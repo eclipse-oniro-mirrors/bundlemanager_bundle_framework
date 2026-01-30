@@ -304,7 +304,7 @@ bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &pe
         AccessToken::PermissionState::PERMISSION_GRANTED) {
         return true;
     }
-    LOG_NOFUNC_W(BMS_TAG_DEFAULT, "permission denied caller:%{public}u", callerToken);
+    LOG_D(BMS_TAG_DEFAULT, "permission denied caller:%{public}u", callerToken);
     return false;
 }
 
@@ -317,7 +317,7 @@ bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permi
         AccessToken::PermissionState::PERMISSION_GRANTED) {
         return true;
     }
-    LOG_NOFUNC_W(BMS_TAG_DEFAULT, "permission denied caller:%{public}u", callerToken);
+    LOG_D(BMS_TAG_DEFAULT, "permission denied caller:%{public}u", callerToken);
     return false;
 }
 
@@ -529,7 +529,7 @@ bool BundlePermissionMgr::IsShellTokenType()
         LOG_D(BMS_TAG_DEFAULT, "caller is shell, success");
         return true;
     }
-    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "caller not shell");
+    LOG_D(BMS_TAG_DEFAULT, "caller not shell");
     return false;
 }
 
@@ -669,6 +669,22 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, con
         return false;
     }
     LOG_D(BMS_TAG_DEFAULT, "end, verify success");
+    return true;
+}
+
+bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
+{
+    // sa no need to check across user permission
+    if (BundlePermissionMgr::IsNativeTokenType()) {
+        return true;
+    }
+    if (userId == BundleUtil::GetUserIdByCallingUid()) {
+        return true;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS)) {
+        LOG_E(BMS_TAG_DEFAULT, "verify permission across local account failed");
+        return false;
+    }
     return true;
 }
 

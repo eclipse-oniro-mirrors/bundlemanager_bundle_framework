@@ -17,14 +17,14 @@
 
 #include <cstddef>
 #include <cstdint>
-
+#define private public
 #include "bundle_mgr_host.h"
 #include "securec.h"
 #include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-constexpr size_t CODE_MAX = 187;
+constexpr size_t CODE_MAX = 221;
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {

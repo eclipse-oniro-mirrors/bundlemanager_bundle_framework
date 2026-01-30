@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,13 +40,13 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam)
+ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
+    const ExtractParam &extractParam)
 {
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
-    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+ErrCode InstalldHostImpl::ProcessBundleInstallNative(const InstallHnpParam &installHnpParam)
 {
     return ERR_OK;
 }
@@ -87,7 +87,7 @@ ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, cons
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
+ErrCode InstalldHostImpl::RemoveDir(const std::string &dir, bool async)
 {
     return ERR_OK;
 }
@@ -97,12 +97,18 @@ ErrCode InstalldHostImpl::GetDiskUsage(const std::string &dir, int64_t &statSize
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
+ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
+    int64_t timeoutMs)
 {
     return ERR_OK;
 }
 
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
 {
     return ERR_OK;
 }
@@ -118,16 +124,22 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
     return "";
 }
 
+ErrCode InstalldHostImpl::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::GetBundleStats(
     const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats,
-    const int32_t uid, const int32_t appIndex, const uint32_t statFlag,
+    const std::unordered_set<int32_t> &uids, const int32_t appIndex, const uint32_t statFlag,
     const std::vector<std::string> &moduleNameList)
 {
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
-    const std::unordered_map<std::string, int32_t> &uidMap, std::vector<BundleStorageStats> &bundleStats)
+ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames,
+    const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
+    std::vector<BundleStorageStats> &bundleStats)
 {
     return ERR_OK;
 }
@@ -138,8 +150,23 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::SetFileConForce(const std::vector<std::string> &paths, const CreateDirParam &createDirParam)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::StopSetFileCon(const CreateDirParam &createDirParam, int32_t reason)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
     bool isPreInstallApp, bool debug, int32_t uid)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir)
 {
     return ERR_OK;
 }
@@ -308,6 +335,11 @@ ErrCode InstalldHostImpl::RemoveSignProfile(const std::string &bundleName)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::AddCertAndEnableKey(const std::string &certPath, const std::string &certContent)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
 {
     return ERR_OK;
@@ -374,7 +406,33 @@ ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+    std::vector<std::string> &soName, std::vector<std::string> &soHash)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::RestoreconPath(const std::string &path)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ResetBmsDBSecurity()
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)
 {
     return ERR_OK;
 }

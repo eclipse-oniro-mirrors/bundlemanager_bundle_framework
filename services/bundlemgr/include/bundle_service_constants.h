@@ -32,6 +32,7 @@ constexpr const char* RESOURCES_INDEX = "resources.index";
 constexpr int8_t INVALID_GID = -1;
 constexpr int8_t BUNDLE_RDB_VERSION = 1;
 constexpr const char* PATH_SEPARATOR = "/";
+constexpr const char* UNDER_LINE = "_";
 constexpr const char* LIBS = "libs/";
 constexpr const char* AN = "an/";
 constexpr const char* RES_FILE_PATH = "resources/resfile/";
@@ -63,9 +64,11 @@ constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
 constexpr const char* HSP_FILE_SUFFIX = ".hsp";
 constexpr const char* APP_FILE_SUFFIX = ".app";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
+constexpr const char* CER_SUFFIX = ".cer";
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
 constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
+constexpr const char* ENTERPRISE_CERT_PATH = "/certificates/enterprise/";
 constexpr const char* TMP_SUFFIX = "_tmp";
 constexpr const char* BUNDLE_APP_DATA_BASE_DIR = "/data/app/";
 constexpr const char* BASE = "/base/";
@@ -98,13 +101,14 @@ constexpr const char* UNINSTALLED_PRELOAD_FILE = "thirdPartyAppList.json";
 constexpr const char* PRELOAD_APP_DIR = "/preload/app/";
 constexpr const char* UNINSTALL_PRELOAD_LIST = "uninstall_preload_list";
 constexpr int NOT_EXIST_USERID = -5;
-constexpr int PATH_MAX_SIZE = 256;
+constexpr int PATH_MAX_SIZE = 4096;
 constexpr int32_t API_VERSION_NINE = 9;
 constexpr int32_t API_VERSION_TWELVE = 12;
 constexpr int32_t API_VERSION_FIFTEEN = 15;
 constexpr int32_t API_VERSION_MOD = 1000;
 constexpr int32_t API_VERSION_MAX = 999;
 constexpr int32_t BACKUP_DEFAULT_APP_KEY = -2;
+constexpr int32_t MAX_ENTERPRISE_RESIGN_CERT_NUM = 10;
 // native so
 constexpr const char* ABI_DEFAULT = "default";
 constexpr const char* ABI_SEPARATOR = ",";
@@ -149,6 +153,7 @@ constexpr const char* PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE = "ohos.permissio
 constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 constexpr const char* PERMISSION_SUPPORT_PLUGIN = "ohos.permission.kernel.SUPPORT_PLUGIN";
 constexpr const char* PERMISSION_MANAGE_STORAGE = "ohos.permission.atomicService.MANAGE_STORAGE";
+constexpr const char* PERMISSION_MANAGE_AGING = "ohos.permission.atomicService.MANAGE_AGING";
 
 constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
 constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
@@ -161,8 +166,17 @@ constexpr const char* DATA_ABILITY_URI_PREFIX = "dataability://";
 constexpr const char* HOS_SYSTEM_APP = "hos_system_app";
 // rdb
 constexpr const char* BUNDLE_RDB_NAME = "/bmsdb.db";
+constexpr const char* BUNDLE_RDB_FLAG = "bmsdb";
+constexpr const char* BUNDLE_RDB_BINLOG_PATH = "/data/service/el1/public/bms/bundle_manager_service/bmsdb.db_binlog";
+constexpr const char* BUNDLE_RESOURCE_RDB_FLAG = "bundleResource";
+constexpr const char* BUNDLE_RESOURCE_RDB_PATH = "/data/service/el1/public/bms/bundle_resources";
+constexpr const char* BUNDLE_RESOURCE_BINLOG_PATH =
+    "/data/service/el1/public/bms/bundle_resources/bundleResource.db_binlog";
+constexpr const char* BUNDLE_RDB_BINLOG = "binlog";
+
 // thread pool
 constexpr const char* RELATIVE_PATH = "../";
+constexpr const char* RELATIVE_PATH_NAME = "..";
 // app detail ability
 constexpr const char* APP_DETAIL_ABILITY = "AppDetailAbility";
 // overlay installation
@@ -193,9 +207,12 @@ constexpr const char* BMS_DATA_PRELOAD = "persist.bms.data.preload";
 constexpr const char* IS_SUPPORT_PLUGIN = "const.bms.support_plugin";
 constexpr const char* IS_DRIVER_FOR_ALL_USERS = "const.bms.driverForAllUsers";
 constexpr const char* HYBRID_SPAWN_ENABLE = "persist.appspawn.hybridspawn.enable";
+constexpr const char* HYBRID_SPAWN_UNIFIED = "persist.appspawn.hybridspawn.unified";
 constexpr const char* IS_APP_CLONE_DISABLE = "persist.edm.app_clone_disable";
 constexpr const char* ENTERPRISE_SPACE_ENABLE = "persist.space_mgr_service.enterprise_space_enable";
 constexpr const char* ENTERPRISE_SPACE_USER_ID_LIST = "persist.space_mgr_service.enterprise_workspace_userid_list";
+constexpr const char* RELABEL_PARAM = "persist.bms.test.relabel";
+constexpr const char* BMS_RELABEL_PARAM = "const.bms.relabel";
 //extResource
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
 // hmdfs and sharefs config
@@ -222,7 +239,6 @@ constexpr const char* NEW_SHADER_CACHE_PATH = "/data/app/el1/%/shader_cache/";
 constexpr const char* NEW_CLOUD_SHADER_PATH = "/data/app/el1/public/shader_cache/cloud/";
 // shader cache dir in /system_optimize
 constexpr const char* SHADER_CACHE_SUBDIR = "/shader_cache/";
-constexpr const char* SYSTEM_OPTIMIZE_SHADER_CACHE_PATH = "/data/app/el1/%/system_optimize/";
 // apiReleaseType
 constexpr const char* API_RELEASE_TYPE_RELEASE = "Release";
 constexpr const char* API_RELEASE_TYPE_BETA = "Beta";
@@ -252,6 +268,7 @@ constexpr const char* INSTALL_SOURCE_RECOVERY = "recovery";
 // bundle update
 constexpr const char* BUNDLE_NEW_CODE_DIR = "+new-";
 constexpr const char* BUNDLE_OLD_CODE_DIR = "+old-";
+constexpr const char* BUNDLE_TEMP_CODE_DIR = "+temp-";
 
 //ability start window
 constexpr const char* PROFILE_PATH = "resources/base/profile/";
@@ -275,14 +292,33 @@ constexpr const char* UPDATE_PERMISSIONS_FLAG_UPDATED = "updated";
 
 const std::set<std::string> OTA_NEW_INSTALL_BUNDLE_NAME_LIST = {};
 
+constexpr const char* SO_PATH_PREFIX = "/data/app/el1/bundle/public/";
 constexpr const char* EXT_PROFILE = "ext_profile";
 constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
 constexpr const char* MANIFEST_JSON = "manifest.json";
 constexpr const char* CLOUD_PROFILE_PATH = "resources/base/profile/cloudkit_config.json";
+// for install param
+constexpr const char* BMS_PARA_INSTALL_BUNDLE_NAME = "ohos.bms.param.installBundleName";
+// for install downgrade
+constexpr const char* BMS_PARA_INSTALL_ALLOW_DOWNGRADE = "ohos.bms.param.installAllowDowngrade";
+
+//plugin file path
+constexpr const char* PLUGIN_FILE_PATH = "+plugins";
+
+// enterprise re sign cert
+constexpr const char* DELETE_CERT_PREFIX = ".deleteCer";
+
+// apl level
+constexpr const char* APL_NORMAL = "normal";
 
 // no report for expected errcode
 const std::set<int32_t> EXPECTED_ERROR = {
-    ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST,
+    // install app in black list
+    ERR_APPEXECFWK_INSTALL_APP_IN_BLACK_LIST,
+    // private space black list
+    ERR_APPEXECFWK_INSTALL_APP_IN_PRIVATE_SPACE_BLACK_LIST,
+    // pc sub user black list
+    ERR_APPEXECFWK_INSTALL_APP_IN_SUB_USER_BLACK_LIST,
     ERR_APPEXECFWK_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED,
     ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED,
     ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED,
@@ -326,6 +362,13 @@ const std::set<int32_t> EXPECTED_ERROR = {
     // ark startup cache error
     ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_APP_OR_ATOMIC,
     ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST,
+};
+
+enum StopReason {
+    NONE,
+    BUSY,
+    UPDATE,
+    DELETE,
 };
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk

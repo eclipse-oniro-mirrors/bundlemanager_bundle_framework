@@ -467,7 +467,7 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0010, Function | Mediu
 {
     BaseBundleInstaller installer;
     InnerBundleInfo newInfo;
-    installer.CreateEl5AndSetPolicy(newInfo);
+    installer.CreateEl5AndSetPolicy(newInfo, false);
     EXPECT_EQ(newInfo.GetBundleName().empty(), true);
 }
 
@@ -497,7 +497,7 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0012, Function | Mediu
 {
     BaseBundleInstaller installer;
     InnerBundleInfo newInfo;
-    installer.CreateEl5AndSetPolicy(newInfo);
+    installer.CreateEl5AndSetPolicy(newInfo, false);
     EXPECT_EQ(newInfo.GetBundleName().empty(), true);
 }
 
@@ -1025,6 +1025,8 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0044, Function | Small
 
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.moduleName = "entry";
+    innerModuleInfo.modulePackage = "entry";
+    innerModuleInfo.isEntry = true;
     HnpPackage hnpPackage;
     innerModuleInfo.hnpPackages.emplace_back(hnpPackage);
 
@@ -1032,9 +1034,9 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0044, Function | Small
     info.currentPackage_ = "entry";
     info.innerModuleInfos_["entry"] = innerModuleInfo;
 
-    int32_t userId;
+    int32_t userId = 100;
     std::string bundleName;
-    ErrCode ret = installer.ProcessBundleUnInstallNative(info, userId, bundleName);
+    ErrCode ret = installer.ProcessBundleUnInstallNative(info, userId, bundleName, "entry");
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -1500,6 +1502,39 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BundleMgrHostImpl_0003, Function | SmallTe
     std::string pluginBundleName = "plugin";
     std::string codePath;
     auto ret = localBundleMgrHostImpl->GetPluginBundlePathForSelf(pluginBundleName, codePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/*
+ * @tc.number: SetShortcutsEnabled_0001
+ * @tc.name: BmsBundleDataMgrNullptrTest
+ * @tc.desc: test SetShortcutsEnabled
+ */
+HWTEST_F(BmsBundleDataMgrNullptrTest, SetShortcutsEnabled_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool isEnabled = false;
+    auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0004
+ * @tc.name: BundleMgrHostImpl_0004
+ * @tc.desc: test GetPluginExtensionInfo
+ */
+HWTEST_F(BmsBundleDataMgrNullptrTest, BundleMgrHostImpl_0004, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::string hostBundleName;
+    AAFwk::Want want;
+    int32_t userId = 0;
+    ExtensionAbilityInfo extensionInfo;
+    auto ret = localBundleMgrHostImpl->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
 } // OHOS

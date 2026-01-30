@@ -24,6 +24,7 @@
 #include "base_bundle_installer.h"
 #include "bundle_multiuser_installer.h"
 #include "parameters.h"
+#include "bundle_mgr_service.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -46,6 +47,7 @@ public:
     static void StartBundleService();
     void SetUp();
     void TearDown();
+    std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
 
 BmsSpaceIsolationTest::BmsSpaceIsolationTest()
@@ -61,10 +63,18 @@ void BmsSpaceIsolationTest::TearDownTestCase()
 {}
 
 void BmsSpaceIsolationTest::SetUp()
-{}
+{
+    bundleMgrService_ = OHOS::DelayedSingleton<BundleMgrService>::GetInstance();
+    bundleMgrService_->OnStart();
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "false");
+}
 
 void BmsSpaceIsolationTest::TearDown()
-{}
+{
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "false");
+    bundleMgrService_->OnStop();
+    bundleMgrService_ = nullptr;
+}
 
 /**
  * @tc.number: GetEnterpriseUserIds_0100
@@ -548,6 +558,634 @@ HWTEST_F(BmsSpaceIsolationTest, CheckSpaceIsolation_1800, Function | SmallTest |
     info.SetAppProvisionType(Constants::APP_PROVISION_TYPE_DEBUG);
     info.baseApplicationInfo_->bundleName = "com.test.not.exist";
     bool result = BundleInstallChecker::CheckSpaceIsolation(USER_ID_100, info);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: CheckSpaceIsolation_1900
+ * @tc.name: CheckSpaceIsolation with invalid bundleType
+ * @tc.desc: bundleType is neither APP nor ATOMIC_SERVICE
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckSpaceIsolation_1900, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    // -1 represents invalid BundleType
+    info.SetApplicationBundleType(static_cast<BundleType>(-1));
+
+    int32_t userId = Constants::START_USERID;
+    BundleInstallChecker checker;
+    EXPECT_TRUE(checker.CheckSpaceIsolation(userId, info));
+}
+
+/**
+ * @tc.number: CheckSpaceIsolation_2000
+ * @tc.name: CheckSpaceIsolation normal release app
+ * @tc.desc: not debug and not enterprise app
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckSpaceIsolation_2000, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.SetApplicationBundleType(BundleType::APP);
+    info.SetAppProvisionType(Constants::APP_PROVISION_TYPE_RELEASE);
+    info.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY);
+
+    ApplicationInfo appInfo;
+    appInfo.debug = false;
+    info.SetBaseApplicationInfo(appInfo);
+
+    int32_t userId = Constants::START_USERID;
+    BundleInstallChecker checker;
+    EXPECT_TRUE(checker.CheckSpaceIsolation(userId, info));
+}
+
+/**
+ * @tc.number: CheckSpaceIsolation_2100
+ * @tc.name: CheckSpaceIsolation debug app not installed
+ * @tc.desc: FetchInnerBundleInfo returns false
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckSpaceIsolation_2100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.SetApplicationBundleType(BundleType::APP);
+    info.SetAppProvisionType(Constants::APP_PROVISION_TYPE_DEBUG);
+
+    int32_t userId = Constants::START_USERID;
+    BundleInstallChecker checker;
+    EXPECT_TRUE(checker.CheckSpaceIsolation(userId, info));
+}
+
+/**
+ * @tc.number: CheckEnterpriseResign_0100
+ * @tc.name: CheckEnterpriseResign enterprise resigned
+ * @tc.desc: provisionInfo.isEnterpriseResigned is true
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckEnterpriseResign_0100, Function | SmallTest | Level1)
+{
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    provisionInfo.isEnterpriseResigned = true;
+
+    int32_t userId = Constants::START_USERID;
+    BundleInstallChecker checker;
+    EXPECT_TRUE(checker.CheckEnterpriseResign(provisionInfo, userId));
+}
+
+/**
+ * @tc.number: CheckEnterpriseResign_0200
+ * @tc.name: CheckEnterpriseResign non enterprise device
+ * @tc.desc: IS_ENTERPRISE_DEVICE is false
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckEnterpriseResign_0200, Function | SmallTest | Level1)
+{
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    provisionInfo.isEnterpriseResigned = false;
+
+    // parameter mock 默认 IS_ENTERPRISE_DEVICE == false
+    int32_t userId = Constants::START_USERID;
+    BundleInstallChecker checker;
+    EXPECT_TRUE(checker.CheckEnterpriseResign(provisionInfo, userId));
+}
+
+/**
+ * @tc.number: ParseHapFiles_0100
+ * @tc.name: test ParseHapFiles when ParseBundleInfo failed
+ * @tc.desc: ParseBundleInfo returns error
+ */
+HWTEST_F(BmsSpaceIsolationTest, ParseHapFiles_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundlePaths;
+    bundlePaths.emplace_back("parse_bundle_failed.hap");
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult verifyResult;
+    hapVerifyRes.emplace_back(verifyResult);
+    InstallCheckParam checkParam;
+    checkParam.isPreInstallApp = false;
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    BundleInstallChecker checker;
+    ErrCode ret = checker.ParseHapFiles(bundlePaths, checkParam, hapVerifyRes, infos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ParseHapFiles_0200
+ * @tc.name: test ParseHapFiles CheckSystemSize failed
+ * @tc.desc: insufficient disk memory
+ */
+HWTEST_F(BmsSpaceIsolationTest, ParseHapFiles_0200, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundlePaths;
+    bundlePaths.emplace_back("system_size_failed.hap");
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    hapVerifyRes.emplace_back(Security::Verify::HapVerifyResult());
+
+    InstallCheckParam checkParam;
+    checkParam.isPreInstallApp = false;
+    checkParam.appType = Constants::AppType::THIRD_PARTY_APP;
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    BundleInstallChecker checker;
+    ErrCode ret = checker.ParseHapFiles(bundlePaths, checkParam, hapVerifyRes, infos);
+
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ParseHapFiles_0300
+ * @tc.name: test ParseHapFiles CheckEnterpriseForAllUser failed
+ * @tc.desc: enterprise install forbidden
+ */
+HWTEST_F(BmsSpaceIsolationTest, ParseHapFiles_0300, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundlePaths;
+    bundlePaths.emplace_back("enterprise_forbidden.hap");
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    hapVerifyRes.emplace_back(Security::Verify::HapVerifyResult());
+
+    InstallCheckParam checkParam;
+    checkParam.isPreInstallApp = false;
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    BundleInstallChecker checker;
+    ErrCode ret = checker.ParseHapFiles(bundlePaths, checkParam, hapVerifyRes, infos);
+
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ValidInstallPermissionForShare_0100
+ * @tc.name: enterprise bundle permission denied
+ * @tc.desc: non-shell caller without enterprise permission
+ */
+HWTEST_F(BmsSpaceIsolationTest, ValidInstallPermissionForShare_0100, Function | SmallTest | Level1)
+{
+    InstallCheckParam checkParam;
+    checkParam.isCallByShell = false;
+    checkParam.installEnterpriseBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    checkParam.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    checkParam.installEtpMdmBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    checkParam.installInternaltestingBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult verifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    verifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.emplace_back(verifyResult);
+
+    BundleInstallChecker checker;
+    EXPECT_FALSE(checker.VaildInstallPermissionForShare(checkParam, hapVerifyRes));
+}
+
+/**
+ * @tc.number: VaildInstallPermissionForShare_0200
+ * @tc.name: internaltesting bundle permission denied
+ * @tc.desc: non-shell caller without internaltesting permission
+ */
+HWTEST_F(BmsSpaceIsolationTest, VaildInstallPermissionForShare_0200, Function | SmallTest | Level1)
+{
+    InstallCheckParam checkParam;
+    checkParam.isCallByShell = false;
+    checkParam.installInternaltestingBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    checkParam.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    checkParam.installEnterpriseBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    checkParam.installEtpMdmBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult verifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::INTERNALTESTING;
+    verifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.emplace_back(verifyResult);
+
+    BundleInstallChecker checker;
+    EXPECT_FALSE(checker.VaildInstallPermissionForShare(checkParam, hapVerifyRes));
+}
+
+/**
+ * @tc.number: VaildInstallPermissionForShare_0300
+ * @tc.name: enterprise normal/mdm permission denied
+ * @tc.desc: VaildEnterpriseInstallPermissionForShare returns false
+ */
+HWTEST_F(BmsSpaceIsolationTest, VaildInstallPermissionForShare_0300, Function | SmallTest | Level1)
+{
+    InstallCheckParam checkParam;
+    checkParam.isCallByShell = false;
+    checkParam.installEtpMdmBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    checkParam.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    checkParam.installEnterpriseBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    checkParam.installInternaltestingBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult verifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_MDM;
+    verifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.emplace_back(verifyResult);
+
+    BundleInstallChecker checker;
+    EXPECT_FALSE(checker.VaildInstallPermissionForShare(checkParam, hapVerifyRes));
+}
+
+/**
+ * @tc.number: NeedCheckDependency_0100
+ * @tc.name: NeedCheckDependency modules empty
+ * @tc.desc: return true when bundle pack modules is empty
+ */
+HWTEST_F(BmsSpaceIsolationTest, NeedCheckDependency_0100, Function | SmallTest | Level1)
+{
+    Dependency dependency;
+    dependency.moduleName = "entry";
+    dependency.bundleName = "";
+
+    InnerBundleInfo bundleInfo;
+    bundleInfo.SetTargetBundleName("com.test.needcheck");
+    BundleInstallChecker checker;
+    bool result = checker.NeedCheckDependency(dependency, bundleInfo);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0100
+ * @tc.name: debug type not same with entry release
+ * @tc.desc: entry module is release but other module is debug
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckAppLabelInfo_0100,
+    Function | SmallTest | Level1)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo entryInfo;
+    {
+        InnerModuleInfo entryModule;
+        entryModule.moduleName = "entry";
+        entryModule.isEntry = true;
+
+        std::map<std::string, InnerModuleInfo> modules;
+        modules.emplace("entry", entryModule);
+        entryInfo.AddInnerModuleInfo(modules);
+        auto appInfo = entryInfo.GetBaseApplicationInfo();
+        appInfo.debug = false;
+        entryInfo.SetBaseApplicationInfo(appInfo);
+    }
+    InnerBundleInfo featureInfo;
+    {
+        InnerModuleInfo featureModule;
+        featureModule.moduleName = "feature";
+        featureModule.isEntry = false;
+
+        std::map<std::string, InnerModuleInfo> modules;
+        modules.emplace("feature", featureModule);
+        featureInfo.AddInnerModuleInfo(modules);
+        auto appInfo = featureInfo.GetBaseApplicationInfo();
+        appInfo.debug = true;
+        featureInfo.SetBaseApplicationInfo(appInfo);
+    }
+    infos.emplace("bundleA", entryInfo);
+    infos.emplace("bundleB", featureInfo);
+
+    BundleInstallChecker checker;
+    ErrCode ret = checker.CheckAppLabelInfo(infos);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckMultiArkNativeFile_0100
+ * @tc.name: ark native abi init from later bundle
+ * @tc.desc: first bundle abi empty, second bundle provides abi
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckMultiArkNativeFile_0100,
+    Function | SmallTest | Level1)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    InnerBundleInfo infoA;
+    infoA.SetArkNativeFileAbi("");
+    infos.emplace("bundleA", infoA);
+    InnerBundleInfo infoB;
+    infoB.SetArkNativeFileAbi("arm64-v8a");
+    infos.emplace("bundleB", infoB);
+
+    BundleInstallChecker checker;
+    ErrCode ret = checker.CheckMultiArkNativeFile(infos);
+
+    EXPECT_EQ(ret, ERR_OK);
+    for (const auto &item : infos) {
+        EXPECT_EQ(item.second.GetArkNativeFileAbi(), "arm64-v8a");
+    }
+}
+
+/**
+ * @tc.number: CheckDeviceType_0100
+ * @tc.name: support app types matched
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckDeviceType_0100, Function | SmallTest | Level1)
+{
+    constexpr const char *supportAppTypesKey = "persist.sys.support_app_types";
+    OHOS::system::SetParameter(supportAppTypesKey, "system");
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    InnerBundleInfo info;
+    info.SetAppType(Constants::AppType::SYSTEM_APP);
+
+    infos.emplace("bundle", info);
+
+    BundleInstallChecker checker;
+    ErrCode ret = checker.CheckDeviceType(infos, ERR_OK);
+
+    EXPECT_EQ(ret, ERR_OK);
+    OHOS::system::SetParameter(supportAppTypesKey, "");
+}
+
+/**
+ * @tc.number: CheckRequiredDeviceFeatures_0100
+ * @tc.name: required device type not found
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckRequiredDeviceFeatures_0100, Function | SmallTest | Level1)
+{
+    constexpr const char *providedDeviceFeaturesKey =
+        "persist.sys.provided_device_features";
+
+    OHOS::system::SetParameter(providedDeviceFeaturesKey, "camera,bluetooth");
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo info;
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = "entry";
+    moduleInfo.modulePackage = "entry";
+    moduleInfo.requiredDeviceFeatures.emplace(
+        "other_device", std::vector<std::string>{"camera"});
+
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
+    info.SetCurrentModulePackage("entry");
+
+    infos.emplace("bundle", info);
+
+    BundleInstallChecker checker;
+    ErrCode ret = checker.CheckRequiredDeviceFeatures(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED);
+
+    OHOS::system::SetParameter(providedDeviceFeaturesKey, "");
+}
+
+/**
+ * @tc.number: CheckRequiredDeviceFeatures_0200
+ * @tc.name: required features not subset of provided
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckRequiredDeviceFeatures_0200, Function | SmallTest | Level1)
+{
+    constexpr const char *providedDeviceFeaturesKey =
+        "persist.sys.provided_device_features";
+    constexpr const char *deviceTypeKey =
+        "const.product.device_type";
+
+    OHOS::system::SetParameter(providedDeviceFeaturesKey, "camera");
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo info;
+
+    std::string deviceType =
+        OHOS::system::GetParameter(deviceTypeKey, "");
+    if (deviceType.empty()) {
+        deviceType = "default";
+    }
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = "entry";
+    moduleInfo.modulePackage = "entry";
+
+    moduleInfo.requiredDeviceFeatures.emplace(
+        deviceType, std::vector<std::string>{"camera", "gps"});
+
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    moduleInfos.emplace("entry", moduleInfo);
+    info.AddInnerModuleInfo(moduleInfos);
+    info.SetCurrentModulePackage("entry");
+
+    infos.emplace("bundle", info);
+
+    BundleInstallChecker checker;
+    ErrCode ret = checker.CheckRequiredDeviceFeatures(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED);
+
+    OHOS::system::SetParameter(providedDeviceFeaturesKey, "");
+}
+
+/**
+ * @tc.number: CheckProxyPermissionLevel_0200
+ * @tc.name: permission level too low
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckProxyPermissionLevel_0200, Function | SmallTest | Level1)
+{
+    BundleInstallChecker checker;
+    std::string permissionName = "ohos.permission.INTERNET";
+
+    bool ret = checker.CheckProxyPermissionLevel(permissionName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CheckSignatureFileDir_0300
+ * @tc.name: signature file dir contains relative path
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckSignatureFileDir_0300, Function | SmallTest | Level1)
+{
+    BundleInstallChecker checker;
+    std::string signatureFileDir = "../codesign.sig";
+    ErrCode ret = checker.CheckSignatureFileDir(signatureFileDir);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID);
+}
+
+/**
+ * @tc.number: CheckAppDistributionType_0100
+ * @tc.name: os integration distribution type allowed
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckAppDistributionType_0100, Function | SmallTest | Level1)
+{
+    BundleInstallChecker checker;
+    ErrCode ret = checker.CheckAppDistributionType(
+        Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppDistributionType_0200
+ * @tc.name: distribution type not in whitelist
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckAppDistributionType_0200,
+    Function | SmallTest | Level1)
+{
+    BundleInstallChecker checker;
+    auto bmsPara =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsPara, nullptr);
+    bmsPara->SaveBmsParam(
+        Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, "0");
+
+    std::string distributionType = "enterprise";
+
+    ErrCode ret = checker.CheckAppDistributionType(distributionType);
+
+    EXPECT_EQ(ret, ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL);
+    bmsPara->SaveBmsParam(
+        Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, "");
+}
+
+
+/**
+ * @tc.number: SetIsAbcCompressed_0100
+ * @tc.name: set abc compressed flag
+ */
+HWTEST_F(BmsSpaceIsolationTest, SetIsAbcCompressed_0100,
+    Function | SmallTest | Level1)
+{
+    BundleInstallChecker checker;
+
+    checker.SetIsAbcCompressed(true);
+    EXPECT_TRUE(checker.GetIsAbcCompressed());
+
+    checker.SetIsAbcCompressed(false);
+    EXPECT_FALSE(checker.GetIsAbcCompressed());
+}
+
+/**
+ * @tc.number: CheckDriverIsolation_0100
+ * @tc.name: CheckDriverIsolation with empty newInfos
+ * @tc.desc: Test CheckDriverIsolation when newInfos is empty
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_0100, Function | SmallTest | Level1)
+{
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    bool result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckDriverIsolation_0200
+ * @tc.name: CheckDriverIsolation with switch off
+ * @tc.desc: Test CheckDriverIsolation when switch is off
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_0200, Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "false");
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos["path"] = InnerBundleInfo();
+    bool result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: CheckDriverIsolation_0300
+ * @tc.name: CheckDriverIsolation with not sane driver properties
+ * @tc.desc: Test CheckDriverIsolation when driver properties is not sane
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_0300, Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "true");
+    Metadata data;
+    InnerExtensionInfo abilityInfo;
+    std::map<std::string, InnerExtensionInfo> baseExtensionInfos;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.provisionInfo = provisionInfo;
+
+    data.name = "cupsFilter";
+    std::vector<Metadata> metadata = { data };
+    abilityInfo.metadata = metadata;
+    baseExtensionInfos["testKey"] = abilityInfo;
+
+    newInfos["path"] = InnerBundleInfo();
+    newInfos.begin()->second.baseExtensionInfos_ = baseExtensionInfos;
+    bool result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_TRUE(result);
+
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.provisionInfo = provisionInfo;
+    result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: CheckDriverIsolation_0400
+ * @tc.name: CheckDriverIsolation with sane driver properties
+ * @tc.desc: Test CheckDriverIsolation when driver properties is saneConfig
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_0400, Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "true");
+    Metadata data;
+    InnerExtensionInfo abilityInfo;
+    std::map<std::string, InnerExtensionInfo> baseExtensionInfos;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.provisionInfo = provisionInfo;
+
+    data.name = "saneConfig";
+    std::vector<Metadata> metadata = { data };
+    abilityInfo.metadata = metadata;
+    abilityInfo.type = ExtensionAbilityType::DRIVER;
+    baseExtensionInfos["testKey"] = abilityInfo;
+
+    newInfos["path"] = InnerBundleInfo();
+    newInfos.begin()->second.baseExtensionInfos_ = baseExtensionInfos;
+    bool result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_FALSE(result);
+
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.provisionInfo = provisionInfo;
+    result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: CheckDriverIsolation_0500
+ * @tc.name: CheckDriverIsolation with sane driver properties
+ * @tc.desc: Test CheckDriverIsolation when driver properties is saneBackend
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_0500, Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "true");
+    Metadata data;
+    InnerExtensionInfo abilityInfo;
+    std::map<std::string, InnerExtensionInfo> baseExtensionInfos;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.provisionInfo = provisionInfo;
+    
+    data.name = "saneBackend";
+    std::vector<Metadata> metadata = { data };
+    abilityInfo.metadata = metadata;
+    abilityInfo.type = ExtensionAbilityType::DRIVER;
+    baseExtensionInfos["testKey"] = abilityInfo;
+    
+    newInfos["path"] = InnerBundleInfo();
+    newInfos.begin()->second.baseExtensionInfos_ = baseExtensionInfos;
+    bool result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_FALSE(result);
+
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.provisionInfo = provisionInfo;
+    result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
     EXPECT_TRUE(result);
 }
 }

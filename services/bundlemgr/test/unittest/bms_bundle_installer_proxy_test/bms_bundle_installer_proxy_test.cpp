@@ -1099,5 +1099,85 @@ HWTEST_F(BmsBundleInstallerProxyTest, CopyExtProfileFileToService_0300, Function
     auto res = bundleInstallerProxy.CopyExtProfileFileToService(streamInstaller, installParam);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
 }
+
+/**
+ * @tc.number: UninstallEnterpriseReSignatureCert_0100
+ * @tc.name: test the UninstallEnterpriseReSignatureCert
+ * @tc.desc: 1. certAlias is empty
+ *           2. test UninstallEnterpriseReSignatureCert
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, UninstallEnterpriseReSignatureCert_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string certAlias = "";
+    int32_t userId = 100;
+    auto res = bundleInstallerProxy.UninstallEnterpriseReSignatureCert(certAlias, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: UninstallEnterpriseReSignatureCert_0200
+ * @tc.name: test the UninstallEnterpriseReSignatureCert
+ * @tc.desc: 1. userId error
+ *           2. test UninstallEnterpriseReSignatureCert
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, UninstallEnterpriseReSignatureCert_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string certAlias = "aaa.cer";
+    int32_t userId = 0;
+    auto res = bundleInstallerProxy.UninstallEnterpriseReSignatureCert(certAlias, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: UninstallEnterpriseReSignatureCert_0300
+ * @tc.name: test the UninstallEnterpriseReSignatureCert
+ * @tc.desc: 1. send request failed
+ *           2. test UninstallEnterpriseReSignatureCert
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, UninstallEnterpriseReSignatureCert_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string certAlias = "aaa.cer";
+    int32_t userId = 100;
+    auto res = bundleInstallerProxy.UninstallEnterpriseReSignatureCert(certAlias, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR);
+}
+
+/**
+ * @tc.number: GetEnterpriseReSignatureCert_0100
+ * @tc.name: test the GetEnterpriseReSignatureCert
+ * @tc.desc: 1. userId error
+ *           2. test GetEnterpriseReSignatureCert
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, GetEnterpriseReSignatureCert_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    int32_t userId = 0;
+    std::vector<std::string> certificateAlias;
+    auto res = bundleInstallerProxy.GetEnterpriseReSignatureCert(userId, certificateAlias);
+    EXPECT_EQ(res, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetEnterpriseReSignatureCert_0200
+ * @tc.name: test the GetEnterpriseReSignatureCert
+ * @tc.desc: 1. userId error
+ *           2. test GetEnterpriseReSignatureCert
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, GetEnterpriseReSignatureCert_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    int32_t userId = 100;
+    std::vector<std::string> certificateAlias;
+    auto res = bundleInstallerProxy.GetEnterpriseReSignatureCert(userId, certificateAlias);
+    EXPECT_EQ(res, ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR);
+}
 }
 }

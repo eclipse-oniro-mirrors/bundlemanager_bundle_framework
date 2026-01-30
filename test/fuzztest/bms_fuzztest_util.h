@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "bundle_info.h"
+#include "bundle_option.h"
 #include "bundle_user_info.h"
 #include "form_info.h"
 #include "install_param.h"
@@ -65,6 +66,26 @@ std::vector<std::string> GenerateStringArray(FuzzedDataProvider& fdp, size_t arr
     }
 
     return result;
+}
+
+void GenerateDynamicShortcutInfo(FuzzedDataProvider& fdp, const std::string& shortcutId, const std::string& bundleName,
+    const int32_t appIndex, ShortcutInfo &shortcutInfo)
+{
+    shortcutInfo.isStatic = fdp.ConsumeBool();
+    shortcutInfo.isHomeShortcut = fdp.ConsumeBool();
+    shortcutInfo.isEnables = fdp.ConsumeBool();
+    shortcutInfo.visible = fdp.ConsumeBool();
+    shortcutInfo.iconId = fdp.ConsumeIntegral<uint32_t>();
+    shortcutInfo.labelId = fdp.ConsumeIntegral<uint32_t>();
+    shortcutInfo.appIndex = appIndex;
+    shortcutInfo.sourceType = fdp.ConsumeIntegral<int32_t>();
+    shortcutInfo.id = shortcutId;
+    shortcutInfo.bundleName = bundleName;
+    shortcutInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.hostAbility = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.icon = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.label = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.disableMessage = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
 }
 
 Resource GenerateResource(FuzzedDataProvider& fdp)
@@ -195,6 +216,7 @@ void GenerateAbilityInfo(FuzzedDataProvider& fdp, T &abilityInfo)
     abilityInfo.supportPipMode = fdp.ConsumeBool();
     abilityInfo.formEnabled = fdp.ConsumeBool();
     abilityInfo.removeMissionAfterTerminate = fdp.ConsumeBool();
+    abilityInfo.allowSelfRedirect  = fdp.ConsumeBool();
     abilityInfo.isModuleJson = fdp.ConsumeBool();
     abilityInfo.isStageBasedModel = fdp.ConsumeBool();
     abilityInfo.continuable = fdp.ConsumeBool();
@@ -689,6 +711,15 @@ void GenerateHapModuleInfo(FuzzedDataProvider& fdp, HapModuleInfo &hapModuleInfo
     hapModuleInfo.reqCapabilities = GenerateStringArray(fdp);
     hapModuleInfo.deviceTypes = GenerateStringArray(fdp);
     GenerateDeviceFeatureMap(fdp, hapModuleInfo.requiredDeviceFeatures);
+}
+
+void GenerateBundleOptionInfo(FuzzedDataProvider& fdp, BundleOptionInfo &bundleOptionInfo)
+{
+    bundleOptionInfo.bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    bundleOptionInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    bundleOptionInfo.abilityName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    bundleOptionInfo.userId = fdp.ConsumeIntegral<int32_t>();
+    bundleOptionInfo.appIndex = fdp.ConsumeIntegral<int32_t>();
 }
 }  // namespace BMSFuzzTestUtil
 }  // namespace AppExecFwk

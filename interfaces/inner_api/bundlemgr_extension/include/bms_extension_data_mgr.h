@@ -23,6 +23,7 @@
 #include "bms_extension.h"
 #include "bundle_compatible_device_type.h"
 #include "bundle_info.h"
+#include "bundle_option.h"
 #include "bundle_resource_info.h"
 #include "code_protect_bundle_info.h"
 #include "launcher_ability_resource_info.h"
@@ -40,7 +41,8 @@ public:
     ErrCode Init();
     bool CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sdkVersion);
     bool CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkVersion);
-    ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
+    ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,
+        const std::string &localCertDir = "");
     bool IsRdDevice();
     ErrCode QueryAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos);
     ErrCode QueryAbilityInfosWithFlag(const Want &want, int32_t flags, int32_t userId,
@@ -65,13 +67,15 @@ public:
     ErrCode DeleteResourceInfo(const std::string &key);
     ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
         int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
-    bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId);
+    ErrCode CheckAppBlackList(const std::string &bundleName, const int32_t userId);
     ErrCode KeyOperation(const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type);
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName, const std::string &appIdentifier);
     ErrCode GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
         BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
     ErrCode GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0);
+    ErrCode GetLauncherAbilityResourceInfo(const BundleOptionInfo &options, const uint32_t flags,
+        LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
     ErrCode GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
     ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
@@ -89,6 +93,10 @@ public:
     ErrCode RemoveBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     ErrCode BatchGetCompatibleDeviceType(
         const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes);
+    bool GetInstallAndRecoverList(const int32_t userId, const std::vector<std::string> &bundleList,
+        std::vector<std::string> &installList, std::vector<std::string> &recoverList);
+    ErrCode GetDetermineCloneNumList(
+        std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList);
 private:
     bool OpenHandler();
     static void *handler_;

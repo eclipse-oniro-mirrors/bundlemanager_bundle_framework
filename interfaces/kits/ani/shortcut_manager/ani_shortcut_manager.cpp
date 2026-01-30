@@ -157,6 +157,104 @@ static ani_object GetAllShortcutInfoForSelfNative(ani_env* env)
     return shortcutInfosObject;
 }
 
+static void AddDynamicShortcutInfosNative(ani_env* env, ani_object aniShortcutInfo, ani_int aniUserId)
+{
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
+    APP_LOGD("ani AddDynamicShortcutInfosNative called");
+    std::vector<ShortcutInfo> shortcutInfos;
+    if (!CommonFunAni::ParseAniArray(env, aniShortcutInfo, shortcutInfos, CommonFunAni::ParseShortcutInfo)) {
+        APP_LOGE("Parse aniShortcutInfo failed");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ERR_APPEXECFWK_SERVICE_NOT_READY),
+            ADD_DYNAMIC_SHORTCUT_INFOS, PERMISSION_DYNAMIC_SHORTCUT_INFO);
+        return;
+    }
+
+    ErrCode ret = iBundleMgr->AddDynamicShortcutInfos(shortcutInfos, aniUserId);
+    if (ret != ERR_OK) {
+        APP_LOGE("AddDynamicShortcutInfos failed ret:%{public}d", ret);
+        BusinessErrorAni::ThrowCommonNewError(env, CommonFunc::ConvertErrCode(ret),
+            ADD_DYNAMIC_SHORTCUT_INFOS, PERMISSION_DYNAMIC_SHORTCUT_INFO);
+    }
+#else
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, ADD_DYNAMIC_SHORTCUT_INFOS, "");
+#endif
+}
+
+static void DeleteDynamicShortcutInfosNative(ani_env* env,
+    ani_string aniBundleName, ani_int aniAppIndex, ani_int aniUserId, ani_object aniIds)
+{
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
+    APP_LOGD("ani DeleteDynamicShortcutInfosNative called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("parse bundleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return;
+    }
+    std::vector<std::string> ids;
+    if (!CommonFunAni::ParseStrArray(env, aniIds, ids)) {
+        APP_LOGE("ParseStrArray failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, SHORTCUT_IDS, TYPE_ARRAY);
+        return;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ERR_APPEXECFWK_SERVICE_NOT_READY),
+            DELETE_DYNAMIC_SHORTCUT_INFOS, PERMISSION_DYNAMIC_SHORTCUT_INFO);
+        return;
+    }
+
+    ErrCode ret = iBundleMgr->DeleteDynamicShortcutInfos(bundleName, aniAppIndex, aniUserId, ids);
+    if (ret != ERR_OK) {
+        APP_LOGE("DeleteDynamicShortcutInfos failed ret:%{public}d", ret);
+        BusinessErrorAni::ThrowCommonNewError(env, CommonFunc::ConvertErrCode(ret),
+            DELETE_DYNAMIC_SHORTCUT_INFOS, PERMISSION_DYNAMIC_SHORTCUT_INFO);
+    }
+#else
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, DELETE_DYNAMIC_SHORTCUT_INFOS, "");
+#endif
+}
+
+static void SetShortcutsEnabledNative(ani_env* env, ani_object aniShortcutInfo, ani_boolean aniIsEnabled)
+{
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
+    APP_LOGD("ani SetShortcutsEnabledNative called");
+    std::vector<ShortcutInfo> shortcutInfos;
+    if (!CommonFunAni::ParseAniArray(env, aniShortcutInfo, shortcutInfos, CommonFunAni::ParseShortcutInfo)) {
+        APP_LOGE("Parse aniShortcutInfo failed");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return;
+    }
+    bool isEnabled = CommonFunAni::AniBooleanToBool(aniIsEnabled);
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ERR_APPEXECFWK_SERVICE_NOT_READY),
+            SET_SHORTCUTS_ENABLED, Constants::PERMISSION_MANAGER_SHORTCUT);
+        return;
+    }
+
+    ErrCode ret = iBundleMgr->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetShortcutsEnabled failed ret:%{public}d", ret);
+        BusinessErrorAni::ThrowCommonNewError(env, CommonFunc::ConvertErrCode(ret),
+            SET_SHORTCUTS_ENABLED, Constants::PERMISSION_MANAGER_SHORTCUT);
+    }
+#else
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_SHORTCUTS_ENABLED, "");
+#endif
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -184,6 +282,12 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(SetShortcutVisibleForSelfNative) },
         ani_native_function { "getAllShortcutInfoForSelfNative", nullptr,
             reinterpret_cast<void*>(GetAllShortcutInfoForSelfNative) },
+        ani_native_function { "addDynamicShortcutInfosNative", nullptr,
+            reinterpret_cast<void*>(AddDynamicShortcutInfosNative) },
+        ani_native_function { "deleteDynamicShortcutInfosNative", nullptr,
+            reinterpret_cast<void*>(DeleteDynamicShortcutInfosNative) },
+        ani_native_function { "setShortcutsEnabledNative", nullptr,
+            reinterpret_cast<void*>(SetShortcutsEnabledNative) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

@@ -84,6 +84,7 @@ AppServiceFwkInstaller::~AppServiceFwkInstaller()
 ErrCode AppServiceFwkInstaller::Install(
     const std::vector<std::string> &hspPaths, InstallParam &installParam)
 {
+    startTime_ = BundleUtil::GetCurrentTimeMs();
     ErrCode result = BeforeInstall(hspPaths, installParam);
     CHECK_RESULT(result, "BeforeInstall check failed %{public}d");
     result = ProcessInstall(hspPaths, installParam);
@@ -407,9 +408,8 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     CHECK_RESULT(result, "Hsp suffix check failed %{public}d");
 
     // check syscap
-    result = bundleInstallChecker_->CheckSysCap(checkedHspPaths);
-    bool isSysCapValid = (result == ERR_OK);
-    if (!isSysCapValid) {
+    ErrCode checkSysCapRes = bundleInstallChecker_->CheckSysCap(checkedHspPaths);
+    if (checkSysCapRes != ERR_OK) {
         APP_LOGI("Hsp syscap check failed %{public}d", result);
     }
 
@@ -436,8 +436,8 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     CHECK_RESULT(result, "Check hsp install condition failed %{public}d");
 
     // check device type
-    if (!isSysCapValid) {
-        result = bundleInstallChecker_->CheckDeviceType(newInfos);
+    if (checkSysCapRes != ERR_OK) {
+        result = bundleInstallChecker_->CheckDeviceType(newInfos, checkSysCapRes);
         if (result != ERR_OK) {
             APP_LOGE("Check device type failed : %{public}d", result);
             return ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR;
@@ -1009,6 +1009,8 @@ void AppServiceFwkInstaller::SendBundleSystemEvent(
     sysEventInfo.preBundleScene = preBundleScene;
     sysEventInfo.filePath = hspPaths;
     sysEventInfo.callingUid = IPCSkeleton::GetCallingUid();
+    sysEventInfo.startTime = startTime_;
+    sysEventInfo.endTime = BundleUtil::GetCurrentTimeMs();
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
 }
 

@@ -32,7 +32,7 @@ namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.test";
 const std::string MODULE_NAME = "entry";
-const int32_t WAIT_TIME = 1;
+const int32_t WAIT_TIME = 2;
 const std::string EMPTY_STRING = "";
 }  // namespace
 
@@ -388,5 +388,41 @@ HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_2000, Function | Sm
     std::string modulePackage = EMPTY_STRING;
     bool result = UninstallSystemBundle(bundleName, modulePackage);
     EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.number: ProcessSingletonChange_0100
+ * @tc.name: ProcessSingletonChange
+ * @tc.desc: test ProcessSingletonChange
+ */
+HWTEST_F(BmsSystemBundleInstallerTest, ProcessSingletonChange_0100, Function | SmallTest | Level0)
+{
+    if (!bundleMgrService_->IsServiceReady()) {
+        bundleMgrService_->OnStart();
+        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    }
+    auto installer = std::make_unique<SystemBundleInstaller>();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    EXPECT_NE(dataMgr->GetAllUser().size(), 0);
+
+    std::set<int32_t> userIdSet;
+    installer->ProcessSingletonChange("com.test.name", userIdSet);
+    EXPECT_EQ(userIdSet.size(), dataMgr->GetAllUser().size());
+
+    userIdSet.clear();
+    userIdSet.insert(100);
+    installer->ProcessSingletonChange("com.test.name", userIdSet);
+    EXPECT_EQ(userIdSet.size(), 1);
+
+    userIdSet.clear();
+    userIdSet.insert(100);
+    installer->ProcessSingletonChange("com.ohos.sceneboard", userIdSet);
+    EXPECT_EQ(userIdSet.size(), 2);
+
+    userIdSet.clear();
+    userIdSet.insert(0);
+    installer->ProcessSingletonChange("com.ohos.sceneboard", userIdSet);
+    EXPECT_EQ(userIdSet.size(), dataMgr->GetAllUser().size());
 }
 } // OHOS

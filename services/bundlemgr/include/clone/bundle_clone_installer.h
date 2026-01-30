@@ -83,6 +83,7 @@ private:
     bool RecoverHapToken(int32_t userId, int32_t appIndex, Security::AccessToken::AccessTokenIDEx &accessTokenIdEx,
         const InnerBundleInfo &innerBundleInfo, const std::string &appServiceCapabilities);
     bool DeleteUninstallCloneBundleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
+    void StopRelable(const InnerBundleInfo &info, int32_t uid);
 
     int32_t uid_ = 0;
     uint32_t accessTokenId_ = 0;
@@ -92,6 +93,7 @@ private:
     std::string appIdentifier_;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     bool isKeepData_ = false;
+    int64_t startTime_ = 0;
     bool existBeforeKeepDataApp_ = false;
 };
 } // AppExecFwk

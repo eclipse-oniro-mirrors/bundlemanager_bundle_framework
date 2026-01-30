@@ -24,14 +24,20 @@ namespace OHOS {
 namespace AppExecFwk {
 class CriticalManager {
 public:
-    CriticalManager();
-    ~CriticalManager() = default;
+    CriticalManager(const CriticalManager&) = delete;
+    CriticalManager& operator=(const CriticalManager&) = delete;
+    CriticalManager(CriticalManager&&) = delete;
+    CriticalManager& operator=(CriticalManager&&) = delete;
 
+    static CriticalManager& GetInstance();
     void SetMemMgrStatus(bool started);
     bool IsCritical();
     void BeforeRequest();
     void AfterRequest();
 private:
+    CriticalManager();
+    ~CriticalManager() = default;
+
     std::shared_ptr<SingleDelayedTaskMgr> delayedTaskMgr_ = nullptr;
     static std::mutex mutex_;
     inline static int32_t counter_ = 0;

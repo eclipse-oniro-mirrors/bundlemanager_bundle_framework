@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,7 +51,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
+constexpr int32_t MAX_SHORTCUT_INFO_SIZE = 100;
+constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // allow max 1GB resource size
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
 constexpr int64_t GET_BUNDLE_FOR_SELF_CACHE_TIME = 800; // 800ms
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
@@ -73,7 +74,7 @@ bool GetData(void *&buffer, size_t size, const void *data)
         APP_LOGE("GetData failed due to null data");
         return false;
     }
-    if (size == 0 || size > MAX_PARCEL_CAPACITY) {
+    if (size == 0 || size > Constants::MAX_PARCEL_CAPACITY) {
         APP_LOGE("GetData failed due to zero size");
         return false;
     }
@@ -297,7 +298,7 @@ bool BundleMgrProxy::GetBundleInfo(
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfo due to params empty");
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfo -n empty");
         return false;
     }
 
@@ -329,7 +330,7 @@ bool BundleMgrProxy::GetBundleInfo(
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfo due to params empty");
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfo -n empty");
         return false;
     }
 
@@ -392,6 +393,49 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
     if (res != ERR_OK) {
         LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoV9 fail -n %{public}s -u %{public}d -f %{public}d error: %{public}d",
             bundleName.c_str(), userId, flags, res);
+        return res;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::GetBundleInfoForException(
+    const std::string &bundleName,
+    int32_t userId, uint32_t catchSoNum, uint64_t catchSoMaxSize, BundleInfoForException &bundleInfoForException)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY, "begin to get bundle info of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        LOG_D(BMS_TAG_QUERY, "GetBundleInfoForException fail bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(catchSoNum)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write catchSoNum fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint64(catchSoMaxSize)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write catchSoMaxSize fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto res = GetParcelInfoIntelligent<BundleInfoForException>(
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_EXCEPTION, data, bundleInfoForException);
+    if (res != ERR_OK) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoForException fail -n %{public}s -u %{public}d error: %{public}d",
+            bundleName.c_str(), userId, res);
         return res;
     }
     return ERR_OK;
@@ -798,7 +842,7 @@ int BundleMgrProxy::GetUidByDebugBundleName(const std::string &bundleName, const
 std::string BundleMgrProxy::GetAppIdByBundleName(const std::string &bundleName, const int userId)
 {
     if (bundleName.empty()) {
-        APP_LOGE("failed to GetAppIdByBundleName due to bundleName empty");
+        APP_LOGE_NOFUNC("GetAppIdByBundleName -n empty");
         return Constants::EMPTY_STRING;
     }
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -1721,7 +1765,8 @@ bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleI
         return false;
     }
 
-    if (!GetParcelableInfo<HapModuleInfo>(BundleMgrInterfaceCode::GET_HAP_MODULE_INFO, data, hapModuleInfo)) {
+    if (GetParcelInfoIntelligent<HapModuleInfo>(
+        BundleMgrInterfaceCode::GET_HAP_MODULE_INFO, data, hapModuleInfo)!= ERR_OK) {
         APP_LOGE("fail to GetHapModuleInfo from server");
         return false;
     }
@@ -1751,15 +1796,16 @@ bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t us
         return false;
     }
 
-    if (!GetParcelableInfo<HapModuleInfo>(
-        BundleMgrInterfaceCode::GET_HAP_MODULE_INFO_WITH_USERID, data, hapModuleInfo)) {
-        APP_LOGE_NOFUNC("fail to GetHapModuleInfo from server");
+    if (GetParcelInfoIntelligent<HapModuleInfo>(
+        BundleMgrInterfaceCode::GET_HAP_MODULE_INFO_WITH_USERID, data, hapModuleInfo)!= ERR_OK) {
+        APP_LOGE("fail to GetHapModuleInfo from server");
         return false;
     }
     return true;
 }
 
-ErrCode BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Want &want, int32_t userId)
+ErrCode BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Want &want, int32_t userId,
+    bool isSync)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetLaunchWantForBundle of %{public}s", bundleName.c_str());
@@ -1784,6 +1830,10 @@ ErrCode BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Wa
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
+    if (!data.WriteBool(isSync)) {
+        APP_LOGE_NOFUNC("fail to GetLaunchWantForBundle due to write isSync fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return GetParcelableInfoWithErrCode<Want>(
         BundleMgrInterfaceCode::GET_LAUNCH_WANT_FOR_BUNDLE, data, want);
 }
@@ -1831,6 +1881,44 @@ ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     return reply.ReadInt32();
+}
+
+ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize, CleanType cleanType,
+    std::optional<uint64_t>& cleanedSize)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+
+    if (cacheSize == 0) {
+        APP_LOGE_NOFUNC("parameter error, cache size must be greater than 0");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("fail to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint64(cacheSize)) {
+        APP_LOGE_NOFUNC("fail to write cache size fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt8(static_cast<int8_t>(cleanType))) {
+        APP_LOGE_NOFUNC("fail to write clean type fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::AUTO_CLEAN_CACHE_BY_INODE, data, reply)) {
+        APP_LOGE_NOFUNC("fail from CBCFA server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+
+    ErrCode result = reply.ReadInt32();
+    bool hasValue = reply.ReadBool();
+    if (hasValue) {
+        cleanedSize = reply.ReadUint64();
+    }
+    return result;
 }
 
 ErrCode BundleMgrProxy::CleanBundleCacheFiles(
@@ -2574,7 +2662,7 @@ ErrCode BundleMgrProxy::SetAbilityFileTypesForSelf(const std::string &moduleName
         return ret;
     }
     MessageParcel data;
-    (void)data.SetMaxCapacity(Constants::CAPACITY_SIZE);
+    (void)data.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write InterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -3412,7 +3500,7 @@ bool BundleMgrProxy::ObtainCallingBundleName(std::string &bundleName)
 bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userId,
     std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag)
 {
-    APP_LOGI("begin %{public}s", bundleName.c_str());
+    APP_LOGI_NOFUNC("GetBundleStats -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -4056,6 +4144,22 @@ ErrCode BundleMgrProxy::GetAppProvisionInfo(const std::string &bundleName, int32
     }
     return GetParcelableInfoWithErrCode<AppProvisionInfo>(BundleMgrInterfaceCode::GET_APP_PROVISION_INFO,
         data, appProvisionInfo);
+}
+
+ErrCode BundleMgrProxy::GetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAllAppProvisionInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetAllAppProvisionInfo due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<AppProvisionInfo>(BundleMgrInterfaceCode::GET_ALL_APP_PROVISION_INFO,
+        data, appProvisionInfos);
 }
 
 ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,
@@ -5327,6 +5431,40 @@ ErrCode BundleMgrProxy::WriteParcelInfoIntelligent(const T &parcelInfo, MessageP
     return ERR_OK;
 }
 
+template<typename T>
+ErrCode BundleMgrProxy::WriteVectorToParcel(const std::vector<T> &parcelVector, MessageParcel &reply)
+{
+    MessageParcel tempParcel;
+    (void)tempParcel.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
+    if (!tempParcel.WriteInt32(static_cast<int32_t>(parcelVector.size()))) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    for (auto &parcel : parcelVector) {
+        if (!tempParcel.WriteParcelable(&parcel)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    size_t dataSize = tempParcel.GetDataSize();
+    if (!reply.WriteUint32(dataSize)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (dataSize > MAX_IPC_REWDATA_SIZE) {
+        APP_LOGE("datasize is too large");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (!reply.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
+        APP_LOGE("write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result)
 {
     MessageParcel reply;
@@ -6332,7 +6470,7 @@ ErrCode BundleMgrProxy::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> 
         BundleMgrInterfaceCode::GET_ALL_BUNDLE_DIRS, data, bundleDirs);
 }
 
-ErrCode BundleMgrProxy::RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+ErrCode BundleMgrProxy::RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin");
@@ -6360,7 +6498,7 @@ ErrCode BundleMgrProxy::RegisterPluginEventCallback(const sptr<IBundleEventCallb
     return reply.ReadInt32();
 }
 
-ErrCode BundleMgrProxy::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+ErrCode BundleMgrProxy::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin");
@@ -6407,7 +6545,7 @@ ErrCode BundleMgrProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void *&dat
         APP_LOGE("ashDataPtr is nullptr");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY)) {
+    if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY_OF_ASHMEM)) {
         APP_LOGE("failed due to wrong size");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -6569,6 +6707,101 @@ ErrCode BundleMgrProxy::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &sho
     }
     return GetVectorFromParcelIntelligentWithErrCode<ShortcutInfo>(
         BundleMgrInterfaceCode::GET_ALL_SHORTCUT_INFO_FOR_SELF, data, shortcutInfos);
+}
+
+ErrCode BundleMgrProxy::AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (shortcutInfos.empty() || shortcutInfos.size() > MAX_SHORTCUT_INFO_SIZE) {
+        APP_LOGE("AddDynamicShortcutInfos shortcutInfos size invalid");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("AddDynamicShortcutInfos write InterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = WriteVectorToParcel(shortcutInfos, data);
+    if (ret != ERR_OK) {
+        APP_LOGE("AddDynamicShortcutInfos write shortcutInfos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("AddDynamicShortcutInfos write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::ADD_DYNAMIC_SHORTCUT_INFOS, data, reply)) {
+        APP_LOGE("fail to AddDynamicShortcutInfos from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode BundleMgrProxy::DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const std::vector<std::string> &ids)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("DeleteDynamicShortcutInfos write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("DeleteDynamicShortcutInfos write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("DeleteDynamicShortcutInfos write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("DeleteDynamicShortcutInfos write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ids.size() > MAX_SHORTCUT_INFO_SIZE) {
+        APP_LOGE("DeleteDynamicShortcutInfos ids size invalid");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (!data.WriteStringVector(ids)) {
+        APP_LOGE("DeleteDynamicShortcutInfos write ids fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::DELETE_DYNAMIC_SHORTCUT_INFOS, data, reply)) {
+        APP_LOGE("fail to DeleteDynamicShortcutInfos from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode BundleMgrProxy::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (shortcutInfos.empty() || shortcutInfos.size() > MAX_SHORTCUT_INFO_SIZE) {
+        APP_LOGE("SetShortcutsEnabled shortcutInfos size invalid");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("SetShortcutsEnabled write InterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = WriteVectorToParcel(shortcutInfos, data);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetShortcutsEnabled write shortcutInfos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isEnabled)) {
+        APP_LOGE("SetShortcutsEnabled write isEnabled fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_SHORTCUTS_ENABLED, data, reply)) {
+        APP_LOGE("fail to SetShortcutsEnabled from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
 }
 
 bool BundleMgrProxy::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
@@ -6749,40 +6982,6 @@ ErrCode BundleMgrProxy::RemoveBackupBundleData(const std::string &bundleName,
     }
     return reply.ReadInt32();
 }
- 
-ErrCode BundleMgrProxy::BatchGetCompatibleDeviceType(
-    const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    APP_LOGD("begin to batch get specified distributionType, bundle name count=%{public}u",
-        static_cast<unsigned int>(bundleNames.size()));
-    if (bundleNames.empty()) {
-        APP_LOGE("fail to BatchGetCompatibleDeviceType due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-    if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
-        APP_LOGE("fail to BatchGetCompatibleDeviceType due to bundleName count is error");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to BatchGetCompatibleDeviceType due to write InterfaceToken fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteInt32(static_cast<int32_t>(bundleNames.size()))) {
-        APP_LOGE("fail to BatchGetCompatibleDeviceType due to write bundle name count fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    for (size_t i = 0; i < bundleNames.size(); i++) {
-        if (!data.WriteString(bundleNames[i])) {
-            APP_LOGE("write bundleName %{public}zu failed", i);
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-    }
- 
-    return GetParcelableInfosWithErrCode(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE,
-        data, compatibleDeviceTypes);
-}
 
 ErrCode BundleMgrProxy::CreateNewBundleEl5Dir(int32_t userId)
 {
@@ -6803,6 +7002,141 @@ ErrCode BundleMgrProxy::CreateNewBundleEl5Dir(int32_t userId)
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     return reply.ReadInt32();
+}
+
+ErrCode BundleMgrProxy::GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
+    BundleInstallStatus &bundleInstallStatus)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("Write bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetBundleInstallStatus due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_INSTALL_STATUS, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        bundleInstallStatus = static_cast<BundleInstallStatus>(reply.ReadUint8());
+    }
+    return ret;
+}
+
+ErrCode BundleMgrProxy::GetAllJsonProfile(ProfileType profileType, int32_t userId,
+    std::vector<JsonProfileInfo> &profileInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(profileType))) {
+        APP_LOGE("Write profile type fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write user id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<JsonProfileInfo>(
+        BundleMgrInterfaceCode::GET_ALL_JSON_PROFILE, data, profileInfos);
+}
+
+ErrCode BundleMgrProxy::GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo &assetGroupInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGI("begin to GetAssetGroupsInfo of %{public}d", uid);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAssetGroupsInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!data.WriteInt32(uid)) {
+        APP_LOGE("fail to GetAssetGroupsInfo due to write uid fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto res = GetParcelInfoIntelligent<AssetGroupInfo>(
+        BundleMgrInterfaceCode::GET_ASSET_GROUPS_INFOS_BY_UID, data, assetGroupInfo);
+    if (res != ERR_OK) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetAssetGroupsInfo fail -u %{public}d error: %{public}d",
+            uid, res);
+        return res;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::BatchGetCompatibleDeviceType(
+    const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to batch get specified distributionType, bundle name count=%{public}u",
+        static_cast<unsigned int>(bundleNames.size()));
+    if (bundleNames.empty()) {
+        APP_LOGE("fail to BatchGetCompatibleDeviceType due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("fail to BatchGetCompatibleDeviceType due to bundleName count is error");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to BatchGetCompatibleDeviceType due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(bundleNames.size()))) {
+        APP_LOGE("fail to BatchGetCompatibleDeviceType due to write bundle name count fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (size_t i = 0; i < bundleNames.size(); i++) {
+        if (!data.WriteString(bundleNames[i])) {
+            APP_LOGE("write bundleName %{public}zu failed", i);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    return GetVectorFromParcelIntelligentWithErrCode(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE,
+        data, compatibleDeviceTypes);
+}
+
+ErrCode BundleMgrProxy::GetPluginExtensionInfo(const std::string &hostBundleName,
+    const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetPluginExtensionInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(hostBundleName)) {
+        APP_LOGE("Write host bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("Write want fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<ExtensionAbilityInfo>(
+        BundleMgrInterfaceCode::GET_PLUGIN_EXTENSION_INFO, data, extensionInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

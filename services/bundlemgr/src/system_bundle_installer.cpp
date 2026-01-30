@@ -121,13 +121,7 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
             userIdSet.insert(Constants::START_USERID);
         }
     }
-    if (userIdSet.empty() || (userIdSet.find(Constants::DEFAULT_USERID) != userIdSet.end())) {
-        // for singleton hap or no user
-        userIdSet = dataMgr->GetAllUser();
-    } else {
-        // for non-singleton hap
-        userIdSet.insert(Constants::DEFAULT_USERID);
-    }
+    ProcessSingletonChange(bundleName, userIdSet);
     ErrCode result = ERR_OK;
     for (auto userId : userIdSet) {
         APP_LOGI_NOFUNC("start ota install -n %{public}s -u %{public}d", bundleName.c_str(), userId);
@@ -138,7 +132,9 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
         if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
             APP_LOGE("install system bundle %{public}s fail err %{public}d", bundleName.c_str(), errCode);
             result = errCode;
-            BmsKeyEventMgr::ProcessMainBundleInstallFailed(bundleName, result);
+            if (!installParam.isPatch) {
+                BmsKeyEventMgr::ProcessMainBundleInstallFailed(bundleName, result);
+            }
         }
         ResetInstallProperties();
     }
@@ -337,6 +333,28 @@ void SystemBundleInstaller::CheckUninstallSystemHsp(const std::string &bundleNam
         PreInstallBundleInfo preInstallBundleInfo;
         if ((dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo))) {
             dataMgr->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+        }
+    }
+}
+
+void SystemBundleInstaller::ProcessSingletonChange(const std::string &bundleName, std::set<int32_t> &userIdSet)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+    if (userIdSet.empty()) {
+        // for no user
+        userIdSet = dataMgr->GetAllUser();
+    } else if (ServiceConstants::SINGLETON_WHITE_LIST.find(bundleName) !=
+        ServiceConstants::SINGLETON_WHITE_LIST.end()) {
+        if (userIdSet.find(Constants::DEFAULT_USERID) != userIdSet.end()) {
+            // for singleton hap change to non-singleton hap
+            userIdSet = dataMgr->GetAllUser();
+        } else {
+            // for non-singleton hap change to singleton hap
+            userIdSet.insert(Constants::DEFAULT_USERID);
         }
     }
 }

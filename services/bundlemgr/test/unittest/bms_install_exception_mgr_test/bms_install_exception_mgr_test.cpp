@@ -16,10 +16,12 @@
 #include <gtest/gtest.h>
 
 #define private public
-#include "bundle_service_constants.h"
 #include "bundle_constants.h"
+#include "bundle_mgr_service.h"
+#include "bundle_service_constants.h"
 #include "directory_ex.h"
 #include "install_exception_mgr.h"
+#include "installd/installd_service.h"
 #include "installd_client.h"
 #include "nlohmann/json.hpp"
 
@@ -32,6 +34,10 @@ const std::string BUNDLE_NAME = "com.example.myapplication";
 const std::string OLD_BUNDLE_DIR_NAME = "/data/app/el1/bundle/public/+old-com.example.myapplication";
 const std::string NEW_BUNDLE_DIR_NAME = "/data/app/el1/bundle/public/+new-com.example.myapplication";
 const std::string REAL_BUNDLE_DIR_NAME = "/data/app/el1/bundle/public/com.example.myapplication";
+const std::string TEMP_BUNDLE_DIR_NAME = "/data/app/el1/bundle/public/+temp-com.example.myapplication";
+const std::string OLD_BUNDLE_DIR_NAME_EMPTY = "/data/app/el1/bundle/public/+old-";
+const int32_t USERID = 100;
+const int32_t WAIT_TIME = 2; // init mocked bms
 }  // namespace
 
 class BmsInstallExceptionMgrTest : public testing::Test {
@@ -42,16 +48,34 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+private:
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsInstallExceptionMgrTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsInstallExceptionMgrTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 void BmsInstallExceptionMgrTest::SetUpTestCase()
 {}
 
 void BmsInstallExceptionMgrTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+}
 
 void BmsInstallExceptionMgrTest::SetUp()
-{}
+{
+    installdService_->Start();
+    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsServiceReady()) {
+        DelayedSingleton<BundleMgrService>::GetInstance()->OnStart();
+        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    }
+}
 
 void BmsInstallExceptionMgrTest::TearDown()
 {}
@@ -221,10 +245,13 @@ HWTEST_F(BmsInstallExceptionMgrTest, installExceptionMgrTest_0008, TestSize.Leve
     EXPECT_TRUE(ans);
     ans = OHOS::ForceCreateDirectory(NEW_BUNDLE_DIR_NAME);
     EXPECT_TRUE(ans);
+    ans = OHOS::ForceCreateDirectory(TEMP_BUNDLE_DIR_NAME);
+    EXPECT_TRUE(ans);
     mgr->HandleAllBundleExceptionInfo();
     (void)OHOS::ForceRemoveDirectory(REAL_BUNDLE_DIR_NAME);
     (void)OHOS::ForceRemoveDirectory(NEW_BUNDLE_DIR_NAME);
     (void)OHOS::ForceRemoveDirectory(OLD_BUNDLE_DIR_NAME);
+    (void)OHOS::ForceRemoveDirectory(TEMP_BUNDLE_DIR_NAME);
 
     info.status = InstallRenameExceptionStatus::DELETE_OLD_PATH;
     ret = mgr->SaveBundleExceptionInfo(BUNDLE_NAME, info);
@@ -237,6 +264,80 @@ HWTEST_F(BmsInstallExceptionMgrTest, installExceptionMgrTest_0008, TestSize.Leve
 
     ret = mgr->DeleteBundleExceptionInfo(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: installExceptionMgrTest_0009
+ * @tc.name: installExceptionMgrTest
+ * @tc.desc: test installExceptionMgrTest
+ */
+HWTEST_F(BmsInstallExceptionMgrTest, installExceptionMgrTest_0009, TestSize.Level1)
+{
+    auto mgr = DelayedSingleton<InstallExceptionMgr>::GetInstance();
+    ASSERT_NE(mgr, nullptr);
+    ASSERT_NE(mgr->installExceptionMgr_, nullptr);
+    InstallExceptionInfo info;
+    info.status = InstallRenameExceptionStatus::UNKOWN_STATUS;
+    auto ret = mgr->SaveBundleExceptionInfo(BUNDLE_NAME, info);
+    EXPECT_EQ(ret, ERR_OK);
+    bool ans = OHOS::ForceCreateDirectory(OLD_BUNDLE_DIR_NAME);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceCreateDirectory(OLD_BUNDLE_DIR_NAME_EMPTY);
+    EXPECT_TRUE(ans);
+    mgr->HandleAllBundleExceptionInfo();
+    auto exist = access(OLD_BUNDLE_DIR_NAME.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+    exist = access(OLD_BUNDLE_DIR_NAME_EMPTY.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+    ret = mgr->DeleteBundleExceptionInfo(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK);
+
+    (void)OHOS::ForceRemoveDirectory(OLD_BUNDLE_DIR_NAME);
+    (void)OHOS::ForceRemoveDirectory(OLD_BUNDLE_DIR_NAME_EMPTY);
+}
+
+/**
+ * @tc.number: installExceptionMgrTest_0010
+ * @tc.name: installExceptionMgrTest
+ * @tc.desc: test installExceptionMgrTest
+ */
+HWTEST_F(BmsInstallExceptionMgrTest, installExceptionMgrTest_0010, TestSize.Level1)
+{
+    auto mgr = DelayedSingleton<InstallExceptionMgr>::GetInstance();
+    ASSERT_NE(mgr, nullptr);
+    ASSERT_NE(mgr->installExceptionMgr_, nullptr);
+    bool ans = OHOS::ForceCreateDirectory(OLD_BUNDLE_DIR_NAME);
+    EXPECT_TRUE(ans);
+    mgr->HandleAllBundleExceptionInfo();
+    auto exist = access(REAL_BUNDLE_DIR_NAME.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+    exist = access(OLD_BUNDLE_DIR_NAME.c_str(), F_OK);
+    EXPECT_NE(exist, 0);
+    (void)OHOS::ForceRemoveDirectory(OLD_BUNDLE_DIR_NAME);
+    (void)OHOS::ForceRemoveDirectory(REAL_BUNDLE_DIR_NAME);
+}
+
+/**
+ * @tc.number: installExceptionMgrTest_0011
+ * @tc.name: installExceptionMgrTest
+ * @tc.desc: test installExceptionMgrTest
+ */
+HWTEST_F(BmsInstallExceptionMgrTest, installExceptionMgrTest_0011, TestSize.Level1)
+{
+    auto mgr = DelayedSingleton<InstallExceptionMgr>::GetInstance();
+    ASSERT_NE(mgr, nullptr);
+    ASSERT_NE(mgr->installExceptionMgr_, nullptr);
+    bool ans = OHOS::ForceCreateDirectory(OLD_BUNDLE_DIR_NAME);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceCreateDirectory(REAL_BUNDLE_DIR_NAME);
+    EXPECT_TRUE(ans);
+    mgr->HandleAllBundleExceptionInfo();
+    auto exist = access(REAL_BUNDLE_DIR_NAME.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+    exist = access(OLD_BUNDLE_DIR_NAME.c_str(), F_OK);
+    EXPECT_NE(exist, 0);
+    (void)OHOS::ForceRemoveDirectory(OLD_BUNDLE_DIR_NAME);
+    (void)OHOS::ForceRemoveDirectory(REAL_BUNDLE_DIR_NAME);
 }
 } //AppExecFwk
 } // OHOS

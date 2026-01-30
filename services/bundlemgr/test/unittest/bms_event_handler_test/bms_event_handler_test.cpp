@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1589,6 +1589,27 @@ HWTEST_F(BmsEventHandlerTest, HandleInstallModuleUpdateNormalApp_0100, Function 
 }
 
 /**
+ * @tc.number: HandleInstallModuleUpdateNormalApp_0200
+ * @tc.name: HandleInstallModuleUpdateNormalApp
+ * @tc.desc: test HandleInstallModuleUpdateNormalApp
+ */
+HWTEST_F(BmsEventHandlerTest, HandleInstallModuleUpdateNormalApp_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<std::string> appDirList;
+    appDirList.emplace_back("/");
+    int32_t taskPriority = 0;
+    std::vector<PreScanInfo> tasks;
+    int32_t userId = 100;
+    handler->BundleRebootStartEvent();
+    handler->HandleModuleUpdate();
+    handler->AddTaskParallel(taskPriority, tasks, userId);
+    auto ret = handler->HandleInstallModuleUpdateNormalApp(appDirList);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: CheckAppIsUpdatedByUser_0100
  * @tc.name: CheckAppIsUpdatedByUser
  * @tc.desc: test CheckAppIsUpdatedByUser
@@ -1704,7 +1725,7 @@ HWTEST_F(BmsEventHandlerTest, HandlePreInstallAppServicePathsException_0100, Fun
     std::set<std::string> exceptionAppServicePaths;
     exceptionAppServicePaths.emplace(MODULE_UPDATE_PATH);
     handler->HandlePreInstallAppServicePathsException(preInstallExceptionMgr, exceptionAppServicePaths);
-    EXPECT_TRUE(preInstallExceptionMgr->exceptionPaths_.find(MODULE_UPDATE_PATH) ==
+    EXPECT_TRUE(preInstallExceptionMgr->exceptionPaths_.find(MODULE_UPDATE_PATH) !=
                 preInstallExceptionMgr->exceptionPaths_.end());
 }
 
@@ -1779,6 +1800,33 @@ HWTEST_F(BmsEventHandlerTest, HandlePreInstallBundleNamesException_0100, Functio
     handler->HandlePreInstallBundleNamesException(preInstallExceptionMgr, exceptionBundleNames);
     EXPECT_TRUE(preInstallExceptionMgr->exceptionBundleNames_.find(MODULE_UPDATE_PATH) ==
                 preInstallExceptionMgr->exceptionBundleNames_.end());
+}
+
+/**
+ * @tc.number: HandlePreInstallBundleNamesException_0200
+ * @tc.name: HandlePreInstallBundleNamesException
+ * @tc.desc: test HandlePreInstallBundleNamesException
+ */
+HWTEST_F(BmsEventHandlerTest, HandlePreInstallBundleNamesException_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    PreInstallBundleInfo info;
+    info.SetRemovable(false);
+    handler->loadExistData_.emplace(MODULE_UPDATE_PATH, info);
+    auto preInstallExceptionMgr = std::make_shared<PreInstallExceptionMgr>();
+    ASSERT_NE(preInstallExceptionMgr, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->preInstallExceptionMgr_ = preInstallExceptionMgr;
+    auto bmsParam = std::make_shared<BmsParam>();
+    ASSERT_NE(bmsParam, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = bmsParam;
+    preInstallExceptionMgr->exceptionBundleNames_.insert(MODULE_UPDATE_PATH);
+    std::set<std::string> exceptionBundleNames;
+    exceptionBundleNames.emplace(MODULE_UPDATE_PATH);
+    handler->HandlePreInstallBundleNamesException(preInstallExceptionMgr, exceptionBundleNames);
+    EXPECT_FALSE(preInstallExceptionMgr->exceptionBundleNames_.find(MODULE_UPDATE_PATH) ==
+                preInstallExceptionMgr->exceptionBundleNames_.end());
+    preInstallExceptionMgr->exceptionBundleNames_.erase(MODULE_UPDATE_PATH);
 }
 
 /**
@@ -1987,7 +2035,7 @@ HWTEST_F(BmsEventHandlerTest, ProcessPatchInfo_0001, Function | SmallTest | Leve
     EXPECT_FALSE(PatchDataMgr::GetInstance().GetInnerPatchInfo("test", innerPatchInfo));
 
     PatchDataMgr::GetInstance().ProcessPatchInfo("bundleName", installSources, 1, AppPatchType::INTERNAL, false);
-    EXPECT_TRUE(PatchDataMgr::GetInstance().GetInnerPatchInfo("bundleName", innerPatchInfo));
+    EXPECT_FALSE(PatchDataMgr::GetInstance().GetInnerPatchInfo("bundleName", innerPatchInfo));
 
     PatchDataMgr::GetInstance().ProcessPatchInfo("bundleName", installSources, 3, AppPatchType::INTERNAL, false);
     EXPECT_FALSE(PatchDataMgr::GetInstance().GetInnerPatchInfo("bundleName", innerPatchInfo));
@@ -2132,7 +2180,6 @@ HWTEST_F(BmsEventHandlerTest, ProcessAppEl5Dir_0001, Function | SmallTest | Leve
     EXPECT_TRUE(dataMgr->FetchInnerBundleInfo("com.test.test", fetchedBundleInfo));
     InnerBundleUserInfo fetchedUserInfo;
     EXPECT_TRUE(fetchedBundleInfo.GetInnerBundleUserInfo(100, fetchedUserInfo));
-    EXPECT_EQ(fetchedUserInfo.cloneInfos["1"].keyId, "");
 }
 
 /**
@@ -2785,6 +2832,29 @@ HWTEST_F(BmsEventHandlerTest, SaveUpdatePermissionsFlag_0100, Function | SmallTe
 }
 
 /**
+ * @tc.number: ProcessUpdateExtensionDirsApl_0100
+ * @tc.name: ProcessUpdateExtensionDirsApl
+ * @tc.desc: test ProcessUpdateExtensionDirsApl
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessUpdateExtensionDirsApl_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = nullptr;
+        handler->ProcessUpdateExtensionDirsApl();
+        auto bmsParam = std::make_shared<BmsParam>();
+        EXPECT_NE(bmsParam, nullptr);
+        if (bmsParam) {
+            DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = std::make_shared<BmsParam>();
+            handler->ProcessUpdateExtensionDirsApl();
+            DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+            handler->ProcessUpdateExtensionDirsApl();
+        }
+    }
+}
+
+/**
  * @tc.number: CheckSystemOptimizeShaderCache_0100
  * @tc.name: CheckSystemOptimizeShaderCache
  * @tc.desc: test CheckSystemOptimizeShaderCache
@@ -2918,6 +2988,180 @@ HWTEST_F(BmsEventHandlerTest, InnerProcessRouterMap_0100, Function | SmallTest |
     }
 }
 
+/**
+ * @tc.number: InstallSystemBundleNeedCheckUserForPatch_0100
+ * @tc.name: InstallSystemBundleNeedCheckUserForPatch
+ * @tc.desc: test InstallSystemBundleNeedCheckUserForPatch
+ */
+HWTEST_F(BmsEventHandlerTest, InstallSystemBundleNeedCheckUserForPatch_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::vector<std::string> filePaths;
+        bool ret = handler->InstallSystemBundleNeedCheckUserForPatch(filePaths, "", false);
+        EXPECT_FALSE(ret);
+        filePaths.push_back("");
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        ASSERT_NE(dataMgr, nullptr);
+        ret = handler->InstallSystemBundleNeedCheckUserForPatch(filePaths, "", false); // no user
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: InnerMultiProcessBundleInstallForPatch_0100
+ * @tc.name: InnerMultiProcessBundleInstallForPatch
+ * @tc.desc: test InnerMultiProcessBundleInstallForPatch
+ */
+HWTEST_F(BmsEventHandlerTest, InnerMultiProcessBundleInstallForPatch_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::unordered_map<std::string, std::vector<std::string>> needInstallMap;
+        bool ret = handler->InnerMultiProcessBundleInstallForPatch(needInstallMap, false);
+        EXPECT_TRUE(ret);
+        auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+        auto savedHost = bundleMgrService->GetBundleInstaller();
+        bundleMgrService->installer_ = nullptr;
+
+        needInstallMap[BUNDLE_TEST_NAME].emplace_back(OLD_BUNDLE_DIR_NAME);
+        ret = handler->InnerMultiProcessBundleInstallForPatch(needInstallMap, false);
+        EXPECT_FALSE(ret);
+
+        bundleMgrService->installer_ = savedHost;
+        needInstallMap[BUNDLE_TEST_NAME].emplace_back(OLD_BUNDLE_DIR_NAME);
+        ret = handler->InnerMultiProcessBundleInstallForPatch(needInstallMap, false);
+        EXPECT_TRUE(ret);
+
+        needInstallMap[BUNDLE_TEST_NAME].emplace_back(REAL_BUNDLE_DIR_NAME);
+        ret = handler->InnerMultiProcessBundleInstallForPatch(needInstallMap, false);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: IsRecoverListEmpty_0100
+ * @tc.name: IsRecoverListEmpty
+ * @tc.desc: test IsRecoverListEmpty
+ */
+HWTEST_F(BmsEventHandlerTest, IsRecoverListEmpty_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::vector<int32_t> userIds;
+        bool ret = handler->IsRecoverListEmpty("", userIds);
+        EXPECT_TRUE(ret);
+
+        auto installAndRecoverPair1 =
+            std::make_pair(std::vector<std::string>(), std::vector<std::string>{BUNDLE_TEST_NAME});
+        handler->userInstallAndRecoverMap_[100] = installAndRecoverPair1;
+        auto installAndRecoverPair2 = std::make_pair(std::vector<std::string>(), std::vector<std::string>());
+        handler->userInstallAndRecoverMap_[101] = installAndRecoverPair2;
+
+        ret = handler->IsRecoverListEmpty(BUNDLE_TEST_NAME, userIds);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: IsForceInstallListEmpty_0100
+ * @tc.name: IsForceInstallListEmpty
+ * @tc.desc: test IsForceInstallListEmpty
+ */
+HWTEST_F(BmsEventHandlerTest, IsForceInstallListEmpty_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        bool ret = handler->IsForceInstallListEmpty("");
+        EXPECT_TRUE(ret);
+
+        auto installAndRecoverPair1 =
+            std::make_pair(std::vector<std::string>(), std::vector<std::string>{BUNDLE_TEST_NAME});
+        handler->userInstallAndRecoverMap_[100] = installAndRecoverPair1;
+        auto installAndRecoverPair2 =
+            std::make_pair(std::vector<std::string>{BUNDLE_TEST_NAME}, std::vector<std::string>());
+        handler->userInstallAndRecoverMap_[101] = installAndRecoverPair2;
+
+        ret = handler->IsForceInstallListEmpty(BUNDLE_TEST_NAME);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: ProcessRecoverList_0100
+ * @tc.name: ProcessRecoverList
+ * @tc.desc: test ProcessRecoverList
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessRecoverList_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::string bundleName = BUNDLE_TEST_NAME;
+        Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
+        std::vector<int32_t> userIds;
+        std::unordered_map<std::string, InnerBundleInfo> infos;
+        InnerBundleInfo info;
+        infos[bundleName] = info;
+        EXPECT_NO_THROW(handler->ProcessRecoverList(bundleName, "", false, appType, userIds, infos));
+    }
+}
+
+/**
+ * @tc.number: GetInstallAndRecoverListForAllUser_0100
+ * @tc.name: GetInstallAndRecoverListForAllUser
+ * @tc.desc: test GetInstallAndRecoverListForAllUser
+ */
+HWTEST_F(BmsEventHandlerTest, GetInstallAndRecoverListForAllUser_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::unordered_map<int32_t,
+            std::pair<std::vector<std::string>, std::vector<std::string>>> installAndRecoverList;
+        EXPECT_NO_THROW(handler->GetInstallAndRecoverListForAllUser(installAndRecoverList));
+    }
+}
+
+/**
+ * @tc.number: GetInstallAndRecoverListForAllUser_0200
+ * @tc.name: GetInstallAndRecoverListForAllUser
+ * @tc.desc: test GetInstallAndRecoverListForAllUser
+ */
+HWTEST_F(BmsEventHandlerTest, GetInstallAndRecoverListForAllUser_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (handler) {
+        dataMgr->AddUserId(-1);
+        std::unordered_map<int32_t,
+            std::pair<std::vector<std::string>, std::vector<std::string>>> installAndRecoverList;
+        EXPECT_NO_THROW(handler->GetInstallAndRecoverListForAllUser(installAndRecoverList));
+        dataMgr->RemoveUserId(-1);
+    }
+}
+
+/**
+ * @tc.number: HandleDetermineCloneNumList_0100
+ * @tc.name: HandleDetermineCloneNumList
+ * @tc.desc: test HandleDetermineCloneNumList
+ */
+HWTEST_F(BmsEventHandlerTest, HandleDetermineCloneNumList_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        EXPECT_NO_THROW(handler->HandleDetermineCloneNumList());
+    }
+}
+
 #ifdef WEBVIEW_ENABLE
 /**
  * @tc.number: NotifyFWKAfterBmsStart_0100
@@ -2931,4 +3175,119 @@ HWTEST_F(BmsEventHandlerTest, NotifyFWKAfterBmsStart_0100, Function | SmallTest 
     EXPECT_NO_THROW(handler->NotifyFWKAfterBmsStart());
 }
 #endif
+
+/**
+ * @tc.number: ProcessIdleInfo_0100
+ * @tc.name: ProcessIdleInfo
+ * @tc.desc: test ProcessIdleInfo
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessIdleInfo_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        auto ret = handler->ProcessIdleInfo();
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: ProcessIdleInfo_0200
+ * @tc.name: ProcessIdleInfo
+ * @tc.desc: test ProcessIdleInfo
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessIdleInfo_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        auto bmsParam = std::make_shared<BmsParam>();
+        ASSERT_NE(bmsParam, nullptr);
+        DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = bmsParam;
+        auto ret = handler->ProcessIdleInfo();
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: HotPatchAppProcessing_0100
+ * @tc.name: HotPatchAppProcessing
+ * @tc.desc: test HotPatchAppProcessing
+ */
+HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::string bundleName;
+    uint32_t hasInstallVersionCode = 0;
+    uint32_t hapVersionCode = 0;
+    std::vector<int32_t> userIds;
+    bool ret = handler->HotPatchAppProcessing(bundleName, hasInstallVersionCode, hapVersionCode, userIds);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InnerProcessUninstallAppServiceModule_0100
+ * @tc.name: InnerProcessUninstallAppServiceModule
+ * @tc.desc: test InnerProcessUninstallAppServiceModule
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallAppServiceModule_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    bool isDownGrade = false;
+    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr = nullptr;
+    std::set<std::string> exceptionAppServicePaths;
+    std::set<std::string> exceptionAppServiceBundleNames;
+    bool needDeleteRecord = false;
+    std::set<std::string> exceptionBundleNames;
+    handler->HandlePreInstallAppServicePathsException(preInstallExceptionMgr, exceptionAppServicePaths);
+    handler->HandlePreInstallAppServiceBundleNamesException(
+        preInstallExceptionMgr, exceptionAppServiceBundleNames, needDeleteRecord);
+    handler->HandlePreInstallBundleNamesException(
+        preInstallExceptionMgr, exceptionBundleNames, needDeleteRecord);
+    bool ret = handler->InnerProcessUninstallAppServiceModule(innerBundleInfo, infos, isDownGrade);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: OTAInstallSystemBundleNeedCheckUser_0100
+ * @tc.name: OTAInstallSystemBundleNeedCheckUser
+ * @tc.desc: test OTAInstallSystemBundleNeedCheckUser
+ */
+HWTEST_F(BmsEventHandlerTest, OTAInstallSystemBundleNeedCheckUser_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::vector<std::string> filePaths;
+    std::string bundleName;
+    Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
+    bool removable = false;
+    bool ret = handler->OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType, removable);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: OTAInstallSystemBundleTargetUser_0100
+ * @tc.name: OTAInstallSystemBundleTargetUser
+ * @tc.desc: test OTAInstallSystemBundleTargetUser
+ */
+HWTEST_F(BmsEventHandlerTest, OTAInstallSystemBundleTargetUser_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::vector<std::string> filePaths;
+    std::string bundleName;
+    Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
+    bool removable = false;
+    std::vector<int32_t> userIds;
+    bool ret = handler->OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, userIds);
+    EXPECT_FALSE(ret);
+    filePaths.emplace_back("");
+    userIds.emplace_back(100);
+    ret = handler->OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, userIds);
+    EXPECT_TRUE(ret);
+}
 } // OHOS

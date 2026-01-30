@@ -21,6 +21,7 @@
 #include "bundle_errors.h"
 #include "business_error.h"
 #include "common_func.h"
+#include "napi_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -93,6 +94,15 @@ napi_value ResetDefaultApplicationSync(napi_env env, napi_callback_info info)
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
         "resetDefaultApplicationSync");
+    napi_throw(env, error);
+    return nullptr;
+}
+
+napi_value SetDefaultApplicationForAppClone(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        SET_DEFAULT_APPLICATION_FOR_APP_CLONE);
     napi_throw(env, error);
     return nullptr;
 }

@@ -24,7 +24,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-constexpr const char* MEDIALIBRARYDATA = "com.ohos.medialibrary.medialibrarydata";
 ErrCode El5FilekeyCallback::OnRegenerateAppKey(std::vector<Security::AccessToken::AppKeyInfo> &infos)
 {
     APP_LOGI("el5 callback");
@@ -79,15 +78,6 @@ void El5FilekeyCallback::ProcessAppEl5Dir(const Security::AccessToken::AppKeyInf
     auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(encryptionParam, keyId);
     if (result != ERR_OK) {
         APP_LOGE("SetEncryptionPolicy failed for %{public}s", info.bundleName.c_str());
-        return;
-    }
-    // update the keyId to the bundleInfo
-    CreateDirParam param;
-    param.bundleName = info.bundleName;
-    param.userId = info.userId;
-    param.appIndex = appIndex;
-    if (!dataMgr->UpdateEl5KeyId(param, keyId)) {
-        APP_LOGE("save keyId failed");
         return;
     }
     APP_LOGI("OnRegenerateAppKey success for %{public}s", info.bundleName.c_str());
@@ -153,14 +143,8 @@ void El5FilekeyCallback::CheckEl5Dir(const Security::AccessToken::AppKeyInfo &in
 
     std::string databaseDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
         ServiceConstants::PATH_SEPARATOR + std::to_string(info.userId) + ServiceConstants::DATABASE + info.bundleName;
-    int32_t gid = info.uid;
-    if (info.bundleName == MEDIALIBRARYDATA) {
-        mode = S_IRWXU | S_IRWXG | S_ISGID;
-        gid = ServiceConstants::DATABASE_DIR_GID;
-    } else {
-        mode = S_IRWXU | S_IRWXG;
-    }
-    if (InstalldClient::GetInstance()->Mkdir(databaseDir, mode, info.uid, gid) != ERR_OK) {
+    mode = S_IRWXU | S_IRWXG;
+    if (InstalldClient::GetInstance()->Mkdir(databaseDir, mode, info.uid, info.uid) != ERR_OK) {
         APP_LOGW("create Screen Lock Protection dir %{public}s failed", databaseDir.c_str());
     }
     result = InstalldClient::GetInstance()->SetDirApl(

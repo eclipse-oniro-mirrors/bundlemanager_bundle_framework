@@ -542,21 +542,28 @@ ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputF
         LOG_E(BMS_TAG_INSTALLER, "file is not real path, file path: %{private}s", path.c_str());
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
-    int32_t inputFd = open(realPath.c_str(), O_RDONLY);
+
+    FILE *inputFp = fopen(realPath.c_str(), "r");
+    if (inputFp == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "fopen %{public}s failed, errno:%{public}d", realPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    int32_t inputFd = fileno(inputFp);
     if (inputFd < 0) {
-        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to open the hap file, errno:%{public}d", errno);
+        LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed, errno:%{public}d", realPath.c_str(), errno);
+        (void)fclose(inputFp);
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
     struct stat sourceStat;
     if (fstat(inputFd, &sourceStat) == -1) {
         LOG_E(BMS_TAG_INSTALLER, "fstat failed, errno : %{public}d", errno);
-        close(inputFd);
+        (void)fclose(inputFp);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
     if (sourceStat.st_size < 0) {
         LOG_E(BMS_TAG_INSTALLER, "invalid st_size");
-        close(inputFd);
+        (void)fclose(inputFp);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
 
@@ -570,11 +577,11 @@ ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputF
     if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
         LOG_E(BMS_TAG_INSTALLER, "errno: %{public}d, send count: %{public}zu, file size: %{public}zu",
             errno, transferCount, static_cast<size_t>(sourceStat.st_size));
-        close(inputFd);
+        (void)fclose(inputFp);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
 
-    close(inputFd);
+    (void)fclose(inputFp);
     fsync(outputFd);
 
     LOG_D(BMS_TAG_INSTALLER, "write file stream to service terminal end");
@@ -820,6 +827,91 @@ ErrCode BundleInstallerProxy::GetFileNameByFilePath(const std::string &filePath,
     return ERR_OK;
 }
 
+ErrCode BundleInstallerProxy::AddEnterpriseResignCert(
+    const std::string &certAlias, const std::string &certContent, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "write descriptor fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(certAlias))) {
+        LOG_E(BMS_TAG_INSTALLER, "write certAlias fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(certContent.size() + 1)) {
+        LOG_E(BMS_TAG_INSTALLER, "write certContent size fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteRawData(certContent.c_str(), certContent.size() + 1)) {
+        LOG_E(BMS_TAG_INSTALLER, "write certContent raw data fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "write userId fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+
+    auto ret = SendInstallRequest(BundleInstallerInterfaceCode::ADD_ENTERPRISE_RESIGN_CERT, data, reply, option);
+    if (!ret) {
+        LOG_E(BMS_TAG_INSTALLER, "AddEnterpriseResignCert failed due to send request fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode BundleInstallerProxy::InstallEnterpriseReSignatureCert(const std::string &certAlias, int32_t fd, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (fd < 0 || userId < Constants::START_USERID || certAlias.empty() ||
+        certAlias.size() > Constants::MAX_FILE_NAME_LENGTH) {
+        LOG_E(BMS_TAG_INSTALLER, "param error fd: %{public}d, userId: %{public}d, certAlias: %{public}s",
+            fd, userId, certAlias.c_str());
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+
+    std::string certContent;
+    struct stat statBuf {};
+    if (fstat(fd, &statBuf) == -1) {
+        LOG_E(BMS_TAG_INSTALLER, "fstat failed, errno : %{public}d", errno);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+
+    if (statBuf.st_size <= 0 || statBuf.st_size > static_cast<off_t>(Constants::CAPACITY_SIZE)) {
+        LOG_E(BMS_TAG_INSTALLER, "cert size too large: %{public}lld", static_cast<long long>(statBuf.st_size));
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+
+    size_t toRead = static_cast<size_t>(statBuf.st_size);
+    certContent.resize(toRead);
+    if (lseek(fd, 0, SEEK_SET) == -1) {
+        LOG_E(BMS_TAG_INSTALLER, "lseek failed, errno: %{public}d", errno);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    size_t total = 0;
+    while (total < toRead) {
+        ssize_t readSize = read(fd, &certContent[total], toRead - total);
+        if (readSize < 0) {
+            if (errno == EINTR) continue;
+            LOG_E(BMS_TAG_INSTALLER, "read failed, errno: %{public}d", errno);
+            return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+        }
+        if (readSize == 0) break;
+        total += static_cast<size_t>(readSize);
+    }
+    if (total != toRead) {
+        LOG_E(BMS_TAG_INSTALLER, "read file failed, expected %{public}zu bytes, got %{public}zu",
+            toRead, total);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+
+    return AddEnterpriseResignCert(certAlias, certContent, userId);
+}
+
 bool BundleInstallerProxy::SendInstallRequest(
     BundleInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
@@ -960,6 +1052,85 @@ ErrCode BundleInstallerProxy::InstallExisted(const std::string &bundleName, int3
     }
 
     return reply.ReadInt32();
+}
+
+ErrCode BundleInstallerProxy::UninstallEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId)
+{
+    LOG_I(BMS_TAG_INSTALLER, "delete enterprise re sign cert -c:%{public}s, -u:%{public}d",
+        certificateAlias.c_str(), userId);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (certificateAlias.empty() || certificateAlias.size() > Constants::MAX_FILE_NAME_LENGTH
+        || userId < Constants::START_USERID) {
+        LOG_E(BMS_TAG_INSTALLER, "param error -c:%{public}s -u:%{public}d", certificateAlias.c_str(), userId);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write descriptor");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(certificateAlias))) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write certificateAlias");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write userId");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+
+    auto ret = SendInstallRequestWithErrCode(BundleInstallerInterfaceCode::DELETE_ENTERPRISE_RE_SIGNATURE_CERT,
+        data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall sign cert failed due to send request fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR;
+    }
+
+    return reply.ReadInt32();
+}
+
+ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias)
+{
+    LOG_I(BMS_TAG_INSTALLER, "get re sign cert -u:%{public}d", userId);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (userId < Constants::START_USERID) {
+        LOG_E(BMS_TAG_INSTALLER, "param error -u:%{public}d", userId);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write descriptor");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write userId");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+
+    auto ret = SendInstallRequestWithErrCode(BundleInstallerInterfaceCode::GET_ENTERPRISE_RE_SIGNATURE_CERT,
+        data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "get sign cert failed due to send request fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR;
+    }
+    ErrCode result = reply.ReadInt32();
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "Reply err : %{public}d", result);
+        return result;
+    }
+    if (!reply.ReadStringVector(&certificateAlias)) {
+        LOG_E(BMS_TAG_INSTALLER, "fail to get sign cert from reply");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_PARCEL_ERROR;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "get sign cert size: %{public}zu", certificateAlias.size());
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

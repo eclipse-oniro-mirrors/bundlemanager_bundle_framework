@@ -56,6 +56,7 @@ const char* HAP_MODULE_INFO_INSTALLATION_FREE = "installationFree";
 const char* HAP_MODULE_INFO_IS_MODULE_JSON = "isModuleJson";
 const char* HAP_MODULE_INFO_IS_STAGE_BASED_MODEL = "isStageBasedModel";
 const char* HAP_MODULE_INFO_IS_REMOVABLE = "isRemovable";
+const char* HAP_MODULE_INFO_IS_REMOVABLESET = "isRemovableSet";
 const char* HAP_MODULE_INFO_MODULE_TYPE = "moduleType";
 const char* HAP_MODULE_INFO_EXTENSION_INFOS = "extensionInfos";
 const char* HAP_MODULE_INFO_META_DATA = "metadata";
@@ -84,6 +85,8 @@ const char* HAP_MODULE_INFO_AOT_COMPILE_STATUS = "aotCompileStatus";
 const char* HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const char* HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const char* HAP_MODULE_INFO_FILE_CONTEXT_MENU = "fileContextMenu";
+const char* HAP_MODULE_INFO_EASY_GO = "easyGo";
+const char* HAP_MODULE_INFO_SHARE_FILES = "shareFiles";
 const char* HAP_MODULE_INFO_ROUTER_MAP = "routerMap";
 const char* HAP_MODULE_INFO_ROUTER_ARRAY = "routerArray";
 const char* ROUTER_ITEM_KEY_NAME = "name";
@@ -579,6 +582,14 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         bool isRemove = parcel.ReadBool();
         isRemovable[key] = isRemove;
     }
+
+    int32_t isRemovableSetSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, isRemovableSetSize);
+    CONTAINER_SECURITY_VERIFY(parcel, isRemovableSetSize, &isRemovableSet);
+    for (auto i = 0; i < isRemovableSetSize; i++) {
+        isRemovableSet.insert(Str16ToStr8(parcel.ReadString16()));
+    }
+
     moduleType = static_cast<ModuleType>(parcel.ReadInt32());
 
     int32_t metadataSize;
@@ -652,6 +663,8 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         nativeLibraryFileNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
     fileContextMenu = Str16ToStr8(parcel.ReadString16());
+    easyGo = Str16ToStr8(parcel.ReadString16());
+    shareFiles = Str16ToStr8(parcel.ReadString16());
     routerMap = Str16ToStr8(parcel.ReadString16());
 
     int32_t routerArraySize;
@@ -775,6 +788,11 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, item.second);
     }
 
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, isRemovableSet.size());
+    for (auto &callingNameUid : isRemovableSet) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(callingNameUid));
+    }
+
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(moduleType));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadata.size());
@@ -812,6 +830,8 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileName));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileContextMenu));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(easyGo));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(shareFiles));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(routerMap));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, routerArray.size());
     for (auto &router : routerArray) {
@@ -867,6 +887,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_IS_MODULE_JSON, hapModuleInfo.isModuleJson},
         {HAP_MODULE_INFO_IS_STAGE_BASED_MODEL, hapModuleInfo.isStageBasedModel},
         {HAP_MODULE_INFO_IS_REMOVABLE, hapModuleInfo.isRemovable},
+        {HAP_MODULE_INFO_IS_REMOVABLESET, hapModuleInfo.isRemovableSet},
         {HAP_MODULE_INFO_UPGRADE_FLAG, hapModuleInfo.upgradeFlag},
         {HAP_MODULE_INFO_MODULE_TYPE, hapModuleInfo.moduleType},
         {HAP_MODULE_INFO_EXTENSION_INFOS, hapModuleInfo.extensionInfos},
@@ -888,6 +909,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS, hapModuleInfo.compressNativeLibs},
         {HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, hapModuleInfo.nativeLibraryFileNames},
         {HAP_MODULE_INFO_FILE_CONTEXT_MENU, hapModuleInfo.fileContextMenu},
+        {HAP_MODULE_INFO_EASY_GO, hapModuleInfo.easyGo},
+        {HAP_MODULE_INFO_SHARE_FILES, hapModuleInfo.shareFiles},
         {HAP_MODULE_INFO_ROUTER_MAP, hapModuleInfo.routerMap},
         {HAP_MODULE_INFO_ROUTER_ARRAY, hapModuleInfo.routerArray},
         {HAP_MODULE_INFO_APP_ENVIRONMENTS, hapModuleInfo.appEnvironments},
@@ -901,7 +924,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_HAS_INTENT, hapModuleInfo.hasIntent},
         {HAP_MODULE_INFO_DEDUPLICATE_HAR, hapModuleInfo.deduplicateHar},
         {Constants::MODULE_ARKTS_MODE, hapModuleInfo.moduleArkTSMode},
-        {Constants::ARKTS_MODE, hapModuleInfo.arkTSMode}
+        {Constants::ARKTS_MODE, hapModuleInfo.arkTSMode},
+        {HAP_MODULE_INFO_VERSION_CODE, hapModuleInfo.versionCode},
     };
 }
 
@@ -1133,6 +1157,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         parseResult,
         JsonType::BOOLEAN,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::set<std::string>>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_IS_REMOVABLESET,
+        hapModuleInfo.isRemovableSet,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_UPGRADE_FLAG,
@@ -1287,6 +1319,18 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
+        HAP_MODULE_INFO_EASY_GO,
+        hapModuleInfo.easyGo,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_SHARE_FILES,
+        hapModuleInfo.shareFiles,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
         HAP_MODULE_INFO_ROUTER_MAP,
         hapModuleInfo.routerMap,
         false,
@@ -1373,6 +1417,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         hapModuleInfo.deduplicateHar,
         false,
         parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_VERSION_CODE,
+        hapModuleInfo.versionCode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGW("HapModuleInfo from_json error : %{public}d", parseResult);
     }

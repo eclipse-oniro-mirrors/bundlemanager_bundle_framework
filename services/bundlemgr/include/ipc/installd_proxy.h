@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,14 +55,14 @@ public:
 
     /**
      * @brief Extract the hnpFiles.
-     * @param hnpPackageInfo Indicates the hnpPackageInfo.
+     * @param hnpPackageMap Indicates the hnpPackageInfo.
      * @param extractParam Indicates the extractParam.
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
-    virtual ErrCode ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam) override;
+    virtual ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
+        const ExtractParam &extractParam) override;
 
-    virtual ErrCode ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
-        const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName) override;
+    virtual ErrCode ProcessBundleInstallNative(const InstallHnpParam &installHnpParam) override;
 
     virtual ErrCode ProcessBundleUnInstallNative(const std::string &userId, const std::string &bundleName) override;
 
@@ -108,7 +108,7 @@ public:
      * @param dir Indicates the directory path that to be removed.
      * @return Returns ERR_OK if the  directory removed successfully; returns error code otherwise.
      */
-    virtual ErrCode RemoveDir(const std::string &dir) override;
+    virtual ErrCode RemoveDir(const std::string &dir, bool async = false) override;
     /**
      * @brief Get disk usage for dir.
      * @param dir Indicates the directory.
@@ -123,7 +123,15 @@ public:
      * @param statSize Indicates size of path.
      * @return Returns true if successfully; returns false otherwise.
      */
-    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize) override;
+    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
+        int64_t timeoutMs = -1) override;
+    /**
+     * @brief Get bundle inode count for UID.
+     * @param uid The user ID of the application.
+     * @param inodeCount Output parameter for inode count.
+     * @return Returns ERR_OK if get bundle inode successfully; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInodeCount(int32_t uid, uint64_t &inodeCount) override;
     /**
      * @brief Clean all files in a bundle data directory through a proxy object.
      * @param bundleDir Indicates the data directory path that to be cleaned.
@@ -139,6 +147,8 @@ public:
      */
     virtual ErrCode CleanBundleDataDirByName(const std::string &bundleName, const int userid,
         const int appIndex = 0, const bool isAtomicService = false) override;
+
+    virtual ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent) override;
     /**
      * @brief Get bundle Stats.
      * @param bundleName Indicates the bundle name.
@@ -147,12 +157,12 @@ public:
      * @return Returns ERR_OK if get stats successfully; returns error code otherwise.
      */
     virtual ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
-        std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID,
+        std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids,
         const int32_t appIndex = 0, const uint32_t statFlag = 0,
         const std::vector<std::string> &moduleNameList = {}) override;
 
-    virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
-        const std::unordered_map<std::string, int32_t> &uidMap,
+    virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames,
+        const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
         std::vector<BundleStorageStats> &bundleStats) override;
 
     virtual ErrCode GetAllBundleStats(const int32_t userId,
@@ -169,6 +179,13 @@ public:
      */
     virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
         bool isPreInstallApp, bool debug, int32_t uid) override;
+
+    virtual ErrCode SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir) override;
+
+    virtual ErrCode SetFileConForce(const std::vector<std::string> &paths,
+        const CreateDirParam &createDirParam) override;
+
+    virtual ErrCode StopSetFileCon(const CreateDirParam &createDirParam, int32_t reason) override;
 
     /**
      * @brief Set dir apl.
@@ -243,6 +260,8 @@ public:
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
 
+    virtual ErrCode AddCertAndEnableKey(const std::string &certPath, const std::string &certContent) override;
+
     virtual ErrCode SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId) override;
 
     virtual ErrCode DeleteEncryptionKeyId(const EncryptionParam &encryptionParam) override;
@@ -271,6 +290,23 @@ public:
     virtual ErrCode ClearDir(const std::string &dir) override;
 
     virtual ErrCode RestoreconPath(const std::string &path) override;
+
+    virtual ErrCode HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+        std::vector<std::string> &soName, std::vector<std::string> &soHash) override;
+    virtual ErrCode HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash) override;
+        
+    virtual ErrCode ResetBmsDBSecurity() override;
+    
+    /**
+     * @brief Copy directory Recursively from source dir to destination dir.
+     * @param sourceDir Indicates the source dir.
+     * @param destinationDir Indicates the destination dir.
+     * @return Returns ERR_OK if copy directory successfully; returns error code otherwise.
+     */
+    virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir) override;
+
+    virtual ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths) override;
+
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

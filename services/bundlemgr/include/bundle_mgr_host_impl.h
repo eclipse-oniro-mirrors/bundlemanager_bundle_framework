@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -156,6 +156,17 @@ public:
      */
     virtual ErrCode GetBundleInfoV9(const std::string &bundleName,
         int32_t flags, BundleInfo &bundleInfo, int32_t userId) override;
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name through the proxy object.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param bundleInfoForException Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @param catchSoNum Indicates the num of catched hash values of so.
+     * @param catchSoMaxSize Indicates the max size of catched so.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoForException(const std::string &bundleName,
+        int32_t userId, uint32_t catchSoNum, uint64_t catchSoMaxSize, BundleInfoForException &bundleInfoForException) override;
     /**
      * @brief Batch obtains the BundleInfos based on a given bundle name list.
      * @param bundleNames Indicates the application bundle name list to be queried.
@@ -543,7 +554,8 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
      */
     virtual ErrCode GetLaunchWantForBundle(
-        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID,
+        bool isSync = false) override;
     /**
      * @brief Obtains detailed information about a specified permission.
      * @param permissionName Indicates the name of the ohos permission.
@@ -557,6 +569,15 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
     virtual ErrCode CleanBundleCacheFilesAutomatic(uint64_t cacheSize) override;
+    /**
+     * @brief Clears cache data of a specified size.
+     * @param cacheSize Indicates the size of the cache data is to be cleared.
+     * @param cleanType Indicates the type of cache data to be cleared.
+     * @param cleanedSize Indicates the size of the cache data that is actually cleared.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode CleanBundleCacheFilesAutomatic(uint64_t cacheSize, CleanType cleanType,
+        std::optional<uint64_t>& cleanedSize) override;
     /**
      * @brief Clears cache data of a specified application.
      * @param bundleName Indicates the bundle name of the application whose cache data is to be cleared.
@@ -968,6 +989,14 @@ public:
     virtual ErrCode CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback) override;
 
     virtual ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible) override;
+
+    virtual ErrCode AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId) override;
+
+    virtual ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const std::vector<std::string> &ids) override;
+
+    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled) override;
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
 #endif
@@ -997,6 +1026,8 @@ public:
     virtual sptr<IOverlayManager> GetOverlayManagerProxy() override;
     virtual ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
         AppProvisionInfo &appProvisionInfo) override;
+    virtual ErrCode GetAllAppProvisionInfo(const int32_t userId,
+        std::vector<AppProvisionInfo> &appProvisionInfos) override;
     virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
         std::vector<Metadata> &provisionMetadatas) override;
     virtual ErrCode GetBaseSharedBundleInfos(const std::string &bundleName,
@@ -1192,8 +1223,8 @@ public:
         const int32_t userId, AbilityInfo &abilityInfo) override;
     virtual ErrCode GetPluginHapModuleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const std::string &pluginModuleName, const int32_t userId, HapModuleInfo &hapModuleInfo) override;
-    virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
-    virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
+    virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;
+    virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos) override;
     virtual ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId, PluginBundleInfo &pluginBundleInfo) override;
@@ -1209,6 +1240,19 @@ public:
     virtual ErrCode RemoveBackupBundleData(const std::string &bundleName,
         const int32_t userId, const int32_t appIndex) override;
     virtual ErrCode CreateNewBundleEl5Dir(int32_t userId) override;
+    virtual ErrCode GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
+        BundleInstallStatus &bundleInstallStatus) override;
+    virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
+        std::vector<JsonProfileInfo> &profileInfos) override;
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name.
+     * @param uid Indicates the uid.
+     * @param assetGroupInfo Indicates the obtained AssetGroupInfo object.
+     * @return Returns ERR_OK if the AssetGroupInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo &assetGroupInfo) override;
+    virtual ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
+        const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);
@@ -1240,9 +1284,11 @@ private:
     void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId, int32_t appIndex = 0);
     ErrCode CleanBundleCacheFilesGetCleanSize(const std::string &bundleName,
-        int32_t userId, uint64_t &cleanCacheSize);
-    void CleanBundleCacheTaskGetCleanSize(const std::string &bundleName,
-        int32_t userId, uint64_t &cleanCacheSize, int32_t callingUid, const std::string &callingBundleName);
+        int32_t userId, CleanType cleanType, int32_t appIndex, uint64_t &cleanCacheSize);
+    void CleanBundleCacheTaskGetCleanSize(const std::string &bundleName, int32_t userId, CleanType cleanType,
+        int32_t appIndex, int32_t callingUid, const std::string &callingBundleName, uint64_t &cleanCacheSize);
+    bool CleanBundleCacheByInodeCount(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, const std::vector<std::string> &moduleNames, uint64_t &cleanCacheSize);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
     ErrCode GetBundleArchiveInfoBySandBoxPath(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
@@ -1250,6 +1296,7 @@ private:
     bool GetPreferableBundleInfoFromHapPaths(const std::vector<std::string> &hapPaths,
         BundleInfo &bundleInfo);
     bool IsBundleExist(const std::string &bundleName);
+    bool IsBundleExistedOrUninstalledWithKeepData(const std::string &bundleName, int32_t userId, int32_t appIndex);
     ErrCode ClearCache(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         int32_t userId, int32_t callingUid, const std::string &callingBundleName);
     void FilterAbilityInfos(std::vector<AbilityInfo> &abilityInfos);
@@ -1277,6 +1324,12 @@ private:
         LauncherAbilityResourceInfo &resultAbilityResourceInfo);
     ErrCode ImplicitQueryAbilityInfosWithDefault(const Want &want,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
+    void SetAtomicServiceRemovable(const ShortcutInfo &shortcutInfo, bool isEnable, int32_t userId);
+    bool CheckAcrossUserPermission(const int32_t userId);
+    bool IsQueryBundleInfoExt(const uint32_t flags) const;
+    bool IsQueryAbilityInfoExt(const uint32_t flags) const;
+
+    bool IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags) const;
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

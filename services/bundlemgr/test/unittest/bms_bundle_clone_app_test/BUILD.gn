@@ -65,6 +65,7 @@ ohos_unittest("BmsBundleCloneAppBundleLogicTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -80,6 +81,7 @@ ohos_unittest("BmsBundleCloneAppBundleLogicTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []
@@ -193,8 +195,10 @@ ohos_unittest("BmsBundleCloneAppDataStructTest") {
     "${inner_api_path}/appexecfwk_base/src/bundle_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_user_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/mime_type_mgr.cpp",
+    "${services_path}/bundlemgr/src/common/single_delayed_task_mgr.cpp",
     "${services_path}/bundlemgr/src/data/inner_ability_info.cpp",
     "${services_path}/bundlemgr/src/data/inner_extension_info.cpp",
+    "${services_path}/bundlemgr/src/exception/exception_util.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_clone_info.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_user_info.cpp",
@@ -293,6 +297,7 @@ ohos_unittest("BmsBundleCloneAppIpcTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -309,6 +314,7 @@ ohos_unittest("BmsBundleCloneAppIpcTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 

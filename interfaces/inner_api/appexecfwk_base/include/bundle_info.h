@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,6 +47,10 @@ enum BundleFlag {
     GET_BUNDLE_WITH_ROUTER_MAP = 0x00000080,
     // get bundle info include skill info
     GET_BUNDLE_WITH_SKILL = 0x00000800,
+    // the flag only for C++ interface passing
+    GET_BUNDLE_INFO_EXCLUDE_EXT = 0x00020000,
+    // get bundle info include request permissions with no detailed info
+    GET_BUNDLE_WITH_REQUESTED_PERMISSION_NO_DETAILED = 0x80000000,
 };
 
 enum class GetBundleInfoFlag {
@@ -67,6 +71,8 @@ enum class GetBundleInfoFlag {
     GET_BUNDLE_INFO_EXCLUDE_CLONE = 0x00004000,
     GET_BUNDLE_INFO_WITH_CLOUD_KIT = 0x00008000,
     GET_BUNDLE_INFO_WITH_ENTRY_MODULE = 0x00010000,
+    // the flag only for C++ interface passing
+    GET_BUNDLE_INFO_EXCLUDE_EXT = 0x00020000,
 };
 
 struct RequestPermissionUsedScene : public Parcelable {
@@ -113,6 +119,36 @@ struct SimpleAppInfo : public Parcelable {
     std::string ToString() const;
 };
 
+enum class BundleInstallStatus : uint8_t {
+    UNKNOWN_STATUS = 0,
+    BUNDLE_NOT_EXIST = 1,
+    BUNDLE_INSTALLING = 2,
+    BUNDLE_INSTALLED = 3,
+};
+
+struct HapHashAndDeveloperCert : public Parcelable {
+    std::string path;
+    std::string hash;
+    std::string developCert;
+ 
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static HapHashAndDeveloperCert *Unmarshalling(Parcel &parcel);
+};
+ 
+// configuration information about a bundle
+struct BundleInfoForException : public Parcelable {
+    std::vector<std::string> allowedAcls;
+    std::vector<std::string> abilityNames;
+    std::vector<HapHashAndDeveloperCert> hapHashValueAndDevelopCerts;
+    // key: soname, value:hash
+    std::map<std::string, std::string> soHash;
+ 
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static BundleInfoForException *Unmarshalling(Parcel &parcel);
+};
+
 // configuration information about a bundle
 struct BundleInfo : public Parcelable {
     bool isNewVersion = false;
@@ -145,6 +181,7 @@ struct BundleInfo : public Parcelable {
     int64_t firstInstallTime = 0;
     std::string name;
     std::string versionName;
+    std::string buildVersion;
 
     std::string vendor;
     std::string releaseType;
@@ -181,6 +218,19 @@ struct BundleInfo : public Parcelable {
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static BundleInfo *Unmarshalling(Parcel &parcel);
+};
+
+struct AssetGroupInfo : public Parcelable {
+    int32_t appIndex = 0;
+    std::string bundleName;
+    std::string appId;
+    std::string appIdentifier;
+    std::string developerId;
+    std::vector<std::string> assetAccessGroups;
+ 
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static AssetGroupInfo *Unmarshalling(Parcel &parcel);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -31,4 +31,4 @@ public:
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif  // OHOS_APPEXECFWK_LIBZIP_ZLIB_CALLBACK_H
+#endif  // OHOS_APPEXECFWK_LIBZIP_ZLIB_CALLBACK_BASE_H

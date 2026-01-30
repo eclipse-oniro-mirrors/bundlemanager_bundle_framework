@@ -20,6 +20,7 @@
 #include "ability_info.h"
 #include "bundle_compatible_device_type.h"
 #include "bundle_info.h"
+#include "bundle_option.h"
 #include "bundle_resource_info.h"
 #include "code_protect_bundle_info.h"
 #include "launcher_ability_resource_info.h"
@@ -37,7 +38,8 @@ public:
     virtual ~BundleMgrExt() = default;
 
     virtual bool CheckApiInfo(const BundleInfo& bundleInfo) = 0;
-    virtual ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult)
+    virtual ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,
+        const std::string &localCertDir = "")
     {
         return ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED;
     }
@@ -123,9 +125,9 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
-    virtual bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId)
+    virtual ErrCode CheckAppBlackList(const std::string &bundleName, const int32_t userId)
     {
-        return false;
+        return ERR_OK;
     }
     virtual ErrCode KeyOperation(const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type)
     {
@@ -202,6 +204,21 @@ public:
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
     virtual ErrCode RemoveBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode GetLauncherAbilityResourceInfo(const BundleOptionInfo &options, const uint32_t flags,
+        LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual bool GetInstallAndRecoverList(const int32_t userId, const std::vector<std::string> &bundleList,
+        std::vector<std::string> &installList, std::vector<std::string> &recoverList)
+    {
+        return false;
+    }
+    virtual ErrCode GetDetermineCloneNumList(
+        std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList)
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }

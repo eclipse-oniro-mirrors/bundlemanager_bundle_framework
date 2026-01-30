@@ -64,6 +64,8 @@ private:
     static void InnerSendDataPartitionUsageEvent(const EventInfo& eventInfo);
     static void InnerSendDefaultAppEvent(const EventInfo& eventInfo);
     static void InnerSendQueryBundleInfoEvent(const EventInfo& eventInfo);
+    static void InnerSendDynamicShortcutEvent(const EventInfo& eventInfo);
+    static void InnerSendDesktopShortcutEvent(const EventInfo& eventInfo);
 
     template<typename... Types>
     static void InnerEventWrite(const std::string &eventName,

@@ -21,6 +21,7 @@ config("bundlemgr_common_config") {
     "include/aot",
     "include/app_provision_info",
     "include/app_service_fwk",
+    "include/exception",
     "include/bundlemgr",
     "include/bms_extension",
     "include/bundle_backup",
@@ -34,6 +35,7 @@ config("bundlemgr_common_config") {
     "include/driver",
     "include/extend_resource",
     "include/first_install_data_mgr",
+    "include/idle_condition_mgr",
     "include/uninstall_data_mgr",
     "include/overlay",
     "include/quick_fix",
@@ -228,7 +230,59 @@ group("bms_target") {
     ":installs",
     ":installs.cfg",
     ":libbms",
+    ":libbms_exception_wrapper",
   ]
+}
+
+ohos_shared_library("libbms_exception_wrapper") {
+  branch_protector_ret = "pac_ret"
+
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
+  use_exceptions = true
+
+  sources = [ "src/exception/exception_wrapper.cpp" ]
+
+  defines = [
+    "APP_LOG_TAG = \"BMS\"",
+    "LOG_DOMAIN = 0xD001120",
+  ]
+
+  cflags = [
+    "-fvisibility=hidden",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+    "-fstack-protector-strong",
+    "-Wno-non-c-typedef-for-linkage",
+  ]
+
+  cflags_cc = [
+    "-fvisibility-inlines-hidden",
+    "-Os",
+    "-fstack-protector-strong",
+    "-Wno-non-c-typedef-for-linkage",
+  ]
+
+  ldflags = [ "-Wl,--gc-sections" ]
+
+  deps = [ "${common_path}:libappexecfwk_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "json:nlohmann_json_static",
+  ]
+
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
 }
 
 ohos_shared_library("libbms") {
@@ -243,7 +297,6 @@ ohos_shared_library("libbms") {
     ubsan = true
   }
 
-  use_exceptions = true
   visibility = [
     "//base/*",
     "//foundation/*",
@@ -307,6 +360,7 @@ ohos_shared_library("libbms") {
     "access_token:libtokenid_sdk",
     "appspawn:appspawn_client",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
@@ -320,6 +374,8 @@ ohos_shared_library("libbms") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "syscap_codec:syscap_interface_shared",
+    "thermal_manager:thermalsrv_client",
+    "window_manager:libmodal_system_ui_extension_client",
     "zlib:shared_libz",
   ]
 
@@ -582,6 +638,7 @@ ohos_shared_library("installs") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "memmgr:memmgrclient",
+    "openssl:libcrypto_shared",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",

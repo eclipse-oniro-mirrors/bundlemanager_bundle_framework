@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,7 @@ constexpr const char* EMPTY_STRING = "";
 constexpr const char* FILE_UNDERLINE = "_";
 constexpr const char* BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
 constexpr const char* CACHE_DIR = "cache";
+constexpr const char* UID_SEPARATOR = "#";
 constexpr int8_t START_USERID = 100;
 constexpr int8_t DEFAULT_USERID = 0;
 constexpr int8_t U1 = 1;
@@ -49,6 +50,8 @@ constexpr int8_t ALL_VERSIONCODE = -1;
 constexpr int8_t INVALID_UDID = -1;
 constexpr int8_t DEFAULT_INSTALLERID = -1;
 constexpr int8_t DEFAULT_APP_INDEX = 0;
+constexpr int16_t MAX_FILE_NAME_LENGTH = 256;
+constexpr int16_t BMS_MAX_PATH_LENGTH = 4096;
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;
@@ -61,10 +64,7 @@ constexpr int32_t MAX_APP_UID = 65535;
 constexpr int32_t STORAGE_MANAGER_UID = 1090;
 constexpr int32_t EDC_UID = 7200;
 constexpr int32_t CODE_SIGN_UID = 3074;
-
-// for render process
-constexpr int32_t START_UID_FOR_RENDER_PROCESS = 1000000;
-constexpr int32_t END_UID_FOR_RENDER_PROCESS = 1099999;
+constexpr int32_t ACCOUNT_UID = 3058;
 
 /*
 all of cache path for bundle:
@@ -77,6 +77,7 @@ modulename max is 128
 constexpr int16_t MAX_CACHE_DIR_SIZE = 774;
 
 // permissions
+constexpr const char* PERMISSION_INSTALL_ALLOW_DOWNGRADE = "ohos.permission.INSTALL_ALLOW_DOWNGRADE";
 constexpr const char* PERMISSION_U1_ENABLED = "ohos.permission.SUPPORT_INSTALL_ON_U1";
 constexpr const char* PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_CLONE_BUNDLE = "ohos.permission.UNINSTALL_CLONE_BUNDLE";
@@ -103,7 +104,9 @@ constexpr const char* PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS = "ohos.perm
 constexpr const char* PERMISSION_MANAGE_SELF_SKILLS = "ohos.permission.MANAGE_SELF_SKILLS";
 constexpr const char* PERMISSION_RECOVER_BUNDLE = "ohos.permission.RECOVER_BUNDLE";
 constexpr const char* PERMISSION_CLEAN_APPLICATION_DATA = "ohos.permission.CLEAN_APPLICATION_DATA";
-
+constexpr const char* PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
+    "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED or "
+    "(ohos.permission.GET_BUNDLE_INFO_PRIVILEGED and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
 enum class AppType {
     SYSTEM_APP = 0,
     THIRD_SYSTEM_APP,
@@ -121,6 +124,12 @@ enum AbilityProfileType : uint32_t {
     ABILITY_PROFILE = 0,
     EXTENSION_PROFILE = 1,
     UNKNOWN_PROFILE = 2
+};
+
+enum ShortcutSourceType : int32_t {
+    DEFAULT_SHORTCUT = 0,
+    STATIC_SHORTCUT = 1,
+    DYNAMIC_SHORTCUT = 2
 };
 
 constexpr const char* ACTION_HOME = "action.system.home";
@@ -148,7 +157,7 @@ constexpr const char* URI_SEPARATOR = "://";
 
 // ipc
 constexpr int32_t CAPACITY_SIZE = 1 * 1024 * 1000; // 1M
-constexpr int32_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
+constexpr int32_t MAX_PARCEL_CAPACITY = 128 * 1024 * 1024; // 128M
 
 // permission
 constexpr const char* LISTEN_BUNDLE_CHANGE = "ohos.permission.LISTEN_BUNDLE_CHANGE";
@@ -178,6 +187,11 @@ constexpr const char* RELEASE_TYPE_VALUE = "2";
 // crowdtesting
 constexpr int8_t INVALID_CROWDTEST_DEADLINE = -1;
 constexpr int8_t INHERIT_CROWDTEST_DEADLINE = -2;
+// app sign type
+constexpr const char* APP_SIGN_TYPE_NONE = "none";
+constexpr const char* APP_SIGN_TYPE_ENTERPRISE_RE_SIGN = "enterpriseReSign";
+// app build version
+constexpr const char* BUILD_VERSION = "buildVersion";
 
 // overlay installation
 constexpr const char* OVERLAY_STATE = "overlayState";
@@ -188,6 +202,7 @@ constexpr const char* SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 // clone application
 constexpr int32_t MAIN_APP_INDEX = 0;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
+constexpr int32_t ALL_CLONE_APP_INDEX = -1;
 
 //param key-value
 constexpr const char* VERIFY_UNINSTALL_FORCED_KEY = "ohos.bms.param.verifyUninstallForced";
@@ -195,6 +210,9 @@ constexpr const char* VERIFY_UNINSTALL_FORCED_VALUE = "true";
 
 constexpr const char* VERIFY_UNINSTALL_RULE_KEY = "ohos.bms.param.verifyUninstallRule";
 constexpr const char* VERIFY_UNINSTALL_RULE_VALUE = "true";
+
+constexpr const char* BMS_PARA_CLONE_IS_KEEP_DATA = "ohos.bms.param.clone.isKeepData";
+constexpr const char* IS_KEEP_DATA_TRUE = "true";
 
 constexpr const char* SUPPORT_APP_TYPES_SEPARATOR = ",";
 constexpr const char* SCHEME_SEPARATOR = "://";

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -90,6 +90,17 @@ enum class InstalldInterfaceCode : uint32_t {
     RESTORE_CON_LIBS = 62,
     CHANGE_FILE_STAT = 63,
     RENAME_FILE = 64,
+    RESTORE_CON_BMSDB = 65,
+    CLEAN_BUNDLE_DIRS = 66,
+    COPY_DIR = 67,
+    GET_SO_HASH = 68,
+    GET_FILES_HASH = 69,
+    ADD_CERT_AND_ENABLE_KEY = 70,
+    DELETE_CERT_AND_REMOVE_KEY = 71,
+    SET_DIRS_APL = 72,
+    SET_FILE_CON_FORCE = 73,
+    STOP_SET_FILE_CON = 74,
+    GET_BUNDLE_FILE_COUNT = 75,
 };
 
 } // namespace AppExecFwk

@@ -19,6 +19,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+    const std::vector<std::string> KEEP_DATA = {};
+}
 BundleExceptionHandler::BundleExceptionHandler(const std::shared_ptr<IBundleDataStorage> &dataStorage)
     : dataStorage_(dataStorage)
 {
@@ -36,6 +39,39 @@ void BundleExceptionHandler::HandleInvalidBundle(InnerBundleInfo &info, bool &is
     InnerHandleInvalidBundle(info, isBundleValid);
     if (isBundleValid && (info.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK)) {
         InnerCheckSystemHspPath(info);
+    }
+    if (isBundleValid && (info.GetApplicationBundleType() == BundleType::SHARED)) {
+        CheckSharedAndRmvInvalidModule(info, isBundleValid);
+    }
+}
+
+void BundleExceptionHandler::CheckSharedAndRmvInvalidModule(InnerBundleInfo &info, bool &isBundleValid)
+{
+    auto sharedInfos = info.GetInnerSharedModuleInfos();
+    for (auto &modulesIt : sharedInfos) {
+        BaseSharedBundleInfo maxShared;
+        bool needBreak = false;
+        if (info.GetMaxVerBaseSharedBundleInfo(modulesIt.first, maxShared)) {
+            auto versionCode = maxShared.versionCode;
+            for (auto module : modulesIt.second) {
+                if (module.versionCode == static_cast<uint32_t>(versionCode) &&
+                    module.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0 &&
+                    access(module.hapPath.c_str(), F_OK) != 0) {
+                    APP_LOGI("-v %{public}u %{public}s not exist, need rmv", versionCode,
+                        module.hapPath.c_str());
+                    info.DeleteHspModuleByVersion(versionCode);
+                    needBreak = true;
+                    break;
+                }
+            }
+        }
+        if (needBreak) {
+            break;
+        }
+    }
+    if (info.GetInnerSharedModuleInfos().size() == 0) {
+        isBundleValid = false;
+        DeleteBundleInfoFromStorage(info);
     }
 }
 
@@ -57,6 +93,13 @@ bool BundleExceptionHandler::RemoveBundleAndDataDir(const std::string &bundleDir
     if (result != ERR_OK) {
         APP_LOGE("fail to remove bundle dir %{public}s, error is %{public}d", bundleDir.c_str(), result);
         return false;
+    }
+
+    for (const auto &bundle : KEEP_DATA) {
+        if (bundleDir.find(bundle) != std::string::npos) {
+            APP_LOGW("%{public}s need keep data", bundle.c_str());
+            return true;
+        }
     }
 
     if (bundleOrModuleDir.find(ServiceConstants::HAPS) != std::string::npos) {

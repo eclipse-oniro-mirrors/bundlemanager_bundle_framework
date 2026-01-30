@@ -73,7 +73,8 @@ public:
      */
     ErrCode CheckMultipleHapsSignInfo(
         const std::vector<std::string> &bundlePaths,
-        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes, bool readFile = false);
+        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+        bool readFile = false, int32_t userId = Constants::INVALID_USERID);
 
     /**
      * @brief To check the hap hash param.
@@ -84,6 +85,8 @@ public:
     ErrCode CheckHapHashParams(
         std::unordered_map<std::string, InnerBundleInfo> &infos,
         std::map<std::string, std::string> hashParams);
+
+    uint32_t GetVersionCode(const std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     /**
      * @brief To check the version code and bundleName in all haps.
@@ -163,7 +166,7 @@ public:
 
     bool IsContainModuleName(const InnerBundleInfo &newInfo, const InnerBundleInfo &info) const;
 
-    ErrCode CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    ErrCode CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos, ErrCode checkSysCapRes) const;
 
     bool IsSubSet(const std::vector<std::string> &mainSet, const std::vector<std::string> &subSet) const;
 
@@ -211,6 +214,10 @@ public:
 
     void FetchPrivilegeCapabilityFromPreConfig(const std::string &bundleName,
         const std::vector<std::string> &appSignatures, AppPrivilegeCapability &appPrivilegeCapability);
+
+    static bool CheckSaneDriverIsolation(const Security::Verify::HapVerifyResult &hapVerifyResult, const int32_t userId,
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+
 private:
 
     ErrCode ParseBundleInfo(
@@ -269,6 +276,7 @@ private:
 
     bool CheckProxyPermissionLevel(const std::string &permissionName) const;
     bool MatchOldSignatures(const std::string &bundleName, const std::vector<std::string> &appSignatures);
+    bool CheckEnterpriseResign(const Security::Verify::ProvisionInfo &provisionInfo, const int32_t userId);
     bool CheckProvisionInfoIsValid(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     std::tuple<bool, std::string, std::string> GetValidReleaseType(
         const std::unordered_map<std::string, InnerBundleInfo> &infos);

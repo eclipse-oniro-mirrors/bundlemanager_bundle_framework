@@ -52,10 +52,14 @@ constexpr const char* UTD_IDS = "utdIds";
 constexpr const char* USER_ID = "userId";
 constexpr const char* SHORTCUT_CHANGED = "usual.event.SHORTCUT_CHANGED";
 constexpr const char* SHORTCUT_ID = "shortcutId";
+constexpr const char* SHORTCUT_IDS = "shortcutIds";
+constexpr const char* BUNDLE_NAMES = "bundleNames";
+constexpr const char* SHORTCUT_OPERATION_TYPE = "operationType";
 constexpr const char* MANAGE_SHORTCUTS = "ohos.permission.MANAGE_SHORTCUTS";
 constexpr const char* IS_BUNDLE_EXIST = "isBundleExist";
 constexpr const char* CROSS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* IS_RECOVER = "isRecover";
+constexpr const char* IS_ENABLED = "isEnabled";
 constexpr const char* PACKAGE_UNINSTALLED_DATA_CLEARED = "usual.event.PACKAGE_UNINSTALLED_DATA_CLEARED";
 }
 
@@ -112,7 +116,8 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
             (installResult.type == NotifyType::UNINSTALL_MODULE)) ?
             static_cast<uint8_t>(InstallType::UNINSTALL_CALLBACK) :
             static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
-    int32_t bundleUserId = BundleUtil::GetUserIdByUid(installResult.uid);
+    int32_t bundleUserId = installResult.userId == Constants::INVALID_USERID ?
+        BundleUtil::GetUserIdByUid(installResult.uid) : installResult.userId;
     int32_t publishUserId = (bundleUserId == Constants::DEFAULT_USERID || bundleUserId == Constants::U1) ?
         AccountHelper::GetUserIdByCallerType() : bundleUserId;
 
@@ -431,7 +436,7 @@ void BundleCommonEventMgr::NotifyDefaultAppChanged(const int32_t userId, std::ve
 }
 
 void BundleCommonEventMgr::NotifyPluginEvents(const NotifyBundleEvents &event,
-    const std::shared_ptr<BundleDataMgr> &dataMgr)
+    const std::shared_ptr<BundleDataMgr> &dataMgr, bool isHsp)
 {
     OHOS::AAFwk::Want want;
     std::string eventData = GetCommonEventData(event.type);
@@ -448,7 +453,7 @@ void BundleCommonEventMgr::NotifyPluginEvents(const NotifyBundleEvents &event,
         LOG_I(BMS_TAG_DEFAULT, "pluginEventBack begin");
         std::string hostBundleName;
         dataMgr->GetBundleNameForUid(event.uid, hostBundleName);
-        dataMgr->NotifyPluginEventCallback(commonData, hostBundleName);
+        dataMgr->NotifyPluginEventCallback(commonData, hostBundleName, isHsp);
         LOG_I(BMS_TAG_DEFAULT, "pluginEventBack end");
     }
 }
@@ -505,6 +510,29 @@ void BundleCommonEventMgr::NotifyShortcutVisibleChanged(
     IPCSkeleton::SetCallingIdentity(identity);
 }
 
+void BundleCommonEventMgr::NotifyDynamicShortcutChanged(const std::string &bundlename,
+    const std::vector<std::string> &ids, int32_t userId, int32_t appIndex, const std::string &operationType)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(SHORTCUT_CHANGED);
+    ElementName element;
+    element.SetBundleName(bundlename);
+    want.SetElement(element);
+    want.SetParam(SHORTCUT_IDS, ids);
+    want.SetParam(USER_ID, userId);
+    want.SetParam(APP_INDEX, appIndex);
+    want.SetParam(SHORTCUT_OPERATION_TYPE, operationType);
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { MANAGE_SHORTCUTS };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+}
+
 void BundleCommonEventMgr::NotifyUninstalledBundleCleared(const NotifyBundleEvents &installResult)
 {
     OHOS::AAFwk::Want want;
@@ -525,6 +553,31 @@ void BundleCommonEventMgr::NotifyUninstalledBundleCleared(const NotifyBundleEven
     std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
     publishInfo.SetSubscriberPermissions(permissionVec);
     publishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+}
+
+void BundleCommonEventMgr::NotifyShortcutsEnabledChanged(const std::vector<ShortcutInfo> &shortcutInfos,
+    bool isEnabled)
+{
+    std::vector<std::string> bundleNames;
+    std::vector<std::string> ids;
+    for (auto &shortcutInfo : shortcutInfos) {
+        bundleNames.emplace_back(shortcutInfo.bundleName);
+        ids.emplace_back(shortcutInfo.id);
+    }
+    OHOS::AAFwk::Want want;
+    want.SetAction(SHORTCUT_CHANGED);
+    want.SetParam(BUNDLE_NAMES, bundleNames);
+    want.SetParam(SHORTCUT_IDS, ids);
+    want.SetParam(IS_ENABLED, isEnabled);
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { MANAGE_SHORTCUTS };
+    publishInfo.SetSubscriberPermissions(permissionVec);
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
         APP_LOGE("PublishCommonEvent failed");

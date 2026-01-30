@@ -27,14 +27,20 @@ public:
     ShortcutVisibleDataStorageRdb();
     ~ShortcutVisibleDataStorageRdb();
 
-    bool IsShortcutVisibleInfoExist(
-        const std::string &bundleName, const std::string &shortcutId, int32_t appIndex, int32_t userId, bool visible);
-    bool SaveStorageShortcutVisibleInfo(
-        const std::string &bundleName, const std::string &shortcutId, int32_t appIndex, int32_t userId, bool visible);
+    bool SaveStorageShortcutVisibleInfo(const std::string &bundleName, const std::string &shortcutId, int32_t appIndex,
+        int32_t userId, const ShortcutInfo &shortcutInfo);
     bool DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
 
-    ErrCode GetShortcutVisibleStatus(const int32_t userId, const int32_t appIndex, ShortcutInfo &shortcutInfo);
+    bool AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId);
+    bool DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex, const int32_t userId,
+        const std::vector<std::string> &ids);
+
+    void GetStorageShortcutInfos(const std::string &bundleName, const int32_t appIndex, const int32_t userId,
+        std::vector<ShortcutInfo> &shortcutInfos, const bool onlyDynamic = false);
 private:
+    void ProcessStaticShortcutInfos(const NativeRdb::AbsRdbPredicates &absRdbPredicatesConst,
+        std::vector<ShortcutInfo> &shortcutInfos);
+
     std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
 };
 

@@ -126,6 +126,8 @@ struct InnerModuleInfo {
     std::string buildHash;
     std::string isolationMode;
     std::string fileContextMenu;
+    std::string easyGo;
+    std::string shareFiles;
     std::string routerMap;
     std::string packageName;
     std::string appStartup;
@@ -160,6 +162,7 @@ struct InnerModuleInfo {
     std::vector<ProxyData> proxyDatas;
     std::vector<AppEnvironment> appEnvironments;
     std::map<std::string, bool> isRemovable;
+    std::set<std::string> isRemovableSet;
     MetaData metaData;
 };
 
@@ -435,6 +438,7 @@ public:
      * @return
      */
     void SetBundleUpdateTime(const int64_t time, int32_t userId = Constants::UNSPECIFIED_USERID);
+    void SetBundleUpdateTimeForAllUser(const int64_t time);
     /**
      * @brief Get bundle update time.
      * @param userId Indicates the user ID.
@@ -967,6 +971,15 @@ public:
         }
 
         return Constants::EMPTY_STRING;
+    }
+
+    const std::vector<std::string> GetAllHapPaths() const
+    {
+        std::vector<std::string> hapPaths;
+        for (const auto &moduleInfo : innerModuleInfos_) {
+            hapPaths.push_back(moduleInfo.second.hapPath);
+        }
+        return hapPaths;
     }
 
     const std::string GetModuleName(const std::string &modulePackage) const
@@ -1586,6 +1599,18 @@ public:
      * @return
      */
     void DeleteModuleRemovable(const std::string &moduleName, int32_t userId);
+
+    /**
+     * @brief Set module removable status in the removable set.
+     * @param moduleName Indicates the moduleName.
+     * @param isEnable Indicates the module isRemovable is enable.
+     * @param userId Indicates the userId.
+     * @param callingBundleName Indicates the calling bundle name.
+     * @return
+     */
+    void SetModuleRemovableSet(const std::string &moduleName,
+        bool isEnable, const int32_t userId, const std::string &callingBundleName);
+
     /**
      * @brief Delete removable info.
      * @param info Indicates the innerModuleInfo of module.
@@ -2157,6 +2182,11 @@ public:
         baseApplicationInfo_->organization = organization;
     }
 
+    std::string GetOrganization()
+    {
+        return baseApplicationInfo_->organization;
+    }
+
     int32_t GetMultiAppMaxCount() const
     {
         return baseApplicationInfo_->multiAppMode.maxCount;
@@ -2170,6 +2200,16 @@ public:
     void SetInstallSource(const std::string &installSource)
     {
         baseApplicationInfo_->installSource = installSource;
+    }
+
+    void SetAppSignType(const std::string &appSignType)
+    {
+        baseApplicationInfo_->appSignType = appSignType;
+    }
+
+    std::string GetAppSignType() const
+    {
+        return baseApplicationInfo_->appSignType;
     }
 
     bool IsInstalledForAllUser() const
@@ -2229,6 +2269,8 @@ public:
 
     void UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo);
     void UpdateRemovable(bool isPreInstall, bool removable);
+    void UpdateModuleRemovable(const InnerBundleInfo &innerBundleInfo);
+    bool IsRemovableSet(const InnerModuleInfo &innerInfo, int32_t userId) const;
     bool FetchNativeSoAttrs(
         const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath) const;
     void UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo);
@@ -2239,6 +2281,7 @@ public:
     int64_t GetLastInstallationTime() const;
     void UpdateAppDetailAbilityAttrs();
     bool IsHideDesktopIcon() const;
+    bool IsHideDesktopIconForEvent() const;
     void AddApplyQuickFixFrequency();
     int32_t GetApplyQuickFixFrequency() const;
     void ResetApplyQuickFixFrequency();
@@ -2316,9 +2359,6 @@ public:
     ErrCode RemoveCloneBundle(const int32_t userId, const int32_t appIndex);
     ErrCode GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex);
     ErrCode IsCloneAppIndexExisted(const int32_t userId, const int32_t appIndex, bool &res);
-    void SetkeyId(const int32_t userId, const std::string &keyId, const int32_t appIndex = 0);
-    void InnerSetKeyId(const int32_t userId, const std::string &keyId, const int32_t appIndex = 0);
-    std::string GetKeyId(const int32_t userId, const int32_t appIndex);
     bool GetApplicationInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
         ApplicationInfo &appInfo) const;
     bool GetBundleInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
@@ -2359,7 +2399,20 @@ public:
     std::string GetApplicationArkTSMode() const;
     void UpdateHasCloudkitConfig();
     int32_t GetModuleSize() const;
+    std::vector<HapHashAndDeveloperCert> GetModuleHapHash();
     bool GetModuleDeduplicateHar() const;
+    std::optional<InnerModuleInfo> GetInnerModuleInfoForEntry() const;
+    void SetDelayedAging(bool isDelayAging)
+    {
+        isDelayAging_ = isDelayAging;
+    }
+    bool GetDelayedAging() const
+    {
+        return isDelayAging_;
+    }
+    bool isAbilityNameExist(const std::string &moduleName, const std::string &abilityName) const;
+    bool GetPluginBundleInfoByName(
+        const int32_t userId, const std::string pluginBundleName, PluginBundleInfo &pluginBundleInfo) const;
 
 private:
     bool IsExistLauncherAbility() const;
@@ -2401,6 +2454,9 @@ private:
 
     // need to send a notification when uninstallState_ change
     bool isNeedSendNotify_ = false;
+
+    // atomicservice Service Delay Aging
+    bool isDelayAging_ = false;
     
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
     int32_t appIndex_ = Constants::INITIAL_APP_INDEX;

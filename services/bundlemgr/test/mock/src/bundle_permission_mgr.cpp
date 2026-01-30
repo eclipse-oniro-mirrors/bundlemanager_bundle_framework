@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +15,109 @@
 
 #include "bundle_permission_mgr.h"
 
+bool g_isSystemApp = true;
+bool g_isNativeTokenType = true;
+bool g_verifyPermission = true;
+bool g_verifyCallingBundleSdkVersion  = true;
+bool g_isBundleSelfCalling = true;
+bool g_checkUserFromShell = true;
+int32_t g_hapApiVersion = 0;
+bool g_isSystemAppFalse = false;
+bool g_verifyCallingBundleSdkVersionFalse = false;
+bool g_userFromShell = false;
+bool g_isSelfCalling = true;
+bool g_isShellTokenType = true;
+bool g_verifyUninstallPermission = true;
+bool g_isCallingUidValid = true;
+
+void SetSystemAppForTest(bool value)
+{
+    g_isSystemApp = value;
+}
+
+void SetNativeTokenTypeForTest(bool value)
+{
+    g_isNativeTokenType = value;
+}
+
+void SetVerifyCallingPermissionForTest(bool value)
+{
+    g_verifyPermission = value;
+}
+
+void SetHapApiVersion(int32_t version)
+{
+    g_hapApiVersion = version;
+}
+
+void SetVerifyCallingBundleSdkVersionForTest(bool value)
+{
+    g_verifyCallingBundleSdkVersion = value;
+}
+
+void SetIsBundleSelfCallingForTest(bool value)
+{
+    g_isBundleSelfCalling = value;
+}
+void SetSystemAppFalseForTest(bool value)
+{
+    g_isSystemAppFalse = value;
+}
+
+void SetVerifyUninstallPermission(bool value)
+{
+    g_verifyUninstallPermission = value;
+}
+
+void SetVerifyCallingBundleSdkVersionForTestFalse(bool value)
+{
+    g_verifyCallingBundleSdkVersionFalse = value;
+}
+
+void SetUserFromShellForTest(bool value)
+{
+    g_userFromShell = value;
+}
+
+void SetIsSelfCalling(bool value)
+{
+    g_isSelfCalling = value;
+}
+
+void SetIsShellTokenType(bool value)
+{
+    g_isShellTokenType = value;
+}
+
+void SetIsCallingUidValid(bool value)
+{
+    g_isCallingUidValid = value;
+}
+
+void SetCheckUserFromShellForTest(bool value)
+{
+    g_checkUserFromShell = value;
+}
+
+void ResetTestValues()
+{
+    g_isNativeTokenType = true;
+    g_verifyPermission = true;
+    g_isSystemApp = true;
+    g_hapApiVersion = 0;
+    g_verifyCallingBundleSdkVersion = true;
+    g_isBundleSelfCalling = true;
+    g_checkUserFromShell = true;
+    g_isSystemAppFalse = false;
+    g_verifyCallingBundleSdkVersionFalse = false;
+    g_userFromShell = false;
+    g_isSelfCalling = true;
+    g_isShellTokenType = true;
+    g_verifyUninstallPermission = true;
+    g_isCallingUidValid = true;
+}
 namespace OHOS {
+int32_t g_testVerifyPermission = 0;
 namespace AppExecFwk {
 using namespace Security::AccessToken;
 
@@ -80,6 +182,10 @@ int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId)
 {
     return -1;
 }
+bool BundlePermissionMgr::VerifyAcrossUserPermission(int userId)
+{
+    return false;
+}
 #else
 int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId)
 {
@@ -98,7 +204,7 @@ bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
 
 bool BundlePermissionMgr::IsCallingUidValid(int32_t uid)
 {
-    return true;
+    return g_isCallingUidValid;
 }
 
 bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &permissionName,
@@ -109,17 +215,17 @@ bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &pe
 
 bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
 {
-    return true;
+    return g_verifyPermission;
 }
 
 bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames)
 {
-    return true;
+    return g_verifyPermission;
 }
 
 bool BundlePermissionMgr::IsSelfCalling()
 {
-    return true;
+    return g_isSelfCalling;
 }
 
 bool BundlePermissionMgr::VerifyRecoverPermission()
@@ -129,15 +235,19 @@ bool BundlePermissionMgr::VerifyRecoverPermission()
 
 bool BundlePermissionMgr::VerifyUninstallPermission()
 {
-    return true;
+    return g_verifyUninstallPermission;
 }
 
 bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
 {
-    return true;
+    return g_isBundleSelfCalling;
 }
 
 bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, const int32_t &appIndex)
+{
+    return true;
+}
+bool BundlePermissionMgr::VerifyAcrossUserPermission(int userId)
 {
     return true;
 }
@@ -151,13 +261,13 @@ bool BundlePermissionMgr::IsNativeTokenType()
 #else
 bool BundlePermissionMgr::IsNativeTokenType()
 {
-    return true;
+    return g_isNativeTokenType;
 }
 #endif
 
 bool BundlePermissionMgr::IsShellTokenType()
 {
-    return true;
+    return g_isShellTokenType;
 }
 
 bool BundlePermissionMgr::Init()
@@ -172,7 +282,7 @@ void BundlePermissionMgr::UnInit()
 int32_t BundlePermissionMgr::VerifyPermission(const std::string &bundleName, const std::string &permissionName,
     const int32_t userId)
 {
-    return 0;
+    return g_testVerifyPermission;
 }
 
 ErrCode BundlePermissionMgr::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
@@ -211,18 +321,18 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
 
 bool BundlePermissionMgr::IsSystemApp()
 {
-    return false;
+    return g_isSystemAppFalse;
 }
 
 // for old api
 bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
 {
-    return false;
+    return g_verifyCallingBundleSdkVersionFalse;
 }
 
 bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
 {
-    return false;
+    return g_userFromShell;
 }
 #else
 bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
@@ -232,24 +342,24 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
 
 bool BundlePermissionMgr::IsSystemApp()
 {
-    return true;
+    return g_isSystemApp;
 }
 
 bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
 {
-    return true;
+    return g_checkUserFromShell;
 }
 
 // for old api
 bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
 {
-    return true;
+    return g_verifyCallingBundleSdkVersion;
 }
 #endif
 
 int32_t BundlePermissionMgr::GetHapApiVersion()
 {
-    return 0;
+    return g_hapApiVersion;
 }
 
 std::vector<Security::AccessToken::PermissionDef> BundlePermissionMgr::GetPermissionDefList(

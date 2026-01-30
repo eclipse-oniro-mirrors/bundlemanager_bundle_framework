@@ -354,7 +354,7 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
     APP_LOGI_NOFUNC("%{public}s icon is not png, parse by drawable descriptor", resourceInfo.GetKey().c_str());
     BundleResourceDrawable drawable;
     if (!drawable.GetIconResourceByHap(resourceInfo.iconId_, 0, resourceManager, resourceInfo)) {
-        APP_LOGE("key:%{public}s parse failed with hap iconId:%{public}d",
+        APP_LOGE_NOFUNC("key:%{public}s parse failed iconId:%{public}d",
             resourceInfo.GetKey().c_str(), resourceInfo.iconId_);
         return false;
     }

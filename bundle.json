@@ -70,6 +70,7 @@
                 "libpng",
                 "libuv",
                 "napi",
+                "openssl",
                 "os_account",
                 "power_manager",
                 "safwk",
@@ -92,7 +93,8 @@
                 "appspawn",
                 "bounds_checking_function",
                 "webview",
-                "user_auth_framework"
+                "user_auth_framework",
+                "thermal_manager"
             ],
             "third_party": [
                 "jsoncpp"
@@ -195,6 +197,7 @@
                         "bundle_errors.h",
                         "business_error.h",
                         "common_func.h",
+                        "error_data.h",
                         "napi_arg.h",
                         "napi_constants.h"
                       ]

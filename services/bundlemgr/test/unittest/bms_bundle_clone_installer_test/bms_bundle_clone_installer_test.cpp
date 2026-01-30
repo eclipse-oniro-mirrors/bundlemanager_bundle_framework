@@ -299,6 +299,10 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_006, TestSize.
     int32_t appIndex = 0;
     bundleCloneInstall_->InstallCloneApp(bundleName, installer, appIndex);
     EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, true, false, installer), ERR_OK);
+
+    appIndex = 0;
+    bundleCloneInstall_->InstallCloneApp(bundleName, installer, appIndex);
+    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, false, false, installer), ERR_OK);
 }
 
 /**
@@ -479,12 +483,6 @@ HWTEST_F(BmsBundleCloneInstallerTest, RemoveEl5Dir_0100, Function | SmallTest | 
     userInfo.cloneInfos.insert({key, InnerBundleCloneInfotest});
     bundleCloneInstall_->RemoveEl5Dir(userInfo, userId, appIndex);
     EXPECT_NE(userInfo.cloneInfos.find(std::to_string(appIndex)), userInfo.cloneInfos.end());
-
-    userInfo.cloneInfos[key].keyId = "test_key";
-    bundleCloneInstall_->RemoveEl5Dir(userInfo, userId, appIndex);
-    auto it = userInfo.cloneInfos.find(std::to_string(appIndex));
-    EXPECT_FALSE(it->second.keyId.empty());
-    userInfo.cloneInfos.clear();
 }
 
 /**

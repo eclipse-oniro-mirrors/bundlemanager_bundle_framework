@@ -79,7 +79,7 @@ ErrCode BundleUserMgrHost::HandleCreateNewUser(Parcel &data, Parcel &reply)
     if (haveAllow) {
         const int32_t allowSize = data.ReadInt32();
         if (allowSize > DISALLOWLISTMAXSIZE) {
-            APP_LOGE("Abnormal allowList data size reading form parcel, size %{public}d", vectorSize);
+            APP_LOGE("Abnormal allowList data size reading form parcel, size %{public}d", allowSize);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         std::vector<std::string> allowLst;

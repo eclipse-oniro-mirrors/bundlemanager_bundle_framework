@@ -29,6 +29,7 @@
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
 #include "parameters.h"
+#include "scope_guard.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -476,7 +477,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckDeviceType_0100, Function | SmallTest
     InnerBundleInfo innerBundleInfo2;
     infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
     infos.insert(pair<string, InnerBundleInfo>("2", innerBundleInfo2));
-    auto ret = installChecker.CheckDeviceType(infos);
+    auto ret = installChecker.CheckDeviceType(infos, ERR_OK);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -2566,6 +2567,34 @@ HWTEST_F(BmsBundleInstallCheckerTest, BundleUserMgrHostImpl_0004, Function | Sma
     auto res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, USERID, false,
         preInstallBundleInfos);
     EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: CheckCriticalApplicatiosAreInstalled_0100
+ * @tc.name: test CheckCriticalAppAreInstalled
+ * @tc.desc: test CheckCriticalAppAreInstalled
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckCriticalApplicatiosAreInstalled_0100, Function | SmallTest | Level0)
+{
+    ASSERT_NE(bundleUserMgrHostImpl_, nullptr);
+    std::set<PreInstallBundleInfo> preInfos;
+    auto res = bundleUserMgrHostImpl_->CheckCriticalAppAreInstalled(USERID, preInfos);
+    EXPECT_EQ(res, ERR_OK);
+
+#ifdef WINDOW_ENABLE
+    PreInstallBundleInfo info;
+    if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
+        info.SetBundleName(Constants::SCENE_BOARD_BUNDLE_NAME);
+    } else {
+        info.SetBundleName(ServiceConstants::LAUNCHER_BUNDLE_NAME);
+    }
+    preInfos.insert(info);
+    res = bundleUserMgrHostImpl_->CheckCriticalAppAreInstalled(USERID, preInfos);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = bundleUserMgrHostImpl_->CheckCriticalAppAreInstalled(MULTI_USERID, preInfos);
+    EXPECT_NE(res, ERR_OK);
+#endif
 }
 
 /**

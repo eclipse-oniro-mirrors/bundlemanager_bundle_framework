@@ -254,7 +254,8 @@ private:
      * @param uid Indicates the uid of the application.
      * @return Returns ERR_OK if the native bundle install successfully; returns error code otherwise.
      */
-    ErrCode ProcessBundleInstallNative(InnerBundleInfo &info, int32_t &userId);
+    ErrCode ProcessBundleInstallNative(const InnerBundleInfo &info, int32_t userId, bool removeDir = true);
+    ErrCode ProcessBundleInstallNative(const InnerBundleInfo &info, const std::unordered_set<int32_t> &userIds);
     /**
      * @brief The process of uninstalling a native bundle.
      * @param info Indicates the InnerBundleInfo parsed from the config.json in the HAP package.
@@ -262,7 +263,10 @@ private:
      * @param bundleName Indicates the bundleName of the application.
      * @return Returns ERR_OK if the native bundle uninstall successfully; returns error code otherwise.
      */
-    ErrCode ProcessBundleUnInstallNative(InnerBundleInfo &info, int32_t &userId, std::string bundleName);
+    ErrCode ProcessBundleUnInstallNative(const InnerBundleInfo &info, int32_t userId, const std::string &bundleName,
+        const std::string &moduleName = "");
+    ErrCode ProcessBundleUnInstallNative(const InnerBundleInfo &info, const std::unordered_set<int32_t> &userIds,
+        const std::string &bundleName, const std::string &moduleName = "");
     /**
      * @brief The process of updating an exist bundle.
      * @param oldInfo Indicates the exist InnerBundleInfo object get from the database.
@@ -410,6 +414,8 @@ private:
 
     ErrCode CheckU1Enable(const InnerBundleInfo &info, const int32_t userId);
 
+    ErrCode CheckEnterpriseResign(const InnerBundleInfo &oldInfo);
+
 #ifdef X86_EMULATOR_MODE
     ErrCode CheckShellInstallForEmulator(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 #endif
@@ -417,7 +423,7 @@ private:
     ErrCode CheckShellInstallInOobe();
 
     ErrCode CheckInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-        std::unordered_map<std::string, InnerBundleInfo> &infos, bool isSysCapValid);
+        std::unordered_map<std::string, InnerBundleInfo> &infos, ErrCode checkSysCapRes);
 
     ErrCode CheckInstallPermission(const InstallParam &installParam,
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
@@ -554,7 +560,7 @@ private:
 
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
-    ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
+    ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info, bool async) const;
     ErrCode RemoveBundleDataDir(
         const InnerBundleInfo &info, bool forException = false, const bool async = false);
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
@@ -600,6 +606,7 @@ private:
         const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
     void SetAPIAndSdkVersions(int32_t targetAPIVersion, uint32_t minAPIVersion, const std::string &compileSdlVersion);
     void SetUid(int32_t uid);
+    void StopRelable(const InnerBundleInfo &info);
     void SetIsAbcCompressed();
     ErrCode CheckNativeFileWithOldInfo(
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
@@ -634,9 +641,9 @@ private:
     bool IsDataPreloadHap(const std::string &path) const;
     ErrCode ExtractArkProfileFile(const std::string &modulePath, const std::string &bundleName,
         int32_t userId) const;
-    ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo, bool checkRepeat = false) const;
+    ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo, bool checkRepeat = false);
     ErrCode CopyPgoFileToArkProfileDir(const std::string &moduleName, const std::string &modulePath,
-        const std::string &bundleName, int32_t userId) const;
+        const std::string &bundleName, int32_t userId);
     ErrCode CopyPgoFile(const std::string &moduleName, const std::string &pgoPath,
         const std::string &bundleName, int32_t userId) const;
     ErrCode CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos, int32_t userId);
@@ -731,7 +738,7 @@ private:
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
     ErrCode ExtractResFileDir(const std::string &modulePath) const;
-    ErrCode ExtractHnpFileDir(const std::string &cpuAbi, const std::string &hnpPackageInfoString,
+    ErrCode ExtractHnpFileDir(const std::string &cpuAbi, const std::map<std::string, std::string> &hnpPackageMap,
         const std::string &modulePath) const;
     void DeleteOldNativeLibraryPath() const;
     std::string GetRealSoPath(const std::string &bundleName, const std::string &nativeLibraryPath,
@@ -742,28 +749,26 @@ private:
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
+    void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
-    ErrCode CleanBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
-        const std::string &bundleName, int32_t userId) const;
+    ErrCode CleanArkStartupCache(const std::string &bundleName) const;
     void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteCloudShader(const std::string &bundleName) const;
-    ErrCode DeleteEl1ShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
-    ErrCode DeleteBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
+    ErrCode DeleteEl1ShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
         const std::string &bundleName, int32_t userId) const;
     ArkStartupCache CreateArkStartupCacheParameter(const std::string &bundleName,
         int32_t userId, BundleType bundleType, int32_t uid);
     ErrCode ProcessArkStartupCache(const ArkStartupCache &createArk,
         int32_t moduleNum, int32_t userId) const;
     ErrCode CreateArkStartupCache(const ArkStartupCache &createArk) const;
-    ErrCode CleanArkStartupCache(const std::string &cacheDir, const std::string &bundleName, int32_t userId) const;
     ErrCode DeleteArkStartupCache(const std::string &cacheDir, const std::string &bundleName, int32_t userId) const;
     bool VerifyActivationLock() const;
     bool VerifyActivationLockToken() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
-    void CreateScreenLockProtectionDir();
-    void CreateEl5AndSetPolicy(InnerBundleInfo &info);
+    void CreateScreenLockProtectionDir(bool withOtherUsers = false);
+    void CreateEl5AndSetPolicy(InnerBundleInfo &info, bool withOtherUsers);
     void DeleteScreenLockProtectionDir(const std::string bundleName) const;
-    void DeleteEncryptionKeyId(const InnerBundleInfo &info, bool isKeepData) const;
+    void DeleteEncryptionKeyId(const std::string &bundleName, bool existEl5Dir, bool isKeepData) const;
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     void PrepareSkillUri(const std::vector<Skill> &skills, std::vector<AppDomainVerify::SkillUri> &skillUris) const;
 #endif
@@ -784,6 +789,8 @@ private:
     void GetRemoveExtensionDirs(
         std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
     void CreateExtensionDataDir(InnerBundleInfo &info) const;
+    bool UpdateExtensionDirsApl(const std::vector<std::string> &updateExtensionDirs,
+        const InnerBundleInfo &info) const;
     void RemoveCreatedExtensionDirsForException() const;
     void RemoveOldExtensionDirs() const;
     ErrCode InnerProcessUpdateHapToken(const bool isOldSystemApp);
@@ -791,7 +798,7 @@ private:
     std::string GetInstallSource(const InstallParam &installParam) const;
     void SetApplicationFlagsAndInstallSource(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InstallParam &installParam) const;
-    bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId) const;
+    ErrCode CheckAppBlackList(const std::string &bundleName, const int32_t userId) const;
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName, const std::string &appIdentifier) const;
     void CheckSystemFreeSizeAndClean() const;
     void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier) const;
@@ -813,6 +820,8 @@ private:
     ErrCode CheckAppDistributionType();
     ErrCode CheckSpaceIsolation(
         const InstallParam &installParam, const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
+    ErrCode CheckDriverIsolation(const Security::Verify::HapVerifyResult &hapVerifyResult, const int32_t userId,
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
 #ifdef WEBVIEW_ENABLE
     ErrCode VerifyArkWebInstall();
     void RestoreconForArkweb();
@@ -839,6 +848,8 @@ private:
         const InstallParam &installParam, bool isRecover);
     ErrCode CheckShellCanInstallPreApp(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool DeleteUninstallBundleInfoFromDb(const std::string &bundleName);
+    void CheckInstallAllowDowngrade(const InstallParam &installParam,
+        const InnerBundleInfo &oldBundleInfo, ErrCode &result);
 
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
         Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
@@ -875,10 +886,17 @@ private:
     bool CheckAddResultMsg(const InnerBundleInfo &info, bool isContainEntry);
     void ProcessUpdateShortcut();
     ErrCode CheckArkTSMode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    bool AddInstallingBundleName(const InstallParam &installParam);
+    bool DeleteInstallingBundleName(const InstallParam &installParam);
+    void RollbackHnpInstall(const std::string &bundleName, const std::unordered_set<int32_t> &userIds);
+    void VerifyDelayedAging(InnerBundleInfo &bundleInfo, int32_t uid);
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     ErrCode CheckInstallPermission(const std::string &appId, const std::string &appIdentifier,
         const std::vector<std::string> &allowedAppIds, const std::vector<std::string> &disallowedAppIds);
 #endif
+    ErrCode ProcessPluginFilesWhenUpdate(const InnerBundleInfo &oldInfo,
+        const std::string &oldPath, const std::string &newPath);
+    void NotifyBundleCallback(const NotifyType &type, int32_t uid);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;
@@ -899,6 +917,7 @@ private:
     bool needDeleteAppTempPath_ = false;
     bool isBundleExist_ = false;
     bool isBundleCrossAppSharedConfig_ = false;
+    bool isHnpInstalled_ = false;
     InstallerState state_ = InstallerState::INSTALL_START;
     uint32_t versionCode_ = 0;
     uint32_t accessTokenId_ = 0;

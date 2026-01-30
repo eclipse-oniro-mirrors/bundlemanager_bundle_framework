@@ -23,6 +23,7 @@
 #include "application_info.h"
 #include "bms_extension_client.h"
 #include "bundle_info.h"
+#include "bundle_option.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_mgr_service.h"
@@ -75,7 +76,7 @@ using namespace OHOS::Security;
 namespace OHOS {
 namespace {
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 const int32_t APP_INDEX = 1;
 const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string BUNDLE_NAME_NOT_EXIST = "com.example.not_exist";
@@ -110,6 +111,9 @@ const std::string BUNDLE_NAME_LAYERED_IMAGE = "com.example.thumbnailtest";
 const std::string LAYERED_IMAGE_HAP_PATH = "/data/test/resource/bms/accesstoken_bundle/thumbnail.hap";
 const std::string TEST_BUNDLE_NAME = "testBundleName";
 const int32_t U1 = 1;
+const int32_t INVALID_INDEX = 6;
+const std::string INVALID_ABILITY_NAME = "com.example.bmsaccesstoken.Ability";
+constexpr const char* CONTACTS_BUNDLE_NAME = "com.ohos.contacts";
 }  // namespace
 
 class BmsBundleResourceTest : public testing::Test {
@@ -4260,6 +4264,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0222, Function | SmallTest
     EXPECT_NE(manager, nullptr);
     bool ret = manager->GetLauncherAbilityInfos(bundleName, abilityInfos);
     EXPECT_TRUE(ret);
+    EXPECT_TRUE(abilityInfos.size() > 0);
 }
 
 /**
@@ -6246,5 +6251,583 @@ HWTEST_F(BmsBundleResourceTest, GetAllUninstallBundleResourceInfo_0020, Function
             EXPECT_TRUE(infos.empty());
         }
     }
+}
+
+/**
+ * @tc.number: GetSingleLauncherAbilityResourceInfo_0001
+ * Function: GetSingleLauncherAbilityResourceInfo
+ * @tc.name: test
+ * @tc.desc: test GetSingleLauncherAbilityResourceInfo_0001
+ */
+HWTEST_F(BmsBundleResourceTest, GetSingleLauncherAbilityResourceInfo_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+        std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfo;
+        bool ret = manager->GetSingleLauncherAbilityResourceInfo("", flags, launcherAbilityResourceInfo, APP_INDEX);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: GetSingleLauncherAbilityResourceInfo_0002
+ * Function: GetSingleLauncherAbilityResourceInfo
+ * @tc.name: test
+ * @tc.desc: test GetSingleLauncherAbilityResourceInfo_0002
+ */
+HWTEST_F(BmsBundleResourceTest, GetSingleLauncherAbilityResourceInfo_0002, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.abilityName_ = ABILITY_NAME;
+    resourceInfo.appIndex_ = APP_INDEX;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ret);
+    if (manager != nullptr) {
+        uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+        std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfo;
+        ret = manager->GetSingleLauncherAbilityResourceInfo(
+            BUNDLE_NAME, flags, launcherAbilityResourceInfo, APP_INDEX);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: GetSingleLauncherAbilityResourceInfo_0003
+ * Function: GetSingleLauncherAbilityResourceInfo
+ * @tc.name: test
+ * @tc.desc: test GetSingleLauncherAbilityResourceInfo_0003
+ */
+HWTEST_F(BmsBundleResourceTest, GetSingleLauncherAbilityResourceInfo_0003, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+
+    ResourceInfo resExact;
+    resExact.bundleName_ = BUNDLE_NAME;
+    resExact.moduleName_ = MODULE_NAME;
+    resExact.abilityName_ = ABILITY_NAME;
+    resExact.appIndex_ = 0;
+    EXPECT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resExact));
+
+    ResourceInfo resFallback;
+    resFallback.bundleName_ = BUNDLE_NAME;
+    resFallback.moduleName_ = "anotherModule";
+    resFallback.abilityName_ = "AnotherAbility";
+    resExact.appIndex_ = 0;
+    EXPECT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resFallback));
+
+    std::vector<ResourceInfo> iconInfos;
+    ResourceInfo iconExact = resExact;
+    iconExact.icon_ = "icon_exact";
+    iconInfos.push_back(iconExact);
+
+    ResourceInfo iconFallback;
+    iconFallback.bundleName_ = BUNDLE_NAME;
+    iconFallback.appIndex_ = APP_INDEX;
+    iconFallback.icon_ = "icon_fallback";
+    iconInfos.push_back(iconFallback);
+
+    EXPECT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(
+        USERID, IconResourceType::THEME_ICON, iconInfos));
+
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    std::vector<LauncherAbilityResourceInfo> infos;
+    EXPECT_TRUE(manager->GetSingleLauncherAbilityResourceInfo(BUNDLE_NAME, flags, infos, 0));
+    ASSERT_EQ(infos.size(), 2u);
+
+    auto itExact = std::find_if(infos.begin(), infos.end(),
+        [](const auto &info) { return info.abilityName == ABILITY_NAME; });
+    ASSERT_NE(itExact, infos.end());
+
+    auto itFallback = std::find_if(infos.begin(), infos.end(),
+        [](const auto &info) { return info.abilityName == "AnotherAbility"; });
+    ASSERT_NE(itFallback, infos.end());
+}
+
+/**
+ * @tc.number: GetAllBundleResourceInfo_0001
+ * Function: GetAllBundleResourceInfo
+ * @tc.name: test
+ * @tc.desc: test GetAllBundleResourceInfo_0001
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllBundleResourceInfo_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    ResourceInfo resNormal;
+    resNormal.bundleName_ = BUNDLE_NAME;
+    resNormal.moduleName_ = MODULE_NAME;
+    resNormal.abilityName_ = ABILITY_NAME;
+    resNormal.appIndex_ = 0;
+    resNormal.icon_ = "icon_normal";
+    resNormal.label_ = "label_normal";
+    EXPECT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resNormal));
+
+    ResourceInfo resContacts;
+    resContacts.bundleName_ = "com.ohos.contacts";
+    resContacts.moduleName_ = "contactsModule";
+    resContacts.abilityName_ = "MainAbility";
+    resContacts.appIndex_ = 0;
+    resContacts.icon_ = "icon_contacts";
+    resContacts.label_ = "label_contacts";
+    EXPECT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resContacts));
+
+    int32_t userId = manager->GetUserId();
+    std::vector<ResourceInfo> iconInfos;
+    ResourceInfo iconNormal = resNormal;
+    iconInfos.push_back(iconNormal);
+
+    ResourceInfo iconContacts = resContacts;
+    iconInfos.push_back(iconContacts);
+
+    EXPECT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(
+        userId, IconResourceType::THEME_ICON, iconInfos));
+
+    std::vector<BundleResourceInfo> infos;
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    EXPECT_TRUE(manager->GetAllBundleResourceInfo(flags, infos));
+    EXPECT_TRUE(!infos.empty());
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfoList_0001
+ * Function: GetLauncherAbilityResourceInfoList
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfoList
+ */
+HWTEST_F(BmsBundleResourceTest, GetLauncherAbilityResourceInfoList_0001, Function | SmallTest | Level0)
+{
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = BUNDLE_NAME;
+    optiont.abilityName = ABILITY_NAME;
+    optiont.appIndex = INVALID_INDEX;
+    optiontList.push_back(optiont);
+
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfo;
+    auto ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optiontList,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), launcherAbilityResourceInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfoList_0002
+ * Function: GetLauncherAbilityResourceInfoList
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfoList
+ */
+HWTEST_F(BmsBundleResourceTest, GetLauncherAbilityResourceInfoList_0002, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.abilityName_ = ABILITY_NAME;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ret);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = BUNDLE_NAME;
+    optiont.moduleName = MODULE_NAME;
+    optiont.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
+    auto result = bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optiontList,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), infos);
+    EXPECT_EQ(result, ERR_OK);
+    setuid(Constants::ROOT_UID);
+    ret = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfoList_0003
+ * Function: GetLauncherAbilityResourceInfoList
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfoList
+ */
+HWTEST_F(BmsBundleResourceTest, GetLauncherAbilityResourceInfoList_0003, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.abilityName_ = ABILITY_NAME;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ret);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = "";
+    optiont.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
+    auto result = bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optiontList,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), infos);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    setuid(Constants::ROOT_UID);
+    ret = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfoList_0004
+ * Function: GetLauncherAbilityResourceInfoList
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfoList
+ */
+HWTEST_F(BmsBundleResourceTest, GetLauncherAbilityResourceInfoList_0004, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.abilityName_ = ABILITY_NAME;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ret);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = BUNDLE_NAME;
+    optiont.moduleName = MODULE_NAME;
+    optiont.abilityName = INVALID_ABILITY_NAME;
+    optiontList.push_back(optiont);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
+    auto result = bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optiontList,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), infos);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    setuid(Constants::ROOT_UID);
+    ret = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetElementLauncherAbilityResourceInfo_0001
+ * Function: GetElementLauncherAbilityResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetElementLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, GetElementLauncherAbilityResourceInfo_0001, Function | SmallTest | Level0)
+{
+    LauncherAbilityResourceInfo launcherAbilityResourceInfo;
+    LauncherAbilityResourceInfo resourceInfo;
+    std::vector<LauncherAbilityResourceInfo> allResources;
+    resourceInfo.bundleName = BUNDLE_NAME;
+    resourceInfo.moduleName = MODULE_NAME;
+    resourceInfo.abilityName = ABILITY_NAME;
+    resourceInfo.appIndex = APP_INDEX;
+    allResources.push_back(resourceInfo);
+
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    auto ret = bundleResourceHostImpl->GetElementLauncherAbilityResourceInfo(
+        allResources, MODULE_NAME, ABILITY_NAME, APP_INDEX, launcherAbilityResourceInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetElementLauncherAbilityResourceInfo_0002
+ * Function: GetElementLauncherAbilityResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetElementLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, GetElementLauncherAbilityResourceInfo_0002, Function | SmallTest | Level0)
+{
+    LauncherAbilityResourceInfo launcherAbilityResourceInfo;
+    LauncherAbilityResourceInfo resourceInfo;
+    std::vector<LauncherAbilityResourceInfo> allResources;
+    resourceInfo.bundleName = BUNDLE_NAME;
+    resourceInfo.moduleName = MODULE_NAME;
+    resourceInfo.abilityName = ABILITY_NAME;
+    resourceInfo.appIndex = APP_INDEX;
+    allResources.push_back(resourceInfo);
+
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    auto ret = bundleResourceHostImpl->GetElementLauncherAbilityResourceInfo(
+        allResources, "", ABILITY_NAME, APP_INDEX, launcherAbilityResourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetElementLauncherAbilityResourceInfo_0003
+ * Function: GetElementLauncherAbilityResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetElementLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, GetElementLauncherAbilityResourceInfo_0003, Function | SmallTest | Level0)
+{
+    LauncherAbilityResourceInfo launcherAbilityResourceInfo;
+    LauncherAbilityResourceInfo resourceInfo;
+    std::vector<LauncherAbilityResourceInfo> allResources;
+    resourceInfo.bundleName = BUNDLE_NAME;
+    resourceInfo.moduleName = MODULE_NAME;
+    resourceInfo.abilityName = ABILITY_NAME;
+    resourceInfo.appIndex = APP_INDEX;
+    allResources.push_back(resourceInfo);
+
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    auto ret = bundleResourceHostImpl->GetElementLauncherAbilityResourceInfo(
+        allResources, MODULE_NAME, "", APP_INDEX, launcherAbilityResourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetElementLauncherAbilityResourceInfo_0004
+ * Function: GetElementLauncherAbilityResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetElementLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, GetElementLauncherAbilityResourceInfo_0004, Function | SmallTest | Level0)
+{
+    LauncherAbilityResourceInfo launcherAbilityResourceInfo;
+    LauncherAbilityResourceInfo resourceInfo;
+    std::vector<LauncherAbilityResourceInfo> allResources;
+    resourceInfo.bundleName = BUNDLE_NAME;
+    resourceInfo.moduleName = MODULE_NAME;
+    resourceInfo.abilityName = ABILITY_NAME;
+    resourceInfo.appIndex = APP_INDEX;
+    allResources.push_back(resourceInfo);
+
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    auto ret = bundleResourceHostImpl->GetElementLauncherAbilityResourceInfo(
+        allResources, MODULE_NAME, ABILITY_NAME, INVALID_INDEX, launcherAbilityResourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0259
+ * @tc.name: GetLauncherAbilityResourceInfo
+ * @tc.desc: test GetLauncherAbilityResourceInfo of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0259, Function | SmallTest | Level0)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    LauncherAbilityResourceInfo launcherAbilityResourceInfo;
+    BundleOptionInfo optiont;
+    optiont.bundleName = BUNDLE_NAME;
+    optiont.abilityName = ABILITY_NAME;
+    auto ret = bmsExtensionClient->GetLauncherAbilityResourceInfo(optiont,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherAbilityResourceInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0260
+ * @tc.name: GetLauncherAbilityResourceInfo
+ * @tc.desc: test GetLauncherAbilityResourceInfo of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0260, Function | SmallTest | Level0)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+
+    bmsExtensionClient->bmsExtensionImpl_ = std::make_shared<BmsExtensionDataMgr>();
+    LauncherAbilityResourceInfo launcherAbilityResourceInfo;
+    BundleOptionInfo optiont;
+    optiont.bundleName = BUNDLE_NAME;
+    optiont.abilityName = ABILITY_NAME;
+    auto ret = bmsExtensionClient->GetLauncherAbilityResourceInfo(optiont,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherAbilityResourceInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_02601
+ * @tc.name: GetLauncherAbilityResourceInfo
+ * @tc.desc: test GetLauncherAbilityResourceInfo of BundleResourceManager
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0261, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    ResourceInfo resExact;
+    resExact.bundleName_ = BUNDLE_NAME;
+    resExact.moduleName_ = MODULE_NAME;
+    resExact.abilityName_ = ABILITY_NAME;
+    resExact.appIndex_ = 0;
+    resExact.icon_ = "icon_exact_base";
+    resExact.label_ = "label_exact";
+    EXPECT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resExact));
+
+    ResourceInfo resFallback;
+    resFallback.bundleName_ = BUNDLE_NAME;
+    resFallback.moduleName_ = "anotherModule";
+    resFallback.abilityName_ = "AnotherAbility";
+    resFallback.appIndex_ = 0;
+    resFallback.icon_ = "icon_fallback_base";
+    resFallback.label_ = "label_fallback";
+    EXPECT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resFallback));
+
+    int32_t userId = manager->GetUserId();
+    std::vector<ResourceInfo> iconInfos;
+    ResourceInfo iconExact = resExact;
+    iconExact.icon_ = "icon_exact_theme";
+    iconInfos.push_back(iconExact);
+
+    ResourceInfo iconFallback = resFallback;
+    iconFallback.moduleName_ = "other";
+    iconFallback.abilityName_ = "Other";
+    iconFallback.icon_ = "icon_fallback_theme";
+    iconInfos.push_back(iconFallback);
+
+    EXPECT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(
+        userId, IconResourceType::THEME_ICON, iconInfos));
+
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    std::vector<LauncherAbilityResourceInfo> infos;
+    EXPECT_TRUE(manager->GetAllLauncherAbilityResourceInfo(flags, infos));
+
+    auto itExact = std::find_if(infos.begin(), infos.end(),
+        [](const auto &info) { return info.abilityName == ABILITY_NAME; });
+    ASSERT_NE(itExact, infos.end());
+
+    auto itFallback = std::find_if(infos.begin(), infos.end(),
+        [](const auto &info) { return info.abilityName == "AnotherAbility"; });
+    ASSERT_NE(itFallback, infos.end());
+    EXPECT_TRUE(!infos.empty());
+}
+
+/**
+ * @tc.number: FilterUninstallResource_0001
+ * Function: FilterUninstallResource
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test FilterUninstallResource
+ */
+HWTEST_F(BmsBundleResourceTest, FilterUninstallResource_0001, Function | SmallTest | Level0)
+{
+    std::vector<BundleResourceInfo> resourceList;
+    BundleResourceInfo res;
+    resourceList.emplace_back(res);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    bundleResourceHostImpl->FilterUninstallResource(100, resourceList);
+    EXPECT_EQ(true, resourceList.empty());
+}
+
+/**
+ * @tc.number: GetBundleResourceInfo_0001
+ * @tc.name: test GetBundleResourceInfo for contacts bundle
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo when bundleName is contacts bundle
+ */
+HWTEST_F(BmsBundleResourceTest, GetBundleResourceInfo_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    
+    ResourceInfo bundleResource;
+    bundleResource.bundleName_ = CONTACTS_BUNDLE_NAME;
+    bundleResource.label_ = "Contacts";
+    bundleResource.icon_ = "data:image/png;base64,original_icon";
+    bool added = manager->bundleResourceRdb_->AddResourceInfo(bundleResource);
+    EXPECT_TRUE(added);
+    
+    ResourceInfo themeResource;
+    themeResource.bundleName_ = CONTACTS_BUNDLE_NAME;
+    themeResource.icon_ = "data:image/png;base64,theme_icon";
+    themeResource.foreground_.push_back(1);
+    themeResource.background_.push_back(2);
+    std::vector<ResourceInfo> themeResources;
+    themeResources.push_back(themeResource);
+    
+    bool addedIcon = manager->bundleResourceIconRdb_->AddResourceIconInfos(
+        USERID,
+        IconResourceType::THEME_ICON,
+        themeResources);
+    EXPECT_TRUE(addedIcon);
+    
+    BundleResourceInfo result;
+    bool ret = manager->GetBundleResourceInfo(
+        CONTACTS_BUNDLE_NAME,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+        result);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetBundleResourceInfo_0002
+ * @tc.name: test GetBundleResourceInfo when match found
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo when match found in resourceIconInfos
+ */
+HWTEST_F(BmsBundleResourceTest, GetBundleResourceInfo_0002, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    
+    std::string bundleName = "com.example.testbundle";
+    int32_t appIndex = 0;
+    
+    ResourceInfo bundleResource;
+    bundleResource.bundleName_ = bundleName;
+    bundleResource.label_ = "Test Bundle";
+    bundleResource.icon_ = "data:image/png;base64,original_icon";
+    bool added = manager->bundleResourceRdb_->AddResourceInfo(bundleResource);
+    EXPECT_TRUE(added);
+    
+    ResourceInfo themeResource;
+    themeResource.bundleName_ = bundleName;
+    themeResource.appIndex_ = appIndex;
+    themeResource.icon_ = "data:image/png;base64,matched_icon";
+    themeResource.foreground_.push_back(3);
+    themeResource.background_.push_back(4);
+    std::vector<ResourceInfo> themeResources;
+    themeResources.push_back(themeResource);
+    
+    bool addedIcon = manager->bundleResourceIconRdb_->AddResourceIconInfos(
+        USERID,
+        IconResourceType::THEME_ICON,
+        themeResources);
+    EXPECT_TRUE(addedIcon);
+    
+    BundleResourceInfo result;
+    bool ret = manager->GetBundleResourceInfo(
+        bundleName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+        result,
+        appIndex);
+    
+    EXPECT_TRUE(ret);
 }
 } // OHOS

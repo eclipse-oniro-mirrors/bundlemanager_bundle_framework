@@ -32,6 +32,7 @@ enum class ComponentType {
 
 enum class UninstallComponentType {
     EXTENSION = 1,
+    UI_EXTENSION = 2,
 };
 
 enum class DisposedType {

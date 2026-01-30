@@ -128,6 +128,7 @@ struct HapModuleInfo : public Parcelable {
     uint32_t descriptionId = 0;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
+    uint32_t versionCode = 0;
     int32_t upgradeFlag = 0;
     int supportedModes = 0;
     ModuleColorMode colorMode = ModuleColorMode::AUTO;
@@ -161,6 +162,8 @@ struct HapModuleInfo : public Parcelable {
     std::string moduleSourceDir;
     std::string buildHash;
     std::string fileContextMenu;
+    std::string easyGo;
+    std::string shareFiles;
     std::string routerMap;
     std::string packageName;
     std::string crossAppSharedConfig;
@@ -191,6 +194,7 @@ struct HapModuleInfo : public Parcelable {
     std::vector<RouterItem> routerArray;
     std::vector<AppEnvironment> appEnvironments;
     std::map<std::string, bool> isRemovable;
+    std::set<std::string> isRemovableSet;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

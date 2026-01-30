@@ -55,7 +55,15 @@ ErrCode SharedBundleInstaller::ParseFiles()
     for (const auto &path : installParam_.sharedBundleDirPaths) {
         auto installer = std::make_shared<InnerSharedBundleInstaller>(path);
         result = installer->ParseFiles(checkParam);
-        CHECK_RESULT(result, "parse file failed %{public}d");
+        if (result != ERR_OK) {
+            APP_LOGE("parse file failed %{public}d", result);
+            EventInfo eventInfo;
+            eventInfo.bundleName = path;
+            eventInfo.errCode = result;
+            eventInfo.isPreInstallApp = installParam_.isPreInstallApp;
+            EventReport::SendBundleSystemEvent(BundleEventType::INSTALL, eventInfo);
+            return result;
+        }
         if (innerInstallers_.find(installer->GetBundleName()) != innerInstallers_.end()) {
             APP_LOGW("sharedBundleDirPaths does not support that different paths contain hsp of same bundleName");
             continue;

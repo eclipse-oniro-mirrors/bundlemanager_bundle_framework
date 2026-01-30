@@ -113,6 +113,7 @@ private:
     bool isEnterpriseBundle_ = false;
     bool isCompressNativeLibs_ = true;
     uint32_t versionCode_ = 0;
+    int64_t startTime_ = 0;
     std::string bundleName_;
     std::string bundleMsg_;
     std::string appIdentifier_;

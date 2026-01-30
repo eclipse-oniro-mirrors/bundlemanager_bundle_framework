@@ -88,6 +88,7 @@ const char* APPLICATION_MODULE_SOURCE_DIRS = "moduleSourceDirs";
 const char* APPLICATION_HNP_PACKAGES = "hnpPackages";
 const char* APPLICATION_HNP_PACKAGES_PACKAGE = "package";
 const char* APPLICATION_HNP_PACKAGES_TYPE = "type";
+const char* APPLICATION_HNP_PACKAGES_INDEPENDENT_SIGN = "independentSign";
 const char* APPLICATION_MODULE_INFOS = "moduleInfos";
 const char* APPLICATION_META_DATA_CONFIG_JSON = "metaData";
 const char* APPLICATION_META_DATA_MODULE_JSON = "metadata";
@@ -149,6 +150,7 @@ const char* APPLICATION_ASSET_ACCESS_GROUPS = "assetAccessGroups";
 const char* APPLICATION_HAS_PLUGIN = "hasPlugin";
 const char* APPLICATION_START_MODE = "startMode";
 const char* APPLICATION_APP_PRELOAD_PHASE = "appPreloadPhase";
+const char* APPLICATION_APP_SIGN_TYPE = "appSignType";
 }
 
 bool MultiAppModeData::ReadFromParcel(Parcel &parcel)
@@ -612,6 +614,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     hasPlugin = parcel.ReadBool();
     startMode = static_cast<StartMode>(parcel.ReadUint8());
     appPreloadPhase = static_cast<AppPreloadPhase>(parcel.ReadUint8());
+    appSignType = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -800,6 +803,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasPlugin);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(startMode));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(appPreloadPhase));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appSignType));
     return true;
 }
 
@@ -923,6 +927,7 @@ void to_json(nlohmann::json &jsonObject, const HnpPackage &hnpPackage)
     jsonObject = nlohmann::json {
         {APPLICATION_HNP_PACKAGES_PACKAGE, hnpPackage.package},
         {APPLICATION_HNP_PACKAGES_TYPE, hnpPackage.type},
+        {APPLICATION_HNP_PACKAGES_INDEPENDENT_SIGN, hnpPackage.independentSign},
     };
 }
 
@@ -941,6 +946,12 @@ void from_json(const nlohmann::json &jsonObject, HnpPackage &hnpPackage)
         APPLICATION_HNP_PACKAGES_TYPE,
         hnpPackage.type,
         true,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_HNP_PACKAGES_INDEPENDENT_SIGN,
+        hnpPackage.independentSign,
+        false,
         parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read Resource error %{public}d", parseResult);
@@ -1057,7 +1068,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_ASSET_ACCESS_GROUPS, applicationInfo.assetAccessGroups},
         {APPLICATION_HAS_PLUGIN, applicationInfo.hasPlugin},
         {APPLICATION_START_MODE, applicationInfo.startMode},
-        {APPLICATION_APP_PRELOAD_PHASE, applicationInfo.appPreloadPhase}
+        {APPLICATION_APP_PRELOAD_PHASE, applicationInfo.appPreloadPhase},
+        {APPLICATION_APP_SIGN_TYPE, applicationInfo.appSignType}
     };
 }
 
@@ -1285,6 +1297,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.startMode, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<AppPreloadPhase>(jsonObject, jsonObjectEnd, APPLICATION_APP_PRELOAD_PHASE,
         applicationInfo.appPreloadPhase, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_APP_SIGN_TYPE,
+        applicationInfo.appSignType, false, parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error : %{public}d", parseResult);
     }

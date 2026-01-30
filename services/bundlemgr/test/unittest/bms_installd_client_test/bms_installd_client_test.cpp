@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -227,11 +227,11 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractFiles_0300, TestSiz
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0100 start";
-    std::string hnpPackageInfo = EMPTY_STRING;
+    std::map<std::string, std::string> hnpPackageMap;
     ExtractParam extractParam;
     extractParam.srcPath = EMPTY_STRING;
     extractParam.targetPath = TARGET_PATH;
-    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0100 end";
 }
@@ -244,11 +244,11 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0100, Test
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0200, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0200 start";
-    std::string hnpPackageInfo = "hnpPackageInfo";
+    std::map<std::string, std::string> hnpPackageMap;
     ExtractParam extractParam;
     extractParam.srcPath = SRC_PATH;
     extractParam.targetPath = EMPTY_STRING;
-    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0200 end";
 }
@@ -261,12 +261,15 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0200, Test
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0300, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0300 start";
-    std::string hnpPackageInfo = "hnpPackageInfo";
+    std::map<std::string, std::string> hnpPackageMap = {
+        {"package", "hello.hnp"},
+        {"typp", "public"}
+    };
     ExtractParam extractParam;
     extractParam.srcPath = SRC_PATH;
     extractParam.targetPath = TARGET_PATH;
-    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageInfo, extractParam);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractHnpFiles, hnpPackageInfo, extractParam));
+    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageMap, extractParam);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractHnpFiles, hnpPackageMap, extractParam));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0300 end";
 }
 
@@ -278,15 +281,15 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0300, Test
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ProcessBundleInstallNative_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ProcessBundleInstallNative_0100 start";
-    std::string userId = std::to_string(USERID);
-    std::string hnpRootPath = SRC_PATH;
-    std::string hapPath = SRC_PATH;
-    std::string cpuAbi = CPU_ABI;
-    std::string packageName = "com.example.test";
+    InstallHnpParam param;
+    param.userId = std::to_string(USERID);
+    param.hnpRootPath = SRC_PATH;
+    param.hapPath = SRC_PATH;
+    param.cpuAbi = CPU_ABI;
+    param.packageName = "com.example.test";
 
-    ErrCode result = installClient_->ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ProcessBundleInstallNative,
-        userId, hnpRootPath, hapPath, cpuAbi, packageName));
+    ErrCode result = installClient_->ProcessBundleInstallNative(param);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ProcessBundleInstallNative, param));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ProcessBundleInstallNative_0100 end";
 }
 
@@ -560,7 +563,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveDir_0200, TestSize.L
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveDir_0200 start";
     std::string dir = DIR;
     ErrCode result = installClient_->RemoveDir(dir);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::RemoveDir, dir));
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::RemoveDir, dir, false));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveDir_0200 end";
 }
 
@@ -603,7 +606,9 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetBundleStats_0100, TestS
     std::string bundleName = EMPTY_STRING;
     int userId = USERID;
     std::vector<int64_t> bundleStats;
-    ErrCode result = installClient_->GetBundleStats(bundleName, userId, bundleStats, 0, 0, 0, {});
+    std::unordered_set<int32_t> uids;
+    uids.emplace(0);
+    ErrCode result = installClient_->GetBundleStats(bundleName, userId, bundleStats, uids, 0, 0, {});
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetBundleStats_0100 end";
 }
@@ -619,10 +624,12 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetBundleStats_0200, TestS
     std::string bundleName = BUNDLE_NAME;
     int userId = USERID;
     std::vector<int64_t> bundleStats;
+    std::unordered_set<int32_t> uids;
+    uids.emplace(0);
     std::vector<std::string> moduleNameList = {};
-    ErrCode result = installClient_->GetBundleStats(bundleName, userId, bundleStats, 0, 0, 0);
+    ErrCode result = installClient_->GetBundleStats(bundleName, userId, bundleStats, uids, 0, 0);
     EXPECT_EQ(result, installClient_->CallService(&IInstalld::GetBundleStats,
-        bundleName, userId, bundleStats, 0, 0, 0, moduleNameList));
+        bundleName, userId, bundleStats, uids, 0, 0, moduleNameList));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetBundleStats_0200 end";
 }
 
@@ -688,6 +695,59 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetDirApl_0400, TestSize.L
     ErrCode result = installClient_->SetDirApl(dir, bundleName, apl, true, false, UID);
     EXPECT_EQ(result, installClient_->CallService(&IInstalld::SetDirApl, dir, bundleName, apl, true, false, UID));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0400 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_SetDirsApl_0100
+ * @tc.name: SetDirsApl
+ * @tc.desc: Test whether SetDirsApl is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetDirsApl_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirsApl_0100 start";
+    std::vector<std::string> dirs;
+
+    CreateDirParam createDirParam;
+    createDirParam.extensionDirs = dirs;
+    createDirParam.bundleName = BUNDLE_NAME;
+    createDirParam.apl = APL;
+    createDirParam.isPreInstallApp = false;
+    createDirParam.debug = false;
+    createDirParam.uid = UID;
+    ErrCode result = installClient_->SetDirsApl(createDirParam, true);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    std::string dir = DIR;
+    dirs.emplace_back(dir);
+    CreateDirParam createDirParam2;
+    createDirParam2.extensionDirs = dirs;
+    createDirParam2.bundleName = EMPTY_STRING;
+    createDirParam2.apl = APL;
+    createDirParam2.isPreInstallApp = true;
+    createDirParam2.debug = false;
+    createDirParam2.uid = UID;
+    result = installClient_->SetDirsApl(createDirParam2, false);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    CreateDirParam createDirParam3;
+    createDirParam3.extensionDirs = dirs;
+    createDirParam3.bundleName = BUNDLE_NAME;
+    createDirParam3.apl = EMPTY_STRING;
+    createDirParam3.isPreInstallApp = false;
+    createDirParam3.debug = true;
+    createDirParam3.uid = UID;
+    result = installClient_->SetDirsApl(createDirParam3, true);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    CreateDirParam createDirParam4;
+    createDirParam4.extensionDirs = dirs;
+    createDirParam4.bundleName = BUNDLE_NAME;
+    createDirParam4.apl = APL;
+    createDirParam4.isPreInstallApp = true;
+    createDirParam4.debug = false;
+    createDirParam4.uid = UID;
+    result = installClient_->SetDirsApl(createDirParam4, false);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirsApl_0100 end";
 }
 
 /**
@@ -1244,6 +1304,20 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsageFromPath_0200,
 }
 
  /**
+ * @tc.number: BmsInstalldClientTest_GetBundleInodeCount_0100
+ * @tc.name: GetBundleInodeCount
+ * @tc.desc: test GetBundleInodeCount with empty uids vector
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetBundleInodeCount_0100, TestSize.Level1)
+{
+    int32_t uid = 100;
+    uint64_t inodeCount = 0;
+    ASSERT_NE(installClient_, nullptr);
+    ErrCode result = installClient_->GetBundleInodeCount(uid, inodeCount);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+ /**
  * @tc.number: BmsInstalldClientTest_IsExistFile_0100
  * @tc.name: IsExistFile
  * @tc.desc: call IsExistFile.
@@ -1656,6 +1730,25 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveSignProfile_0200, Te
 }
 
 /**
+ * @tc.number: BmsInstalldClientTest_AddCertAndEnableKey_0100
+ * @tc.name: AddCertAndEnableKey
+ * @tc.desc: call AddCertAndEnableKey.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_AddCertAndEnableKey_0100, TestSize.Level1)
+{
+    ASSERT_NE(installClient_, nullptr);
+
+    std::string certPath = "cert/path";
+    std::string certContent = "cert.content";
+    ErrCode result = installClient_->AddCertAndEnableKey(certPath, certContent);
+    EXPECT_NE(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    result = installClient_->AddCertAndEnableKey(certPath, "");
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    result = installClient_->AddCertAndEnableKey("", certContent);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
  * @tc.number: BmsInstalldDeathRecipientTest_OnRemoteDied_0100
  * @tc.name: OnRemoteDied
  * @tc.desc: call OnRemoteDied.
@@ -1828,7 +1921,7 @@ HWTEST_F(BmsInstalldClientTest, ClearDir_0400, TestSize.Level0)
 
     std::string notExistDir = "/bms/not/exist/dir";
     ErrCode ret = InstalldClient::GetInstance()->ClearDir(notExistDir);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED);
+    EXPECT_EQ(ret, ERR_OK);
 
     setuid(uid);
 }
@@ -1858,7 +1951,7 @@ HWTEST_F(BmsInstalldClientTest, ClearDir_0500, TestSize.Level0)
     EXPECT_EQ(ret, 0);
     // clear dir
     ErrCode clearRet = InstalldClient::GetInstance()->ClearDir(tmpFile);
-    EXPECT_EQ(clearRet, ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED);
+    EXPECT_EQ(clearRet, ERR_OK);
 
     (void)std::remove(tmpFile.c_str());
     setuid(uid);
@@ -1873,8 +1966,10 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_BatchGetBundleStats_0100, 
 {
     const std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
     std::vector<BundleStorageStats> bundleStats;
-    const std::unordered_map<std::string, int32_t> uidMap = {{"com.example.bundlekit.test", 10000}};
-    auto ret = installClient_->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
+    std::unordered_set<int32_t> uids;
+    uids.emplace(10000);
+    const std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap = {{"com.example.bundlekit.test", uids}};
+    auto ret = installClient_->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 
@@ -1887,8 +1982,10 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_BatchGetBundleStats_0200, 
 {
     const std::vector<std::string> bundleNames = {};
     std::vector<BundleStorageStats> bundleStats;
-    const std::unordered_map<std::string, int32_t> uidMap = {{"com.example.bundlekit.test", 10000}};
-    auto ret = installClient_->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
+    std::unordered_set<int32_t> uids;
+    uids.emplace(10000);
+    const std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap = {{"com.example.bundlekit.test", uids}};
+    auto ret = installClient_->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1901,8 +1998,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_BatchGetBundleStats_0300, 
 {
     const std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
     std::vector<BundleStorageStats> bundleStats;
-    const std::unordered_map<std::string, int32_t> uidMap = {};
-    auto ret = installClient_->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
+    const std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap = {};
+    auto ret = installClient_->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1930,6 +2027,30 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RestoreconPath_0100, TestS
     const std::string arkWebName = OHOS::system::GetParameter("persist.arkwebcore.package_name", "");
     const std::string arkWebLibPath = "/data/app/el1/bundle/public/" + arkWebName + "/libs/arm64/";
     ErrCode result = installClient_->RestoreconPath(arkWebLibPath);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ResetBmsDBSecurity_0100
+ * @tc.name: ResetBmsDBSecurity
+ * @tc.desc: Test whether ResetBmsDBSecurity is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ResetBmsDBSecurity_0100, TestSize.Level1)
+{
+    ErrCode result = installClient_->ResetBmsDBSecurity();
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyDir_0100
+ * @tc.name: CopyDir
+ * @tc.desc: Test whether CopyDir is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyDir_0100, TestSize.Level1)
+{
+    std::string srcDir = "/data/app/el1/bundle/public/com.example.source/";
+    std::string destDir = "/data/app/el1/bundle/public/com.example.destination/";
+    ErrCode result = installClient_->CopyDir(srcDir, destDir);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 } // namespace AppExecFwk

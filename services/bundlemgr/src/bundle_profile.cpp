@@ -1758,7 +1758,7 @@ bool CheckModuleNameIsValid(const std::string &moduleName)
     if (moduleName.empty()) {
         return false;
     }
-    if (moduleName.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
+    if (moduleName.find(ServiceConstants::RELATIVE_PATH_NAME) != std::string::npos) {
         return false;
     }
     if (moduleName.find(ServiceConstants::MODULE_NAME_SEPARATOR) != std::string::npos) {
@@ -2428,7 +2428,7 @@ bool ToInnerBundleInfo(
         }
         innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     }
-    if (!find || !isExistPageAbility) {
+    if ((!find || !isExistPageAbility) && !transformParam.isPreInstallApp) {
         applicationInfo.needAppDetail = true;
         if (BundleUtil::IsExistDir(ServiceConstants::SYSTEM_LIB64)) {
             applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;

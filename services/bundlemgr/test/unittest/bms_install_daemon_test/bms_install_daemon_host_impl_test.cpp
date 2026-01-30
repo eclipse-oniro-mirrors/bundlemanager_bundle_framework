@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,7 @@ const std::string HAP_FILE_PATH =
 const std::string TEST_PATH = "/data/app/el1/bundle/public/com.example.test/";
 const std::string TEST_PATH_TARGET = "/data/test";
 const std::string OVER_MAX_PATH_SIZE(300, 'x');
+const int32_t INVALID_CODE = -1;
 }; // namespace
 class BmsInstallDaemonHostImplTest : public testing::Test {
 public:
@@ -217,7 +218,9 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0900, Function | Sma
     ASSERT_NE(hostImpl, nullptr);
 
     std::vector<int64_t> vec;
-    auto ret = hostImpl->GetBundleStats(TEST_STRING, 0, vec, 0);
+    std::unordered_set<int32_t> uids;
+    uids.emplace(0);
+    auto ret = hostImpl->GetBundleStats(TEST_STRING, 0, vec, uids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -678,7 +681,9 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3600, Function | Sma
     ASSERT_NE(hostImpl, nullptr);
 
     std::vector<int64_t> vec;
-    auto ret = hostImpl->GetBundleStats("", 0, vec, 0);
+    std::unordered_set<int32_t> uids;
+    uids.emplace(0);
+    auto ret = hostImpl->GetBundleStats("", 0, vec, uids);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -955,20 +960,20 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5300, Function | Sma
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
 
-    std::string hnpPackageInfo = "";
+    std::map<std::string, std::string> hnpPackageMap;
     ExtractParam extractParam;
     extractParam.srcPath = "";
     extractParam.targetPath = "";
-    ErrCode ret = installdProxy->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    ErrCode ret = installdProxy->ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_NE(ret, ERR_OK);
 
     extractParam.targetPath = TEST_PATH;
-    ret = installdProxy->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    ret = installdProxy->ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_NE(ret, ERR_OK);
 
     extractParam.targetPath = "";
     extractParam.srcPath = HAP_FILE_PATH;
-    ret = installdProxy->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    ret = installdProxy->ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -983,12 +988,13 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5400, Function | Sma
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
 
-    std::string userId = "";
-    std::string hnpRootPath = "";
-    std::string hapPath = "";
-    std::string cpuAbi = "";
-    std::string packageName = "";
-    ErrCode ret = installdProxy->ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    InstallHnpParam param;
+    param.userId = "";
+    param.hnpRootPath = "";
+    param.hapPath = "";
+    param.cpuAbi = "";
+    param.packageName = "";
+    ErrCode ret = installdProxy->ProcessBundleInstallNative(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 
@@ -1290,6 +1296,19 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7300, Function | Sma
 }
 
 /**
+ * @tc.number: InstalldHostImplTest_7310
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling AddCertAndEnableKey of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7310, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode res = hostImpl->AddCertAndEnableKey("", "");
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: InstalldHostImplTest_7400
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling GetExtensionSandboxTypeList of hostImpl
@@ -1349,8 +1368,10 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7700, Function | Sma
 
     const std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
     std::vector<BundleStorageStats> bundleStats;
-    const std::unordered_map<std::string, int32_t> uidMap = {{"com.example.bundlekit.test", 10000}};
-    auto ret = hostImpl->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
+    std::unordered_set<int32_t> uids;
+    uids.emplace(10000);
+    const std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap = {{"com.example.bundlekit.test", uids}};
+    auto ret = hostImpl->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -1389,6 +1410,302 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7900, Function | Sma
     codeSignatureParam.isPlugin = true;
     auto ret = hostImpl->VerifyCodeSignatureForHap(codeSignatureParam);
     setuid(Constants::ROOT_UID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_8000
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling CleanBundleDirs of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8000, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> dirs;
+    auto ret = hostImpl->CleanBundleDirs(dirs, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_8100
+ * @tc.name: test HashSoFile
+ * @tc.desc: 1.Test the HashSoFile of InstalldHostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8100, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(installdProxy, nullptr);
+ 
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    std::string soPath = "/data/app/el1/bundle/public/";
+    std::vector<std::string> soName;
+    std::vector<std::string> soHash;
+ 
+    ErrCode res = installdProxy->HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+ 
+/**
+ * @tc.number: InstalldHostImplTest_8200
+ * @tc.name: test HashFiles
+ * @tc.desc: 1.Test the HashFiles of InstalldHostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8200, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(installdProxy, nullptr);
+ 
+    std::vector<std::string> files;
+    std::vector<std::string> filesHash;
+ 
+    ErrCode res = installdProxy->HashFiles(files, filesHash);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_8300
+ * @tc.name: test SetDirsApl of InstallHostImpl
+ * @tc.desc: 1. calling SetDirsApl of hostImpl
+ * @tc.require:
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8300, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> dirs;
+    dirs.emplace_back(TEST_STRING);
+
+    CreateDirParam createDirParam;
+    createDirParam.extensionDirs = dirs;
+    createDirParam.bundleName = TEST_STRING;
+    createDirParam.apl = TEST_STRING;
+    createDirParam.isPreInstallApp = false;
+    createDirParam.debug = false;
+    createDirParam.uid = 0;
+    auto ret = hostImpl->SetDirsApl(createDirParam, true);
+#ifdef WITH_SELINUX
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+#else
+    EXPECT_EQ(ret, ERR_OK);
+#endif
+}
+
+/**
+ * @tc.number: DeleteUninstallTmpDirs_0100
+ * @tc.name: test DeleteUninstallTmpDirs
+ * @tc.desc: test DeleteUninstallTmpDirs of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, DeleteUninstallTmpDirs_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> dirs;
+    auto ret = hostImpl->DeleteUninstallTmpDirs(dirs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CreateSharefilesDataDirEl2_0100
+ * @tc.name: test CreateSharefilesDataDirEl2
+ * @tc.desc: test CreateSharefilesDataDirEl2 of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, CreateSharefilesDataDirEl2_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    CreateDirParam createDirParam;
+    auto ret = hostImpl->CreateSharefilesDataDirEl2(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithEl_0100
+ * @tc.name: test CreateBundleDataDirWithEl
+ * @tc.desc: test CreateBundleDataDirWithEl of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, CreateBundleDataDirWithEl_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    CreateDirParam createDirParam;
+    auto ret = hostImpl->CreateBundleDataDirWithEl(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: SetFileConForce_0100
+ * @tc.name: test SetFileConForce
+ * @tc.desc: test SetFileConForce of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, SetFileConForce_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> paths;
+    CreateDirParam createDirParam;
+    auto ret = hostImpl->SetFileConForce(paths, createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: StopSetFileCon_0100
+ * @tc.name: test StopSetFileCon
+ * @tc.desc: test StopSetFileCon of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, StopSetFileCon_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    CreateDirParam createDirParam;
+    int32_t reason = INVALID_CODE;
+    auto ret = hostImpl->StopSetFileCon(createDirParam, reason);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: IsExistApFile_0100
+ * @tc.name: test IsExistApFile
+ * @tc.desc: test IsExistApFile of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, IsExistApFile_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::string path = TEST_STRING;
+    bool isExist = true;
+    auto ret = hostImpl->IsExistApFile(path, isExist);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: MigrateData_0100
+ * @tc.name: test MigrateData
+ * @tc.desc: test MigrateData of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, MigrateData_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> sourcePaths;
+    std::string destinationPath = TEST_STRING;
+    auto ret = hostImpl->MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: MoveHapToCodeDir_0100
+ * @tc.name: test MoveHapToCodeDir
+ * @tc.desc: test MoveHapToCodeDir of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, MoveHapToCodeDir_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::string originPath = TEST_STRING;
+    std::string targetPath = TEST_STRING;
+    auto ret = hostImpl->MoveHapToCodeDir(originPath, targetPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CreateDataGroupDirs_0100
+ * @tc.name: test CreateDataGroupDirs
+ * @tc.desc: test CreateDataGroupDirs of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, CreateDataGroupDirs_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<CreateDirParam> params;
+    auto ret = hostImpl->CreateDataGroupDirs(params);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: DeleteDataGroupDirs_0100
+ * @tc.name: test DeleteDataGroupDirs
+ * @tc.desc: test DeleteDataGroupDirs of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, DeleteDataGroupDirs_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> uuidList;
+    int32_t userId = INVALID_CODE;
+    auto ret = hostImpl->DeleteDataGroupDirs(uuidList, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: ClearDir_0100
+ * @tc.name: test ClearDir
+ * @tc.desc: test ClearDir of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, ClearDir_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::string dir = TEST_STRING;
+    auto ret = hostImpl->ClearDir(dir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: RestoreconPath_0100
+ * @tc.name: test RestoreconPath
+ * @tc.desc: test RestoreconPath of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, RestoreconPath_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::string path = TEST_STRING;
+    auto ret = hostImpl->RestoreconPath(path);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: ResetBmsDBSecurity_0100
+ * @tc.name: test ResetBmsDBSecurity
+ * @tc.desc: test ResetBmsDBSecurity of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, ResetBmsDBSecurity_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->ResetBmsDBSecurity();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: DeleteCertAndRemoveKey_0100
+ * @tc.name: test DeleteCertAndRemoveKey
+ * @tc.desc: test DeleteCertAndRemoveKey of InstalldHostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, DeleteCertAndRemoveKey_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> certPaths;
+    auto ret = hostImpl->DeleteCertAndRemoveKey(certPaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_8400
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetBundleInodeCount of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8400, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    int32_t uid = 100;
+    uint64_t inodeCount = 0;
+    auto ret = hostImpl->GetBundleInodeCount(uid, inodeCount);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

@@ -248,6 +248,19 @@ ErrCode BundleManagerHelper::InnerGetAppProvisionInfo(
     return CommonFunc::ConvertErrCode(ret);
 }
 
+ErrCode BundleManagerHelper::InnerGetAllAppProvisionInfo(const int32_t userId,
+    std::vector<AppProvisionInfo>& appProvisionInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAllAppProvisionInfo(userId, appProvisionInfos);
+    APP_LOGD("GetAllAppProvisionInfo ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 ErrCode BundleManagerHelper::InnerGetAllPreinstalledApplicationInfos(
     std::vector<PreinstalledApplicationInfo>& preinstalledApplicationInfos)
 {
@@ -502,6 +515,22 @@ ErrCode BundleManagerHelper::InnerGetPluginBundlePathForSelf(
     ErrCode result = iBundleMgr->GetPluginBundlePathForSelf(pluginBundleName, codePath);
     if (result != ERR_OK) {
         APP_LOGE("GetPluginBundlePathForSelf ErrCode: %{public}d", result);
+    }
+    return CommonFunc::ConvertErrCode(result);
+}
+
+ErrCode BundleManagerHelper::InnerGetBundleInstallStatus(
+    const std::string &bundleName, BundleInstallStatus &bundleInstallStatus)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode result = iBundleMgr->GetBundleInstallStatus(bundleName, userId, bundleInstallStatus);
+    if (result != ERR_OK) {
+        APP_LOGE("GetBundleInstallStatus ErrCode: %{public}d", result);
     }
     return CommonFunc::ConvertErrCode(result);
 }

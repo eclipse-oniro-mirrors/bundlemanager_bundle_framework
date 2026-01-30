@@ -26,6 +26,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_verify_mgr.h"
+#include "default_app_host_impl.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
@@ -52,7 +53,7 @@ const std::string DEFAULT_APP_VIDEO = "VIDEO";
 const int32_t USERID = 100;
 const int32_t FLAGS = 0;
 const int32_t UID = 0;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 constexpr int PERMISSION_NOT_GRANTED = -1;
 const int32_t APP_INDEX = 0;
 const uint32_t ACCESS_TOKEN_ID = 1765341;
@@ -72,6 +73,7 @@ public:
 private:
     std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
     std::shared_ptr<BundleInstallerHost> bundleInstallerHost_ = std::make_unique<BundleInstallerHost>();
+    std::shared_ptr<DefaultAppHostImpl> defaultAppHostImpl_ = std::make_unique<DefaultAppHostImpl>();
     static std::shared_ptr<InstalldService> installdService_;
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
@@ -984,6 +986,19 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6400, Functi
 {
     AppProvisionInfo appProvisionInfo;
     ErrCode ret = bundleMgrHostImpl_->GetAppProvisionInfo(BUNDLE_NAME, USERID, appProvisionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0001
+ * @tc.name: test GetAllAppProvisionInfo of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetAllAppProvisionInfo false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetAllAppProvisionInfo_0001, Function | SmallTest | Level0)
+{
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = bundleMgrHostImpl_->GetAllAppProvisionInfo(USERID, appProvisionInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -2002,6 +2017,47 @@ HWTEST_F(BmsBundlePermissionFalseTest, GetAbilityResourceInfo_0002, Function | S
 }
 
 /**
+ * @tc.number: GetBundleInstallStatus_0001
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetBundleInstallStatus_0001, Function | SmallTest | Level1)
+{
+    std::string bundleName = "bundle_test";
+    int32_t userId = 100;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = bundleMgrHostImpl_->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(status, BundleInstallStatus::UNKNOWN_STATUS);
+}
+
+/**
+ * @tc.number: GetAllJsonProfile_0001
+ * @tc.name: test GetAllJsonProfile
+ * @tc.desc: test GetAllJsonProfile
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetAllJsonProfile_0001, Function | SmallTest | Level1)
+{
+    std::vector<JsonProfileInfo> profileInfos;
+    int32_t userId = 100;
+    auto testRet = bundleMgrHostImpl_->GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, userId, profileInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CheckInstallDowngradeParam_0100
+ * @tc.name: test CheckInstallDowngradeParam
+ * @tc.desc: 1.Test CheckInstallDowngradeParam
+*/
+HWTEST_F(BmsBundlePermissionFalseTest, CheckInstallDowngradeParam_0100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "true";
+    bool ret = bundleInstallerHost_->CheckInstallDowngradeParam(installParam);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: RecoverBackupBundleData_0001
  * @tc.name: test RecoverBackupBundleData
  * @tc.desc: test RecoverBackupBundleData
@@ -2012,6 +2068,19 @@ HWTEST_F(BmsBundlePermissionFalseTest, RecoverBackupBundleData_0001, Function | 
     int32_t userId = 100;
     int32_t appIndex = 0;
     auto testRet = bundleMgrHostImpl_->RecoverBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetAssetGroupsInfo_0001
+ * @tc.name: test GetAssetGroupsInfo
+ * @tc.desc: test GetAssetGroupsInfo
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetAssetGroupsInfo_0001, Function | SmallTest | Level1)
+{
+    int32_t uid = -1;
+    AssetGroupInfo assetGroupInfo;
+    auto testRet = bundleMgrHostImpl_->GetAssetGroupsInfo(uid, assetGroupInfo);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -2027,5 +2096,49 @@ HWTEST_F(BmsBundlePermissionFalseTest, RemoveBackupBundleData_0001, Function | S
     int32_t appIndex = 0;
     auto testRet = bundleMgrHostImpl_->RemoveBackupBundleData(bundleName, userId, appIndex);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: SetDefaultApplicationForAppClone_0001
+ * @tc.name: test SetDefaultApplicationForAppClone
+ * @tc.desc: 1. SetDefaultApplicationForAppClone failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, SetDefaultApplicationForAppClone_0001, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    ElementName elementName("", "", "", "");
+    want.SetElement(elementName);
+    int32_t userId = 101;
+    int32_t appIndex = 1;
+    auto res = defaultAppHostImpl_->SetDefaultApplicationForAppClone(userId, appIndex, DEFAULT_APP_VIDEO,
+        want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0001
+ * @tc.name: test GetPluginExtensionInfo
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundlePermissionFalseTest, GetPluginExtensionInfo_0001, Function | SmallTest | Level1)
+{
+    ExtensionAbilityInfo extensionInfo;
+    AAFwk::Want want;
+    std::string hostBundleName;
+    int32_t userId = 100;
+    ErrCode testRet = bundleMgrHostImpl_->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetLaunchWantForBundle_0001
+ * @tc.name: test GetLaunchWantForBundle of BundleMgrHostImpl
+ * @tc.desc: 1. GetLaunchWantForBundle failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetLaunchWantForBundle_0001, Function | SmallTest | Level0)
+{
+    Want want;
+    ErrCode ret = bundleMgrHostImpl_->GetLaunchWantForBundle(BUNDLE_NAME, want, USERID, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS

@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -33,6 +33,7 @@ install_daemon_sources = [
   "${services_path}/bundlemgr/src/ipc/encryption_param.cpp",
   "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
   "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
+  "${services_path}/bundlemgr/src/ipc/install_hnp_param.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
   "${services_path}/bundlemgr/src/driver_install_ext.cpp",
@@ -57,6 +58,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/data/inner_extension_info.cpp",
   "${services_path}/bundlemgr/src/driver/driver_installer.cpp",
   "${services_path}/bundlemgr/src/event_report.cpp",
+  "${services_path}/bundlemgr/src/exception/exception_util.cpp",
   "${services_path}/bundlemgr/src/hmp_bundle_installer.cpp",
   "${services_path}/bundlemgr/src/inner_bundle_clone_info.cpp",
   "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
@@ -72,6 +74,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/ipc/encryption_param.cpp",
   "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
   "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
+  "${services_path}/bundlemgr/src/ipc/install_hnp_param.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
   "${services_path}/bundlemgr/src/module_json_updater.cpp",
@@ -172,9 +175,11 @@ bundle_install_external_deps = [
   "ffrt:libffrt",
   "hitrace:libhitracechain",
   "memmgr:memmgrclient",
+  "openssl:libcrypto_shared",
   "os_account:libaccountkits",
   "safwk:api_cache_manager",
   "storage_service:storage_manager_acl",
+  "window_manager:libmodal_system_ui_extension_client",
   "zlib:shared_libz",
 ]
 
@@ -227,6 +232,7 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/navigation/sem_ver.cpp",
   "${services_path}/bundlemgr/src/new_bundle_data_dir_mgr.cpp",
   "${services_path}/bundlemgr/src/shortcut_data_storage_rdb.cpp",
+  "${services_path}/bundlemgr/src/shortcut_enabled_data_storage_rdb.cpp",
   "${services_path}/bundlemgr/src/shortcut_visible_data_storage_rdb.cpp",
   "${services_path}/bundlemgr/src/system_ability_helper.cpp",
   "${services_path}/bundlemgr/src/user_unlocked_event_subscriber.cpp",
@@ -238,6 +244,12 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/bundlemgr_ext/bundle_mgr_ext_host_impl.cpp",
   "${services_path}/bundlemgr/src/install_exception_mgr.cpp",
   "${services_path}/bundlemgr/src/install_exception_mgr_rdb.cpp",
+  "${services_path}/bundlemgr/src/idle_condition_mgr/bms_update_selinux_mgr.cpp",
+  "${services_path}/bundlemgr/src/idle_condition_mgr/idle_condition_listener.cpp",
+  "${services_path}/bundlemgr/src/idle_condition_mgr/idle_condition_mgr.cpp",
+  "${services_path}/bundlemgr/src/idle_condition_mgr/idle_condition_event_subscribe.cpp",
+  "${services_path}/bundlemgr/src/idle_condition_mgr/idle_param_util.cpp",
+  "${services_path}/bundlemgr/src/idle_condition_mgr/idle_manager_rdb.cpp",
   "${services_path}/bundlemgr/src/on_demand_install/on_demand_install_data_mgr.cpp",
   "${services_path}/bundlemgr/src/on_demand_install/on_demand_install_data_storage_rdb.cpp",
 ]

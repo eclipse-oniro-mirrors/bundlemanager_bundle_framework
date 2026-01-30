@@ -24,6 +24,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 enum ProfileType : int8_t {
+    UNSPECIFIED_PROFILE = 0,
     INTENT_PROFILE = 1,
     ADDITION_PROFILE = 2,
     NETWORK_PROFILE = 3,
@@ -31,7 +32,9 @@ enum ProfileType : int8_t {
     PKG_CONTEXT_PROFILE = 5,
     FILE_ICON_PROFILE = 6,
     INSIGHT_INTENT_PROFILE = 7,
-    CLOUD_PROFILE = 8
+    CLOUD_PROFILE = 8,
+    EASY_GO_PROFILE = 9,
+    SHARE_FILES_PROFILE = 10,
 };
 
 enum AppDistributionTypeEnum : int8_t {
@@ -41,6 +44,25 @@ enum AppDistributionTypeEnum : int8_t {
     APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM = 4,
     APP_DISTRIBUTION_TYPE_INTERNALTESTING = 5,
     APP_DISTRIBUTION_TYPE_CROWDTESTING = 6,
+};
+
+struct JsonProfileInfo : public Parcelable {
+    ProfileType profileType = ProfileType::UNSPECIFIED_PROFILE;
+    std::string bundleName;
+    std::string moduleName;
+    std::string profile;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static JsonProfileInfo *Unmarshalling(Parcel &parcel);
+    std::string ToString() const;
+};
+
+struct BundleProfileData {
+    std::string bundleName;
+    std::string moduleName;
+    std::string hapPath;
+    std::string profilePath;
 };
 
 // stores module information about an application

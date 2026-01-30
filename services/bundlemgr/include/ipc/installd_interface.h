@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,13 +16,16 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_INSTALLD_INTERFACE_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_INSTALLD_INTERFACE_H
 
+#include <map>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "iremote_broker.h"
 
 #include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
+#include "bundle_service_constants.h"
 #include "bundle_storage_stats.h"
 #include "ipc/check_encryption_param.h"
 #include "ipc/code_signature_param.h"
@@ -30,6 +33,7 @@
 #include "ipc/encryption_param.h"
 #include "ipc/extract_param.h"
 #include "ipc/file_stat.h"
+#include "ipc/install_hnp_param.h"
 #include "installd/installd_constants.h"
 
 namespace OHOS {
@@ -71,17 +75,17 @@ public:
 
     /**
      * @brief Extract the hnpFiles.
-     * @param hnpPackageInfo Indicates the hnpPackageInfo.
+     * @param hnpPackageMap Indicates the hnpPackageInfo.
      * @param extractParam Indicates the extractParam.
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
-    virtual ErrCode ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam)
+    virtual ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
+        const ExtractParam &extractParam)
     {
         return ERR_OK;
     }
 
-    virtual ErrCode ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
-        const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+    virtual ErrCode ProcessBundleInstallNative(const InstallHnpParam &installHnpParam)
     {
         return ERR_OK;
     }
@@ -160,7 +164,7 @@ public:
      * @param dir Indicates the directory path that to be removed.
      * @return Returns ERR_OK if the  directory removed successfully; returns error code otherwise.
      */
-    virtual ErrCode RemoveDir(const std::string &dir)
+    virtual ErrCode RemoveDir(const std::string &dir, bool async = false)
     {
         return ERR_OK;
     }
@@ -181,7 +185,18 @@ public:
      * @param statSize Indicates size of path.
      * @return Returns true if successfully; returns false otherwise.
      */
-    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
+    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
+        int64_t timeoutMs = -1)
+    {
+        return ERR_OK;
+    }
+    /**
+     * @brief Get bundle inode count for UID.
+     * @param uid The user ID of the application.
+     * @param inodeCount Output parameter for inode count.
+     * @return Returns ERR_OK if get bundle inode successfully; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
     {
         return ERR_OK;
     }
@@ -206,6 +221,11 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Get bundle Stats.
      * @param bundleName Indicates the bundle name.
@@ -214,14 +234,14 @@ public:
      * @return Returns ERR_OK if get stats successfully; returns error code otherwise.
      */
     virtual ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
-        std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex = 0,
+        std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids, const int32_t appIndex = 0,
         const uint32_t statFlag = 0, const std::vector<std::string> &moduleNameList = {})
     {
         return ERR_OK;
     }
 
-    virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
-        const std::unordered_map<std::string, int32_t> &uidMap,
+    virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames,
+        const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
         std::vector<BundleStorageStats> &bundleStats)
     {
         return ERR_OK;
@@ -248,7 +268,22 @@ public:
         return ERR_OK;
     }
 
-        /**
+    virtual ErrCode SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode SetFileConForce(const std::vector<std::string> &paths, const CreateDirParam &createDirParam)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode StopSetFileCon(const CreateDirParam &createDirParam, int32_t reason)
+    {
+        return ERR_OK;
+    }
+
+    /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.
      * @return Returns ERR_OK if set apl successfully; returns error code otherwise.
@@ -435,6 +470,11 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode AddCertAndEnableKey(const std::string &certPath, const std::string &certContent)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
     {
         return ERR_OK;
@@ -495,12 +535,38 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+        std::vector<std::string> &soName, std::vector<std::string> &soHash)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode ClearDir(const std::string &dir)
     {
         return ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
     }
 
     virtual ErrCode RestoreconPath(const std::string &path)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode ResetBmsDBSecurity()
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)
     {
         return ERR_OK;
     }

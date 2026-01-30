@@ -36,7 +36,7 @@ constexpr int8_t INITIAL_USER_ID = -1;
 constexpr int8_t TYPE_PART_COUNT = 2;
 constexpr int8_t INDEX_ZERO = 0;
 constexpr int8_t INDEX_ONE = 1;
-constexpr uint16_t TYPE_MAX_SIZE = 200;
+constexpr uint16_t TYPE_MAX_SIZE = 512;
 constexpr const char* SPLIT = "/";
 constexpr const char* SCHEME_SIGN = "://";
 constexpr const char* EMAIL_ACTION = "ohos.want.action.sendToData";
@@ -154,17 +154,10 @@ ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& t
 ErrCode DefaultAppMgr::IsDefaultApplicationInternal(
     int32_t userId, const std::string& normalizedType, bool& isDefaultApp) const
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    Element element;
-    bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, normalizedType, element);
-    if (!ret) {
-        LOG_I(BMS_TAG_DEFAULT, "GetDefaultApplicationInfo failed");
-        isDefaultApp = false;
-        return ERR_OK;
-    }
-    ret = IsElementValid(userId, normalizedType, element);
-    if (!ret) {
-        LOG_W(BMS_TAG_DEFAULT, "invalid element");
+    BundleInfo bundleInfo;
+    ErrCode result = GetDefaultApplicationInternal(userId, normalizedType, bundleInfo);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "GetDefaultApplicationInfo failed");
         isDefaultApp = false;
         return ERR_OK;
     }
@@ -176,14 +169,15 @@ ErrCode DefaultAppMgr::IsDefaultApplicationInternal(
         return ERR_OK;
     }
     std::string callingBundleName;
-    ret = dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
-    if (!ret) {
+    int32_t appIndex = 0;
+    result = dataMgr->GetBundleNameAndIndexForUid(IPCSkeleton::GetCallingUid(), callingBundleName, appIndex);
+    if (result != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "GetBundleNameForUid failed");
         isDefaultApp = false;
         return ERR_OK;
     }
     LOG_I(BMS_TAG_DEFAULT, "callingBundleName:%{public}s", callingBundleName.c_str());
-    isDefaultApp = element.bundleName == callingBundleName;
+    isDefaultApp = (bundleInfo.name == callingBundleName) && (bundleInfo.appIndex == appIndex);
     return ERR_OK;
 }
 
@@ -367,7 +361,7 @@ ErrCode DefaultAppMgr::ResetDefaultApplicationInternal(int32_t userId, const std
     return ERR_OK;
 }
 
-void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bundleName) const
+void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bundleName, int32_t appIndex) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     LOG_D(BMS_TAG_DEFAULT, "begin");
@@ -381,7 +375,7 @@ void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bun
     std::map<std::string, Element> newInfos;
     std::vector<std::string> changedTypeVec;
     for (const auto& item : currentInfos) {
-        if (item.second.bundleName != bundleName) {
+        if (item.second.bundleName != bundleName || item.second.appIndex != appIndex) {
             newInfos.emplace(item.first, item.second);
             continue;
         }
@@ -612,9 +606,10 @@ bool DefaultAppMgr::GetBundleInfo(int32_t userId, const std::string& type, const
         LOG_W(BMS_TAG_DEFAULT, "GetBundleInfo, type and skills not match");
         return false;
     }
-    ret = dataMgr->GetBundleInfo(element.bundleName, GET_BUNDLE_DEFAULT, bundleInfo, userId);
-    if (!ret) {
-        LOG_W(BMS_TAG_DEFAULT, "GetBundleInfo failed");
+    int32_t flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    ErrCode errCode = dataMgr->GetCloneBundleInfo(element.bundleName, flag, element.appIndex, bundleInfo, userId);
+    if (errCode != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "GetCloneBundleInfo failed, errCode: %{public}d", errCode);
         return false;
     }
     bool isAbility = !element.abilityName.empty();

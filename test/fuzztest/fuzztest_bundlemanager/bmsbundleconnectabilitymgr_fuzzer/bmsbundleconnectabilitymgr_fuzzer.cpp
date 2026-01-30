@@ -100,6 +100,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bundleConnectAbilityMgr.CheckEcologicalRule(want, callerInfo, rule);
     bundleConnectAbilityMgr.CheckIsOnDemandLoad(targetAbilityInfo1);
     bundleConnectAbilityMgr.GetModuleName(innerBundleInfo, want, moduleName);
+    int32_t flag = fdp.ConsumeIntegral<int32_t>();
+    bundleConnectAbilityMgr.PreloadRequest(flag, targetAbilityInfo1);
     return true;
 }
 }

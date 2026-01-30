@@ -64,7 +64,8 @@ const std::string ABILITY_NAME_EMPTY = "";
 const std::string DEVICE_ID = "PHONE-001";
 const int32_t USERID = 100;
 const int32_t OTHER_USERID = 101;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t CALLING_UID = 200;
+const int32_t WAIT_TIME = 2; // init mocked bms
 const int32_t UPGRADE_FLAG = 1;
 const int32_t FLAG_ONE = 1;
 const int32_t FLAG_TWO = 2;
@@ -375,12 +376,12 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0005, Function | Sma
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
-        bool result = bundleMgr->SetModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, true, USERID);
+        bool result = bundleMgr->SetModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, true, USERID, CALLING_UID);
         EXPECT_TRUE(result);
         bool isRemovable = false;
         ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, isRemovable, USERID);
         EXPECT_EQ(ret, ERR_OK);
-        EXPECT_TRUE(isRemovable);
+        EXPECT_FALSE(isRemovable);
     }
 
     UninstallBundleInfo(BUNDLE_NAME);
@@ -1020,6 +1021,41 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0043, Function | Sma
     want.SetParam("uid", -800000);
     auto ret = connectAbilityMgr->ProcessPreload(want);
     EXPECT_FALSE(ret);
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0044
+ * Function: IsModuleRemovable
+ * @tc.name: test IsModuleRemovable
+ * @tc.require: issueI5MZ7R
+ * @tc.desc: test IsRemovableSet returns true, isRemovable should be false
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0044, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    std::string callingNameUid = BUNDLE_NAME + Constants::UID_SEPARATOR + std::to_string(USERID);
+    moduleInfo.isRemovableSet.insert(callingNameUid);
+    
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+    
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    
+    bool isRemovable = true;
+    ErrCode ret = dataMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, isRemovable, USERID);
+    
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(isRemovable);
     UninstallBundleInfo(BUNDLE_NAME);
 }
 
@@ -2114,6 +2150,58 @@ HWTEST_F(BmsBundleFreeInstallTest, CheckSubPackageName_0100, Function | SmallTes
     InnerBundleInfo innerBundleInfo;
     Want want;
     auto ret = connectAbilityMgr->CheckSubPackageName(innerBundleInfo, want);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: QueryBundleStatsInfoByInterval_0200
+ * @tc.name: test QueryBundleStatsInfoByInterval results empty
+ * @tc.desc: cover StatisticsUsageStats emplace_back branch
+ */
+HWTEST_F(BmsBundleFreeInstallTest, QueryBundleStatsInfoByInterval_0200,
+    Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
+    bool ret = bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: QueryBundleStatsInfoByInterval_0300
+ * @tc.name: test QueryBundleStatsInfoByInterval any_of hit or not hit
+ * @tc.desc: cover any_of lambda both branches
+ */
+HWTEST_F(BmsBundleFreeInstallTest, QueryBundleStatsInfoByInterval_0300,
+    Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+
+    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
+    DeviceUsageStats::BundleActivePackageStats stat;
+    stat.bundleName_ = "com.test.bundle";
+    stat.startCount_ = 1;
+    stat.lastTimeUsed_ = 100;
+    results.emplace_back(stat);
+
+    bool ret = bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: QueryBundleStatsInfoByInterval_0400
+ * @tc.name: test QueryBundleStatsInfoByInterval multi user
+ * @tc.desc: cover for loop of GetAllUser
+ */
+HWTEST_F(BmsBundleFreeInstallTest, QueryBundleStatsInfoByInterval_0400,
+    Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
+    DeviceUsageStats::BundleActivePackageStats stat;
+    stat.bundleName_ = "bundle.multi.user";
+    results.emplace_back(stat);
+    bool ret = bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
     EXPECT_TRUE(ret);
 }
 } // OHOS

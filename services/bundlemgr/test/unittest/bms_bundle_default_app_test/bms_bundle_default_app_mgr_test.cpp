@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -52,7 +52,7 @@ const std::string EMAIL = "EMAIL";
 const int32_t USER_ID = 100;
 const int32_t ALL_USER_ID = -4;
 const int32_t UID = 20000001;
-const int32_t WAIT_TIME = 1;
+const int32_t WAIT_TIME = 2;
 const std::string IMAGE_UTD_ID = "general.image";
 const std::string PNG_UTD_ID = "general.png";
 const std::string WORD = "WORD";
@@ -66,6 +66,7 @@ const std::string BROWSER = "BROWSER";
 const std::string DEFAULT_APPLICATION_CHANGED_EVENT = "usual.event.DEFAULT_APPLICATION_CHANGED";
 const std::string UTD_IDS = "utdIds";
 const std::string USER_ID_STRING = "userId";
+constexpr uint16_t TYPE_MAX_SIZE = 512;
 } // namespace
 
 class DefaultAppChangedTestEventSubscriber;
@@ -573,6 +574,22 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, GetBundleInfo_0040, Function | SmallTest | 
     auto ret = DefaultAppMgr::GetInstance().GetBundleInfo(userId, type, element, bundleInfo);
     EXPECT_TRUE(ret);
     EXPECT_TRUE(bundleInfo.abilityInfos.size() != 0);
+}
+
+/**
+ * @tc.number: GetBundleInfo_0050
+ * @tc.name: Test GetBundleInfo by DefaultAppMgr
+ * @tc.desc: 1.GetBundleInfo
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, GetBundleInfo_0050, Function | SmallTest | Level1)
+{
+    int32_t userId = 100;
+    std::string type{ "AUDIO" };
+    Element element{ BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, "", "", 1 };
+    BundleInfo bundleInfo;
+
+    auto ret = DefaultAppMgr::GetInstance().GetBundleInfo(userId, type, element, bundleInfo);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -1352,7 +1369,9 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, HandleUninstallBundle_0001, Function | Smal
     int32_t userId = 0;
     const std::string bundleName = "testname";
     std::map<std::string, Element> currentInfos;
-    DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, bundleName);
+    DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, bundleName, 0);
+    ASSERT_FALSE(DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfos(userId, currentInfos));
+    DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, bundleName, 1);
     ASSERT_FALSE(DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfos(userId, currentInfos));
 }
 
@@ -1380,5 +1399,105 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, GetBundleInfoByUtd_0001, Function | SmallTe
     int32_t userId = 100;
     auto ret = DefaultAppMgr::GetInstance().GetBundleInfoByUtd(userId, EMAIL, bundleInfo, false);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0010
+ * @tc.name: test SetDefaultApplicationForAppClone
+ * @tc.desc: 1.SetDefaultApplicationForAppClone
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0010, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", "", "", "");
+    want.SetElement(elementName);
+    int32_t appIndex = 6;
+    auto res = impl.SetDefaultApplicationForAppClone(USER_ID, appIndex, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0020
+ * @tc.name: test SetDefaultApplicationForAppClone
+ * @tc.desc: 1.SetDefaultApplicationForAppClone
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0020, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", "", "", "");
+    want.SetElement(elementName);
+    int32_t appIndex = 0;
+    auto res = impl.SetDefaultApplicationForAppClone(USER_ID, appIndex, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0030
+ * @tc.name: test SetDefaultApplicationForAppClone
+ * @tc.desc: 1.SetDefaultApplicationForAppClone
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0030, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", "", "", "");
+    want.SetElement(elementName);
+    int32_t appIndex = 1;
+    auto res = impl.SetDefaultApplicationForAppClone(USER_ID+20, appIndex, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0040
+ * @tc.name: test SetDefaultApplicationForAppClone
+ * @tc.desc: 1.SetDefaultApplicationForAppClone
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0040, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    ClearDataMgr();
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, "", MODULE_NAME);
+    want.SetElement(elementName);
+    int32_t appIndex = 1;
+    auto res = impl.SetDefaultApplicationForAppClone(USER_ID, appIndex, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0050
+ * @tc.name: test SetDefaultApplicationForAppClone
+ * @tc.desc: 1.SetDefaultApplicationForAppClone
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0050, Function | SmallTest | Level1)
+{
+    auto dataMgr = OHOS::BmsBundleDefaultAppMgrTest::bundleMgrService_->GetDataMgr();
+    dataMgr->AddUserId(USER_ID);
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, "", MODULE_NAME);
+    want.SetElement(elementName);
+    int32_t appIndex = 2;
+    auto res = impl.SetDefaultApplicationForAppClone(USER_ID, appIndex, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: IsDefaultApplication_0080
+ * @tc.name: test IsDefaultApplication
+ * @tc.desc: 1.when type > TYPE_MAX_SIZE, isDefaultApp = false;
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, IsDefaultApplication_0080, Function | SmallTest | Level1)
+{
+    int32_t userId = ALL_USER_ID;
+    std::string type(TYPE_MAX_SIZE + 1, 'a');
+    bool isDefaultApp = true;
+
+    auto ret = DefaultAppMgr::GetInstance().IsDefaultApplication(userId, type, isDefaultApp);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(isDefaultApp);
 }
 } // namespace OHOS

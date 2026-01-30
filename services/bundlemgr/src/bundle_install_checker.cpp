@@ -66,6 +66,9 @@ constexpr int8_t THRESHOLD_VAL_LEN = 40;
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
+constexpr const char* IS_ROOT_MODE_PARAM = "const.debuggable";
+const int32_t ROOT_MODE = 1;
+const int32_t USER_MODE = 0;
 
 const std::unordered_map<std::string, void (*)(AppPrivilegeCapability &appPrivilegeCapability)>
         PRIVILEGE_MAP = {
@@ -246,20 +249,26 @@ ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundle
 
 ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     const std::vector<std::string> &bundlePaths,
-    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes, bool readFile)
+    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes, bool readFile, int32_t userId)
 {
     LOG_D(BMS_TAG_INSTALLER, "Check multiple haps signInfo");
     if (bundlePaths.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "check hap sign info failed due to empty bundlePaths");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "check sign failed paths empty");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
+    userId = userId < Constants::DEFAULT_USERID ? AccountHelper::GetUserIdByCallerType() : userId;
     for (const std::string &bundlePath : bundlePaths) {
         Security::Verify::HapVerifyResult hapVerifyResult;
         ErrCode verifyRes = ERR_OK;
         if (readFile) {
-            verifyRes = Security::Verify::HapVerify(bundlePath, hapVerifyResult, true);
+            std::string localCertDir = std::string(ServiceConstants::HAP_COPY_PATH) +
+                ServiceConstants::ENTERPRISE_CERT_PATH + std::to_string(userId);
+            if (userId < Constants::START_USERID || !BundleUtil::IsExistDir(localCertDir)) {
+                localCertDir.clear();
+            }
+            verifyRes = Security::Verify::HapVerify(bundlePath, hapVerifyResult, true, localCertDir);
         } else {
-            verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
+            verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult, userId);
         }
 #ifndef X86_EMULATOR_MODE
         if (verifyRes != ERR_OK) {
@@ -273,6 +282,11 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     if (hapVerifyRes.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "no sign info in the all haps");
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+    }
+
+    if (!CheckEnterpriseResign(hapVerifyRes[0].GetProvisionInfo(), userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "enterprise resign check failed");
+        return ERR_APPEXECFWK_INSTALL_FAILED_APP_SOURCE_NOT_TRUESTED;
     }
 
     if (!CheckProvisionInfoIsValid(hapVerifyRes)) {
@@ -289,6 +303,28 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     }
     LOG_D(BMS_TAG_INSTALLER, "finish check multiple haps signInfo");
     return ERR_OK;
+}
+
+bool BundleInstallChecker::CheckEnterpriseResign(
+    const Security::Verify::ProvisionInfo &provisionInfo, const int32_t userId)
+{
+    if (provisionInfo.distributionType != Security::Verify::AppDistType::ENTERPRISE &&
+        provisionInfo.distributionType != Security::Verify::AppDistType::ENTERPRISE_NORMAL &&
+        provisionInfo.distributionType != Security::Verify::AppDistType::ENTERPRISE_MDM) {
+        return true;
+    }
+    if (provisionInfo.isEnterpriseResigned) {
+        return true;
+    }
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false)) {
+        return true;
+    }
+    std::vector<std::string> certificateAlias;
+    if ((BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias) == ERR_OK) && !certificateAlias.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "enterprise resign cert exist but hap not resigned");
+        return false;
+    }
+    return true;
 }
 
 bool BundleInstallChecker::CheckProvisionInfoIsValid(
@@ -488,6 +524,9 @@ ErrCode BundleInstallChecker::ParseHapFiles(
                 return result;
             }
         }
+        if (provisionInfo.isEnterpriseResigned) {
+            newInfo.SetAppSignType(Constants::APP_SIGN_TYPE_ENTERPRISE_RE_SIGN);
+        }
         infos.emplace(bundlePaths[i], newInfo);
     }
     if (!infos.empty()) {
@@ -667,7 +706,7 @@ bool BundleInstallChecker::VaildEnterpriseInstallPermissionForShare(const Instal
 ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     LOG_D(BMS_TAG_INSTALLER, "CheckDependency");
-
+    auto hapVersionCode = GetVersionCode(infos);
     for (const auto &info : infos) {
         if (info.second.GetInnerModuleInfos().empty()) {
             LOG_D(BMS_TAG_INSTALLER, "GetInnerModuleInfos is empty");
@@ -689,7 +728,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
             }
             LOG_W(BMS_TAG_INSTALLER, "The depend module:%{public}s is not exist in installing package",
                 dependency.moduleName.c_str());
-            if (!FindModuleInInstalledPackage(dependency.moduleName, bundleName, info.second.GetVersionCode())) {
+            if (!FindModuleInInstalledPackage(dependency.moduleName, bundleName, hapVersionCode)) {
                 LOG_E(BMS_TAG_INSTALLER, "The depend :%{public}s is not exist", dependency.moduleName.c_str());
                 SetCheckResultMsg(
                     moduleInfo.moduleName + "'s dependent module: " + dependency.moduleName + " does not exist");
@@ -1029,13 +1068,29 @@ std::tuple<bool, std::string, std::string> BundleInstallChecker::GetValidRelease
         (infos.begin()->second).GetReleaseType());
 }
 
+uint32_t BundleInstallChecker::GetVersionCode(const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    if (infos.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "infos is empty");
+        return 0;
+    }
+    uint32_t version = (infos.begin()->second).GetVersionCode();
+    for (const auto &info : infos) {
+        if (info.second.HasEntry()) {
+            return info.second.GetVersionCode();
+        }
+        version = version > info.second.GetVersionCode() ? version : info.second.GetVersionCode();
+    }
+    return version;
+}
+
 ErrCode BundleInstallChecker::CheckAppLabelInfo(
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     LOG_D(BMS_TAG_INSTALLER, "Check APP label");
     ErrCode ret = ERR_OK;
     std::string bundleName = (infos.begin()->second).GetBundleName();
-    uint32_t versionCode = (infos.begin()->second).GetVersionCode();
+    uint32_t versionCode = GetVersionCode(infos);
     auto [isHsp, moduleName, releaseType] = GetValidReleaseType(infos);
     bool singleton = (infos.begin()->second).IsSingleton();
     Constants::AppType appType = (infos.begin()->second).GetAppType();
@@ -1048,6 +1103,14 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     bool hasEntry = (infos.begin()->second).HasEntry();
     bool isSameDebugType = true;
     bool entryDebug = hasEntry ? debug : false;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    bool isPreInstallApp = false;
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+    } else {
+        PreInstallBundleInfo preInstallBundleInfo;
+        isPreInstallApp = dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    }
 
     for (const auto &info : infos) {
         // check bundleName
@@ -1057,9 +1120,17 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         }
         // check version
         if (bundleType != BundleType::SHARED) {
-            if (versionCode != info.second.GetVersionCode()) {
-                LOG_E(BMS_TAG_INSTALLER, "versionCode not same");
-                return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
+            if ((isPreInstallApp ? isPreInstallApp : info.second.IsPreInstallApp()) &&
+                info.second.GetAppType() == Constants::AppType::SYSTEM_APP && info.second.IsHsp()) {
+                if (versionCode < info.second.GetVersionCode()) {
+                    LOG_E(BMS_TAG_INSTALLER, "hsp version higer than entry!");
+                    return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
+                }
+            } else {
+                if (versionCode != info.second.GetVersionCode()) {
+                    LOG_E(BMS_TAG_INSTALLER, "versionCode not same");
+                    return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
+                }
             }
         }
         // check release type
@@ -1361,6 +1432,52 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
 #endif
 }
 
+bool CheckDriverNameAndType(const InnerBundleInfo &bundleInfo)
+{
+    for (const auto &extensionInfo: bundleInfo.GetInnerExtensionInfos()) {
+        bool isDriverExtensionAbilityType = (extensionInfo.second.type == ExtensionAbilityType::DRIVER);
+        if (!isDriverExtensionAbilityType) {
+            continue;
+        }
+
+        for (const auto &meta : extensionInfo.second.metadata) {
+            if (meta.name == "saneConfig" || meta.name == "saneBackend") {
+                LOG_E(BMS_TAG_INSTALLER, "Bundle %{public}s is not allowed", bundleInfo.GetBundleName().c_str());
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool BundleInstallChecker::CheckSaneDriverIsolation(const Security::Verify::HapVerifyResult &hapVerifyResult,
+    const int32_t userId, const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    if (newInfos.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "newInfos is empty");
+        return false;
+    }
+
+    bool isSpaceIsolation = OHOS::system::GetBoolParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, false);
+    if (!isSpaceIsolation) {
+        return true;
+    }
+
+    bool isDebugProvisionType = (hapVerifyResult.GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG);
+    if (!isDebugProvisionType) {
+        return true;
+    }
+    for (const auto &newInfo : newInfos) {
+        const InnerBundleInfo &bundleInfo = newInfo.second;
+        if (!CheckDriverNameAndType(bundleInfo)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool BundleInstallChecker::MatchOldSignatures(const std::string &bundleName,
     const std::vector<std::string> &appSignatures)
 {
@@ -1500,7 +1617,8 @@ bool BundleInstallChecker::CheckSupportAppTypes(
     return true;
 }
 
-ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos) const
+ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos,
+    ErrCode checkSysCapRes) const
 {
     std::string supportAppTypes = OHOS::system::GetParameter(SUPPORT_APP_TYPES, "");
     if (!supportAppTypes.empty() && CheckSupportAppTypes(infos, supportAppTypes)) {
@@ -1511,6 +1629,11 @@ ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, In
     for (const auto &info : infos) {
         std::vector<std::string> devVec = info.second.GetDeviceType(info.second.GetCurrentModulePackage());
         if (devVec.empty()) {
+            if (checkSysCapRes == ERR_APPEXECFWK_INSTALL_CHECK_SYSCAP_FAILED &&
+                GetIntParameter(IS_ROOT_MODE_PARAM, USER_MODE) == ROOT_MODE) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLER, "deviceTypes is empty and in root mode and check syscap failed");
+                return ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED;
+            }
             LOG_NOFUNC_W(BMS_TAG_INSTALLER, "deviceTypes is empty");
             continue;
         }
@@ -1842,26 +1965,45 @@ void BundleInstallChecker::SetCheckResultMsg(const std::string checkResultMsg)
 
 bool BundleInstallChecker::DetermineCloneApp(InnerBundleInfo &innerBundleInfo)
 {
-    ApplicationInfo applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
-    if (applicationInfo.multiAppMode.multiAppModeType != MultiAppModeType::APP_CLONE
-        || applicationInfo.multiAppMode.maxCount == 0) {
-        BmsExtensionDataMgr bmsExtensionDataMgr;
-        int32_t cloneNum = 0;
-        const std::string appIdentifier = innerBundleInfo.GetAppIdentifier();
-        if (!bmsExtensionDataMgr.DetermineCloneNum(applicationInfo.bundleName, appIdentifier, cloneNum)) {
-            LOG_W(BMS_TAG_INSTALLER, "DetermineCloneNum failed");
-            return false;
-        }
-        if (cloneNum == 0) {
-            LOG_W(BMS_TAG_INSTALLER, "DetermineCloneNum -c %{public}d", cloneNum);
-            return false;
-        }
-        LOG_I(BMS_TAG_INSTALLER, "install -n %{public}s -c %{public}d",
-            applicationInfo.bundleName.c_str(), cloneNum);
-        applicationInfo.multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
-        applicationInfo.multiAppMode.maxCount = cloneNum;
-        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int32_t cloneNum = 0;
+    if (!bmsExtensionDataMgr.DetermineCloneNum(
+        innerBundleInfo.GetBundleName(), innerBundleInfo.GetAppIdentifier(), cloneNum) ||
+        cloneNum == 0) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "DetermineCloneNum failed");
+        return false;
     }
+    MultiAppModeType currentMode = innerBundleInfo.GetMultiAppModeType();
+    if (currentMode != MultiAppModeType::UNSPECIFIED && currentMode != MultiAppModeType::APP_CLONE) {
+        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr == nullptr) {
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "DetermineCloneApp dataMgr is null");
+            return false;
+        }
+        /**
+         * 1. If an app installed for the first time is not in cloning mode, no action is required.
+         * 2. Forced app cloning cannot be upgraded to multi-instance, keep cloning mode.
+         */
+        MultiAppModeType installedMode;
+        if (!dataMgr->GetMultiAppModeTypeByBundleName(innerBundleInfo.GetBundleName(), installedMode) ||
+            installedMode != MultiAppModeType::APP_CLONE) {
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s not installed or not clone mode no action required",
+                innerBundleInfo.GetBundleName().c_str());
+            return false;
+        }
+    }
+    if (currentMode == MultiAppModeType::APP_CLONE &&
+        innerBundleInfo.GetMultiAppMaxCount() >= cloneNum) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s cloneNum is smaller no need to refresh",
+            innerBundleInfo.GetBundleName().c_str());
+        return false;
+    }
+    MultiAppModeData multiAppMode;
+    multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+    multiAppMode.maxCount = std::min(cloneNum, Constants::CLONE_APP_INDEX_MAX);
+    innerBundleInfo.SetMultiAppMode(multiAppMode);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DetermineCloneNum -n %{public}s -c %{public}d",
+        innerBundleInfo.GetBundleName().c_str(), cloneNum);
     return true;
 }
 

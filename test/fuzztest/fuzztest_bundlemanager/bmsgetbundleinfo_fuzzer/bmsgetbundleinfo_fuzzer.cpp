@@ -38,6 +38,16 @@ namespace OHOS {
         bundleMgrProxy.GetBundleInfo(bundleName, flag, bundleInfo, userId);
         bundleMgrProxy.GetBundleInfo(bundleName, flags, bundleInfo, userId);
         bundleMgrProxy.GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
+
+        BundleInfoForException bundleInfoForException;
+        uint32_t catchSoNum = BMSFuzzTestUtil::GenerateRandomUser(fdp);
+        uint64_t catchSoMaxSize = BMSFuzzTestUtil::GenerateRandomUser(fdp);
+        bundleMgrProxy.GetBundleInfoForException(bundleName, userId, catchSoNum,
+            catchSoMaxSize, bundleInfoForException);
+
+        AssetGroupInfo assetGroupInfo;
+        int32_t uid = BMSFuzzTestUtil::GenerateRandomUser(fdp);
+        bundleMgrProxy.GetAssetGroupsInfo(uid, assetGroupInfo);
         return true;
     }
 }

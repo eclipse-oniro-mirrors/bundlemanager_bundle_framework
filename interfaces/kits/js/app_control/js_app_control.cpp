@@ -739,6 +739,63 @@ napi_value GetDisposedRule(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+void ConvertDisposedRuleConfiguration(
+    napi_env env, napi_value nRule, const DisposedRuleConfiguration &disposedRuleConfiguration)
+{
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, disposedRuleConfiguration.appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "appIndex", nAppIndex));
+    napi_value nAppId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, disposedRuleConfiguration.appId.c_str(),
+        NAPI_AUTO_LENGTH, &nAppId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "appId", nAppId));
+
+    napi_value nDisposedRule = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nDisposedRule));
+    ConvertRuleInfo(env, nDisposedRule, disposedRuleConfiguration.disposedRule);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "disposedRule", nDisposedRule));
+}
+
+napi_value GetAllDisposedRules(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetAllDisposedRules called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ZERO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("AppControlProxy is null");
+        napi_value error = BusinessError::CreateNewCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+            GET_ALL_DISPOSED_RULES);
+        napi_throw(env, error);
+        return nullptr;
+    }
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    ErrCode ret = ERR_OK;
+    ret = appControlProxy->GetDisposedRules(userId, disposedRuleConfigurations);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAllDisposedRules failed");
+        napi_value businessError = BusinessError::CreateNewCommonError(
+            env, ret, GET_ALL_DISPOSED_RULES, PERMISSION_DISPOSED_APP_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRuleArray = nullptr;
+    NAPI_CALL(env, napi_create_array_with_length(env, disposedRuleConfigurations.size(), &nRuleArray));
+    for (size_t i = 0; i < disposedRuleConfigurations.size(); i++) {
+        napi_value ndisposedRuleConfiguration = nullptr;
+        NAPI_CALL(env, napi_create_object(env, &ndisposedRuleConfiguration));
+        ConvertDisposedRuleConfiguration(env, ndisposedRuleConfiguration, disposedRuleConfigurations[i]);
+        NAPI_CALL(env, napi_set_element(env, nRuleArray, i, ndisposedRuleConfiguration));
+    }
+    return nRuleArray;
+}
+
 static napi_value InnerSetDisposedRule(napi_env env, std::string &appId, DisposedRule &rule, int32_t appIndex)
 {
     napi_value nRet;
@@ -889,7 +946,7 @@ bool ParseUninstallDisposedRule(napi_env env, napi_value nRule, UninstallDispose
         APP_LOGW("uninstallComponentType parseInt failed");
         return false;
     }
-    if (uninstallComponentType != static_cast<int32_t>(UninstallComponentType::EXTENSION)) {
+    if (UNINSTALL_COMPONENT_TYPE_LIST.find(uninstallComponentType) == UNINSTALL_COMPONENT_TYPE_LIST.end()) {
         APP_LOGW("uninstallComponentType not valid");
         return false;
     }
@@ -1125,6 +1182,10 @@ void CreateUninstallComponentType(napi_env env, napi_value value)
         &nExtensionAbilityType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "EXTENSION",
         nExtensionAbilityType));
+    napi_value nUIExtensionType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(UninstallComponentType::UI_EXTENSION),
+        &nUIExtensionType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UI_EXTENSION", nUIExtensionType));
 }
 
 void CreateDisposedType(napi_env env, napi_value value)

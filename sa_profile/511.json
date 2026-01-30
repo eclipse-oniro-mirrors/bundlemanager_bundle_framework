@@ -9,6 +9,7 @@
             "distributed": false,
             "bootphase": "CoreStartPhase",
             "dump_level": 1,
+            "min_hdi_proxy_version": [],
             "stop-on-demand": {
                 "longtimeunused-unload": 180
             }

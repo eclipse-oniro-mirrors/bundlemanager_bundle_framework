@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,6 +35,7 @@ namespace {
 const int32_t ERR_CODE = 8388613;
 const uint32_t ACCESS_TOKEN_ID = 1765341;
 const int32_t MAX_WAITING_TIME = 600;
+const int32_t MAX_SHORTCUT_INFOS = 101;
 }
 
 class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
@@ -1415,6 +1416,55 @@ HWTEST_F(BmsBundleMgrProxyTest, GetPluginBundlePathForSelf_0100, Function | Medi
 }
 
 /**
+ * @tc.number: GetBundleInstallStatus_0001
+ * @tc.name: test the GetBundleInstallStatus
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetBundleInstallStatus_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "bundle";
+    int32_t userId = 100;
+    BundleInstallStatus status;
+    auto ret = bundleMgrProxy.GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllJsonProfile_0001
+ * @tc.name: test the GetAllJsonProfile
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllJsonProfile
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAllJsonProfile_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<JsonProfileInfo> profileInfos;
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, userId, profileInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0001
+ * @tc.name: test the GetAllAppProvisionInfo
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllAppProvisionInfo
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAllAppProvisionInfo_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.GetAllAppProvisionInfo(userId, appProvisionInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
  * @tc.number: RecoverBackupBundleData_0001
  * @tc.name: test the RecoverBackupBundleData
  * @tc.desc: 1. system running normally
@@ -1446,6 +1496,164 @@ HWTEST_F(BmsBundleMgrProxyTest, RemoveBackupBundleData_0001, Function | MediumTe
     int32_t appIndex = 0;
     auto ret = bundleMgrProxy.RemoveBackupBundleData(bundleName, userId, appIndex);
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateNewBundleEl5Dir_0001
+ * @tc.name: test the CreateNewBundleEl5Dir
+ * @tc.desc: 1. system running normally
+ *           2. test CreateNewBundleEl5Dir
+ */
+HWTEST_F(BmsBundleMgrProxyTest, CreateNewBundleEl5Dir_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.CreateNewBundleEl5Dir(userId);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfosProxy_0001
+ * @tc.name: test the AddDynamicShortcutInfos
+ * @tc.desc: test AddDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleMgrProxyTest, AddDynamicShortcutInfosProxy_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    ShortcutInfo shortcutInfo;
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfosProxy_0002
+ * @tc.name: test the AddDynamicShortcutInfos
+ * @tc.desc: test AddDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleMgrProxyTest, AddDynamicShortcutInfosProxy_0002, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.clear();
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfosProxy_0003
+ * @tc.name: test the AddDynamicShortcutInfos
+ * @tc.desc: test AddDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleMgrProxyTest, AddDynamicShortcutInfosProxy_0003, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    ShortcutInfo shortcutInfo;
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.reserve(MAX_SHORTCUT_INFOS);
+    for (int i = 0; i < MAX_SHORTCUT_INFOS; ++i) {
+        shortcutInfos.push_back(shortcutInfo);
+    }
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeleteDynamicShortcutInfosProxy_0001
+ * @tc.name: test the DeleteDynamicShortcutInfos
+ * @tc.desc: test DeleteDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleMgrProxyTest, DeleteDynamicShortcutInfosProxy_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<std::string> ids;
+    std::string bundleName = "bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto ret = bundleMgrProxy.DeleteDynamicShortcutInfos(bundleName, appIndex, userId, ids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: SetShortcutsEnabled_0001
+ * @tc.name: test the SetShortcutsEnabled
+ * @tc.desc: test SetShortcutsEnabled
+ */
+HWTEST_F(BmsBundleMgrProxyTest, SetShortcutsEnabled_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    ShortcutInfo shortcutInfo;
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+    bool isEnabled = false;
+    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SetShortcutsEnabled_0002
+ * @tc.name: test the SetShortcutsEnabled
+ * @tc.desc: test SetShortcutsEnabled
+ */
+HWTEST_F(BmsBundleMgrProxyTest, SetShortcutsEnabled_0002, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.clear();
+    bool isEnabled = false;
+    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetShortcutsEnabled_0003
+ * @tc.name: test the SetShortcutsEnabled
+ * @tc.desc: test SetShortcutsEnabled
+ */
+HWTEST_F(BmsBundleMgrProxyTest, SetShortcutsEnabled_0003, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    ShortcutInfo shortcutInfo;
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.reserve(MAX_SHORTCUT_INFOS);
+    for (int i = 0; i < MAX_SHORTCUT_INFOS; ++i) {
+        shortcutInfos.push_back(shortcutInfo);
+    }
+    bool isEnabled = false;
+    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CleanBundleCacheFilesAutomatic_0200
+ * @tc.name: test the CleanBundleCacheFilesAutomatic
+ * @tc.desc: 1. system running normally
+ *           2. test CleanBundleCacheFilesAutomatic
+ */
+HWTEST_F(BmsBundleMgrProxyTest, CleanBundleCacheFilesAutomatic_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    uint64_t cacheSize = 0;
+    CleanType cleanType = CleanType::CACHE_SPACE;
+    std::optional<uint64_t> cleanedSize;
+    auto res = bundleMgrProxy.CleanBundleCacheFilesAutomatic(cacheSize, cleanType, cleanedSize);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    cacheSize = 1;
+    res = bundleMgrProxy.CleanBundleCacheFilesAutomatic(cacheSize, cleanType, cleanedSize);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
 }
 }
 }

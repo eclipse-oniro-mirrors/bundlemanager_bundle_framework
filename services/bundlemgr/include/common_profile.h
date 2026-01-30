@@ -435,6 +435,7 @@ constexpr const char* META_DATA_RESOURCE = "resource";
 // hnppackge
 constexpr const char* HNP_PACKAGE = "package";
 constexpr const char* HNP_TYPE = "type";
+constexpr const char* HNP_INDEPENDENT_SIGN = "independentSign";
 // metadata reserved
 constexpr const char* META_DATA_FORM = "ohos.extension.form";
 constexpr const char* META_DATA_SHORTCUTS = "ohos.ability.shortcuts";
@@ -452,6 +453,7 @@ constexpr const char* ABILITY_START_WINDOW_ICON_ID = "startWindowIconId";
 constexpr const char* ABILITY_START_WINDOW_BACKGROUND = "startWindowBackground";
 constexpr const char* ABILITY_START_WINDOW_BACKGROUND_ID = "startWindowBackgroundId";
 constexpr const char* ABILITY_REMOVE_MISSION_AFTER_TERMINATE = "removeMissionAfterTerminate";
+constexpr const char* ABILITY_ALLOW_SELF_REDIRECT = "allowSelfRedirect";
 constexpr const char* ABILITY_ORIENTATION = "orientation";
 constexpr const char* ABILITY_SUPPORT_WINDOW_MODE = "supportWindowMode";
 constexpr const char* ABILITY_MAX_WINDOW_RATIO = "maxWindowRatio";
@@ -546,6 +548,9 @@ constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 
 // moduleMenu
 constexpr const char* MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
+
+constexpr const char* MODULE_EASY_GO = "easyGo";
+constexpr const char* MODULE_SHARE_FILES = "shareFiles";
 
 // module router
 constexpr const char* MODULE_ROUTER_MAP = "routerMap";

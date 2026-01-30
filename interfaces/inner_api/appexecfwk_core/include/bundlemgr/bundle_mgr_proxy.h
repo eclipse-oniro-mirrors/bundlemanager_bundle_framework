@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -130,6 +130,26 @@ public:
      */
     virtual ErrCode GetBundleInfoV9(const std::string &bundleName, int32_t flags,
         BundleInfo &bundleInfo, int32_t userId) override;
+
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name through the proxy object.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param bundleInfoForException Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @param catchSoNum Indicates the num of catched hash values of so.
+     * @param catchSoMaxSize Indicates the max size of catched so.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoForException(const std::string &bundleName,
+        int32_t userId, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+        BundleInfoForException &bundleInfoForException) override;
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name.
+     * @param uid Indicates the uid.
+     * @param assetGroupInfo Indicates the obtained AssetGroupInfo object.
+     * @return Returns ERR_OK if the AssetGroupInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo &assetGroupInfo) override;
     /**
      * @brief Obtains the BundleInfos by the given want list through the proxy object.
      * @param wants Indicates the imformation of the abilities to be queried.
@@ -550,7 +570,8 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
      */
     virtual ErrCode GetLaunchWantForBundle(
-        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID,
+        bool isSync = false) override;
     /**
      * @brief Obtains detailed information about a specified permission through the proxy object.
      * @param permissionName Indicates the name of the ohos permission.
@@ -564,6 +585,15 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
     virtual ErrCode CleanBundleCacheFilesAutomatic(uint64_t cacheSize) override;
+    /**
+     * @brief Clears cache data of a specified size through the proxy object.
+     * @param cacheSize Indicates the size of the cache data is to be cleared.
+     * @param cleanType Indicates the type of cache data to be cleared.
+     * @param cleanedSize Indicates the size of the cache data that is actually cleared.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode CleanBundleCacheFilesAutomatic(uint64_t cacheSize, CleanType cleanType,
+        std::optional<uint64_t>& cleanedSize) override;
     /**
      * @brief Clears cache data of a specified application through the proxy object.
      * @param bundleName Indicates the bundle name of the application whose cache data is to be cleared.
@@ -999,6 +1029,9 @@ public:
     virtual ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
         AppProvisionInfo &appProvisionInfo) override;
 
+    virtual ErrCode GetAllAppProvisionInfo(const int32_t userId,
+        std::vector<AppProvisionInfo> &appProvisionInfos) override;
+
     virtual ErrCode GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles) override;
     virtual ErrCode GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
         std::vector<SharedBundleInfo> &sharedBundles) override;
@@ -1254,9 +1287,9 @@ public:
 
     virtual ErrCode GetPluginInfosForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos) override;
 
-    virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
+    virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;
 
-    virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
+    virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;
 
     virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir) override;
@@ -1275,6 +1308,13 @@ public:
     virtual ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible) override;
 
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos) override;
+
+    virtual ErrCode AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId) override;
+
+    virtual ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const std::vector<std::string> &ids) override;
+
+    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled) override;
 
     virtual bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion,
         const int32_t minorVersion, const int32_t patchVersion) override;
@@ -1298,6 +1338,23 @@ public:
         const int32_t userId, const int32_t appIndex) override;
 
     virtual ErrCode CreateNewBundleEl5Dir(int32_t userId) override;
+
+    virtual ErrCode GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
+        BundleInstallStatus &bundleInstallStatus) override;
+
+    /**
+     * @brief Obtains all JSON profile info designated by profileType and userId.
+     * It does not support querying JSON profile info for disabled applications.
+     * only support profileType: EASY_GO_PROFILE/SHARE_FILES_PROFILE
+     * @param profileType Indicates the profile type.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
+        std::vector<JsonProfileInfo> &profileInfos) override;
+
+    virtual ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
+        const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo) override;
 private:
     /**
      * @brief Send a command message from the proxy object.
@@ -1382,6 +1439,9 @@ private:
 
     template<typename T>
     ErrCode WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const;
+
+    template<typename T>
+    ErrCode WriteVectorToParcel(const std::vector<T> &parcelVector, MessageParcel &reply);
 
     ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, void *&data);
 

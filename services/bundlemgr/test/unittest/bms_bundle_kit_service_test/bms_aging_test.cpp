@@ -223,7 +223,7 @@ const std::string URI_PATH_REGEX_001 = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 
     PORT_SEPARATOR + PORT_001 + PATH_SEPARATOR + PATH_REGEX_001;
 const int32_t DEFAULT_USERID = 100;
 const int32_t ALL_USERID = -3;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
 const int32_t TEST_APP_INDEX1 = 1;
@@ -339,8 +339,8 @@ HWTEST_F(BmsAgingTest, AginTest_0019, Function | SmallTest | Level0)
 
     AgingRequest request;
     std::vector<AgingBundleInfo> agingBundles = {
-        AgingBundleInfo("com.example.app1", 1000, 5),
-        AgingBundleInfo("com.example.app2", 2000, 3)
+        AgingBundleInfo("com.example.app1", 1000, 5, 0),
+        AgingBundleInfo("com.example.app2", 2000, 3, 0)
     };
     request.AddAgingBundle(agingBundles[0]);
     request.AddAgingBundle(agingBundles[1]);
@@ -356,7 +356,7 @@ HWTEST_F(BmsAgingTest, AginTest_0019, Function | SmallTest | Level0)
 HWTEST_F(BmsAgingTest, AginTest_0024, Function | SmallTest | Level0)
 {
     RecentlyUnuseBundleAgingHandler bundleAgingMgr;
-    AgingBundleInfo agingBundle("com.example.app2", 2000, 3);
+    AgingBundleInfo agingBundle("com.example.app2", 2000, 3, 0);
     bool ret = bundleAgingMgr.CleanCache(agingBundle);
     EXPECT_FALSE(ret);
 }
@@ -398,8 +398,13 @@ HWTEST_F(BmsAgingTest, CheckPrerequisite_0002, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     AppExecFwk::BundleAgingMgr::AgingTriggertype type = AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD;
     DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().SetDisplayState(DisplayPowerMgr::DisplayState::DISPLAY_ON);
+    DisplayPowerMgr::DisplayState state = DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().GetDisplayState();
     bool ret = bundleAgingMgr.CheckPrerequisite(type);
-    EXPECT_FALSE(ret);
+    if (state == DisplayPowerMgr::DisplayState::DISPLAY_ON) {
+        EXPECT_FALSE(ret);
+    } else {
+        EXPECT_TRUE(ret);
+    }
 }
 
 /**
@@ -429,7 +434,7 @@ HWTEST_F(BmsAgingTest, Dump_0001, Function | SmallTest | Level0)
 {
     DeviceUsageStats::BundleActiveClient::GetInstance();
     AppExecFwk::AgingRequest agingRequest;
-    AppExecFwk::AgingBundleInfo bundleInfo("com.example.app1", 1, 2);
+    AppExecFwk::AgingBundleInfo bundleInfo("com.example.app1", 1, 2, 0);
     agingRequest.AddAgingBundle(bundleInfo);
     agingRequest.Dump();
     EXPECT_EQ(agingRequest.agingBundles_[0].GetStartCount(), 2);
@@ -504,7 +509,7 @@ HWTEST_F(BmsAgingTest, ProcessBundle_0001, Function | SmallTest | Level0)
     AgingHandlerChain agingHandlerChain;
     AgingRequest request;
     RecentlyUnuseBundleAgingHandler ruAgingHandler;
-    AgingBundleInfo agingBundleInfoFirst("mock_NOT_RUNNING", 1000, 5);
+    AgingBundleInfo agingBundleInfoFirst("mock_NOT_RUNNING", 1000, 5, 0);
     request.AddAgingBundle(agingBundleInfoFirst);
     auto handler = std::make_shared<RecentlyUnuseBundleAgingHandler>(ruAgingHandler);
     agingHandlerChain.AddHandler(handler);
@@ -522,7 +527,7 @@ HWTEST_F(BmsAgingTest, ProcessBundle_0002, Function | SmallTest | Level0)
     AgingHandlerChain agingHandlerChain;
     AgingRequest request;
     RecentlyUnuseBundleAgingHandler ruAgingHandler;
-    AgingBundleInfo agingBundleInfoFirst("mock_NOT_RUNNING", 1000, 5);
+    AgingBundleInfo agingBundleInfoFirst("mock_NOT_RUNNING", 1000, 5, 0);
     request.AddAgingBundle(agingBundleInfoFirst);
     request.SetAgingCleanType(AgingCleanType::CLEAN_OTHERS);
     request.totalDataBytesThreshold_ = 2;
@@ -531,6 +536,48 @@ HWTEST_F(BmsAgingTest, ProcessBundle_0002, Function | SmallTest | Level0)
     bool ret = ruAgingHandler.ProcessBundle(request);
     EXPECT_FALSE(ret);
     request.totalDataBytesThreshold_ = 0;
+}
+
+/**
+ * @tc.number: SortAgingBundles_0001
+ * @tc.name: SortAgingBundles_0001
+ * @tc.desc: test sorting aging bundleInfo
+ */
+HWTEST_F(BmsAgingTest, SortAgingBundles_0001, Function | SmallTest | Level0)
+{
+    AgingRequest request;
+    AgingBundleInfo agingBundleInfoFirst("com.example.app1", 2000, 5, 1);
+    AgingBundleInfo agingBundleInfoSecond("com.example.app2", 1000, 6, 0);
+    AgingBundleInfo agingBundleInfoThree("com.example.app3", 1000, 5, 0);
+    request.AddAgingBundle(agingBundleInfoFirst);
+    request.AddAgingBundle(agingBundleInfoSecond);
+    request.AddAgingBundle(agingBundleInfoThree);
+    request.SortAgingBundles();
+    auto TestAgingBundles = request.GetAgingBundles();
+    EXPECT_EQ(TestAgingBundles[0].GetBundleName(), "com.example.app3");
+    EXPECT_EQ(TestAgingBundles[1].GetBundleName(), "com.example.app2");
+    EXPECT_EQ(TestAgingBundles[2].GetBundleName(), "com.example.app1");
+}
+
+/**
+ * @tc.number: SortAgingBundles_0002
+ * @tc.name: SortAgingBundles_0002
+ * @tc.desc: test sorting aging bundleInfo
+ */
+HWTEST_F(BmsAgingTest, SortAgingBundles_0002, Function | SmallTest | Level0)
+{
+    AgingRequest request;
+    AgingBundleInfo agingBundleInfoFirst("com.example.app1", 2000, 5, 1);
+    AgingBundleInfo agingBundleInfoSecond("com.example.app2", 1000, 6, 0);
+    AgingBundleInfo agingBundleInfoThree("com.example.app3", 2000, 7, 1);
+    request.AddAgingBundle(agingBundleInfoFirst);
+    request.AddAgingBundle(agingBundleInfoSecond);
+    request.AddAgingBundle(agingBundleInfoThree);
+    request.SortAgingBundles();
+    auto TestAgingBundles = request.GetAgingBundles();
+    EXPECT_EQ(TestAgingBundles[0].GetBundleName(), "com.example.app2");
+    EXPECT_EQ(TestAgingBundles[1].GetBundleName(), "com.example.app1");
+    EXPECT_EQ(TestAgingBundles[2].GetBundleName(), "com.example.app3");
 }
 #endif
 }

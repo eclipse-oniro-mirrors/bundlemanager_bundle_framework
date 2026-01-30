@@ -47,7 +47,7 @@ const std::string HAP_FILE_PATH = "/data/test/resource/bms/permission_bundle/";
 const int32_t USERID = 100;
 const int32_t FLAGS = 0;
 const int32_t UID = 0;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 }  // namespace
 
 class BmsBundlePermissionTokenTest : public testing::Test {
@@ -266,5 +266,19 @@ HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1200, Functi
     HapModuleInfo info;
     auto ret = bundleMgrHostImpl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionTokenTest_1300
+ * @tc.name: test VerifyAcrossUserPermission of BundlePermissionMgr
+ * @tc.desc: 1. system running normally
+ *           2. GetSandboxHapModuleInfo false by no permission
+ */
+HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1300, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::VerifyAcrossUserPermission(USERID);
+    EXPECT_EQ(ret, true);
+    ret = BundlePermissionMgr::VerifyAcrossUserPermission(USERID+1);
+    EXPECT_EQ(ret, true);
 }
 } // OHOS

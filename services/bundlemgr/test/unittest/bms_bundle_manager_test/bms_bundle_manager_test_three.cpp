@@ -67,7 +67,7 @@ const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3j
 const int32_t USERID = 100;
 const int32_t FLAG = 0;
 const int32_t WRONG_UID = -1;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 const std::string BUNDLE_BACKUP_TEST = "backup.hap";
 const std::string BUNDLE_PREVIEW_TEST = "preview.hap";
 const std::string BUNDLE_THUMBNAIL_TEST = "thumbnail.hap";
@@ -510,7 +510,7 @@ HWTEST_F(BmsBundleManagerTest3, GetBundleInfoForSelf_0100, Function | SmallTest 
     int32_t flags = 0;
     BundleInfo info;
     ErrCode ret = hostImpl->GetBundleInfoForSelf(flags, info);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
@@ -739,8 +739,8 @@ HWTEST_F(BmsBundleManagerTest3, AgingUtilTest_0001, Function | SmallTest | Level
 HWTEST_F(BmsBundleManagerTest3, AgingUtilTest_0002, Function | SmallTest | Level1)
 {
     std::vector<AgingBundleInfo> bundles;
-    AgingBundleInfo bundle1("bundle1", 0, 0);
-    AgingBundleInfo bundle2("bundle2", 0, 0);
+    AgingBundleInfo bundle1("bundle1", 0, 0, 0);
+    AgingBundleInfo bundle2("bundle2", 0, 0, 0);
     bundles.push_back(bundle1);
     bundles.push_back(bundle2);
     AgingUtil::SortAgingBundles(bundles);
@@ -943,6 +943,66 @@ HWTEST_F(BmsBundleManagerTest3, GetAdditionalInfo_0200, Function | SmallTest | L
 
     ErrCode ret = hostImpl->GetAdditionalInfo(BUNDLE_NAME, additionalInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfos_0100
+ * @tc.name: test AddDynamicShortcutInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest3, AddDynamicShortcutInfos_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = hostImpl->AddDynamicShortcutInfos(shortcutInfos, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfos_0200
+ * @tc.name: test AddDynamicShortcutInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest3, AddDynamicShortcutInfos_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ShortcutInfo> shortcutInfos;
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+
+    ErrCode ret = hostImpl->AddDynamicShortcutInfos(shortcutInfos, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: DeleteDynamicShortcutInfos_0100
+ * @tc.name: test DeleteDynamicShortcutInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest3, DeleteDynamicShortcutInfos_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> ids;
+    ErrCode ret = hostImpl->DeleteDynamicShortcutInfos(BUNDLE_NAME, 0, USERID, ids);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: DeleteDynamicShortcutInfos_0200
+ * @tc.name: test DeleteDynamicShortcutInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest3, DeleteDynamicShortcutInfos_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> ids;
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+
+    ErrCode ret = hostImpl->DeleteDynamicShortcutInfos(BUNDLE_NAME, 0, USERID, ids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**
@@ -1837,7 +1897,11 @@ HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_3401, Function | MediumTest | 
     std::vector<std::string> bundleNames = {BUNDLE_NAME};
     std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
     ErrCode retCode = hostImpl->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+    #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(retCode, ERR_OK);
+    #else
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #endif
 }
 
 /**
@@ -1911,7 +1975,7 @@ HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_3900, Function | MediumTest | 
     EXPECT_NE(hostImpl, nullptr);
     std::string odid = "odid";
     ErrCode retCode = hostImpl->GetOdid(odid);
-    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
@@ -2341,6 +2405,114 @@ HWTEST_F(BmsBundleManagerTest3, RemoveSameAbilityResourceInfo_0001, Function | S
 }
 
 /**
+ * @tc.number: GetBundleInstallStatus_0001
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleManagerTest3, GetBundleInstallStatus_0001, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_BACKUP_NAME;
+    int32_t userId = 100;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = hostImpl->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleInstallStatus_0002
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleManagerTest3, GetBundleInstallStatus_0002, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t userId = 100;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = hostImpl->GetBundleInstallStatus("", userId, status);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleInstallStatus_0003
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleManagerTest3, GetBundleInstallStatus_0003, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_BACKUP_NAME;
+    int32_t userId = 100000;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = hostImpl->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleInstallStatus_0004
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleManagerTest3, GetBundleInstallStatus_0004, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    std::string bundleName = BUNDLE_BACKUP_NAME;
+    int32_t userId = 100;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = hostImpl->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_EQ(status, BundleInstallStatus::UNKNOWN_STATUS);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = savedDataMgr;
+}
+
+/**
+ * @tc.number: GetBundleInstallStatus_0005
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleManagerTest3, GetBundleInstallStatus_0005, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_BACKUP_NAME;
+    int32_t userId = 100;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = hostImpl->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLED);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetBundleInstallStatus_0006
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleManagerTest3, GetBundleInstallStatus_0006, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_BACKUP_NAME;
+    int32_t userId = 101;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = hostImpl->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
  * @tc.number: RecoverBackupBundleData_0001
  * @tc.name: test RecoverBackupBundleData
  * @tc.desc: test RecoverBackupBundleData
@@ -2496,5 +2668,22 @@ HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0004, Function | MediumTe
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
     UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: CreateNewBundleEl5Dir_0001
+ * @tc.name: test CreateNewBundleEl5Dir
+ * @tc.desc: test CreateNewBundleEl5Dir
+ */
+HWTEST_F(BmsBundleManagerTest3, CreateNewBundleEl5Dir_0001, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t userId = 100;
+    auto testRet = hostImpl->CreateNewBundleEl5Dir(userId);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS

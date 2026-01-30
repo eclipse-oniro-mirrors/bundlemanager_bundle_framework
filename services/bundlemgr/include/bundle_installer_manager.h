@@ -20,6 +20,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <atomic>
 
 #include "nocopyable.h"
 
@@ -29,6 +30,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+inline std::atomic<int32_t> g_taskCounter = 0;
+
 using ThreadPoolTask = std::function<void()>;
 class BundleInstallerManager : public std::enable_shared_from_this<BundleInstallerManager> {
 public:

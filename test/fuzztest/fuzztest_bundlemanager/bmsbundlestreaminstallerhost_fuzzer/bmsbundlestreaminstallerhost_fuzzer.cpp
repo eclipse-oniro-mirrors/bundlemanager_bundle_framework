@@ -18,8 +18,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
-
+#define private public
 #include "bundle_stream_installer_host.h"
+#undef private
 #include "message_parcel.h"
 #include "securec.h"
 #include "bms_fuzztest_util.h"
@@ -41,7 +42,14 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     BundleStreamInstallerHost host;
     FuzzedDataProvider fdp(data, size);
     uint8_t code = fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX);
+    host.Init();
     host.OnRemoteRequest(code, datas, reply, option);
+    host.HandleCreateSharedBundleStream(datas, reply);
+    host.HandleCreateExtProfileFileStream(datas, reply);
+    host.HandleCreatePgoFileStream(datas, reply);
+    host.HandleCreateSignatureFileStream(datas, reply);
+    host.HandleCreateStream(datas, reply);
+    host.HandleInstall(datas, reply);
     return true;
 }
 }

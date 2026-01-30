@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
+constexpr int16_t MAX_BUNDLE_SA_UID_SIZE = 10;
+constexpr int16_t BUNDLE_UID_SIZE = 1;
 constexpr uint16_t MAX_VEC_SIZE = 1024;
 }
 
@@ -44,12 +46,12 @@ InstalldHost::~InstalldHost()
 
 void InstalldHost::SetMemMgrStatus(bool started)
 {
-    criticalManager_.SetMemMgrStatus(started);
+    CriticalManager::GetInstance().SetMemMgrStatus(started);
 }
 
 bool InstalldHost::IsCritical()
 {
-    return criticalManager_.IsCritical();
+    return CriticalManager::GetInstance().IsCritical();
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -63,7 +65,7 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         LOG_E(BMS_TAG_INSTALLD, "descripter is not matched");
         return OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    criticalManager_.BeforeRequest();
+    CriticalManager::GetInstance().BeforeRequest();
     bool result = true;
     switch (code) {
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DIR):
@@ -92,6 +94,15 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::SET_DIR_APL):
             result = this->HandleSetDirApl(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::SET_DIRS_APL):
+            result = this->HandleSetDirsApl(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::SET_FILE_CON_FORCE):
+            result = HandleSetFileConForce(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::STOP_SET_FILE_CON):
+            result = HandleStopSetFileCon(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_DIR):
             result = this->HandleRemoveDir(data, reply);
@@ -201,6 +212,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_SIGN_PROFILE):
             result = this->HandRemoveSignProfile(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::ADD_CERT_AND_ENABLE_KEY):
+            result = this->HandleAddCertAndEnableKey(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_VECTOR):
             result = this->HandleCreateBundleDataDirWithVector(data, reply);
             break;
@@ -237,6 +251,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_DISK_USAGE_FROM_PATH):
             result = HandleGetDiskUsageFromPath(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_FILE_COUNT):
+            result = this->HandleGetBundleInodeCount(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_DATA_GROUP_DIRS):
             result = HandleCreateDataGroupDirs(data, reply);
             break;
@@ -252,20 +269,38 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::LOAD_INSTALLS):
             result = HandleLoadInstalls(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_SO_HASH):
+            result = HandleHashSoFile(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_FILES_HASH):
+            result = HandleHashFiles(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::CLEAR_DIR):
             result = HandleClearDir(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::RESTORE_CON_LIBS):
             result = HandleRestoreconPath(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::RESTORE_CON_BMSDB):
+            result = HandleResetBmsDBSecurity(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CLEAN_BUNDLE_DIRS):
+            result = this->HandleCleanBundleDirs(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_DIR):
+            result = HandleCopyDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_CERT_AND_REMOVE_KEY):
+            result = HandleDeleteCertAndRemoveKey(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
-            criticalManager_.AfterRequest();
+            CriticalManager::GetInstance().AfterRequest();
             return ret;
     }
     LOG_D(BMS_TAG_INSTALLD, "installd host finish to process message from client");
-    criticalManager_.AfterRequest();
+    CriticalManager::GetInstance().AfterRequest();
     return result ? NO_ERROR : OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
 }
 
@@ -305,27 +340,34 @@ bool InstalldHost::HandleExtractFiles(MessageParcel &data, MessageParcel &reply)
 
 bool InstalldHost::HandleExtractHnpFiles(MessageParcel &data, MessageParcel &reply)
 {
-    std::string hnpPackageInfo = Str16ToStr8(data.ReadString16());
+    std::map<std::string, std::string> hnpPackageMap;
+    int32_t mapSize = data.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(data, mapSize, &hnpPackageMap);
+    for (int32_t i = 0; i < mapSize; ++i) {
+        std::string package = Str16ToStr8(data.ReadString16());
+        std::string type = Str16ToStr8(data.ReadString16());
+        hnpPackageMap.try_emplace(package, type);
+    }
     std::unique_ptr<ExtractParam> info(data.ReadParcelable<ExtractParam>());
     if (info == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
         return false;
     }
 
-    ErrCode result = ExtractHnpFiles(hnpPackageInfo, *info);
+    ErrCode result = ExtractHnpFiles(hnpPackageMap, *info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
 bool InstalldHost::HandleProcessBundleInstallNative(MessageParcel &data, MessageParcel &reply)
 {
-    std::string userId = Str16ToStr8(data.ReadString16());
-    std::string hnpRootPath = Str16ToStr8(data.ReadString16());
-    std::string hapPath = Str16ToStr8(data.ReadString16());
-    std::string cpuAbi = Str16ToStr8(data.ReadString16());
-    std::string packageName = Str16ToStr8(data.ReadString16());
+    std::unique_ptr<InstallHnpParam> info(data.ReadParcelable<InstallHnpParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
 
-    ErrCode result = ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    ErrCode result = ProcessBundleInstallNative(*info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -425,7 +467,7 @@ bool InstalldHost::HandleCreateBundleDataDir(MessageParcel &data, MessageParcel 
 bool InstalldHost::HandleCreateBundleDataDirWithVector(MessageParcel &data, MessageParcel &reply)
 {
     auto createDirParamSize = data.ReadInt32();
-    if (createDirParamSize <= 0 || createDirParamSize > Constants::MAX_PARCEL_CAPACITY) {
+    if (createDirParamSize <= 0 || createDirParamSize > Constants::MAX_APP_UID) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
@@ -467,7 +509,8 @@ bool InstalldHost::HandleRemoveModuleDataDir(MessageParcel &data, MessageParcel 
 bool InstalldHost::HandleRemoveDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string removedDir = Str16ToStr8(data.ReadString16());
-    ErrCode result = RemoveDir(removedDir);
+    bool async = data.ReadBool();
+    ErrCode result = RemoveDir(removedDir, async);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -500,12 +543,31 @@ bool InstalldHost::HandleGetDiskUsageFromPath(MessageParcel &data, MessageParcel
         READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, data, path);
         cachePaths.emplace_back(path);
     }
+    int64_t timeoutMs = data.ReadInt64();
     int64_t statSize = 0;
-    ErrCode result = GetDiskUsageFromPath(cachePaths, statSize);
+    ErrCode result = GetDiskUsageFromPath(cachePaths, statSize, timeoutMs);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64(statSize)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetDiskUsageFromPath write failed");
         return false;
+    }
+    return true;
+}
+bool InstalldHost::HandleGetBundleInodeCount(MessageParcel &data, MessageParcel &reply)
+{
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD, "HandleGetBundleInodeCount start");
+    int32_t uid = data.ReadInt32();
+    uint64_t inodeCount = 0;
+    ErrCode result = GetBundleInodeCount(uid, inodeCount);
+    if (!reply.WriteInt32(result)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "Handle Get Inode Count write result failed");
+        return false;
+    }
+    if (result == ERR_OK) {
+        if (!reply.WriteUint64(inodeCount)) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "Handle Get Inode Count write inodeCount failed");
+            return false;
+        }
     }
     return true;
 }
@@ -529,11 +591,40 @@ bool InstalldHost::HandleCleanBundleDataDirByName(MessageParcel &data, MessagePa
     return true;
 }
 
+bool InstalldHost::HandleCleanBundleDirs(MessageParcel &data, MessageParcel &reply)
+{
+    uint32_t dirSize = data.ReadUint32();
+    if (dirSize == 0 || dirSize > MAX_VEC_SIZE) {
+        APP_LOGE("dir count is error");
+        return false;
+    }
+    std::vector<std::string> dirs;
+    for (uint32_t i = 0; i < dirSize; i++) {
+        std::string path;
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, data, path);
+        dirs.emplace_back(path);
+    }
+    
+    bool keepParent = data.ReadBool();
+    ErrCode result = CleanBundleDirs(dirs, keepParent);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
 bool InstalldHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &reply)
 {
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t userId = data.ReadInt32();
-    int32_t uid = data.ReadInt32();
+    std::unordered_set<int32_t> uids;
+    int32_t uidSize = data.ReadInt32();
+    if (uidSize < BUNDLE_UID_SIZE || uidSize > (MAX_BUNDLE_SA_UID_SIZE + BUNDLE_UID_SIZE)) {
+        LOG_E(BMS_TAG_INSTALLD, "uidSize out of range");
+        return false;
+    }
+    for (int32_t i = 0; i < uidSize; ++i) {
+        int32_t uid = data.ReadInt32();
+        uids.emplace(uid);
+    }
     int32_t appIndex = data.ReadInt32();
     uint32_t statFlag = data.ReadUint32();
     std::vector<std::string> moduleNameList;
@@ -541,7 +632,7 @@ bool InstalldHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &repl
         return false;
     }
     std::vector<int64_t> bundleStats;
-    ErrCode result = GetBundleStats(bundleName, userId, bundleStats, uid, appIndex, statFlag, moduleNameList);
+    ErrCode result = GetBundleStats(bundleName, userId, bundleStats, uids, appIndex, statFlag, moduleNameList);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64Vector(bundleStats)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetBundleStats write failed");
@@ -564,8 +655,7 @@ bool InstalldHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel 
         std::string bundleName = Str16ToStr8(data.ReadString16());
         bundleNames.emplace_back(bundleName);
     }
-    int32_t userId = data.ReadInt32();
-    std::unordered_map<std::string, int32_t> uidMap;
+    std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap;
     int32_t uidMapSize = data.ReadInt32();
     if (uidMapSize < 0 || uidMapSize > MAX_BATCH_QUERY_BUNDLE_SIZE) {
         LOG_E(BMS_TAG_INSTALLD, "param invalid");
@@ -573,11 +663,20 @@ bool InstalldHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel 
     }
     for (int32_t i = 0; i < uidMapSize; ++i) {
         std::string bundleName = Str16ToStr8(data.ReadString16());
-        int32_t uids = data.ReadInt32();
-        uidMap.emplace(bundleName, uids);
+        int32_t uidSize = data.ReadInt32();
+        if (uidSize < BUNDLE_UID_SIZE || uidSize > (MAX_BUNDLE_SA_UID_SIZE + BUNDLE_UID_SIZE)) {
+            LOG_E(BMS_TAG_INSTALLD, "uidSize out of range");
+            return false;
+        }
+        std::unordered_set<int32_t> uidSet;
+        for (int32_t j = 0; j < uidSize; ++j) {
+            int32_t uid = data.ReadInt32();
+            uidSet.emplace(uid);
+        }
+        uidMap.emplace(bundleName, uidSet);
     }
     std::vector<BundleStorageStats> bundleStats;
-    ErrCode result = BatchGetBundleStats(bundleNames, userId, uidMap, bundleStats);
+    ErrCode result = BatchGetBundleStats(bundleNames, uidMap, bundleStats);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     int32_t statsSize = static_cast<int32_t>(bundleStats.size());
     if (!reply.WriteInt32(statsSize)) {
@@ -625,6 +724,55 @@ bool InstalldHost::HandleSetDirApl(MessageParcel &data, MessageParcel &reply)
     bool debug = data.ReadBool();
     int32_t uid = data.ReadInt32();
     ErrCode result = SetDirApl(dataDir, bundleName, apl, isPreInstallApp, debug, uid);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleSetDirsApl(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+
+    bool isExtensionDir = data.ReadBool();
+    ErrCode result = SetDirsApl(*info, isExtensionDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleSetFileConForce(MessageParcel &data, MessageParcel &reply)
+{
+    uint32_t pathSize = data.ReadUint32();
+    if (pathSize == 0 || pathSize > MAX_VEC_SIZE) {
+        APP_LOGE("path count is error");
+        return false;
+    }
+    std::vector<std::string> paths;
+    for (uint32_t i = 0; i < pathSize; ++i) {
+        std::string path = Str16ToStr8(data.ReadString16());
+        paths.emplace_back(path);
+    }
+    std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+    ErrCode result = SetFileConForce(paths, *info);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleStopSetFileCon(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+    int32_t reason = data.ReadInt32();
+    ErrCode result = StopSetFileCon(*info, reason);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -963,6 +1111,30 @@ bool InstalldHost::HandRemoveSignProfile(MessageParcel &data, MessageParcel &rep
     return true;
 }
 
+bool InstalldHost::HandleAddCertAndEnableKey(MessageParcel &data, MessageParcel &reply)
+{
+    std::string certPath = Str16ToStr8(data.ReadString16());
+    size_t dataSize = data.ReadUint32();
+    if (dataSize == 0 || dataSize > Constants::CAPACITY_SIZE) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    const char *content = reinterpret_cast<const char *>(data.ReadRawData(dataSize));
+    if (!content) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    std::string certContent(content, dataSize);
+    if (certPath.empty() || certContent.empty() || certPath.size() > Constants::BMS_MAX_PATH_LENGTH ||
+        certContent.size() > Constants::CAPACITY_SIZE) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    ErrCode result = AddCertAndEnableKey(certPath, certContent);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
 bool InstalldHost::HandleSetEncryptionDir(MessageParcel &data, MessageParcel &reply)
 {
     std::unique_ptr<EncryptionParam> info(data.ReadParcelable<EncryptionParam>());
@@ -1152,10 +1324,93 @@ bool InstalldHost::HandleClearDir(MessageParcel &data, MessageParcel &reply)
     return true;
 }
 
+bool InstalldHost::HandleHashSoFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string soPath = data.ReadString();
+    uint32_t catchSoNum = data.ReadUint32();
+    uint64_t catchSoMaxSize = data.ReadUint64();
+    std::vector<std::string> soName;
+    std::vector<std::string> soHash;
+    ErrCode result = HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    
+    if (!reply.WriteStringVector(soName)) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to get so name from reply");
+        return false;
+    }
+    if (!reply.WriteStringVector(soHash)) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to get so hash from reply");
+        return false;
+    }
+    return true;
+}
+
+bool InstalldHost::HandleHashFiles(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t size = data.ReadInt32();
+    std::vector<std::string> files;
+    CONTAINER_SECURITY_VERIFY(data, size, &files);
+    for (int32_t index = 0; index < size; ++index) {
+        std::string path = Str16ToStr8(data.ReadString16());
+        files.emplace_back(path);
+    }
+    std::vector<std::string> filesHash;
+    ErrCode result = HashFiles(files, filesHash);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteStringVector(filesHash)) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to get so name from reply");
+        return false;
+    }
+    return true;
+}
+
 bool InstalldHost::HandleRestoreconPath(MessageParcel &data, MessageParcel &reply)
 {
     std::string path = data.ReadString();
     ErrCode result = RestoreconPath(path);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleResetBmsDBSecurity(MessageParcel &data, MessageParcel &reply)
+{
+    ErrCode result = ResetBmsDBSecurity();
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCopyDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string srcDir = data.ReadString();
+    std::string destDir = data.ReadString();
+
+    ErrCode result = CopyDir(srcDir, destDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleDeleteCertAndRemoveKey(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t pathSize = data.ReadInt32();
+    if (pathSize <= 0 || pathSize > ServiceConstants::MAX_ENTERPRISE_RESIGN_CERT_NUM) {
+        APP_LOGE("pathSize is error");
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+        return false;
+    }
+    std::vector<std::string> certPaths;
+    certPaths.reserve(pathSize);
+    CONTAINER_SECURITY_VERIFY(data, pathSize, &certPaths);
+    for (int32_t i = 0; i < pathSize; i++) {
+        std::string path = Str16ToStr8(data.ReadString16());
+        if (path.empty() || path.size() > Constants::BMS_MAX_PATH_LENGTH) {
+            APP_LOGE("path is empty or size is too large");
+            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+            return false;
+        }
+        certPaths.emplace_back(std::move(path));
+    }
+
+    ErrCode result = DeleteCertAndRemoveKey(certPaths);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

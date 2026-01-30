@@ -49,6 +49,8 @@ constexpr const char* APP_CONTROL_RULE = "APP_CONTROL_RULE";
 constexpr const char* DB_ERROR = "DB_ERROR";
 constexpr const char* DEFAULT_APP = "DEFAULT_APP";
 constexpr const char* QUERY_BUNDLE_INFO = "QUERY_BUNDLE_INFO";
+constexpr const char* BUNDLE_DYNAMIC_SHORTCUTINFO = "BUNDLE_DYNAMIC_SHORTCUTINFO";
+constexpr const char* DESKTOP_SHORTCUT = "DESKTOP_SHORTCUT";
 
 // event params
 const char* EVENT_PARAM_PNAMEID = "PNAMEID";
@@ -72,6 +74,8 @@ const char* EVENT_PARAM_APP_DISTRIBUTION_TYPE = "APP_DISTRIBUTION_TYPE";
 const char* EVENT_PARAM_FILE_PATH = "FILE_PATH";
 const char* EVENT_PARAM_HASH_VALUE = "HASH_VALUE";
 const char* EVENT_PARAM_INSTALL_TIME = "INSTALL_TIME";
+const char* EVENT_PARAM_START_TIME = "START_TIME";
+const char* EVENT_PARAM_END_TIME = "END_TIME";
 const char* EVENT_PARAM_APPLY_QUICK_FIX_FREQUENCY = "APPLY_QUICK_FIX_FREQUENCY";
 const char* EVENT_PARAM_CONTINUE_TYPE = "CONTINUE_TYPE";
 const char* EVENT_PARAM_PACKAGE_NAME = "PACKAGE_NAME";
@@ -95,6 +99,10 @@ const char* REMAIN_PARTITION_SIZE_KEY = "REMAIN_PARTITION_SIZE";
 const char* USER_DATA_SIZE = "USER_DATA_SIZE";
 const char* EVENT_PARAM_WANT = "WANT";
 const char* EVENT_PARAM_UTD = "UTD";
+const char* EVENT_SHORTCUT_ID = "SHORTCUT_ID";
+const char* EVENT_OP_TYPE = "OP_TYPE";
+const char* EVENT_PARAM_IS_KEEPDATA = "IS_KEEPDATA";
+
 // API and SDK version
 const char* EVENT_PARAM_MIN_API_VERSION = "MIN_API_VERSION";
 const char* EVENT_PARAM_TARGET_API_VERSION = "TARGET_API_VERSION";
@@ -333,6 +341,14 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
             [](const EventInfo& eventInfo) {
                 InnerSendQueryBundleInfoEvent(eventInfo);
             } },
+        { BMSEventType::BUNDLE_DYNAMIC_SHORTCUTINFO,
+            [](const EventInfo& eventInfo) {
+                InnerSendDynamicShortcutEvent(eventInfo);
+            } },
+        { BMSEventType::DESKTOP_SHORTCUT,
+            [](const EventInfo& eventInfo) {
+                InnerSendDesktopShortcutEvent(eventInfo);
+            } },
     };
 
 void InnerEventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
@@ -388,7 +404,8 @@ void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& e
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
-        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted);
+        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted,
+        EVENT_PARAM_IS_KEEPDATA, eventInfo.isKeepData);
 }
 
 void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& eventInfo)
@@ -489,6 +506,8 @@ void InnerEventReport::InnerSendBundleInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
         EVENT_PARAM_INSTALL_TIME, eventInfo.timeStamp,
+        EVENT_PARAM_START_TIME, eventInfo.startTime,
+        EVENT_PARAM_END_TIME, eventInfo.endTime,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_APPID, eventInfo.callingAppId,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
@@ -521,7 +540,10 @@ void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_CALLING_APPID, eventInfo.callingAppId,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
-        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_IS_KEEPDATA, eventInfo.isKeepData,
+        EVENT_PARAM_START_TIME, eventInfo.startTime,
+        EVENT_PARAM_END_TIME, eventInfo.endTime);
 }
 
 void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
@@ -536,6 +558,8 @@ void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
         EVENT_PARAM_INSTALL_TIME, eventInfo.timeStamp,
+        EVENT_PARAM_START_TIME, eventInfo.startTime,
+        EVENT_PARAM_END_TIME, eventInfo.endTime,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_APPID, eventInfo.callingAppId,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
@@ -564,6 +588,8 @@ void InnerEventReport::InnerSendPreBundleRecoverEvent(const EventInfo& eventInfo
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
         EVENT_PARAM_INSTALL_TIME, eventInfo.timeStamp,
+        EVENT_PARAM_START_TIME, eventInfo.startTime,
+        EVENT_PARAM_END_TIME, eventInfo.endTime,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_APPID, eventInfo.callingAppId,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
@@ -753,7 +779,8 @@ void InnerEventReport::InnerSendDefaultAppEvent(const EventInfo& eventInfo)
         EVENT_PARAM_CALLING_NAME, eventInfo.callingName,
         EVENT_PARAM_ACTION_TYPE, eventInfo.actionType,
         EVENT_PARAM_WANT, eventInfo.want,
-        EVENT_PARAM_UTD, eventInfo.utd);
+        EVENT_PARAM_UTD, eventInfo.utd,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
 template<typename... Types>
@@ -796,6 +823,32 @@ void InnerEventReport::InnerSendQueryBundleInfoEvent(const EventInfo& eventInfo)
         EVENT_PARAM_CALLING_UID_LIST, eventInfo.callingUidList,
         EVENT_PARAM_CALLING_BUNDLE_NAME_LIST, eventInfo.callingBundleNameList,
         EVENT_PARAM_CALLING_APP_ID_LIST, eventInfo.callingAppIdList,
+        EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
+}
+
+void InnerEventReport::InnerSendDynamicShortcutEvent(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        BUNDLE_DYNAMIC_SHORTCUTINFO,
+        HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_SHORTCUT_ID, eventInfo.shortcutIds,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
+        EVENT_OP_TYPE, eventInfo.shortcutOperationType,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid);
+}
+
+void InnerEventReport::InnerSendDesktopShortcutEvent(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        DESKTOP_SHORTCUT,
+        HiSysEventType::BEHAVIOR,
+        EVENT_OP_TYPE, eventInfo.shortcutOperationType,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_SHORTCUT_ID, eventInfo.shortcutIds,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
 }
 }  // namespace AppExecFwk

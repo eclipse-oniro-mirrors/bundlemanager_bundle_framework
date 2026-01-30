@@ -28,6 +28,7 @@ constexpr const char* ERR_MSG_ENUM_ERROR =
 class BusinessErrorMap {
 public:
     static void GetErrMap(std::unordered_map<int32_t, const char*>& errMap);
+    static void GetNewErrMap(std::unordered_map<int32_t, const char*>& errMap);
 };
 }
 }

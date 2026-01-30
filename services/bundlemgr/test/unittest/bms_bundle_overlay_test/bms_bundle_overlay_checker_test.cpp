@@ -57,7 +57,7 @@ const int32_t FILE_UNDERLINE_NUM = 2;
 const int32_t NOT_EXIST_USERID = -5;
 const int32_t FOUR = 4;
 const int32_t DEFAULT_OVERLAY_BUNDLE_INFO = 0;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
 } // namespace
 
@@ -3203,7 +3203,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0300, Function | Small
     installer->dataMgr_ = nullptr;
     installer->MarkPreInstallState(bundleName, isUninstalled);
 
-    installer->DeleteEncryptionKeyId(oldInfo, isKeepData);
+    installer->DeleteEncryptionKeyId(bundleName, false, isKeepData);
 
     installer->UpdateExtensionSandboxInfo(newInfos, hapVerifyRes);
 
@@ -3217,8 +3217,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0300, Function | Small
 
     installer->GenerateOdid(infos, hapVerifyRes);
 
-    bool isSysCapValid = false;
-    ErrCode ret = installer->CheckInstallCondition(hapVerifyRes, infos, isSysCapValid);
+    ErrCode ret = installer->CheckInstallCondition(hapVerifyRes, infos, ERR_OK);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -3246,6 +3245,12 @@ HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0400, Function | Small
     EXPECT_TRUE(ret);
 
     bundleInfo.versionCode = 200;
+    oldInfo.SetBaseBundleInfo(bundleInfo);
+    oldInfo.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
+    ret = installer->NeedDeleteOldNativeLib(newInfos, oldInfo);
+    EXPECT_TRUE(ret);
+
+    bundleInfo.versionCode = 100;
     oldInfo.SetBaseBundleInfo(bundleInfo);
     oldInfo.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
     ret = installer->NeedDeleteOldNativeLib(newInfos, oldInfo);

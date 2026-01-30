@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <regex>
 #include <sstream>
@@ -43,6 +44,7 @@
 #include <unistd.h>
 
 #include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
@@ -51,6 +53,7 @@
 #include "el5_filekey_manager_error.h"
 #include "el5_filekey_manager_kit.h"
 #include "ffrt.h"
+#include "ipc/critical_manager.h"
 #include "parameters.h"
 #include "securec.h"
 #include "hnp_api.h"
@@ -58,6 +61,20 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+
+struct SoFileInfo {
+    std::string filename;
+    std::string fullpath;
+    uint64_t size;
+    
+    SoFileInfo() : filename(""), fullpath(""), size(0) {}
+    SoFileInfo(const std::string& name, const std::string& path, uint64_t sz)
+        : filename(name), fullpath(path), size(sz) {}
+    bool operator<(const SoFileInfo& other) const
+    {
+        return size > other.size;
+    }
+};
 namespace {
 constexpr const char* PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 constexpr const char* PREFIX_LIBS_PATH = "/libs/";
@@ -70,6 +87,8 @@ static const char CODE_CRYPTO_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15
     "EnforceMetadataProcessForAppERKNSt3__h13unordered_mapINS3_12basic_stringIcNS3_11char_traitsIcEENS"
     "3_9allocatorIcEEEESA_NS3_4hashISA_EENS3_8equal_toISA_EENS8_INS3_4pairIKSA_SA_EEEEEERKNS2_17CodeCryptoHapInfoERb";
 #endif
+
+constexpr int64_t BUFFER_SIZE = 8192;
 static constexpr int32_t PERMISSION_DENIED = 13;
 static constexpr int32_t RESULT_OK = 0;
 static constexpr int16_t INSTALLS_UID = 3060;
@@ -88,7 +107,9 @@ constexpr const char* ATOMIC_SERVICE_PATH = "+auid-";
 const std::vector<std::string> DRIVER_EXECUTE_DIR {
     "/print_service/cups/serverbin/filter",
     "/print_service/sane/backend",
-    "/print_service/cups/serverbin/backend"
+    "/print_service/cups/serverbin/backend",
+    "/print_service/cups_enterprise/serverbin/filter",
+    "/print_service/cups_enterprise/serverbin/backend",
 };
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
@@ -98,7 +119,7 @@ static const char* CODE_DECRYPT = "/dev/code_decrypt";
 static int8_t INVALID_RETURN_VALUE = -1;
 static int8_t INVALID_FILE_DESCRIPTOR = -1;
 #endif
-std::recursive_mutex mMountsLock;
+std::mutex mMountsLock;
 static std::map<std::string, std::string> mQuotaReverseMounts;
 using ApplyPatch = int32_t (*)(const std::string, const std::string, const std::string);
 
@@ -263,11 +284,13 @@ bool InstalldOperator::DeleteDirFast(const std::string &path)
             std::strerror(errno), path.c_str(), newPath.c_str());
         return DeleteDir(path);
     }
+    CriticalManager::GetInstance().BeforeRequest();
     auto task = [newPath]() {
         bool ret = InstalldOperator::DeleteDir(newPath);
         if (!ret) {
             LOG_E(BMS_TAG_INSTALLD, "async del failed,%{public}s", newPath.c_str());
         }
+        CriticalManager::GetInstance().AfterRequest();
     };
     ffrt::submit(task);
     return true;
@@ -442,20 +465,10 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
     return true;
 }
 
-bool InstalldOperator::ExtractFiles(const std::string hnpPackageInfo, const ExtractParam &extractParam)
+bool InstalldOperator::ExtractFiles(const std::map<std::string, std::string> &hnpPackageMap,
+    const ExtractParam &extractParam)
 {
-    std::map<std::string, std::string> hnpPackageInfoMap;
-    std::stringstream hnpPackageInfoString(hnpPackageInfo);
-    std::string keyValue;
-    while (getline(hnpPackageInfoString, keyValue, '}')) {
-        size_t pos = keyValue.find(":");
-        if (pos != std::string::npos) {
-            std::string key = keyValue.substr(1, pos - 1);
-            std::string value = keyValue.substr(pos + 1);
-            hnpPackageInfoMap[key] = value;
-        }
-    }
-
+    std::map<std::string, std::string> hnpPackageInfoMap = hnpPackageMap;
     BundleExtractor extractor(extractParam.srcPath);
     if (!extractor.Init()) {
         LOG_E(BMS_TAG_INSTALLD, "extractor init failed");
@@ -492,6 +505,10 @@ bool InstalldOperator::ExtractFiles(const std::string hnpPackageInfo, const Extr
             }
             targetPathAndName = extractParam.targetPath + hnpPackageInfoMap[targetName]
                                 + ServiceConstants::PATH_SEPARATOR + targetName;
+            if (targetPathAndName.find("..") != std::string::npos) {
+                LOG_E(BMS_TAG_INSTALLD, "hnp type err: %{public}s", hnpPackageInfoMap[targetName].c_str());
+                continue;
+            }
             ExtractTargetHnpFile(extractor, entryName, targetPathAndName, extractParam.extractFileType);
             hnpPackageInfoMap.erase(targetName);
             continue;
@@ -609,24 +626,36 @@ void InstalldOperator::ExtractTargetHnpFile(const BundleExtractor &extractor, co
     LOG_D(BMS_TAG_INSTALLD, "extract file success, path : %{public}s", path.c_str());
 }
 
-bool InstalldOperator::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
-    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+bool InstalldOperator::ProcessBundleInstallNative(const InstallHnpParam &param)
 {
-    struct HapInfo hapInfo;
-    if (strcpy_s(hapInfo.packageName, sizeof(hapInfo.packageName), packageName.c_str()) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s packageName: %{public}s", packageName.c_str());
+    struct HapInfo hapInfo = {};
+    if (strcpy_s(hapInfo.packageName, sizeof(hapInfo.packageName), param.packageName.c_str()) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s packageName: %{public}s", param.packageName.c_str());
         return false;
     }
-    if (strcpy_s(hapInfo.hapPath, sizeof(hapInfo.hapPath), hapPath.c_str()) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s hapPath: %{public}s", hapPath.c_str());
+    if (strcpy_s(hapInfo.hapPath, sizeof(hapInfo.hapPath), param.hapPath.c_str()) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s hapPath: %{public}s", param.hapPath.c_str());
         return false;
     }
-    if (strcpy_s(hapInfo.abi, sizeof(hapInfo.abi), cpuAbi.c_str()) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s cpuAbi: %{public}s", cpuAbi.c_str());
+    if (strcpy_s(hapInfo.abi, sizeof(hapInfo.abi), param.cpuAbi.c_str()) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s cpuAbi: %{public}s", param.cpuAbi.c_str());
         return false;
     }
-    int ret = NativeInstallHnp(userId.c_str(), hnpRootPath.c_str(), &hapInfo, 1);
-    LOG_D(BMS_TAG_INSTALLD, "NativeInstallHnp ret: %{public}d", ret);
+    if (strcpy_s(hapInfo.appIdentifier, sizeof(hapInfo.appIdentifier), param.appIdentifier.c_str()) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s appIdentifier: %{public}s", param.appIdentifier.c_str());
+        return false;
+    }
+    size_t count = param.hnpPaths.size();
+    std::vector<char*> independentSignHnps;
+    independentSignHnps.reserve(count);
+    for (size_t i = 0; i < count; i++) {
+        independentSignHnps.emplace_back(const_cast<char*>(param.hnpPaths[i].c_str()));
+    }
+    hapInfo.count = static_cast<int32_t>(count);
+    hapInfo.independentSignHnpPaths = independentSignHnps.data();
+
+    int ret = NativeInstallHnp(param.userId.c_str(), param.hnpRootPath.c_str(), &hapInfo, 1);
+    LOG_I(BMS_TAG_INSTALLD, "NativeInstallHnp ret: %{public}d", ret);
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "Native package installation failed with error code: %{public}d", ret);
         return false;
@@ -637,7 +666,7 @@ bool InstalldOperator::ProcessBundleInstallNative(const std::string &userId, con
 bool InstalldOperator::ProcessBundleUnInstallNative(const std::string &userId, const std::string &packageName)
 {
     int ret = NativeUnInstallHnp(userId.c_str(), packageName.c_str());
-    LOG_D(BMS_TAG_INSTALLD, "NativeUnInstallHnp ret: %{public}d", ret);
+    LOG_I(BMS_TAG_INSTALLD, "NativeUnInstallHnp ret: %{public}d", ret);
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "Native package uninstallation failed with error code: %{public}d", ret);
         return false;
@@ -648,6 +677,10 @@ bool InstalldOperator::ProcessBundleUnInstallNative(const std::string &userId, c
 bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,
     const ExtractParam &param)
 {
+    if (!IsFileNameValid(entryName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Invalid entryname %{public}s", entryName.c_str());
+        return false;
+    }
     // create dir if not exist
     if (!IsExistDir(param.targetPath)) {
         if (!MkRecursiveDir(param.targetPath, true)) {
@@ -696,29 +729,31 @@ bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     if (!OHOS::ChangeModeFile(path, mode)) {
         LOG_W(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
     }
-    FsyncFile(path);
-    return true;
+    return FsyncFile(path);
 }
 
-void InstalldOperator::FsyncFile(const std::string &path)
+bool InstalldOperator::FsyncFile(const std::string &path)
 {
     FILE *fileFp = fopen(path.c_str(), "r");
     if (fileFp == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed", path.c_str());
-        return;
+        return false;
     }
     int32_t fileFd = fileno(fileFp);
     if (fileFd < 0) {
         LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed %{public}d", path.c_str(), errno);
         (void)fclose(fileFp);
-        return;
+        return false;
     }
     if (fsync(fileFd) != 0) {
         if (fsync(fileFd) != 0) {
             LOG_E(BMS_TAG_INSTALLER, "retry fsync %{public}s failed %{public}d", path.c_str(), errno);
+            (void)fclose(fileFp);
+            return false;
         }
     }
     (void)fclose(fileFp);
+    return true;
 }
 
 bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
@@ -794,7 +829,8 @@ bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &
     realOldPath.reserve(PATH_MAX);
     realOldPath.resize(PATH_MAX - 1);
     if (realpath(oldPath.c_str(), &(realOldPath[0])) == nullptr) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "realOldPath:%{public}s errno:%{public}d", realOldPath.c_str(), errno);
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "realpath for %{public}s failed, errno:%{public}d",
+            oldPath.c_str(), errno);
         return false;
     }
 
@@ -1012,21 +1048,22 @@ bool InstalldOperator::CheckPathIsSame(const std::string &path, int32_t mode, co
         return false;
     }
     isPathExist = true;
-    if (((s.st_mode & MODE_BASE) == mode) && (static_cast<int32_t>(s.st_uid) == uid)
-        && (static_cast<int32_t>(s.st_gid) == gid)) {
-        LOG_D(BMS_TAG_INSTALLD, "path :%{public}s mode uid and gid are same, no need to create again", path.c_str());
+    if ((s.st_mode & MODE_BASE) != mode) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLD, "path:%{public}s mode not same, %{public}d vs %{public}d",
+            path.c_str(), static_cast<int32_t>(s.st_mode & MODE_BASE), mode);
+    }
+    if ((static_cast<int32_t>(s.st_uid) == uid) && (static_cast<int32_t>(s.st_gid) == gid)) {
+        LOG_D(BMS_TAG_INSTALLD, "path :%{public}s uid and gid are same, no need to create again", path.c_str());
         return true;
     }
-    LOG_NOFUNC_W(BMS_TAG_INSTALLD, "path:%{public}s exist, but mode uid or gid are not same, need to create again",
-        path.c_str());
+    LOG_NOFUNC_W(BMS_TAG_INSTALLD, "path:%{public}s uid or gid are not same, "
+        "uid:%{public}d vs %{public}d, gid:%{public}d vs %{public}d",
+        path.c_str(), static_cast<int32_t>(s.st_uid), uid, static_cast<int32_t>(s.st_gid), gid);
     return false;
 }
 
 bool InstalldOperator::IsPathNeedChown(const std::string &path, int32_t mode, bool isPathExist)
 {
-    if (isPathExist) {
-        return true;
-    }
     struct stat s;
     if (stat(path.c_str(), &s) != 0) {
         LOG_D(BMS_TAG_INSTALLD, "path :%{public}s is not exist, not need, errno:%{public}d", path.c_str(), errno);
@@ -1125,13 +1162,24 @@ void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, st
     closedir(dir);
 }
 
-int64_t InstalldOperator::GetDiskUsageFromPath(const std::vector<std::string> &path)
+int64_t InstalldOperator::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t timeoutMs)
 {
+    auto startTime = std::chrono::steady_clock::now();
     int64_t fileSize = 0;
     for (auto &st : path) {
-        int64_t pathSize = GetDiskUsage(st);
-        LOG_D(BMS_TAG_INSTALLD, "stat size:%{public}" PRId64, pathSize);
-        fileSize += pathSize;
+        // check timeout
+        if (timeoutMs > 0) {
+            auto currentTime = std::chrono::steady_clock::now();
+            auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime);
+            auto elapsedMs = std::abs(elapsedTime.count());
+            if (elapsedMs >= timeoutMs) {
+                LOG_W(BMS_TAG_INSTALLD, "timeout, return fileSize:%{public}" PRId64, fileSize);
+                return fileSize;
+            }
+        }
+        fileSize += GetDiskUsage(st);
+        LOG_D(BMS_TAG_INSTALLD, "GetBundleStats get cache size:%{public}" PRId64 " from: %{public}s ",
+            fileSize, st.c_str());
     }
     return fileSize;
 }
@@ -1174,27 +1222,49 @@ bool InstalldOperator::InitialiseQuotaMounts()
 
 int64_t InstalldOperator::GetDiskUsageFromQuota(const int32_t uid)
 {
-    std::lock_guard<std::recursive_mutex> lock(mMountsLock);
-    std::string device = "";
-    if (mQuotaReverseMounts.find(QUOTA_DEVICE_DATA_PATH) == mQuotaReverseMounts.end()) {
-        if (!InitialiseQuotaMounts()) {
-            LOG_E(BMS_TAG_INSTALLD, "Failed to initialise quota mounts");
-            return 0;
-        }
-    }
-    device = mQuotaReverseMounts[QUOTA_DEVICE_DATA_PATH];
-    if (device.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "skip when device no quotas present");
-        return 0;
-    }
-    struct dqblk dq;
-    if (quotactl(QCMD(Q_GETQUOTA, USRQUOTA), device.c_str(), uid, reinterpret_cast<char*>(&dq)) != 0) {
-        LOG_E(BMS_TAG_INSTALLD, "Failed to get quotactl, errno: %{public}d", errno);
+    auto dq = GetQuotaData(uid);
+    if (!dq.has_value()) {
         return 0;
     }
     LOG_D(BMS_TAG_INSTALLD, "get disk usage from quota, uid: %{public}d, usage: %{public}llu",
-        uid, static_cast<unsigned long long>(dq.dqb_curspace));
-    return dq.dqb_curspace;
+        uid, static_cast<unsigned long long>(dq->dqb_curspace));
+    return dq->dqb_curspace;
+}
+
+int64_t InstalldOperator::GetBundleInodeCount(int32_t uid)
+{
+    auto dq = GetQuotaData(uid);
+    if (!dq.has_value()) {
+        return 0;
+    }
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD, "get inodes from quota, uid: %{public}d, inodes: %{public}llu",
+        uid, static_cast<unsigned long long>(dq->dqb_curinodes));
+    return dq->dqb_curinodes;
+}
+
+std::optional<struct dqblk> InstalldOperator::GetQuotaData(int32_t uid)
+{
+    std::string device = "";
+    {
+        std::lock_guard<std::mutex> lock(mMountsLock);
+        if (mQuotaReverseMounts.find(QUOTA_DEVICE_DATA_PATH) == mQuotaReverseMounts.end()) {
+            if (!InitialiseQuotaMounts()) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLD, "Failed to initialise quota mounts");
+                return std::nullopt;
+            }
+        }
+        device = mQuotaReverseMounts[QUOTA_DEVICE_DATA_PATH];
+    }
+    if (device.empty()) {
+        APP_LOGW_NOFUNC("skip when device no quotas present");
+        return std::nullopt;
+    }
+    struct dqblk dq;
+    if (quotactl(QCMD(Q_GETQUOTA, USRQUOTA), device.c_str(), uid, reinterpret_cast<char*>(&dq)) != 0) {
+        APP_LOGE_NOFUNC("Failed to get quotactl, errno: %{public}d", errno);
+        return std::nullopt;
+    }
+    return dq;
 }
 
 bool InstalldOperator::ScanDir(
@@ -1802,12 +1872,6 @@ bool InstalldOperator::MoveFile(const std::string &srcPath, const std::string &d
         mode |= S_IXUSR;
         mode &= ~S_IWUSR;
     }
-    std::vector<std::string> driverExecuteExtPaths{};
-    DelayedSingleton<DriverInstallExtHandler>::GetInstance()->GetDriverExecuteExtPaths(driverExecuteExtPaths);
-    if (std::any_of(driverExecuteExtPaths.begin(), driverExecuteExtPaths.end(), filterExecuteFile)) {
-        mode |= S_IXUSR;
-        mode &= ~S_IWUSR;
-    }
     if (!OHOS::ChangeModeFile(destPath, mode)) {
         LOG_E(BMS_TAG_INSTALLD, "change mode failed");
         return false;
@@ -2341,32 +2405,33 @@ bool InstalldOperator::GetAtomicServiceBundleDataDir(const std::string &bundleNa
 
 void InstalldOperator::AddDeleteDfx(const std::string &path)
 {
-    int32_t fd = open(path.c_str(), O_RDONLY);
-    if (fd < 0) {
+    FILE* fp = fopen(path.c_str(), "r");
+    if (fp == nullptr) {
         LOG_D(BMS_TAG_INSTALLD, "open dfx path %{public}s failed", path.c_str());
         return;
     }
+    int32_t fd = fileno(fp);
     unsigned int flags = 0;
     int32_t ret = ioctl(fd, HMF_IOCTL_HW_GET_FLAGS, &flags);
     if (ret < 0) {
         LOG_D(BMS_TAG_INSTALLD, "check dfx flag path %{public}s failed errno:%{public}d", path.c_str(), errno);
-        close(fd);
+        (void)fclose(fp);
         return;
     }
     if (flags & HMFS_MONITOR_FL) {
         LOG_D(BMS_TAG_INSTALLD, "Delete Control flag is already set");
-        close(fd);
+        (void)fclose(fp);
         return;
     }
     flags |= HMFS_MONITOR_FL;
     ret = ioctl(fd, HMF_IOCTL_HW_SET_FLAGS, &flags);
     if (ret < 0) {
         LOG_W(BMS_TAG_INSTALLD, "Add dfx flag failed errno:%{public}d path %{public}s", errno, path.c_str());
-        close(fd);
+        (void)fclose(fp);
         return;
     }
     LOG_I(BMS_TAG_INSTALLD, "Delete Control flag of %{public}s is set succeed", path.c_str());
-    close(fd);
+    (void)fclose(fp);
     return;
 }
 
@@ -2376,16 +2441,17 @@ void InstalldOperator::RmvDeleteDfx(const std::string &path)
         LOG_D(BMS_TAG_INSTALLD, "codeDir:%{public}s not need delete", path.c_str());
         return;
     }
-    int32_t fd = open(path.c_str(), O_RDONLY);
-    if (fd < 0) {
+    FILE* fp = fopen(path.c_str(), "r");
+    if (fp == nullptr) {
         LOG_D(BMS_TAG_INSTALLD, "open dfx path %{public}s failed", path.c_str());
         return;
     }
+    int32_t fd = fileno(fp);
     unsigned int flags = 0;
     int32_t ret = ioctl(fd, HMF_IOCTL_HW_GET_FLAGS, &flags);
     if (ret < 0) {
         LOG_D(BMS_TAG_INSTALLD, "check dfx flag path %{public}s failed errno:%{public}d", path.c_str(), errno);
-        close(fd);
+        (void)fclose(fp);
         return;
     }
     if (flags & HMFS_MONITOR_FL) {
@@ -2394,12 +2460,12 @@ void InstalldOperator::RmvDeleteDfx(const std::string &path)
         ret = ioctl(fd, HMF_IOCTL_HW_SET_FLAGS, &flags);
         if (ret < 0) {
             LOG_W(BMS_TAG_INSTALLD, "Rmv dfx flag failed errno:%{public}d path %{public}s", errno, path.c_str());
-            close(fd);
+            (void)fclose(fp);
             return;
         }
         LOG_D(BMS_TAG_INSTALLD, "Delete Control flag of %{public}s is Rmv succeed", path.c_str());
     }
-    close(fd);
+    (void)fclose(fp);
     return;
 }
 
@@ -2733,7 +2799,7 @@ bool InstalldOperator::ClearDir(const std::string &dir)
     std::error_code ec;
     if (!std::filesystem::exists(path, ec) || !std::filesystem::is_directory(path, ec)) {
         LOG_E(BMS_TAG_INSTALLD, "invalid path:%{public}s,err:%{public}s", dir.c_str(), ec.message().c_str());
-        return false;
+        return true;
     }
 
     std::filesystem::directory_iterator dirIter(path, std::filesystem::directory_options::skip_permission_denied, ec);
@@ -2752,14 +2818,165 @@ bool InstalldOperator::ClearDir(const std::string &dir)
         delPathVector.emplace_back(dirIter->path());
     }
 
+    bool isSuccess = true;
     for (const auto &delPath : delPathVector) {
+        ec.clear();
         std::filesystem::remove_all(delPath, ec);
         if (ec) {
             LOG_E(BMS_TAG_INSTALLD, "remove_all failed,%{public}s,err:%{public}s", dir.c_str(), ec.message().c_str());
-            return false;
+            isSuccess = false;
         }
     }
-    LOG_I(BMS_TAG_INSTALLD, "clearDir success");
+    if (isSuccess) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "clearDir success");
+    } else {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLD, "clearDir completed with errors");
+    }
+    return isSuccess;
+}
+
+std::string InstalldOperator::Sha256File(const std::string& filePath)
+{
+    if (filePath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "failed due to filePath is empty");
+        return "";
+    }
+
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file) {
+        LOG_E(BMS_TAG_INSTALLD, "failed due to open filePath failed errno:%{public}d", errno);
+        return "";
+    }
+
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+
+    std::vector<char> buffer(BUFFER_SIZE);
+    while (file.read(buffer.data(), buffer.size()) || file.gcount() > 0) {
+        SHA256_Update(&sha256, buffer.data(), file.gcount());
+    }
+
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_Final(hash, &sha256);
+
+    std::stringstream ss;
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+    }
+
+    return ss.str();
+}
+
+ErrCode InstalldOperator::HashSoFile(const std::string& soPath,
+    uint32_t catchSoNum,
+    uint64_t catchSoMaxSize,
+    std::vector<std::string> &soName,
+    std::vector<std::string> &soHash)
+{
+    uint64_t maxSize = static_cast<uint64_t>(catchSoMaxSize);
+    std::vector<SoFileInfo> soFiles;
+    std::error_code ec;
+    if (!std::filesystem::exists(soPath, ec) || !std::filesystem::is_directory(soPath, ec)) {
+        LOG_W(BMS_TAG_INSTALLD, "invalid path:%{public}s,err:%{public}s", soPath.c_str(), ec.message().c_str());
+        return ERR_APPEXECFWK_NO_SO_EXISTED;
+    }
+    std::filesystem::directory_iterator dirIter(soPath,
+        std::filesystem::directory_options::skip_permission_denied, ec);
+    std::filesystem::directory_iterator endIter;
+    if (ec) {
+        LOG_W(BMS_TAG_INSTALLD, "create iterator failed,%{public}s,err:%{public}s",
+            soPath.c_str(), ec.message().c_str());
+        return ERR_APPEXECFWK_NO_SO_EXISTED;
+    }
+    for (; dirIter != endIter; dirIter.increment(ec)) {
+        if (ec) {
+            LOG_W(BMS_TAG_INSTALLD, "iteration failed,%{public}s,err:%{public}s", soPath.c_str(), ec.message().c_str());
+            return ERR_APPEXECFWK_NO_SO_EXISTED;
+        }
+        const std::filesystem::directory_entry &entry = *dirIter;
+        if (!entry.is_regular_file()) {
+            continue;
+        }
+        const auto& path = entry.path();
+        uint64_t fileSize = std::filesystem::file_size(path);
+        if (fileSize <= maxSize) {
+            soFiles.emplace_back(SoFileInfo(path.filename().string(), path.string(), fileSize));
+        }
+    }
+
+    if (soFiles.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "no so file existed");
+        return ERR_APPEXECFWK_NO_SO_EXISTED;
+    }
+
+    std::sort(soFiles.begin(), soFiles.end());
+    if (soFiles.size() > static_cast<size_t>(catchSoNum)) {
+        soFiles.resize(catchSoNum);
+    }
+
+    for (const auto& soFile : soFiles) {
+        std::string hash = Sha256File(soFile.fullpath);
+        soName.push_back(soFile.filename);
+        soHash.push_back(hash);
+    }
+    return ERR_OK;
+}
+
+bool InstalldOperator::WriteCertToFile(const std::string &certFilePath, const std::string &certContent)
+{
+    if (certFilePath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "certFilePath is empty");
+        return false;
+    }
+
+    std::string tmpPath = certFilePath + ".tmp";
+    int fd = open(tmpPath.c_str(), O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    if (fd < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "open tmp cert file failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
+        return false;
+    }
+
+    const char *buf = certContent.data();
+    size_t toWrite = certContent.size();
+    size_t written = 0;
+    while (written < toWrite) {
+        ssize_t writeSize = write(fd, buf + written, toWrite - written);
+        if (writeSize < 0) {
+            if (errno == EINTR) continue;
+            LOG_E(BMS_TAG_INSTALLD, "write tmp cert file failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
+            close(fd);
+            unlink(tmpPath.c_str());
+            return false;
+        }
+        written += static_cast<size_t>(writeSize);
+    }
+
+    if (fsync(fd) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "fsync failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
+        close(fd);
+        unlink(tmpPath.c_str());
+        return false;
+    }
+
+    if (close(fd) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "close failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
+        unlink(tmpPath.c_str());
+        return false;
+    }
+
+    if (chown(tmpPath.c_str(), Constants::FOUNDATION_UID, Constants::FOUNDATION_UID) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "chown tmp cert file failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
+        unlink(tmpPath.c_str());
+        return false;
+    }
+
+    if (rename(tmpPath.c_str(), certFilePath.c_str()) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "rename tmp cert file to final failed %{public}s -> %{public}s errno:%{public}d",
+            tmpPath.c_str(), certFilePath.c_str(), errno);
+        unlink(tmpPath.c_str());
+        return false;
+    }
+
     return true;
 }
 
@@ -2772,6 +2989,158 @@ bool InstalldOperator::RestoreconPath(const std::string &path)
     }
     LOG_E(BMS_TAG_INSTALLD, "RestoreconPath failed, ret: %{public}d", ret);
     return false;
+}
+
+bool InstalldOperator::IsFileNameValid(const std::string &fileName)
+{
+    if (fileName.find("../") != std::string::npos
+        || fileName.find("/..") != std::string::npos) {
+        return false;
+    }
+    return true;
+}
+
+bool InstalldOperator::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+{
+    LOG_D(BMS_TAG_INSTALLD, "sourceDir is %{public}s, destinationDir is %{public}s",
+        sourceDir.c_str(), destinationDir.c_str());
+    if (sourceDir.empty() || destinationDir.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Copy dir failed due to sourceDir or destinationDir is empty");
+        return false;
+    }
+
+    std::string realPath = "";
+    if (!PathToRealPath(sourceDir, realPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "sourceDir(%{public}s) is not real path", sourceDir.c_str());
+        return false;
+    }
+
+    if (!OHOS::ForceCreateDirectory(destinationDir)) {
+        LOG_E(BMS_TAG_INSTALLD, "Failed to create destination directory");
+        return false;
+    }
+
+    DIR* directory = opendir(realPath.c_str());
+    if (directory == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "open dir(%{public}s) fail, errno:%{public}d", realPath.c_str(), errno);
+        return false;
+    }
+
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(directory)) != nullptr) {
+        std::string currentName(ptr->d_name);
+        if (currentName.compare(".") == 0 || currentName.compare("..") == 0) {
+            continue;
+        }
+
+        std::string curPath = sourceDir + ServiceConstants::PATH_SEPARATOR + currentName;
+        std::string destPath = destinationDir + ServiceConstants::PATH_SEPARATOR + currentName;
+        if (ptr->d_type == DT_DIR) {
+            if (!CopyDir(curPath, destPath)) {
+                LOG_E(BMS_TAG_INSTALLD, "Create directory(%{public}s) fail", curPath.c_str());
+            }
+            continue;
+        }
+        struct stat fileStat;
+        if (stat(curPath.c_str(), &fileStat) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "Failed to get file info: %s", curPath.c_str());
+            continue;
+        }
+        if (CopyFile(curPath, destPath)) {
+            ChangeFileAttr(destPath, fileStat.st_uid, fileStat.st_gid);
+            if (chmod(destPath.c_str(), fileStat.st_mode) != 0) {
+                LOG_E(BMS_TAG_INSTALLD, "chmod file(%{public}s) fail", destPath.c_str());
+            }
+        } else {
+            LOG_E(BMS_TAG_INSTALLD, "Copy file(%{public}s) to (%{public}s) fail", curPath.c_str(), destPath.c_str());
+        }
+    }
+    closedir(directory);
+    return true;
+}
+
+ErrCode InstalldOperator::DeleteCertAndRemoveKey(const std::string &path)
+{
+    if (path.empty() || path.size() > Constants::BMS_MAX_PATH_LENGTH) {
+        LOG_E(BMS_TAG_INSTALLD, "path is empty or size is too large");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    std::vector<unsigned char> certData;
+    if (!ReadCert(path, certData)) {
+        LOG_E(BMS_TAG_INSTALLD, "read cert failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    std::string tempPath = path + ServiceConstants::DELETE_CERT_PREFIX;
+    if (!RenameFile(path, tempPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "rename to tempPath failed, errno: %{public}d", errno);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_RENAME_CERT_FAILED;
+    }
+#if defined(CODE_SIGNATURE_ENABLE)
+    Security::CodeSign::ByteBuffer byteBuffer;
+    byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(certData.data()), static_cast<int32_t>(certData.size()));
+    ErrCode ret = Security::CodeSign::CodeSignUtils::RemoveKeyForEnterpriseResign(byteBuffer);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed due to error %{public}d", ret);
+        if (!RenameFile(tempPath, path)) {
+            LOG_E(BMS_TAG_INSTALLD, "rename failed, errno: %{public}d", errno);
+        }
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_REMOVE_KEY_ERROR;
+    }
+    LOG_I(BMS_TAG_INSTALLD, "end");
+#else
+    LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported");
+#endif
+    if (!DeleteDir(tempPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "del cert failed, errno: %{public}d", errno);
+    }
+    return ERR_OK;
+}
+
+bool InstalldOperator::ReadCert(const std::string &path, std::vector<unsigned char> &certData)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    FILE *file = fopen(path.c_str(), "r");
+    if (file == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "open file failed path:%{public}s errno: %{public}d", path.c_str(), errno);
+        return false;
+    }
+    int32_t fd = fileno(file);
+    if (fd < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "get fd failed");
+        fclose(file);
+        return false;
+    }
+
+    struct stat statBuf;
+    if (fstat(fd, &statBuf) < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Fstat failed, errno: %{public}d", errno);
+        fclose(file);
+        return false;
+    }
+    if (statBuf.st_size <= 0 || statBuf.st_size > static_cast<off_t>(Constants::CAPACITY_SIZE)) {
+        LOG_E(BMS_TAG_INSTALLER, "cert size too large: %{public}lld", static_cast<long long>(statBuf.st_size));
+        fclose(file);
+        return false;
+    }
+
+    certData.resize(statBuf.st_size);
+    if (lseek(fd, 0, SEEK_SET) == -1) {
+        LOG_E(BMS_TAG_INSTALLD, "Lseek failed, errno: %{public}d", errno);
+        fclose(file);
+        return false;
+    }
+    ssize_t bytesRead = read(fd, certData.data(), static_cast<size_t>(statBuf.st_size));
+    if (bytesRead != static_cast<ssize_t>(statBuf.st_size)) {
+        LOG_E(BMS_TAG_INSTALLD, "read file failed, expected %{public}lld bytes, got %{public}lld",
+            static_cast<long long>(statBuf.st_size), static_cast<long long>(bytesRead));
+        fclose(file);
+        return false;
+    }
+    fclose(file);
+#else
+    LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported");
+#endif
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

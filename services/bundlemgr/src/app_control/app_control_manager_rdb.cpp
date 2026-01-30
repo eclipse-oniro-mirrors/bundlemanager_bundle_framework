@@ -682,6 +682,21 @@ ErrCode AppControlManagerRdb::DeleteDisposedRuleByBundleExcludeEdm(const std::ve
     return ERR_OK;
 }
 
+ErrCode AppControlManagerRdb::DeleteAllDisposedRulesForUser(int32_t userId)
+{
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.NotEqualTo(CALLING_NAME, AppControlConstants::EDM_CALLING);
+
+    bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
+    if (!ret) {
+        LOG_E(BMS_TAG_DEFAULT, "Delete all disposed rules failed for userId:%{public}d.", userId);
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode AppControlManagerRdb::OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
     int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
@@ -933,7 +948,7 @@ ErrCode AppControlManagerRdb::DeleteUninstallDisposedRule(const std::string &cal
     return ERR_OK;
 }
 
-ErrCode AppControlManagerRdb::GetUninstallDisposedRule(const std::string &appIdentifier,
+ErrCode AppControlManagerRdb::GetUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
     int32_t appIndex, int32_t userId, UninstallDisposedRule &rule)
 {
     LOG_D(BMS_TAG_DEFAULT, "begin");
@@ -944,6 +959,9 @@ ErrCode AppControlManagerRdb::GetUninstallDisposedRule(const std::string &appIde
     absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
     absRdbPredicates.OrderByAsc(PRIORITY);
     absRdbPredicates.OrderByAsc(TIME_STAMP);
+    if (!callerName.empty()) {
+        absRdbPredicates.EqualTo(CALLING_NAME, callerName);
+    }
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "null absSharedResultSet");

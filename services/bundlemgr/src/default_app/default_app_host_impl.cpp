@@ -17,6 +17,7 @@
 
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
+#include "bundle_permission_mgr.h"
 #include "event_report.h"
 #include "hitrace_meter.h"
 #include "ipc_skeleton.h"
@@ -37,6 +38,44 @@ ErrCode DefaultAppHostImpl::GetDefaultApplication(int32_t userId, const std::str
 
 ErrCode DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
 {
+    return InnerSetDefaultApplication(userId, Constants::DEFAULT_APP_INDEX, type, want);
+}
+
+ErrCode DefaultAppHostImpl::SetDefaultApplicationForAppClone(const int32_t userId, const int32_t appIndex,
+    const std::string& type, const Want& want)
+{
+    if (!BundlePermissionMgr::VerifyAcrossUserPermission(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (!dataMgr->HasUserId(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "userId not exist");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (appIndex > Constants::CLONE_APP_INDEX_MAX || appIndex <= Constants::MAIN_APP_INDEX) {
+        LOG_E(BMS_TAG_DEFAULT, "Invalid appIndex:%{public}d", appIndex);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+    std::string bundleName = want.GetElement().GetBundleName();
+    if (!bundleName.empty()) {
+        std::vector<int32_t> appIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
+        bool isAppIndexFound = std::find(appIndexes.cbegin(), appIndexes.cend(), appIndex) != appIndexes.cend();
+        if (!isAppIndexFound) {
+            LOG_E(BMS_TAG_DEFAULT, "Invalid appIndex:%{public}d", appIndex);
+            return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+        }
+    }
+    return InnerSetDefaultApplication(userId, appIndex, type, want);
+}
+
+ErrCode DefaultAppHostImpl::InnerSetDefaultApplication(int32_t userId, const int32_t appIndex,
+    const std::string& type, const Want& want)
+{
     LOG_D(BMS_TAG_DEFAULT, "SetDefaultApplication userId:%{public}d type:%{public}s", userId, type.c_str());
     const ElementName& elementName = want.GetElement();
     const std::string& bundleName = elementName.GetBundleName();
@@ -51,7 +90,8 @@ ErrCode DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::str
         Element element;
         ErrCode result = DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);
         if (result == ERR_OK) {
-            EventReport::SendDefaultAppEvent(DefaultAppActionType::SET, userId, GetCallerName(), want.ToString(), type);
+            EventReport::SendDefaultAppEvent(DefaultAppActionType::SET, userId, appIndex, GetCallerName(),
+                want.ToString(), type);
         }
         return result;
     }
@@ -66,14 +106,15 @@ ErrCode DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::str
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     Element element;
-    bool ret = dataMgr->GetElement(userId, elementName, element);
+    bool ret = dataMgr->GetElement(userId, appIndex, elementName, element);
     if (!ret) {
         LOG_E(BMS_TAG_DEFAULT, "GetElement failed");
         return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
     }
     ErrCode result = DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);
     if (result == ERR_OK) {
-        EventReport::SendDefaultAppEvent(DefaultAppActionType::SET, userId, GetCallerName(), want.ToString(), type);
+        EventReport::SendDefaultAppEvent(DefaultAppActionType::SET, userId, appIndex,
+            GetCallerName(), want.ToString(), type);
     }
     return result;
 }
@@ -82,8 +123,8 @@ ErrCode DefaultAppHostImpl::ResetDefaultApplication(int32_t userId, const std::s
 {
     ErrCode result = DefaultAppMgr::GetInstance().ResetDefaultApplication(userId, type);
     if (result == ERR_OK) {
-        EventReport::SendDefaultAppEvent(
-            DefaultAppActionType::RESET, userId, GetCallerName(), Constants::EMPTY_STRING, type);
+        EventReport::SendDefaultAppEvent(DefaultAppActionType::RESET, userId,
+            Constants::DEFAULT_APP_INDEX, GetCallerName(), Constants::EMPTY_STRING, type);
     }
     return result;
 }

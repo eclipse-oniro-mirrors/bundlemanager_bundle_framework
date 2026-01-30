@@ -61,7 +61,7 @@ const int32_t USERID = 100;
 const uint32_t VERSION_1 = 1000001;
 const uint32_t VERSION_2 = 1000002;
 const int32_t MAX_TRY_TIMES = 1000;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 }  // namespace
 
 class BmsBundleUpdateDebugTest : public testing::Test {

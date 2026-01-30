@@ -21,6 +21,7 @@
 
 #include "appexecfwk_errors.h"
 #include "bundle_data_mgr.h"
+#include "bundle_constants.h"
 #include "disposed_rule.h"
 #include "inner_bundle_info.h"
 
@@ -61,6 +62,7 @@ struct NotifyBundleEvents {
     int32_t bundleType = 0;
     int32_t atomicServiceModuleUpgrade = 0;
     int32_t appIndex = 0;
+    int32_t userId = Constants::INVALID_USERID;
     std::string bundleName = "";
     std::string modulePackage = "";
     std::string abilityName = "";
@@ -92,9 +94,13 @@ public:
         const std::string &bundleName, bool isEnableDynamicIcon, int32_t userId, int32_t appIndex);
     void NotifyBundleResourcesChanged(const int32_t userId, const uint32_t type);
     void NotifyDefaultAppChanged(const int32_t userId, std::vector<std::string> &utdIdVec);
-    void NotifyPluginEvents(const NotifyBundleEvents &event, const std::shared_ptr<BundleDataMgr> &dataMgr);
+    void NotifyPluginEvents(const NotifyBundleEvents &event,
+        const std::shared_ptr<BundleDataMgr> &dataMgr, bool isHsp = false);
     void NotifyShortcutVisibleChanged(
         const std::string &bundlename, const std::string &id, int32_t userId, int32_t appIndex, bool visible);
+    void NotifyDynamicShortcutChanged(const std::string &bundlename,
+        const std::vector<std::string> &ids, int32_t userId, int32_t appIndex, const std::string &operationType);
+    void NotifyShortcutsEnabledChanged(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled);
     void NotifyPluginCommonEvents(const std::string &hostBundleName, const std::string &pluginBundleName,
         const NotifyType &type);
     void NotifyUninstalledBundleCleared(const NotifyBundleEvents &installResult);

@@ -39,6 +39,11 @@ void BundleResourceHelper::BundleSystemStateInit()
     BundleSystemState::GetInstance().SetSystemLanguage(BundleResourceParam::GetSystemLanguage());
     BundleSystemState::GetInstance().SetSystemColorMode(BundleResourceParam::GetSystemColorMode());
     APP_LOGI("current system state: %{public}s", BundleSystemState::GetInstance().ToString().c_str());
+    // ahead resource db connection for boot trubo
+    auto task = []() {
+        DelayedSingleton<BundleResourceManager>::GetInstance();
+    };
+    std::thread(task).detach();
 #endif
 }
 
@@ -383,6 +388,18 @@ void BundleResourceHelper::DeleteUninstallBundleResource(const std::string &bund
         return;
     }
     (void)manager->DeleteUninstallBundleResource(bundleName, userId, appIndex);
+#endif
+}
+
+void BundleResourceHelper::DeleteUninstallBundleResourceForUser(const int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return;
+    }
+    (void)manager->DeleteUninstallBundleResourceForUser(userId);
 #endif
 }
 } // AppExecFwk

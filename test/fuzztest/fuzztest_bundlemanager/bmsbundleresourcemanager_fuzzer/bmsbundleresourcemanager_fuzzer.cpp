@@ -131,6 +131,46 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     LauncherAbilityResourceInfo launcherAbilityResourceInfo2;
     launcherAbilityResourceInfo2.appIndex = fdp.ConsumeIntegral<int32_t>();
     manager->IsLauncherAbility(launcherAbilityResourceInfo, abilityInfos);
+    manager->GetSingleLauncherAbilityResourceInfo(bundleName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherInfos, appIndex);
+    bool isBundleFirstInstall = fdp.ConsumeBool();
+    manager->AddResourceInfoByBundleNameWhenInstall(bundleName, userId, isBundleFirstInstall);
+    manager->AddResourceInfoByBundleNameWhenUpdate(bundleName, userId);
+    manager->ProcessCloneBundleResourceInfo(bundleName, appIndex);
+    manager->AddResourceInfoByBundleNameWhenCreateUser(bundleName, userId);
+    bool isExistInOtherUser = fdp.ConsumeBool();
+    manager->DeleteBundleResourceInfo(bundleName, userId, isExistInOtherUser);
+    manager->AddDynamicIconResource(bundleName, userId, appIndex, resourceInfo);
+    manager->DeleteDynamicIconResource(bundleName, userId, appIndex);
+    manager->AddAllResourceInfo(userId, type);
+    manager->IsNeedInterrupted(tempTaskNumber, BundleResourceChangeType::SYSTEM_THEME_CHANGE);
+    manager->AddResourceInfosWhenSystemLanguageChanged(resourceInfosMap, userId, tempTaskNumber);
+    manager->ProcessCloneBundleResourceInfoWhenSystemLanguageChanged(bundleName, userId, appIndex);
+    std::set<std::string> oldResourceNames;
+    std::set<std::string> oldResourceNames2 = {"group1", "group2"};
+    manager->DeleteNotExistThemeResource(resourceInfosMap, oldResourceNames, userId);
+    manager->DeleteNotExistThemeResource(resourceInfosMap, oldResourceNames2, userId);
+    manager->AddResourceInfosWhenSystemThemeChanged(resourceInfosMap, userId, tempTaskNumber);
+    manager->ProcessCloneBundleResourceInfoWhenSystemThemeChanged(bundleName, userId, appIndex);
+    manager->InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, userId);
+    manager->AddCloneBundleResourceInfoWhenInstall(bundleName, userId, appIndex, isExistInOtherUser);
+    manager->DeleteCloneBundleResourceInfoWhenUninstall(bundleName, userId, appIndex, isExistInOtherUser);
+    uint32_t resourceFlags = fdp.ConsumeIntegral<uint32_t>();
+    manager->IsNeedProcessResourceIconInfo(resourceFlags);
+    manager->GetUserId();
+    manager->SetIsOnlineThemeWhenBoot();
+    manager->SetIsOnlineTheme(userId);
+    std::set<int32_t> userIds;
+    bool hasBundleUpdated = fdp.ConsumeBool();
+    manager->InnerProcessThemeIconWhenOta(bundleName, userIds, hasBundleUpdated);
+    manager->InnerProcessDynamicIconWhenOta(bundleName);
+    manager->AddUninstallBundleResource(bundleName, userId, appIndex);
+    manager->DeleteUninstallBundleResource(bundleName, userId, appIndex);
+    manager->DeleteUninstallBundleResourceForUser(userId);
+    manager->GetUninstallBundleResource(bundleName, userId, appIndex, flags, bundleResourceInfo);
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    bundleResourceInfos.push_back(bundleResourceInfo);
+    manager->GetAllUninstallBundleResourceInfo(userId, flags, bundleResourceInfos);
     return true;
 }
 }

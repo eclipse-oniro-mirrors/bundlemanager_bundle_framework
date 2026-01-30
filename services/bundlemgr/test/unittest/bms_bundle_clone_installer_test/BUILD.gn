@@ -78,6 +78,7 @@ ohos_unittest("BmsBundleCloneInstallerTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
@@ -93,6 +94,7 @@ ohos_unittest("BmsBundleCloneInstallerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -217,6 +219,11 @@ ohos_unittest("BmsBundleCloneInstallerTest") {
     ]
     defines += [ "APP_DOMAIN_VERIFY_ENABLED" ]
   }
+
+    if (bundle_framework_default_app) {
+    sources += default_app
+    defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
+  }
 }
 
 ohos_unittest("BmsBundleCloneInstallerPermissionTest") {
@@ -282,6 +289,7 @@ ohos_unittest("BmsBundleCloneInstallerPermissionTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
@@ -296,6 +304,7 @@ ohos_unittest("BmsBundleCloneInstallerPermissionTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   include_dirs = []

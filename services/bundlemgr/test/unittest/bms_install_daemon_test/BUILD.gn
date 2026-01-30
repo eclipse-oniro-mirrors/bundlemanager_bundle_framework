@@ -64,6 +64,7 @@ ohos_unittest("BmsInstallDaemonTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += bundle_install_external_deps
@@ -111,6 +112,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     "${services_path}/bundlemgr/src/ipc/encryption_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
+    "${services_path}/bundlemgr/src/ipc/install_hnp_param.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
     "${services_path}/bundlemgr/src/system_ability_helper.cpp",
@@ -196,6 +198,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "${services_path}/bundlemgr/src/ipc/encryption_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
+    "${services_path}/bundlemgr/src/ipc/install_hnp_param.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
     "${services_path}/bundlemgr/src/system_ability_helper.cpp",
@@ -232,6 +235,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += bundle_install_external_deps
@@ -280,6 +284,7 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
     "${services_path}/bundlemgr/src/ipc/encryption_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/install_hnp_param.cpp",
     "${services_path}/bundlemgr/src/driver_install_ext.cpp",
   ]
 
@@ -312,6 +317,7 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += bundle_install_external_deps
@@ -359,6 +365,7 @@ ohos_unittest("BmsInstalldOperatorTest") {
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
     "${services_path}/bundlemgr/src/ipc/encryption_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/install_hnp_param.cpp",
   ]
 
   sources += [ "bms_installd_operator_test.cpp" ]
@@ -388,6 +395,7 @@ ohos_unittest("BmsInstalldOperatorTest") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += bundle_install_external_deps

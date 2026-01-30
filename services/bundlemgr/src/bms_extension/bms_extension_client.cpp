@@ -47,8 +47,7 @@ ErrCode BmsExtensionClient::QueryLauncherAbility(const Want &want, int32_t userI
     std::string bundleName = want.GetElement().GetBundleName();
     InnerBundleInfo info;
     if (!bundleName.empty() && dataMgr->QueryInnerBundleInfo(bundleName, info)) {
-        LOG_D(BMS_TAG_QUERY, "bundle %{public}s has been existed and does not need to find in bms extension",
-            bundleName.c_str());
+        LOG_D(BMS_TAG_QUERY, "bundle %{public}s exist no need to query bms ext", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
@@ -58,7 +57,7 @@ ErrCode BmsExtensionClient::QueryLauncherAbility(const Want &want, int32_t userI
     }
     ErrCode res = bmsExtensionImpl_->QueryAbilityInfos(want, userId, abilityInfos);
     if (res != ERR_OK) {
-        APP_LOGW_NOFUNC("query abilitys_ext %{public}s err code %{public}d", bundleName.c_str(), res);
+        APP_LOGW_NOFUNC("query launcher_ext code %{public}d", res);
         return res;
     }
     for_each(abilityInfos.begin(), abilityInfos.end(), [this](auto &info) {
@@ -89,8 +88,7 @@ ErrCode BmsExtensionClient::QueryAbilityInfos(const Want &want, int32_t flags, i
     std::string bundleName = want.GetElement().GetBundleName();
     InnerBundleInfo info;
     if (!bundleName.empty() && dataMgr->QueryInnerBundleInfo(bundleName, info)) {
-        LOG_D(BMS_TAG_QUERY, "bundle %{public}s has been existed and does not need to find in bms extension",
-            bundleName.c_str());
+        LOG_D(BMS_TAG_QUERY, "bundle %{public}s exist no need to query bms ext", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
@@ -100,7 +98,7 @@ ErrCode BmsExtensionClient::QueryAbilityInfos(const Want &want, int32_t flags, i
     }
     ErrCode res = bmsExtensionImpl_->QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos, isNewVersion);
     if (res != ERR_OK) {
-        APP_LOGW_NOFUNC("query abilitys_ext %{public}s err code %{public}d", bundleName.c_str(), res);
+        APP_LOGW_NOFUNC("query abilitys_ext code %{public}d", res);
         return res;
     }
     if (abilityInfos.empty()) {
@@ -132,8 +130,7 @@ ErrCode BmsExtensionClient::BatchQueryAbilityInfos(const std::vector<Want> &want
         std::string bundleName = wants[i].GetElement().GetBundleName();
         InnerBundleInfo info;
         if (!bundleName.empty() && dataMgr->QueryInnerBundleInfo(bundleName, info)) {
-            APP_LOGD("bundle %{public}s has been existed and does not need to find in bms extension",
-                bundleName.c_str());
+            LOG_D(BMS_TAG_QUERY, "bundle %{public}s exist no need to query bms ext", bundleName.c_str());
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
 
@@ -144,7 +141,7 @@ ErrCode BmsExtensionClient::BatchQueryAbilityInfos(const std::vector<Want> &want
         ErrCode res = bmsExtensionImpl_->QueryAbilityInfosWithFlag(wants[i], flags, userId, tmpAbilityInfos,
             isNewVersion);
         if (res != ERR_OK) {
-            APP_LOGW_NOFUNC("query abilitys_ext %{public}s err code %{public}d", bundleName.c_str(), res);
+            APP_LOGW_NOFUNC("query batch_abilitys_ext code %{public}d", res);
             return res;
         }
         abilityInfos.insert(abilityInfos.end(), tmpAbilityInfos.begin(), tmpAbilityInfos.end());
@@ -224,8 +221,7 @@ ErrCode BmsExtensionClient::GetBundleInfo(const std::string &bundleName, int32_t
     }
     InnerBundleInfo info;
     if (dataMgr->QueryInnerBundleInfo(bundleName, info)) {
-        LOG_D(BMS_TAG_QUERY, "bundle %{public}s has been existed and does not need to find in bms extension",
-            bundleName.c_str());
+        LOG_D(BMS_TAG_QUERY, "bundle %{public}s exist no need to query bms ext", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
@@ -235,7 +231,7 @@ ErrCode BmsExtensionClient::GetBundleInfo(const std::string &bundleName, int32_t
     }
     ErrCode res = bmsExtensionImpl_->GetBundleInfo(bundleName, flags, userId, bundleInfo, isNewVersion);
     if (res != ERR_OK) {
-        APP_LOGE_NOFUNC("query bundle_ext %{public}s err code %{public}d", bundleName.c_str(), res);
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "query bundle_ext code %{public}d", res);
         return res;
     }
 
@@ -450,6 +446,17 @@ ErrCode BmsExtensionClient::GetLauncherAbilityResourceInfo(const std::string &bu
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return bmsExtensionImpl_->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo, appIndex);
+}
+
+ErrCode BmsExtensionClient::GetLauncherAbilityResourceInfo(const BundleOptionInfo &options, const uint32_t flags,
+    LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->GetLauncherAbilityResourceInfo(options, flags, launcherAbilityResourceInfo);
 }
 
 ErrCode BmsExtensionClient::GetAllBundleResourceInfo(const uint32_t flags,

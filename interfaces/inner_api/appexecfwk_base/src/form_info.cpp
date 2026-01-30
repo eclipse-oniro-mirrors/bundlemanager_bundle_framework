@@ -84,6 +84,13 @@ const char* JSON_KEY_SUB_BUNDLE_NAME = "subBundleName";
 const char* JSON_KEY_KEEP_STATE_DURATION = "keepStateDuration";
 const char* JSON_KEY_RESIZABLE = "resizable";
 const char* JSON_KEY_GROUP_ID = "groupId";
+const char* JSON_KEY_SUPPORT_DEVICE_TYPE = "supportDeviceTypes";
+const char* JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES = "supportDevicePerformanceClasses";
+const char* JSON_KEY_IS_TEMPLATE_FORM = "isTemplateForm";
+const char* JSON_KEY_STANDBY = "standby";
+const char* JSON_KEY_STANDBY_IS_SUPPORTED = "isSupported";
+const char* JSON_KEY_STANDBY_IS_ADAPTED = "isAdapted";
+const char* JSON_KEY_STANDBY_IS_PRIVACY_SENSITIVE = "isPrivacySensitive";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -152,6 +159,12 @@ void FormInfo::SetInfoByFormExt(const ExtensionFormInfo &formInfo)
     for (const auto &conditionUpdateType : formInfo.conditionUpdate) {
         conditionUpdate.push_back(conditionUpdateType);
     }
+    for (const auto &deviceTypes : formInfo.supportDeviceTypes) {
+        supportDeviceTypes.push_back(deviceTypes);
+    }
+    for (const auto &devicePerformanceClasses : formInfo.supportDevicePerformanceClasses) {
+        supportDevicePerformanceClasses.push_back(devicePerformanceClasses);
+    }
     dataProxyEnabled = formInfo.dataProxyEnabled;
     isDynamic = formInfo.isDynamic;
     transparencyEnabled = formInfo.transparencyEnabled;
@@ -163,6 +176,9 @@ void FormInfo::SetInfoByFormExt(const ExtensionFormInfo &formInfo)
     appFormVisibleNotify = formInfo.appFormVisibleNotify;
     resizable = formInfo.resizable;
     groupId = formInfo.groupId;
+    standby.isSupported = formInfo.standby.isSupported;
+    standby.isAdapted = formInfo.standby.isAdapted;
+    standby.isPrivacySensitive = formInfo.standby.isPrivacySensitive;
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -279,6 +295,20 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < formPreviewImagesSize; i++) {
         formPreviewImages.emplace_back(parcel.ReadUint32());
     }
+
+    int32_t supportDeviceTypeSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDeviceTypeSize);
+    CONTAINER_SECURITY_VERIFY(parcel, supportDeviceTypeSize, &supportDeviceTypes);
+    for (int32_t i = 0; i < supportDeviceTypeSize; i++) {
+        supportDeviceTypes.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+ 
+    int32_t supportDevicePerformanceClassesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDevicePerformanceClassesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, supportDevicePerformanceClassesSize, &supportDevicePerformanceClasses);
+    for (int32_t i = 0; i < supportDevicePerformanceClassesSize; i++) {
+        supportDevicePerformanceClasses.emplace_back(parcel.ReadInt32());
+    }
     enableBlurBackground = parcel.ReadBool();
     appFormVisibleNotify = parcel.ReadBool();
     funInteractionParams.abilityName = Str16ToStr8(parcel.ReadString16());
@@ -288,18 +318,22 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     sceneAnimationParams.abilityName = Str16ToStr8(parcel.ReadString16());
     sceneAnimationParams.disabledDesktopBehaviors = Str16ToStr8(parcel.ReadString16());
     resizable = parcel.ReadBool();
+    isTemplateForm = parcel.ReadBool();
     groupId = Str16ToStr8(parcel.ReadString16());
+    standby.isSupported = parcel.ReadBool();
+    standby.isAdapted = parcel.ReadBool();
+    standby.isPrivacySensitive = parcel.ReadBool();
     return true;
 }
 
 FormInfo *FormInfo::Unmarshalling(Parcel &parcel)
 {
-    FormInfo *info = new (std::nothrow) FormInfo();
-    if (info && !info->ReadFromParcel(parcel)) {
+    std::unique_ptr<FormInfo> info = std::make_unique<FormInfo>();
+    if (!info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
         info = nullptr;
     }
-    return info;
+    return info.release();
 }
 
 bool FormInfo::Marshalling(Parcel &parcel) const
@@ -383,6 +417,19 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     for (auto i = 0; i < formPreviewImagesSize; i++) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, formPreviewImages[i]);
     }
+
+    const auto supportDeviceTypeSize = static_cast<int32_t>(supportDeviceTypes.size());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDeviceTypeSize);
+    for (auto i = 0; i < supportDeviceTypeSize; i++) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(supportDeviceTypes[i]));
+    }
+
+    const auto supportDevicePerformanceClassesSize = static_cast<int32_t>(supportDevicePerformanceClasses.size());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDevicePerformanceClassesSize);
+    for (auto i = 0; i < supportDevicePerformanceClassesSize; i++) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDevicePerformanceClasses[i]);
+    }
+
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enableBlurBackground);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, appFormVisibleNotify);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(funInteractionParams.abilityName));
@@ -392,7 +439,11 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.abilityName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.disabledDesktopBehaviors));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, resizable);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isTemplateForm);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(groupId));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, standby.isSupported);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, standby.isAdapted);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, standby.isPrivacySensitive);
     return true;
 }
 
@@ -417,6 +468,13 @@ void to_json(nlohmann::json &jsonObject, const FormWindow &formWindow)
 {
     jsonObject[JSON_KEY_DESIGN_WIDTH] = formWindow.designWidth;
     jsonObject[JSON_KEY_AUTO_DESIGN_WIDTH] = formWindow.autoDesignWidth;
+}
+
+void to_json(nlohmann::json &jsonObject, const FormStandby &formStandby)
+{
+    jsonObject[JSON_KEY_STANDBY_IS_SUPPORTED] = formStandby.isSupported;
+    jsonObject[JSON_KEY_STANDBY_IS_ADAPTED] = formStandby.isAdapted;
+    jsonObject[JSON_KEY_STANDBY_IS_PRIVACY_SENSITIVE] = formStandby.isPrivacySensitive;
 }
 
 void to_json(nlohmann::json &jsonObject, const FormFunInteractionParams &funInteractionParams)
@@ -483,7 +541,11 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_FUN_INTERACTION_PARAMS, formInfo.funInteractionParams},
         {JSON_KEY_SCENE_ANIMATION_PARAMS, formInfo.sceneAnimationParams},
         {JSON_KEY_RESIZABLE, formInfo.resizable},
-        {JSON_KEY_GROUP_ID, formInfo.groupId}
+        {JSON_KEY_IS_TEMPLATE_FORM, formInfo.isTemplateForm},
+        {JSON_KEY_GROUP_ID, formInfo.groupId},
+        {JSON_KEY_SUPPORT_DEVICE_TYPE, formInfo.supportDeviceTypes},
+        {JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES, formInfo.supportDevicePerformanceClasses},
+        {JSON_KEY_STANDBY, formInfo.standby}
     };
 }
 
@@ -528,6 +590,33 @@ void from_json(const nlohmann::json &jsonObject, FormWindow &formWindow)
         parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formWindow jsonObject error : %{public}d", parseResult);
+    }
+}
+
+void from_json(const nlohmann::json &jsonObject, FormStandby &formStandby)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_STANDBY_IS_SUPPORTED,
+        formStandby.isSupported,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_STANDBY_IS_ADAPTED,
+        formStandby.isAdapted,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_STANDBY_IS_PRIVACY_SENSITIVE,
+        formStandby.isPrivacySensitive,
+        false,
+        parseResult);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read formStandby jsonObject error : %{public}d", parseResult);
     }
 }
 
@@ -915,12 +1004,42 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         formInfo.resizable,
         false,
         parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_IS_TEMPLATE_FORM,
+        formInfo.isTemplateForm,
+        false,
+        parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_GROUP_ID,
         formInfo.groupId,
         false,
         parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SUPPORT_DEVICE_TYPE,
+        formInfo.supportDeviceTypes,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<int32_t>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES,
+        formInfo.supportDevicePerformanceClasses,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::NUMBER);
+    GetValueIfFindKey<FormStandby>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_STANDBY,
+        formInfo.standby,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formInfo jsonObject error : %{public}d", parseResult);
     }

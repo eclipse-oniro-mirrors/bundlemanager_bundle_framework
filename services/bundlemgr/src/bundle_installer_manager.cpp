@@ -20,6 +20,7 @@
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "datetime_ex.h"
+#include "idle_condition_mgr/idle_condition_mgr.h"
 #include "ipc_skeleton.h"
 #include "parameters.h"
 #include "xcollie_helper.h"
@@ -35,7 +36,6 @@ constexpr unsigned int TIME_OUT_SECONDS = 60 * 25;
 constexpr int8_t MAX_TASK_NUMBER = 10;
 constexpr int8_t RETAIL_MODE_THREAD_NUMBER = 1;
 constexpr int8_t DELAY_INTERVAL_SECONDS = 60;
-static std::atomic<int32_t> g_taskCounter = 0;
 }
 
 BundleInstallerManager::BundleInstallerManager()
@@ -242,6 +242,8 @@ void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::stri
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "add task:%{public}s", taskName.c_str());
     g_taskCounter++;
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    idleMgr->InterruptRelabel(taskName);
     threadPool_->AddTask(task);
 }
 

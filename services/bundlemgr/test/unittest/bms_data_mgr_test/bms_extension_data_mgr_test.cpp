@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
+#include "bundle_option.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_extension_profile.h"
 #include "bundle_mgr_service.h"
@@ -43,6 +44,7 @@ namespace OHOS {
 namespace {
 const int32_t USERID = 100;
 const int32_t TEST_UID = 20065535;
+const int32_t TEST_NUMBER_ONE = 1;
 constexpr int32_t REMOTE_RESULT = 8585601;
 const uint32_t SDK_VERSION = 10;
 const uint32_t COMPATIBLE_VERSION = 11;
@@ -50,6 +52,7 @@ const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
 const std::string BMS_DATA_PATH = "data/data";
 const std::string BUNDLE_EXT_NAME = "bundleExtName";
 const std::string TEST_BUNDLE_NAME = "testBundleName";
+const std::string TEST_EXTENSION_NAME = "testExtensionName";
 const nlohmann::json EXTENSIONS_JSON_1 = R"(
 {
     "bms-extensions": {
@@ -869,15 +872,15 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0018, Function | SmallTest | Leve
 
 /**
  * @tc.number: BundleMgrExt_0019
- * @tc.name: IsAppInBlocklist
- * @tc.desc: IsAppInBlocklist
+ * @tc.name: CheckAppBlackList
+ * @tc.desc: CheckAppBlackList
  */
 HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0019, Function | SmallTest | Level0)
 {
     BundleMgrExtTest bundleMgrExtTest;
     std::string bundleName{ "extension" };
-    auto res = bundleMgrExtTest.IsAppInBlocklist(bundleName, 100);
-    EXPECT_FALSE(res);
+    auto res = bundleMgrExtTest.CheckAppBlackList(bundleName, 100);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -983,16 +986,16 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0021, Function | SmallTest
 
 /**
  * @tc.number: BmsExtensionDataMgr_0022
- * @tc.name: IsAppInBlocklist
- * @tc.desc: IsAppInBlocklist
+ * @tc.name: CheckAppBlackList
+ * @tc.desc: CheckAppBlackList
  */
 HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0022, Function | SmallTest | Level0)
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
 
     std::string bundleName{ "extension" };
-    auto res = bmsExtensionDataMgr.IsAppInBlocklist(bundleName, 100);
-    EXPECT_FALSE(res);
+    auto res = bmsExtensionDataMgr.CheckAppBlackList(bundleName, 100);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -1315,7 +1318,11 @@ HWTEST_F(
     std::vector<std::string> bundleNames = {"bundleNameTest"};
     std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
     ErrCode res = bmsExtensionDataMgrTest.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+    #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(res, ERR_OK);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #endif
 }
 
 /**
@@ -1810,23 +1817,23 @@ HWTEST_F(BmsExtensionDataMgrTest, ClearBackupUninstallFile_001, Function | Small
 }
 
 /**
- * @tc.number: IsAppInBlocklist_001
- * @tc.name: IsAppInBlocklist
- * @tc.desc: IsAppInBlocklist
+ * @tc.number: CheckAppBlackList_001
+ * @tc.name: CheckAppBlackList
+ * @tc.desc: CheckAppBlackList
  */
-HWTEST_F(BmsExtensionDataMgrTest, IsAppInBlocklist_001, Function | SmallTest | Level0)
+HWTEST_F(BmsExtensionDataMgrTest, CheckAppBlackList_001, Function | SmallTest | Level0)
 {
     BmsExtensionDataMgr bmsExtensionDataMgrTest;
     bmsExtensionDataMgrTest.handler_ = nullptr;
     int32_t userId = 0;
     std::string bundleName = "testname";
-    ErrCode res = bmsExtensionDataMgrTest.IsAppInBlocklist(bundleName, userId);
-    EXPECT_FALSE(res);
+    ErrCode res = bmsExtensionDataMgrTest.CheckAppBlackList(bundleName, userId);
+    EXPECT_EQ(res, ERR_OK);
 
     int16_t handleTest = 1;
     bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.IsAppInBlocklist(bundleName, userId);
-    EXPECT_FALSE(res);
+    res = bmsExtensionDataMgrTest.CheckAppBlackList(bundleName, userId);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -2121,7 +2128,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BatchGetCompatibleDeviceType_001, Function | S
     std::vector<std::string> bundleNames = {"bundleNameTest"};
     std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
     ErrCode res = bmsExtensionDataMgrTest.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+    #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(res, ERR_OK);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #endif
 }
 
 /**
@@ -2384,5 +2395,62 @@ HWTEST_F(BmsExtensionDataMgrTest, RemoveBackupBundleData_002, Function | SmallTe
     int32_t appIndex = 0;
     auto res = bundleMgrExtTest.RemoveBackupBundleData(bundleName, userId, appIndex);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfo_0001
+ * @tc.name: GetLauncherAbilityResourceInfo
+ * @tc.desc: GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetLauncherAbilityResourceInfo_0001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    LauncherAbilityResourceInfo launcherAbilityResourceInfo;
+    BundleOptionInfo optiont;
+    optiont.bundleName = "bundleNameTest";
+    optiont.abilityName = "abilityNameTest";
+
+    ErrCode res = bmsExtensionDataMgr.GetLauncherAbilityResourceInfo(
+        optiont, static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherAbilityResourceInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: GetDetermineCloneNumList_0001
+ * @tc.name: GetDetermineCloneNumList
+ * @tc.desc: GetDetermineCloneNumList
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetDetermineCloneNumList_0001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::vector<std::tuple<std::string, std::string, uint32_t>> determineCloneNumList;
+    EXPECT_NO_THROW(bmsExtensionDataMgr.GetDetermineCloneNumList(determineCloneNumList));
+}
+
+/**
+ * @tc.number: GetInstallAndRecoverList_0001
+ * @tc.name: GetInstallAndRecoverList
+ * @tc.desc: GetInstallAndRecoverList
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetInstallAndRecoverList_0001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int32_t userId = USERID;
+    std::vector<std::string> bundleList;
+    std::vector<std::string> installList;
+    std::vector<std::string> recoverList;
+    bmsExtensionDataMgr.handler_ = nullptr;
+    ErrCode res = bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
+#ifdef USE_ARM64
+    EXPECT_TRUE(res);
+#else
+    EXPECT_FALSE(res);
+#endif
+
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = TEST_EXTENSION_NAME;
+    int32_t handleTest = TEST_NUMBER_ONE;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    res = bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
+    EXPECT_FALSE(res);
 }
 } // OHOS

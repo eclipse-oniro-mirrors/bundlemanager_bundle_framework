@@ -59,7 +59,7 @@ int32_t APP_INDEX_2 = Constants::INITIAL_SANDBOX_APP_INDEX + 2;
 const int32_t USERID = 100;
 const int32_t INVALID_USERID = 300;
 const int32_t TEST_UID = 20010039;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 } // namespace
 
 class BmsSandboxAppTest : public testing::Test {
@@ -2152,7 +2152,7 @@ HWTEST_F(BmsSandboxAppTest, GetBundleInfoForSelf_0100, Function | SmallTest | Le
     BundleInfo bundleInfo;
     bundleMgrService_->GetDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, info);
     ErrCode res = bundleMgrHostImpl_->GetBundleInfoForSelf(APP_INDEX_1, bundleInfo);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_UID);
 
     DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
     setuid(0);

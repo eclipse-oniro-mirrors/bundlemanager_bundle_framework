@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -650,12 +650,13 @@ napi_value GetLaunchWantForBundleSync(napi_env env, napi_callback_info info)
     }
     OHOS::AAFwk::Want want;
     ErrCode ret = CommonFunc::ConvertErrCode(
-        iBundleMgr->GetLaunchWantForBundle(bundleName, want, userId));
+        iBundleMgr->GetLaunchWantForBundle(bundleName, want, userId, true));
     if (ret != NO_ERROR) {
         APP_LOGE("GetLaunchWantForBundle failed, bundleName is %{public}s, userId is %{public}d",
             bundleName.c_str(), userId);
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, GET_LAUNCH_WANT_FOR_BUNDLE_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            env, ret, GET_LAUNCH_WANT_FOR_BUNDLE_SYNC,
+            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -1106,6 +1107,56 @@ napi_value GetPluginBundlePathForSelfSync(napi_env env, napi_callback_info info)
 
     APP_LOGD("call GetPluginBundlePathForSelfSync done");
     return nCodePath;
+}
+
+napi_value GetBundleInstallStatus(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetBundleInstallStatus called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    ErrCode ret = BundleManagerHelper::InnerGetBundleInstallStatus(bundleName, status);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetBundleInstallStatus failed ret=%{public}d", ret);
+        napi_value businessError = BusinessError::CreateNewCommonError(
+            env, ret, GET_BUNDLE_INSTALL_STATUS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nBundleInstallStatus = nullptr;
+    napi_create_int32(env, static_cast<int32_t>(status), &nBundleInstallStatus);
+    APP_LOGD("call GetBundleInstallStatus done");
+    return nBundleInstallStatus;
+}
+
+void CreateBundleInstallStatusObject(napi_env env, napi_value value)
+{
+    napi_value nBundleNotExist;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        BundleInstallStatus::BUNDLE_NOT_EXIST), &nBundleNotExist));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BUNDLE_NOT_EXIST",
+        nBundleNotExist));
+
+    napi_value nBundleInstalling;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        BundleInstallStatus::BUNDLE_INSTALLING), &nBundleInstalling));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BUNDLE_INSTALLING",
+        nBundleInstalling));
+
+    napi_value nBundleInstalled;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        BundleInstallStatus::BUNDLE_INSTALLED), &nBundleInstalled));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BUNDLE_INSTALLED",
+        nBundleInstalled));
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

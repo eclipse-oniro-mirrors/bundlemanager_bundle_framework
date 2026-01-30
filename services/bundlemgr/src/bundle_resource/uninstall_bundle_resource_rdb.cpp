@@ -15,6 +15,7 @@
 
 #include "uninstall_bundle_resource_rdb.h"
 
+#include "exception_util.h"
 #include "json_util.h"
 #include "nlohmann/json.hpp"
 
@@ -79,14 +80,14 @@ std::map<std::string, std::string> UninstallBundleResourceRdb::FromString(const 
 
 std::string UninstallBundleResourceRdb::ToString(const std::map<std::string, std::string> &labelMap)
 {
-    try {
-        nlohmann::json json;
-        json[BundleResourceConstants::LABEL] = labelMap;
-        return json.dump();
-    } catch (const nlohmann::json::exception &e) {
-        APP_LOGE("ToString err: %{public}s", e.what());
+    nlohmann::json json;
+    json[BundleResourceConstants::LABEL] = labelMap;
+    std::string result;
+    if (!ExceptionUtil::GetInstance().SafeDump(json, result)) {
+        APP_LOGE_NOFUNC("SafeDump failed");
         return Constants::EMPTY_STRING;
     }
+    return result;
 }
 
 bool UninstallBundleResourceRdb::AddUninstallBundleResource(const std::string &bundleName,
@@ -131,6 +132,19 @@ bool UninstallBundleResourceRdb::DeleteUninstallBundleResource(const std::string
     absRdbPredicates.EqualTo(BundleResourceConstants::APP_INDEX, appIndex);
     if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
         APP_LOGW("delete -n %{public}s, -u %{public}d, -i %{public}d failed", bundleName.c_str(), userId, appIndex);
+        return false;
+    }
+    return true;
+}
+
+bool UninstallBundleResourceRdb::DeleteUninstallBundleResourceForUser(const int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("need delete resource info -u %{public}d", userId);
+    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::UINSTALL_BUNDLE_RESOURCE_RDB);
+    absRdbPredicates.EqualTo(BundleResourceConstants::USER_ID, userId);
+    if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
+        APP_LOGW("delete -u %{public}d failed", userId);
         return false;
     }
     return true;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,8 +29,10 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "common_json_converter.h"
+#include "exception_util.h"
 #include "free_install_params.h"
 #include "installd_client.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -57,6 +59,7 @@ constexpr const char* MODULE_LABEL = "label";
 constexpr const char* MODULE_LABEL_ID = "labelId";
 constexpr const char* MODULE_DESCRIPTION_INSTALLATION_FREE = "installationFree";
 constexpr const char* MODULE_IS_REMOVABLE = "isRemovable";
+constexpr const char* MODULE_IS_REMOVABLESET = "isRemovableSet";
 constexpr const char* MODULE_UPGRADE_FLAG = "upgradeFlag";
 constexpr const char* MODULE_IS_ENTRY = "isEntry";
 constexpr const char* MODULE_METADATA = "metaData";
@@ -128,6 +131,8 @@ constexpr const char* MODULE_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames
 constexpr const char* MODULE_AOT_COMPILE_STATUS = "aotCompileStatus";
 constexpr const char* DATA_GROUP_INFOS = "dataGroupInfos";
 constexpr const char* MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
+constexpr const char* MODULE_EASY_GO = "easyGo";
+constexpr const char* MODULE_SHARE_FILES = "shareFiles";
 constexpr const char* MODULE_IS_ENCRYPTED = "isEncrypted";
 constexpr const char* MODULE_RESIZEABLE = "resizeable";
 constexpr const char* MODULE_ROUTER_MAP = "routerMap";
@@ -138,6 +143,7 @@ constexpr const char* DEVELOPER_ID = "developerId";
 constexpr const char* ODID = "odid";
 constexpr const char* UNINSTALL_STATE = "uninstallState";
 constexpr const char* PLUGIN_BUNDLE_INFOS = "pluginBundleInfos";
+constexpr const char* IS_DELAY_AGING = "isDelayAging";
 constexpr int8_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -375,6 +381,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->odid_ = info.odid_;
     this->uninstallState_ = info.uninstallState_;
     this->pluginBundleInfos_ = info.pluginBundleInfos_;
+    this->isDelayAging_ = info.isDelayAging_;
     return *this;
 }
 
@@ -443,6 +450,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_LABEL_ID, info.labelId},
         {MODULE_DESCRIPTION_INSTALLATION_FREE, info.installationFree},
         {MODULE_IS_REMOVABLE, info.isRemovable},
+        {MODULE_IS_REMOVABLESET, info.isRemovableSet},
         {MODULE_UPGRADE_FLAG, info.upgradeFlag},
         {MODULE_REQ_CAPABILITIES, info.reqCapabilities},
         {MODULE_ABILITY_KEYS, info.abilityKeys},
@@ -488,6 +496,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_NATIVE_LIBRARY_FILE_NAMES, info.nativeLibraryFileNames},
         {MODULE_AOT_COMPILE_STATUS, info.aotCompileStatus},
         {MODULE_FILE_CONTEXT_MENU, info.fileContextMenu},
+        {MODULE_EASY_GO, info.easyGo},
+        {MODULE_SHARE_FILES, info.shareFiles},
         {MODULE_IS_ENCRYPTED, info.isEncrypted},
         {MODULE_QUERY_SCHEMES, info.querySchemes},
         {MODULE_ROUTER_MAP, info.routerMap},
@@ -556,6 +566,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[DEVELOPER_ID] = developerId_;
     jsonObject[ODID] = odid_;
     jsonObject[UNINSTALL_STATE] = uninstallState_;
+    jsonObject[IS_DELAY_AGING] = isDelayAging_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -731,6 +742,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         parseResult,
         JsonType::BOOLEAN,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::set<std::string>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_IS_REMOVABLESET,
+        info.isRemovableSet,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         MODULE_UPGRADE_FLAG,
@@ -1011,6 +1030,18 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_FILE_CONTEXT_MENU,
         info.fileContextMenu,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_EASY_GO,
+        info.easyGo,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_SHARE_FILES,
+        info.shareFiles,
         false,
         parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
@@ -1318,10 +1349,9 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
 
 int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
 {
-    try {
-        const auto &jsonObjectEnd = jsonObject.end();
-        int32_t parseResult = ERR_OK;
-        GetValueIfFindKey<Constants::AppType>(jsonObject,
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<Constants::AppType>(jsonObject,
             jsonObjectEnd,
             APP_TYPE,
             appType_,
@@ -1586,14 +1616,16 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             uninstallState_,
             false,
             parseResult);
-        if (parseResult != ERR_OK) {
-            APP_LOGE("read InnerBundleInfo from database error code : %{public}d", parseResult);
-        }
-        return parseResult;
-    } catch (const nlohmann::json::exception &e) {
-        APP_LOGE("FromJson err: %{public}s", e.what());
-        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+            jsonObjectEnd,
+            IS_DELAY_AGING,
+            isDelayAging_,
+            false,
+            parseResult);
+    if (parseResult != ERR_OK) {
+        APP_LOGE_NOFUNC("read InnerBundleInfo from database error code : %{public}d", parseResult);
     }
+    return parseResult;
 }
 
 void InnerBundleInfo::BuildDefaultUserInfo()
@@ -1637,10 +1669,12 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.reqCapabilities = it->second.reqCapabilities;
     hapInfo.colorMode = it->second.colorMode;
     hapInfo.isRemovable = it->second.isRemovable;
+    hapInfo.isRemovableSet = it->second.isRemovableSet;
     hapInfo.upgradeFlag = it->second.upgradeFlag;
     hapInfo.isLibIsolated = it->second.isLibIsolated;
     hapInfo.nativeLibraryPath = it->second.nativeLibraryPath;
     hapInfo.cpuAbi = it->second.cpuAbi;
+    hapInfo.versionCode = it->second.versionCode == 0 ? baseBundleInfo_->versionCode : it->second.versionCode;
 
     hapInfo.bundleName = baseApplicationInfo_->bundleName;
     hapInfo.mainElementName = it->second.mainAbility;
@@ -1674,12 +1708,18 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     }
     std::string key;
     key.append(".").append(modulePackage).append(".");
+    hapInfo.extensionInfos.reserve(baseExtensionInfos_.size());
     for (const auto &extension : baseExtensionInfos_) {
-        if ((extension.first.find(key) != std::string::npos) && (extension.second.moduleName == hapInfo.moduleName)) {
+        if ((extension.second.moduleName == hapInfo.moduleName) && (extension.first.find(key) != std::string::npos)) {
             hapInfo.extensionInfos.emplace_back(InnerExtensionInfo::ConvertToExtensionInfo(extension.second));
         }
     }
     hapInfo.metadata = it->second.metadata;
+    ApplicationInfo appInfo;
+    GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
+        ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
+        userId, appInfo, appIndex);
+    hapInfo.abilityInfos.reserve(baseAbilityInfos_.size());
     for (auto &ability : baseAbilityInfos_) {
         if (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY) {
             continue;
@@ -1687,10 +1727,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         if ((ability.first.find(key) != std::string::npos) && (ability.second.moduleName == hapInfo.moduleName)) {
             AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(ability.second);
             AppendDynamicSkillsToAbilityIfExist(abilityInfo);
-            auto &abilityInfoRef = hapInfo.abilityInfos.emplace_back(abilityInfo);
-            GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
-                ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
-                abilityInfoRef.applicationInfo, appIndex);
+            abilityInfo.applicationInfo = appInfo;
+            hapInfo.abilityInfos.emplace_back(std::move(abilityInfo));
         }
     }
     hapInfo.dependencies = it->second.dependencies;
@@ -1703,12 +1741,12 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     }
     for (const auto &item : it->second.preloads) {
         PreloadItem preload(item);
-        hapInfo.preloads.emplace_back(preload);
+        hapInfo.preloads.emplace_back(std::move(preload));
     }
     hapInfo.resizeable = it->second.resizeable;
     for (const auto &item : it->second.proxyDatas) {
         ProxyData proxyData(item);
-        hapInfo.proxyDatas.emplace_back(proxyData);
+        hapInfo.proxyDatas.emplace_back(std::move(proxyData));
     }
     hapInfo.buildHash = it->second.buildHash;
     hapInfo.isolationMode = GetIsolationMode(it->second.isolationMode);
@@ -1716,6 +1754,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.nativeLibraryFileNames = it->second.nativeLibraryFileNames;
     hapInfo.aotCompileStatus = it->second.aotCompileStatus;
     hapInfo.fileContextMenu = it->second.fileContextMenu;
+    hapInfo.easyGo = it->second.easyGo;
+    hapInfo.shareFiles = it->second.shareFiles;
     hapInfo.routerMap = it->second.routerMap;
     hapInfo.appEnvironments = it->second.appEnvironments;
     hapInfo.packageName = it->second.packageName;
@@ -1724,7 +1764,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.abilityStageSrcEntryDelegator = it->second.abilityStageSrcEntryDelegator;
     hapInfo.moduleArkTSMode = it->second.moduleArkTSMode;
     hapInfo.arkTSMode = it->second.arkTSMode;
-    return hapInfo;
+    return std::move(hapInfo);
 }
 
 std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(
@@ -1876,28 +1916,27 @@ void InnerBundleInfo::AppendDynamicSkillsToAbilityIfExist(AbilityInfo &abilityIn
 
 bool InnerBundleInfo::ValidateDynamicSkills(const std::map<std::string, std::vector<Skill>> &dynamicSkills) const
 {
-    try {
-        // validate to json
-        nlohmann::json jsonObject;
-        jsonObject[DYNAMIC_SKILLS] = dynamicSkills;
-        (void)jsonObject.dump();
-        // validate from json
-        int32_t ret = ERR_OK;
-        std::map<std::string, std::vector<Skill>> tmpDynamicSkills;
-        GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
-            jsonObject.end(),
-            DYNAMIC_SKILLS,
-            tmpDynamicSkills,
-            JsonType::OBJECT,
-            false,
-            ret,
-            ArrayType::NOT_ARRAY);
-        if (ret != ERR_OK) {
-            APP_LOGE("ValidateDynamicSkills error:%{public}d", ret);
-            return false;
-        }
-    } catch (const nlohmann::json::exception& e) {
-        APP_LOGE("ValidateDynamicSkills exception:%{public}s, %{public}d", e.what(), e.id);
+    // validate to json
+    nlohmann::json jsonObject;
+    jsonObject[DYNAMIC_SKILLS] = dynamicSkills;
+    std::string dumpResult;
+    if (!ExceptionUtil::GetInstance().SafeDump(jsonObject, dumpResult)) {
+        APP_LOGE_NOFUNC("ValidateDynamicSkills dump failed");
+        return false;
+    }
+    // validate from json
+    int32_t ret = ERR_OK;
+    std::map<std::string, std::vector<Skill>> tmpDynamicSkills;
+    GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
+        jsonObject.end(),
+        DYNAMIC_SKILLS,
+        tmpDynamicSkills,
+        JsonType::OBJECT,
+        false,
+        ret,
+        ArrayType::NOT_ARRAY);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("ValidateDynamicSkills error:%{public}d", ret);
         return false;
     }
     return true;
@@ -1982,6 +2021,7 @@ void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool is
 
     baseBundleInfo_->versionCode = bundleInfo.versionCode;
     baseBundleInfo_->versionName = bundleInfo.versionName;
+    baseBundleInfo_->buildVersion = bundleInfo.buildVersion;
     baseBundleInfo_->minCompatibleVersionCode = bundleInfo.minCompatibleVersionCode;
     baseBundleInfo_->compatibleVersion = bundleInfo.compatibleVersion;
     baseBundleInfo_->targetVersion = bundleInfo.targetVersion;
@@ -2072,6 +2112,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
         baseApplicationInfo_->assetAccessGroups = applicationInfo.assetAccessGroups;
         baseApplicationInfo_->appPreloadPhase = applicationInfo.appPreloadPhase;
     }
+    baseApplicationInfo_->appSignType = applicationInfo.appSignType;
 }
 
 void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
@@ -2209,6 +2250,11 @@ bool InnerBundleInfo::IsHideDesktopIcon() const
     return baseApplicationInfo_->hideDesktopIcon ? true : !IsExistLauncherAbility();
 }
 
+bool InnerBundleInfo::IsHideDesktopIconForEvent() const
+{
+    return baseApplicationInfo_->hideDesktopIcon;
+}
+
 bool InnerBundleInfo::IsExistLauncherAbility() const
 {
     bool isExistLauncherAbility = false;
@@ -2279,6 +2325,17 @@ void InnerBundleInfo::UpdateRemovable(bool isPreInstall, bool removable)
 #endif
 
     baseApplicationInfo_->removable = removable;
+}
+
+void InnerBundleInfo::UpdateModuleRemovable(const InnerBundleInfo &innerBundleInfo)
+{
+    for (auto &[infoKey, infoValue] : innerBundleInfo.innerModuleInfos_) {
+        auto it = innerModuleInfos_.find(infoKey);
+        if (it != innerModuleInfos_.end()) {
+            it->second.isRemovable = infoValue.isRemovable;
+            it->second.isRemovableSet = infoValue.isRemovableSet;
+        }
+    }
 }
 
 void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)
@@ -2563,14 +2620,14 @@ void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
 
 std::string InnerBundleInfo::ToString() const
 {
-    try {
-        nlohmann::json j;
-        ToJson(j);
-        return j.dump();
-    } catch (const nlohmann::json::exception &e) {
-        LOG_E(BMS_TAG_DEFAULT, "ToString err: %{public}s", e.what());
+    nlohmann::json j;
+    ToJson(j);
+    std::string result;
+    if (!ExceptionUtil::GetInstance().SafeDump(j, result)) {
+        APP_LOGE_NOFUNC("ToString SafeDump failed");
         return Constants::EMPTY_STRING;
     }
+    return result;
 }
 
 void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, ApplicationInfo &appInfo,
@@ -2592,6 +2649,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         return;
     }
 
+    appInfo.moduleInfos.reserve(innerModuleInfos_.size());
     for (const auto &info : innerModuleInfos_) {
         bool deCompress = info.second.hapPath.empty();
         ModuleInfo moduleInfo;
@@ -2604,7 +2662,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
             appInfo.hnpPackages[info.second.moduleName] = info.second.hnpPackages;
         }
         moduleInfo.preloads = info.second.preloads;
-        appInfo.moduleInfos.emplace_back(moduleInfo);
+        appInfo.moduleInfos.emplace_back(std::move(moduleInfo));
         if (deCompress && info.second.isEntry) {
             appInfo.entryDir = info.second.modulePath;
         }
@@ -2705,6 +2763,11 @@ void InnerBundleInfo::GetPreInstallApplicationFlags(ApplicationInfo &appInfo) co
     if (IsPreInstallApp()) {
         uint32_t applicationFlags = static_cast<uint32_t>(appInfo.applicationFlags);
         applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP);
+        if (GetBundleName() == OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "")) {
+            applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP_UPDATE);
+            appInfo.applicationFlags = static_cast<int32_t>(applicationFlags);
+            return;
+        }
         appInfo.applicationFlags = static_cast<int32_t>(applicationFlags);
         for (const auto &moduleEnt: innerModuleInfos_) {
             const auto &hapPath = moduleEnt.second.hapPath;
@@ -2737,8 +2800,8 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
     GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
         bundleInfo.applicationInfo, appIndex);
     for (const auto &info : innerModuleInfos_) {
-        if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_REQUESTED_PERMISSION)
-            == GET_BUNDLE_WITH_REQUESTED_PERMISSION) {
+        if ((static_cast<uint32_t>(flags) &
+            (GET_BUNDLE_WITH_REQUESTED_PERMISSION | GET_BUNDLE_WITH_REQUESTED_PERMISSION_NO_DETAILED)) != 0) {
             for (const auto &item : info.second.requestPermissions) {
                 bundleInfo.reqPermissions.push_back(item.name);
             }
@@ -2925,30 +2988,30 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(
         bundleInfo.hapModuleInfos.clear();
         return;
     }
+    bundleInfo.hapModuleInfos.reserve(innerModuleInfos_.size());
     for (const auto &info : innerModuleInfos_) {
         auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId, appIndex);
         if (hapmoduleinfo) {
-            HapModuleInfo hapModuleInfo = *hapmoduleinfo;
             auto it = innerModuleInfos_.find(info.second.modulePackage);
             if (it == innerModuleInfos_.end()) {
                 APP_LOGE("not find module %{public}s", info.second.modulePackage.c_str());
             } else {
-                hapModuleInfo.hashValue = it->second.hashValue;
+                hapmoduleinfo->hashValue = it->second.hashValue;
             }
-            if (!hasHapModuleFlag && hasEntryModuleFlag && hapModuleInfo.moduleType != ModuleType::ENTRY) {
+            if (!hasHapModuleFlag && hasEntryModuleFlag && hapmoduleinfo->moduleType != ModuleType::ENTRY) {
                 continue;
             }
-            if (hapModuleInfo.hapPath.empty()) {
-                hapModuleInfo.moduleSourceDir = info.second.modulePath;
+            if (hapmoduleinfo->hapPath.empty()) {
+                hapmoduleinfo->moduleSourceDir = info.second.modulePath;
             }
             if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
                 != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
-                hapModuleInfo.metadata.clear();
+                hapmoduleinfo->metadata.clear();
             }
 
-            GetBundleWithAbilitiesV9(flags, hapModuleInfo, userId, appIndex);
-            GetBundleWithExtensionAbilitiesV9(flags, hapModuleInfo, appIndex);
-            bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
+            GetBundleWithAbilitiesV9(flags, *hapmoduleinfo, userId, appIndex);
+            GetBundleWithExtensionAbilitiesV9(flags, *hapmoduleinfo, appIndex);
+            bundleInfo.hapModuleInfos.emplace_back(std::move(*hapmoduleinfo));
         }
     }
 }
@@ -2962,6 +3025,7 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         return;
     }
     APP_LOGD("Get bundleInfo with abilities");
+    hapModuleInfo.abilityInfos.reserve(baseAbilityInfos_.size());
     for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
         if ((innerAbilityInfo.moduleName != hapModuleInfo.moduleName) ||
             (innerAbilityInfo.name == ServiceConstants::APP_DETAIL_ABILITY)) {
@@ -2988,7 +3052,7 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
             AppendDynamicSkillsToAbilityIfExist(abilityInfo);
         }
 
-        hapModuleInfo.abilityInfos.emplace_back(abilityInfo);
+        hapModuleInfo.abilityInfos.emplace_back(std::move(abilityInfo));
     }
 }
 
@@ -3002,6 +3066,7 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(
         return;
     }
     APP_LOGD("Get bundleInfo with extensionAbilities");
+    hapModuleInfo.extensionInfos.reserve(baseExtensionInfos_.size());
     for (const auto &extensionInfo : baseExtensionInfos_) {
         if (extensionInfo.second.moduleName != hapModuleInfo.moduleName || !extensionInfo.second.enabled) {
             continue;
@@ -3017,7 +3082,7 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(
             != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL)) {
             info.skills.clear();
         }
-        hapModuleInfo.extensionInfos.emplace_back(info);
+        hapModuleInfo.extensionInfos.emplace_back(std::move(info));
     }
 }
 
@@ -3147,7 +3212,7 @@ std::optional<std::vector<HnpPackage>> InnerBundleInfo::GetInnerModuleInfoHnpInf
 {
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         if (!(innerModuleInfo.second.hnpPackages.empty())) {
-            if (innerModuleInfo.second.moduleName == moduleName) {
+            if (innerModuleInfo.second.moduleName == moduleName || moduleName == Constants::EMPTY_STRING) {
                 return innerModuleInfo.second.hnpPackages;
             }
         }
@@ -3340,56 +3405,6 @@ void InnerBundleInfo::SetAccessTokenIdExWithAppIndex(
     cloneItem->second.accessTokenIdEx = accessTokenIdEx.tokenIDEx;
 }
 
-void InnerBundleInfo::SetkeyId(const int32_t userId, const std::string &keyId, const int32_t appIndex)
-{
-    if (keyId.empty()) {
-        APP_LOGE("SetkeyId failed, keyId is empty");
-        return;
-    }
-    InnerSetKeyId(userId, keyId, appIndex);
-}
-
-void InnerBundleInfo::InnerSetKeyId(const int32_t userId, const std::string &keyId, const int32_t appIndex)
-{
-    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
-    auto infoItem = innerBundleUserInfos_.find(key);
-    if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("SetkeyId failed, not find userInfo for userId %{public}d", userId);
-        return;
-    }
-    if (appIndex == 0) {
-        infoItem->second.keyId = keyId;
-        return;
-    }
-    std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = infoItem->second.cloneInfos;
-    std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
-    if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
-        APP_LOGE("key:%{public}s not found", key.c_str());
-        return;
-    }
-    mpCloneInfos.at(appIndexKey).keyId = keyId;
-}
-
-std::string InnerBundleInfo::GetKeyId(const int32_t userId, const int32_t appIndex)
-{
-    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
-    auto infoItem = innerBundleUserInfos_.find(key);
-    if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("GetKeyId failed, not find userInfo for userId %{public}d", userId);
-        return "";
-    }
-    if (appIndex == 0) {
-        return infoItem->second.keyId;
-    }
-    std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = infoItem->second.cloneInfos;
-    std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
-    if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
-        APP_LOGE("key:%{public}s not found", key.c_str());
-        return "";
-    }
-    return mpCloneInfos.at(appIndexKey).keyId;
-}
-
 void InnerBundleInfo::SetBundleUpdateTime(const int64_t time, int32_t userId)
 {
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
@@ -3399,6 +3414,13 @@ void InnerBundleInfo::SetBundleUpdateTime(const int64_t time, int32_t userId)
     }
 
     infoItem->second.updateTime = time;
+}
+
+void InnerBundleInfo::SetBundleUpdateTimeForAllUser(const int64_t time)
+{
+    for (auto &userInfo : innerBundleUserInfos_) {
+        userInfo.second.updateTime = time;
+    }
 }
 
 bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex) const
@@ -3863,8 +3885,13 @@ bool InnerBundleInfo::IsBundleRemovable() const
                 return false;
             }
         }
-    }
 
+        for (const auto &stateIter : innerModuleInfo.second.isRemovableSet) {
+            if (!stateIter.empty()) {
+                return false;
+            }
+        }
+    }
     return true;
 }
 
@@ -3915,6 +3942,25 @@ bool InnerBundleInfo::GetFreeInstallModules(std::vector<std::string> &freeInstal
     return !freeInstallModule.empty();
 }
 
+bool InnerBundleInfo::IsRemovableSet(const InnerModuleInfo &innerInfo, int32_t userId) const
+{
+    std::string userIdStr = std::to_string(userId);
+    APP_LOGD("isRemovableSet size:%{public}zu", innerInfo.isRemovableSet.size());
+
+    for (const auto &item : innerInfo.isRemovableSet) {
+        size_t pos = item.rfind(Constants::UID_SEPARATOR);
+        if (pos != std::string::npos) {
+            std::string suffix = item.substr(pos + 1);
+            if (suffix == userIdStr) {
+                APP_LOGD("userId:%{public}d exist moduleName:%{public}s item:%{public}s", userId,
+                    innerInfo.moduleName.c_str(), item.c_str());
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t userId) const
 {
     APP_LOGD("userId:%{public}d moduleName:%{public}s", userId, moduleName.c_str());
@@ -3922,6 +3968,10 @@ bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t u
     if (!modInfoItem) {
         APP_LOGE("get InnerModuleInfo by moduleName(%{public}s) failed", moduleName.c_str());
         return false;
+    }
+
+    if (IsRemovableSet(modInfoItem.value(), userId)) {
+        return true;
     }
 
     auto item = modInfoItem->isRemovable.find(std::to_string(userId));
@@ -3944,10 +3994,22 @@ ErrCode InnerBundleInfo::IsModuleRemovable(
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
 
+    const BundleType bundleType = GetApplicationBundleType();
+    if (bundleType != BundleType::ATOMIC_SERVICE) {
+        isRemovable = false;
+        APP_LOGD("bundle type %{public}d is not ATOMIC_SERVICE", static_cast<int>(bundleType));
+        return ERR_OK;
+    }
+
+    if (IsRemovableSet(modInfoItem.value(), userId)) {
+        isRemovable = false;
+        return ERR_OK;
+    }
+
     auto item = modInfoItem->isRemovable.find(std::to_string(userId));
     if (item == modInfoItem->isRemovable.end()) {
         APP_LOGW("userId:%{public}d not moduleName:%{public}s", userId, moduleName.c_str());
-        isRemovable = false;
+        isRemovable = true;
         return ERR_OK;
     }
 
@@ -3990,6 +4052,24 @@ bool InnerBundleInfo::SetModuleRemovable(const std::string &moduleName, bool isE
     return false;
 }
 
+void InnerBundleInfo::SetModuleRemovableSet(
+    const std::string &moduleName, bool isEnable, const int32_t userId, const std::string &callingBundleName)
+{
+    auto moduleIter = innerModuleInfos_.find(moduleName);
+    if (moduleIter == innerModuleInfos_.end()) {
+        return;
+    }
+    std::string stringUserId = std::to_string(userId);
+    std::string callingNameUid = callingBundleName + Constants::UID_SEPARATOR + stringUserId;
+    InnerModuleInfo &innerModuleInfo = moduleIter->second;
+    if (!isEnable) {
+        APP_LOGD("userId:%{public}d callingNameUid:%{public}s", userId, callingNameUid.c_str());
+        innerModuleInfo.isRemovableSet.insert(callingNameUid);
+    } else {
+        APP_LOGD("Delete isRemovableSet item: %{public}s", callingNameUid.c_str());
+        innerModuleInfo.isRemovableSet.erase(callingNameUid);
+    }
+}
 ErrCode InnerBundleInfo::UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex)
 {
     APP_LOGI_NOFUNC("update encrypted key %{public}s %{public}d %{public}d", bundleName.c_str(), isExisted, appIndex);
@@ -4005,11 +4085,22 @@ ErrCode InnerBundleInfo::UpdateAppEncryptedStatus(const std::string &bundleName,
 
 void InnerBundleInfo::DeleteModuleRemovableInfo(InnerModuleInfo &info, const std::string &stringUserId)
 {
+    for (auto it = info.isRemovableSet.begin(); it != info.isRemovableSet.end();) {
+        const std::string &item = *it;
+        size_t pos = item.rfind(Constants::UID_SEPARATOR);
+        if (pos != std::string::npos && item.substr(pos + 1) == stringUserId) {
+            APP_LOGD("Delete isRemovableSet item: %s", item.c_str());
+            it = info.isRemovableSet.erase(it);
+        } else {
+            ++it;
+        }
+    }
     auto item = info.isRemovable.find(stringUserId);
     if (item == info.isRemovable.end()) {
         return;
     }
-
+    APP_LOGD("bundleName:%{public}s moduleName:%{public}s isRemovableSet number:%{public}zu",
+        info.name.c_str(), info.moduleName.c_str(), info.isRemovableSet.size());
     info.isRemovable.erase(stringUserId);
 }
 
@@ -5384,6 +5475,10 @@ bool InnerBundleInfo::ConvertPluginBundleInfo(const std::string &bundleName,
     for (const auto &item : baseAbilityInfos_) {
         pluginBundleInfo.abilityInfos.try_emplace(item.first, InnerAbilityInfo::ConvertToAbilityInfo(item.second));
     }
+    for (const auto &item : baseExtensionInfos_) {
+        pluginBundleInfo.extensionInfos.try_emplace(
+            item.first, InnerExtensionInfo::ConvertToExtensionInfo(item.second));
+    }
     pluginBundleInfo.appInfo = *baseApplicationInfo_;
     pluginBundleInfo.appInfo.arkTSMode = GetApplicationArkTSMode();
     for (const auto &info : innerModuleInfos_) {
@@ -5680,6 +5775,39 @@ void InnerBundleInfo::UpdateHasCloudkitConfig()
     }
 }
 
+std::vector<HapHashAndDeveloperCert> InnerBundleInfo::GetModuleHapHash()
+{
+    std::vector<std::string> noHashHaps;
+    std::vector<HapHashAndDeveloperCert> hapHashAndDeveloperCerts;
+    for (auto it = innerModuleInfos_.begin(); it != innerModuleInfos_.end(); it++) {
+        if (!it->second.hapPath.empty()) {
+            std::string hapHash = it->second.hashValue;
+            // set hapsHash
+            if (hapHash.empty()) {
+                noHashHaps.push_back(it->second.hapPath);
+                continue;
+            }
+            APP_LOGD("Sha256File: %{public}s hash: %{public}s", it->second.hapPath.c_str(), hapHash.c_str());
+            HapHashAndDeveloperCert hap;
+            hap.path = it->second.hapPath;
+            hap.hash = hapHash;
+            hapHashAndDeveloperCerts.emplace_back(hap);
+        }
+    }
+    if (!noHashHaps.empty()) {
+        std::vector<std::string> hapsHash;
+        if (InstalldClient::GetInstance()->HashFiles(noHashHaps, hapsHash) == ERR_OK) {
+            for (size_t i = 0; i < noHashHaps.size(); i++) {
+                HapHashAndDeveloperCert hap;
+                hap.path = noHashHaps[i];
+                hap.hash = hapsHash[i];
+                hapHashAndDeveloperCerts.emplace_back(hap);
+            }
+        }
+    }
+    return hapHashAndDeveloperCerts;
+}
+
 bool InnerBundleInfo::GetModuleDeduplicateHar() const
 {
     bool hasDedupLicateHarInHsp = false;
@@ -5691,6 +5819,47 @@ bool InnerBundleInfo::GetModuleDeduplicateHar() const
         }
     }
     return hasDedupLicateHarInHsp;
+}
+
+std::optional<InnerModuleInfo> InnerBundleInfo::GetInnerModuleInfoForEntry() const
+{
+    for (const auto &innerModuleInfo : innerModuleInfos_) {
+        if (innerModuleInfo.second.isEntry) {
+            return innerModuleInfo.second;
+        }
+    }
+    return std::nullopt;
+}
+
+bool InnerBundleInfo::isAbilityNameExist(const std::string &moduleName, const std::string &abilityName) const
+{
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        if (innerAbilityInfo.name == abilityName && innerAbilityInfo.moduleName == moduleName) {
+            return true;
+        }
+    }
+    APP_LOGE("bundleName: %{public}s not find moduleName:%{public}s, abilityName:%{public}s",
+        GetBundleName().c_str(), moduleName.c_str(), abilityName.c_str());
+    return false;
+}
+
+bool InnerBundleInfo::GetPluginBundleInfoByName(const int32_t userId, const std::string pluginBundleName,
+    PluginBundleInfo &pluginBundleInfo) const
+{
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        APP_LOGD("can not find userId %{public}d when GetPluginBundleInfoByName", userId);
+        return false;
+    }
+    auto item = innerBundleUserInfo.installedPluginSet.find(pluginBundleName);
+    if (item != innerBundleUserInfo.installedPluginSet.end()) {
+        auto it = pluginBundleInfos_.find(pluginBundleName);
+        if (it != pluginBundleInfos_.end()) {
+            pluginBundleInfo = it->second;
+            return true;
+        }
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

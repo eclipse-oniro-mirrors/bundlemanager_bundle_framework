@@ -63,7 +63,12 @@ enum CompressMethod {
 enum ReturnStatus {
     OK = 0,
     STREAM_END = 1,
-    NEED_DICT = 2
+    NEED_DICT = 2,
+    ERRNO = -1,
+    STREAM_ERROR = -2,
+    DATA_ERROR = -3,
+    MEM_ERROR = -4,
+    BUF_ERROR = -5
 };
 
 #define COMPRESS_LEVE_CHECK(level, ret)                                                            \
@@ -367,6 +372,11 @@ napi_value ReturnStatusInit(napi_env env, napi_value exports)
     SetNamedProperty(env, ReturnStatus, "OK", OK);
     SetNamedProperty(env, ReturnStatus, "STREAM_END", STREAM_END);
     SetNamedProperty(env, ReturnStatus, "NEED_DICT", NEED_DICT);
+    SetNamedProperty(env, ReturnStatus, "ERRNO", ERRNO);
+    SetNamedProperty(env, ReturnStatus, "STREAM_ERROR", STREAM_ERROR);
+    SetNamedProperty(env, ReturnStatus, "DATA_ERROR", DATA_ERROR);
+    SetNamedProperty(env, ReturnStatus, "MEM_ERROR", MEM_ERROR);
+    SetNamedProperty(env, ReturnStatus, "BUF_ERROR", BUF_ERROR);
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("ReturnStatus", ReturnStatus),
     };

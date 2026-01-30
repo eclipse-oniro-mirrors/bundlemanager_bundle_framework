@@ -20,6 +20,7 @@
 #include "ability_manager_helper.h"
 #include "account_helper.h"
 #include "bms_extension_data_mgr.h"
+#include "bms_update_selinux_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
@@ -57,6 +58,7 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
     APP_LOGD("InstallCloneApp %{public}s begin", bundleName.c_str());
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
+    startTime_ = BundleUtil::GetCurrentTimeMs();
 
     ErrCode result = ProcessCloneBundleInstall(bundleName, userId, appIndex);
     NotifyBundleEvents installRes = {
@@ -89,6 +91,7 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
     APP_LOGD("UninstallCloneApp %{public}s _ %{public}d begin", bundleName.c_str(), appIndex);
 
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
+    startTime_ = BundleUtil::GetCurrentTimeMs();
 
     ErrCode result = ProcessCloneBundleUninstall(bundleName, userId, appIndex, sync, destroyAppCloneParam);
     auto iter = destroyAppCloneParam.parameters.find(ServiceConstants::BMS_PARA_CLONE_IS_KEEP_DATA);
@@ -98,8 +101,19 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
         result == ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID ||
         result == ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_CLONED) &&
         DeleteUninstalledCloneData(bundleName, userId, appIndex)) {
+        DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId, appIndex);
+        SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, userId, appIndex,
+            false, false, InstallScene::NORMAL, ERR_OK);
         return ERR_OK;
     }
+    
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    if (result == ERR_OK) {
+        if (!sync) {
+            DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, bundleName, appIndex);
+        }
+    }
+#endif
     NotifyBundleEvents installRes = {
         .type = NotifyType::UNINSTALL_BUNDLE,
         .resultCode = result,
@@ -111,8 +125,8 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
         .appIdentifier = appIdentifier_,
         .developerId = GetDeveloperId(bundleName),
         .assetAccessGroups = GetAssetAccessGroups(bundleName),
-        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-        .keepData = isKeepData_
+        .keepData = isKeepData_,
+        .crossAppSharedConfig = isBundleCrossAppSharedConfig_
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -263,7 +277,11 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     appId_ = info.GetAppId();
     appIdentifier_ = info.GetAppIdentifier();
 
-    ScopeGuard createCloneDataDirGuard([&] { RemoveCloneDataDir(bundleName, userId, appIndex, true); });
+    ScopeGuard createCloneDataDirGuard([&] {
+        if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName, userId, appIndex)) {
+            RemoveCloneDataDir(bundleName, userId, appIndex, true);
+        }
+    });
     ErrCode result = CreateCloneDataDir(info, userId, uid, appIndex);
     if (result != ERR_OK) {
         APP_LOGE("InstallCloneApp create clone dir failed");
@@ -360,6 +378,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             APP_LOGE("delete AT failed clone");
         }
+        DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId, appIndex);
     } else {
         isKeepData_ = true;
         UninstallBundleInfo uninstallBundleInfo;
@@ -396,6 +415,9 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     }
 #endif
     UninstallDebugAppSandbox(bundleName, uid_, appIndex, info);
+    if (!isKeepData_) {
+        StopRelable(info, uid_);
+    }
     APP_LOGI("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
 }
@@ -556,7 +578,7 @@ void BundleCloneInstaller::RemoveEl5Dir(InnerBundleUserInfo &userInfo,
     }
     EncryptionParam encryptionParam(key, "", 0, userId, EncryptionDirType::APP);
     if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(encryptionParam) != ERR_OK) {
-        APP_LOGW("delete encryption key id failed");
+        APP_LOGD("delete encryption key id failed");
     }
 }
 
@@ -591,6 +613,9 @@ void BundleCloneInstaller::SendBundleSystemEvent(const std::string &bundleName, 
     sysEventInfo.callingUid = IPCSkeleton::GetCallingUid();
     sysEventInfo.versionCode = versionCode_;
     sysEventInfo.preBundleScene = preBundleScene;
+    sysEventInfo.isKeepData = isKeepData_;
+    sysEventInfo.startTime = startTime_;
+    sysEventInfo.endTime = BundleUtil::GetCurrentTimeMs();
     GetCallingEventInfo(sysEventInfo);
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
 }
@@ -718,6 +743,21 @@ bool BundleCloneInstaller::DeleteUninstallCloneBundleInfo(const std::string &bun
     }
     BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, appIndex);
     return true;
+}
+
+void BundleCloneInstaller::StopRelable(const InnerBundleInfo &info, int32_t uid)
+{
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
+        return;
+    }
+    CreateDirParam param;
+    param.bundleName = info.GetBundleName();
+    param.uid = uid;
+    param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    param.apl = info.GetAppPrivilegeLevel();
+    param.isPreInstallApp = info.IsPreInstallApp();
+    param.stopReason = "ProcessCloneBundleUninstall";
+    InstalldClient::GetInstance()->StopSetFileCon(param, ServiceConstants::StopReason::DELETE);
 }
 } // AppExecFwk
 } // OHOS

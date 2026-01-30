@@ -32,6 +32,7 @@ export default namespace appControl {
 
   export enum UninstallComponentType {
     EXTENSION = 1,
+    UI_EXTENSION = 2
   }
 
   export enum DisposedType {
@@ -122,12 +123,20 @@ export default namespace appControl {
     public appId: string = '';
     public appIndex: int;
     public disposedRule: DisposedRule = new DisposedRuleInner;
+
+    constructor() { }
+    constructor(disposedRule: DisposedRuleInner, appId: string, appIndex: int) {
+        this.disposedRule = disposedRule;
+        this.appId = appId;
+        this.appIndex = appIndex;
+    }
   }
 
   native function setDisposedStatusNative(appId: string, disposedWant: Want, isSync: boolean): void;
   native function getDisposedStatusNative(appId: string, isSync: boolean): Want;
   native function deleteDisposedStatusNative(appId: string, appIndex: int, isSync: boolean): void;
   native function getDisposedRuleNative(appId: string, appIndex: int): DisposedRule;
+  native function getAllDisposedRulesNative(): Array<DisposedRuleConfiguration>;
   native function setDisposedRuleNative(appId: string, rule: DisposedRule, appIndex: int): void;
   native function setUninstallDisposedRuleNative(appIdentifier: string, rule: UninstallDisposedRule, appIndex: int): void;
   native function getUninstallDisposedRuleNative(appIdentifier: string, appIndex: int): UninstallDisposedRule;
@@ -148,13 +157,13 @@ export default namespace appControl {
   }
 
   function setDisposedStatus(appId: string, disposedWant: Want): Promise<void> {
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let cb = (): void => {
         return setDisposedStatusNative(appId, disposedWant, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -172,7 +181,7 @@ export default namespace appControl {
       return getDisposedStatusNative(appId, false);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: Want = e as Want;
       callback(null, result);
     }, (err: Error): void => {
@@ -186,7 +195,7 @@ export default namespace appControl {
         return getDisposedStatusNative(appId, false);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: Want = e as Want;
         resolve(result);
       }, (err: Error): void => {
@@ -213,13 +222,13 @@ export default namespace appControl {
   }
 
   function deleteDisposedStatus(appId: string): Promise<void> {
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let cb = (): void => {
         return deleteDisposedStatusNative(appId, 0, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -238,6 +247,11 @@ export default namespace appControl {
   {
     let appIndexInfo = appIndex ?? 0;
     return getDisposedRuleNative(appId, appIndexInfo);
+  }
+
+  function getAllDisposedRules(): Array<DisposedRuleConfiguration>
+  {
+    return getAllDisposedRulesNative();
   }
 
   function setDisposedRule(appId: string, rule: DisposedRule, appIndex?: int): void

@@ -35,6 +35,8 @@ struct CreateDirParam : public Parcelable {
     bool isPreInstallApp = false;
     bool debug = false;
     bool isDlpSandbox = false;
+    bool isExtensionDir = false;
+    bool isContainsEl5Dir = false;
     CreateDirFlag createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
     DataDirEl dataDirEl = DataDirEl::NONE;
     int32_t userId = -1;
@@ -45,6 +47,9 @@ struct CreateDirParam : public Parcelable {
     std::string apl;
     std::vector<std::string> extensionDirs;
     std::string uuid;
+    int32_t dlpType = 0;
+    uint32_t remainingNum = 0;
+    std::string stopReason;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

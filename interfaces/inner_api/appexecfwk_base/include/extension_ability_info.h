@@ -84,6 +84,7 @@ enum class ExtensionAbilityType {
     FAULT_LOG = 33,
     NOTIFICATION_SUBSCRIBER = 34,
     CRYPTO = 35,
+    PARTNER_AGENT = 36,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
@@ -122,7 +123,9 @@ enum class ExtensionAbilityType {
     SYS_VISUAL = 505,
     RECENT_PHOTO = 506,
     AWC_WEBPAGE = 507,
-    AWC_NEWSFEED = 508
+    AWC_NEWSFEED = 508,
+    CONTENT_EMBED = 509,
+    EMBEDDED_CASHIER = 510
 };
 
 enum class CompileMode {

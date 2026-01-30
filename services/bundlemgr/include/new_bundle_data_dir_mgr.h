@@ -41,6 +41,8 @@ public:
     bool AddAllUserId(const std::set<int32_t> userIds);
     bool DeleteUserId(const int32_t userId);
     bool ProcessOtaBundleDataDir(const std::string &bundleName, const int32_t userId);
+    std::set<std::string> GetAllBundleDataDirEl5BundleName(const int32_t userId);
+    bool ProcessOtaBundleDataDirEl5(const int32_t userId);
 
 private:
     uint32_t GetNewBundleDataDirType(const std::string &bundleName, const int32_t userId);

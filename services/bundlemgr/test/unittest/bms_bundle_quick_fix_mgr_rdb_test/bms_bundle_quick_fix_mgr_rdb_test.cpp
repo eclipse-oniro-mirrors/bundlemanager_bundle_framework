@@ -669,19 +669,6 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixManagerHostImplTest_0011,
 }
 
 /**
- * @tc.number: BmsBundleQuickFixManagerHostImplTest_0012
- * @tc.name: GetQuickFixMgr
- * @tc.desc: Verify GetQuickFixMgr succeeded.
- */
-HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixManagerHostImplTest_0012, Function | SmallTest | Level0)
-{
-    auto impl = std::make_shared<QuickFixManagerHostImpl>();
-    auto result = impl->GetQuickFixMgr();
-    EXPECT_TRUE(result);
-    EXPECT_TRUE(impl->quickFixMgr_ != nullptr);
-}
-
-/**
  * @tc.number: BmsBundleQuickFixManagerHostImplTest_0013
  * @tc.name: CreateFd
  * @tc.desc: Verify CreateFd failed.

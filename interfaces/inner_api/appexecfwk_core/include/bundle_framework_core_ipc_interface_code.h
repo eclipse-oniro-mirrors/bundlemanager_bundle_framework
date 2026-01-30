@@ -234,7 +234,17 @@ enum class BundleMgrInterfaceCode : uint32_t {
     RECOVER_BACKUP_BUNDLE_DATA = 208,
     REMOVE_BACKUP_BUNDLE_DATA = 209,
     CREATE_NEW_BUNDLE_EL5_DIR = 210,
-    BATCH_GET_COMPATIBLED_DEVICE_TYPE = 211,
+    GET_BUNDLE_INSTALL_STATUS = 211,
+    GET_ALL_JSON_PROFILE = 212,
+    GET_BUNDLE_INFO_FOR_EXCEPTION = 213,
+    BATCH_GET_COMPATIBLED_DEVICE_TYPE = 214,
+    GET_ALL_APP_PROVISION_INFO = 215,
+    ADD_DYNAMIC_SHORTCUT_INFOS = 216,
+    DELETE_DYNAMIC_SHORTCUT_INFOS = 217,
+    GET_ASSET_GROUPS_INFOS_BY_UID = 218,
+    SET_SHORTCUTS_ENABLED = 219,
+    GET_PLUGIN_EXTENSION_INFO = 220,
+    AUTO_CLEAN_CACHE_BY_INODE = 221,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -294,6 +304,9 @@ enum class BundleInstallerInterfaceCode : uint8_t {
     INSTALL_EXISTED = 13,
     INSTALL_PLUGIN_APP = 14,
     UNINSTALL_PLUGIN_APP = 15,
+    ADD_ENTERPRISE_RESIGN_CERT = 16,
+    DELETE_ENTERPRISE_RE_SIGNATURE_CERT = 17,
+    GET_ENTERPRISE_RE_SIGNATURE_CERT = 18,
 };
 
 /* SAID: 401-28 Interface No.28 subservice also provides the following interfaces */
@@ -334,6 +347,7 @@ enum class DefaultAppInterfaceCode : uint8_t {
     GET_DEFAULT_APPLICATION = 1,
     SET_DEFAULT_APPLICATION = 2,
     RESET_DEFAULT_APPLICATION = 3,
+    SET_DEFAULT_APPLICATION_FOR_APP_CLONE = 4,
 };
 
 /* SAID: 401-100 Interface No.100 subservice also provides the following interfaces */
@@ -381,6 +395,7 @@ enum class BundleResourceInterfaceCode : uint8_t {
     DELETE_RESOURCE_INFO = 6,
     GET_EXTENSION_ABILITY_RESOURCE_INFO = 7,
     GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO = 8,
+    GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST = 9,
 };
 
 /* SAID: 401-127 Interface No.127 subservice also provides the following interfaces */

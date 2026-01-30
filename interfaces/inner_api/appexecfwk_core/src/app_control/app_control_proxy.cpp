@@ -789,7 +789,7 @@ bool AppControlProxy::WriteStringVector(const std::vector<std::string> &stringVe
 template<typename T>
 bool AppControlProxy::WriteParcelableVector(const std::vector<T> &parcelableVector, MessageParcel &data)
 {
-    data.SetDataCapacity(Constants::CAPACITY_SIZE);
+    data.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
     if (!data.WriteInt32(parcelableVector.size())) {
         LOG_E(BMS_TAG_DEFAULT, "write ParcelableVector failed");
         return false;

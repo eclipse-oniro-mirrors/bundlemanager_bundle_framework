@@ -43,7 +43,9 @@
 #include "bundle_exception_handler.h"
 #include "clean_cache_callback_proxy.h"
 #include "directory_ex.h"
+#include "event_report.h"
 #include "hidump_helper.h"
+#include "inner_event_report.h"
 #include "install_param.h"
 #include "extension_ability_info.h"
 #include "installd/installd_service.h"
@@ -159,6 +161,7 @@ const std::string TEST_URI_HTTP = "http://www.test.com";
 const std::string META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr int32_t MOCK_BUNDLE_MGR_EXT_FLAG = 10;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
+const std::vector<std::string> TEST_SHORTCUT_ID = {"shortcutId1", "shortcutId2"};
 const nlohmann::json APP_LIST0 = R"(
 {
     "app_list": [
@@ -317,7 +320,7 @@ const int ABILITYINFOS_SIZE_2 = 2;
 const int32_t USERID = 100;
 const int32_t MULTI_USERID = 101;
 const int32_t TEST_USERID = 1001;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
 const int32_t SPACE_SIZE = 0;
@@ -2524,6 +2527,31 @@ HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostHandleDeleteDesktopShortcutInfo_000
 }
 
 /**
+ * @tc.number: DesktopShortcutEvent_001
+ * @tc.name: DesktopShortcutEvent_001
+ * @tc.desc: test DesktopShortcutEvent_001
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DesktopShortcutEvent_001, Function | MediumTest | Level1)
+{
+    EXPECT_NO_THROW(EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, 100,
+        "com.test.bundle", 0, "test_shortcut_id", 5523, 0));
+    EXPECT_NO_THROW(EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::ADD, 100,
+        "com.test.bundle", 0, "test_shortcut_id", 5523, 0));
+}
+
+/**
+ * @tc.number: DesktopShortcutEvent_001
+ * @tc.name: DesktopShortcutEvent_001
+ * @tc.desc: test DesktopShortcutEvent_001
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DesktopShortcutEvent_002, Function | MediumTest | Level1)
+{
+    EventInfo eventInfo;
+    EXPECT_NO_THROW(InnerEventReport::InnerSendDesktopShortcutEvent(eventInfo));
+}
+
+
+/**
  * @tc.number: BundleMgrHostHandleGetAllDesktopShortcutInfo_0001
  * @tc.name: BundleMgrHostHandleGetAllDesktopShortcutInfo_0001
  * ShortcutInfo
@@ -2615,6 +2643,54 @@ HWTEST_F(BmsBundleDataMgrTest3, GetBundleInfosForContinuation_0100, Function | S
     ResetDataMgr();
     GetBundleDataMgr()->GetBundleInfosForContinuation(bundleInfos);
     EXPECT_TRUE(bundleInfos.empty());
+}
+
+/**
+ * @tc.number: GetBundleInfosForContinuation_0200
+ * @tc.name: test GetBundleInfosForContinuation
+ * @tc.desc: 1.system run normally
+ *           2.check GetBundleInfosForContinuation success
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetBundleInfosForContinuation_0200, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    std::vector<BundleInfo> bundleInfos;
+    BundleInfo bundleInfo;
+    HapModuleInfo hapModuleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.continuable = true;
+    hapModuleInfo.abilityInfos.push_back(abilityInfo);
+    bundleInfo.hapModuleInfos.push_back(hapModuleInfo);
+    bundleInfos.push_back(bundleInfo);
+
+    GetBundleDataMgr()->GetBundleInfosForContinuation(bundleInfos);
+    EXPECT_FALSE(bundleInfos.empty());
+    EXPECT_EQ(bundleInfos.size(), 1);
+}
+
+/**
+ * @tc.number: GetBundleInfosForContinuation_0300
+ * @tc.name: test GetBundleInfosForContinuation
+ * @tc.desc: 1.system run normally
+ *           2.check GetBundleInfosForContinuation success
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetBundleInfosForContinuation_0300, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    std::vector<BundleInfo> bundleInfos;
+    BundleInfo bundleInfo;
+    HapModuleInfo hapModuleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.continuable = true;
+    hapModuleInfo.abilityInfos.push_back(abilityInfo);
+    bundleInfo.hapModuleInfos.push_back(hapModuleInfo);
+    BundleInfo bundleInfo1;
+    bundleInfos.push_back(bundleInfo);
+    bundleInfos.push_back(bundleInfo1);
+
+    GetBundleDataMgr()->GetBundleInfosForContinuation(bundleInfos);
+    EXPECT_FALSE(bundleInfos.empty());
+    EXPECT_EQ(bundleInfos.size(), 1);
 }
 
 /**
@@ -3383,11 +3459,11 @@ HWTEST_F(BmsBundleDataMgrTest3, RegisterPluginEventCallback_0001, Function | Med
     ErrCode ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 
-    sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
-    ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback2);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-
     setuid(Constants::FOUNDATION_UID);
+    ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+
+    sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
     ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback2);
     setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_OK);
@@ -3405,11 +3481,11 @@ HWTEST_F(BmsBundleDataMgrTest3, UnregisterPluginEventCallback_0001, Function | M
     ErrCode ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 
-    sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
-    ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback2);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-
     setuid(Constants::FOUNDATION_UID);
+    ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+
+    sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
     ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback2);
     setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_OK);
@@ -3789,5 +3865,220 @@ HWTEST_F(BmsBundleDataMgrTest3, DeleteUninstallCloneBundleInfo_0006, Function | 
     EXPECT_FALSE(ret);
     bundleDataMgr->uninstallDataMgr_ = std::make_shared<UninstallDataMgrStorageRdb>();
     EXPECT_NE(bundleDataMgr->uninstallDataMgr_, nullptr);
+}
+
+/**
+ * @tc.number: IsQueryAbilityInfoExt_0001
+ * @tc.name: IsQueryAbilityInfoExt
+ * @tc.desc: test IsQueryAbilityInfoExt
+ */
+HWTEST_F(BmsBundleDataMgrTest3, IsQueryAbilityInfoExt_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    localBundleMgrHostImpl->isBrokerServiceExisted_ = true;
+    uint32_t flag = static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION);
+    bool ret = localBundleMgrHostImpl->IsQueryAbilityInfoExt(flag);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsQueryAbilityInfoExt_0002
+ * @tc.name: IsQueryAbilityInfoExt
+ * @tc.desc: test IsQueryAbilityInfoExt
+ */
+HWTEST_F(BmsBundleDataMgrTest3, IsQueryAbilityInfoExt_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    localBundleMgrHostImpl->isBrokerServiceExisted_ = true;
+    uint32_t flag = static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXT);
+    bool ret = localBundleMgrHostImpl->IsQueryAbilityInfoExt(flag);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsQueryAbilityInfoExt_0003
+ * @tc.name: IsQueryAbilityInfoExt
+ * @tc.desc: test IsQueryAbilityInfoExt
+ */
+HWTEST_F(BmsBundleDataMgrTest3, IsQueryAbilityInfoExt_0003, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    localBundleMgrHostImpl->isBrokerServiceExisted_ = false;
+    uint32_t flag = static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION);
+    bool ret = localBundleMgrHostImpl->IsQueryAbilityInfoExt(flag);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsQueryBundleInfoExt_0001
+ * @tc.name: IsQueryBundleInfoExt
+ * @tc.desc: test IsQueryBundleInfoExt
+ */
+HWTEST_F(BmsBundleDataMgrTest3, IsQueryBundleInfoExt_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    localBundleMgrHostImpl->isBrokerServiceExisted_ = true;
+    uint32_t flag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    bool ret = localBundleMgrHostImpl->IsQueryBundleInfoExt(flag);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsQueryBundleInfoExt_0002
+ * @tc.name: IsQueryBundleInfoExt
+ * @tc.desc: test IsQueryBundleInfoExt
+ */
+HWTEST_F(BmsBundleDataMgrTest3, IsQueryBundleInfoExt_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    localBundleMgrHostImpl->isBrokerServiceExisted_ = true;
+    uint32_t flag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT);
+    bool ret = localBundleMgrHostImpl->IsQueryBundleInfoExt(flag);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsQueryBundleInfoExt_0003
+ * @tc.name: IsQueryBundleInfoExt
+ * @tc.desc: test IsQueryBundleInfoExt
+ */
+HWTEST_F(BmsBundleDataMgrTest3, IsQueryBundleInfoExt_0003, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    localBundleMgrHostImpl->isBrokerServiceExisted_ = false;
+    uint32_t flag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    bool ret = localBundleMgrHostImpl->IsQueryBundleInfoExt(flag);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: HandleAddDynamicShortcutInfos_0001
+ * @tc.name: test HandleAddDynamicShortcutInfos
+ * @tc.desc: test HandleAddDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest3, HandleAddDynamicShortcutInfos_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    data.WriteInt32(100);
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleAddDynamicShortcutInfos(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleDeleteDynamicShortcutInfos_0001
+ * @tc.name: test HandleDeleteDynamicShortcutInfos
+ * @tc.desc: test HandleDeleteDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest3, HandleDeleteDynamicShortcutInfos_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    data.WriteString(BUNDLE_TEST1);
+    data.WriteInt32(0);
+    data.WriteInt32(100);
+    data.WriteStringVector(TEST_SHORTCUT_ID);
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleDeleteDynamicShortcutInfos(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleDeleteDynamicShortcutInfos_0002
+ * @tc.name: test HandleDeleteDynamicShortcutInfos
+ * @tc.desc: test HandleDeleteDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest3, HandleDeleteDynamicShortcutInfos_0002, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    data.WriteString(BUNDLE_TEST1);
+    data.WriteInt32(0);
+    data.WriteInt32(100);
+    std::vector<std::string> ids;
+    ids.resize(101);
+    data.WriteStringVector(ids);
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleDeleteDynamicShortcutInfos(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleHandleSetShortcutsEnabled_0001
+ * @tc.name: test HandleSetShortcutsEnabled
+ * @tc.desc: test HandleSetShortcutsEnabled
+ */
+HWTEST_F(BmsBundleDataMgrTest3, HandleHandleSetShortcutsEnabled_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    data.WriteInt32(100);
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleSetShortcutsEnabled(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GenerateBundleId_0100
+ * @tc.name: GenerateBundleId
+ * @tc.desc: test GenerateBundleId
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GenerateBundleId_0100, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+
+    int32_t bundleId = 0;
+    std::string bundleName = BUNDLE_TEST1;
+    int32_t uid = bundleDataMgr->baseAppUid_;
+    // bundleIdMap is empty
+    auto ret = bundleDataMgr->GenerateBundleId(bundleName, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // bundle exist
+    ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST1, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleId, uid);
+
+    // bundle not exist
+    ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST2, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleId, uid + 1);
+
+    bundleDataMgr->bundleIdMap_.emplace(MAX_APP_UID, BUNDLE_TEST3);
+    ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST4, bundleId);
+    EXPECT_EQ(bundleId, uid + 2);
+
+    for (int i = uid + 3; i <= MAX_APP_UID; ++i) {
+        std::string tempBundleName = std::string("bundleName_") + std::to_string(i);
+        bundleDataMgr->bundleIdMap_.emplace(i, tempBundleName);
+    }
+    ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST5, bundleId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER);
+}
+
+/**
+ * @tc.number: LauncherService_0100
+ * @tc.name: GetShortcutInfoByAppIndex bundle not exist
+ * @tc.desc: Should return bundle not exist error
+ */
+HWTEST_F(BmsBundleDataMgrTest3, LauncherService_0100, Function | MediumTest | Level1)
+{
+    auto launcherService = GetLauncherService();
+    ASSERT_NE(launcherService, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = launcherService->GetShortcutInfoByAppIndex(
+        "not.exist.bundle", 0, shortcutInfos);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 } // OHOS

@@ -51,9 +51,10 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
     APP_LOGI("-n %{public}s -u %{public}d begin", bundleName.c_str(), userId);
 
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    if (bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId)) {
+    ErrCode result = bmsExtensionDataMgr.CheckAppBlackList(bundleName, userId);
+    if (result != ERR_OK) {
         APP_LOGE("app %{public}s is in blocklist", bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
+        return result;
     }
 
     if (GetDataMgr() != ERR_OK) {
@@ -61,7 +62,7 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
     }
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
-    ErrCode result = ProcessBundleInstall(bundleName, userId);
+    result = ProcessBundleInstall(bundleName, userId);
     NotifyBundleEvents installRes = {
         .type = NotifyType::INSTALL,
         .resultCode = result,
@@ -286,6 +287,12 @@ void BundleMultiUserInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t
 
 ErrCode BundleMultiUserInstaller::RemoveDataDir(const std::string bundleName, int32_t userId)
 {
+    if (GetDataMgr() != ERR_OK) {
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    if (dataMgr_ -> GetUninstallBundleInfoWithUserAndAppIndex(bundleName, userId, Constants::INITIAL_APP_INDEX)) {
+        return ERR_OK;
+    }
     std::string key = bundleName;
     ErrCode ret = InstalldClient::GetInstance()->RemoveBundleDataDir(key, userId);
     if (ret != ERR_OK) {

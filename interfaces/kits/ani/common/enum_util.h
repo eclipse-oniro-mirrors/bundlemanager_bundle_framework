@@ -52,13 +52,15 @@ constexpr const char* CLASSNAME_BUNDLE_LAUNCH_MODE = "@ohos.bundle.bundle.Launch
 constexpr const char* CLASSNAME_ZLIB_COMPRESS_LEVEL = "@ohos.zlib.zlib.CompressLevel";
 constexpr const char* CLASSNAME_ZLIB_MEM_LEVEL = "@ohos.zlib.zlib.MemLevel";
 constexpr const char* CLASSNAME_ZLIB_COMPRESS_STRATEGY = "@ohos.zlib.zlib.CompressStrategy";
-constexpr const char* CLASSNAME_ZLIB_PATHSEPARATORSTRATRGY = "L@ohos/zlib/zlib/PathSeparatorStrategy;";
+constexpr const char* CLASSNAME_ZLIB_PATHSEPARATORSTRATRGY = "@ohos.zlib.zlib.PathSeparatorStrategy";
 constexpr const char* CLASSNAME_ZLIB_RETURN_STATUS = "@ohos.zlib.zlib.ReturnStatus";
 constexpr const char* CLASSNAME_APPCONTROL_COMPONENT_TYPE = "@ohos.bundle.appControl.appControl.ComponentType";
 constexpr const char* CLASSNAME_APPCONTROL_DISPOSED_TYPE = "@ohos.bundle.appControl.appControl.DisposedType";
 constexpr const char* CLASSNAME_APPCONTROL_CONTROL_TYPE = "@ohos.bundle.appControl.appControl.ControlType";
 constexpr const char* CLASSNAME_APPCONTROL_UNINSTALL_COMPONENT_TYPE =
     "@ohos.bundle.appControl.appControl.UninstallComponentType";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_INSTALL_STATUS =
+    "@ohos.bundle.bundleManager.bundleManager.BundleInstallStatus";
 } // namespace CommonFunAniNS
 class EnumUtils {
 private:
@@ -181,11 +183,13 @@ private:
         APP_SERVICE = 29,
         LIVE_FORM = 30,
         WEB_NATIVE_MESSAGING = 32,
+        FAULT_LOG = 33,
         NOTIFICATION_SUBSCRIBER = 34,
         CRYPTO = 35,
+        PARTNER_AGENT = 36,
         UNSPECIFIED = 255
     } */
-    static constexpr std::array<int, 33> Array_BundleManager_ExtensionAbilityType = {
+    static constexpr std::array<int, 35> Array_BundleManager_ExtensionAbilityType = {
         0,
         1,
         2,
@@ -216,8 +220,10 @@ private:
         29,
         30,
         32,
+        33,
         34,
         35,
+        36,
         255,
     };
     /* bundleManager.ApplicationFlag
@@ -415,6 +421,17 @@ public:
             env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APPLICATION_FLAG, value, Array_BundleManager_ApplicationFlag);
     }
 
+    /* bundleManager.BundleInstallStatus
+    enum BundleInstallStatus {
+        BUNDLE_NOT_EXIST = 1,
+        BUNDLE_INSTALLING = 2,
+        BUNDLE_INSTALLED = 3
+    }*/
+    static inline ani_enum_item EnumNativeToETS_BundleManager_BundleInstallStatus(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_BUNDLE_INSTALL_STATUS, value, 1);
+    }
+
     /* bundleManager.CompatiblePolicy
     enum CompatiblePolicy {
         BACKWARD_COMPATIBILITY = 1
@@ -535,6 +552,7 @@ public:
     /* appControl.UninstallComponentType
     enum UninstallComponentType {
         EXTENSION = 1,
+        UI_EXTENSION = 2
     } */
     static inline ani_enum_item EnumNativeToETS_AppControl_UninstallComponentType(ani_env* env, const int32_t value)
     {

@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_APP_CONTROL_MANAGER_H
 #define FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_APP_CONTROL_MANAGER_H
 
+#include <atomic>
 #include <mutex>
 #include <unordered_map>
 
@@ -104,11 +105,13 @@ public:
     ErrCode SetUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
         const UninstallDisposedRule& rule, int32_t appIndex, int32_t userId);
 
-    ErrCode GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
-        int32_t userId, UninstallDisposedRule& rule);
+    ErrCode GetUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
+        int32_t appIndex, int32_t userId, UninstallDisposedRule& rule);
 
     ErrCode DeleteUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
         int32_t appIndex, int32_t userId);
+
+    ErrCode DeleteAllDisposedRulesForUser(int32_t userId);
 
 private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
@@ -134,7 +137,7 @@ private:
     ErrCode CheckAppControlRuleIntercept(const std::string &bundleName,
         int32_t userId, bool isSuccess, AppRunningControlRuleResult &controlRuleResult);
 
-    bool isAppInstallControlEnabled_ = false;
+    std::atomic<bool> isAppInstallControlEnabled_  { false };
     std::mutex appRunningControlMutex_;
     std::mutex abilityRunningControlRuleMutex_;
     std::mutex runningRuleSettingStatusMutex_;

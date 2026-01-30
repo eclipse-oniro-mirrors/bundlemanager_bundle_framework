@@ -368,7 +368,6 @@ ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId, int32_
     if (iter != appRunningControlRuleResult_.end()) {
         appRunningControlRuleResult_.erase(iter);
     }
-    commonEventMgr_->NotifyDeleteDisposedRule(appId, userId, Constants::MAIN_APP_INDEX);
     return ERR_OK;
 }
 
@@ -673,7 +672,6 @@ ErrCode AppControlManager::DeleteDisposedRule(
     std::string appIdKey = GenerateAppRunningRuleCacheKey(appId, userId, appIndex);
     std::string transformedAppIdKey = GenerateAppRunningRuleCacheKey(transformedAppId, userId, appIndex);
     DeleteAbilityRunningRuleCache({ appIdKey, transformedAppIdKey});
-    commonEventMgr_->NotifyDeleteDisposedRule(appId, userId, appIndex);
     return ERR_OK;
 }
 
@@ -712,6 +710,20 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const InnerBundleInfo &
         std::string ruleCacheKey = key + std::to_string(index);
         DeleteAbilityRunningRuleCache({ ruleCacheKey });
         commonEventMgr_->NotifyDeleteDisposedRule(appId, userId, index);
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManager::DeleteAllDisposedRulesForUser(int32_t userId)
+{
+    if (appControlManagerDb_ == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManagerDb is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto ret = appControlManagerDb_->DeleteAllDisposedRulesForUser(userId);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "rdb delete failed userId:%{public}d", userId);
+        return ret;
     }
     return ERR_OK;
 }
@@ -877,10 +889,10 @@ ErrCode AppControlManager::SetUninstallDisposedRule(const std::string &callerNam
     return ERR_OK;
 }
 
-ErrCode AppControlManager::GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
-    int32_t userId, UninstallDisposedRule& rule)
+ErrCode AppControlManager::GetUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
+    int32_t appIndex, int32_t userId, UninstallDisposedRule& rule)
 {
-    auto ret = appControlManagerDb_->GetUninstallDisposedRule(appIdentifier, appIndex, userId, rule);
+    auto ret = appControlManagerDb_->GetUninstallDisposedRule(callerName, appIdentifier, appIndex, userId, rule);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "get from rdb failed");
         return ret;

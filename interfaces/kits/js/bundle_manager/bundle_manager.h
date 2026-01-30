@@ -312,6 +312,12 @@ struct AppProvisionInfoCallbackInfo : public BaseCallbackInfo {
     AppProvisionInfo appProvisionInfo;
 };
 
+struct AllAppProvisionInfoCallbackInfo : public BaseCallbackInfo {
+    explicit AllAppProvisionInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<AppProvisionInfo> appProvisionInfos;
+};
+
 struct RecoverableApplicationCallbackInfo : public BaseCallbackInfo {
     explicit RecoverableApplicationCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
 
@@ -379,6 +385,7 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info);
 napi_value GetAllSharedBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info);
+napi_value GetAllAppProvisionInfo(napi_env env, napi_callback_info info);
 napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info);
 napi_value GetAdditionalInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info);

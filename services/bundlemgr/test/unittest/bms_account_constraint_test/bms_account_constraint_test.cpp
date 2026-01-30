@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2025 Huawei Device Co., Ltd.
+* Copyright (c) 2025-2026 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -42,7 +42,7 @@ using OHOS::Parcel;
 
 namespace OHOS {
 namespace {
-const int32_t WAIT_TIME = 1;
+const int32_t WAIT_TIME = 2;
 constexpr int32_t USER_ID = 100;
 }  // namespace
 
@@ -125,6 +125,65 @@ HWTEST_F(BmsAccountConstraintTest, CheckOsAccountConstraintEnabled_0002, Functio
     int32_t uid = 0;
     auto ret = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT);
+}
+
+/**
+ * @tc.number: InnerProcessBundleInstall_0001
+ * @tc.name: CleanArkStartupCache
+ * @tc.desc: test CleanArkStartupCache
+ */
+HWTEST_F(BmsAccountConstraintTest, InnerProcessBundleInstall_0001, Function | MediumTest | Level1)
+{
+    auto bundleName = "com.example.helloworld";
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetSingleton(false);
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>(bundleName, innerBundleInfo));
+    InnerBundleInfo oldInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    oldInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    InstallParam installParam;
+    installParam.needSavePreInstallInfo = false;
+    installParam.isPatch = true;
+    int32_t uid = 0;
+
+    BaseBundleInstaller installer;
+    installer.bundleName_ = bundleName;
+    installer.isAppExist_ = true;
+    installer.userId_ = -3;
+    installer.InitDataMgr();
+    installer.dataMgr_->bundleInfos_.emplace(bundleName, oldInfo);
+    auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED);
+}
+
+/**
+ * @tc.number: InnerProcessBundleInstall_0002
+ * @tc.name: CleanArkStartupCache
+ * @tc.desc: test CleanArkStartupCache
+ */
+HWTEST_F(BmsAccountConstraintTest, InnerProcessBundleInstall_0002, Function | MediumTest | Level1)
+{
+    auto bundleName = "com.example.helloworld";
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetSingleton(false);
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>(bundleName, innerBundleInfo));
+    InnerBundleInfo oldInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    oldInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    InstallParam installParam;
+    installParam.needSavePreInstallInfo = false;
+    int32_t uid = 0;
+
+    BaseBundleInstaller installer;
+    installer.bundleName_ = bundleName;
+    installer.isAppExist_ = true;
+    installer.userId_ = -3;
+    installer.InitDataMgr();
+    installer.dataMgr_->bundleInfos_.emplace(bundleName, oldInfo);
+    auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_GET_INSTALL_TEMP_BUNDLE_ERROR);
 }
 
 /**

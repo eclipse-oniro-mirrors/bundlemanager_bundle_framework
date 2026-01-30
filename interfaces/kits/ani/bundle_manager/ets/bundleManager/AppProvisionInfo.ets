@@ -26,6 +26,7 @@ export interface AppProvisionInfo {
   readonly issuer: string;
   readonly appIdentifier: string;
   readonly organization: string;
+  readonly bundleName?: string;
 }
 
 export interface Validity {

@@ -24,6 +24,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace DesktopShortcutOperation {
+    constexpr const char* ADD = "ADD";
+    constexpr const char* DELETE = "DEL";
+}
 enum class BMSEventType : uint8_t {
     UNKNOW = 0,
     /***********FAULT EVENT**************/
@@ -55,6 +59,8 @@ enum class BMSEventType : uint8_t {
     DATA_PARTITION_USAGE_EVENT,
     DEFAULT_APP,
     QUERY_BUNDLE_INFO,
+    BUNDLE_DYNAMIC_SHORTCUTINFO,
+    DESKTOP_SHORTCUT,
 };
 
 enum class BundleEventType : uint8_t {
@@ -145,6 +151,9 @@ struct EventInfo {
     // abc compressed
     bool isAbcCompressed = false;
 
+    // is keepdata for unisntall
+    bool isKeepData = false;
+
     InstallScene preBundleScene = InstallScene::NORMAL;
 
     // only used in user event
@@ -172,6 +181,8 @@ struct EventInfo {
     ErrCode errCode = ERR_OK;
     int64_t costTimeSeconds = 0;
     int64_t timeStamp = 0;
+    int64_t startTime = 0;
+    int64_t endTime = 0;
     int64_t freeSize = 0;
     int32_t errorCode = 0;
     int32_t rebuildType = 0;
@@ -215,7 +226,11 @@ struct EventInfo {
     std::vector<std::string> bundleNameList;
     std::vector<std::string> callingAppIdList;
     std::vector<std::string> callingBundleNameList;
-    
+
+    // for dynamic shortcut create/delete
+    std::string shortcutOperationType;
+    std::string shortcutIds;
+
     std::string want;
     std::string utd;
 
@@ -282,6 +297,8 @@ struct EventInfo {
         targetAPIVersion = 0;
         minAPIVersion = 0;
         uid = 0;
+        shortcutOperationType.clear();
+        shortcutIds.clear();
         isAbcCompressed = false;
     }
 };
@@ -417,9 +434,35 @@ public:
      * @param callingName Indicates method caller
      * @param want Indicates the want
      * @param utd Indicates the utd
+     * @param appIndex Indicates the appIndex
      */
-    static void SendDefaultAppEvent(DefaultAppActionType actionType, int32_t userId, const std::string& callingName,
-        const std::string& want, const std::string& utd);
+    static void SendDefaultAppEvent(DefaultAppActionType actionType, int32_t userId, const int32_t appIndex,
+        const std::string& callingName, const std::string& want, const std::string& utd);
+
+    /**
+     * @brief Send info when add or delete dynamic shortcuts.
+     * @param bundleName Indicates the bundleName.
+     * @param userId Indicates the shortcutIds.
+     * @param shortcutIds set default app method type.
+     * @param operationType Operation types include Add and Delete.
+     * @param callingUid Indicates method caller uid.
+     */
+    static void SendDynamicShortcutEvent(const std::string &bundleName, int32_t userId,
+        const std::vector<std::string> &shortcutIds, const std::string &operationType, int32_t callingUid);
+    
+    /**
+     * @brief Send info when add or delete desktop shortcuts.
+     * @param operationType Operation types include Add and Delete.
+     * @param userId Indicates the shortcutIds.
+     * @param bundleName Indicates the bundleName.
+     * @param appIndex Indicates the app index for clone app.
+     * @param shortcutId Indicates the shortcut id.
+     * @param callingUid Indicates method caller uid.
+     * @param result Indicates method result.
+     */
+    static void SendDesktopShortcutEvent(const std::string &operationType, int32_t userId,
+        const std::string &bundleName, int32_t appIndex, const std::string &shortcutId, int32_t callingUid,
+        int32_t result);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

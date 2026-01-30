@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
+#include "bundle_option.h"
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "bundle_resource_host_impl.h"
 #endif
@@ -214,7 +215,10 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0009, TestSize.Leve
     std::string bundleName = "com.example.test";
     int32_t userId = 0;
     uint64_t cleanCacheSize = 0;
-    auto ret = localBundleMgrHostImpl->CleanBundleCacheFilesGetCleanSize(bundleName, userId, cleanCacheSize);
+    CleanType cleanType = CleanType::CACHE_SPACE;
+    int32_t appIndex = 0;
+    auto ret = localBundleMgrHostImpl->CleanBundleCacheFilesGetCleanSize(bundleName, userId, cleanType, appIndex,
+        cleanCacheSize);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
@@ -870,12 +874,45 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0048, TestSize.Leve
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
-/**
+/*
  * @tc.number: BundleMgrHostImpl_0049
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetBundleInstallStatus SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0049, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "bundle";
+    int32_t userId = 100;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto ret = localBundleMgrHostImpl->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    EXPECT_EQ(status, BundleInstallStatus::UNKNOWN_STATUS);
+}
+
+/*
+ * @tc.number: BundleMgrHostImpl_0050
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetAllJsonProfile SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0050, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::vector<JsonProfileInfo> profileInfos;
+    int32_t userId = 100;
+    auto ret = localBundleMgrHostImpl->GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, userId, profileInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0051
  * @tc.name: BmsSystemAppPermissionDeniedTest
  * @tc.desc: BatchGetCompatibleDeviceType SystemAppPermission Denied
  */
-HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0049, TestSize.Level1)
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0051, TestSize.Level1)
 {
     std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
     ASSERT_NE(localBundleMgrHostImpl, nullptr);
@@ -886,6 +923,85 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0049, TestSize.Leve
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
+/*
+ * @tc.number: BundleMgrHostImpl_0052
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: AddDynamicShortcutInfos SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0052, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    int32_t userId = 100;
+    auto ret = localBundleMgrHostImpl->AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/*
+ * @tc.number: BundleMgrHostImpl_0053
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: DeleteDynamicShortcutInfos SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0053, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    std::vector<std::string> ids;
+    auto ret = localBundleMgrHostImpl->DeleteDynamicShortcutInfos(bundleName, appIndex, userId, ids);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/*
+ * @tc.number: BundleMgrHostImpl_0054
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: SetShortcutsEnabled SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0054, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool isEnabled = false;
+    auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/*
+ * @tc.number: BundleMgrHostImpl_0055
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetLaunchWantForBundle SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0055, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    Want want;
+    int32_t userId = BundleUtil::GetUserIdByCallingUid();
+    auto ret = localBundleMgrHostImpl->GetLaunchWantForBundle("", want, userId, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/*
+ * @tc.number: BundleMgrHostImpl_0056
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetLaunchWantForBundle SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0056, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    Want want;
+    int32_t userId = 101;
+    auto ret = localBundleMgrHostImpl->GetLaunchWantForBundle("", want, userId, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 /**
  * @tc.number: BundleResourceHostImpl_0001
@@ -1032,5 +1148,46 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleResourceHostImpl_0009, TestSize
         extensionAbilityResourceInfo, appIndex);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
+
+/**
+ * @tc.number: BundleResourceHostImpl_0010
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetLauncherAbilityResourceInfoList SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleResourceHostImpl_0010, TestSize.Level1)
+{
+    std::shared_ptr<BundleResourceHostImpl> localBundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(localBundleResourceHostImpl, nullptr);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = "com.example.test";
+    optiont.abilityName = "com.example.test.MainAbility";
+    optiontList.push_back(optiont);
+
+    uint32_t flags = 0; // Example flags
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfo;
+    auto ret = localBundleResourceHostImpl->GetLauncherAbilityResourceInfoList(
+        optiontList, flags, launcherAbilityResourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
 #endif
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0001
+ * @tc.name: GetPluginExtensionInfo
+ * @tc.desc: GetPluginExtensionInfo SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, GetPluginExtensionInfo_0001, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string hostBundleName = "com.example.host"; // Example host bundle name
+    Want want;
+    int32_t userId = 0; // Example user ID
+    ExtensionAbilityInfo extensionInfo;
+    auto ret = localBundleMgrHostImpl->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
 }  // namespace OHOS

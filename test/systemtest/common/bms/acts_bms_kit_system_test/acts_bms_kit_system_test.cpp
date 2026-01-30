@@ -909,6 +909,63 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_1100, Function | MediumTest | Level
 }
 
 /**
+ * @tc.number: GetBundleInfoForSg_0010
+ * @tc.name: test query bundle information for sg
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.query bundleInfoForException
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSg_0010, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleInfoForSg_0010" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfoForException bundleInfoForException;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    auto getInfoResult = bundleMgrProxy->GetBundleInfoForException("", USERID, catchSoNum, catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    getInfoResult = bundleMgrProxy->GetBundleInfoForException("test1", USERID, catchSoNum, catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    std::cout << "END GetBundleInfoForSg_0010" << std::endl;
+}
+
+/**
+ * @tc.number: GetBundleInfoForSg_0011
+ * @tc.name: test query bundle information for sg
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.query bundleInfoForException
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSg_0011, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleInfoForSg_0011" << std::endl;
+    std::vector<std::string> resvec;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    
+    BundleInfoForException bundleInfoForException;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    auto getInfoResult = bundleMgrProxy->GetBundleInfoForException(appName, USERID, catchSoNum,
+        catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetBundleInfoForSg_0011" << std::endl;
+}
+
+/**
  * @tc.number: GetBundleInfoV9_0010
  * @tc.name: test query bundle information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -9881,6 +9938,115 @@ HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0003, Function | MediumTest | Level1)
     std::cout << "END CanOpenLink_0003" << std::endl;
 }
 
+/**
+ * @tc.number: GetAllJsonProfile_0001
+ * @tc.name: test GetAllJsonProfile interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call GetAllJsonProfile
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllJsonProfile_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllJsonProfile_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<JsonProfileInfo> profileInfos;
+    auto queryResult = bundleMgrProxy->GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, USERID, profileInfos);
+    EXPECT_EQ(queryResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetAllJsonProfile_0001" << std::endl;
+}
+
+/**
+ * @tc.number: GetAllJsonProfile_0002
+ * @tc.name: test GetAllJsonProfile interface
+ * @tc.desc: call GetAllJsonProfile with invalid userId
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllJsonProfile_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllJsonProfile_0002" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<JsonProfileInfo> profileInfos;
+    auto queryResult = bundleMgrProxy->GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, 200, profileInfos);
+    EXPECT_EQ(queryResult, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    std::cout << "END GetAllJsonProfile_0002" << std::endl;
+}
+
+/**
+ * @tc.number: GetAllJsonProfile_0003
+ * @tc.name: test GetAllJsonProfile interface
+ * @tc.desc: call GetAllJsonProfile with invalid profile type
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllJsonProfile_0003, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllJsonProfile_0003" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<JsonProfileInfo> profileInfos;
+    auto queryResult = bundleMgrProxy->GetAllJsonProfile(static_cast<ProfileType>(-1), USERID, profileInfos);
+    EXPECT_EQ(queryResult, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST);
+    std::cout << "END GetAllJsonProfile_0003" << std::endl;
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0001
+ * @tc.name: test GetAllAppProvisionInfo interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call GetAllAppProvisionInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllAppProvisionInfo_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllAppProvisionInfo_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    auto queryResult = bundleMgrProxy->GetAllAppProvisionInfo(USERID, appProvisionInfos);
+    EXPECT_EQ(queryResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetAllAppProvisionInfo_0001" << std::endl;
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0002
+ * @tc.name: test GetAllAppProvisionInfo interface
+ * @tc.desc: call GetAllAppProvisionInfo with invalid userId
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllAppProvisionInfo_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllAppProvisionInfo_0002" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    auto queryResult = bundleMgrProxy->GetAllAppProvisionInfo(200, appProvisionInfos);
+    EXPECT_EQ(queryResult, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    std::cout << "END GetAllAppProvisionInfo_0002" << std::endl;
+}
 
 /**
  * @tc.number: GetAllPluginInfo_0001
@@ -10884,10 +11050,12 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0001, Function | Sma
     } else {
         std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
         ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
-        if (compatibleDeviceTypes.empty()) {
-            EXPECT_FALSE(true);
+        if (ret != ERR_OK) {
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+            EXPECT_TRUE(compatibleDeviceTypes.empty());
         } else {
             EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(compatibleDeviceTypes.size(), 1);
             EXPECT_EQ(compatibleDeviceTypes[0].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
         }
     }
@@ -10927,7 +11095,7 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0003, Function | Sma
     } else {
         std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
         ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
-        EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
     }
 }
 
@@ -10948,10 +11116,12 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0004, Function | Sma
     } else {
         std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
         ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
-        if (compatibleDeviceTypes.empty()) {
-            EXPECT_FALSE(true);
+        if (ret != ERR_OK) {
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+            EXPECT_TRUE(compatibleDeviceTypes.empty());
         } else {
             EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(compatibleDeviceTypes.size(), 2);
             EXPECT_EQ(compatibleDeviceTypes[0].bundleName, "");
             EXPECT_EQ(compatibleDeviceTypes[1].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
         }
@@ -11122,6 +11292,44 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleDirs_0002, Function | MediumTest | Le
 }
 
 /**
+ * @tc.number: GetBundleInstallStatuse_0001
+ * @tc.name: test GetBundleInstallStatus interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call GetBundleInstallStatus
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInstallStatus_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleInstallStatus_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto queryResult = bundleMgrProxy->GetBundleInstallStatus(appName, USERID, status);
+    EXPECT_EQ(queryResult, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLED);
+
+    status = BundleInstallStatus::UNKNOWN_STATUS;
+    queryResult = bundleMgrProxy->GetBundleInstallStatus(appName, INVALIED_ID, status);
+    EXPECT_EQ(queryResult, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetBundleInstallStatus_0001" << std::endl;
+}
+
+/**
  * @tc.number: GetAllBundleCacheStat_0001
  * @tc.name: test GetAllBundleCacheStat interface
  * @tc.desc: 1. call GetAllBundleCacheStat
@@ -11182,6 +11390,36 @@ HWTEST_F(ActsBmsKitSystemTest, GetTestRunner_0001, Function | MediumTest | Level
     std::cout << "END GetTestRunner_0001" << std::endl;
 }
 
+/**
+ * @tc.number: GetAssetGroupsInfo_0001
+ * @tc.name: test GetAssetGroupsInfo interface
+ * @tc.desc: 1.query bundles by uid
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAssetGroupsInfo_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAssetGroupsInfo_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    int32_t uid = bundleInfo.uid;
+    
+    AssetGroupInfo assetGroupInfo;
+    auto ret = bundleMgrProxy->GetAssetGroupsInfo(uid, assetGroupInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = bundleMgrProxy->GetAssetGroupsInfo(-1, assetGroupInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+
+    Uninstall(appName, resvec);
+    std::cout << "END GetAssetGroupsInfo_0001" << std::endl;
+}
+ 
 /**
  * @tc.number: GetTestRunner_0002
  * @tc.name: test GetTestRunner interface

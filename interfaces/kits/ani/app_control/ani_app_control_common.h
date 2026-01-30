@@ -26,6 +26,8 @@ using Want = OHOS::AAFwk::Want;
 class AniAppControlCommon {
 public:
     static ani_object ConvertDisposedRule(ani_env* env, const DisposedRule& disposedRule);
+    static ani_object ConvertDisposedRuleConfiguration(
+        ani_env* env, const DisposedRuleConfiguration& disposedRuleConfiguration);
     static ani_object ConvertUninstallDisposedRule(ani_env* env, const UninstallDisposedRule& uninstallDisposedRule);
     static bool ParseWantWithoutVerification(ani_env* env, ani_object object, Want& want);
     static bool ParseDisposedRule(ani_env* env, ani_object object, DisposedRule& disposedRule);

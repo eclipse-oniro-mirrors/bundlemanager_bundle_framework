@@ -97,6 +97,7 @@ static ani_boolean AniIsHapModuleRemovable(ani_env* env, ani_string aniBundleNam
         APP_LOGE("can not get iBundleMgr");
         BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
             RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return false;
     }
     bool isRemovable = false;
     auto result = iBundleMgr->IsModuleRemovable(bundleName, moduleName, isRemovable);
@@ -132,6 +133,7 @@ static ani_object AniGetBundlePackInfo(ani_env* env, ani_string aniBundleName, a
         APP_LOGE("can not get iBundleMgr");
         BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, RESOURCE_NAME_OF_GET_BUNDLE_PACK_INFO,
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
     }
     BundlePackInfo bundlePackInfo;
     auto result = iBundleMgr->GetBundlePackInfo(bundleName, static_cast<int32_t>(bundlePackFlag), bundlePackInfo);

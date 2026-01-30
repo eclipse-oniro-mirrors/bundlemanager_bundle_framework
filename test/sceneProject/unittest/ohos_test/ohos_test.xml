@@ -190,6 +190,14 @@
       <option name="push" value="test_bundle/version3.hap -> /data/test/resource/bms/update_bundle/" src="res"/>
     </preparer>
   </target>
+    <target name="BmsBundleDowngradeTest">
+    <preparer>
+      <option name="push" value="test_bundle/version1.hap -> /data/test/resource/bms/downgrade_bundle/" src="res"/>
+      <option name="push" value="test_bundle/version2.hap -> /data/test/resource/bms/downgrade_bundle/" src="res"/>
+      <option name="push" value="test_bundle/versionNormalHapTest1.hap -> /data/test/resource/bms/downgrade_bundle/" src="res"/>
+      <option name="push" value="test_bundle/versionNormalHapTest2.hap -> /data/test/resource/bms/downgrade_bundle/" src="res"/>
+    </preparer>
+  </target>
   <target name="BmsBundleVerifierTest">
     <preparer>
       <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>

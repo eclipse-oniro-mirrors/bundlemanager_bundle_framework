@@ -66,6 +66,7 @@ ohos_unittest("BmsDataMgrTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -80,6 +81,7 @@ ohos_unittest("BmsDataMgrTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []
@@ -214,6 +216,7 @@ ohos_unittest("BmsExtensionDataMgrTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -231,11 +234,15 @@ ohos_unittest("BmsExtensionDataMgrTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []
   if (current_cpu == "arm64") {
-    defines += [ "USE_EXTENSION_DATA" ]
+    defines += [
+      "USE_EXTENSION_DATA",
+      "USE_ARM64"
+    ]
   }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]

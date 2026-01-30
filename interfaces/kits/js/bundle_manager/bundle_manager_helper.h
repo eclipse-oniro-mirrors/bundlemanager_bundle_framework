@@ -45,6 +45,7 @@ public:
         const std::string &bundleName, int32_t appIndex, const OHOS::sptr<CleanCacheCallback> cleanCacheCallback);
     static ErrCode InnerGetAppProvisionInfo(
         const std::string& bundleName, int32_t userId, AppProvisionInfo& appProvisionInfo);
+    static ErrCode InnerGetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo>& appProvisionInfos);
     static ErrCode InnerGetAllPreinstalledApplicationInfos(
         std::vector<PreinstalledApplicationInfo>& preinstalledApplicationInfos);
     static ErrCode InnerGetAllAppCloneBundleInfo(
@@ -68,6 +69,7 @@ public:
     static ErrCode InnerGetAbilityInfos(const std::string& uri, uint32_t flags, std::vector<AbilityInfo>& abilityInfos);
     static ErrCode InnerCleanBundleCacheForSelfCallback(const OHOS::sptr<CleanCacheCallback> cleanCacheCallback);
     static ErrCode InnerGetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath);
+    static ErrCode InnerGetBundleInstallStatus(const std::string &bundleName, BundleInstallStatus &bundleInstallStatus);
 };
 } // AppExecFwk
 } // OHOS

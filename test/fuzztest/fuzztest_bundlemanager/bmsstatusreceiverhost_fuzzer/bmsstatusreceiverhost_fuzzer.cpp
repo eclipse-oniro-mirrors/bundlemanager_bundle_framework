@@ -36,6 +36,8 @@ public:
     }
     void OnFinished(const int32_t resultCode, const std::string &resultMsg)
     {
+        (void)resultCode;
+        (void)resultMsg;
         return;
     }
 };

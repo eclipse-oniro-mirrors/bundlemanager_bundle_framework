@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -64,9 +64,10 @@ const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/libs/arm";
 }  // namespace
+extern int32_t g_testVerifyPermission;
 
 class BmsBundleInstallerPermissionTest : public testing::Test {
 public:
@@ -412,9 +413,9 @@ bool BmsBundleInstallerPermissionTest::WriteToConfigFile(const std::string &bund
 HWTEST_F(BmsBundleInstallerPermissionTest, ExtractHnpFiles_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl installdHostImpl;
-    std::string hnpPackageInfo;
+    std::map<std::string, std::string> hnpPackageMap;
     ExtractParam extractParam;
-    auto ret = installdHostImpl.ExtractHnpFiles(hnpPackageInfo, extractParam);
+    auto ret = installdHostImpl.ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -426,12 +427,14 @@ HWTEST_F(BmsBundleInstallerPermissionTest, ExtractHnpFiles_0100, Function | Smal
 HWTEST_F(BmsBundleInstallerPermissionTest, ProcessBundleInstallNative_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl installdHostImpl;
-    std::string userId = std::to_string(USERID);
-    std::string cpuAbi = "arm64";
-    std::string packageName = "com.example.test";
-    std::string hnpRootPath = "/data/app/el1/bundle/public/com.example.test/entry_tmp/hnp_tmp_extract_dir/";
-    std::string hapPath = "/system/app/module01/module01.hap";
-    auto ret = installdHostImpl.ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    
+    InstallHnpParam param;
+    param.userId = std::to_string(USERID);
+    param.cpuAbi = "arm64";
+    param.packageName = "com.example.test";
+    param.hnpRootPath = "/data/app/el1/bundle/public/com.example.test/entry_tmp/hnp_tmp_extract_dir/";
+    param.hapPath = "/system/app/module01/module01.hap";
+    auto ret = installdHostImpl.ProcessBundleInstallNative(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -660,6 +663,20 @@ HWTEST_F(BmsBundleInstallerPermissionTest, GetDiskUsageFromPath_0100, Function |
     std::vector<std::string> path;
     int64_t statSize = 0;
     ErrCode ret = installdHostImpl.GetDiskUsageFromPath(path, statSize);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0100
+ * @tc.name: test GetBundleInodeCount
+ * @tc.desc: 1.Test the GetBundleInodeCount of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, GetBundleInodeCount_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    int32_t uid = -1;
+    uint64_t inodeCount = 0;
+    ErrCode ret = installdHostImpl.GetBundleInodeCount(uid, inodeCount);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -1135,21 +1152,6 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleMgrHostImpl_0002, Function | Sm
     bool ret = localBundleMgrHostImpl->GetLabelByBundleName(bundleName, userId, result);
     EXPECT_EQ(ret, false);
 }
-
-/**
- * @tc.number: CleanArkStartupCache_0010
- * @tc.name: test CleanArkStartupCache
- * @tc.desc: 1.Test the CleanArkStartupCache of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerPermissionTest, CleanArkStartupCache_0010, Function | SmallTest | Level0)
-{
-    // test no FOUNDATION_UID
-    std::string cacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
-    std::string bundleName = "";
-    BaseBundleInstaller installer;
-    ErrCode ret = installer.CleanArkStartupCache(cacheDir, bundleName, 100);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
  
 /**
  * @tc.number: DeleteArkStartupCache_0010
@@ -1221,6 +1223,39 @@ HWTEST_F(BmsBundleInstallerPermissionTest, ProcessArkStartupCache_0010, Function
 }
 
 /**
+ * @tc.number: HashSoFile_0010
+ * @tc.name: test HashSoFile
+ * @tc.desc: 1.Test the HashSoFile of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, HashSoFile_0010, Function | SmallTest | Level0)
+{
+    // test no FOUNDATION_UID
+    InstalldHostImpl installdHostImpl;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    std::string soPath = "/data/app/el1/";
+    std::vector<std::string> soName;
+    std::vector<std::string> soHash;
+    auto ret = installdHostImpl.HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: HashFiles_0010
+ * @tc.name: test HashFiles
+ * @tc.desc: 1.Test the HashFiles of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, HashFiles_0010, Function | SmallTest | Level0)
+{
+    // test no FOUNDATION_UID
+    InstalldHostImpl installdHostImpl;
+    std::vector<std::string> files;
+    std::vector<std::string> filesHash;
+    auto ret = installdHostImpl.HashFiles(files, filesHash);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
 * @tc.number: ParseSizeFromProvision_0010
 * @tc.name: test arseSizeFromProvision
 * @tc.desc: 1.Test arseSizeFromProvision
@@ -1261,5 +1296,68 @@ HWTEST_F(BmsBundleInstallerPermissionTest, ParseSizeFromProvision_0010, Function
     installer.verifyRes_.SetProvisionInfo(provisionInfo);
     installer.ParseSizeFromProvision(bundleName, uid, sizeMb);
     EXPECT_EQ(sizeMb, 1024);
+}
+
+/**
+ * @tc.number: CopyDir_0100
+ * @tc.name: test CopyDir
+ * @tc.desc: 1.Test the CopyDir of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, CopyDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string sourceDir = "test.source.dir";
+    std::string destinationDir = "test.destination.dir";
+    ErrCode ret = hostImpl.CopyDir(sourceDir, destinationDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: VerifyDelayedAging_0100
+ * @tc.name: test VerifyDelayedAging
+ * @tc.desc: test the VerifyDelayedAging success
+ */
+HWTEST_F(BmsBundleInstallerPermissionTest, VerifyDelayedAging_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo bundleInfo;
+    int32_t uid = -1;
+    int32_t testUid = bundleInfo.GetUid(uid);
+    installer.VerifyDelayedAging(bundleInfo, testUid);
+    EXPECT_EQ(bundleInfo.GetDelayedAging(), true);
+}
+
+/**
+ * @tc.number: VerifyDelayedAging_0200
+ * @tc.name: test VerifyDelayedAging
+ * @tc.desc: test the VerifyDelayedAging fail
+ */
+HWTEST_F(BmsBundleInstallerPermissionTest, VerifyDelayedAging_0200, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo bundleInfo;
+    int32_t uid = -1;
+    int32_t testUid = bundleInfo.GetUid(uid);
+    int32_t testNum1 = 1;
+    int32_t testNum2 = 0;
+    g_testVerifyPermission = testNum1;
+    installer.VerifyDelayedAging(bundleInfo, testUid);
+    g_testVerifyPermission = testNum2;
+    EXPECT_EQ(bundleInfo.GetDelayedAging(), false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0100
+ * @tc.name: test InnerBundleInfo
+ * @tc.desc: 1.Test the InnerBundleInfo assignment operator
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, InnerBundleInfo_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    bool isDelayAging = true;
+    innerBundleInfo2.SetDelayedAging(isDelayAging);
+    innerBundleInfo1 = innerBundleInfo2;
+    EXPECT_TRUE(innerBundleInfo1.GetDelayedAging());
 }
 } // OHOS

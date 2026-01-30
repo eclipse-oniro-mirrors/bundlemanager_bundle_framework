@@ -75,6 +75,12 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     innerBundleInfo2.innerModuleInfos_[moduleName].distro.moduleType = "shared";
     bundleOverlayInstallChecker.CheckHapType(innerBundleInfo2);
     bundleOverlayInstallChecker.CheckVersionCode(newInfos, innerBundleInfo2);
+    bundleOverlayInstallChecker.CheckExternalBundle(innerBundleInfo, userId);
+    std::string targetBundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    std::string targetModuleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    bundleOverlayInstallChecker.CheckTargetBundle("", "", "", userId);
+    bundleOverlayInstallChecker.CheckTargetBundle(targetBundleName, "", "", userId);
+    bundleOverlayInstallChecker.CheckTargetModule(bundleName, targetModuleName);
 
     innerBundleInfo.overlayType_ = OVERLAY_EXTERNAL_BUNDLE;
     innerBundleInfo2.overlayType_ = OVERLAY_INTERNAL_BUNDLE;

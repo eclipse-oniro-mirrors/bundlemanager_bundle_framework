@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -171,12 +171,14 @@ struct Metadata {
 struct HnpPackage {
     std::string package;
     std::string type;
+    bool independentSign = false;
 };
 
 struct Ability {
     bool visible = false;
     bool continuable = false;
     bool removeMissionAfterTerminate = false;
+    bool allowSelfRedirect = true;
     bool excludeFromMissions = false;
     bool recoverable = false;
     bool unclearableMission = false;
@@ -286,6 +288,7 @@ struct App {
     std::string description;
     std::string vendor;
     std::string versionName;
+    std::string buildVersion;
     std::string apiReleaseType = APP_API_RELEASETYPE_DEFAULT_VALUE;
     std::pair<bool, bool> removable = std::make_pair<>(false, true);
     std::vector<std::string> targetBundleList;
@@ -339,6 +342,8 @@ struct Module {
     std::string buildHash;
     std::string isolationMode;
     std::string fileContextMenu;
+    std::string easyGo;
+    std::string shareFiles;
     std::vector<std::string> querySchemes;
     std::string routerMap;
     std::vector<AppEnvironment> appEnvironments;
@@ -430,6 +435,12 @@ void from_json(const nlohmann::json &jsonObject, HnpPackage &hnpPackage)
         jsonObjectEnd,
         HNP_TYPE,
         hnpPackage.type,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HNP_INDEPENDENT_SIGN,
+        hnpPackage.independentSign,
         false,
         g_parseResult);
 }
@@ -599,6 +610,12 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         jsonObjectEnd,
         ABILITY_REMOVE_MISSION_AFTER_TERMINATE,
         ability.removeMissionAfterTerminate,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ABILITY_ALLOW_SELF_REDIRECT,
+        ability.allowSelfRedirect,
         false,
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
@@ -1414,6 +1431,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.appPreloadPhase,
         false,
         g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::BUILD_VERSION,
+        app.buildVersion,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1660,6 +1683,18 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.fileContextMenu,
         false,
         g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_EASY_GO,
+        module.easyGo,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_SHARE_FILES,
+        module.shareFiles,
+        false,
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         MODULE_QUERY_SCHEMES,
@@ -1784,6 +1819,7 @@ void GetHnpPackage(std::vector<HnpPackage> &hnpPackage, const std::vector<Profil
         HnpPackage tmpHnpPackage;
         tmpHnpPackage.package = item.package;
         tmpHnpPackage.type = item.type;
+        tmpHnpPackage.independentSign = item.independentSign;
         hnpPackage.emplace_back(tmpHnpPackage);
     }
 }
@@ -1820,7 +1856,7 @@ bool CheckModuleNameIsValid(const std::string &moduleName)
         APP_LOGE("module name size too long");
         return false;
     }
-    if (moduleName.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
+    if (moduleName.find(ServiceConstants::RELATIVE_PATH_NAME) != std::string::npos) {
         return false;
     }
     if (moduleName.find(ServiceConstants::MODULE_NAME_SEPARATOR) != std::string::npos) {
@@ -2449,6 +2485,7 @@ bool ToAbilityInfo(
     abilityInfo.startWindow = ability.startWindow;
     abilityInfo.startWindowId = ability.startWindowId;
     abilityInfo.removeMissionAfterTerminate = ability.removeMissionAfterTerminate;
+    abilityInfo.allowSelfRedirect  = ability.allowSelfRedirect ;
     abilityInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
     size_t len = sizeof(Profile::DISPLAY_ORIENTATION_MAP_KEY) /
             sizeof(Profile::DISPLAY_ORIENTATION_MAP_KEY[0]);
@@ -2591,7 +2628,6 @@ bool ToInnerModuleInfo(
     innerModuleInfo.description = moduleJson.module.description;
     innerModuleInfo.descriptionId = moduleJson.module.descriptionId;
     GetMetadata(innerModuleInfo.metadata, moduleJson.module.metadata);
-    GetHnpPackage(innerModuleInfo.hnpPackages, moduleJson.module.hnpPackages);
     innerModuleInfo.distro.deliveryWithInstall = moduleJson.module.deliveryWithInstall;
     innerModuleInfo.distro.installationFree = moduleJson.module.installationFree;
     innerModuleInfo.distro.moduleName = moduleJson.module.name;
@@ -2600,6 +2636,10 @@ bool ToInnerModuleInfo(
         innerModuleInfo.distro.moduleType = moduleJson.module.type;
         if (moduleJson.module.type == Profile::MODULE_TYPE_ENTRY) {
             innerModuleInfo.isEntry = true;
+            GetHnpPackage(innerModuleInfo.hnpPackages, moduleJson.module.hnpPackages);
+        } else if (moduleJson.module.hnpPackages.size() > 0) {
+            APP_LOGW("Only entry module can have hnpPackages, ignore hnpPackages for module %{public}s",
+                moduleJson.module.name.c_str());
         }
     }
 
@@ -2645,6 +2685,8 @@ bool ToInnerModuleInfo(
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
     innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs || moduleJson.module.extractNativeLibs;
     innerModuleInfo.fileContextMenu = moduleJson.module.fileContextMenu;
+    innerModuleInfo.easyGo = moduleJson.module.easyGo;
+    innerModuleInfo.shareFiles = moduleJson.module.shareFiles;
 
     if (moduleJson.module.querySchemes.size() > Profile::MAX_QUERYSCHEMES_LENGTH) {
         APP_LOGE("The length of the querySchemes exceeds the limit");
@@ -2725,7 +2767,7 @@ bool ToInnerBundleInfo(
         APP_LOGE("To innerModuleInfo failed");
         return false;
     }
-
+    innerModuleInfo.versionCode = applicationInfo.versionCode;
     innerModuleInfo.asanEnabled = applicationInfo.asanEnabled;
     innerModuleInfo.gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
     innerModuleInfo.tsanEnabled = applicationInfo.tsanEnabled;
@@ -2740,6 +2782,7 @@ bool ToInnerBundleInfo(
     SetInstallationFree(innerModuleInfo, applicationInfo.bundleType);
 
     BundleInfo bundleInfo;
+    bundleInfo.buildVersion = moduleJson.app.buildVersion;
     ToBundleInfo(applicationInfo, innerModuleInfo, transformParam, bundleInfo);
 
     // handle abilities
@@ -2834,7 +2877,7 @@ bool ToInnerBundleInfo(
         ToExtensionAbilitySkills(extension.skills, extensionInfo);
         innerBundleInfo.InsertExtensionInfo(key, extensionInfo);
     }
-    if (!findEntry) {
+    if (!findEntry && !transformParam.isPreInstallApp) {
         applicationInfo.needAppDetail = true;
         if (BundleUtil::IsExistDir(ServiceConstants::SYSTEM_LIB64)) {
             applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;

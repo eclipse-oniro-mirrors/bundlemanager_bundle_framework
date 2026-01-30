@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <string>
+#include <thread>
 
 #include "nocopyable.h"
 #include "singleton.h"
@@ -86,7 +87,7 @@ public:
      * @param dir Indicates the directory path that to be removed.
      * @return Returns ERR_OK if the  directory removed successfully; returns error code otherwise.
      */
-    ErrCode RemoveDir(const std::string &dir);
+    ErrCode RemoveDir(const std::string &dir, bool async = false);
     /**
      * @brief Get disk usage for dir.
      * @param dir Indicates the directory.
@@ -99,9 +100,18 @@ public:
      * @brief Get disk usage for dir.
      * @param path Indicates the directory vector.
      * @param statSize Indicates size of path.
+     * @param timeoutMs Indicates the timeout time.
      * @return Returns true if successfully; returns false otherwise.
      */
-    ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize);
+    ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize, int64_t timeoutMs = -1);
+    /**
+     * @brief Get bundle inode count for UID.
+     * @param uid The user ID of the application).
+     * @param inodeCount Output parameter for inode count.
+     * @return Returns ERR_OK if successfully; returns false otherwise.
+     */
+    ErrCode GetBundleInodeCount(int32_t uid, uint64_t &inodeCount);
+
     /**
      * @brief Clean all files in a bundle data directory.
      * @param bundleDir Indicates the data directory path that to be cleaned.
@@ -125,12 +135,12 @@ public:
      * @return Returns ERR_OK if get stats successfully; returns error code otherwise.
      */
     ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
-        std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID,
+        std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids,
         const int32_t appIndex = 0, const uint32_t statFlag = 0,
         const std::vector<std::string> &moduleNameList = {});
 
-    ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
-        const std::unordered_map<std::string, int32_t> &uidMap,
+    ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames,
+        const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
         std::vector<BundleStorageStats> &bundleStats);
 
     ErrCode GetAllBundleStats(const int32_t userId,
@@ -156,6 +166,12 @@ public:
      */
     ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
         bool isPreInstallApp, bool debug, int32_t uid);
+
+    ErrCode SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir);
+
+    ErrCode SetFileConForce(const std::vector<std::string> &paths, const CreateDirParam &createDirParam);
+
+    ErrCode StopSetFileCon(const CreateDirParam &createDirParam, int32_t reason);
 
     /**
      * @brief Set dir apl.
@@ -209,10 +225,9 @@ public:
 
     ErrCode ExtractFiles(const ExtractParam &extractParam);
 
-    ErrCode ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam);
+    ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap, const ExtractParam &extractParam);
 
-    ErrCode ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
-        const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName);
+    ErrCode ProcessBundleInstallNative(const InstallHnpParam &installHnpParam);
 
     ErrCode ProcessBundleUnInstallNative(const std::string &userId, const std::string &bundleName);
 
@@ -252,6 +267,8 @@ public:
 
     ErrCode RemoveSignProfile(const std::string &bundleName);
 
+    ErrCode AddCertAndEnableKey(const std::string &certPath, const std::string &certContent);
+
     ErrCode SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId);
 
     ErrCode DeleteEncryptionKeyId(const EncryptionParam &encryptionParam);
@@ -278,6 +295,24 @@ public:
 
     ErrCode RestoreconPath(const std::string &path);
 
+    ErrCode HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+        std::vector<std::string> &soName, std::vector<std::string> &soHash);
+
+    ErrCode HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash);
+    
+    ErrCode ResetBmsDBSecurity();
+
+    /**
+     * @brief Clean a bundle data directory.
+     * @param dirs Indicates the directory path that to be cleaned.
+     * @return Returns ERR_OK if the bundle dirs cleaned successfully; returns error code otherwise.
+     */
+    ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent);
+
+    ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir);
+
+    ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();
@@ -286,6 +321,7 @@ private:
     ErrCode CallService(F func, Args&&... args)
     {
         int32_t maxRetryTimes = 2;
+        int32_t retryInterval = 50;
         ErrCode errCode = ERR_APPEXECFWK_INSTALLD_SERVICE_DIED;
         for (int32_t retryTimes = 0; retryTimes < maxRetryTimes; retryTimes++) {
             auto proxy = GetInstalldProxy();
@@ -297,6 +333,7 @@ private:
             if (errCode == ERR_APPEXECFWK_INSTALLD_SERVICE_DIED) {
                 APP_LOGE("CallService failed, retry times: %{public}d", retryTimes + 1);
                 ResetInstalldProxy();
+                std::this_thread::sleep_for(std::chrono::milliseconds(retryInterval));
             } else {
                 return errCode;
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,9 @@ public:
     virtual ErrCode GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0) override;
 
+    virtual ErrCode GetLauncherAbilityResourceInfoList(const std::vector<BundleOptionInfo>& optionsList,
+        const uint32_t flags, std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo) override;
+
     virtual ErrCode GetAllBundleResourceInfo(const uint32_t flags,
         std::vector<BundleResourceInfo> &bundleResourceInfos) override;
 
@@ -61,11 +64,16 @@ private:
     ErrCode GetVectorParcelInfo(
         BundleResourceInterfaceCode code, MessageParcel &data, std::vector<T> &parcelInfos);
 
+    template<typename T>
+    ErrCode WriteParcelableVector(const std::vector<T> &parcelableVector, MessageParcel &data);
+
     ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, void *&data);
 
     bool SendRequest(BundleResourceInterfaceCode code, MessageParcel &data, MessageParcel &reply);
 
     static inline BrokerDelegator<BundleResourceProxy> delegator_;
+
+    ErrCode CheckBundleOptionInfoInvalid(const std::vector<BundleOptionInfo>& optionsList);
 };
 } // AppExecFwk
 } // OHOS

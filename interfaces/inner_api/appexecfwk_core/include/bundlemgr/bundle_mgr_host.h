@@ -57,6 +57,13 @@ private:
      */
     ErrCode HandleGetApplicationInfoWithIntFlagsV9(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the GetApplicationInfoV9 function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetAssetGroupsInfo(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the GetApplicationInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -418,6 +425,13 @@ private:
      */
     ErrCode HandleCleanBundleCacheFilesAutomatic(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the CleanBundleCacheFilesAutomaticByType function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleCleanBundleCacheFilesAutomaticByType(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the CleanBundleCacheFiles function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -777,6 +791,8 @@ private:
 
     ErrCode HandleGetAppProvisionInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAllAppProvisionInfo(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetProvisionMetadata(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetBaseSharedBundleInfos(MessageParcel &data, MessageParcel &reply);
@@ -942,6 +958,9 @@ private:
     ErrCode HandleGreatOrEqualTargetAPIVersion(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleSetShortcutVisibleForSelf(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetAllShortcutInfoForSelf(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleAddDynamicShortcutInfos(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleDeleteDynamicShortcutInfos(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleSetShortcutsEnabled(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetPluginInfo(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetTestRunner(MessageParcel &data, MessageParcel &reply);
 
@@ -958,6 +977,11 @@ private:
     ErrCode HandleRecoverBackupBundleData(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleRemoveBackupBundleData(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleCreateNewBundleEl5Dir(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetBundleInstallStatus(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetBundleInfoForException(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetAllJsonProfile(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetPluginExtensionInfo(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.
@@ -970,6 +994,11 @@ private:
 
     template<typename T>
     bool WriteVectorToParcelIntelligent(std::vector<T> &parcelableVector, MessageParcel &reply);
+
+    template<typename T>
+    ErrCode GetVectorParcelInfoIntelligent(
+        MessageParcel &data, std::vector<T> &parcelInfos, const int32_t maxVectorSize);
+
     /**
      * @brief Allocat ashmem num.
      * @return Returns ashmem num.

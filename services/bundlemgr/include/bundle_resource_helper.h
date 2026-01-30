@@ -83,6 +83,8 @@ public:
 
     static void DeleteUninstallBundleResource(const std::string &bundleName, const int32_t userId,
         const int32_t appIndex);
+
+    static void DeleteUninstallBundleResourceForUser(const int32_t userId);
 };
 } // AppExecFwk
 } // OHOS

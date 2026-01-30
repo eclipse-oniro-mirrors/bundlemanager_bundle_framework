@@ -28,9 +28,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // max allow 1 GB resource size
+constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // max allow 1 GB resource size
 constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 100 * 1024 * 1024; // max ipc size 100MB
 const std::string BUNDLE_RESOURCE_ASHMEM_NAME = "bundleResourceAshemeName";
+const int32_t MAX_PARCE_LABLE_LIST_SIZE = 1000;
 }
 BundleResourceHost::BundleResourceHost()
 {
@@ -78,6 +79,9 @@ int32_t BundleResourceHost::OnRemoteRequest(uint32_t code, MessageParcel &data,
         case static_cast<uint32_t>(BundleResourceInterfaceCode::GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO):
             errCode = this->HandleGetAllUninstallBundleResourceInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleResourceInterfaceCode::GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST):
+            errCode = this->HandleGetLauncherAbilityResourceInfoList(data, reply);
+            break;
         default:
             APP_LOGW("bundle resource host receives unknown %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -112,6 +116,28 @@ ErrCode BundleResourceHost::HandleGetLauncherAbilityResourceInfo(MessageParcel &
     int32_t appIndex = data.ReadInt32();
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
     ErrCode ret = GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfos, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        return WriteVectorToParcel<LauncherAbilityResourceInfo>(launcherAbilityResourceInfos, reply);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleResourceHost::HandleGetLauncherAbilityResourceInfoList(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::vector<BundleOptionInfo> optionsList;
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    ErrCode readRet = ReadParcelableVector(data, optionsList);
+    if (readRet != ERR_OK) {
+        APP_LOGE("fail to read optionsList");
+        return readRet;
+    }
+    uint32_t flags = data.ReadUint32();
+    ErrCode ret = GetLauncherAbilityResourceInfoList(optionsList, flags, launcherAbilityResourceInfos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -271,7 +297,7 @@ template<typename T>
 ErrCode BundleResourceHost::WriteParcelInfo(const T &parcelInfo, MessageParcel &reply)
 {
     MessageParcel tmpParcel;
-    (void)tmpParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY);
+    (void)tmpParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY_OF_ASHMEM);
     if (!tmpParcel.WriteParcelable(&parcelInfo)) {
         APP_LOGE("write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -296,7 +322,7 @@ template<typename T>
 ErrCode BundleResourceHost::WriteVectorToParcel(std::vector<T> &parcelVector, MessageParcel &reply)
 {
     MessageParcel tempParcel;
-    (void)tempParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY);
+    (void)tempParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY_OF_ASHMEM);
     if (!tempParcel.WriteInt32(parcelVector.size())) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -323,6 +349,26 @@ ErrCode BundleResourceHost::WriteVectorToParcel(std::vector<T> &parcelVector, Me
         APP_LOGE("write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    return ERR_OK;
+}
+
+template<typename T>
+ErrCode BundleResourceHost::ReadParcelableVector(MessageParcel &data, std::vector<T> &parcelableInfos)
+{
+    int32_t infoSize = data.ReadInt32();
+    if (infoSize > MAX_PARCE_LABLE_LIST_SIZE) {
+        APP_LOGE("elements num exceeds the limit 1000");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    for (int32_t i = 0; i < infoSize; i++) {
+        std::unique_ptr<T> info(data.ReadParcelable<T>());
+        if (info == nullptr) {
+            APP_LOGE("read parcelable infos failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        parcelableInfos.emplace_back(*info);
+    }
+    APP_LOGD("read parcelable infos success");
     return ERR_OK;
 }
 } // AppExecFwk

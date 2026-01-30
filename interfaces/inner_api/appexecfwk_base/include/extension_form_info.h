@@ -50,12 +50,15 @@ struct ExtensionFormInfo {
     FormWindow window;
     bool resizable = false;
     std::string groupId;
+    FormStandby standby;
 
     std::vector<int32_t> supportDimensions {};
     std::vector<int32_t> conditionUpdate {};
     std::vector<FormCustomizeData> metadata {};
     std::vector<int32_t> supportShapes {};
     std::vector<uint32_t> previewImages {};
+    std::vector<std::string> supportDeviceTypes {};
+    std::vector<int32_t> supportDevicePerformanceClasses {};
     FormFunInteractionParams funInteractionParams;
     FormSceneAnimationParams sceneAnimationParams;
 };

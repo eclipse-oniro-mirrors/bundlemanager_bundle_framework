@@ -73,6 +73,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
@@ -86,6 +87,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += [
@@ -294,6 +296,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -304,6 +307,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += [
@@ -441,6 +445,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -452,6 +457,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += [
@@ -588,6 +594,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -598,6 +605,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += [
@@ -736,6 +744,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -747,6 +756,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += [

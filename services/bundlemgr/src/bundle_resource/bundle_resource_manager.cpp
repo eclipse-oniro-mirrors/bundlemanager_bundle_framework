@@ -173,17 +173,17 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
     return false;
 }
 
-bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+bool BundleResourceManager::GetSingleLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex)
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
-    if (bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, resourceFlags,
+    if (bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, flags,
         launcherAbilityResourceInfo, appIndex)) {
-        if (IsNeedProcessResourceIconInfo(resourceFlags)) {
+        if (IsNeedProcessResourceIconInfo(flags)) {
             int32_t userId = GetUserId();
             std::vector<LauncherAbilityResourceInfo> resourceIconInfos;
-            if (!bundleResourceIconRdb_->GetResourceIconInfos(bundleName, userId, appIndex, resourceFlags,
+            if (!bundleResourceIconRdb_->GetResourceIconInfos(bundleName, userId, appIndex, flags,
                 resourceIconInfos) || resourceIconInfos.empty()) {
                 return true;
             }
@@ -209,6 +209,17 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
                 }
             }
         }
+        return true;
+    }
+    return false;
+}
+
+bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex)
+{
+    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
+    uint32_t resourceFlags = CheckResourceFlags(flags);
+    if (GetSingleLauncherAbilityResourceInfo(bundleName, resourceFlags, launcherAbilityResourceInfo, appIndex)) {
         return true;
     }
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
@@ -322,7 +333,7 @@ bool BundleResourceManager::FilterLauncherAbilityResourceInfoWithFlag(const uint
 bool BundleResourceManager::GetLauncherAbilityInfos(const std::string &bundleName,
     std::vector<AbilityInfo> &abilityInfos)
 {
-    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t userId = GetUserId();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("dataMgr is nullptr");
@@ -1362,6 +1373,12 @@ bool BundleResourceManager::DeleteUninstallBundleResource(const std::string &bun
     APP_LOGI("-n %{public}s -u %{public}d -i %{public}d delete uinstall bundle resource start", bundleName.c_str(),
         userId, appIndex);
     return uninstallBundleResourceRdb_->DeleteUninstallBundleResource(bundleName, userId, appIndex);
+}
+
+bool BundleResourceManager::DeleteUninstallBundleResourceForUser(const int32_t userId)
+{
+    APP_LOGI("-u %{public}d delete uinstall bundle resource start", userId);
+    return uninstallBundleResourceRdb_->DeleteUninstallBundleResourceForUser(userId);
 }
 
 bool BundleResourceManager::GetUninstallBundleResource(const std::string &bundleName,

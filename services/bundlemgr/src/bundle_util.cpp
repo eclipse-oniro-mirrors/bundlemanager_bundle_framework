@@ -31,6 +31,7 @@
 #endif
 #include "directory_ex.h"
 #include "hitrace_meter.h"
+#include "inner_bundle_clone_common.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "mime_type_mgr.h"
@@ -53,6 +54,11 @@ constexpr const char* BUNDLE_ID_FILE = "appid";
 // single max hap size
 constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
+constexpr const char* PROC_FILE_PATH = "/sys/fs/hmfs/userdata/orphan_nodes_info";
+constexpr double MAX_INSTALL_NEED_FDUSED_RATE = 0.8;
+constexpr int8_t ORPHAN_DATA_SIZE = 2;
+constexpr int32_t ONE_M = 1024 * 1024;
+
 constexpr const char* ABC_FILE_PATH = "abc_files";
 constexpr const char* PGO_FILE_PATH = "pgo_files";
 #ifdef CONFIG_POLOCY_ENABLE
@@ -122,8 +128,7 @@ ErrCode BundleUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, s
         if (stat(bundlePath.c_str(), &s) == 0) {
             std::string realPath = "";
             // it is a direction
-            ret = GetHapFilesFromBundlePath(bundlePath, realPaths);
-            if ((s.st_mode & S_IFDIR) && ret != ERR_OK) {
+            if ((s.st_mode & S_IFDIR) && ((ret = GetHapFilesFromBundlePath(bundlePath, realPaths)) != ERR_OK)) {
                 APP_LOGE("GetHapFilesFromBundlePath failed with bundlePath:%{public}s", bundlePaths.front().c_str());
                 return ret;
             }
@@ -718,21 +723,21 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
         return false;
     }
 
-    int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY);
-    if (sourceFd == -1) {
+    FILE* sourceFp = fopen(sourcePath.c_str(), "r");
+    if (sourceFp == nullptr) {
         APP_LOGE("sourcePath open failed, errno : %{public}d", errno);
         return CopyFile(sourcePath, destPath);
     }
-
+    int32_t sourceFd = fileno(sourceFp);
     struct stat sourceStat;
     if (fstat(sourceFd, &sourceStat) == -1) {
         APP_LOGE("fstat failed, errno : %{public}d", errno);
-        close(sourceFd);
+        (void)fclose(sourceFp);
         return CopyFile(sourcePath, destPath);
     }
     if (sourceStat.st_size < 0) {
         APP_LOGE("invalid st_size");
-        close(sourceFd);
+        (void)fclose(sourceFp);
         return CopyFile(sourcePath, destPath);
     }
 
@@ -740,7 +745,7 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
         destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (destFd == -1) {
         APP_LOGE("destPath open failed, errno : %{public}d", errno);
-        close(sourceFd);
+        (void)fclose(sourceFp);
         return CopyFile(sourcePath, destPath);
     }
 
@@ -754,12 +759,12 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
     if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
         APP_LOGE("sendfile failed, errno : %{public}d, send count : %{public}zu , file size : %{public}zu",
             errno, transferCount, static_cast<size_t>(sourceStat.st_size));
-        close(sourceFd);
+        (void)fclose(sourceFp);
         close(destFd);
         return CopyFile(sourcePath, destPath);
     }
 
-    close(sourceFd);
+    (void)fclose(sourceFp);
     if (needFsync) {
         (void)fsync(destFd);
     }
@@ -897,7 +902,8 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
     }
     destination.append(ServiceConstants::PATH_SEPARATOR);
     destination.append(GetAppInstallPrefix(filePath, rename));
-    destination.append(std::to_string(GetCurrentTimeNs()));
+    static std::atomic<uint64_t> installCount = 0;
+    destination.append(std::to_string(GetCurrentTimeNs()) + std::string("_") + std::to_string(++installCount));
     destination = CreateTempDir(destination);
     auto pos = filePath.find(subStr);
     if (pos == std::string::npos) { // this circumstance could not be considered laterly
@@ -1234,6 +1240,61 @@ bool BundleUtil::GetBitValue(const uint8_t num, const uint8_t pos)
     return (num & (1U << pos)) != 0;
 }
 
+bool BundleUtil::CheckOrphanNodeUseRateIsSufficient()
+{
+    std::vector<int64_t> numbers;
+    if (!GetOrphanNodes(PROC_FILE_PATH, numbers)) {
+        APP_LOGW("GetOrphanNodes failed!");
+        return true;
+    }
+    int64_t curOrphanNode = numbers[0];
+    int64_t maxOrphanNode = numbers[1];
+    APP_LOGD("orphan node %{public}lld, %{public}lld", static_cast<long long>(curOrphanNode),
+        static_cast<long long>(maxOrphanNode));
+    if (curOrphanNode >= maxOrphanNode || curOrphanNode < 0) {
+        APP_LOGE("orphan node insuff %{public}lld, %{public}lld", static_cast<long long>(curOrphanNode),
+            static_cast<long long>(maxOrphanNode));
+        return false;
+    }
+    bool res = (static_cast<double>(curOrphanNode) / maxOrphanNode) < MAX_INSTALL_NEED_FDUSED_RATE;
+    if (!res) {
+        APP_LOGE("orphan node insuff %{public}lld, %{public}lld", static_cast<long long>(curOrphanNode),
+            static_cast<long long>(maxOrphanNode));
+    }
+    return res;
+}
+
+bool BundleUtil::GetOrphanNodes(const std::string &sysFile, std::vector<int64_t> &numbers)
+{
+    std::ifstream file(sysFile);
+    if (!file.is_open()) {
+        APP_LOGW("proc file load failed!");
+        return false;
+    }
+    std::string line;
+    file.seekg(0, std::ios::end);
+    int64_t size = file.tellg();
+    if (size <= 0 || size > ONE_M) {
+        APP_LOGE("file is empty or too big");
+        file.close();
+        return false;
+    }
+    file.seekg(0, std::ios::beg);
+    if (getline(file, line)) {
+        std::istringstream iss(line);
+        int64_t num;
+        while (iss >> num) {
+            numbers.push_back(num);
+        }
+    }
+    file.close();
+    if (numbers.size() < ORPHAN_DATA_SIZE) {
+        APP_LOGW("proc file data incorrect!");
+        return false;
+    }
+    return true;
+}
+
 std::vector<std::string> BundleUtil::FileTypeNormalize(const std::string &fileType)
 {
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
@@ -1259,6 +1320,55 @@ std::vector<std::string> BundleUtil::FileTypeNormalize(const std::string &fileTy
     APP_LOGI("UDMF not support");
     return {};
 #endif
+}
+
+ErrCode BundleUtil::GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias)
+{
+    std::string path = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH +
+        std::to_string(userId);
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        if (errno == ENOENT) {
+            APP_LOGI("dir not exist");
+            return ERR_OK;
+        }
+        APP_LOGE("fail to opendir:%{public}s, errno:%{public}d", path.c_str(), errno);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_OPEN_DIR_FAILED;
+    }
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        if (ptr->d_type == DT_REG) {
+            if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
+                continue;
+            }
+            std::string fileName(ptr->d_name);
+            if (EndWith(fileName, ServiceConstants::CER_SUFFIX)) {
+                certificateAlias.emplace_back(fileName);
+            }
+        }
+    }
+    closedir(dir);
+    APP_LOGI("re sign cert size:%{public}zu", certificateAlias.size());
+    return ERR_OK;
+}
+
+std::vector<std::string> BundleUtil::GetPathsToSetContext(const std::string &bundleName,
+    int32_t userId, int32_t appIndex)
+{
+    std::vector<std::string> paths;
+    std::string dataDirName = bundleName;
+    if (appIndex == 0) {
+        paths.emplace_back(std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
+    } else {
+        dataDirName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
+    for (const auto &el : ServiceConstants::FULL_BUNDLE_EL) {
+        paths.emplace_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + dataDirName);
+        paths.emplace_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::DATABASE + dataDirName);
+    }
+    return paths;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

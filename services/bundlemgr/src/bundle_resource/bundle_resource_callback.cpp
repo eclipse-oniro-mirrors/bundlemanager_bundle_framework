@@ -49,10 +49,6 @@ bool BundleResourceCallback::OnSystemColorModeChanged(const std::string &colorMo
 bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language, const uint32_t type)
 {
     APP_LOGI("start, language %{public}s", language.c_str());
-    if (language == BundleSystemState::GetInstance().GetSystemLanguage()) {
-        APP_LOGD("current language is %{public}s no change", language.c_str());
-        return true;
-    }
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     if (currentUserId <= 0) {
         currentUserId = Constants::START_USERID;

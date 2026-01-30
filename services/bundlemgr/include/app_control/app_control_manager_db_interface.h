@@ -73,12 +73,13 @@ public:
         const UninstallDisposedRule &rule, int32_t appIndex, int32_t userId) = 0;
     virtual ErrCode DeleteUninstallDisposedRule(const std::string &callingName, const std::string &appIdentifier,
         int32_t appIndex, int32_t userId) = 0;
-    virtual ErrCode GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
-        int32_t userId, UninstallDisposedRule &rule) = 0;
+    virtual ErrCode GetUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
+        int32_t appIndex, int32_t userId, UninstallDisposedRule &rule) = 0;
     virtual ErrCode GetAppRunningControlRuleByUserId(int32_t userId, std::string &appId,
         AppRunningControlRule &controlRuleResult) = 0;
     virtual ErrCode GetAllUserIdsForRunningControl(std::vector<int32_t> &outUserIds) = 0;
     virtual ErrCode GetAppIdsByUserId(int32_t userId, std::vector<std::string> &appIds) = 0;
+    virtual ErrCode DeleteAllDisposedRulesForUser(int32_t userId) = 0;
 };
 } // namespace AppExecFwk
 } // namespace OHOS

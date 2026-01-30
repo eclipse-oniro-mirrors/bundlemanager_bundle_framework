@@ -29,6 +29,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
+struct AsyncCallbackInfo;
+
 class ZlibCallbackInfo : public ZlibCallbackInfoBase {
 public:
     ZlibCallbackInfo() = default;
@@ -44,7 +46,7 @@ public:
     void SetValid(bool valid);
 
 private:
-    int32_t ExcuteWork(uv_loop_s* loop, uv_work_t* work);
+    int32_t ExecuteWork(AsyncCallbackInfo* asyncCallbackInfo);
 private:
     napi_env env_ = nullptr;
     napi_ref callback_ = nullptr;

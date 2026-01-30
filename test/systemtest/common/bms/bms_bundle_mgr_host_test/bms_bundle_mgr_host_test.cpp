@@ -23,6 +23,7 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace AppExecFwk {
+constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 
 class BmsBundleMgrHostTest : public testing::Test {
 public:
@@ -161,6 +162,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleInfoWithIntFlagsV9_0100, Function 
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = bundleMgrHost.HandleGetBundleInfoWithIntFlagsV9(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetBundleInfoForException_0100
+ * @tc.name: test the HandleGetBundleInfoForException
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetBundleInfoForException
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleInfoForException_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetBundleInfoForException(data, reply);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -1560,6 +1576,24 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetAppProvisionInfo_0100, Function | Medium
 }
 
 /**
+ * @tc.number: HandleGetAllAppProvisionInfo_0100
+ * @tc.name: test the HandleGetAllAppProvisionInfo normal case
+ * @tc.desc: 1. test normal execution flow where WriteInt32 and WriteParcelableVector both succeed
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetAllAppProvisionInfo_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+
+    int32_t userId = 100;
+    data.WriteInt32(userId);
+
+    ErrCode res = bundleMgrHost.HandleGetAllAppProvisionInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: HandleGetProvisionMetadata
  * @tc.name: test the HandleGetProvisionMetadata
  * @tc.desc: 1. system running normally
@@ -2025,6 +2059,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetAllPluginInfo_0001, Function | MediumTes
 }
 
 /**
+ * @tc.number: HandleGetAllJsonProfile_0001
+ * @tc.name: test the HandleGetAllJsonProfile
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetAllJsonProfile
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetAllJsonProfile_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetAllJsonProfile(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: HandleGetPluginInfosForSelf_0001
  * @tc.name: test the HandleGetPluginInfosForSelf
  * @tc.desc: 1. system running normally
@@ -2067,6 +2116,70 @@ HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_0001, Function
     MessageParcel reply;
     ErrCode res = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name  : HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsZero
+ * @tc.number: HandleBatchGetCompatibleDeviceTypeTest_0002
+ * @tc.desc  : 1. bundleNameCount is zero
+ *             2. test HandleBatchGetCompatibleDeviceType
+ */
+HWTEST_F(BmsBundleMgrHostTest,
+         HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsZero,
+         Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+
+    data.WriteInt32(0);
+
+    ErrCode ret = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name  : HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsTooLarge
+ * @tc.number: HandleBatchGetCompatibleDeviceTypeTest_0003
+ * @tc.desc  : 1. bundleNameCount is more than MAX_BATCH_QUERY_BUNDLE_SIZE
+ *             2. test HandleBatchGetCompatibleDeviceType
+ */
+HWTEST_F(BmsBundleMgrHostTest,
+         HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsTooLarge,
+         Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+
+    data.WriteInt32(MAX_BATCH_QUERY_BUNDLE_SIZE + 1);
+
+    ErrCode ret = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name  : HandleBatchGetCompatibleDeviceType_ShouldReturnOK_WhenAllOperationsSucceed
+ * @tc.number: HandleBatchGetCompatibleDeviceTypeTest_0004
+ * @tc.desc  : 1. bundleNameCount is one
+ *             2. test HandleBatchGetCompatibleDeviceType
+ */
+HWTEST_F(BmsBundleMgrHostTest,
+         HandleBatchGetCompatibleDeviceType_ShouldReturnOK_WhenAllOperationsSucceed,
+         Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+
+    data.WriteInt32(1);
+    data.WriteString("testBundleName");
+
+    ErrCode ret = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
+
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -2293,6 +2406,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetPluginBundlePathForSelf_0001, Function |
 }
 
 /**
+* @tc.number: HandleGetBundleInstallStatus_0001
+* @tc.name: test the HandleGetBundleInstallStatus
+* @tc.desc: 1. system running normally
+*           2. test HandleGetBundleInstallStatus
+*/
+HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleInstallStatus_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetBundleInstallStatus(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
 * @tc.number: HandleRecoverBackupBundleData_0001
 * @tc.name: test the HandleRecoverBackupBundleData
 * @tc.desc: 1. system running normally
@@ -2304,6 +2432,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleRecoverBackupBundleData_0001, Function | Me
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = bundleMgrHost.HandleRecoverBackupBundleData(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+* @tc.number: HandleGetAssetGroupsInfo_0001
+* @tc.name: test the HandleGetAssetGroupsInfo
+* @tc.desc: 1. system running normally
+*           2. test HandleGetAssetGroupsInfo
+*/
+HWTEST_F(BmsBundleMgrHostTest, HandleGetAssetGroupsInfo_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetAssetGroupsInfo(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -2320,6 +2463,51 @@ HWTEST_F(BmsBundleMgrHostTest, HandleRemoveBackupBundleData_0001, Function | Med
     MessageParcel reply;
     ErrCode res = bundleMgrHost.HandleRemoveBackupBundleData(data, reply);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+* @tc.number: HandleAddDynamicShortcutInfos_0001
+* @tc.name: test the HandleAddDynamicShortcutInfos
+* @tc.desc: 1. system running normally
+*           2. test HandleAddDynamicShortcutInfos
+*/
+HWTEST_F(BmsBundleMgrHostTest, HandleAddDynamicShortcutInfos_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleAddDynamicShortcutInfos(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+* @tc.number: HandleDeleteDynamicShortcutInfos_0001
+* @tc.name: test the HandleDeleteDynamicShortcutInfos
+* @tc.desc: 1. system running normally
+*           2. test HandleDeleteDynamicShortcutInfos
+*/
+HWTEST_F(BmsBundleMgrHostTest, HandleDeleteDynamicShortcutInfos_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleDeleteDynamicShortcutInfos(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+* @tc.number: HandleSetShortcutsEnabled_0001
+* @tc.name: test the HandleSetShortcutsEnabled
+* @tc.desc: 1. system running normally
+*           2. test HandleSetShortcutsEnabled
+*/
+HWTEST_F(BmsBundleMgrHostTest, HandleSetShortcutsEnabled_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleSetShortcutsEnabled(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 } // AppExecFwk
 } // OHOS

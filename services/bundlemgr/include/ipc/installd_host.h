@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -129,6 +129,13 @@ private:
      */
     bool HandleGetDiskUsageFromPath(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the GetDiskUsage function called from a IInstalld proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleGetBundleInodeCount(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the CleanBundleDataDir function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -142,6 +149,8 @@ private:
      * @return Returns true if called successfully; returns false otherwise.
      */
     bool HandleCleanBundleDataDirByName(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCleanBundleDirs(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the CleanBundleDataDir function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
@@ -161,6 +170,18 @@ private:
      * @return Returns true if called successfully; returns false otherwise.
      */
     bool HandleSetDirApl(MessageParcel &data, MessageParcel &reply);
+
+    /**
+     * @brief Handles the set dirs apl function called from a IInstalld proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleSetDirsApl(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleSetFileConForce(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleStopSetFileCon(MessageParcel &data, MessageParcel &reply);
 
     /**
      * @brief Handles the set dir apl function called from a IInstalld proxy object.
@@ -226,6 +247,8 @@ private:
 
     bool HandRemoveSignProfile(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleAddCertAndEnableKey(MessageParcel &data, MessageParcel &reply);
+
     bool HandleSetEncryptionDir(MessageParcel &data, MessageParcel &reply);
 
     bool HandleDeleteEncryptionKeyId(MessageParcel &data, MessageParcel &reply);
@@ -252,9 +275,17 @@ private:
 
     bool HandleClearDir(MessageParcel &data, MessageParcel &reply);
 
-    CriticalManager criticalManager_;
+    bool HandleHashSoFile(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleHashFiles(MessageParcel &data, MessageParcel &reply);
 
     bool HandleRestoreconPath(MessageParcel &data, MessageParcel &reply);
+    
+    bool HandleResetBmsDBSecurity(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCopyDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleDeleteCertAndRemoveKey(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

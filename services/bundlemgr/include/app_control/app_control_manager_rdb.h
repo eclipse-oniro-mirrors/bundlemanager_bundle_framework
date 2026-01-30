@@ -70,12 +70,13 @@ public:
         const UninstallDisposedRule &rule, int32_t appIndex, int32_t userId) override;
     virtual ErrCode DeleteUninstallDisposedRule(const std::string &callingName, const std::string &appIdentifier,
         int32_t appIndex, int32_t userId) override;
-    virtual ErrCode GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
-        int32_t userId, UninstallDisposedRule &rule) override;
+    virtual ErrCode GetUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
+        int32_t appIndex, int32_t userId, UninstallDisposedRule &rule) override;
     virtual ErrCode GetAppRunningControlRuleByUserId(int32_t userId, std::string &appId,
         AppRunningControlRule &controlRuleResult) override;
     virtual ErrCode GetAllUserIdsForRunningControl(std::vector<int32_t> &outUserIds) override;
     virtual ErrCode GetAppIdsByUserId(int32_t userId, std::vector<std::string> &appIds) override;
+    virtual ErrCode DeleteAllDisposedRulesForUser(int32_t userId) override;
 
 private:
     ErrCode DeleteOldControlRule(const std::string &callingName, const std::string &controlRuleType,

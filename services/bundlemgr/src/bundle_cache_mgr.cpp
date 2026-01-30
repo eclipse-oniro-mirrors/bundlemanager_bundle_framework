@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "app_log_tag_wrapper.h"
 #include "bundle_cache_mgr.h"
 
 #include <cinttypes>
@@ -25,6 +26,7 @@ constexpr int32_t INVALID_APP_INDEX = 0;
 constexpr size_t INDEX_BUNDLE_NAME = 0;
 constexpr size_t INDEX_MODULE_NAMES = 1;
 constexpr size_t INDEX_CLONE_APP_INDEX = 2;
+constexpr int64_t TOTAL_TIMEOUT_MS = 60000;
 }
 
 std::vector<std::string> BundleCacheMgr::GetBundleCachePath(const std::string &bundleName,
@@ -72,17 +74,27 @@ void BundleCacheMgr::GetBundleCacheSize(const std::vector<std::tuple<std::string
     std::vector<std::string>, std::vector<int32_t>>> &validBundles, const int32_t userId,
     uint64_t &cacheStat)
 {
+    auto startTime = std::chrono::steady_clock::now();
     for (const auto &item : validBundles) {
-        // get cache path for every bundle(contains clone and module)
         std::string bundleName = std::get<INDEX_BUNDLE_NAME>(item);
         std::vector<std::string> moduleNames = std::get<INDEX_MODULE_NAMES>(item);
         std::vector<int32_t> allCloneAppIndex = std::get<INDEX_CLONE_APP_INDEX>(item);
         for (const auto &appIndex : allCloneAppIndex) {
+            // Calculate the remaining timeout time
+            auto currentTime = std::chrono::steady_clock::now();
+            auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
+            auto remainingTime = TOTAL_TIMEOUT_MS - elapsedTime;
+            if (remainingTime <= 0) {
+                APP_LOGW("timeout");
+                return;
+            }
             std::vector<std::string> cachePaths = GetBundleCachePath(bundleName, userId, appIndex, moduleNames);
             int64_t cacheSize = 0;
-            ErrCode ret = InstalldClient::GetInstance()->GetDiskUsageFromPath(cachePaths, cacheSize);
+            
+            // Transfer remaining time to GetDiskUsageFromPath
+            ErrCode ret = InstalldClient::GetInstance()->GetDiskUsageFromPath(cachePaths, cacheSize, remainingTime);
             if (ret != ERR_OK) {
-                APP_LOGW("BundleCache GetDiskUsageFromPath  failed for %{public}s", bundleName.c_str());
+                APP_LOGW("failed for %{public}s", bundleName.c_str());
                 continue;
             }
             APP_LOGD("BundleCache stat: %{public}" PRId64 " bundlename: %{public}s",
@@ -91,6 +103,44 @@ void BundleCacheMgr::GetBundleCacheSize(const std::vector<std::tuple<std::string
         }
     }
     return;
+}
+
+void BundleCacheMgr::GetBundleCacheSizeByAppIndex(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, const std::vector<std::string> &moduleNames, uint64_t &cacheStat)
+{
+    std::vector<std::string> cachePaths = GetBundleCachePath(bundleName, userId, appIndex, moduleNames);
+    int64_t cacheSize = 0;
+    ErrCode ret = InstalldClient::GetInstance()->GetDiskUsageFromPath(cachePaths, cacheSize);
+    if (ret != ERR_OK) {
+        APP_LOGW_NOFUNC("BundleCache failed for %{public}s", bundleName.c_str());
+        return;
+    }
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "BundleCache stat: %{public}" PRId64 " bundlename: %{public}s",
+        cacheSize, bundleName.c_str());
+    cacheStat += static_cast<uint64_t>(cacheSize);
+    return;
+}
+
+ErrCode BundleCacheMgr::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+{
+    if (uid < 0) {
+        inodeCount = 0;
+        APP_LOGE_NOFUNC("Invalid uid: %{public}d", uid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+
+    uint64_t totalInodeCount = 0;
+    ErrCode ret = InstalldClient::GetInstance()->GetBundleInodeCount(uid, totalInodeCount);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("InodeCount failed for uid %{public}d", uid);
+        return ret;
+    }
+
+    inodeCount = totalInodeCount;
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "succeeded, uid: %{public}d, inodeCount: %{public}llu",
+        uid, inodeCount);
+
+    return ERR_OK;
 }
 
 ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)

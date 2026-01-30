@@ -60,6 +60,9 @@ public:
     bool GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0);
 
+    bool GetSingleLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0);
+
     bool GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
 
     bool GetAllLauncherAbilityResourceInfo(const uint32_t flags,
@@ -119,11 +122,15 @@ public:
 
     bool DeleteUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
 
+    bool DeleteUninstallBundleResourceForUser(const int32_t userId);
+
     bool GetUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex,
         const uint32_t flags, BundleResourceInfo &bundleResourceInfo);
 
     bool GetAllUninstallBundleResourceInfo(const int32_t userId, const uint32_t flags,
         std::vector<BundleResourceInfo> &bundleResourceInfos);
+
+    int32_t GetUserId();
 
 private:
     void ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo);
@@ -168,8 +175,6 @@ private:
         const bool hasBundleUpdated = false);
 
     bool InnerProcessDynamicIconWhenOta(const std::string &bundleName);
-
-    int32_t GetUserId();
 
     void SetIsOnlineTheme(const int32_t userId);
 

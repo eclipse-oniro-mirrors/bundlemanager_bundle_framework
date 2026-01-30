@@ -39,6 +39,7 @@ const char* PLUGIN_BUNDLE_INFO_ABILITY_INFOS = "abilityInfos";
 const char* PLUGIN_BUNDLE_INFO_APPLICATION_INFO = "appInfo";
 const char* PLUGIN_BUNDLE_INFO_NATIVE_LIB_PATH = "nativeLibraryPath";
 const char* COMPILE_MODE_ES_MODULE = "esmodule";
+const char* PLUGIN_BUNDLE_INFO_EXTENSION_INFOS = "extensionInfos";
 }
 
 bool PluginBundleInfo::ReadFromParcel(Parcel &parcel)
@@ -87,6 +88,26 @@ bool PluginBundleInfo::ReadFromParcel(Parcel &parcel)
     }
     appInfo = *applicationInfo;
 
+    if (!ReadExtensionInfos(parcel)) {
+        return false;
+    }
+    return true;
+}
+
+bool PluginBundleInfo::ReadExtensionInfos(Parcel &parcel)
+{
+    int32_t extensionInfoSize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfoSize);
+    CONTAINER_SECURITY_VERIFY(parcel, extensionInfoSize, &extensionInfos);
+    for (int32_t i = 0; i < extensionInfoSize; ++i) {
+        std::string name = parcel.ReadString();
+        std::unique_ptr<ExtensionAbilityInfo> info(parcel.ReadParcelable<ExtensionAbilityInfo>());
+        if (!info) {
+            APP_LOGE("ReadParcelable<ExtensionAbilityInfo> failed");
+            return false;
+        }
+        extensionInfos.emplace(name, *info);
+    }
     return true;
 }
 
@@ -115,6 +136,11 @@ bool PluginBundleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &abilityInfo.second);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &appInfo);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfos.size());
+    for (const auto &extensionInfo : extensionInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, extensionInfo.first);
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &extensionInfo.second);
+    }
     return true;
 }
 
@@ -145,7 +171,8 @@ void to_json(nlohmann::json &jsonObject, const PluginBundleInfo &pluginBundleInf
         {PLUGIN_BUNDLE_INFO_CODE_PATH, pluginBundleInfo.codePath},
         {PLUGIN_BUNDLE_INFO_NATIVE_LIB_PATH, pluginBundleInfo.nativeLibraryPath},
         {PLUGIN_BUNDLE_INFO_ABILITY_INFOS, pluginBundleInfo.abilityInfos},
-        {PLUGIN_BUNDLE_INFO_APPLICATION_INFO, pluginBundleInfo.appInfo}
+        {PLUGIN_BUNDLE_INFO_APPLICATION_INFO, pluginBundleInfo.appInfo},
+        {PLUGIN_BUNDLE_INFO_EXTENSION_INFOS, pluginBundleInfo.extensionInfos},
     };
 }
 
@@ -249,6 +276,14 @@ void from_json(const nlohmann::json &jsonObject, PluginBundleInfo &pluginBundleI
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::unordered_map<std::string, ExtensionAbilityInfo>>(jsonObject,
+        jsonObjectEnd,
+        PLUGIN_BUNDLE_INFO_EXTENSION_INFOS,
+        pluginBundleInfo.extensionInfos,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read pluginBundleInfo error : %{public}d", parseResult);
     }
@@ -263,6 +298,22 @@ bool PluginBundleInfo::GetAbilityInfoByName(const std::string &abilityName,
         if ((abilityInfo.name == abilityName) &&
             (moduleName.empty() || (abilityInfo.moduleName == moduleName))) {
             info = abilityInfo;
+            info.applicationInfo = appInfo;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool PluginBundleInfo::GetExtensionInfoByName(const std::string &extensionName,
+    const std::string &moduleName,
+    ExtensionAbilityInfo &info)
+{
+    for (const auto &extension : extensionInfos) {
+        auto &extensionInfo = extension.second;
+        if ((extensionInfo.name == extensionName) &&
+            (moduleName.empty() || (extensionInfo.moduleName == moduleName))) {
+            info = extensionInfo;
             info.applicationInfo = appInfo;
             return true;
         }

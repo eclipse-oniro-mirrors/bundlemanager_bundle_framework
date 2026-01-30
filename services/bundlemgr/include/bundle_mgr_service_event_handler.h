@@ -62,6 +62,8 @@ enum OTAFlag : uint32_t {
     CHECK_SYSTEM_OPTIMIZE_SHADER_CAHCE_DIR = 0x00080000,
     UPDATE_MODULE_JSON = 0x00100000,
     PROCESS_ROUTER_MAP = 0x00200000,
+    UPDATE_EXTENSION_DIRS_SELINUX_APL = 0x00400000,
+    ADD_IDLE_INFO = 0x00800000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -132,6 +134,8 @@ public:
     static void ProcessRebootQuickFixUnInstallAndRecover(const std::string &path);
 
     static void SavePreInstallException(const std::string &bundleDir);
+
+    static void SavePreInstallExceptionBundleName(const std::string &bundleName);
 
     static void ProcessSystemBundleInstall(
         const PreScanInfo &preScanInfo,
@@ -535,6 +539,12 @@ private:
         const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap,
         Constants::AppType appType);
 
+    static bool InstallSystemBundleNeedCheckUserForPatch(const std::vector<std::string> &filePaths,
+        const std::string &bundleName, bool isOta);
+
+    static bool InnerMultiProcessBundleInstallForPatch(
+        const std::unordered_map<std::string, std::vector<std::string>> &needInstallMap, bool isOta);
+
     void ProcessCheckAppDataDir();
     void InnerProcessCheckAppDataDir();
 
@@ -604,6 +614,7 @@ private:
     static void PatchSharedHspInstall(const std::string &path);
     static void PatchSystemBundleInstall(const std::string &path, bool isOta);
     void HandleOTACodeEncryption();
+    void HandleDetermineCloneNumList();
     void SaveCodeProtectFlag();
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
@@ -615,8 +626,12 @@ private:
 #endif
     void DeletePreInstallExceptionAppService(const std::string &bundleDir);
     void SavePreInstallExceptionAppService(const std::string &bundleDir);
+    void DeletePreInstallExceptionShared(const std::string &bundleDir);
+    void HandlePreInstallSharedBundlePathsException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+        const std::set<std::string> &exceptionSharedPaths);
+    void SavePreInstallExceptionShared(const std::string &bundleDir);
     void HandlePreInstallAppServicePathsException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
-        const std::set<std::string> &exceptionAppServicePaths, bool needDeleteRecord = true);
+        const std::set<std::string> &exceptionAppServicePaths);
     void HandlePreInstallAppPathsException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
         const std::set<std::string> &exceptionPaths, bool needDeleteRecord = true);
     void HandlePreInstallAppServiceBundleNamesException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
@@ -700,6 +715,7 @@ private:
     void ProcessUpdatePermissions();
     bool IsPermissionsUpdated();
     bool SaveUpdatePermissionsFlag();
+    void ProcessUpdateExtensionDirsApl();
     bool CleanAllBundleEl1ArkStartupCacheLocal();
     bool ProcessCheckSystemOptimizeDir();
 #ifdef WEBVIEW_ENABLE
@@ -712,6 +728,16 @@ private:
     ErrCode CleanSystemOptimizeBundleShaderCache(const std::string &bundleName,
         int32_t appIndex, int32_t userId);
     ErrCode CleanSystemOptimizeShaderCache();
+    bool IsRecoverListEmpty(const std::string &bundleName, std::vector<int32_t> &userIds);
+    void ProcessRecoverList(const std::string &bundleName, const std::string &filePath, bool removable,
+        Constants::AppType appType, const std::vector<int32_t> userIds,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void GetInstallAndRecoverListForAllUser(std::unordered_map<int32_t,
+        std::pair<std::vector<std::string>, std::vector<std::string>>> &installAndRecoverList);
+    bool IsForceInstallListEmpty(const std::string &bundleName);
+    static std::vector<std::string> ObtainRealPath(const std::vector<std::string> &paths);
+    void RegisterRelabelEvent();
+    bool ProcessIdleInfo();
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
@@ -733,6 +759,8 @@ private:
     std::map<std::string, std::set<std::string>> moduleUpdateAppService_;
     // key is bundleName, value is HmpBundlePathInfo
     std::map<std::string, HmpBundlePathInfo> hmpBundlePathInfos_;
+    std::unordered_map<int32_t,
+        std::pair<std::vector<std::string>, std::vector<std::string>>> userInstallAndRecoverMap_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

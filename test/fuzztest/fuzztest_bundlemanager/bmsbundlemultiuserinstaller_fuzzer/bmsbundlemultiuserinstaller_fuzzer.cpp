@@ -58,10 +58,12 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bundleMultiUserInstaller.ProcessBundleInstall(SYS_BUNDLE_NAME, Constants::UNSPECIFIED_USERID);
     bundleMultiUserInstaller.ProcessBundleInstall(bundleName, Constants::START_USERID);
     bundleMultiUserInstaller.ProcessBundleInstall(SYS_BUNDLE_NAME, INVALID_USER_ID);
+    bundleMultiUserInstaller.ResetInstallProperties();
     bundleMultiUserInstaller.CreateDataGroupDir(bundleName, userId);
 
     int32_t uid = fdp.ConsumeIntegral<int32_t>();
     InnerBundleInfo info;
+    bundleMultiUserInstaller.CreateDataDir(info, userId, uid);
     bundleMultiUserInstaller.CreateEl5Dir(info, userId, uid);
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.needDelete = false;
@@ -84,6 +86,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bundleMultiUserInstaller.RecoverHapToken(testBundleName, userId, accessTokenIdEx, innerBundleInfo);
     bundleMultiUserInstaller.RecoverHapToken(
         testBundleName, Constants::START_USERID, accessTokenIdEx, innerBundleInfo);
+    bundleMultiUserInstaller.RemoveDataDir(bundleName, userId);
+    bundleMultiUserInstaller.GetDataMgr();
     return true;
 }
 }

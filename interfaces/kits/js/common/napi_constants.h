@@ -43,6 +43,7 @@ constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
 constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
 constexpr uint32_t EXPLICIT_QUERY_RESULT_LEN = 1;
 constexpr int32_t EMPTY_USER_ID = -500;
+constexpr uint32_t MAX_SHORTCUT_INFO_SIZE = 100;
 
 constexpr int32_t ENUM_ONE = 1;
 constexpr int32_t ENUM_TWO = 2;
@@ -136,6 +137,10 @@ constexpr const char* PARAM_MODULENAME_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter moduleName is empty";
 constexpr const char* PARAM_ABILITYNAME_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter abilityName is empty";
+constexpr const char* PARAM_BUNDLE_OPTIONS_EMPTY_ERROR =
+    "BusinessError 401: Parameter error. parameter array is empty";
+constexpr const char* PARAM_BUNDLE_OPTIONS_NUMBER_ERROR =
+    "BusinessError 401: Parameter error. array size exceeds maximum allowed limit of 1000 elements";
 constexpr const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
 constexpr const char* PARAM_DEVELOPER_ID_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter developerId is empty";
@@ -151,6 +156,7 @@ constexpr const char* CLEAN_BUNDLE_CACHE_FILES_FOR_SELF = "CleanBundleCacheFiles
 constexpr const char* GET_ALL_BUNDLE_CACHE_SIZE = "getAllBundleCacheSize";
 constexpr const char* CLEAN_ALL_BUNDLE_CACHE = "cleanAllBundleCache";
 constexpr const char* GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
+constexpr const char* GET_ALL_APP_PROVISION_INFO = "getAllAppProvisionInfo";
 constexpr const char* CAN_OPEN_LINK = "CanOpenLink";
 constexpr const char* GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicationInfos";
 constexpr const char* GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
@@ -182,8 +188,10 @@ constexpr const char* GET_DYNAMIC_ICON_INFO = "GetDynamicIconInfo";
 constexpr const char* GET_PLUGIN_BUNDLE_PATH_FOR_SELF = "GetPluginBundlePathForSelf";
 constexpr const char* RECOVER_BACKUP_BUNDLE_DATA = "RecoverBackupBundleData";
 constexpr const char* REMOVE_BACKUP_BUNDLE_DATA = "RemoveBackupBundleData";
+constexpr const char* GET_BUNDLE_INSTALL_STATUS = "getBundleInstallStatus";
 
 inline const std::set<int32_t> SUPPORTED_PROFILE_LIST = { 1 };
+inline const std::set<int32_t> UNINSTALL_COMPONENT_TYPE_LIST = { 1, 2 };
 
 inline std::map<int32_t, std::string> APP_DISTRIBUTION_TYPE_MAP = {
     { ENUM_ONE, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
@@ -218,6 +226,7 @@ constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
 constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO = "GetLauncherAbilityResourceInfo";
 constexpr const char* GET_ALL_BUNDLE_RESOURCE_INFO = "GetAllBundleResourceInfo";
 constexpr const char* GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = "GetAllLauncherAbilityResourceInfo";
+constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST = "getLauncherAbilityResourceInfoList";
 constexpr const char* GET_EXTENSION_ABILITY_RESOURCE_INFO = "GetExtensionAbilityResourceInfo";
 constexpr const char* GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO = "GetAllUninstalledBundleResourceInfo";
 
@@ -228,8 +237,20 @@ constexpr const char* GET_ALL_DESKTOP_SHORTCUT_INFO = "GetAllDesktopShortcutInfo
 constexpr const char* SET_SHORTCUT_VISIBLE = "SetShortcutVisibleForSelf";
 constexpr const char* GET_ALL_SHORTCUT_INFO_FOR_SELF = "GetAllShortcutInfoForSelf";
 constexpr const char* SHORTCUT_ID = "shortcutId";
+constexpr const char* SHORTCUT_IDS = "ids";
 constexpr const char* INVALID_SHORTCUT_INFO_ERROR =
     "invalid ShortcutInfo: parameter type error, or appIndex is less than 0";
+constexpr const char* ADD_DYNAMIC_SHORTCUT_INFOS = "addDynamicShortcutInfos";
+constexpr const char* DELETE_DYNAMIC_SHORTCUT_INFOS = "deleteDynamicShortcutInfos";
+constexpr const char* SET_SHORTCUTS_ENABLED = "setShortcutsEnabled";
+constexpr const char* SHORTCUT_INFO_LENGTH_ERROR = "shortcutInfo length invalid";
+constexpr const char* SHORTCUT_IDS_LENGTH_ERROR = "shortcut Ids length invalid";
+constexpr const char* BUNDLENAME_APPINDEX_NOT_UNIQUE =
+    "BusinessError 18100001: A combination of bundleName and appIndex"
+    "in the shortcutInfo list is different from the others.";
+constexpr const char* PERMISSION_DYNAMIC_SHORTCUT_INFO =
+    "ohos.permission.MANAGE_SHORTCUTS or "
+    "(ohos.permission.MANAGE_SHORTCUTS and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
 
 // free_install
 constexpr const char* RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE = "isHapModuleRemovable";
@@ -265,7 +286,8 @@ constexpr const char* INSTALL_PERMISSION =
     "ohos.permission.INSTALL_ENTERPRISE_BUNDLE or "
     "ohos.permission.INSTALL_ENTERPRISE_MDM_BUNDLE or "
     "ohos.permission.INSTALL_ENTERPRISE_NORMAL_BUNDLE or "
-    "ohos.permission.INSTALL_INTERNALTESTING_BUNDLE";
+    "ohos.permission.INSTALL_INTERNALTESTING_BUNDLE or "
+    "(ohos.permission.INSTALL_BUNDLE and ohos.permission.INSTALL_ALLOW_DOWNGRADE)";
 constexpr const char* UNINSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.UNINSTALL_BUNDLE";
 constexpr const char* RECOVER_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.RECOVER_BUNDLE";
 constexpr const char* INSTALL_SELF_PERMISSION = "ohos.permission.INSTALL_SELF_BUNDLE";
@@ -295,6 +317,7 @@ constexpr const char* SET_DISPOSED_STATUS_SYNC = "SetDisposedStatusSync";
 constexpr const char* DELETE_DISPOSED_STATUS_SYNC = "DeleteDisposedStatusSync";
 constexpr const char* GET_DISPOSED_STATUS_SYNC = "GetDisposedStatusSync";
 constexpr const char* GET_DISPOSED_RULE = "GetDisposedRule";
+constexpr const char* GET_ALL_DISPOSED_RULES = "GetAllDisposedRules";
 constexpr const char* APP_ID = "appId";
 constexpr const char* APP_IDENTIFIER = "appIdentifier";
 constexpr const char* DISPOSED_WANT = "disposedWant";
@@ -309,6 +332,9 @@ constexpr const char* SET_DISPOSED_RULE = "SetDisposedRule";
 constexpr const char* SET_DISPOSED_RULES = "SetDisposedRules";
 
 // default_app_manager
+constexpr const char* PERMISSION_SET_DEFAULT_APPLICATION_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
+    "ohos.permission.SET_DEFAULT_APPLICATION or "
+    "(ohos.permission.SET_DEFAULT_APPLICATION and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
 const std::unordered_map<std::string, std::string> TYPE_MAPPING = {
     {"Web Browser", "BROWSER"},
     {"Image Gallery", "IMAGE"},
@@ -328,8 +354,11 @@ constexpr const char* SET_DEFAULT_APPLICATION = "SetDefaultApplication";
 constexpr const char* SET_DEFAULT_APPLICATION_SYNC = "SetDefaultApplicationSync";
 constexpr const char* RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
 constexpr const char* RESET_DEFAULT_APPLICATION_SYNC = "ResetDefaultApplicationSync";
+constexpr const char* SET_DEFAULT_APPLICATION_FOR_APP_CLONE = "setDefaultApplicationForAppClone";
 constexpr const char* TYPE_CHECK = "type";
 constexpr const char* WANT_CHECK = "want";
+constexpr const char* ELEMENT_NAME = "ElementName";
+constexpr const char* BUNDLE_OPTION = "BundleOption";
 }
 }
 }

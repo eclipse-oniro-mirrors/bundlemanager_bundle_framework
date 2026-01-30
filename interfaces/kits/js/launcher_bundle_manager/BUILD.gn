@@ -112,6 +112,7 @@ ohos_shared_library("launcherbundlemanager") {
   }
 
   external_deps = [
+    "ability_base:configuration",
     "ability_base:want",
     "ability_runtime:ability_manager",
     "ability_runtime:ability_start_options",

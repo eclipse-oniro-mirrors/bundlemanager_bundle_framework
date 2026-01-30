@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -127,7 +127,7 @@ HWTEST_F(BmsInstalldHostTest, HandleProcessBundleInstallNative_0100, Function | 
     MessageParcel data;
     MessageParcel reply;
     bool res = installdHost.HandleProcessBundleInstallNative(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -285,6 +285,20 @@ HWTEST_F(BmsInstalldHostTest, HandleGetDiskUsage_0100, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: HandleGetBundleInodeCount_0100
+ * @tc.name: test HandleGetBundleInodeCount
+ * @tc.desc: 1.HandleGetBundleInodeCount test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleGetBundleInodeCount_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleGetBundleInodeCount(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleCleanBundleDataDir_0100
  * @tc.name: test HandleCleanBundleDataDir
  * @tc.desc: 1.HandleCleanBundleDataDir test
@@ -323,7 +337,7 @@ HWTEST_F(BmsInstalldHostTest, HandleGetBundleStats_0100, Function | SmallTest | 
     MessageParcel data;
     MessageParcel reply;
     bool res = installdHost.HandleGetBundleStats(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -663,6 +677,20 @@ HWTEST_F(BmsInstalldHostTest, HandDeliverySignProfile_0100, Function | SmallTest
 }
 
 /**
+ * @tc.number: HandleAddCertAndEnableKey_0100
+ * @tc.name: test HandleAddCertAndEnableKey
+ * @tc.desc: 1.HandleAddCertAndEnableKey test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleAddCertAndEnableKey_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleAddCertAndEnableKey(data, reply);
+    EXPECT_FALSE(res);
+}
+
+/**
  * @tc.number: HandRemoveSignProfile_0100
  * @tc.name: test HandRemoveSignProfile
  * @tc.desc: 1.HandRemoveSignProfile test
@@ -837,7 +865,7 @@ HWTEST_F(BmsInstalldHostTest, HandleSetArkStartupCacheApl_0100, Function | Small
  */
 HWTEST_F(BmsInstalldHostTest, BeforeAfterRequest_0100, Function | SmallTest | Level1)
 {
-    CriticalManager criticalManager;
+    auto &criticalManager = CriticalManager::GetInstance();
     criticalManager.SetMemMgrStatus(true);
     criticalManager.counter_ = 0;
     criticalManager.critical_ = false;
@@ -877,14 +905,84 @@ HWTEST_F(BmsInstalldHostTest, SetMemMgrStatus_0100, Function | SmallTest | Level
 {
     InstalldHost installdHost;
     installdHost.SetMemMgrStatus(true);
-    EXPECT_TRUE(installdHost.criticalManager_.memMgrStarted_);
+    EXPECT_TRUE(CriticalManager::GetInstance().memMgrStarted_);
     installdHost.SetMemMgrStatus(false);
-    EXPECT_FALSE(installdHost.criticalManager_.memMgrStarted_);
+    EXPECT_FALSE(CriticalManager::GetInstance().memMgrStarted_);
 
-    CriticalManager criticalManager;
+    auto &criticalManager = CriticalManager::GetInstance();
     criticalManager.SetMemMgrStatus(true);
     EXPECT_TRUE(criticalManager.memMgrStarted_);
     criticalManager.SetMemMgrStatus(false);
     EXPECT_FALSE(criticalManager.memMgrStarted_);
+}
+
+/**
+ * @tc.number: HandleResetBmsDBSecurity_0100
+ * @tc.name: test HandleResetBmsDBSecurity_0100
+ * @tc.desc: 1.HandleResetBmsDBSecurity_0100 test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleResetBmsDBSecurity_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleResetBmsDBSecurity(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleCopyDir_0100
+ * @tc.name: test HandleCopyDir_0100
+ * @tc.desc: 1.HandleCopyDir_0100 test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleCopyDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleCopyDir(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleHashFiles_0100
+ * @tc.name: test HandleHashFiles
+ * @tc.desc: 1.HandleHashFiles test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleHashFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleHashFiles(data, reply);
+    EXPECT_TRUE(res);
+}
+ 
+/**
+ * @tc.number: HandleHashSoFile_0100
+ * @tc.name: test HandleHashSoFile
+ * @tc.desc: 1.HandleHashSoFile test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleHashSoFile_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleHashSoFile(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleDeleteCertAndRemoveKey_0100
+ * @tc.name: test HandleDeleteCertAndRemoveKey
+ * @tc.desc: 1.HandleDeleteCertAndRemoveKey test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleDeleteCertAndRemoveKey_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleDeleteCertAndRemoveKey(data, reply);
+    EXPECT_FALSE(res);
 }
 } // OHOS

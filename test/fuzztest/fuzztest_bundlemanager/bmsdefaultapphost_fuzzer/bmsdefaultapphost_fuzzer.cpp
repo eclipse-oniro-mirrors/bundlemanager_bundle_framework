@@ -41,6 +41,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     uint8_t code = fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX);
     defaultAppHost.OnRemoteRequest(code, datas, reply, option);
+    defaultAppHost.HandleIsDefaultApplication(datas, reply);
+    defaultAppHost.HandleGetDefaultApplication(datas, reply);
+    defaultAppHost.HandleSetDefaultApplication(datas, reply);
+    defaultAppHost.HandleResetDefaultApplication(datas, reply);
+    defaultAppHost.HandleSetDefaultApplicationForAppClone(datas, reply);
     return true;
 }
 }

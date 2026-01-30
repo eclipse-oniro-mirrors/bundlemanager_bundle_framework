@@ -39,7 +39,7 @@ using namespace OHOS::Security;
 namespace OHOS {
 namespace {
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 }  // namespace
 
 class BmsBundlePermissionStartFullTest : public testing::Test {

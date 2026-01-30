@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,9 +16,11 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_OPERATOR_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_OPERATOR_H
 
+#include <openssl/sha.h>
 #include <mutex>
 #include <string>
 #include <vector>
+#include <sys/quota.h>
 
 #include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
@@ -29,6 +31,7 @@
 #include "ipc/code_signature_param.h"
 #include "ipc/encryption_param.h"
 #include "ipc/extract_param.h"
+#include "ipc/install_hnp_param.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -100,7 +103,8 @@ public:
     static bool IsNativeSo(const std::string &entryName, const std::string &cpuAbi);
 
     static bool ExtractFiles(const ExtractParam &extractParam);
-    static bool ExtractFiles(const std::string hnpPackageInfo, const ExtractParam &extractParam);
+    static bool ExtractFiles(const std::map<std::string, std::string> &hnpPackageMap,
+        const ExtractParam &extractParam);
     static bool ExtractTargetFile(
         const BundleExtractor &extractor,
         const std::string &entryName,
@@ -110,12 +114,7 @@ public:
         const std::string &entryName,
         const std::string &targetPath,
         const ExtractFileType &extractFileType = ExtractFileType::SO);
-    static bool ProcessBundleInstallNative(
-        const std::string &userId,
-        const std::string &hnpRootPath,
-        const std::string &hapPath,
-        const std::string &cpuAbi,
-        const std::string &packageName);
+    static bool ProcessBundleInstallNative(const InstallHnpParam &installHnpParam);
     static bool ProcessBundleUnInstallNative(const std::string &userId, const std::string &bundleName);
 
     static bool DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
@@ -215,13 +214,16 @@ public:
     /**
      * @brief Get disk usage from path.
      * @param path Indicates the current path.
+     * @param timeoutMs Indicates the timeout time.
      * @return Returns disk size.
      */
-    static int64_t GetDiskUsageFromPath(const std::vector<std::string> &path);
+    static int64_t GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t timeoutMs = -1);
 
     static bool InitialiseQuotaMounts();
 
     static int64_t GetDiskUsageFromQuota(const int32_t uid);
+
+    static int64_t GetBundleInodeCount(int32_t uid);
 
     static bool ScanDir(
         const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
@@ -320,7 +322,31 @@ public:
     static bool ClearDir(const std::string &dir);
 
     static bool RestoreconPath(const std::string &path);
+    static std::string Sha256File(const std::string& filePath);
+ 
+    static ErrCode HashSoFile(const std::string& soPath,
+        uint32_t catchSoNum,
+        uint64_t catchSoMaxSize,
+        std::vector<std::string> &soName,
+        std::vector<std::string> &soHash);
 
+    static bool WriteCertToFile(const std::string &certFilePath, const std::string &certContent);
+
+    static bool IsFileNameValid(const std::string &fileName);
+
+    static bool ResetBmsDBSecurity();
+
+    /**
+     * @brief Copy directory Recursively from source dir to destination dir.
+     * @param sourceDir Indicates the source dir.
+     * @param destinationDir Indicates the destination dir.
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    static bool CopyDir(const std::string &sourceDir, const std::string &destinationDir);
+
+    static bool FsyncFile(const std::string &path);
+
+    static ErrCode DeleteCertAndRemoveKey(const std::string &path);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
@@ -340,7 +366,6 @@ private:
     static EnforceMetadataProcessForApp enforceMetadataProcessForApp_;
     static bool OpenEncryptionHandle();
 #endif
-    static void FsyncFile(const std::string &path);
     static std::string GetSameLevelTmpPath(const std::string &path);
 
     struct OwnershipInfo {
@@ -360,6 +385,8 @@ private:
     static int32_t ForceCreateDirectory(const std::string &path, const OwnershipInfo &info);
     static int32_t MigrateDataCreateAhead(
         const std::string &sourcePaths, std::string &destinationPath, const OwnershipInfo &info);
+    static bool ReadCert(const std::string &path, std::vector<unsigned char> &certData);
+    static std::optional<struct dqblk> GetQuotaData(int32_t uid);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

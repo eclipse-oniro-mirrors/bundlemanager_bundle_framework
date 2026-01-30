@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -577,12 +577,13 @@ static ani_object GetLaunchWantForBundleNative(ani_env* env,
         return nullptr;
     }
     OHOS::AAFwk::Want want;
-    ErrCode ret = iBundleMgr->GetLaunchWantForBundle(bundleName, want, aniUserId);
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
+    ErrCode ret = iBundleMgr->GetLaunchWantForBundle(bundleName, want, aniUserId, isSync);
     if (ret != ERR_OK) {
         APP_LOGE("GetLaunchWantForBundle failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
             isSync ? GET_LAUNCH_WANT_FOR_BUNDLE_SYNC : GET_LAUNCH_WANT_FOR_BUNDLE,
+            isSync ? Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS :
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
@@ -1339,6 +1340,23 @@ static ani_object GetAppProvisionInfoNative(
     return CommonFunAni::ConvertAppProvisionInfo(env, appProvisionInfo);
 }
 
+static ani_object GetAllAppProvisionInfoNative(ani_env* env, ani_int aniUserId)
+{
+    APP_LOGD("ani GetAllAppProvisionInfoNative called");
+    if (aniUserId == EMPTY_USER_ID) {
+        aniUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = BundleManagerHelper::InnerGetAllAppProvisionInfo(aniUserId, appProvisionInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetAllAppProvisionInfo failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonNewError(env, ret, GET_ALL_APP_PROVISION_INFO,
+            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+        return nullptr;
+    }
+    return CommonFunAni::ConvertAniArray(env, appProvisionInfos, CommonFunAni::ConvertAppProvisionInfo);
+}
+
 static ani_boolean CanOpenLink(ani_env* env, ani_string aniLink)
 {
     APP_LOGD("ani CanOpenLink called");
@@ -2062,6 +2080,26 @@ static void RemoveBackupBundleDataNative(ani_env* env,
     }
 }
 
+static ani_enum_item GetBundleInstallStatusNative(ani_env* env, ani_string aniBundleName)
+{
+    APP_LOGD("ani GetInstallBundleStatus called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    ErrCode ret = BundleManagerHelper::InnerGetBundleInstallStatus(bundleName, status);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetBundleInstallStatus failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonNewError(env, ret, GET_BUNDLE_INSTALL_STATUS,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+    return EnumUtils::EnumNativeToETS_BundleManager_BundleInstallStatus(env, static_cast<int32_t>(status));
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -2127,6 +2165,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(CleanAllBundleCacheNative) },
         ani_native_function { "getAppProvisionInfoNative", nullptr,
             reinterpret_cast<void*>(GetAppProvisionInfoNative) },
+        ani_native_function { "getAllAppProvisionInfoNative", nullptr,
+            reinterpret_cast<void*>(GetAllAppProvisionInfoNative) },
         ani_native_function { "canOpenLink", nullptr, reinterpret_cast<void*>(CanOpenLink) },
         ani_native_function { "getAllPreinstalledApplicationInfoNative", nullptr,
             reinterpret_cast<void*>(GetAllPreinstalledApplicationInfoNative) },
@@ -2167,6 +2207,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(RecoverBackupBundleDataNative) },
         ani_native_function { "removeBackupBundleDataNative", nullptr,
             reinterpret_cast<void*>(RemoveBackupBundleDataNative) },
+        ani_native_function { "getBundleInstallStatusNative", nullptr,
+            reinterpret_cast<void*>(GetBundleInstallStatusNative) },
     };
 
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
@@ -2188,14 +2230,20 @@ void ANIClearCacheListener::DoClearCache()
     ani_env* env = nullptr;
     ani_option interopEnabled { "--interop=disable", nullptr };
     ani_options aniArgs { 1, &interopEnabled };
+    bool needDetach = false;
     if (g_vm == nullptr) {
         APP_LOGE("g_vm is empty");
         return;
     }
-    ani_status status = g_vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+    ani_status status = g_vm->GetEnv(ANI_VERSION_1, &env);
     if (status != ANI_OK) {
-        APP_LOGE("AttachCurrentThread fail %{public}d", status);
-        return;
+        APP_LOGW("GetEnv fail %{public}d", status);
+        status = g_vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+        if (status != ANI_OK) {
+            APP_LOGE("AttachCurrentThread fail %{public}d", status);
+            return;
+        }
+        needDetach = true;
     }
     if (env == nullptr) {
         APP_LOGE("env is empty");
@@ -2204,7 +2252,9 @@ void ANIClearCacheListener::DoClearCache()
             env->GlobalReference_Delete(item.second);
         }
     }
-    g_vm->DetachCurrentThread();
+    if (needDetach) {
+        g_vm->DetachCurrentThread();
+    }
     g_aniCache.clear();
 }
 

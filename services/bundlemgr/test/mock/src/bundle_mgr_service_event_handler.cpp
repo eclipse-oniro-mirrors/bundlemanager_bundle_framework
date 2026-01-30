@@ -706,5 +706,17 @@ bool BMSEventHandler::InnerProcessUninstallForExistPreBundle(const BundleInfo &i
 {
     return false;
 }
+
+bool BMSEventHandler::InstallSystemBundleNeedCheckUserForPatch(const std::vector<std::string> &filePaths,
+    const std::string &bundleName, bool isOta)
+{
+    return true;
+}
+
+bool BMSEventHandler::InnerMultiProcessBundleInstallForPatch(
+    const std::unordered_map<std::string, std::vector<std::string>> &needInstallMap, bool isOta)
+{
+    return true;
+}
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -23,7 +23,7 @@ export interface Skill {
 export interface SkillUri {
     readonly scheme: string;
     readonly host: string;
-    readonly port: int;
+    readonly port: string;
     readonly path: string;
     readonly pathStartWith: string;
     readonly pathRegex: string;

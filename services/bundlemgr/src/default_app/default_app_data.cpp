@@ -30,6 +30,7 @@ namespace {
     constexpr const char* EXTENSION_NAME = "extensionName";
     constexpr const char* TYPE = "type";
     constexpr const char* APP_TYPE = "appType";
+    constexpr const char* APP_INDEX = "appIndex";
 }
 
 std::string DefaultAppData::ToString() const
@@ -109,7 +110,8 @@ void to_json(nlohmann::json& jsonObject, const Element& element)
         {MODULE_NAME, element.moduleName},
         {ABILITY_NAME, element.abilityName},
         {EXTENSION_NAME, element.extensionName},
-        {TYPE, element.type}
+        {TYPE, element.type},
+        {APP_INDEX, element.appIndex}
     };
 }
 
@@ -153,6 +155,14 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         element.type,
         false,
         g_defaultAppJson);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_INDEX,
+        element.appIndex,
+        JsonType::NUMBER,
+        false,
+        g_defaultAppJson,
+        ArrayType::NOT_ARRAY);
     if (g_defaultAppJson != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "Element from_json error, error code : %{public}d", g_defaultAppJson);
     }

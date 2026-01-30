@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -25,7 +25,10 @@ ohos_unittest("BmsBundleDataMgrTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = []
+  include_dirs = [
+    "mock/include",
+    "${kits_path}/js/bundle_manager",
+  ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -68,11 +71,14 @@ ohos_unittest("BmsBundleDataMgrTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_kit/test:test",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${core_path}:appexecfwk_core",
+    "${kits_path}/js/bundle_manager:bundle_manager_common",
+    "${kits_path}/js/common:bundle_napi_common",
   ]
   deps += bundle_install_deps
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -88,10 +94,13 @@ ohos_unittest("BmsBundleDataMgrTest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "jsoncpp:jsoncpp",
+    "libuv:uv",
+    "napi:ace_napi",
     "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -269,6 +278,7 @@ ohos_unittest("BmsBundleKitServiceTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -285,6 +295,7 @@ ohos_unittest("BmsBundleKitServiceTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -436,6 +447,9 @@ ohos_unittest("BmsBundleKitServiceTwoTest") {
 
   sources += [ "bms_bundle_kit_service_test_two.cpp" ]
 
+  sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
+  sources +=
+      [ "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp" ]
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
@@ -454,6 +468,7 @@ ohos_unittest("BmsBundleKitServiceTwoTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -471,6 +486,7 @@ ohos_unittest("BmsBundleKitServiceTwoTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -520,6 +536,12 @@ ohos_unittest("BmsBundleKitServiceTwoTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
+
+  if (device_usage_statistics_enabled) {
+    external_deps += [ "device_usage_statistics:usagestatsinner" ]
+    defines += [ "DEVICE_USAGE_STATISTICS_ENABLED" ]
+  }
+
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
@@ -612,7 +634,8 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
-  sources -= [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp" ]
 
   sources += [ "bms_bundle_get_window_properties_test.cpp" ]
@@ -635,6 +658,7 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -651,6 +675,7 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -813,6 +838,7 @@ ohos_unittest("BmsBundleDataMgrTest2") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -829,6 +855,7 @@ ohos_unittest("BmsBundleDataMgrTest2") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -1002,6 +1029,7 @@ ohos_unittest("BmsBundleDataMgrTest3") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -1020,6 +1048,7 @@ ohos_unittest("BmsBundleDataMgrTest3") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -1188,13 +1217,12 @@ ohos_unittest("BmsAgingTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = [
-    "${core_path}:appexecfwk_core",
-  ]
+  deps = [ "${core_path}:appexecfwk_core" ]
   deps += bundle_install_deps
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -1212,6 +1240,7 @@ ohos_unittest("BmsAgingTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -1330,7 +1359,7 @@ ohos_unittest("BmsCleanAllBundleCacheTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ 
+  include_dirs = [
     "mock/include",
     "${kits_path}/js/bundle_manager",
   ]
@@ -1387,6 +1416,7 @@ ohos_unittest("BmsCleanAllBundleCacheTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -1406,6 +1436,7 @@ ohos_unittest("BmsCleanAllBundleCacheTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []
@@ -1558,7 +1589,7 @@ ohos_unittest("BmsBundleDataMgrSharedTest") {
     "${services_path}/bundlemgr/test/mock/src/mock_ability_manager_helper.cpp",
   ]
 
-  sources += ["bms_bundle_data_mgr_shared_test.cpp"]
+  sources += [ "bms_bundle_data_mgr_shared_test.cpp" ]
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
@@ -1577,6 +1608,7 @@ ohos_unittest("BmsBundleDataMgrSharedTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -1595,6 +1627,7 @@ ohos_unittest("BmsBundleDataMgrSharedTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -1749,7 +1782,7 @@ ohos_unittest("BmsBundleDataMgrSharedTestNoMock") {
   sources +=
       [ "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp" ]
 
-  sources += ["bms_bundle_data_mgr_shared_test_no_mock.cpp"]
+  sources += [ "bms_bundle_data_mgr_shared_test_no_mock.cpp" ]
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
@@ -1768,6 +1801,7 @@ ohos_unittest("BmsBundleDataMgrSharedTestNoMock") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -1786,6 +1820,7 @@ ohos_unittest("BmsBundleDataMgrSharedTestNoMock") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -1907,8 +1942,8 @@ group("unittest") {
   if (ability_runtime_enable) {
     deps = [
       ":BmsAgingTest",
-      ":BmsBundleDataMgrSharedTestNoMock",
       ":BmsBundleDataMgrSharedTest",
+      ":BmsBundleDataMgrSharedTestNoMock",
       ":BmsBundleDataMgrTest",
       ":BmsBundleDataMgrTest2",
       ":BmsBundleDataMgrTest3",

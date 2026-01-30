@@ -43,7 +43,7 @@ namespace OHOS {
         errorCode = DefaultAppMgr::GetInstance().IsDefaultApplication(reinterpret_cast<uintptr_t>(data), type, ret);
         DefaultAppMgr::GetInstance().HandleCreateUser(reinterpret_cast<uintptr_t>(data));
         DefaultAppMgr::GetInstance().HandleRemoveUser(reinterpret_cast<uintptr_t>(data));
-        DefaultAppMgr::GetInstance().HandleUninstallBundle(reinterpret_cast<uintptr_t>(data), type);
+        DefaultAppMgr::GetInstance().HandleUninstallBundle(reinterpret_cast<uintptr_t>(data), type, 0);
         auto normalizedTypeVector = DefaultAppMgr::GetInstance().Normalize(type);
         errorCode = DefaultAppMgr::GetInstance().GetDefaultApplication(
             reinterpret_cast<uintptr_t>(data), type, bundleInfo);

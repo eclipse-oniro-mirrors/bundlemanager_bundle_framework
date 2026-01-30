@@ -43,6 +43,7 @@ constexpr const char* GET_RESOURCE_INFO_WITH_ICON = "GET_RESOURCE_INFO_WITH_ICON
 constexpr const char* GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = "GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL";
 constexpr const char* GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR = "GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR";
 constexpr const char* GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY = "GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY";
+const size_t MAX_ARRAY_NUM = 1000;
 
 static void ConvertBundleResourceInfo(
     napi_env env,
@@ -339,6 +340,18 @@ void GetAllLauncherAbilityResourceInfoExec(napi_env env, void *data)
         asyncCallbackInfo->flags, asyncCallbackInfo->launcherAbilityResourceInfos);
 }
 
+void GetLauncherAbilityResourceInfoListExec(napi_env env, void *data)
+{
+    AllLauncherAbilityResourceInfoCallback *asyncCallbackInfo =
+        reinterpret_cast<AllLauncherAbilityResourceInfoCallback *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = ResourceHelper::InnerGetLauncherAbilityResourceInfoList(asyncCallbackInfo->optionsList,
+        asyncCallbackInfo->flags, asyncCallbackInfo->launcherAbilityResourceInfos);
+}
+
 void GetAllLauncherAbilityResourceInfoComplete(napi_env env, napi_status status, void *data)
 {
     AllLauncherAbilityResourceInfoCallback *asyncCallbackInfo =
@@ -356,6 +369,28 @@ void GetAllLauncherAbilityResourceInfoComplete(napi_env env, napi_status status,
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO, PERMISSION_GET_ALL_BUNDLE_RESOURCES);
+    }
+    CommonFunc::NapiReturnDeferred<AllLauncherAbilityResourceInfoCallback>(env, asyncCallbackInfo,
+        result, ARGS_SIZE_TWO);
+}
+
+void GetLauncherAbilityResourceInfoListComplete(napi_env env, napi_status status, void *data)
+{
+    AllLauncherAbilityResourceInfoCallback *asyncCallbackInfo =
+        reinterpret_cast<AllLauncherAbilityResourceInfoCallback *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<AllLauncherAbilityResourceInfoCallback> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
+        ConvertLauncherAbilityResourceInfos(env, asyncCallbackInfo->launcherAbilityResourceInfos, result[1]);
+    } else {
+        result[0] = BusinessError::CreateNewCommonError(env, asyncCallbackInfo->err,
+            GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST, PERMISSION_GET_ALL_BUNDLE_RESOURCES);
     }
     CommonFunc::NapiReturnDeferred<AllLauncherAbilityResourceInfoCallback>(env, asyncCallbackInfo,
         result, ARGS_SIZE_TWO);
@@ -400,6 +435,62 @@ napi_value GetAllLauncherAbilityResourceInfo(napi_env env, napi_callback_info in
         GetAllLauncherAbilityResourceInfoComplete);
     callbackPtr.release();
     APP_LOGD("NAPI end");
+    return promise;
+}
+
+napi_value GetLauncherAbilityResourceInfoList(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetLauncherAbilityResourceInfoList start");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    AllLauncherAbilityResourceInfoCallback *asyncCallbackInfo =
+        new (std::nothrow) AllLauncherAbilityResourceInfoCallback(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<AllLauncherAbilityResourceInfoCallback> callbackPtr {asyncCallbackInfo};
+    int32_t flags = 0;
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseBundleOptionArray(env, asyncCallbackInfo->optionsList, args[i])) {
+                APP_LOGE("ParseBundleOptionArray invalid");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_OPTION, TYPE_ARRAY);
+                    return nullptr;
+            }
+            if (asyncCallbackInfo->optionsList.empty()) {
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLE_OPTIONS_EMPTY_ERROR);
+                return nullptr;
+            }
+            if (asyncCallbackInfo->optionsList.size() > MAX_ARRAY_NUM) {
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLE_OPTIONS_NUMBER_ERROR);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], flags)) {
+                APP_LOGE("Flags %{public}d invalid", flags);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else {
+            APP_LOGE("param count invalid");
+            BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    if (flags <= 0) {
+        flags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    }
+    asyncCallbackInfo->flags = static_cast<uint32_t>(flags);
+    auto promise = CommonFunc::AsyncCallNativeMethod<AllLauncherAbilityResourceInfoCallback>(
+        env, asyncCallbackInfo, GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST, GetLauncherAbilityResourceInfoListExec,
+        GetLauncherAbilityResourceInfoListComplete);
+    callbackPtr.release();
+    APP_LOGD("NAPI GetLauncherAbilityResourceInfoList end");
     return promise;
 }
 

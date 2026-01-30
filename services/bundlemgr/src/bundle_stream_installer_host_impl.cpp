@@ -550,7 +550,7 @@ static bool SelectApp(const std::vector<std::string> &filePaths)
 
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!GetInnerBundleInfo(path, infos)
-            || bundleInstallChecker->CheckDeviceType(infos) != OHOS::ERR_OK) {
+            || bundleInstallChecker->CheckDeviceType(infos, ERR_OK) != OHOS::ERR_OK) {
             std::error_code ec;
             if (!std::filesystem::remove(path, ec) || ec) {
                 APP_LOGE("remove file failed.");
@@ -639,6 +639,7 @@ bool BundleStreamInstallerHostImpl::Install()
 
     bool res;
     if (installParam_.isSelfUpdate) {
+        installParam_.parameters.erase(ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE);
         res = installer->UpdateBundleForSelf(pathVec, installParam_, receiver_);
     } else {
         res = installer->Install(pathVec, installParam_, receiver_);

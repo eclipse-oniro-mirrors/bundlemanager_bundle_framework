@@ -17,8 +17,8 @@ import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = fuzz_test_path
 
-ohos_fuzztest("AppServiceFwkInstallerExtractModuleFuzzTest") {
-  fuzz_config_file = "../../../fuzztest/fuzztest_others/appservicefwkinstallerextractmodule_fuzzer"
+ohos_fuzztest("BMSAppServiceFwkInstallerExtractModuleFuzzTest") {
+  fuzz_config_file = "../../../fuzztest/fuzztest_bundlemanager/bmsappservicefwkinstallerextractmodule_fuzzer"
 
   use_exceptions = true
   module_out_path = module_output_path
@@ -36,7 +36,7 @@ ohos_fuzztest("AppServiceFwkInstallerExtractModuleFuzzTest") {
 
   sources += bundle_install_sources
 
-  sources += [ "appservicefwkinstallerextractmodule_fuzzer.cpp" ]
+  sources += [ "bmsappservicefwkinstallerextractmodule_fuzzer.cpp" ]
 
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = [
@@ -58,6 +58,7 @@ ohos_fuzztest("AppServiceFwkInstallerExtractModuleFuzzTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
@@ -74,6 +75,7 @@ ohos_fuzztest("AppServiceFwkInstallerExtractModuleFuzzTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 

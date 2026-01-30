@@ -102,6 +102,7 @@ const std::string PROCESS_TEST = "test.process";
 const std::string DEVICE_ID = "PHONE-001";
 const int APPLICATION_INFO_FLAGS = 1;
 const int DEFAULT_USER_ID_TEST = 100;
+const int NOT_EXSIT_USER_ID_TEST = 139;
 const int NEW_USER_ID_TEST = 200;
 const std::string LABEL = "hello";
 const std::string DESCRIPTION = "mainEntry";
@@ -229,7 +230,7 @@ const std::string URI_PATH_REGEX_001 = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 
     PORT_SEPARATOR + PORT_001 + PATH_SEPARATOR + PATH_REGEX_001;
 const int32_t DEFAULT_USERID = 100;
 const int32_t ALL_USERID = -3;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
 const int32_t TEST_APP_INDEX1 = 1;
@@ -1815,13 +1816,17 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0200, Function | SmallTes
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     bool testRet = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, true,
-        DEFAULT_USER_ID_TEST);
+        DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_TRUE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable,
         DEFAULT_USER_ID_TEST);
     EXPECT_EQ(testRet1, ERR_OK);
-    EXPECT_TRUE(isRemovable);
+    EXPECT_FALSE(isRemovable);
+
+    auto testRet2 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable,
+        NOT_EXSIT_USER_ID_TEST);
+    EXPECT_EQ(testRet2, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -1837,7 +1842,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0300, Function | SmallTes
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     bool testRet = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, false,
-        DEFAULT_USER_ID_TEST);
+        DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_TRUE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable,
@@ -1846,13 +1851,13 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0300, Function | SmallTes
     EXPECT_FALSE(isRemovable);
 
     bool testRet2 = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, true,
-        DEFAULT_USER_ID_TEST);
+        DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_TRUE(testRet2);
     isRemovable = false;
     auto testRet3 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable,
         DEFAULT_USER_ID_TEST);
     EXPECT_EQ(testRet3, ERR_OK);
-    EXPECT_TRUE(isRemovable);
+    EXPECT_FALSE(isRemovable);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -1882,7 +1887,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0500, Function | SmallTes
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    bool testRet = GetBundleDataMgr()->SetModuleRemovable("", "", true, DEFAULT_USER_ID_TEST);
+    bool testRet = GetBundleDataMgr()->SetModuleRemovable("", "", true, DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_FALSE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable,
@@ -1904,7 +1909,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0600, Function | SmallTes
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     bool testRet = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, true,
-        DEFAULT_USER_ID_TEST);
+        DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_TRUE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable("", "", isRemovable, DEFAULT_USER_ID_TEST);
@@ -1929,7 +1934,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0700, Function | SmallTes
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    bool testRet = GetBundleDataMgr()->SetModuleRemovable("", "", true, DEFAULT_USER_ID_TEST);
+    bool testRet = GetBundleDataMgr()->SetModuleRemovable("", "", true, DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_FALSE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable,
@@ -8444,7 +8449,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0100, Function 
     int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurAbilityInfosV9_0100 finish");
 }
@@ -8465,7 +8470,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0200, Function 
     int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurAbilityInfosV9_0200 finish");
 }
@@ -8486,7 +8491,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0300, Function 
     int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurAbilityInfosV9_0300 finish");
 }
@@ -8507,7 +8512,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0400, Function 
     int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurAbilityInfosV9_0400 finish");
 }
@@ -8528,7 +8533,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0500, Function 
     int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurAbilityInfosV9_0500 finish");
 }
@@ -8552,7 +8557,7 @@ HWTEST_F(BmsBundleKitServiceTest, ExplicitQueryExtensionInfoV9_0100, Function | 
     int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ExplicitQueryExtensionInfoV9(want, flags, 0, extensionInfo, appIndex);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ExplicitQueryExtensionInfoV9_0100 finish");
 }
@@ -8576,7 +8581,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurExtensionInfosV9_0100, Functio
     int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurExtensionInfosV9(want, flags, 0, infos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurExtensionInfosV9_0100 finish");
 }
@@ -8600,7 +8605,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurExtensionInfosV9_0200, Functio
     int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurExtensionInfosV9(want, flags, 0, infos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurExtensionInfosV9_0200 finish");
 }

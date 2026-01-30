@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "json_serializer.h"
 #include "scope_guard.h"
 
 namespace OHOS {
@@ -27,8 +28,14 @@ const std::string SHORTCUT_ID = "SHORTCUT_ID";
 const std::string USER_ID = "USER_ID";
 const std::string APP_INDEX = "APP_INDEX";
 const std::string VISIBLE = "VISIBLE";
+const std::string SOURCE_TYPE = "SOURCE_TYPE";
+const std::string SHORTCUT_INFO = "SHORTCUT_INFO";
 const std::string SHORTCUT_VISIBLE_RDB_TABLE_NAME = "shortcut_visible";
+const std::string PORT_SEPARATOR = ":";
+const int32_t SHORTCUT_ID_INDEX = 0;
 const int32_t VISIBLE_INDEX = 4;
+const int32_t SHORTCUT_INFO_INDEX = 6;
+const int32_t DYNAMIC_SHORTCUT_TYPE = 2;
 }
 ShortcutVisibleDataStorageRdb::ShortcutVisibleDataStorageRdb()
 {
@@ -45,6 +52,10 @@ ShortcutVisibleDataStorageRdb::ShortcutVisibleDataStorageRdb()
         + "APP_INDEX INTEGER NOT NULL, "
         + "VISIBLE INTEGER NOT NULL, "
         + "PRIMARY KEY (SHORTCUT_ID, BUNDLE_NAME, USER_ID, APP_INDEX));");
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + SHORTCUT_VISIBLE_RDB_TABLE_NAME +
+        " ADD SOURCE_TYPE INTEGER DEFAULT 1;"));
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + SHORTCUT_VISIBLE_RDB_TABLE_NAME +
+        " ADD SHORTCUT_INFO TEXT;"));
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }
@@ -54,56 +65,65 @@ ShortcutVisibleDataStorageRdb::~ShortcutVisibleDataStorageRdb()
     APP_LOGI_NOFUNC("ShortcutVisibleDataStorageRdb instance is destroyed");
 }
 
-bool ShortcutVisibleDataStorageRdb::IsShortcutVisibleInfoExist(
-    const std::string &bundleName, const std::string &shortcutId, int32_t appIndex, int32_t userId, bool visible)
+bool ShortcutVisibleDataStorageRdb::SaveStorageShortcutVisibleInfo(const std::string &bundleName,
+    const std::string &shortcutId, int32_t appIndex, int32_t userId, const ShortcutInfo &shortcutInfo)
 {
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
         return false;
     }
-    NativeRdb::AbsRdbPredicates absRdbPredicates(SHORTCUT_VISIBLE_RDB_TABLE_NAME);
-    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
-    absRdbPredicates.EqualTo(SHORTCUT_ID, shortcutId);
-    absRdbPredicates.EqualTo(APP_INDEX, appIndex);
-    absRdbPredicates.EqualTo(USER_ID, userId);
-    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
-    if (absSharedResultSet == nullptr) {
-        APP_LOGE("absSharedResultSet is null.");
-        return false;
-    }
-    int32_t visibleValue;
-    if (absSharedResultSet->GoToFirstRow() != NativeRdb::E_OK) {
-        APP_LOGD("absSharedResultSet GoToFirstRow is null.");
-        return false;
-    }
-    if (absSharedResultSet->GetInt(VISIBLE_INDEX, visibleValue) != NativeRdb::E_OK) {
-        APP_LOGE("absSharedResultSet GetInt is null.");
-        return false;
-    }
-    bool visibleResult = visibleValue == 1 ? true : false;
-    if (visible == visibleResult) {
-        return true;
-    }
-    return false;
-}
-
-bool ShortcutVisibleDataStorageRdb::SaveStorageShortcutVisibleInfo(
-    const std::string &bundleName, const std::string &shortcutId, int32_t appIndex, int32_t userId, bool visible)
-{
-    if (rdbDataManager_ == nullptr) {
-        APP_LOGE("rdbDataManager is null");
-        return false;
-    }
-    int32_t visibleValue = visible ? 1 : 0;
+    int32_t visibleValue = shortcutInfo.visible ? 1 : 0;
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(BUNDLE_NAME, bundleName);
     valuesBucket.PutString(SHORTCUT_ID, shortcutId);
     valuesBucket.PutInt(USER_ID, userId);
     valuesBucket.PutInt(APP_INDEX, appIndex);
     valuesBucket.PutInt(VISIBLE, visibleValue);
-    bool ret = rdbDataManager_->InsertData(valuesBucket);
-    APP_LOGD("SaveStorageShortcutVisibleInfo %{public}d", ret);
-    return ret;
+    valuesBucket.PutInt(SOURCE_TYPE, shortcutInfo.sourceType);
+    nlohmann::json jsonObject;
+    to_json(jsonObject, shortcutInfo);
+    std::string value = jsonObject.dump();
+    valuesBucket.PutString(SHORTCUT_INFO, value);
+    if (!rdbDataManager_->InsertData(valuesBucket)) {
+        APP_LOGE("InsertData failed");
+        return false;
+    }
+    return true;
+}
+
+bool ShortcutVisibleDataStorageRdb::AddDynamicShortcutInfos(
+    const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
+{
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    std::vector<NativeRdb::ValuesBucket> valuesBuckets;
+    for (auto shortcutInfo : shortcutInfos) {
+        int32_t visibleValue = shortcutInfo.visible ? 1 : 0;
+        nlohmann::json jsonObject;
+        to_json(jsonObject, shortcutInfo);
+        std::string value = jsonObject.dump();
+        NativeRdb::ValuesBucket valuesBucket;
+        valuesBucket.PutString(BUNDLE_NAME, shortcutInfo.bundleName);
+        valuesBucket.PutString(SHORTCUT_ID, shortcutInfo.id);
+        valuesBucket.PutInt(USER_ID, userId);
+        valuesBucket.PutInt(APP_INDEX, shortcutInfo.appIndex);
+        valuesBucket.PutInt(VISIBLE, visibleValue);
+        valuesBucket.PutInt(SOURCE_TYPE, shortcutInfo.sourceType);
+        valuesBucket.PutString(SHORTCUT_INFO, value);
+        valuesBuckets.emplace_back(valuesBucket);
+    }
+    int64_t insertNum = 0;
+    if (!rdbDataManager_->BatchInsert(insertNum, valuesBuckets)) {
+        APP_LOGE("BatchInsert dynamicShortcutInfos failed");
+        return false;
+    }
+    if (valuesBuckets.size() != static_cast<uint64_t>(insertNum)) {
+        APP_LOGE("BatchInsert size not expected");
+        return false;
+    }
+    return true;
 }
 
 bool ShortcutVisibleDataStorageRdb::DeleteShortcutVisibleInfo(
@@ -124,50 +144,121 @@ bool ShortcutVisibleDataStorageRdb::DeleteShortcutVisibleInfo(
     return ret;
 }
 
-ErrCode ShortcutVisibleDataStorageRdb::GetShortcutVisibleStatus(const int32_t userId,
-    const int32_t appIndex, ShortcutInfo &shortcutInfo)
+bool ShortcutVisibleDataStorageRdb::DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const std::vector<std::string> &ids)
 {
-    std::string bundleName = shortcutInfo.bundleName;
-    std::string shortcutId = shortcutInfo.id;
-    if (bundleName.empty() || shortcutId.empty()) {
-        APP_LOGE("bundleName or shortcutId is empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(SHORTCUT_VISIBLE_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
-    absRdbPredicates.EqualTo(SHORTCUT_ID, shortcutId);
+    if (!ids.empty()) {
+        absRdbPredicates.In(SHORTCUT_ID, ids);
+    }
     absRdbPredicates.EqualTo(USER_ID, userId);
     absRdbPredicates.EqualTo(APP_INDEX, appIndex);
+    absRdbPredicates.EqualTo(SOURCE_TYPE, DYNAMIC_SHORTCUT_TYPE);
+    if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
+        APP_LOGE("DeleteData failed");
+        return false;
+    }
+    return true;
+}
+
+void ShortcutVisibleDataStorageRdb::ProcessStaticShortcutInfos(const NativeRdb::AbsRdbPredicates &absRdbPredicatesConst,
+    std::vector<ShortcutInfo> &shortcutInfos)
+{
+    NativeRdb::AbsRdbPredicates absRdbPredicates(absRdbPredicatesConst);
+    absRdbPredicates.NotEqualTo(SOURCE_TYPE, DYNAMIC_SHORTCUT_TYPE);
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("absSharedResultSet is null, bundleName: %{public}s", bundleName.c_str());
-        return ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
+        APP_LOGE("absSharedResultSet is null");
+        return;
     }
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
-    int32_t count;
-    int ret = absSharedResultSet->GetRowCount(count);
-    if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GetRowCount failed, bundleName: %{public}s, ret: %{public}d", bundleName.c_str(), ret);
-        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    if (absSharedResultSet->GoToFirstRow() != NativeRdb::E_OK) {
+        APP_LOGE("GoToFirstRow failed");
+        return;
     }
-    if (count == 0) {
-        APP_LOGD("count size 0");
-        return ERR_OK;
+    std::vector<std::string> deleteIds;
+    do {
+        std::string shortcutId;
+        if (absSharedResultSet->GetString(SHORTCUT_ID_INDEX, shortcutId) != NativeRdb::E_OK) {
+            APP_LOGE("GetString shortcutId failed");
+            return;
+        }
+        int32_t visibleValue = 0;
+        if (absSharedResultSet->GetInt(VISIBLE_INDEX, visibleValue) != NativeRdb::E_OK) {
+            APP_LOGE("GetInt visibleValue failed");
+            return;
+        }
+        bool foundAny = false;
+        for (auto &info : shortcutInfos) {
+            if (info.id == shortcutId) {
+                info.visible = visibleValue == 1 ? true : false;
+                foundAny = true;
+            }
+        }
+        if (!foundAny) {
+            APP_LOGW("delete invalid static shortcutInfo, id:%{public}s", shortcutId.c_str());
+            deleteIds.emplace_back(shortcutId);
+        }
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+    if (!deleteIds.empty()) {
+        absRdbPredicates.In(SHORTCUT_ID, deleteIds);
+        if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
+            APP_LOGE("DeleteData failed");
+        }
     }
-    ret = absSharedResultSet->GoToFirstRow();
-    if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GoToFirstRow failed, bundleName: %{public}s, ret: %{public}d", bundleName.c_str(), ret);
-        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
-    }
+}
 
-    int32_t value;
-    ret = absSharedResultSet->GetInt(VISIBLE_INDEX, value);
-    if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GetInt failed, bundleName: %{public}s, ret: %{public}d", bundleName.c_str(), ret);
-        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+void ShortcutVisibleDataStorageRdb::GetStorageShortcutInfos(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, std::vector<ShortcutInfo> &shortcutInfos, const bool onlyDynamic)
+{
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return;
     }
-    shortcutInfo.visible = value == 1;
-    return ERR_OK;
+    NativeRdb::AbsRdbPredicates absRdbPredicates(SHORTCUT_VISIBLE_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
+    absRdbPredicates.EqualTo(USER_ID, userId);
+    if (appIndex != Constants::ALL_CLONE_APP_INDEX) {
+        absRdbPredicates.EqualTo(APP_INDEX, appIndex);
+    }
+    if (!onlyDynamic) {
+        ProcessStaticShortcutInfos(absRdbPredicates, shortcutInfos);
+    }
+    absRdbPredicates.EqualTo(SOURCE_TYPE, DYNAMIC_SHORTCUT_TYPE);
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("absSharedResultSet is null");
+        return;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    if (absSharedResultSet->GoToFirstRow() != NativeRdb::E_OK) {
+        APP_LOGE("GoToFirstRow failed");
+        return;
+    }
+    std::vector<ShortcutInfo> result;
+    do {
+        std::string value;
+        if (absSharedResultSet->GetString(SHORTCUT_INFO_INDEX, value) != NativeRdb::E_OK) {
+            APP_LOGE("GetString shortcutInfo failed");
+            return;
+        }
+        nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
+        if (jsonObject.is_discarded()) {
+            APP_LOGE("Shortcut jsonObject is discarded");
+            return;
+        }
+        ShortcutInfo shortcutInfo;
+        from_json(jsonObject, shortcutInfo);
+        shortcutInfos.erase(std::remove_if(shortcutInfos.begin(), shortcutInfos.end(),
+            [&shortcutInfo](const ShortcutInfo &s) { return s.id == shortcutInfo.id; }), shortcutInfos.end());
+        result.emplace_back(shortcutInfo);
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+    shortcutInfos.insert(shortcutInfos.end(), result.begin(), result.end());
 }
 }
 }

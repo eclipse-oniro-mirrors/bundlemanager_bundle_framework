@@ -103,6 +103,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     supportPipMode = parcel.ReadBool();
     formEnabled = parcel.ReadBool();
     removeMissionAfterTerminate = parcel.ReadBool();
+    allowSelfRedirect = parcel.ReadBool();
 
     readPermission = Str16ToStr8(parcel.ReadString16());
     writePermission = Str16ToStr8(parcel.ReadString16());
@@ -325,6 +326,7 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, supportPipMode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, formEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, removeMissionAfterTerminate);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowSelfRedirect);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(readPermission));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(writePermission));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, configChanges.size());

@@ -131,6 +131,7 @@ struct Metadata : public Parcelable {
 struct HnpPackage : public Parcelable {
     std::string package;
     std::string type;
+    bool independentSign = false;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
@@ -353,6 +354,7 @@ struct ApplicationInfo : public Parcelable {
     // quick fix info
     AppQuickFix appQuickFix;
     AppPreloadPhase appPreloadPhase = AppPreloadPhase::DEFAULT;
+    std::string appSignType = Constants::APP_SIGN_TYPE_NONE;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

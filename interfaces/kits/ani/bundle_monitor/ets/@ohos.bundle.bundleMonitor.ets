@@ -40,9 +40,15 @@ export default namespace bundleMonitor {
     }
   }
 
-  type BundleChangedEvent = 'add' | 'update' | 'remove';
+  native function onAdd(callback: Callback<BundleChangedInfo>): void;
 
-  native function on(type: BundleChangedEvent, callback: Callback<BundleChangedInfo>): void;
+  native function onUpdate(callback: Callback<BundleChangedInfo>): void;
 
-  native function off(type: BundleChangedEvent, callback?: Callback<BundleChangedInfo>): void;
+  native function onRemove(callback: Callback<BundleChangedInfo>): void;
+
+  native function offAdd(callback?: Callback<BundleChangedInfo>): void;
+
+  native function offUpdate(callback?: Callback<BundleChangedInfo>): void;
+
+  native function offRemove(callback?: Callback<BundleChangedInfo>): void;
 }

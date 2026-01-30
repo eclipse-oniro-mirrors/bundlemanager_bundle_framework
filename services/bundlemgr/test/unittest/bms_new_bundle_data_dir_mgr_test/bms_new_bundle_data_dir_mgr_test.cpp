@@ -510,7 +510,7 @@ HWTEST_F(BmsNewBundleDataDirMgrTest, InnerProcessOtaBundleDataDirGroup_0001, Fun
 }
 
 /**
- * @tc.number: IProcessOtaBundleDataDir_0001
+ * @tc.number: ProcessOtaBundleDataDir_0001
  * @tc.name: ProcessOtaBundleDataDir
  * @tc.desc: 1.test ProcessOtaBundleDataDir
  */
@@ -532,6 +532,70 @@ HWTEST_F(BmsNewBundleDataDirMgrTest, ProcessOtaBundleDataDir_0001, Function | Sm
         EXPECT_TRUE(ret);
         ret = newBundleDirMgr->ProcessOtaBundleDataDir(BUNDLE_NAME, USER_ID);
         EXPECT_FALSE(ret);
+        ret = newBundleDirMgr->DeleteUserId(USER_ID);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: GetAllBundleDataDirEl5BundleName_0001
+ * @tc.name: GetAllBundleDataDirEl5BundleName
+ * @tc.desc: 1.test GetAllBundleDataDirEl5BundleName
+ */
+HWTEST_F(BmsNewBundleDataDirMgrTest, GetAllBundleDataDirEl5BundleName_0001, Function | SmallTest | Level1)
+{
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    EXPECT_NE(newBundleDirMgr, nullptr);
+    if (newBundleDirMgr != nullptr) {
+        newBundleDirMgr->hasInit_ = false;
+        auto allBundleNames = newBundleDirMgr->GetAllBundleDataDirEl5BundleName(USER_ID);
+        EXPECT_TRUE(allBundleNames.empty());
+
+        std::set<int32_t> userIds;
+        userIds.insert(USER_ID);
+        bool ret = newBundleDirMgr->AddAllUserId(userIds);
+        EXPECT_TRUE(ret);
+        allBundleNames = newBundleDirMgr->GetAllBundleDataDirEl5BundleName(USER_ID_2);
+        EXPECT_TRUE(allBundleNames.empty());
+
+        ret = newBundleDirMgr->AddNewBundleDirInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(CreateBundleDirType::CREATE_ALL_DIR) |
+            static_cast<uint32_t>(CreateBundleDirType::CREATE_EL5_DIR) |
+            static_cast<uint32_t>(CreateBundleDirType::CREATE_GROUP_DIR));
+        EXPECT_TRUE(ret);
+        allBundleNames = newBundleDirMgr->GetAllBundleDataDirEl5BundleName(USER_ID);
+        EXPECT_FALSE(allBundleNames.empty());
+        ret = newBundleDirMgr->DeleteUserId(USER_ID);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: ProcessOtaBundleDataDirEl5_0001
+ * @tc.name: ProcessOtaBundleDataDirEl5
+ * @tc.desc: 1.test ProcessOtaBundleDataDirEl5
+ */
+HWTEST_F(BmsNewBundleDataDirMgrTest, ProcessOtaBundleDataDirEl5_0001, Function | SmallTest | Level1)
+{
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    EXPECT_NE(newBundleDirMgr, nullptr);
+    if (newBundleDirMgr != nullptr) {
+        bool ret = newBundleDirMgr->ProcessOtaBundleDataDirEl5(USER_ID);
+        EXPECT_TRUE(ret);
+
+        std::set<int32_t> userIds;
+        userIds.insert(USER_ID);
+        ret = newBundleDirMgr->AddAllUserId(userIds);
+        EXPECT_TRUE(ret);
+        ret = newBundleDirMgr->AddNewBundleDirInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(CreateBundleDirType::CREATE_ALL_DIR) |
+            static_cast<uint32_t>(CreateBundleDirType::CREATE_EL5_DIR) |
+            static_cast<uint32_t>(CreateBundleDirType::CREATE_GROUP_DIR));
+        EXPECT_TRUE(ret);
+        ret = newBundleDirMgr->ProcessOtaBundleDataDirEl5(USER_ID);
+        EXPECT_FALSE(ret);
+        ret = newBundleDirMgr->DeleteUserId(USER_ID);
+        EXPECT_TRUE(ret);
     }
 }
 }

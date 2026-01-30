@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -98,6 +98,9 @@ constexpr const char* CLASSNAME_OVERLAY_MODULE_INFO_INNER =
 constexpr const char* CLASSNAME_WANT = "@ohos.app.ability.Want.Want";
 constexpr const char* CLASSNAME_ZLIB_CHECKSUM_INTERNAL = "@ohos.zlib.zlib.ChecksumInternal";
 constexpr const char* CLASSNAME_ZLIB_GZIP_INTERNAL = "@ohos.zlib.zlib.GZipInternal";
+constexpr const char* CLASSNAME_ZLIB_ZIP_INTERNAL = "@ohos.zlib.zlib.ZipInternal";
+constexpr const char* CLASSNAME_DISPOSED_RULE_CONFIGURATION_INNER =
+    "@ohos.bundle.appControl.appControl.DisposedRuleConfigurationInner";
 constexpr const char* CLASSNAME_DISPOSED_RULE_INNER = "@ohos.bundle.appControl.appControl.DisposedRuleInner";
 constexpr const char* CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER =
     "@ohos.bundle.appControl.appControl.UninstallDisposedRuleInner";
@@ -176,7 +179,9 @@ static std::map<std::string, ANIClassCacheItem> g_aniClassCache = {
     { CLASSNAME_APP_PROVISION_INFO_INNER, { } },
     { CLASSNAME_ZLIB_CHECKSUM_INTERNAL, { } },
     { CLASSNAME_ZLIB_GZIP_INTERNAL, { } },
+    { CLASSNAME_ZLIB_ZIP_INTERNAL, { } },
     { CLASSNAME_DISPOSED_RULE_INNER, { } },
+    { CLASSNAME_DISPOSED_RULE_CONFIGURATION_INNER, { } },
     { CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER, { } },
     { CLASSNAME_BUNDLE_RES_INFO_INNER, { } },
     { CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER, { } },
@@ -431,6 +436,10 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     ani_object firstInstallTime = BoxValue(env, bundleInfo.firstInstallTime);
     RETURN_NULL_IF_FALSE(firstInstallTime);
 
+    // buildVersion: string
+    ani_string buildVersion = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleInfo.buildVersion, buildVersion));
+
     ani_value args[] = {
         { .r = name },
         { .r = vendor },
@@ -448,6 +457,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         { .r = routerMap },
         { .i = bundleInfo.appIndex },
         { .r = firstInstallTime },
+        { .r = buildVersion },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
@@ -466,6 +476,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // routerMap: Array<RouterItem>
         .AddInt()                                   // appIndex: int
         .AddClass(CommonFunAniNS::CLASSNAME_LONG)   // firstInstallTime?: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // buildVersion?: string
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_INFO_INNER, ctorSig, args);
 }
@@ -508,6 +519,7 @@ ani_object CommonFunAni::ConvertDefaultAppAbilityInfo(ani_env* env, const Abilit
         { .l = static_cast<ani_long>(abilityInfo.descriptionId) },
         { .r = icon },
         { .l = static_cast<ani_long>(abilityInfo.iconId) },
+        { .i = abilityInfo.appIndex },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
@@ -519,6 +531,7 @@ ani_object CommonFunAni::ConvertDefaultAppAbilityInfo(ani_env* env, const Abilit
         .AddLong()                                  // descriptionId: long
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // icon: string
         .AddLong()                                  // iconId: long
+        .AddInt()                                   // appIndex: int
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_ABILITY_INFO_INNER, ctorSig, args);
 }
@@ -546,6 +559,7 @@ ani_object CommonFunAni::ConvertDefaultAppExtensionInfo(ani_env* env, const Exte
         { .l = static_cast<ani_long>(extensionInfo.labelId) },
         { .l = static_cast<ani_long>(extensionInfo.descriptionId) },
         { .l = static_cast<ani_long>(extensionInfo.iconId) },
+        { .i = extensionInfo.appIndex },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
@@ -554,6 +568,7 @@ ani_object CommonFunAni::ConvertDefaultAppExtensionInfo(ani_env* env, const Exte
         .AddLong()                                  // labelId: long
         .AddLong()                                  // descriptionId: long
         .AddLong()                                  // iconId: long
+        .AddInt()                                   // appIndex: int
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_EXTENSION_ABILITY_INFO_INNER, ctorSig, args);
 }
@@ -1529,15 +1544,9 @@ ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUr
     ani_string host = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, skillUri.host, host));
 
-    // port: int
-    int32_t port = 0;
-    if (!skillUri.port.empty()) {
-        auto [ptr, ec] = std::from_chars(skillUri.port.data(), skillUri.port.data() + skillUri.port.size(), port);
-        if (ec != std::errc() || ptr != skillUri.port.data() + skillUri.port.size()) {
-            APP_LOGW("skillUri port convert failed");
-            port = 0;
-        }
-    }
+    // port: string
+    ani_string port = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, skillUri.port, port));
 
     // path: string
     ani_string path = nullptr;
@@ -1566,7 +1575,7 @@ ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUr
     ani_value args[] = {
         { .r = scheme },
         { .r = host },
-        { .i = port },
+        { .r = port },
         { .r = path },
         { .r = pathStartWith },
         { .r = pathRegex },
@@ -1578,7 +1587,7 @@ ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUr
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // scheme: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // host: string
-        .AddInt()                                   // port: int
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // port: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // path: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // pathStartWith: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // pathRegex: string
@@ -1772,6 +1781,10 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
     ani_string organization = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.organization, organization));
 
+    // bundleName: string
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.bundleName, bundleName));
+
     ani_value args[] = {
         { .l = static_cast<ani_long>(appProvisionInfo.versionCode) },
         { .r = versionName },
@@ -1785,6 +1798,7 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
         { .r = issuer },
         { .r = appIdentifier },
         { .r = organization },
+        { .r = bundleName},
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddLong()                                  // versionCode: long
@@ -1799,6 +1813,7 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // issuer: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // appIdentifier: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // organization: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_APP_PROVISION_INFO_INNER, ctorSig, args);
 }
@@ -3061,6 +3076,96 @@ bool CommonFunAni::ParseElementName(ani_env* env, ani_object object, ElementName
     // abilityName: string
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ABILITY_NAME, &string));
     elementName.SetAbilityName(AniStrToString(env, string));
+
+    return true;
+}
+
+bool CommonFunAni::ParseBundleOption(ani_env* env, ani_object object, BundleOptionInfo& option)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+    ani_string string = nullptr;
+
+    // userId?: int
+    int32_t intUserId = 0;
+    if (CallGetterOptional(env, object, PROPERTYNAME_USER_ID, &intUserId)) {
+        option.userId = intUserId;
+    }
+
+    // appIndex?: int
+    int32_t intAppIndex = 0;
+    if (CallGetterOptional(env, object, PROPERTYNAME_APP_INDEX, &intAppIndex)) {
+        option.appIndex = intAppIndex;
+    }
+
+    // bundleName?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_BUNDLE_NAME, &string)) {
+        option.bundleName = AniStrToString(env, string);
+    }
+
+    // moduleName?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_MODULE_NAME, &string)) {
+        option.moduleName = AniStrToString(env, string);
+    }
+
+    // abilityName?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_ABILITY_NAME, &string)) {
+        option.abilityName = AniStrToString(env, string);
+    }
+
+    return true;
+}
+
+template<typename valueType>
+bool CommonFunAni::CallSetter(ani_env* env, ani_class cls, ani_object object, const char* propertyName, valueType value)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(cls);
+    RETURN_FALSE_IF_NULL(object);
+
+    std::string setterSig;
+    ani_value setterParam { };
+    if constexpr (std::is_same_v<valueType, ani_boolean>) {
+        setterSig = "z:";
+        setterParam.z = value;
+    } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
+                         std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
+        setterSig = "i:";
+        setterParam.i = static_cast<ani_int>(value);
+    } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
+        setterSig = "l:";
+        setterParam.l = static_cast<ani_long>(value);
+    } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
+                         std::is_same_v<valueType, uint64_t>) {
+        setterSig = "d:";
+        setterParam.d = static_cast<ani_double>(value);
+    } else if constexpr (std::is_pointer_v<valueType> &&
+                         std::is_base_of_v<__ani_ref, std::remove_pointer_t<valueType>>) {
+        if constexpr (std::is_same_v<valueType, ani_string>) {
+            setterSig.append("C{");
+            setterSig.append(CommonFunAniNS::CLASSNAME_STRING);
+            setterSig.append("}:");
+        }
+        setterParam.r = value;
+    } else {
+        APP_LOGE("Classname %{public}s Unsupported", propertyName);
+        return false;
+    }
+
+    ani_method setter;
+    ani_status status =
+        env->Class_FindMethod(cls, Builder::BuildSetterName(propertyName).c_str(),
+            setterSig.empty() ? nullptr : setterSig.c_str(), &setter);
+    if (status != ANI_OK) {
+        APP_LOGE("Class_FindMethod %{public}s failed %{public}d", propertyName, status);
+        return false;
+    }
+
+    status = env->Object_CallMethod_Void_A(object, setter, &setterParam);
+    if (status != ANI_OK) {
+        APP_LOGE("Object_CallMethod_Void_A %{public}s failed %{public}d", propertyName, status);
+        return false;
+    }
 
     return true;
 }

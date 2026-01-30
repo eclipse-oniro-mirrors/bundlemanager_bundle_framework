@@ -121,6 +121,17 @@ void BusinessErrorAni::ThrowCommonError(ani_env *env, int32_t err,
     ThrowError(env, error);
 }
 
+void BusinessErrorAni::ThrowCommonNewError(ani_env *env, int32_t err,
+    const std::string &parameter, const std::string &type)
+{
+    if (env == nullptr) {
+        APP_LOGE("env is nullptr");
+        return;
+    }
+    ani_object error = CreateNewCommonError(env, err, parameter, type);
+    ThrowError(env, error);
+}
+
 void BusinessErrorAni::ThrowInstallError(ani_env *env, int32_t err, int32_t innerCode,
     const std::string &parameter, const std::string &type)
 {
@@ -157,6 +168,39 @@ ani_object BusinessErrorAni::CreateCommonError(
     BusinessErrorMap::GetErrMap(errMap);
     if (errMap.find(err) != errMap.end()) {
         errMessage += errMap[err];
+    }
+    iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, functionName);
+        iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
+        if (iter != std::string::npos) {
+            errMessage = errMessage.replace(iter, 1, permissionName);
+        }
+    }
+    return CreateError(env, err, errMessage);
+}
+
+ani_object BusinessErrorAni::CreateNewCommonError(
+    ani_env *env, int32_t err, const std::string &functionName, const std::string &permissionName)
+{
+    if (env == nullptr) {
+        APP_LOGE("env is nullptr");
+        return nullptr;
+    }
+    std::string errMessage = BusinessErrorNS::ERR_MSG_BUSINESS_ERROR;
+    auto iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, std::to_string(err));
+    }
+    std::unordered_map<int32_t, const char*> errMap;
+    BusinessErrorMap::GetNewErrMap(errMap);
+    if (errMap.find(err) != errMap.end()) {
+        errMessage += errMap[err];
+    } else {
+        BusinessErrorMap::GetErrMap(errMap);
+        if (errMap.find(err) != errMap.end()) {
+            errMessage += errMap[err];
+        }
     }
     iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
     if (iter != std::string::npos) {

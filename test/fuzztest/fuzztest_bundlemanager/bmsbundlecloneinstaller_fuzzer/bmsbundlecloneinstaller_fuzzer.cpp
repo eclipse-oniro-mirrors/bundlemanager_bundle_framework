@@ -33,9 +33,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 
     std::string emptyBundleName = "";
     std::string randomBundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     int32_t appIndex = 1;
     int32_t randomAppIndex = fdp.ConsumeIntegral<int32_t>();
     int32_t randomUserId = fdp.ConsumeIntegral<int32_t>();
+    int32_t userId = GenerateRandomUser(fdp);
 
     installer.InstallCloneApp(emptyBundleName, Constants::START_USERID, appIndex);
     installer.InstallCloneApp(randomBundleName, Constants::START_USERID, appIndex);
@@ -49,6 +51,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     installer.ProcessCloneBundleUninstall(emptyBundleName, randomUserId, appIndex, sync, param);
     installer.ProcessCloneBundleUninstall(randomBundleName, Constants::START_USERID, appIndex, sync, param);
     installer.ProcessCloneBundleUninstall(randomBundleName, Constants::START_USERID, randomAppIndex, sync, param);
+    installer.UninstallCloneApp(bundleName, userId, appIndex, true, param);
+    installer.UninstallAllCloneApps(bundleName, true, false, userId);
 
     int32_t uid = fdp.ConsumeIntegral<int32_t>();
     InnerBundleInfo info;
@@ -88,7 +92,10 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 
     installer.GetDeveloperId(randomBundleName);
     installer.GetDeveloperId(emptyBundleName);
-
+    installer.StopRelable(info, uid);
+    installer.DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex);
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    installer.RecoverHapToken(userId, 1, accessTokenIdEx, info, "");
     return true;
 }
 }

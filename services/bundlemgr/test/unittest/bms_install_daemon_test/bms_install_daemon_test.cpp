@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -243,8 +243,10 @@ bool BmsInstallDaemonTest::GetBundleStats(const std::string &bundleName, const i
     if (!service_->IsServiceReady()) {
         service_->Start();
     }
+    std::unordered_set<int32_t> uids;
+    uids.emplace(uid);
     if (InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats,
-        uid, appIndex, statFlag, moduleNames) == ERR_OK) {
+        uids, appIndex, statFlag, moduleNames) == ERR_OK) {
         return true;
     }
     return false;
@@ -852,6 +854,52 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0900, Function | SmallTest | Level
         TEST_STRING, TEST_STRING, TEST_STRING, 0);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: InstalldClient_1000
+ * @tc.name: Test SetDirsApl, Param is empty
+ * @tc.desc: 1.Test the SetDirsApl of InstalldClient
+*/
+HWTEST_F(BmsInstallDaemonTest, InstalldClient_1000, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    std::vector<std::string> dirs;
+    std::string TEST_STRING = "test.string";
+    CreateDirParam createDirParam;
+    createDirParam.extensionDirs = dirs;
+    createDirParam.bundleName = BUNDLE_NAME;
+    createDirParam.apl = TEST_STRING;
+    createDirParam.isPreInstallApp = false;
+    createDirParam.debug = false;
+    createDirParam.uid = UID;
+    ErrCode ret = InstalldClient::GetInstance()->SetDirsApl(createDirParam, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+ 
+    dirs.emplace_back(TEST_STRING);
+    CreateDirParam createDirParam2;
+    createDirParam2.extensionDirs = dirs;
+    createDirParam2.bundleName = "";
+    createDirParam2.apl = TEST_STRING;
+    createDirParam2.isPreInstallApp = false;
+    createDirParam2.debug = false;
+    createDirParam2.uid = UID;
+    ret = InstalldClient::GetInstance()->SetDirsApl(createDirParam2, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+ 
+    CreateDirParam createDirParam3;
+    createDirParam3.extensionDirs = dirs;
+    createDirParam3.bundleName = BUNDLE_NAME;
+    createDirParam3.apl = "";
+    createDirParam3.isPreInstallApp = true;
+    createDirParam3.debug = true;
+    createDirParam3.uid = UID;
+    ret = InstalldClient::GetInstance()->SetDirsApl(createDirParam3, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
 
 /**
  * @tc.number: ExtractBundleFile_0100
@@ -1616,12 +1664,13 @@ HWTEST_F(BmsInstallDaemonTest, MigrateData_0003, Function | SmallTest | Level0)
 HWTEST_F(BmsInstallDaemonTest, ProcessBundleInstallNative_0100, Function | SmallTest | Level0)
 {
     InstalldHostImpl hostImpl;
-    std::string userId = "100";
-    std::string hnpRootPath = "/hnp/root";
-    std::string hapPath = "/hnp/root/path";
-    std::string cpuAbi = "cpuAbi";
-    std::string packageName = "com.acts.example";
-    ErrCode ret = hostImpl.ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    InstallHnpParam param;
+    param.userId = "100";
+    param.hnpRootPath = "/hnp/root";
+    param.hapPath = "/hnp/root/path";
+    param.cpuAbi = "cpuAbi";
+    param.packageName = "com.acts.example";
+    ErrCode ret = hostImpl.ProcessBundleInstallNative(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NATIVE_INSTALL_FAILED);
 }
 
@@ -1679,6 +1728,20 @@ HWTEST_F(BmsInstallDaemonTest, GetDiskUsageFromPath_0100, Function | SmallTest |
     path.emplace_back("dir/path/");
     int64_t statSize = 0;
     ErrCode ret = hostImpl.GetDiskUsageFromPath(path, statSize);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test GetBundleInodeCount
+*/
+HWTEST_F(BmsInstallDaemonTest, GetBundleInodeCount_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    int32_t uid = 100;
+    uint64_t inodeCount = 0;
+    ErrCode ret = hostImpl.GetBundleInodeCount(uid, inodeCount);
     EXPECT_EQ(ret, ERR_OK);
 }
 

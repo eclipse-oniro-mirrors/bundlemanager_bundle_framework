@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -46,6 +46,7 @@ ohos_shared_library("zlib") {
   public_configs = [ ":zip_config" ]
 
   sources = [
+    "napi/class_checksum/checksum_common_func.cpp",
     "napi/class_checksum/checksum_n_exporter.cpp",
     "napi/class_gzip/gzip_n_exporter.cpp",
     "napi/class_zip/zip_n_exporter.cpp",

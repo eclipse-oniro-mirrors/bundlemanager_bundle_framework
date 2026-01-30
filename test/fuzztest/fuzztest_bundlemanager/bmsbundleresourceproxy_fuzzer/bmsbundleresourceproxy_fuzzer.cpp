@@ -53,6 +53,14 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         static_cast<ExtensionAbilityType>(fdp.ConsumeIntegralInRange<uint16_t>(0, EXTENSION_ABILITY_MAX));
     bundleResourceProxy.GetExtensionAbilityResourceInfo(bundleName, extensionAbilityType, flags,
         launcherAbilityResourceInfo, appIndex);
+
+    std::vector<BundleOptionInfo> optionsList;
+    BundleOptionInfo bundleOptionInfo;
+    GenerateBundleOptionInfo(fdp, bundleOptionInfo);
+    bundleOptionInfo.appIndex = 0;
+    optionsList.emplace_back(bundleOptionInfo);
+    bundleResourceProxy.GetLauncherAbilityResourceInfoList(optionsList,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherAbilityResourceInfo);
     return true;
 }
 }

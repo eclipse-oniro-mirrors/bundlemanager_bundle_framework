@@ -94,6 +94,10 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nApplicationInfoFlag));
     CreateApplicationInfoFlagObject(env, nApplicationInfoFlag);
 
+    napi_value nBundleInstallStatus = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nBundleInstallStatus));
+    CreateBundleInstallStatusObject(env, nBundleInstallStatus);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfoSync", GetBundleArchiveInfoSync),
@@ -187,6 +191,9 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getPluginBundlePathForSelf", GetPluginBundlePathForSelfSync),
         DECLARE_NAPI_FUNCTION("recoverBackupBundleData", RecoverBackupBundleData),
         DECLARE_NAPI_FUNCTION("removeBackupBundleData", RemoveBackupBundleData),
+        DECLARE_NAPI_FUNCTION("getBundleInstallStatus", GetBundleInstallStatus),
+        DECLARE_NAPI_PROPERTY("BundleInstallStatus", nBundleInstallStatus),
+        DECLARE_NAPI_FUNCTION("getAllAppProvisionInfo", GetAllAppProvisionInfo),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
