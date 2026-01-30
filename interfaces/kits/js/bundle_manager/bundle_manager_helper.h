@@ -46,6 +46,7 @@ public:
     static ErrCode InnerGetAppProvisionInfo(
         const std::string& bundleName, int32_t userId, AppProvisionInfo& appProvisionInfo);
     static ErrCode InnerGetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo>& appProvisionInfos);
+    static ErrCode InnerGetAllAppInstallExtendedInfo(std::vector<AppInstallExtendedInfo>& appInstallExtendedInfos);
     static ErrCode InnerGetAllPreinstalledApplicationInfos(
         std::vector<PreinstalledApplicationInfo>& preinstalledApplicationInfos);
     static ErrCode InnerGetAllAppCloneBundleInfo(

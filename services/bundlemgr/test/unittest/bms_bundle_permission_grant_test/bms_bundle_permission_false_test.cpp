@@ -990,6 +990,19 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6400, Functi
 }
 
 /**
+ * @tc.number: GetAllAppInstallExtendedInfo_0001
+ * @tc.name: test GetAllAppInstallExtendedInfo of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetAllAppInstallExtendedInfo false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetAllAppInstallExtendedInfo_0001, Function | SmallTest | Level0)
+{
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+    ErrCode ret = bundleMgrHostImpl_->GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: GetAllAppProvisionInfo_0001
  * @tc.name: test GetAllAppProvisionInfo of BundleMgrHostImpl
  * @tc.desc: 1. system running normally

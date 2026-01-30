@@ -483,6 +483,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PROXY_DATA_INFOS):
             errCode = this->HandleGetProxyDataInfos(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_APP_INSTALL_EXTENSION_INFO):
+            errCode = this->HandleGetAllAppInstallExtendedInfo(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_PROXY_DATA_INFOS):
             errCode = this->HandleGetAllProxyDataInfos(data, reply);
             break;
@@ -3554,6 +3557,22 @@ ErrCode BundleMgrHost::HandleGetAppProvisionInfo(MessageParcel &data, MessagePar
     }
     if ((ret == ERR_OK) && !reply.WriteParcelable(&appProvisionInfo)) {
         APP_LOGE("write appProvisionInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllAppInstallExtendedInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+    ErrCode ret = GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetAllAppInstallExtendedInfo write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !WriteVectorToParcelIntelligent(appInstallExtendedInfos, reply)) {
+        APP_LOGE("write appInstallExtendedInfos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

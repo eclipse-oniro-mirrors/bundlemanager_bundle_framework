@@ -130,6 +130,32 @@ static void SetUint32Property(napi_env env, napi_value obj, uint32_t value, cons
 static void ConvertAppProvisionInfo(
     napi_env env, const AppProvisionInfo &appProvisionInfo, napi_value objAppProvisionInfo);
 
+static void ConvertAllAppInstallExtendedInfos(napi_env env,
+    const std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos, napi_value objAppInstallExtendedInfo);
+
+static void ConvertAppInstallExtendedInfo(
+    napi_env env, const AppInstallExtendedInfo &appInstallExtendedInfo, napi_value objAppInstallExtendedInfo);
+
+private:
+static void SetAppInstallExtendedInfoBasicProperties(napi_env env,
+    const AppInstallExtendedInfo &appInstallExtendedInfo, napi_value objAppInstallExtendedInfo);
+
+static void SetAppInstallExtendedInfoHashParam(napi_env env,
+    const AppInstallExtendedInfo &appInstallExtendedInfo, napi_value objAppInstallExtendedInfo);
+
+static void SetAppInstallExtendedInfoSharedBundleInfo(napi_env env,
+    const AppInstallExtendedInfo &appInstallExtendedInfo, napi_value objAppInstallExtendedInfo);
+
+static void SetAppInstallExtendedInfoRequiredDeviceFeatures(napi_env env,
+    const AppInstallExtendedInfo &appInstallExtendedInfo, napi_value objAppInstallExtendedInfo);
+
+static void SetAppInstallExtendedInfoHapPath(napi_env env,
+    const AppInstallExtendedInfo &appInstallExtendedInfo, napi_value objAppInstallExtendedInfo);
+
+public:
+static void ConvertRequiredDeviceFeatures(napi_env env, const std::map<std::string, std::vector<std::string>> &data,
+    napi_value objInfos);
+
 static void ConvertAllAppProvisionInfo(napi_env env,
     const std::vector<AppProvisionInfo> &appProvisionInfos, napi_value objAppProvisionInfo);
 

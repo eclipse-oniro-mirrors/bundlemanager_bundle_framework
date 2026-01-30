@@ -1028,6 +1028,8 @@ public:
         AppProvisionInfo &appProvisionInfo) override;
     virtual ErrCode GetAllAppProvisionInfo(const int32_t userId,
         std::vector<AppProvisionInfo> &appProvisionInfos) override;
+    virtual ErrCode GetAllAppInstallExtendedInfo(
+        std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos) override;
     virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
         std::vector<Metadata> &provisionMetadatas) override;
     virtual ErrCode GetBaseSharedBundleInfos(const std::string &bundleName,

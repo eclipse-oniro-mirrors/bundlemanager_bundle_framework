@@ -2220,6 +2220,11 @@ public:
         baseApplicationInfo_->appSignType = appSignType;
     }
 
+    std::string GetInstallSource() const
+    {
+        return baseApplicationInfo_->installSource;
+    }
+
     std::string GetAppSignType() const
     {
         return baseApplicationInfo_->appSignType;

@@ -32,6 +32,7 @@
 #include "ability_info.h"
 #include "aot/aot_args.h"
 #include "application_info.h"
+#include "app_install_extended_info.h"
 #include "app_provision_info.h"
 #ifdef ABILITY_RUNTIME_ENABLE
 #include "app_mgr_interface.h"
@@ -984,6 +985,16 @@ public:
     ErrCode GetSpecifiedDistributionType(const std::string &bundleName, std::string &specifiedDistributionType);
     ErrCode GetAdditionalInfo(const std::string &bundleName, std::string &additionalInfo);
     ErrCode GetAdditionalInfoForAllUser(const std::string &bundleName, std::string &additionalInfo);
+    /**
+     * @brief Generate AppInstallExtendedInfo from InnerBundleInfo.
+     * @param innerBundleInfo Indicates the InnerBundleInfo object.
+     * @param appInstallExtendedInfo Indicates the generated AppInstallExtendedInfo object.
+     * @return Returns ERR_OK if successfully generated; returns error code otherwise.
+     */
+    ErrCode GenerateAppInstallExtendedInfo(const InnerBundleInfo &innerBundleInfo,
+        AppInstallExtendedInfo &appInstallExtendedInfo);
+
+    ErrCode GetAllAppInstallExtendedInfo(std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos) const;
 
     ErrCode GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName, int32_t userId,
         std::vector<ProxyData> &proxyDatas) const;

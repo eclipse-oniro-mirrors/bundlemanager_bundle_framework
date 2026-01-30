@@ -27,6 +27,7 @@
 #include "ability_manager_helper.h"
 #include "accesstoken_kit.h"
 #include "account_helper.h"
+#include "app_install_extended_info.h"
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_client.h"
@@ -9082,6 +9083,75 @@ ErrCode BundleDataMgr::GetAdditionalInfoForAllUser(
         additionalInfo)) {
         APP_LOGW("bundleName:%{public}s GetAdditionalInfo failed", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GenerateAppInstallExtendedInfo(const InnerBundleInfo &innerBundleInfo,
+    AppInstallExtendedInfo &appInstallExtendedInfo)
+{
+    std::string bundleName = innerBundleInfo.GetBundleName();
+    appInstallExtendedInfo.bundleName = bundleName;
+
+    // collect hashParam and requiredDeviceFeatures from modules
+    for (const auto& [modulePackage, innerModuleInfo] : innerBundleInfo.GetInnerModuleInfos()) {
+        appInstallExtendedInfo.hashParam.emplace(modulePackage, innerModuleInfo.hashValue);
+        appInstallExtendedInfo.requiredDeviceFeatures.emplace(modulePackage,
+            innerBundleInfo.GetRequiredDeviceFeatures(modulePackage));   
+    }
+
+    // get specifiedDistributionType 
+    ErrCode ret = GetSpecifiedDistributionType(bundleName, appInstallExtendedInfo.specifiedDistributionType);
+    if (ret != ERR_OK) {
+        APP_LOGW("GetSpecifiedDistributionType failed for %{public}s, continue without it", bundleName.c_str());
+    }
+
+    // get additionalInfo 
+    ret = GetAdditionalInfo(bundleName, appInstallExtendedInfo.additionalInfo);
+    if (ret != ERR_OK) {
+        APP_LOGW("GetAdditionalInfo failed for %{public}s, continue without it", bundleName.c_str());
+    }
+
+    appInstallExtendedInfo.crowdtestDeadline = innerBundleInfo.GetAppCrowdtestDeadline();
+    appInstallExtendedInfo.installSource = innerBundleInfo.GetInstallSource();
+    appInstallExtendedInfo.compatibleVersion = innerBundleInfo.GetCompatibleVersion();
+
+    // get sharedBundleInfo
+    innerBundleInfo.GetSharedBundleInfo(appInstallExtendedInfo.sharedBundleInfo);
+
+    // collect hapPath from all modules
+    for (const auto& [modulePackage, innerModuleInfo] : innerBundleInfo.GetInnerModuleInfos()) {
+        if (!innerModuleInfo.hapPath.empty()) {
+            appInstallExtendedInfo.hapPath.push_back(innerModuleInfo.hapPath);
+        }
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAllAppInstallExtendedInfo(std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto& [bundleName, innerBundleInfo] : bundleInfos_) {
+        if (innerBundleInfo.IsDisabled()) {
+            APP_LOGD("app %{public}s is disabled", bundleName.c_str());
+            continue;
+        }
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
+            APP_LOGD("app %{public}s is cross-app shared bundle", bundleName.c_str());
+            continue;
+        }
+
+        AppInstallExtendedInfo appInstallExtendedInfo;
+        ErrCode ret = const_cast<BundleDataMgr*>(this)->GenerateAppInstallExtendedInfo(
+            innerBundleInfo, appInstallExtendedInfo);
+        if (ret != ERR_OK) {
+            APP_LOGE("GenerateAppInstallExtendedInfo failed for %{public}s, ret: %{public}d",
+                bundleName.c_str(), ret);
+            continue;
+        }
+
+        appInstallExtendedInfos.emplace_back(appInstallExtendedInfo);
     }
     return ERR_OK;
 }

@@ -17,6 +17,7 @@
 #define BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H
 
 #include "ability_info.h"
+#include "app_install_extended_info.h"
 #include "app_provision_info.h"
 #include "base_cb_info.h"
 #include "bundle_constants.h"
@@ -312,6 +313,11 @@ struct AppProvisionInfoCallbackInfo : public BaseCallbackInfo {
     AppProvisionInfo appProvisionInfo;
 };
 
+struct AllAppInstallExtendedInfoCallbackInfo : public BaseCallbackInfo {
+    explicit AllAppInstallExtendedInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+};
+
 struct AllAppProvisionInfoCallbackInfo : public BaseCallbackInfo {
     explicit AllAppProvisionInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
     int32_t userId = Constants::UNSPECIFIED_USERID;
@@ -404,6 +410,7 @@ napi_value GetAllBundleInfoByDeveloperId(napi_env env, napi_callback_info info);
 napi_value GetDeveloperIds(napi_env env, napi_callback_info info);
 napi_value SwitchUninstallState(napi_env env, napi_callback_info info);
 napi_value GetAppCloneBundleInfo(napi_env env, napi_callback_info info);
+napi_value GetAllInstallInfo(napi_env env, napi_callback_info info);
 napi_value GetAllAppCloneBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetAppCloneIdentity(napi_env env, napi_callback_info info);
 napi_value GetAllPluginInfo(napi_env env, napi_callback_info info);

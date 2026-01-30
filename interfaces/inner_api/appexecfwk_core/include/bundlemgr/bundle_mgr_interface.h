@@ -19,6 +19,7 @@
 #include "ability_info.h"
 #include "appexecfwk_errors.h"
 #include "application_info.h"
+#include "app_install_extended_info.h"
 #include "app_provision_info.h"
 #include "bundle_additional_info.h"
 #include "bundle_constants.h"
@@ -1501,6 +1502,11 @@ public:
 
     virtual ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
         AppProvisionInfo &appProvisionInfo)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode GetAllAppInstallExtendedInfo(std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos)
     {
         return ERR_OK;
     }

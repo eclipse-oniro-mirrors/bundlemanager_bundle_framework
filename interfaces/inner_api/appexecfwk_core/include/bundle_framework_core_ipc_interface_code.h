@@ -245,6 +245,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     SET_SHORTCUTS_ENABLED = 219,
     GET_PLUGIN_EXTENSION_INFO = 220,
     AUTO_CLEAN_CACHE_BY_INODE = 221,
+    GET_ALL_APP_INSTALL_EXTENSION_INFO = 222,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

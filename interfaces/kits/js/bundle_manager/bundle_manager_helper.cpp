@@ -248,6 +248,19 @@ ErrCode BundleManagerHelper::InnerGetAppProvisionInfo(
     return CommonFunc::ConvertErrCode(ret);
 }
 
+ErrCode BundleManagerHelper::InnerGetAllAppInstallExtendedInfo(
+    std::vector<AppInstallExtendedInfo>& appInstallExtendedInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+    APP_LOGD("GetAllAppInstallExtendedInfo ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 ErrCode BundleManagerHelper::InnerGetAllAppProvisionInfo(const int32_t userId,
     std::vector<AppProvisionInfo>& appProvisionInfos)
 {

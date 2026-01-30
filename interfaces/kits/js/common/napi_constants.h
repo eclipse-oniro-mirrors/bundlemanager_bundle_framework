@@ -160,6 +160,7 @@ constexpr const char* GET_ALL_APP_PROVISION_INFO = "getAllAppProvisionInfo";
 constexpr const char* CAN_OPEN_LINK = "CanOpenLink";
 constexpr const char* GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicationInfos";
 constexpr const char* GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
+constexpr const char* GET_ALL_INSTALL_INFO = "getAllBundleInstallInfo";
 constexpr const char* SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
 constexpr const char* GET_SIGNATURE_INFO = "GetSignatureInfo";
 constexpr const char* GET_ALL_APP_CLONE_BUNDLE_INFO = "GetAllAppCloneBundleInfo";

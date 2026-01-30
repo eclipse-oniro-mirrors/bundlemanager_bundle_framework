@@ -1402,6 +1402,132 @@ void CommonFunc::ConvertAllAppProvisionInfo(napi_env env,
     }
 }
 
+void CommonFunc::ConvertAllAppInstallExtendedInfos(napi_env env,
+    const std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos, napi_value objAppInstallExtendedInfo)
+{
+    AutoHandleScope scopeGuard(env);
+    if (appInstallExtendedInfos.empty()) {
+        APP_LOGD("appInstallExtendedInfos is empty");
+        return;
+    }
+    size_t index = 0;
+    for (const auto &item : appInstallExtendedInfos) {
+        napi_value objInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objInfo));
+        ConvertAppInstallExtendedInfo(env, item, objInfo);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, objAppInstallExtendedInfo, index, objInfo));
+        index++;
+    }
+}
+
+void CommonFunc::SetAppInstallExtendedInfoBasicProperties(napi_env env,
+    const AppInstallExtendedInfo &appInstallExtendedInfo, napi_value objAppInstallExtendedInfo)
+{
+    SetStringProperty(env, objAppInstallExtendedInfo, appInstallExtendedInfo.bundleName, "bundleName");
+    SetStringProperty(env, objAppInstallExtendedInfo, appInstallExtendedInfo.specifiedDistributionType,
+        "specifiedDistributionType");
+    SetStringProperty(env, objAppInstallExtendedInfo, appInstallExtendedInfo.installSource, "installSource");
+    SetStringProperty(env, objAppInstallExtendedInfo, appInstallExtendedInfo.additionalInfo, "additionalInfo");
+
+    napi_value nCrowdtestDeadline;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, appInstallExtendedInfo.crowdtestDeadline, &nCrowdtestDeadline));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInstallExtendedInfo,
+        "crowdtestDeadline", nCrowdtestDeadline));
+
+    napi_value nCompatibleVersion;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appInstallExtendedInfo.compatibleVersion, &nCompatibleVersion));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInstallExtendedInfo,
+        "compatibleVersion", nCompatibleVersion));
+}
+
+void CommonFunc::SetAppInstallExtendedInfoHashParam(napi_env env,
+    const AppInstallExtendedInfo &appInstallExtendedInfo, napi_value objAppInstallExtendedInfo)
+{
+    napi_value nHashParam;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nHashParam));
+    ConvertRouterDataInfos(env, appInstallExtendedInfo.hashParam, nHashParam);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInstallExtendedInfo, "hashParam", nHashParam));
+}
+
+void CommonFunc::SetAppInstallExtendedInfoSharedBundleInfo(napi_env env,
+    const AppInstallExtendedInfo &appInstallExtendedInfo, napi_value objAppInstallExtendedInfo)
+{
+    napi_value nSharedBundleInfo;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nSharedBundleInfo));
+    ConvertSharedBundleInfo(env, nSharedBundleInfo, appInstallExtendedInfo.sharedBundleInfo);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInstallExtendedInfo,
+        "sharedBundleInfo", nSharedBundleInfo));
+}
+
+void CommonFunc::SetAppInstallExtendedInfoRequiredDeviceFeatures(napi_env env,
+    const AppInstallExtendedInfo &appInstallExtendedInfo, napi_value objAppInstallExtendedInfo)
+{
+    napi_value nRequiredDeviceFeatures;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nRequiredDeviceFeatures));
+    size_t moduleIndex = 0;
+    for (const auto &item : appInstallExtendedInfo.requiredDeviceFeatures) {
+        napi_value nModuleObj;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nModuleObj));
+        napi_value nModule;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, item.first.c_str(), NAPI_AUTO_LENGTH, &nModule));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nModuleObj, "moduleName", nModule));
+        napi_value nRequiredDeviceFeature;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nRequiredDeviceFeature));
+        ConvertRequiredDeviceFeatures(env, item.second, nRequiredDeviceFeature);
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nModuleObj,
+            "requiredDeviceFeature", nRequiredDeviceFeature));
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nRequiredDeviceFeatures, moduleIndex++, nModuleObj));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInstallExtendedInfo,
+        "requiredDeviceFeatures", nRequiredDeviceFeatures));
+}
+
+void CommonFunc::SetAppInstallExtendedInfoHapPath(napi_env env,
+    const AppInstallExtendedInfo &appInstallExtendedInfo, napi_value objAppInstallExtendedInfo)
+{
+    napi_value nHapPath;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nHapPath));
+    for (size_t idx = 0; idx < appInstallExtendedInfo.hapPath.size(); idx++) {
+        napi_value nPath;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInstallExtendedInfo.hapPath[idx].c_str(),
+            NAPI_AUTO_LENGTH, &nPath));
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nHapPath, idx, nPath));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInstallExtendedInfo, "hapPath", nHapPath));
+}
+
+void CommonFunc::ConvertAppInstallExtendedInfo(
+    napi_env env, const AppInstallExtendedInfo &appInstallExtendedInfo, napi_value objAppInstallExtendedInfo)
+{
+    AutoHandleScope scopeGuard(env);
+    SetAppInstallExtendedInfoBasicProperties(env, appInstallExtendedInfo, objAppInstallExtendedInfo);
+    SetAppInstallExtendedInfoHashParam(env, appInstallExtendedInfo, objAppInstallExtendedInfo);
+    SetAppInstallExtendedInfoSharedBundleInfo(env, appInstallExtendedInfo, objAppInstallExtendedInfo);
+    SetAppInstallExtendedInfoRequiredDeviceFeatures(env, appInstallExtendedInfo, objAppInstallExtendedInfo);
+    SetAppInstallExtendedInfoHapPath(env, appInstallExtendedInfo, objAppInstallExtendedInfo);
+}
+
+void CommonFunc::ConvertRequiredDeviceFeatures(napi_env env, const std::map<std::string,
+    std::vector<std::string>> &data, napi_value objInfos)
+{
+    AutoHandleScope scopeGuard(env);
+    for (const auto &item : data) {
+        napi_value nFeatures;
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nFeatures));
+        for (size_t idx = 0; idx < item.second.size(); idx++) {
+            napi_value nFeature;
+            NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, item.second[idx].c_str(),
+                NAPI_AUTO_LENGTH, &nFeature));
+            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nFeatures, idx, nFeature));
+        }
+
+        napi_value nDevice;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, item.first.c_str(), NAPI_AUTO_LENGTH, &nDevice));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfos, item.first.c_str(), nFeatures));
+    }
+}
+
+
 void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo,
     napi_value objExtensionInfo)
 {

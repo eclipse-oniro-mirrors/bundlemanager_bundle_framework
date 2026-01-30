@@ -24,6 +24,7 @@
 
 #include "ability_manager_client.h"
 #include "ability_info.h"
+#include "app_install_extended_info.h"
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_client.h"
@@ -7166,5 +7167,185 @@ HWTEST_F(BmsBundleDataMgrTest, GetQuotaData_0100, Function | SmallTest | Level1)
     quotaValue = InstalldOperator::GetBundleInodeCount(uid);
     EXPECT_EQ(quotaValue, 0);
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetAllAppInstallExtendedInfo_0100
+ * @tc.name: test GetAllAppInstallExtendedInfo
+ * @tc.desc: 1. test GetAllAppInstallExtendedInfo with valid bundles
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllAppInstallExtendedInfo_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+    ErrCode ret = dataMgr->GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GT(appInstallExtendedInfos.size(), 0);
+
+    bool found = false;
+    for (const auto& info : appInstallExtendedInfos) {
+        if (info.bundleName == BUNDLE_NAME_TEST) {
+            found = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(found);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetAllAppInstallExtendedInfo_0200
+ * @tc.name: test GetAllAppInstallExtendedInfo with disabled bundle
+ * @tc.desc: 1. test that disabled bundles are filtered out
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllAppInstallExtendedInfo_0200, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.test.disabled";
+
+    // Create and add disabled bundle directly
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    appInfo.name = bundleName;
+    appInfo.enabled = true;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.modulePackage = MODULE_NAME_TEST;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.hashValue = "testHashValue";
+    innerModuleInfo.isEntry = true;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+
+    bool startRet = GetBundleDataMgr()->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    ASSERT_TRUE(startRet);
+
+    bool addRet = GetBundleDataMgr()->AddInnerBundleInfo(bundleName, innerBundleInfo);
+    ASSERT_TRUE(addRet);
+
+    bool endRet = GetBundleDataMgr()->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS);
+    ASSERT_TRUE(endRet);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+    ErrCode ret = dataMgr->GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Disabled bundle should not be in result
+    bool found = false;
+    for (const auto& info : appInstallExtendedInfos) {
+        if (info.bundleName == bundleName) {
+            found = true;
+            break;
+        }
+    }
+    EXPECT_FALSE(found);
+
+    RemoveBundleinfo(bundleName);
+}
+
+/**
+ * @tc.number: GetAllAppInstallExtendedInfo_0300
+ * @tc.name: test GetAllAppInstallExtendedInfo with shared bundle
+ * @tc.desc: 1. test that shared bundles are filtered out
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllAppInstallExtendedInfo_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.example.test.shared";
+
+    // Create shared bundle
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    appInfo.name = bundleName;
+    appInfo.enabled = true;
+
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::SHARED);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.modulePackage = MODULE_NAME_TEST;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.hashValue = "testHashValue";
+    innerModuleInfo.isEntry = true;
+
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+
+    bool startRet = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    ASSERT_TRUE(startRet);
+
+    bool addRet = dataMgr->AddInnerBundleInfo(bundleName, innerBundleInfo);
+    ASSERT_TRUE(addRet);
+
+    bool endRet = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS);
+    ASSERT_TRUE(endRet);
+
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+    ErrCode ret = dataMgr->GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Shared bundle should not be in result
+    bool found = false;
+    for (const auto& info : appInstallExtendedInfos) {
+        if (info.bundleName == bundleName) {
+            found = true;
+            break;
+        }
+    }
+    EXPECT_FALSE(found);
+
+    RemoveBundleinfo(bundleName);
+}
+
+/**
+ * @tc.number: GetAllAppInstallExtendedInfo_0400
+ * @tc.name: test GetAllAppInstallExtendedInfo with multiple bundles
+ * @tc.desc: 1. test GetAllAppInstallExtendedInfo with multiple valid bundles
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllAppInstallExtendedInfo_0400, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST1);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+    ErrCode ret = dataMgr->GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GE(appInstallExtendedInfos.size(), 2);
+
+    bool foundFirst = false;
+    bool foundSecond = false;
+    for (const auto& info : appInstallExtendedInfos) {
+        if (info.bundleName == BUNDLE_NAME_TEST) {
+            foundFirst = true;
+        }
+        if (info.bundleName == BUNDLE_TEST1) {
+            foundSecond = true;
+        }
+    }
+    EXPECT_TRUE(foundFirst);
+    EXPECT_TRUE(foundSecond);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    MockUninstallBundle(BUNDLE_TEST1);
 }
 } // OHOS
