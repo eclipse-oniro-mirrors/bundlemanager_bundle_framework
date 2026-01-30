@@ -1987,11 +1987,11 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, BeforeUninstall_0001, Function | S
 }
 
 /**
- * @tc.number: GenerateOdid_0001
- * @tc.name: test GenerateOdid
- * @tc.desc: 1.test GenerateOdid
+ * @tc.number: UpdateDeveloperId_0001
+ * @tc.name: test UpdateDeveloperId
+ * @tc.desc: 1.test UpdateDeveloperId
  */
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, GenerateOdid_0001, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UpdateDeveloperId_0001, Function | SmallTest | Level1)
 {
     AppServiceFwkInstaller appServiceFwkInstaller;
     InitAppServiceFwkInstaller(appServiceFwkInstaller);
@@ -2001,7 +2001,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, GenerateOdid_0001, Function | Smal
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
     Security::Verify::HapVerifyResult hapVerifyResult;
     hapVerifyRes.emplace_back(hapVerifyResult);
-    EXPECT_NO_THROW(appServiceFwkInstaller.GenerateOdid(infos, hapVerifyRes));
+    EXPECT_NO_THROW(appServiceFwkInstaller.UpdateDeveloperId(infos, hapVerifyRes));
 }
 
 /**

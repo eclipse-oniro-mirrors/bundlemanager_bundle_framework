@@ -4923,6 +4923,11 @@ void InnerBundleInfo::UpdateOdid(const std::string &developerId, const std::stri
     odid_ = odid;
 }
 
+void InnerBundleInfo::UpdateDeveloperId(const std::string &developerId)
+{
+    developerId_ = developerId;
+}
+
 void InnerBundleInfo::UpdateOdidByBundleInfo(const InnerBundleInfo &info)
 {
     std::string developerId;

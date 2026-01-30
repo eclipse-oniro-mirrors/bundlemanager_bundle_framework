@@ -460,13 +460,12 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
         DEBUG_APP_IDENTIFIER : hapVerifyResults[0].GetProvisionInfo().bundleInfo.appIdentifier;
     compileSdkType_ = newInfos.empty() ? COMPILE_SDK_TYPE_OPEN_HARMONY :
         (newInfos.begin()->second).GetBaseApplicationInfo().compileSdkType;
-
-    GenerateOdid(newInfos, hapVerifyResults);
+    UpdateDeveloperId(newInfos, hapVerifyResults);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     return result;
 }
 
-void AppServiceFwkInstaller::GenerateOdid(
+void AppServiceFwkInstaller::UpdateDeveloperId(
     std::unordered_map<std::string, InnerBundleInfo> &infos,
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
 {
@@ -479,11 +478,9 @@ void AppServiceFwkInstaller::GenerateOdid(
     if (developerId.empty()) {
         developerId = hapVerifyRes[0].GetProvisionInfo().bundleInfo.bundleName;
     }
-    std::string odid;
-    dataMgr_->GenerateOdid(developerId, odid);
 
     for (auto &item : infos) {
-        item.second.UpdateOdid(developerId, odid);
+        item.second.UpdateDeveloperId(developerId);
     }
 }
 

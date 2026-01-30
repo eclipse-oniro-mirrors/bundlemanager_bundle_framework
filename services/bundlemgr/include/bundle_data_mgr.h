@@ -144,7 +144,7 @@ public:
     bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     bool UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     void UpdateBaseBundleInfoIntoOld(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
-    bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true);
+    bool UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true);
     bool UpdatePartialInnerBundleInfo(const InnerBundleInfo &info);
     /**
      * @brief Generate UID and GID for a bundle.
@@ -1056,6 +1056,7 @@ public:
     ErrCode CreateBundleDataDir(int32_t userId);
     ErrCode CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl);
     void GenerateOdid(const std::string &developerId, std::string &odid) const;
+    std::string GenerateOdidNoLock(const std::string &developerId) const;
     ErrCode GetOdid(std::string &odid) const;
     ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
     void UpdateRouterInfo(const std::string &bundleName);

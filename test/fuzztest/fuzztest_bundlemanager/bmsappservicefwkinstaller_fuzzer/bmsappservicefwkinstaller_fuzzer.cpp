@@ -82,7 +82,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
     hapVerifyRes.emplace_back(Security::Verify::HapVerifyResult());
     infos["test"] = InnerBundleInfo();
-    appServiceFwkInstaller.GenerateOdid(infos, hapVerifyRes);
+    appServiceFwkInstaller.UpdateDeveloperId(infos, hapVerifyRes);
     appServiceFwkInstaller.CheckAppLabelInfo(infos);
     appServiceFwkInstaller.InnerProcessInstall(infos, installParam);
     appServiceFwkInstaller.CheckNeedInstall(infos, emptyInfo, isKeepData);
@@ -156,7 +156,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     appServiceFwkInstaller.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, targetSoPath);
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
     appServiceFwkInstaller.DeliveryProfileToCodeSign(hapVerifyResults);
-    appServiceFwkInstaller.GenerateOdid(infos, hapVerifyResults);
+    appServiceFwkInstaller.UpdateDeveloperId(infos, hapVerifyResults);
     return true;
 }
 }

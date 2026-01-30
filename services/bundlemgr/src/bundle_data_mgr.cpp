@@ -345,11 +345,17 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
         APP_LOGW("bundleName: %{public}s : bundle info already exist", bundleName.c_str());
         return false;
     }
+
     std::lock_guard<std::mutex> stateLock(stateMutex_);
     auto statusItem = installStates_.find(bundleName);
     if (statusItem == installStates_.end()) {
         APP_LOGW("save info fail, bundleName:%{public}s is not installed", bundleName.c_str());
         return false;
+    }
+    std::string developerId = info.GetDeveloperId();
+    if (!developerId.empty()) {
+        std::string odid = GenerateOdidNoLock(developerId);
+        info.UpdateOdid(developerId, odid);
     }
     if (!checkStatus || statusItem->second == InstallState::INSTALL_START) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
@@ -8238,7 +8244,7 @@ bool BundleDataMgr::UpdateQuickFixInnerBundleInfo(const std::string &bundleName,
     return false;
 }
 
-bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo, bool needSaveStorage)
+bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool needSaveStorage)
 {
     std::string bundleName = innerBundleInfo.GetBundleName();
     if (bundleName.empty()) {
@@ -8252,7 +8258,11 @@ bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo
         APP_LOGW("bundle:%{public}s info is not existed", bundleName.c_str());
         return false;
     }
-
+    std::string developerId = innerBundleInfo.GetDeveloperId();
+    if (!developerId.empty()) {
+        std::string odid = GenerateOdidNoLock(developerId);
+        innerBundleInfo.UpdateOdid(developerId, odid);
+    }
     if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
         APP_LOGE("to update InnerBundleInfo:%{public}s failed", bundleName.c_str());
         return false;
@@ -10344,26 +10354,44 @@ ErrCode BundleDataMgr::CanOpenLink(
 
 void BundleDataMgr::GenerateOdid(const std::string &developerId, std::string &odid) const
 {
-    APP_LOGD("start, developerId:%{public}s", developerId.c_str());
+    APP_LOGD("GenerateOdid start, developerId:%{public}s", developerId.c_str());
     if (developerId.empty()) {
-        APP_LOGE("developerId is empty");
+        APP_LOGE_NOFUNC("developerId is empty");
         return;
     }
-    std::string groupId = BundleUtil::ExtractGroupIdByDevelopId(developerId);
+
+    // Acquire lock and call the no-lock version
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    odid = GenerateOdidNoLock(developerId);
+}
+
+std::string BundleDataMgr::GenerateOdidNoLock(const std::string &developerId) const
+{
+    APP_LOGD("GenerateOdidNoLock start, developerId:%{public}s", developerId.c_str());
+    if (developerId.empty()) {
+        APP_LOGE_NOFUNC("developerId is empty");
+        return "";
+    }
+    std::string groupId = BundleUtil::ExtractGroupIdByDevelopId(developerId);
+    // Check if odid already exists in bundleInfos_ (caller must hold bundleInfoMutex_)
     for (const auto &item : bundleInfos_) {
         std::string developerIdExist;
         std::string odidExist;
         item.second.GetDeveloperidAndOdid(developerIdExist, odidExist);
         std::string groupIdExist = BundleUtil::ExtractGroupIdByDevelopId(developerIdExist);
         if (groupId == groupIdExist) {
-            odid = odidExist;
-            return;
+            // Found existing odid for this groupId
+            APP_LOGI_NOFUNC("found existing odid:%{private}s for groupId:%{public}s",
+                odidExist.c_str(), groupId.c_str());
+            return odidExist;
         }
     }
-    odid = GenerateUuid();
-    APP_LOGI_NOFUNC("developerId:%{public}s not existed generate odid %{private}s",
-        developerId.c_str(), odid.c_str());
+
+    // No existing odid found, generate new one
+    std::string newOdid = GenerateUuid();
+    APP_LOGI_NOFUNC("generated new odid:%{private}s for groupId:%{public}s, developerId:%{public}s",
+        newOdid.c_str(), groupId.c_str(), developerId.c_str());
+    return newOdid;
 }
 
 ErrCode BundleDataMgr::GetOdid(std::string &odid) const
