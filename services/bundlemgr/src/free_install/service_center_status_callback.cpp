@@ -50,7 +50,7 @@ int32_t ServiceCenterStatusCallback::OnDelayedHeartbeat(std::string installResul
 
 int32_t ServiceCenterStatusCallback::OnServiceCenterReceived(std::string installResultStr)
 {
-    LOG_I(BMS_TAG_DEFAULT, "OnDelayedHeartbeat");
+    LOG_I(BMS_TAG_DEFAULT, "OnServiceCenterReceived");
     auto server = server_.lock();
     if (server == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "pointer is nullptr");

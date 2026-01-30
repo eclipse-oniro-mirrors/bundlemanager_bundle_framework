@@ -335,7 +335,6 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
         return *this;
     }
     this->appType_ = info.appType_;
-
     this->userId_ = info.userId_;
     this->bundleStatus_ = info.bundleStatus_;
     this->appFeature_ = info.appFeature_;
@@ -4763,9 +4762,9 @@ void InnerBundleInfo::HandleOTACodeEncryption(std::vector<std::string> &withoutK
     codeProtectBundleInfo.appIdentifier = GetAppIdentifier();
     std::vector<CodeProtectBundleInfo> codeProtectBundleInfos { codeProtectBundleInfo };
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    auto res = bmsExtensionDataMgr.KeyOperation(codeProtectBundleInfos, CodeOperation::OTA_CHECK);
+    ErrCode res = bmsExtensionDataMgr.KeyOperation(codeProtectBundleInfos, CodeOperation::OTA_CHECK);
     if (res != ERR_OK) {
-        APP_LOGE("ota check for %{public}s failed", GetBundleName().c_str());
+        APP_LOGE("ota check for %{public}s failed %{public}d", GetBundleName().c_str(), res);
         if (res != CPM_KEY_NOT_EXIST) {
             return;
         }
@@ -4820,12 +4819,12 @@ void InnerBundleInfo::CheckSoEncryption(const CheckEncryptionParam &checkEncrypt
         .append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath).append(ServiceConstants::PATH_SEPARATOR);
     CheckEncryptionParam param { checkEncryptionParam };
     param.modulePath = moduleInfo.hapPath;
+    param.targetSoPath = targetSoPath;
     param.cpuAbi = cpuAbi;
     param.isCompressNativeLibrary = isCompressNativeLibrary;
     param.installBundleType =
         moduleInfo.distro.moduleType == Profile::MODULE_TYPE_SHARED ?
         InstallBundleType::INTER_APP_HSP : InstallBundleType::HAP;
-    param.targetSoPath = targetSoPath;
     bool isEncrypted = false;
     ErrCode result = InstalldClient::GetInstance()->CheckEncryption(param, isEncrypted);
     if (result != ERR_OK) {
@@ -5548,6 +5547,39 @@ void InnerBundleInfo::SetDFXParamStatus()
     SetUbsanEnabled(IsUbsanEnabled());
 }
 
+std::string InnerBundleInfo::GetApplicationArkTSMode() const
+{
+    size_t dynamicCnt = 0;
+    size_t staticCnt = 0;
+    for (const auto& [moduleName, innerModuleInfo] : innerModuleInfos_) {
+        if (innerModuleInfo.moduleArkTSMode == Constants::ARKTS_MODE_DYNAMIC) {
+            dynamicCnt++;
+        }
+        if (innerModuleInfo.moduleArkTSMode == Constants::ARKTS_MODE_STATIC) {
+            staticCnt++;
+        }
+    }
+
+    size_t moduleSize = innerModuleInfos_.size();
+    if (dynamicCnt == moduleSize) {
+        return Constants::ARKTS_MODE_DYNAMIC;
+    }
+    if (staticCnt == moduleSize) {
+        return Constants::ARKTS_MODE_STATIC;
+    }
+    return Constants::ARKTS_MODE_HYBRID;
+}
+
+std::string InnerBundleInfo::GetModuleArkTSMode(const std::string &moduleName) const
+{
+    auto item = innerModuleInfos_.find(moduleName);
+    if (item == innerModuleInfos_.end()) {
+        APP_LOGW_NOFUNC("moduleName %{public}s not exist", moduleName.c_str());
+        return Constants::EMPTY_STRING;
+    }
+    return item->second.moduleArkTSMode;
+}
+
 bool InnerBundleInfo::ConvertPluginBundleInfo(const std::string &bundleName,
     PluginBundleInfo &pluginBundleInfo) const
 {
@@ -5811,59 +5843,17 @@ bool InnerBundleInfo::SetInnerModuleAtomicResizeable(const std::string &moduleNa
     return true;
 }
 
-std::string InnerBundleInfo::GetApplicationArkTSMode() const
+bool InnerBundleInfo::GetModuleDeduplicateHar() const
 {
-    size_t dynamicCnt = 0;
-    size_t staticCnt = 0;
-    for (const auto& [moduleName, innerModuleInfo] : innerModuleInfos_) {
-        if (innerModuleInfo.moduleArkTSMode == Constants::ARKTS_MODE_DYNAMIC) {
-            dynamicCnt++;
-        }
-        if (innerModuleInfo.moduleArkTSMode == Constants::ARKTS_MODE_STATIC) {
-            staticCnt++;
+    bool hasDedupLicateHarInHsp = false;
+    for (auto it : innerModuleInfos_) {
+        if (it.second.distro.moduleType == Profile::MODULE_TYPE_SHARED) {
+            if (BundleUtil::GetBitValue(it.second.boolSet, InnerModuleInfoBoolFlag::HAS_DEDUPLICATE_HAR)) {
+                return true;
+            }
         }
     }
-
-    size_t moduleSize = innerModuleInfos_.size();
-    if (dynamicCnt == moduleSize) {
-        return Constants::ARKTS_MODE_DYNAMIC;
-    }
-    if (staticCnt == moduleSize) {
-        return Constants::ARKTS_MODE_STATIC;
-    }
-    return Constants::ARKTS_MODE_HYBRID;
-}
-
-std::string InnerBundleInfo::GetModuleArkTSMode(const std::string &moduleName) const
-{
-    auto item = innerModuleInfos_.find(moduleName);
-    if (item == innerModuleInfos_.end()) {
-        APP_LOGW_NOFUNC("moduleName %{public}s not exist", moduleName.c_str());
-        return Constants::EMPTY_STRING;
-    }
-    return item->second.moduleArkTSMode;
-}
-
-void InnerBundleInfo::UpdateHasCloudkitConfig()
-{
-    std::string entryModuleName = GetEntryModuleName();
-    auto item = innerModuleInfos_.find(entryModuleName);
-    if (item == innerModuleInfos_.end()) {
-        APP_LOGE("entry module info is not found");
-        return;
-    }
-    BundleExtractor bundleExtractor(item->second.hapPath);
-    if (!bundleExtractor.Init()) {
-        APP_LOGE("bundle extractor init failed");
-        return;
-    }
-    bool hasConfig = bundleExtractor.HasEntry(ServiceConstants::CLOUD_PROFILE_PATH);
-    APP_LOGD("cloudkit config exist: %{public}d", hasConfig);
-    if (hasConfig) {
-        BundleUtil::SetBit(InnerModuleInfoBoolFlag::HAS_CLOUD_KIT_CONFIG, item->second.boolSet);
-    } else {
-        BundleUtil::ResetBit(InnerModuleInfoBoolFlag::HAS_CLOUD_KIT_CONFIG, item->second.boolSet);
-    }
+    return hasDedupLicateHarInHsp;
 }
 
 std::vector<HapHashAndDeveloperCert> InnerBundleInfo::GetModuleHapHash()
@@ -5899,17 +5889,26 @@ std::vector<HapHashAndDeveloperCert> InnerBundleInfo::GetModuleHapHash()
     return hapHashAndDeveloperCerts;
 }
 
-bool InnerBundleInfo::GetModuleDeduplicateHar() const
+void InnerBundleInfo::UpdateHasCloudkitConfig()
 {
-    bool hasDedupLicateHarInHsp = false;
-    for (auto it : innerModuleInfos_) {
-        if (it.second.distro.moduleType == Profile::MODULE_TYPE_SHARED) {
-            if (BundleUtil::GetBitValue(it.second.boolSet, InnerModuleInfoBoolFlag::HAS_DEDUPLICATE_HAR)) {
-                return true;
-            }
-        }
+    std::string entryModuleName = GetEntryModuleName();
+    auto item = innerModuleInfos_.find(entryModuleName);
+    if (item == innerModuleInfos_.end()) {
+        APP_LOGE("entry module info is not found");
+        return;
     }
-    return hasDedupLicateHarInHsp;
+    BundleExtractor bundleExtractor(item->second.hapPath);
+    if (!bundleExtractor.Init()) {
+        APP_LOGE("bundle extractor init failed");
+        return;
+    }
+    bool hasConfig = bundleExtractor.HasEntry(ServiceConstants::CLOUD_PROFILE_PATH);
+    APP_LOGD("cloudkit config exist: %{public}d", hasConfig);
+    if (hasConfig) {
+        BundleUtil::SetBit(InnerModuleInfoBoolFlag::HAS_CLOUD_KIT_CONFIG, item->second.boolSet);
+    } else {
+        BundleUtil::ResetBit(InnerModuleInfoBoolFlag::HAS_CLOUD_KIT_CONFIG, item->second.boolSet);
+    }
 }
 
 std::optional<InnerModuleInfo> InnerBundleInfo::GetInnerModuleInfoForEntry() const

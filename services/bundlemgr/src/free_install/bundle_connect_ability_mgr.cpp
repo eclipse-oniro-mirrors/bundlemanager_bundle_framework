@@ -1231,12 +1231,7 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
 
 bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, BmsExperienceRule &rule)
 {
-    auto instance_ = BmsEcologicalRuleMgrServiceClient::GetInstance();
-    if (instance_ == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "Failed to get instance from erms");
-        return false;
-    }
-    int ret = instance_->QueryFreeInstallExperience(want, callerInfo, rule);
+    int ret = BmsEcologicalRuleMgrServiceClient::GetInstance()->QueryFreeInstallExperience(want, callerInfo, rule);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "Failed to query free install experience from erms");
         return false;

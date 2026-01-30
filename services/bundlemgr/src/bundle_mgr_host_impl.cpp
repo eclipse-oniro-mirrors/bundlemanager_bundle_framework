@@ -38,6 +38,7 @@
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "new_bundle_data_dir_mgr.h"
+#include "parameters.h"
 #include "on_demand_install_data_mgr.h"
 #include "param_validator.h"
 #include "system_ability_helper.h"
@@ -50,7 +51,6 @@
 #ifdef BMS_USER_AUTH_FRAMEWORK_ENABLED
 #include "migrate_data_user_auth_callback.h"
 #endif
-#include "parameters.h"
 #include "system_ability_definition.h"
 #include "scope_guard.h"
 #ifdef BMS_USER_AUTH_FRAMEWORK_ENABLED
@@ -65,6 +65,7 @@ constexpr const char* SYSTEM_APP = "system";
 constexpr const char* THIRD_PARTY_APP = "third-party";
 constexpr const char* APP_LINKING = "applinking";
 constexpr const char* EMPTY_ABILITY_NAME = "";
+const std::string FUNCATION_GET_ASSET_GROUPS_INFO = "BundleMgrHostImpl::GetAssetGroupsInfo";
 const std::string FUNCTION_GET_NAME_FOR_UID = "BundleMgrHostImpl::GetNameForUid";
 const std::string FUNCTION_GET_OVERLAY_MANAGER_PROXY = "BundleMgrHostImpl::GetOverlayManagerProxy";
 const std::string FUNCTION_GET_BUNDLE_RESOURCE_PROXY = "BundleMgrHostImpl::GetBundleResourceProxy";
@@ -76,7 +77,6 @@ const std::string FUNCTION_GET_SHARED_BUNDLE_INFO_BY_SELF = "BundleMgrHostImpl::
 const std::string FUNCTION_GET_HAP_MODULE_INFO = "BundleMgrHostImpl::GetHapModuleInfo";
 const std::string FUNCTION_BATCH_BUNDLE_INFO = "BundleMgrHostImpl::BatchGetBundleInfo";
 const std::string FUNCTION_GET_BUNDLE_INFO = "BundleMgrHostImpl::GetBundleInfo";
-const std::string FUNCATION_GET_ASSET_GROUPS_INFO = "BundleMgrHostImpl::GetAssetGroupsInfo";
 const std::string FUNCTION_GET_BUNDLE_INFO_V9 = "BundleMgrHostImpl::GetBundleInfoV9";
 const std::string FUNCTION_GET_BUNDLE_INFO_FOR_SELF = "BundleMgrHostImpl::GetBundleInfoForSelf";
 const std::string FUNCTION_GREAT_OR_EQUAL_API_TARGET_VERSION = "BundleMgrHostImpl::GreatOrEqualTargetAPIVersion";
@@ -381,10 +381,10 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_BUNDLE_INFO_V9);
-    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     LOG_D(BMS_TAG_QUERY, "GetBundleInfoV9, bundleName:%{public}s, flags:%{public}d, userId:%{public}d",
         bundleName.c_str(), flags, userId);
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_BUNDLE_INFO_V9);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     bool permissionVerify = [bundleName]() {
         if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
             return true;
@@ -1019,6 +1019,38 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
 #endif
 }
 
+void BundleMgrHostImpl::CallAbilityManager(
+    int32_t resultCode, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
+{
+    if (callBack == nullptr) {
+        APP_LOGI("callBack is nullptr");
+        return;
+    }
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN)) {
+        APP_LOGE("Write interface token failed");
+        return;
+    }
+    if (!data.WriteInt32(resultCode)) {
+        APP_LOGE("Write result code failed");
+        return;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("Write want failed");
+        return;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write userId failed");
+        return;
+    }
+
+    if (callBack->SendRequest(ERR_OK, data, reply, option) != ERR_OK) {
+        APP_LOGE("SendRequest failed");
+    }
+}
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 bool BundleMgrHostImpl::SilentInstall(const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
 {
@@ -1602,7 +1634,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string tempHapPath = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(BundleUtil::GetCurrentTimeNs());
+        std::string(ServiceConstants::PATH_SEPARATOR) + std::to_string(BundleUtil::GetCurrentTimeNs());
     if (!BundleUtil::CreateDir(tempHapPath)) {
         APP_LOGE("GetBundleArchiveInfo make temp dir failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -2179,7 +2211,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
 bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, const int userId,
     const int appIndex, const int callerUid)
 {
-    APP_LOGI("start CleanBundleDataFiles, bundleName : %{public}s, userId:%{public}d, appIndex:%{public}d",
+    APP_LOGD("start CleanBundleDataFiles, bundleName : %{public}s, userId:%{public}d, appIndex:%{public}d",
         bundleName.c_str(), userId, appIndex);
     int32_t callingUid = callerUid;
     if (callerUid == -1) {
@@ -5988,6 +6020,22 @@ ErrCode BundleMgrHostImpl::IsBundleInstalled(const std::string &bundleName, int3
     return dataMgr->IsBundleInstalled(bundleName, userId, appIndex, isInstalled);
 }
 
+std::string BundleMgrHostImpl::GetCallerName()
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return Constants::EMPTY_STRING;
+    }
+    std::string callerName;
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    auto ret = dataMgr->GetNameForUid(uid, callerName);
+    if (ret != ERR_OK) {
+        callerName = std::to_string(uid);
+    }
+    return callerName;
+}
+
 ErrCode BundleMgrHostImpl::GetCompatibleDeviceTypeNative(std::string &deviceType)
 {
     APP_LOGD("start GetCompatibleDeviceTypeNative");
@@ -6105,22 +6153,6 @@ ErrCode BundleMgrHostImpl::GetBundleNameByAppId(const std::string &appId, std::s
     return ERR_OK;
 }
 
-std::string BundleMgrHostImpl::GetCallerName()
-{
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return Constants::EMPTY_STRING;
-    }
-    std::string callerName;
-    int32_t uid = IPCSkeleton::GetCallingUid();
-    auto ret = dataMgr->GetNameForUid(uid, callerName);
-    if (ret != ERR_OK) {
-        callerName = std::to_string(uid);
-    }
-    return callerName;
-}
-
 ErrCode GetDirForApp(const std::string &bundleName, const int32_t appIndex, std::string &dataDir)
 {
     APP_LOGD("start GetDirForApp");
@@ -6213,38 +6245,6 @@ ErrCode BundleMgrHostImpl::SetAppDistributionTypes(std::set<AppDistributionTypeE
     }
     APP_LOGI("save bms param success %{public}s", value.c_str());
     return ERR_OK;
-}
-
-void BundleMgrHostImpl::CallAbilityManager(
-    int32_t resultCode, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
-{
-    if (callBack == nullptr) {
-        APP_LOGI("callBack is nullptr");
-        return;
-    }
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN)) {
-        APP_LOGE("Write interface token failed");
-        return;
-    }
-    if (!data.WriteInt32(resultCode)) {
-        APP_LOGE("Write result code failed");
-        return;
-    }
-    if (!data.WriteParcelable(&want)) {
-        APP_LOGE("Write want failed");
-        return;
-    }
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("Write userId failed");
-        return;
-    }
-
-    if (callBack->SendRequest(ERR_OK, data, reply, option) != ERR_OK) {
-        APP_LOGE("SendRequest failed");
-    }
 }
 
 bool BundleMgrHostImpl::GetPluginBundleInfo(const std::string &bundleName, const int32_t userId,
@@ -6395,6 +6395,18 @@ void BundleMgrHostImpl::AddPreinstalledApplicationInfo(PreInstallBundleInfo &pre
     preinstalledApplicationInfos.emplace_back(preinstalledApplicationInfo);
 }
 
+ErrCode BundleMgrHostImpl::SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+{
+    // The application itself is the caller, so there is no need for permission control.
+    APP_LOGD("SetShortcutVisibleForSelf begin");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->SetShortcutVisibleForSelf(shortcutId, visible);
+}
+
 void BundleMgrHostImpl::GetAbilityLabelInfo(std::vector<AbilityInfo> &abilityInfos)
 {
     uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
@@ -6456,16 +6468,20 @@ bool BundleMgrHostImpl::GetLabelFromCache(const std::string &cacheKey, const std
     return false;
 }
 
-ErrCode BundleMgrHostImpl::SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+/**
+ * Internal interface. The application compares the API version number saved in the package management.
+ * No permission control is required
+ */
+bool BundleMgrHostImpl::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
+    const int32_t patchVersion)
 {
-    // The application itself is the caller, so there is no need for permission control.
-    APP_LOGD("SetShortcutVisibleForSelf begin");
+    APP_LOGD("GreatOrEqualTargetAPIVersion begin");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return ERR_APPEXECFWK_NULL_PTR;
+        return false;
     }
-    return dataMgr->SetShortcutVisibleForSelf(shortcutId, visible);
+    return dataMgr->GreatOrEqualTargetAPIVersion(platformVersion, minorVersion, patchVersion);
 }
 
 ErrCode BundleMgrHostImpl::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos)
@@ -6545,20 +6561,6 @@ ErrCode BundleMgrHostImpl::SetShortcutsEnabled(const std::vector<ShortcutInfo> &
         return ERR_APPEXECFWK_NULL_PTR;
     }
     return dataMgr->SetShortcutsEnabled(shortcutInfos, isEnabled);
-}
-
-// Internal interface. The application compares the API version number saved in the package management.
-//No permission control is required
-bool BundleMgrHostImpl::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
-    const int32_t patchVersion)
-{
-    APP_LOGD("GreatOrEqualTargetAPIVersion begin");
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return false;
-    }
-    return dataMgr->GreatOrEqualTargetAPIVersion(platformVersion, minorVersion, patchVersion);
 }
 
 bool BundleMgrHostImpl::GetCallingInfo(int32_t callingUid, std::string &callingBundleName, std::string &callingAppId)
@@ -6935,6 +6937,33 @@ ErrCode BundleMgrHostImpl::CreateNewBundleEl5Dir(int32_t userId)
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
+    BundleInstallStatus &bundleInstallStatus)
+{
+    APP_LOGD("start GetBundleInstallStatus, bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (bundleName.empty() || !dataMgr->HasUserId(userId)) {
+        bundleInstallStatus = BundleInstallStatus::BUNDLE_NOT_EXIST;
+        return ERR_OK;
+    }
+    dataMgr->GetBundleInstallStatus(bundleName, userId, bundleInstallStatus);
+    return ERR_OK;
+}
+
 bool BundleMgrHostImpl::IsQueryBundleInfoExt(const uint32_t flags) const
 {
     if (!isBrokerServiceExisted_) {
@@ -6972,33 +7001,6 @@ bool BundleMgrHostImpl::IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags)
         return false;
     }
     return true;
-}
-
-ErrCode BundleMgrHostImpl::GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
-    BundleInstallStatus &bundleInstallStatus)
-{
-    APP_LOGD("start GetBundleInstallStatus, bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
-
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("verify permission failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
-    }
-
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-    }
-    if (bundleName.empty() || !dataMgr->HasUserId(userId)) {
-        bundleInstallStatus = BundleInstallStatus::BUNDLE_NOT_EXIST;
-        return ERR_OK;
-    }
-    dataMgr->GetBundleInstallStatus(bundleName, userId, bundleInstallStatus);
-    return ERR_OK;
 }
 
 ErrCode BundleMgrHostImpl::GetAllJsonProfile(ProfileType profileType, int32_t userId,

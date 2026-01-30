@@ -374,6 +374,7 @@ ErrCode InstalldProxy::CleanBundleDirs(const std::vector<std::string> &dirs, boo
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     int32_t dirSize = static_cast<int32_t>(dirs.size());
     INSTALLD_PARCEL_WRITE(data, Uint32, dirSize);
+
     for (const std::string &dir : dirs) {
         INSTALLD_PARCEL_WRITE(data, String, dir);
     }
@@ -1052,7 +1053,7 @@ ErrCode InstalldProxy::SetEncryptionPolicy(const EncryptionParam &encryptionPara
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::SET_ENCRYPTION_DIR, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     keyId = reply.ReadString();
@@ -1072,7 +1073,7 @@ ErrCode InstalldProxy::DeleteEncryptionKeyId(const EncryptionParam &encryptionPa
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::DELETE_ENCRYPTION_KEY_ID, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     return ERR_OK;

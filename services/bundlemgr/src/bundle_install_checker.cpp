@@ -463,6 +463,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         } else {
             newInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
         }
+
         newInfo.SetIsPreInstallApp(checkParam.isPreInstallApp);
         result = ParseBundleInfo(bundlePaths[i], newInfo, packInfo);
         if (result != ERR_OK) {
@@ -941,6 +942,7 @@ ErrCode BundleInstallChecker::ParseBundleInfo(
         }
         return result;
     }
+
     const auto extensions = info.GetInnerExtensionInfos();
     for (const auto &item : extensions) {
         if (item.second.type == ExtensionAbilityType::UNSPECIFIED &&

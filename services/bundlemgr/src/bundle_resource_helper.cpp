@@ -303,6 +303,18 @@ bool BundleResourceHelper::GetLauncherAbilityResourceInfo(const std::string &bun
 #endif
 }
 
+void BundleResourceHelper::SetIsOnlineThemeWhenBoot()
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return;
+    }
+    manager->SetIsOnlineThemeWhenBoot();
+#endif
+}
+
 void BundleResourceHelper::ProcessBundleResourceChange()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -350,18 +362,6 @@ void BundleResourceHelper::ProcessBundleResourceChange()
 #endif
 #else
     return;
-#endif
-}
-
-void BundleResourceHelper::SetIsOnlineThemeWhenBoot()
-{
-#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    if (manager == nullptr) {
-        APP_LOGE("failed, manager is nullptr");
-        return;
-    }
-    manager->SetIsOnlineThemeWhenBoot();
 #endif
 }
 
