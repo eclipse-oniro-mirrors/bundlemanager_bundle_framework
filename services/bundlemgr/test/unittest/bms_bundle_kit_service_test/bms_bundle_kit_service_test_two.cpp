@@ -6652,35 +6652,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesGetCleanSize_0200, Functi
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
-
-/**
- * @tc.number: CleanBundleCacheFilesGetCleanSize_0300
- * @tc.name: test CleanBundleCacheFilesGetCleanSize
- * @tc.desc: 1.Test the CleanBundleCacheFilesGetCleanSize by BundleMgrHostImpl
- */
-HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesGetCleanSize_0300, Function | SmallTest | Level1)
-{
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ASSERT_NE(hostImpl, nullptr);
-    uint64_t cacheSize = 1;
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    InnerBundleInfo innerBundleInfo;
-    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
-    InnerBundleUserInfo info;
-    info.bundleUserInfo.userId = 100;
-    innerBundleUserInfos["_100"] = info;
-    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
-    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::ENABLED;
-
-    std::string bundleName = "com.test.CleanBundleCacheFilesGetCleanSize_0300";
-    ClearBundleInfo(bundleName);
-    dataMgr->bundleInfos_.insert(pair<std::string, InnerBundleInfo>(bundleName, innerBundleInfo));
-    ErrCode ret = hostImpl->CleanBundleCacheFilesGetCleanSize(bundleName, 1, cacheSize);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
-    dataMgr->bundleInfos_.erase(bundleName);
-}
-
 /**
  * @tc.number: CleanBundleCacheFilesGetCleanSize_0300
  * @tc.name: test CleanBundleCacheFilesGetCleanSize
