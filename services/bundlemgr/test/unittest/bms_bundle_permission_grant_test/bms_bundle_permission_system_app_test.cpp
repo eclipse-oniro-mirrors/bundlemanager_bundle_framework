@@ -3549,4 +3549,120 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0083
     EXPECT_EQ(res, ERR_OK);
     ResetTestValues();
 }
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0084
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetDisposedRulesBySetter test
+ *           2. GetDisposedRulesBySetter false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0084, Function | SmallTest | Level1)
+{
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->GetDisposedRulesBySetter("name", 0, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0085
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetDisposedRulesBySetter test
+ *           2. GetDisposedRulesBySetter false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0085, Function | SmallTest | Level1)
+{
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    ErrCode res = impl->GetDisposedRulesBySetter("name", 0, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0086
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetDisposedRules test
+ *           2. GetDisposedRules false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0086, Function | SmallTest | Level1)
+{
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->GetDisposedRulesBySetter("name", 0, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0087
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetDisposedRules test
+ *           2. GetDisposedRules false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0087, Function | SmallTest | Level1)
+{
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->GetDisposedRulesBySetter("name", 0, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_OK);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0088
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetDisposedRules test
+ *           2. GetDisposedRules false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0088, Function | SmallTest | Level1)
+{
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->GetDisposedRulesBySetter("name", 1, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_OK);
+    ResetCallingUid();
+    ResetTestValues();
+}
 } // OHOS

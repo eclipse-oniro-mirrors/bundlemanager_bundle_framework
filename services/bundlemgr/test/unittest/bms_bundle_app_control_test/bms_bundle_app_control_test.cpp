@@ -44,8 +44,6 @@ using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Security;
 using OHOS::AAFwk::Want;
-
-
 namespace OHOS {
 namespace {
 const std::string INSTALL_PATH = "/data/test/resource/bms/app_control/bmsThirdBundle1.hap";
@@ -140,6 +138,12 @@ public:
     }
     virtual ErrCode GetDisposedRules(
         int32_t userId, std::vector<DisposedRuleConfiguration>& disposedRuleConfigurations)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode GetDisposedRulesBySetter(
+        const std::string &bundleName, int32_t appIndex, int32_t userId,
+        std::vector<DisposedRuleConfiguration>& disposedRuleConfigurations)
     {
         return ERR_OK;
     }
@@ -5530,4 +5534,21 @@ HWTEST_F(BmsBundleAppControlTest, HandleDeleteDisposedRules_0200, Function | Sma
     auto res = appControlHost->HandleDeleteDisposedRules(data, reply);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
+
+/**
+ * @tc.number: GetDisposedRulesBySetter_0100
+ * @tc.name: test GetDisposedRulesBySetter by AppControlProxy
+ * @tc.desc: 1.GetDisposedRulesBySetter test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetDisposedRulesBySetter_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    ASSERT_NE(appControlProxy, nullptr);
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    ErrCode ret = appControlProxy->GetDisposedRulesBySetter("1", 0, TEST_USERID, disposedRuleConfigurations);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
 } // OHOS

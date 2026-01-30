@@ -516,6 +516,176 @@ HWTEST_F(BmsAppControlProxyTest, GetDisposedRules_0100, Function | MediumTest | 
 }
 
 /**
+ * @tc.number: GetDisposedRulesBySetter_0100
+ * @tc.name: test the GetDisposedRulesBySetter
+ * @tc.desc: 1. system running normally
+ *           2. test GetDisposedRulesBySetter
+ */
+HWTEST_F(BmsAppControlProxyTest, GetDisposedRulesBySetter_0100, Function | MediumTest | Level1)
+{
+    AppControlProxy appControlProxy(nullptr);
+    int32_t userId = 100;
+    std::string bundleName = "bundleName";
+    int32_t appIndex = 0;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto res = appControlProxy.GetDisposedRulesBySetter(bundleName, appIndex, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetDisposedRulesBySetter_0200
+ * @tc.name: test GetDisposedRulesBySetter with empty bundleName
+ * @tc.desc: 1. test GetDisposedRulesBySetter with empty bundleName
+ */
+HWTEST_F(BmsAppControlProxyTest, GetDisposedRulesBySetter_0200, Function | MediumTest | Level1)
+{
+    sptr<MockRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string bundleName = "";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto res = appControlProxy.GetDisposedRulesBySetter(bundleName, appIndex, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDisposedRulesBySetter_0300
+ * @tc.name: test GetDisposedRulesBySetter with valid remote object
+ * @tc.desc: 1. test GetDisposedRulesBySetter with valid parameters
+ */
+HWTEST_F(BmsAppControlProxyTest, GetDisposedRulesBySetter_0300, Function | MediumTest | Level1)
+{
+    sptr<MockRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto res = appControlProxy.GetDisposedRulesBySetter(bundleName, appIndex, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDisposedRulesBySetter_0400
+ * @tc.name: test GetDisposedRulesBySetter with different appIndex
+ * @tc.desc: 1. test GetDisposedRulesBySetter with appIndex = 1
+ */
+HWTEST_F(BmsAppControlProxyTest, GetDisposedRulesBySetter_0400, Function | MediumTest | Level1)
+{
+    sptr<MockRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 1;
+    int32_t userId = 100;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto res = appControlProxy.GetDisposedRulesBySetter(bundleName, appIndex, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDisposedRulesBySetter_0500
+ * @tc.name: test GetDisposedRulesBySetter with negative appIndex
+ * @tc.desc: 1. test GetDisposedRulesBySetter with appIndex = -1
+ */
+HWTEST_F(BmsAppControlProxyTest, GetDisposedRulesBySetter_0500, Function | MediumTest | Level1)
+{
+    sptr<MockRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = -1;
+    int32_t userId = 100;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto res = appControlProxy.GetDisposedRulesBySetter(bundleName, appIndex, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDisposedRulesBySetter_0600
+ * @tc.name: test GetDisposedRulesBySetter with zero userId
+ * @tc.desc: 1. test GetDisposedRulesBySetter with userId = 0
+ */
+HWTEST_F(BmsAppControlProxyTest, GetDisposedRulesBySetter_0600, Function | MediumTest | Level1)
+{
+    sptr<MockRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = 0;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto res = appControlProxy.GetDisposedRulesBySetter(bundleName, appIndex, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDisposedRulesBySetter_0700
+ * @tc.name: test GetDisposedRulesBySetter with long bundleName
+ * @tc.desc: 1. test GetDisposedRulesBySetter with long bundleName
+ */
+HWTEST_F(BmsAppControlProxyTest, GetDisposedRulesBySetter_0700, Function | MediumTest | Level1)
+{
+    sptr<MockRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string bundleName = "com.example.very.long.bundle.name.that.exceeds.normal.length.for.testing.purposes";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto res = appControlProxy.GetDisposedRulesBySetter(bundleName, appIndex, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDisposedRulesBySetter_0800
+ * @tc.name: test GetDisposedRulesBySetter with special characters
+ * @tc.desc: 1. test GetDisposedRulesBySetter with special characters in bundleName
+ */
+HWTEST_F(BmsAppControlProxyTest, GetDisposedRulesBySetter_0800, Function | MediumTest | Level1)
+{
+    sptr<MockRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string bundleName = "com.example_test-app.123";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto res = appControlProxy.GetDisposedRulesBySetter(bundleName, appIndex, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDisposedRulesBySetter_0900
+ * @tc.name: test GetDisposedRulesBySetter with INT32_MAX values
+ * @tc.desc: 1. test GetDisposedRulesBySetter with maximum int32 values
+ */
+HWTEST_F(BmsAppControlProxyTest, GetDisposedRulesBySetter_0900, Function | MediumTest | Level1)
+{
+    sptr<MockRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = INT32_MAX;
+    int32_t userId = INT32_MAX;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto res = appControlProxy.GetDisposedRulesBySetter(bundleName, appIndex, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDisposedRulesBySetter_1000
+ * @tc.name: test GetDisposedRulesBySetter with INT32_MIN values
+ * @tc.desc: 1. test GetDisposedRulesBySetter with minimum int32 values
+ */
+HWTEST_F(BmsAppControlProxyTest, GetDisposedRulesBySetter_1000, Function | MediumTest | Level1)
+{
+    sptr<MockRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = INT32_MIN;
+    int32_t userId = INT32_MIN;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto res = appControlProxy.GetDisposedRulesBySetter(bundleName, appIndex, userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: GetAbilityRunningControlRule_0100
  * @tc.name: test the GetAbilityRunningControlRule
  * @tc.desc: 1. system running normally

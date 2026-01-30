@@ -796,6 +796,58 @@ napi_value GetAllDisposedRules(napi_env env, napi_callback_info info)
     return nRuleArray;
 }
 
+napi_value GetDisposedRulesBySetter(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetDisposedRulesBySetter called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("bundleName invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
+    if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], appIndex)) {
+            APP_LOGW("parse appIndex falied");
+        }
+    }
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("AppControlProxy is null");
+        napi_value error = BusinessError::CreateNewCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+            GET_ALL_DISPOSED_RULES);
+        napi_throw(env, error);
+        return nullptr;
+    }
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    ErrCode ret = ERR_OK;
+    ret = appControlProxy->GetDisposedRulesBySetter(bundleName, appIndex, userId, disposedRuleConfigurations);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetDisposedRulesBySetter failed");
+        napi_value businessError = BusinessError::CreateNewCommonError(
+            env, ret, GET_ALL_DISPOSED_RULES, PERMISSION_DISPOSED_APP_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRuleArray = nullptr;
+    NAPI_CALL(env, napi_create_array_with_length(env, disposedRuleConfigurations.size(), &nRuleArray));
+    for (size_t i = 0; i < disposedRuleConfigurations.size(); i++) {
+        napi_value ndisposedRuleConfiguration = nullptr;
+        NAPI_CALL(env, napi_create_object(env, &ndisposedRuleConfiguration));
+        ConvertDisposedRuleConfiguration(env, ndisposedRuleConfiguration, disposedRuleConfigurations[i]);
+        NAPI_CALL(env, napi_set_element(env, nRuleArray, i, ndisposedRuleConfiguration));
+    }
+    return nRuleArray;
+}
+
 static napi_value InnerSetDisposedRule(napi_env env, std::string &appId, DisposedRule &rule, int32_t appIndex)
 {
     napi_value nRet;

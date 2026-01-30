@@ -59,6 +59,7 @@ private:
     ErrCode HandleDeleteDisposedStatus(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleGetDisposedRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleGetDisposedRules(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleGetDisposedRulesBySetter(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleSetDisposedRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleSetDisposedRules(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleDeleteDisposedRules(MessageParcel& data, MessageParcel& reply);

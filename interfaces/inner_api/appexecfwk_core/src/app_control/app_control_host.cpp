@@ -139,6 +139,8 @@ int AppControlHost::OnRemoteRequest(
             return HandleDeleteUninstallDisposedRule(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_DISPOSED_RULES):
             return HandleGetDisposedRules(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_ALL_DISPOSED_RULES_BY_SETTER):
+            return HandleGetDisposedRulesBySetter(data, reply);
         default:
             LOG_W(BMS_TAG_DEFAULT, "AppControlHost receive unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -441,6 +443,26 @@ ErrCode AppControlHost::HandleGetDisposedRules(MessageParcel& data, MessageParce
     int32_t userId = data.ReadInt32();
     std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
     ErrCode ret = GetDisposedRules(userId, disposedRuleConfigurations);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (WriteVectorToParcel(disposedRuleConfigurations, reply) != ERR_OK) {
+            LOG_E(BMS_TAG_DEFAULT, "write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleGetDisposedRulesBySetter(MessageParcel& data, MessageParcel &reply)
+{
+    std::string bundleName = data.ReadString();
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    ErrCode ret = GetDisposedRulesBySetter(bundleName, appIndex, userId, disposedRuleConfigurations);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

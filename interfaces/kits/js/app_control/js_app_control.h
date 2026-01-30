@@ -39,6 +39,7 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info);
 napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info);
 napi_value GetDisposedRule(napi_env env, napi_callback_info info);
 napi_value GetAllDisposedRules(napi_env env, napi_callback_info info);
+napi_value GetDisposedRulesBySetter(napi_env env, napi_callback_info info);
 napi_value SetDisposedRule(napi_env env, napi_callback_info info);
 napi_value SetDisposedRules(napi_env env, napi_callback_info info);
 napi_value GetUninstallDisposedRule(napi_env env, napi_callback_info info);
