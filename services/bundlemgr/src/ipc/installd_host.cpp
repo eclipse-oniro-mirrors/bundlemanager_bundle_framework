@@ -1147,7 +1147,7 @@ bool InstalldHost::HandleSetEncryptionDir(MessageParcel &data, MessageParcel &re
     ErrCode result = SetEncryptionPolicy(*info, keyId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteString(keyId)) {
-        APP_LOGE("write keyId failed");
+        LOG_E(BMS_TAG_INSTALLD, "write keyId failed");
         return false;
     }
     return true;

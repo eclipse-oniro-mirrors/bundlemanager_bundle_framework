@@ -603,8 +603,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             for (const auto &dir : BUNDLE_DATA_DIR) {
                 if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, mode,
                     createDirParam.uid, createDirParam.gid)) {
-                    LOG_E(BMS_TAG_INSTALLD, "CreateBundledatadir MkOwnerDir el2 failed errno:%{public}d",
-                        errno);
+                    LOG_E(BMS_TAG_INSTALLD, "CreateBundledatadir MkOwnerDir el2 failed errno:%{public}d", errno);
                     return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
                 }
             }
@@ -1310,7 +1309,6 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
                 ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir +
                 ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR;
             cachePaths.push_back(moduleCachePath);
-
             if (ServiceConstants::BUNDLE_EL[1] == el) {
                 moduleCachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
                     ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES +
@@ -2561,7 +2559,6 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(
                     systemOptimizeShaderCachePath.c_str(), errno);
                 return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
             }
-
             // remove ark_startup_cache/bundlename
             std::string arkStartupCacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
                 bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;

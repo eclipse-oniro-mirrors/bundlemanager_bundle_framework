@@ -16,7 +16,6 @@
 #include "installd/installd_operator.h"
 
 #include <algorithm>
-#include <cstdint>
 #if defined(CODE_SIGNATURE_ENABLE)
 #include "code_sign_utils.h"
 #endif
@@ -24,8 +23,8 @@
 #include "linux/code_decrypt.h"
 #endif
 #include <cerrno>
-#include <cstdio>
 #include <cinttypes>
+#include <cstdio>
 #include <dirent.h>
 #include <dlfcn.h>
 #include <fcntl.h>
@@ -1496,8 +1495,8 @@ bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector
 
     DIR* directory = opendir(realPath.c_str());
     if (directory == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "ObtainQuickFixFileDir open dir(%{public}s) fail, errno:%{public}d",
-            realPath.c_str(), errno);
+        LOG_E(BMS_TAG_INSTALLD, "ObtainQuickFixFileDir open dir(%{public}s) fail, errno:%{public}d", realPath.c_str(),
+            errno);
         return false;
     }
 
@@ -2223,7 +2222,7 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
     /* open CODE_DECRYPT */
     std::string newCodeDecrypt;
     if (!PathToRealPath(CODE_DECRYPT, newCodeDecrypt)) {
-        LOG_E(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", CODE_DECRYPT.c_str());
+        LOG_E(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", CODE_DECRYPT);
         return INVALID_RETURN_VALUE;
     }
     fd = open(newCodeDecrypt.c_str(), O_RDONLY);

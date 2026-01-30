@@ -26,7 +26,6 @@ constexpr const char* ON_DEMAND_INSTALL_LIST = "on_demand_install_list";
 constexpr const char* UNINSTALL_LIST = "uninstall_list";
 constexpr const char* EXTENSION_TYPE = "extensionType";
 constexpr const char* RECOVER_LIST = "recover_list";
-constexpr const char* ARK_STARTUP_SNAPSHOT_LIST = "ark_startup_snapshot_list";
 constexpr const char* APP_DIR = "app_dir";
 constexpr const char* REMOVABLE = "removable";
 constexpr const char* APPIDENTIFIER = "appIdentifier";
@@ -54,6 +53,7 @@ constexpr const char* ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 constexpr const char* ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
 constexpr const char* ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED = "allowAppRunWhenDeviceFirstLocked";
 constexpr const char* RESOURCES_APPLY = "resourcesApply";
+constexpr const char* ARK_STARTUP_SNAPSHOT_LIST = "ark_startup_snapshot_list";
 }
 
 ErrCode PreBundleProfile::TransformTo(

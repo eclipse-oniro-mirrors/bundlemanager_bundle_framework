@@ -232,6 +232,7 @@ bool BundleResourceProcess::GetDynamicIcon(
             resourceInfo.appIndex_);
         return false;
     }
+
     // need check theme
     bool isOnlineTheme = false;
     if (BundleResourceProcess::CheckThemeType(innerBundleInfo.GetBundleName(), userId, isOnlineTheme) &&

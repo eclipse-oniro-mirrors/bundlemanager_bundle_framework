@@ -240,16 +240,6 @@ void EventReport::SendDbErrorEvent(const std::string &dbName, int32_t operationT
     EventReport::SendSystemEvent(BMSEventType::DB_ERROR, eventInfo);
 }
 
-void EventReport::ReportDataPartitionUsageEvent()
-{
-    if (!BundleFileUtil::IsReportDataPartitionUsageEvent(PARTITION_NAME)) {
-        APP_LOGD("data partitioning threshold has not been reached.");
-        return;
-    }
-    EventInfo eventInfo;
-    EventReport::SendSystemEvent(BMSEventType::DATA_PARTITION_USAGE_EVENT, eventInfo);
-}
-
 void EventReport::SendDefaultAppEvent(DefaultAppActionType actionType, int32_t userId, const int32_t appIndex,
     const std::string& callingName, const std::string& want, const std::string& utd)
 {
@@ -280,6 +270,16 @@ void EventReport::SendDynamicShortcutEvent(const std::string &bundleName,
     eventInfo.shortcutOperationType = operationType;
     eventInfo.callingUid = callingUid;
     EventReport::SendSystemEvent(BMSEventType::BUNDLE_DYNAMIC_SHORTCUTINFO, eventInfo);
+}
+
+void EventReport::ReportDataPartitionUsageEvent()
+{
+    if (!BundleFileUtil::IsReportDataPartitionUsageEvent(PARTITION_NAME)) {
+        APP_LOGD("data partitioning threshold has not been reached.");
+        return;
+    }
+    EventInfo eventInfo;
+    EventReport::SendSystemEvent(BMSEventType::DATA_PARTITION_USAGE_EVENT, eventInfo);
 }
 
 void EventReport::SendDesktopShortcutEvent(const std::string &operationType, int32_t userId,

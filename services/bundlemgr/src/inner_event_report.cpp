@@ -90,6 +90,10 @@ const char* EVENT_PARAM_ACTION_TYPE = "ACTION_TYPE";
 const char* EVENT_PARAM_RULE = "ACTION_RULE";
 const char* EVENT_PARAM_APP_INDEX = "APP_INDEX";
 const char* EVENT_PARAM_IS_PATCH = "IS_PATCH";
+const char* EVENT_PARAM_WANT = "WANT";
+const char* EVENT_PARAM_UTD = "UTD";
+const char* EVENT_SHORTCUT_ID = "SHORTCUT_ID";
+const char* EVENT_OP_TYPE = "OP_TYPE";
 const char* EVENT_PARAM_IS_INTERCEPTED = "IS_INTERCEPTED";
 const char* FILE_OR_FOLDER_PATH = "FILE_OR_FOLDER_PATH";
 const char* FILE_OR_FOLDER_SIZE = "FILE_OR_FOLDER_SIZE";
@@ -97,10 +101,6 @@ const char* COMPONENT_NAME_KEY = "COMPONENT_NAME";
 const char* PARTITION_NAME_KEY = "PARTITION_NAME";
 const char* REMAIN_PARTITION_SIZE_KEY = "REMAIN_PARTITION_SIZE";
 const char* USER_DATA_SIZE = "USER_DATA_SIZE";
-const char* EVENT_PARAM_WANT = "WANT";
-const char* EVENT_PARAM_UTD = "UTD";
-const char* EVENT_SHORTCUT_ID = "SHORTCUT_ID";
-const char* EVENT_OP_TYPE = "OP_TYPE";
 const char* EVENT_PARAM_IS_KEEPDATA = "IS_KEEPDATA";
 
 // API and SDK version
@@ -753,6 +753,19 @@ void InnerEventReport::InnerSendDbErrorEvent(const EventInfo& eventInfo)
         ERROR_CODE, eventInfo.errorCode);
 }
 
+void InnerEventReport::InnerSendDefaultAppEvent(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        DEFAULT_APP,
+        HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_CALLING_NAME, eventInfo.callingName,
+        EVENT_PARAM_ACTION_TYPE, eventInfo.actionType,
+        EVENT_PARAM_WANT, eventInfo.want,
+        EVENT_PARAM_UTD, eventInfo.utd,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
+}
+
 void InnerEventReport::InnerSendDataPartitionUsageEvent(const EventInfo& eventInfo)
 {
     HiSysEventWrite(
@@ -768,19 +781,6 @@ void InnerEventReport::InnerSendDataPartitionUsageEvent(const EventInfo& eventIn
         REMAIN_PARTITION_SIZE_KEY, eventInfo.partitionSize,
         FILE_OR_FOLDER_PATH, eventInfo.filePath,
         FILE_OR_FOLDER_SIZE, eventInfo.fileSize);
-}
-
-void InnerEventReport::InnerSendDefaultAppEvent(const EventInfo& eventInfo)
-{
-    InnerEventWrite(
-        DEFAULT_APP,
-        HiSysEventType::BEHAVIOR,
-        EVENT_PARAM_USERID, eventInfo.userId,
-        EVENT_PARAM_CALLING_NAME, eventInfo.callingName,
-        EVENT_PARAM_ACTION_TYPE, eventInfo.actionType,
-        EVENT_PARAM_WANT, eventInfo.want,
-        EVENT_PARAM_UTD, eventInfo.utd,
-        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
 template<typename... Types>

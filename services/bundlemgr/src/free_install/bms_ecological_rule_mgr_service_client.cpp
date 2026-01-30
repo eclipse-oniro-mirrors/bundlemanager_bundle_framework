@@ -108,12 +108,8 @@ int32_t BmsEcologicalRuleMgrServiceClient::QueryFreeInstallExperience(const OHOS
 
 void BmsEcologicalRuleMgrServiceDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
-    auto instance = BmsEcologicalRuleMgrServiceClient::GetInstance();
-    if (instance != nullptr) {
-        instance->OnRemoteSaDied(object);
-    } else {
-        LOG_E(BMS_TAG_DEFAULT, "get instance failed");
-    }
+    LOG_I(BMS_TAG_DEFAULT, "OnRemoteDied");
+    BmsEcologicalRuleMgrServiceClient::GetInstance()->OnRemoteSaDied(object);
 }
 
 BmsEcologicalRuleMgrServiceProxy::BmsEcologicalRuleMgrServiceProxy(const sptr<IRemoteObject> &object)

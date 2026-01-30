@@ -75,7 +75,6 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
-
     SendBundleSystemEvent(bundleName, BundleEventType::INSTALL, userId, appIndex,
         false, false, InstallScene::NORMAL, result);
 
@@ -118,9 +117,9 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
         .type = NotifyType::UNINSTALL_BUNDLE,
         .resultCode = result,
         .accessTokenId = accessTokenId_,
-        .bundleName = bundleName,
         .uid = uid_,
         .appIndex = appIndex,
+        .bundleName = bundleName,
         .appId = appId_,
         .appIdentifier = appIdentifier_,
         .developerId = GetDeveloperId(bundleName),
@@ -489,7 +488,6 @@ void BundleCloneInstaller::UninstallDebugAppSandbox(const std::string &bundleNam
     }
     APP_LOGD("call UninstallDebugAppSandbox end");
 }
-
 
 ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,
     const int32_t userId, const int32_t &uid, const int32_t &appIndex) const

@@ -82,12 +82,12 @@ constexpr const char* MODULE_UPDATE_VALUE_REVERT_BMS = "revert_bms";
 constexpr const char* MODULE_UPDATE_VALUE_REVERT = "revert";
 constexpr const char* MODULE_UPDATE_APP_SERVICE_DIR = "appServiceFwk";
 constexpr const char* MODULE_UPDATE_INSTALL_RESULT = "persist.moduleupdate.bms.install.";
-constexpr const char* HAP_PATH_DATA_AREA = "/data/app/el1/bundle/public";
 constexpr const char* MODULE_UPDATE_INSTALL_RESULT_FALSE = "false";
 constexpr const char* MODULE_UPDATE_PARAM_EMPTY = "";
 constexpr const char* FINGERPRINT = "fingerprint";
 constexpr const char* UNKNOWN = "";
 constexpr const char* VALUE_TRUE = "true";
+constexpr const char* HAP_PATH_DATA_AREA = "/data/app/el1/bundle/public";
 constexpr const char* DEVICE_TYPE_PHONE = "phone";
 
 constexpr int8_t VERSION_LEN = 64;
@@ -128,9 +128,9 @@ constexpr const char* BUNDLE_SCAN_FINISH = "1";
 constexpr const char* CODE_PROTECT_FLAG = "codeProtectFlag";
 constexpr const char* CODE_PROTECT_FLAG_CHECKED = "checked";
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
+constexpr int32_t USER_ID_SIZE = 1;
 constexpr const char* APPSPAWN_PRELOAD_ARKWEB_ENGINE = "const.startup.appspawn.preload.arkwebEngine";
 constexpr int64_t TEN_MB = 1024 * 1024 * 10; //10MB
-constexpr int32_t USER_ID_SIZE = 1;
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> onDemandInstallList_;
@@ -5434,79 +5434,6 @@ void BMSEventHandler::ProcessUpdatePermissions()
     LOG_I(BMS_TAG_DEFAULT, "update permissions end");
 }
 
-bool BMSEventHandler::IsPermissionsUpdated()
-{
-    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
-    if (bmsParam == nullptr) {
-        LOG_W(BMS_TAG_DEFAULT, "bmsParam is nullptr");
-        return false;
-    }
-    std::string value;
-    if (bmsParam->GetBmsParam(ServiceConstants::UPDATE_PERMISSIONS_FLAG, value)) {
-        LOG_I(BMS_TAG_DEFAULT, "already update permissions");
-        return true;
-    }
-    return false;
-}
-
-bool BMSEventHandler::SaveUpdatePermissionsFlag()
-{
-    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
-    if (bmsPara == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "bmsPara is nullptr");
-        return false;
-    }
-    if (!bmsPara->SaveBmsParam(ServiceConstants::UPDATE_PERMISSIONS_FLAG,
-        std::string{ ServiceConstants::UPDATE_PERMISSIONS_FLAG_UPDATED })) {
-        LOG_E(BMS_TAG_DEFAULT, "save updatePermissionsFlag failed");
-        return false;
-    }
-    return true;
-}
-
-bool BMSEventHandler::ProcessCheckSystemOptimizeDir()
-{
-    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Need to check system optimize dir");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-        return false;
-    }
-    std::set<int32_t> userIds = dataMgr->GetAllUser();
-    for (const auto &userId : userIds) {
-        std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
-        el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
-            std::to_string(userId));
-        LOG_I(BMS_TAG_DEFAULT, "create system optimize dir for -u: %{public}d", userId);
-        InstalldClient::GetInstance()->Mkdir(el1ArkStartupCachePath, ServiceConstants::SYSTEM_OPTIMIZE_MODE, 0, 0);
-    }
-    return true;
-}
-
-bool BMSEventHandler::CleanAllBundleEl1ArkStartupCacheLocal()
-{
-    LOG_I(BMS_TAG_DEFAULT, "start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-        return false;
-    }
-
-    std::set<int32_t> userIds = dataMgr->GetAllUser();
-    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
-    for (const auto &userId : userIds) {
-        std::string el1ArkStartupCachePath = std::string(ServiceConstants::SYSTEM_OPTIMIZE_PATH);
-        el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"),
-            1, std::to_string(userId));
-        for (auto &bundleName : bundleNames) {
-            std::string el1BundleArkStartupCachePath = el1ArkStartupCachePath +
-                bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
-            InstalldClient::GetInstance()->CleanBundleDataDir(el1BundleArkStartupCachePath);
-        }
-    }
-    return true;
-}
-
 ErrCode BMSEventHandler::CheckSystemOptimizeBundleShaderCache(const std::string &bundleName,
     int32_t appIndex, int32_t userId, int32_t uid)
 {
@@ -5591,6 +5518,79 @@ ErrCode BMSEventHandler::CleanSystemOptimizeShaderCache()
         }
     }
     return ERR_OK;
+}
+
+bool BMSEventHandler::IsPermissionsUpdated()
+{
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsParam == nullptr) {
+        LOG_W(BMS_TAG_DEFAULT, "bmsParam is nullptr");
+        return false;
+    }
+    std::string value;
+    if (bmsParam->GetBmsParam(ServiceConstants::UPDATE_PERMISSIONS_FLAG, value)) {
+        LOG_I(BMS_TAG_DEFAULT, "already update permissions");
+        return true;
+    }
+    return false;
+}
+
+bool BMSEventHandler::SaveUpdatePermissionsFlag()
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "bmsPara is nullptr");
+        return false;
+    }
+    if (!bmsPara->SaveBmsParam(ServiceConstants::UPDATE_PERMISSIONS_FLAG,
+        std::string{ ServiceConstants::UPDATE_PERMISSIONS_FLAG_UPDATED })) {
+        LOG_E(BMS_TAG_DEFAULT, "save updatePermissionsFlag failed");
+        return false;
+    }
+    return true;
+}
+
+bool BMSEventHandler::ProcessCheckSystemOptimizeDir()
+{
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Need to check system optimize dir");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return false;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
+        el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+            std::to_string(userId));
+        LOG_I(BMS_TAG_DEFAULT, "create system optimize dir for -u: %{public}d", userId);
+        InstalldClient::GetInstance()->Mkdir(el1ArkStartupCachePath, ServiceConstants::SYSTEM_OPTIMIZE_MODE, 0, 0);
+    }
+    return true;
+}
+
+bool BMSEventHandler::CleanAllBundleEl1ArkStartupCacheLocal()
+{
+    LOG_I(BMS_TAG_DEFAULT, "start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return false;
+    }
+
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
+    for (const auto &userId : userIds) {
+        std::string el1ArkStartupCachePath = std::string(ServiceConstants::SYSTEM_OPTIMIZE_PATH);
+        el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"),
+            1, std::to_string(userId));
+        for (auto &bundleName : bundleNames) {
+            std::string el1BundleArkStartupCachePath = el1ArkStartupCachePath +
+                bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
+            InstalldClient::GetInstance()->CleanBundleDataDir(el1BundleArkStartupCachePath);
+        }
+    }
+    return true;
 }
 
 bool BMSEventHandler::IsRecoverListEmpty(const std::string &bundleName, std::vector<int32_t> &userIds)
