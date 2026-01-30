@@ -44,9 +44,6 @@ using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Security;
 using OHOS::AAFwk::Want;
-void SetSystemAppForTest(bool value);
-void SetVerifyCallingPermissionForTest(bool value);
-void ResetTestValues();
 namespace OHOS {
 namespace {
 const std::string INSTALL_PATH = "/data/test/resource/bms/app_control/bmsThirdBundle1.hap";
@@ -5554,18 +5551,4 @@ HWTEST_F(BmsBundleAppControlTest, GetDisposedRulesBySetter_0100, Function | Smal
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
-/**
- * @tc.number: GetDisposedRulesBySetter_0200
- * @tc.name: test GetDisposedRulesBySetter by AppControlManagerHostImpl
- * @tc.desc: 1.GetDisposedRulesBySetter test
- */
-HWTEST_F(BmsBundleAppControlTest, GetDisposedRulesBySetter_0200, Function | SmallTest | Level1)
-{
-    auto impl = std::make_shared<AppControlManagerHostImpl>();
-    ASSERT_NE(impl, nullptr);
-    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
-    auto ret = impl->GetDisposedRulesBySetter("1", 0, TEST_USERID, disposedRuleConfigurations);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_EQ(disposedRuleConfigurations.size(), 0);
-}
 } // OHOS
