@@ -317,14 +317,17 @@ ErrCode GetOriginalSize(const std::string& srcFile, int64_t& originalSize)
     if (!ZipFileIsValid(srcFile)) {
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
-    FILE* zipFile = fopen(srcFile.c_str(), "r");
+    FILE* zipFile = fopen(srcFile.c_str(), "rb");
     if (zipFile == nullptr) {
         APP_LOGE("Failed to open file, errno: %{public}d, %{public}s", errno, strerror(errno));
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
     PlatformFile zipFd = fileno(zipFile);
     ErrCode ret = GetOriginalSize(zipFd, originalSize);
-    fclose(zipFile);
+    int32_t retClose = fclose(zipFile);
+    if (retClose != 0) {
+        APP_LOGE("Failed to close file, errno: %{public}d, %{public}s", errno, strerror(errno));
+    }
     return ret;
 }
 
