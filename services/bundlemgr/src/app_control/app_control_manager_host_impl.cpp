@@ -664,7 +664,9 @@ ErrCode AppControlManagerHostImpl::GetDisposedRulesBySetter(
     if (appIndex > 0) {
         callerName.append("_").append(std::to_string(appIndex));
     }
-
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
     auto ret = appControlManager_->GetDisposedRules(callerName, userId, disposedRuleConfigurations);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "host GetDisposedRulesBySetter error:%{public}d", ret);
