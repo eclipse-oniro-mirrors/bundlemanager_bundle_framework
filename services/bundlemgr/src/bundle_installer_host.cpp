@@ -1172,7 +1172,7 @@ bool BundleInstallerHost::CheckUninstallDisposedRule(
 
     UninstallDisposedRule rule;
     auto ret = DelayedSingleton<AppControlManager>::GetInstance()
-                   ->GetUninstallDisposedRule(Constants::EMPTY_STRING, appId, appIndex, userId, rule);
+                   ->GetUninstallDisposedRule(appId, appIndex, userId, rule);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "GetUninstallDisposedRule failed code:%{public}d", ret);
         return false;

@@ -942,10 +942,7 @@ ErrCode AppControlManagerHostImpl::GetUninstallDisposedRule(const std::string &a
         LOG_E(BMS_TAG_DEFAULT, "null appControlManager_");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
-    std::string callerName;
-    GetCallerByUid(uid, callerName);
-    auto ret = appControlManager_->GetUninstallDisposedRule(callerName, appIdentifier, appIndex, userId, rule);
+    auto ret = appControlManager_->GetUninstallDisposedRule(appIdentifier, appIndex, userId, rule);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "error:%{public}d, appIndex:%{public}d",
             ret, appIndex);
@@ -969,25 +966,16 @@ ErrCode AppControlManagerHostImpl::SetUninstallDisposedRule(const std::string &a
         LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
     if (rule.want == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "null want");
         return ERR_BUNDLE_MANAGER_INVALID_UNINSTALL_RULE;
     }
-    std::string callerName;
-    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        if (dataMgr_ == nullptr) {
-            LOG_E(BMS_TAG_DEFAULT, "dataMgr_ is nullptr");
-            return ERR_APPEXECFWK_NULL_PTR;
-        }
-        if (dataMgr_->GetNameForUid(uid, callerName) != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "get callerName failed");
-            return ERR_BUNDLE_MANAGER_INVALID_UNINSTALL_RULE;
-        }
-        if (callerName != rule.want->GetBundle()) {
-            LOG_E(BMS_TAG_DEFAULT, "callerName is not equal to bundleName in want");
-            return ERR_BUNDLE_MANAGER_INVALID_UNINSTALL_RULE;
-        }
+    if (!BundlePermissionMgr::IsNativeTokenType() && callerName != rule.want->GetBundle()) {
+        LOG_E(BMS_TAG_DEFAULT, "callerName is not equal to bundleName in want");
+        return ERR_BUNDLE_MANAGER_INVALID_UNINSTALL_RULE;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = GetCallingUserId();
@@ -996,7 +984,6 @@ ErrCode AppControlManagerHostImpl::SetUninstallDisposedRule(const std::string &a
         LOG_E(BMS_TAG_DEFAULT, "null appControlManager_");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    GetCallerByUid(uid, callerName);
     auto ret = appControlManager_->SetUninstallDisposedRule(callerName, appIdentifier, rule, appIndex, userId);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "error:%{public}d, appIndex:%{public}d",
