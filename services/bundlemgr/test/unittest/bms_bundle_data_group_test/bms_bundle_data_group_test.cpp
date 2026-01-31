@@ -1427,6 +1427,96 @@ HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0036, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: AdaptInstallSource_0010
+ * @tc.name: test AdaptInstallSource with empty installSource
+ * @tc.desc: 1.Test AdaptInstallSource with empty installSource
+*/
+HWTEST_F(BmsBundleDataGroupTest, AdaptInstallSource_0010, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    appInfo.installSource = "";
+    std::string originalInstallSource = appInfo.installSource;
+
+    innerBundleInfo.AdaptInstallSource(appInfo);
+
+    EXPECT_EQ(appInfo.installSource, originalInstallSource);
+}
+
+/**
+ * @tc.number: AdaptInstallSource_0020
+ * @tc.name: test AdaptInstallSource with normal installSource
+ * @tc.desc: 1.Test AdaptInstallSource with normal installSource (not clone prefix)
+*/
+HWTEST_F(BmsBundleDataGroupTest, AdaptInstallSource_0020, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    appInfo.installSource = "galaxy";
+    std::string originalInstallSource = appInfo.installSource;
+
+    innerBundleInfo.AdaptInstallSource(appInfo);
+
+    EXPECT_EQ(appInfo.installSource, originalInstallSource);
+}
+
+/**
+ * @tc.number: AdaptInstallSource_0030
+ * @tc.name: test AdaptInstallSource with incomplete clone format (no separator)
+ * @tc.desc: 1.Test AdaptInstallSource with incomplete clone format
+*/
+HWTEST_F(BmsBundleDataGroupTest, AdaptInstallSource_0030, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    appInfo.installSource = "+installSource:com.example.caller";
+    std::string originalInstallSource = appInfo.installSource;
+
+    innerBundleInfo.AdaptInstallSource(appInfo);
+
+    EXPECT_EQ(appInfo.installSource, originalInstallSource);
+}
+
+/**
+ * @tc.number: AdaptInstallSource_0040
+ * @tc.name: test AdaptInstallSource with valid clone format
+ * @tc.desc: 1.Test AdaptInstallSource with valid clone format
+*/
+HWTEST_F(BmsBundleDataGroupTest, AdaptInstallSource_0040, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    appInfo.installSource = "+installSource:com.example.caller+gallery";
+
+    innerBundleInfo.AdaptInstallSource(appInfo);
+
+    EXPECT_EQ(appInfo.installSource, "gallery");
+}
+
+/**
+ * @tc.number: AdaptInstallSource_0050
+ * @tc.name: test AdaptInstallSource with prefix only (length condition)
+ * @tc.desc: 1.Test AdaptInstallSource when lastPlusPos <= strlen(INSTALL_SOURCE_PREFIX)
+*/
+HWTEST_F(BmsBundleDataGroupTest, AdaptInstallSource_0050, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    // Format: "+installSource:+abc" where lastPlusPos is 15, strlen("+installSource:") is 15
+    appInfo.installSource = "+installSource:+abc";
+    std::string originalInstallSource = appInfo.installSource;
+
+    innerBundleInfo.AdaptInstallSource(appInfo);
+
+    EXPECT_EQ(appInfo.installSource, originalInstallSource);
+}
+
+/**
  * @tc.number: BaseBundleInstaller_0001
  * @tc.name: test InstallBundleByBundleName
  * @tc.desc: 1.InstallBundleByBundleName

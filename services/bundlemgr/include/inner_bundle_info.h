@@ -2460,6 +2460,7 @@ private:
     void PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_t appIndex,
         const std::string &bundleName, const std::string &caller) const;
     void GetPreInstallApplicationFlags(ApplicationInfo &appInfo) const;
+    void AdaptInstallSource(ApplicationInfo &appInfo) const;
 
     bool isSandboxApp_ = false;
     // Auxiliary property, which is used when the application

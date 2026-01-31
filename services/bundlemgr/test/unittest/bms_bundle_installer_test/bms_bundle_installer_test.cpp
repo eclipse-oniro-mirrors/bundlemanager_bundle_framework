@@ -9273,6 +9273,172 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0400, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: GetCloneInstallSource_0005
+ * @tc.name: test GetCloneInstallSource with pre-installed source
+ * @tc.desc: 1.Test GetCloneInstallSource with originalInstallSource as pre-installed
+*/
+HWTEST_F(BmsBundleInstallerTest, GetCloneInstallSource_0005, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string originalInstallSource = ServiceConstants::INSTALL_SOURCE_PREINSTALL;
+    std::string callingBundleName = "com.example.caller";
+
+    std::string result = installer.GetCloneInstallSource(originalInstallSource, callingBundleName);
+    EXPECT_EQ(result, "+installSource:com.example.caller+pre-installed");
+}
+
+/**
+ * @tc.number: GetCloneInstallSource_0006
+ * @tc.name: test GetCloneInstallSource with ota source
+ * @tc.desc: 1.Test GetCloneInstallSource with originalInstallSource as ota
+*/
+HWTEST_F(BmsBundleInstallerTest, GetCloneInstallSource_0006, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string originalInstallSource = ServiceConstants::INSTALL_SOURCE_OTA;
+    std::string callingBundleName = "com.example.caller";
+
+    std::string result = installer.GetCloneInstallSource(originalInstallSource, callingBundleName);
+    EXPECT_EQ(result, "+installSource:com.example.caller+ota");
+}
+
+/**
+ * @tc.number: GetCloneInstallSource_0007
+ * @tc.name: test GetCloneInstallSource with recovery source
+ * @tc.desc: 1.Test GetCloneInstallSource with originalInstallSource as recovery
+*/
+HWTEST_F(BmsBundleInstallerTest, GetCloneInstallSource_0007, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string originalInstallSource = ServiceConstants::INSTALL_SOURCE_RECOVERY;
+    std::string callingBundleName = "com.example.caller";
+
+    std::string result = installer.GetCloneInstallSource(originalInstallSource, callingBundleName);
+    EXPECT_EQ(result, "+installSource:com.example.caller+recovery");
+}
+
+/**
+ * @tc.number: GetCloneInstallSource_0008
+ * @tc.name: test GetCloneInstallSource with unknown source
+ * @tc.desc: 1.Test GetCloneInstallSource with originalInstallSource as unknown
+*/
+HWTEST_F(BmsBundleInstallerTest, GetCloneInstallSource_0008, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string originalInstallSource = "unknown";
+    std::string callingBundleName = "com.example.caller";
+
+    std::string result = installer.GetCloneInstallSource(originalInstallSource, callingBundleName);
+    EXPECT_EQ(result, "+installSource:com.example.caller+unknown");
+}
+
+/**
+ * @tc.number: GetCloneInstallSource_0010
+ * @tc.name: test GetCloneInstallSource when original install source bundle not installed
+ * @tc.desc: 1.Test GetCloneInstallSource when original install source bundle not installed
+*/
+HWTEST_F(BmsBundleInstallerTest, GetCloneInstallSource_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string originalInstallSource = "com.example.original.not.installed";
+    std::string callingBundleName = "com.example.caller";
+
+    std::string result = installer.GetCloneInstallSource(originalInstallSource, callingBundleName);
+    EXPECT_EQ(result, callingBundleName);
+}
+
+/**
+ * @tc.number: GetCloneInstallSource_0020
+ * @tc.name: test GetCloneInstallSource when original bundle is not system app
+ * @tc.desc: 1.Test GetCloneInstallSource when original bundle is not system app
+*/
+HWTEST_F(BmsBundleInstallerTest, GetCloneInstallSource_0020, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Create a non-system app bundle
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "com.example.original";
+    innerBundleInfo.baseApplicationInfo_->isSystemApp = false;
+    dataMgr->bundleInfos_["com.example.original"] = innerBundleInfo;
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase("com.example.original"); });
+
+    BaseBundleInstaller installer;
+    std::string originalInstallSource = "com.example.original";
+    std::string callingBundleName = "com.example.caller";
+
+    std::string result = installer.GetCloneInstallSource(originalInstallSource, callingBundleName);
+    EXPECT_EQ(result, callingBundleName);
+}
+
+/**
+ * @tc.number: GetCloneInstallSource_0030
+ * @tc.name: test GetCloneInstallSource with valid system app having install permission
+ * @tc.desc: 1.Test GetCloneInstallSource returns correct clone install source format
+*/
+HWTEST_F(BmsBundleInstallerTest, GetCloneInstallSource_0040, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Create a system app bundle
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "com.example.original";
+    innerBundleInfo.baseApplicationInfo_->isSystemApp = true;
+    dataMgr->bundleInfos_["com.example.original"] = innerBundleInfo;
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase("com.example.original"); });
+
+    BaseBundleInstaller installer;
+    installer.userId_ = USERID;
+    std::string originalInstallSource = "com.example.original";
+    std::string callingBundleName = "com.example.caller";
+
+    std::string result = installer.GetCloneInstallSource(originalInstallSource, callingBundleName);
+    EXPECT_TRUE(result == "+installSource:com.example.caller+com.example.original");
+}
+
+/**
+ * @tc.number: GetInstallSource_0410
+ * @tc.name: test GetInstallSource with originalInstallSource parameter
+ * @tc.desc: 1.Test GetInstallSource calls GetCloneInstallSource successfully
+*/
+HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0410, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Create a system app bundle as original install source
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "com.example.original";
+    innerBundleInfo.baseApplicationInfo_->isSystemApp = true;
+    dataMgr->bundleInfos_["com.example.original"] = innerBundleInfo;
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase("com.example.original"); });
+
+    // Setup calling bundle name for UID
+    InnerBundleInfo callingBundleInfo;
+    callingBundleInfo.baseApplicationInfo_->bundleName = "com.example.caller";
+    dataMgr->bundleInfos_["com.example.caller"] = callingBundleInfo;
+    ScopeGuard callingBundleInfoGuard([&] { dataMgr->bundleInfos_.erase("com.example.caller"); });
+
+    // Map UID to calling bundle name
+    dataMgr->bundleIdMap_[11111] = "com.example.caller";
+    ScopeGuard bundleIdGuard([&] { dataMgr->bundleIdMap_.erase(11111); });
+
+    BaseBundleInstaller installer;
+    installer.userId_ = USERID;
+    installer.sysEventInfo_.callingUid = 20011111;
+
+    InstallParam installParam;
+    installParam.isPreInstallApp = false;
+    installParam.parameters[ServiceConstants::BMS_PARA_ORIGINAL_INSTALL_SOURCE] = "com.example.original";
+
+    std::string installSource = installer.GetInstallSource(installParam);
+    // Should return clone install source format or calling bundle name
+    EXPECT_TRUE(installSource == "+installSource:com.example.caller+com.example.original");
+}
+
+/**
  * @tc.number: AddAppGalleryHapToTempPath_0010
  * @tc.name: test AddAppGalleryHapToTempPath
  * @tc.desc: AddAppGalleryHapToTempPath
