@@ -49,7 +49,7 @@ static napi_value AppControlExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("deleteDisposedStatusSync", DeleteDisposedStatusSync),
         DECLARE_NAPI_FUNCTION("getDisposedRule", GetDisposedRule),
         DECLARE_NAPI_FUNCTION("getAllDisposedRules", GetAllDisposedRules),
-        DECLARE_NAPI_FUNCTION("getAllDisposedRulesBySetter", GetDisposedRulesBySetter),
+        DECLARE_NAPI_FUNCTION("getDisposedRulesByBundle", GetDisposedRulesBySetter),
         DECLARE_NAPI_FUNCTION("setDisposedRule", SetDisposedRule),
         DECLARE_NAPI_FUNCTION("setDisposedRules", SetDisposedRules),
         DECLARE_NAPI_FUNCTION("getUninstallDisposedRule", GetUninstallDisposedRule),

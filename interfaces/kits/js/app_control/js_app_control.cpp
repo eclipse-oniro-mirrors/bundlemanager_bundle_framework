@@ -800,7 +800,7 @@ napi_value GetDisposedRulesBySetter(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI GetDisposedRulesBySetter called");
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -811,12 +811,6 @@ napi_value GetDisposedRulesBySetter(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    int32_t appIndex = Constants::MAIN_APP_INDEX;
-    if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
-        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], appIndex)) {
-            APP_LOGW("parse appIndex falied");
-        }
-    }
     auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
@@ -825,10 +819,10 @@ napi_value GetDisposedRulesBySetter(napi_env env, napi_callback_info info)
         napi_throw(env, error);
         return nullptr;
     }
-    int32_t userId = Constants::UNSPECIFIED_USERID;
     std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
     ErrCode ret = ERR_OK;
-    ret = appControlProxy->GetDisposedRulesBySetter(bundleName, appIndex, userId, disposedRuleConfigurations);
+    ret = appControlProxy->GetDisposedRulesBySetter(bundleName, Constants::MAIN_APP_INDEX,
+        Constants::UNSPECIFIED_USERID, disposedRuleConfigurations);
     ret = CommonFunc::ConvertErrCode(ret);
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedRulesBySetter failed");

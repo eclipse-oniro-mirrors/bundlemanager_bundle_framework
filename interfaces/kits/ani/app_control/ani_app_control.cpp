@@ -221,7 +221,7 @@ static ani_object AniGetAllDisposedRules(ani_env* env)
         env, disposedRuleConfigurations, AniAppControlCommon::ConvertDisposedRuleConfiguration);
 }
 
-static ani_object AniGetDisposedRulesBySetter(ani_env* env, ani_string aniBundleName, ani_int aniAppIndex)
+static ani_object AniGetDisposedRulesBySetter(ani_env* env, ani_string aniBundleName)
 {
     APP_LOGD("ani GetDisposedRulesBySetter called");
     std::string bundleName;
@@ -239,7 +239,8 @@ static ani_object AniGetDisposedRulesBySetter(ani_env* env, ani_string aniBundle
     int32_t userId = Constants::UNSPECIFIED_USERID;
     std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
     ErrCode ret = ERR_OK;
-    ret = appControlProxy->GetDisposedRulesBySetter(bundleName, aniAppIndex, userId, disposedRuleConfigurations);
+    ret = appControlProxy->GetDisposedRulesBySetter(bundleName, Constants::MAIN_APP_INDEX,
+        userId, disposedRuleConfigurations);
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedRulesBySetter failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonNewError(env, CommonFunc::ConvertErrCode(ret),
