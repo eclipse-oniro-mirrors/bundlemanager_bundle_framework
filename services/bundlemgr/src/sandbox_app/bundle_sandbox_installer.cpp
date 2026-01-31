@@ -230,6 +230,9 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
 
     // 6. remove data dir and uid, gid
     std::string innerBundleName = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
+    if (!dataMgr_->UMountCryptoPath(userId_, innerBundleName)) {
+        APP_LOGW_NOFUNC("umount crypto path failed -u:%{public}d -n:%{public}s", userId_, innerBundleName.c_str());
+    }
     result = InstalldClient::GetInstance()->RemoveBundleDataDir(innerBundleName, userId_);
     if (result != ERR_OK) {
         APP_LOGE("fail to remove data dir: %{public}s, error is %{public}d", innerBundleName.c_str(), result);

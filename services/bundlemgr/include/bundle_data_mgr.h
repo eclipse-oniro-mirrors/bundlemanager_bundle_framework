@@ -1272,6 +1272,13 @@ public:
     std::vector<CreateDirParam> GetAllExtensionDirsToUpdateSelinuxApl();
     ErrCode GetCreateDirParamByBundleOption(const BundleOptionInfo &optionInfo, CreateDirParam &dirParam) const;
     bool ProcessIdleInfo() const;
+    /**
+     * @brief umount crypto path when uninstall
+     * @param userId Indicates the user ID.
+     * @param bundleName Indicates the bundle name.
+     * @return Returns true if umount success; returns false otherwise.
+     */
+    bool UMountCryptoPath(const int32_t userId, const std::string &bundleName) const;
 private:
     /**
      * @brief Init transferStates.

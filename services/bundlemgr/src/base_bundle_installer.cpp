@@ -2020,6 +2020,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return ERR_APPEXECFWK_UNINSTALL_KILLING_APP_ERROR;
         }
     }
+    if (!installParam.isOTA && !dataMgr_->UMountCryptoPath(userId_, bundleName)) {
+        APP_LOGW_NOFUNC("umount crypto path failed -u:%{public}d -n:%{public}s", userId_, bundleName.c_str());
+    }
 
     std::shared_ptr<BundleCloneInstaller> cloneInstaller = std::make_shared<BundleCloneInstaller>();
     cloneInstaller->UninstallAllCloneApps(bundleName, installParam.isRemoveUser, installParam.isKeepData,
@@ -2345,6 +2348,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // if it is the only module in the bundle
     if (oldInfo.IsOnlyModule(modulePackage)) {
         LOG_I(BMS_TAG_INSTALLER, "%{public}s is only module", modulePackage.c_str());
+        if (!installParam.isOTA && !dataMgr_->UMountCryptoPath(userId_, bundleName)) {
+            APP_LOGW_NOFUNC("umount crypto path failed -u:%{public}d -n:%{public}s", userId_, bundleName.c_str());
+        }
         enableGuard.Dismiss();
         stateGuard.Dismiss();
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
