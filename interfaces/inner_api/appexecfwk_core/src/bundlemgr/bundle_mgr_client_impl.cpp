@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -724,10 +724,109 @@ ErrCode BundleMgrClientImpl::ConnectInstaller()
 
 void BundleMgrClientImpl::OnDeath()
 {
-    APP_LOGD("BundleManagerService dead");
+    APP_LOGI_NOFUNC("BundleManagerService died");
+    std::lock_guard callbackLock(pluginCallbackMutex_);
+    pluginEventCallbackList_.clear();
+    pluginEventCallback_ = nullptr;
     std::unique_lock<std::shared_mutex> lock(mutex_);
     bundleMgr_ = nullptr;
     bundleInstaller_ = nullptr;
+}
+
+void BundleMgrClientImpl::OnPluginEventCallback(const EventFwk::CommonEventData eventData)
+{
+    APP_LOGD("OnPluginEventCallback");
+    std::vector<sptr<IBundleEventCallback>> copyList;
+    {
+        std::lock_guard callbackLock(pluginCallbackMutex_);
+        copyList = pluginEventCallbackList_;
+    }
+    for (const auto &callback : copyList) {
+        if (callback != nullptr) {
+            callback->OnReceiveEvent(eventData);
+        }
+    }
+}
+
+ErrCode BundleMgrClientImpl::RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
+{
+    APP_LOGD("RegisterPluginEventCallback begin");
+    if (pluginEventCallback == nullptr) {
+        APP_LOGE_NOFUNC("pluginEventCallback nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    std::lock_guard callbackLock(pluginCallbackMutex_);
+    if (pluginEventCallback_ == nullptr) {
+        pluginEventCallback_ = new (std::nothrow) PluginEventCallback(shared_from_this());
+        ErrCode result = Connect();
+        if (result != ERR_OK) {
+            APP_LOGE_NOFUNC("connect fail %{public}d", result);
+            return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+        }
+        std::shared_lock<std::shared_mutex> lock(mutex_);
+        if (bundleMgr_ == nullptr) {
+            APP_LOGE_NOFUNC("bundleMgr_ nullptr");
+            return ERR_APPEXECFWK_NULL_PTR;
+        }
+        auto ret = bundleMgr_->RegisterPluginEventCallback(pluginEventCallback_);
+        if (ret == ERR_OK) {
+            pluginEventCallbackList_.push_back(pluginEventCallback);
+        } else {
+            APP_LOGE_NOFUNC("RegisterPluginEventCallback failed %{public}d", ret);
+        }
+        return ret;
+    }
+    pluginEventCallbackList_.push_back(pluginEventCallback);
+    return ERR_OK;
+}
+
+ErrCode BundleMgrClientImpl::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
+{
+    APP_LOGD("UnregisterPluginEventCallback begin");
+    if (pluginEventCallback == nullptr) {
+        APP_LOGE_NOFUNC("pluginEventCallback nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    std::lock_guard callbackLock(pluginCallbackMutex_);
+    pluginEventCallbackList_.erase(std::remove_if(pluginEventCallbackList_.begin(), pluginEventCallbackList_.end(),
+        [pluginEventCallback](const sptr<IBundleEventCallback> &callback) {
+            return callback->AsObject() == pluginEventCallback->AsObject();
+        }), pluginEventCallbackList_.end());
+    if (!pluginEventCallbackList_.empty()) {
+        APP_LOGD("pluginEventCallbackList_ is not empty");
+        return ERR_OK;
+    }
+    if (pluginEventCallback_ == nullptr) {
+        APP_LOGW_NOFUNC("pluginEventCallback_ is null");
+        return ERR_OK;
+    }
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE_NOFUNC("connect fail %{public}d", result);
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE_NOFUNC("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    ErrCode ret = bundleMgr_->UnregisterPluginEventCallback(pluginEventCallback_);
+    if (ret != ERR_OK) {
+        APP_LOGW_NOFUNC("UnregisterPluginEventCallback failed %{public}d", ret);
+    }
+    pluginEventCallback_ = nullptr;
+    return ERR_OK;
+}
+
+void PluginEventCallback::OnReceiveEvent(const EventFwk::CommonEventData eventData)
+{
+    APP_LOGD("OnReceiveEvent");
+    auto bundleClient = bundleMgrClientImpl_.lock();
+    if (bundleClient == nullptr) {
+        APP_LOGE_NOFUNC("bundleMgrClientImpl_ is nullptr");
+        return;
+    }
+    bundleClient->OnPluginEventCallback(eventData);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
