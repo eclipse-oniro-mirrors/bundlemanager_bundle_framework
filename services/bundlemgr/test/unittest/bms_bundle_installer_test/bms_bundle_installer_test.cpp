@@ -15562,6 +15562,48 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1024, Function | SmallTest 
 }
 
 /**
+ * @tc.number: BaseBundleInstaller_1025
+ * @tc.name: test IsShellOrDevAssistant with SHELL_UID
+ * @tc.desc: 1. Set callingUid to SHELL_UID
+ *           2. Call IsShellOrDevAssistant
+ *           3. Expect true return value
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1025, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.sysEventInfo_.callingUid = ServiceConstants::SHELL_UID;
+    EXPECT_TRUE(installer.IsShellOrDevAssistant());
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_1026
+ * @tc.name: test IsShellOrDevAssistant with DEV_ASSISTANT_UID
+ * @tc.desc: 1. Set callingUid to DEV_ASSISTANT_UID
+ *           2. Call IsShellOrDevAssistant
+ *           3. Expect true return value
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1026, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.sysEventInfo_.callingUid = Constants::DEV_ASSISTANT_UID;
+    EXPECT_TRUE(installer.IsShellOrDevAssistant());
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_1027
+ * @tc.name: test IsShellOrDevAssistant with regular UID
+ * @tc.desc: 1. Set callingUid to regular app UID (1000)
+ *           2. Call IsShellOrDevAssistant
+ *           3. Expect false return value
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1027, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.sysEventInfo_.callingUid = 1000;
+    EXPECT_FALSE(installer.IsShellOrDevAssistant());
+}
+
+/**
  * @tc.number: InnerProcessSkipPreInstallBundles_0200
  * @tc.name: test InnerProcessSkipPreInstallBundles
  * @tc.desc: 1.Test InnerProcessSkipPreInstallBundles of BundleUserMgrHostImpl

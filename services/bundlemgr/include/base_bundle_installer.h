@@ -817,6 +817,7 @@ private:
     void UpdateDynamicSkills();
     ErrCode MarkInstallFinish();
     bool IsArkWeb(const std::string &bundleName) const;
+    bool IsShellOrDevAssistant() const;
     void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
         const InnerBundleInfo& innerBundleInfo);
     ErrCode CheckAppDistributionType();
