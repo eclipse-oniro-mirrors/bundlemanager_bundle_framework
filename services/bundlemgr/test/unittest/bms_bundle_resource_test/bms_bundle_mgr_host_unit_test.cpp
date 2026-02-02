@@ -31,6 +31,7 @@ const std::string TEST_NETWORK_ID = "testnetworkid";
 constexpr int32_t TEST_BUNDLE_NAME_COUNT = 1;
 constexpr int32_t TEST_UID = 12345;
 constexpr int32_t TEST_WANT_COUNT = 1;
+constexpr int32_t UNKNOWN_ERROR = -31;
 }
 
 class BmsBundleMgrHostUnitTest : public testing::Test {
@@ -4234,6 +4235,139 @@ HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetBundleInodeCount_0100, Function | Sm
     MessageParcel data;
     std::u16string descriptor = BundleMgrHost::GetDescriptor();
     data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetShortcutInfoByAbility_0100
+ * @tc.name: test the HandleGetShortcutInfoByAbility
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetShortcutInfoByAbility_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_ABILITY);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, UNKNOWN_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetShortcutInfoByAbility_0200
+ * @tc.name: test the HandleGetShortcutInfoByAbility
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetShortcutInfoByAbility_0200, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_ABILITY);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    data.WriteString("bundleName");
+    data.WriteString("");
+    data.WriteString("abilityName");
+    data.WriteInt32(100);
+    data.WriteInt32(0);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, UNKNOWN_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetShortcutInfoByAbility_0300
+ * @tc.name: test the HandleGetShortcutInfoByAbility
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetShortcutInfoByAbility_0300, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_ABILITY);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    data.WriteString("bundleName");
+    data.WriteString("moduleName");
+    data.WriteString("");
+    data.WriteInt32(100);
+    data.WriteInt32(0);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, UNKNOWN_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetShortcutInfoByAbility_0400
+ * @tc.name: test the HandleGetShortcutInfoByAbility
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetShortcutInfoByAbility_0400, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_ABILITY);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    data.WriteString("bundleName");
+    data.WriteString("moduleName");
+    data.WriteString("abilityName");
+    data.WriteInt32(100);
+    data.WriteInt32(-1);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, UNKNOWN_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetShortcutInfoByAbility_0500
+ * @tc.name: test the HandleGetShortcutInfoByAbility
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetShortcutInfoByAbility_0500, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_ABILITY);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    data.WriteString("bundleName");
+    data.WriteString("moduleName");
+    data.WriteString("abilityName");
+    data.WriteInt32(100);
+    data.WriteInt32(100);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, UNKNOWN_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetShortcutInfoByAbility_0600
+ * @tc.name: test the HandleGetShortcutInfoByAbility
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetShortcutInfoByAbility_0600, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_ABILITY);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    data.WriteString("bundleName");
+    data.WriteString("moduleName");
+    data.WriteString("abilityName");
+    data.WriteInt32(100);
+    data.WriteInt32(0);
     MessageParcel reply;
     MessageOption option;
     ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);

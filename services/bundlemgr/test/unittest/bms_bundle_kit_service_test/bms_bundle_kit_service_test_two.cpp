@@ -2420,6 +2420,22 @@ HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoByAppIndex_0200, Function | Sma
 }
 
 /**
+ * @tc.number: GetShortcutInfoByAbility_0100
+ * @tc.name: test GetShortcutInfoByAbility
+ * @tc.desc: test GetShortcutInfoByAbility
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoByAbility_0100, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ErrCode testRet = hostImpl->GetShortcutInfoByAbility(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST,
+        100, 0, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: BundleStreamInstallerHostImplInit_0100
  * @tc.name: test Init
  * @tc.desc: Init is false

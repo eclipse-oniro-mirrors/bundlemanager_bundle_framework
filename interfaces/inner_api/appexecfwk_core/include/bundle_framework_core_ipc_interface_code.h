@@ -249,6 +249,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     IS_APPLICATION_DISABLE_FORBIDDEN = 223,
     SET_APPLICATION_DISABLE_FORBIDDEN = 224,
     GET_BUNDLE_INODE_COUNT = 225,
+    GET_SHORTCUT_INFO_BY_ABILITY = 226,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

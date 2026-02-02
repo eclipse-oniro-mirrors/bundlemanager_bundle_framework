@@ -28,6 +28,7 @@ namespace shortcutManager {
     return err;
   }
   
+  const EMPTY_USER_ID: int = -500;
   const ERROR_SOURCETYPE : int = -1;
   const MAIN_APP_INDEX: int = 0;
   const CLONE_APP_INDEX_MAX: int = 5;
@@ -55,6 +56,7 @@ namespace shortcutManager {
   native function addDynamicShortcutInfosNative(shortcutInfo: Array<ShortcutInfo>, userId: int): void;
   native function deleteDynamicShortcutInfosNative(bundleName: string, appIndex: int, userId: int, ids: Array<string>): void;
   native function setShortcutsEnabledNative(shortcutInfo: Array<ShortcutInfo>, isEnabled: boolean): void;
+  native function getShortcutInfoByAbilityNative(bundleName: string, moduleName: string, abilityName: string, userId: int, appIndex: int): Array<ShortcutInfo>;
 
   function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: int): Promise<void> {
     if (shortcutInfo.appIndex < MAIN_APP_INDEX || shortcutInfo.sourceType === ERROR_SOURCETYPE) {
@@ -230,6 +232,15 @@ namespace shortcutManager {
       });
     });
     return p;
+  }
+
+  function getShortcutInfoByAbility(bundleName: string, moduleName: string, abilityName: string, userId?: int, appIndex?: int): Array<ShortcutInfo> {
+    let userIdInfo: int = userId ?? EMPTY_USER_ID;
+    let appIndexInfo: int = appIndex ?? 0;
+    if (appIndexInfo < MAIN_APP_INDEX || appIndexInfo > CLONE_APP_INDEX_MAX) {
+      throw createBusinessError(ERROR_INVALID_APPINDEX_CODE, ERROR_INVALID_APPINDEX_MSG);
+    }
+    return getShortcutInfoByAbilityNative(bundleName, moduleName, abilityName, userIdInfo, appIndexInfo);
   }
 
   export type ShortcutInfo = _ShortcutInfo;

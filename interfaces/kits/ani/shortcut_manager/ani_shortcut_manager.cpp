@@ -255,6 +255,64 @@ static void SetShortcutsEnabledNative(ani_env* env, ani_object aniShortcutInfo, 
 #endif
 }
 
+static ani_object GetShortcutInfoByAbilityNative(ani_env* env, ani_string aniBundleName, ani_string aniModuleName,
+    ani_string aniAbilityName, ani_int aniUserId, ani_int aniAppIndex)
+{
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
+    APP_LOGD("ani GetShortcutInfoByAbility called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("parse bundleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    std::string moduleName;
+    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName)) {
+        APP_LOGE("parse moduleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    std::string abilityName;
+    if (!CommonFunAni::ParseString(env, aniAbilityName, abilityName)) {
+        APP_LOGE("parse abilityName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (aniUserId == EMPTY_USER_ID) {
+        aniUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessErrorAni::ThrowCommonError(env, ERR_APPEXECFWK_SERVICE_NOT_READY, GET_SHORTCUT_INFO_BY_ABILITY,
+            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+        return nullptr;
+    }
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = iBundleMgr->GetShortcutInfoByAbility(bundleName, moduleName, abilityName,
+        aniUserId, aniAppIndex, shortcutInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetShortcutInfoByAbility failed ret:%{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+            GET_SHORTCUT_INFO_BY_ABILITY, Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+        return nullptr;
+    }
+    ani_object shortcutInfosObject = CommonFunAni::ConvertAniArray(env, shortcutInfos,
+        CommonFunAni::ConvertShortcutInfo);
+    if (shortcutInfosObject == nullptr) {
+        APP_LOGE("nullptr shortcutInfosObject");
+    }
+
+    return shortcutInfosObject;
+#else
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_SHORTCUT_INFO_BY_ABILITY, "");
+    return nullptr;
+#endif
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -288,6 +346,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(DeleteDynamicShortcutInfosNative) },
         ani_native_function { "setShortcutsEnabledNative", nullptr,
             reinterpret_cast<void*>(SetShortcutsEnabledNative) },
+        ani_native_function { "getShortcutInfoByAbilityNative", nullptr,
+            reinterpret_cast<void*>(GetShortcutInfoByAbilityNative) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

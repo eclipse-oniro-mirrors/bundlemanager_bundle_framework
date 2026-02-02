@@ -771,6 +771,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_APPLICATION_DISABLE_FORBIDDEN):
             errCode = HandleSetApplicationDisableForbidden(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_ABILITY):
+            errCode = HandleGetShortcutInfoByAbility(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -2542,6 +2545,43 @@ ErrCode BundleMgrHost::HandleGetShortcutInfoByAppIndex(MessageParcel &data, Mess
     int32_t appIndex = data.ReadInt32();
     std::vector<ShortcutInfo> infos;
     ErrCode ret = GetShortcutInfoByAppIndex(bundlename, appIndex, infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(infos, reply)) {
+        APP_LOGE("write shortcut infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetShortcutInfoByAbility(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    std::string abilityName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    if (bundleName.empty()) {
+        APP_LOGE_NOFUNC("GetShortcutInfoByAbility failed due to bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (moduleName.empty()) {
+        APP_LOGE_NOFUNC("GetShortcutInfoByAbility failed due to moduleName empty");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    if (abilityName.empty()) {
+        APP_LOGE_NOFUNC("GetShortcutInfoByAbility failed due to abilityName empty");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE_NOFUNC("GetShortcutInfoByAbility failed due to appIndex out of range");
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+    std::vector<ShortcutInfo> infos;
+    ErrCode ret = GetShortcutInfoByAbility(bundleName, moduleName, abilityName, userId, appIndex, infos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

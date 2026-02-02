@@ -6357,18 +6357,8 @@ std::string BundleDataMgr::TryGetRawDataByExtractor(const std::string &hapPath, 
     return rawData;
 }
 
-bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
-    const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const
+bool BundleDataMgr::ProcessShortcutInfo(const AbilityInfo &abilityInfo, ShortcutJson &shortcutJson) const
 {
-    if (!info.GetIsNewVersion()) {
-        info.GetShortcutInfos(shortcutInfos);
-        return true;
-    }
-    AbilityInfo abilityInfo;
-    info.GetMainAbilityInfo(abilityInfo);
-    if (abilityInfo.hapPath.empty() || abilityInfo.metadata.size() <= 0) {
-        return false;
-    }
     std::string rawData;
     for (const auto &meta : abilityInfo.metadata) {
         if (meta.name.compare(META_DATA_SHORTCUTS_NAME) == 0) {
@@ -6394,11 +6384,57 @@ bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
         APP_LOGE("shortcuts json invalid");
         return false;
     }
-    ShortcutJson shortcutJson = jsonObject.get<ShortcutJson>();
+    shortcutJson = jsonObject.get<ShortcutJson>();
+    return true;
+}
+
+bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
+    const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    if (!info.GetIsNewVersion()) {
+        info.GetShortcutInfos(shortcutInfos);
+        return true;
+    }
+    AbilityInfo abilityInfo;
+    info.GetMainAbilityInfo(abilityInfo);
+    if (abilityInfo.hapPath.empty() || abilityInfo.metadata.size() <= 0) {
+        return false;
+    }
+    
+    ShortcutJson shortcutJson;
+    if (!ProcessShortcutInfo(abilityInfo, shortcutJson)) {
+        return false;
+    }
     for (const Shortcut &item : shortcutJson.shortcuts) {
         ShortcutInfo shortcutInfo;
         shortcutInfo.bundleName = abilityInfo.bundleName;
         shortcutInfo.moduleName = abilityInfo.moduleName;
+        info.InnerProcessShortcut(item, shortcutInfo);
+        shortcutInfo.sourceType = 1;
+        APP_LOGI_NOFUNC("shortcutInfo: -n %{public}s, id %{public}s, iconId %{public}d, labelId %{public}d",
+            shortcutInfo.bundleName.c_str(), shortcutInfo.id.c_str(), shortcutInfo.iconId, shortcutInfo.labelId);
+        shortcutInfos.emplace_back(shortcutInfo);
+    }
+    (void)InnerProcessShortcutId(info.GetBundleUpdateTime(Constants::ALL_USERID), abilityInfo.hapPath, shortcutInfos);
+    return true;
+}
+
+bool BundleDataMgr::GetShortcutInfosByAbilityInfo(const InnerBundleInfo &info, const AbilityInfo &abilityInfo,
+    std::vector<ShortcutInfo> &shortcutInfos) const 
+{
+    if (abilityInfo.hapPath.empty() || abilityInfo.metadata.size() <= 0) {
+        return false;
+    }
+    
+    ShortcutJson shortcutJson;
+    if (!ProcessShortcutInfo(abilityInfo, shortcutJson)) {
+        return false;
+    }
+    for (const Shortcut &item : shortcutJson.shortcuts) {
+        ShortcutInfo shortcutInfo;
+        shortcutInfo.bundleName = abilityInfo.bundleName;
+        shortcutInfo.moduleName = abilityInfo.moduleName;
+        shortcutInfo.hostAbility = abilityInfo.name;
         info.InnerProcessShortcut(item, shortcutInfo);
         shortcutInfo.sourceType = 1;
         APP_LOGI_NOFUNC("shortcutInfo: -n %{public}s, id %{public}s, iconId %{public}d, labelId %{public}d",
@@ -6563,6 +6599,84 @@ ErrCode BundleDataMgr::GetShortcutInfoByAppIndex(const std::string &bundleName, 
     shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, requestUserId, shortcutInfos);
     shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetShortcutInfoByAbility(const std::string &bundleName,
+    const std::string &moduleName, const std::string &abilityName,
+    int32_t userId, int32_t appIndex, std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE_NOFUNC("invalid userId, -n:%{public}s -u:%{public}d", bundleName.c_str(), userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
+        APP_LOGE("name %{public}s invalid appIndex:%{public}d", bundleName.c_str(), appIndex);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const InnerBundleInfo *innerBundleInfo = nullptr;
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName,
+        BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, requestUserId, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGD("GetInnerBundleInfoWithFlagsV9 failed, -n:%{public}s, -u:%{public}d",
+            bundleName.c_str(), requestUserId);
+        return ret;
+    }
+    if (!innerBundleInfo) {
+        APP_LOGE_NOFUNC("The InnerBundleInfo obtained by GetShortcutInfoByAbility is null.");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    // Find ability info
+    AbilityInfo abilityInfo;
+    ret = innerBundleInfo->FindAbilityInfo(moduleName, abilityName, abilityInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("find ability failed -n:%{public}s -m:%{public}s -a:%{public}s", bundleName.c_str(),
+            moduleName.c_str(), abilityName.c_str());
+        return ret;
+    }
+
+    // Get all shortcut infos by abilityInfo
+    std::vector<ShortcutInfo> allShortcutInfos;
+    if (!innerBundleInfo->GetIsNewVersion()) {
+        innerBundleInfo->GetShortcutInfos(allShortcutInfos);
+    } else {
+        (void)GetShortcutInfosByAbilityInfo(*innerBundleInfo, abilityInfo, allShortcutInfos);
+    }
+    
+    for (auto &info : allShortcutInfos) {
+        info.appIndex = appIndex;
+    }
+
+    ProcessDynamicShortcutInfo(*innerBundleInfo, appIndex, requestUserId, allShortcutInfos);
+    shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, allShortcutInfos);
+
+    // Filter by host ability
+    for (const auto &shortcutInfo : allShortcutInfos) {
+        if (shortcutInfo.moduleName == moduleName && shortcutInfo.hostAbility == abilityName) {
+            shortcutInfos.emplace_back(shortcutInfo);
+        }
+    }
+
+    return ERR_OK;
+}
+
+void BundleDataMgr::ProcessDynamicShortcutInfo(const InnerBundleInfo &innerBundleInfo, const int32_t appIndex,
+    const int32_t requestUserId, std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    std::vector<ShortcutInfo> dynamicShortcutInfos;
+    shortcutVisibleStorage_->GetStorageShortcutInfos(innerBundleInfo.GetBundleName(), appIndex,
+        requestUserId, dynamicShortcutInfos);
+    std::string mainAbilityName = innerBundleInfo.GetMainAbility();
+    for (auto &shortcut : dynamicShortcutInfos) {
+        if (shortcut.hostAbility.empty()) {
+            shortcut.hostAbility = mainAbilityName;
+        }
+        shortcutInfos.emplace_back(shortcut);
+    }
 }
 
 bool BundleDataMgr::GetAllCommonEventInfo(const std::string &eventKey,

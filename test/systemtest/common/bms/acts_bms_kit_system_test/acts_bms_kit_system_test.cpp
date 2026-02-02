@@ -7973,6 +7973,120 @@ HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0300, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: GetShortcutInfoByAbility_0100
+ * @tc.name: test GetShortcutInfoByAbility
+ * @tc.desc: test GetShortcutInfoByAbility proxy
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoByAbility_0100, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode testRet = bundleMgrProxy->GetShortcutInfoByAbility("", BASE_MODULE_NAME, BASE_ABILITY_NAME,
+        USERID, PERMS_INDEX_ZERO, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0200
+ * @tc.name: test GetShortcutInfoByAbility proxy
+ * @tc.desc: test GetShortcutInfoByAbility proxy
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoByAbility_0200, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode testRet = bundleMgrProxy->GetShortcutInfoByAbility(BASE_BUNDLE_NAME, "", BASE_ABILITY_NAME,
+        USERID, PERMS_INDEX_ZERO, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0300
+ * @tc.name: test GetShortcutInfoByAbility proxy
+ * @tc.desc: test GetShortcutInfoByAbility proxy
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoByAbility_0300, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode testRet = bundleMgrProxy->GetShortcutInfoByAbility(BASE_BUNDLE_NAME, BASE_MODULE_NAME, "",
+        USERID, PERMS_INDEX_ZERO, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0400
+ * @tc.name: test GetShortcutInfoByAbility proxy
+ * @tc.desc: test GetShortcutInfoByAbility proxy
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoByAbility_0400, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode testRet = bundleMgrProxy->GetShortcutInfoByAbility(BASE_BUNDLE_NAME, BASE_MODULE_NAME, BASE_ABILITY_NAME,
+        USERID, INVALIED_ID, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0500
+ * @tc.name: test GetShortcutInfoByAbility proxy
+ * @tc.desc: test GetShortcutInfoByAbility proxy
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoByAbility_0500, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode testRet = bundleMgrProxy->GetShortcutInfoByAbility(BASE_BUNDLE_NAME, BASE_MODULE_NAME, BASE_ABILITY_NAME,
+        USERID, USERID, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0600
+ * @tc.name: test GetShortcutInfoByAbility proxy
+ * @tc.desc: test GetShortcutInfoByAbility proxy
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoByAbility_0600, Function | SmallTest | Level1)
+{
+    APP_LOGD("START GetShortcutInfoByAbility_0400");
+    int32_t originUid = geteuid();
+    seteuid(HUNDRED_USERID);
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode testRet = bundleMgrProxy->GetShortcutInfoByAbility(appName, "entry_phone", "MainAbility",
+        USERID, PERMS_INDEX_ZERO, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(shortcutInfos.size(), 2);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    seteuid(originUid);
+    APP_LOGD("END GetShortcutInfoByAbility_0400");
+}
+
+/**
  * @tc.number: event_callback_0100
  * @tc.name: 1.test RegisterBundleEventCallback interface
  *           2.test UnregisterBundleEventCallback interface

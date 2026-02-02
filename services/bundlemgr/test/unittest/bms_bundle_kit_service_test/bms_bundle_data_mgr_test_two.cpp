@@ -315,6 +315,7 @@ const int ABILITYINFOS_SIZE_1 = 1;
 const int ABILITYINFOS_SIZE_2 = 2;
 const int32_t USERID = 100;
 const int32_t MULTI_USERID = 101;
+const int32_t INVALID_APP_INDEX = -1;
 const int32_t WAIT_TIME = 2; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
@@ -3386,5 +3387,398 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchGetBundleInfo_0200, Function | MediumTest |
     int32_t userId = 100;
     ErrCode res = bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0100
+ * @tc.name: test GetShortcutInfoByAbility with valid parameters
+ * @tc.desc: 1.call GetShortcutInfoByAbility with valid parameters
+ *           2.verify result is ERR_OK and shortcutInfos is not empty
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetShortcutInfoByAbility_0100, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, SHORTCUT_HOST_ABILITY);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = dataMgr->GetShortcutInfoByAbility(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, SHORTCUT_HOST_ABILITY, USERID, 0, shortcutInfos);
+
+    EXPECT_EQ(ret, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0200
+ * @tc.name: test GetShortcutInfoByAbility with empty bundleName
+ * @tc.desc: 1.call GetShortcutInfoByAbility with empty bundleName
+ *           2.verify result is ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetShortcutInfoByAbility_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = dataMgr->GetShortcutInfoByAbility(
+        EMPTY_STRING, MODULE_NAME_TEST, ABILITY_NAME_TEST, USERID, 0, shortcutInfos);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0300
+ * @tc.name: test GetShortcutInfoByAbility with invalid userId
+ * @tc.desc: 1.call GetShortcutInfoByAbility with invalid userId
+ *           2.verify result is ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetShortcutInfoByAbility_0300, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = dataMgr->GetShortcutInfoByAbility(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, Constants::INVALID_USERID, 0, shortcutInfos);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0400
+ * @tc.name: test GetShortcutInfoByAbility with non-existent bundle
+ * @tc.desc: 1.call GetShortcutInfoByAbility with non-existent bundleName
+ *           2.verify result is ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetShortcutInfoByAbility_0400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = dataMgr->GetShortcutInfoByAbility(
+        BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST, USERID, 0, shortcutInfos);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0500
+ * @tc.name: test GetShortcutInfoByAbility with invalid appIndex(negative)
+ * @tc.desc: 1.call GetShortcutInfoByAbility with negative appIndex
+ *           2.verify result is ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetShortcutInfoByAbility_0500, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = dataMgr->GetShortcutInfoByAbility(
+        BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST, USERID, INVALID_APP_INDEX, shortcutInfos);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0600
+ * @tc.name: test GetShortcutInfoByAbility with invalid appIndex(exceeds max)
+ * @tc.desc: 1.call GetShortcutInfoByAbility with appIndex > CLONE_APP_INDEX_MAX
+ *           2.verify result is ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetShortcutInfoByAbility_0600, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = dataMgr->GetShortcutInfoByAbility(
+        BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST, USERID, USERID, shortcutInfos);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0700
+ * @tc.name: test GetShortcutInfoByAbility with wrong module name
+ * @tc.desc: 1.call GetShortcutInfoByAbility with wrong module name
+ *           2.verify result is ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetShortcutInfoByAbility_0700, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = dataMgr->GetShortcutInfoByAbility(
+        BUNDLE_NAME_TEST, ABILITY_NAME_TEST, ABILITY_NAME_TEST, USERID, 0, shortcutInfos);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0800
+ * @tc.name: test GetShortcutInfoByAbility with wrong ability name
+ * @tc.desc: 1.call GetShortcutInfoByAbility with wrong ability name
+ *           2.verify result is ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetShortcutInfoByAbility_0800, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = dataMgr->GetShortcutInfoByAbility(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, MODULE_NAME_TEST, USERID, 0, shortcutInfos);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0900
+ * @tc.name: test GetShortcutInfoByAbility with different userId
+ * @tc.desc: 1.call GetShortcutInfoByAbility for different userId
+ *           2.verify result is ERR_OK
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetShortcutInfoByAbility_0900, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(MULTI_USERID);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = dataMgr->GetShortcutInfoByAbility(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, MULTI_USERID, 0, shortcutInfos);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetShortcutInfosByAbilityInfo_0100
+ * @tc.name: test GetShortcutInfosByAbilityInfo with valid parameters
+ * @tc.desc: 1.create InnerBundleInfo and AbilityInfo with metadata
+ *           2.call GetShortcutInfosByAbilityInfo
+ *           3.verify result is true
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetShortcutInfosByAbilityInfo_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = ABILITY_NAME_TEST;
+    innerAbilityInfo.moduleName = MODULE_NAME_TEST;
+    innerAbilityInfo.bundleName = BUNDLE_NAME_TEST;
+    innerAbilityInfo.hapPath = HAP_FILE_PATH;
+    Metadata metadata(META_DATA_SHORTCUTS_NAME, BUNDLE_LABEL, MAIN_ENTRY);
+    innerAbilityInfo.metadata.push_back(metadata);
+    innerInfo.InsertAbilitiesInfo(ABILITY_NAME_TEST, innerAbilityInfo);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.name = ABILITY_NAME_TEST;
+    abilityInfo.moduleName = MODULE_NAME_TEST;
+    abilityInfo.bundleName = BUNDLE_NAME_TEST;
+    abilityInfo.hapPath = HAP_FILE_PATH;
+    abilityInfo.metadata.push_back(metadata);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool ret = dataMgr->GetShortcutInfosByAbilityInfo(innerInfo, abilityInfo, shortcutInfos);
+
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetShortcutInfosByAbilityInfo_0200
+ * @tc.name: test GetShortcutInfosByAbilityInfo with empty hapPath
+ * @tc.desc: 1.create AbilityInfo with empty hapPath
+ *           2.call GetShortcutInfosByAbilityInfo
+ *           3.verify result is false
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetShortcutInfosByAbilityInfo_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+
+    AbilityInfo abilityInfo;
+    abilityInfo.name = ABILITY_NAME_TEST;
+    abilityInfo.moduleName = MODULE_NAME_TEST;
+    abilityInfo.bundleName = BUNDLE_NAME_TEST;
+    abilityInfo.hapPath = EMPTY_STRING;
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool ret = dataMgr->GetShortcutInfosByAbilityInfo(innerInfo, abilityInfo, shortcutInfos);
+
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetShortcutInfosByAbilityInfo_0300
+ * @tc.name: test GetShortcutInfosByAbilityInfo with empty metadata
+ * @tc.desc: 1.create AbilityInfo with empty metadata
+ *           2.call GetShortcutInfosByAbilityInfo
+ *           3.verify result is false
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetShortcutInfosByAbilityInfo_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+
+    AbilityInfo abilityInfo;
+    abilityInfo.name = ABILITY_NAME_TEST;
+    abilityInfo.moduleName = MODULE_NAME_TEST;
+    abilityInfo.bundleName = BUNDLE_NAME_TEST;
+    abilityInfo.hapPath = HAP_FILE_PATH;
+    abilityInfo.metadata.clear();
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool ret = dataMgr->GetShortcutInfosByAbilityInfo(innerInfo, abilityInfo, shortcutInfos);
+
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ProcessDynamicShortcutInfo_0100
+ * @tc.name: test ProcessDynamicShortcutInfo with valid parameters
+ * @tc.desc: 1.create InnerBundleInfo with shortcuts
+ *           2.call ProcessDynamicShortcutInfo
+ *           3.verify shortcutInfos is processed
+ */
+HWTEST_F(BmsBundleDataMgrTest2, ProcessDynamicShortcutInfo_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_TEST, SHORTCUT_TEST_ID);
+    shortcutInfos.push_back(shortcutInfo);
+
+    dataMgr->ProcessDynamicShortcutInfo(innerInfo, 0, USERID, shortcutInfos);
+
+    EXPECT_FALSE(shortcutInfos.empty());
+}
+
+/**
+ * @tc.number: ProcessDynamicShortcutInfo_0200
+ * @tc.name: test ProcessDynamicShortcutInfo with empty shortcutInfos
+ * @tc.desc: 1.create InnerBundleInfo
+ *           2.call ProcessDynamicShortcutInfo with empty shortcutInfos
+ *           3.verify no crash occurs
+ */
+HWTEST_F(BmsBundleDataMgrTest2, ProcessDynamicShortcutInfo_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+
+    dataMgr->ProcessDynamicShortcutInfo(innerInfo, 0, USERID, shortcutInfos);
+
+    EXPECT_TRUE(shortcutInfos.empty());
+}
+
+/**
+ * @tc.number: ProcessDynamicShortcutInfo_0300
+ * @tc.name: test ProcessDynamicShortcutInfo with appIndex
+ * @tc.desc: 1.create InnerBundleInfo
+ *           2.call ProcessDynamicShortcutInfo with appIndex = 1
+ *           3.verify shortcutInfos appIndex is set
+ */
+HWTEST_F(BmsBundleDataMgrTest2, ProcessDynamicShortcutInfo_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_TEST, SHORTCUT_TEST_ID);
+    shortcutInfo.appIndex = 0;
+    shortcutInfos.push_back(shortcutInfo);
+
+    int32_t appIndex = 1;
+    dataMgr->ProcessDynamicShortcutInfo(innerInfo, appIndex, USERID, shortcutInfos);
+
+    EXPECT_FALSE(shortcutInfos.empty());
+}
+
+/**
+ * @tc.number: ProcessDynamicShortcutInfo_0400
+ * @tc.name: test ProcessDynamicShortcutInfo with different userId
+ * @tc.desc: 1.create InnerBundleInfo
+ *           2.call ProcessDynamicShortcutInfo with different userId
+ *           3.verify no crash occurs
+ */
+HWTEST_F(BmsBundleDataMgrTest2, ProcessDynamicShortcutInfo_0400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_TEST, SHORTCUT_TEST_ID);
+    shortcutInfos.push_back(shortcutInfo);
+
+    dataMgr->ProcessDynamicShortcutInfo(innerInfo, 0, MULTI_USERID, shortcutInfos);
+
+    EXPECT_FALSE(shortcutInfos.empty());
+    ClearDataMgr();
 }
 } // OHOS

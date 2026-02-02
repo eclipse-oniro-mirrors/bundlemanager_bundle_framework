@@ -238,6 +238,7 @@ constexpr const char* DELETE_DESKTOP_SHORTCUT_INFO = "DeleteDesktopShortcutInfo"
 constexpr const char* GET_ALL_DESKTOP_SHORTCUT_INFO = "GetAllDesktopShortcutInfo";
 constexpr const char* SET_SHORTCUT_VISIBLE = "SetShortcutVisibleForSelf";
 constexpr const char* GET_ALL_SHORTCUT_INFO_FOR_SELF = "GetAllShortcutInfoForSelf";
+constexpr const char* GET_SHORTCUT_INFO_BY_ABILITY = "GetShortcutInfoByAbility";
 constexpr const char* SHORTCUT_ID = "shortcutId";
 constexpr const char* SHORTCUT_IDS = "ids";
 constexpr const char* INVALID_SHORTCUT_INFO_ERROR =

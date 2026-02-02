@@ -2184,4 +2184,22 @@ HWTEST_F(BmsBundlePermissionFalseTest, SetApplicationDisableForbidden_0001, Func
     auto testRet = bundleMgrHostImpl_->SetApplicationDisableForbidden(bundleName, userId, appIndex, forbidden);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0001
+ * @tc.name: test GetShortcutInfoByAbility
+ * @tc.desc: test GetShortcutInfoByAbility
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetShortcutInfoByAbility_0001, Function | SmallTest | Level1)
+{
+    std::string bundleName = "bundle_test";
+    std::string moduleName = "test";
+    std::string abilityName = "testAbility";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto testRet = bundleMgrHostImpl_->GetShortcutInfoByAbility(bundleName, moduleName, abilityName,
+        userId, appIndex, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS
