@@ -225,8 +225,8 @@ struct AbilityInfo : public Parcelable {
     uint32_t iconId = 0;
     uint32_t orientationId = 0;
     uint32_t formEntity = 0;
-    uint32_t backgroundModes = 0;
     uint32_t startWindowId = 0;
+    uint32_t backgroundModes = 0;
     uint32_t startWindowIconId = 0;
     uint32_t startWindowBackgroundId = 0;
     uint32_t maxWindowWidth = 0;

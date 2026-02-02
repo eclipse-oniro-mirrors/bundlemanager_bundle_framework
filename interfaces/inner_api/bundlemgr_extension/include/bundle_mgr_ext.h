@@ -107,6 +107,15 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
+    virtual ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
+        int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode CheckAppBlackList(const std::string &bundleName, const int32_t userId)
+    {
+        return ERR_OK;
+    }
     virtual ErrCode AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
@@ -119,15 +128,6 @@ public:
     virtual ErrCode DeleteResourceInfo(const std::string &key)
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
-    }
-    virtual ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
-        int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates)
-    {
-        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
-    }
-    virtual ErrCode CheckAppBlackList(const std::string &bundleName, const int32_t userId)
-    {
-        return ERR_OK;
     }
     virtual ErrCode KeyOperation(const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type)
     {
@@ -156,17 +156,16 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
+    virtual bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum)
+    {
+        return false;
+    }
     virtual void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier)
     {
         return;
     }
 
     virtual bool IsTargetApp(const std::string &bundleName, const std::string &appIdentifier)
-    {
-        return false;
-    }
-
-    virtual bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum)
     {
         return false;
     }
@@ -207,6 +206,11 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
+    virtual ErrCode GetDetermineCloneNumList(
+        std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
     virtual ErrCode GetLauncherAbilityResourceInfo(const BundleOptionInfo &options, const uint32_t flags,
         LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
     {
@@ -216,11 +220,6 @@ public:
         std::vector<std::string> &installList, std::vector<std::string> &recoverList)
     {
         return false;
-    }
-    virtual ErrCode GetDetermineCloneNumList(
-        std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList)
-    {
-        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
 };
 

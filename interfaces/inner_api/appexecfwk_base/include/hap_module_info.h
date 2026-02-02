@@ -170,10 +170,10 @@ struct HapModuleInfo : public Parcelable {
     std::string abilitySrcEntryDelegator;
     std::string abilityStageSrcEntryDelegator;
     std::string appStartup;
-    std::string formExtensionModule;
-    std::string formWidgetModule;
     std::string moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     std::string arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    std::string formExtensionModule;
+    std::string formWidgetModule;
 
     // quick fix hqf info
     HqfInfo hqfInfo;

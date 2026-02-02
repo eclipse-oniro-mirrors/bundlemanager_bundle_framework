@@ -205,56 +205,6 @@ struct ExtensionFormProfileInfoStruct {
     std::vector<ExtensionFormProfileInfo> forms {};
 };
 
-void from_json(const nlohmann::json &jsonObject, FormFunInteractionParams &funInteractionParams)
-{
-    const auto &jsonObjectEnd = jsonObject.end();
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        ExtensionFormProfileReader::ABILITY_NAME,
-        funInteractionParams.abilityName,
-        false,
-        g_parseResult);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        ExtensionFormProfileReader::TARGET_BUNDLE_NAME,
-        funInteractionParams.targetBundleName,
-        false,
-        g_parseResult);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        ExtensionFormProfileReader::SUB_BUNDLE_NAME,
-        funInteractionParams.subBundleName,
-        false,
-        g_parseResult);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        ExtensionFormProfileReader::KEEP_STATE_DURATION,
-        funInteractionParams.keepStateDuration,
-        JsonType::NUMBER,
-        false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-}
-
-void from_json(const nlohmann::json &jsonObject, FormSceneAnimationParams &sceneAnimationParams)
-{
-    const auto &jsonObjectEnd = jsonObject.end();
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        ExtensionFormProfileReader::ABILITY_NAME,
-        sceneAnimationParams.abilityName,
-        false,
-        g_parseResult);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
-        jsonObjectEnd,
-        ExtensionFormProfileReader::DISABLED_DESKTOP_BEHAVIORS,
-        sceneAnimationParams.disabledDesktopBehaviors,
-        JsonType::ARRAY,
-        false,
-        g_parseResult,
-        ArrayType::STRING);
-}
-
 void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
 {
     const auto &jsonObjectEnd = jsonObject.end();
@@ -312,6 +262,56 @@ void from_json(const nlohmann::json &jsonObject, Standby &standby)
         standby.isPrivacySensitive,
         false,
         g_parseResult);
+}
+
+void from_json(const nlohmann::json &jsonObject, FormFunInteractionParams &funInteractionParams)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::ABILITY_NAME,
+        funInteractionParams.abilityName,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::TARGET_BUNDLE_NAME,
+        funInteractionParams.targetBundleName,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::SUB_BUNDLE_NAME,
+        funInteractionParams.subBundleName,
+        false,
+        g_parseResult);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::KEEP_STATE_DURATION,
+        funInteractionParams.keepStateDuration,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+}
+
+void from_json(const nlohmann::json &jsonObject, FormSceneAnimationParams &sceneAnimationParams)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::ABILITY_NAME,
+        sceneAnimationParams.abilityName,
+        false,
+        g_parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::DISABLED_DESKTOP_BEHAVIORS,
+        sceneAnimationParams.disabledDesktopBehaviors,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &extensionFormProfileInfo)
@@ -650,7 +650,9 @@ bool GetSupportShapes(const ExtensionFormProfileInfo &form, ExtensionFormInfo &i
     for (const auto &shape: form.supportShapes) {
         size_t i = 0;
         for (i = 0; i < len; i++) {
-            if (SHAPE_MAP_KEY[i] == shape) break;
+            if (SHAPE_MAP_KEY[i] == shape) {
+                break;
+            }
         }
         if (i == len) {
             APP_LOGW("dimension invalid form %{public}s", form.name.c_str());
@@ -802,8 +804,9 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
 
     size_t len = sizeof(FORM_COLOR_MODE_MAP_KEY) / sizeof(FORM_COLOR_MODE_MAP_KEY[0]);
     for (size_t i = 0; i < len; i++) {
-        if (FORM_COLOR_MODE_MAP_KEY[i] == form.colorMode)
+        if (FORM_COLOR_MODE_MAP_KEY[i] == form.colorMode) {
             info.colorMode = FORM_COLOR_MODE_MAP_VALUE[i];
+        }
     }
 
     len = sizeof(FORM_RENDERING_MODE_MAP_KEY) / sizeof(FORM_RENDERING_MODE_MAP_KEY[0]);
@@ -815,10 +818,12 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
 
     len = sizeof(FORM_TYPE_MAP_KEY) / sizeof(FORM_TYPE_MAP_KEY[0]);
     for (size_t i = 0; i < len; i++) {
-        if (FORM_TYPE_MAP_KEY[i] == form.type)
+        if (FORM_TYPE_MAP_KEY[i] == form.type) {
             info.type = FORM_TYPE_MAP_VALUE[i];
-        if (UI_SYNTAX_MAP_KEY[i] == form.uiSyntax)
+        }
+        if (UI_SYNTAX_MAP_KEY[i] == form.uiSyntax) {
             info.uiSyntax = UI_SYNTAX_MAP_VALUE[i];
+        }
     }
 
     if (!GetMetadata(form, info)) {

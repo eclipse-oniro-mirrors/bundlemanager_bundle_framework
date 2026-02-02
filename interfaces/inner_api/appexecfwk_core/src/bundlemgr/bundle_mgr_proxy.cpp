@@ -1859,7 +1859,7 @@ ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, Perm
 ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-
+    APP_LOGD("begin to CleanBundleCacheFilesAutomatic cache");
     if (cacheSize == 0) {
         APP_LOGE("parameter error, cache size must be greater than 0");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
@@ -2646,43 +2646,6 @@ ErrCode BundleMgrProxy::SetCloneAbilityEnabled(
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::SET_CLONE_ABILITY_ENABLED, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
-    }
-    return reply.ReadInt32();
-}
-
-ErrCode BundleMgrProxy::SetAbilityFileTypesForSelf(const std::string &moduleName, const std::string &abilityName,
-    const std::vector<std::string> &fileTypes)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    LOG_NOFUNC_I(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf -m:%{public}s, -a:%{public}s",
-        moduleName.c_str(), abilityName.c_str());
-    ErrCode ret = ParamValidator::ValidateAbilityFileTypes(moduleName, abilityName, fileTypes);
-    if (ret != ERR_OK) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "ValidateAbilityFileTypes failed, ret:%{public}d", ret);
-        return ret;
-    }
-    MessageParcel data;
-    (void)data.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write InterfaceToken failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(moduleName)) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write moduleName failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(abilityName)) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write abilityName failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteStringVector(fileTypes)) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write fileTypes failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_ABILITY_FILE_TYPES_FOR_SELF, data, reply)) {
-        APP_LOGE("SetAbilityFileTypesForSelf SendTransactCmd failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return reply.ReadInt32();
 }
@@ -5917,6 +5880,32 @@ ErrCode BundleMgrProxy::QueryCloneExtensionAbilityInfoWithAppIndex(const Element
         BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX, data, extensionAbilityInfo);
 }
 
+ErrCode BundleMgrProxy::GetOdidByBundleName(const std::string &bundleName, std::string &odid)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("GetOdidByBundleName Called");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("Write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ODID_BY_BUNDLENAME, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        odid = reply.ReadString();
+    }
+    APP_LOGD("GetOdidByBundleName ret: %{public}d, odid: %{private}s", ret, odid.c_str());
+    return ret;
+}
+
 ErrCode BundleMgrProxy::GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -6042,32 +6031,6 @@ ErrCode BundleMgrProxy::GetAllDesktopShortcutInfo(int32_t userId, std::vector<Sh
     }
     return GetVectorFromParcelIntelligentWithErrCode<ShortcutInfo>(
         BundleMgrInterfaceCode::GET_ALL_DESKTOP_SHORTCUT_INFO, data, shortcutInfos);
-}
-
-ErrCode BundleMgrProxy::GetOdidByBundleName(const std::string &bundleName, std::string &odid)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    APP_LOGD("GetOdidByBundleName Called");
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("Write interfaceToken failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("Write bundleName failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ODID_BY_BUNDLENAME, data, reply)) {
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    auto ret = reply.ReadInt32();
-    if (ret == ERR_OK) {
-        odid = reply.ReadString();
-    }
-    APP_LOGD("GetOdidByBundleName ret: %{public}d, odid: %{private}s", ret, odid.c_str());
-    return ret;
 }
 
 bool BundleMgrProxy::GetBundleInfosForContinuation(
@@ -6709,6 +6672,66 @@ ErrCode BundleMgrProxy::SetShortcutVisibleForSelf(const std::string &shortcutId,
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (shortcutInfos.empty() || shortcutInfos.size() > MAX_SHORTCUT_INFO_SIZE) {
+        APP_LOGE("SetShortcutsEnabled shortcutInfos size invalid");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("SetShortcutsEnabled write InterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = WriteVectorToParcel(shortcutInfos, data);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetShortcutsEnabled write shortcutInfos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isEnabled)) {
+        APP_LOGE("SetShortcutsEnabled write isEnabled fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_SHORTCUTS_ENABLED, data, reply)) {
+        APP_LOGE("fail to SetShortcutsEnabled from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
+bool BundleMgrProxy::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
+    const int32_t patchVersion)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("BundleMgrProxy::GreatOrEqualTargetAPIVersion, major: %{public}d, minor: %{public}d, patch: %{public}d",
+        platformVersion, minorVersion, patchVersion);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GreatOrEqualTargetAPIVersion due to write InterfaceToken fail");
+        return false;
+    }
+    if (!data.WriteInt32(platformVersion)) {
+        APP_LOGE("fail to GreatOrEqualTargetAPIVersion due to write platformVersion fail");
+        return false;
+    }
+    if (!data.WriteInt32(minorVersion)) {
+        APP_LOGE("fail to GreatOrEqualTargetAPIVersion due to write minorVersion fail");
+        return false;
+    }
+    if (!data.WriteInt32(patchVersion)) {
+        APP_LOGE("fail to GreatOrEqualTargetAPIVersion due to write patchVersion fail");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GREAT_OR_EQUAL_API_TARGET_VERSION, data, reply)) {
+        return false;
+    }
+    return reply.ReadBool();
+}
+
 ErrCode BundleMgrProxy::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -6787,66 +6810,6 @@ ErrCode BundleMgrProxy::DeleteDynamicShortcutInfos(const std::string &bundleName
     return reply.ReadInt32();
 }
 
-ErrCode BundleMgrProxy::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    if (shortcutInfos.empty() || shortcutInfos.size() > MAX_SHORTCUT_INFO_SIZE) {
-        APP_LOGE("SetShortcutsEnabled shortcutInfos size invalid");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("SetShortcutsEnabled write InterfaceToken failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    auto ret = WriteVectorToParcel(shortcutInfos, data);
-    if (ret != ERR_OK) {
-        APP_LOGE("SetShortcutsEnabled write shortcutInfos failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteBool(isEnabled)) {
-        APP_LOGE("SetShortcutsEnabled write isEnabled fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_SHORTCUTS_ENABLED, data, reply)) {
-        APP_LOGE("fail to SetShortcutsEnabled from server");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return reply.ReadInt32();
-}
-
-bool BundleMgrProxy::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
-    const int32_t patchVersion)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    APP_LOGD("BundleMgrProxy::GreatOrEqualTargetAPIVersion, major: %{public}d, minor: %{public}d, patch: %{public}d",
-        platformVersion, minorVersion, patchVersion);
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GreatOrEqualTargetAPIVersion due to write InterfaceToken fail");
-        return false;
-    }
-    if (!data.WriteInt32(platformVersion)) {
-        APP_LOGE("fail to GreatOrEqualTargetAPIVersion due to write platformVersion fail");
-        return false;
-    }
-    if (!data.WriteInt32(minorVersion)) {
-        APP_LOGE("fail to GreatOrEqualTargetAPIVersion due to write minorVersion fail");
-        return false;
-    }
-    if (!data.WriteInt32(patchVersion)) {
-        APP_LOGE("fail to GreatOrEqualTargetAPIVersion due to write patchVersion fail");
-        return false;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::GREAT_OR_EQUAL_API_TARGET_VERSION, data, reply)) {
-        return false;
-    }
-    return reply.ReadBool();
-}
-
 ErrCode BundleMgrProxy::GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
     const int32_t userId, PluginBundleInfo &pluginBundleInfo)
 {
@@ -6905,6 +6868,43 @@ ErrCode BundleMgrProxy::GetTestRunner(
         return res;
     }
     return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::SetAbilityFileTypesForSelf(const std::string &moduleName, const std::string &abilityName,
+    const std::vector<std::string> &fileTypes)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_NOFUNC_I(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf -m:%{public}s, -a:%{public}s",
+        moduleName.c_str(), abilityName.c_str());
+    ErrCode ret = ParamValidator::ValidateAbilityFileTypes(moduleName, abilityName, fileTypes);
+    if (ret != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "ValidateAbilityFileTypes failed, ret:%{public}d", ret);
+        return ret;
+    }
+    MessageParcel data;
+    (void)data.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write InterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write moduleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(abilityName)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write abilityName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteStringVector(fileTypes)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write fileTypes failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_ABILITY_FILE_TYPES_FOR_SELF, data, reply)) {
+        APP_LOGE("SetAbilityFileTypesForSelf SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
 }
 
 ErrCode BundleMgrProxy::GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath)
@@ -7046,27 +7046,6 @@ ErrCode BundleMgrProxy::GetBundleInstallStatus(const std::string &bundleName, co
     return ret;
 }
 
-ErrCode BundleMgrProxy::GetAllJsonProfile(ProfileType profileType, int32_t userId,
-    std::vector<JsonProfileInfo> &profileInfos)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("Write interface token fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteInt32(static_cast<int32_t>(profileType))) {
-        APP_LOGE("Write profile type fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("Write user id fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return GetVectorFromParcelIntelligentWithErrCode<JsonProfileInfo>(
-        BundleMgrInterfaceCode::GET_ALL_JSON_PROFILE, data, profileInfos);
-}
-
 ErrCode BundleMgrProxy::GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo &assetGroupInfo)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -7090,6 +7069,27 @@ ErrCode BundleMgrProxy::GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo &as
         return res;
     }
     return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::GetAllJsonProfile(ProfileType profileType, int32_t userId,
+    std::vector<JsonProfileInfo> &profileInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(profileType))) {
+        APP_LOGE("Write profile type fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write user id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<JsonProfileInfo>(
+        BundleMgrInterfaceCode::GET_ALL_JSON_PROFILE, data, profileInfos);
 }
 
 ErrCode BundleMgrProxy::BatchGetCompatibleDeviceType(

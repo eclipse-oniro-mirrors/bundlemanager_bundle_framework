@@ -107,6 +107,13 @@ struct SignatureInfo : public Parcelable {
     static SignatureInfo *Unmarshalling(Parcel &parcel);
 };
 
+enum class BundleInstallStatus : uint8_t {
+    UNKNOWN_STATUS = 0,
+    BUNDLE_NOT_EXIST = 1,
+    BUNDLE_INSTALLING = 2,
+    BUNDLE_INSTALLED = 3,
+};
+
 struct SimpleAppInfo : public Parcelable {
     int32_t uid = -1;
     std::string bundleName;
@@ -117,13 +124,6 @@ struct SimpleAppInfo : public Parcelable {
     virtual bool Marshalling(Parcel &parcel) const override;
     static SimpleAppInfo *Unmarshalling(Parcel &parcel);
     std::string ToString() const;
-};
-
-enum class BundleInstallStatus : uint8_t {
-    UNKNOWN_STATUS = 0,
-    BUNDLE_NOT_EXIST = 1,
-    BUNDLE_INSTALLING = 2,
-    BUNDLE_INSTALLED = 3,
 };
 
 struct HapHashAndDeveloperCert : public Parcelable {

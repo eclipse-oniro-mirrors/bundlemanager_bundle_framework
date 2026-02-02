@@ -757,8 +757,6 @@ public:
      */
     virtual ErrCode SetCloneAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID)  override;
-    virtual ErrCode SetAbilityFileTypesForSelf(const std::string &moduleName, const std::string &abilityName,
-        const std::vector<std::string> &fileTypes) override;
     /**
      * @brief Obtains the interface used to install and uninstall bundles through the proxy object.
      * @return Returns a pointer to IBundleInstaller class if exist; returns nullptr otherwise.
@@ -995,6 +993,13 @@ public:
      */
     virtual bool ProcessPreload(const Want &want) override;
 
+    virtual ErrCode GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName, int32_t flags,
+        int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
@@ -1171,6 +1176,7 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
     virtual ErrCode GetOdid(std::string &odid) override;
+
     /**
      * @brief Obtains BundleInfo of all bundles available in the system through the developerId.
      * @param developerId Indicates the developerId of application.
@@ -1224,16 +1230,11 @@ public:
     virtual ErrCode GetCloneBundleInfoExt(const std::string &bundleName, uint32_t flags, int32_t appIndex,
         int32_t userId, BundleInfo &bundleInfo) override;
 
-    virtual ErrCode GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
-        int32_t userId = Constants::UNSPECIFIED_USERID) override;
-
     virtual ErrCode GetLaunchWant(Want &want) override;
 
-    virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName, int32_t flags,
-        int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo,
-        int32_t userId = Constants::UNSPECIFIED_USERID) override;
-
     virtual ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) override;
+
+    virtual ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) override;
 
     virtual ErrCode GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo) override;
 
@@ -1242,8 +1243,6 @@ public:
     virtual ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
 
     virtual ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) override;
-
-    virtual ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) override;
 
     /**
      * @brief Obtains BundleInfo of all continuable bundles available in the system through the proxy object.
@@ -1310,17 +1309,17 @@ public:
 
     virtual ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible) override;
 
+    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled) override;
+
+    virtual bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion,
+        const int32_t minorVersion, const int32_t patchVersion) override;
+
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos) override;
 
     virtual ErrCode AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId) override;
 
     virtual ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId, const std::vector<std::string> &ids) override;
-
-    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled) override;
-
-    virtual bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion,
-        const int32_t minorVersion, const int32_t patchVersion) override;
 
     virtual ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId, PluginBundleInfo &pluginBundleInfo) override;
@@ -1330,20 +1329,20 @@ public:
 
     virtual ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
         int32_t userId) override;
-    
-    virtual ErrCode GetPluginBundlePathForSelf(
-        const std::string &pluginBundleName, std::string &codePath) override;
+
+    virtual ErrCode SetAbilityFileTypesForSelf(const std::string &moduleName, const std::string &abilityName,
+        const std::vector<std::string> &fileTypes) override;
     
     virtual ErrCode RecoverBackupBundleData(const std::string &bundleName,
         const int32_t userId, const int32_t appIndex) override;
+
+    virtual ErrCode GetPluginBundlePathForSelf(
+        const std::string &pluginBundleName, std::string &codePath) override;
 
     virtual ErrCode RemoveBackupBundleData(const std::string &bundleName,
         const int32_t userId, const int32_t appIndex) override;
 
     virtual ErrCode CreateNewBundleEl5Dir(int32_t userId) override;
-
-    virtual ErrCode GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
-        BundleInstallStatus &bundleInstallStatus) override;
 
     /**
      * @brief Obtains all JSON profile info designated by profileType and userId.
@@ -1355,6 +1354,9 @@ public:
      */
     virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
         std::vector<JsonProfileInfo> &profileInfos) override;
+
+    virtual ErrCode GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
+        BundleInstallStatus &bundleInstallStatus) override;
 
     virtual ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
         const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo) override;
