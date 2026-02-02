@@ -132,6 +132,8 @@ namespace bundleManager {
     NOTIFICATION_SUBSCRIBER = 34,
     CRYPTO = 35,
     PARTNER_AGENT = 36,
+    AGENT = 37,
+    AGENT_UI = 38,
     UNSPECIFIED = 255
   }
 
