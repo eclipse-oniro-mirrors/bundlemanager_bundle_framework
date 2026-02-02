@@ -889,10 +889,10 @@ ErrCode AppControlManager::SetUninstallDisposedRule(const std::string &callerNam
     return ERR_OK;
 }
 
-ErrCode AppControlManager::GetUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
-    int32_t appIndex, int32_t userId, UninstallDisposedRule& rule)
+ErrCode AppControlManager::GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
+    int32_t userId, UninstallDisposedRule& rule)
 {
-    auto ret = appControlManagerDb_->GetUninstallDisposedRule(callerName, appIdentifier, appIndex, userId, rule);
+    auto ret = appControlManagerDb_->GetUninstallDisposedRule(appIdentifier, appIndex, userId, rule);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "get from rdb failed");
         return ret;

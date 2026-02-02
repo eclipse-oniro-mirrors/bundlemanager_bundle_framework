@@ -2531,8 +2531,7 @@ HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0700, Function | SmallTe
     rdb->rdbDataManager_->bmsRdbConfig_.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     rdb->rdbDataManager_->bmsRdbConfig_.tableName = "app_control";
     appControlManager.appControlManagerDb_ = rdb;
-    auto res = appControlManager.GetUninstallDisposedRule(
-        CALLER_BUNDLE_NAME, APPID, APP_INDEX, USERID, uninstallDisposedRule);
+    auto res = appControlManager.GetUninstallDisposedRule(APPID, APP_INDEX, USERID, uninstallDisposedRule);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -2546,10 +2545,7 @@ HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0800, Function | SmallTe
     auto rdb = std::make_shared<AppControlManagerRdb>();
     ASSERT_NE(rdb, nullptr);
     UninstallDisposedRule uninstallDisposedRule;
-    auto res = rdb->GetUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, APP_INDEX, USERID, uninstallDisposedRule);
-    EXPECT_EQ(res, ERR_OK);
-
-    res = rdb->GetUninstallDisposedRule("", APPID, APP_INDEX, USERID, uninstallDisposedRule);
+    auto res = rdb->GetUninstallDisposedRule(APPID, APP_INDEX, USERID, uninstallDisposedRule);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -2567,7 +2563,7 @@ HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0900, Function | SmallTe
     rule.priority = 0;
     rdb->SetUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, APP_INDEX, USERID);
     UninstallDisposedRule uninstallDisposedRule;
-    auto res = rdb->GetUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, APP_INDEX, USERID, uninstallDisposedRule);
+    auto res = rdb->GetUninstallDisposedRule(APPID, APP_INDEX, USERID, uninstallDisposedRule);
     EXPECT_EQ(res, ERR_OK);
     EXPECT_EQ(rule.uninstallComponentType, uninstallDisposedRule.uninstallComponentType);
     EXPECT_EQ(rule.priority, uninstallDisposedRule.priority);
@@ -2587,7 +2583,7 @@ HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_2000, Function | SmallTe
     rule.priority = 0;
     rdb->SetUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, APP_INDEX, USERID);
     UninstallDisposedRule uninstallDisposedRule;
-    auto res = rdb->GetUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, APP_INDEX, USERID, uninstallDisposedRule);
+    auto res = rdb->GetUninstallDisposedRule(APPID, APP_INDEX, USERID, uninstallDisposedRule);
     EXPECT_EQ(res, ERR_OK);
     EXPECT_EQ(rule.uninstallComponentType, uninstallDisposedRule.uninstallComponentType);
     EXPECT_EQ(rule.priority, uninstallDisposedRule.priority);
