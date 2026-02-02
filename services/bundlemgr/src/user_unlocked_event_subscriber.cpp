@@ -194,6 +194,7 @@ void UpdateAppDataMgr::DeleteUninstallTmpDirs(const std::set<int32_t>& userIds)
         dirs.insert(dirs.end(), tmpDirs.begin(), tmpDirs.end());
     }
     dirs.emplace_back(Constants::BUNDLE_CODE_DIR);
+    dirs.emplace_back(ServiceConstants::NEW_CLOUD_SHADER_PATH);
     ErrCode ret = InstalldClient::GetInstance()->DeleteUninstallTmpDirs(dirs);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "delete tmp dirs failed:%{public}d", ret);

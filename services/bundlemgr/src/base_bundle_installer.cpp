@@ -7419,7 +7419,7 @@ ErrCode BaseBundleInstaller::DeleteCloudShader(const std::string &bundleName) co
     std::string newShaderCloudPath;
     newShaderCloudPath.append(ServiceConstants::NEW_CLOUD_SHADER_PATH).append(bundleName);
     LOG_D(BMS_TAG_INSTALLER, "DeleteCloudShader %{public}s", newShaderCloudPath.c_str());
-    return InstalldClient::GetInstance()->RemoveDir(newShaderCloudPath);
+    return InstalldClient::GetInstance()->RemoveDir(newShaderCloudPath, true);
 }
 
 ErrCode BaseBundleInstaller::DeleteEl1ShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
