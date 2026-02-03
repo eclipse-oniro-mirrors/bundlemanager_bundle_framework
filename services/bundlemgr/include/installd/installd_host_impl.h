@@ -304,7 +304,6 @@ public:
     virtual ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths) override;
 
 private:
-    static std::string GetGroupDirPath(const std::string &el, int32_t userId, const std::string &uuid);
     std::string GetExtensionConfigPath() const;
     /**
      * @brief Create /data/app/el2/userid/sharefiles/ bundle data directory.
@@ -331,12 +330,13 @@ private:
     ErrCode AclSetExtensionDirs(bool debug, const std::string &parentDir,
         const std::vector<std::string> &extensionDirs, bool setAccess, bool setDefault);
     int64_t GetAppCacheSize(const std::string &bundleName, const int32_t userId,
-        const int32_t appIndex, const std::vector<std::string> &moduleNames = {});
-    ErrCode CreateDataGroupDir(const CreateDirParam &param);
-    ErrCode DeleteEl5DataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId);
+        const int32_t appIndex, const std::vector<std::string> &moduleNameList = {});
     ErrCode CreateBundleDataDirWithEl(const CreateDirParam &createDirParam);
     ErrCode CreateCommonDataDir(const CreateDirParam &createDirParam, const std::string &el);
     ErrCode CreateEl2DataDir(const CreateDirParam &createDirParam);
+    ErrCode CreateDataGroupDir(const CreateDirParam &param);
+    ErrCode DeleteEl5DataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId);
+    static std::string GetGroupDirPath(const std::string &el, int32_t userId, const std::string &uuid);
     void InnerCleanBundleDataDirByName(std::string &suffixName, const int userid, const int appIndex = 0);
     ErrCode ResetBmsDBSecurityByPath(const std::string &parentPath, const std::string &fileFlag);
     ErrCode ResetSecurityByPath(const FileStat &fileStat, const std::string &targetPath);

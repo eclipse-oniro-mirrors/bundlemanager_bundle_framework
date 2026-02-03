@@ -42,8 +42,8 @@ constexpr const char* BUNDLE_RESOURCE_CHANGE_TYPE = "bundleResourceChangeType";
 constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* TYPE = "type";
 constexpr const char* RESULT_CODE = "resultCode";
-constexpr const char* IS_APP_UPDATE = "isAppUpdate";
 constexpr const char* KEEP_DATA = "keepData";
+constexpr const char* IS_APP_UPDATE = "isAppUpdate";
 constexpr const char* PERMISSION_GET_DISPOSED_STATUS = "ohos.permission.GET_DISPOSED_APP_STATUS";
 constexpr const char* ASSET_ACCESS_GROUPS = "assetAccessGroups";
 constexpr const char* DEVELOPERID = "developerId";
@@ -261,8 +261,8 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(APP_INDEX, installResult.appIndex);
     want.SetParam(TYPE, static_cast<int32_t>(installResult.type));
     want.SetParam(RESULT_CODE, installResult.resultCode);
-    want.SetParam(IS_APP_UPDATE, installResult.isAppUpdate);
     want.SetParam(KEEP_DATA, installResult.keepData);
+    want.SetParam(IS_APP_UPDATE, installResult.isAppUpdate);
     if (want.GetAction() == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED
         && !installResult.assetAccessGroups.empty()) {
         want.SetParam(ASSET_ACCESS_GROUPS, installResult.assetAccessGroups);
@@ -450,11 +450,11 @@ void BundleCommonEventMgr::NotifyPluginEvents(const NotifyBundleEvents &event,
     want.SetParam(Constants::UID, event.uid);
     EventFwk::CommonEventData commonData { want };
     if (dataMgr != nullptr) {
-        LOG_I(BMS_TAG_DEFAULT, "pluginEventBack begin");
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "pluginEventBack begin");
         std::string hostBundleName;
         dataMgr->GetBundleNameForUid(event.uid, hostBundleName);
         dataMgr->NotifyPluginEventCallback(commonData, hostBundleName, isHsp);
-        LOG_I(BMS_TAG_DEFAULT, "pluginEventBack end");
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "pluginEventBack end");
     }
 }
 

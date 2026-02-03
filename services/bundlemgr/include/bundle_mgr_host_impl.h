@@ -17,7 +17,6 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MGR_HOST_IMPL_H
 
 #include <atomic>
-
 #include "bundle_cache_mgr.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "bundle_connect_ability_mgr.h"
@@ -653,7 +652,7 @@ public:
     virtual ErrCode CompileReset(const std::string &bundleName, bool isAllBundle) override;
     /**
      * @brief Reset the bundle informations.
-     * @return Returns true if the reset result is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the reset result is successfully obtained; returns error code otherwise.
      */
     virtual ErrCode ResetAllAOT() override;
     /**
@@ -1158,6 +1157,8 @@ public:
         int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
+    virtual ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) override;
+
     virtual ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) override;
 
     virtual ErrCode GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo) override;
@@ -1168,12 +1169,10 @@ public:
 
     virtual ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) override;
 
-    virtual ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) override;
-
     virtual ErrCode UpdateAppEncryptedStatus(const std::string &bundleName,
         bool isExisted, int32_t appIndex = 0) override;
-    virtual bool GreatOrEqualTargetAPIVersion(int32_t platformVersion,
-        int32_t minorVersion, int32_t patchVersion) override;
+    virtual bool GreatOrEqualTargetAPIVersion(int32_t platformVersion, int32_t minorVersion,
+        int32_t patchVersion) override;
     /**
      * @brief Obtains all bundle names of a specified user.
      * @param flags Indicates the flags to control the bundle list.
@@ -1242,10 +1241,10 @@ public:
     virtual ErrCode RemoveBackupBundleData(const std::string &bundleName,
         const int32_t userId, const int32_t appIndex) override;
     virtual ErrCode CreateNewBundleEl5Dir(int32_t userId) override;
-    virtual ErrCode GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
-        BundleInstallStatus &bundleInstallStatus) override;
     virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
         std::vector<JsonProfileInfo> &profileInfos) override;
+    virtual ErrCode GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
+        BundleInstallStatus &bundleInstallStatus) override;
     /**
      * @brief Obtains the BundleInfo based on a given bundle name.
      * @param uid Indicates the uid.
@@ -1303,8 +1302,8 @@ private:
         int32_t userId, int32_t callingUid, const std::string &callingBundleName);
     void FilterAbilityInfos(std::vector<AbilityInfo> &abilityInfos);
     void SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info);
-    bool CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex);
     bool CheckCanSetEnable(const std::string &bundleName);
+    bool CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex);
     bool IsAppLinking(int32_t flags) const;
     std::string GetCallerName();
     void CallAbilityManager(int32_t resultCode, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack);
@@ -1312,6 +1311,7 @@ private:
         std::unordered_map<std::string, PluginBundleInfo> &pluginBundleInfos);
     void AddPreinstalledApplicationInfo(PreInstallBundleInfo &preInstallBundleInfo,
         std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos);
+
     void GetAbilityLabelInfo(std::vector<AbilityInfo> &abilityInfos);
     void GetApplicationLabelInfo(std::vector<AbilityInfo> &abilityInfos);
     bool GetLabelFromCache(const std::string &cacheKey, const std::string &abilityName,

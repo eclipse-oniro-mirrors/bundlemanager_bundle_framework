@@ -691,7 +691,7 @@ private:
     ErrCode SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InnerBundleInfo &oldInfo);
     ErrCode CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos,
-        const InnerBundleInfo &oldInfo, bool isHapCopied = true);
+        const InnerBundleInfo &oldInfo, bool copyHapToInstallPath = true);
     void UpdateEncryptionStatus(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo);
     bool IsBundleEncrypted(const std::unordered_map<std::string, InnerBundleInfo> &infos,
@@ -705,11 +705,11 @@ private:
     void GetDataGroupIds(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_set<std::string> &groupIds);
     void GenerateNewUserDataGroupInfos(InnerBundleInfo &info) const;
-    void RemoveOldGroupDirs(const InnerBundleInfo &oldInfo);
+    void RemoveOldGroupDirs(const InnerBundleInfo &oldInfo) const;
     ErrCode RemoveDataGroupDirs(const std::string &bundleName, int32_t userId, bool isKeepData = false) const;
     void DeleteGroupDirsForException(const InnerBundleInfo &oldInfo) const;
     ErrCode CreateDataGroupDirs(
-        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes, const InnerBundleInfo &oldInfo);
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults, const InnerBundleInfo &oldInfo);
     bool NeedDeleteOldNativeLib(
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const InnerBundleInfo &oldInfo);
@@ -811,6 +811,7 @@ private:
     void SaveUninstallBundleInfo(const std::string bundleName, bool isKeepData,
         const UninstallBundleInfo &uninstallBundleInfo);
     void DeleteUninstallBundleInfo(const std::string &bundleName);
+    bool DeleteUninstallBundleInfoFromDb(const std::string &bundleName);
     void SetFirstInstallTime(const std::string &bundleName, const int64_t &time, InnerBundleInfo &info);
     bool SaveFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
         bool isPreInstallApp, const InnerBundleUserInfo &innerBundleUserInfo);
@@ -849,16 +850,15 @@ private:
     void CheckPreBundle(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const InstallParam &installParam, bool isRecover);
     ErrCode CheckShellCanInstallPreApp(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
-    bool DeleteUninstallBundleInfoFromDb(const std::string &bundleName);
     void CheckInstallAllowDowngrade(const InstallParam &installParam,
         const InnerBundleInfo &oldBundleInfo, ErrCode &result);
 
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
         Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
+    void UpdateKillApplicationProcess(const InnerBundleInfo &innerBundleInfo);
     std::string GetAssetAccessGroups(const std::string &bundleName);
     std::string GetDeveloperId(const std::string &bundleName);
     void GetModuleNames(const std::string &bundleName, std::vector<std::string> &moduleNames);
-    void UpdateKillApplicationProcess(const InnerBundleInfo &innerBundleInfo);
     ErrCode CheckPreAppAllowHdcInstall(const InstallParam &installParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     void CheckPreBundleRecoverResult(ErrCode &result);
@@ -882,11 +882,10 @@ private:
     void PrintStartWindowIconId(const InnerBundleInfo &info);
     bool ProcessExtProfile(const InstallParam &installParam);
     void SetHybridSpawn();
-    bool IsBundleCrossAppSharedConfig(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode ProcessDynamicIconFileWhenUpdate(const InnerBundleInfo &oldInfo, const std::string &oldPath,
         const std::string &newPath);
+    bool IsBundleCrossAppSharedConfig(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool CheckAddResultMsg(const InnerBundleInfo &info, bool isContainEntry);
-    void ProcessUpdateShortcut();
     ErrCode CheckArkTSMode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool AddInstallingBundleName(const InstallParam &installParam);
     bool DeleteInstallingBundleName(const InstallParam &installParam);
@@ -898,6 +897,7 @@ private:
 #endif
     ErrCode ProcessPluginFilesWhenUpdate(const InnerBundleInfo &oldInfo,
         const std::string &oldPath, const std::string &newPath);
+    void ProcessUpdateShortcut();
     void NotifyBundleCallback(const NotifyType &type, int32_t uid);
 
     bool isAppExist_ = false;

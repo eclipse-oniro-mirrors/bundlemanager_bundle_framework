@@ -923,9 +923,9 @@ public:
     bool IsSystemHsp(const std::string &bundleName);
 
     bool UpdateUninstallBundleInfo(const std::string &bundleName, const UninstallBundleInfo &uninstallBundleInfo);
+    bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo) const;
     bool GetUninstallBundleInfoWithUserAndAppIndex(const std::string &bundleName,
         int32_t userId, int32_t appIndex) const;
-    bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo) const;
     bool DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
     bool RemoveUninstalledBundleinfos(int32_t userId);
     bool DeleteUninstallCloneBundleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
@@ -1138,7 +1138,6 @@ public:
         std::vector<ExtensionAbilityInfo> &infos) const;
     void QueryAllCloneExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos) const;
-
     ErrCode GetAppIdByBundleName(const std::string &bundleName, std::string &appId) const;
 
     ErrCode GetAppIdAndAppIdentifierByBundleName(const std::string &bundleName, std::string &appId,
@@ -1235,6 +1234,9 @@ public:
     std::string GetCurDynamicIconModule(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible);
     ErrCode DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
+    bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
+        const int32_t patchVersion);
+    void FilterShortcutJson(nlohmann::json &jsonResult);
     ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos);
     ErrCode AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId);
     ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex, int32_t userId,
@@ -1242,12 +1244,8 @@ public:
     void UpdateShortcutInfoResId(const std::string &bundleName, const int32_t userId);
     ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled);
     ErrCode DeleteShortcutEnabledInfo(const std::string &bundleName);
-    bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
-        const int32_t patchVersion);
     ErrCode GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32_t userId, std::unordered_map<std::string,
         std::vector<std::pair<int32_t, int32_t>>> &cloneInfos) const;
-    void FilterShortcutJson(nlohmann::json &jsonResult);
-    ErrCode IsSystemApp(const std::string &bundleName, bool &isSystemApp);
     void UpdateShortcutInfos(const std::string &bundleName);
     ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId, PluginBundleInfo &pluginBundleInfo);
@@ -1255,6 +1253,7 @@ public:
     ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName, ModuleTestRunner &testRunner);
     ErrCode ImplicitQueryAbilityInfosWithDefault(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, AbilityInfo &defaultAbilityInfo, bool &findDefaultApp);
+    ErrCode IsSystemApp(const std::string &bundleName, bool &isSystemApp);
     ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
         int32_t userId, bool &stateChange);
     ErrCode GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath);

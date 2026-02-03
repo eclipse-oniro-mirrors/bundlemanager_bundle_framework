@@ -143,8 +143,7 @@ ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName, bool is
         dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
     }
     std::string bundleDir =
-        std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
-        AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName;
+        std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName;
     APP_LOGI("start to remove bundle dir: %{public}s", bundleDir.c_str());
     if (InstalldClient::GetInstance()->RemoveDir(bundleDir) != ERR_OK) {
         APP_LOGW("remove bundle dir %{public}s failed", bundleDir.c_str());
@@ -248,10 +247,9 @@ void AppServiceFwkInstaller::RemoveModuleDataDir(
 {
     APP_LOGI("start to remove module info of %{public}s in %{public}s ", moduleName.c_str(), bundleName.c_str());
     std::string moduleDir =
-        std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
-        AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName +
-        AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(oldInfo.GetVersionCode()) +
-        AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
+        std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
+        bundleName + AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX +
+        std::to_string(oldInfo.GetVersionCode()) + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
     APP_LOGI("start to remove module dir: %{public}s", moduleDir.c_str());
     if (InstalldClient::GetInstance()->RemoveDir(moduleDir) != ERR_OK) {
         APP_LOGW("remove module dir %{public}s failed", moduleDir.c_str());

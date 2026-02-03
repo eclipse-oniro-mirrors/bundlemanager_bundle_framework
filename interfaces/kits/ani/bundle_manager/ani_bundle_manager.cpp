@@ -838,37 +838,6 @@ static void SetApplicationEnabledNative(ani_env* env,
     }
 }
 
-static void SetAbilityFileTypesForSelf(ani_env* env,
-    ani_string aniModuleName, ani_string aniAbilityName, ani_object aniFileTypes)
-{
-    APP_LOGI("ANI SetAbilityFileTypesForSelf begin");
-    std::string moduleName;
-    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName)) {
-        APP_LOGE("parse moduleName failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
-        return;
-    }
-    std::string abilityName;
-    if (!CommonFunAni::ParseString(env, aniAbilityName, abilityName)) {
-        APP_LOGE("parse abilityName failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, TYPE_STRING);
-        return;
-    }
-    std::vector<std::string> fileTypes;
-    if (!CommonFunAni::ParseStrArray(env, aniFileTypes, fileTypes)) {
-        APP_LOGE("parse fileTypes failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, FILE_TYPES, TYPE_ARRAY);
-        return;
-    }
-    ANIClearCacheListener::DoClearCache();
-    ErrCode ret = BundleManagerHelper::InnerSetAbilityFileTypesForSelf(moduleName, abilityName, fileTypes);
-    if (ret != ERR_OK) {
-        APP_LOGE("SetAbilityFileTypesForSelf failed:%{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(
-            env, ret, SET_ABILITY_FILE_TYPES_FOR_SELF_STRING, Constants::PERMISSION_MANAGE_SELF_SKILLS);
-    }
-}
-
 static ani_object QueryExtensionAbilityInfoNative(ani_env* env,
     ani_object aniWant, ani_enum_item aniExtensionAbilityType, ani_string aniExtensionAbilityTypeName,
     ani_int aniExtensionAbilityFlags, ani_int aniUserId,
@@ -2006,30 +1975,6 @@ static void CleanBundleCacheFilesForSelfNative(ani_env* env)
     }
 }
 
-static ani_string GetPluginBundlePathForSelfNative(ani_env* env, ani_string aniPluginBundleName)
-{
-    APP_LOGD("ani GetPluginBundlePathForSelfNative called");
-    std::string pluginBundleName;
-    if (!CommonFunAni::ParseString(env, aniPluginBundleName, pluginBundleName)) {
-        APP_LOGE("pluginBundleName %{public}s invalid", pluginBundleName.c_str());
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PLUGIN_BUNDLE_NAME, TYPE_STRING);
-        return nullptr;
-    }
-    std::string codePath;
-    ErrCode ret = BundleManagerHelper::InnerGetPluginBundlePathForSelf(pluginBundleName, codePath);
-    if (ret != ERR_OK) {
-        APP_LOGE("InnerGetPluginBundlePathForSelf failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, ret, GET_PLUGIN_BUNDLE_PATH_FOR_SELF, "");
-        return nullptr;
-    }
-    ani_string aniCodePath = nullptr;
-    if (!CommonFunAni::StringToAniStr(env, codePath, aniCodePath)) {
-        APP_LOGE("StringToAniStr failed");
-        return nullptr;
-    }
-    return aniCodePath;
-}
-
 static void RecoverBackupBundleDataNative(ani_env* env,
     ani_string aniBundleName, ani_int aniUserId, ani_int aniAppIndex)
 {
@@ -2078,6 +2023,61 @@ static void RemoveBackupBundleDataNative(ani_env* env,
         BusinessErrorAni::ThrowCommonError(env,
             CommonFunc::ConvertErrCode(ret), REMOVE_BACKUP_BUNDLE_DATA, Constants::PERMISSION_CLEAN_APPLICATION_DATA);
     }
+}
+
+static void SetAbilityFileTypesForSelf(ani_env* env,
+    ani_string aniModuleName, ani_string aniAbilityName, ani_object aniFileTypes)
+{
+    APP_LOGI("ANI SetAbilityFileTypesForSelf begin");
+    std::string moduleName;
+    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName)) {
+        APP_LOGE("parse moduleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
+        return;
+    }
+    std::string abilityName;
+    if (!CommonFunAni::ParseString(env, aniAbilityName, abilityName)) {
+        APP_LOGE("parse abilityName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, TYPE_STRING);
+        return;
+    }
+    std::vector<std::string> fileTypes;
+    if (!CommonFunAni::ParseStrArray(env, aniFileTypes, fileTypes)) {
+        APP_LOGE("parse fileTypes failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, FILE_TYPES, TYPE_ARRAY);
+        return;
+    }
+    ANIClearCacheListener::DoClearCache();
+    ErrCode ret = BundleManagerHelper::InnerSetAbilityFileTypesForSelf(moduleName, abilityName, fileTypes);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetAbilityFileTypesForSelf failed:%{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(
+            env, ret, SET_ABILITY_FILE_TYPES_FOR_SELF_STRING, Constants::PERMISSION_MANAGE_SELF_SKILLS);
+    }
+}
+
+static ani_string GetPluginBundlePathForSelfNative(ani_env* env, ani_string aniPluginBundleName)
+{
+    APP_LOGD("ani GetPluginBundlePathForSelfNative called");
+    std::string pluginBundleName;
+    if (!CommonFunAni::ParseString(env, aniPluginBundleName, pluginBundleName)) {
+        APP_LOGE("pluginBundleName %{public}s invalid", pluginBundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PLUGIN_BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    std::string codePath;
+    ErrCode ret = BundleManagerHelper::InnerGetPluginBundlePathForSelf(pluginBundleName, codePath);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetPluginBundlePathForSelf failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, ret, GET_PLUGIN_BUNDLE_PATH_FOR_SELF, "");
+        return nullptr;
+    }
+    ani_string aniCodePath = nullptr;
+    if (!CommonFunAni::StringToAniStr(env, codePath, aniCodePath)) {
+        APP_LOGE("StringToAniStr failed");
+        return nullptr;
+    }
+    return aniCodePath;
 }
 
 static ani_enum_item GetBundleInstallStatusNative(ani_env* env, ani_string aniBundleName)
@@ -2145,8 +2145,6 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(SetAbilityEnabledNative) },
         ani_native_function { "setApplicationEnabledNative", nullptr,
             reinterpret_cast<void*>(SetApplicationEnabledNative) },
-        ani_native_function { "setAbilityFileTypesForSelf", nullptr,
-            reinterpret_cast<void*>(SetAbilityFileTypesForSelf) },
         ani_native_function { "getDynamicIconNative", nullptr, reinterpret_cast<void*>(GetDynamicIconNative) },
         ani_native_function { "queryAbilityInfoWithWantsNative", nullptr,
             reinterpret_cast<void*>(QueryAbilityInfoWithWantsNative) },
@@ -2201,6 +2199,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getAbilityInfoNative", nullptr, reinterpret_cast<void*>(GetAbilityInfoNative) },
         ani_native_function { "cleanBundleCacheFilesForSelfNative", nullptr,
             reinterpret_cast<void*>(CleanBundleCacheFilesForSelfNative) },
+        ani_native_function { "setAbilityFileTypesForSelf", nullptr,
+            reinterpret_cast<void*>(SetAbilityFileTypesForSelf) },
         ani_native_function { "getPluginBundlePathForSelfNative", nullptr,
             reinterpret_cast<void*>(GetPluginBundlePathForSelfNative) },
         ani_native_function { "recoverBackupBundleDataNative", nullptr,

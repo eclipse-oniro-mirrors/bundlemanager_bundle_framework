@@ -85,8 +85,8 @@ private:
         bool originalResult, const Element& originalElement, bool currentResult, const Element& currentElement) const;
     bool SendDefaultAppChangeEvent(const int32_t userId, const std::vector<std::string>& typeVec) const;
 
-    std::shared_ptr<IDefaultAppDb> defaultAppDb_;
     mutable std::mutex mutex_;
+    std::shared_ptr<IDefaultAppDb> defaultAppDb_;
 };
 }
 }

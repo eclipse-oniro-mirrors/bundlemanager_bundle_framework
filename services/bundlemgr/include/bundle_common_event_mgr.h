@@ -92,6 +92,7 @@ public:
     void NotifyDeleteDisposedRule(const std::string &appId, int32_t userId, int32_t appIndex);
     void NotifyDynamicIconEvent(
         const std::string &bundleName, bool isEnableDynamicIcon, int32_t userId, int32_t appIndex);
+    void NotifyUninstalledBundleCleared(const NotifyBundleEvents &installResult);
     void NotifyBundleResourcesChanged(const int32_t userId, const uint32_t type);
     void NotifyDefaultAppChanged(const int32_t userId, std::vector<std::string> &utdIdVec);
     void NotifyPluginEvents(const NotifyBundleEvents &event,
@@ -103,7 +104,6 @@ public:
     void NotifyShortcutsEnabledChanged(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled);
     void NotifyPluginCommonEvents(const std::string &hostBundleName, const std::string &pluginBundleName,
         const NotifyType &type);
-    void NotifyUninstalledBundleCleared(const NotifyBundleEvents &installResult);
 private:
     std::string GetCommonEventData(const NotifyType &type);
     void SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBundleEvents &installResult);
