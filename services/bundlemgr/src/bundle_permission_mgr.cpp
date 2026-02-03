@@ -522,6 +522,10 @@ bool BundlePermissionMgr::IsNativeTokenType()
 bool BundlePermissionMgr::IsShellTokenType()
 {
     LOG_D(BMS_TAG_DEFAULT, "IsShellTokenType begin");
+    if (IPCSkeleton::GetCallingUid() == Constants::DEV_ASSISTANT_UID) {
+        LOG_I(BMS_TAG_DEFAULT, "caller is dev assistant, success");
+        return true;
+    }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     LOG_D(BMS_TAG_DEFAULT, "tokenType is %{private}d", tokenType);

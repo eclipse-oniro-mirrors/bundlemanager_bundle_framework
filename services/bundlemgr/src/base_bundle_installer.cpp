@@ -1281,6 +1281,12 @@ bool BaseBundleInstaller::IsArkWeb(const std::string &bundleName) const
     return true;
 }
 
+bool BaseBundleInstaller::IsShellOrDevAssistant() const
+{
+    return sysEventInfo_.callingUid == ServiceConstants::SHELL_UID ||
+        sysEventInfo_.callingUid == Constants::DEV_ASSISTANT_UID;
+}
+
 #ifdef WEBVIEW_ENABLE
 ErrCode BaseBundleInstaller::VerifyArkWebInstall()
 {
@@ -4534,7 +4540,7 @@ ErrCode BaseBundleInstaller::CheckShellInstall(std::vector<Security::Verify::Hap
 #ifdef X86_EMULATOR_MODE
     return CheckShellInstallForEmulator(hapVerifyRes);
 #else
-    if (sysEventInfo_.callingUid != ServiceConstants::SHELL_UID || hapVerifyRes.empty()) {
+    if (!IsShellOrDevAssistant() || hapVerifyRes.empty()) {
         return ERR_OK;
     }
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
@@ -6410,7 +6416,7 @@ ErrCode BaseBundleInstaller::CheckSoEncryption(InnerBundleInfo &info, const std:
             info.GetBundleName().c_str());
         return ERR_APPEXECFWK_INSTALL_DEBUG_ENCRYPTED_BUNDLE_FAILED;
     }
-    if (isEncrypted && sysEventInfo_.callingUid == ServiceConstants::SHELL_UID) {
+    if (isEncrypted && IsShellOrDevAssistant()) {
         LOG_E(BMS_TAG_INSTALLER, "-n %{public}s encrypted bundle is not allowed for shell",
             info.GetBundleName().c_str());
         return ERR_APPEXECFWK_INSTALL_ENCRYPTED_BUNDLE_NOT_ALLOWED_FOR_SHELL;
@@ -8076,7 +8082,7 @@ void BaseBundleInstaller::CheckPreBundle(const std::unordered_map<std::string, I
 ErrCode BaseBundleInstaller::CheckShellCanInstallPreApp(
     const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
 {
-    if (sysEventInfo_.callingUid != ServiceConstants::SHELL_UID) {
+    if (!IsShellOrDevAssistant()) {
         return ERR_OK;
     }
     if (newInfos.empty()) {
