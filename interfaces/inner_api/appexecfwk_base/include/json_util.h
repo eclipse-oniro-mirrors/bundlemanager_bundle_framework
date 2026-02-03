@@ -54,9 +54,13 @@ public:
 
 template<typename T, typename dataType>
 void CheckArrayType(
-    const nlohmann::json &jsonObject, const std::string &key, dataType &data, ArrayType arrayType, int32_t &parseResult)
+    const nlohmann::detail::iter_impl<const nlohmann::json> &iter,
+    dataType &data, ArrayType arrayType, int32_t &parseResult)
 {
-    auto arrays = jsonObject.at(key);
+    if (iter->is_null() || !iter->is_array()) {
+        return;
+    }
+    const auto &arrays = *iter;
     if (arrays.empty()) {
         return;
     }
@@ -68,42 +72,42 @@ void CheckArrayType(
         case ArrayType::STRING:
             for (const auto &array : arrays) {
                 if (!array.is_string()) {
-                    APP_LOGE("%{public}s not string", key.c_str());
+                    APP_LOGE("Array element not string type");
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                 }
             }
             if (parseResult == ERR_OK) {
-                data = jsonObject.at(key).get<T>();
+                data = iter->get<T>();
             }
             break;
         case ArrayType::OBJECT:
             for (const auto &array : arrays) {
                 if (!array.is_object()) {
-                    APP_LOGE("%{public}s not object", key.c_str());
+                    APP_LOGE("Array element not object type");
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                     break;
                 }
             }
             if (parseResult == ERR_OK) {
-                data = jsonObject.at(key).get<T>();
+                data = iter->get<T>();
             }
             break;
         case ArrayType::NUMBER:
             for (const auto &array : arrays) {
                 if (!array.is_number()) {
-                    APP_LOGE("%{public}s not number", key.c_str());
+                    APP_LOGE("Array element not number type");
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                 }
             }
             if (parseResult == ERR_OK) {
-                data = jsonObject.at(key).get<T>();
+                data = iter->get<T>();
             }
             break;
         case ArrayType::NOT_ARRAY:
-            APP_LOGE("%{public}s not string", key.c_str());
+            APP_LOGE("Invalid array type");
             break;
         default:
-            APP_LOGE("%{public}s error", key.c_str());
+            APP_LOGE("Unknown array type");
             break;
     }
 }
@@ -116,33 +120,35 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
     if (parseResult) {
         return;
     }
-    if (jsonObject.find(key) != end) {
+    auto iter = jsonObject.find(key);
+    if (iter != end) {
         switch (jsonType) {
             case JsonType::NUMBER:
-                if (!jsonObject.at(key).is_number()) {
+                if (!iter->is_number()) {
                     APP_LOGE("type error %{public}s not number", key.c_str());
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                     break;
                 }
-                data = jsonObject.at(key).get<T>();
+                data = iter->get<T>();
                 break;
             case JsonType::OBJECT:
-                if (!jsonObject.at(key).is_object()) {
+                if (!iter->is_object()) {
                     APP_LOGE("type error %{public}s not object", key.c_str());
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                     break;
                 }
-                data = jsonObject.at(key).get<T>();
+                data = iter->get<T>();
                 break;
             case JsonType::ARRAY:
-                if (!jsonObject.at(key).is_array()) {
+                if (!iter->is_array()) {
                     APP_LOGE("type error %{public}s not array", key.c_str());
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                     break;
                 }
-                CheckArrayType<T>(jsonObject, key, data, arrayType, parseResult);
+                CheckArrayType<T>(iter, data, arrayType, parseResult);
                 break;
             case JsonType::NULLABLE:
+                // Nullable type, accept any value or null
                 APP_LOGE("type error %{public}s nullable", key.c_str());
                 break;
             default:
@@ -151,6 +157,7 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
         }
         return;
     }
+
     if (isNecessary) {
         APP_LOGE("profile prop %{public}s missing", key.c_str());
         parseResult = ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP;
@@ -190,15 +197,17 @@ void GetBigStringIfFindKey(const nlohmann::json &jsonObject,
     if (parseResult) {
         return;
     }
-    if (jsonObject.find(key) != end) {
+    // Performance optimization: Use iterator to reduce JSON lookups from 3 to 1
+    auto iter = jsonObject.find(key);
+    if (iter != end) {
         switch (jsonType) {
             case JsonType::STRING:
-                if (!jsonObject.at(key).is_string()) {
+                if (!iter->is_string()) {
                     APP_LOGE("type error %{public}s not string", key.c_str());
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                     break;
                 }
-                data = jsonObject.at(key).get<T>();
+                data = iter->get<T>();
                 break;
             default:
                 APP_LOGE("type error %{public}s not jsonType", key.c_str());
@@ -206,6 +215,7 @@ void GetBigStringIfFindKey(const nlohmann::json &jsonObject,
         }
         return;
     }
+
     if (isNecessary) {
         APP_LOGE("profile prop %{public}s missing", key.c_str());
         parseResult = ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP;
@@ -227,20 +237,22 @@ void GetMapValueIfFindKey(const nlohmann::json &jsonObject,
     if (parseResult != ERR_OK) {
         return;
     }
-    if (jsonObject.find(key) != end) {
-        if (!jsonObject.at(key).is_object()) {
+    // Performance optimization: Use iterator to reduce JSON lookups from 3 to 1
+    auto iter = jsonObject.find(key);
+    if (iter != end) {
+        if (!iter->is_object()) {
             APP_LOGE("type error %{public}s not map object", key.c_str());
             parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
             return;
         }
-        for (const auto& [mapKey, mapValue] : jsonObject.at(key).items()) {
+        for (const auto& [mapKey, mapValue] : iter->items()) {
             if (!BMSJsonUtil::CheckMapValueType(mapValue, valueType, arrayType)) {
                 APP_LOGE("type error key:%{public}s", mapKey.c_str());
                 parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                 return;
             }
         }
-        data = jsonObject.at(key).get<T>();
+        data = iter->get<T>();
         return;
     }
     if (isNecessary) {

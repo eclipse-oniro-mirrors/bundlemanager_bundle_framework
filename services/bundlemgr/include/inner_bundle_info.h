@@ -2286,6 +2286,7 @@ public:
     void SetQuickFixHqfInfos(const std::vector<HqfInfo> &hqfInfos);
 
     void UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo);
+    void ResetPrivilegeCapability();
     void UpdateRemovable(bool isPreInstall, bool removable);
     void UpdateModuleRemovable(const InnerBundleInfo &innerBundleInfo);
     bool IsRemovableSet(const InnerModuleInfo &innerInfo, int32_t userId) const;
