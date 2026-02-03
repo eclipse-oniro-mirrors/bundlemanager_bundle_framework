@@ -44,8 +44,9 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "staticSubscriber", ExtensionAbilityType::STATICSUBSCRIBER },
     { "wallpaper", ExtensionAbilityType::WALLPAPER },
     { "backup", ExtensionAbilityType::BACKUP },
-    { "distributed", ExtensionAbilityType::DISTRIBUTED },
+
     { "appService", ExtensionAbilityType::APP_SERVICE },
+    { "distributed", ExtensionAbilityType::DISTRIBUTED },
     { "selection", ExtensionAbilityType::SELECTION },
     { "window", ExtensionAbilityType::WINDOW },
     { "enterpriseAdmin", ExtensionAbilityType::ENTERPRISE_ADMIN },
@@ -96,8 +97,9 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "callerInfoQuery", ExtensionAbilityType::CALLER_INFO_QUERY },
     { "sysPicker/photoEditor", ExtensionAbilityType::SYSPICKER_PHOTOEDITOR },
     { "sys/visualExtension", ExtensionAbilityType::SYS_VISUAL },
-    { "uiService", ExtensionAbilityType::UI_SERVICE },
+
     { "recentPhoto", ExtensionAbilityType::RECENT_PHOTO },
+    { "uiService", ExtensionAbilityType::UI_SERVICE },
     { "assetAcceleration", ExtensionAbilityType::ASSET_ACCELERATION },
     { "formEdit", ExtensionAbilityType::FORM_EDIT },
     { "liveForm", ExtensionAbilityType::LIVE_FORM },

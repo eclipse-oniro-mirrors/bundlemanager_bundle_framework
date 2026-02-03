@@ -2105,6 +2105,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->multiProjects = applicationInfo.multiProjects;
     baseApplicationInfo_->appEnvironments = applicationInfo.appEnvironments;
     baseApplicationInfo_->maxChildProcess = applicationInfo.maxChildProcess;
+    baseApplicationInfo_->multiAppMode = applicationInfo.multiAppMode;
     baseApplicationInfo_->configuration = applicationInfo.configuration;
     baseApplicationInfo_->startMode = applicationInfo.startMode;
     if (newInfo.HasEntry()) {

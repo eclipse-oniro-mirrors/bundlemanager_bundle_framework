@@ -38,6 +38,7 @@
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "new_bundle_data_dir_mgr.h"
+#include "parameter.h"
 #include "parameters.h"
 #include "on_demand_install_data_mgr.h"
 #include "param_validator.h"
@@ -233,6 +234,7 @@ ErrCode BundleMgrHostImpl::GetApplicationInfoV9(
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "GetApplicationInfoV9 bundleName:%{public}s flags:%{public}d userId:%{public}d",
         appName.c_str(), flags, userId);
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -326,6 +328,7 @@ bool BundleMgrHostImpl::GetBundleInfo(
     LOG_D(BMS_TAG_QUERY,
         "start GetBundleInfo, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
         bundleName.c_str(), flags, userId);
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_BUNDLE_INFO);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     // API9 need to be system app
@@ -383,6 +386,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "GetBundleInfoV9, bundleName:%{public}s, flags:%{public}d, userId:%{public}d",
         bundleName.c_str(), flags, userId);
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_BUNDLE_INFO_V9);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     bool permissionVerify = [bundleName]() {
@@ -1184,6 +1188,7 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "start QueryAbilityInfos, flags : %{public}d, userId : %{public}d", flags, userId);
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
@@ -1213,6 +1218,7 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "start QueryAbilityInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -1303,6 +1309,7 @@ ErrCode BundleMgrHostImpl::QueryLauncherAbilityInfos(
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "start QueryLauncherAbilityInfos, userId : %{public}d", userId);
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -3310,6 +3317,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, int32_
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfosV9 without type begin");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -3384,6 +3392,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, const 
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfosV9 begin");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -3712,7 +3721,6 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    findDefaultApp = false;
     auto ret = dataMgr->ImplicitQueryInfos(
         want, flags, userId, withDefault, abilityInfos, extensionInfos, findDefaultApp);
     if (ret && findDefaultApp) {
@@ -3925,8 +3933,8 @@ bool BundleMgrHostImpl::GetAllBundleStats(int32_t userId, std::vector<int64_t> &
         APP_LOGE("non-system app calling system api");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-        Constants::PERMISSION_GET_BUNDLE_INFO})) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO)) {
         APP_LOGE("verify permission failed");
         return false;
     }
@@ -6064,11 +6072,6 @@ ErrCode BundleMgrHostImpl::GetCompatibleDeviceType(const std::string &bundleName
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-    }
     BmsExtensionDataMgr bmsExtensionDataMgr;
     deviceType = bmsExtensionDataMgr.GetCompatibleDeviceType(bundleName);
     APP_LOGI("deviceType : %{public}s", deviceType.c_str());
@@ -6618,7 +6621,7 @@ bool BundleMgrHostImpl::SendQueryBundleInfoEvent(
     }
 
     size_t infoSize = infos.size();
-    if (infoSize <= 0) {
+    if (infoSize == 0) {
         return false;
     }
     int32_t lastReportEventTime = infos[0].lastReportEventTime;
@@ -6929,9 +6932,9 @@ ErrCode BundleMgrHostImpl::CreateNewBundleEl5Dir(int32_t userId)
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
-    if (newBundleDirMgr != nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    if (newBundleDirMgr == nullptr) {
+        APP_LOGE("bundle dir mgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
     }
     (void)newBundleDirMgr->ProcessOtaBundleDataDirEl5(userId);
     return ERR_OK;

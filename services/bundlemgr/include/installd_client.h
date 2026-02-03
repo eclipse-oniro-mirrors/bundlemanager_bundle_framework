@@ -340,6 +340,7 @@ private:
         }
         return errCode;
     }
+
 private:
     std::mutex mutex_;
     std::mutex getProxyMutex_;

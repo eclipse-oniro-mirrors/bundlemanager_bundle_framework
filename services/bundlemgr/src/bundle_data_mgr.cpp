@@ -8937,7 +8937,6 @@ bool BundleDataMgr::CreateAppGroupDir(
             }
         }
     }
-    
     return CreateGroupDirs(dataGroupInfos, userId, needCreateEl5Dir, dirEl) == ERR_OK;
 }
 
@@ -8955,12 +8954,10 @@ bool BundleDataMgr::CreateAppGroupDir(const std::string &bundleName, int32_t use
         dataGroupInfoMap = bundleInfoItem->second.GetDataGroupInfos();
         needCreateEl5Dir = bundleInfoItem->second.NeedCreateEl5Dir();
     }
-
     return CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir);
 }
 
-ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos,
-    int32_t userId,
+ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId,
     bool needCreateEl5Dir, DataDirEl dirEl)
 {
     if (dataGroupInfos.empty()) {
@@ -8992,8 +8989,7 @@ ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGro
     return res;
 }
 
-ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos,
-    int32_t userId)
+ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId)
 {
     if (dataGroupInfos.empty()) {
         return ERR_OK;
@@ -9015,7 +9011,6 @@ ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &data
                 dataGroupInfo.dataGroupId.c_str(), dataGroupInfo.uuid.c_str(), userId);
             res = result;
         }
-        
         // set el5 group dirs encryption policy
         EncryptionParam encryptionParam("", dataGroupInfo.uuid, dataGroupInfo.uid, userId, EncryptionDirType::GROUP);
         std::string keyId = "";
