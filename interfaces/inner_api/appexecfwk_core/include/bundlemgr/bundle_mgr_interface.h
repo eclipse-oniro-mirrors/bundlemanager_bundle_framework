@@ -951,7 +951,7 @@ public:
     }
     /**
      * @brief Reset the bundle informations.
-     * @return Returns true if the reset result is successfully obtained; returns false otherwise.
+     * @return Returns ERR_OK if the reset result is successfully obtained; returns error code otherwise.
      */
     virtual ErrCode ResetAllAOT()
     {
@@ -1781,6 +1781,11 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
@@ -1802,11 +1807,6 @@ public:
     }
 
     virtual ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
-    {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-
-    virtual ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -1967,6 +1967,7 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
     virtual ErrCode SetAbilityFileTypesForSelf(const std::string &moduleName, const std::string &abilityName,
         const std::vector<std::string> &fileTypes)
     {
@@ -1977,7 +1978,7 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    
+
     virtual ErrCode RecoverBackupBundleData(const std::string &bundleName,
         const int32_t userId, const int32_t appIndex)
     {
@@ -1995,12 +1996,6 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
-        BundleInstallStatus &bundleInstallStatus)
-    {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-
     virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
         std::vector<JsonProfileInfo> &profileInfos)
     {
@@ -2009,6 +2004,12 @@ public:
 
     virtual ErrCode BatchGetCompatibleDeviceType(
         const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
+        BundleInstallStatus &bundleInstallStatus)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

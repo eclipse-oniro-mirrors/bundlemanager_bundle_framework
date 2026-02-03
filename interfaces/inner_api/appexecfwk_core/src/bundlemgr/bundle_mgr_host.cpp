@@ -612,6 +612,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_CLONE_ABILITY_ENABLED):
             errCode = this->HandleIsCloneAbilityEnabled(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID_BY_BUNDLENAME):
+            errCode = this->HandleGetOdidByBundleName(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::ADD_DESKTOP_SHORTCUT_INFO):
             errCode = this->HandleAddDesktopShortcutInfo(data, reply);
             break;
@@ -620,9 +623,6 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_DESKTOP_SHORTCUT_INFO):
             errCode = this->HandleGetAllDesktopShortcutInfo(data, reply);
-            break;
-        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID_BY_BUNDLENAME):
-            errCode = this->HandleGetOdidByBundleName(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_FOR_CONTINUATION):
             errCode = this->HandleGetBundleInfosForContinuation(data, reply);
@@ -693,17 +693,17 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_SHORTCUT_VISIBLE):
             errCode = HandleSetShortcutVisibleForSelf(data, reply);
             break;
-        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_SHORTCUT_INFO_FOR_SELF):
-            errCode = HandleGetAllShortcutInfoForSelf(data, reply);
-            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GREAT_OR_EQUAL_API_TARGET_VERSION):
             errCode = HandleGreatOrEqualTargetAPIVersion(data, reply);
             break;
-        case static_cast<uint32_t>(BundleMgrInterfaceCode::RESET_ALL_AOT):
-            errCode = HandleResetAllAOT(data, reply);
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_SHORTCUT_INFO_FOR_SELF):
+            errCode = HandleGetAllShortcutInfoForSelf(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PLUGIN_INFO):
             errCode = HandleGetPluginInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::RESET_ALL_AOT):
+            errCode = HandleResetAllAOT(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_TEST_RUNNER):
             errCode = HandleGetTestRunner(data, reply);
@@ -732,26 +732,26 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::REMOVE_BACKUP_BUNDLE_DATA):
             errCode = HandleRemoveBackupBundleData(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_EXCEPTION):
+            errCode = this->HandleGetBundleInfoForException(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_NEW_BUNDLE_EL5_DIR):
             errCode = HandleCreateNewBundleEl5Dir(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INSTALL_STATUS):
             errCode = HandleGetBundleInstallStatus(data, reply);
             break;
-        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_EXCEPTION):
-            errCode = this->HandleGetBundleInfoForException(data, reply);
-            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_JSON_PROFILE):
             errCode = HandleGetAllJsonProfile(data, reply);
-            break;
-        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ASSET_GROUPS_INFOS_BY_UID):
-            errCode = this->HandleGetAssetGroupsInfo(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE):
             errCode = HandleBatchGetCompatibleDeviceType(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::ADD_DYNAMIC_SHORTCUT_INFOS):
             errCode = HandleAddDynamicShortcutInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ASSET_GROUPS_INFOS_BY_UID):
+            errCode = this->HandleGetAssetGroupsInfo(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::DELETE_DYNAMIC_SHORTCUT_INFOS):
             errCode = HandleDeleteDynamicShortcutInfos(data, reply);
@@ -1889,7 +1889,6 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFilesAutomatic(MessageParcel &data,
 
     uint64_t cacheSize = data.ReadUint64();
     ErrCode ret = CleanBundleCacheFilesAutomatic(cacheSize);
-
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -2319,24 +2318,6 @@ ErrCode BundleMgrHost::HandleSetCloneAbilityEnabled(MessageParcel &data, Message
     int32_t userId = data.ReadInt32();
     ErrCode ret = SetCloneAbilityEnabled(*abilityInfo, appIndex, isEnabled, userId);
     if (!reply.WriteInt32(ret)) {
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleSetAbilityFileTypesForSelf(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    std::string moduleName = data.ReadString();
-    std::string abilityName = data.ReadString();
-    std::vector<std::string> fileTypes;
-    if (!data.ReadStringVector(&fileTypes)) {
-        APP_LOGE("ReadStringVector failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    ErrCode ret = SetAbilityFileTypesForSelf(moduleName, abilityName, fileTypes);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -4578,6 +4559,24 @@ ErrCode BundleMgrHost::HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageP
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleGetOdidByBundleName(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    std::string odid;
+    auto ret = GetOdidByBundleName(bundleName, odid);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(odid)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    APP_LOGD("odid is %{private}s", odid.c_str());
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleGetSignatureInfoByBundleName(MessageParcel &data, MessageParcel &reply)
 {
     std::string name = data.ReadString();
@@ -4673,24 +4672,6 @@ ErrCode BundleMgrHost::HandleGetAllDesktopShortcutInfo(MessageParcel &data, Mess
         APP_LOGE("Write shortcut infos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleGetOdidByBundleName(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    std::string bundleName = data.ReadString();
-    std::string odid;
-    auto ret = GetOdidByBundleName(bundleName, odid);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!reply.WriteString(odid)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    APP_LOGD("odid is %{private}s", odid.c_str());
     return ERR_OK;
 }
 
@@ -5098,22 +5079,6 @@ ErrCode BundleMgrHost::HandleSetShortcutVisibleForSelf(MessageParcel &data, Mess
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleGetAllShortcutInfoForSelf(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    std::vector<ShortcutInfo> infos;
-    auto ret = GetAllShortcutInfoForSelf(infos);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("Write result failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (ret == ERR_OK && !WriteVectorToParcelIntelligent(infos, reply)) {
-        APP_LOGE("Write shortcut infos failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
 ErrCode BundleMgrHost::HandleAddDynamicShortcutInfos(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -5189,6 +5154,22 @@ ErrCode BundleMgrHost::HandleGreatOrEqualTargetAPIVersion(MessageParcel &data, M
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleGetAllShortcutInfoForSelf(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::vector<ShortcutInfo> infos;
+    auto ret = GetAllShortcutInfoForSelf(infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteVectorToParcelIntelligent(infos, reply)) {
+        APP_LOGE("Write shortcut infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleGetPluginInfo(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -5233,27 +5214,6 @@ ErrCode BundleMgrHost::HandleGetTestRunner(MessageParcel &data, MessageParcel &r
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleIsDebuggableApplication(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    std::string bundleName = data.ReadString();
-    if (bundleName.empty()) {
-        APP_LOGE("fail to IsDebuggableApplication due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-    bool isDebuggable = false;
-    ErrCode ret = IsDebuggableApplication(bundleName, isDebuggable);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("WriteInt32 failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!reply.WriteBool(isDebuggable)) {
-        APP_LOGE("WriteBool failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
 ErrCode BundleMgrHost::HandleGetAllBundleNames(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -5289,6 +5249,27 @@ ErrCode BundleMgrHost::HandleGetAbilityResourceInfo(MessageParcel &data, Message
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleIsDebuggableApplication(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    if (bundleName.empty()) {
+        APP_LOGE("fail to IsDebuggableApplication due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    bool isDebuggable = false;
+    ErrCode ret = IsDebuggableApplication(bundleName, isDebuggable);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(isDebuggable)) {
+        APP_LOGE("WriteBool failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }
@@ -5373,6 +5354,24 @@ ErrCode BundleMgrHost::HandleCreateNewBundleEl5Dir(MessageParcel &data, MessageP
     ErrCode ret = CreateNewBundleEl5Dir(userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetAbilityFileTypesForSelf(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string moduleName = data.ReadString();
+    std::string abilityName = data.ReadString();
+    std::vector<std::string> fileTypes;
+    if (!data.ReadStringVector(&fileTypes)) {
+        APP_LOGE("ReadStringVector failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = SetAbilityFileTypesForSelf(moduleName, abilityName, fileTypes);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

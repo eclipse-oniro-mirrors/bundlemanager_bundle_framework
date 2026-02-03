@@ -77,7 +77,6 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         std::string pgoPath = Str16ToStr8(parcel.ReadString16());
         pgoParams.emplace(moduleName, pgoPath);
     }
-
     uint32_t parametersSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, parametersSize);
     CONTAINER_SECURITY_VERIFY(parcel, parametersSize, &parameters);
@@ -136,7 +135,6 @@ bool InstallParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pgoParam.first));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pgoParam.second));
     }
-
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, static_cast<uint32_t>(parameters.size()));
     for (const auto &parameter : parameters) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(parameter.first));

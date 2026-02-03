@@ -136,6 +136,7 @@ BUNDLE_INSTALL:
   START_TIME: {type: INT64, desc: bundle installation start time}
   END_TIME: {type: INT64, desc: bundle installation end time}
 
+
 BUNDLE_UNINSTALL:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle uninstall}
   PNAMEID: {type: STRING, desc: package name}
@@ -290,7 +291,7 @@ QUERY_OF_CONTINUE_TYPE:
   CONTINUE_TYPE: {type: STRING, desc: continueType}
   ERROR_CODE: {type: INT32, desc: apply quick fix frequency}
   USERID: {type: INT32, desc: userId of the bundle}
-  
+
 FREE_INSTALL_EVENT:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: free install event}
   BUNDLE_NAME: {type: STRING, desc: bundle name}
@@ -317,14 +318,6 @@ APP_CONTROL_RULE:
   RULE: {type: STRING, desc: rule}
   APP_INDEX: {type: INT32, desc: app index}
 
-USER_DATA_SIZE:
-   __BASE: {type: STATISTIC, level: MINOR , desc: data partition management}
-   COMPONENT_NAME: {type: STRING, desc: name of component}
-   PARTITION_NAME: {type: STRING, desc: name of partition}
-   REMAIN_PARTITION_SIZE: {type: UINT64, desc: Remaining size of the partition}
-   FILE_OR_FOLDER_PATH: {type: STRING, arrsize: 100, desc: File or folder path}
-   FILE_OR_FOLDER_SIZE: {type: UINT64, arrsize: 100, desc: File or folder size}
-
 DEFAULT_APP:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: default application}
   ACTION_TYPE: {type: INT32, desc: action type}
@@ -333,6 +326,14 @@ DEFAULT_APP:
   WANT: {type: STRING, desc: want}
   UTD: {type: STRING, desc: utd}
   APP_INDEX: {type: INT32, desc: app index}
+
+USER_DATA_SIZE:
+   __BASE: {type: STATISTIC, level: MINOR , desc: data partition management}
+   COMPONENT_NAME: {type: STRING, desc: name of component}
+   PARTITION_NAME: {type: STRING, desc: name of partition}
+   REMAIN_PARTITION_SIZE: {type: UINT64, desc: Remaining size of the partition}
+   FILE_OR_FOLDER_PATH: {type: STRING, arrsize: 100, desc: File or folder path}
+   FILE_OR_FOLDER_SIZE: {type: UINT64, arrsize: 100, desc: File or folder size}
 
 BUNDLE_DYNAMIC_SHORTCUTINFO:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: dynamic shortcutInfo}

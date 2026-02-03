@@ -127,7 +127,6 @@ ohos_shared_library("appexecfwk_core") {
                               "*verify_manager_proxy.cpp",
                               "*verify_manager_stub.cpp",
                             ])
-
   public_configs = [
     "../appexecfwk_base:appexecfwk_base_sdk_config",
     ":appexecfwk_core_config",

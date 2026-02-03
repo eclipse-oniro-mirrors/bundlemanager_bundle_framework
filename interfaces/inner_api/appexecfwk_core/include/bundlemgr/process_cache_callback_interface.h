@@ -32,7 +32,7 @@ public:
 
     /**
      * @brief Called when del all bundle cache files progress finished.
-     * @param succeeded Indicates the result of progress.
+     * @param result Indicates the result of progress.
      */
     virtual void OnCleanAllBundleCacheFinished(int32_t resulted) = 0;
 
