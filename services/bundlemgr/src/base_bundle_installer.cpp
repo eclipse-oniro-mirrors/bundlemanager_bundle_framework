@@ -1486,9 +1486,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = CheckPreAppAllowHdcInstall(installParam, hapVerifyResults);
     CHECK_RESULT(result, "not allowed install os_integration bundle, %{public}d");
 
-    result = CheckShellInstallInOobe();
-    CHECK_RESULT(result, "check shell install in oobe failed %{public}d");
-
     // parse the bundle infos for all haps
     // key is bundlePath , value is innerBundleInfo
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
@@ -4570,17 +4567,6 @@ ErrCode BaseBundleInstaller::CheckShellInstallForEmulator(std::vector<Security::
     return ERR_OK;
 }
 #endif
-
-ErrCode BaseBundleInstaller::CheckShellInstallInOobe()
-{
-    if (sysEventInfo_.callingUid != ServiceConstants::SHELL_UID) {
-        return ERR_OK;
-    }
-    if (!VerifyActivationLockToken()) {
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_NOT_ALLOWED_FOR_SHELL_IN_OOBE;
-    }
-    return ERR_OK;
-}
 
 ErrCode BaseBundleInstaller::ParseHapFiles(
     const std::vector<std::string> &bundlePaths,
@@ -7667,21 +7653,6 @@ bool BaseBundleInstaller::VerifyActivationLock() const
     }
 
     LOG_D(BMS_TAG_INSTALLER, "activation lock pass");
-    // otherwise, pass
-    return true;
-}
-
-bool BaseBundleInstaller::VerifyActivationLockToken() const
-{
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    bool pass = false;
-    ErrCode res = bmsExtensionDataMgr.VerifyActivationLockToken(pass);
-    if ((res == ERR_OK) && !pass) {
-        LOG_E(BMS_TAG_INSTALLER, "oobe phrase, not allow to install in hdc");
-        return false;
-    }
-
-    LOG_D(BMS_TAG_INSTALLER, "activation lock pass not in oobe");
     // otherwise, pass
     return true;
 }
