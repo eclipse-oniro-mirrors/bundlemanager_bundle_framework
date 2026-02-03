@@ -26,6 +26,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace ServiceConstants {
+constexpr const char* SO_PATH_PREFIX = "/data/app/el1/bundle/public/";
 constexpr const char* RETAIL_MODE_KEY = "const.dfx.enable_retail";
 constexpr const char* ASSETS_DIR = "assets";
 constexpr const char* RESOURCES_INDEX = "resources.index";
@@ -233,17 +234,16 @@ constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
 constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
 constexpr const char* CLOUD_SHADER_COMMON_PATH = "/data/local/shader_cache/cloud/common";
 constexpr const char* CLOUD_SHADER_OWNER = "const.appgallery.shaderowner.bundlename";
+
 // new shader
 constexpr int16_t NEW_SHADRE_CACHE_MODE = 02771;
 constexpr int16_t NEW_SHADRE_CACHE_GID = 3099;
 constexpr const char* NEW_SHADER_CACHE_PATH = "/data/app/el1/%/shader_cache/";
 constexpr const char* NEW_CLOUD_SHADER_PATH = "/data/app/el1/public/shader_cache/cloud/";
+
 // shader cache dir in /system_optimize
 constexpr const char* SHADER_CACHE_SUBDIR = "/shader_cache/";
-// apiReleaseType
-constexpr const char* API_RELEASE_TYPE_RELEASE = "Release";
-constexpr const char* API_RELEASE_TYPE_BETA = "Beta";
-constexpr const char* API_RELEASE_TYPE_CANARY = "Canary";
+
 // account constraint
 constexpr const char* CONSTRAINT_APPS_INSTALL = "constraint.bundles.install";
 // allow multi icon bundle
@@ -293,7 +293,6 @@ constexpr const char* UPDATE_PERMISSIONS_FLAG_UPDATED = "updated";
 
 const std::set<std::string> OTA_NEW_INSTALL_BUNDLE_NAME_LIST = {};
 
-constexpr const char* SO_PATH_PREFIX = "/data/app/el1/bundle/public/";
 constexpr const char* EXT_PROFILE = "ext_profile";
 constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
 constexpr const char* MANIFEST_JSON = "manifest.json";

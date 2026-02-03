@@ -18,7 +18,6 @@
 
 #include <set>
 #include <string>
-#include <unordered_set>
 
 #include "app_privilege_capability.h"
 #include "appexecfwk_errors.h"
@@ -126,6 +125,7 @@ public:
         const std::string &configFile, std::vector<RouterItem> &routerArray) const;
 
     static ErrCode ParseNoDisablingList(const std::string &configPath, std::vector<std::string> &noDisablingList);
+
     /**
      * @brief Parse bundleNames by the configFile.
      * @param configFile Indicates the path of configFile.

@@ -1394,6 +1394,7 @@ public:
     {
         return innerBundleUserInfos_;
     }
+
     /**
      * @brief Reset bundle state.
      * @param userId Indicates the userId to set.
@@ -2403,11 +2404,11 @@ public:
         baseApplicationInfo_->multiAppMode = multiAppMode;
     }
 
-    void SetDFXParamStatus();
     int32_t GetApplicationFlags() const
     {
         return baseApplicationInfo_->applicationFlags;
     }
+    void SetDFXParamStatus();
     bool ConvertPluginBundleInfo(const std::string &bundleName, PluginBundleInfo &pluginBundleInfo) const;
     bool AddPluginBundleInfo(const PluginBundleInfo &pluginBundleInfo, const int32_t userId);
     bool RemovePluginBundleInfo(const std::string &pluginBundleName, const int32_t userId);
@@ -2417,9 +2418,9 @@ public:
     void GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos) const;
     std::string GetApplicationArkTSMode() const;
     void UpdateHasCloudkitConfig();
-    int32_t GetModuleSize() const;
     std::vector<HapHashAndDeveloperCert> GetModuleHapHash();
     bool GetModuleDeduplicateHar() const;
+    int32_t GetModuleSize() const;
     std::optional<InnerModuleInfo> GetInnerModuleInfoForEntry() const;
     void SetDelayedAging(bool isDelayAging)
     {

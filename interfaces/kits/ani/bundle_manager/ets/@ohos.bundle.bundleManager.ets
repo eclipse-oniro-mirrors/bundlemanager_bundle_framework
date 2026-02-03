@@ -257,8 +257,6 @@ namespace bundleManager {
 
   native function setApplicationEnabledNative(bundleName: string, isEnabled: boolean, appIndex: int, isSync: boolean): void;
 
-  native function setAbilityFileTypesForSelf(moduleName: string, abilityName: string, fileTypes: Array<string>): void;
-
   native function getDynamicIconNative(bundleName: string): string;
 
   native function queryAbilityInfoWithWantsNative(wants: Array<Want>, abilityFlags: int,
@@ -274,6 +272,16 @@ namespace bundleManager {
   native function enableDynamicIconNative(bundleName: string, moduleName: string, option: BundleOptions): void;
 
   native function cleanBundleCacheFilesForSelfNative(): void;
+
+  native function getPluginBundlePathForSelfNative(pluginBundleName: string): string;
+
+  native function recoverBackupBundleDataNative(bundleName: string, userId: int , appIndex: int): void;
+
+  native function removeBackupBundleDataNative(bundleName: string, userId: int , appIndex: int): void;
+
+  native function getBundleInstallStatusNative(bundleName: string): BundleInstallStatus;
+
+  native function setAbilityFileTypesForSelf(moduleName: string, abilityName: string, fileTypes: Array<string>): void;
 
   function getBundleInfoForSelfSync(bundleFlags: int): BundleInfo {
     return getBundleInfoForSelfNative(bundleFlags, true);
@@ -354,14 +362,6 @@ namespace bundleManager {
   native function getAppCloneIdentityBySandboxDataDir(sandboxDataDir: string): AppCloneIdentity;
 
   native function getAbilityInfoNative(uri: string, abilityFlags: int): Array<AbilityInfo>;
-
-  native function getPluginBundlePathForSelfNative(pluginBundleName: string): string;
-  
-  native function recoverBackupBundleDataNative(bundleName: string, userId: int , appIndex: int): void;
-
-  native function removeBackupBundleDataNative(bundleName: string, userId: int , appIndex: int): void;
-
-  native function getBundleInstallStatusNative(bundleName: string): BundleInstallStatus;
 
   function isApplicationEnabledSync(bundleName: string): boolean {
     return isApplicationEnabledNative(bundleName, 0, true);

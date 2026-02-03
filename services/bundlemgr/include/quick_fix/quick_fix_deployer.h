@@ -131,9 +131,9 @@ private:
     bool isDebug_ = false;
     std::string appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
     std::string targetPath_ = "";
-    bool isReplace_ = false;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
     DeployQuickFixResult deployQuickFixResult_;
+    bool isReplace_ = false;
 
 #define CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(errcode)                           \
     do {                                                                           \
