@@ -120,7 +120,7 @@ bool SystemAbilityHelper::IsAppRunning(const sptr<IAppMgr> appMgrProxy,
     int32_t result = appMgrProxy->IsAppRunning(bundleName, appCloneIndex, userId, running);
     IPCSkeleton::SetCallingIdentity(identity);
     if (result != 0) {
-        APP_LOGW("IsAppRunning failed");
+        APP_LOGW("IsAppRunning failed: %{public}d", result);
     }
     return running;
 }

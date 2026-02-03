@@ -350,10 +350,10 @@ struct Module {
     std::string packageName;
     std::string crossAppSharedConfig;
     std::string appStartup;
-    std::string formExtensionModule;
-    std::string formWidgetModule;
     std::string moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     std::string arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    std::string formExtensionModule;
+    std::string formWidgetModule;
 };
 
 struct ModuleJson {
@@ -2702,10 +2702,10 @@ bool ToInnerModuleInfo(
     innerModuleInfo.packageName = moduleJson.module.packageName;
     innerModuleInfo.crossAppSharedConfig = moduleJson.module.crossAppSharedConfig;
     innerModuleInfo.appStartup = moduleJson.module.appStartup;
-    innerModuleInfo.formExtensionModule = moduleJson.module.formExtensionModule;
-    innerModuleInfo.formWidgetModule = moduleJson.module.formWidgetModule;
     innerModuleInfo.moduleArkTSMode = moduleJson.module.moduleArkTSMode;
     innerModuleInfo.arkTSMode = moduleJson.module.arkTSMode;
+    innerModuleInfo.formExtensionModule = moduleJson.module.formExtensionModule;
+    innerModuleInfo.formWidgetModule = moduleJson.module.formWidgetModule;
     innerModuleInfo.debug = moduleJson.app.debug;
     innerModuleInfo.abilitySrcEntryDelegator = moduleJson.module.abilitySrcEntryDelegator;
     innerModuleInfo.abilityStageSrcEntryDelegator = moduleJson.module.abilityStageSrcEntryDelegator;

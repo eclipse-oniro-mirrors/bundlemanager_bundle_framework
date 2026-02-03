@@ -112,7 +112,7 @@ ErrCode BundleParser::Parse(
         APP_LOGE("bundle extractor init failed");
         return ERR_APPEXECFWK_PARSE_UNEXPECTED;
     }
-    
+
     // check abc is compressed or not
     bundleExtractor.IsHapCompress(isAbcCompressed);
 
@@ -437,6 +437,7 @@ ErrCode BundleParser::ParseArkStartupCacheConfig(
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
+
     PreBundleProfile preBundleProfile;
     return preBundleProfile.TransToArkStartupCacheList(jsonBuf, bundleNames);
 }
