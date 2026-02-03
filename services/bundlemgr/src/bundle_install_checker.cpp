@@ -260,16 +260,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     for (const std::string &bundlePath : bundlePaths) {
         Security::Verify::HapVerifyResult hapVerifyResult;
         ErrCode verifyRes = ERR_OK;
-        if (readFile) {
-            std::string localCertDir = std::string(ServiceConstants::HAP_COPY_PATH) +
-                ServiceConstants::ENTERPRISE_CERT_PATH + std::to_string(userId);
-            if (userId < Constants::START_USERID || !BundleUtil::IsExistDir(localCertDir)) {
-                localCertDir.clear();
-            }
-            verifyRes = Security::Verify::HapVerify(bundlePath, hapVerifyResult, true, localCertDir);
-        } else {
-            verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult, userId);
-        }
+        verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult, readFile, userId);
 #ifndef X86_EMULATOR_MODE
         if (verifyRes != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "hap file verify failed, bundlePath: %{public}s", bundlePath.c_str());

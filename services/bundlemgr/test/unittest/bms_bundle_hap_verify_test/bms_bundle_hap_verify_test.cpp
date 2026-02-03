@@ -181,4 +181,17 @@ HWTEST_F(BmsBundleHapVerifyTest, HapVerify_0100, Function | SmallTest | Level0)
     auto res = BundleVerifyMgr::HapVerify(INSTALL_PATH, result);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: HapVerify_0200
+ * Function: HapVerify
+ * @tc.name: test HapVerify
+ * @tc.desc: HapVerify with readFile true
+ */
+HWTEST_F(BmsBundleHapVerifyTest, HapVerify_0200, Function | SmallTest | Level0)
+{
+    Security::Verify::HapVerifyResult result;
+    auto res = BundleVerifyMgr::HapVerify(INSTALL_PATH, result, true);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // OHOS
