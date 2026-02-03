@@ -1452,11 +1452,16 @@ void CommonFunc::SetAppInstallExtendedInfoHashParam(napi_env env,
 void CommonFunc::SetAppInstallExtendedInfoSharedBundleInfo(napi_env env,
     const AppInstallExtendedInfo &appInstallExtendedInfo, napi_value objAppInstallExtendedInfo)
 {
-    napi_value nSharedBundleInfo;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nSharedBundleInfo));
-    ConvertSharedBundleInfo(env, nSharedBundleInfo, appInstallExtendedInfo.sharedBundleInfo);
+    napi_value nSharedBundleInfos;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nSharedBundleInfos));
+    for (size_t idx = 0; idx < appInstallExtendedInfo.sharedBundleInfos.size(); idx++) {
+        napi_value nSharedBundleInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nSharedBundleInfo));
+        ConvertSharedBundleInfo(env, nSharedBundleInfo, appInstallExtendedInfo.sharedBundleInfos[idx]);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSharedBundleInfos, idx, nSharedBundleInfo));
+    }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInstallExtendedInfo,
-        "sharedBundleInfo", nSharedBundleInfo));
+        "sharedBundleInfo", nSharedBundleInfos));
 }
 
 void CommonFunc::SetAppInstallExtendedInfoRequiredDeviceFeatures(napi_env env,

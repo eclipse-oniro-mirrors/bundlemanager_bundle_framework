@@ -1568,6 +1568,7 @@ private:
     std::unordered_map<std::string, std::set<int32_t>> installingBundleNames_;
 
     static bool HasAppLinkingFlag(uint32_t flags);
+    static bool HasOnlySharedModules(const InnerBundleInfo &innerBundleInfo);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

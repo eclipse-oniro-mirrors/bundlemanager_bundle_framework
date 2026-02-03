@@ -26,10 +26,10 @@ namespace AppExecFwk {
 bool AppInstallExtendedInfo::ReadFromParcel(Parcel &parcel)
 {
     bundleName = Str16ToStr8(parcel.ReadString16());
-    int32_t dataSize;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataSize);
-    CONTAINER_SECURITY_VERIFY(parcel, dataSize, &hashParam);
-    for (int32_t i = 0; i<dataSize; ++i) {
+    int32_t size;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, size);
+    CONTAINER_SECURITY_VERIFY(parcel, size, &hashParam);
+    for (auto i = 0; i < size; i++) {
         std::string key = Str16ToStr8(parcel.ReadString16());
         std::string value = Str16ToStr8(parcel.ReadString16());
         hashParam.emplace(key, value);
@@ -39,84 +39,78 @@ bool AppInstallExtendedInfo::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, crowdtestDeadline);
     installSource = Str16ToStr8(parcel.ReadString16());
     additionalInfo = Str16ToStr8(parcel.ReadString16());
-
-    std::unique_ptr<SharedBundleInfo> sharedBundleInfoPtr(parcel.ReadParcelable<SharedBundleInfo>());
-    if (!sharedBundleInfoPtr) {
-        APP_LOGE("ReadParcelable<SharedBundelInfo> failed");
-        return false;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, size);
+    CONTAINER_SECURITY_VERIFY(parcel, size, &sharedBundleInfos);
+    for (auto i = 0; i < size; i++) {
+        std::unique_ptr<SharedBundleInfo> info(parcel.ReadParcelable<SharedBundleInfo>());
+        if (!info) {
+            APP_LOGE("ReadParcelable<SharedBundleInfo> failed");
+            return false;
+        }
+        sharedBundleInfos.emplace_back(*info);
     }
-    sharedBundleInfo = *sharedBundleInfoPtr;
-
-    int32_t outerSize;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, outerSize);
-    CONTAINER_SECURITY_VERIFY(parcel, outerSize, &requiredDeviceFeatures);
-    for (int32_t i = 0; i < outerSize; ++i) {
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, size);
+    CONTAINER_SECURITY_VERIFY(parcel, size, &requiredDeviceFeatures);
+    for (auto i = 0; i < size; i++) {
         std::string outerKey = Str16ToStr8(parcel.ReadString16());
         int32_t innerSize;
         READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, innerSize);
         std::map<std::string, std::vector<std::string>> innerMap;
-        for (int32_t j = 0; j < innerSize; ++j) {
+        CONTAINER_SECURITY_VERIFY(parcel, innerSize, &innerMap);
+        for (auto j = 0; j < innerSize; j++) {
             std::string innerKey = Str16ToStr8(parcel.ReadString16());
             int32_t vecSize;
             READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, vecSize);
             std::vector<std::string> vec;
-            for (int32_t k = 0; k < vecSize; ++k) {
-                vec.push_back(Str16ToStr8(parcel.ReadString16()));
+            CONTAINER_SECURITY_VERIFY(parcel, vecSize, &vec);
+            for (auto k = 0; k < vecSize; k++) {
+                vec.emplace_back(Str16ToStr8(parcel.ReadString16()));
             }
-            innerMap[innerKey] = vec;
+            innerMap.emplace(innerKey, vec);
         }
-        requiredDeviceFeatures[outerKey] = innerMap;
+        requiredDeviceFeatures.emplace(outerKey, innerMap);
     }
-
-    // read hapPath
-    int32_t hapPathSize;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapPathSize);
-    CONTAINER_SECURITY_VERIFY(parcel, hapPathSize, &hapPath);
-    for (int32_t i = 0; i < hapPathSize; ++i) {
-        hapPath.push_back(Str16ToStr8(parcel.ReadString16()));
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, size);
+    CONTAINER_SECURITY_VERIFY(parcel, size, &hapPath);
+    for (auto i = 0; i < size; i++) {
+        hapPath.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
-
     return true;
 }
 
 bool AppInstallExtendedInfo::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(hashParam.size()));
-    for (const auto &dataItem : hashParam) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.first));
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.second));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hashParam.size());
+    for (const auto &[key, value] : hashParam) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(key));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(value));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(specifiedDistributionType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, compatibleVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, crowdtestDeadline);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(installSource));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(additionalInfo));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &sharedBundleInfo);
-
-    int32_t outerSize = static_cast<int32_t>(requiredDeviceFeatures.size());
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, outerSize);
-    for (const auto& outerPair : requiredDeviceFeatures) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(outerPair.first));
-        int32_t innerSize = static_cast<int32_t>(outerPair.second.size());
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, innerSize);
-        for (const auto& innerPair : outerPair.second) {
-            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(innerPair.first));
-            int32_t vecSize = static_cast<int32_t>(innerPair.second.size());
-            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, vecSize);
-            for (const auto& item : innerPair.second) {
-                WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sharedBundleInfos.size());
+    for (const auto &info : sharedBundleInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &info);
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, requiredDeviceFeatures.size());
+    for (const auto &[outerKey, innerMap] : requiredDeviceFeatures) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(outerKey));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, innerMap.size());
+        for (const auto &[innerKey, vec] : innerMap) {
+            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(innerKey));
+            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, vec.size());
+            for (const auto &str : vec) {
+                WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(str));
             }
         }
     }
-
-    // write hapPath
-    int32_t hapPathSize = static_cast<int32_t>(hapPath.size());
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapPathSize);
-    for (const auto& path : hapPath) {
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapPath.size());
+    for (const auto &path : hapPath) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(path));
     }
-
     return true;
 }
 
