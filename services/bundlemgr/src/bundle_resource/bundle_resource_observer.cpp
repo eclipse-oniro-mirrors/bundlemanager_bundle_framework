@@ -19,7 +19,6 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_resource_callback.h"
-#include "bundle_resource_constants.h"
 #include "bundle_system_state.h"
 
 #ifdef ABILITY_RUNTIME_ENABLE

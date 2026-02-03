@@ -83,6 +83,7 @@
 
 #include "router_data_storage_rdb.h"
 #include "shortcut_data_storage_rdb.h"
+#include "system_ability_definition.h"
 #include "system_ability_helper.h"
 #include "ohos_account_kits.h"
 #include "xcollie_helper.h"
@@ -532,30 +533,6 @@ bool BundleDataMgr::RemoveModuleInfo(
     return true;
 }
 
-bool BundleDataMgr::UpdateUninstallBundleInfo(const std::string &bundleName,
-    const UninstallBundleInfo &uninstallBundleInfo)
-{
-    if (uninstallDataMgr_ == nullptr) {
-        APP_LOGE("rdbDataManager is null");
-        return false;
-    }
-    if (bundleName.empty() || uninstallBundleInfo.userInfos.empty()) {
-        APP_LOGE("param error");
-        return false;
-    }
-    UninstallBundleInfo oldUninstallBundleInfo;
-    if (uninstallDataMgr_->GetUninstallBundleInfo(bundleName, oldUninstallBundleInfo)) {
-        std::string newUser = uninstallBundleInfo.userInfos.begin()->first;
-        if (oldUninstallBundleInfo.userInfos.find(newUser) != oldUninstallBundleInfo.userInfos.end()) {
-            APP_LOGE("u %{public}s has been saved", newUser.c_str());
-            return false;
-        }
-        oldUninstallBundleInfo.userInfos[newUser] = uninstallBundleInfo.userInfos.begin()->second;
-        return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, oldUninstallBundleInfo);
-    }
-    return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
-}
-
 bool BundleDataMgr::GetUninstallBundleInfoWithUserAndAppIndex(const std::string &bundleName,
     int32_t userId, int32_t appIndex) const
 {
@@ -581,6 +558,30 @@ bool BundleDataMgr::GetUninstallBundleInfoWithUserAndAppIndex(const std::string 
         return false;
     }
     return true;
+}
+
+bool BundleDataMgr::UpdateUninstallBundleInfo(const std::string &bundleName,
+    const UninstallBundleInfo &uninstallBundleInfo)
+{
+    if (uninstallDataMgr_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    if (bundleName.empty() || uninstallBundleInfo.userInfos.empty()) {
+        APP_LOGE("param error");
+        return false;
+    }
+    UninstallBundleInfo oldUninstallBundleInfo;
+    if (uninstallDataMgr_->GetUninstallBundleInfo(bundleName, oldUninstallBundleInfo)) {
+        std::string newUser = uninstallBundleInfo.userInfos.begin()->first;
+        if (oldUninstallBundleInfo.userInfos.find(newUser) != oldUninstallBundleInfo.userInfos.end()) {
+            APP_LOGE("u %{public}s has been saved", newUser.c_str());
+            return false;
+        }
+        oldUninstallBundleInfo.userInfos[newUser] = uninstallBundleInfo.userInfos.begin()->second;
+        return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, oldUninstallBundleInfo);
+    }
+    return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
 }
 
 bool BundleDataMgr::GetUninstallBundleInfo(const std::string &bundleName,
@@ -3373,7 +3374,7 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag,
         std::string routerPath = hapModuleInfo.routerMap;
         auto pos = routerPath.find(PROFILE_PREFIX);
         if (pos == std::string::npos) {
-            APP_LOGD("invalid router profile");
+            APP_LOGD("invalid router map profile");
             continue;
         }
         if (!routerStorage_->GetRouterInfo(bundleInfo.name, hapModuleInfo.moduleName,
@@ -3382,6 +3383,7 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag,
             continue;
         }
     }
+
     // get plugin router info
     std::vector<RouterItem> pluginRouterInfos;
     GetRouterInfoForPlugin(bundleInfo.name, userId, pluginRouterInfos);
@@ -8201,6 +8203,7 @@ bool BundleDataMgr::GetElement(int32_t userId, const int32_t appIndex, const Ele
             return true;
         }
     }
+
     APP_LOGW("ElementName doesn't exist");
     return false;
 }
@@ -9660,7 +9663,8 @@ void BundleDataMgr::DeleteUserDataGroupInfos(const std::string &bundleName, int3
     }
 }
 
-void BundleDataMgr::GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
+void BundleDataMgr::GetDataGroupIndexMap(
+    std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
     std::unordered_set<int32_t> &uniqueIdSet) const
 {
     for (const auto &bundleInfo : bundleInfos_) {
@@ -10848,67 +10852,6 @@ ErrCode BundleDataMgr::AddCloneBundle(const std::string &bundleName, const Inner
     return ERR_OK;
 }
 
-void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
-    std::vector<AbilityInfo> &abilityInfos) const
-{
-#ifdef APP_DOMAIN_VERIFY_ENABLED
-    APP_LOGD("FilterAbility start");
-    if (abilityInfos.empty()) {
-        APP_LOGD("abilityInfos is empty");
-        return;
-    }
-    if (want.GetUriString().rfind(SCHEME_HTTPS, 0) != 0) {
-        APP_LOGD("scheme is not https");
-        if (HasAppLinkingFlag(static_cast<uint32_t>(flags))) {
-            APP_LOGI("using app linking flag and scheme is not https, return empty list");
-            abilityInfos.clear();
-        }
-        return;
-    }
-    std::vector<AbilityInfo> filteredAbilityInfos;
-    // call FiltedAbilityInfos
-    APP_LOGI("call FilterAbilities");
-    std::string identity = IPCSkeleton::ResetCallingIdentity();
-    if (!DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->FilterAbilities(
-        want, abilityInfos, filteredAbilityInfos)) {
-        APP_LOGE("FilterAbilities failed");
-    }
-    IPCSkeleton::SetCallingIdentity(identity);
-    if (HasAppLinkingFlag(static_cast<uint32_t>(flags))) {
-        APP_LOGD("return filteredAbilityInfos");
-        abilityInfos = filteredAbilityInfos;
-        for (auto &abilityInfo : abilityInfos) {
-            abilityInfo.linkType = LinkType::APP_LINK;
-        }
-        return;
-    }
-    for (auto &filteredAbilityInfo : filteredAbilityInfos) {
-        for (auto &abilityInfo : abilityInfos) {
-            if (filteredAbilityInfo.bundleName == abilityInfo.bundleName &&
-                filteredAbilityInfo.name == abilityInfo.name &&
-                filteredAbilityInfo.appIndex == abilityInfo.appIndex) {
-                abilityInfo.linkType = LinkType::APP_LINK;
-                break;
-            }
-        }
-    }
-    return;
-#else
-    APP_LOGI("AppDomainVerify is not enabled");
-    if (HasAppLinkingFlag(static_cast<uint32_t>(flags))) {
-        APP_LOGI("has flag and return empty list");
-        abilityInfos.clear();
-    }
-    return;
-#endif
-}
-
-bool BundleDataMgr::HasAppLinkingFlag(uint32_t flags)
-{
-    return (flags & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING);
-}
-
 ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex)
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -10997,6 +10940,67 @@ ErrCode BundleDataMgr::QueryAbilityInfoByContinueType(const std::string &bundleN
         abilityInfo.uid = innerBundleUserInfoPtr->uid;
     }
     return ERR_OK;
+}
+
+void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
+    std::vector<AbilityInfo> &abilityInfos) const
+{
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+    APP_LOGD("FilterAbility start");
+    if (abilityInfos.empty()) {
+        APP_LOGD("abilityInfos is empty");
+        return;
+    }
+    if (want.GetUriString().rfind(SCHEME_HTTPS, 0) != 0) {
+        APP_LOGD("scheme is not https");
+        if (HasAppLinkingFlag(static_cast<uint32_t>(flags))) {
+            APP_LOGI("using app linking flag and scheme is not https, return empty list");
+            abilityInfos.clear();
+        }
+        return;
+    }
+    std::vector<AbilityInfo> filteredAbilityInfos;
+    // call FiltedAbilityInfos
+    APP_LOGI("call FilterAbilities");
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    if (!DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->FilterAbilities(
+        want, abilityInfos, filteredAbilityInfos)) {
+        APP_LOGE("FilterAbilities failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+    if (HasAppLinkingFlag(static_cast<uint32_t>(flags))) {
+        APP_LOGD("return filteredAbilityInfos");
+        abilityInfos = filteredAbilityInfos;
+        for (auto &abilityInfo : abilityInfos) {
+            abilityInfo.linkType = LinkType::APP_LINK;
+        }
+        return;
+    }
+    for (auto &filteredAbilityInfo : filteredAbilityInfos) {
+        for (auto &abilityInfo : abilityInfos) {
+            if (filteredAbilityInfo.bundleName == abilityInfo.bundleName &&
+                filteredAbilityInfo.name == abilityInfo.name &&
+                filteredAbilityInfo.appIndex == abilityInfo.appIndex) {
+                abilityInfo.linkType = LinkType::APP_LINK;
+                break;
+            }
+        }
+    }
+    return;
+#else
+    APP_LOGI("AppDomainVerify is not enabled");
+    if (HasAppLinkingFlag(static_cast<uint32_t>(flags))) {
+        APP_LOGI("has flag and return empty list");
+        abilityInfos.clear();
+    }
+    return;
+#endif
+}
+
+bool BundleDataMgr::HasAppLinkingFlag(uint32_t flags)
+{
+    return (flags & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING);
 }
 
 ErrCode BundleDataMgr::QueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
@@ -12473,6 +12477,134 @@ ErrCode BundleDataMgr::DeleteShortcutVisibleInfo(const std::string &bundleName, 
     return ERR_OK;
 }
 
+bool BundleDataMgr::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion, const int32_t patchVersion)
+{
+    if (platformVersion > ServiceConstants::API_VERSION_MAX || platformVersion < 1) {
+        APP_LOGE("GreatOrEqualTargetAPIVersion Error, platformVersion is invalid: %{public}d", platformVersion);
+        return false;
+    }
+    if (minorVersion > ServiceConstants::API_VERSION_MAX || minorVersion < 0) {
+        APP_LOGE("GreatOrEqualTargetAPIVersion Error, minorVersion is invalid: %{public}d", minorVersion);
+        return false;
+    }
+    if (patchVersion > ServiceConstants::API_VERSION_MAX || patchVersion < 0) {
+        APP_LOGE("GreatOrEqualTargetAPIVersion Error, patchVersion is invalid: %{public}d", patchVersion);
+        return false;
+    }
+
+    BundleInfo bundleInfo;
+    auto ret = GetBundleInfoForSelf(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GreatOrEqualTargetAPIVersion, GetBundleInfoForSelf fail");
+        return false;
+    }
+
+    APP_LOGD("BundleDataMgr::GreatOrEqualTargetAPIVersion, name: %{public}s, major: %{public}d, minor: %{public}d, patch: %{public}d",
+        bundleInfo.name.c_str(), (bundleInfo.targetVersion % ServiceConstants::API_VERSION_MOD),
+        bundleInfo.targetMinorApiVersion, bundleInfo.targetPatchApiVersion);
+    if (static_cast<uint32_t>(platformVersion) != (bundleInfo.targetVersion % ServiceConstants::API_VERSION_MOD)) {
+        return static_cast<uint32_t>(platformVersion) < (bundleInfo.targetVersion % ServiceConstants::API_VERSION_MOD);
+    }
+
+    if (minorVersion != bundleInfo.targetMinorApiVersion) {
+        return minorVersion < bundleInfo.targetMinorApiVersion;
+    }
+    return patchVersion <= bundleInfo.targetPatchApiVersion;
+}
+
+std::string BundleDataMgr::GenerateUuid() const
+{
+    auto currentTime = std::chrono::system_clock::now();
+    auto timestampNanoseconds =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
+
+    // convert nanosecond timestamps to string
+    std::string timeStr = std::to_string(timestampNanoseconds);
+
+    char deviceId[UUID_LENGTH_MAX] = { 0 };
+    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
+    std::string deviceUdid;
+    if (ret != 0) {
+        APP_LOGW("GetDevUdid failed");
+    } else {
+        deviceUdid = std::string{ deviceId };
+    }
+
+    std::string message = timeStr + deviceUdid;
+    std::string uuid = OHOS::Security::Verify::GenerateUuidByKey(message);
+    return uuid;
+}
+
+std::string BundleDataMgr::GenerateUuidByKey(const std::string &key) const
+{
+    char deviceId[UUID_LENGTH_MAX] = { 0 };
+    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
+    std::string deviceUdid;
+    if (ret != 0) {
+        APP_LOGW("GetDevUdid failed");
+    } else {
+        deviceUdid = std::string{ deviceId };
+    }
+
+    std::string message = key + deviceUdid;
+    return OHOS::Security::Verify::GenerateUuidByKey(message);
+}
+
+void BundleDataMgr::FilterShortcutJson(nlohmann::json &jsonResult)
+{
+    if (!jsonResult.is_array()) {
+        APP_LOGE("Invalid JSON format: expected array");
+        return;
+    }
+    for (auto it = jsonResult.begin(); it != jsonResult.end();) {
+        if (!it->contains(BUNDLE_NAME) || !it->at(BUNDLE_NAME).is_string()) {
+            it = jsonResult.erase(it);
+            continue;
+        }
+        if (!it->contains(APP_INDEX) || !it->at(APP_INDEX).is_number()) {
+            it = jsonResult.erase(it);
+            continue;
+        }
+        if (!it->contains(USER_ID) || !it->at(USER_ID).is_number()) {
+            it = jsonResult.erase(it);
+            continue;
+        }
+        int32_t userId = (*it)[USER_ID].get<int>();
+        if (userId != Constants::START_USERID) {
+            std::string bundleName = (*it)[BUNDLE_NAME].get<std::string>();
+            int32_t appIndex = (*it)[APP_INDEX].get<int>();
+            APP_LOGW("userId %{public}d is not supported for clone %{public}s %{public}d",
+                userId, bundleName.c_str(), appIndex);
+            it = jsonResult.erase(it);
+            continue;
+        }
+        ++it;
+    }
+}
+
+void BundleDataMgr::UpdateShortcutInfos(const std::string &bundleName)
+{
+    APP_LOGD("UpdateShortcutInfos begin");
+    std::vector<ShortcutInfo> shortcutInfos;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto iter = bundleInfos_.find(bundleName);
+        if (iter != bundleInfos_.end()) {
+            GetShortcutInfosByInnerBundleInfo(iter->second, shortcutInfos);
+        } else {
+            APP_LOGE("%{public}s not exist", bundleName.c_str());
+            return;
+        }
+    }
+    if (shortcutInfos.empty()) {
+        shortcutEnabledStorage_->DeleteShortcutEnabledInfo(bundleName);
+        return;
+    } else {
+        shortcutStorage_->UpdateDesktopShortcutInfo(bundleName, shortcutInfos);
+        shortcutEnabledStorage_->UpdateShortcutEnabledInfo(bundleName, shortcutInfos);
+    }
+}
+
 ErrCode BundleDataMgr::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos)
 {
     APP_LOGD("GetAllShortcutInfoForSelf begin");
@@ -12665,79 +12797,6 @@ ErrCode BundleDataMgr::DeleteDynamicShortcutInfos(const std::string &bundleName,
     return ERR_OK;
 }
 
-bool BundleDataMgr::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion, const int32_t patchVersion)
-{
-    if (platformVersion > ServiceConstants::API_VERSION_MAX || platformVersion < 1) {
-        APP_LOGE("GreatOrEqualTargetAPIVersion Error, platformVersion is invalid: %{public}d", platformVersion);
-        return false;
-    }
-    if (minorVersion > ServiceConstants::API_VERSION_MAX || minorVersion < 0) {
-        APP_LOGE("GreatOrEqualTargetAPIVersion Error, minorVersion is invalid: %{public}d", minorVersion);
-        return false;
-    }
-    if (patchVersion > ServiceConstants::API_VERSION_MAX || patchVersion < 0) {
-        APP_LOGE("GreatOrEqualTargetAPIVersion Error, patchVersion is invalid: %{public}d", patchVersion);
-        return false;
-    }
-
-    BundleInfo bundleInfo;
-    auto ret = GetBundleInfoForSelf(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfo);
-    if (ret != ERR_OK) {
-        APP_LOGE("GreatOrEqualTargetAPIVersion, GetBundleInfoForSelf fail");
-        return false;
-    }
-
-    APP_LOGE("BundleDataMgr::GreatOrEqualTargetAPIVersion, name: %{public}s, major: %{public}d, minor: %{public}d, patch: %{public}d",
-        bundleInfo.name.c_str(), (bundleInfo.targetVersion % ServiceConstants::API_VERSION_MOD),
-        bundleInfo.targetMinorApiVersion, bundleInfo.targetPatchApiVersion);
-    if (static_cast<uint32_t>(platformVersion) != (bundleInfo.targetVersion % ServiceConstants::API_VERSION_MOD)) {
-        return static_cast<uint32_t>(platformVersion) < (bundleInfo.targetVersion % ServiceConstants::API_VERSION_MOD);
-    }
-
-    if (minorVersion != bundleInfo.targetMinorApiVersion) {
-        return minorVersion < bundleInfo.targetMinorApiVersion;
-    }
-    return patchVersion <= bundleInfo.targetPatchApiVersion;
-}
-
-std::string BundleDataMgr::GenerateUuid() const
-{
-    auto currentTime = std::chrono::system_clock::now();
-    auto timestampNanoseconds =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
-
-    // convert nanosecond timestamps to string
-    std::string timeStr = std::to_string(timestampNanoseconds);
-
-    char deviceId[UUID_LENGTH_MAX] = { 0 };
-    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
-    std::string deviceUdid;
-    if (ret != 0) {
-        APP_LOGW("GetDevUdid failed");
-    } else {
-        deviceUdid = std::string{ deviceId };
-    }
-
-    std::string message = timeStr + deviceUdid;
-    std::string uuid = OHOS::Security::Verify::GenerateUuidByKey(message);
-    return uuid;
-}
-
-std::string BundleDataMgr::GenerateUuidByKey(const std::string &key) const
-{
-    char deviceId[UUID_LENGTH_MAX] = { 0 };
-    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
-    std::string deviceUdid;
-    if (ret != 0) {
-        APP_LOGW("GetDevUdid failed");
-    } else {
-        deviceUdid = std::string{ deviceId };
-    }
-
-    std::string message = key + deviceUdid;
-    return OHOS::Security::Verify::GenerateUuidByKey(message);
-}
-
 ErrCode BundleDataMgr::GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32_t userId,
     std::unordered_map<std::string, std::vector<std::pair<int32_t, int32_t>>> &cloneInfos) const
 {
@@ -12761,61 +12820,6 @@ ErrCode BundleDataMgr::GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32
         }
     }
     return ERR_OK;
-}
-
-void BundleDataMgr::FilterShortcutJson(nlohmann::json &jsonResult)
-{
-    if (!jsonResult.is_array()) {
-        APP_LOGE("Invalid JSON format: expected array");
-        return;
-    }
-    for (auto it = jsonResult.begin(); it != jsonResult.end();) {
-        if (!it->contains(BUNDLE_NAME) || !it->at(BUNDLE_NAME).is_string()) {
-            it = jsonResult.erase(it);
-            continue;
-        }
-        if (!it->contains(APP_INDEX) || !it->at(APP_INDEX).is_number()) {
-            it = jsonResult.erase(it);
-            continue;
-        }
-        if (!it->contains(USER_ID) || !it->at(USER_ID).is_number()) {
-            it = jsonResult.erase(it);
-            continue;
-        }
-        int32_t userId = (*it)[USER_ID].get<int>();
-        if (userId != Constants::START_USERID) {
-            std::string bundleName = (*it)[BUNDLE_NAME].get<std::string>();
-            int32_t appIndex = (*it)[APP_INDEX].get<int>();
-            APP_LOGW("userId %{public}d is not supported for clone %{public}s %{public}d",
-                userId, bundleName.c_str(), appIndex);
-            it = jsonResult.erase(it);
-            continue;
-        }
-        ++it;
-    }
-}
-
-void BundleDataMgr::UpdateShortcutInfos(const std::string &bundleName)
-{
-    APP_LOGD("UpdateShortcutInfos begin");
-    std::vector<ShortcutInfo> shortcutInfos;
-    {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        auto iter = bundleInfos_.find(bundleName);
-        if (iter != bundleInfos_.end()) {
-            GetShortcutInfosByInnerBundleInfo(iter->second, shortcutInfos);
-        } else {
-            APP_LOGE("%{public}s not exist", bundleName.c_str());
-            return;
-        }
-    }
-    if (shortcutInfos.empty()) {
-        shortcutEnabledStorage_->DeleteShortcutEnabledInfo(bundleName);
-        return;
-    } else {
-        shortcutStorage_->UpdateDesktopShortcutInfo(bundleName, shortcutInfos);
-        shortcutEnabledStorage_->UpdateShortcutEnabledInfo(bundleName, shortcutInfos);
-    }
 }
 
 ErrCode BundleDataMgr::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
