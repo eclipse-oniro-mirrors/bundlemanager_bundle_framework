@@ -137,6 +137,7 @@ bool BundleResourceIconRdb::DeleteResourceIconInfo(const std::string &bundleName
         key = std::to_string(appIndex) + BundleResourceConstants::UNDER_LINE + bundleName;
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME);
+    // need delete both bundle resource and launcher ability resource
     /**
      * key:
      * appIndex_bundleName
@@ -170,6 +171,7 @@ bool BundleResourceIconRdb::DeleteResourceIconInfos(const std::string &bundleNam
     APP_LOGD("need delete resource info, -n %{public}s, -u %{public}d, -t %{public}d",
         bundleName.c_str(), userId, static_cast<int32_t>(type));
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME);
+    // need delete both bundle resource and launcher ability resource
     /**
      * key:
      * bundleName
@@ -207,6 +209,7 @@ bool BundleResourceIconRdb::DeleteResourceIconInfos(const std::string &bundleNam
 
 bool BundleResourceIconRdb::DeleteResourceIconInfos(const std::string &bundleName, const IconResourceType type)
 {
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     return DeleteResourceIconInfos(bundleName, Constants::UNSPECIFIED_USERID, type);
 }
 

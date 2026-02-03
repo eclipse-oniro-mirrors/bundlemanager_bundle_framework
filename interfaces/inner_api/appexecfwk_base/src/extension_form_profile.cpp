@@ -67,8 +67,7 @@ constexpr const char* DIMENSION_MAP_KEY[] = {
     "1*1",
     "6*4",
     "2*3",
-    "3*3",
-    "3*4"
+    "3*3"
 };
 const int32_t DIMENSION_MAP_VALUE[] = {
     1,
@@ -581,10 +580,11 @@ bool CheckFormNameIsValid(const std::string &name)
     return true;
 }
 
-void supportFormDimension(std::set<int32_t> &supportDimensionSet, const ExtensionFormProfileInfo &form)
+bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
-    size_t i = 0;
+    std::set<int32_t> supportDimensionSet {};
     size_t len = sizeof(DIMENSION_MAP_KEY) / sizeof(DIMENSION_MAP_KEY[0]);
+    size_t i = 0;
     for (const auto &dimension: form.supportDimensions) {
         for (i = 0; i < len; i++) {
             if (DIMENSION_MAP_KEY[i] == dimension) {
@@ -595,7 +595,7 @@ void supportFormDimension(std::set<int32_t> &supportDimensionSet, const Extensio
             APP_LOGW("dimension invalid form %{public}s", form.name.c_str());
             continue;
         }
-
+                
         int32_t dimensionItem = DIMENSION_MAP_VALUE[i];
         #ifndef FORM_DIMENSION_2_3
             if (dimensionItem == DIMENSION_2_3) {
@@ -610,23 +610,14 @@ void supportFormDimension(std::set<int32_t> &supportDimensionSet, const Extensio
                 continue;
             }
         #endif
-        
+
         supportDimensionSet.emplace(dimensionItem);
     }
-}
-
-bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
-{
-    std::set<int32_t> supportDimensionSet {};
-    size_t len = sizeof(DIMENSION_MAP_KEY) / sizeof(DIMENSION_MAP_KEY[0]);
-    size_t i = 0;
-    supportFormDimension(supportDimensionSet, form);
     for (i = 0; i < len; i++) {
         if (DIMENSION_MAP_KEY[i] == form.defaultDimension) {
             break;
         }
     }
-
     if (i == len) {
         APP_LOGW("defaultDimension invalid form %{public}s", form.name.c_str());
         return false;
@@ -801,7 +792,7 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
         }
     }
     info.sceneAnimationParams.disabledDesktopBehaviors = oss.str();
-
+ 
     size_t len = sizeof(FORM_COLOR_MODE_MAP_KEY) / sizeof(FORM_COLOR_MODE_MAP_KEY[0]);
     for (size_t i = 0; i < len; i++) {
         if (FORM_COLOR_MODE_MAP_KEY[i] == form.colorMode) {
@@ -859,9 +850,6 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     info.enableBlurBackground = form.enableBlurBackground;
     LOG_NOFUNC_I(BMS_TAG_COMMON, "form name: %{public}s enableBlurBackground: %{public}d",
         info.name.c_str(), info.enableBlurBackground);
-    if (info.enableBlurBackground) {
-        info.transparencyEnabled = true;
-    }
     return true;
 }
 

@@ -128,7 +128,6 @@ private:
 
 private:
     void Init();
-    void OnDeath();
     static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr();
 
     std::shared_ptr<BundleMonitor> bundleMonitor_ = nullptr;

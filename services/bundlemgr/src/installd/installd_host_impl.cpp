@@ -545,8 +545,8 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     }
     if (createDirParam.bundleName.empty() || createDirParam.userId < 0 ||
         createDirParam.uid < 0 || createDirParam.gid < 0) {
-        LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir invalid param, bundleName %{public}s "
-            "userId %{public}d uid %{public}d gid %{public}d", createDirParam.bundleName.c_str(),
+        LOG_E(BMS_TAG_INSTALLD, "param -n %{public}s -u %{public}d -uid %{public}d -gid %{public}d",
+            createDirParam.bundleName.c_str(),
             createDirParam.userId, createDirParam.uid, createDirParam.gid);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }

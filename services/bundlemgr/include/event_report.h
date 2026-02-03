@@ -56,8 +56,8 @@ enum class BMSEventType : uint8_t {
     BMS_DISK_SPACE,
     APP_CONTROL_RULE,
     DB_ERROR,
-    DATA_PARTITION_USAGE_EVENT,
     DEFAULT_APP,
+    DATA_PARTITION_USAGE_EVENT,
     QUERY_BUNDLE_INFO,
     BUNDLE_DYNAMIC_SHORTCUTINFO,
     DESKTOP_SHORTCUT,
@@ -425,7 +425,7 @@ public:
      * @param eventInfo event info.
      */
     static EventInfo ProcessIsIntercepted(const EventInfo &eventInfo);
-    
+
     /**
      * @brief Send info when set or reset default app.
      * @param actionType set default app method type.

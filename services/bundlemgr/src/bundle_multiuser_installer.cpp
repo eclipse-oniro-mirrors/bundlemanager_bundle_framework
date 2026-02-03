@@ -290,7 +290,7 @@ ErrCode BundleMultiUserInstaller::RemoveDataDir(const std::string bundleName, in
     if (GetDataMgr() != ERR_OK) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    if (dataMgr_ -> GetUninstallBundleInfoWithUserAndAppIndex(bundleName, userId, Constants::INITIAL_APP_INDEX)) {
+    if (dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName, userId, Constants::INITIAL_APP_INDEX)) {
         return ERR_OK;
     }
     std::string key = bundleName;

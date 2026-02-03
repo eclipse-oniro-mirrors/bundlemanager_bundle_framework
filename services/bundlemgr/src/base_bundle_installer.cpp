@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -75,6 +75,7 @@
 #include "storage_manager_proxy.h"
 #endif
 #include "iservice_registry.h"
+#include "ipc_skeleton.h"
 #include "inner_bundle_clone_common.h"
 #include "inner_patch_info.h"
 #include "patch_data_mgr.h"
@@ -1548,7 +1549,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // check the dependencies whether or not exists
     result = CheckDependency(newInfos, sharedBundleInstaller);
     CHECK_RESULT(result, "check dependency failed %{public}d");
-    
     // hapVerifyResults at here will not be empty
     verifyRes_ = hapVerifyResults[0];
 
@@ -1636,6 +1636,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!InitTempBundleFromCache(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INIT_INSTALL_TEMP_BUNDLE_ERROR;
     }
+    bool oldAppHasKey = oldInfo.GetApplicationReservedFlag() &
+        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED);
+    ScopeGuard encrytedKeyGuard([&] { dataMgr_->UpdateAppEncryptedStatus(bundleName_, oldAppHasKey, 0, false); });
+    dataMgr_->UpdateAppEncryptedStatus(bundleName_, false, 0, false);
     // check AppDistributionType
     result = CheckAppDistributionType();
     CHECK_RESULT(result, "check app distribution type info failed %{public}d");
@@ -1731,6 +1735,21 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         tempInfo_.SetTempBundleInfo(cacheInfo);
     }
 #endif
+    // process ark startup cache
+    std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
+        bundleName_ + ServiceConstants::ARK_STARTUP_CACHE_DIR;
+    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+        std::to_string(userId_));
+    ArkStartupCache ceateArk;
+    ceateArk.bundleName = bundleName_;
+    ceateArk.bundleType = oldInfo.GetApplicationBundleType();
+    ceateArk.cacheDir = el1ArkStartupCachePath;
+    ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
+    InnerBundleUserInfo newInnerBundleUserInfo;
+    cacheInfo.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo);
+    ceateArk.uid = newInnerBundleUserInfo.uid;
+    ceateArk.gid = newInnerBundleUserInfo.uid;
+    ProcessArkStartupCache(ceateArk, cacheInfo.GetModuleSize(), userId_);
     UpdateEncryptedStatus(oldInfo);
     GetInstallEventInfo(cacheInfo, sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
@@ -2200,8 +2219,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // remove drive so file
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     driverInstaller->RemoveDriverSoFile(oldInfo, "", false);
+    BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, false);
+    DeleteRouterInfo(oldInfo);
+    // remove profile from code signature
+    RemoveProfileFromCodeSign(bundleName);
+    DeleteEncryptedStatus(bundleName, uid);
+    ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
     if (oldInfo.IsPreInstallApp() && (oldInfo.IsRemovable() || isForcedUninstall)) {
-        LOG_I(BMS_TAG_INSTALLER, "Pre-installed app %{public}s detected, Marking as uninstalled", bundleName.c_str());
         MarkPreInstallState(bundleName, true);
         if (isForcedUninstall) {
             LOG_I(BMS_TAG_INSTALLER, "Pre-installed app %{public}s detected, Marking as force uninstalled",
@@ -2210,12 +2234,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         }
     }
 
-    DeleteEncryptedStatus(bundleName, uid);
-    BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, false);
-    DeleteRouterInfo(oldInfo);
-    // remove profile from code signature
-    RemoveProfileFromCodeSign(bundleName);
-    ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
     UninstallDebugAppSandbox(bundleName, uid, oldInfo);
     if (!PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName)) {
         LOG_E(BMS_TAG_INSTALLER, "DeleteInnerPatchInfo failed, bundleName: %{public}s", bundleName.c_str());
@@ -3666,7 +3684,6 @@ void BaseBundleInstaller::ParseSizeFromProvision(
 
 ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
 {
-    LOG_I(BMS_TAG_INSTALLER, "start");
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
@@ -4986,13 +5003,13 @@ void BaseBundleInstaller::UpdateDeveloperId(
 void BaseBundleInstaller::GetDataGroupIds(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
     std::unordered_set<std::string> &groupIds)
 {
-    for (size_t i = 0; i < hapVerifyRes.size(); i++) {
+    for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
-        auto dataGroupIds = provisionInfo.bundleInfo.dataGroupIds;
-        if (dataGroupIds.empty()) {
+        auto dataGroupGids = provisionInfo.bundleInfo.dataGroupIds;
+        if (dataGroupGids.empty()) {
             continue;
         }
-        for (const std::string &id : dataGroupIds) {
+        for (const std::string &id : dataGroupGids) {
             groupIds.insert(id);
         }
     }
@@ -7039,6 +7056,7 @@ ErrCode BaseBundleInstaller::CheckBundleInBmsExtension(const std::string &bundle
 
 void BaseBundleInstaller::RemoveTempSoDir(const std::string &tempSoDir)
 {
+    LOG_D(BMS_TAG_INSTALLER, "tempSoDir is %{public}s", tempSoDir.c_str());
     auto firstPos = tempSoDir.find(ServiceConstants::TMP_SUFFIX);
     if (firstPos == std::string::npos) {
         LOG_W(BMS_TAG_INSTALLER, "invalid tempSoDir %{public}s", tempSoDir.c_str());
@@ -7055,6 +7073,7 @@ void BaseBundleInstaller::RemoveTempSoDir(const std::string &tempSoDir)
         return;
     }
     std::string subTempSoDir = tempSoDir.substr(0, thirdPos);
+    LOG_D(BMS_TAG_INSTALLER, "subTempSoDir %{public}s", subTempSoDir.c_str());
     InstalldClient::GetInstance()->RemoveDir(subTempSoDir);
 }
 
@@ -7596,7 +7615,6 @@ void BaseBundleInstaller::CreateCloudShader(const std::string &bundleName, int32
             ServiceConstants::CLOUD_SHADER_COMMON_PATH, result);
         return;
     }
-    LOG_I(BMS_TAG_INSTALLER, "Create cloud shader cache result: %{public}d", result);
 }
 
 ErrCode BaseBundleInstaller::DeleteCloudShader(const std::string &bundleName) const
