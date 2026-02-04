@@ -1,266 +1,266 @@
 # CLAUDE.md
 
-此文件为 Claude Code (claude.ai/code) 在此代码仓库中工作时提供指导。
+This file provides guidance for Claude Code (claude.ai/code) when working in this codebase.
 
-## 概述
+## Overview
 
-这是 OpenHarmony 的 **BundleManager Bundle Framework（包管理包框架）**，是一个负责应用包（bundle）管理的核心子系统。它提供应用的安装、更新、卸载和信息查询能力。
+This is the **BundleManager Bundle Framework** of OpenHarmony, a core subsystem responsible for application bundle management. It provides capabilities for application installation, update, uninstallation, and information query.
 
-## 架构
+## Architecture
 
-### 目录结构
+### Directory Structure
 
 ```
 bundlemanager_bundle_framework/
-├── interfaces/                      # 接口层
-│   ├── inner_api/                   # 内部 API（供其他子系统使用）
-│   └── kits/                        # 应用开发接口（支持 C/C++、JS、Cangjie、ANI）
-├── services/                        # 服务实现
-│   └── bundlemgr/                   # 包管理器服务
-│       ├── include/                 # 头文件（组织方式与 src/ 相同）
-│       ├── src/                     # 源代码
-│       │   ├── aging/               # 包老化管理（资源清理）
-│       │   ├── aot/                 # AOT（Ahead-Of-Time）编译管理
-│       │   ├── app_control/         # 应用控制和应用跳转拦截
-│       │   ├── app_provision_info/  # 应用配置文件（profile）管理
-│       │   ├── app_service_fwk/     # 应用服务框架安装
-│       │   ├── bms_extension/       # BMS 扩展客户端
-│       │   ├── bundle_backup/       # 备份和恢复功能
-│       │   ├── bundle_resource/     # Bundle 资源管理
-│       │   ├── bundlemgr_ext/       # BundleManager 扩展
-│       │   ├── clone/               # 应用克隆支持
-│       │   ├── common/              # 公共工具和辅助类
-│       │   ├── data/                # 数据处理
-│       │   ├── default_app/         # 默认应用管理
-│       │   ├── distributed_manager/ # 分布式包管理
-│       │   ├── driver/              # 驱动安装支持
-│       │   ├── exception/           # 异常处理
-│       │   ├── extend_resource/     # 扩展资源管理
-│       │   ├── first_install_data_mgr/ # 首次安装数据管理
-│       │   ├── free_install/        # 免安装（按需安装）能力
-│       │   ├── idle_condition_mgr/  # 空闲条件管理
-│       │   ├── installd/            # Installd 客户端（特权进程）
-│       │   ├── ipc/                 # IPC 通信
-│       │   ├── navigation/          # 导航相关
-│       │   ├── on_demand_install/   # 按需安装
-│       │   ├── overlay/             # 叠加安装支持
-│       │   ├── plugin/              # 插件支持
-│       │   ├── quick_fix/           # 快速修复（补丁）管理
-│       │   ├── rdb/                 # 关系型数据库封装
-│       │   ├── rpcid_decode/        # RPC ID 解码
-│       │   ├── sandbox_app/         # 沙箱应用支持
-│       │   ├── shared/              # 共享包管理
-│       │   ├── uninstall_data_mgr/  # 卸载数据管理
-│       │   ├── user_auth/           # 用户认证
-│       │   ├── utd/                 # 统类型描述（Unified Type Descriptor）
-│       │   └── verify/              # 验证功能
-│       └── test/                    # 服务层单元测试
-├── test/                            # 系统/集成级测试
-└── etc/                             # 配置文件
+├── interfaces/                      # Interface layer
+│   ├── inner_api/                   # Internal APIs (for other subsystems)
+│   └── kits/                        # Application development interfaces (supports C/C++, JS, Cangjie, ANI)
+├── services/                        # Service implementations
+│   └── bundlemgr/                   # Bundle manager service
+│       ├── include/                 # Header files (organized same as src/)
+│       ├── src/                     # Source code
+│       │   ├── aging/               # Bundle aging management (resource cleanup)
+│       │   ├── aot/                 # AOT (Ahead-Of-Time) compilation management
+│       │   ├── app_control/         # Application control and app jump interception
+│       │   ├── app_provision_info/  # App provisioning profile management
+│       │   ├── app_service_fwk/     # Application service framework installation
+│       │   ├── bms_extension/       # BMS extension client
+│       │   ├── bundle_backup/       # Backup and restore functionality
+│       │   ├── bundle_resource/     # Bundle resource management
+│       │   ├── bundlemgr_ext/       # BundleManager extension
+│       │   ├── clone/               # Application clone support
+│       │   ├── common/              # Common utilities and helper classes
+│       │   ├── data/                # Data processing
+│       │   ├── default_app/         # Default application management
+│       │   ├── distributed_manager/ # Distributed bundle management
+│       │   ├── driver/              # Driver installation support
+│       │   ├── exception/           # Exception handling
+│       │   ├── extend_resource/     # Extended resource management
+│       │   ├── first_install_data_mgr/ # First installation data management
+│       │   ├── free_install/        # Free installation (on-demand) capability
+│       │   ├── idle_condition_mgr/  # Idle condition management
+│       │   ├── installd/            # Installd client (privileged process)
+│       │   ├── ipc/                 # IPC communication
+│       │   ├── navigation/          # Navigation related
+│       │   ├── on_demand_install/   # On-demand installation
+│       │   ├── overlay/             # Overlay installation support
+│       │   ├── plugin/              # Plugin support
+│       │   ├── quick_fix/           # Quick fix (patch) management
+│       │   ├── rdb/                 # Relational database wrapper
+│       │   ├── rpcid_decode/        # RPC ID decoding
+│       │   ├── sandbox_app/         # Sandbox application support
+│       │   ├── shared/              # Shared bundle management
+│       │   ├── uninstall_data_mgr/  # Uninstallation data management
+│       │   ├── user_auth/           # User authentication
+│       │   ├── utd/                 # Unified Type Descriptor
+│       │   └── verify/              # Verification functionality
+│       └── test/                    # Service layer unit tests
+├── test/                            # System/integration level tests
+└── etc/                             # Configuration files
 ```
 
-### 关键组件
+### Key Components
 
-包管理框架的核心组件和功能子系统（位于 `services/bundlemgr/src/`）：
+Core components and functional subsystems of the bundle management framework (located in `services/bundlemgr/src/`):
 
-#### 核心服务类
+#### Core Service Classes
 
-- **bundle_mgr_service.cpp**: BundleMgrService 实现（SA 401），主系统能力服务，协调所有包管理操作
-- **bundle_data_mgr.cpp**: BundleDataMgr 实现，中央数据管理器，存储和查询包/组件信息
-- **bundle_installer.cpp**: BundleInstaller 实现，处理安装、更新和卸载逻辑
-- **bundle_mgr_host_impl.cpp**: BundleMgrHostImpl 实现，提供 IBundleMgr 接口的 IPC 主机
+- **bundle_mgr_service.cpp**: BundleMgrService implementation (SA 401), main system ability service that coordinates all bundle management operations
+- **bundle_data_mgr.cpp**: BundleDataMgr implementation, central data manager for storing and querying bundle/component information
+- **bundle_installer.cpp**: BundleInstaller implementation, handles installation, update, and uninstallation logic
+- **bundle_mgr_host_impl.cpp**: BundleMgrHostImpl implementation, provides IPC host for IBundleMgr interface
 
-#### 功能模块分类
+#### Functional Module Categories
 
-**安装与卸载**
-- **base_bundle_installer.cpp**: 基础安装器实现
-- **bundle_install_checker.cpp**: 安装检查器
-- **bundle_parser.cpp**: Bundle 解析器
-- **installd/**: Installd 客户端，与 InstalldService (SA 511) IPC 通信，执行特权文件/目录操作
+**Installation and Uninstallation**
+- **base_bundle_installer.cpp**: Base installer implementation
+- **bundle_install_checker.cpp**: Installation checker
+- **bundle_parser.cpp**: Bundle parser
+- **installd/**: Installd client, communicates with InstalldService (SA 511) via IPC, performs privileged file/directory operations
 
-**数据与资源管理**
-- **data/**: 数据处理模块
-- **rdb/**: 关系型数据库封装
-- **bundle_resource/**: Bundle 资源管理
-- **extend_resource/**: 扩展资源管理
-- **bundle_backup/**: 备份和恢复功能
+**Data and Resource Management**
+- **data/**: Data processing modules
+- **rdb/**: Relational database wrapper
+- **bundle_resource/**: Bundle resource management
+- **extend_resource/**: Extended resource management
+- **bundle_backup/**: Backup and restore functionality
 
-**权限与安全**
-- **verify/**: 验证功能（代码签名、完整性校验等）
-- **bundle_permission_mgr.cpp**: Bundle 权限管理
-- **user_auth/**: 用户认证
+**Permissions and Security**
+- **verify/**: Verification functionality (code signing, integrity checks, etc.)
+- **bundle_permission_mgr.cpp**: Bundle permission management
+- **user_auth/**: User authentication
 
-**高级特性**
-- **free_install/**: 免安装（按需安装）能力
-- **on_demand_install/**: 按需安装
-- **overlay/**: 叠加安装支持
-- **quick_fix/**: 快速修复（补丁）管理
-- **clone/**: 应用克隆支持
-- **sandbox_app/**: 沙箱应用支持
-- **shared/**: 共享包管理
-- **aot/**: AOT（Ahead-Of-Time）编译管理
+**Advanced Features**
+- **free_install/**: Free installation (on-demand) capability
+- **on_demand_install/**: On-demand installation
+- **overlay/**: Overlay installation support
+- **quick_fix/**: Quick fix (patch) management
+- **clone/**: Application clone support
+- **sandbox_app/**: Sandbox application support
+- **shared/**: Shared bundle management
+- **aot/**: AOT (Ahead-Of-Time) compilation management
 
-**应用控制**
-- **app_control/**: 应用控制和应用跳转拦截
-- **default_app/**: 默认应用管理
-- **app_service_fwk/**: 应用服务框架安装
+**Application Control**
+- **app_control/**: Application control and app jump interception
+- **default_app/**: Default application management
+- **app_service_fwk/**: Application service framework installation
 
-**分布式与备份**
-- **distributed_manager/**: 分布式包管理
-- **first_install_data_mgr/**: 首次安装数据管理
-- **uninstall_data_mgr/**: 卸载数据管理
+**Distributed and Backup**
+- **distributed_manager/**: Distributed bundle management
+- **first_install_data_mgr/**: First installation data management
+- **uninstall_data_mgr/**: Uninstallation data management
 
-**系统功能**
-- **aging/**: 包老化管理，用于资源清理
-- **app_provision_info/**: 应用配置文件（profile）管理
-- **bms_extension/**: BMS 扩展客户端
-- **bundlemgr_ext/**: BundleManager 扩展
-- **driver/**: 驱动安装支持
-- **exception/**: 异常处理
-- **idle_condition_mgr/**: 空闲条件管理
-- **navigation/**: 导航相关
-- **plugin/**: 插件支持
-- **rpcid_decode/**: RPC ID 解码
-- **utd/**: 统类型描述（Unified Type Descriptor）
+**System Functions**
+- **aging/**: Bundle aging management for resource cleanup
+- **app_provision_info/**: App provisioning profile management
+- **bms_extension/**: BMS extension client
+- **bundlemgr_ext/**: BundleManager extension
+- **driver/**: Driver installation support
+- **exception/**: Exception handling
+- **idle_condition_mgr/**: Idle condition management
+- **navigation/**: Navigation related
+- **plugin/**: Plugin support
+- **rpcid_decode/**: RPC ID decoding
+- **utd/**: Unified Type Descriptor
 
-**通信与基础设施**
-- **ipc/**: IPC 通信
-- **common/**: 公共工具和辅助类
+**Communication and Infrastructure**
+- **ipc/**: IPC communication
+- **common/**: Common utilities and helper classes
 
-### 进程架构
+### Process Architecture
 
-包管理框架采用**多进程架构**，将不同权限级别的操作分离到独立进程中，包管理调用installd模块时需通过IPC：
+The bundle management framework adopts a **multi-process architecture**, separating operations with different privilege levels into independent processes. Bundle management calls to the installd module require IPC:
 
 #### BundleMgrService (SA 401)
-- **进程**: Foundation 进程
-- **功能**: 提供应用包管理的核心 API（安装、卸载、查询等）
-- **依赖服务**:
-  - 公共事件服务（用于系统事件）
-  - 包代理服务
-  - EL5 文件密钥服务
+- **Process**: Foundation process
+- **Function**: Provides core APIs for application bundle management (installation, uninstallation, query, etc.)
+- **Dependent Services**:
+  - Common event service (for system events)
+  - Bundle proxy service
+  - EL5 file encryption key service
   - InstalldService (SA 511)
 
 #### InstalldService (SA 511)
-- **进程**: Installs 进程（独立特权进程）
-- **功能**: 执行需要提升权限的文件系统操作
-- **配置**: 见 `sa_profile/511.json`
-  - 进程名: `installs`
-  - 库文件: `libinstalls.z.so`
-  - 启动阶段: `CoreStartPhase`
-  - 按需卸载: 长期未使用 180 秒后自动卸载
+- **Process**: Installs process (independent privileged process)
+- **Function**: Executes file system operations that require elevated privileges
+- **Configuration**: See `sa_profile/511.json`
+  - Process name: `installs`
+  - Library file: `libinstalls.z.so`
+  - Start phase: `CoreStartPhase`
+  - On-demand unload: Automatically unloads after 180 seconds of inactivity
 
-## 构建系统
+## Build System
 
-此项目使用 **GN (Generate Ninja)** 作为构建系统。
+This project uses **GN (Generate Ninja)** as the build system.
 
-### 关键构建文件
+### Key Build Files
 
-- 根构建: `BUILD.gn`
-- 服务构建: `services/bundlemgr/BUILD.gn`
-- 配置: `appexecfwk.gni`, `services/bundlemgr/appexecfwk_bundlemgr.gni`
+- Root build: `BUILD.gn`
+- Service build: `services/bundlemgr/BUILD.gn`
+- Configuration: `appexecfwk.gni`, `services/bundlemgr/appexecfwk_bundlemgr.gni`
 
-### 构建目标
+### Build Targets
 
-主构建目标：
+Main build target:
 ```bash
-# 构建所有包框架目标
+# Build all bundle framework targets
 ./build.sh --product-name <product> --build-target bundle_framework
 ```
 
-### 构建配置
+### Build Configuration
 
-特性开关（定义在 `appexecfwk.gni` 中）：
-- `bundle_framework_free_install`: 启用免安装能力
-- `bundle_framework_default_app`: 启用默认应用管理
-- `bundle_framework_quick_fix`: 启用快速修复支持
-- `bundle_framework_overlay_install`: 启用叠加安装
-- `bundle_framework_sandbox_app`: 启用沙箱应用支持
+Feature switches (defined in `appexecfwk.gni`):
+- `bundle_framework_free_install`: Enable free installation capability
+- `bundle_framework_default_app`: Enable default application management
+- `bundle_framework_quick_fix`: Enable quick fix support
+- `bundle_framework_overlay_install`: Enable overlay installation
+- `bundle_framework_sandbox_app`: Enable sandbox application support
 
-## 开发模式
+## Development Patterns
 
-### 日志
+### Logging
 
-**位置**：`common/log/`（详见 `common/log/README.md`）
+**Location**: `common/log/` (see `common/log/README.md` for details)
 
-**使用方法**：
+**Usage**:
 ```cpp
-// 包含头文件
+// Include header file
 #include "app_log_wrapper.h"
 
-// 在 GN 文件中定义
+// Define in GN file
 defines = [
     "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
 ]
 
-// 使用日志宏
-APP_LOGD("调试: %{public}d", 123);         // Debug
-APP_LOGI("信息: %{public}s", "string");    // Info
-APP_LOGW("警告");                          // Warning
-APP_LOGE("错误: %{private}s", "敏感信息"); // Error
+// Use logging macros
+APP_LOGD("Debug: %{public}d", 123);                      // Debug
+APP_LOGI("Info: %{public}s", "string");                  // Info
+APP_LOGW("Warning");                                      // Warning
+APP_LOGE("Error: %{private}s", "sensitive information"); // Error
 ```
 
-### 数据存储
+### Data Storage
 
-**技术**：使用 RDB（关系型数据库）进行持久化存储
+**Technology**: Uses RDB (Relational Database) for persistent storage
 
-**关键文件**：
-- 接口：`services/bundlemgr/include/bundle_data_storage_interface.h`
-- 实现：`services/bundlemgr/src/rdb/`
+**Key Files**:
+- Interface: `services/bundlemgr/include/bundle_data_storage_interface.h`
+- Implementation: `services/bundlemgr/src/rdb/`
 
-### 错误处理
+### Error Handling
 
-**错误码定义**：`interfaces/kits/native/inner_api/appexecfwk_errors.h`
-- 按模块分类：通用、安装、数据库、代码签名、快速修复、叠加安装等
+**Error Code Definitions**: `interfaces/kits/native/inner_api/appexecfwk_errors.h`
+- Categorized by module: general, installation, database, code signing, quick fix, overlay installation, etc.
 
-**错误检查宏**：`services/bundlemgr/src/common/common_fun_ani.h`
-- RETURN_IF_NULL、RETURN_FALSE_IF_NULL 等空指针检查宏
+**Error Checking Macros**: `services/bundlemgr/src/common/common_fun_ani.h`
+- Null pointer checking macros like RETURN_IF_NULL, RETURN_FALSE_IF_NULL, etc.
 
-**处理模式**：检查-返回、错误码转换（RDB_ERR_MAP、CODE_SIGNATURE_ERR_MAP）、异常保护（JSON、动态库加载）、重试机制
+**Handling Patterns**: Check-and-return, error code mapping (RDB_ERR_MAP, CODE_SIGNATURE_ERR_MAP), exception protection (JSON, dynamic library loading), retry mechanisms
 
-## 测试
+## Testing
 
-### 测试结构
+### Test Structure
 
-- `test/unittest/`: 单个组件的单元测试
-- `test/moduletest/`: 模块集成测试
-- `test/systemtest/`: 系统级端到端测试
-- `test/benchmarktest/`: 性能基准测试
-- `test/fuzztest/`: 模糊测试
-- `test/sceneProject/`: 测试 HAP 文件和测试应用
+- `test/unittest/`: Unit tests for individual components
+- `test/moduletest/`: Module integration tests
+- `test/systemtest/`: System-level end-to-end tests
+- `test/benchmarktest/`: Performance benchmark tests
+- `test/fuzztest/`: Fuzzing tests
+- `test/sceneProject/`: Test HAP files and test applications
 
-### 测试资源
+### Test Resources
 
-- `test/resource/bmssystemtestability/`: 测试 Ability 源码
-- `test/resource/bundlemgrservice/`: 包管理器服务测试资源
+- `test/resource/bmssystemtestability/`: Test Ability source code
+- `test/resource/bundlemgrservice/`: Bundle manager service test resources
 
-## 重要概念
+## Important Concepts
 
-- **Bundle**: 应用包（HAP 文件），包含代码、资源和配置
-- **HAP**: Harmonymony Ability Package - OpenHarmony 应用的包格式
-- **Module**: 包含一个或多个 Ability 的 HAP 文件
-- **Ability**: 表示功能的应用组件（类似于 Android 的 Activity/Service）
-- **Extension**: 特殊的 Ability 类型（数据、卡片等）
-- **InnerBundleInfo**: 包信息的内部表示，包含丰富的元数据
-- **ApplicationInfo**: 应用级信息（包名、版本、权限等）
-- **AbilityInfo**: 组件级信息（类型、启动模式、权限等）
+- **Bundle**: Application package (HAP file), containing code, resources, and configuration
+- **HAP**: Harmony Ability Package - OpenHarmony application package format
+- **Module**: HAP file containing one or more Abilities
+- **Ability**: Application component representing functionality (similar to Android's Activity/Service)
+- **Extension**: Special Ability type (data, cards, etc.)
+- **InnerBundleInfo**: Internal representation of bundle information, containing rich metadata
+- **ApplicationInfo**: Application-level information (package name, version, permissions, etc.)
+- **AbilityInfo**: Component-level information (type, launch mode, permissions, etc.)
 
-## 关键依赖
+## Key Dependencies
 
-此组件依赖众多 OpenHarmony 子系统（完整列表见 `bundle.json`）：
-- `ability_runtime`: Ability 框架
-- `samgr`: 系统能力管理器
-- `ipc`: IPC 框架
-- `storage_service`: 文件存储
-- `access_token`: 权限管理
-- `resource_manager`: 资源管理
-- `appverify`: 应用验证
-- `hitrace`, `hisysevent`, `hilog`: DFX 能力
+This component depends on many OpenHarmony subsystems (see `bundle.json` for complete list):
+- `ability_runtime`: Ability framework
+- `samgr`: System ability manager
+- `ipc`: IPC framework
+- `storage_service`: File storage
+- `access_token`: Permission management
+- `resource_manager`: Resource management
+- `appverify`: Application verification
+- `hitrace`, `hisysevent`, `hilog`: DFX capabilities
 
-## 配置文件
+## Configuration Files
 
-- `bundle.json`: 组件元数据和依赖
-- `sa_profile/401.json`: BundleMgrService 的系统能力配置
-- `sa_profile/511.json`: 安装服务的系统能力配置
-- `services/bundlemgr/installs.cfg`: 安装配置
-- `hisysevent.yaml`: HiSysEvent 事件报告配置
+- `bundle.json`: Component metadata and dependencies
+- `sa_profile/401.json`: System ability configuration for BundleMgrService
+- `sa_profile/511.json`: System ability configuration for installation service
+- `services/bundlemgr/installs.cfg`: Installation configuration
+- `hisysevent.yaml`: HiSysEvent event reporting configuration
