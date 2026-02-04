@@ -86,6 +86,7 @@ ohos_unittest("BmsBundleResourceTest") {
     "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "thermal_manager:thermalsrv_client",
   ]
@@ -318,6 +319,7 @@ ohos_unittest("BmsBundleResourceHelperTest") {
     "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "thermal_manager:thermalsrv_client",
   ]

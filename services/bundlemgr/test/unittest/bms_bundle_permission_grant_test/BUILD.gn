@@ -103,6 +103,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "storage_service:storage_manager_sa_proxy",
     "thermal_manager:thermalsrv_client",
@@ -292,6 +293,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "thermal_manager:thermalsrv_client",
   ]
@@ -479,6 +481,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "thermal_manager:thermalsrv_client",
   ]
@@ -672,6 +675,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "storage_service:storage_manager_sa_proxy",
     "thermal_manager:thermalsrv_client",
@@ -867,6 +871,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "thermal_manager:thermalsrv_client",
   ]
@@ -1055,6 +1060,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "thermal_manager:thermalsrv_client",
   ]
@@ -1230,6 +1236,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "thermal_manager:thermalsrv_client",
   ]
@@ -1395,6 +1402,7 @@ ohos_unittest("BmsBundlePermissionIpcSkeletonTest") {
     "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "thermal_manager:thermalsrv_client",
   ]

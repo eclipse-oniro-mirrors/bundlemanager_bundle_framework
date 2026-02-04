@@ -641,6 +641,7 @@ ohos_shared_library("installs") {
     "openssl:libcrypto_shared",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "storage_service:storage_manager_acl",
   ]
