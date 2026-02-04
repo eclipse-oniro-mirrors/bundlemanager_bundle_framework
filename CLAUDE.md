@@ -218,16 +218,6 @@ APP_LOGE("错误: %{private}s", "敏感信息"); // Error
 
 **处理模式**：检查-返回、错误码转换（RDB_ERR_MAP、CODE_SIGNATURE_ERR_MAP）、异常保护（JSON、动态库加载）、重试机制
 
-### 线程同步
-
-**同步机制**：
-- **读写锁**（std::shared_mutex）：读多写少场景，如 `bundle_data_mgr.cpp` 的 bundleInfoMutex_
-- **互斥锁**（std::mutex）：独占访问，如 `bundle_mgr_service.cpp` 的 bundleConnectMutex_
-- **条件变量**（std::condition_variable）：线程等待和通知，如 `installd_client.cpp`
-- **单例模式**：DelayedSingleton 模板实现线程安全单例
-
-**最佳实践**：读写分离（读共享、写独占）、分层锁设计、固定加锁顺序避免死锁、RAII 管理锁生命周期
-
 ## 测试
 
 ### 测试结构
