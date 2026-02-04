@@ -103,7 +103,7 @@ bool BMSJsonUtil::CheckMapValueType(const nlohmann::json &value, JsonType valueT
         case JsonType::ARRAY:
             return CheckArrayValueType(value, arrayType);
         default:
-            APP_LOGE("not support valueType: %{public}d", (int)valueType);
+            APP_LOGE("not support valueType: %{public}d", static_cast<int32_t>(valueType));
             return false;
     }
 }

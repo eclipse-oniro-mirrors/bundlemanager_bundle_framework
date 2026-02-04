@@ -229,7 +229,7 @@ bool ZipReader::ExtractEntry(WriterDelegate *delegate, const unzFile &zipFile, u
         } else {
             uint64_t numBytesToWrite = std::min<uint64_t>(remainingCapacity, checked_cast<uint64_t>(numBytesRead));
             if (!delegate->WriteBytes(buf.get(), numBytesToWrite)) {
-                APP_LOGE("WriteBytes %{public}lu", (unsigned long) numBytesToWrite);
+                APP_LOGE("WriteBytes %{public}lu", static_cast<unsigned long>(numBytesToWrite));
                 break;
             }
             if (remainingCapacity == checked_cast<uint64_t>(numBytesRead)) {

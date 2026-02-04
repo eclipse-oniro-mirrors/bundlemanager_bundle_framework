@@ -41,7 +41,6 @@ namespace AppExecFwk {
 namespace {
 using UserStatusFunc = ErrCode (*)(int32_t, std::vector<std::string>&, std::vector<std::string>&);
 using AOTVersionFunc = ErrCode (*)(std::string&);
-using CleanUpFunc = void (*)();
 // ark compile option parameter key
 constexpr const char* INSTALL_COMPILE_MODE = "persist.bm.install.arkopt";
 constexpr const char* IDLE_COMPILE_MODE = "persist.bm.idle.arkopt";
@@ -88,7 +87,6 @@ constexpr const char* COMPILE_NONE = "none";
 
 constexpr const char* USER_STATUS_SO_NAME = "libuser_status_client.z.so";
 constexpr const char* USER_STATUS_FUNC_NAME = "GetUserPreferenceApp";
-constexpr const char* CLEAN_UP_FUNC_NAME = "CleanUp";
 constexpr const char* BM_AOT_TEST = "bm.aot.test";
 
 constexpr const char* SYS_COMP_AN_DIR = "/data/service/el1/public/for-all-app/framework_ark_cache/";
@@ -651,13 +649,6 @@ bool AOTHandler::GetUserBehaviourAppList(std::vector<std::string> &bundleNames, 
     std::vector<std::string> interestedApps;
     ErrCode ret = userStatusFunc(size, interestedApps, bundleNames);
     APP_LOGI("GetUserPreferenceApp ret : %{public}d, bundleNames size : %{public}zu", ret, bundleNames.size());
-    CleanUpFunc cleanUpFunc = reinterpret_cast<CleanUpFunc>(dlsym(handle, CLEAN_UP_FUNC_NAME));
-    if (cleanUpFunc == nullptr) {
-        APP_LOGE("dlsym cleanup failed : %{public}s", dlerror());
-        dlclose(handle);
-        return false;
-    }
-    cleanUpFunc();
     dlclose(handle);
     return ret == ERR_OK;
 }
