@@ -3678,4 +3678,35 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0088
     ResetCallingUid();
     ResetTestValues();
 }
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0089
+ * @tc.name: test GetLaunchWantForBundle of BundleMgrHostImpl
+ * @tc.desc: GetLaunchWantForBundle false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0089, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingBundleSdkVersionForTestFalse(false);
+    Want want;
+    ErrCode ret = bundleMgrHostImpl_->GetLaunchWantForBundle(BUNDLE_NAME, want, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0090
+ * @tc.name: test GetLaunchWantForBundle of BundleMgrHostImpl
+ * @tc.desc: GetLaunchWantForBundle false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0090, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingBundleSdkVersionForTestFalse(true);
+    SetVerifyCallingPermissionForTest(false);
+    Want want;
+    ErrCode ret = bundleMgrHostImpl_->GetLaunchWantForBundle(BUNDLE_NAME, want, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetTestValues();
+}
 } // OHOS
