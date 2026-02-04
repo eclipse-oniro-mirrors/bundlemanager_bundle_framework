@@ -62,6 +62,7 @@
 #include "display_power_mgr_client.h"
 #include "display_power_info.h"
 #include "battery_srv_client.h"
+#include "app_disable_forbidden_mgr.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -10340,5 +10341,76 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllAppInstallExtendedInfo_0400, Function | 
     MockUninstallBundle(BUNDLE_NAME_TEST);
     MockUninstallBundle(BUNDLE_NAME_TEST1);
     ResetTestValues();
+}
+
+/**
+ * @tc.number: IsApplicationDisableForbidden_0100
+ * @tc.name: test IsApplicationDisableForbidden success
+ * @tc.desc: 1. Test IsApplicationDisableForbidden
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsApplicationDisableForbidden_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto appDisableForbiddenMgr = DelayedSingleton<AppDisableForbiddenMgr>::GetInstance();
+    ASSERT_NE(appDisableForbiddenMgr, nullptr);
+
+    bool forbidden = false;
+    ErrCode ret = appDisableForbiddenMgr->IsApplicationDisableForbidden(
+        BUNDLE_NAME_TEST, DEFAULT_USERID, 0, forbidden);
+    EXPECT_NE(ret, ERR_OK);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: IsApplicationDisableForbidden_0200
+ * @tc.name: test IsApplicationDisableForbidden
+ * @tc.desc: 1. Test IsApplicationDisableForbidden when bundle does not exist
+ *           2. Should return error when CheckBundleExist fails
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsApplicationDisableForbidden_0200, Function | SmallTest | Level1)
+{
+    auto appDisableForbiddenMgr = DelayedSingleton<AppDisableForbiddenMgr>::GetInstance();
+    ASSERT_NE(appDisableForbiddenMgr, nullptr);
+
+    bool forbidden = false;
+    std::string nonExistentBundle = "com.example.nonexistent";
+    ErrCode ret = appDisableForbiddenMgr->IsApplicationDisableForbidden(
+        nonExistentBundle, DEFAULT_USERID, 0, forbidden);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SetApplicationDisableForbidden_0100
+ * @tc.name: test SetApplicationDisableForbidden
+ * @tc.desc: 1. Test SetApplicationDisableForbidden
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetApplicationDisableForbidden_0100, Function | SmallTest | Level1)
+{
+    auto appDisableForbiddenMgr = DelayedSingleton<AppDisableForbiddenMgr>::GetInstance();
+    ASSERT_NE(appDisableForbiddenMgr, nullptr);
+
+    auto ret = appDisableForbiddenMgr->SetApplicationDisableForbidden("", 100, 0, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NAME_IS_EMPTY);
+    ret = appDisableForbiddenMgr->SetApplicationDisableForbidden(BUNDLE_NAME_TEST, -1, 0, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    ret = appDisableForbiddenMgr->SetApplicationDisableForbidden(BUNDLE_NAME_TEST, 100, -1, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    ret = appDisableForbiddenMgr->SetApplicationDisableForbidden(BUNDLE_NAME_TEST, 100, 6, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    ret = appDisableForbiddenMgr->SetApplicationDisableForbidden(BUNDLE_NAME_TEST, 100, 0, true);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = appDisableForbiddenMgr->SetApplicationDisableForbidden(BUNDLE_NAME_TEST, 100, 1, true);
+    EXPECT_EQ(ret, ERR_OK);
+    bool forbidden = false;
+    ret = appDisableForbiddenMgr->IsApplicationDisableForbiddenNoCheck(
+        BUNDLE_NAME_TEST, 100, 0, forbidden);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = appDisableForbiddenMgr->SetApplicationDisableForbidden(BUNDLE_NAME_TEST, 100, 0, false);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = appDisableForbiddenMgr->IsApplicationDisableForbiddenNoCheck(
+        BUNDLE_NAME_TEST, 100, 0, forbidden);
+    EXPECT_EQ(ret, ERR_OK);
 }
 }

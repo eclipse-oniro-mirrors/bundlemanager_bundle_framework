@@ -283,6 +283,8 @@ namespace bundleManager {
 
   native function getBundleInstallStatusNative(bundleName: string): BundleInstallStatus;
 
+  native function isApplicationDisableForbidden(bundleName: string, userId: int, appIndex: int): boolean;
+
   native function setAbilityFileTypesForSelf(moduleName: string, abilityName: string, fileTypes: Array<string>): void;
 
   function getBundleInfoForSelfSync(bundleFlags: int): BundleInfo {

@@ -2435,6 +2435,36 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleInstallStatus_0001, Function | Med
 }
 
 /**
+* @tc.number: HandleIsApplicationDisableForbidden_0001
+* @tc.name: test the HandleIsApplicationDisableForbidden
+* @tc.desc: 1. system running normally
+*           2. test HandleIsApplicationDisableForbidden
+*/
+HWTEST_F(BmsBundleMgrHostTest, HandleIsApplicationDisableForbidden_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleIsApplicationDisableForbidden(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+* @tc.number: HandleSetApplicationDisableForbidden_0001
+* @tc.name: test the HandleSetApplicationDisableForbidden
+* @tc.desc: 1. system running normally
+*           2. test HandleSetApplicationDisableForbidden
+*/
+HWTEST_F(BmsBundleMgrHostTest, HandleSetApplicationDisableForbidden_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleSetApplicationDisableForbidden(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
 * @tc.number: HandleRecoverBackupBundleData_0001
 * @tc.name: test the HandleRecoverBackupBundleData
 * @tc.desc: 1. system running normally

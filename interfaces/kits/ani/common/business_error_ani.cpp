@@ -28,6 +28,7 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* ERROR_MESSAGE_PLACEHOLDER = "$";
 constexpr const char* BUSINESS_ERROR_CLASS = "@ohos.base.BusinessError";
+constexpr const char* ERROR_MESSAGE_APP_DISABLE_FORBIDDEN = "Or the application is forbidden to be disabled.";
 } // namespace
     
 void BusinessErrorAni::ThrowError(ani_env *env, int32_t err, const std::string &msg)
@@ -284,6 +285,46 @@ void BusinessErrorAni::ThrowError(ani_env *env, ani_object err)
         return;
     }
     env->ThrowError(static_cast<ani_error>(err));
+}
+
+void BusinessErrorAni::ThrowErrorForSetAppEnabled(ani_env *env, int32_t err,
+    const std::string &parameter, const std::string &type)
+{
+    if (env == nullptr) {
+        APP_LOGE("err is nullptr");
+        return;
+    }
+    ani_object error = CreateErrorForSetAppEnabled(env, err, parameter, type);
+    ThrowError(env, error);
+}
+
+ani_object BusinessErrorAni::CreateErrorForSetAppEnabled(
+    ani_env *env, int32_t err, const std::string &functionName, const std::string &permissionName)
+{
+    if (env == nullptr) {
+        APP_LOGE("err is nullptr");
+        return nullptr;
+    }
+    std::string errMessage = BusinessErrorNS::ERR_MSG_BUSINESS_ERROR;
+    auto iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, std::to_string(err));
+    }
+    std::unordered_map<int32_t, const char*> errMap;
+    BusinessErrorMap::GetErrMap(errMap);
+    if (errMap.find(err) != errMap.end()) {
+        errMessage += errMap[err];
+    }
+    iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, functionName);
+        iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
+        if (iter != std::string::npos) {
+            errMessage = errMessage.replace(iter, 1, permissionName);
+            errMessage += ERROR_MESSAGE_APP_DISABLE_FORBIDDEN;
+        }
+    }
+    return CreateError(env, err, errMessage);
 }
 } // namespace AppExecFwk
 } // namespace OHOS

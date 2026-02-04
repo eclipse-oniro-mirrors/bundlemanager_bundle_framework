@@ -13440,5 +13440,43 @@ bool BundleDataMgr::UMountCryptoPath(const int32_t userId, const std::string &bu
 #endif // STORAGE_SERVICE_ENABLE
     return true;
 }
+
+ErrCode BundleDataMgr::CheckBundleExist(const std::string &bundleName, int32_t userId, int32_t appIndex) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE_NOFUNC("check bundle invalid -u %{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (appIndex < 0 || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE_NOFUNC("check bundle invalid appIndex -n %{public}s -a %{public}d", bundleName.c_str(), appIndex);
+        return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE_NOFUNC("check bundle -n %{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        APP_LOGE_NOFUNC("-n: %{public}s is not installed in user %{public}d", bundleName.c_str(), userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (appIndex > 0) {
+        InnerBundleUserInfo innerBundleUserInfo;
+        if (!innerBundleInfo.GetInnerBundleUserInfo(responseUserId, innerBundleUserInfo)) {
+            APP_LOGE_NOFUNC("check bundle GetInnerBundleUserInfo failed");
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+        auto cloneInfo = innerBundleUserInfo.cloneInfos.find(std::to_string(appIndex));
+        if (cloneInfo == innerBundleUserInfo.cloneInfos.end()) {
+            APP_LOGE_NOFUNC("check bundle invalid appIndex %{public}d", appIndex);
+            return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
+        }
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

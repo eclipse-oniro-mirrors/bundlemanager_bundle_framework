@@ -806,7 +806,7 @@ static void SetAbilityEnabledNative(ani_env* env,
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     if (ret != ERR_OK) {
         APP_LOGE("SetAbilityEnabled failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(
+        BusinessErrorAni::ThrowErrorForSetAppEnabled(
             env, ret, isSync ? SET_ABILITY_ENABLED_SYNC : SET_ABILITY_ENABLED,
             Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE);
     }
@@ -832,7 +832,7 @@ static void SetApplicationEnabledNative(ani_env* env,
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     if (ret != ERR_OK) {
         APP_LOGE("SetApplicationEnabled failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(
+        BusinessErrorAni::ThrowErrorForSetAppEnabled(
             env, ret, isSync ? SET_APPLICATION_ENABLED_SYNC : SET_APPLICATION_ENABLED,
             Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE);
     }
@@ -2025,6 +2025,32 @@ static void RemoveBackupBundleDataNative(ani_env* env,
     }
 }
 
+static ani_boolean IsApplicationDisableForbidden(ani_env* env,
+    ani_string aniBundleName, ani_int aniUserId, ani_int aniAppIndex)
+{
+    APP_LOGD("ani IsApplicationDisableForbidden called");
+    bool forbidden = false;
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE_NOFUNC("bundleName parse failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return forbidden;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE_NOFUNC("GetBundleMgr failed");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return forbidden;
+    }
+    ErrCode ret = iBundleMgr->IsApplicationDisableForbidden(bundleName, aniUserId, aniAppIndex, forbidden);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("IsApplicationDisableForbidden failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), IS_APPLICATION_DISABLE_FORBIDDEN,
+            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+    }
+    return forbidden;
+}
+
 static void SetAbilityFileTypesForSelf(ani_env* env,
     ani_string aniModuleName, ani_string aniAbilityName, ani_object aniFileTypes)
 {
@@ -2207,6 +2233,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(RecoverBackupBundleDataNative) },
         ani_native_function { "removeBackupBundleDataNative", nullptr,
             reinterpret_cast<void*>(RemoveBackupBundleDataNative) },
+        ani_native_function { "isApplicationDisableForbidden", nullptr,
+            reinterpret_cast<void*>(IsApplicationDisableForbidden) },
         ani_native_function { "getBundleInstallStatusNative", nullptr,
             reinterpret_cast<void*>(GetBundleInstallStatusNative) },
     };

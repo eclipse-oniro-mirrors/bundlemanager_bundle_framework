@@ -1784,7 +1784,7 @@ void SetApplicationEnabledComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
     } else {
         APP_LOGE("asyncCallbackInfo is null");
-        result[0] = BusinessError::CreateCommonError(
+        result[0] = BusinessError::CreateErrorForSetAppEnabled(
             env, asyncCallbackInfo->err, "SetApplicationEnabled", Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE);
     }
     CommonFunc::NapiReturnDeferred<ApplicationEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
@@ -1923,7 +1923,7 @@ void SetAbilityEnabledComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
         APP_LOGE("asyncCallbackInfo is null");
-        result[0] = BusinessError::CreateCommonError(
+        result[0] = BusinessError::CreateErrorForSetAppEnabled(
             env, asyncCallbackInfo->err, "SetAbilityEnabled", Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE);
     }
     CommonFunc::NapiReturnDeferred<AbilityEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
@@ -6153,6 +6153,56 @@ napi_value RemoveBackupBundleData(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("call RemoveBackupBundleData done");
     return promise;
+}
+
+napi_value IsApplicationDisableForbidden(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI IsApplicationDisableForbidden call");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_THREE)) {
+        APP_LOGE_NOFUNC("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE_NOFUNC("parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
+        APP_LOGE_NOFUNC("userId invalid");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+        return nullptr;
+    }
+    int32_t appIndex = 0;
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_TWO], appIndex)) {
+        APP_LOGE_NOFUNC("appIndex invalid");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+        return nullptr;
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE_NOFUNC("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    bool forbidden = false;
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->IsApplicationDisableForbidden(
+        bundleName, userId, appIndex, forbidden));
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("IsApplicationDisableForbidden failed:%{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(env, ret, IS_APPLICATION_DISABLE_FORBIDDEN,
+            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nForbidden = nullptr;
+    NAPI_CALL(env, napi_get_boolean(env, forbidden, &nForbidden));
+    APP_LOGD("call IsApplicationDisableForbidden done");
+    return nForbidden;
 }
 } // namespace AppExecFwk
 } // namespace OHOS

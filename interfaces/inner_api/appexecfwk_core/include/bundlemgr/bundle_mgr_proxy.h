@@ -1360,6 +1360,12 @@ public:
 
     virtual ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
         const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo) override;
+
+    virtual ErrCode IsApplicationDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex,
+        bool &forbidden) override;
+
+    virtual ErrCode SetApplicationDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex,
+        bool forbidden) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

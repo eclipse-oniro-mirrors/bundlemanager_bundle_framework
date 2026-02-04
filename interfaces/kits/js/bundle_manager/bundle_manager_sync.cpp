@@ -146,7 +146,7 @@ napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetApplicationEnabled(bundleName, isEnable));
     if (ret != NO_ERROR) {
         APP_LOGE("SetApplicationEnabledSync failed, bundleName is %{public}s", bundleName.c_str());
-        napi_value businessError = BusinessError::CreateCommonError(
+        napi_value businessError = BusinessError::CreateErrorForSetAppEnabled(
             env, ret, SET_APPLICATION_ENABLED_SYNC, Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE);
         napi_throw(env, businessError);
         return nullptr;
@@ -187,7 +187,7 @@ napi_value SetAbilityEnabledSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetAbilityEnabled(abilityInfo, isEnable));
     if (ret != NO_ERROR) {
         APP_LOGE("SetAbilityEnabledSync failed");
-        napi_value businessError = BusinessError::CreateCommonError(
+        napi_value businessError = BusinessError::CreateErrorForSetAppEnabled(
             env, ret, SET_ABILITY_ENABLED_SYNC, Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE);
         napi_throw(env, businessError);
         return nullptr;

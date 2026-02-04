@@ -61,6 +61,7 @@ enum class BMSEventType : uint8_t {
     QUERY_BUNDLE_INFO,
     BUNDLE_DYNAMIC_SHORTCUTINFO,
     DESKTOP_SHORTCUT,
+    APP_STATUS_CHANGE,
 };
 
 enum class BundleEventType : uint8_t {
@@ -153,6 +154,9 @@ struct EventInfo {
 
     // is keepdata for unisntall
     bool isKeepData = false;
+
+    // whether the app is forbidden to be disabled
+    bool disableForbidden = false;
 
     InstallScene preBundleScene = InstallScene::NORMAL;
 
@@ -463,6 +467,9 @@ public:
     static void SendDesktopShortcutEvent(const std::string &operationType, int32_t userId,
         const std::string &bundleName, int32_t appIndex, const std::string &shortcutId, int32_t callingUid,
         int32_t result);
+
+    static void SendAppDisableForbiddenEvent(const std::string &bundleName, int32_t userId, int32_t appIndex,
+        bool forbidden, ErrCode errCode, int32_t callingUid);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

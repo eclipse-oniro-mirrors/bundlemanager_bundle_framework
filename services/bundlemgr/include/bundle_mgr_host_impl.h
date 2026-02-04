@@ -1254,6 +1254,10 @@ public:
     virtual ErrCode GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo &assetGroupInfo) override;
     virtual ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
         const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo) override;
+    virtual ErrCode IsApplicationDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex,
+        bool &forbidden) override;
+    virtual ErrCode SetApplicationDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex,
+        bool forbidden) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);
@@ -1332,6 +1336,7 @@ private:
     bool IsQueryAbilityInfoExt(const uint32_t flags) const;
 
     bool IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags) const;
+    ErrCode CheckAppDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isEnabled);
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

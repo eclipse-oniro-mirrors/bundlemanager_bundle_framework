@@ -8888,4 +8888,25 @@ HWTEST_F(BmsDataMgrTest, ImplicitQueryCurExtensionInfosV9_0001, Function | Mediu
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 }
 
+/**
+ * @tc.number: CheckBundleExist_0001
+ * @tc.name: CheckBundleExist
+ * @tc.desc: test CheckBundleExist
+ */
+HWTEST_F(BmsDataMgrTest, CheckBundleExist_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "test";
+    int32_t userId = 10;
+    int32_t appIndex = 0;
+    auto ret = bundleDataMgr.CheckBundleExist(bundleName, userId, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    bundleDataMgr.multiUserIdsSet_.insert(100);
+    userId = 100;
+    appIndex = -1;
+    ret = bundleDataMgr.CheckBundleExist(bundleName, userId, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+}
+
 } // OHOS

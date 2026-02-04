@@ -16,6 +16,7 @@
 #include "bundle_mgr_host_impl.h"
 
 #include "account_helper.h"
+#include "app_disable_forbidden/app_disable_forbidden_mgr.h"
 #include "app_log_tag_wrapper.h"
 #include "exception_util.h"
 #include "app_mgr_interface.h"
@@ -2806,6 +2807,10 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         APP_LOGE("bundle in white-list");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    auto checkResult = CheckAppDisableForbidden(bundleName, userId, 0, isEnable);
+    if (checkResult != ERR_OK) {
+        return checkResult;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -2859,6 +2864,10 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
+    }
+    auto checkResult = CheckAppDisableForbidden(bundleName, userId, appIndex, isEnable);
+    if (checkResult != ERR_OK) {
+        return checkResult;
     }
     APP_LOGD("verify permission success, begin to SetCloneApplicationEnabled");
     auto dataMgr = GetDataMgrFromService();
@@ -2954,6 +2963,10 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
         APP_LOGE("bundle in white-list");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    auto checkResult = CheckAppDisableForbidden(abilityInfo.bundleName, userId, 0, isEnabled);
+    if (checkResult != ERR_OK) {
+        return checkResult;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -3005,6 +3018,10 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
+    }
+    auto checkResult = CheckAppDisableForbidden(abilityInfo.bundleName, userId, appIndex, isEnabled);
+    if (checkResult != ERR_OK) {
+        return checkResult;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -7057,6 +7074,73 @@ ErrCode BundleMgrHostImpl::GetPluginExtensionInfo(
         return ERR_APPEXECFWK_NULL_PTR;
     }
     return dataMgr->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
+}
+
+ErrCode BundleMgrHostImpl::IsApplicationDisableForbidden(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, bool &forbidden)
+{
+    APP_LOGD("start IsApplicationDisableForbidden, -n %{public}s -u %{public}d -i %{public}d",
+        bundleName.c_str(), userId, appIndex);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE_NOFUNC("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE_NOFUNC("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        APP_LOGE_NOFUNC("verify permission across local account failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    return DelayedSingleton<AppDisableForbiddenMgr>::GetInstance()->IsApplicationDisableForbidden(
+        bundleName, userId, appIndex, forbidden);
+}
+
+ErrCode BundleMgrHostImpl::SetApplicationDisableForbidden(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, bool forbidden)
+{
+    LOG_NOFUNC_D(BMS_TAG_DEFAULT,
+        "start SetApplicationDisableForbidden, -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+        bundleName.c_str(), userId, appIndex, forbidden);
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != Constants::EDM_UID) {
+        APP_LOGE_NOFUNC("uid: %{public}d is not edm", callingUid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE)) {
+        APP_LOGE_NOFUNC("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto ret = DelayedSingleton<AppDisableForbiddenMgr>::GetInstance()->SetApplicationDisableForbidden(
+        bundleName, userId, appIndex, forbidden);
+    EventReport::SendAppDisableForbiddenEvent(bundleName, userId, appIndex, forbidden, ret, callingUid);
+    return ret;
+}
+
+ErrCode BundleMgrHostImpl::CheckAppDisableForbidden(
+    const std::string &bundleName, int32_t userId, int32_t appIndex, bool isEnabled)
+{
+    if (BundlePermissionMgr::IsNativeTokenTypeOnly() || isEnabled) {
+        LOG_NOFUNC_D(BMS_TAG_DEFAULT, "sa calling or isEnabled is true");
+        return ERR_OK;
+    }
+
+    bool forbidden = false;
+    auto ret = DelayedSingleton<AppDisableForbiddenMgr>::GetInstance()->IsApplicationDisableForbiddenNoCheck(
+        bundleName, userId, appIndex, forbidden);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("DisableForbiddenRdb get data failed bundle: %{public}s, ret: %{public}d",
+            bundleName.c_str(), ret);
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    if (forbidden) {
+        APP_LOGE_NOFUNC("bundle: %{public}s is forbidden to be disabled.", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

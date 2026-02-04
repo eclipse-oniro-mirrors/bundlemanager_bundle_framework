@@ -51,7 +51,11 @@ static void ThrowEnumError(napi_env env,
 
 static napi_value CreateEnumError(napi_env env,
     const std::string &parameter, const std::string &enumClass);
+
+static napi_value CreateErrorForSetAppEnabled(napi_env env, int32_t err,
+    const std::string &functionName = "", const std::string &permissionName = "");
 };
+
 
 #define CHECK_STRING_EMPTY(env, str, strName)                                              \
     do {                                                                           \
