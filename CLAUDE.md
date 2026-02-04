@@ -6,6 +6,38 @@ This file provides guidance for Claude Code (claude.ai/code) when working in thi
 
 This is the **BundleManager Bundle Framework** of OpenHarmony, a core subsystem responsible for application bundle management. It provides capabilities for application installation, update, uninstallation, and information query.
 
+## Quick Start
+
+### Prerequisites
+
+This project is part of OpenHarmony and requires:
+- OpenHarmony build environment (HB, GN, Ninja)
+- OpenHarmony SDK
+- Linux build environment (Ubuntu 18.04+ recommended)
+
+### Build Commands
+
+```bash
+# Build all bundle framework targets for a specific product
+./build.sh --product-name rk3568 --build-target bundle_framework
+
+# Or for other common products
+./build.sh --product-name ohos-sdk --build-target bundle_framework
+./build.sh --product-name rk3568 --build-target bms_target
+
+# Build only the service layer
+./build.sh --product-name rk3568 --build-target services/bundlemgr:bms_target
+
+# Build with specific feature enabled
+./build.sh --product-name rk3568 --build-target bundle_framework --gn-args bundle_framework_free_install=true
+```
+
+### Common Build Issues
+
+- Ensure `hb` tool is properly installed and in PATH
+- Product name must match available products in OpenHarmony vendor tree
+- Feature flags can be toggled via `--gn-args` parameter
+
 ## Architecture
 
 ### Directory Structure
@@ -175,6 +207,10 @@ Feature switches (defined in `appexecfwk.gni`):
 - `bundle_framework_quick_fix`: Enable quick fix support
 - `bundle_framework_overlay_install`: Enable overlay installation
 - `bundle_framework_sandbox_app`: Enable sandbox application support
+- `bundle_framework_graphics`: Enable graphics-related bundle management features
+- `bundle_framework_launcher`: Enable launcher service capabilities
+- `bundle_framework_form_dimension_2_3`: Enable form dimension 2.3 support
+- `bundle_framework_form_dimension_3_3`: Enable form dimension 3.3 support
 
 ## Development Patterns
 
@@ -234,12 +270,38 @@ APP_LOGE("Error: %{private}s", "sensitive information"); // Error
 - `test/resource/bmssystemtestability/`: Test Ability source code
 - `test/resource/bundlemgrservice/`: Bundle manager service test resources
 
+### Running Tests
+
+```bash
+# Build all test targets
+./build.sh --product-name rk3568 --build-target test_target
+
+# Run specific test types
+./build.sh --product-name rk3568 --build-target test/unittest
+./build.sh --product-name rk3568 --build-target test/moduletest
+./build.sh --product-name rk3568 --build-target test/systemtest
+./build.sh --product-name rk3568 --build-target test/benchmarktest
+./build.sh --product-name rk3568 --build-target test/fuzztest
+
+# Run individual test component
+./build.sh --product-name rk3568 --build-target services/bundlemgr/test:unittest
+```
+
+### Test Organization
+
+Tests are organized by the component they test:
+- **Unit tests**: Test individual classes and functions in isolation
+- **Module tests**: Test integration between related components
+- **System tests**: End-to-end testing of the full bundle management workflow
+- **Benchmark tests**: Performance testing for critical paths
+- **Fuzz tests**: Security and robustness testing with malformed inputs
+
 ## Important Concepts
 
 - **Bundle**: Application package (HAP file), containing code, resources, and configuration
 - **HAP**: Harmony Ability Package - OpenHarmony application package format
 - **Module**: HAP file containing one or more Abilities
-- **Ability**: Application component representing functionality (similar to Android's Activity/Service)
+- **Ability**: Application component representing functionality
 - **Extension**: Special Ability type (data, cards, etc.)
 - **InnerBundleInfo**: Internal representation of bundle information, containing rich metadata
 - **ApplicationInfo**: Application-level information (package name, version, permissions, etc.)
@@ -256,6 +318,75 @@ This component depends on many OpenHarmony subsystems (see `bundle.json` for com
 - `resource_manager`: Resource management
 - `appverify`: Application verification
 - `hitrace`, `hisysevent`, `hilog`: DFX capabilities
+
+## Debugging
+
+### Log Locations
+
+Bundle manager logs are routed through HiLog (OpenHarmony's logging system):
+
+- **Service logs**: BundleMgrService (SA 401) outputs to system log with domain `0xD001120`
+- **Installd logs**: InstalldService (SA 511) outputs with its own log domain
+- **Log viewing**: Use `hdc shell hilog -T BMS` to filter bundle manager logs
+
+### Dynamic Log Control
+
+```cpp
+// In code, dynamically adjust log level
+AppLogWrapper::SetLogLevel(AppLogLevel::DEBUG);  // Show all logs
+AppLogWrapper::SetLogLevel(AppLogLevel::ERROR);  // Show only errors
+```
+
+### HiSysEvent Events
+
+Bundle manager reports events via HiSysEvent (see `hisysevent.yaml` for schema):
+
+Common event domains:
+- `BMS_INSTALL`: Installation/uninstallation events
+- `BMS_CODE_SIGNATURE`: Code signing verification events
+- `BMS_QUICK_FIX`: Quick fix patch events
+- `BMS_OVERLAY`: Overlay installation events
+
+### Viewing Events
+
+```bash
+# View bundle manager events
+hdc shell hidumper -s 1201 -a "-e BMS"
+
+# Query specific events
+hdc shell hisysevent -q -d BMS_INSTALL -t 100
+```
+
+### Common Debugging Scenarios
+
+**Installation failures:**
+1. Check InstalldService status: `hdc shell hidumper -s 511`
+2. Verify signature verification in logs
+3. Check disk space and permissions
+
+**Permission issues:**
+1. Verify access token grants in logs
+2. Check `bundle_permission_mgr.cpp` flow
+3. Review provisioning profile parsing
+
+**IPC communication issues:**
+1. Verify both SA 401 and SA 511 are running: `hdc shell hidumper -s samgr`
+2. Check for death recipient callbacks in logs
+3. Monitor binder transaction logs
+
+**Database issues:**
+1. Check RDB storage initialization in `bundle_data_storage_rdb.cpp`
+2. Verify database schema in `services/bundlemgr/src/rdb/`
+3. Look for transaction failures in logs
+
+### Gotchas
+
+- **Privilege separation**: File operations must go through InstalldService (SA 511), not directly in BundleMgrService
+- **Multi-user support**: Bundle operations are user-scoped; always check userId parameter
+- **IPC timeout**: Bundle operations can take time; adjust timeout if installing large HAPs
+- **RDB transaction conflicts**: Database operations may fail during concurrent installations
+- **Signature verification**: All HAPs must be signed; development signing differs from production
+- **Overlay installation**: Overlay bundles have special restrictions on target bundles
 
 ## Configuration Files
 
