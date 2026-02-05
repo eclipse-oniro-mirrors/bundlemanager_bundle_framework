@@ -616,7 +616,7 @@ private:
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode CheckNativeSoWithOldInfo(
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
-    void NotifyBundleStatus(const NotifyBundleEvents &installRes);
+    ErrCode NotifyBundleStatus(const NotifyBundleEvents &installRes);
     void AddNotifyBundleEvents(const NotifyBundleEvents &notifyBundleEvents);
     void ProcessHqfInfo(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
     ErrCode ProcessDiffFiles(const AppqfInfo &appQfInfo, const std::string &nativeLibraryPath,
@@ -863,8 +863,6 @@ private:
     ErrCode CheckPreAppAllowHdcInstall(const InstallParam &installParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     void CheckPreBundleRecoverResult(ErrCode &result);
-    void CheckNewEl5Bundle(const bool isOta, const InnerBundleInfo &oldBundleInfo,
-        const InnerBundleInfo &newBundleInfo);
 
     bool IsAllowEnterPrise();
     void MarkIsForceUninstall(const std::string &bundleName, bool isForceUninstalled);
