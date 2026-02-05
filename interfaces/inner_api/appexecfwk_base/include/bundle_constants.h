@@ -218,8 +218,6 @@ constexpr int32_t ALL_CLONE_APP_INDEX = -1;
 constexpr const char* VERIFY_UNINSTALL_RULE_KEY = "ohos.bms.param.verifyUninstallRule";
 constexpr const char* VERIFY_UNINSTALL_RULE_VALUE = "true";
 
-constexpr const char* BMS_PARA_CLONE_IS_KEEP_DATA = "ohos.bms.param.clone.isKeepData";
-constexpr const char* IS_KEEP_DATA_TRUE = "true";
 
 constexpr const char* SUPPORT_APP_TYPES_SEPARATOR = ",";
 constexpr const char* SCHEME_SEPARATOR = "://";

@@ -1074,8 +1074,10 @@ ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, in
         APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX;
     }
+    auto iter = destroyAppCloneParam.parameters.find(ServiceConstants::BMS_PARA_CLONE_IS_KEEP_DATA);
+    bool isKeepData = (iter != destroyAppCloneParam.parameters.end() && iter->second == ServiceConstants::BMS_TRUE);
     if (destroyAppCloneParam.IsVerifyUninstallRule() &&
-        CheckUninstallDisposedRule(bundleName, userId, appIndex, destroyAppCloneParam.IsKeepData())) {
+        CheckUninstallDisposedRule(bundleName, userId, appIndex, isKeepData)) {
         LOG_W(BMS_TAG_INSTALLER, "CheckUninstallDisposedRule failed");
         return ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED;
     }

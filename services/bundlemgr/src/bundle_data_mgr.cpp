@@ -665,12 +665,12 @@ bool BundleDataMgr::RemoveUninstalledBundleinfos(int32_t userId)
         if (item.second.userInfos.empty()) {
             if (!uninstallDataMgr_->DeleteUninstallBundleInfo(item.first)) {
                 APP_LOGE("delete uninstall bundle %{public}s failed", item.first.c_str());
-                return false;
+                continue;
             }
         } else {
             if (!uninstallDataMgr_->UpdateUninstallBundleInfo(item.first, item.second)) {
                 APP_LOGE("update uninstall bundle %{public}s failed", item.first.c_str());
-                return false;
+                continue;
             }
         }
     }
@@ -9843,20 +9843,19 @@ void BundleDataMgr::ScanAllBundleGroupInfo()
             }
             int32_t groupUidIndex = dataGroupItem.second[0].uid -
                 dataGroupItem.second[0].userId * Constants::BASE_USER_RANGE - DATA_GROUP_UID_OFFSET;
-            bool hasIndex = indexMap.find(groupUidIndex) != indexMap.end();
-            if (!hasIndex && groupIdMap.find(dataGroupId) == groupIdMap.end()) {
+            if (indexMap.find(groupUidIndex) == indexMap.end() && groupIdMap.find(dataGroupId) == groupIdMap.end()) {
                 indexMap[groupUidIndex] = dataGroupId;
                 groupIdMap[dataGroupId] = groupUidIndex;
                 continue;
             }
-            if (!hasIndex && groupIdMap.find(dataGroupId) != groupIdMap.end()) {
-                APP_LOGW("id %{public}s has invalid index %{public}d, not index %{public}d",
+            if (indexMap.find(groupUidIndex) == indexMap.end() && groupIdMap.find(dataGroupId) != groupIdMap.end()) {
+                APP_LOGW("id %{public}s has valid index %{public}d, not index %{public}d",
                     dataGroupId.c_str(), groupIdMap[dataGroupId], groupUidIndex);
             }
-            if (hasIndex && indexMap[groupUidIndex] == dataGroupId) {
+            if (indexMap.find(groupUidIndex) != indexMap.end() && indexMap[groupUidIndex] == dataGroupId) {
                 continue;
             }
-            if (hasIndex && indexMap[groupUidIndex] != dataGroupId) {
+            if (indexMap.find(groupUidIndex) != indexMap.end() && indexMap[groupUidIndex] != dataGroupId) {
                 APP_LOGW("id %{public}s has invalid index %{public}d", dataGroupId.c_str(), groupUidIndex);
             }
             errorGroupIds.insert(dataGroupId);
