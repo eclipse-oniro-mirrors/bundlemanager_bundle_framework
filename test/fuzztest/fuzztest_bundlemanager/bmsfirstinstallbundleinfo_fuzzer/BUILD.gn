@@ -79,6 +79,7 @@ ohos_fuzztest("BMSFirstInstallBundleInfoFuzzTest") {
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "syscap_codec:syscap_interface_shared",
     "thermal_manager:thermalsrv_client",

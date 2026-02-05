@@ -57,6 +57,7 @@ ohos_systemtest("BmsLauncherServiceSystemTest") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
     "selinux:libselinux",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "thermal_manager:thermalsrv_client",
   ]

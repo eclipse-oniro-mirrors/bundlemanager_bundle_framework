@@ -83,6 +83,7 @@ ohos_unittest("BmsAOTMgrTest") {
     "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "thermal_manager:thermalsrv_client",
   ]
@@ -254,6 +255,7 @@ ohos_unittest("BmsAOTHandlerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "thermal_manager:thermalsrv_client",
   ]

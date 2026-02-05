@@ -81,6 +81,7 @@ ohos_unittest("BmsInstallExceptionMgrTest") {
     "json:nlohmann_json_static",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
     "selinux_adapter:librestorecon",
     "thermal_manager:thermalsrv_client",
   ]
