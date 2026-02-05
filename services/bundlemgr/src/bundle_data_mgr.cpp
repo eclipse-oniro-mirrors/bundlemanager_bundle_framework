@@ -9104,20 +9104,11 @@ ErrCode BundleDataMgr::GenerateAppInstallExtendedInfo(const InnerBundleInfo &inn
     std::string bundleName = innerBundleInfo.GetBundleName();
     appInstallExtendedInfo.bundleName = bundleName;
 
-    // collect hashParam and requiredDeviceFeatures from modules
-    for (const auto& [modulePackage, innerModuleInfo] : innerBundleInfo.GetInnerModuleInfos()) {
-        appInstallExtendedInfo.hashParam.emplace(modulePackage, innerModuleInfo.hashValue);
-        appInstallExtendedInfo.requiredDeviceFeatures.emplace(modulePackage,
-            innerBundleInfo.GetRequiredDeviceFeatures(modulePackage));   
-    }
-
-    // get specifiedDistributionType 
     ErrCode ret = GetSpecifiedDistributionType(bundleName, appInstallExtendedInfo.specifiedDistributionType);
     if (ret != ERR_OK) {
         APP_LOGW("GetSpecifiedDistributionType failed for %{public}s, continue without it", bundleName.c_str());
     }
 
-    // get additionalInfo 
     ret = GetAdditionalInfo(bundleName, appInstallExtendedInfo.additionalInfo);
     if (ret != ERR_OK) {
         APP_LOGW("GetAdditionalInfo failed for %{public}s, continue without it", bundleName.c_str());
@@ -9127,13 +9118,40 @@ ErrCode BundleDataMgr::GenerateAppInstallExtendedInfo(const InnerBundleInfo &inn
     appInstallExtendedInfo.installSource = innerBundleInfo.GetInstallSource();
     appInstallExtendedInfo.compatibleVersion = innerBundleInfo.GetCompatibleVersion();
 
-    // get sharedBundleInfo
-    innerBundleInfo.GetSharedBundleInfo(appInstallExtendedInfo.sharedBundleInfo);
-
-    // collect hapPath from all modules
+    // collect module info and dependencies in single pass
     for (const auto& [modulePackage, innerModuleInfo] : innerBundleInfo.GetInnerModuleInfos()) {
+        appInstallExtendedInfo.hashParam.emplace(modulePackage, innerModuleInfo.hashValue);
+        appInstallExtendedInfo.requiredDeviceFeatures.emplace(modulePackage,
+            innerBundleInfo.GetRequiredDeviceFeatures(modulePackage));
         if (!innerModuleInfo.hapPath.empty()) {
             appInstallExtendedInfo.hapPath.push_back(innerModuleInfo.hapPath);
+        }
+    }
+
+    // collect sharedBundleInfos with lambda to reduce nesting depth
+    std::set<std::pair<std::string, std::string>> uniqueDependencies;
+    auto addDependency = [this, &uniqueDependencies, &appInstallExtendedInfo](const Dependency &dep) {
+        auto key = std::make_pair(dep.bundleName, dep.moduleName);
+        if (uniqueDependencies.find(key) != uniqueDependencies.end()) {
+            return;
+        }
+        uniqueDependencies.insert(key);
+        SharedBundleInfo sharedBundleInfo;
+        if (GetSharedBundleInfoBySelf(dep.bundleName, sharedBundleInfo) == ERR_OK) {
+            appInstallExtendedInfo.sharedBundleInfos.emplace_back(sharedBundleInfo);
+        } else {
+            APP_LOGW("GetSharedBundleInfoBySelf failed for bundle %{public}s", dep.bundleName.c_str());
+        }
+    };
+
+    for (const auto& [modulePackage, innerModuleInfo] : innerBundleInfo.GetInnerModuleInfos()) {
+        std::vector<Dependency> dependencies;
+        if (!innerBundleInfo.GetAllSharedDependencies(modulePackage, dependencies)) {
+            APP_LOGD("GetAllSharedDependencies failed for module %{public}s, skip", modulePackage.c_str());
+            continue;
+        }
+        for (const auto& dep : dependencies) {
+            addDependency(dep);
         }
     }
 
@@ -9143,6 +9161,7 @@ ErrCode BundleDataMgr::GenerateAppInstallExtendedInfo(const InnerBundleInfo &inn
 ErrCode BundleDataMgr::GetAllAppInstallExtendedInfo(std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos) const
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+
     for (const auto& [bundleName, innerBundleInfo] : bundleInfos_) {
         if (innerBundleInfo.IsDisabled()) {
             APP_LOGD("app %{public}s is disabled", bundleName.c_str());
@@ -9152,7 +9171,12 @@ ErrCode BundleDataMgr::GetAllAppInstallExtendedInfo(std::vector<AppInstallExtend
             APP_LOGD("app %{public}s is cross-app shared bundle", bundleName.c_str());
             continue;
         }
-
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
+            if (HasOnlySharedModules(innerBundleInfo)) {
+                APP_LOGD("app %{public}s has only shared bundle", bundleName.c_str());
+                continue;
+            }
+        }
         AppInstallExtendedInfo appInstallExtendedInfo;
         ErrCode ret = const_cast<BundleDataMgr*>(this)->GenerateAppInstallExtendedInfo(
             innerBundleInfo, appInstallExtendedInfo);
@@ -9161,7 +9185,6 @@ ErrCode BundleDataMgr::GetAllAppInstallExtendedInfo(std::vector<AppInstallExtend
                 bundleName.c_str(), ret);
             continue;
         }
-
         appInstallExtendedInfos.emplace_back(appInstallExtendedInfo);
     }
     return ERR_OK;
@@ -11001,6 +11024,17 @@ bool BundleDataMgr::HasAppLinkingFlag(uint32_t flags)
 {
     return (flags & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
         static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING);
+}
+
+bool BundleDataMgr::HasOnlySharedModules(const InnerBundleInfo &innerBundleInfo)
+{
+    std::map<std::string, InnerModuleInfo> moduleInfos = innerBundleInfo.GetInnerModuleInfos();
+    for (const auto &info : moduleInfos) {
+        if (info.second.distro.moduleType != Profile::MODULE_TYPE_SHARED) {
+            return false;
+        }
+    }
+    return true;
 }
 
 ErrCode BundleDataMgr::QueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,

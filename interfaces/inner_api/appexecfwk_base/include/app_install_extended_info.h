@@ -34,7 +34,7 @@ struct AppInstallExtendedInfo : public Parcelable {
     std::map<std::string, std::string> hashParam;
     std::vector<std::string> hapPath;
     std::map<std::string, std::map<std::string, std::vector<std::string>>> requiredDeviceFeatures;
-    SharedBundleInfo sharedBundleInfo;
+    std::vector<SharedBundleInfo> sharedBundleInfos;
 
     bool ReadFromParcel(Parcel &parcel);
     bool Marshalling(Parcel &parcel) const override;
