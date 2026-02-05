@@ -452,7 +452,7 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     // check native file
     result = bundleInstallChecker_->CheckMultiNativeFile(newInfos);
     CHECK_RESULT(result, "Native so is incompatible in all hsps %{public}d");
-
+    verifyRes_ = hapVerifyResults[0];
     isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyResults[0]);
     appIdentifier_ = (hapVerifyResults[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
         DEBUG_APP_IDENTIFIER : hapVerifyResults[0].GetProvisionInfo().bundleInfo.appIdentifier;
@@ -635,6 +635,7 @@ ErrCode AppServiceFwkInstaller::VerifyCodeSignatureForHsp(
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.isPreInstalledBundle = false;
     codeSignatureParam.isCompressNativeLibrary = isCompressNativeLibs_;
+    bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
@@ -1068,6 +1069,7 @@ ErrCode AppServiceFwkInstaller::VerifyCodeSignatureForNativeFiles(const std::str
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.isPreInstalledBundle = true;
+    bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 

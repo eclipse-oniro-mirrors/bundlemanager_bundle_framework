@@ -2081,12 +2081,18 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
             FILE_ENTRY_ONLY : FILE_ALL;
         if (codeSignatureParam.isEnterpriseBundle) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for enterprise bundle");
-            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
-                codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
+            Security::CodeSign::ByteBuffer byteBuffer;
+            byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(codeSignatureParam.profileBlock.get()),
+                codeSignatureParam.profileBlockLength);
+            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(
+                codeSignatureParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
         } else if (codeSignatureParam.isInternaltestingBundle) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for internaltesting bundle");
-            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
-                codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
+            Security::CodeSign::ByteBuffer byteBuffer;
+            byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(codeSignatureParam.profileBlock.get()),
+                codeSignatureParam.profileBlockLength);
+            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(
+                codeSignatureParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
         } else if (codeSignatureParam.isPlugin) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for plugin");
             ret = codeSignHelper->EnforceCodeSignForAppWithPluginId(codeSignatureParam.appIdentifier,

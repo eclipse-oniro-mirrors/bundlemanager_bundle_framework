@@ -125,6 +125,7 @@ private:
     std::vector<std::string> uninstallModuleVec_;
     std::vector<std::string> deleteBundlePath_;
     InnerBundleInfo newInnerBundleInfo_;
+    Security::Verify::HapVerifyResult verifyRes_;
     DISALLOW_COPY_AND_MOVE(AppServiceFwkInstaller);
 
 #define CHECK_RESULT(errcode, errmsg)                                              \

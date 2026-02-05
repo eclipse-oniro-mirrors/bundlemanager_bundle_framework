@@ -149,6 +149,7 @@ private:
     std::vector<std::string> createdDirs_;
     InnerBundleInfo oldBundleInfo_;
     InnerBundleInfo newBundleInfo_;
+    Security::Verify::HapVerifyResult verifyRes_;
 
     DISALLOW_COPY_AND_MOVE(InnerSharedBundleInstaller);
 
