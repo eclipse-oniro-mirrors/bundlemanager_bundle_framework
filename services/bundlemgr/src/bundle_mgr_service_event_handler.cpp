@@ -130,7 +130,6 @@ constexpr const char* CODE_PROTECT_FLAG_CHECKED = "checked";
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
 constexpr int32_t USER_ID_SIZE = 1;
 constexpr const char* APPSPAWN_PRELOAD_ARKWEB_ENGINE = "const.startup.appspawn.preload.arkwebEngine";
-constexpr int64_t TEN_MB = 1024 * 1024 * 10; //10MB
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> onDemandInstallList_;
@@ -245,11 +244,6 @@ void BMSEventHandler::OnBmsStarting()
     if (LoadInstallInfosFromDb()) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OnBmsStarting Load install info from db success");
         BundleRebootStartEvent();
-        return;
-    }
-
-    if (!BundleUtil::CheckSystemFreeSize(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH, TEN_MB)) {
-        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "OnBmsStarting no space");
         return;
     }
 
