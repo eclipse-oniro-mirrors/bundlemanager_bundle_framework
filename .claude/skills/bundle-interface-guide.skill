@@ -1,0 +1,44 @@
+name: bundle-interface-guide
+description: |
+  提供 OpenHarmony BundleManager 添加新接口的完整指南。
+  包含 Installd 层、服务层、IPC 层和 JS NAPI 层的实现步骤、代码示例、编译指南和测试方法。
+
+aliases:
+  - bm-guide
+
+triggers:
+  - "如何添加 BundleManager 接口"
+  - "添加新接口到 BundleManager"
+  - "BundleManager 接口实现"
+  - "BMS 接口开发"
+
+documents:
+  - docs/bundle_manager_interface_guide.md
+
+commands:
+  - name: 查看完整指南
+    action: read_file
+    args:
+      file: docs/bundle_manager_interface_guide.md
+
+  - name: 查看文件清单
+    action: read_file
+    args:
+      file: docs/bundle_manager_interface_guide.md
+      section: "修改文件清单"
+
+  - name: 查看实现步骤
+    action: read_file
+    args:
+      file: docs/bundle_manager_interface_guide.md
+      section: "完整实现流程"
+
+examples: |
+  用户: 如何为 BundleManager 添加新接口？
+  助手: [显示 bundle-interface-guide skill 内容]
+
+  用户: 添加 BundleManager 接口需要修改哪些文件？
+  助手: [显示文件清单部分]
+
+  用户: BundleManager 接口的 IPC 实现步骤是什么？
+  助手: [显示 IPC 层实现部分]
