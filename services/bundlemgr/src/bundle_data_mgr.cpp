@@ -9177,6 +9177,11 @@ ErrCode BundleDataMgr::GetAllAppInstallExtendedInfo(std::vector<AppInstallExtend
                 continue;
             }
         }
+        int32_t userId = AccountHelper::GetOsAccountLocalIdFromUid(IPCSkeleton::GetCallingUid());
+        if (!innerBundleInfo.GetUsers().count(userId)) {
+            APP_LOGD("user %{public}d is not exist", userId);
+            continue;
+        }
         AppInstallExtendedInfo appInstallExtendedInfo;
         ErrCode ret = const_cast<BundleDataMgr*>(this)->GenerateAppInstallExtendedInfo(
             innerBundleInfo, appInstallExtendedInfo);
