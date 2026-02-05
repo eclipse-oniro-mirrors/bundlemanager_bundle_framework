@@ -112,24 +112,32 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfoList(const std::ve
     launcherAbilityResourceInfo.clear();
     std::vector<LauncherAbilityResourceInfo> allResources;
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode result = ERR_OK;
+    bool isAllFailed = true;
     for (const auto& options : optionsList) {
         const std::string& bundleName = options.bundleName;
         const std::string& moduleName = options.moduleName;
         const std::string& abilityName = options.abilityName;
         const int32_t appIndex = options.appIndex;
+        LauncherAbilityResourceInfo singleResource;
+        singleResource.bundleName = bundleName;
+        singleResource.moduleName = moduleName;
+        singleResource.abilityName = abilityName;
+        singleResource.appIndex = appIndex;
         if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
-            APP_LOGE("get bundle resource Fail, appIndex: %{public}d not in valid range", appIndex);
-            return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+            APP_LOGW("get bundle resource fail, appIndex: %{public}d not in valid range", appIndex);
+            launcherAbilityResourceInfo.emplace_back(std::move(singleResource));
+            result = ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+            continue;
         }
         allResources.clear();
-        LauncherAbilityResourceInfo singleResource;
         if (manager->GetSingleLauncherAbilityResourceInfo(bundleName, flags, allResources, appIndex)) {
-            auto ret = GetElementLauncherAbilityResourceInfo(
+            result = GetElementLauncherAbilityResourceInfo(
                 allResources, moduleName, abilityName, appIndex, singleResource);
-            if (ret != ERR_OK) {
-                return ret;
-            }
             launcherAbilityResourceInfo.emplace_back(std::move(singleResource));
+            if (result == ERR_OK) {
+                isAllFailed = false;
+            }
             continue;
         }
         BundleOptionInfo option;
@@ -138,13 +146,17 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfoList(const std::ve
         option.abilityName = options.abilityName;
         option.appIndex = options.appIndex;
         option.userId = manager->GetUserId();
-        auto result = bmsExtensionClient->GetLauncherAbilityResourceInfo(option, flags, singleResource);
+        result = bmsExtensionClient->GetLauncherAbilityResourceInfo(option, flags, singleResource);
+        launcherAbilityResourceInfo.emplace_back(std::move(singleResource));
         if (result == ERR_OK) {
-            launcherAbilityResourceInfo.emplace_back(std::move(singleResource));
-            continue;
+            isAllFailed = false;
+        } else {
+            APP_LOGW_NOFUNC("get resource failed -n %{public}s -f %{public}u", bundleName.c_str(), flags);
+            result = CheckBundleNameValid(bundleName, appIndex);
         }
-        APP_LOGE_NOFUNC("get resource failed -n %{public}s -f %{public}u", bundleName.c_str(), flags);
-        return CheckBundleNameValid(bundleName, appIndex);
+    }
+    if (isAllFailed) {
+        return result;
     }
     return ERR_OK;
 }

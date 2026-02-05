@@ -145,17 +145,12 @@ ErrCode BundleResourceProxy::GetLauncherAbilityResourceInfoList(const std::vecto
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start, optionsList size:%{public}zu, flags:%{public}u", optionsList.size(), flags);
 
-    ErrCode ret = CheckBundleOptionInfoInvalid(optionsList);
-    if (ret != ERR_OK) {
-        APP_LOGE("fail to write optionsList");
-        return ret;
-    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to write InterfaceToken");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    ret = WriteParcelableVector(optionsList, data);
+    ErrCode ret = WriteParcelableVector(optionsList, data);
     if (ret != ERR_OK) {
         APP_LOGE("fail to write optionsList");
         return ret;

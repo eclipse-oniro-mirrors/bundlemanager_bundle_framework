@@ -451,7 +451,7 @@ HWTEST_F(BundleResourceProxyTest, GetLauncherAbilityResourceInfoList_0100, Funct
     uint32_t flags = TEST_FLAGS;
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfo;
     auto ret = proxy->GetLauncherAbilityResourceInfoList(optionsList, flags, launcherAbilityResourceInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 
     optionsList.clear();
     bundleOptionInfo.bundleName = TEST_STRING;
