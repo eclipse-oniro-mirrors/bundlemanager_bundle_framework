@@ -66,6 +66,7 @@ constexpr int32_t EDC_UID = 7200;
 constexpr int32_t DEV_ASSISTANT_UID = 7400;
 constexpr int32_t CODE_SIGN_UID = 3074;
 constexpr int32_t ACCOUNT_UID = 3058;
+constexpr int32_t EDM_UID = 3057;
 
 /*
 all of cache path for bundle:

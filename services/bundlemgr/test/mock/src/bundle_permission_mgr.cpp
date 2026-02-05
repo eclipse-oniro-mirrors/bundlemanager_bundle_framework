@@ -31,6 +31,7 @@ bool g_verifyUninstallPermission = true;
 bool g_isCallingUidValid = true;
 bool g_verifyPermissionFalse = false;
 bool g_isBundleSelfCallingFalse = false;
+bool g_isNativeTokenTypeOnly = true;
 
 void SetSystemAppForTest(bool value)
 {
@@ -282,6 +283,11 @@ bool BundlePermissionMgr::IsNativeTokenType()
 bool BundlePermissionMgr::IsShellTokenType()
 {
     return g_isShellTokenType;
+}
+
+bool BundlePermissionMgr::IsNativeTokenTypeOnly()
+{
+    return g_isNativeTokenTypeOnly;
 }
 
 bool BundlePermissionMgr::Init()

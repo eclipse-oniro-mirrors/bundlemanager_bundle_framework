@@ -7150,5 +7150,74 @@ ErrCode BundleMgrProxy::GetPluginExtensionInfo(const std::string &hostBundleName
     return GetParcelableInfoWithErrCode<ExtensionAbilityInfo>(
         BundleMgrInterfaceCode::GET_PLUGIN_EXTENSION_INFO, data, extensionInfo);
 }
+
+ErrCode BundleMgrProxy::IsApplicationDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex,
+    bool &forbidden)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE_NOFUNC("Write bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE_NOFUNC("Write user id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE_NOFUNC("Write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::IS_APPLICATION_DISABLE_FORBIDDEN, data, reply)) {
+        APP_LOGE_NOFUNC("SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    forbidden = reply.ReadBool();
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::SetApplicationDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex,
+    bool forbidden)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE_NOFUNC("Write bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE_NOFUNC("Write user id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE_NOFUNC("write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(forbidden)) {
+        APP_LOGE_NOFUNC("write forbidden fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_APPLICATION_DISABLE_FORBIDDEN, data, reply)) {
+        APP_LOGE_NOFUNC("SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

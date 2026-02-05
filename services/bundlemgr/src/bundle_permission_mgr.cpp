@@ -537,6 +537,20 @@ bool BundlePermissionMgr::IsShellTokenType()
     return false;
 }
 
+bool BundlePermissionMgr::IsNativeTokenTypeOnly()
+{
+    LOG_D(BMS_TAG_DEFAULT, "IsNativeTokenTypeOnly begin");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    LOG_D(BMS_TAG_DEFAULT, "tokenType is %{private}d", tokenType);
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        LOG_D(BMS_TAG_DEFAULT, "caller is native, success");
+        return true;
+    }
+    LOG_D(BMS_TAG_DEFAULT, "caller not native");
+    return false;
+}
+
 bool BundlePermissionMgr::VerifyCallingUid()
 {
     LOG_D(BMS_TAG_DEFAULT, "begin to verify calling uid");

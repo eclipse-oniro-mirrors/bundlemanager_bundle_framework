@@ -66,6 +66,7 @@ private:
     static void InnerSendQueryBundleInfoEvent(const EventInfo& eventInfo);
     static void InnerSendDynamicShortcutEvent(const EventInfo& eventInfo);
     static void InnerSendDesktopShortcutEvent(const EventInfo& eventInfo);
+    static void InnerSendAppDisableForbiddenEvent(const EventInfo& eventInfo);
 
     template<typename... Types>
     static void InnerEventWrite(const std::string &eventName,

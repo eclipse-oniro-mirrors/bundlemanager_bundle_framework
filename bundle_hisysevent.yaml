@@ -35,3 +35,12 @@ QUERY_BUNDLE_INFO:
   CALLING_BUNDLE_NAME_LIST: {type: STRING, arrsize: 100, desc: calling bundleName}
   GET_BUNDLE_INFO_FLAG_LIST: {type: INT32, arrsize: 100, desc: flag of bundle info}
   ERROR_CODE: {type: INT32, desc: error code}
+
+APP_STATUS_CHANGE:
+  __BASE: {type: STATISTIC, level: MINOR, desc: app disable forbidden state change}
+  BUNDLE_NAME: {type: STRING, desc: bundle name}
+  USERID: {type: INT32, desc: userId of the bundle}
+  APP_INDEX: {type: INT32, desc: app index}
+  DISABLE_FORBIDDEN: {type: BOOL, desc: disable forbidden}
+  ERROR_CODE: {type: INT32, desc: error code}
+  CALLING_UID: {type: INT32, desc: calling uid}

@@ -1416,6 +1416,42 @@ HWTEST_F(BmsBundleMgrProxyTest, GetPluginBundlePathForSelf_0100, Function | Medi
 }
 
 /**
+ * @tc.number: IsApplicationDisableForbidden_0001
+ * @tc.name: test the IsApplicationDisableForbidden
+ * @tc.desc: 1. system running normally
+ *           2. test IsApplicationDisableForbidden
+ */
+HWTEST_F(BmsBundleMgrProxyTest, IsApplicationDisableForbidden_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "bundle_test";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    bool forbidden = false;
+    auto ret = bundleMgrProxy.IsApplicationDisableForbidden(bundleName, userId, appIndex, forbidden);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SetApplicationDisableForbidden_0001
+ * @tc.name: test the SetApplicationDisableForbidden
+ * @tc.desc: 1. system running normally
+ *           2. test SetApplicationDisableForbidden
+ */
+HWTEST_F(BmsBundleMgrProxyTest, SetApplicationDisableForbidden_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "bundle_test";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    bool forbidden = false;
+    auto ret = bundleMgrProxy.SetApplicationDisableForbidden(bundleName, userId, appIndex, forbidden);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
  * @tc.number: GetBundleInstallStatus_0001
  * @tc.name: test the GetBundleInstallStatus
  * @tc.desc: 1. system running normally

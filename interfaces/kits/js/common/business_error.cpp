@@ -23,6 +23,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+constexpr const char* ERROR_MESSAGE_APP_DISABLE_FORBIDDEN = "Or the application is forbidden to be disabled.";
 
 void BusinessError::ThrowError(napi_env env, int32_t err, const std::string &msg)
 {
@@ -181,6 +182,31 @@ napi_value BusinessError::CreateEnumError(napi_env env,
         }
     }
     return CreateError(env, ERROR_PARAM_CHECK_ERROR, errMessage);
+}
+
+napi_value BusinessError::CreateErrorForSetAppEnabled(
+    napi_env env, int32_t err, const std::string &functionName, const std::string &permissionName)
+{
+    std::string errMessage = BusinessErrorNS::ERR_MSG_BUSINESS_ERROR;
+    auto iter = errMessage.find("$");
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, std::to_string(err));
+    }
+    std::unordered_map<int32_t, const char*> errMap;
+    BusinessErrorMap::GetErrMap(errMap);
+    if (errMap.find(err) != errMap.end()) {
+        errMessage += errMap[err];
+    }
+    iter = errMessage.find("$");
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, functionName);
+        iter = errMessage.find("$");
+        if (iter != std::string::npos) {
+            errMessage = errMessage.replace(iter, 1, permissionName);
+            errMessage += ERROR_MESSAGE_APP_DISABLE_FORBIDDEN;
+        }
+    }
+    return CreateError(env, err, errMessage);
 }
 } // AppExecFwk
 } // OHOS

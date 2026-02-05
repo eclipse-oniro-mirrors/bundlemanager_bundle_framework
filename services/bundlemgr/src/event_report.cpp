@@ -297,6 +297,20 @@ void EventReport::SendDesktopShortcutEvent(const std::string &operationType, int
     EventReport::SendSystemEvent(BMSEventType::DESKTOP_SHORTCUT, eventInfo);
 }
 
+void EventReport::SendAppDisableForbiddenEvent(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, bool forbidden, ErrCode errCode, int32_t callingUid)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = bundleName;
+    eventInfo.userId = userId;
+    eventInfo.appIndex = appIndex;
+    eventInfo.disableForbidden = forbidden;
+    eventInfo.errCode = errCode;
+    eventInfo.callingUid = callingUid;
+
+    EventReport::SendSystemEvent(BMSEventType::APP_STATUS_CHANGE, eventInfo);
+}
+
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
 {
 #ifdef HISYSEVENT_ENABLE

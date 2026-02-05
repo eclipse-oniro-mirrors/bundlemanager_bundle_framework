@@ -11439,5 +11439,64 @@ HWTEST_F(ActsBmsKitSystemTest, GetTestRunner_0002, Function | MediumTest | Level
     }
     std::cout << "END GetTestRunner_0002" << std::endl;
 }
+
+/**
+ * @tc.number: IsApplicationDisableForbidden_0001
+ * @tc.name: test IsApplicationDisableForbidden interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call IsApplicationDisableForbidden
+ */
+HWTEST_F(ActsBmsKitSystemTest, IsApplicationDisableForbidden_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START IsApplicationDisableForbidden_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    bool forbidden = false;
+    auto ret = bundleMgrProxy->IsApplicationDisableForbidden(appName, USERID, 0, forbidden);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(forbidden);
+
+    auto saveuid = getuid();
+    setuid(Constants::EDM_UID);
+    ret = bundleMgrProxy->SetApplicationDisableForbidden(appName, USERID, 0, true);
+    setuid(saveuid);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = bundleMgrProxy->IsApplicationDisableForbidden(appName, USERID, 0, forbidden);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(forbidden);
+
+    setuid(Constants::EDM_UID);
+    ret = bundleMgrProxy->SetApplicationDisableForbidden(appName, USERID, 0, false);
+    setuid(saveuid);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = bundleMgrProxy->IsApplicationDisableForbidden(appName, USERID, 0, forbidden);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(forbidden);
+
+    ret = bundleMgrProxy->IsApplicationDisableForbidden(appName, USERID, 1, forbidden);
+    EXPECT_NE(ret, ERR_OK);
+
+    ret = bundleMgrProxy->IsApplicationDisableForbidden(appName, 200, 0, forbidden);
+    EXPECT_NE(ret, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END IsApplicationDisableForbidden_0001" << std::endl;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

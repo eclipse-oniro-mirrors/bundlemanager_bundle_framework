@@ -983,6 +983,8 @@ private:
     ErrCode HandleGetBundleInstallStatus(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetAllJsonProfile(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetPluginExtensionInfo(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleIsApplicationDisableForbidden(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleSetApplicationDisableForbidden(MessageParcel &data, MessageParcel &reply);
 
 private:
     /**

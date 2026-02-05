@@ -2154,4 +2154,34 @@ HWTEST_F(BmsBundlePermissionFalseTest, GetLaunchWantForBundle_0001, Function | S
     ErrCode ret = bundleMgrHostImpl_->GetLaunchWantForBundle(BUNDLE_NAME, want, USERID, true);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: IsApplicationDisableForbidden_0001
+ * @tc.name: test IsApplicationDisableForbidden
+ * @tc.desc: test IsApplicationDisableForbidden
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, IsApplicationDisableForbidden_0001, Function | SmallTest | Level1)
+{
+    std::string bundleName = "bundle_test";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    bool forbidden = false;
+    auto testRet = bundleMgrHostImpl_->IsApplicationDisableForbidden(bundleName, userId, appIndex, forbidden);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: SetApplicationDisableForbidden_0001
+ * @tc.name: test SetApplicationDisableForbidden
+ * @tc.desc: test SetApplicationDisableForbidden
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, SetApplicationDisableForbidden_0001, Function | SmallTest | Level1)
+{
+    std::string bundleName = "bundle_test";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    bool forbidden = false;
+    auto testRet = bundleMgrHostImpl_->SetApplicationDisableForbidden(bundleName, userId, appIndex, forbidden);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS

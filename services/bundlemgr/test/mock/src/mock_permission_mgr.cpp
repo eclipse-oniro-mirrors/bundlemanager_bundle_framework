@@ -213,6 +213,11 @@ bool BundlePermissionMgr::IsShellTokenType()
     return false;
 }
 
+bool BundlePermissionMgr::IsNativeTokenTypeOnly()
+{
+    return true;
+}
+
 bool BundlePermissionMgr::VerifyCallingUid()
 {
     return false;

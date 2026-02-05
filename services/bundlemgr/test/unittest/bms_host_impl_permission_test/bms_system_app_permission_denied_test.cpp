@@ -1190,4 +1190,23 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, GetPluginExtensionInfo_0001, TestSize
     auto ret = localBundleMgrHostImpl->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
+
+/*
+ * @tc.number: IsApplicationDisableForbidden_0001
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: IsApplicationDisableForbidden SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, IsApplicationDisableForbidden_0001, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "bundle_test";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    bool forbidden = false;
+    auto ret = localBundleMgrHostImpl->IsApplicationDisableForbidden(bundleName, userId, appIndex, forbidden);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    EXPECT_FALSE(forbidden);
+}
 }  // namespace OHOS

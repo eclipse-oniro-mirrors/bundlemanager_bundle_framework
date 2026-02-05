@@ -43,6 +43,10 @@ public:
         const std::string &parameter, const std::string &type);
     static void ThrowEnumError(ani_env *env, const std::string &parameter, const std::string &type);
     static void ThrowError(ani_env *env, int32_t err, const std::string &msg = "");
+    static void ThrowErrorForSetAppEnabled(ani_env *env, int32_t err,
+        const std::string &parameter, const std::string &type);
+    static ani_object CreateErrorForSetAppEnabled(
+        ani_env *env, int32_t err, const std::string &functionName = "", const std::string &permissionName = "");
 private:
     static void ThrowError(ani_env *env, ani_object err);
 };

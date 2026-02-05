@@ -51,6 +51,7 @@ constexpr const char* DEFAULT_APP = "DEFAULT_APP";
 constexpr const char* QUERY_BUNDLE_INFO = "QUERY_BUNDLE_INFO";
 constexpr const char* BUNDLE_DYNAMIC_SHORTCUTINFO = "BUNDLE_DYNAMIC_SHORTCUTINFO";
 constexpr const char* DESKTOP_SHORTCUT = "DESKTOP_SHORTCUT";
+constexpr const char* APP_STATUS_CHANGE = "APP_STATUS_CHANGE";
 
 // event params
 const char* EVENT_PARAM_PNAMEID = "PNAMEID";
@@ -102,6 +103,7 @@ const char* PARTITION_NAME_KEY = "PARTITION_NAME";
 const char* REMAIN_PARTITION_SIZE_KEY = "REMAIN_PARTITION_SIZE";
 const char* USER_DATA_SIZE = "USER_DATA_SIZE";
 const char* EVENT_PARAM_IS_KEEPDATA = "IS_KEEPDATA";
+const char* EVENT_PARAM_DISABLE_FORBIDDEN = "DISABLE_FORBIDDEN";
 
 // API and SDK version
 const char* EVENT_PARAM_MIN_API_VERSION = "MIN_API_VERSION";
@@ -348,6 +350,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::DESKTOP_SHORTCUT,
             [](const EventInfo& eventInfo) {
                 InnerSendDesktopShortcutEvent(eventInfo);
+            } },
+        { BMSEventType::APP_STATUS_CHANGE,
+            [](const EventInfo& eventInfo) {
+                InnerSendAppDisableForbiddenEvent(eventInfo);
             } },
     };
 
@@ -850,6 +856,19 @@ void InnerEventReport::InnerSendDesktopShortcutEvent(const EventInfo& eventInfo)
         EVENT_SHORTCUT_ID, eventInfo.shortcutIds,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
+}
+
+void InnerEventReport::InnerSendAppDisableForbiddenEvent(const EventInfo& eventInfo)
+{
+    InnerSystemEventWrite(
+        APP_STATUS_CHANGE,
+        HiSysEventType::STATISTIC,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_DISABLE_FORBIDDEN, eventInfo.disableForbidden,
+        EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

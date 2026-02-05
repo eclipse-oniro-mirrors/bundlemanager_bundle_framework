@@ -19,6 +19,7 @@ config("bundlemgr_common_config") {
   include_dirs = [
     "include",
     "include/aot",
+    "include/app_disable_forbidden",
     "include/app_provision_info",
     "include/app_service_fwk",
     "include/exception",

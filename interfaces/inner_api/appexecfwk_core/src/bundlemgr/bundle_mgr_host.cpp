@@ -762,6 +762,12 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PLUGIN_EXTENSION_INFO):
             errCode = HandleGetPluginExtensionInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_APPLICATION_DISABLE_FORBIDDEN):
+            errCode = HandleIsApplicationDisableForbidden(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_APPLICATION_DISABLE_FORBIDDEN):
+            errCode = HandleSetApplicationDisableForbidden(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -5451,6 +5457,40 @@ ErrCode BundleMgrHost::HandleGetPluginExtensionInfo(MessageParcel &data, Message
     }
     if (ret == ERR_OK && !reply.WriteParcelable(&extensionAbilityInfo)) {
         APP_LOGE("write extension infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleIsApplicationDisableForbidden(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    bool forbidden = false;
+    auto ret = IsApplicationDisableForbidden(bundleName, userId, appIndex, forbidden);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE_NOFUNC("is app disable forbidden write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(forbidden)) {
+        APP_LOGE_NOFUNC("is app disable forbidden write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetApplicationDisableForbidden(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    bool forbidden = data.ReadBool();
+    auto ret = SetApplicationDisableForbidden(bundleName, userId, appIndex, forbidden);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE_NOFUNC("set app disable forbidden write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
