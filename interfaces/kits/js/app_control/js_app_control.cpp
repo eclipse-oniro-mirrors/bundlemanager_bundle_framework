@@ -815,7 +815,7 @@ napi_value GetDisposedRulesBySetter(napi_env env, napi_callback_info info)
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
         napi_value error = BusinessError::CreateNewCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
-            GET_ALL_DISPOSED_RULES);
+            GET_DISPOSED_RULES_BY_BUNDLE);
         napi_throw(env, error);
         return nullptr;
     }
@@ -827,7 +827,7 @@ napi_value GetDisposedRulesBySetter(napi_env env, napi_callback_info info)
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedRulesBySetter failed");
         napi_value businessError = BusinessError::CreateNewCommonError(
-            env, ret, GET_ALL_DISPOSED_RULES, PERMISSION_DISPOSED_APP_STATUS);
+            env, ret, GET_DISPOSED_RULES_BY_BUNDLE, PERMISSION_DISPOSED_APP_STATUS);
         napi_throw(env, businessError);
         return nullptr;
     }

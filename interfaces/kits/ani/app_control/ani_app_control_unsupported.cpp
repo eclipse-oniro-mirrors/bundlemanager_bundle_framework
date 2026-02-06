@@ -70,7 +70,7 @@ static ani_object AniGetAllDisposedRules(ani_env* env)
 static ani_object AniGetDisposedRulesBySetter(ani_env* env, ani_string aniBundleName, ani_int aniAppIndex)
 {
     APP_LOGI("AppControl not supported");
-    BusinessErrorAni::ThrowCommonNewError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_ALL_DISPOSED_RULES, "");
+    BusinessErrorAni::ThrowCommonNewError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_DISPOSED_RULES_BY_BUNDLE, "");
     return nullptr;
 }
 
