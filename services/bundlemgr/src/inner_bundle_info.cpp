@@ -2321,6 +2321,25 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     }
 }
 
+void InnerBundleInfo::ResetPrivilegeCapability()
+{
+    // Reset all privilege-related fields to default values (false)
+    // This is used when loading bundle info from database during system startup
+    SetKeepAlive(false);
+    baseApplicationInfo_->runningResourcesApply = false;
+    baseApplicationInfo_->associatedWakeUp = false;
+    std::vector<std::string> allowCommonEvent;
+    SetAllowCommonEvent(allowCommonEvent);
+    SetAllowAppRunWhenDeviceFirstLocked(false);
+    std::vector<int32_t> resourcesApply;
+    baseApplicationInfo_->resourcesApply = resourcesApply;
+    baseApplicationInfo_->allowEnableNotification = false;
+    // Note: allowMultiProcess is not reset here as it can be configured by signature
+    // Note: hideDesktopIcon is not reset here as it has its own reset logic
+    // Note: userDataClearable is not reset here as it has its own default value
+    // Note: formVisibleNotify is not reset here as it has its own default value
+}
+
 void InnerBundleInfo::UpdateRemovable(bool isPreInstall, bool removable)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE

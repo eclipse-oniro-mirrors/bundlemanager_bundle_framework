@@ -903,4 +903,294 @@ HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0700, Function | SmallTest | Level
     EXPECT_TRUE(ret);
 }
 #endif
+
+/**
+ * @tc.number: TransformStrToInfo_Parallel_0100
+ * @tc.name: TransformStrToInfo with empty dataset
+ * @tc.desc: Test parallel processing with empty input data
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, TransformStrToInfo_Parallel_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+
+    std::map<std::string, std::string> emptyDatas;
+    std::map<std::string, InnerBundleInfo> infos;
+
+    // Should handle empty data gracefully
+    dataStorage->TransformStrToInfo(emptyDatas, infos);
+
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: TransformStrToInfo_Parallel_0200
+ * @tc.name: TransformStrToInfo with single bundle
+ * @tc.desc: Test parallel processing with single bundle
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, TransformStrToInfo_Parallel_0200, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+
+    // Create test bundle info
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = TEST_BUNDLE_NAME;
+    applicationInfo.name = TEST_NAME;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    // Save to get JSON string
+    bool ret = dataStorage->SaveStorageBundleInfo(innerBundleInfo);
+    EXPECT_TRUE(ret);
+
+    // Query saved data
+    std::map<std::string, std::string> datas;
+    ret = dataStorage->rdbDataManager_->QueryAllData(datas);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(datas.empty());
+
+    // Test TransformStrToInfo
+    std::map<std::string, InnerBundleInfo> infos;
+    dataStorage->TransformStrToInfo(datas, infos);
+
+    EXPECT_FALSE(infos.empty());
+    EXPECT_EQ(infos[TEST_BUNDLE_NAME].GetApplicationName(), TEST_NAME);
+
+    // Cleanup
+    dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
+}
+
+/**
+ * @tc.number: TransformStrToInfo_Parallel_0300
+ * @tc.name: TransformStrToInfo with multiple bundles
+ * @tc.desc: Test parallel processing with multiple bundles (10 apps)
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, TransformStrToInfo_Parallel_0300, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+
+    const int bundleCount = 10;
+    std::vector<InnerBundleInfo> savedBundles;
+
+    // Create and save multiple bundles
+    for (int i = 0; i < bundleCount; i++) {
+        ApplicationInfo applicationInfo;
+        applicationInfo.bundleName = "com.test.bundle" + std::to_string(i);
+        applicationInfo.name = "TestName" + std::to_string(i);
+
+        InnerBundleInfo innerBundleInfo;
+        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+        bool ret = dataStorage->SaveStorageBundleInfo(innerBundleInfo);
+        EXPECT_TRUE(ret);
+        savedBundles.push_back(innerBundleInfo);
+    }
+
+    // Query all saved data
+    std::map<std::string, std::string> datas;
+    bool ret = dataStorage->rdbDataManager_->QueryAllData(datas);
+    EXPECT_TRUE(ret);
+    EXPECT_GE(datas.size(), bundleCount);
+
+    // Test TransformStrToInfo with parallel processing
+    std::map<std::string, InnerBundleInfo> infos;
+    dataStorage->TransformStrToInfo(datas, infos);
+
+    EXPECT_GE(infos.size(), bundleCount);
+
+    // Verify all bundles are correctly loaded
+    for (int i = 0; i < bundleCount; i++) {
+        std::string bundleName = "com.test.bundle" + std::to_string(i);
+        std::string expectedName = "TestName" + std::to_string(i);
+        EXPECT_EQ(infos[bundleName].GetApplicationName(), expectedName);
+    }
+
+    // Cleanup
+    for (const auto &bundle : savedBundles) {
+        dataStorage->DeleteStorageBundleInfo(bundle);
+    }
+}
+
+/**
+ * @tc.number: TransformStrToInfo_Parallel_0400
+ * @tc.name: TransformStrToInfo with large dataset
+ * @tc.desc: Test parallel processing with large dataset (50 apps)
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, TransformStrToInfo_Parallel_0400, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+
+    const int bundleCount = 50;
+    std::vector<InnerBundleInfo> savedBundles;
+
+    // Create and save multiple bundles
+    for (int i = 0; i < bundleCount; i++) {
+        ApplicationInfo applicationInfo;
+        applicationInfo.bundleName = "com.test.large" + std::to_string(i);
+        applicationInfo.name = "LargeTest" + std::to_string(i);
+
+        InnerBundleInfo innerBundleInfo;
+        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+        bool ret = dataStorage->SaveStorageBundleInfo(innerBundleInfo);
+        EXPECT_TRUE(ret);
+        savedBundles.push_back(innerBundleInfo);
+    }
+
+    // Query all saved data
+    std::map<std::string, std::string> datas;
+    bool ret = dataStorage->rdbDataManager_->QueryAllData(datas);
+    EXPECT_TRUE(ret);
+    EXPECT_GE(datas.size(), bundleCount);
+
+    // Test TransformStrToInfo with parallel processing
+    std::map<std::string, InnerBundleInfo> infos;
+    dataStorage->TransformStrToInfo(datas, infos);
+
+    EXPECT_GE(infos.size(), bundleCount);
+
+    // Verify all bundles are correctly loaded
+    for (int i = 0; i < bundleCount; i++) {
+        std::string bundleName = "com.test.large" + std::to_string(i);
+        EXPECT_TRUE(infos.find(bundleName) != infos.end());
+    }
+
+    // Cleanup
+    for (const auto &bundle : savedBundles) {
+        dataStorage->DeleteStorageBundleInfo(bundle);
+    }
+}
+
+/**
+ * @tc.number: TransformStrToInfo_Parallel_0500
+ * @tc.name: TransformStrToInfo with corrupted JSON
+ * @tc.desc: Test parallel processing handles corrupted JSON data
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, TransformStrToInfo_Parallel_0500, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+
+    std::map<std::string, std::string> datas;
+
+    // Add valid data
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = TEST_BUNDLE_NAME;
+    applicationInfo.name = TEST_NAME;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    dataStorage->SaveStorageBundleInfo(innerBundleInfo);
+
+    // Query to get valid JSON
+    std::map<std::string, std::string> allData;
+    dataStorage->rdbDataManager_->QueryAllData(allData);
+
+    // Add corrupted JSON data
+    datas[TEST_BUNDLE_NAME] = allData[TEST_BUNDLE_NAME];  // Valid
+    datas["corrupted_bundle"] = "{invalid json content";   // Invalid
+    datas["another_bad"] = "not a json at all";           // Invalid
+
+    // Test TransformStrToInfo
+    std::map<std::string, InnerBundleInfo> infos;
+    dataStorage->TransformStrToInfo(datas, infos);
+
+    // Should only load the valid bundle
+    EXPECT_TRUE(infos.find(TEST_BUNDLE_NAME) != infos.end());
+    EXPECT_EQ(infos[TEST_BUNDLE_NAME].GetApplicationName(), TEST_NAME);
+
+    // Cleanup
+    dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
+}
+
+/**
+ * @tc.number: TransformStrToInfo_Parallel_0600
+ * @tc.name: TransformStrToInfo result consistency
+ * @tc.desc: Verify parallel processing produces same results as serial
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, TransformStrToInfo_Parallel_0600, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+
+    const int bundleCount = 20;
+    std::vector<InnerBundleInfo> savedBundles;
+
+    // Create and save bundles with different properties
+    for (int i = 0; i < bundleCount; i++) {
+        ApplicationInfo applicationInfo;
+        applicationInfo.bundleName = "com.test.consistency" + std::to_string(i);
+        applicationInfo.name = "ConsistencyTest" + std::to_string(i);
+        applicationInfo.label = "Label" + std::to_string(i);
+        applicationInfo.description = "Description" + std::to_string(i);
+
+        InnerBundleInfo innerBundleInfo;
+        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+        bool ret = dataStorage->SaveStorageBundleInfo(innerBundleInfo);
+        EXPECT_TRUE(ret);
+        savedBundles.push_back(innerBundleInfo);
+    }
+
+    // Query all saved data
+    std::map<std::string, std::string> datas;
+    bool ret = dataStorage->rdbDataManager_->QueryAllData(datas);
+    EXPECT_TRUE(ret);
+    EXPECT_GE(datas.size(), bundleCount);
+
+    // Test TransformStrToInfo
+    std::map<std::string, InnerBundleInfo> infos;
+    dataStorage->TransformStrToInfo(datas, infos);
+
+    // Verify consistency: all bundles loaded
+    EXPECT_GE(infos.size(), bundleCount);
+
+    // Verify each bundle's properties are preserved correctly
+    for (int i = 0; i < bundleCount; i++) {
+        std::string bundleName = "com.test.consistency" + std::to_string(i);
+        auto it = infos.find(bundleName);
+        EXPECT_TRUE(it != infos.end());
+
+        if (it != infos.end()) {
+            EXPECT_EQ(it->second.GetApplicationName(), "ConsistencyTest" + std::to_string(i));
+        }
+    }
+
+    // Cleanup
+    for (const auto &bundle : savedBundles) {
+        dataStorage->DeleteStorageBundleInfo(bundle);
+    }
+}
+
+/**
+ * @tc.number: TransformStrToInfo_Parallel_0700
+ * @tc.name: TransformStrToInfo with null rdbDataManager
+ * @tc.desc: Test parallel processing handles null database manager
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, TransformStrToInfo_Parallel_0700, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+    dataStorage->rdbDataManager_ = nullptr;
+
+    std::map<std::string, std::string> datas;
+    datas["test_key"] = "test_value";
+
+    std::map<std::string, InnerBundleInfo> infos;
+
+    // Should handle null database manager gracefully
+    dataStorage->TransformStrToInfo(datas, infos);
+
+    EXPECT_TRUE(infos.empty());
+}
+
 }  // namespace

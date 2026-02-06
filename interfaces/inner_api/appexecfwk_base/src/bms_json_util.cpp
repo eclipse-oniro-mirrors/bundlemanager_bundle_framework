@@ -23,13 +23,14 @@ void BMSJsonUtil::GetStrValueIfFindKey(const nlohmann::json &jsonObject,
     if (parseResult) {
         return;
     }
-    if (jsonObject.find(key) != end) {
-        if (!jsonObject.at(key).is_string()) {
+    auto iter = jsonObject.find(key);
+    if (iter != end) {
+        if (!iter->is_string()) {
             APP_LOGE("type error %{public}s not string", key.c_str());
             parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
             return;
         }
-        data = jsonObject.at(key).get<std::string>();
+        data = iter->get<std::string>();
         if (data.length() > Constants::MAX_JSON_STRING_LENGTH) {
             parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR;
         }
@@ -40,6 +41,7 @@ void BMSJsonUtil::GetStrValueIfFindKey(const nlohmann::json &jsonObject,
         parseResult = ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP;
     }
 }
+
 void BMSJsonUtil::GetBoolValueIfFindKey(const nlohmann::json &jsonObject,
     const nlohmann::detail::iter_impl<const nlohmann::json> &end,
     const std::string &key, bool &data, bool isNecessary, int32_t &parseResult)
@@ -47,13 +49,14 @@ void BMSJsonUtil::GetBoolValueIfFindKey(const nlohmann::json &jsonObject,
     if (parseResult) {
         return;
     }
-    if (jsonObject.find(key) != end) {
-        if (!jsonObject.at(key).is_boolean()) {
+    auto iter = jsonObject.find(key);
+    if (iter != end) {
+        if (!iter->is_boolean()) {
             APP_LOGE("type error %{public}s not bool", key.c_str());
             parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
             return;
         }
-        data = jsonObject.at(key).get<bool>();
+        data = iter->get<bool>();
         return;
     }
     if (isNecessary) {
