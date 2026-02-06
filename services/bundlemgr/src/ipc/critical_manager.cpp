@@ -23,7 +23,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr uint32_t DELAY_MILLI_SECONDS = 5 * 1000;
-constexpr const char* TASK_NAME = "CriticalTask";
+constexpr const char* TASK_NAME = "BmsCriticalTask";
 }
 
 std::mutex CriticalManager::mutex_;
@@ -57,7 +57,7 @@ void CriticalManager::BeforeRequest()
     LOG_D(BMS_TAG_INSTALLD, "before counter: %{public}d, memmgr: %{public}d, critical: %{public}d",
         counter_, memMgrStarted_, critical_);
     counter_++;
-    if (memMgrStarted_ && !critical_ && counter_ > 0) {
+    if (memMgrStarted_ && !critical_) {
         LOG_I(BMS_TAG_INSTALLD, "SetCritical true");
         Memory::MemMgrClient::GetInstance().SetCritical(
             getpid(), true, INSTALLD_SERVICE_ID);
