@@ -212,6 +212,8 @@ static std::string ObtainCallingBundleName();
 
 static void ConvertSharedModuleInfo(napi_env env, napi_value value, const SharedModuleInfo &moduleInfo);
 static void ConvertSharedBundleInfo(napi_env env, napi_value value, const SharedBundleInfo &bundleInfo);
+static void ConvertSharedModuleInfoForInstall(napi_env env, napi_value value, const SharedModuleInfo &moduleInfo);
+static void ConvertSharedBundleInfoForInstall(napi_env env, napi_value value, const SharedBundleInfo &bundleInfo);
 static void ConvertAllSharedBundleInfo(napi_env env, napi_value value,
     const std::vector<SharedBundleInfo> &sharedBundles);
 static void ConvertRecoverableApplicationInfo(

@@ -8499,6 +8499,12 @@ ErrCode BundleDataMgr::GetSharedBundleInfoBySelf(const std::string &bundleName, 
 {
     APP_LOGD("GetSharedBundleInfoBySelf bundleName: %{public}s", bundleName.c_str());
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    return GetSharedBundleInfoBySelfNoLock(bundleName, sharedBundleInfo);
+}
+
+ErrCode BundleDataMgr::GetSharedBundleInfoBySelfNoLock(const std::string &bundleName,
+    SharedBundleInfo &sharedBundleInfo)
+{
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("GetSharedBundleInfoBySelf failed, can not find bundle %{public}s",
@@ -9104,14 +9110,14 @@ ErrCode BundleDataMgr::GenerateAppInstallExtendedInfo(const InnerBundleInfo &inn
     std::string bundleName = innerBundleInfo.GetBundleName();
     appInstallExtendedInfo.bundleName = bundleName;
 
-    ErrCode ret = GetSpecifiedDistributionType(bundleName, appInstallExtendedInfo.specifiedDistributionType);
-    if (ret != ERR_OK) {
-        APP_LOGW("GetSpecifiedDistributionType failed for %{public}s, continue without it", bundleName.c_str());
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType(bundleName,
+        appInstallExtendedInfo.specifiedDistributionType)) {
+        APP_LOGW("bundleName:%{public}s GetSpecifiedDistributionType failed", bundleName.c_str());
     }
 
-    ret = GetAdditionalInfo(bundleName, appInstallExtendedInfo.additionalInfo);
-    if (ret != ERR_OK) {
-        APP_LOGW("GetAdditionalInfo failed for %{public}s, continue without it", bundleName.c_str());
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName,
+        appInstallExtendedInfo.additionalInfo)) {
+        APP_LOGW("bundleName:%{public}s GetAdditionalInfo failed", bundleName.c_str());
     }
 
     appInstallExtendedInfo.crowdtestDeadline = innerBundleInfo.GetAppCrowdtestDeadline();
@@ -9137,10 +9143,10 @@ ErrCode BundleDataMgr::GenerateAppInstallExtendedInfo(const InnerBundleInfo &inn
         }
         uniqueDependencies.insert(key);
         SharedBundleInfo sharedBundleInfo;
-        if (GetSharedBundleInfoBySelf(dep.bundleName, sharedBundleInfo) == ERR_OK) {
+        if (GetSharedBundleInfoBySelfNoLock(dep.bundleName, sharedBundleInfo) == ERR_OK) {
             appInstallExtendedInfo.sharedBundleInfos.emplace_back(sharedBundleInfo);
         } else {
-            APP_LOGW("GetSharedBundleInfoBySelf failed for bundle %{public}s", dep.bundleName.c_str());
+            APP_LOGW("GetSharedBundleInfo failed for bundle %{public}s", dep.bundleName.c_str());
         }
     };
 
@@ -9158,7 +9164,7 @@ ErrCode BundleDataMgr::GenerateAppInstallExtendedInfo(const InnerBundleInfo &inn
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::GetAllAppInstallExtendedInfo(std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos) const
+ErrCode BundleDataMgr::GetAllAppInstallExtendedInfo(std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos)
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
 
@@ -9183,8 +9189,7 @@ ErrCode BundleDataMgr::GetAllAppInstallExtendedInfo(std::vector<AppInstallExtend
             continue;
         }
         AppInstallExtendedInfo appInstallExtendedInfo;
-        ErrCode ret = const_cast<BundleDataMgr*>(this)->GenerateAppInstallExtendedInfo(
-            innerBundleInfo, appInstallExtendedInfo);
+        ErrCode ret = GenerateAppInstallExtendedInfo(innerBundleInfo, appInstallExtendedInfo);
         if (ret != ERR_OK) {
             APP_LOGE("GenerateAppInstallExtendedInfo failed for %{public}s, ret: %{public}d",
                 bundleName.c_str(), ret);
