@@ -100,7 +100,7 @@ napi_value GetDisposedRulesBySetter(napi_env env, napi_callback_info info)
 {
     APP_LOGE("AppControl not supported");
     napi_value error = BusinessError::CreateNewCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-        "GetDisposedRulesBySetter");
+        "GetDisposedRulesByBundle");
     napi_throw(env, error);
     return nullptr;
 }
