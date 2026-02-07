@@ -1428,6 +1428,12 @@ public:
         return false;
     }
 
+    virtual ErrCode GetBundleInodeCount(const std::string &bundleName, int32_t appIndex, int32_t userId,
+        uint64_t &inodeCount)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual ErrCode GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;

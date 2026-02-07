@@ -138,6 +138,11 @@ ErrCode InstalldClient::GetDiskUsage(const std::string &dir, int64_t &statSize, 
     return 0;
 }
 
+ErrCode InstalldClient::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
     int64_t timeoutMs)
 {

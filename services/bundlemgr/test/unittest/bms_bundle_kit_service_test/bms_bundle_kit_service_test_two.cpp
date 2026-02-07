@@ -10413,4 +10413,141 @@ HWTEST_F(BmsBundleKitServiceTest, SetApplicationDisableForbidden_0100, Function 
         BUNDLE_NAME_TEST, 100, 0, forbidden);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: GetBundleInodeCount_0100
+ * @tc.name: test GetBundleInodeCount permission denied
+ * @tc.desc: 1. Test GetBundleInodeCount when permission denied
+ *           2. Should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInodeCount_0100, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(false);
+    SetIsBundleSelfCallingForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    uint64_t inodeCount = 0;
+    ErrCode ret = hostImpl->GetBundleInodeCount("com.ohos.dlpmanager", 0, DEFAULT_USERID, inodeCount);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0200
+ * @tc.name: test GetBundleInodeCount with empty bundleName
+ * @tc.desc: 1. Test GetBundleInodeCount when bundleName is empty
+ *           2. Should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInodeCount_0200, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    uint64_t inodeCount = 0;
+    ErrCode ret = hostImpl->GetBundleInodeCount("", 0, DEFAULT_USERID, inodeCount);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0300
+ * @tc.name: test GetBundleInodeCount with invalid userId
+ * @tc.desc: 1. Test GetBundleInodeCount when userId < 0
+ *           2. Should return ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInodeCount_0300, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    uint64_t inodeCount = 0;
+    ErrCode ret = hostImpl->GetBundleInodeCount("com.ohos.dlpmanager", 0, -1, inodeCount);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0400
+ * @tc.name: test GetBundleInodeCount with invalid appIndex
+ * @tc.desc: 1. Test GetBundleInodeCount when appIndex < 0
+ *           2. Should return ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInodeCount_0400, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    uint64_t inodeCount = 0;
+    ErrCode ret = hostImpl->GetBundleInodeCount("com.ohos.dlpmanager", -1, DEFAULT_USERID, inodeCount);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0500
+ * @tc.name: test GetBundleInodeCount with DataMgr nullptr
+ * @tc.desc: 1. Test GetBundleInodeCount when DataMgr is nullptr
+ *           2. Should return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInodeCount_0500, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    uint64_t inodeCount = 0;
+    ErrCode ret = hostImpl->GetBundleInodeCount("com.ohos.dlpmanager", 0, DEFAULT_USERID, inodeCount);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0600
+ * @tc.name: test GetBundleInodeCount with bundle not found
+ * @tc.desc: 1. Test GetBundleInodeCount when bundle not found (uid == INVALID_UID)
+ *           2. Should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInodeCount_0600, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::string nonExistentBundle = "com.example.nonexistent";
+    uint64_t inodeCount = 0;
+    ErrCode ret = hostImpl->GetBundleInodeCount(nonExistentBundle, 0, DEFAULT_USERID, inodeCount);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0700
+ * @tc.name: test GetBundleInodeCount with valid bundleName
+ * @tc.desc: 1. Test GetBundleInodeCount with valid parameters
+ *           2. Call GetBundleInodeCount interface
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInodeCount_0700, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    uint64_t inodeCount = 0;
+    ErrCode ret = hostImpl->GetBundleInodeCount("com.ohos.dlpmanager", 0, DEFAULT_USERID, inodeCount);
+    // Just verify the call can be made successfully
+    EXPECT_TRUE(ret == ERR_OK || ret == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ResetTestValues();
+}
 }

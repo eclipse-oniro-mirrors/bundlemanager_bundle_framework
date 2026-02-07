@@ -4223,6 +4223,24 @@ HWTEST_F(BmsBundleMgrHostUnitTest, HandleBatchQueryAbilityInfos_0100, Function |
 }
 
 /**
+ * @tc.number: HandleGetBundleInodeCount_0100
+ * @tc.name: test the HandleGetBundleInodeCount
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetBundleInodeCount_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INODE_COUNT);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: HandleGetDistributedBundleInfo_0100
  * @tc.name: test the HandleGetDistributedBundleInfo
  * @tc.desc: 1. system running normally

@@ -699,5 +699,23 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_4000, Function | SmallTest | 
     auto result = bundleUserMgrProxy.RemoveUser(11111);
     EXPECT_NE(result, ERR_OK);
 }
+
+/**
+ * @tc.number: GetBundleInodeCount_0100
+ * @tc.name: test GetBundleInodeCount basic call
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify GetBundleInodeCount returns error when no service
+ */
+HWTEST_F(BundleMgrProxyTest, GetBundleInodeCount_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    uint64_t inodeCount = 0;
+    ErrCode ret = bundleMgrProxy.GetBundleInodeCount(bundleName, appIndex, userId, inodeCount);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
+}
 } // AppExecFwk
 } // OHOS

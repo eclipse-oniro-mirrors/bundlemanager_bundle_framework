@@ -395,6 +395,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_STATS):
             errCode = this->HandleGetAllBundleStats(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INODE_COUNT):
+            errCode = this->HandleGetBundleInodeCount(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_ABILITY_ENABLE_INSTALL):
             errCode = this->HandleCheckAbilityEnableInstall(data, reply);
             break;
@@ -3432,6 +3435,25 @@ ErrCode BundleMgrHost::HandleGetAllBundleStats(MessageParcel &data, MessageParce
     }
     if (ret && !reply.WriteInt64Vector(bundleStats)) {
         APP_LOGE("write bundleStats failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleInodeCount(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    uint64_t inodeCount = 0;
+    ErrCode ret = GetBundleInodeCount(bundleName, appIndex, userId, inodeCount);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE_NOFUNC("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteUint64(inodeCount)) {
+        APP_LOGE_NOFUNC("write inodeCount failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
