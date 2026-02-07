@@ -49,6 +49,7 @@
 #include "default_app_mgr.h"
 #endif
 #include "event_report.h"
+#include "ffrt.h"
 #include "hitrace_meter.h"
 #include "inner_bundle_clone_common.h"
 #include "installd_client.h"
@@ -79,6 +80,7 @@
 
 #ifdef STORAGE_SERVICE_ENABLE
 #include "storage_manager_proxy.h"
+#include "storage_service_errno.h"
 #endif
 
 #include "router_data_storage_rdb.h"
@@ -13454,23 +13456,35 @@ bool BundleDataMgr::UMountCryptoPath(const int32_t userId, const std::string &bu
         return false;
     }
 #ifdef STORAGE_SERVICE_ENABLE
-    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (!systemAbilityManager) {
-        APP_LOGW_NOFUNC("umount, systemAbilityManager error");
-        return false;
-    }
+    auto task = [userId, bundleName]() {
+        auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (!systemAbilityManager) {
+            APP_LOGW_NOFUNC("umount, systemAbilityManager error");
+            return;
+        }
 
-    auto remote = systemAbilityManager->CheckSystemAbility(STORAGE_MANAGER_MANAGER_ID);
-    if (!remote) {
-        APP_LOGW_NOFUNC("umount, CheckSystemAbility error");
-        return false;
-    }
+        auto remote = systemAbilityManager->CheckSystemAbility(STORAGE_MANAGER_MANAGER_ID);
+        if (!remote) {
+            APP_LOGW_NOFUNC("umount, CheckSystemAbility error");
+            return;
+        }
 
-    auto proxy = iface_cast<StorageManager::IStorageManager>(remote);
-    if (!proxy) {
-        APP_LOGW_NOFUNC("umount, proxy get error");
-        return false;
-    }
+        auto proxy = iface_cast<StorageManager::IStorageManager>(remote);
+        if (!proxy) {
+            APP_LOGW_NOFUNC("umount, proxy get error");
+            return;
+        }
+        
+        int result = proxy->ClearSecondMountPoint(userId, bundleName);
+        if (result != ERR_OK && result != ErrNo::E_NOT_NEED_CLEAR_SECOND_MOUNT_POINT) {
+            result = proxy->ClearSecondMountPoint(userId, bundleName);
+            if (result != ERR_OK && result != ErrNo::E_NOT_NEED_CLEAR_SECOND_MOUNT_POINT) {
+                APP_LOGW_NOFUNC("umount failed %{public}d", result);
+                return;
+            }
+        }
+    };
+    ffrt::submit(task, {}, {}, ffrt::task_attr().name("UMountCryptoPath"));
 #endif // STORAGE_SERVICE_ENABLE
     return true;
 }
