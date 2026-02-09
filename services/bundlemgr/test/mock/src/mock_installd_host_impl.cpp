@@ -92,9 +92,9 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir, bool async)
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetDiskUsage(const std::string &dir, int64_t &statSize, bool isRealPath)
+int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
 {
-    return ERR_OK;
+    return 0;
 }
 
 ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
