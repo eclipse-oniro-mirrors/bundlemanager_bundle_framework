@@ -5348,25 +5348,6 @@ bool BundleMgrProxy::SendTransactCmdWithLog(BundleMgrInterfaceCode code, Message
     return true;
 }
 
-bool ParseStr(const char *buf, const int itemLen, int index, std::string &result)
-{
-    APP_LOGD("ParseStr itemLen:%{public}d index:%{public}d", itemLen, index);
-    if (buf == nullptr || itemLen <= 0 || index < 0) {
-        APP_LOGE("param invalid");
-        return false;
-    }
-
-    char item[itemLen + 1];
-    if (strncpy_s(item, sizeof(item), buf + index, itemLen) != 0) {
-        APP_LOGE("ParseStr failed due to strncpy_s error");
-        return false;
-    }
-
-    std::string str(item, 0, itemLen);
-    result = str;
-    return true;
-}
-
 template<typename T>
 ErrCode BundleMgrProxy::GetParcelInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo)
 {
