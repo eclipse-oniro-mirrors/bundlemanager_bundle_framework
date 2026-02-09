@@ -2223,7 +2223,7 @@ public:
 
     std::string GetInstallSource() const
     {
-        return baseApplicationInfo_->installSource;
+        return AdaptInstallSourceValue(*baseApplicationInfo_);
     }
 
     std::string GetAppSignType() const
@@ -2462,6 +2462,7 @@ private:
     void PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_t appIndex,
         const std::string &bundleName, const std::string &caller) const;
     void GetPreInstallApplicationFlags(ApplicationInfo &appInfo) const;
+    std::string AdaptInstallSourceValue(const ApplicationInfo &appInfo) const;
     void AdaptInstallSource(ApplicationInfo &appInfo) const;
 
     bool isSandboxApp_ = false;

@@ -2814,10 +2814,10 @@ void InnerBundleInfo::GetPreInstallApplicationFlags(ApplicationInfo &appInfo) co
     }
 }
 
-void InnerBundleInfo::AdaptInstallSource(ApplicationInfo &appInfo) const
+std::string InnerBundleInfo::AdaptInstallSourceValue(const ApplicationInfo &appInfo) const
 {
     if (appInfo.installSource.empty()) {
-        return;
+        return appInfo.installSource;
     }
 
     if (appInfo.installSource.find(ServiceConstants::INSTALL_SOURCE_PREFIX) == 0) {
@@ -2827,9 +2827,15 @@ void InnerBundleInfo::AdaptInstallSource(ApplicationInfo &appInfo) const
             lastPlusPos > strlen(ServiceConstants::INSTALL_SOURCE_PREFIX)) {
             APP_LOGD("installSource converted from %{public}s for bundleName: %{public}s",
                 appInfo.installSource.c_str(), appInfo.bundleName.c_str());
-            appInfo.installSource = appInfo.installSource.substr(lastPlusPos + 1);
+            return appInfo.installSource.substr(lastPlusPos + 1);
         }
     }
+    return appInfo.installSource;
+}
+
+void InnerBundleInfo::AdaptInstallSource(ApplicationInfo &appInfo) const
+{
+    appInfo.installSource = AdaptInstallSourceValue(appInfo);
 }
 
 bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32_t userId, int32_t appIndex) const
