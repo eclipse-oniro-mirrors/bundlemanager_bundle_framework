@@ -2813,8 +2813,9 @@ HWTEST_F(BmsBundleDataMgrTest, SetApplicationEnabled_0100, Function | SmallTest 
     applicationInfo.bundleName = BUNDLE_NAME_TEST;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    bool stateChanged = false;
     ErrCode res = GetBundleDataMgr()->SetApplicationEnabled(
-        BUNDLE_NAME_TEST, 0, isEnabled, CALLER_NAME_UT, Constants::ALL_USERID);
+        BUNDLE_NAME_TEST, 0, isEnabled, CALLER_NAME_UT, Constants::ALL_USERID, stateChanged);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 

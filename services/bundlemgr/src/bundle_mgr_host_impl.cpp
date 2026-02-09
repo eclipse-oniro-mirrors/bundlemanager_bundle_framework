@@ -2825,14 +2825,20 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
 
-    auto ret = dataMgr->SetApplicationEnabled(bundleName, 0, isEnable, caller, userId);
+    bool stateChanged = false;
+    auto ret = dataMgr->SetApplicationEnabled(bundleName, 0, isEnable, caller, userId, stateChanged);
     if (ret != ERR_OK) {
         APP_LOGE("Set application(%{public}s) enabled value faile", bundleName.c_str());
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0, caller);
         return ret;
     }
-
     EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, 0, caller);
+
+    // If state did not change, return directly
+    if (!stateChanged) {
+        return ERR_OK;
+    }
+    
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
@@ -2883,7 +2889,9 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller);
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
-    auto ret = dataMgr->SetApplicationEnabled(bundleName, appIndex, isEnable, caller, userId);
+
+    bool stateChanged = false;
+    auto ret = dataMgr->SetApplicationEnabled(bundleName, appIndex, isEnable, caller, userId, stateChanged);
     if (ret != ERR_OK) {
         APP_LOGE("Set application(%{public}s) enabled value fail", bundleName.c_str());
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller);
@@ -2891,6 +2899,13 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
     }
 
     EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, appIndex, caller);
+
+    // If state did not change, return directly
+    if (!stateChanged) {
+        APP_LOGD("SetCloneApplicationEnabled finish");
+        return ERR_OK;
+    }
+
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
@@ -2981,14 +2996,23 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
             userId, isEnabled, 0, caller);
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
-    auto ret = dataMgr->SetAbilityEnabled(abilityInfo, 0, isEnabled, userId);
+
+    bool stateChanged = false;
+    auto ret = dataMgr->SetAbilityEnabled(abilityInfo, 0, isEnabled, userId, stateChanged);
     if (ret != ERR_OK) {
         APP_LOGE("Set ability(%{public}s) enabled value failed", abilityInfo.bundleName.c_str());
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
             userId, isEnabled, 0, caller);
         return ret;
     }
+
     EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, 0, caller);
+
+    // If state did not change, return directly
+    if (!stateChanged) {
+        return ERR_OK;
+    }
+
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
@@ -3037,15 +3061,24 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
             userId, isEnabled, appIndex, caller);
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
-    auto ret = dataMgr->SetAbilityEnabled(abilityInfo, appIndex, isEnabled, userId);
+
+    bool stateChanged = false;
+    auto ret = dataMgr->SetAbilityEnabled(abilityInfo, appIndex, isEnabled, userId, stateChanged);
     if (ret != ERR_OK) {
         APP_LOGE("Set ability(%{public}s) enabled value failed", abilityInfo.bundleName.c_str());
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
             userId, isEnabled, appIndex, caller);
         return ret;
     }
+
     EventReport::SendComponentStateSysEvent(
         abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, appIndex, caller);
+
+    // If state did not change, return directly
+    if (!stateChanged) {
+        return ERR_OK;
+    }
+
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
