@@ -651,21 +651,6 @@ std::string BmsExtensionDataMgr::GetCompatibleDeviceType(const std::string &bund
     return GetDeviceType();
 }
 
-ErrCode BmsExtensionDataMgr::VerifyActivationLockToken(bool &res)
-{
-    if ((Init() != ERR_OK) || handler_ == nullptr) {
-        APP_LOGW("link failed");
-        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
-    }
-    auto bundleMgrExtPtr =
-        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
-    if (bundleMgrExtPtr == nullptr) {
-        APP_LOGW("GetBundleMgrExt failed");
-        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
-    }
-    return bundleMgrExtPtr->VerifyActivationLockToken(res);
-}
-
 bool BmsExtensionDataMgr::IsNeedToSkipPreBundleInstall()
 {
     if (Init() != ERR_OK || handler_ == nullptr) {

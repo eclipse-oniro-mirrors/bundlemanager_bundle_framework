@@ -84,7 +84,6 @@ public:
     void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier);
     bool IsTargetApp(const std::string &bundleName, const std::string &appIdentifier);
     std::string GetCompatibleDeviceType(const std::string &bundleName);
-    ErrCode VerifyActivationLockToken(bool &res);
     bool IsNeedToSkipPreBundleInstall();
     ErrCode GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames);
     ErrCode BmsExtensionInit();
