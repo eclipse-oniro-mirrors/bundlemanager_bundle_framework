@@ -4258,8 +4258,8 @@ ErrCode BundleMgrHostImpl::GetAllAppInstallExtendedInfo(std::vector<AppInstallEx
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("verify permission failed");
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
+        APP_LOGE("verify calling permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
