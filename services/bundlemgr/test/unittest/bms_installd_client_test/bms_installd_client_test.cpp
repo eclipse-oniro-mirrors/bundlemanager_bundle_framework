@@ -1253,9 +1253,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsage_0100, TestSiz
 {
     std::string dir;
     bool isRealPath = true;
-    int64_t statSize = 0;
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->GetDiskUsage(dir, statSize, isRealPath);
+    ErrCode result = installClient_->GetDiskUsage(dir, isRealPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1268,9 +1267,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsage_0200, TestSiz
 {
     std::string dir = "disk.path";
     bool isRealPath = true;
-    int64_t statSize = 0;
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->GetDiskUsage(dir, statSize, isRealPath);
+    ErrCode result = installClient_->GetDiskUsage(dir, isRealPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 

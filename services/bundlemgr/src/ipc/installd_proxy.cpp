@@ -272,7 +272,7 @@ ErrCode InstalldProxy::RemoveDir(const std::string &dir, bool async)
     return TransactInstalldCmd(InstalldInterfaceCode::REMOVE_DIR, data, reply, option);
 }
 
-ErrCode InstalldProxy::GetDiskUsage(const std::string &dir, int64_t &statSize, bool isRealPath)
+int64_t InstalldProxy::GetDiskUsage(const std::string &dir, bool isRealPath)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -281,11 +281,7 @@ ErrCode InstalldProxy::GetDiskUsage(const std::string &dir, int64_t &statSize, b
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC, WAIT_TIME);
-    ErrCode ret = TransactInstalldCmd(InstalldInterfaceCode::GET_DISK_USAGE, data, reply, option);
-    if (ret == ERR_OK) {
-        statSize = reply.ReadInt64();
-    }
-    return ret;
+    return TransactInstalldCmd(InstalldInterfaceCode::GET_DISK_USAGE, data, reply, option);
 }
 
 ErrCode InstalldProxy::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
