@@ -34,12 +34,6 @@ struct DestroyAppCloneParam : public Parcelable {
             parameters.at(Constants::VERIFY_UNINSTALL_RULE_KEY) == Constants::VERIFY_UNINSTALL_RULE_VALUE;
     }
 
-    bool IsKeepData() const
-    {
-        return parameters.find(Constants::BMS_PARA_CLONE_IS_KEEP_DATA) != parameters.end() &&
-            parameters.at(Constants::BMS_PARA_CLONE_IS_KEEP_DATA) == Constants::IS_KEEP_DATA_TRUE;
-    }
-
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static DestroyAppCloneParam *Unmarshalling(Parcel &parcel);

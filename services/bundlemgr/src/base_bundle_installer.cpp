@@ -228,7 +228,9 @@ void BaseBundleInstaller::SendStartInstallNotify(const InstallParam &installPara
             .appId = item.second.GetAppId(),
             .appIdentifier = item.second.GetAppIdentifier()
         };
-        NotifyBundleStatus(installRes);
+        if (NotifyBundleStatus(installRes) != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "notify status failed for start install");
+        }
     }
 }
 
@@ -266,8 +268,8 @@ ErrCode BaseBundleInstaller::InstallBundle(
         if (installParam.allUser || IsDriverForAllUser(bundleName_) ||
             IsEnterpriseForAllUser(installParam, bundleName_)) {
             AddBundleStatus(installRes);
-        } else {
-            NotifyBundleStatus(installRes);
+        } else if (NotifyBundleStatus(installRes) != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
         }
     }
     if (result == ERR_OK) {
@@ -316,8 +318,8 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             AddNotifyBundleEvents(installRes);
         } else if (IsDriverForAllUser(bundleName) || IsEnterpriseForAllUser(installParam, bundleName)) {
             AddBundleStatus(installRes);
-        } else {
-            NotifyBundleStatus(installRes);
+        } else if (NotifyBundleStatus(installRes) != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
         }
     }
 
@@ -357,7 +359,9 @@ ErrCode BaseBundleInstaller::Recover(
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .isRecover = true
         };
-        NotifyBundleStatus(installRes);
+        if (NotifyBundleStatus(installRes) != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
+        }
     }
 
     auto recoverInstallParam = installParam;
@@ -441,8 +445,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
-        } else {
-            NotifyBundleStatus(installRes);
+        } else if (NotifyBundleStatus(installRes) != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
         }
     }
     NotifyBundleCallback(NotifyType::UNINSTALL_BUNDLE, uid);
@@ -468,7 +472,7 @@ void BaseBundleInstaller::MarkIsForceUninstall(const std::string &bundleName, bo
         LOG_E(BMS_TAG_INSTALLER, "dataMgr is nullptr");
         return;
     }
-
+ 
     PreInstallBundleInfo preInstallBundleInfo;
     preInstallBundleInfo.SetBundleName(bundleName);
     if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
@@ -695,7 +699,9 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .isBundleExist = isBundleExist_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_
         };
-        NotifyBundleStatus(installRes);
+        if (NotifyBundleStatus(installRes) != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
+        }
     }
 
     SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, installParam, sysEventInfo_.preBundleScene, result);
@@ -2127,11 +2133,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_OK;
     }
     dataMgr_->DisableBundle(bundleName);
-
-    // kill again after disable bundle
-    if (installParam.GetKillProcess() && !AbilityManagerHelper::UninstallApplicationProcesses(bundleName, uid)) {
-        LOG_E(BMS_TAG_INSTALLER, "kill process failed %{public}s", bundleName.c_str());
-    }
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall already start");
@@ -4612,8 +4613,6 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     if (!infos.empty()) {
         bundleType_ = infos.begin()->second.GetApplicationBundleType();
     }
-    // protect err scene
-    dataMgr_->UpdateAppEncryptedStatus(infos.begin()->second.GetBundleName(), false, 0, true);
     UpdateDeveloperId(infos, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
     /* At this place, hapVerifyRes cannot be empty and unnecessary to check it */
@@ -5876,10 +5875,6 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
                 LOG_W(BMS_TAG_INSTALLER, "rename hap failed, due to hap not existed");
                 return result;
             }
-            if (result == ERR_APPEXECFWK_INSTALLD_MOVE_FILE_CROSS_DEV) {
-                LOG_W(BMS_TAG_INSTALLER, "rename hap failed, try to copy instead");
-                result = InstalldClient::GetInstance()->CopyFile(hapPathRecord.first, hapPathRecord.second);
-            }
             if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "Move hap to install path failed");
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
@@ -6099,10 +6094,11 @@ void BaseBundleInstaller::SetCallingTokenId(const Security::AccessToken::AccessT
     callerToken_ = callerToken;
 }
 
-void BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &installRes)
+ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &installRes)
 {
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
+    return ERR_OK;
 }
 
 void BaseBundleInstaller::AddBundleStatus(const NotifyBundleEvents &installRes)
