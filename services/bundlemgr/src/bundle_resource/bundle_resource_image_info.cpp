@@ -138,7 +138,7 @@ bool BundleResourceImageInfo::ConvertToBase64(
     std::string base64data = IMAGE_HEADER_INFO;
     size_t i = 0;
     // encode in groups of every 3 bytes
-    for (i = 0; i < length - LEN_THREE; i += LEN_THREE) {
+    for (i = 0; i + LEN_THREE < length; i += LEN_THREE) {
         base64data += g_codes[originalData[i] >> BIT_TWO];
         base64data += g_codes[((originalData[i] & 0x3) << BIT_FOUR) | (originalData[i + BIT_ONE] >> BIT_FOUR)];
         base64data += g_codes[((originalData[i + BIT_ONE] & 0xF) << BIT_TWO) | (originalData[i + BIT_TWO] >> BIT_SIX)];
@@ -150,7 +150,7 @@ bool BundleResourceImageInfo::ConvertToBase64(
         base64data += g_codes[(originalData[i] & 0x3) << BIT_FOUR];
         base64data += '=';
         base64data += '=';
-    } else {
+    } else if (i + BIT_ONE < length) {
         base64data += g_codes[originalData[i] >> BIT_TWO];
         base64data += g_codes[((originalData[i] & 0x3) << BIT_FOUR) | (originalData[i + BIT_ONE] >> BIT_FOUR)];
         base64data += g_codes[(originalData[i + BIT_ONE] & 0xF) << BIT_TWO];
