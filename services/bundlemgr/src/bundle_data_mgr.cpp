@@ -1398,7 +1398,7 @@ ErrCode BundleDataMgr::FindMatchedAbilityForLink(
         LOG_E(BMS_TAG_QUERY, "param invalid");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
-    
+
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ is empty");
@@ -1432,20 +1432,24 @@ bool BundleDataMgr::IsMatchedAbilityExist(const Want &want, const InnerBundleInf
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     const std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
-        AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(abilityInfoPair.second);
-        if (abilityInfo.name == ServiceConstants::APP_DETAIL_ABILITY) {
+        const InnerAbilityInfo &innerAbilityInfo = abilityInfoPair.second;
+
+        if (innerAbilityInfo.name == ServiceConstants::APP_DETAIL_ABILITY) {
             continue;
         }
-        if (!info.IsAbilityEnabled(abilityInfo, GetUserId(userId), 0)) {
-            LOG_W(BMS_TAG_QUERY, "Ability %{public}s is disabled", abilityInfo.name.c_str());
+
+        if (!info.IsAbilityEnabled(innerAbilityInfo.bundleName, innerAbilityInfo.name,
+            GetUserId(userId), 0)) {
+            LOG_W(BMS_TAG_QUERY, "Ability %{public}s is disabled", innerAbilityInfo.name.c_str());
             continue;
-        }        
+        }
+
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
         if (skillsPair == skillInfos.end()) {
             continue;
         }
         bool isPrivateType = MatchPrivateType(
-            want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes, paramMimeTypes);
+            want, innerAbilityInfo.supportExtNames, innerAbilityInfo.supportMimeTypes, paramMimeTypes);
         if (isPrivateType) {
             return true;
         }

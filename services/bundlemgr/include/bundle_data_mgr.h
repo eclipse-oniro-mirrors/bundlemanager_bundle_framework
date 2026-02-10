@@ -805,6 +805,7 @@ public:
         const std::vector<ExtendResourceInfo> &extendResourceInfos);
     bool RemoveExtResources(const std::string &bundleName,
         const std::vector<std::string> &moduleNames);
+
     bool UpateCurDynamicIconModule(
         const std::string &bundleName, const std::string &moduleName,
         const int32_t userId = Constants::UNSPECIFIED_USERID, const int32_t appIndex = Constants::DEFAULT_APP_INDEX);

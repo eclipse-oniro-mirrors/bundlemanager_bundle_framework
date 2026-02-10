@@ -1549,6 +1549,16 @@ public:
      */
     bool IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId,
         int32_t appIndex = 0) const;
+    /**
+     * @brief Check if the ability is enabled (lightweight version).
+     * @param bundleName Indicates the bundle name.
+     * @param abilityName Indicates the ability name.
+     * @param userId Indicates the user Id.
+     * @param appIndex Indicates the app index.
+     * @return Return true if the ability is enabled, false otherwise.
+     */
+    bool IsAbilityEnabled(const std::string &bundleName, const std::string &abilityName,
+        int32_t userId, int32_t appIndex = 0) const;
     ErrCode IsAbilityEnabledV9(const AbilityInfo &abilityInfo,
         int32_t userId, bool &isEnable, int32_t appIndex = 0) const;
 

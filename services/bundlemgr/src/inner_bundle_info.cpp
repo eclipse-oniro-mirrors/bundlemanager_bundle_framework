@@ -3535,11 +3535,18 @@ void InnerBundleInfo::SetBundleUpdateTimeForAllUser(const int64_t time)
 
 bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex) const
 {
-    APP_LOGD("IsAbilityEnabled bundleName:%{public}s, userId:%{public}d", abilityInfo.bundleName.c_str(), userId);
+    return IsAbilityEnabled(abilityInfo.bundleName, abilityInfo.name, userId, appIndex);
+}
+
+bool InnerBundleInfo::IsAbilityEnabled(const std::string &bundleName, const std::string &abilityName,
+    int32_t userId, int32_t appIndex) const
+{
+    APP_LOGD("IsAbilityEnabled bundleName:%{public}s, abilityName:%{public}s, userId:%{public}d",
+        bundleName.c_str(), abilityName.c_str(), userId);
     if (userId == ServiceConstants::NOT_EXIST_USERID) {
         return true;
     }
-    auto& key = NameAndUserIdToKey(abilityInfo.bundleName, userId);
+    auto& key = NameAndUserIdToKey(bundleName, userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
         APP_LOGW_NOFUNC("key:%{public}s not found", key.c_str());
@@ -3548,10 +3555,10 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
 
     if (appIndex == 0) {
         auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
-        if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
+        if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityName)
             != disabledAbilities.end()) {
             APP_LOGW_NOFUNC("-n %{public}s -a %{public}s disabled",
-                abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
+                bundleName.c_str(), abilityName.c_str());
             return false;
         } else {
             return true;
@@ -3565,10 +3572,10 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
         return false;
     }
     auto disabledAbilities = mpCloneInfos.at(appIndexKey).disabledAbilities;
-    if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
+    if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityName)
         != disabledAbilities.end()) {
         APP_LOGW_NOFUNC("-n %{public}s -a %{public}s disabled",
-            abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
+            bundleName.c_str(), abilityName.c_str());
         return false;
     } else {
         return true;
