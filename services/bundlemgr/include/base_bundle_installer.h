@@ -420,8 +420,6 @@ private:
     ErrCode CheckShellInstallForEmulator(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 #endif
 
-    ErrCode CheckShellInstallInOobe();
-
     ErrCode CheckInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, InnerBundleInfo> &infos, ErrCode checkSysCapRes);
 
@@ -763,7 +761,6 @@ private:
     ErrCode CreateArkStartupCache(const ArkStartupCache &createArk) const;
     ErrCode DeleteArkStartupCache(const std::string &cacheDir, const std::string &bundleName, int32_t userId) const;
     bool VerifyActivationLock() const;
-    bool VerifyActivationLockToken() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
     void CreateScreenLockProtectionDir(bool withOtherUsers = false);
     void CreateEl5AndSetPolicy(InnerBundleInfo &info, bool withOtherUsers);

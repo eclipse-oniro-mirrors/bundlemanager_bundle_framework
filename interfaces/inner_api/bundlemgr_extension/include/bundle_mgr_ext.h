@@ -178,10 +178,6 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
-    virtual ErrCode VerifyActivationLockToken(bool &res)
-    {
-        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
-    }
     virtual bool IsNeedToSkipPreBundleInstall()
     {
         return false;
