@@ -339,6 +339,7 @@ private:
     ErrCode CreateCommonDataDir(const CreateDirParam &createDirParam, const std::string &el);
     ErrCode CreateEl2DataDir(const CreateDirParam &createDirParam);
     ErrCode CreateDataGroupDir(const CreateDirParam &param);
+    ErrCode CreateEl5DataGroupDir(const CreateDirParam &param);
     ErrCode DeleteEl5DataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId);
     static std::string GetGroupDirPath(const std::string &el, int32_t userId, const std::string &uuid);
     void InnerCleanBundleDataDirByName(std::string &suffixName, const int userid, const int appIndex = 0);
