@@ -994,11 +994,10 @@ public:
     virtual bool ProcessPreload(const Want &want) override;
 
     virtual ErrCode GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
-        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        int32_t userId) override;
 
-    virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName, int32_t flags,
-        int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo,
-        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName,
+        int32_t flags, int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo, int32_t userId) override;
 
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 

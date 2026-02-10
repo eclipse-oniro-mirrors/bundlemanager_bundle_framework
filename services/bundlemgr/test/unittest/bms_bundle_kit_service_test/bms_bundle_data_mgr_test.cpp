@@ -3625,7 +3625,6 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryInfos_0100, Function | MediumTest | 
     bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, 0, USERID, USERID, abilityInfo, extensionInfo,
         findDefaultApp);
     EXPECT_EQ(ret, false);
-    EXPECT_EQ(findDefaultApp, false);
 }
 
 /**

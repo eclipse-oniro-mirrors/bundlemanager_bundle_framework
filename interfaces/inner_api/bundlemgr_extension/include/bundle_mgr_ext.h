@@ -164,7 +164,6 @@ public:
     {
         return;
     }
-
     virtual bool IsTargetApp(const std::string &bundleName, const std::string &appIdentifier)
     {
         return false;
@@ -218,7 +217,6 @@ public:
         return false;
     }
 };
-
 } // AppExecFwk
 } // OHOS
 
