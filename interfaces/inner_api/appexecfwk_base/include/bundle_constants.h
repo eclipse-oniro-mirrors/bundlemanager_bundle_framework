@@ -66,6 +66,14 @@ constexpr int32_t EDC_UID = 7200;
 constexpr int32_t CODE_SIGN_UID = 3074;
 constexpr int32_t ACCOUNT_UID = 3058;
 
+// Render Process: START_ID_FOR_RENDER_PROCESS_ISOLATION and
+// END_ID_FOR_RENDER_PROCESS_ISOLATION are defined in process_uid_define.h
+//
+// Note: START_UID_FOR_RENDER_PROCESS and END_UID_FOR_RENDER_PROCESS
+// are deprecated
+constexpr int32_t START_UID_FOR_RENDER_PROCESS = 1000000;
+constexpr int32_t END_UID_FOR_RENDER_PROCESS = 1099999;
+
 /*
 all of cache path for bundle:
 modulename max is 128
