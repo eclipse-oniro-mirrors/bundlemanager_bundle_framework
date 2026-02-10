@@ -451,12 +451,5 @@ ErrCode LauncherService::GetShortcutInfoByAppIndex(
     }
     return ERR_OK;
 }
-
-void LauncherService::OnDeath()
-{
-    APP_LOGD("BundleManagerService dead");
-    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
-    bundleMgr_ = nullptr;
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

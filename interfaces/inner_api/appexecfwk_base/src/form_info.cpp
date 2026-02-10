@@ -411,7 +411,6 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(bundleType));
-
     const auto formPreviewImagesSize = static_cast<int32_t>(formPreviewImages.size());
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, formPreviewImagesSize);
     for (auto i = 0; i < formPreviewImagesSize; i++) {

@@ -2429,8 +2429,8 @@ public:
     void GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos) const;
     std::string GetApplicationArkTSMode() const;
     void UpdateHasCloudkitConfig();
-    std::vector<HapHashAndDeveloperCert> GetModuleHapHash();
     bool GetModuleDeduplicateHar() const;
+    std::vector<HapHashAndDeveloperCert> GetModuleHapHash();
     int32_t GetModuleSize() const;
     std::optional<InnerModuleInfo> GetInnerModuleInfoForEntry() const;
     void SetDelayedAging(bool isDelayAging)

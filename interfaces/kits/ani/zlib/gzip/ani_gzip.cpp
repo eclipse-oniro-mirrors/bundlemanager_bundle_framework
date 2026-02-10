@@ -30,7 +30,6 @@ constexpr const char* CLASSNAME_GZ_ERROR_OUTPUT_INFO_INNER = "@ohos.zlib.zlib.Gz
 constexpr const char* FIELD_NAME_NATIVE_GZFILE = "nativeGZFile";
 constexpr const char* FUNCTION_TOSTRING = "toString";
 constexpr const char* MANGLING_TOSTRING = ":C{std.core.String}";
-constexpr int INVALID_FD = -1;
 constexpr uint8_t MIN_ASCII = 0;
 constexpr uint8_t MAX_ASCII = 255;
 constexpr size_t INT64_BITS = 64;

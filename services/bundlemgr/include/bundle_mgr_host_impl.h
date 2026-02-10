@@ -1309,8 +1309,8 @@ private:
     void FilterAbilityInfos(std::vector<AbilityInfo> &abilityInfos);
     void SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info);
     bool CheckCanSetEnable(const std::string &bundleName);
-    bool CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex);
     bool IsAppLinking(int32_t flags) const;
+    bool CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex);
     std::string GetCallerName();
     void CallAbilityManager(int32_t resultCode, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack);
     bool GetPluginBundleInfo(const std::string &bundleName, const int32_t userId,

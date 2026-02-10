@@ -38,7 +38,6 @@ struct CreateDirParam : public Parcelable {
     bool isExtensionDir = false;
     bool isContainsEl5Dir = false;
     CreateDirFlag createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
-    DataDirEl dataDirEl = DataDirEl::NONE;
     int32_t userId = -1;
     int32_t uid = -1;
     int32_t gid = -1;
@@ -46,6 +45,7 @@ struct CreateDirParam : public Parcelable {
     std::string bundleName;
     std::string apl;
     std::vector<std::string> extensionDirs;
+    DataDirEl dataDirEl = DataDirEl::NONE;
     std::string uuid;
     int32_t dlpType = 0;
     uint32_t remainingNum = 0;
