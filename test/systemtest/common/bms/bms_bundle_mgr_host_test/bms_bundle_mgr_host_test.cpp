@@ -2553,5 +2553,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleSetShortcutsEnabled_0001, Function | Medium
     ErrCode res = bundleMgrHost.HandleSetShortcutsEnabled(data, reply);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
 }
+
+/**
+ * @tc.number: HandleGetBundleInodeCount_0001
+ * @tc.name: test the HandleGetBundleInodeCount
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetBundleInodeCount basic call
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleInodeCount_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetBundleInodeCount(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
 } // AppExecFwk
 } // OHOS

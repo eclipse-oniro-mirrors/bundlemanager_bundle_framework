@@ -748,6 +748,8 @@ private:
 
     ErrCode HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetBundleInodeCount(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetAllBundleCacheStat(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleCleanAllBundleCache(MessageParcel &data, MessageParcel &reply);

@@ -1010,6 +1010,9 @@ public:
 
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
 
+    virtual ErrCode GetBundleInodeCount(const std::string &bundleName, int32_t appIndex, int32_t userId,
+        uint64_t &inodeCount) override;
+
     virtual ErrCode GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback) override;
 
     ErrCode GetAllBundleCacheStatExec(const sptr<IProcessCacheCallback> processCacheCallback);

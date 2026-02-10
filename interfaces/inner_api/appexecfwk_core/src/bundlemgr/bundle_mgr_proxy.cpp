@@ -3575,6 +3575,45 @@ bool BundleMgrProxy::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bun
     return true;
 }
 
+ErrCode BundleMgrProxy::GetBundleInodeCount(const std::string &bundleName, int32_t appIndex, int32_t userId,
+    uint64_t &inodeCount)
+{
+    APP_LOGI_NOFUNC("-n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("failed to due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE_NOFUNC("fail to due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE_NOFUNC("fail to due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE_NOFUNC("fail to due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_INODE_COUNT, data, reply)) {
+        APP_LOGE_NOFUNC("fail to from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+
+    ErrCode ret = static_cast<ErrCode>(reply.ReadInt32());
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("failed, ret: %{public}d", ret);
+        return ret;
+    }
+
+    inodeCount = reply.ReadUint64();
+    return ERR_OK;
+}
+
 bool BundleMgrProxy::CheckAbilityEnableInstall(
     const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback)
 {
