@@ -1792,50 +1792,30 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleStats_0300, Function | SmallTest | Le
     ASSERT_NE(hostImpl, nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
-    std::string bundleName = "com.example.GetBundleStats_0300";
-    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->RemoveUninstalledBundleinfos(DEFAULT_USERID);
-    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
-
+    std::string bundleName = "com.example.CheckAppIndex_1000_1";
     std::vector<int64_t> bundleStats;
     int32_t appIndex = 1;
     hostImpl->isBrokerServiceExisted_ = true;
-
+ 
     // test bundlename not in bundleinfos or uninstallbundleinfos
     bool ret = hostImpl->GetBundleStats(bundleName, DEFAULT_USERID, bundleStats, appIndex);
     EXPECT_FALSE(ret);
-
+ 
     // test bundlename not in bundleinfos, but uninstalled withkeepdata before
     UninstallDataUserInfo uninstallDataUserInfo;
-    uninstallDataUserInfo.uid = -1;
+    uninstallDataUserInfo.uid = 20020039;
     UninstallBundleInfo uninstallBundleInfo;
     uninstallBundleInfo.bundleType = BundleType::ATOMIC_SERVICE;
     uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(DEFAULT_USERID), uninstallDataUserInfo));
-
-    UninstallDataUserInfo uninstallDataUserInfo1;
-    uninstallDataUserInfo1.uid = 20020034;
-    std::string cloneInfoKey = std::to_string(DEFAULT_USERID) + '_' + std::to_string(1);
-    uninstallBundleInfo.userInfos.emplace(std::make_pair(cloneInfoKey, uninstallDataUserInfo1));
-
-    UninstallDataUserInfo uninstallDataUserInfo2;
-    uninstallDataUserInfo2.uid = -1;
-    cloneInfoKey = std::to_string(DEFAULT_USERID) + '_' + std::to_string(2);
-    uninstallBundleInfo.userInfos.emplace(std::make_pair(cloneInfoKey, uninstallDataUserInfo2));
-
     ret = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->UpdateUninstallBundleInfo(bundleName,
         uninstallBundleInfo);
     ASSERT_TRUE(ret);
-
-    ret = hostImpl->GetBundleStats(bundleName, DEFAULT_USERID, bundleStats, 3);
-    EXPECT_FALSE(ret);
-
+ 
     ret = hostImpl->GetBundleStats(bundleName, DEFAULT_USERID, bundleStats, appIndex);
     EXPECT_TRUE(ret);
-
-    ret = hostImpl->GetBundleStats(bundleName, DEFAULT_USERID, bundleStats, 0);
-    EXPECT_FALSE(ret);
-
-    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->RemoveUninstalledBundleinfos(DEFAULT_USERID);
-
+ 
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->DeleteUninstallBundleInfo(bundleName,
+        DEFAULT_USERID);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
 }
 

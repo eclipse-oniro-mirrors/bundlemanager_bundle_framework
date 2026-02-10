@@ -3874,21 +3874,23 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
- 
-    bool isKeepData = false;
+
     if (!CheckAppIndex(bundleName, userId, appIndex)) {
-        isKeepData = dataMgr->GetUninstallBundleInfoWithUserAndAppIndex(bundleName, userId, appIndex);
-        if (!isKeepData) {
+        UninstallBundleInfo uninstallBundleInfo;
+        if (!dataMgr->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
             APP_LOGD("bundle is not existed and not uninstalled with keepdata before");
             return false;
         }
     }
-    if (isBrokerServiceExisted_ && !isKeepData &&
-        !IsBundleExistedOrUninstalledWithKeepData(bundleName, userId, appIndex)) {
-        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-        ErrCode ret = bmsExtensionClient->GetBundleStats(bundleName, userId, bundleStats);
-        APP_LOGI("ret : %{public}d", ret);
-        return ret == ERR_OK;
+    if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
+        UninstallBundleInfo uninstallBundleInfo;
+        if (!dataMgr->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+            APP_LOGD("bundle is not existed and not uninstalled with keepdata before");
+            auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+            ErrCode ret = bmsExtensionClient->GetBundleStats(bundleName, userId, bundleStats);
+            APP_LOGI("ret : %{public}d", ret);
+            return ret == ERR_OK;
+        }
     }
     return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex, statFlag);
 }
@@ -5262,21 +5264,6 @@ ErrCode BundleMgrHostImpl::GetUninstalledBundleInfo(const std::string bundleName
         return ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO;
     }
     return ERR_OK;
-}
-
-bool BundleMgrHostImpl::IsBundleExistedOrUninstalledWithKeepData(const std::string &bundleName,
-    int32_t userId, int32_t appIndex)
-{
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("Mgr is nullptr");
-        return false;
-    }
-    if (!dataMgr->HasUserInstallInBundle(bundleName, userId)) {
-        APP_LOGD("bundle is not existed in bundleinfos");
-        return dataMgr->GetUninstallBundleInfoWithUserAndAppIndex(bundleName, userId, appIndex);
-    }
-    return true;
 }
 
 bool BundleMgrHostImpl::IsBundleExist(const std::string &bundleName)
