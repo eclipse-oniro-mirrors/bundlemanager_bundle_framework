@@ -19,6 +19,7 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "app_control_constants.h"
+#include "bundle_common_event_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
@@ -677,7 +678,7 @@ ErrCode AppControlManagerHostImpl::GetDisposedRulesBySetter(
 ErrCode AppControlManagerHostImpl::SetDisposedRules(
     std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations, int32_t userId)
 {
-    LOG_I(BMS_TAG_DEFAULT, "host begin to SetDisposedRules");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "host impl SetDisposedRules size:%{public}zu", disposedRuleConfigurations.size());
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -695,19 +696,24 @@ ErrCode AppControlManagerHostImpl::SetDisposedRules(
     std::string callerName;
     GetCallerByUid(uid, callerName);
     bool isEdm = uid == AppControlConstants::EDM_UID ? true : false;
+
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     for (auto &disposedRuleConfiguration : disposedRuleConfigurations) {
         disposedRuleConfiguration.disposedRule.isEdm = isEdm;
         auto ret = appControlManager_->SetDisposedRule(callerName, disposedRuleConfiguration.appId,
             disposedRuleConfiguration.disposedRule, disposedRuleConfiguration.appIndex, userId);
-        SendAppControlEvent(ControlActionType::DISPOSE_RULE, ControlOperationType::ADD_RULE,
-            callerName, userId, disposedRuleConfiguration.appIndex, { disposedRuleConfiguration.appId },
-            disposedRuleConfiguration.disposedRule.ToString());
-
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_DEFAULT, "host SetDisposedRules error:%{public}d", ret);
             return ret;
         }
+        commonEventMgr->NotifySetDisposedRuleAsync(disposedRuleConfiguration.appId, userId,
+            disposedRuleConfiguration.disposedRule.ToString(), disposedRuleConfiguration.appIndex);
+        SendAppControlEvent(ControlActionType::DISPOSE_RULE, ControlOperationType::ADD_RULE,
+            callerName, userId, disposedRuleConfiguration.appIndex, { disposedRuleConfiguration.appId },
+            disposedRuleConfiguration.disposedRule.ToString());
     }
+
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "host SetDisposedRules completed");
     return ERR_OK;
 }
 
@@ -731,6 +737,7 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedRules(
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     std::string callerName;
     GetCallerByUid(uid, callerName);
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     for (auto &disposedRuleConfiguration : disposedRuleConfigurations) {
         ErrCode ret = appControlManager_->DeleteDisposedRule(
             callerName, disposedRuleConfiguration.appId, disposedRuleConfiguration.appIndex, userId);
@@ -739,11 +746,8 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedRules(
                 ret, disposedRuleConfiguration.appId.c_str(), disposedRuleConfiguration.appIndex);
             continue;
         }
-        
-        std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-        commonEventMgr->NotifyDeleteDisposedRule(
+        commonEventMgr->NotifyDeleteDisposedRuleAsync(
             disposedRuleConfiguration.appId, userId, disposedRuleConfiguration.appIndex);
-
         SendAppControlEvent(ControlActionType::DISPOSE_RULE, ControlOperationType::REMOVE_RULE,
             callerName, userId, disposedRuleConfiguration.appIndex, { disposedRuleConfiguration.appId },
             Constants::EMPTY_STRING);
@@ -779,6 +783,9 @@ ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, Dis
     auto ret = appControlManager_->SetDisposedRule(callerName, appId, rule, Constants::MAIN_APP_INDEX, userId);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "host GetDisposedStatus error:%{public}d", ret);
+    } else {
+        std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+        commonEventMgr->NotifySetDisposedRule(appId, userId, rule.ToString(), Constants::MAIN_APP_INDEX);
     }
     SendAppControlEvent(ControlActionType::DISPOSE_RULE, ControlOperationType::ADD_RULE,
         callerName, userId, Constants::MAIN_APP_INDEX, { appId }, rule.ToString());
@@ -867,6 +874,9 @@ ErrCode AppControlManagerHostImpl::SetDisposedRuleForCloneApp(const std::string 
     auto ret = appControlManager_->SetDisposedRule(callerName, appId, rule, appIndex, userId);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "SetDisposedRuleForCloneApp error:%{public}d, appIndex:%{public}d", ret, appIndex);
+    } else {
+        std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+        commonEventMgr->NotifySetDisposedRule(appId, userId, rule.ToString(), appIndex);
     }
     SendAppControlEvent(ControlActionType::DISPOSE_RULE, ControlOperationType::ADD_RULE,
         callerName, userId, appIndex, { appId }, rule.ToString());
