@@ -916,6 +916,7 @@ private:
     bool isBundleExist_ = false;
     bool isBundleCrossAppSharedConfig_ = false;
     bool isHnpInstalled_ = false;
+    bool isKeepTokenId_ = false;
     InstallerState state_ = InstallerState::INSTALL_START;
     uint32_t versionCode_ = 0;
     uint32_t accessTokenId_ = 0;

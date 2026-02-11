@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -79,6 +79,7 @@ struct NotifyBundleEvents {
     bool crossAppSharedConfig = false;
     bool isRecover = false;
     bool isInstallByBundleName = false;
+    std::map<std::string, std::string> metadataConfigInfos;
 };
 
 class BundleCommonEventMgr : public std::enable_shared_from_this<BundleCommonEventMgr> {

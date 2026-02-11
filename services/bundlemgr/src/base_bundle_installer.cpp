@@ -251,6 +251,8 @@ ErrCode BaseBundleInstaller::InstallBundle(
         OHOS::system::SetParameter(ServiceConstants::BMS_DATA_PRELOAD, BMS_FALSE);
     }
     CheckPreBundleRecoverResult(result);
+    std::map<std::string, std::string> tokenIdMetadataInfos;
+    tokenIdMetadataInfos[ServiceConstants::META_KEEP_TOKEN_ID_KEY] = isKeepTokenId_ ? BMS_TRUE : BMS_FALSE;
     if (installParam.needSendEvent && dataMgr_ && !bundleName_.empty()) {
         NotifyBundleEvents installRes = {
             .isModuleUpdate = isModuleUpdate_,
@@ -264,7 +266,8 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .modulePackage = moduleName_,
             .abilityName = mainAbility_,
             .appDistributionType = appDistributionType_,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+            .metadataConfigInfos = tokenIdMetadataInfos
         };
         if (installParam.allUser || IsDriverForAllUser(bundleName_) ||
             IsEnterpriseForAllUser(installParam, bundleName_)) {
@@ -301,6 +304,8 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
 
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessInstallBundleByBundleName(bundleName, installParam, uid);
+    std::map<std::string, std::string> tokenIdMetadataInfos;
+    tokenIdMetadataInfos[ServiceConstants::META_KEEP_TOKEN_ID_KEY] = isKeepTokenId_ ? BMS_TRUE : BMS_FALSE;
     if (installParam.needSendEvent && dataMgr_ && !bundleName.empty()) {
         NotifyBundleEvents installRes = {
             .type = NotifyType::INSTALL,
@@ -313,6 +318,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .bundleName = bundleName,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+            .metadataConfigInfos = tokenIdMetadataInfos,
             .isInstallByBundleName = true
         };
         if (installParam.concentrateSendEvent) {
@@ -348,6 +354,8 @@ ErrCode BaseBundleInstaller::Recover(
     }
     int32_t uid = Constants::INVALID_UID;
     result = ProcessRecover(bundleName, installParam, uid);
+    std::map<std::string, std::string> tokenIdMetadataInfos;
+    tokenIdMetadataInfos[ServiceConstants::META_KEEP_TOKEN_ID_KEY] = isKeepTokenId_ ? BMS_TRUE : BMS_FALSE;
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
             .type = NotifyType::INSTALL,
@@ -358,6 +366,7 @@ ErrCode BaseBundleInstaller::Recover(
             .bundleName = bundleName,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+            .metadataConfigInfos = tokenIdMetadataInfos,
             .isRecover = true
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
@@ -426,6 +435,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 #endif
     }
 
+    std::map<std::string, std::string> tokenIdMetadataInfos;
+    tokenIdMetadataInfos[ServiceConstants::META_KEEP_TOKEN_ID_KEY] = isKeepTokenId_ ? BMS_TRUE : BMS_FALSE;
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
             .isAgingUninstall = installParam.isAgingUninstall,
@@ -441,7 +452,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .developerId = developerId,
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+            .metadataConfigInfos = tokenIdMetadataInfos
         };
 
         if (installParam.concentrateSendEvent) {
@@ -681,6 +693,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             result = ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED;
         }
     }
+    std::map<std::string, std::string> tokenIdMetadataInfos;
+    tokenIdMetadataInfos[ServiceConstants::META_KEEP_TOKEN_ID_KEY] = isKeepTokenId_ ? BMS_TRUE : BMS_FALSE;
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
             .isAgingUninstall = installParam.isAgingUninstall,
@@ -698,7 +712,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData,
             .isBundleExist = isBundleExist_,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+            .metadataConfigInfos = tokenIdMetadataInfos
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
@@ -1053,6 +1068,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
+            isKeepTokenId_ = oldInfo.HasKeepTokenIdMetadata();
             if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)
                 && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult,
                 verifyRes_.GetProvisionInfo().appServiceCapabilities) != ERR_OK) {
@@ -1845,10 +1861,12 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         bool isKeepData = dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
             Constants::INITIAL_APP_INDEX);
         RemoveBundleAndDataDir(newInfos.begin()->second, isKeepData);
+        isKeepTokenId_ = oldInfo.HasKeepTokenIdMetadata();
         if (!isKeepData) {
             // delete accessTokenId
-            if (BundlePermissionMgr::DeleteAccessTokenId(newInfos.begin()->second.GetAccessTokenId(userId_)) !=
-                AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DeleteAccessTokenId keepTokenParam=%{public}d", isKeepTokenId_);
+            if (BundlePermissionMgr::DeleteAccessTokenId(newInfos.begin()->second.GetAccessTokenId(userId_),
+                isKeepTokenId_) != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
                 LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
             }
         }
@@ -2629,6 +2647,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
+            isKeepTokenId_ = oldInfo.HasKeepTokenIdMetadata();
             if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)) {
                 if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult,
                     verifyRes_.GetProvisionInfo().appServiceCapabilities) != ERR_OK) {
@@ -2743,8 +2762,11 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
     }
 
     accessTokenId_ = info.GetAccessTokenId(userId_);
+    isKeepTokenId_ = info.HasKeepTokenIdMetadata();
     if (!isKeepData) {
-        if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+        bool keepTokenParam = isKeepTokenId_ && async;
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DeleteAccessTokenId keepTokenParam=%{public}d", keepTokenParam);
+        if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_, keepTokenParam) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
         }
@@ -2856,6 +2878,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
 
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
+    isKeepTokenId_ = info.HasKeepTokenIdMetadata();
     if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, info)) {
         if (BundlePermissionMgr::InitHapToken(info, userId_, 0, accessTokenIdEx, checkResult,
             verifyRes_.GetProvisionInfo().appServiceCapabilities) != ERR_OK) {
@@ -3925,6 +3948,8 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
         LOG_E(BMS_TAG_INSTALLER, "failed %{public}s %{public}d", bundleName.c_str(), userId_);
         return false;
     }
+    std::map<std::string, std::string> tokenIdMetadataInfos;
+    tokenIdMetadataInfos[ServiceConstants::META_KEEP_TOKEN_ID_KEY] = isKeepTokenId_ ? BMS_TRUE : BMS_FALSE;
     NotifyBundleEvents installRes = {
         .resultCode = ERR_OK,
         .accessTokenId = it->second.accessTokenId,
@@ -3934,6 +3959,7 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
         .bundleName = bundleName,
         .appId = uninstallBundleInfo.appId,
         .appIdentifier = uninstallBundleInfo.appIdentifier,
+        .metadataConfigInfos = tokenIdMetadataInfos,
         .keepData = false,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
@@ -5757,8 +5783,11 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
 
     // delete accessTokenId
     accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
+    isKeepTokenId_ = innerBundleInfo.HasKeepTokenIdMetadata();
     if (!isKeepData) {
-        if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+        bool keepTokenParam = isKeepTokenId_ && async;
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DeleteAccessTokenId keepTokenParam=%{public}d", keepTokenParam);
+        if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_, keepTokenParam) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
         }
@@ -5942,6 +5971,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     callerToken_ = 0;
     isBundleExist_ = false;
     isBundleCrossAppSharedConfig_ = false;
+    isKeepTokenId_ = false;
     appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
 }
 

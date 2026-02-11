@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -193,9 +193,9 @@ AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(const Inn
     return hapPolicy;
 }
 
-int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessToken::AccessTokenID tokenId)
+int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessToken::AccessTokenID tokenId, bool isTokenReserved)
 {
-    return AccessToken::AccessTokenKit::DeleteToken(tokenId);
+    return AccessToken::AccessTokenKit::DeleteToken(tokenId, isTokenReserved);
 }
 
 int32_t BundlePermissionMgr::ClearUserGrantedPermissionState(const AccessToken::AccessTokenID tokenId)

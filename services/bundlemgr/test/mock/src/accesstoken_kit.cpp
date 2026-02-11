@@ -146,7 +146,7 @@ int AccessTokenKit::VerifyAccessToken(
     return 0;
 }
 
-int AccessTokenKit::DeleteToken(AccessTokenID tokenID)
+int AccessTokenKit::DeleteToken(AccessTokenID tokenID, bool isTokenReserved)
 {
     return 0;
 }

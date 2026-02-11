@@ -7309,4 +7309,64 @@ HWTEST_F(BmsBundleDataMgrTest, UMountCryptoPath_0200, Function | SmallTest | Lev
     bool ret = dataMgr->UMountCryptoPath(userId, path);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: HasKeepTokenIdMetadata_0100
+ * @tc.name: HasKeepTokenIdMetadata
+ * @tc.desc: innerModuleInfos is empty
+ */
+HWTEST_F(BmsBundleDataMgrTest, HasKeepTokenIdMetadata_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    EXPECT_FALSE(innerBundleInfo.HasKeepTokenIdMetadata());
+}
+
+/**
+ * @tc.number: HasKeepTokenIdMetadata_0200
+ * @tc.name: HasKeepTokenIdMetadata
+ * @tc.desc: cover all continue branches and final return false
+ */
+HWTEST_F(BmsBundleDataMgrTest, HasKeepTokenIdMetadata_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleA;
+    moduleA.moduleName = "moduleA";
+    moduleA.isEntry = false;
+    innerBundleInfo.innerModuleInfos_["moduleA"] = moduleA;
+
+    InnerModuleInfo moduleB;
+    moduleB.moduleName = "moduleB";
+    moduleB.isEntry = true;
+    innerBundleInfo.innerModuleInfos_["moduleB"] = moduleB;
+
+    InnerModuleInfo moduleC;
+    moduleC.moduleName = "moduleC";
+    moduleC.isEntry = true;
+    Metadata meta;
+    meta.name = "other_key";
+    moduleC.metadata.emplace_back(meta);
+    innerBundleInfo.innerModuleInfos_["moduleC"] = moduleC;
+    EXPECT_FALSE(innerBundleInfo.HasKeepTokenIdMetadata());
+}
+
+/**
+ * @tc.number: HasKeepTokenIdMetadata_0300
+ * @tc.name: HasKeepTokenIdMetadata
+ * @tc.desc: find keepTokenId metadata
+ */
+HWTEST_F(BmsBundleDataMgrTest, HasKeepTokenIdMetadata_0300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entryModule";
+    moduleInfo.isEntry = true;
+
+    Metadata meta;
+    meta.name = ServiceConstants::META_KEEP_TOKEN_ID_KEY;
+    moduleInfo.metadata.emplace_back(meta);
+
+    innerBundleInfo.innerModuleInfos_["entryModule"] = moduleInfo;
+    EXPECT_TRUE(innerBundleInfo.HasKeepTokenIdMetadata());
+}
 } // OHOS

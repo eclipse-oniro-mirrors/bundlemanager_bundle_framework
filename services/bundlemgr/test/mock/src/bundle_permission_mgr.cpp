@@ -193,7 +193,7 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, con
 {
     return false;
 }
-int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId)
+int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId, bool isTokenReserved)
 {
     return -1;
 }
@@ -202,7 +202,7 @@ bool BundlePermissionMgr::VerifyAcrossUserPermission(int userId)
     return false;
 }
 #else
-int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId)
+int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId, bool isTokenReserved)
 {
     return 0;
 }
