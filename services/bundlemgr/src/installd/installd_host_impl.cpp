@@ -401,7 +401,7 @@ static void CreateCloudDir(const std::string &bundleName, const int32_t userid, 
 
 /**
  * @brief Create bundle data dir(BUNDLE_DATA_DIR) in /data/app/el2/userid/sharefiles/
- * @return ErrCode
+ * @return NA
  */
 ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &createDirParam)
 {
@@ -442,7 +442,6 @@ ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &creat
     if (res != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLD, "SetDirApl failed: %{public}s, errno: %{public}d",
             bundleShareFilesDataDir.c_str(), res);
-        return res;
     }
     LOG_D(BMS_TAG_INSTALLD, "succeed for %{public}s", bundleName.c_str());
     return res;
@@ -1154,14 +1153,13 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir, bool async)
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetDiskUsage(const std::string &dir, int64_t &statSize, bool isRealPath)
+int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    statSize = InstalldOperator::GetDiskUsage(dir, isRealPath);
-    return ERR_OK;
+    return InstalldOperator::GetDiskUsage(dir, isRealPath);
 }
 
 ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
@@ -2715,8 +2713,7 @@ ErrCode InstalldHostImpl::CreateDataGroupDir(const CreateDirParam &param)
         std::string groupDir = userDir + ServiceConstants::DATA_GROUP_PATH + param.uuid;
         if (!InstalldOperator::MkOwnerDir(
             groupDir, ServiceConstants::DATA_GROUP_DIR_MODE, param.uid, param.gid)) {
-            LOG_E(BMS_TAG_INSTALLD, "create group dir:%{public}s failed error %{public}s",
-                groupDir.c_str(), strerror(errno));
+            LOG_E(BMS_TAG_INSTALLD, "create group dir failed error %{public}s", strerror(errno));
             result = ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
             continue;
         }

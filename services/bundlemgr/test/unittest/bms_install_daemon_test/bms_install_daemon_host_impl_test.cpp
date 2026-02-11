@@ -1060,8 +1060,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5800, Function | Sma
 
     std::string dir = "";
     bool isReadPath = false;
-    int64_t statSize = 0;
-    ErrCode res = installdProxy->GetDiskUsage(dir, statSize, isReadPath);
+    int64_t res = installdProxy->GetDiskUsage(dir, isReadPath);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 
@@ -1078,8 +1077,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5900, Function | Sma
 
     std::string dir = "com.acts.example";
     bool isReadPath = false;
-    int64_t statSize = 0;
-    ErrCode res = installdProxy->GetDiskUsage(dir, statSize, isReadPath);
+    int64_t res = installdProxy->GetDiskUsage(dir, isReadPath);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 

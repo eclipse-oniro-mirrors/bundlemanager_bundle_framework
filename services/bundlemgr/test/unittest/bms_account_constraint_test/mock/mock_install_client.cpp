@@ -133,7 +133,7 @@ ErrCode InstalldClient::RemoveDir(const std::string &dir, bool async)
     return 0;
 }
 
-ErrCode InstalldClient::GetDiskUsage(const std::string &dir, int64_t &statSize, bool isRealPath)
+int64_t InstalldClient::GetDiskUsage(const std::string &dir, bool isRealPath)
 {
     return 0;
 }

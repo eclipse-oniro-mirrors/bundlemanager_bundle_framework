@@ -113,10 +113,9 @@ public:
      * @brief Get disk usage for dir.
      * @param dir Indicates the directory.
      * @param isRealPath Indicates isRealPath.
-     * @param statSize Indicates size of dir.
      * @return Returns true if successfully; returns false otherwise.
      */
-    virtual ErrCode GetDiskUsage(const std::string &dir, int64_t &statSize, bool isRealPath = false) override;
+    virtual int64_t GetDiskUsage(const std::string &dir, bool isRealPath = false) override;
     /**
      * @brief Get disk usage for dir.
      * @param path Indicates the directory vector.
