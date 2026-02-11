@@ -1319,6 +1319,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckAppLogDir();
     ProcessCheckAppFileManagerDir();
     ProcessCheckPreinstallData();
+    ProcessCheckSystemOptimizeDir();
     ProcessCheckShaderCacheDir();
     ProcessCheckSystemOptimizeShaderCacheDir();
     ProcessCheckCloudShaderDir();
@@ -1330,9 +1331,9 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckAppExtensionAbility();
     ProcessRouterMap();
     // Driver update may cause shader cache invalidity and need to be cleared
+    CleanSystemOptimizeShaderCache();
     CleanAllBundleShaderCache();
     CleanAllBundleEl1ShaderCacheLocal();
-    CleanSystemOptimizeShaderCache();
     CleanAllBundleEl1ArkStartupCacheLocal();
     if (OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
         (void)ProcessIdleInfo();

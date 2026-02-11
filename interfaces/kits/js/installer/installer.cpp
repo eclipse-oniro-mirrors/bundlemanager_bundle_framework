@@ -344,6 +344,10 @@ static bool ParseParameters(napi_env env, napi_value args, std::map<std::string,
             APP_LOGE("parse parameter failed");
             return false;
         }
+        if (key == Constants::VERIFY_UNINSTALL_FORCED_KEY) {
+            APP_LOGW("No support VERIFY_UNINSTALL_FORCED_KEY");
+            continue;
+        }
         if (parameters.find(key) != parameters.end()) {
             APP_LOGE("key(%{public}s) is duplicate", key.c_str());
             return false;

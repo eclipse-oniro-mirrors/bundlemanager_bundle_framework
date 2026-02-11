@@ -4719,6 +4719,7 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         for (auto bundleName = bundleNameList.begin(); bundleName != bundleNameList.end();) {
             const auto infoItem = bundleInfos_.find(*bundleName);
+            std::string name = *bundleName;
             InnerBundleUserInfo userInfo;
             if (infoItem == bundleInfos_.end() ||
                 !infoItem->second.GetInnerBundleUserInfo(infoItem->second.GetResponseUserId(userId), userInfo)) {
@@ -4731,11 +4732,15 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
                     stats.errCode = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
                     bundleStatsList.push_back(stats);
                 } else {
+                    APP_LOGD("bundle: %{public}s is uninstalled with keepdata before, uid: %{public}d",
+                        name.c_str(), uninstallBundleInfo.GetUid(userId));
                     uidMap[*bundleName].insert(uninstallBundleInfo.GetUid(userId));
                     ++bundleName;
                 }
                 continue;
             }
+            APP_LOGD("bundle: %{public}s is installed, uid: %{public}d",
+                    name.c_str(), userInfo.uid);
             uidMap[*bundleName].insert(userInfo.uid);
             ++bundleName;
         }
@@ -5930,7 +5935,7 @@ ErrCode BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInf
     ErrCode ret = GenerateBundleId(innerBundleUserInfo.bundleName, bundleId);
     if (ret != ERR_OK) {
         APP_LOGW("Generate bundleId failed, bundleName: %{public}s", innerBundleUserInfo.bundleName.c_str());
-        return ret;
+        return ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER;
     }
 
     innerBundleUserInfo.uid = innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE

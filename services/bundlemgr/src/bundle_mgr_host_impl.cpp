@@ -473,8 +473,8 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForException(const std::string &bundleNa
 
     // Add ExtensionAbilityInfo names to abilityNames
     const auto &innerExtensionInfos = innerBundleInfo.GetInnerExtensionInfos();
-    for (const auto &[key, extensionInfo] : innerExtensionInfos) {
-        bundleInfoForException.abilityNames.push_back(extensionInfo.name);
+    for (const auto &[key, innerExtensionInfo] : innerExtensionInfos) {
+        bundleInfoForException.abilityNames.push_back(innerExtensionInfo.name);
     }
 
     // get hapHashValueAndDevelopCerts

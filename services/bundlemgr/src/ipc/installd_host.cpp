@@ -519,13 +519,8 @@ bool InstalldHost::HandleGetDiskUsage(MessageParcel &data, MessageParcel &reply)
 {
     std::string dir = Str16ToStr8(data.ReadString16());
     bool isRealPath = data.ReadBool();
-    int64_t statSize = 0;
-    ErrCode result = GetDiskUsage(dir, statSize, isRealPath);
+    ErrCode result = GetDiskUsage(dir, isRealPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    if (!reply.WriteInt64(statSize)) {
-        LOG_E(BMS_TAG_INSTALLD, "HandleGetDiskUsage write failed");
-        return false;
-    }
     return true;
 }
 
