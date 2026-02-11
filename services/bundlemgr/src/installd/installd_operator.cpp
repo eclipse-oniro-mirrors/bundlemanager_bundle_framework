@@ -156,6 +156,7 @@ static bool EndsWith(const std::string &sourceString, const std::string &targetS
 #define HMFS_MONITOR_FL 0x00000002
 #define HMF_IOCTL_HW_GET_FLAGS _IOR(0xf5, 70, unsigned int)
 #define HMF_IOCTL_HW_SET_FLAGS _IOR(0xf5, 71, unsigned int)
+#define BMS_FDSAN_INSTALLD_TAG 0xD001122
 
 struct fscrypt_asdp_policy {
     char version;
@@ -2327,14 +2328,15 @@ bool InstalldOperator::SetKeyIdPolicy(const EncryptionParam &encryptionParam, co
             LOG_E(BMS_TAG_INSTALLD, "open filePath failed");
             return false;
         }
+        fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_INSTALLD_TAG);
         // call ioctl to set e policy
         auto result = ioctl(fd, HMFS_IOC_SET_ASDP_ENCRYPTION_POLICY, &policy);
         if (result != 0) {
             LOG_E(BMS_TAG_INSTALLD, "ioctl failed result:%{public}d %{public}d", result, errno);
-            close(fd);
+            fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
             return false;
         }
-        close(fd);
+        fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
     }
     return true;
 }
@@ -2937,6 +2939,7 @@ bool InstalldOperator::WriteCertToFile(const std::string &certFilePath, const st
         LOG_E(BMS_TAG_INSTALLD, "open tmp cert file failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
         return false;
     }
+    fdsan_exchange_owner_tag(fd, 0, BMS_FDSAN_INSTALLD_TAG);
 
     const char *buf = certContent.data();
     size_t toWrite = certContent.size();
@@ -2946,7 +2949,7 @@ bool InstalldOperator::WriteCertToFile(const std::string &certFilePath, const st
         if (writeSize < 0) {
             if (errno == EINTR) continue;
             LOG_E(BMS_TAG_INSTALLD, "write tmp cert file failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
-            close(fd);
+            fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
             unlink(tmpPath.c_str());
             return false;
         }
@@ -2955,12 +2958,12 @@ bool InstalldOperator::WriteCertToFile(const std::string &certFilePath, const st
 
     if (fsync(fd) != 0) {
         LOG_E(BMS_TAG_INSTALLD, "fsync failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
-        close(fd);
+        fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG);
         unlink(tmpPath.c_str());
         return false;
     }
 
-    if (close(fd) != 0) {
+    if (fdsan_close_with_tag(fd, BMS_FDSAN_INSTALLD_TAG) != 0) {
         LOG_E(BMS_TAG_INSTALLD, "close failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
         unlink(tmpPath.c_str());
         return false;

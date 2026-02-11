@@ -404,13 +404,16 @@ ErrCode UnzipWithFilterCallback(
             APP_LOGE("Failed to open");
             return ERR_ZLIB_SRC_FILE_DISABLED;
         }
+        fdsan_exchange_owner_tag(zipFd, 0, LOG_DOMAIN);
+
         ret = UnzipWithFilterAndWriters(zipFd,
             dest,
             std::bind(&CreateFilePathWriterDelegate, std::placeholders::_1, std::placeholders::_2),
             std::bind(&CreateDirectory, std::placeholders::_1, std::placeholders::_2),
             unzipParam,
             needChangePathSeparator);
-        close(zipFd);
+
+        fdsan_close_with_tag(zipFd, LOG_DOMAIN);
     }
     return ret;
 }
@@ -630,8 +633,9 @@ ErrCode GetOriginalSize(const std::string &srcFile, int64_t &originalSize)
         APP_LOGE("Failed to open file, errno: %{public}d, %{public}s", errno, strerror(errno));
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
+    fdsan_exchange_owner_tag(zipFd, 0, LOG_DOMAIN);
     ErrCode ret = GetOriginalSize(zipFd, originalSize);
-    close(zipFd);
+    fdsan_close_with_tag(zipFd, LOG_DOMAIN);
     return ret;
 }
 

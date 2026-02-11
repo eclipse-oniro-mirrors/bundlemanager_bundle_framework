@@ -384,12 +384,18 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, const std::string &
 
     realBundleDir += std::string(ServiceConstants::PATH_SEPARATOR) + labelPath;
     int32_t bundleIdFd = open(realBundleDir.c_str(), O_WRONLY | O_TRUNC);
+    if (bundleIdFd < 0) {
+        APP_LOGE("open file %{public}s failed, errorNo: %{public}d:%{public}s",
+            realBundleDir.c_str(), errno, strerror(errno));
+        return;
+    }
+    fdsan_exchange_owner_tag(bundleIdFd, 0, LOG_DOMAIN);
     if (bundleIdFd > 0) {
         if (write(bundleIdFd, finalLabelValue.c_str(), finalLabelValue.size()) < 0) {
             APP_LOGE("write bundleId error:%{public}d", errno);
         }
     }
-    close(bundleIdFd);
+    fdsan_close_with_tag(bundleIdFd, LOG_DOMAIN);
 }
 
 void BundleUtil::RemoveFsConfig(const std::string &bundleName, const std::string &configPath)
@@ -748,6 +754,7 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
         (void)fclose(sourceFp);
         return CopyFile(sourcePath, destPath);
     }
+    fdsan_exchange_owner_tag(destFd, 0, LOG_DOMAIN);
 
     size_t buffer = 524288; // 0.5M
     size_t transferCount = 0;
@@ -760,7 +767,7 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
         APP_LOGE("sendfile failed, errno : %{public}d, send count : %{public}zu , file size : %{public}zu",
             errno, transferCount, static_cast<size_t>(sourceStat.st_size));
         (void)fclose(sourceFp);
-        close(destFd);
+        fdsan_close_with_tag(destFd, LOG_DOMAIN);
         return CopyFile(sourcePath, destPath);
     }
 
@@ -768,7 +775,7 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
     if (needFsync) {
         (void)fsync(destFd);
     }
-    close(destFd);
+    fdsan_close_with_tag(destFd, LOG_DOMAIN);
     APP_LOGD("sendfile success");
     return true;
 }
