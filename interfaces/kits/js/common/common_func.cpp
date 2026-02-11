@@ -1457,7 +1457,7 @@ void CommonFunc::SetAppInstallExtendedInfoSharedBundleInfo(napi_env env,
     for (size_t idx = 0; idx < appInstallExtendedInfo.sharedBundleInfos.size(); idx++) {
         napi_value nSharedBundleInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nSharedBundleInfo));
-        ConvertSharedBundleInfo(env, nSharedBundleInfo, appInstallExtendedInfo.sharedBundleInfos[idx]);
+        ConvertSharedBundleInfoForInstall(env, nSharedBundleInfo, appInstallExtendedInfo.sharedBundleInfos[idx]);
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSharedBundleInfos, idx, nSharedBundleInfo));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInstallExtendedInfo,
@@ -2678,6 +2678,44 @@ void CommonFunc::ConvertSharedModuleInfo(napi_env env, napi_value value, const S
     napi_value nDescriptionId;
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, moduleInfo.descriptionId, &nDescriptionId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, DESCRIPTION_ID, nDescriptionId));
+}
+
+void CommonFunc::ConvertSharedModuleInfoForInstall(napi_env env, napi_value value, const SharedModuleInfo &moduleInfo)
+{
+    AutoHandleScope scopeGuard(env);
+    napi_value nName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, moduleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, NAME, nName));
+
+    napi_value nVersionCode;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, moduleInfo.versionCode, &nVersionCode));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "versionCode", nVersionCode));
+
+    napi_value nHapPath;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, moduleInfo.hapPath.c_str(), NAPI_AUTO_LENGTH, &nHapPath));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "hapPath", nHapPath));
+}
+
+void CommonFunc::ConvertSharedBundleInfoForInstall(napi_env env, napi_value value, const SharedBundleInfo &bundleInfo)
+{
+    AutoHandleScope scopeGuard(env);
+    napi_value nName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, bundleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, NAME, nName));
+
+    napi_value nSharedModuleInfos;
+    size_t size = bundleInfo.sharedModuleInfos.size();
+    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nSharedModuleInfos));
+    for (size_t index = 0; index < size; ++index) {
+        napi_value nModuleInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nModuleInfo));
+        ConvertSharedModuleInfoForInstall(env, nModuleInfo, bundleInfo.sharedModuleInfos[index]);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSharedModuleInfos, index, nModuleInfo));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "sharedModuleInfo", nSharedModuleInfos));
 }
 
 void CommonFunc::ConvertSharedBundleInfo(napi_env env, napi_value value, const SharedBundleInfo &bundleInfo)

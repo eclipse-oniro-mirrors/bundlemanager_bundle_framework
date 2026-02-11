@@ -4622,7 +4622,7 @@ void GetAllAppInstallExtendedInfoComplete(napi_env env, napi_status status, void
             result[ARGS_POS_ONE]);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_ALL_INSTALL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            GET_ALL_INSTALL_INFO, Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
     }
     CommonFunc::NapiReturnDeferred<AllAppInstallExtendedInfoCallbackInfo>(env, asyncCallbackInfo,
         result, ARGS_SIZE_TWO);

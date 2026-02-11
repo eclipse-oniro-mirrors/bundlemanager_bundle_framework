@@ -974,6 +974,8 @@ public:
 
     ErrCode GetSharedBundleInfoBySelf(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo);
 
+    ErrCode GetSharedBundleInfoBySelfNoLock(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo);
+
     ErrCode GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
         std::vector<Dependency> &dependencies);
 
@@ -995,7 +997,7 @@ public:
     ErrCode GenerateAppInstallExtendedInfo(const InnerBundleInfo &innerBundleInfo,
         AppInstallExtendedInfo &appInstallExtendedInfo);
 
-    ErrCode GetAllAppInstallExtendedInfo(std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos) const;
+    ErrCode GetAllAppInstallExtendedInfo(std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos);
 
     ErrCode GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName, int32_t userId,
         std::vector<ProxyData> &proxyDatas) const;
