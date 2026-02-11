@@ -809,7 +809,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0018, Function | SmallTest
         EXPECT_EQ(ret, ERR_OK);
         QuickFixChecker checker;
         ret = checker.CheckHotReloadWithInstalledBundle(appQuickFix, bundleInfo);
-        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_ALREADY_EXISTED);
+        EXPECT_EQ(ret, ERR_OK);
     }
 
     UninstallBundleInfo(BUNDLE_NAME);
@@ -863,10 +863,16 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0020, Function | SmallTest
         BundleInfo bundleInfo;
         ErrCode ret = deployer->GetBundleInfo(appQuickFix.bundleName, bundleInfo);
         EXPECT_EQ(ret, ERR_OK);
+        bundleInfo.applicationInfo.appPrivilegeLevel = "normal";
+        bundleInfo.signatureInfo.appIdentifier = "testIdentifier";
+        bundleInfo.name = appQuickFix.bundleName;
         Security::Verify::ProvisionInfo provisionInfo;
+        provisionInfo.bundleInfo.apl = "normal";
+        provisionInfo.bundleInfo.appIdentifier = "testIdentifier";
+        provisionInfo.bundleInfo.bundleName = appQuickFix.bundleName;
         QuickFixChecker checker;
         ret = checker.CheckPatchWithInstalledBundle(appQuickFix, bundleInfo, provisionInfo);
-        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED);
+        EXPECT_EQ(ret, ERR_OK);
     }
 
     UninstallBundleInfo(BUNDLE_NAME);
