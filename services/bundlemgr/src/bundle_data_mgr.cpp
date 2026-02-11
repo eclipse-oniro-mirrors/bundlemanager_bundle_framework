@@ -9656,34 +9656,36 @@ void BundleDataMgr::GenerateNewUserDataGroupInfos(const std::string &bundleName,
 void BundleDataMgr::DeleteUserDataGroupInfos(const std::string &bundleName, int32_t userId, bool keepData)
 {
     APP_LOGD("called for -b %{public}s, -u %{public}d", bundleName.c_str(), userId);
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto bundleInfoItem = bundleInfos_.find(bundleName);
-    if (bundleInfoItem == bundleInfos_.end()) {
-        APP_LOGW("%{public}s not found", bundleName.c_str());
-        return;
-    }
-    auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
-    if (dataGroupInfos.empty()) {
-        return;
-    }
     std::vector<std::string> uuidList;
-    for (const auto &dataItem : dataGroupInfos) {
-        std::string groupId = dataItem.first;
-        if (dataItem.second.empty()) {
-            APP_LOGW("id infos %{public}s empty in %{public}s", groupId.c_str(), bundleName.c_str());
-            continue;
+    {
+        std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto bundleInfoItem = bundleInfos_.find(bundleName);
+        if (bundleInfoItem == bundleInfos_.end()) {
+            APP_LOGW("%{public}s not found", bundleName.c_str());
+            return;
         }
-        bundleInfoItem->second.RemoveGroupInfos(userId, groupId);
-        if (!keepData && !IsDataGroupIdExistNoLock(groupId, userId)) {
-            uuidList.emplace_back(dataItem.second[0].uuid);
+        auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
+        if (dataGroupInfos.empty()) {
+            return;
+        }
+        for (const auto &dataItem : dataGroupInfos) {
+            std::string groupId = dataItem.first;
+            if (dataItem.second.empty()) {
+                APP_LOGW("id infos %{public}s empty in %{public}s", groupId.c_str(), bundleName.c_str());
+                continue;
+            }
+            bundleInfoItem->second.RemoveGroupInfos(userId, groupId);
+            if (!keepData && !IsDataGroupIdExistNoLock(groupId, userId)) {
+                uuidList.emplace_back(dataItem.second[0].uuid);
+            }
+        }
+        if (!dataStorage_->SaveStorageBundleInfo(bundleInfoItem->second)) {
+            APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
         }
     }
     auto result = InstalldClient::GetInstance()->DeleteDataGroupDirs(uuidList, userId);
     if (result != ERR_OK) {
         APP_LOGE("delete group dir failed, err %{public}d", result);
-    }
-    if (!dataStorage_->SaveStorageBundleInfo(bundleInfoItem->second)) {
-        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
     }
 }
 
@@ -9756,29 +9758,31 @@ bool BundleDataMgr::IsDataGroupIdExistNoLock(const std::string &dataGroupId, int
 void BundleDataMgr::DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, int32_t userId) const
 {
     //find ids existed in newInfo, but not in oldInfo when there is no others share this id
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    const auto bundleInfoItem = bundleInfos_.find(oldInfo.GetBundleName());
-    if (bundleInfoItem == bundleInfos_.end()) {
-        APP_LOGE("find bundle %{public}s failed", oldInfo.GetBundleName().c_str());
-        return;
-    }
-    auto newDataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
-    if (newDataGroupInfos.empty()) {
-        return;
-    }
-    auto oldDatagroupInfos = oldInfo.GetDataGroupInfos();
     std::vector<std::string> uuidList;
-    for (const auto &newDataItem : newDataGroupInfos) {
-        std::string newGroupId = newDataItem.first;
-        if (newDataItem.second.empty()) {
-            APP_LOGE("infos empty in %{public}s %{public}s", oldInfo.GetBundleName().c_str(), newGroupId.c_str());
-            continue;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        const auto bundleInfoItem = bundleInfos_.find(oldInfo.GetBundleName());
+        if (bundleInfoItem == bundleInfos_.end()) {
+            APP_LOGE("find bundle %{public}s failed", oldInfo.GetBundleName().c_str());
+            return;
         }
-        if (oldDatagroupInfos.find(newGroupId) != oldDatagroupInfos.end() ||
-            IsShareDataGroupIdNoLock(newGroupId, userId)) {
-            continue;
+        auto newDataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
+        if (newDataGroupInfos.empty()) {
+            return;
         }
-        uuidList.emplace_back(newDataItem.second[0].uuid);
+        auto oldDatagroupInfos = oldInfo.GetDataGroupInfos();
+        for (const auto &newDataItem : newDataGroupInfos) {
+            std::string newGroupId = newDataItem.first;
+            if (newDataItem.second.empty()) {
+                APP_LOGE("infos empty in %{public}s %{public}s", oldInfo.GetBundleName().c_str(), newGroupId.c_str());
+                continue;
+            }
+            if (oldDatagroupInfos.find(newGroupId) != oldDatagroupInfos.end() ||
+                IsShareDataGroupIdNoLock(newGroupId, userId)) {
+                continue;
+            }
+            uuidList.emplace_back(newDataItem.second[0].uuid);
+        }
     }
     auto result = InstalldClient::GetInstance()->DeleteDataGroupDirs(uuidList, userId);
     if (result != ERR_OK) {
