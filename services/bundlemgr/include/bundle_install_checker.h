@@ -96,6 +96,14 @@ public:
      * @return Returns ERR_OK if haps checking successfully; returns error code otherwise.
      */
     ErrCode CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+
+    /**
+     * @brief To check the consistency of multiple HSP files.
+     * @param infos .Indicates all innerBundleInfo for all HSPs need to be installed.
+     * @return Returns ERR_OK if HSPs checking successfully; returns error code otherwise.
+     */
+    ErrCode CheckMultipleHspConsistency(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+
     /**
      * @brief To check native file in all haps.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.

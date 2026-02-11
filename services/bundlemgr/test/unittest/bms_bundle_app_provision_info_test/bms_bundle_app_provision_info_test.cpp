@@ -1032,7 +1032,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0600, Fun
 /**
  * @tc.number: InnerSharedBundleInstallerTest_0700
  * @tc.name: test the start function of ObtainHspFileAndSignatureFilePath
- * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath with multiple HSP files
 */
 HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0700, Function | SmallTest | Level0)
 {
@@ -1042,16 +1042,23 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0700, Fun
     std::string signatureFilePath;
     auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
     EXPECT_EQ(ret, ERR_OK);
-    inBundlePaths.emplace_back(HAP_FILE_PATH1);
+
+    // Test with 3 HSP files (less than 128 limit)
+    inBundlePaths.emplace_back(HSP_FILE_PATH1);
     inBundlePaths.emplace_back(HSP_FILE_PATH1);
     ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_NUMBER_EXCEED_MAX_NUMBER_IN_HSP_LIB_PATH);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Test with invalid file type (HAP file)
+    inBundlePaths.emplace_back(HAP_FILE_PATH1);
+    ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ONLY_HSP_OR_SIG_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR);
 }
 
 /**
  * @tc.number: InnerSharedBundleInstallerTest_0800
  * @tc.name: test the start function of ObtainHspFileAndSignatureFilePath
- * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath with file type validation
 */
 HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0800, Function | SmallTest | Level0)
 {
@@ -1062,14 +1069,37 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0800, Fun
     auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ONLY_HSP_OR_SIG_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR);
 
+    // Multiple HSP files are now allowed (up to 128)
     inBundlePaths.clear();
     inBundlePaths = {HSP_FILE_PATH1, HSP_FILE_PATH1};
     ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ONLY_ONE_HSP_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR);
+    EXPECT_EQ(ret, ERR_OK);
 
+    // Test with signature file and HSP file
     inBundlePaths[0] = "test.sig";
     ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0850
+ * @tc.name: test the start function of ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath with files exceeding 128 limit
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0850, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::vector<std::string> inBundlePaths;
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+
+    // Construct 129 HSP files to exceed MAX_FILE_NUMBER (128)
+    for (int32_t i = 0; i < 129; ++i) {
+        inBundlePaths.emplace_back(HSP_FILE_PATH1);
+    }
+
+    auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_NUMBER_EXCEED_MAX_NUMBER_IN_HSP_LIB_PATH);
 }
 
 /**

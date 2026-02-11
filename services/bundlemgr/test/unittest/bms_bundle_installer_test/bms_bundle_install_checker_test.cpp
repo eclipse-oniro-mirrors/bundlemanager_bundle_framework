@@ -2934,4 +2934,279 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckU1EnableSameInHaps_0400, Function | S
     auto ret = installChecker.CheckU1EnableSameInHaps(infos, "", u1Enable);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_U1_ENABLE_NOT_SAME_IN_ALL_BUNDLE_INFOS);
 }
+
+/**
+ * @tc.number: CheckMultipleHspConsistency_0001
+ * @tc.name: Test CheckMultipleHspConsistency with empty infos
+ * @tc.desc: 1.Test CheckMultipleHspConsistency with empty infos
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMultipleHspConsistency_0001, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    auto ret = installChecker.CheckMultipleHspConsistency(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckMultipleHspConsistency_0002
+ * @tc.name: Test CheckMultipleHspConsistency with single HSP
+ * @tc.desc: 1.Test CheckMultipleHspConsistency with single HSP
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMultipleHspConsistency_0002, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "test.bundle";
+    bundleInfo.versionCode = 1;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "test.bundle";
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    infos.insert(pair<string, InnerBundleInfo>("path1", innerBundleInfo));
+    auto ret = installChecker.CheckMultipleHspConsistency(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckMultipleHspConsistency_0003
+ * @tc.name: Test CheckMultipleHspConsistency with bundleName mismatch
+ * @tc.desc: 1.Test CheckMultipleHspConsistency with bundleName mismatch
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMultipleHspConsistency_0003, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = "test.bundle1";
+    bundleInfo1.versionCode = 1;
+    innerBundleInfo1.SetBaseBundleInfo(bundleInfo1);
+    ApplicationInfo applicationInfo1;
+    applicationInfo1.bundleName = "test.bundle1";
+    applicationInfo1.bundleType = BundleType::SHARED;
+    innerBundleInfo1.SetBaseApplicationInfo(applicationInfo1);
+    innerBundleInfo1.SetAppType(Constants::AppType::SYSTEM_APP);
+
+    InnerBundleInfo innerBundleInfo2;
+    BundleInfo bundleInfo2;
+    bundleInfo2.name = "test.bundle2";
+    bundleInfo2.versionCode = 1;
+    innerBundleInfo2.SetBaseBundleInfo(bundleInfo2);
+    ApplicationInfo applicationInfo2;
+    applicationInfo2.bundleName = "test.bundle2";
+    applicationInfo2.bundleType = BundleType::SHARED;
+    innerBundleInfo2.SetBaseApplicationInfo(applicationInfo2);
+    innerBundleInfo2.SetAppType(Constants::AppType::SYSTEM_APP);
+
+    infos.insert(pair<string, InnerBundleInfo>("path1", innerBundleInfo1));
+    infos.insert(pair<string, InnerBundleInfo>("path2", innerBundleInfo2));
+    auto ret = installChecker.CheckMultipleHspConsistency(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLENAME_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckMultipleHspConsistency_0004
+ * @tc.name: Test CheckMultipleHspConsistency with versionCode mismatch
+ * @tc.desc: 1.Test CheckMultipleHspConsistency with versionCode mismatch
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMultipleHspConsistency_0004, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = "test.bundle";
+    bundleInfo1.versionCode = 1;
+    innerBundleInfo1.SetBaseBundleInfo(bundleInfo1);
+    ApplicationInfo applicationInfo1;
+    applicationInfo1.bundleName = "test.bundle";
+    applicationInfo1.bundleType = BundleType::SHARED;
+    innerBundleInfo1.SetBaseApplicationInfo(applicationInfo1);
+    innerBundleInfo1.SetAppType(Constants::AppType::SYSTEM_APP);
+
+    InnerBundleInfo innerBundleInfo2;
+    BundleInfo bundleInfo2;
+    bundleInfo2.name = "test.bundle";
+    bundleInfo2.versionCode = 2;
+    innerBundleInfo2.SetBaseBundleInfo(bundleInfo2);
+    ApplicationInfo applicationInfo2;
+    applicationInfo2.bundleName = "test.bundle";
+    applicationInfo2.bundleType = BundleType::SHARED;
+    innerBundleInfo2.SetBaseApplicationInfo(applicationInfo2);
+    innerBundleInfo2.SetAppType(Constants::AppType::SYSTEM_APP);
+
+    infos.insert(pair<string, InnerBundleInfo>("path1", innerBundleInfo1));
+    infos.insert(pair<string, InnerBundleInfo>("path2", innerBundleInfo2));
+    auto ret = installChecker.CheckMultipleHspConsistency(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckMultipleHspConsistency_0005
+ * @tc.name: Test CheckMultipleHspConsistency with appType mismatch
+ * @tc.desc: 1.Test CheckMultipleHspConsistency with appType mismatch
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMultipleHspConsistency_0005, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = "test.bundle";
+    bundleInfo1.versionCode = 1;
+    innerBundleInfo1.SetBaseBundleInfo(bundleInfo1);
+    ApplicationInfo applicationInfo1;
+    applicationInfo1.bundleName = "test.bundle";
+    applicationInfo1.bundleType = BundleType::SHARED;
+    innerBundleInfo1.SetBaseApplicationInfo(applicationInfo1);
+    innerBundleInfo1.SetAppType(Constants::AppType::SYSTEM_APP);
+
+    InnerBundleInfo innerBundleInfo2;
+    BundleInfo bundleInfo2;
+    bundleInfo2.name = "test.bundle";
+    bundleInfo2.versionCode = 1;
+    innerBundleInfo2.SetBaseBundleInfo(bundleInfo2);
+    ApplicationInfo applicationInfo2;
+    applicationInfo2.bundleName = "test.bundle";
+    applicationInfo2.bundleType = BundleType::SHARED;
+    innerBundleInfo2.SetBaseApplicationInfo(applicationInfo2);
+    innerBundleInfo2.SetAppType(Constants::AppType::THIRD_PARTY_APP);
+
+    infos.insert(pair<string, InnerBundleInfo>("path1", innerBundleInfo1));
+    infos.insert(pair<string, InnerBundleInfo>("path2", innerBundleInfo2));
+    auto ret = installChecker.CheckMultipleHspConsistency(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckMultipleHspConsistency_0006
+ * @tc.name: Test CheckMultipleHspConsistency with bundleType mismatch
+ * @tc.desc: 1.Test CheckMultipleHspConsistency with bundleType mismatch
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMultipleHspConsistency_0006, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = "test.bundle";
+    bundleInfo1.versionCode = 1;
+    innerBundleInfo1.SetBaseBundleInfo(bundleInfo1);
+    ApplicationInfo applicationInfo1;
+    applicationInfo1.bundleName = "test.bundle";
+    applicationInfo1.bundleType = BundleType::SHARED;
+    innerBundleInfo1.SetBaseApplicationInfo(applicationInfo1);
+    innerBundleInfo1.SetAppType(Constants::AppType::SYSTEM_APP);
+
+    InnerBundleInfo innerBundleInfo2;
+    BundleInfo bundleInfo2;
+    bundleInfo2.name = "test.bundle";
+    bundleInfo2.versionCode = 1;
+    innerBundleInfo2.SetBaseBundleInfo(bundleInfo2);
+    ApplicationInfo applicationInfo2;
+    applicationInfo2.bundleName = "test.bundle";
+    applicationInfo2.bundleType = BundleType::APP;
+    innerBundleInfo2.SetBaseApplicationInfo(applicationInfo2);
+    innerBundleInfo2.SetAppType(Constants::AppType::SYSTEM_APP);
+
+    infos.insert(pair<string, InnerBundleInfo>("path1", innerBundleInfo1));
+    infos.insert(pair<string, InnerBundleInfo>("path2", innerBundleInfo2));
+    auto ret = installChecker.CheckMultipleHspConsistency(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckMultipleHspConsistency_0007
+ * @tc.name: Test CheckMultipleHspConsistency with isStage mismatch
+ * @tc.desc: 1.Test CheckMultipleHspConsistency with isStage mismatch
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMultipleHspConsistency_0007, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = "test.bundle";
+    bundleInfo1.versionCode = 1;
+    innerBundleInfo1.SetBaseBundleInfo(bundleInfo1);
+    ApplicationInfo applicationInfo1;
+    applicationInfo1.bundleName = "test.bundle";
+    applicationInfo1.bundleType = BundleType::SHARED;
+    innerBundleInfo1.SetBaseApplicationInfo(applicationInfo1);
+    innerBundleInfo1.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo1.SetIsNewVersion(true);
+
+    InnerBundleInfo innerBundleInfo2;
+    BundleInfo bundleInfo2;
+    bundleInfo2.name = "test.bundle";
+    bundleInfo2.versionCode = 1;
+    innerBundleInfo2.SetBaseBundleInfo(bundleInfo2);
+    ApplicationInfo applicationInfo2;
+    applicationInfo2.bundleName = "test.bundle";
+    applicationInfo2.bundleType = BundleType::SHARED;
+    innerBundleInfo2.SetBaseApplicationInfo(applicationInfo2);
+    innerBundleInfo2.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo2.SetIsNewVersion(false);
+
+    infos.insert(pair<string, InnerBundleInfo>("path1", innerBundleInfo1));
+    infos.insert(pair<string, InnerBundleInfo>("path2", innerBundleInfo2));
+    auto ret = installChecker.CheckMultipleHspConsistency(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
+ * @tc.number: CheckMultipleHspConsistency_0008
+ * @tc.name: Test CheckMultipleHspConsistency with all fields consistent
+ * @tc.desc: 1.Test CheckMultipleHspConsistency with all fields consistent
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMultipleHspConsistency_0008, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = "test.bundle";
+    bundleInfo1.versionCode = 1;
+    innerBundleInfo1.SetBaseBundleInfo(bundleInfo1);
+    ApplicationInfo applicationInfo1;
+    applicationInfo1.bundleName = "test.bundle";
+    applicationInfo1.bundleType = BundleType::SHARED;
+    innerBundleInfo1.SetBaseApplicationInfo(applicationInfo1);
+    innerBundleInfo1.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo1.SetIsNewVersion(true);
+
+    InnerBundleInfo innerBundleInfo2;
+    BundleInfo bundleInfo2;
+    bundleInfo2.name = "test.bundle";
+    bundleInfo2.versionCode = 1;
+    innerBundleInfo2.SetBaseBundleInfo(bundleInfo2);
+    ApplicationInfo applicationInfo2;
+    applicationInfo2.bundleName = "test.bundle";
+    applicationInfo2.bundleType = BundleType::SHARED;
+    innerBundleInfo2.SetBaseApplicationInfo(applicationInfo2);
+    innerBundleInfo2.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo2.SetIsNewVersion(true);
+
+    InnerBundleInfo innerBundleInfo3;
+    BundleInfo bundleInfo3;
+    bundleInfo3.name = "test.bundle";
+    bundleInfo3.versionCode = 1;
+    innerBundleInfo3.SetBaseBundleInfo(bundleInfo3);
+    ApplicationInfo applicationInfo3;
+    applicationInfo3.bundleName = "test.bundle";
+    applicationInfo3.bundleType = BundleType::SHARED;
+    innerBundleInfo3.SetBaseApplicationInfo(applicationInfo3);
+    innerBundleInfo3.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo3.SetIsNewVersion(true);
+
+    infos.insert(pair<string, InnerBundleInfo>("path1", innerBundleInfo1));
+    infos.insert(pair<string, InnerBundleInfo>("path2", innerBundleInfo2));
+    infos.insert(pair<string, InnerBundleInfo>("path3", innerBundleInfo3));
+    auto ret = installChecker.CheckMultipleHspConsistency(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
