@@ -2737,7 +2737,6 @@ ErrCode InstalldHostImpl::CreateDataGroupDir(const CreateDirParam &param)
             result = ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
             continue;
         }
-        
         // Set independent SELinux labels for group directories
         if (param.hasInputMethodExtension) {
 #ifdef WITH_SELINUX
@@ -2747,13 +2746,12 @@ ErrCode InstalldHostImpl::CreateDataGroupDir(const CreateDirParam &param)
                 {"el3", "u:object_r:data_app_el3_file:s0"},
                 {"el4", "u:object_r:data_app_el4_file:s0"}
             };
-            
             auto it = elToContextMap.find(el);
             if (it != elToContextMap.end()) {
                 const char *context = it->second;
                 if (lsetfilecon(groupDir.c_str(), context) < 0) {
-                    LOG_E(BMS_TAG_INSTALLD, "Set SELinux context for inputmethod group dir %{public}s failed errno:%{public}d", 
-                        groupDir.c_str(), errno);
+                    LOG_E(BMS_TAG_INSTALLD, "Set SELinux context for inputmethod group dir %{public}s failed "
+                        "errno:%{public}d", groupDir.c_str(), errno);
                 }
             }
 #endif
@@ -2766,22 +2764,22 @@ ErrCode InstalldHostImpl::CreateEl5DataGroupDir(const CreateDirParam &param)
 {
     if (param.uuid.empty() || param.userId < 0 ||
         param.uid < 0 || param.gid < 0) {
-        LOG_E(BMS_TAG_INSTALLD, "invalid param for el5, uuid %{private}s "
-            "-u %{public}d uid %{public}d gid %{public}d", param.uuid.c_str(),
-            param.userId, param.uid, param.gid);
+        LOG_E(BMS_TAG_INSTALLD, "invalid param for el5, uuid %{private}s -u %{public}d uid %{public}d gid %{public}d",
+            param.uuid.c_str(), param.userId, param.uid, param.gid);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     // Create el5 group dir
     ErrCode result = ERR_OK;
-    std::string userDir = ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH + 
+    std::string userDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
         ServiceConstants::PATH_SEPARATOR + std::to_string(param.userId);
     if (access(userDir.c_str(), F_OK) != 0) {
-        LOG_W(BMS_TAG_INSTALLD, "el5 user directory %{public}s does not existed", userDir.c_str());
+        LOG_W(BMS_TAG_INSTALLD, "el5 user directory %{public}s does not existed",
+            userDir.c_str());
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
     std::string groupDir = userDir + ServiceConstants::DATA_GROUP_PATH + param.uuid;
-    if (!InstalldOperator::MkOwnerDir(
-        groupDir, ServiceConstants::DATA_GROUP_DIR_MODE, param.uid, param.gid)) {
+    if (!InstalldOperator::MkOwnerDir(groupDir, ServiceConstants::DATA_GROUP_DIR_MODE,
+        param.uid, param.gid)) {
         LOG_E(BMS_TAG_INSTALLD, "create el5 group dir:%{public}s failed error %{public}s",
             groupDir.c_str(), strerror(errno));
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
@@ -2791,8 +2789,8 @@ ErrCode InstalldHostImpl::CreateEl5DataGroupDir(const CreateDirParam &param)
 #ifdef WITH_SELINUX
         const char *context = "u:object_r:data_app_el5_file:s0";
         if (lsetfilecon(groupDir.c_str(), context) < 0) {
-            LOG_E(BMS_TAG_INSTALLD, "Set SELinux context for el5 inputmethod group dir %{public}s failed errno:%{public}d", 
-                groupDir.c_str(), errno);
+            LOG_E(BMS_TAG_INSTALLD, "Set SELinux context for el5 inputmethod group dir %{public}s failed "
+                "errno:%{public}d", groupDir.c_str(), errno);
         }
 #endif
     }

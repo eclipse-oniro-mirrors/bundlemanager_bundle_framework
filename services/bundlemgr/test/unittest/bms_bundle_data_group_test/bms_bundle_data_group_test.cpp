@@ -2646,4 +2646,154 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0030, Function | MediumTest
     
     EXPECT_FALSE(installer.IsBundleEncrypted(infos, oldInfo, newInfo));
 }
+
+/**
+ * @tc.number: InnerBundleInfo_0037
+ * @tc.name: test HasInputMethodExtension with INPUTMETHOD extension
+ * @tc.desc: Test HasInputMethodExtension returns true when bundle has INPUTMETHOD extension
+ */
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0037, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    
+    // Create an INPUTMETHOD extension
+    InnerExtensionInfo inputMethodExtension;
+    inputMethodExtension.bundleName = "com.test.inputmethod";
+    inputMethodExtension.moduleName = "testModule";
+    inputMethodExtension.name = "InputMethodExtension";
+    inputMethodExtension.type = ExtensionAbilityType::INPUTMETHOD;
+    
+    // Add extension to bundle
+    std::string extensionKey = "com.test.inputmethod.testModule.InputMethodExtension";
+    innerBundleInfo.baseExtensionInfos_[extensionKey] = inputMethodExtension;
+    
+    // Verify HasInputMethodExtension returns true
+    EXPECT_TRUE(innerBundleInfo.HasInputMethodExtension());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0038
+ * @tc.name: test HasInputMethodExtension with no extensions
+ * @tc.desc: Test HasInputMethodExtension returns false when bundle has no extensions
+ */
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0038, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    
+    // No extensions added
+    
+    // Verify HasInputMethodExtension returns false
+    EXPECT_FALSE(innerBundleInfo.HasInputMethodExtension());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0039
+ * @tc.name: test HasInputMethodExtension with non-INPUTMETHOD extensions
+ * @tc.desc: Test HasInputMethodExtension returns false when bundle has non-INPUTMETHOD extensions
+ */
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0039, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    
+    // Create a non-INPUTMETHOD extension (e.g., FORM)
+    InnerExtensionInfo formExtension;
+    formExtension.bundleName = "com.test.form";
+    formExtension.moduleName = "testModule";
+    formExtension.name = "FormExtension";
+    formExtension.type = ExtensionAbilityType::FORM;
+    
+    // Add extension to bundle
+    std::string extensionKey = "com.test.form.testModule.FormExtension";
+    innerBundleInfo.baseExtensionInfos_[extensionKey] = formExtension;
+    
+    // Verify HasInputMethodExtension returns false
+    EXPECT_FALSE(innerBundleInfo.HasInputMethodExtension());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0040
+ * @tc.name: test HasInputMethodExtension with multiple extensions including INPUTMETHOD
+ * @tc.desc: Test HasInputMethodExtension returns true when bundle has multiple extensions including INPUTMETHOD
+ */
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0040, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    
+    // Create a non-INPUTMETHOD extension
+    InnerExtensionInfo formExtension;
+    formExtension.bundleName = "com.test.mixed";
+    formExtension.moduleName = "testModule";
+    formExtension.name = "FormExtension";
+    formExtension.type = ExtensionAbilityType::FORM;
+    
+    // Create an INPUTMETHOD extension
+    InnerExtensionInfo inputMethodExtension;
+    inputMethodExtension.bundleName = "com.test.mixed";
+    inputMethodExtension.moduleName = "testModule";
+    inputMethodExtension.name = "InputMethodExtension";
+    inputMethodExtension.type = ExtensionAbilityType::INPUTMETHOD;
+    
+    // Create another non-INPUTMETHOD extension
+    InnerExtensionInfo serviceExtension;
+    serviceExtension.bundleName = "com.test.mixed";
+    serviceExtension.moduleName = "testModule";
+    serviceExtension.name = "ServiceExtension";
+    serviceExtension.type = ExtensionAbilityType::SERVICE;
+    
+    // Add all extensions to bundle
+    std::string formKey = "com.test.mixed.testModule.FormExtension";
+    innerBundleInfo.baseExtensionInfos_[formKey] = formExtension;
+    
+    std::string inputMethodKey = "com.test.mixed.testModule.InputMethodExtension";
+    innerBundleInfo.baseExtensionInfos_[inputMethodKey] = inputMethodExtension;
+    
+    std::string serviceKey = "com.test.mixed.testModule.ServiceExtension";
+    innerBundleInfo.baseExtensionInfos_[serviceKey] = serviceExtension;
+    
+    // Verify HasInputMethodExtension returns true (because one extension is INPUTMETHOD)
+    EXPECT_TRUE(innerBundleInfo.HasInputMethodExtension());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0041
+ * @tc.name: test HasInputMethodExtension with multiple extensions but no INPUTMETHOD
+ * @tc.desc: Test HasInputMethodExtension returns false when bundle has multiple extensions but no INPUTMETHOD
+ */
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0041, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    
+    // Create multiple non-INPUTMETHOD extensions
+    InnerExtensionInfo formExtension;
+    formExtension.bundleName = "com.test.noninput";
+    formExtension.moduleName = "testModule";
+    formExtension.name = "FormExtension";
+    formExtension.type = ExtensionAbilityType::FORM;
+    
+    InnerExtensionInfo serviceExtension;
+    serviceExtension.bundleName = "com.test.noninput";
+    serviceExtension.moduleName = "testModule";
+    serviceExtension.name = "ServiceExtension";
+    serviceExtension.type = ExtensionAbilityType::SERVICE;
+    
+    InnerExtensionInfo dataShareExtension;
+    dataShareExtension.bundleName = "com.test.noninput";
+    dataShareExtension.moduleName = "testModule";
+    dataShareExtension.name = "DataShareExtension";
+    dataShareExtension.type = ExtensionAbilityType::DATASHARE;
+    
+    // Add all extensions to bundle
+    std::string formKey = "com.test.noninput.testModule.FormExtension";
+    innerBundleInfo.baseExtensionInfos_[formKey] = formExtension;
+    
+    std::string serviceKey = "com.test.noninput.testModule.ServiceExtension";
+    innerBundleInfo.baseExtensionInfos_[serviceKey] = serviceExtension;
+    
+    std::string dataShareKey = "com.test.noninput.testModule.DataShareExtension";
+    innerBundleInfo.baseExtensionInfos_[dataShareKey] = dataShareExtension;
+    
+    // Verify HasInputMethodExtension returns false (no INPUTMETHOD extensions)
+    EXPECT_FALSE(innerBundleInfo.HasInputMethodExtension());
+}
+
 } // OHOS
