@@ -5598,10 +5598,11 @@ ErrCode BundleDataMgr::IsApplicationEnabled(
 }
 
 ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
-    int32_t appIndex, bool isEnable, const std::string &caller, int32_t userId)
+    int32_t appIndex, bool isEnable, const std::string &caller, int32_t userId, bool &stateChanged)
 {
     APP_LOGD("SetApplicationEnabled %{public}s", bundleName.c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    stateChanged = false;
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGW("Request userId %{public}d is invalid, bundleName:%{public}s", userId, bundleName.c_str());
@@ -5614,6 +5615,11 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
     }
 
     InnerBundleInfo& newInfo = infoItem->second;
+
+    bool currentEnabled = false;
+    (void)newInfo.GetApplicationEnabledV9(requestUserId, currentEnabled, appIndex);
+    stateChanged = (currentEnabled != isEnable);
+
     if (appIndex != 0) {
         auto ret = newInfo.SetCloneApplicationEnabled(isEnable, appIndex, caller, requestUserId);
         if (ret != ERR_OK) {
@@ -5626,6 +5632,7 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
         }
         return ERR_OK;
     }
+
     auto ret = newInfo.SetApplicationEnabled(isEnable, caller, requestUserId);
     if (ret != ERR_OK) {
         APP_LOGW("SetApplicationEnabled failed, err %{public}d", ret);
@@ -5749,9 +5756,10 @@ ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t 
 }
 
 ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex,
-    bool isEnabled, int32_t userId)
+    bool isEnabled, int32_t userId, bool &stateChanged)
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    stateChanged = false;
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGW("Request userId is invalid, bundleName:%{public}s, abilityName:%{public}s",
@@ -5764,8 +5772,13 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     InnerBundleInfo& newInfo = infoItem->second;
+
+    bool currentEnabled = false;
+    (void)newInfo.IsAbilityEnabledV9(abilityInfo, requestUserId, currentEnabled, appIndex);
+    stateChanged = (currentEnabled != isEnabled);
+
     if (appIndex != 0) {
-        auto ret = newInfo.SetCloneAbilityEnabled(
+        ErrCode ret = newInfo.SetCloneAbilityEnabled(
             abilityInfo.moduleName, abilityInfo.name, isEnabled, userId, appIndex);
         if (ret != ERR_OK) {
             APP_LOGW("SetCloneAbilityEnabled failed result: %{public}d, bundleName:%{public}s, abilityName:%{public}s",
@@ -5778,7 +5791,7 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t
         }
         return ERR_OK;
     }
-    ErrCode ret = newInfo.SetAbilityEnabled(
+    auto ret = newInfo.SetAbilityEnabled(
         abilityInfo.moduleName, abilityInfo.name, isEnabled, userId);
     if (ret != ERR_OK) {
         APP_LOGW("SetAbilityEnabled failed result: %{public}d, bundleName:%{public}s, abilityName:%{public}s",
