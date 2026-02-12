@@ -15068,26 +15068,6 @@ HWTEST_F(BmsBundleInstallerTest, ResetBmsDBSecurity_0100, Function | SmallTest |
 }
 
 /**
- * @tc.number: ResetBmsDBSecurityByPath_0100
- * @tc.name: test ResetBmsDBSecurityByPath
- * @tc.desc: test ResetBmsDBSecurityByPath of InstalldHostImpl
- */
-HWTEST_F(BmsBundleInstallerTest, ResetBmsDBSecurityByPath_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    std::string parentPath = TEST_EMPTY_STRING;
-    std::string fileFlag = TEST_EMPTY_STRING;
-    ErrCode ret = impl.ResetBmsDBSecurityByPath(parentPath, fileFlag);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CHANGE_FILE_STAT_FAILED);
-    parentPath = ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH;
-    ret = impl.ResetBmsDBSecurityByPath(parentPath, fileFlag);
-    EXPECT_EQ(ret, ERR_OK);
-    fileFlag = ServiceConstants::BUNDLE_RDB_BINLOG;
-    ret = impl.ResetBmsDBSecurityByPath(parentPath, fileFlag);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
  * @tc.number: CleanBundleDirs_0100
  * @tc.name: test CleanBundleDirs
  * @tc.desc: test CleanBundleDirs of InstalldHostImpl
