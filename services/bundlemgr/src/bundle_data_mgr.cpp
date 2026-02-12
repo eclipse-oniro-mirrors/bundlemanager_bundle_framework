@@ -9141,13 +9141,12 @@ ErrCode BundleDataMgr::GenerateAppInstallExtendedInfo(const InnerBundleInfo &inn
     }
 
     // collect sharedBundleInfos with lambda to reduce nesting depth
-    std::set<std::pair<std::string, std::string>> uniqueDependencies;
+    std::set<std::string> uniqueDependencies;
     auto addDependency = [this, &uniqueDependencies, &appInstallExtendedInfo](const Dependency &dep) {
-        auto key = std::make_pair(dep.bundleName, dep.moduleName);
-        if (uniqueDependencies.find(key) != uniqueDependencies.end()) {
+        if (uniqueDependencies.find(dep.bundleName) != uniqueDependencies.end()) {
             return;
         }
-        uniqueDependencies.insert(key);
+        uniqueDependencies.insert(dep.bundleName);
         SharedBundleInfo sharedBundleInfo;
         if (GetSharedBundleInfoBySelfNoLock(dep.bundleName, sharedBundleInfo) == ERR_OK) {
             appInstallExtendedInfo.sharedBundleInfos.emplace_back(sharedBundleInfo);
