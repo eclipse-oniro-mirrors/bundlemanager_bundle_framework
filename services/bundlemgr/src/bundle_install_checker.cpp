@@ -15,7 +15,11 @@
 
 #include "bundle_install_checker.h"
 
+#include <sys/stat.h>
+#include <sys/statfs.h>
+
 #include "app_log_tag_wrapper.h"
+#include "bundle_extractor.h"
 #include "bms_extension_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
@@ -30,6 +34,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr const char* USER_DATA_DIR = "/data";
+constexpr double INODE_SAFETY_FACTOR = 1.5;
+constexpr uint8_t CREATE_DIRS_WHEN_INSTALL = 22;
 constexpr const char* PRIVILEGE_ALLOW_APP_DATA_NOT_CLEARED = "AllowAppDataNotCleared";
 constexpr const char* PRIVILEGE_ALLOW_APP_MULTI_PROCESS = "AllowAppMultiProcess";
 constexpr const char* PRIVILEGE_ALLOW_APP_DESKTOP_ICON_HIDE = "AllowAppDesktopIconHide";
@@ -70,6 +77,7 @@ constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
 constexpr const char* IS_ROOT_MODE_PARAM = "const.debuggable";
 const int32_t ROOT_MODE = 1;
 const int32_t USER_MODE = 0;
+const uint32_t LEAST_FREE_INODE = 100000;
 
 const std::unordered_map<std::string, void (*)(AppPrivilegeCapability &appPrivilegeCapability)>
         PRIVILEGE_MAP = {
@@ -2040,5 +2048,97 @@ void BundleInstallChecker::SetIsAbcCompressed(const bool &isAbcCompressed)
 {
     isAbcCompressed_ = isAbcCompressed;
 }
+
+uint32_t BundleInstallChecker::CalculateSingleBundleInodes(const std::string &bundlePath,
+    const InnerBundleInfo &innerBundleInfo)
+{
+    // Get extracted files size from BundleExtractor with extraction conditions
+    BundleExtractor bundleExtractor(bundlePath);
+    if (!bundleExtractor.Init()) {
+        LOG_E(BMS_TAG_INSTALLER, "BundleExtractor init failed for %{public}s", bundlePath.c_str());
+        return 0;
+    }
+
+    // Get extraction condition parameters from InnerBundleInfo
+    const auto &moduleInfos = innerBundleInfo.GetInnerModuleInfos();
+    if (moduleInfos.empty()) {
+        LOG_W(BMS_TAG_INSTALLER, "No module info found for %{public}s", bundlePath.c_str());
+        return 0;
+    }
+
+    // Use of first module's info for extraction conditions
+    const auto &firstModule = moduleInfos.begin()->second;
+    bool isCompressNativeLibrary = firstModule.compressNativeLibs;
+    const std::string &arkNativeFileAbi = firstModule.cpuAbi;
+    const auto &hnpPackages = firstModule.hnpPackages;
+
+    // Get extracted files inode count directly
+    uint32_t extractedInodeCount = bundleExtractor.GetExtractedFileInodes(isCompressNativeLibrary,
+        !arkNativeFileAbi.empty(), hnpPackages);
+
+    LOG_D(BMS_TAG_INSTALLER,
+        "Bundle: %{public}s, extractedInodes=%{public}u",
+        bundlePath.c_str(),
+        extractedInodeCount);
+
+    return extractedInodeCount;
+}
+
+ErrCode BundleInstallChecker::CalculateInstallInodes(std::unordered_map<std::string, InnerBundleInfo> &infos,
+    bool isNewInstall)
+{
+    LOG_D(BMS_TAG_INSTALLER, "CalculateInstallInodes start");
+
+    uint32_t totalRequiredInodes = 0;
+    for (auto &infoPair : infos) {
+        const std::string &bundlePath = infoPair.first;
+        const InnerBundleInfo &innerBundleInfo = infoPair.second;
+
+        // Calculate inodes using common helper method
+        uint32_t inodes = CalculateSingleBundleInodes(bundlePath, innerBundleInfo);
+        totalRequiredInodes += inodes;
+    }
+
+    if (totalRequiredInodes == 0) {
+        LOG_W(BMS_TAG_INSTALLER, "Total required inodes is 0, skip check");
+        return ERR_OK;
+    }
+
+    if (isNewInstall) {
+        totalRequiredInodes += CREATE_DIRS_WHEN_INSTALL;
+    }
+
+    // Get system available inodes
+    struct statfs stat;
+    if (statfs(USER_DATA_DIR, &stat) != 0) {
+        LOG_E(BMS_TAG_INSTALLER, "statfs failed for %{public}s, error %{public}d",
+            USER_DATA_DIR, errno);
+        return ERR_OK;
+    }
+
+    // Calculate required inodes with safety factor (configurable) and 10w free limit
+    uint64_t requiredInodesWithSafety = static_cast<uint64_t>(totalRequiredInodes * INODE_SAFETY_FACTOR)
+        + LEAST_FREE_INODE;
+
+    LOG_D(BMS_TAG_INSTALLER,
+        "Inode check: totalRequired=%{public}u, withSafetyFactor=%{public}llu, "
+        "systemAvailable=%{public}llu, systemTotal=%{public}llu",
+        totalRequiredInodes,
+        static_cast<unsigned long long>(requiredInodesWithSafety),
+        static_cast<unsigned long long>(stat.f_ffree),
+        static_cast<unsigned long long>(stat.f_files));
+
+    if (stat.f_ffree < requiredInodesWithSafety) {
+        LOG_E(BMS_TAG_INSTALLER,
+            "Insufficient inodes: required=%{public}llu (with factor), available=%{public}llu",
+            static_cast<unsigned long long>(requiredInodesWithSafety),
+            static_cast<unsigned long long>(stat.f_ffree));
+        return ERR_APPEXECFWK_INSTALL_INODE_INSUFFICIENT;
+    }
+
+    LOG_D(BMS_TAG_INSTALLER, "CalculateInstallInodes completed successfully");
+    return BundleUtil::CheckOrphanNodeUseRateIsSufficient() ? ERR_OK : ERR_APPEXECFWK_INSTALL_INODE_INSUFFICIENT;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

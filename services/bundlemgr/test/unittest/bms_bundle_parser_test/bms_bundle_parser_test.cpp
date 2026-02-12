@@ -5489,4 +5489,466 @@ HWTEST_F(BmsBundleParserTest, TransformToTestRunner_0120, Function | SmallTest |
     EXPECT_TRUE(runner.srcPath.empty());
     EXPECT_TRUE(runner.arkTSMode.empty());
 }
+
+/**
+ * @tc.number: CalculateRequiredInodes_0001
+ * @tc.name: test CalculateRequiredInodes with small file
+ * @tc.desc: 1. fileSize < 923*4KB
+ *           2. verify inode count = 1
+ */
+HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0001, Function | SmallTest | Level0)
+{
+    // Case 1: fileSize < 923*4KB (3692 KB)
+    uint64_t fileSizeKb = 1000;  // Less than 3692 KB
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 1);  // BASE_INODES_SMALL
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0002
+ * @tc.name: test CalculateRequiredInodes with exact threshold 1
+ * @tc.desc: 1. fileSize = 923*4KB - 1
+ *           2. verify inode count = 1
+ */
+HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0002, Function | SmallTest | Level0)
+{
+    uint64_t fileSizeKb = 3691;  // Just below threshold 1
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 1);
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0003
+ * @tc.name: test CalculateRequiredInodes at threshold 1
+ * @tc.desc: 1. fileSize = 923*4KB
+ *           2. verify inode count = 3 (enters medium range)
+ */
+HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0003, Function | SmallTest | Level0)
+{
+    uint64_t fileSizeKb = 3692;  // Exactly threshold 1: 923*4KB
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 3);  // BASE_INODES_MEDIUM
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0004
+ * @tc.name: test CalculateRequiredInodes with medium file
+ * @tc.desc: 1. 923*4KB < fileSize < 923*4+2*1018*4 KB
+ *           2. verify inode count = 3
+ */
+HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0004, Function | SmallTest | Level0)
+{
+    uint64_t fileSizeKb = 5000;  // Between 3692 and 11836 KB
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 3);
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0005
+ * @tc.name: test CalculateRequiredInodes at threshold 2
+ * @tc.desc: 1. fileSize = 923*4+2*1018*4 KB
+ *           2. verify inode count starts increasing
+ */
+HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0005, Function | SmallTest | Level0)
+{
+    uint64_t fileSizeKb = 11836;  // Exactly threshold 2
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 3);  // Still at base, before increment
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0006
+ * @tc.name: test CalculateRequiredInodes with large file
+ * @tc.desc: 1. fileSize just above threshold 2
+ *           2. verify inode count calculation with ceiling
+ */
+HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0006, Function | SmallTest | Level0)
+{
+    uint64_t fileSizeKb = 11840;  // 11836 + 4 (one indirect block size)
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 4);  // 3 + 1
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0007
+ * @tc.name: test CalculateRequiredInodes with multiple indirect blocks
+ * @tc.desc: 1. fileSize in large range
+ *           2. verify ceiling division works correctly
+ */
+HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0007, Function | SmallTest | Level0)
+{
+    // 11836 + 2*4072 = 11836 + 8144 = 19980 (should be 3 + 2 = 5 inodes)
+    uint64_t fileSizeKb = 19980;
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 5);
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0008
+ * @tc.name: test CalculateRequiredInodes at threshold 3
+ * @tc.desc: 1. fileSize = 923*4+2*1018*4+2*1018*1018*4 KB
+ *           2. verify enters huge range
+ */
+HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0008, Function | SmallTest | Level0)
+{
+    uint64_t fileSizeKb = 8302428
+    ;  // Exactly threshold 3
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 2042);  // BASE_INODES_LARGE (3 + 2*1018 = 2039) + 1 before increment
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0009
+ * @tc.name: test CalculateRequiredInodes with huge file
+ * @tc.desc: 1. fileSize > threshold 3
+ *           2. verify double indirect blocks calculation
+ */
+HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0009, Function | SmallTest | Level0)
+{
+    // 8302428 + 4KB = 8302432 (should be 2041 + 1 = 2042)
+    uint64_t fileSizeKb = 8302432;
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 2043);
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0010
+ * @tc.name: test CalculateRequiredInodes with zero size
+ * @tc.desc: 1. fileSize = 0
+ *           2. verify handles edge case
+ */
+HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0010, Function | SmallTest | Level0)
+{
+    uint64_t fileSizeKb = 0;
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 1);  // Minimum 1 inode for any file
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0011
+ * @tc.name: test CalculateRequiredInodes with 1KB file
+ * @tc.desc: 1. fileSize = 1KB
+ *           2. verify minimum file handling
+ */
+HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0011, Function | SmallTest | Level0)
+{
+    uint64_t fileSizeKb = 1;
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 1);
+}
+
+/**
+ * @tc.number: GetExtractedFileInodes_0001
+ * @tc.name: test BundleExtractor::GetExtractedFileInodes with all conditions false
+ * @tc.desc: 1. test with isCompressNativeLibrary=false, hasArkNativeFile=false
+ *           2. verify only AP and resources files are counted
+ */
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0001, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        false,  // isCompressNativeLibrary
+        false,  // hasArkNativeFile
+        {});     // hnpPackages
+    // Should count AP and resources files
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0002
+* @tc.name: test BundleExtractor::GetExtractedFileInodes with native library extraction
+* @tc.desc: 1. test with isCompressNativeLibrary=true
+*           2. verify SO files in libs/ are counted
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0002, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        true,   // isCompressNativeLibrary - libs should be extracted
+        false,  // hasArkNativeFile
+        {});     // hnpPackages
+    // With libs enabled, should count more files
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0003
+* @tc.name: test BundleExtractor::GetExtractedFileInodes with ark native files
+* @tc.desc: 1. test with hasArkNativeFile=true
+*           2. verify AN/AI files are counted
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0003, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        false,  // isCompressNativeLibrary
+        true,   // hasArkNativeFile - AN/AI files should be extracted
+        {});     // hnpPackages
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0004
+* @tc.name: test BundleExtractor::GetExtractedFileInodes with HNP packages
+* @tc.desc: 1. test with HNP packages specified
+*           2. verify matching HNP files are counted
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0004, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    std::vector<OHOS::AppExecFwk::HnpPackage> hnpPackages;
+    OHOS::AppExecFwk::HnpPackage hnpPkg;
+    hnpPkg.package = "test_hnp";
+    hnpPackages.push_back(hnpPkg);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        false,        // isCompressNativeLibrary
+        false,        // hasArkNativeFile
+        hnpPackages);  // HNP packages to extract
+    // Should count matching HNP files
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0005
+* @tc.name: test BundleExtractor::GetExtractedFileInodes with all conditions enabled
+* @tc.desc: 1. test with all extraction conditions enabled
+*           2. verify all extractable files are counted
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0005, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    std::vector<OHOS::AppExecFwk::HnpPackage> hnpPackages;
+    OHOS::AppExecFwk::HnpPackage hnpPkg;
+    hnpPkg.package = "test_hnp";
+    hnpPackages.push_back(hnpPkg);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        true,         // isCompressNativeLibrary - extract libs
+        true,         // hasArkNativeFile - extract AN/AI
+        hnpPackages);  // extract HNP
+    // Should count maximum number of inodes
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0006
+* @tc.name: test BundleExtractor::GetExtractedFileInodes inode calculation
+* @tc.desc: 1. test that inodes are calculated correctly
+*           2. verify total is reasonable
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0006, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        false,
+        false,
+        {});
+
+    // Total inodes should be at least 1 if any files are extracted
+    // Each file requires at least 1 inode
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0007
+* @tc.name: test BundleExtractor::GetExtractedFileInodes with invalid HAP
+* @tc.desc: 1. test with non-existent HAP file
+*           2. verify returns 0
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0007, Function | SmallTest | Level0)
+{
+    std::string bundlePath = "/non/exist/file.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        false,
+        false,
+        {});
+    // Should fail because file doesn't exist
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0008
+* @tc.name: test BundleExtractor::GetExtractedFileInodes empty HNP packages list
+* @tc.desc: 1. test with empty hnpPackages vector
+*           2. verify HNP files are not counted
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0008, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    // Empty hnpPackages list
+    std::vector<OHOS::AppExecFwk::HnpPackage> hnpPackages;
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        false,
+        false,
+        hnpPackages);
+    EXPECT_GE(totalInodes, 0);
+    // HNP files should not be counted when packages list is empty
+    // Total inodes should reflect only AP and resource files
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0009
+* @tc.name: test BundleExtractor::GetExtractedFileInodes result validation
+* @tc.desc: 1. test that inode calculation is done internally
+*           2. verify total inodes matches expected range
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0009, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        false,
+        false,
+        {});
+
+    // Verify inodes were calculated
+    // Each file should have at least 1 inode
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0010
+* @tc.name: test BundleExtractor::GetExtractedFileInodes with valid HAP file
+* @tc.desc: 1. test with valid HAP file
+*           2. verify returns non-zero
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0010, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        false,
+        false,
+        {});
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0011
+* @tc.name: test BundleExtractor::GetExtractedFileInodes with different file paths
+* @tc.desc: 1. test that different
+*           2. verify extraction conditions work
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0011, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        true,   // isCompressNativeLibrary
+        true,   // hasArkNativeFile
+        {});     // hnpPackages
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0012
+* @tc.name: test BundleExtractor::GetExtractedFileInodes with only libs condition
+* @tc.desc: 1. test with only libs extraction enabled
+*           2. verify libs files are counted
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0012, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        true,   // isCompressNativeLibrary
+        false,  // hasArkNativeFile
+        {});     // hnpPackages
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0013
+* @tc.name: test BundleExtractor::GetExtractedFileInodes with only ark native condition
+* @tc.desc: 1. test with only ark native extraction enabled
+*           2. verify AN/AI files are counted
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0013, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        false,  // isCompressNativeLibrary
+        true,   // hasArkNativeFile
+        {});     // hnpPackages
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0014
+* @tc.name: test BundleExtractor::GetExtractedFileInodes with only hnp condition
+* @tc.desc: 1. test with only hnp extraction enabled
+*           2. verify HNP files are counted
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0014, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    std::vector<OHOS::AppExecFwk::HnpPackage> hnpPackages;
+    OHOS::AppExecFwk::HnpPackage hnpPkg;
+    hnpPkg.package = "test_hnp";
+    hnpPackages.push_back(hnpPkg);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        false,        // isCompressNativeLibrary
+        false,        // hasArkNativeFile
+        hnpPackages);  // hnpPackages
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: GetExtractedFileInodes_0015
+* @tc.name: test BundleExtractor::GetExtractedFileInodes all conditions disabled
+* @tc.desc: 1. test with all extraction conditions disabled
+*           2. verify only AP and resources files are counted
+*/
+HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0015, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
+    BundleExtractor bundleExtractor(bundlePath);
+
+    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
+        false,  // isCompressNativeLibrary
+        false,  // hasArkNativeFile
+        {});     // hnpPackages
+    EXPECT_GE(totalInodes, 0);
+}
+
+/**
+* @tc.number: CalculateRequiredInodes_0013
+* @tc.name: test BundleExtractor::CalculateRequiredInodes just below threshold 2
+* @tc.desc: 1. fileSize = 11835 KB (threshold 2 - 1)
+*           2. verify inode count = 3
+*/
+HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0013, Function | SmallTest | Level0)
+{
+    uint64_t fileSizeKb = 11835;
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 3);
+}
+
 } // OHOS

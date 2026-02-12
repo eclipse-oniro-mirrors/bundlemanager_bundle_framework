@@ -217,6 +217,14 @@ public:
     void FetchPrivilegeCapabilityFromPreConfig(const std::string &bundleName,
         const std::vector<std::string> &appSignatures, AppPrivilegeCapability &appPrivilegeCapability);
 
+    /**
+     * @brief Calculate inode requirements for installation files and check system availability.
+     * @param infos Indicates the innerBundleInfo of each hap (key is bundlePath).
+     * @param isNewInstall Indicates whether this is a new installation.
+     * @return Returns ERR_OK if calculation and check successful; returns error code otherwise.
+     */
+    ErrCode CalculateInstallInodes(std::unordered_map<std::string, InnerBundleInfo> &infos, bool isNewInstall);
+    
     static bool CheckSaneDriverIsolation(const Security::Verify::HapVerifyResult &hapVerifyResult, const int32_t userId,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
 
@@ -224,6 +232,14 @@ public:
         CodeSignatureParam &codeSignatureParam);
 
 private:
+
+    /**
+     * @brief Calculate inode requirements for a single bundle.
+     * @param bundlePath Indicates the file path of the HAP package.
+     * @param innerBundleInfo Indicates the InnerBundleInfo to get module info.
+     * @return Returns the inode count required for this bundle.
+     */
+    static uint32_t CalculateSingleBundleInodes(const std::string &bundlePath, const InnerBundleInfo &innerBundleInfo);
 
     ErrCode ParseBundleInfo(
         const std::string &bundleFilePath,

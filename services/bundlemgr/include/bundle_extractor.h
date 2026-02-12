@@ -18,6 +18,7 @@
 
 #include <vector>
 
+#include "application_info.h"
 #include "base_extractor.h"
 
 namespace OHOS {
@@ -46,6 +47,23 @@ public:
     bool ExtractModuleProfile(std::ostream &dest) const;
 
     void IsHapCompress(bool &isAbcCompressed) const;
+
+    /**
+     * @brief Calculate the required inode count for a file based on its size.
+     * @param fileSizeKb File size in KB.
+     * @return Returns the required inode count.
+     */
+    static uint32_t CalculateRequiredInodes(uint64_t fileSizeKb);
+
+    /**
+     * @brief Calculate the total inode count for files that will be extracted from the HAP.
+     * @param isCompressNativeLibrary Whether native libs are compressed.
+     * @param hasArkNativeFile Whether Ark Native files exist.
+     * @param hnpPackages HNP packages info.
+     * @return Returns total inode count if successful; returns 0 otherwise.
+     */
+    uint32_t GetExtractedFileInodes(bool isCompressNativeLibrary, bool hasArkNativeFile,
+        const std::vector<HnpPackage> &hnpPackages) const;
 };
 
 class BundleParallelExtractor : public BundleExtractor {

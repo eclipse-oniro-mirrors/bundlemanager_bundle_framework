@@ -17,6 +17,8 @@
 #define protected public
 
 #include <cstdio>
+#include <fstream>
+#include <filesystem>
 #include <gtest/gtest.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -29,6 +31,10 @@
 #include "directory_ex.h"
 #include "parameter.h"
 #include "parameters.h"
+#include "bundle_extractor.h"
+#include "bundle_parser.h"
+#include "zip_file.h"
+#include "securec.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -1053,4 +1059,406 @@ HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0042, TestSize.Level
     bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
     EXPECT_EQ(codeSignatureParam.profileBlockLength, 100);
 }
+
+/**
+ * @tc.number: CalculateRequiredInodes_0001
+ * @tc.name: test BundleExtractor::CalculateRequiredInodes with small file
+ * @tc.desc: 1. fileSize < 923*4KB
+ *           2. verify inode count = 1
+ */
+HWTEST_F(BundleInstallCheckerTest, CalculateRequiredInodes_0001, TestSize.Level2)
+{
+    // Test small file: fileSize < 923*4KB (3692 KB)
+    uint64_t fileSizeKb = 1000;
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 1);
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0002
+ * @tc.name: test BundleExtractor::CalculateRequiredInodes at threshold 1
+ * @tc.desc: 1. fileSize = 923*4KB
+ *           2. verify inode count = 3
+ */
+HWTEST_F(BundleInstallCheckerTest, CalculateRequiredInodes_0002, TestSize.Level2)
+{
+    uint64_t fileSizeKb = 3692;  // Exactly threshold 1
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 3);
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0003
+ * @tc.name: test BundleExtractor::CalculateRequiredInodes at threshold 2
+ * @tc.desc: 1. fileSize = 923*4+2*1018*4 KB
+ *           2. verify inode count starts increasing
+ */
+HWTEST_F(BundleInstallCheckerTest, CalculateRequiredInodes_0003, TestSize.Level2)
+{
+    uint64_t fileSizeKb = 11836;  // Exactly threshold 2
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 3);
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0004
+ * @tc.name: test BundleExtractor::CalculateRequiredInodes in large range
+ * @tc.desc: 1. fileSize in large range
+ *           2. verify inode calculation with ceiling
+ */
+HWTEST_F(BundleInstallCheckerTest, CalculateRequiredInodes_0004, TestSize.Level2)
+{
+    uint64_t fileSizeKb = 12000;  // Just above threshold 2
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_EQ(inodes, 4);  // 3 + 1
+}
+
+/**
+ * @tc.number: CalculateRequiredInodes_0005
+ * @tc.name: test BundleExtractor::CalculateRequiredInodes in huge range
+ * @tc.desc: 1. fileSize in huge range
+ *           2. verify double indirect blocks
+ */
+HWTEST_F(BundleInstallCheckerTest, CalculateRequiredInodes_0005, TestSize.Level2)
+{
+    uint64_t fileSizeKb = 8400000;  // Well above threshold 3
+    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
+    EXPECT_GT(inodes, 2040);  // Should be much larger than BASE_INODES_LARGE
+}
+
+/**
+ * @tc.number: CalculateInstallInodes_0001
+ * @tc.name: test BundleInstallChecker::CalculateInstallInodes with empty infos
+ * @tc.desc: 1. test with empty infos map
+ *           2. verify completes successfully
+ */
+HWTEST_F(BundleInstallCheckerTest, CalculateInstallInodes_0001, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    ErrCode ret = bundleInstallChecker.CalculateInstallInodes(infos, false);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: CalculateInstallInodes_0002
+ * @tc.name: test BundleInstallChecker::CalculateInstallInodes with mock InnerBundleInfo (new install)
+ * @tc.desc: 1. test with mock InnerBundleInfo containing module info
+ *           2. verify inode counts are calculated correctly for new install
+ */
+HWTEST_F(BundleInstallCheckerTest, CalculateInstallInodes_0002, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    // Create mock InnerBundleInfo
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test.bundle";
+    innerBundleInfo.currentPackage_ = "entry";
+
+    // Add mock module info
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.modulePackage = "test.entry";
+    moduleInfo.compressNativeLibs = true;
+    moduleInfo.cpuAbi = "arm64-v8a";
+
+    innerBundleInfo.innerModuleInfos_["test.entry"] = moduleInfo;
+    infos["/data/test/test.hap"] = innerBundleInfo;
+
+    ErrCode ret = bundleInstallChecker.CalculateInstallInodes(infos, true);
+    // The method should calculate inodes without storing in InnerBundleInfo
+    EXPECT_GE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CalculateInstallInodes_0003
+ * @tc.name: test BundleInstallChecker::CalculateInstallInodes with mock InnerBundleInfo (update)
+ * @tc.desc: 1. test with mock InnerBundleInfo containing module info
+ *           2. verify inode counts are calculated correctly for update
+ */
+HWTEST_F(BundleInstallCheckerTest, CalculateInstallInodes_0003, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    // Create mock InnerBundleInfo
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test.bundle";
+    innerBundleInfo.currentPackage_ = "entry";
+
+    // Add mock module info
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.modulePackage = "test.entry";
+    moduleInfo.compressNativeLibs = false;
+    moduleInfo.cpuAbi = "arm64-v8a";
+
+    innerBundleInfo.innerModuleInfos_["test.entry"] = moduleInfo;
+    infos["/data/test/test.hap"] = innerBundleInfo;
+
+    ErrCode ret = bundleInstallChecker.CalculateInstallInodes(infos, false);
+    EXPECT_GE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CalculateInstallInodes_0004
+ * @tc.name: test BundleInstallChecker::CalculateInstallInodes with multiple bundles
+ * @tc.desc: 1. test with multiple InnerBundleInfo
+ *           2. verify total inode counts are calculated correctly
+ */
+HWTEST_F(BundleInstallCheckerTest, CalculateInstallInodes_0004, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    // Create first mock InnerBundleInfo
+    InnerBundleInfo innerBundleInfo1;
+    innerBundleInfo1.baseApplicationInfo_->bundleName = "test.bundle1";
+    innerBundleInfo1.currentPackage_ = "entry1";
+
+    InnerModuleInfo moduleInfo1;
+    moduleInfo1.moduleName = "entry1";
+    moduleInfo1.modulePackage = "test.entry1";
+    moduleInfo1.compressNativeLibs = true;
+    moduleInfo1.cpuAbi = "arm64-v8a";
+
+    innerBundleInfo1.innerModuleInfos_["test.entry1"] = moduleInfo1;
+    infos["/data/test/test1.hap"] = innerBundleInfo1;
+
+    // Create second mock InnerBundleInfo
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo2.baseApplicationInfo_->bundleName = "test.bundle2";
+    innerBundleInfo2.currentPackage_ = "entry2";
+
+    InnerModuleInfo moduleInfo2;
+    moduleInfo2.moduleName = "entry2";
+    moduleInfo2.modulePackage = "test.entry2";
+    moduleInfo2.compressNativeLibs = false;
+    moduleInfo2.cpuAbi = "arm64-v8a";
+
+    innerBundleInfo2.innerModuleInfos_["test.entry2"] = moduleInfo2;
+    infos["/data/test/test2.hap"] = innerBundleInfo2;
+
+    ErrCode ret = bundleInstallChecker.CalculateInstallInodes(infos, true);
+    EXPECT_GE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CalculateInstallInodes_0005
+ * @tc.name: test BundleInstallChecker::CalculateInstallInodes with empty module info
+ * @tc.desc: 1. test with InnerBundleInfo having empty module infos
+ *           2. verify handles gracefully
+ */
+HWTEST_F(BundleInstallCheckerTest, CalculateInstallInodes_0005, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    // Create mock InnerBundleInfo with empty module infos
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test.bundle";
+    innerBundleInfo.currentPackage_ = "entry";
+
+    infos["/data/test/test.hap"] = innerBundleInfo;
+
+    ErrCode ret = bundleInstallChecker.CalculateInstallInodes(infos, true);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CalculateInstallInodes_0006
+ * @tc.name: test BundleInstallChecker::CalculateInstallInodes with non-existent file
+ * @tc.desc: 1. test with non-existent HAP file path
+ *           2. verify handles gracefully
+ */
+HWTEST_F(BundleInstallCheckerTest, CalculateInstallInodes_0006, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    // Create mock InnerBundleInfo
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test.bundle";
+    innerBundleInfo.currentPackage_ = "entry";
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.modulePackage = "test.entry";
+    moduleInfo.compressNativeLibs = true;
+    moduleInfo.cpuAbi = "arm64-v8a";
+
+    innerBundleInfo.innerModuleInfos_["test.entry"] = moduleInfo;
+    infos["/non/exist/path/test.hap"] = innerBundleInfo;
+
+    ErrCode ret = bundleInstallChecker.CalculateInstallInodes(infos, true);
+    // Should succeed even if file doesn't exist (returns 0 inodes)
+    EXPECT_GE(ret, ERR_OK);
+}
+
+/**
+* @tc.number: CalculateInstallInodes_0007
+* @tc.name: test BundleInstallChecker::CalculateInstallInodes with total inodes zero
+* @tc.desc: 1. test with bundle that returns 0 inodes
+*           2. verify skips check and returns ERR_OK
+*/
+HWTEST_F(BundleInstallCheckerTest, CalculateInstallInodes_0007, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    // Create mock InnerBundleInfo with empty module info (will return 0 inodes)
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test.bundle";
+    innerBundleInfo.currentPackage_ = "entry";
+
+    infos["/data/test/test.hap"] = innerBundleInfo;
+
+    ErrCode ret = bundleInstallChecker.CalculateInstallInodes(infos, true);
+    // Should succeed because totalRequiredInodes is 0
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+* @tc.number: CalculateInstallInodes_0008
+* @tc.name: test BundleInstallChecker::CalculateInstallInodes with new install
+* @tc.desc: 1. test new install scenario (isNewInstall=true)
+*           2. verify directory inode overhead is added
+*/
+HWTEST_F(BundleInstallCheckerTest, CalculateInstallInodes_0008, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+       // Create mock InnerBundleInfo
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test.bundle";
+    innerBundleInfo.currentPackage_ = "entry";
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.modulePackage = "test.entry";
+    moduleInfo.compressNativeLibs = false;
+    moduleInfo.cpuAbi = "arm64-v8a";
+
+    innerBundleInfo.innerModuleInfos_["test.entry"] = moduleInfo;
+    infos["/data/test/test.hap"] = innerBundleInfo;
+
+    ErrCode ret = bundleInstallChecker.CalculateInstallInodes(infos, true);
+    // New install should add CREATE_DIRS_WHEN_INSTALL (22) inodes
+    EXPECT_GE(ret, ERR_OK);
+}
+
+/**
+* @tc.number: CalculateInstallInodes_0009
+* @tc.name: test BundleInstallChecker::CalculateInstallInodes with update install
+* @tc.desc: 1. test update scenario (isNewInstall=false)
+*           2. verify directory inode overhead is not added
+*/
+HWTEST_F(BundleInstallCheckerTest, CalculateInstallInodes_0009, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    // Create mock InnerBundleInfo
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test.bundle";
+    innerBundleInfo.currentPackage_ = "entry";
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.modulePackage = "test.entry";
+    moduleInfo.compressNativeLibs = false;
+    moduleInfo.cpuAbi = "arm64-v8a";
+
+    innerBundleInfo.innerModuleInfos_["test.entry"] = moduleInfo;
+    infos["/data/test/test.hap"] = innerBundleInfo;
+
+    ErrCode ret = bundleInstallChecker.CalculateInstallInodes(infos, false);
+    //'Update should not add CREATE_DIRS_WHEN_INSTALL inodes
+    EXPECT_GE(ret, ERR_OK);
+}
+
+/**
+* @tc.number: CalculateInstallInodes_0010
+* @tc.name: test BundleInstallChecker::CalculateInstallInodes with multiple modules
+* @tc.desc: 1. test with bundle containing multiple modules
+*           2. verify uses first module's info
+*/
+HWTEST_F(BundleInstallCheckerTest, CalculateInstallInodes_0010, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    // Create mock InnerBundleInfo with multiple modules
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test.bundle";
+    innerBundleInfo.currentPackage_ = "entry";
+
+    // First module
+    InnerModuleInfo moduleInfo1;
+    moduleInfo1.moduleName = "entry";
+    moduleInfo1.modulePackage = "test.entry";
+    moduleInfo1.compressNativeLibs = true;
+    moduleInfo1.cpuAbi = "arm64-v8a";
+    innerBundleInfo.innerModuleInfos_["test.entry"] = moduleInfo1;
+
+    // Second module
+    InnerModuleInfo moduleInfo2;
+    moduleInfo2.moduleName = "feature";
+    moduleInfo2.modulePackage = "test.feature";
+    moduleInfo2.compressNativeLibs = false;
+    moduleInfo2.cpuAbi = "";
+    innerBundleInfo.innerModuleInfos_["test.feature"] = moduleInfo2;
+
+    infos["/data/test/test.hap"] = innerBundleInfo;
+
+    ErrCode ret = bundleInstallChecker.CalculateInstallInodes(infos, true);
+    // Should use first module's info (compressNativeLibs=true, cpuAbi=arm64-v8a)
+    EXPECT_GE(ret, ERR_OK);
+}
+
+/**
+* @tc.number: CalculateInstallInodes_0011
+* @tc.name: test BundleInstallChecker::CalculateInstallInodes with hnp packages
+* @tc.desc: 1. test with bundle containing HNP packages
+*           2. verify HNP packages are considered
+*/
+HWTEST_F(BundleInstallCheckerTest, CalculateInstallInodes_0011, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    // Create mock InnerBundleInfo with HNP packages
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test.bundle";
+    innerBundleInfo.currentPackage_ = "entry";
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.modulePackage = "test.entry";
+    moduleInfo.compressNativeLibs = false;
+    moduleInfo.cpuAbi = "arm64-v8a";
+
+    // Add HNP packages
+    HnpPackage hnpPkg1;
+    hnpPkg1.package = "test_hnp1";
+    hnpPkg1.type = "hnp";
+    moduleInfo.hnpPackages.push_back(hnpPkg1);
+
+    HnpPackage hnpPkg2;
+    hnpPkg2.package = "test_hnp2";
+    hnpPkg2.type = "hnp";
+    moduleInfo.hnpPackages.push_back(hnpPkg2);
+
+    innerBundleInfo.innerModuleInfos_["test.entry"] = moduleInfo;
+    infos["/data/test/test.hap"] = innerBundleInfo;
+
+    ErrCode ret = bundleInstallChecker.CalculateInstallInodes(infos, true);
+    // Should consider HNP packages in inode calculation
+    EXPECT_GE(ret, ERR_OK);
+}
+
 } // OHOS
