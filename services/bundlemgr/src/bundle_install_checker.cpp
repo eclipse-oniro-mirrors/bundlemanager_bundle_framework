@@ -1184,6 +1184,60 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     return ret;
 }
 
+ErrCode BundleInstallChecker::CheckMultipleHspConsistency(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    if (infos.size() <= 1) {
+        LOG_NOFUNC_D(BMS_TAG_INSTALLER, "infos size <= 1, no need to check consistency");
+        return ERR_OK;
+    }
+    // Get reference values from the first HSP
+    const auto &firstBundle = infos.begin()->second;
+    std::string bundleName = firstBundle.GetBundleName();
+    Constants::AppType appType = firstBundle.GetAppType();
+    BundleType bundleType = firstBundle.GetApplicationBundleType();
+    bool isStage = firstBundle.GetIsNewVersion();
+    uint32_t versionCode = firstBundle.GetVersionCode();
+    // Check consistency across all HSP files
+    for (const auto &item : infos) {
+        const auto &bundleInfo = item.second;
+        // Check bundleName
+        if (bundleName != bundleInfo.GetBundleName()) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "bundleName not consistent: expected=%{public}s, actual=%{public}s",
+                bundleName.c_str(), bundleInfo.GetBundleName().c_str());
+            return ERR_APPEXECFWK_INSTALL_BUNDLENAME_NOT_SAME;
+        }
+        // Check versionCode
+        if (versionCode != bundleInfo.GetVersionCode()) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "versionCode not consistent: expected=%{public}u, actual=%{public}u",
+                versionCode, bundleInfo.GetVersionCode());
+            return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
+        }
+        // Check appType
+        if (appType != bundleInfo.GetAppType()) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "appType not consistent: expected=%{public}d, actual=%{public}d",
+                static_cast<int32_t>(appType), static_cast<int32_t>(bundleInfo.GetAppType()));
+            return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
+        }
+        // Check bundleType
+        if (bundleType != bundleInfo.GetApplicationBundleType()) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "bundleType not consistent: expected=%{public}d, actual=%{public}d",
+                static_cast<int32_t>(bundleType), static_cast<int32_t>(bundleInfo.GetApplicationBundleType()));
+            return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
+        }
+        // Check isStage (FA model or Stage model)
+        if (isStage != bundleInfo.GetIsNewVersion()) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "isStage not consistent: expected=%{public}d, actual=%{public}d",
+                isStage, bundleInfo.GetIsNewVersion());
+            return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
+        }
+    }
+
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "CheckMultipleHspConsistency passed for %{public}zu HSP files",
+        infos.size());
+    return ERR_OK;
+}
+
 ErrCode BundleInstallChecker::CheckMultiNativeFile(
     std::unordered_map<std::string, InnerBundleInfo> &infos)
 {

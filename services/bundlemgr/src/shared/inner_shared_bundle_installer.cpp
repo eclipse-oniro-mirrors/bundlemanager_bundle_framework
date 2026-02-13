@@ -28,7 +28,7 @@ namespace AppExecFwk {
 using namespace OHOS::Security;
 namespace {
 constexpr const char* HSP_VERSION_PREFIX = "v";
-constexpr int8_t MAX_FILE_NUMBER = 2;
+constexpr int32_t MAX_FILE_NUMBER = 128;
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 }
@@ -78,6 +78,10 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     // parse bundle infos
     result = bundleInstallChecker_->ParseHapFiles(bundlePaths, checkParam, hapVerifyResults_, parsedBundles_);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
+
+    // check multiple HSP consistency (bundleName,versionCode, appType, bundleType, isStage)
+    result = bundleInstallChecker_->CheckMultipleHspConsistency(parsedBundles_);
+    CHECK_RESULT(result, "check multiple hsp consistency failed %{public}d");
 
     // check u1Enable
     result = bundleInstallChecker_->CheckNoU1Enable(parsedBundles_);
@@ -629,8 +633,6 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
         bundlePaths.emplace_back(inBundlePaths[0]);
         return ERR_OK;
     }
-    int32_t numberOfHsp = 0;
-    int32_t numberOfSignatureFile = 0;
     for (const auto &path : inBundlePaths) {
         if ((path.find(ServiceConstants::HSP_FILE_SUFFIX) == std::string::npos) &&
             (path.find(ServiceConstants::CODE_SIGNATURE_FILE_SUFFIX) == std::string::npos)) {
@@ -638,20 +640,10 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
             return ERR_APPEXECFWK_INSTALL_ONLY_HSP_OR_SIG_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR;
         }
         if (BundleUtil::EndWith(path, ServiceConstants::HSP_FILE_SUFFIX)) {
-            numberOfHsp++;
             bundlePaths.emplace_back(path);
         }
         if (BundleUtil::EndWith(path, ServiceConstants::CODE_SIGNATURE_FILE_SUFFIX)) {
-            numberOfSignatureFile++;
             signatureFilePath = path;
-        }
-        if (numberOfHsp >= MAX_FILE_NUMBER) {
-            APP_LOGE("only one hsp file can be contained in a single shared bundle dir");
-            return ERR_APPEXECFWK_INSTALL_ONLY_ONE_HSP_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR;
-        }
-        if (numberOfSignatureFile >= MAX_FILE_NUMBER) {
-            APP_LOGE("only one signature file can be contained in a single shared bundle dir");
-            return ERR_APPEXECFWK_INSTALL_ONLY_ONE_SIG_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR;
         }
     }
     APP_LOGD("signatureFilePath is %{public}s", signatureFilePath.c_str());
