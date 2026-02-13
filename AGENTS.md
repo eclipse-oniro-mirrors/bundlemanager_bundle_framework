@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance for Claude Code (claude.ai/code) when working in this codebase.
+This file provides guidance for AI when working in this codebase.
 
 ## Overview
 
