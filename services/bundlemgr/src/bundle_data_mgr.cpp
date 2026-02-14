@@ -3294,7 +3294,7 @@ ErrCode BundleDataMgr::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInf
     std::string bundleName;
     ErrCode ret = GetBundleNameAndIndex(uid, bundleName, appIndex);
     if (ret != ERR_OK) {
-        APP_LOGW("uid: %{public}d invalid!", uid);
+        APP_LOGD("uid: %{public}d invalid!", uid);
         return ret;
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -4254,7 +4254,7 @@ ErrCode BundleDataMgr::GetBundleNameAndIndexForUid(const int32_t uid, std::strin
 {
     ErrCode ret = GetBundleNameAndIndex(uid, bundleName, appIndex);
     if (ret != ERR_OK) {
-        APP_LOGW("uid: %{public}d invalid!", uid);
+        APP_LOGD("uid: %{public}d invalid!", uid);
         return ret;
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);

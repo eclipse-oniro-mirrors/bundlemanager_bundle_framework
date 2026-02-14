@@ -2660,7 +2660,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
 {
     const InnerBundleUserInfo *innerBundleUserInfoPtr = nullptr;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfoPtr)) {
-        LOG_W(BMS_TAG_QUERY, "can not find userId %{public}d when get applicationInfo", userId);
+        LOG_D(BMS_TAG_QUERY, "can not find userId %{public}d when get applicationInfo", userId);
         return;
     }
     if (!innerBundleUserInfoPtr) {
