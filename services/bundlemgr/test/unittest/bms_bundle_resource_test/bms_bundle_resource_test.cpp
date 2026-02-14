@@ -6533,6 +6533,370 @@ HWTEST_F(BmsBundleResourceTest, GetLauncherAbilityResourceInfoList_0004, Functio
 }
 
 /**
+ * @tc.number: GetLauncherAbilityResourceInfoList_0005
+ * Function: GetLauncherAbilityResourceInfoList
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfoList
+ */
+HWTEST_F(BmsBundleResourceTest, GetLauncherAbilityResourceInfoList_0005, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.abilityName_ = ABILITY_NAME;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ret);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = BUNDLE_NAME;
+    optiont.moduleName = MODULE_NAME;
+    optiont.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont);
+    BundleOptionInfo optiont1;
+    optiont1.bundleName = BUNDLE_NAME;
+    optiont1.moduleName = MODULE_NAME;
+    optiont1.abilityName = INVALID_ABILITY_NAME;
+    optiontList.push_back(optiont1);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
+    auto result = bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optiontList,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), infos);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(infos.size(), 2);
+    setuid(Constants::ROOT_UID);
+    ret = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfoList_0006
+ * Function: GetLauncherAbilityResourceInfoList
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfoList
+ */
+HWTEST_F(BmsBundleResourceTest, GetLauncherAbilityResourceInfoList_0006, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.abilityName_ = ABILITY_NAME;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ret);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = BUNDLE_NAME;
+    optiont.moduleName = MODULE_NAME;
+    optiont.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont);
+    BundleOptionInfo optiont1;
+    optiont1.bundleName = BUNDLE_NAME;
+    optiont1.moduleName = "INVALID_MODULE_NAME";
+    optiont1.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont1);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
+    auto result = bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optiontList,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), infos);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(infos.size(), 2);
+    setuid(Constants::ROOT_UID);
+    ret = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfoList_0007
+ * Function: GetLauncherAbilityResourceInfoList
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfoList
+ */
+HWTEST_F(BmsBundleResourceTest, GetLauncherAbilityResourceInfoList_0007, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.abilityName_ = ABILITY_NAME;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ret);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = BUNDLE_NAME;
+    optiont.moduleName = MODULE_NAME;
+    optiont.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont);
+    BundleOptionInfo optiont1;
+    optiont1.bundleName = "bundleName";
+    optiont1.moduleName = MODULE_NAME;
+    optiont1.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont1);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
+    auto result = bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optiontList,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), infos);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(infos.size(), 2);
+    setuid(Constants::ROOT_UID);
+    ret = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfoList_0008
+ * Function: GetLauncherAbilityResourceInfoList
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfoList
+ */
+HWTEST_F(BmsBundleResourceTest, GetLauncherAbilityResourceInfoList_0008, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.abilityName_ = ABILITY_NAME;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ret);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = BUNDLE_NAME;
+    optiont.moduleName = "moduleName";
+    optiont.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont);
+    BundleOptionInfo optiont1;
+    optiont1.bundleName = BUNDLE_NAME;
+    optiont1.moduleName = MODULE_NAME;
+    optiont1.abilityName = INVALID_ABILITY_NAME;
+    optiontList.push_back(optiont1);
+    BundleOptionInfo optiont2;
+    optiont2.bundleName = "bundleName";
+    optiont2.moduleName = MODULE_NAME;
+    optiont2.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont2);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
+    auto result = bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optiontList,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), infos);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    setuid(Constants::ROOT_UID);
+    ret = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfoList_0009
+ * Function: GetLauncherAbilityResourceInfoList
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfoList
+ */
+HWTEST_F(BmsBundleResourceTest, GetLauncherAbilityResourceInfoList_0009, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.abilityName_ = ABILITY_NAME;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ret);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = "bundleName";
+    optiont.moduleName = MODULE_NAME;
+    optiont.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont);
+    BundleOptionInfo optiont1;
+    optiont1.bundleName = BUNDLE_NAME;
+    optiont1.moduleName = MODULE_NAME;
+    optiont1.abilityName = INVALID_ABILITY_NAME;
+    optiontList.push_back(optiont1);
+    BundleOptionInfo optiont2;
+    optiont2.bundleName = BUNDLE_NAME;
+    optiont2.moduleName = "moduleName";
+    optiont2.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont2);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
+    auto result = bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optiontList,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), infos);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    setuid(Constants::ROOT_UID);
+    ret = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfoList_0010
+ * Function: GetLauncherAbilityResourceInfoList
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfoList
+ */
+HWTEST_F(BmsBundleResourceTest, GetLauncherAbilityResourceInfoList_0010, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.abilityName_ = ABILITY_NAME;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ret);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = "bundleName";
+    optiont.moduleName = MODULE_NAME;
+    optiont.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont);
+    BundleOptionInfo optiont1;
+    optiont1.bundleName = BUNDLE_NAME;
+    optiont1.moduleName = "moduleName";
+    optiont1.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont1);
+    BundleOptionInfo optiont2;
+    optiont2.bundleName = BUNDLE_NAME;
+    optiont2.moduleName = MODULE_NAME;
+    optiont2.abilityName = INVALID_ABILITY_NAME;
+    optiontList.push_back(optiont2);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
+    auto result = bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optiontList,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), infos);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    setuid(Constants::ROOT_UID);
+    ret = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfoList_0011
+ * Function: GetLauncherAbilityResourceInfoList
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfoList
+ */
+HWTEST_F(BmsBundleResourceTest, GetLauncherAbilityResourceInfoList_0011, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.abilityName_ = ABILITY_NAME;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ret);
+    ResourceInfo resourceInfo1;
+    resourceInfo1.bundleName_ = BUNDLE_NAME;
+    ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo1);
+    EXPECT_TRUE(ret);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = "bundleName";
+    optiont.moduleName = MODULE_NAME;
+    optiont.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont);
+    BundleOptionInfo optiont1;
+    optiont1.bundleName = BUNDLE_NAME;
+    optiont1.moduleName = "moduleName";
+    optiont1.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont1);
+    BundleOptionInfo optiont2;
+    optiont2.bundleName = BUNDLE_NAME;
+    optiont2.moduleName = MODULE_NAME;
+    optiont2.abilityName = ABILITY_NAME;
+    optiont2.appIndex = 2;
+    optiontList.push_back(optiont2);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
+    auto result = bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optiontList,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), infos);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+    setuid(Constants::ROOT_UID);
+    ret = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ret);
+    ret = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo1.GetKey());
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfoList_0012
+ * Function: GetLauncherAbilityResourceInfoList
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfoList
+ */
+HWTEST_F(BmsBundleResourceTest, GetLauncherAbilityResourceInfoList_0012, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.abilityName_ = ABILITY_NAME;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ret);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = "bundleName";
+    optiont.moduleName = MODULE_NAME;
+    optiont.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont);
+    BundleOptionInfo optiont1;
+    optiont1.bundleName = BUNDLE_NAME;
+    optiont1.moduleName = "moduleName";
+    optiont1.abilityName = ABILITY_NAME;
+    optiontList.push_back(optiont1);
+    BundleOptionInfo optiont2;
+    optiont2.bundleName = BUNDLE_NAME;
+    optiont2.moduleName = MODULE_NAME;
+    optiont2.abilityName = ABILITY_NAME;
+    optiont2.appIndex = 10;
+    optiontList.push_back(optiont2);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
+    auto result = bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optiontList,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), infos);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+    setuid(Constants::ROOT_UID);
+    ret = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: GetElementLauncherAbilityResourceInfo_0001
  * Function: GetElementLauncherAbilityResourceInfo
  * @tc.name: test
