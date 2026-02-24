@@ -1997,7 +1997,7 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode CreateNewBundleEl5Dir(int32_t userId)
+    virtual ErrCode CreateNewBundleDir(int32_t userId)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

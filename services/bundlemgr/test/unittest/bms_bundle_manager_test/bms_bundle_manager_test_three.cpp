@@ -2672,8 +2672,8 @@ HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0004, Function | MediumTe
 
 /**
  * @tc.number: CreateNewBundleEl5Dir_0001
- * @tc.name: test CreateNewBundleEl5Dir
- * @tc.desc: test CreateNewBundleEl5Dir
+ * @tc.name: test CreateNewBundleDir
+ * @tc.desc: test CreateNewBundleDir
  */
 HWTEST_F(BmsBundleManagerTest3, CreateNewBundleEl5Dir_0001, Function | MediumTest | Level1)
 {
@@ -2683,7 +2683,7 @@ HWTEST_F(BmsBundleManagerTest3, CreateNewBundleEl5Dir_0001, Function | MediumTes
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     int32_t userId = 100;
-    auto testRet = hostImpl->CreateNewBundleEl5Dir(userId);
+    auto testRet = hostImpl->CreateNewBundleDir(userId);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS

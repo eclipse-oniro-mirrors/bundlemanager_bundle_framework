@@ -18,6 +18,7 @@
 
 #include <map>
 #include <string>
+#include <unordered_set>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -34,6 +35,8 @@ public:
     static int32_t IsRunning(const std::string &bundleName);
 
     static int32_t QueryRunningSharedBundles(const pid_t pid, std::map<std::string, uint32_t> &shareBundles);
+
+    static int32_t GetUserLockedBundleList(const int32_t userId, std::unordered_set<std::string> &bundleNames);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

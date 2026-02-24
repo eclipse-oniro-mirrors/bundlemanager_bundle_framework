@@ -20,9 +20,11 @@
 
 #include "app_log_tag_wrapper.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-#include "ability_manager_client.h"
 #include "app_mgr_interface.h"
 #include "running_process_info.h"
+#endif
+#ifdef ABILITY_RUNTIME_ENABLE
+#include "ability_manager_client.h"
 #endif
 
 namespace OHOS {
@@ -95,6 +97,20 @@ int32_t AbilityManagerHelper::QueryRunningSharedBundles(
 {
     shareBundles["moduleNameTest"] = 1;
     return 0;
+}
+
+int32_t AbilityManagerHelper::GetUserLockedBundleList(
+    const int32_t userId, std::unordered_set<std::string> &bundleNames)
+{
+#ifdef ABILITY_RUNTIME_ENABLE
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    int32_t ret = AbilityManagerClient::GetInstance()->GetUserLockedBundleList(userId, bundleNames);
+    IPCSkeleton::SetCallingIdentity(identity);
+    return ret;
+#else
+    APP_LOGI("ABILITY_RUNTIME_ENABLE is false");
+    return 0;
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

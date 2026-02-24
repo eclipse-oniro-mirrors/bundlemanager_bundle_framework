@@ -15,6 +15,7 @@
 
 #include "bundle_mgr_host_impl.h"
 
+#include "ability_manager_helper.h"
 #include "account_helper.h"
 #include "app_disable_forbidden/app_disable_forbidden_mgr.h"
 #include "app_log_tag_wrapper.h"
@@ -6979,7 +6980,7 @@ ErrCode BundleMgrHostImpl::RemoveBackupBundleData(const std::string &bundleName,
     return ret;
 }
 
-ErrCode BundleMgrHostImpl::CreateNewBundleEl5Dir(int32_t userId)
+ErrCode BundleMgrHostImpl::CreateNewBundleDir(int32_t userId)
 {
     if (!BundlePermissionMgr::IsCallingUidValid(ServiceConstants::ACCOUNT_UID)) {
         APP_LOGE("IsCallingUidValid failed");
@@ -6991,6 +6992,15 @@ ErrCode BundleMgrHostImpl::CreateNewBundleEl5Dir(int32_t userId)
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     (void)newBundleDirMgr->ProcessOtaBundleDataDirEl5(userId);
+    std::unordered_set<std::string> bundleNames;
+    ErrCode ret = AbilityManagerHelper::GetUserLockedBundleList(userId, bundleNames);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("GetUserLockedBundleList failed %{public}d %{public}d", userId, ret);
+        return ret;
+    }
+    for (const auto &bundleName : bundleNames) {
+        (void)newBundleDirMgr->ProcessOtaBundleDataDir(bundleName, userId);
+    }
     return ERR_OK;
 }
 

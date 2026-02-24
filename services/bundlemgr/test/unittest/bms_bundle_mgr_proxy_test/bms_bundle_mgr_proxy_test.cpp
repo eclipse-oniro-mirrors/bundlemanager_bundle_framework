@@ -1536,16 +1536,16 @@ HWTEST_F(BmsBundleMgrProxyTest, RemoveBackupBundleData_0001, Function | MediumTe
 
 /**
  * @tc.number: CreateNewBundleEl5Dir_0001
- * @tc.name: test the CreateNewBundleEl5Dir
+ * @tc.name: test the CreateNewBundleDir
  * @tc.desc: 1. system running normally
- *           2. test CreateNewBundleEl5Dir
+ *           2. test CreateNewBundleDir
  */
 HWTEST_F(BmsBundleMgrProxyTest, CreateNewBundleEl5Dir_0001, Function | MediumTest | Level1)
 {
     sptr<IRemoteObject> impl;
     BundleMgrProxy bundleMgrProxy(impl);
     int32_t userId = 100;
-    auto ret = bundleMgrProxy.CreateNewBundleEl5Dir(userId);
+    auto ret = bundleMgrProxy.CreateNewBundleDir(userId);
     EXPECT_NE(ret, ERR_OK);
 }
 

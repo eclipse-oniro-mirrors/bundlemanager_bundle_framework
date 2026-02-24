@@ -738,8 +738,8 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_EXCEPTION):
             errCode = this->HandleGetBundleInfoForException(data, reply);
             break;
-        case static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_NEW_BUNDLE_EL5_DIR):
-            errCode = HandleCreateNewBundleEl5Dir(data, reply);
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_NEW_BUNDLE_DIR):
+            errCode = HandleCreateNewBundleDir(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INSTALL_STATUS):
             errCode = HandleGetBundleInstallStatus(data, reply);
@@ -5375,11 +5375,11 @@ ErrCode BundleMgrHost::HandleBatchGetCompatibleDeviceType(MessageParcel &data, M
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleCreateNewBundleEl5Dir(MessageParcel &data, MessageParcel &reply)
+ErrCode BundleMgrHost::HandleCreateNewBundleDir(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t userId = data.ReadInt32();
-    ErrCode ret = CreateNewBundleEl5Dir(userId);
+    ErrCode ret = CreateNewBundleDir(userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
