@@ -2113,6 +2113,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
         baseApplicationInfo_->appPreloadPhase = applicationInfo.appPreloadPhase;
     }
     baseApplicationInfo_->appSignType = applicationInfo.appSignType;
+    baseApplicationInfo_->profileable = applicationInfo.profileable;
 }
 
 void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)

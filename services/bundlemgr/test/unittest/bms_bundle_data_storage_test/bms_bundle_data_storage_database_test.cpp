@@ -1375,6 +1375,7 @@ protected:
                 "applicationFlags":1,
                 "installedForAllUser": false,
                 "isForceRotate": false,
+                "profileable": false,
                 "hasPlugin": false,
                 "startMode":1,
                 "appPreloadPhase":0,
