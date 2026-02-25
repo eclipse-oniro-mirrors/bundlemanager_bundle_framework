@@ -74,6 +74,7 @@ ohos_shared_library("ani_launcher_bundle_manager") {
     "napi:ace_napi",
     "runtime_core:ani",
     "runtime_core:ani_helpers",
+    "samgr:samgr_proxy",
   ]
 
   subsystem_name = "bundlemanager"
