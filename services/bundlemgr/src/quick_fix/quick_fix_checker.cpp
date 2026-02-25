@@ -83,9 +83,7 @@ ErrCode QuickFixChecker::CheckPatchWithInstalledBundle(const AppQuickFix &appQui
         (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
     LOG_D(BMS_TAG_DEFAULT, "application isDebug: %{public}d", isDebug);
     if (isDebug && (bundleInfo.applicationInfo.appQuickFix.deployedAppqfInfo.type == QuickFixType::HOT_RELOAD)) {
-        // patch and hot reload can not both exist
-        LOG_E(BMS_TAG_DEFAULT, "hot reload type already existed, hot reload and patch type can not both exist");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED;
+        LOG_I(BMS_TAG_DEFAULT, "quickfix type change hot reload -> patch");
     }
 
     const auto &qfInfo = appQuickFix.deployingAppqfInfo;
@@ -161,9 +159,7 @@ ErrCode QuickFixChecker::CheckHotReloadWithInstalledBundle(const AppQuickFix &ap
         return ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE;
     }
     if (bundleInfo.applicationInfo.appQuickFix.deployedAppqfInfo.type == QuickFixType::PATCH) {
-        // patch and hot reload can not both exist
-        LOG_E(BMS_TAG_DEFAULT, "error: patch type already existed, hot reload and patch can not both exist");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_ALREADY_EXISTED;
+        LOG_I(BMS_TAG_DEFAULT, "quickfix type change patch -> hot reload");
     }
     return ERR_OK;
 }
