@@ -78,7 +78,8 @@ bool BmsExtensionDataMgr::OpenHandler()
     return true;
 }
 
-bool BmsExtensionDataMgr::CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sdkVersion)
+bool BmsExtensionDataMgr::CheckApiInfo(const BundleInfo &bundleInfo,
+    std::tuple<uint32_t, uint32_t, uint32_t> sdkVersion)
 {
     if ((Init() == ERR_OK) && handler_) {
         auto bundleMgrExtPtr =
@@ -95,19 +96,18 @@ bool BmsExtensionDataMgr::CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sd
         return res;
     }
     APP_LOGW("access bms-extension failed");
-    return CheckApiInfo(bundleInfo.compatibleVersion, sdkVersion);
-}
-
-bool BmsExtensionDataMgr::CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkVersion)
-{
-    APP_LOGD("CheckApiInfo with compatibleVersion:%{public}d, sdkVersion:%{public}d", compatibleVersion, sdkVersion);
-    uint32_t compatibleVersionOHOS = compatibleVersion % API_VERSION_BASE;
-    bool res = compatibleVersionOHOS <= sdkVersion;
-    if (!res) {
-        APP_LOGE("Ext CheckApiInfo failed with compatibleVersion:%{public}d, sdkVersion:%{public}d",
-            compatibleVersionOHOS, sdkVersion);
+    uint32_t compatibleVersionOHOS = bundleInfo.compatibleVersion % API_VERSION_BASE;
+    auto compatibleVersion = std::make_tuple(
+        compatibleVersionOHOS, bundleInfo.compatibleMinorVersion, bundleInfo.compatiblePatchVersion);
+    bool ret = compatibleVersion <= sdkVersion;
+    if (!ret) {
+        auto [major, minor, patch] = sdkVersion;
+        LOG_E(BMS_TAG_EXT, "Ext CheckApiInfo failed with compatibleVersion: %{public}d.%{public}d.%{public}d, "
+            "sdkVersion: %{public}d.%{public}d.%{public}d",
+            compatibleVersionOHOS, bundleInfo.compatibleMinorVersion, bundleInfo.compatiblePatchVersion,
+            major, minor, patch);
     }
-    return res;
+    return ret;
 }
 
 ErrCode BmsExtensionDataMgr::HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,

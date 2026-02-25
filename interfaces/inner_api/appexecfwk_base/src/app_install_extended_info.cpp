@@ -36,6 +36,8 @@ bool AppInstallExtendedInfo::ReadFromParcel(Parcel &parcel)
     }
     specifiedDistributionType = Str16ToStr8(parcel.ReadString16());
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, compatibleVersion);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, compatibleMinorVersion);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, compatiblePatchVersion);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, crowdtestDeadline);
     installSource = Str16ToStr8(parcel.ReadString16());
     additionalInfo = Str16ToStr8(parcel.ReadString16());
@@ -88,6 +90,8 @@ bool AppInstallExtendedInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(specifiedDistributionType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, compatibleVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, compatibleMinorVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, compatiblePatchVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, crowdtestDeadline);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(installSource));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(additionalInfo));

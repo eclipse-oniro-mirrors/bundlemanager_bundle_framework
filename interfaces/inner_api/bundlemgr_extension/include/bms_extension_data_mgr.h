@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BMS_EXTENSION_DATA_MGR_H
 #include <mutex>
 #include <string>
+#include <tuple>
 
 #include "ability_info.h"
 #include "appexecfwk_errors.h"
@@ -39,8 +40,7 @@ public:
 
     BmsExtensionDataMgr();
     ErrCode Init();
-    bool CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sdkVersion);
-    bool CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkVersion);
+    bool CheckApiInfo(const BundleInfo &bundleInfo, std::tuple<uint32_t, uint32_t, uint32_t> sdkVersion);
     ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,
         bool readFile = false, const std::string &localCertDir = "");
     bool IsRdDevice();

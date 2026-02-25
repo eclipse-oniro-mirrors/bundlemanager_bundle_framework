@@ -5187,12 +5187,20 @@ bool BaseBundleInstaller::CheckApiInfo(const std::unordered_map<std::string, Inn
 {
     std::string compileSdkType = infos.begin()->second.GetBaseApplicationInfo().compileSdkType;
     auto bundleInfo = infos.begin()->second.GetBaseBundleInfo();
-    uint32_t systemApiVersion = static_cast<uint32_t>(GetSdkApiVersion());
+    auto systemApiVersion = std::make_tuple(
+        static_cast<uint32_t>(GetSdkApiVersion()),
+        static_cast<uint32_t>(GetSdkMinorApiVersion()),
+        static_cast<uint32_t>(GetSdkPatchApiVersion()));
+    auto compatibleVersion = std::make_tuple(
+        bundleInfo.compatibleVersion, bundleInfo.compatibleMinorVersion, bundleInfo.compatiblePatchVersion);
     if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
-        bool res = bundleInfo.compatibleVersion <= systemApiVersion;
+        bool res = compatibleVersion <= systemApiVersion;
         if (!res) {
-            LOG_E(BMS_TAG_INSTALLER, "CheckApiInfo failed with compatibleVersion:%{public}d, sysApiVer:%{public}d",
-                bundleInfo.compatibleVersion, systemApiVersion);
+            auto [major, minor, patch] = systemApiVersion;
+            LOG_E(BMS_TAG_INSTALLER, "CheckApiInfo failed with compatibleVersion: %{public}d.%{public}d.%{public}d, "
+                "systemApiVersion: %{public}d.%{public}d.%{public}d",
+                bundleInfo.compatibleVersion, bundleInfo.compatibleMinorVersion, bundleInfo.compatiblePatchVersion,
+                major, minor, patch);
         }
         return res;
     }

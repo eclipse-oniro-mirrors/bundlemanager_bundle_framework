@@ -46,6 +46,8 @@ const nlohmann::json MODULE_JSON = R"(
         "label": "$string:app_name",
         "labelId": 16777216,
         "minAPIVersion": 9,
+        "minMinorAPIVersion": 0,
+        "minPatchAPIVersion": 0,
         "targetAPIVersion": 9,
         "vendor": "example",
         "versionCode": 1000000,

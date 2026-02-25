@@ -40,6 +40,8 @@ const char* APPLICATION_VERSION_CODE = "versionCode";
 const char* APPLICATION_VERSION_NAME = "versionName";
 const char* APPLICATION_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
 const char* APPLICATION_API_COMPATIBLE_VERSION = "apiCompatibleVersion";
+const char* APPLICATION_COMPATIBLE_MINOR_VERSION = "compatibleMinorVersion";
+const char* APPLICATION_COMPATIBLE_PATCH_VERSION = "compatiblePatchVersion";
 const char* APPLICATION_API_TARGET_VERSION = "apiTargetVersion";
 const char* APPLICATION_TARGET_MINOR_API_VERSION = "targetMinorApiVersion";
 const char* APPLICATION_TARGET_PATCH_API_VERSION = "targetPatchApiVersion";
@@ -381,6 +383,8 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     versionName = Str16ToStr8(parcel.ReadString16());
     minCompatibleVersionCode = parcel.ReadInt32();
     apiCompatibleVersion = parcel.ReadUint32();
+    compatibleMinorVersion = parcel.ReadUint32();
+    compatiblePatchVersion = parcel.ReadUint32();
     apiTargetVersion = parcel.ReadInt32();
     targetMinorApiVersion = parcel.ReadInt32();
     targetPatchApiVersion = parcel.ReadInt32();
@@ -642,6 +646,8 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, minCompatibleVersionCode);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, apiCompatibleVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, compatibleMinorVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, compatiblePatchVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, apiTargetVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, targetMinorApiVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, targetPatchApiVersion);
@@ -970,6 +976,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_VERSION_NAME, applicationInfo.versionName},
         {APPLICATION_MIN_COMPATIBLE_VERSION_CODE, applicationInfo.minCompatibleVersionCode},
         {APPLICATION_API_COMPATIBLE_VERSION, applicationInfo.apiCompatibleVersion},
+        {APPLICATION_COMPATIBLE_MINOR_VERSION, applicationInfo.compatibleMinorVersion},
+        {APPLICATION_COMPATIBLE_PATCH_VERSION, applicationInfo.compatiblePatchVersion},
         {APPLICATION_API_TARGET_VERSION, applicationInfo.apiTargetVersion},
         {APPLICATION_TARGET_MINOR_API_VERSION, applicationInfo.targetMinorApiVersion},
         {APPLICATION_TARGET_PATCH_API_VERSION, applicationInfo.targetPatchApiVersion},
@@ -1093,6 +1101,10 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.minCompatibleVersionCode, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_API_COMPATIBLE_VERSION,
         applicationInfo.apiCompatibleVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_COMPATIBLE_MINOR_VERSION,
+        applicationInfo.compatibleMinorVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_COMPATIBLE_PATCH_VERSION,
+        applicationInfo.compatiblePatchVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_API_TARGET_VERSION,
         applicationInfo.apiTargetVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_TARGET_MINOR_API_VERSION,

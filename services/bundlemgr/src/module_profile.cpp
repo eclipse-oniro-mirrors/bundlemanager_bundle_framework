@@ -154,6 +154,8 @@ struct DeviceConfig {
     // pair first : if exist in module.json then true, otherwise false
     // pair second : actual value
     std::pair<bool, int32_t> minAPIVersion = std::make_pair<>(false, 0);
+    std::pair<bool, uint32_t> minMinorAPIVersion = std::make_pair<>(false, 0);
+    std::pair<bool, uint32_t> minPatchAPIVersion = std::make_pair<>(false, 0);
     std::pair<bool, bool> keepAlive = std::make_pair<>(false, false);
     std::pair<bool, bool> removable = std::make_pair<>(false, true);
     std::pair<bool, bool> singleton = std::make_pair<>(false, false);
@@ -282,6 +284,8 @@ struct App {
     int32_t versionCode = 0;
     int32_t minCompatibleVersionCode = -1;
     uint32_t minAPIVersion = 0;
+    uint32_t minMinorAPIVersion = 0;
+    uint32_t minPatchAPIVersion = 0;
     int32_t targetAPIVersion = 0;
     int32_t targetMinorApiVersion = 0;
     int32_t targetPatchApiVersion = 0;
@@ -979,6 +983,28 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
             g_parseResult,
             ArrayType::NOT_ARRAY);
     }
+    if (jsonObject.find(MIN_MINOR_API_VERSION) != jsonObjectEnd) {
+        deviceConfig.minMinorAPIVersion.first = true;
+        GetValueIfFindKey<uint32_t>(jsonObject,
+            jsonObjectEnd,
+            MIN_MINOR_API_VERSION,
+            deviceConfig.minMinorAPIVersion.second,
+            JsonType::NUMBER,
+            false,
+            g_parseResult,
+            ArrayType::NOT_ARRAY);
+    }
+    if (jsonObject.find(MIN_PATCH_API_VERSION) != jsonObjectEnd) {
+        deviceConfig.minPatchAPIVersion.first = true;
+        GetValueIfFindKey<uint32_t>(jsonObject,
+            jsonObjectEnd,
+            MIN_PATCH_API_VERSION,
+            deviceConfig.minPatchAPIVersion.second,
+            JsonType::NUMBER,
+            false,
+            g_parseResult,
+            ArrayType::NOT_ARRAY);
+    }
     if (jsonObject.find(DEVICE_CONFIG_KEEP_ALIVE) != jsonObjectEnd) {
         deviceConfig.keepAlive.first = true;
         BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
@@ -1088,6 +1114,22 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.minAPIVersion,
         JsonType::NUMBER,
         true,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_MIN_MINOR_API_VERSION,
+        app.minMinorAPIVersion,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_MIN_PATCH_API_VERSION,
+        app.minPatchAPIVersion,
+        JsonType::NUMBER,
+        false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
@@ -2281,6 +2323,8 @@ bool ToApplicationInfo(
     }
 
     applicationInfo.apiCompatibleVersion = app.minAPIVersion;
+    applicationInfo.compatibleMinorVersion = app.minMinorAPIVersion;
+    applicationInfo.compatiblePatchVersion = app.minPatchAPIVersion;
     applicationInfo.apiTargetVersion = app.targetAPIVersion;
     applicationInfo.targetMinorApiVersion = app.targetMinorApiVersion;
     applicationInfo.targetPatchApiVersion = app.targetPatchApiVersion;
@@ -2333,6 +2377,12 @@ bool ToApplicationInfo(
         Profile::DeviceConfig deviceConfig = app.deviceConfigs.at(deviceType);
         if (deviceConfig.minAPIVersion.first) {
             applicationInfo.apiCompatibleVersion = static_cast<uint32_t>(deviceConfig.minAPIVersion.second);
+        }
+        if (deviceConfig.minMinorAPIVersion.first) {
+            applicationInfo.compatibleMinorVersion = deviceConfig.minMinorAPIVersion.second;
+        }
+        if (deviceConfig.minPatchAPIVersion.first) {
+            applicationInfo.compatiblePatchVersion = deviceConfig.minPatchAPIVersion.second;
         }
         if (applicationInfo.isSystemApp && transformParam.isPreInstallApp) {
             if (deviceConfig.keepAlive.first) {
@@ -2414,6 +2464,8 @@ bool ToBundleInfo(
     bundleInfo.minCompatibleVersionCode = static_cast<uint32_t>(applicationInfo.minCompatibleVersionCode);
 
     bundleInfo.compatibleVersion = static_cast<uint32_t>(applicationInfo.apiCompatibleVersion);
+    bundleInfo.compatibleMinorVersion = applicationInfo.compatibleMinorVersion;
+    bundleInfo.compatiblePatchVersion = applicationInfo.compatiblePatchVersion;
     bundleInfo.targetVersion = static_cast<uint32_t>(applicationInfo.apiTargetVersion);
     bundleInfo.targetMinorApiVersion = applicationInfo.targetMinorApiVersion;
     bundleInfo.targetPatchApiVersion = applicationInfo.targetPatchApiVersion;

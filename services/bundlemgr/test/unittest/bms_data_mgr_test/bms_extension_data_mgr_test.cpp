@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <tuple>
 #define private public
 
 #include <fstream>
@@ -46,6 +47,7 @@ const int32_t USERID = 100;
 const int32_t TEST_UID = 20065535;
 const int32_t TEST_NUMBER_ONE = 1;
 constexpr int32_t REMOTE_RESULT = 8585601;
+const uint32_t API_VERSION_BASE = 1000;
 const uint32_t SDK_VERSION = 10;
 const uint32_t COMPATIBLE_VERSION = 11;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
@@ -252,7 +254,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0001, Function | SmallTest
     BmsExtensionDataMgr bmsExtensionDataMgr;
     BundleInfo bundleInfo;
     bundleInfo.compatibleVersion = COMPATIBLE_VERSION;
-    bool res = bmsExtensionDataMgr.CheckApiInfo(bundleInfo, SDK_VERSION);
+    bool res = bmsExtensionDataMgr.CheckApiInfo(bundleInfo, std::make_tuple(10, 0, 0));
 #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(res, true);
 #else
@@ -274,18 +276,6 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0002, Function | SmallTest
     #else
     EXPECT_EQ(res, false);
     #endif
-}
-
-/**
- * @tc.number: BmsExtensionDataMgr_0003
- * @tc.name: CheckApiInfo
- * @tc.desc: CheckApiInfo
- */
-HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0003, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    bool res = bmsExtensionDataMgr.CheckApiInfo(SDK_VERSION, SDK_VERSION);
-    EXPECT_TRUE(res);
 }
 
 /**
@@ -1390,7 +1380,52 @@ HWTEST_F(BmsExtensionDataMgrTest, CheckApiInfo_001, Function | SmallTest | Level
 {
     BmsExtensionDataMgr bmsExtensionDataMgrTest;
     BundleInfo bundleInfo;
-    uint32_t sdkVersion = 1000;
+    auto sdkVersion = std::make_tuple(3, 2, 1);
+
+    bundleInfo.compatibleVersion = 3 + API_VERSION_BASE;
+    bundleInfo.compatibleMinorVersion = 2;
+    bundleInfo.compatiblePatchVersion = 1;
+    auto ret = bmsExtensionDataMgrTest.CheckApiInfo(bundleInfo, sdkVersion);
+    EXPECT_TRUE(ret);
+
+    bundleInfo.compatibleVersion = 3 + API_VERSION_BASE;
+    bundleInfo.compatibleMinorVersion = 2;
+    bundleInfo.compatiblePatchVersion = 0;
+    ret = bmsExtensionDataMgrTest.CheckApiInfo(bundleInfo, sdkVersion);
+    EXPECT_TRUE(ret);
+
+    bundleInfo.compatibleVersion = 3 + API_VERSION_BASE;
+    bundleInfo.compatibleMinorVersion = 1;
+    bundleInfo.compatiblePatchVersion = 2;
+    ret = bmsExtensionDataMgrTest.CheckApiInfo(bundleInfo, sdkVersion);
+    EXPECT_TRUE(ret);
+
+    bundleInfo.compatibleVersion = 2 + API_VERSION_BASE;
+    bundleInfo.compatibleMinorVersion = 3;
+    bundleInfo.compatiblePatchVersion = 3;
+    ret = bmsExtensionDataMgrTest.CheckApiInfo(bundleInfo, sdkVersion);
+    EXPECT_TRUE(ret);
+
+    bundleInfo.compatibleVersion = 4 + API_VERSION_BASE;
+    bundleInfo.compatibleMinorVersion = 0;
+    bundleInfo.compatiblePatchVersion = 0;
+    ret = bmsExtensionDataMgrTest.CheckApiInfo(bundleInfo, sdkVersion);
+    EXPECT_FALSE(ret);
+
+    bundleInfo.compatibleVersion = 3 + API_VERSION_BASE;
+    bundleInfo.compatibleMinorVersion = 3;
+    bundleInfo.compatiblePatchVersion = 0;
+    ret = bmsExtensionDataMgrTest.CheckApiInfo(bundleInfo, sdkVersion);
+    EXPECT_FALSE(ret);
+
+    bundleInfo.compatibleVersion = 3 + API_VERSION_BASE;
+    bundleInfo.compatibleMinorVersion = 2;
+    bundleInfo.compatiblePatchVersion = 2;
+    ret = bmsExtensionDataMgrTest.CheckApiInfo(bundleInfo, sdkVersion);
+    EXPECT_FALSE(ret);
+
+    bundleInfo.compatibleVersion = 0;
+    sdkVersion = std::make_tuple(1000, 0, 0);
     ErrCode res = bmsExtensionDataMgrTest.CheckApiInfo(bundleInfo, sdkVersion);
     EXPECT_TRUE(res);
 

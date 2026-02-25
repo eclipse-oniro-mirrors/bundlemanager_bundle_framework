@@ -339,6 +339,8 @@ constexpr const char* APP_VERSION_CODE = "versionCode";
 constexpr const char* APP_VERSION_NAME = "versionName";
 constexpr const char* APP_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
 constexpr const char* APP_MIN_API_VERSION = "minAPIVersion";
+constexpr const char* APP_MIN_MINOR_API_VERSION = "minMinorAPIVersion";
+constexpr const char* APP_MIN_PATCH_API_VERSION = "minPatchAPIVersion";
 constexpr const char* APP_TARGET_API_VERSION = "targetAPIVersion";
 constexpr const char* APP_TARGET_MINOR_API_VERSION = "targetMinorApiVersion";
 constexpr const char* APP_TARGET_PATCH_API_VERSION = "targetPatchApiVersion";
@@ -423,6 +425,8 @@ constexpr const char* MODULE_TYPE_FEATURE = "feature";
 constexpr const char* MODULE_TYPE_SHARED = "shared";
 // deviceConfig
 constexpr const char* MIN_API_VERSION = "minAPIVersion";
+constexpr const char* MIN_MINOR_API_VERSION = "minMinorAPIVersion";
+constexpr const char* MIN_PATCH_API_VERSION = "minPatchAPIVersion";
 constexpr const char* DEVICE_CONFIG_KEEP_ALIVE = "keepAlive";
 constexpr const char* DEVICE_CONFIG_REMOVABLE = "removable";
 constexpr const char* DEVICE_CONFIG_SINGLETON = "singleton";

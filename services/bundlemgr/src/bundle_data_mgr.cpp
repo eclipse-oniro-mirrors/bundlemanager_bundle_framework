@@ -9155,6 +9155,8 @@ ErrCode BundleDataMgr::GenerateAppInstallExtendedInfo(const InnerBundleInfo &inn
     appInstallExtendedInfo.crowdtestDeadline = innerBundleInfo.GetAppCrowdtestDeadline();
     appInstallExtendedInfo.installSource = innerBundleInfo.GetInstallSource();
     appInstallExtendedInfo.compatibleVersion = innerBundleInfo.GetCompatibleVersion();
+    appInstallExtendedInfo.compatibleMinorVersion = innerBundleInfo.GetCompatibleMinorVersion();
+    appInstallExtendedInfo.compatiblePatchVersion = innerBundleInfo.GetCompatiblePatchVersion();
 
     // collect module info and dependencies in single pass
     for (const auto& [modulePackage, innerModuleInfo] : innerBundleInfo.GetInnerModuleInfos()) {
