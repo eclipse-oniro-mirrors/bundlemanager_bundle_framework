@@ -1545,6 +1545,7 @@ public:
      * @brief ability is enabled.
      * @param abilityInfo Indicates the abilityInfo.
      * @param userId Indicates the user Id.
+     * @param appIndex Indicates the app index.
      * @return Return set ability enabled result.
      */
     bool IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId,
