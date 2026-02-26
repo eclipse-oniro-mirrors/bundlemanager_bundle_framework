@@ -1674,5 +1674,20 @@ HWTEST_F(BmsBundleMgrProxyTest, CleanBundleCacheFilesAutomatic_0200, Function | 
     res = bundleMgrProxy.CleanBundleCacheFilesAutomatic(cacheSize, cleanType, cleanedSize);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
 }
+
+/**
+ * @tc.number: GetAllAppInstallExtendedInfo_0100
+ * @tc.name: test GetAllAppInstallExtendedInfo basic call
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify GetAllAppInstallExtendedInfo
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAllAppInstallExtendedInfo_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+    ErrCode ret = bundleMgrProxy.GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
 }
 }
