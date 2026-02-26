@@ -10676,7 +10676,7 @@ ErrCode BundleDataMgr::HandleDetermineCloneNumList(
                 bundleName.c_str(), static_cast<int32_t>(infoItem->second.GetMultiAppModeType()));
             continue;
         }
-        if (infoItem->second.GetMultiAppMaxCount() >= cloneNum) {
+        if (static_cast<uint32_t>(infoItem->second.GetMultiAppMaxCount()) >= cloneNum) {
             APP_LOGW_NOFUNC("%{public}s cloneNum is smaller no need to refresh", bundleName.c_str());
             continue;
         }
