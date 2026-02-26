@@ -96,18 +96,7 @@ bool DisableForbiddenRdb::IsApplicationDisableForbidden(const std::string &bundl
     NativeRdb::AbsRdbPredicates absRdbPredicates(DISABLE_FORBIDDEN_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
     absRdbPredicates.EqualTo(APP_INDEX, appIndex);
-
-    if (userId >= Constants::START_USERID) {
-        absRdbPredicates.BeginWrap();
-        absRdbPredicates.EqualTo(USER_ID, userId);
-        absRdbPredicates.Or();
-        absRdbPredicates.EqualTo(USER_ID, Constants::DEFAULT_USERID);
-        absRdbPredicates.Or();
-        absRdbPredicates.EqualTo(USER_ID, Constants::U1);
-        absRdbPredicates.EndWrap();
-    } else {
-        absRdbPredicates.EqualTo(USER_ID, userId);
-    }
+    absRdbPredicates.EqualTo(USER_ID, userId);
 
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
