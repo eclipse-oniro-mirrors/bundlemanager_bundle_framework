@@ -265,7 +265,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
 #ifndef X86_EMULATOR_MODE
         if (verifyRes != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "hap file verify failed, bundlePath: %{public}s", bundlePath.c_str());
-            return readFile ? ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE : verifyRes;
+            return verifyRes;
         }
 #endif
         hapVerifyRes.emplace_back(hapVerifyResult);
