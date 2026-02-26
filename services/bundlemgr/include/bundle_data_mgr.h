@@ -1484,7 +1484,7 @@ private:
     void CreateNewDataGroupInfo(const std::string &groupId, const int32_t userId,
         const DataGroupInfo &oldDataGroupInfo, DataGroupInfo &newDataGroupInfo);
     ErrCode CreateEl5GroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId,
-        bool hasInputMethodExtension);
+        bool hasInputMethodExtension = false);
     ErrCode CreateGroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId,
         bool needCreateEl5Dir, DataDirEl dirEl, bool hasInputMethodExtension = false);
     bool CreateAppGroupDir(const InnerBundleInfo &info, int32_t userId, DataDirEl dirEl = DataDirEl::NONE);

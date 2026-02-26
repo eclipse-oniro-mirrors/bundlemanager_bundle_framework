@@ -2731,14 +2731,15 @@ ErrCode InstalldHostImpl::CreateDataGroupDir(const CreateDirParam &param)
             continue;
         }
         std::string groupDir = userDir + ServiceConstants::DATA_GROUP_PATH + param.uuid;
+        bool isPathExist = InstalldOperator::IsExistDir(groupDir);
         if (!InstalldOperator::MkOwnerDir(
             groupDir, ServiceConstants::DATA_GROUP_DIR_MODE, param.uid, param.gid)) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLD, "create group dir failed error %{public}s", strerror(errno));
             result = ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
             continue;
         }
-        // Set independent SELinux labels for group directories
-        if (!param.hasInputMethodExtension) {
+        // Set independent SELinux labels for group directories when first create path
+        if (!isPathExist && !param.hasInputMethodExtension) {
             // default is data_app_el2_file, now is data_app_el2_group_file
             if (!InstalldOperator::RestoreconPath(groupDir)) {
                 LOG_NOFUNC_E(BMS_TAG_INSTALLD, "RestoreconPath el2-el5 failed");
@@ -2767,14 +2768,15 @@ ErrCode InstalldHostImpl::CreateEl5DataGroupDir(const CreateDirParam &param)
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
     std::string groupDir = userDir + ServiceConstants::DATA_GROUP_PATH + param.uuid;
+    bool isPathExist = InstalldOperator::IsExistDir(groupDir);
     if (!InstalldOperator::MkOwnerDir(groupDir, ServiceConstants::DATA_GROUP_DIR_MODE,
         param.uid, param.gid)) {
         LOG_E(BMS_TAG_INSTALLD, "create el5 group dir:%{public}s failed error %{public}s",
             groupDir.c_str(), strerror(errno));
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
-    // Set independent SELinux label for el5 group directory
-    if (!param.hasInputMethodExtension) {
+    // Set independent SELinux label for el5 group directory when first create group dir
+    if (!isPathExist && !param.hasInputMethodExtension) {
         // default is data_app_el5_file, now is data_app_el5_group_file
         if (!InstalldOperator::RestoreconPath(groupDir)) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLD, "RestoreconPath el5 failed");
