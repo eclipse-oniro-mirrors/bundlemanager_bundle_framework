@@ -378,7 +378,7 @@ namespace bundleManager {
 
   function getLaunchWantForBundleSync(bundleName: string, userId?: int): Want {
     if (bundleName === "") {
-      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_TYPE_ERROR);
     }
     let userIdInfo: int = userId ?? EMPTY_VALUE;
     return getLaunchWantForBundleNative(bundleName, userIdInfo, true);
