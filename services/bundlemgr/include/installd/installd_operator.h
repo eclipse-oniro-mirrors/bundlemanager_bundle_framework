@@ -322,6 +322,9 @@ public:
     static bool ClearDir(const std::string &dir);
 
     static bool RestoreconPath(const std::string &path);
+
+    static ErrCode SetBinFileLabel(const std::string &binFilePath);
+
     static std::string Sha256File(const std::string& filePath);
  
     static ErrCode HashSoFile(const std::string& soPath,

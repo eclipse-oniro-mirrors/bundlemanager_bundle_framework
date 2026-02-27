@@ -34,6 +34,7 @@
 #include "ipc/extract_param.h"
 #include "ipc/file_stat.h"
 #include "ipc/install_hnp_param.h"
+#include "ipc/verify_bin_param.h"
 #include "installd/installd_constants.h"
 
 namespace OHOS {
@@ -551,6 +552,17 @@ public:
     }
 
     virtual ErrCode RestoreconPath(const std::string &path)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode ProcessBinFiles(const VerifyBinParam &verifyBinParam)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode ChmodFiles(const std::vector<std::string> &filePaths, uint32_t mode,
+        const std::string &bundleName, const std::string &nativeLibraryPath)
     {
         return ERR_OK;
     }

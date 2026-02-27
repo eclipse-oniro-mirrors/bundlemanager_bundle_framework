@@ -64,6 +64,7 @@ constexpr const char* MODULE_UPGRADE_FLAG = "upgradeFlag";
 constexpr const char* MODULE_IS_ENTRY = "isEntry";
 constexpr const char* MODULE_METADATA = "metaData";
 constexpr const char* MODULE_HNP_PACKAGE = "hnpPackage";
+constexpr const char* MODULE_EXECUTABLE_BINARY_PATHS = "executableBinaryPaths";
 constexpr const char* MODULE_COLOR_MODE = "colorMode";
 constexpr const char* MODULE_DISTRO = "distro";
 constexpr const char* MODULE_REQ_CAPABILITIES = "reqCapabilities";
@@ -166,6 +167,7 @@ constexpr const char* MODULE_UBSAN_ENABLED = "ubsanEnabled";
 constexpr const char* MODULE_DEBUG = "debug";
 constexpr const char* MODULE_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
+constexpr const char* EXECUTABLE_BINARY_PATH = "path";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 constexpr const char* MODULE_BOOL_SET = "boolSet";
 constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
@@ -241,6 +243,28 @@ void to_json(nlohmann::json &jsonObject, const ExtendResourceInfo &extendResourc
         {EXT_RESOURCE_MODULE_NAME, extendResourceInfo.moduleName},
         {EXT_RESOURCE_ICON_ID, extendResourceInfo.iconId},
         {EXT_RESOURCE_FILE_PATH, extendResourceInfo.filePath}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executableBinaryPath)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        EXECUTABLE_BINARY_PATH,
+        executableBinaryPath.path,
+        false,
+        parseResult);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read ExecutableBinaryPath from json error, error code : %{public}d", parseResult);
+    }
+}
+
+void to_json(nlohmann::json &jsonObject, const ExecutableBinaryPath &executableBinaryPath)
+{
+    jsonObject = nlohmann::json {
+        {EXECUTABLE_BINARY_PATH, executableBinaryPath.path}
     };
 }
 
@@ -468,6 +492,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_SYSTEM_THEME, info.systemTheme},
         {MODULE_META_DATA, info.metadata},
         {MODULE_HNP_PACKAGE, info.hnpPackages},
+        {MODULE_EXECUTABLE_BINARY_PATHS, info.executableBinaryPaths},
         {MODULE_REQUEST_PERMISSIONS, info.requestPermissions},
         {MODULE_DEFINE_PERMISSIONS, info.definePermissions},
         {MODULE_EXTENSION_KEYS, info.extensionKeys},
@@ -845,6 +870,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_HNP_PACKAGE,
         info.hnpPackages,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<ExecutableBinaryPath>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_EXECUTABLE_BINARY_PATHS,
+        info.executableBinaryPaths,
         JsonType::ARRAY,
         false,
         parseResult,
@@ -1747,6 +1780,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         ProxyData proxyData(item);
         hapInfo.proxyDatas.emplace_back(std::move(proxyData));
     }
+    hapInfo.executableBinaryPaths = it->second.executableBinaryPaths;
     hapInfo.buildHash = it->second.buildHash;
     hapInfo.isolationMode = GetIsolationMode(it->second.isolationMode);
     hapInfo.compressNativeLibs = it->second.compressNativeLibs;

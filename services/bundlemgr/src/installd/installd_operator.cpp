@@ -57,6 +57,9 @@
 #include "securec.h"
 #include "hnp_api.h"
 #include "policycoreutils.h"
+#ifdef WITH_SELINUX
+#include <selinux/selinux.h>
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -1611,6 +1614,7 @@ bool InstalldOperator::PrepareEntryMap(const CodeSignatureParam &codeSignaturePa
     return true;
 }
 
+
 ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &codeSignatureParam,
     const Security::CodeSign::EntryMap &entryMap)
 {
@@ -1655,7 +1659,7 @@ ErrCode InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSign
     if (!extractor.Init()) {
         return ERR_APPEXECFWK_INSTALL_ENCRYPTION_EXTRACTOR_INIT_FAILED;
     }
- 
+
     std::vector<std::string> soEntryFiles;
     if (!ObtainNativeSoFile(extractor, codeSignatureParam.cpuAbi, soEntryFiles)) {
         return ERR_APPEXECFWK_INSTALL_ENCRYPTION_OBTAIN_SO_FAILED;
@@ -1665,13 +1669,13 @@ ErrCode InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSign
         LOG_D(BMS_TAG_INSTALLD, "soEntryFiles is empty");
         return ERR_OK;
     }
- 
+
 #if defined(CODE_SIGNATURE_ENABLE)
     Security::CodeSign::EntryMap entryMap;
     if (!PrepareEntryMap(codeSignatureParam, soEntryFiles, entryMap)) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
- 
+
     ErrCode ret = PerformCodeSignatureCheck(codeSignatureParam, entryMap);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "VerifyCode failed due to %{public}d", ret);
@@ -2994,6 +2998,32 @@ bool InstalldOperator::RestoreconPath(const std::string &path)
     }
     LOG_E(BMS_TAG_INSTALLD, "RestoreconPath failed, ret: %{public}d", ret);
     return false;
+}
+
+ErrCode InstalldOperator::SetBinFileLabel(const std::string &binFilePath)
+{
+    if (binFilePath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "binFilePath is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (access(binFilePath.c_str(), F_OK) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "bin file not found: %{public}s", binFilePath.c_str());
+        return ERR_APPEXECFWK_INSTALL_FAILED_ACCESS_BIN_FILE;
+    }
+
+#ifdef WITH_SELINUX
+    // Set SELinux context for executable files
+    const char* context = "u:object_r:app_bin_file:s0";
+    if (lsetfilecon(binFilePath.c_str(), context) < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "setcon for %{public}s failed, errno:%{public}d",
+            binFilePath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED;
+    }
+#endif
+
+    LOG_I(BMS_TAG_INSTALLD, "SetBinFileLabel success %{public}s", binFilePath.c_str());
+    return ERR_OK;
 }
 
 bool InstalldOperator::IsFileNameValid(const std::string &fileName)

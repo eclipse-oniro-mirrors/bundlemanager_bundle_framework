@@ -679,6 +679,11 @@ ohos_shared_library("installs") {
     defines += [ "DFX_SIGDUMP_HANDLER_ENABLE" ]
   }
 
+  if (security_privacy_server_enable) {
+    external_deps += [ "security_privacy_server:binary_security_sdk" ]
+    defines += [ "SECURITY_PRIVACY_SERVER_ENABLE" ]
+  }
+
   install_enable = true
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

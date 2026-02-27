@@ -116,6 +116,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     "${services_path}/bundlemgr/src/ipc/install_hnp_param.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
+    "${services_path}/bundlemgr/src/ipc/verify_bin_param.cpp",
     "${services_path}/bundlemgr/src/system_ability_helper.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_installd_host_impl.cpp",
   ]
@@ -202,6 +203,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "${services_path}/bundlemgr/src/ipc/install_hnp_param.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
+    "${services_path}/bundlemgr/src/ipc/verify_bin_param.cpp",
     "${services_path}/bundlemgr/src/system_ability_helper.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/src/driver_install_ext.cpp",

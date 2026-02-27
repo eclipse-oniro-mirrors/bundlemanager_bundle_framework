@@ -280,7 +280,11 @@ private:
     bool HandleHashFiles(MessageParcel &data, MessageParcel &reply);
 
     bool HandleRestoreconPath(MessageParcel &data, MessageParcel &reply);
-    
+
+    bool HandleProcessBinFiles(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleChmodFiles(MessageParcel &data, MessageParcel &reply);
+
     bool HandleResetBmsDBSecurity(MessageParcel &data, MessageParcel &reply);
 
     bool HandleCopyDir(MessageParcel &data, MessageParcel &reply);

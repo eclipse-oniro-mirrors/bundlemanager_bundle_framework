@@ -23,8 +23,14 @@ ohos_unittest("BmsHapModuleInfoTest") {
     debug = false
   }
   module_out_path = module_output_path
-  include_dirs = [ "${bundle_framework_path}interfaces/inner_api/appexecfwk_core/include/bundlemgr" ]
-  sources = [ "bms_hap_module_info_test.cpp" ]
+  include_dirs = [
+    "${bundle_framework_path}interfaces/inner_api/appexecfwk_core/include/bundlemgr",
+    "${services_path}/bundlemgr/include",
+  ]
+  sources = [
+    "bms_hap_module_info_test.cpp",
+    "${services_path}/bundlemgr/src/ipc/verify_bin_param.cpp",
+  ]
 
   cflags = []
   if (target_cpu == "arm") {

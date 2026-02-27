@@ -101,6 +101,8 @@ enum class InstalldInterfaceCode : uint32_t {
     SET_FILE_CON_FORCE = 73,
     STOP_SET_FILE_CON = 74,
     GET_BUNDLE_FILE_COUNT = 75,
+    PROCESS_BIN_FILES = 76,
+    CHMOD_FILES = 77,
 };
 
 } // namespace AppExecFwk

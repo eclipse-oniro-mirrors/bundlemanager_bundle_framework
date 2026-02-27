@@ -114,6 +114,14 @@ struct AppEnvironment : public Parcelable {
     static AppEnvironment *Unmarshalling(Parcel &parcel);
 };
 
+struct ExecutableBinaryPath : public Parcelable {
+    std::string path;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static ExecutableBinaryPath *Unmarshalling(Parcel &parcel);
+};
+
 // configuration information about an module
 struct HapModuleInfo : public Parcelable {
     bool compressNativeLibs = true;
@@ -195,6 +203,7 @@ struct HapModuleInfo : public Parcelable {
     std::vector<AppEnvironment> appEnvironments;
     std::map<std::string, bool> isRemovable;
     std::set<std::string> isRemovableSet;
+    std::vector<ExecutableBinaryPath> executableBinaryPaths;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

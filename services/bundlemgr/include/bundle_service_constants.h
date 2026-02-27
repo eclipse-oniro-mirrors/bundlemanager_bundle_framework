@@ -214,6 +214,7 @@ constexpr const char* ENTERPRISE_SPACE_ENABLE = "persist.space_mgr_service.enter
 constexpr const char* ENTERPRISE_SPACE_USER_ID_LIST = "persist.space_mgr_service.enterprise_workspace_userid_list";
 constexpr const char* RELABEL_PARAM = "persist.bms.test.relabel";
 constexpr const char* BMS_RELABEL_PARAM = "const.bms.relabel";
+constexpr const char* HAP_BIN_INSTALL_ENABLE = "const.bms.bin_install";
 //extResource
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
 // hmdfs and sharefs config

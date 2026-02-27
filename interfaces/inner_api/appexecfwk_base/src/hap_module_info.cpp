@@ -109,6 +109,8 @@ const char* HAP_MODULE_INFO_FORM_EXTENSION_MODULE = "formExtensionModule";
 const char* HAP_MODULE_INFO_FORM_WIDGET_MODULE = "formWidgetModule";
 const char* HAP_MODULE_INFO_HAS_INTENT = "hasIntent";
 const char* HAP_MODULE_INFO_DEDUPLICATE_HAR = "deduplicateHar";
+const char* EXECUTABLE_BINARY_PATH_KEY = "path";
+const char* HAP_MODULE_INFO_EXECUTABLE_BINARY_PATHS = "executableBinaryPaths";
 const uint32_t MODULE_CAPACITY = 204800; // 200K
 }
 
@@ -220,6 +222,51 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
     if (parseResult != ERR_OK) {
         APP_LOGE("read Dependency error : %{public}d", parseResult);
     }
+}
+
+bool ExecutableBinaryPath::ReadFromParcel(Parcel &parcel)
+{
+    path = Str16ToStr8(parcel.ReadString16());
+    return true;
+}
+
+bool ExecutableBinaryPath::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(path));
+    return true;
+}
+
+ExecutableBinaryPath *ExecutableBinaryPath::Unmarshalling(Parcel &parcel)
+{
+    ExecutableBinaryPath *info = new (std::nothrow) ExecutableBinaryPath();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executableBinaryPath)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        EXECUTABLE_BINARY_PATH_KEY,
+        executableBinaryPath.path,
+        false,
+        parseResult);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read ExecutableBinaryPath from json error, error code : %{public}d", parseResult);
+    }
+}
+
+void to_json(nlohmann::json &jsonObject, const ExecutableBinaryPath &executableBinaryPath)
+{
+    jsonObject = nlohmann::json {
+        {EXECUTABLE_BINARY_PATH_KEY, executableBinaryPath.path}
+    };
 }
 
 bool ProxyData::ReadFromParcel(Parcel &parcel)
@@ -689,6 +736,17 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         }
         appEnvironments.emplace_back(*appEnvironment);
     }
+    int32_t executableBinaryPathsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, executableBinaryPathsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, executableBinaryPathsSize, &executableBinaryPaths);
+    for (int32_t i = 0; i < executableBinaryPathsSize; ++i) {
+        std::unique_ptr<ExecutableBinaryPath> executableBinaryPath(parcel.ReadParcelable<ExecutableBinaryPath>());
+        if (!executableBinaryPath) {
+            APP_LOGE("ReadParcelable<ExecutableBinaryPath> failed");
+            return false;
+        }
+        executableBinaryPaths.emplace_back(*executableBinaryPath);
+    }
     packageName = Str16ToStr8(parcel.ReadString16());
     crossAppSharedConfig = Str16ToStr8(parcel.ReadString16());
     abilitySrcEntryDelegator = Str16ToStr8(parcel.ReadString16());
@@ -841,6 +899,10 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     for (auto &item : appEnvironments) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, executableBinaryPaths.size());
+    for (auto &path : executableBinaryPaths) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &path);
+    }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(packageName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(crossAppSharedConfig));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilitySrcEntryDelegator));
@@ -914,6 +976,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_ROUTER_MAP, hapModuleInfo.routerMap},
         {HAP_MODULE_INFO_ROUTER_ARRAY, hapModuleInfo.routerArray},
         {HAP_MODULE_INFO_APP_ENVIRONMENTS, hapModuleInfo.appEnvironments},
+        {HAP_MODULE_INFO_EXECUTABLE_BINARY_PATHS, hapModuleInfo.executableBinaryPaths},
         {HAP_MODULE_INFO_PACKAGE_NAME, hapModuleInfo.packageName},
         {HAP_MODULE_INFO_CROS_APP_SHARED_CONFIG, hapModuleInfo.crossAppSharedConfig},
         {HAP_MODULE_ABILITY_SRC_ENTRY_DELEGATOR, hapModuleInfo.abilitySrcEntryDelegator},
@@ -1347,6 +1410,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         HAP_MODULE_INFO_APP_ENVIRONMENTS,
         hapModuleInfo.appEnvironments,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<ExecutableBinaryPath>>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_EXECUTABLE_BINARY_PATHS,
+        hapModuleInfo.executableBinaryPaths,
         JsonType::ARRAY,
         false,
         parseResult,

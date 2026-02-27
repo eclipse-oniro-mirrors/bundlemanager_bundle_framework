@@ -1693,6 +1693,47 @@ HWTEST_F(BmsInstallDaemonHostImplTest, DeleteCertAndRemoveKey_0100, Function | S
 }
 
 /**
+ * @tc.number: ChmodFilesTest_001
+ * @tc.name: test ChmodFiles with empty filePaths
+ * @tc.desc: 1. filePaths is empty
+ *           2. verify return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, ChmodFilesTest_001, Function | SmallTest | Level0)
+{
+    setuid(Constants::FOUNDATION_UID);
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    std::vector<std::string> filePaths;
+    uint32_t mode = 0755;
+    std::string bundleName = "com.ohos.test";
+    std::string nativeLibraryDir = "/data/app/el1/bundle/public/com.ohos.test/libs/arm64/";
+
+    auto ret = hostImpl->ChmodFiles(filePaths, mode, bundleName, nativeLibraryDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+    setuid(Constants::ROOT_UID);
+}
+
+/**
+ * @tc.number: ProcessBinFilesTest_001
+ * @tc.name: test ProcessBinFiles
+ * @tc.desc: 1. calling ProcessBinFiles of hostImpl
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, ProcessBinFilesTest_001, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    VerifyBinParam verifyBinParam;
+    verifyBinParam.bundleName = "com.ohos.test";
+    verifyBinParam.appIdentifier = "test";
+    verifyBinParam.userId = 100;
+    verifyBinParam.binFilePaths = {"/data/app/el1/bundle/public/com.ohos.test/bin/test"};
+    auto ret = hostImpl->ProcessBinFiles(verifyBinParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: InstalldHostImplTest_8400
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling GetBundleInodeCount of hostImpl
