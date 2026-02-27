@@ -59,6 +59,7 @@ ohos_shared_library("launcherbundlemanager_common") {
     "hilog:libhilog",
     "ipc:ipc_single",
     "napi:ace_napi",
+    "samgr:samgr_proxy",
   ]
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
