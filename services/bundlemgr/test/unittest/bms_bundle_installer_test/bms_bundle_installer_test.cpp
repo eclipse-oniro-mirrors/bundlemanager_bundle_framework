@@ -15356,6 +15356,55 @@ HWTEST_F(BmsBundleInstallerTest, InnerProcessSkipPreInstallBundles_0300, Functio
 }
 
 /**
+ * @tc.number: RecoverDriverForAllUsers_0100
+ * @tc.name: test BundleInstaller
+ * @tc.desc: 1.Test the RecoverDriverForAllUsers of BundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, RecoverDriverForAllUsers_0100, Function | SmallTest | Level0)
+{
+    BundleInstaller installer(1,nullptr);
+    installer.InitDataMgr();
+    InstallParam installParam;
+    InnerBundleInfo info;
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    info.InsertExtensionInfo("key", innerExtensionInfo);
+    installer.dataMgr_->bundleInfos_.try_emplace("testBundleName", info);
+    installer.isAppExist_ = true;
+    installer.RecoverDriverForAllUsers("testBundleName", installParam);
+    EXPECT_FALSE(installer.isAppExist_);
+    installer.isAppExist_ = true;
+    installParam.userId = 100;
+    installer.RecoverDriverForAllUsers("testBundleName", installParam);
+    EXPECT_FALSE(installer.isAppExist_);
+    installer.Uninstall("testBundleName", "", installParam);
+    installer.dataMgr_->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: InstallForAllUsers_0100
+ * @tc.name: test BundleInstaller
+ * @tc.desc: 1.Test the InstallForAllUsers of BundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallForAllUsers_0100, Function | SmallTest | Level0)
+{
+    BundleInstaller installer(1,nullptr);
+    installer.InitDataMgr();
+    InstallParam installParam;
+    InnerBundleInfo info;
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    info.InsertExtensionInfo("key", innerExtensionInfo);
+    installer.dataMgr_->bundleInfos_.try_emplace("testBundleName", info);
+    installer.isAppExist_ = true;
+    installer.bundleName_ = "testBundleName";
+    installer.InstallForAllUsers(installParam);
+    EXPECT_FALSE(installer.isAppExist_);
+    installer.Uninstall("testBundleName", "", installParam);
+    installer.dataMgr_->bundleInfos_.clear();
+}
+
+/**
  * @tc.number: InstallExisted_0001
  * @tc.name: test InstallExisted
  * @tc.desc: Test InstallExisted

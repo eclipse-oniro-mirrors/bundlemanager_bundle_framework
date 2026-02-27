@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2449,6 +2449,63 @@ HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0100, TestSize.Level1)
     int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     ret = verifyManagerProxy.Verify(abcPaths, funcResult);
     EXPECT_EQ(ret, OBJECT_NULL);
+}
+
+/**
+ * @tc.number: VerifyManagerProxy_0201
+ * @tc.name: Verify
+ * @tc.desc: 1.Test the interface of Verify
+ */
+HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0201, TestSize.Level1)
+{
+    auto& verifyManagerClient = VerifyManagerClient::GetInstance();
+    std::vector<std::string> abcPaths;
+    std::string abcPath = HAP_PATH;
+    abcPaths.push_back(abcPath);
+    ErrCode ret = verifyManagerClient.Verify(abcPaths);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: VerifyManagerProxy_0203
+ * @tc.name: DeleteAbc
+ * @tc.desc: 1.Test the interface of DeleteAbc
+ */
+HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0203, TestSize.Level1)
+{
+    auto& verifyManagerClient = VerifyManagerClient::GetInstance();
+    std::string abcPath = HAP_PATH;
+    ErrCode ret = verifyManagerClient.DeleteAbc(abcPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: VerifyManagerProxy_0205
+ * @tc.name: GetVerifyManagerProxy
+ * @tc.desc: 1.Test the interface of GetVerifyManagerProxy
+ */
+HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0205, TestSize.Level1)
+{
+    auto& verifyManagerClient = VerifyManagerClient::GetInstance();
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    verifyManagerClient.verifyManager_ = bundleMgrProxy->GetVerifyManager();
+    ASSERT_NE(verifyManagerClient.verifyManager_, nullptr);
+    sptr<IVerifyManager> ret = verifyManagerClient.GetVerifyManagerProxy();
+    EXPECT_TRUE(ret != nullptr);
+}
+
+/**
+ * @tc.number: VerifyManagerProxy_0206
+ * @tc.name: GetVerifyManagerProxy
+ * @tc.desc: 1.Test the interface of GetVerifyManagerProxy
+ */
+HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0206, TestSize.Level1)
+{
+    auto& verifyManagerClient = VerifyManagerClient::GetInstance();
+    verifyManagerClient.verifyManager_ = nullptr;
+    sptr<IVerifyManager> ret = verifyManagerClient.GetVerifyManagerProxy();
+    EXPECT_TRUE(ret != nullptr);
 }
 
 /**
