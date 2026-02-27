@@ -4341,6 +4341,7 @@ HWTEST_F(BmsDataMgrTest, GetSharedBundleInfo_0101, Function | MediumTest | Level
     ret = bundleDataMgr.GetSharedBundleInfo(bundleName, flags, bundleInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
+
 /**
  * @tc.number: IsPreInstallApp_0001
  * @tc.name: IsPreInstallApp
@@ -4352,6 +4353,23 @@ HWTEST_F(BmsDataMgrTest, IsPreInstallApp_0001, Function | MediumTest | Level1)
     std::string bundleName = "bundleName";
     bool ret = bundleDataMgr.IsPreInstallApp(bundleName);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IsPreInstallApp_0002
+ * @tc.name: IsPreInstallApp
+ * @tc.desc: test IsPreInstallApp
+ */
+HWTEST_F(BmsDataMgrTest, IsPreInstallApp_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName";
+    InnerBundleInfo innerBundleInfo;
+    EXPECT_NE(innerBundleInfo.baseBundleInfo_, nullptr);
+    innerBundleInfo.baseBundleInfo_->isPreInstallApp = true;
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bool ret = bundleDataMgr.IsPreInstallApp(bundleName);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -8023,6 +8041,9 @@ HWTEST_F(BmsDataMgrTest, UpdateShortcutInfoResId_0003, Function | MediumTest | L
     std::vector<ShortcutInfo> shortcutInfos;
     shortcutInfos.push_back(shortcutInfo);
     BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    EXPECT_NE(bundleDataMgr.shortcutVisibleStorage_, nullptr);
     bundleDataMgr.shortcutVisibleStorage_->AddDynamicShortcutInfos(shortcutInfos, userId);
 
     bundleDataMgr.UpdateShortcutInfoResId(bundleName, userId);
@@ -8911,4 +8932,101 @@ HWTEST_F(BmsDataMgrTest, CheckBundleExist_0001, Function | MediumTest | Level1)
     EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
 }
 
+/**
+ * @tc.number: IsSystemHsp_0001
+ * @tc.name: IsSystemHsp
+ * @tc.desc: test IsSystemHsp
+ */
+HWTEST_F(BmsDataMgrTest, IsSystemHsp_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bool removable = false;
+    std::string bundleName;
+    bundleDataMgr.UpdateRemovable(bundleName, removable);
+    bundleName = "com.ohos.test";
+    InnerBundleInfo innerBundleInfo;
+    EXPECT_NE(innerBundleInfo.baseApplicationInfo_, nullptr);
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    EXPECT_NE(bundleDataMgr.shortcutVisibleStorage_, nullptr);
+    bool ret = bundleDataMgr.IsSystemHsp(bundleName);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetAllSystemHspCodePaths_0001
+ * @tc.name: GetAllSystemHspCodePaths
+ * @tc.desc: test GetAllSystemHspCodePaths
+ */
+HWTEST_F(BmsDataMgrTest, GetAllSystemHspCodePaths_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    InnerBundleInfo innerBundleInfo;
+    EXPECT_NE(innerBundleInfo.baseApplicationInfo_, nullptr);
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    EXPECT_NE(bundleDataMgr.shortcutVisibleStorage_, nullptr);
+    auto ret = bundleDataMgr.GetAllSystemHspCodePaths();
+    EXPECT_FALSE(ret.empty());
+}
+
+/**
+ * @tc.number: GetAllLiteBundleInfo_0001
+ * @tc.name: GetAllLiteBundleInfo
+ * @tc.desc: test GetAllLiteBundleInfo
+ */
+HWTEST_F(BmsDataMgrTest, GetAllLiteBundleInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = Constants::INVALID_USERID;
+    bundleDataMgr.multiUserIdsSet_.clear();
+    auto ret = bundleDataMgr.GetAllLiteBundleInfo(userId);
+    EXPECT_TRUE(ret.empty());
+}
+
+/**
+ * @tc.number: CreateGroupDirs_0001
+ * @tc.name: CreateGroupDirs
+ * @tc.desc: test CreateGroupDirs
+ */
+HWTEST_F(BmsDataMgrTest, CreateGroupDirs_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<DataGroupInfo> dataGroupInfos;
+    CreateDirParam baseParam;
+    bool needCreateEl5Dir = false;
+    DataDirEl dirEl = DataDirEl::NONE;
+    ErrCode ret = bundleDataMgr.CreateGroupDirs(dataGroupInfos, baseParam.userId, needCreateEl5Dir, dirEl);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateEl5GroupDirs_0001
+ * @tc.name: CreateEl5GroupDirs
+ * @tc.desc: test CreateEl5GroupDirs
+ */
+HWTEST_F(BmsDataMgrTest, CreateEl5GroupDirs_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<DataGroupInfo> dataGroupInfos;
+    CreateDirParam baseParam;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.dataGroupInfos_.clear();
+    bundleDataMgr.ProcessAllUserDataGroupInfosWhenBundleUpdate(innerBundleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleInfo.innerBundleUserInfos_.emplace("100", innerBundleUserInfo);
+    innerBundleInfo.dataGroupInfos_.emplace("testGroup", dataGroupInfos);
+    bundleDataMgr.ProcessAllUserDataGroupInfosWhenBundleUpdate(innerBundleInfo);
+    std::string bundleName = "com.ohos.test";
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    int32_t userId = Constants::INVALID_USERID;
+    bundleDataMgr.GenerateNewUserDataGroupInfos(bundleName, userId);
+    bool keepData = false;
+    bundleDataMgr.DeleteUserDataGroupInfos(bundleName, userId, keepData);
+    bundleDataMgr.DeleteGroupDirsForException(innerBundleInfo, userId);
+    bundleDataMgr.ScanAllBundleGroupInfo();
+    ErrCode ret = bundleDataMgr.CreateEl5GroupDirs(dataGroupInfos, baseParam.userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
