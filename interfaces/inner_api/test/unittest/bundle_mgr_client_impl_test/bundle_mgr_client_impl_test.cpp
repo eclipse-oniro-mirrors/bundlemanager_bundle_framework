@@ -61,11 +61,15 @@ public:
     MockEventCallback() = default;
     virtual ~MockEventCallback() = default;
     void OnReceiveEvent(const EventFwk::CommonEventData eventData) override;
+    bool IsCalled() const { return isCalled_; }
+    void Reset() { isCalled_ = false; }
 private:
+    bool isCalled_ = false;
 };
 
 void MockEventCallback::OnReceiveEvent(const EventFwk::CommonEventData eventData)
 {
+    isCalled_ = true;
     std::cout << "MockEventCallback::OnReceiveEvent" << std::endl;
 }
 
@@ -320,6 +324,185 @@ HWTEST_F(BundleMgrClientImplTest, RegisterAndUnregisterPluginEventCallback_0200,
     ret = bundleMgrClient->UnregisterPluginEventCallback(pluginCallback2);
     EXPECT_EQ(ret, ERR_OK);
 
+    setuid(uid);
+}
+
+/**
+ * @tc.number: OnPluginEventCallback_0100
+ * @tc.name: OnPluginEventCallback_0100
+ * @tc.desc: Test OnPluginEventCallback with empty callback list
+ */
+HWTEST_F(BundleMgrClientImplTest, OnPluginEventCallback_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+
+    EventFwk::CommonEventData eventData;
+    EXPECT_NO_THROW(bundleMgrClientImpl->OnPluginEventCallback(eventData));
+}
+
+/**
+ * @tc.number: OnPluginEventCallback_0200
+ * @tc.name: OnPluginEventCallback_0200
+ * @tc.desc: Test OnPluginEventCallback with multiple callbacks
+ */
+HWTEST_F(BundleMgrClientImplTest, OnPluginEventCallback_0200, Function | SmallTest | Level0)
+{
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = GetBundleDataMgr()->GetBundleInfosV9(1, bundleInfos, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GT(bundleInfos.size(), 0);
+    int uid = getuid();
+    std::cout << "current uid is " << getuid() << std::endl;
+    if (bundleInfos.size() > 0) {
+        setuid(bundleInfos[0].applicationInfo.uid);
+        std::cout << "set uid to " << bundleInfos[0].applicationInfo.uid << std::endl;
+    }
+
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+
+    sptr<MockEventCallback> mockCallback1 = new MockEventCallback();
+    sptr<MockEventCallback> mockCallback2 = new MockEventCallback();
+    sptr<MockEventCallback> mockCallback3 = new MockEventCallback();
+
+    ret = bundleMgrClientImpl->RegisterPluginEventCallback(mockCallback1);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = bundleMgrClientImpl->RegisterPluginEventCallback(mockCallback2);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = bundleMgrClientImpl->RegisterPluginEventCallback(mockCallback3);
+    EXPECT_EQ(ret, ERR_OK);
+
+    EventFwk::CommonEventData eventData;
+    EXPECT_NO_THROW(bundleMgrClientImpl->OnPluginEventCallback(eventData));
+
+    EXPECT_TRUE(mockCallback1->IsCalled());
+    EXPECT_TRUE(mockCallback2->IsCalled());
+    EXPECT_TRUE(mockCallback3->IsCalled());
+
+    bundleMgrClientImpl->UnregisterPluginEventCallback(mockCallback1);
+    bundleMgrClientImpl->UnregisterPluginEventCallback(mockCallback2);
+    bundleMgrClientImpl->UnregisterPluginEventCallback(mockCallback3);
+    setuid(uid);
+}
+
+/**
+ * @tc.number: OnPluginEventCallback_0300
+ * @tc.name: OnPluginEventCallback_0300
+ * @tc.desc: Test PluginEventCallback::OnReceiveEvent with expired weak_ptr
+ */
+HWTEST_F(BundleMgrClientImplTest, OnPluginEventCallback_0300, Function | SmallTest | Level0)
+{
+    auto bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+    sptr<PluginEventCallback> pluginEventCallback = new PluginEventCallback(bundleMgrClientImpl);
+
+    bundleMgrClientImpl.reset();
+
+    EventFwk::CommonEventData eventData;
+    EXPECT_NO_THROW(pluginEventCallback->OnReceiveEvent(eventData));
+}
+
+/**
+ * @tc.number: OnPluginEventCallback_0400
+ * @tc.name: OnPluginEventCallback_0400
+ * @tc.desc: Test OnPluginEventCallback with event data containing bundle name
+ */
+HWTEST_F(BundleMgrClientImplTest, OnPluginEventCallback_0400, Function | SmallTest | Level0)
+{
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = GetBundleDataMgr()->GetBundleInfosV9(1, bundleInfos, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GT(bundleInfos.size(), 0);
+    int uid = getuid();
+    std::cout << "current uid is " << getuid() << std::endl;
+    if (bundleInfos.size() > 0) {
+        setuid(bundleInfos[0].applicationInfo.uid);
+        std::cout << "set uid to " << bundleInfos[0].applicationInfo.uid << std::endl;
+    }
+
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+
+    sptr<MockEventCallback> mockCallback = new MockEventCallback();
+    ret = bundleMgrClientImpl->RegisterPluginEventCallback(mockCallback);
+    EXPECT_EQ(ret, ERR_OK);
+
+    EventFwk::CommonEventData eventData;
+    AAFwk::Want want;
+    want.SetParam("bundleName", std::string("com.example.test"));
+    eventData.SetWant(want);
+
+    EXPECT_NO_THROW(bundleMgrClientImpl->OnPluginEventCallback(eventData));
+
+    EXPECT_TRUE(mockCallback->IsCalled());
+
+    bundleMgrClientImpl->UnregisterPluginEventCallback(mockCallback);
+    setuid(uid);
+}
+
+/**
+ * @tc.number: OnPluginEventCallback_0500
+ * @tc.name: OnPluginEventCallback_0500
+ * @tc.desc: Test OnPluginEventCallback concurrent calls
+ */
+HWTEST_F(BundleMgrClientImplTest, OnPluginEventCallback_0500, Function | SmallTest | Level0)
+{
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = GetBundleDataMgr()->GetBundleInfosV9(1, bundleInfos, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GT(bundleInfos.size(), 0);
+    int uid = getuid();
+    std::cout << "current uid is " << getuid() << std::endl;
+    if (bundleInfos.size() > 0) {
+        setuid(bundleInfos[0].applicationInfo.uid);
+        std::cout << "set uid to " << bundleInfos[0].applicationInfo.uid << std::endl;
+    }
+
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+
+    sptr<MockEventCallback> mockCallback = new MockEventCallback();
+    ret = bundleMgrClientImpl->RegisterPluginEventCallback(mockCallback);
+    EXPECT_EQ(ret, ERR_OK);
+
+    EventFwk::CommonEventData eventData;
+    EXPECT_NO_THROW(bundleMgrClientImpl->OnPluginEventCallback(eventData));
+    EXPECT_NO_THROW(bundleMgrClientImpl->OnPluginEventCallback(eventData));
+    EXPECT_NO_THROW(bundleMgrClientImpl->OnPluginEventCallback(eventData));
+
+    EXPECT_TRUE(mockCallback->IsCalled());
+
+    bundleMgrClientImpl->UnregisterPluginEventCallback(mockCallback);
+    setuid(uid);
+}
+
+/**
+ * @tc.number: OnPluginEventCallback_0600
+ * @tc.name: OnPluginEventCallback_0600
+ * @tc.desc: Test PluginEventCallback::OnReceiveEvent with valid weak_ptr
+ */
+HWTEST_F(BundleMgrClientImplTest, OnPluginEventCallback_0600, Function | SmallTest | Level0)
+{
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = GetBundleDataMgr()->GetBundleInfosV9(1, bundleInfos, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GT(bundleInfos.size(), 0);
+    int uid = getuid();
+    std::cout << "current uid is " << getuid() << std::endl;
+    if (bundleInfos.size() > 0) {
+        setuid(bundleInfos[0].applicationInfo.uid);
+        std::cout << "set uid to " << bundleInfos[0].applicationInfo.uid << std::endl;
+    }
+
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+    sptr<PluginEventCallback> pluginEventCallback = new PluginEventCallback(bundleMgrClientImpl);
+
+    sptr<MockEventCallback> mockCallback = new MockEventCallback();
+    ret = bundleMgrClientImpl->RegisterPluginEventCallback(mockCallback);
+    EXPECT_EQ(ret, ERR_OK);
+
+    EventFwk::CommonEventData eventData;
+    EXPECT_NO_THROW(pluginEventCallback->OnReceiveEvent(eventData));
+
+    EXPECT_TRUE(mockCallback->IsCalled());
+
+    bundleMgrClientImpl->UnregisterPluginEventCallback(mockCallback);
     setuid(uid);
 }
 } // AppExecFwk
