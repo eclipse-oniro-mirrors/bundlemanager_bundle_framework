@@ -4241,13 +4241,14 @@ HWTEST_F(BmsDataMgrTest, SetAbilityEnabled_0001, Function | SmallTest | Level0)
     abilityInfo.bundleName = bundleName;
     int32_t appIndex = 100;
     int32_t userId = 10;
-    auto ret = dataMgr->SetAbilityEnabled(abilityInfo, appIndex, false, userId);
+    bool stateChanged = false;
+    auto ret = dataMgr->SetAbilityEnabled(abilityInfo, appIndex, false, userId, stateChanged);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     userId = Constants::ANY_USERID;
     dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
     dataMgr->AddInnerBundleInfo(bundleName, info);
-    ret = dataMgr->SetAbilityEnabled(abilityInfo, appIndex, false, userId);
+    ret = dataMgr->SetAbilityEnabled(abilityInfo, appIndex, false, userId, stateChanged);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 }
 
@@ -8566,9 +8567,10 @@ HWTEST_F(BmsDataMgrTest, SetApplicationEnabled_0001, Function | MediumTest | Lev
     bool isEnable = true;
     std::string caller;
     int32_t userId = Constants::ALL_USERID;
+    bool stateChanged = false;
     InnerBundleInfo innerBundleInfo;
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
-    ErrCode ret = bundleDataMgr.SetApplicationEnabled(bundleName, appIndex, isEnable, caller, userId);
+    ErrCode ret = bundleDataMgr.SetApplicationEnabled(bundleName, appIndex, isEnable, caller, userId, stateChanged);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
