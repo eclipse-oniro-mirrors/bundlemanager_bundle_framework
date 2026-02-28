@@ -1405,7 +1405,8 @@ HWTEST_F(BmsBundleManagerTest3, GetJsonProfile_0004, Function | SmallTest | Leve
     std::string wrongName = "wrong";
     std::string profile;
 
-    auto ret = dataMgr->SetApplicationEnabled(BUNDLE_BACKUP_NAME, 0, false, CALLER_NAME_UT, USERID);
+    bool stateChanged = false;
+    auto ret = dataMgr->SetApplicationEnabled(BUNDLE_BACKUP_NAME, 0, false, CALLER_NAME_UT, USERID, stateChanged);
     EXPECT_EQ(ret, ERR_OK);
     ret = dataMgr->GetJsonProfile(profileType, BUNDLE_BACKUP_NAME, MODULE_NAME, profile, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);

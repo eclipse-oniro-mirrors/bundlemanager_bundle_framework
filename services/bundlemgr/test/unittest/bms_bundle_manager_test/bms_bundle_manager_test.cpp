@@ -596,7 +596,8 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0100, Function | Sma
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    ErrCode result = dataMgr->SetApplicationEnabled(BUNDLE_BACKUP_NAME, 0, true, CALLER_NAME_UT, USERID);
+    bool stateChanged = false;
+    ErrCode result = dataMgr->SetApplicationEnabled(BUNDLE_BACKUP_NAME, 0, true, CALLER_NAME_UT, USERID, stateChanged);
     EXPECT_EQ(result, ERR_OK);
     AAFwk::Want want;
     want.SetAction("action.system.home");

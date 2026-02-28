@@ -1415,15 +1415,16 @@ HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0020, Function | SmallTest | Lev
 HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0021, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
+    bool stateChanged = false;
     ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled(
-        TEST_BUNDLE_NAME, 0, false, CALLER_NAME_UT, Constants::INVALID_USERID);
+        TEST_BUNDLE_NAME, 0, false, CALLER_NAME_UT, Constants::INVALID_USERID, stateChanged);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     AbilityInfo abilityInfo;
     testRet = GetBundleDataMgr()->SetAbilityEnabled(
-        abilityInfo, 0, false, Constants::INVALID_USERID);
+        abilityInfo, 0, false, Constants::INVALID_USERID, stateChanged);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     testRet = GetBundleDataMgr()->SetAbilityEnabled(
-        abilityInfo, 0, false, Constants::UNSPECIFIED_USERID);
+        abilityInfo, 0, false, Constants::UNSPECIFIED_USERID, stateChanged);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -1690,8 +1691,9 @@ HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0008, Function | SmallTest
 HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0009, Function | SmallTest | Level1)
 {
     bool isEnable = true;
+    bool stateChanged = false;
     ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled(
-        TEST_BUNDLE_NAME, 0, isEnable, CALLER_NAME_UT, USERID);
+        TEST_BUNDLE_NAME, 0, isEnable, CALLER_NAME_UT, USERID, stateChanged);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -1718,12 +1720,13 @@ HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0010, Function | SmallTest
 HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0011, Function | SmallTest | Level1)
 {
     bool isEnable = true;
+    bool stateChanged = false;
     AbilityInfo abilityInfo;
     ErrCode testRet = GetBundleDataMgr()->IsAbilityEnabled(
         abilityInfo, 0, isEnable);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     testRet = GetBundleDataMgr()->SetAbilityEnabled(
-        abilityInfo, 0, isEnable, USERID);
+        abilityInfo, 0, isEnable, USERID, stateChanged);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
