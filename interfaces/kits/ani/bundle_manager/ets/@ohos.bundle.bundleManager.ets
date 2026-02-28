@@ -27,6 +27,7 @@ import Want from '@ohos.app.ability.Want';
 import { BundleOptionsInner } from './bundleManager/BundleInfoInner';
 
 namespace bundleManager {
+  type RecordData = string | number | boolean | Array<string> | Object | undefined;
 
   loadLibraryWithPermissionCheck("ani_bundle_manager.z", "@ohos.bundle.bundleManager");
 
@@ -340,6 +341,8 @@ namespace bundleManager {
   native function getJsonProfileNative(profileType: ProfileType, bundleName: string, moduleName: string, userId: int): string;
 
   native function getExtResourceNative(bundleName: string): Array<string>;
+
+  native function getAllBundleInstallInfoNative(): Array<Record<string, RecordData>>;
 
   native function disableDynamicIconNative(bundleName: string, option: BundleOptions): void;
   
@@ -1760,6 +1763,24 @@ namespace bundleManager {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(Promise.resolve());
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAllBundleInstallInfo(): Promise<Array<Record<string, RecordData>>> {
+    let p = new Promise<Array<Record<string, RecordData>>>((resolve: (installInfo: Array<Record<string, RecordData>>)
+      => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): Array<Record<string, RecordData>> => {
+        return getAllBundleInstallInfoNative();
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let installInfo: Array<Record<string, RecordData>> = e as Array<Record<string, RecordData>>;
+        resolve(installInfo);
       }, (err: Error): void => {
         reject(err as BusinessError);
       });

@@ -27,6 +27,7 @@
 #include "ani_bundle_manager.h"
 #include "ani_common_want.h"
 #include <ani_signature_builder.h>
+#include "app_install_extended_info.h"
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
 #include "bundle_manager_helper.h"
@@ -41,7 +42,11 @@
 #include "ipc_skeleton.h"
 #include "napi_constants.h"
 #include "process_cache_callback_host.h"
-
+#include "array_wrapper.h"
+#include "int_wrapper.h"
+#include "long_wrapper.h"
+#include "want_params_wrapper.h"
+#include "string_wrapper.h"
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
@@ -1654,6 +1659,238 @@ static void DisableDynamicIconNative(ani_env* env, ani_string aniBundleName, ani
     }
 }
 
+static sptr<AAFwk::IArray> ConvertHashParamToWantParams(const std::map<std::string, std::string>& hashParam)
+{
+    size_t hashParamSize = hashParam.size();
+    sptr<AAFwk::IArray> hashParamArray =
+        new (std::nothrow) AAFwk::Array(hashParamSize, AAFwk::g_IID_IWantParams);
+    if (hashParamArray != nullptr) {
+        size_t hashParamIndex = 0;
+        for (const auto& item : hashParam) {
+            AAFwk::WantParams hashParams;
+            hashParams.SetParam("key", AAFwk::String::Box(item.first));
+            hashParams.SetParam("value", AAFwk::String::Box(item.second));
+            OHOS::sptr<AAFwk::IWantParams> phashParams = AAFwk::WantParamWrapper::Box(hashParams);
+            if (phashParams != nullptr) {
+                hashParamArray->Set(hashParamIndex++, phashParams);
+            }
+        }
+    }
+    return hashParamArray;
+}
+
+static sptr<AAFwk::IArray> ConvertHapPathToArray(const std::vector<std::string>& hapPath)
+{
+    size_t size = hapPath.size();
+    sptr<AAFwk::IArray> hapPathArray = new (std::nothrow) AAFwk::Array(size, AAFwk::g_IID_IString);
+    if (hapPathArray == nullptr) {
+        APP_LOGE("Create hapPathArray failed");
+        return nullptr;
+    }
+    for (size_t i = 0; i < size; i++) {
+        hapPathArray->Set(i, AAFwk::String::Box(hapPath[i]));
+    }
+    return hapPathArray;
+}
+
+
+static sptr<AAFwk::IArray> ConvertRequiredDeviceFeaturesToArray(
+    const std::map<std::string, std::map<std::string, std::vector<std::string>>>& requiredDeviceFeatures)
+{
+    auto fillFeatureArray = [](sptr<AAFwk::IArray> featureArray, const std::vector<std::string>& features) {
+        for (size_t i = 0; i < features.size(); i++) {
+            featureArray->Set(i, AAFwk::String::Box(features[i]));
+        }
+    };
+
+    auto buildFeatureWantParams = [&fillFeatureArray](const std::map<std::string,
+            std::vector<std::string>>& featureEntries) {
+        AAFwk::WantParams featureWantParams;
+        for (const auto& featureEntry : featureEntries) {
+            size_t featureSize = featureEntry.second.size();
+            sptr<AAFwk::IArray> featureArray =
+                new (std::nothrow) AAFwk::Array(featureSize, AAFwk::g_IID_IString);
+            if (featureArray != nullptr) {
+                fillFeatureArray(featureArray, featureEntry.second);
+                featureWantParams.SetParam(featureEntry.first, featureArray);
+            }
+        }
+        return featureWantParams;
+    };
+
+    auto addModuleToArray = [](sptr<AAFwk::IArray> targetArray, size_t& index,
+        const std::string& moduleName, const AAFwk::WantParams& featureWantParams) {
+        AAFwk::WantParams moduleWantParams;
+        moduleWantParams.SetParam("moduleName", AAFwk::String::Box(moduleName));
+        OHOS::sptr<AAFwk::IWantParams> pFeatureWantParams = AAFwk::WantParamWrapper::Box(featureWantParams);
+        if (pFeatureWantParams == nullptr) {
+            return;
+        }
+        moduleWantParams.SetParam("requiredDeviceFeature", pFeatureWantParams);
+
+        OHOS::sptr<AAFwk::IWantParams> pModuleWantParams = AAFwk::WantParamWrapper::Box(moduleWantParams);
+        if (pModuleWantParams != nullptr) {
+            targetArray->Set(index++, pModuleWantParams);
+        }
+    };
+
+    size_t featuresSize = requiredDeviceFeatures.size();
+    sptr<AAFwk::IArray> requiredDeviceFeaturesArray =
+        new (std::nothrow) AAFwk::Array(featuresSize, AAFwk::g_IID_IWantParams);
+    if (requiredDeviceFeaturesArray == nullptr) {
+        APP_LOGE("Create requiredDeviceFeaturesArray failed");
+        return nullptr;
+    }
+
+    size_t moduleIndex = 0;
+    for (const auto& moduleItem : requiredDeviceFeatures) {
+        AAFwk::WantParams featureWantParams = buildFeatureWantParams(moduleItem.second);
+        addModuleToArray(requiredDeviceFeaturesArray, moduleIndex, moduleItem.first, featureWantParams);
+    }
+    return requiredDeviceFeaturesArray;
+}
+
+
+static sptr<AAFwk::IArray> ConvertSharedBundleInfoToArray(
+    const std::vector<SharedBundleInfo>& sharedBundleInfo)
+{
+    auto createSharedModuleParams = [](const SharedModuleInfo& sharedModule) {
+        AAFwk::WantParams sharedModuleWantParams;
+        sharedModuleWantParams.SetParam("name", AAFwk::String::Box(sharedModule.name));
+        sharedModuleWantParams.SetParam("versionCode", AAFwk::Long::Box(sharedModule.versionCode));
+        sharedModuleWantParams.SetParam("hapPath", AAFwk::String::Box(sharedModule.hapPath));
+        return sharedModuleWantParams;
+    };
+
+    auto buildSharedModuleArray = [&createSharedModuleParams](const std::vector<SharedModuleInfo>& sharedModuleInfos) {
+        size_t moduleSize = sharedModuleInfos.size();
+        sptr<AAFwk::IArray> sharedModuleArray =
+            new (std::nothrow) AAFwk::Array(moduleSize, AAFwk::g_IID_IWantParams);
+        if (sharedModuleArray == nullptr) {
+            return sharedModuleArray;
+        }
+
+        for (size_t j = 0; j < moduleSize; j++) {
+            AAFwk::WantParams sharedModuleWantParams = createSharedModuleParams(sharedModuleInfos[j]);
+            OHOS::sptr<AAFwk::IWantParams> pSharedModuleWantParams =
+                AAFwk::WantParamWrapper::Box(sharedModuleWantParams);
+            if (pSharedModuleWantParams != nullptr) {
+                sharedModuleArray->Set(j, pSharedModuleWantParams);
+            }
+        }
+        return sharedModuleArray;
+    };
+
+    auto addSharedBundleToArray = [](sptr<AAFwk::IArray> targetArray, size_t index,
+        const SharedBundleInfo& sharedBundle, sptr<AAFwk::IArray> sharedModuleArray) {
+        AAFwk::WantParams sharedBundleWantParams;
+        sharedBundleWantParams.SetParam("name", AAFwk::String::Box(sharedBundle.name));
+        sharedBundleWantParams.SetParam("sharedModuleInfos", sharedModuleArray);
+        OHOS::sptr<AAFwk::IWantParams> pSharedBundleWantParams =
+            AAFwk::WantParamWrapper::Box(sharedBundleWantParams);
+        if (pSharedBundleWantParams != nullptr) {
+            targetArray->Set(index, pSharedBundleWantParams);
+        }
+    };
+
+    size_t sharedBundleSize = sharedBundleInfo.size();
+    sptr<AAFwk::IArray> sharedBundleInfoArray =
+        new (std::nothrow) AAFwk::Array(sharedBundleSize, AAFwk::g_IID_IWantParams);
+    if (sharedBundleInfoArray == nullptr) {
+        APP_LOGE("Create sharedBundleInfoArray failed");
+        return nullptr;
+    }
+
+    for (size_t i = 0; i < sharedBundleSize; i++) {
+        sptr<AAFwk::IArray> sharedModuleArray = buildSharedModuleArray(sharedBundleInfo[i].sharedModuleInfos);
+        addSharedBundleToArray(sharedBundleInfoArray, i, sharedBundleInfo[i], sharedModuleArray);
+    }
+    return sharedBundleInfoArray;
+}
+
+static ani_object ConvertAppInstallExtendedInfo(ani_env* env, const AppInstallExtendedInfo& appInstallExtendedInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    AAFwk::WantParams wantParams;
+
+    // String properties
+    wantParams.SetParam("bundleName", AAFwk::String::Box(appInstallExtendedInfo.bundleName));
+    wantParams.SetParam("specifiedDistributionType",
+        AAFwk::String::Box(appInstallExtendedInfo.specifiedDistributionType));
+    wantParams.SetParam("installSource", AAFwk::String::Box(appInstallExtendedInfo.installSource));
+    wantParams.SetParam("additionalInfo", AAFwk::String::Box(appInstallExtendedInfo.additionalInfo));
+
+    // Long properties
+    wantParams.SetParam("crowdtestDeadline",
+        AAFwk::Long::Box(static_cast<int64_t>(appInstallExtendedInfo.crowdtestDeadline)));
+    wantParams.SetParam("compatibleVersion",
+        AAFwk::Long::Box(static_cast<int64_t>(appInstallExtendedInfo.compatibleVersion)));
+
+    // hashParam
+    sptr<AAFwk::IArray> hashParamArray =
+        ConvertHashParamToWantParams(appInstallExtendedInfo.hashParam);
+    if (hashParamArray == nullptr) {
+        APP_LOGE("ConvertHashParamToArray failed");
+        return nullptr;
+    }
+    wantParams.SetParam("hashParam", hashParamArray);
+
+    // hapPath: Array<string>
+    sptr<AAFwk::IArray> hapPathArray = ConvertHapPathToArray(appInstallExtendedInfo.hapPath);
+    if (hapPathArray == nullptr) {
+        APP_LOGE("ConvertHapPathToArray failed");
+        return nullptr;
+    }
+    wantParams.SetParam("hapPath", hapPathArray);
+
+    // requiredDeviceFeatures: Array<{moduleName: string, requiredDeviceFeature: WantParams}>
+    sptr<AAFwk::IArray> requiredDeviceFeaturesArray =
+        ConvertRequiredDeviceFeaturesToArray(appInstallExtendedInfo.requiredDeviceFeatures);
+    if (requiredDeviceFeaturesArray == nullptr) {
+        APP_LOGE("ConvertRequiredDeviceFeaturesToArray failed");
+        return nullptr;
+    }
+    wantParams.SetParam("requiredDeviceFeatures", requiredDeviceFeaturesArray);
+
+    // sharedBundleInfo: Array<SharedBundleInfo>
+    sptr<AAFwk::IArray> sharedBundleInfoArray =
+        ConvertSharedBundleInfoToArray(appInstallExtendedInfo.sharedBundleInfos);
+    if (sharedBundleInfoArray == nullptr) {
+        APP_LOGE("ConvertSharedBundleInfoToArray failed");
+        return nullptr;
+    }
+    wantParams.SetParam("sharedBundleInfo", sharedBundleInfoArray);
+
+    // Wrap WantParams to ani_ref, then convert to ani_object
+    ani_ref wantParamRef = AppExecFwk::WrapWantParams(env, wantParams);
+    if (wantParamRef == nullptr) {
+        APP_LOGE("WrapWantParams failed");
+        return nullptr;
+    }
+    return reinterpret_cast<ani_object>(wantParamRef);
+}
+
+static ani_object GetAllBundleInstallInfoNative(ani_env* env)
+{
+    APP_LOGD("ani GetAllBundleInstallInfoNative called");
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("GetBundleMgr failed");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+    ErrCode ret = iBundleMgr->GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAllAppInstallExtendedInfo failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+            GET_ALL_INSTALL_INFO, Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
+        return nullptr;
+    }
+    return CommonFunAni::ConvertAniArray(env, appInstallExtendedInfos, ConvertAppInstallExtendedInfo);
+}
+
 static ani_object GetDynamicIconInfoNative(ani_env* env, ani_string aniBundleName)
 {
     APP_LOGD("ani GetDynamicIconInfoNative called");
@@ -2202,6 +2439,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(GetAllAppCloneBundleInfoNative) },
         ani_native_function { "getAllSharedBundleInfoNative", nullptr,
             reinterpret_cast<void*>(GetAllSharedBundleInfoNative) },
+        ani_native_function { "getAllBundleInstallInfoNative", nullptr,
+            reinterpret_cast<void*>(GetAllBundleInstallInfoNative) },
         ani_native_function { "getSharedBundleInfoNative", nullptr,
             reinterpret_cast<void*>(GetSharedBundleInfoNative) },
         ani_native_function { "getAdditionalInfo", nullptr, reinterpret_cast<void*>(GetAdditionalInfo) },
