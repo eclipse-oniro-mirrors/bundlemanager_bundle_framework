@@ -490,12 +490,15 @@ public:
     /**
      * @brief Set the application status.
      * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the application index.
      * @param isEnable Indicates the status to set.
+     * @param caller Indicates the caller name.
      * @param userId Indicates the user id.
+     * @param stateChanged Output parameter indicating whether the state actually changed.
      * @return Returns result of the operation.
      */
     ErrCode SetApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
-        const std::string &caller, int32_t userId = Constants::UNSPECIFIED_USERID);
+        const std::string &caller, int32_t userId, bool &stateChanged);
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability to check.
@@ -506,13 +509,15 @@ public:
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability.
+     * @param appIndex Indicates the application index.
      * @param isEnabled Specifies whether to enable the ability.
      *                 The value true means to enable it, and the value false means to disable it.
      * @param userId Indicates the user id.
+     * @param stateChanged Output parameter indicating whether the state actually changed.
      * @return Returns result of the operation.
      */
     ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool isEnabled,
-        int32_t userId = Constants::UNSPECIFIED_USERID);
+        int32_t userId, bool &stateChanged);
     /**
      * @brief Register the bundle status callback function.
      * @param bundleStatusCallback Indicates the callback object that using for notifing the bundle status.
