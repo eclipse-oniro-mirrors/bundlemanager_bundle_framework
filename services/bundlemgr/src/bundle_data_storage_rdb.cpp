@@ -136,25 +136,26 @@ void BundleDataStorageRdb::TransformStrToInfo(
 {
     APP_LOGI_NOFUNC("bundle TransformStrToInfo start");
     if (rdbDataManager_ == nullptr || datas.empty()) {
-        APP_LOGE("rdbDataManager is null");
+        APP_LOGE_NOFUNC("rdbDataManager is null");
         return;
     }
-    const uint8_t actualThreads = datas.size() > PARALLEL_SIZE ? std::max(uint8_t(1), std::min(
-        static_cast<uint8_t>(std::thread::hardware_concurrency()), MAX_THREADS)) : 1;
-    const uint16_t itemsPerThread = (datas.size() + actualThreads - 1) / actualThreads;
-    APP_LOGI_NOFUNC("Processing %{public}zu bundles with %{public}u parallel threads",
-        datas.size(), actualThreads);
+    const size_t dataSize = datas.size();
+    uint8_t actualThreads = 1;
+    if (dataSize >= PARALLEL_SIZE) {
+        const size_t maxTd = dataSize / PARALLEL_SIZE;
+        actualThreads = std::max(uint8_t(1), static_cast<uint8_t>(std::min(maxTd, static_cast<size_t>(MAX_THREADS))));
+    }
+    const size_t itemsPerThread = (dataSize + actualThreads - 1) / actualThreads;
+    APP_LOGI_NOFUNC("%{public}zu bundles with %{public}u threads", dataSize, actualThreads);
     std::vector<ThreadResult> threadResults(actualThreads);
     std::vector<std::future<void>> futures;
-    for (uint16_t i = 0; i < actualThreads; ++i) {
-        // Calculate the range for this thread
-        const uint16_t startIndex = i * itemsPerThread;
-        const uint16_t endIndex = std::min(static_cast<uint16_t>(startIndex + itemsPerThread),
-            static_cast<uint16_t>(datas.size()));
+    for (uint8_t i = 0; i < actualThreads; ++i) {
+        const size_t startIndex = static_cast<size_t>(i) * itemsPerThread;
+        const size_t endIndex = std::min(startIndex + itemsPerThread, dataSize);
         auto startIter = datas.begin();
-        std::advance(startIter, startIndex);
+        std::advance(startIter, static_cast<std::map<std::string, std::string>::difference_type>(startIndex));
         auto endIter = datas.begin();
-        std::advance(endIter, endIndex);
+        std::advance(endIter, static_cast<std::map<std::string, std::string>::difference_type>(endIndex));
         futures.push_back(std::async(std::launch::async,
             [this, startIter, endIter, &result = threadResults[i]]() {
             for (auto iter = startIter; iter != endIter; ++iter) {
