@@ -5964,14 +5964,40 @@ HWTEST_F(BmsBundleDataMgrTest, CreateAppGroupDir_0100, Function | SmallTest | Le
     int32_t userId = 100;
     bool needCreateEl5Dir = true;
     DataDirEl dirEl = DataDirEl::EL5;
-    auto ret = dataMgr->CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl);
+    auto ret = dataMgr->CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl, false);
     EXPECT_TRUE(ret);
 
     DataGroupInfo groupInfo;
     groupInfo.userId = 100;
     groupInfo.dataGroupId = "123";
     groupInfo.uuid = "321";
-    ret = dataMgr->CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl);
+    ret = dataMgr->CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl, false);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: CreateAppGroupDir_0200
+ * @tc.name: CreateAppGroupDir with hasInputMethodExtension
+ * @tc.desc: test CreateAppGroupDir with hasInputMethodExtension parameter
+ */
+HWTEST_F(BmsBundleDataMgrTest, CreateAppGroupDir_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
+    int32_t userId = 100;
+    bool needCreateEl5Dir = true;
+    DataDirEl dirEl = DataDirEl::EL5;
+    
+    // Test with hasInputMethodExtension = true
+    auto ret = dataMgr->CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl, true);
+    EXPECT_TRUE(ret);
+
+    DataGroupInfo groupInfo;
+    groupInfo.userId = 100;
+    groupInfo.dataGroupId = "123";
+    groupInfo.uuid = "321";
+    ret = dataMgr->CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl, true);
     EXPECT_TRUE(ret);
 }
 

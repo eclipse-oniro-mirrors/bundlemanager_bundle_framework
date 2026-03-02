@@ -1364,6 +1364,11 @@ public:
         return  extensionSkillInfos_;
     }
     /**
+     * @brief Checks if the bundle contains inputMethod type extension.
+     * @return Returns true if the bundle contains inputMethod extension; returns false otherwise.
+     */
+    bool HasInputMethodExtension() const;
+    /**
      * @brief Get the bundle is whether removable.
      * @return Return whether the bundle is removable.
      */

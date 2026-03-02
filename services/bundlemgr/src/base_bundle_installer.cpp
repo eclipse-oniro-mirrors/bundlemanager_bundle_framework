@@ -1808,9 +1808,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     codePathGuard.Dismiss();
     ProcessOldCodePath(bundleName_, isFeatureNeedUninstall_);
     // create data group dir
-    ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(oldInfo); });
     CreateDataGroupDirs(hapVerifyResults, oldInfo);
-    groupDirGuard.Dismiss();
     // process ark startup cache
     if (result == ERR_OK) {
         InnerBundleUserInfo newInnerBundleUserInfo;

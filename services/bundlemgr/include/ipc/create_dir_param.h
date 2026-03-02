@@ -37,6 +37,7 @@ struct CreateDirParam : public Parcelable {
     bool isDlpSandbox = false;
     bool isExtensionDir = false;
     bool isContainsEl5Dir = false;
+    bool hasInputMethodExtension = false;
     CreateDirFlag createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
     int32_t userId = -1;
     int32_t uid = -1;

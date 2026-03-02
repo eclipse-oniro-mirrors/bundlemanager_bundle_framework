@@ -42,6 +42,7 @@
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_status_callback_death_recipient.h"
+#include "ipc/create_dir_param.h"
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
 #endif
@@ -8916,6 +8917,7 @@ std::vector<int32_t> BundleDataMgr::GetUserIds(const std::string &bundleName) co
 void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t userId)
 {
     std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
+    bool hasInputMethodExtension = false;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         auto bundleInfoItem = bundleInfos_.find(bundleName);
@@ -8927,6 +8929,7 @@ void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t 
         if (!needCreateEl5Dir) {
             return;
         }
+        hasInputMethodExtension = bundleInfoItem->second.HasInputMethodExtension();
         dataGroupInfoMap = bundleInfoItem->second.GetDataGroupInfos();
     }
     if (dataGroupInfoMap.empty()) {
@@ -8940,7 +8943,7 @@ void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t 
             }
         }
     }
-    if (CreateEl5GroupDirs(dataGroupInfos, userId) != ERR_OK) {
+    if (CreateEl5GroupDirs(dataGroupInfos, userId, hasInputMethodExtension) != ERR_OK) {
         APP_LOGW("create el5 group dirs for %{public}s %{public}d failed", bundleName.c_str(), userId);
     }
 }
@@ -8949,12 +8952,14 @@ bool BundleDataMgr::CreateAppGroupDir(const InnerBundleInfo &info, int32_t userI
 {
     auto dataGroupInfoMap = info.GetDataGroupInfos();
     bool needCreateEl5Dir = info.NeedCreateEl5Dir();
-    return CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl);
+    bool hasInputMethodExtension = info.HasInputMethodExtension();
+    
+    return CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl, hasInputMethodExtension);
 }
 
 bool BundleDataMgr::CreateAppGroupDir(
     const std::unordered_map<std::string, std::vector<DataGroupInfo>> &dataGroupInfoMap,
-    int32_t userId, bool needCreateEl5Dir, DataDirEl dirEl)
+    int32_t userId, bool needCreateEl5Dir, DataDirEl dirEl, bool hasInputMethodExtension)
 {
     if (dataGroupInfoMap.empty()) {
         return true;
@@ -8967,13 +8972,14 @@ bool BundleDataMgr::CreateAppGroupDir(
             }
         }
     }
-    return CreateGroupDirs(dataGroupInfos, userId, needCreateEl5Dir, dirEl) == ERR_OK;
+    return CreateGroupDirs(dataGroupInfos, userId, needCreateEl5Dir, dirEl, hasInputMethodExtension) == ERR_OK;
 }
 
 bool BundleDataMgr::CreateAppGroupDir(const std::string &bundleName, int32_t userId)
 {
     std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
     bool needCreateEl5Dir = false;
+    bool hasInputMethodExtension = false;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         auto bundleInfoItem = bundleInfos_.find(bundleName);
@@ -8983,12 +8989,14 @@ bool BundleDataMgr::CreateAppGroupDir(const std::string &bundleName, int32_t use
         }
         dataGroupInfoMap = bundleInfoItem->second.GetDataGroupInfos();
         needCreateEl5Dir = bundleInfoItem->second.NeedCreateEl5Dir();
+        hasInputMethodExtension = bundleInfoItem->second.HasInputMethodExtension();
     }
-    return CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir);
+    return CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, DataDirEl::NONE, hasInputMethodExtension);
 }
 
-ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId,
-    bool needCreateEl5Dir, DataDirEl dirEl)
+ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos,
+    int32_t userId,
+    bool needCreateEl5Dir, DataDirEl dirEl, bool hasInputMethodExtension)
 {
     if (dataGroupInfos.empty()) {
         return ERR_OK;
@@ -9000,6 +9008,7 @@ ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGro
         param.uid = dataGroupInfo.uid;
         param.gid = dataGroupInfo.gid;
         param.userId = dataGroupInfo.userId;
+        param.hasInputMethodExtension = hasInputMethodExtension;
         params.emplace_back(param);
     }
     ErrCode res = ERR_OK;
@@ -9011,7 +9020,7 @@ ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGro
     if (!needCreateEl5Dir || (dirEl != DataDirEl::EL5 && dirEl != DataDirEl::NONE)) {
         return res;
     }
-    auto el5Res = CreateEl5GroupDirs(dataGroupInfos, userId);
+    auto el5Res = CreateEl5GroupDirs(dataGroupInfos, userId, hasInputMethodExtension);
     if (el5Res != ERR_OK) {
         APP_LOGE("el5Res %{public}d", el5Res);
         res = el5Res;
@@ -9019,29 +9028,33 @@ ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGro
     return res;
 }
 
-ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId)
+ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos,
+    int32_t userId, bool hasInputMethodExtension)
 {
     if (dataGroupInfos.empty()) {
         return ERR_OK;
     }
-    std::string parentDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(userId);
-    if (!BundleUtil::IsExistDir(parentDir)) {
-        APP_LOGE("parent dir(%{public}s) missing: el5", parentDir.c_str());
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    std::vector<CreateDirParam> createDirParams;
+    for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
+        CreateDirParam param;
+        param.uuid = dataGroupInfo.uuid;
+        param.userId = userId;
+        param.uid = dataGroupInfo.uid;
+        param.gid = dataGroupInfo.gid;
+        param.dataDirEl = OHOS::AppExecFwk::DataDirEl::EL5;
+        // Set inputmethod extension flag
+        param.hasInputMethodExtension = hasInputMethodExtension;
+        createDirParams.emplace_back(param);
     }
+    // Use CreateDataGroupDirs to create group directories under el5
+    auto result = InstalldClient::GetInstance()->CreateDataGroupDirs(createDirParams);
+    if (result != ERR_OK) {
+        APP_LOGE("CreateDataGroupDirs failed for el5 group dirs");
+        return result;
+    }
+    // Set encryption policy for el5 group directories
     ErrCode res = ERR_OK;
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
-        // create el5 group dirs
-        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-        auto result = InstalldClient::GetInstance()->Mkdir(dir,
-            ServiceConstants::DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
-        if (result != ERR_OK) {
-            APP_LOGW("id %{public}s group dir %{private}s userId %{public}d failed",
-                dataGroupInfo.dataGroupId.c_str(), dataGroupInfo.uuid.c_str(), userId);
-            res = result;
-        }
-        // set el5 group dirs encryption policy
         EncryptionParam encryptionParam("", dataGroupInfo.uuid, dataGroupInfo.uid, userId, EncryptionDirType::GROUP);
         std::string keyId = "";
         auto setPolicyRes = InstalldClient::GetInstance()->SetEncryptionPolicy(encryptionParam, keyId);

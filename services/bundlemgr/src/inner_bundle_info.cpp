@@ -6040,5 +6040,15 @@ bool InnerBundleInfo::HasKeepTokenIdMetadata() const
     }
     return false;
 }
+
+bool InnerBundleInfo::HasInputMethodExtension() const
+{
+    for (const auto& [key, extensionInfo] : baseExtensionInfos_) {
+        if (extensionInfo.type == ExtensionAbilityType::INPUTMETHOD) {
+            return true;
+        }
+    }
+    return false;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
