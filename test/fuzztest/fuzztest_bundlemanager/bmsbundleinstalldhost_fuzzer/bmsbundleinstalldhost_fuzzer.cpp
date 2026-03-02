@@ -14,7 +14,7 @@
  */
 
 #define private public
-#include "bundleinstalldhost_fuzzer.h"
+#include "bmsbundleinstalldhost_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -22,14 +22,14 @@
 #include "bundle_mgr_service.h"
 #include "message_parcel.h"
 #include "securec.h"
+#include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-constexpr size_t U32_AT_SIZE = 4;
-constexpr uint32_t CODE_MAX = 75;
+constexpr uint32_t CODE_MAX = 128;
 static InstalldHost installdHost;
 
-bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
+bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     for (uint32_t code = 0; code <= CODE_MAX; code++) {
         MessageParcel datas;
@@ -49,29 +49,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
-
-    if (size < OHOS::U32_AT_SIZE) {
-        return 0;
-    }
-
-    char* ch = static_cast<char*>(malloc(size + 1));
-    if (ch == nullptr) {
-        return 0;
-    }
-
-    (void)memset_s(ch, size + 1, 0x00, size + 1);
-    if (memcpy_s(ch, size, data, size) != EOK) {
-        free(ch);
-        ch = nullptr;
-        return 0;
-    }
-
-    OHOS::DoSomethingInterestingWithMyAPI(ch, size);
-    free(ch);
-    ch = nullptr;
+    OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }

@@ -20,7 +20,7 @@ import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 module_output_path = fuzz_test_path
 
 ##############################fuzztest##########################################
-ohos_fuzztest("BundleInstalldHostFuzzTest") {
+ohos_fuzztest("BMSBundleInstalldHostFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
       "../../../fuzztest/fuzztest_bundlemanager/bmsbundleinstalldhost_fuzzer"
@@ -107,6 +107,7 @@ ohos_fuzztest("BundleInstalldHostFuzzTest") {
 
   defines = []
   include_dirs = [ "${test_path}/fuzztest" ]
+
   if (device_usage_statistics_enabled) {
     external_deps += [ "device_usage_statistics:usagestatsinner" ]
     defines += [ "DEVICE_USAGE_STATISTICS_ENABLED" ]
