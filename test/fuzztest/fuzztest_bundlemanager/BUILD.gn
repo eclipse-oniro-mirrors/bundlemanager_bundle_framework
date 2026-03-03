@@ -51,6 +51,7 @@ group("bundlemanagerfuzztest") {
     "bmsapplicationinfofromjson_fuzzer:BMSApplicationInfoFromJsonFuzzTest",
     "bmsbundlefileutil_fuzzer:BMSBundleFileUtilFuzzTest",
     "bmsbundleinfo_fuzzer:BMSBundleInfoFuzzTest",
+    "bmsbundleinstalldhost_fuzzer:BMSBundleInstalldHostFuzzTest",
     "bmsbundleinstallerhost_fuzzer:BMSBundleInstallerHostFuzzTest",
     "bmsbundleinstallerproxy_fuzzer:BMSBundleInstallerProxyFuzzTest",
     "bmsbundlemanagercallback_fuzzer:BMSBundleManagerCallbackFuzzTest",
