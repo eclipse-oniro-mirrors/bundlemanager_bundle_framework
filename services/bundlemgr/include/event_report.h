@@ -235,6 +235,7 @@ struct EventInfo {
     std::string want;
     std::string utd;
     bool isIntercepted = false;
+    std::string odid;
     std::vector<uint64_t> fileSize;
     std::vector<uint64_t> partitionSize;
 
@@ -304,6 +305,7 @@ struct EventInfo {
         shortcutOperationType.clear();
         shortcutIds.clear();
         isAbcCompressed = false;
+        odid.clear();
     }
 };
 

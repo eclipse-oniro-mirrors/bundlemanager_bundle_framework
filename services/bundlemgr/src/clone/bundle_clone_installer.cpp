@@ -619,6 +619,9 @@ void BundleCloneInstaller::SendBundleSystemEvent(const std::string &bundleName, 
     sysEventInfo.startTime = startTime_;
     sysEventInfo.endTime = BundleUtil::GetCurrentTimeMs();
     GetCallingEventInfo(sysEventInfo);
+    if (dataMgr_ != nullptr) {
+        dataMgr_->GetOdidByBundleName(bundleName, sysEventInfo.odid);
+    }
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
 }
 

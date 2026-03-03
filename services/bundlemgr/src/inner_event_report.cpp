@@ -104,6 +104,7 @@ const char* REMAIN_PARTITION_SIZE_KEY = "REMAIN_PARTITION_SIZE";
 const char* USER_DATA_SIZE = "USER_DATA_SIZE";
 const char* EVENT_PARAM_IS_KEEPDATA = "IS_KEEPDATA";
 const char* EVENT_PARAM_DISABLE_FORBIDDEN = "DISABLE_FORBIDDEN";
+const char* EVENT_PARAM_ODID = "ODID";
 
 // API and SDK version
 const char* EVENT_PARAM_MIN_API_VERSION = "MIN_API_VERSION";
@@ -387,7 +388,8 @@ void InnerEventReport::InnerSendBundleInstallExceptionEvent(const EventInfo& eve
         EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
-        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted);
+        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted,
+        EVENT_PARAM_ODID, eventInfo.odid);
 }
 
 void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& eventInfo)
@@ -411,7 +413,8 @@ void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& e
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
         EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted,
-        EVENT_PARAM_IS_KEEPDATA, eventInfo.isKeepData);
+        EVENT_PARAM_IS_KEEPDATA, eventInfo.isKeepData,
+        EVENT_PARAM_ODID, eventInfo.odid);
 }
 
 void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& eventInfo)
@@ -429,7 +432,8 @@ void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& even
         EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
-        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted);
+        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted,
+        EVENT_PARAM_ODID, eventInfo.odid);
 }
 
 void InnerEventReport::InnerSendPreBundleRecoverExceptionEvent(const EventInfo& eventInfo)
@@ -529,7 +533,8 @@ void InnerEventReport::InnerSendBundleInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_TARGET_API_VERSION, eventInfo.targetAPIVersion,
         EVENT_PARAM_COMPILE_SDK_VERSION, eventInfo.compileSdkVersion,
         EVENT_PARAM_UID, eventInfo.uid,
-        EVENT_PARAM_IS_ABC_COMPRESSED, eventInfo.isAbcCompressed);
+        EVENT_PARAM_IS_ABC_COMPRESSED, eventInfo.isAbcCompressed,
+        EVENT_PARAM_ODID, eventInfo.odid);
 }
 
 void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
@@ -549,7 +554,8 @@ void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
         EVENT_PARAM_IS_KEEPDATA, eventInfo.isKeepData,
         EVENT_PARAM_START_TIME, eventInfo.startTime,
-        EVENT_PARAM_END_TIME, eventInfo.endTime);
+        EVENT_PARAM_END_TIME, eventInfo.endTime,
+        EVENT_PARAM_ODID, eventInfo.odid);
 }
 
 void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
@@ -579,7 +585,8 @@ void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
         EVENT_PARAM_TARGET_API_VERSION, eventInfo.targetAPIVersion,
         EVENT_PARAM_COMPILE_SDK_VERSION, eventInfo.compileSdkVersion,
         EVENT_PARAM_UID, eventInfo.uid,
-        EVENT_PARAM_IS_ABC_COMPRESSED, eventInfo.isAbcCompressed);
+        EVENT_PARAM_IS_ABC_COMPRESSED, eventInfo.isAbcCompressed,
+        EVENT_PARAM_ODID, eventInfo.odid);
 }
 
 void InnerEventReport::InnerSendPreBundleRecoverEvent(const EventInfo& eventInfo)

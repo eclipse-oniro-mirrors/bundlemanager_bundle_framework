@@ -6145,6 +6145,9 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
     sysEventInfo_.isKeepData = installParam.isKeepData;
     sysEventInfo_.endTime = BundleUtil::GetCurrentTimeMs();
     GetCallingEventInfo(sysEventInfo_);
+    if (InitDataMgr()) {
+        dataMgr_->GetOdidByBundleName(bundleName, sysEventInfo_.odid);
+    }
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo_);
 }
 

@@ -314,6 +314,10 @@ void InnerSharedBundleInstaller::SendBundleSystemEvent(const EventInfo &eventTem
     eventInfo.versionCode = newBundleInfo_.GetBaseBundleInfo().versionCode;
     eventInfo.callingUid = IPCSkeleton::GetCallingUid();
     GetInstallEventInfo(eventInfo);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr != nullptr) {
+        dataMgr->GetOdidByBundleName(bundleName_, eventInfo.odid);
+    }
 
     BundleEventType eventType = isBundleExist_ ? BundleEventType::UPDATE : BundleEventType::INSTALL;
     EventReport::SendBundleSystemEvent(eventType, eventInfo);

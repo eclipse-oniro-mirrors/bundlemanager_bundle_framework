@@ -1006,6 +1006,9 @@ void AppServiceFwkInstaller::SendBundleSystemEvent(
     sysEventInfo.callingUid = IPCSkeleton::GetCallingUid();
     sysEventInfo.startTime = startTime_;
     sysEventInfo.endTime = BundleUtil::GetCurrentTimeMs();
+    if (dataMgr_ != nullptr) {
+        dataMgr_->GetOdidByBundleName(bundleName_, sysEventInfo.odid);
+    }
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
 }
 
