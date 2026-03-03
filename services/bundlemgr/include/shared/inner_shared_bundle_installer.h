@@ -126,6 +126,7 @@ private:
         bool isEnterpriseBundle, bool isCompileSdkOpenHarmony, const std::string &bundleName) const;
     void UpdateInnerModuleInfo(const std::string packageName, const InnerModuleInfo &innerModuleInfo);
     ErrCode MarkInstallFinish();
+    void UpdateRouterInfoForSharedBundle(const InnerBundleInfo &newBundleInfo);
 
     bool isBundleExist_ = false;
     bool isEnterpriseBundle_ = false;

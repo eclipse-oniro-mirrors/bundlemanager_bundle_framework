@@ -4081,4 +4081,161 @@ HWTEST_F(BmsBundleDataMgrTest3, LauncherService_0100, Function | MediumTest | Le
 
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
+
+/**
+ * @tc.number: GetRouterInfoForSharedBundle_0200
+ * @tc.name: test GetRouterInfoForSharedBundle
+ * @tc.desc: 1.system run normally
+ *           2.check GetRouterInfoForSharedBundle with bundle not exist
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetRouterInfoForSharedBundle_0200, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::string bundleName = "com.test.notexist";
+    std::vector<RouterItem> routerInfos;
+    bundleDataMgr->GetRouterInfoForSharedBundle(bundleName, routerInfos);
+    EXPECT_EQ(routerInfos.size(), 0);
+}
+
+/**
+ * @tc.number: GetRouterInfoForSharedBundle_0300
+ * @tc.name: test GetRouterInfoForSharedBundle
+ * @tc.desc: 1.system run normally
+ *           2.check GetRouterInfoForSharedBundle with bundle exist but no dependencies
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetRouterInfoForSharedBundle_0300, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_TEST1;
+    bundleDataMgr->bundleInfos_.emplace(BUNDLE_TEST1, info);
+
+    std::string bundleName = BUNDLE_TEST1;
+    std::vector<RouterItem> routerInfos;
+    bundleDataMgr->GetRouterInfoForSharedBundle(bundleName, routerInfos);
+    EXPECT_EQ(routerInfos.size(), 0);
+
+    bundleDataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: MergeRouterItems_0100
+ * @tc.name: test MergeRouterItems
+ * @tc.desc: 1.system run normally
+ *           2.check MergeRouterItems with empty vectors
+ */
+HWTEST_F(BmsBundleDataMgrTest3, MergeRouterItems_0100, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::vector<RouterItem> sharedBundleRouterInfos;
+    std::vector<RouterItem> pluginRouterInfos;
+    bundleDataMgr->MergeRouterItems(sharedBundleRouterInfos, pluginRouterInfos);
+    EXPECT_EQ(pluginRouterInfos.size(), 0);
+}
+
+/**
+ * @tc.number: MergeRouterItems_0200
+ * @tc.name: test MergeRouterItems
+ * @tc.desc: 1.system run normally
+ *           2.check MergeRouterItems with duplicate names, sharedBundle should override plugin
+ */
+HWTEST_F(BmsBundleDataMgrTest3, MergeRouterItems_0200, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::vector<RouterItem> sharedBundleRouterInfos;
+    RouterItem sharedItem;
+    sharedItem.name = "router1";
+    sharedItem.bundleName = "com.test.shared";
+    sharedItem.moduleName = "module1";
+    sharedItem.pageSourceFile = "shared_page";
+    sharedBundleRouterInfos.push_back(sharedItem);
+
+    std::vector<RouterItem> pluginRouterInfos;
+    RouterItem pluginItem;
+    pluginItem.name = "router1";
+    pluginItem.bundleName = "com.test.plugin";
+    pluginItem.moduleName = "module2";
+    pluginItem.pageSourceFile = "plugin_page";
+    pluginRouterInfos.push_back(pluginItem);
+
+    bundleDataMgr->MergeRouterItems(sharedBundleRouterInfos, pluginRouterInfos);
+    EXPECT_EQ(pluginRouterInfos.size(), 1);
+    EXPECT_EQ(pluginRouterInfos[0].bundleName, "com.test.shared");
+    EXPECT_EQ(pluginRouterInfos[0].pageSourceFile, "shared_page");
+}
+
+/**
+ * @tc.number: MergeRouterItems_0300
+ * @tc.name: test MergeRouterItems
+ * @tc.desc: 1.system run normally
+ *           2.check MergeRouterItems with different names
+ */
+HWTEST_F(BmsBundleDataMgrTest3, MergeRouterItems_0300, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::vector<RouterItem> sharedBundleRouterInfos;
+    RouterItem sharedItem;
+    sharedItem.name = "router1";
+    sharedItem.bundleName = "com.test.shared";
+    sharedBundleRouterInfos.push_back(sharedItem);
+
+    std::vector<RouterItem> pluginRouterInfos;
+    RouterItem pluginItem;
+    pluginItem.name = "router2";
+    pluginItem.bundleName = "com.test.plugin";
+    pluginRouterInfos.push_back(pluginItem);
+
+    bundleDataMgr->MergeRouterItems(sharedBundleRouterInfos, pluginRouterInfos);
+    EXPECT_EQ(pluginRouterInfos.size(), 2);
+}
+
+/**
+ * @tc.number: DeleteRouterInfoForSharedBundle_0100
+ * @tc.name: test DeleteRouterInfoForSharedBundle
+ * @tc.desc: 1.system run normally
+ *           2.check DeleteRouterInfoForSharedBundle with empty InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DeleteRouterInfoForSharedBundle_0100, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    InnerBundleInfo info;
+    int32_t versionCode = 1;
+    bool ret = bundleDataMgr->DeleteRouterInfoForSharedBundle(info, versionCode);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: DeleteRouterInfoForSharedBundle_0200
+ * @tc.name: test DeleteRouterInfoForSharedBundle
+ * @tc.desc: 1.system run normally
+ *           2.check DeleteRouterInfoForSharedBundle with valid InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DeleteRouterInfoForSharedBundle_0200, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "com.test.shared";
+    
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = "com.test.shared.module1";
+    info.InsertInnerModuleInfo(moduleInfo.modulePackage, moduleInfo);
+    
+    int32_t versionCode = 1;
+    bool ret = bundleDataMgr->DeleteRouterInfoForSharedBundle(info, versionCode);
+    EXPECT_EQ(ret, true);
+}
 } // OHOS
