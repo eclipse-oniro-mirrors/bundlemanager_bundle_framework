@@ -1188,7 +1188,7 @@ ErrCode InstalldHostImpl::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
 
-    inodeCount = InstalldOperator::GetBundleInodeCount(uid);
+    inodeCount = static_cast<uint64_t>(InstalldOperator::GetBundleInodeCount(uid));
     return ERR_OK;
 }
 

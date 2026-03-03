@@ -2026,7 +2026,7 @@ void BundleInstallChecker::ProcessCodeSignatureParam(
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "process CodeSignatureParam memcpy_s failed");
             return;
         }
-        codeSignatureParam.profileBlockLength = provisionInfo.profileBlockLength;
+        codeSignatureParam.profileBlockLength = static_cast<uint32_t>(provisionInfo.profileBlockLength);
         codeSignatureParam.profileBlock = std::move(tempProfilePtr);
     }
 }
