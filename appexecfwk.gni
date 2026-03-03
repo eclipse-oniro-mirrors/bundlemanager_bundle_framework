@@ -39,6 +39,7 @@ declare_args() {
   bundle_framework_bundle_resource = true
   bundle_framework_form_dimension_2_3 = false
   bundle_framework_form_dimension_3_3 = false
+  bundle_framework_bss_enable = false
 
   ability_runtime_enable = true
   account_enable = true
@@ -62,7 +63,6 @@ declare_args() {
   dfx_sigdump_handler_enabled = true
   webview_enable = true
   user_auth_framework_impl_enabled = true
-  security_privacy_server_enable = true
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.resourceschedule_device_usage_statistics)) {
@@ -189,11 +189,6 @@ declare_args() {
       !defined(global_parts_info.useriam_user_auth_framework)) {
     user_auth_framework_impl_enabled = false
   }
-
-  if (defined(global_parts_info) &&
-      !defined(global_parts_info.appsecurityprivacy_security_privacy_server)) {
-    security_privacy_server_enable = false
-  }
 }
 
 print("bundle_framework_power_mgr_enable = " +
@@ -221,4 +216,4 @@ print("verify_abc_enabled = " + "$verify_abc_enabled")
 print(
     "user_auth_framework_impl_enabled = " + "$user_auth_framework_impl_enabled")
 print(
-    "security_privacy_server_enable = " + "$security_privacy_server_enable")
+    "bundle_framework_bss_enable = " + "$bundle_framework_bss_enable")
