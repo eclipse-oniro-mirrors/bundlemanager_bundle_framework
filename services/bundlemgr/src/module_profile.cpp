@@ -275,6 +275,7 @@ struct App {
     bool ubsanEnabled = false;
     bool cloudFileSyncEnabled = false;
     bool cloudStructuredDataSyncEnabled = false;
+    bool profileable = false;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
@@ -1454,6 +1455,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.buildVersion,
         false,
         g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        APP_PROFILEABLE,
+        app.profileable,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -2311,6 +2318,7 @@ bool ToApplicationInfo(
     applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
     applicationInfo.vendor = app.vendor;
     applicationInfo.asanEnabled = app.asanEnabled;
+    applicationInfo.profileable = app.profileable;
     if (app.bundleType == Profile::BUNDLE_TYPE_ATOMIC_SERVICE) {
         applicationInfo.bundleType = BundleType::ATOMIC_SERVICE;
     }
