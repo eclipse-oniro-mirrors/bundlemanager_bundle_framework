@@ -2498,12 +2498,12 @@ HWTEST_F(BmsDataMgrTest, ResetAOTCompileStatus_0100, Function | SmallTest | Leve
     int32_t triggerMode = 0;
     ErrCode ret = dataMgr->ResetAOTCompileStatus(bundleName, moduleName, triggerMode);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    dataMgr->ResetAOTFlagsCommand(bundleName);
+    dataMgr->ResetAOTFlags(bundleName);
     std::map<std::string, InnerBundleInfo> infos;
     InnerBundleInfo innerBundleInfo;
     infos.emplace(BUNDLE_NAME, innerBundleInfo);
     dataMgr->bundleInfos_.swap(infos);
-    dataMgr->ResetAOTFlagsCommand(BUNDLE_NAME);
+    dataMgr->ResetAOTFlags(BUNDLE_NAME);
     ret = dataMgr->ResetAOTCompileStatus(BUNDLE_NAME, moduleName, triggerMode);
     EXPECT_NE(ret, ERR_OK);
 }

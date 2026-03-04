@@ -81,7 +81,6 @@ const char* PROXY_DATA_REQUIRED_WRITE_PERMISSION = "requiredWritePermission";
 const char* PROXY_DATA_METADATA = "metadata";
 const char* HAP_MODULE_INFO_BUILD_HASH = "buildHash";
 const char* HAP_MODULE_INFO_ISOLATION_MODE = "isolationMode";
-const char* HAP_MODULE_INFO_AOT_COMPILE_STATUS = "aotCompileStatus";
 const char* HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const char* HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const char* HAP_MODULE_INFO_FILE_CONTEXT_MENU = "fileContextMenu";
@@ -967,7 +966,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_PROXY_DATAS, hapModuleInfo.proxyDatas},
         {HAP_MODULE_INFO_BUILD_HASH, hapModuleInfo.buildHash},
         {HAP_MODULE_INFO_ISOLATION_MODE, hapModuleInfo.isolationMode},
-        {HAP_MODULE_INFO_AOT_COMPILE_STATUS, hapModuleInfo.aotCompileStatus},
+        {Constants::AOT_COMPILE_STATUS, hapModuleInfo.aotCompileStatus},
         {HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS, hapModuleInfo.compressNativeLibs},
         {HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, hapModuleInfo.nativeLibraryFileNames},
         {HAP_MODULE_INFO_FILE_CONTEXT_MENU, hapModuleInfo.fileContextMenu},
@@ -1354,7 +1353,7 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<AOTCompileStatus>(jsonObject,
         jsonObjectEnd,
-        HAP_MODULE_INFO_AOT_COMPILE_STATUS,
+        Constants::AOT_COMPILE_STATUS,
         hapModuleInfo.aotCompileStatus,
         JsonType::NUMBER,
         false,

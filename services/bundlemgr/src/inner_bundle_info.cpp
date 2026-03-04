@@ -129,7 +129,6 @@ constexpr const char* MODULE_BUILD_HASH = "buildHash";
 constexpr const char* MODULE_ISOLATION_MODE = "isolationMode";
 constexpr const char* MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 constexpr const char* MODULE_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
-constexpr const char* MODULE_AOT_COMPILE_STATUS = "aotCompileStatus";
 constexpr const char* DATA_GROUP_INFOS = "dataGroupInfos";
 constexpr const char* MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
 constexpr const char* MODULE_EASY_GO = "easyGo";
@@ -286,6 +285,16 @@ AOTCompileStatus InnerBundleInfo::GetAOTCompileStatus(const std::string &moduleN
         return AOTCompileStatus::NOT_COMPILED;
     }
     return item->second.aotCompileStatus;
+}
+
+AOTCompileStatus InnerBundleInfo::GetAOTCompileStatusWithVersion(
+    const std::string &moduleName, uint32_t versionCode) const
+{
+    auto item = innerModuleInfos_.find(moduleName);
+    if (item != innerModuleInfos_.end() && item->second.versionCode == versionCode) {
+        return item->second.aotCompileStatus;
+    }
+    return AOTCompileStatus::NOT_COMPILED;
 }
 
 bool InnerBundleInfo::IsAOTFlagsInitial() const
@@ -518,7 +527,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_ISOLATION_MODE, info.isolationMode},
         {MODULE_COMPRESS_NATIVE_LIBS, info.compressNativeLibs},
         {MODULE_NATIVE_LIBRARY_FILE_NAMES, info.nativeLibraryFileNames},
-        {MODULE_AOT_COMPILE_STATUS, info.aotCompileStatus},
+        {Constants::AOT_COMPILE_STATUS, info.aotCompileStatus},
         {MODULE_FILE_CONTEXT_MENU, info.fileContextMenu},
         {MODULE_EASY_GO, info.easyGo},
         {MODULE_SHARE_FILES, info.shareFiles},
@@ -1052,7 +1061,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         ArrayType::STRING);
     GetValueIfFindKey<AOTCompileStatus>(jsonObject,
         jsonObjectEnd,
-        MODULE_AOT_COMPILE_STATUS,
+        Constants::AOT_COMPILE_STATUS,
         info.aotCompileStatus,
         JsonType::NUMBER,
         false,
@@ -2193,6 +2202,9 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
             continue;
         }
         for (auto &innerModuleInfo : innerModuleInfoVector) {
+            if (innerModuleInfo.versionCode != item->second.versionCode) {
+                continue;
+            }
             innerModuleInfo.requiredDeviceFeatures = item->second.requiredDeviceFeatures;
             innerModuleInfo.systemTheme = item->second.systemTheme;
             innerModuleInfo.crossAppSharedConfig = item->second.crossAppSharedConfig;
@@ -2443,6 +2455,8 @@ bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleNam
     baseSharedBundleInfo.moduleArkTSMode = innerModuleInfo.moduleArkTSMode;
     baseSharedBundleInfo.compressNativeLibs = innerModuleInfo.compressNativeLibs;
     baseSharedBundleInfo.nativeLibraryFileNames = innerModuleInfo.nativeLibraryFileNames;
+    baseSharedBundleInfo.aotCompileStatus =
+        GetAOTCompileStatusWithVersion(moduleName, innerModuleInfo.versionCode);
     return true;
 }
 
@@ -2473,6 +2487,8 @@ bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uin
             baseSharedBundleInfo.moduleArkTSMode = item.moduleArkTSMode;
             baseSharedBundleInfo.compressNativeLibs = item.compressNativeLibs;
             baseSharedBundleInfo.nativeLibraryFileNames = item.nativeLibraryFileNames;
+            baseSharedBundleInfo.aotCompileStatus =
+                GetAOTCompileStatusWithVersion(moduleName, versionCode);
             return true;
         }
     }
@@ -2552,6 +2568,8 @@ bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) co
             sharedModuleInfo.nativeLibraryPath = info.nativeLibraryPath;
             sharedModuleInfo.moduleArkTSMode = info.moduleArkTSMode;
             sharedModuleInfo.nativeLibraryFileNames = info.nativeLibraryFileNames;
+            sharedModuleInfo.aotCompileStatus =
+                GetAOTCompileStatusWithVersion(infoVector.first, info.versionCode);
             sharedModuleInfos.emplace_back(sharedModuleInfo);
         }
     }

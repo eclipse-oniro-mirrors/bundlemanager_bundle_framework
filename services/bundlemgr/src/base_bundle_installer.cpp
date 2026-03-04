@@ -591,6 +591,7 @@ ErrCode BaseBundleInstaller::UninstallHspBundle(std::string &uninstallDir, const
         LOG_E(BMS_TAG_INSTALLER, "update uninstall success failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
+    (void)InstalldClient::GetInstance()->RemoveDir(AOTHandler::BuildSharedArkCachePath(bundleName));
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed", bundleName.c_str());
     }
@@ -617,6 +618,14 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
         LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", uninstallDir.c_str());
         return errCode;
     }
+    if (versionCode == info.GetVersionCode()) {
+        info.ResetAOTFlags();
+        (void)InstalldClient::GetInstance()->RemoveDir(AOTHandler::BuildSharedArkCachePath(info.GetBundleName()));
+    } else {
+        std::string versionAnDir = AOTHandler::BuildSharedArkCachePath(
+            info.GetBundleName(), static_cast<uint32_t>(versionCode));
+        (void)InstalldClient::GetInstance()->RemoveDir(versionAnDir);
+    }
     if (!dataMgr_->RemoveHspModuleByVersionCode(versionCode, info)) {
         LOG_E(BMS_TAG_INSTALLER, "remove hsp module by versionCode failed");
         return ERR_APPEXECFWK_RMV_HSP_BY_VERSION_ERROR;
@@ -625,7 +634,7 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
         LOG_E(BMS_TAG_INSTALLER, "update install success failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
-    
+
     userId_ = Constants::ALL_USERID;
     PerfProfile::GetInstance().SetBundleUninstallEndTime(GetTickCount());
     return ERR_OK;
@@ -1013,7 +1022,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     GetExtensionDirsChange(newInfos, oldInfo);
 
     if (isAppExist_) {
-        (void)InstalldClient::GetInstance()->RemoveDir(ServiceConstants::ARK_CACHE_PATH + oldInfo.GetBundleName());
+        (void)InstalldClient::GetInstance()->RemoveDir(ServiceConstants::HAP_ARK_CACHE_PATH + oldInfo.GetBundleName());
         SetAtomicServiceModuleUpgrade(oldInfo);
         if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
             LOG_E(BMS_TAG_INSTALLER, "old bundle info is shared package");
@@ -1829,6 +1838,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     CheckAddResultMsg(cacheInfo, isContainEntry_);
     PrintDataStat();
+    ProcessAOT(installParam);
     return result;
 }
 
@@ -2512,6 +2522,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return result;
     }
 
+    oldInfo.ResetAOTFlags();
+    (void)DeleteOldArkNativeFile(oldInfo);
     oldInfo.SetInstallMark(bundleName, modulePackage, InstallExceptionStatus::INSTALL_FINISH);
     LOG_D(BMS_TAG_INSTALLER, "remove module %{public}s in %{public}s ", modulePackage.c_str(), bundleName.c_str());
     if (!dataMgr_->RemoveModuleInfo(bundleName, modulePackage, oldInfo)) {
@@ -4288,7 +4300,7 @@ ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const s
     std::string arkNativeFilePath;
     arkNativeFilePath.append(ServiceConstants::ABI_MAP.at(cpuAbi)).append(ServiceConstants::PATH_SEPARATOR);
     std::string targetPath;
-    targetPath.append(ServiceConstants::ARK_CACHE_PATH).append(info.GetBundleName())
+    targetPath.append(ServiceConstants::HAP_ARK_CACHE_PATH).append(info.GetBundleName())
         .append(ServiceConstants::PATH_SEPARATOR).append(arkNativeFilePath);
     LOG_D(BMS_TAG_INSTALLER, "Begin extract an modulePath: %{public}s targetPath: %{public}s cpuAbi: %{public}s",
         modulePath.c_str(), targetPath.c_str(), cpuAbi.c_str());
@@ -4403,7 +4415,7 @@ ErrCode BaseBundleInstaller::ExtractArkProfileFile(
 ErrCode BaseBundleInstaller::DeleteOldArkNativeFile(const InnerBundleInfo &oldInfo)
 {
     std::string targetPath;
-    targetPath.append(ServiceConstants::ARK_CACHE_PATH).append(oldInfo.GetBundleName());
+    targetPath.append(ServiceConstants::HAP_ARK_CACHE_PATH).append(oldInfo.GetBundleName());
     auto result = InstalldClient::GetInstance()->RemoveDir(targetPath);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove arkNativeFilePath %{public}s, error is %{public}d",
@@ -6564,13 +6576,21 @@ void BaseBundleInstaller::ProcessOldNativeLibraryPath(const std::unordered_map<s
     }
 }
 
-void BaseBundleInstaller::ProcessAOT(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &infos) const
+void BaseBundleInstaller::ProcessAOT(const InstallParam &installParam) const
 {
-    if (isOTA) {
+    if (installParam.isFirstBootInstall) {
+        LOG_D(BMS_TAG_INSTALLER, "is first boot install, no need to AOT");
+        return;
+    }
+    if (installParam.isOTA || otaInstall_) {
         LOG_D(BMS_TAG_INSTALLER, "is OTA, no need to AOT");
         return;
     }
-    AOTHandler::GetInstance().HandleInstall(infos);
+    if (installParam.isCreateUser) {
+        LOG_D(BMS_TAG_INSTALLER, "is create user, no need to AOT");
+        return;
+    }
+    AOTHandler::GetInstance().HandleInstallAOTAsync(bundleName_);
 }
 
 void BaseBundleInstaller::RemoveOldHapIfOTA(const InstallParam &installParam,
@@ -7833,6 +7853,7 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
         LOG_W(BMS_TAG_INSTALLER, "mark finish failed");
         return ERR_APPEXECFWK_GET_INSTALL_TEMP_BUNDLE_ERROR;
     }
+    info.ResetAOTFlags();
     (void)bundleInstallChecker_->DetermineCloneApp(info);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);

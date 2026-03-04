@@ -18,6 +18,8 @@
 #include <thread>
 #include <chrono>
 
+#include "aot/aot_handler.h"
+#include "application_info.h"
 #include "installd_client.h"
 
 namespace OHOS {
@@ -57,18 +59,19 @@ void AOTSignDataCacheMgr::AddSignDataForSysComp(const std::string &anFileName, c
     sysCompSignDataMap_[anFileName] = signData;
 }
 
-void AOTSignDataCacheMgr::AddSignDataForHap(const AOTArgs &aotArgs, const uint32_t versionCode,
+void AOTSignDataCacheMgr::AddSignDataForModule(const AOTArgs &aotArgs, const uint32_t versionCode,
     const std::vector<uint8_t> &signData, const ErrCode ret)
 {
     if (aotArgs.bundleName.empty() || aotArgs.moduleName.empty() || signData.empty()) {
-        APP_LOGE_NOFUNC("empty bundleName or moduleName or signData");
+        APP_LOGD("empty bundleName or moduleName or signData");
         return;
     }
     if (!isLocked_ || ret != ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
         return;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    hapSignDataVector_.emplace_back(HapSignData{versionCode, aotArgs.bundleName, aotArgs.moduleName, signData});
+    moduleSignDataVector_.emplace_back(ModuleSignData{aotArgs.bundleType, aotArgs.triggerType, versionCode,
+        aotArgs.bundleName, aotArgs.moduleName, signData});
 }
 
 void AOTSignDataCacheMgr::UnregisterScreenUnlockEvent()
@@ -110,13 +113,13 @@ void AOTSignDataCacheMgr::HandleUnlockEvent()
     }
     std::lock_guard<std::mutex> lock(mutex_);
     std::unordered_map<std::string, std::vector<uint8_t>>().swap(sysCompSignDataMap_);
-    hapSignDataVector_.clear();
+    moduleSignDataVector_.clear();
     APP_LOGE_NOFUNC("sign data failed");
 }
 
 bool AOTSignDataCacheMgr::EnforceCodeSign()
 {
-    return EnforceCodeSignForSysComp() && EnforceCodeSignForHap();
+    return EnforceCodeSignForSysComp() && EnforceCodeSignForModule();
 }
 
 bool AOTSignDataCacheMgr::EnforceCodeSignForSysComp()
@@ -133,28 +136,36 @@ bool AOTSignDataCacheMgr::EnforceCodeSignForSysComp()
     return true;
 }
 
-bool AOTSignDataCacheMgr::EnforceCodeSignForHap()
+bool AOTSignDataCacheMgr::EnforceCodeSignForModule()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    for (const HapSignData &hapSignData : hapSignDataVector_) {
-        std::filesystem::path anFileName(ServiceConstants::ARK_CACHE_PATH);
-        anFileName /= hapSignData.bundleName;
-        anFileName /= ServiceConstants::ARM64;
-        anFileName /= hapSignData.moduleName + ServiceConstants::AN_SUFFIX;
-        ErrCode signRet = InstalldClient::GetInstance()->PendSignAOT(anFileName.string(), hapSignData.signData);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("dataMgr is null");
+        return false;
+    }
+    for (const ModuleSignData &signData : moduleSignDataVector_) {
+        std::filesystem::path anFileName;
+        if (signData.bundleType == static_cast<uint8_t>(BundleType::SHARED)) {
+            anFileName = AOTHandler::BuildSharedArkCachePath(signData.bundleName, signData.versionCode);
+            anFileName /= signData.moduleName + ServiceConstants::AN_SUFFIX;
+        } else {
+            anFileName = ServiceConstants::HAP_ARK_CACHE_PATH;
+            anFileName /= signData.bundleName;
+            anFileName /= ServiceConstants::ARM64;
+            anFileName /= signData.moduleName + ServiceConstants::AN_SUFFIX;
+        }
+        ErrCode signRet = InstalldClient::GetInstance()->PendSignAOT(anFileName.string(), signData.signData);
         if (signRet == ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
             APP_LOGE_NOFUNC("sign service disabled");
             return false;
         }
         if (signRet == ERR_OK) {
-            auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-            if (dataMgr != nullptr) {
-                dataMgr->SetAOTCompileStatus(hapSignData.bundleName, hapSignData.moduleName,
-                    AOTCompileStatus::COMPILE_SUCCESS, hapSignData.versionCode);
-            }
+            AOTCompileStatus status = AOTHandler::ConvertToAOTCompileStatus(signRet, signData.triggerType);
+            dataMgr->SetAOTCompileStatus(signData.bundleName, signData.moduleName, status, signData.versionCode);
         }
     }
-    hapSignDataVector_.clear();
+    moduleSignDataVector_.clear();
     return true;
 }
 }  // namespace AppExecFwk

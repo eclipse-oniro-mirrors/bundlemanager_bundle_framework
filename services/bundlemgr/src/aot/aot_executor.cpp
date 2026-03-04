@@ -24,8 +24,6 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -64,6 +62,8 @@ constexpr const char* PGO_DIR = "pgoDir";
 constexpr const char* IS_SYS_COMP = "isSysComp";
 constexpr const char* IS_SYS_COMP_FALSE = "0";
 constexpr const char* IS_SYS_COMP_TRUE = "1";
+constexpr uint8_t SHARED_BUNDLE_TYPE = 2; // Keep aligned with BundleType::SHARED.
+
 #if defined(CODE_SIGNATURE_ENABLE)
 constexpr int16_t ERR_AOT_COMPILER_SIGN_FAILED = 10004;
 constexpr int16_t ERR_AOT_COMPILER_CALL_CRASH = 10008;
@@ -89,12 +89,8 @@ std::string AOTExecutor::DecToHex(uint32_t decimal) const
 
 bool AOTExecutor::CheckArgs(const AOTArgs &aotArgs) const
 {
-    if (aotArgs.compileMode.empty() || aotArgs.hapPath.empty() || aotArgs.outputPath.empty()) {
+    if (aotArgs.hapPath.empty() || aotArgs.outputPath.empty()) {
         APP_LOGE("aotArgs check failed");
-        return false;
-    }
-    if (aotArgs.compileMode == ServiceConstants::COMPILE_PARTIAL && aotArgs.arkProfilePath.empty()) {
-        APP_LOGE("partial mode, arkProfilePath can't be empty");
         return false;
     }
     return true;
@@ -195,9 +191,9 @@ void AOTExecutor::MapSysCompArgs(const AOTArgs &aotArgs, std::unordered_map<std:
     argsMap.emplace(PROCESS_UID, DecToHex(uid));
 }
 
-void AOTExecutor::MapHapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap)
+void AOTExecutor::MapBundleArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap)
 {
-    APP_LOGD("MapHapArgs : %{public}s", aotArgs.ToString().c_str());
+    APP_LOGD("MapBundleArgs : %{public}s", aotArgs.ToString().c_str());
     nlohmann::json subject = GetSubjectInfo(aotArgs);
 
     nlohmann::json objectArray = nlohmann::json::array();
@@ -212,6 +208,9 @@ void AOTExecutor::MapHapArgs(const AOTArgs &aotArgs, std::unordered_map<std::str
         object[ABC_SIZE] = DecToHex(hspInfo.length);
         objectArray.push_back(object);
     }
+    argsMap.emplace("bundleType", std::to_string(aotArgs.bundleType));
+    argsMap.emplace("triggerType", std::to_string(aotArgs.triggerType));
+    argsMap.emplace("staticAndHybridModuleCnt", std::to_string(aotArgs.staticAndHybridModuleCnt));
     argsMap.emplace("target-compiler-mode", aotArgs.compileMode);
     argsMap.emplace("aot-file", aotArgs.outputPath + ServiceConstants::PATH_SEPARATOR + aotArgs.moduleName);
     argsMap.emplace("compiler-pkg-info", subject.dump());
@@ -261,6 +260,70 @@ ErrCode AOTExecutor::EnforceCodeSign(const std::string &anFileName, const std::v
 #endif
 }
 
+bool AOTExecutor::MkdirWithAuth(const std::filesystem::path &basePath, const std::filesystem::path &targetPath,
+    uid_t uid, gid_t gid, mode_t mode) const
+{
+    std::error_code ec;
+    if (!std::filesystem::is_directory(basePath, ec)) {
+        APP_LOGE_NOFUNC("invalid path:%{public}s,err:%{public}s", basePath.string().c_str(), ec.message().c_str());
+        return false;
+    }
+    std::filesystem::path normalBase = basePath.lexically_normal();
+    std::filesystem::path normalTarget = targetPath.lexically_normal();
+    if (normalTarget == normalBase) {
+        return true;
+    }
+    std::filesystem::path relativePath = normalTarget.lexically_relative(normalBase);
+    if (relativePath.empty()) {
+        APP_LOGE_NOFUNC("target not under base");
+        return false;
+    }
+    std::filesystem::path currentPath(normalBase);
+    for (const auto &part : relativePath) {
+        if (part == ".") {
+            continue;
+        }
+        if (part == "..") {
+            APP_LOGE_NOFUNC("target out of base");
+            return false;
+        }
+        currentPath /= part;
+        const std::string dirStr = currentPath.string();
+        std::error_code dirEc;
+        if (std::filesystem::is_directory(currentPath, dirEc)) {
+            continue;
+        }
+        if (!std::filesystem::create_directory(currentPath, dirEc)) {
+            APP_LOGE_NOFUNC("create dir failed:%{public}s,err:%{public}s", dirStr.c_str(), dirEc.message().c_str());
+            return false;
+        }
+        if (chown(dirStr.c_str(), uid, gid) != 0) {
+            APP_LOGE_NOFUNC("chown failed:%{public}s, errno:%{public}d", dirStr.c_str(), errno);
+            return false;
+        }
+        if (chmod(dirStr.c_str(), mode) != 0) {
+            APP_LOGE_NOFUNC("chmod failed:%{public}s, errno:%{public}d", dirStr.c_str(), errno);
+            return false;
+        }
+    }
+    return true;
+}
+
+bool AOTExecutor::MkAOTOutputDir(const AOTArgs &aotArgs) const
+{
+    std::filesystem::path basePath;
+    std::filesystem::path targetPath;
+    mode_t dirMode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    if (aotArgs.bundleType == SHARED_BUNDLE_TYPE) {
+        basePath = ServiceConstants::SHARED_HSP_ARK_CACHE_PATH;
+        targetPath = aotArgs.outputPath;
+    } else {
+        basePath = ServiceConstants::HAP_ARK_CACHE_PATH;
+        targetPath = basePath / aotArgs.bundleName;
+    }
+    return MkdirWithAuth(basePath, targetPath, aotArgs.bundleUid, aotArgs.bundleGid, dirMode);
+}
+
 ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<uint8_t> &signData)
 {
 #if defined(CODE_SIGNATURE_ENABLE)
@@ -268,15 +331,8 @@ ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<uint8_
     if (aotArgs.isSysComp) {
         MapSysCompArgs(aotArgs, argsMap);
     } else {
-        MapHapArgs(aotArgs, argsMap);
-        std::string aotFilePath = ServiceConstants::ARK_CACHE_PATH + aotArgs.bundleName;
-        if (!InstalldOperator::IsExistDir(ServiceConstants::ARK_CACHE_PATH)) {
-            APP_LOGE("ark cache dir not exist");
-            return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
-        }
-        if (!InstalldOperator::MkOwnerDir(aotFilePath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH,
-            aotArgs.bundleUid, aotArgs.bundleGid)) {
-            APP_LOGE("mk bundle ark cache dir failed");
+        MapBundleArgs(aotArgs, argsMap);
+        if (!MkAOTOutputDir(aotArgs)) {
             return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
         }
     }

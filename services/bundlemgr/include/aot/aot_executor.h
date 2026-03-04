@@ -16,8 +16,11 @@
 #ifndef FOUNDATION_BUNDLE_FRAMEWORK_AOT_AOT_EXECUTOR
 #define FOUNDATION_BUNDLE_FRAMEWORK_AOT_AOT_EXECUTOR
 
+#include <filesystem>
 #include <mutex>
 #include <nlohmann/json.hpp>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unordered_map>
 
 #include "aot/aot_args.h"
@@ -50,8 +53,11 @@ private:
     ErrCode PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) const;
     nlohmann::json GetSubjectInfo(const AOTArgs &aotArgs) const;
     void MapSysCompArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap);
-    void MapHapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap);
+    void MapBundleArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap);
+    bool MkdirWithAuth(const std::filesystem::path &basePath, const std::filesystem::path &targetPath,
+        uid_t uid, gid_t gid, mode_t mode) const;
     ErrCode EnforceCodeSign(const std::string &anFileName, const std::vector<uint8_t> &signData) const;
+    bool MkAOTOutputDir(const AOTArgs &aotArgs) const;
     ErrCode StartAOTCompiler(const AOTArgs &aotArgs, std::vector<uint8_t> &signData);
     void InitState(const AOTArgs &aotArgs);
     void ResetState();

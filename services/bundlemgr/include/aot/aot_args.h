@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_BUNDLE_FRAMEWORK_AOT_AOT_ARGS
 #define FOUNDATION_BUNDLE_FRAMEWORK_AOT_AOT_ARGS
 
+#include "bundle_service_constants.h"
 #include "message_parcel.h"
 
 namespace OHOS {
@@ -36,6 +37,9 @@ struct HspInfo : public Parcelable {
 };
 
 struct AOTArgs : public Parcelable {
+    uint8_t bundleType = 0;
+    uint8_t triggerType = ServiceConstants::AOT_TRIGGER_IDLE;
+    uint32_t staticAndHybridModuleCnt = 0;
     uint32_t offset = 0;
     uint32_t length = 0;
     uint32_t isEncryptedBundle = 0;

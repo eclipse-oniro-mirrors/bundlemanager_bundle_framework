@@ -17,6 +17,7 @@
 
 #include <fcntl.h>
 
+#include "aot/aot_handler.h"
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
 #include "installd_client.h"
@@ -229,6 +230,9 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
     }
 
     MergeBundleInfos();
+
+    newBundleInfo_.ResetAOTFlags();
+    (void)InstalldClient::GetInstance()->RemoveDir(AOTHandler::BuildSharedArkCachePath(bundleName_));
 
     result = SavePreInstallInfo(installParam);
     CHECK_RESULT(result, "save pre install info failed %{public}d");

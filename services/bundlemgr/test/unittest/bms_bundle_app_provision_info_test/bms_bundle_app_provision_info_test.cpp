@@ -1521,6 +1521,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, Install_0001, Function | SmallTest | Lev
     ASSERT_TRUE(reseult);
     EXPECT_EQ(ret, ERR_OK);
 }
+
 /**
  * @tc.number: DeliveryProfileToCodeSign_0001
  * @tc.name: test the start function of DeliveryProfileToCodeSign

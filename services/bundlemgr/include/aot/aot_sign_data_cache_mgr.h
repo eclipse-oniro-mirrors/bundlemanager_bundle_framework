@@ -37,7 +37,7 @@ public:
     void RegisterScreenUnlockListener();
     void AddSignDataForSysComp(const std::string &anFileName, const std::vector<uint8_t> &signData,
         const ErrCode ret);
-    void AddSignDataForHap(const AOTArgs &aotArgs, const uint32_t versionCode,
+    void AddSignDataForModule(const AOTArgs &aotArgs, const uint32_t versionCode,
         const std::vector<uint8_t> &signData, const ErrCode ret);
 private:
     AOTSignDataCacheMgr() = default;
@@ -49,7 +49,7 @@ private:
     void HandleUnlockEvent();
     bool EnforceCodeSign();
     bool EnforceCodeSignForSysComp();
-    bool EnforceCodeSignForHap();
+    bool EnforceCodeSignForModule();
     class UnlockEventSubscriber : public OHOS::EventFwk::CommonEventSubscriber {
     public:
         UnlockEventSubscriber(const OHOS::EventFwk::CommonEventSubscribeInfo &info) : CommonEventSubscriber(info) {}
@@ -57,7 +57,9 @@ private:
         void OnReceiveEvent(const OHOS::EventFwk::CommonEventData &event) override;
     };
 private:
-    struct HapSignData {
+    struct ModuleSignData {
+        uint8_t bundleType = 0;
+        uint8_t triggerType = ServiceConstants::AOT_TRIGGER_IDLE;
         uint32_t versionCode = 0;
         std::string bundleName;
         std::string moduleName;
@@ -66,7 +68,7 @@ private:
     std::atomic<bool> isLocked_ { true };
     mutable std::mutex mutex_;
     std::shared_ptr<UnlockEventSubscriber> unlockEventSubscriber_;
-    std::vector<HapSignData> hapSignDataVector_;
+    std::vector<ModuleSignData> moduleSignDataVector_;
     // key: anFileName, value: signData
     std::unordered_map<std::string, std::vector<uint8_t>> sysCompSignDataMap_;
 };

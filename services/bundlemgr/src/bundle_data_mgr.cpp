@@ -8705,7 +8705,8 @@ void BundleDataMgr::SetAOTCompileStatus(const std::string &bundleName, const std
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGW("bundleName %{public}s not exist", bundleName.c_str());
-        (void)InstalldClient::GetInstance()->RemoveDir(ServiceConstants::ARK_CACHE_PATH + bundleName);
+        (void)InstalldClient::GetInstance()->RemoveDir(ServiceConstants::HAP_ARK_CACHE_PATH + bundleName);
+        (void)InstalldClient::GetInstance()->RemoveDir(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH + bundleName);
         return;
     }
     if (item->second.GetVersionCode() != versionCode) {
@@ -8716,7 +8717,8 @@ void BundleDataMgr::SetAOTCompileStatus(const std::string &bundleName, const std
     item->second.SetAOTCompileStatus(moduleName, aotCompileStatus);
     std::string abi;
     std::string path;
-    if (aotCompileStatus == AOTCompileStatus::COMPILE_SUCCESS) {
+    if (aotCompileStatus == AOTCompileStatus::IDLE_COMPILE_SUCCESS ||
+        aotCompileStatus == AOTCompileStatus::INSTALL_COMPILE_SUCCESS) {
         abi = ServiceConstants::ARM64_V8A;
         path = std::string(ServiceConstants::ARM64) + ServiceConstants::PATH_SEPARATOR;
     }
@@ -8727,9 +8729,9 @@ void BundleDataMgr::SetAOTCompileStatus(const std::string &bundleName, const std
     }
 }
 
-void BundleDataMgr::ResetAOTFlags()
+void BundleDataMgr::ResetAllBundleAOTFlags()
 {
-    APP_LOGI("ResetAOTFlags begin");
+    APP_LOGI_NOFUNC("ResetAllBundleAOTFlags begin");
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     std::for_each(bundleInfos_.begin(), bundleInfos_.end(), [this](auto &item) {
         if (item.second.IsAOTFlagsInitial()) {
@@ -8740,12 +8742,12 @@ void BundleDataMgr::ResetAOTFlags()
             APP_LOGW("SaveStorageBundleInfo failed, bundleName : %{public}s", item.second.GetBundleName().c_str());
         }
     });
-    APP_LOGI("ResetAOTFlags end");
+    APP_LOGI_NOFUNC("ResetAllBundleAOTFlags end");
 }
 
-void BundleDataMgr::ResetAOTFlagsCommand(const std::string &bundleName)
+void BundleDataMgr::ResetAOTFlags(const std::string &bundleName)
 {
-    APP_LOGD("ResetAOTFlagsCommand begin");
+    APP_LOGD("ResetAOTFlags begin, bundleName : %{public}s", bundleName.c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
@@ -8760,7 +8762,7 @@ void BundleDataMgr::ResetAOTFlagsCommand(const std::string &bundleName)
         APP_LOGW("SaveStorageBundleInfo failed, bundleName : %{public}s", item->second.GetBundleName().c_str());
         return;
     }
-    APP_LOGD("ResetAOTFlagsCommand end");
+    APP_LOGD("ResetAOTFlags end");
 }
 
 ErrCode BundleDataMgr::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,

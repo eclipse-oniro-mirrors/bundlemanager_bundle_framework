@@ -229,6 +229,7 @@ ErrCode BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPr
         InstallParam installParam;
         installParam.userId = userId;
         installParam.isPreInstallApp = !info.GetIsAdditionalApp();
+        installParam.isCreateUser = true;
         installParam.installFlag = InstallFlag::NORMAL;
         installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
         sptr<UserReceiverImpl> userReceiverImpl(

@@ -15,6 +15,7 @@
 
 #include "aot/aot_handler.h"
 
+#include <algorithm>
 #include <dlfcn.h>
 #include <filesystem>
 #include <fstream>
@@ -23,6 +24,7 @@
 #include <tuple>
 
 #include "account_helper.h"
+#include "ffrt.h"
 #ifdef CODE_SIGNATURE_ENABLE
 #include "aot/aot_sign_data_cache_mgr.h"
 #endif
@@ -89,8 +91,9 @@ constexpr const char* USER_STATUS_SO_NAME = "libuser_status_client.z.so";
 constexpr const char* USER_STATUS_FUNC_NAME = "GetUserPreferenceApp";
 constexpr const char* BM_AOT_TEST = "bm.aot.test";
 
-constexpr const char* SYS_COMP_AN_DIR = "/data/service/el1/public/for-all-app/framework_ark_cache/";
+constexpr const char* SYS_COMP_ARK_CACHE_PATH = "/data/service/el1/public/for-all-app/framework_ark_cache/";
 constexpr const char* SYS_COMP_CONFIG_PATH = "/system/etc/ark/system_framework_aot_enable_list.conf";
+constexpr const char* BUNDLE_INSTALL_AOT_CONFIG_PATH = "/system/etc/ark/static_app_install_aot_enable_list.conf";
 
 constexpr const char* DEPRECATED_ARK_CACHE_PATH = "/data/local/ark-cache";
 constexpr const char* DEPRECATED_ARK_PROFILE_PATH = "/data/local/ark-profile";
@@ -122,6 +125,23 @@ std::string AOTHandler::BuildArkProfilePath(
         return path.string();
     }
     path /= moduleName;
+    return path.string();
+}
+
+std::string AOTHandler::BuildSharedArkCachePath(
+    const std::string &bundleName, std::optional<uint32_t> versionCode)
+{
+    if (bundleName.empty()) {
+        APP_LOGW_NOFUNC("bundleName is empty");
+        return Constants::EMPTY_STRING;
+    }
+    std::filesystem::path path(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH);
+    path /= bundleName;
+    if (!versionCode.has_value()) {
+        return path.string();
+    }
+    path /= std::to_string(versionCode.value());
+    path /= ServiceConstants::ARM64;
     return path.string();
 }
 
@@ -161,66 +181,81 @@ std::string AOTHandler::FindArkProfilePath(const std::string &bundleName, const 
     return Constants::EMPTY_STRING;
 }
 
+void AOTHandler::BuildSharedArgs(uint32_t versionCode, AOTArgs &aotArgs) const
+{
+    aotArgs.bundleUid = ServiceConstants::SYSTEM_UID;
+    aotArgs.bundleGid = ServiceConstants::SYSTEM_UID;
+    aotArgs.bundleType = static_cast<uint8_t>(BundleType::SHARED);
+    aotArgs.compileMode = ServiceConstants::COMPILE_FULL;
+    aotArgs.outputPath = BuildSharedArkCachePath(aotArgs.bundleName, versionCode);
+}
+
+bool AOTHandler::BuildAppArgs(const InnerBundleInfo &info, const std::string &compileMode, AOTArgs &aotArgs) const
+{
+    if (aotArgs.triggerType == ServiceConstants::AOT_TRIGGER_IDLE) {
+        if (compileMode == ServiceConstants::COMPILE_PARTIAL) {
+            aotArgs.arkProfilePath = FindArkProfilePath(aotArgs.bundleName, aotArgs.moduleName);
+            if (aotArgs.arkProfilePath.empty()) {
+                APP_LOGD("compile mode is partial, but ap not exist, no need to AOT");
+                return false;
+            }
+        }
+    }
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    int32_t activeUserId = AccountHelper::GetUserIdByCallerType();
+    if (activeUserId < Constants::START_USERID) {
+        activeUserId = Constants::START_USERID;
+    }
+    if (!info.GetInnerBundleUserInfo(activeUserId, innerBundleUserInfo)) {
+        APP_LOGE_NOFUNC("bundle(%{public}s) get user(%{public}d) failed",
+            aotArgs.bundleName.c_str(), activeUserId);
+        return false;
+    }
+    aotArgs.bundleUid = innerBundleUserInfo.uid;
+    aotArgs.bundleGid = info.GetGid(activeUserId);
+
+    info.GetInternalDependentHspInfo(aotArgs.moduleName, aotArgs.hspVector);
+    aotArgs.compileMode = compileMode;
+    aotArgs.bundleType = static_cast<uint8_t>(BundleType::APP);
+    aotArgs.outputPath = ServiceConstants::HAP_ARK_CACHE_PATH + aotArgs.bundleName +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::ARM64;
+    return true;
+}
+
 std::optional<AOTArgs> AOTHandler::BuildAOTArgs(const InnerBundleInfo &info, const std::string &moduleName,
-    const std::string &compileMode, bool isEnableBaselinePgo) const
+    const std::string &compileMode, bool isEnableBaselinePgo, const uint8_t triggerType) const
 {
     AOTArgs aotArgs;
     aotArgs.bundleName = info.GetBundleName();
     aotArgs.moduleName = moduleName;
-    if (compileMode == ServiceConstants::COMPILE_PARTIAL) {
-        aotArgs.arkProfilePath = FindArkProfilePath(aotArgs.bundleName, aotArgs.moduleName);
-        if (aotArgs.arkProfilePath.empty()) {
-            APP_LOGD("compile mode is partial, but ap not exist, no need to AOT");
-            return std::nullopt;
-        }
-    }
-    aotArgs.compileMode = compileMode;
-    aotArgs.hapPath = info.GetModuleHapPath(aotArgs.moduleName);
-    aotArgs.coreLibPath = Constants::EMPTY_STRING;
-    aotArgs.outputPath = ServiceConstants::ARK_CACHE_PATH + aotArgs.bundleName + ServiceConstants::PATH_SEPARATOR
-        + ServiceConstants::ARM64;
-    // handle internal hsp
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (!dataMgr) {
-        APP_LOGE("dataMgr is null");
-        return std::nullopt;
-    }
-    InnerBundleInfo installedInfo;
-    if (!dataMgr->QueryInnerBundleInfo(info.GetBundleName(), installedInfo)) {
-        APP_LOGE("QueryInnerBundleInfo failed");
-        return std::nullopt;
-    }
-    installedInfo.GetInternalDependentHspInfo(moduleName, aotArgs.hspVector);
+    aotArgs.triggerType = triggerType;
 
-    InnerBundleUserInfo newInnerBundleUserInfo;
-    int32_t curActiveUserId = AccountHelper::GetUserIdByCallerType();
-    int32_t activeUserId = curActiveUserId <= 0 ? Constants::START_USERID : curActiveUserId;
-    if (!installedInfo.GetInnerBundleUserInfo(activeUserId, newInnerBundleUserInfo)) {
-        APP_LOGE("bundle(%{public}s) get user (%{public}d) failed",
-            installedInfo.GetBundleName().c_str(), activeUserId);
+    if (info.GetApplicationBundleType() == BundleType::SHARED) {
+        BuildSharedArgs(info.GetVersionCode(), aotArgs);
+    } else if (!BuildAppArgs(info, compileMode, aotArgs)) {
         return std::nullopt;
     }
-    aotArgs.bundleUid = newInnerBundleUserInfo.uid;
-    aotArgs.bundleGid = installedInfo.GetGid(activeUserId);
-    aotArgs.isEncryptedBundle = installedInfo.IsEncryptedMoudle(moduleName) ? 1 : 0;
+
+    aotArgs.moduleArkTSMode = info.GetModuleArkTSMode(moduleName);
+    if (aotArgs.moduleArkTSMode.empty()) {
+        APP_LOGE_NOFUNC("moduleArkTSMode empty");
+        return std::nullopt;
+    }
+
+    aotArgs.hapPath = info.GetModuleHapPath(moduleName);
+    aotArgs.isEncryptedBundle = info.IsEncryptedMoudle(moduleName) ? 1 : 0;
     aotArgs.appIdentifier = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
         DEBUG_APP_IDENTIFIER : info.GetAppIdentifier();
-    aotArgs.anFileName = aotArgs.outputPath + ServiceConstants::PATH_SEPARATOR + aotArgs.moduleName
+    aotArgs.anFileName = aotArgs.outputPath + ServiceConstants::PATH_SEPARATOR + moduleName
         + ServiceConstants::AN_SUFFIX;
-
-    std::string optBCRange = system::GetParameter(COMPILE_OPTCODE_RANGE_KEY, "");
-    aotArgs.optBCRangeList = optBCRange;
-
-    bool deviceIsScreenOff = CheckDeviceState();
-    aotArgs.isScreenOff = static_cast<uint32_t>(deviceIsScreenOff);
-
+    aotArgs.optBCRangeList = system::GetParameter(COMPILE_OPTCODE_RANGE_KEY, "");
+    aotArgs.isScreenOff = static_cast<uint32_t>(CheckDeviceState());
     aotArgs.isEnableBaselinePgo = static_cast<uint32_t>(isEnableBaselinePgo);
-    aotArgs.moduleArkTSMode = installedInfo.GetModuleArkTSMode(moduleName);
-    if (aotArgs.moduleArkTSMode.empty()) {
-        APP_LOGE("moduleArkTSMode empty");
-        return std::nullopt;
-    }
-    APP_LOGD("args : %{public}s", aotArgs.ToString().c_str());
+    aotArgs.staticAndHybridModuleCnt = static_cast<uint32_t>(std::count_if(
+        info.GetInnerModuleInfos().begin(), info.GetInnerModuleInfos().end(),
+        [](const auto &item) { return item.second.moduleArkTSMode != Constants::ARKTS_MODE_DYNAMIC; }));
+    APP_LOGD("args: %{public}s", aotArgs.ToString().c_str());
     return aotArgs;
 }
 
@@ -238,23 +273,27 @@ ErrCode AOTHandler::AOTInternal(const std::optional<AOTArgs> &aotArgs, uint32_t 
     }
     LOG_I(BMS_TAG_AOT, "ExecuteAOT ret : %{public}d", ret);
 #ifdef CODE_SIGNATURE_ENABLE
-    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(*aotArgs, versionCode, pendSignData, ret);
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForModule(*aotArgs, versionCode, pendSignData, ret);
 #endif
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr) {
         APP_LOGE("dataMgr is null");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    AOTCompileStatus status = ConvertToAOTCompileStatus(ret);
+    AOTCompileStatus status = ConvertToAOTCompileStatus(ret, aotArgs->triggerType);
     dataMgr->SetAOTCompileStatus(aotArgs->bundleName, aotArgs->moduleName, status, versionCode);
     return ret;
 }
 
-AOTCompileStatus AOTHandler::ConvertToAOTCompileStatus(const ErrCode ret) const
+AOTCompileStatus AOTHandler::ConvertToAOTCompileStatus(const ErrCode ret, const uint8_t triggerType)
 {
     switch (ret) {
-        case ERR_OK:
-            return AOTCompileStatus::COMPILE_SUCCESS;
+        case ERR_OK: {
+            if (triggerType == ServiceConstants::AOT_TRIGGER_INSTALL) {
+                return AOTCompileStatus::INSTALL_COMPILE_SUCCESS;
+            }
+            return AOTCompileStatus::IDLE_COMPILE_SUCCESS;
+        }
         case ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CRASH:
             return AOTCompileStatus::COMPILE_CRASH;
         case ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CANCELLED:
@@ -264,54 +303,55 @@ AOTCompileStatus AOTHandler::ConvertToAOTCompileStatus(const ErrCode ret) const
     }
 }
 
-void AOTHandler::HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode) const
+void AOTHandler::HandleInstallAOTAsync(const std::string &bundleName) const
 {
-    std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, info.GetCurrentModulePackage(), compileMode, true);
-    (void)AOTInternal(aotArgs, info.GetVersionCode());
-}
-
-void AOTHandler::HandleInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos) const
-{
-    auto task = [this, infos]() {
-        APP_LOGD("HandleInstall begin");
-        if (infos.empty() || !(infos.cbegin()->second.GetIsNewVersion())) {
-            APP_LOGD("not stage model, no need to AOT");
-            return;
-        }
-        if (!IsSupportARM64()) {
-            APP_LOGD("current device doesn't support arm64, no need to AOT");
-            return;
-        }
-        std::string compileMode = system::GetParameter(INSTALL_COMPILE_MODE, COMPILE_NONE);
-        APP_LOGD("%{public}s = %{public}s", INSTALL_COMPILE_MODE, compileMode.c_str());
-        if (compileMode == COMPILE_NONE) {
-            APP_LOGD("%{public}s = none, no need to AOT", INSTALL_COMPILE_MODE);
-            return;
-        }
-        std::for_each(infos.cbegin(), infos.cend(), [this, compileMode](const auto &item) {
-            HandleInstallWithSingleHap(item.second, compileMode);
-        });
-        APP_LOGD("HandleInstall end");
+    APP_LOGI_NOFUNC("HandleInstallAOTAsync begin, bundleName: %{public}s", bundleName.c_str());
+    auto task = [bundleName]() {
+        AOTHandler::GetInstance().HandleInstallAOT(bundleName);
     };
-    std::thread t(task);
-    t.detach();
+    ffrt::submit(task, {}, {}, ffrt::task_attr().name("InstallAOTTask"));
 }
 
-void AOTHandler::ClearArkCacheDir() const
+void AOTHandler::HandleInstallAOT(const std::string &bundleName) const
 {
-    (void)InstalldClient::GetInstance()->ClearDir(SYS_COMP_AN_DIR);
-
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (!dataMgr) {
-        APP_LOGE("dataMgr is null");
+    APP_LOGI_NOFUNC("HandleInstallAOT begin, bundleName: %{public}s", bundleName.c_str());
+    if (!IsSupportARM64()) {
+        APP_LOGD("current device doesn't support arm64, no need to AOT");
         return;
     }
-    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
-    std::for_each(bundleNames.cbegin(), bundleNames.cend(), [dataMgr](const auto &bundleName) {
-        std::string removeDir = ServiceConstants::ARK_CACHE_PATH + bundleName;
-        ErrCode ret = InstalldClient::GetInstance()->RemoveDir(removeDir);
-        APP_LOGD("removeDir %{public}s, ret : %{public}d", removeDir.c_str(), ret);
-    });
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE_NOFUNC("dataMgr is null");
+        return;
+    }
+    InnerBundleInfo info;
+    if (!dataMgr->QueryInnerBundleInfo(bundleName, info)) {
+        APP_LOGE_NOFUNC("QueryInnerBundleInfo failed");
+        return;
+    }
+    if (!info.GetIsNewVersion()) {
+        APP_LOGD("not stage model, no need to AOT");
+        return;
+    }
+    if (info.GetApplicationArkTSMode() == Constants::ARKTS_MODE_DYNAMIC) {
+        APP_LOGD("arkTSMode is dynamic, no need to AOT");
+        return;
+    }
+    std::vector<std::string> enableList = GetAOTEnableList(BUNDLE_INSTALL_AOT_CONFIG_PATH);
+    if (std::find(enableList.begin(), enableList.end(), bundleName) == enableList.end()) {
+        APP_LOGD("bundle %{public}s not in AOT enable list", bundleName.c_str());
+        return;
+    }
+    for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
+        if (moduleInfo.moduleArkTSMode == Constants::ARKTS_MODE_DYNAMIC) {
+            continue;
+        }
+        APP_LOGI_NOFUNC("AOT compile for %{public}s/%{public}s", bundleName.c_str(), moduleName.c_str());
+        std::optional<AOTArgs> aotArgs = BuildAOTArgs(
+            info, moduleName, "", false, ServiceConstants::AOT_TRIGGER_INSTALL);
+        (void)AOTInternal(aotArgs, info.GetVersionCode());
+    }
+    APP_LOGI_NOFUNC("HandleInstallAOT end");
 }
 
 void AOTHandler::ClearArkAp() const
@@ -353,45 +393,59 @@ void AOTHandler::DeleteArkAp(const BundleInfo &bundleInfo, const int32_t userId)
     }
 }
 
-void AOTHandler::HandleResetAOT(const std::string &bundleName, bool isAllBundle) const
+void AOTHandler::HandleResetBundleAOT(const std::string &bundleName, bool isAllBundle) const
 {
     if (isAllBundle && system::GetParameter(BM_AOT_TEST, "").empty()) {
         APP_LOGD("isAllBundle true, param bm.aot.test empty, so ignore");
         return;
     }
+    if (isAllBundle) {
+        ResetAllBundleAOT();
+        return;
+    }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr) {
         APP_LOGE("dataMgr is null");
         return;
     }
-    std::vector<std::string> bundleNames;
-    if (isAllBundle) {
-        bundleNames = dataMgr->GetAllBundleName();
-    } else {
-        bundleNames = {bundleName};
+    BundleType bundleType = BundleType::APP;
+    if (!dataMgr->GetBundleType(bundleName, bundleType)) {
+        APP_LOGE_NOFUNC("bundleName %{public}s not exist", bundleName.c_str());
+        return;
     }
-    std::for_each(bundleNames.cbegin(), bundleNames.cend(), [dataMgr](const auto &bundleToReset) {
-        std::string removeDir = ServiceConstants::ARK_CACHE_PATH + bundleToReset;
-        ErrCode ret = InstalldClient::GetInstance()->RemoveDir(removeDir);
-        APP_LOGD("removeDir %{public}s, ret : %{public}d", removeDir.c_str(), ret);
-        dataMgr->ResetAOTFlagsCommand(bundleToReset);
-    });
+    dataMgr->ResetAOTFlags(bundleName);
+    if (bundleType == BundleType::SHARED) {
+        (void)InstalldClient::GetInstance()->RemoveDir(BuildSharedArkCachePath(bundleName));
+    } else {
+        (void)InstalldClient::GetInstance()->RemoveDir(ServiceConstants::HAP_ARK_CACHE_PATH + bundleName);
+    }
 }
 
 void AOTHandler::HandleResetAllAOT() const
 {
+    ResetAllSysCompAOT();
+    ResetAllBundleAOT();
+}
+
+void AOTHandler::ResetAllSysCompAOT() const
+{
+    APP_LOGI_NOFUNC("ResetAllSysCompAOT begin");
+    (void)InstalldClient::GetInstance()->ClearDir(SYS_COMP_ARK_CACHE_PATH);
+    APP_LOGI_NOFUNC("ResetAllSysCompAOT end");
+}
+
+void AOTHandler::ResetAllBundleAOT() const
+{
+    APP_LOGI_NOFUNC("ResetAllBundleAOT begin");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (!dataMgr) {
+    if (dataMgr == nullptr) {
         APP_LOGE("dataMgr is null");
         return;
     }
-    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
-    std::for_each(bundleNames.cbegin(), bundleNames.cend(), [dataMgr](const auto &bundleToReset) {
-        std::string removeDir = ServiceConstants::ARK_CACHE_PATH + bundleToReset;
-        ErrCode ret = InstalldClient::GetInstance()->RemoveDir(removeDir);
-        APP_LOGI("reset all aot removeDir %{public}s, ret : %{public}d", removeDir.c_str(), ret);
-        dataMgr->ResetAOTFlagsCommand(bundleToReset);
-    });
+    dataMgr->ResetAllBundleAOTFlags();
+    (void)InstalldClient::GetInstance()->ClearDir(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH);
+    (void)InstalldClient::GetInstance()->ClearDir(ServiceConstants::HAP_ARK_CACHE_PATH);
+    APP_LOGI_NOFUNC("ResetAllBundleAOT end");
 }
 
 ErrCode AOTHandler::MkApDestDirIfNotExist() const
@@ -510,22 +564,12 @@ void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInf
     }
 }
 
-void AOTHandler::ResetAOTFlags() const
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (!dataMgr) {
-        APP_LOGE("dataMgr is null");
-        return;
-    }
-    dataMgr->ResetAOTFlags();
-}
-
 void AOTHandler::HandleOTA()
 {
-    APP_LOGI("AOTHandler OTA begin");
-    ResetAOTFlags();
+    APP_LOGI_NOFUNC("AOTHandler OTA begin");
+    ResetAllSysCompAOT();
+    ResetAllBundleAOT();
     HandleArkPathsChange();
-    ClearArkCacheDir();
     ClearArkAp();
     HandleOTACompile();
 }
@@ -693,7 +737,7 @@ EventInfo AOTHandler::HandleCompileWithBundle(const std::string &bundleName, con
             eventInfo.costTimeSeconds = BundleUtil::GetCurrentTime() - beginTimeSeconds;
             return eventInfo;
         }
-        ErrCode ret = HandleCompileWithSingleHap(info, moduleName, compileMode, true);
+        ErrCode ret = HandleCompileWithSingleModule(info, moduleName, compileMode, true);
         APP_LOGI("moduleName : %{public}s, ret : %{public}d", moduleName.c_str(), ret);
         if (ret != ERR_OK) {
             compileRet = false;
@@ -738,7 +782,7 @@ void AOTHandler::HandleIdleWithSingleSysComp(const std::string &abcPath) const
     aotArgs.sysCompPath = abcPath;
     std::string abcNameNoSuffix = std::filesystem::path(abcPath).stem().string();
     std::filesystem::path tmpAnFileName =
-        std::filesystem::path(SYS_COMP_AN_DIR) / (abcNameNoSuffix + ServiceConstants::AN_SUFFIX);
+        std::filesystem::path(SYS_COMP_ARK_CACHE_PATH) / (abcNameNoSuffix + ServiceConstants::AN_SUFFIX);
     aotArgs.anFileName = tmpAnFileName.string();
     aotArgs.outputPath = aotArgs.anFileName;
 
@@ -754,32 +798,35 @@ void AOTHandler::HandleIdleWithSingleSysComp(const std::string &abcPath) const
 #endif
 }
 
-void AOTHandler::HandleIdleWithSingleHap(
+void AOTHandler::HandleIdleWithSingleModule(
     const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const
 {
-    APP_LOGD("HandleIdleWithSingleHap, moduleName : %{public}s", moduleName.c_str());
+    APP_LOGD("HandleIdleWithSingleModule, moduleName : %{public}s", moduleName.c_str());
     if (!NeedCompile(info, moduleName)) {
         return;
     }
-    std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode);
+    std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode, false,
+        ServiceConstants::AOT_TRIGGER_IDLE);
     (void)AOTInternal(aotArgs, info.GetVersionCode());
 }
 
 bool AOTHandler::NeedCompile(const InnerBundleInfo &info, const std::string &moduleName) const
 {
     AOTCompileStatus status = info.GetAOTCompileStatus(moduleName);
-    if (status == AOTCompileStatus::NOT_COMPILED || status == AOTCompileStatus::COMPILE_CANCELLED) {
+    if (status == AOTCompileStatus::NOT_COMPILED || status == AOTCompileStatus::COMPILE_CANCELLED
+        || status == AOTCompileStatus::INSTALL_COMPILE_SUCCESS) {
         return true;
     }
     APP_LOGI("%{public}s:%{public}d, skip compile", moduleName.c_str(), static_cast<int32_t>(status));
     return false;
 }
 
-ErrCode AOTHandler::HandleCompileWithSingleHap(const InnerBundleInfo &info, const std::string &moduleName,
+ErrCode AOTHandler::HandleCompileWithSingleModule(const InnerBundleInfo &info, const std::string &moduleName,
     const std::string &compileMode, bool isEnableBaselinePgo) const
 {
-    APP_LOGI("HandleCompileWithSingleHap, moduleName : %{public}s", moduleName.c_str());
-    std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode, isEnableBaselinePgo);
+    APP_LOGI("HandleCompileWithSingleModule, moduleName : %{public}s", moduleName.c_str());
+    std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode, isEnableBaselinePgo,
+        ServiceConstants::AOT_TRIGGER_IDLE);
     return AOTInternal(aotArgs, info.GetVersionCode());
 }
 
@@ -822,7 +869,7 @@ void AOTHandler::HandleIdle() const
         return;
     }
     IdleForSysComp();
-    IdleForHap(compileMode);
+    IdleForBundle(compileMode);
     APP_LOGI("HandleIdle end");
 }
 
@@ -916,7 +963,7 @@ ErrCode AOTHandler::HandleCompileModules(const std::vector<std::string> &moduleN
     ErrCode ret = ERR_OK;
     std::for_each(moduleNames.cbegin(), moduleNames.cend(),
         [this, &info, &compileMode, &ret, &compileResult](const auto &moduleName) {
-        ErrCode errCode = HandleCompileWithSingleHap(info, moduleName, compileMode);
+        ErrCode errCode = HandleCompileWithSingleModule(info, moduleName, compileMode);
         switch (errCode) {
             case ERR_OK:
                 break;
@@ -993,27 +1040,27 @@ void AOTHandler::CreateArkProfilePaths() const
     }
 }
 
-std::vector<std::string> AOTHandler::GetSysCompList() const
+std::vector<std::string> AOTHandler::GetAOTEnableList(const std::string &configPath) const
 {
-    std::ifstream configFile(SYS_COMP_CONFIG_PATH);
+    std::ifstream configFile(configPath);
     if (!configFile.is_open()) {
-        APP_LOGE_NOFUNC("open %{public}s failed", SYS_COMP_CONFIG_PATH);
+        APP_LOGE_NOFUNC("open %{public}s failed", configPath.c_str());
         return {};
     }
-    std::vector<std::string> sysCompList;
+    std::vector<std::string> enableList;
     std::string line;
     while (std::getline(configFile, line)) {
         if (!line.empty()) {
-            sysCompList.emplace_back(line);
+            enableList.emplace_back(line);
         }
     }
-    return sysCompList;
+    return enableList;
 }
 
 void AOTHandler::IdleForSysComp() const
 {
     APP_LOGI_NOFUNC("IdleForSysComp begin");
-    std::vector<std::string> sysCompList = GetSysCompList();
+    std::vector<std::string> sysCompList = GetAOTEnableList(SYS_COMP_CONFIG_PATH);
     if (sysCompList.empty()) {
         APP_LOGI_NOFUNC("sysCompList empty");
         return;
@@ -1025,9 +1072,9 @@ void AOTHandler::IdleForSysComp() const
     APP_LOGI_NOFUNC("IdleForSysComp end");
 }
 
-void AOTHandler::IdleForHap(const std::string &compileMode) const
+void AOTHandler::IdleForBundle(const std::string &compileMode) const
 {
-    APP_LOGI_NOFUNC("IdleForHap begin");
+    APP_LOGI_NOFUNC("IdleForBundle begin");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr) {
         APP_LOGE_NOFUNC("dataMgr is null");
@@ -1048,10 +1095,10 @@ void AOTHandler::IdleForHap(const std::string &compileMode) const
         std::vector<std::string> moduleNames;
         info.GetModuleNames(moduleNames);
         std::for_each(moduleNames.cbegin(), moduleNames.cend(), [this, &info, &compileMode](const auto &moduleName) {
-            HandleIdleWithSingleHap(info, moduleName, compileMode);
+            HandleIdleWithSingleModule(info, moduleName, compileMode);
         });
     });
-    APP_LOGI_NOFUNC("IdleForHap end");
+    APP_LOGI_NOFUNC("IdleForBundle end");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

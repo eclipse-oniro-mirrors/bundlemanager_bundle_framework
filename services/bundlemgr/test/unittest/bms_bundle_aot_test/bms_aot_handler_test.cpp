@@ -220,30 +220,33 @@ HWTEST_F(BmsAOTHandlerTest, IdleForSysComp_0100, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.number: IdleForHap_0100
- * @tc.name: test IdleForHap
- * @tc.desc: 1.call IdleForHap, expect sysCompSignDataMap_ size is 0
+ * @tc.number: IdleForBundle_0100
+ * @tc.name: test IdleForBundle
+ * @tc.desc: 1.call IdleForBundle, expect sysCompSignDataMap_ size is 0
  */
-HWTEST_F(BmsAOTHandlerTest, IdleForHap_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTHandlerTest, IdleForBundle_0100, Function | SmallTest | Level1)
 {
     AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.clear();
 
     std::string compilePartial = "partial";
-    AOTHandler::GetInstance().IdleForHap(compilePartial);
+    AOTHandler::GetInstance().IdleForBundle(compilePartial);
     size_t sysCompSignDataMapSize = AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.size();
     EXPECT_EQ(sysCompSignDataMapSize, 0);
 }
 
 /**
- * @tc.number: GetSysCompList_0100
- * @tc.name: test GetSysCompList
- * @tc.desc: 1.call GetSysCompList, if file exist and not empty, expect sysCompList not empty
- *           2.call GetSysCompList, if file not exist, expect sysCompList empty
+ * @tc.number: GetAOTEnableList_0100
+ * @tc.name: test GetAOTEnableList
+ * @tc.desc: 1.call GetAOTEnableList with sysComp config, if file exist and not empty, expect list not empty
+ *           2.call GetAOTEnableList with sysComp config, if file not exist, expect list empty
+ *           3.call GetAOTEnableList with bundle config, if file exist and not empty, expect list not empty
+ *           4.call GetAOTEnableList with bundle config, if file not exist, expect list empty
+ *           5.call GetAOTEnableList with non-existent path, expect list empty
  */
-HWTEST_F(BmsAOTHandlerTest, GetSysCompList_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTHandlerTest, GetAOTEnableList_0100, Function | SmallTest | Level1)
 {
     std::string sysCompConfigPath = "/system/etc/ark/system_framework_aot_enable_list.conf";
-    std::vector<std::string> sysCompList = AOTHandler::GetInstance().GetSysCompList();
+    std::vector<std::string> sysCompList = AOTHandler::GetInstance().GetAOTEnableList(sysCompConfigPath);
     struct stat st;
     int32_t ret = stat(sysCompConfigPath.c_str(), &st);
     if (ret == 0 && S_ISREG(st.st_mode) && st.st_size > 0) {
@@ -251,5 +254,46 @@ HWTEST_F(BmsAOTHandlerTest, GetSysCompList_0100, Function | SmallTest | Level1)
     } else {
         EXPECT_TRUE(sysCompList.empty());
     }
+
+    std::string bundleConfigPath = "/system/etc/ark/static_app_install_aot_enable_list.conf";
+    std::vector<std::string> bundleList = AOTHandler::GetInstance().GetAOTEnableList(bundleConfigPath);
+    ret = stat(bundleConfigPath.c_str(), &st);
+    if (ret == 0 && S_ISREG(st.st_mode) && st.st_size > 0) {
+        EXPECT_FALSE(bundleList.empty());
+    } else {
+        EXPECT_TRUE(bundleList.empty());
+    }
+
+    std::string nonExistentPath = "/system/etc/ark/non_existent.conf";
+    std::vector<std::string> emptyList = AOTHandler::GetInstance().GetAOTEnableList(nonExistentPath);
+    EXPECT_TRUE(emptyList.empty());
+}
+
+/**
+ * @tc.number: BuildSharedArkCachePath_0100
+ * @tc.name: test BuildSharedArkCachePath
+ * @tc.desc: 1.param is empty bundleName, expect return empty string
+ *           2.param is bundleName only, expect return bundle-level path
+ *           3.param is bundleName and versionCode, expect return version-level path with arm64
+ */
+HWTEST_F(BmsAOTHandlerTest, BuildSharedArkCachePath_0100, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.shared";
+    uint32_t versionCode = 1000000;
+    std::string basePath = "/data/service/el1/public/for-all-app/shared_bundles_ark_cache";
+    std::string bundlePath = basePath + "/" + bundleName;
+    std::string versionPath = bundlePath + "/" + std::to_string(versionCode) + "/arm64";
+
+    std::string path = AOTHandler::BuildSharedArkCachePath("");
+    EXPECT_EQ(path, "");
+
+    path = AOTHandler::BuildSharedArkCachePath(bundleName);
+    EXPECT_EQ(path, bundlePath);
+
+    path = AOTHandler::BuildSharedArkCachePath(bundleName, versionCode);
+    EXPECT_EQ(path, versionPath);
+
+    path = AOTHandler::BuildSharedArkCachePath(bundleName, std::nullopt);
+    EXPECT_EQ(path, bundlePath);
 }
 } // OHOS

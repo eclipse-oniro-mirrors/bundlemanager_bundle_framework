@@ -1050,6 +1050,7 @@ void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
 {
     InstallParam installParam;
     installParam.isPreInstallApp = true;
+    installParam.isFirstBootInstall = true;
     installParam.removable = false;
     installParam.copyHapToInstallPath = false;
     installParam.needSavePreInstallInfo = true;
@@ -1179,6 +1180,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     InstallParam installParam;
     installParam.userId = userId;
     installParam.isPreInstallApp = true;
+    installParam.isFirstBootInstall = true;
     installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
     installParam.removable = preScanInfo.removable;
@@ -1202,6 +1204,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     InstallParam installParam;
     installParam.userId = userId;
     installParam.isPreInstallApp = true;
+    installParam.isFirstBootInstall = true;
     installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
     installParam.removable = false;
@@ -1221,6 +1224,7 @@ void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &shared
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Process shared bundle by sharedBundlePath(%{public}s)", sharedBundlePath.c_str());
     InstallParam installParam;
     installParam.isPreInstallApp = true;
+    installParam.isFirstBootInstall = true;
     installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
     installParam.removable = false;
