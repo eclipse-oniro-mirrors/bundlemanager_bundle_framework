@@ -46,7 +46,7 @@ static ani_object ConvertCRCTable(ani_env* env, const tableType* table, const si
     CHECK_PARAM_NULL_RETURN(arrayObj, nullptr);
 
     static const std::string setterSig = Builder::BuildSignatureDescriptor(
-        { Builder::BuildInt(), Builder::BuildClass(CommonFunAniNS::CLASSNAME_OBJECT) });
+        { Builder::BuildInt(), Builder::BuildAny() });
     static const std::string longCtorSig = Builder::BuildSignatureDescriptor({ Builder::BuildLong() });
     for (size_t i = 0; i < tableSize; ++i) {
         ani_value argLong = { .l = static_cast<ani_long>(table[i]) };
