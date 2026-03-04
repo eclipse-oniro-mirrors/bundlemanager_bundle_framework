@@ -2129,6 +2129,21 @@ HWTEST_F(BmsBundlePermissionFalseTest, SetDefaultApplicationForAppClone_0001, Fu
 }
 
 /**
+ * @tc.number: SetDefaultApplicationForCustom_0001
+ * @tc.name: test SetDefaultApplicationForCustom
+ * @tc.desc: 1. SetDefaultApplicationForCustom failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, SetDefaultApplicationForCustom_0001, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    ElementName elementName("", "", "", "");
+    want.SetElement(elementName);
+    int32_t userId = 100;
+    auto res = defaultAppHostImpl_->SetDefaultApplicationForCustom(userId, DEFAULT_APP_VIDEO, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: GetPluginExtensionInfo_0001
  * @tc.name: test GetPluginExtensionInfo
  * @tc.desc: 1.system run normally

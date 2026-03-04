@@ -1818,6 +1818,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         LOG_W(BMS_TAG_INSTALLER, "ProcessExtProfile failed");
     }
     SetHybridSpawn();
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    DefaultAppMgr::GetInstance().HandleInstallBundle(userId_, bundleName_);
+#endif
     // set api and sdk version to systemevent
     SetAPIAndSdkVersions(cacheInfo.GetBaseApplicationInfo().apiTargetVersion,
         cacheInfo.GetBaseApplicationInfo().apiCompatibleVersion,
@@ -2683,6 +2686,9 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                 }
             }
             SetHybridSpawn();
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+            DefaultAppMgr::GetInstance().HandleInstallBundle(userId_, bundleName_);
+#endif
             UtdHandler::InstallUtdAsync(bundleName, userId_);
             GenerateNewUserDataGroupInfos(oldInfo);
             isBundleCrossAppSharedConfig_ = oldInfo.IsBundleCrossAppSharedConfig();

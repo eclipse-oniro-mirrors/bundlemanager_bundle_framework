@@ -129,6 +129,53 @@ ErrCode DefaultAppHostImpl::ResetDefaultApplication(int32_t userId, const std::s
     return result;
 }
 
+ErrCode DefaultAppHostImpl::SetDefaultApplicationForCustom(const int32_t userId, const std::string& type,
+    const Want& want)
+{
+    LOG_NOFUNC_D(BMS_TAG_DEFAULT, "SetDefaultApplicationForCustom userId: %{public}d type: %{public}s",
+        userId, type.c_str());
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != Constants::EDC_UID) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "uid: %{public}d is not edc", callingUid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyAcrossUserPermission(userId)) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    if (userId < Constants::START_USERID || !dataMgr->HasUserId(userId)) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "invalid userId");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    const ElementName& elementName = want.GetElement();
+    const std::string& bundleName = elementName.GetBundleName();
+    const std::string& moduleName = elementName.GetModuleName();
+    const std::string& abilityName = elementName.GetAbilityName();
+    LOG_NOFUNC_D(BMS_TAG_DEFAULT, "ElementName bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+    if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "param is empty, elementName -n %{public}s -m %{public}s -a %{public}s",
+            bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    Element element;
+    element.bundleName = bundleName;
+    element.moduleName = moduleName;
+    element.abilityName = abilityName;
+    ErrCode result = DefaultAppMgr::GetInstance().SetDefaultApplicationForCustom(userId, type, element);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "SetDefaultApplicationForCustom errcode %{public}d", result);
+        return result;
+    }
+    SetDefaultApplication(userId, type, want);
+    return ERR_OK;
+}
+
 std::string DefaultAppHostImpl::GetCallerName()
 {
     int32_t uid = IPCSkeleton::GetCallingUid();

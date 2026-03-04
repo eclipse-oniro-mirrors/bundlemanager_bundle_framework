@@ -34,9 +34,12 @@ public:
     ErrCode GetDefaultApplication(
         int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup = false) const;
     ErrCode SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const;
+    ErrCode SetDefaultApplicationForCustom(int32_t userId, const std::string& type,
+        const Element& element) const;
     ErrCode ResetDefaultApplication(int32_t userId, const std::string& type) const;
 
     void HandleUninstallBundle(int32_t userId, const std::string& bundleName, const int32_t appIndex) const;
+    void HandleInstallBundle(int32_t userId, const std::string& bundleName) const;
     void HandleCreateUser(int32_t userId) const;
     void HandleRemoveUser(int32_t userId) const;
 
@@ -76,6 +79,8 @@ private:
         int32_t userId, const std::string& normalizedType, BundleInfo& bundleInfo, bool backup = false) const;
     ErrCode SetDefaultApplicationInternal(
         int32_t userId, const std::string& normalizedType, const Element& element) const;
+    ErrCode SetDefaultApplicationInternalForCustom(
+        int32_t userId, const std::string& normalizedType, const Element& element) const;
     ErrCode ResetDefaultApplicationInternal(int32_t userId, const std::string& normalizedType) const;
     void GetDefaultInfo(const int32_t userId, const std::vector<std::string>& normalizedTypeVec,
         std::unordered_map<std::string, std::pair<bool, Element>>& defaultInfo) const;
@@ -84,6 +89,7 @@ private:
     bool ShouldSendEvent(
         bool originalResult, const Element& originalElement, bool currentResult, const Element& currentElement) const;
     bool SendDefaultAppChangeEvent(const int32_t userId, const std::vector<std::string>& typeVec) const;
+    int32_t GetEdcUserId(int32_t userId) const;
 
     mutable std::mutex mutex_;
     std::shared_ptr<IDefaultAppDb> defaultAppDb_;

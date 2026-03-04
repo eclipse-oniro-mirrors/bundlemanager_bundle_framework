@@ -158,5 +158,20 @@ HWTEST_F(BmsDefaultAppHostTest, HandleSetDefaultApplicationForAppClone_0100, Fun
     ErrCode res = defaultAppHost.HandleSetDefaultApplicationForAppClone(data, reply);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
 }
+
+/**
+ * @tc.number: HandleSetDefaultApplicationForCustom_0100
+ * @tc.name: test the HandleSetDefaultApplicationForCustom
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetDefaultApplicationForCustom
+ */
+HWTEST_F(BmsDefaultAppHostTest, HandleSetDefaultApplicationForCustom_0100, Function | MediumTest | Level1)
+{
+    DefaultAppHost defaultAppHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = defaultAppHost.HandleSetDefaultApplicationForCustom(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
 } // AppExecFwk
 } // OHOS

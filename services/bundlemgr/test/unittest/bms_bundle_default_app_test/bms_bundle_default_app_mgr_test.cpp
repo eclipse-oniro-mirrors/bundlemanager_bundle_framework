@@ -53,6 +53,7 @@ const int32_t USER_ID = 100;
 const int32_t ALL_USER_ID = -4;
 const int32_t UID = 20000001;
 const int32_t WAIT_TIME = 2;
+const int32_t EDC_DEFAULT_USER_ID = -100;
 const std::string IMAGE_UTD_ID = "general.image";
 const std::string PNG_UTD_ID = "general.png";
 const std::string WORD = "WORD";
@@ -66,6 +67,7 @@ const std::string BROWSER = "BROWSER";
 const std::string DEFAULT_APPLICATION_CHANGED_EVENT = "usual.event.DEFAULT_APPLICATION_CHANGED";
 const std::string UTD_IDS = "utdIds";
 const std::string USER_ID_STRING = "userId";
+const std::string TEST_UTD_ID = "testUidId";
 constexpr uint16_t TYPE_MAX_SIZE = 512;
 } // namespace
 
@@ -1499,5 +1501,87 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, IsDefaultApplication_0080, Function | Small
     auto ret = DefaultAppMgr::GetInstance().IsDefaultApplication(userId, type, isDefaultApp);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_FALSE(isDefaultApp);
+}
+
+/**
+ * @tc.number: SetDefaultApplicationForCustom_0010
+ * @tc.name: test SetDefaultApplicationForCustom
+ * @tc.desc: 1.SetDefaultApplicationForCustom
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForCustom_0010, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", "", "", "");
+    want.SetElement(elementName);
+    auto res = impl.SetDefaultApplicationForCustom(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleInstallBundle_1000
+ * @tc.name: Test HandleInstallBundle by DefaultAppMgr
+ * @tc.desc: 1.HandleInstallBundle with failed GetDefaultApplicationInfos for custom config
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, HandleInstallBundle_1000, Function | SmallTest | Level1)
+{
+    int32_t userId = 100;
+    const std::string bundleName = "test.bundle";
+    DefaultAppMgr::GetInstance().HandleInstallBundle(userId, bundleName);
+    std::map<std::string, Element> currentInfos;
+    ASSERT_FALSE(DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfos(userId, currentInfos));
+}
+
+/**
+ * @tc.number: HandleUninstallBundle_1000
+ * @tc.name: Test HandleUninstallBundle by DefaultAppMgr
+ * @tc.desc: 1.HandleUninstallBundle with appIndex not matching
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, HandleUninstallBundle_1000, Function | SmallTest | Level1)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(100);
+    int32_t userId = 100;
+    const std::string bundleName = "test.bundle";
+    int32_t appIndex = 0;
+    Element currentElement;
+    currentElement.bundleName = bundleName;
+    currentElement.moduleName = MODULE_NAME;
+    currentElement.abilityName = ABILITY_NAME;
+    currentElement.appIndex = 1;
+    DefaultAppMgr::GetInstance().defaultAppDb_->SetDefaultApplicationInfo(userId, TEST_UTD_ID, currentElement);
+    DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, bundleName, appIndex);
+    bool res =
+        DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfo(userId, TEST_UTD_ID, currentElement);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: GetEdcUserId_0001
+ * @tc.name: Test GetEdcUserId by DefaultAppMgr
+ * @tc.desc: 1.GetEdcUserId
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, GetEdcUserId_0001, Function | SmallTest | Level1)
+{
+    int32_t userId = -1;
+    int32_t EdcUserId = DefaultAppMgr::GetInstance().GetEdcUserId(userId);
+    EXPECT_EQ(EdcUserId, EDC_DEFAULT_USER_ID);
+
+    userId = 0;
+    EdcUserId = DefaultAppMgr::GetInstance().GetEdcUserId(userId);
+    EXPECT_EQ(EdcUserId, EDC_DEFAULT_USER_ID);
+
+    userId = 1;
+    EdcUserId = DefaultAppMgr::GetInstance().GetEdcUserId(userId);
+    EXPECT_EQ(EdcUserId, EDC_DEFAULT_USER_ID);
+
+    userId = 2;
+    EdcUserId = DefaultAppMgr::GetInstance().GetEdcUserId(userId);
+    EXPECT_EQ(EdcUserId, EDC_DEFAULT_USER_ID);
+
+    userId = 100;
+    EdcUserId = DefaultAppMgr::GetInstance().GetEdcUserId(userId);
+    EXPECT_EQ(EdcUserId, EDC_DEFAULT_USER_ID);
 }
 } // namespace OHOS
