@@ -624,6 +624,7 @@ ErrCode ParamsProcessGetLaunchWantForBundleSync(napi_env env, napi_callback_info
         }
     }
     if (bundleName.size() == 0) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return ERROR_PARAM_CHECK_ERROR;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
