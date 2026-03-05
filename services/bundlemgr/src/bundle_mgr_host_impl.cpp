@@ -2427,7 +2427,7 @@ ErrCode BundleMgrHostImpl::CompileReset(const std::string &bundleName, bool isAl
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    AOTHandler::GetInstance().HandleResetAOT(bundleName, isAllBundle);
+    AOTHandler::GetInstance().HandleResetBundleAOT(bundleName, isAllBundle);
     return ERR_OK;
 }
 

@@ -77,6 +77,9 @@ std::string HspInfo::ToString() const
 
 bool AOTArgs::ReadFromParcel(Parcel &parcel)
 {
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, bundleType);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, triggerType);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, staticAndHybridModuleCnt);
     std::u16string bundleNameVal;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, bundleNameVal);
     bundleName = Str16ToStr8(bundleNameVal);
@@ -133,6 +136,9 @@ bool AOTArgs::ReadFromParcel(Parcel &parcel)
 
 bool AOTArgs::Marshalling(Parcel &parcel) const
 {
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, bundleType);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, triggerType);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, staticAndHybridModuleCnt);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(compileMode));
@@ -173,7 +179,10 @@ AOTArgs *AOTArgs::Unmarshalling(Parcel &parcel)
 
 std::string AOTArgs::ToString() const
 {
-    std::string ret = "[ bundleName = " +  bundleName
+    std::string ret = "[ bundleType = " + std::to_string(bundleType)
+        + ", triggerType = " + std::to_string(triggerType)
+        + ", staticAndHybridModuleCnt = " + std::to_string(staticAndHybridModuleCnt)
+        + ", bundleName = " +  bundleName
         + ", moduleName = " + moduleName
         + ", compileMode = " + compileMode
         + ", hapPath = " + hapPath

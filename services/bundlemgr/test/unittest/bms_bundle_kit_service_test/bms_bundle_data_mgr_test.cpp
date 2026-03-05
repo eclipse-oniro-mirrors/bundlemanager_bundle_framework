@@ -3877,7 +3877,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetProvisionMetadata_0100, Function | MediumTest 
 HWTEST_F(BmsBundleDataMgrTest, TestAOTCompileStatus_0100, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
-    info.SetAOTCompileStatus(MODULE_NAME1, AOTCompileStatus::COMPILE_SUCCESS);
+    info.SetAOTCompileStatus(MODULE_NAME1, AOTCompileStatus::IDLE_COMPILE_SUCCESS);
     AOTCompileStatus ret = info.GetAOTCompileStatus(MODULE_NAME1);
     EXPECT_EQ(ret, AOTCompileStatus::NOT_COMPILED);
 }
@@ -3893,10 +3893,10 @@ HWTEST_F(BmsBundleDataMgrTest, TestAOTCompileStatus_0200, Function | MediumTest 
     InnerModuleInfo moduleInfo;
     moduleInfo.moduleName = MODULE_NAME1;
     info.innerModuleInfos_.try_emplace(MODULE_NAME1, moduleInfo);
-    info.SetAOTCompileStatus(MODULE_NAME1, AOTCompileStatus::COMPILE_SUCCESS);
+    info.SetAOTCompileStatus(MODULE_NAME1, AOTCompileStatus::IDLE_COMPILE_SUCCESS);
 
     AOTCompileStatus ret = info.GetAOTCompileStatus(MODULE_NAME1);
-    EXPECT_EQ(ret, AOTCompileStatus::COMPILE_SUCCESS);
+    EXPECT_EQ(ret, AOTCompileStatus::IDLE_COMPILE_SUCCESS);
 }
 
 /**

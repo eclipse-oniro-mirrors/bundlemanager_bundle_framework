@@ -4482,6 +4482,33 @@ HWTEST_F(BmsBundleKitServiceTest, BaseSharedBundleInfo_0200, Function | SmallTes
 }
 
 /**
+ * @tc.number: BaseSharedBundleInfo_AotStatusByVersion_0100
+ * @tc.name: Test GetBaseSharedBundleInfo uses versioned AOT status
+ * @tc.desc: verify aotCompileStatus is NOT_COMPILED when module version mismatches innerModuleInfos_
+ */
+HWTEST_F(BmsBundleKitServiceTest, BaseSharedBundleInfo_AotStatusByVersion_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BaseSharedBundleInfo packageInfo;
+
+    InnerModuleInfo sharedModuleInfo;
+    sharedModuleInfo.bundleType = BundleType::SHARED;
+    sharedModuleInfo.moduleName = MODULE_NAME_TEST;
+    sharedModuleInfo.versionCode = BUNDLE_VERSION_CODE;
+    info.innerSharedModuleInfos_[MODULE_NAME_TEST].emplace_back(sharedModuleInfo);
+
+    InnerModuleInfo runtimeModuleInfo;
+    runtimeModuleInfo.moduleName = MODULE_NAME_TEST;
+    runtimeModuleInfo.versionCode = BUNDLE_VERSION_CODE + 1;
+    info.innerModuleInfos_[MODULE_NAME_TEST] = runtimeModuleInfo;
+    info.SetAOTCompileStatus(MODULE_NAME_TEST, AOTCompileStatus::IDLE_COMPILE_SUCCESS);
+
+    bool ret = info.GetBaseSharedBundleInfo(MODULE_NAME_TEST, BUNDLE_VERSION_CODE, packageInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(packageInfo.aotCompileStatus, AOTCompileStatus::NOT_COMPILED);
+}
+
+/**
  * @tc.number: BaseSharedBundleInfo_0300
  * @tc.name: Test SetSharedBundleModuleNativeLibraryPath
  * @tc.desc: 1.Test SetSharedBundleModuleNativeLibraryPath of InnerBundleInfo

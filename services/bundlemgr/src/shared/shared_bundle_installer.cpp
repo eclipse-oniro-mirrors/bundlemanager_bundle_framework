@@ -15,6 +15,7 @@
 
 #include "shared_bundle_installer.h"
 
+#include "aot/aot_handler.h"
 #include "bundle_mgr_service.h"
 #include "scope_guard.h"
 
@@ -152,6 +153,7 @@ ErrCode SharedBundleInstaller::Install(const EventInfo &eventTemplate)
 
     installGuard.Dismiss();
     SendBundleSystemEvent(eventTemplate, result);
+    ProcessAOT();
     APP_LOGD("install shared bundles success");
     return result;
 }
@@ -219,6 +221,25 @@ void SharedBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
         return;
     }
     eventInfo.callingAppId = bundleInfo.appId;
+}
+
+void SharedBundleInstaller::ProcessAOT() const
+{
+    if (installParam_.isFirstBootInstall) {
+        APP_LOGD("is first boot install, no need to AOT");
+        return;
+    }
+    if (installParam_.isOTA) {
+        APP_LOGD("is OTA, no need to AOT");
+        return;
+    }
+    if (installParam_.isCreateUser) {
+        APP_LOGD("is create user, no need to AOT");
+        return;
+    }
+    for (const auto &installer : innerInstallers_) {
+        AOTHandler::GetInstance().HandleInstallAOTAsync(installer.first);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -116,6 +116,8 @@ constexpr const char* ABI_DEFAULT = "default";
 constexpr const char* ABI_SEPARATOR = ",";
 constexpr const char* MODULE_NAME_SEPARATOR = ",";
 constexpr const char* COMMA = ",";
+constexpr uint8_t AOT_TRIGGER_IDLE = 0;
+constexpr uint8_t AOT_TRIGGER_INSTALL = 1;
 constexpr const char* AN_SUFFIX = ".an";
 constexpr const char* AP_SUFFIX = ".ap";
 constexpr const char* SYSTEM_LIB64 = "/system/lib64";
@@ -186,7 +188,11 @@ constexpr int32_t DEFAULT_OVERLAY_DISABLE_STATUS = 0;
 constexpr int32_t OVERLAY_MINIMUM_PRIORITY = 1;
 // ark compile mode
 constexpr const char* COMPILE_PARTIAL = "partial";
-constexpr const char* ARK_CACHE_PATH = "/data/app/el1/public/aot_compiler/ark_cache/";
+constexpr const char* COMPILE_FULL = "full";
+constexpr const char* HAP_ARK_CACHE_PATH = "/data/app/el1/public/aot_compiler/ark_cache/";
+constexpr const char* SHARED_HSP_ARK_CACHE_PATH = "/data/service/el1/public/for-all-app/shared_bundles_ark_cache/";
+constexpr const char* FOR_ALL_APP_DIR = "/data/service/el1/public/for-all-app/";
+constexpr uint16_t SYSTEM_UID = 1000;
 
 constexpr int32_t SYSTEM_OPTIMIZE_MODE = (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 constexpr const char* ARK_STARTUP_CACHE_DIR = "/ark_startup_cache/";

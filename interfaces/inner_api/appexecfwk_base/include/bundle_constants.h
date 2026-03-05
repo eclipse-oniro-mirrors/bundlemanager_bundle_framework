@@ -230,6 +230,7 @@ constexpr const char* VERIFY_UNINSTALL_FORCED_VALUE = "true";
 
 constexpr const char* ARKTS_MODE = "arkTSMode";
 constexpr const char* MODULE_ARKTS_MODE = "moduleArkTSMode";
+constexpr const char* AOT_COMPILE_STATUS = "aotCompileStatus";
 constexpr const char* ARKTS_MODE_DYNAMIC = "dynamic";
 constexpr const char* ARKTS_MODE_STATIC = "static";
 constexpr const char* ARKTS_MODE_HYBRID = "hybrid";

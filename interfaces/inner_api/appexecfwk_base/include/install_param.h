@@ -65,6 +65,8 @@ struct InstallParam : public Parcelable {
     bool isOTA = false;
     bool concentrateSendEvent = false;
     bool isRemoveUser = false;
+    bool isFirstBootInstall = false;
+    bool isCreateUser = false;
     bool allUser = false;
     bool isPatch = false;
     bool isDataPreloadHap = false;

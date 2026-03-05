@@ -411,6 +411,8 @@ void GenerateInstallParam(FuzzedDataProvider& fdp, InstallParam &installParam)
     installParam.isOTA = fdp.ConsumeBool();
     installParam.concentrateSendEvent = fdp.ConsumeBool();
     installParam.isRemoveUser = fdp.ConsumeBool();
+    installParam.isFirstBootInstall = fdp.ConsumeBool();
+    installParam.isCreateUser = fdp.ConsumeBool();
     installParam.allUser = fdp.ConsumeBool();
     installParam.isPatch = fdp.ConsumeBool();
     installParam.isDataPreloadHap = fdp.ConsumeBool();
@@ -674,7 +676,7 @@ void GenerateHapModuleInfo(FuzzedDataProvider& fdp, HapModuleInfo &hapModuleInfo
     hapModuleInfo.moduleType = static_cast<ModuleType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_THREE));
     hapModuleInfo.compileMode = fdp.ConsumeBool() ? CompileMode::ES_MODULE : CompileMode::JS_BUNDLE;
     hapModuleInfo.aotCompileStatus =
-        static_cast<AOTCompileStatus>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_FOUR));
+        static_cast<AOTCompileStatus>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_FIVE));
     hapModuleInfo.isolationMode = static_cast<IsolationMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_THREE));
     hapModuleInfo.name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);        // module.name in config.json
     hapModuleInfo.package = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);

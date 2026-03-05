@@ -35,12 +35,16 @@ public:
     static AOTHandler& GetInstance();
     static std::string BuildArkProfilePath(
         const int32_t userId, const std::string &bundleName = "", const std::string &moduleName = "");
-    void HandleInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    static std::string BuildSharedArkCachePath(
+        const std::string &bundleName, std::optional<uint32_t> versionCode = std::nullopt);
+    static AOTCompileStatus ConvertToAOTCompileStatus(const ErrCode ret, const uint8_t triggerType);
+
+    void HandleInstallAOTAsync(const std::string &bundleName) const;
     void HandleOTA();
     void HandleIdle() const;
     ErrCode HandleCompile(const std::string &bundleName, const std::string &compileMode, bool isAllBundle,
         std::vector<std::string> &compileResults) const;
-    void HandleResetAOT(const std::string &bundleName, bool isAllBundle) const;
+    void HandleResetBundleAOT(const std::string &bundleName, bool isAllBundle) const;
     void HandleResetAllAOT() const;
     ErrCode HandleCopyAp(const std::string &bundleName, bool isAllBundle, std::vector<std::string> &results) const;
 private:
@@ -48,17 +52,19 @@ private:
     ~AOTHandler() = default;
     DISALLOW_COPY_AND_MOVE(AOTHandler);
 
+    void HandleInstallAOT(const std::string &bundleName) const;
     ErrCode MkApDestDirIfNotExist() const;
     void CopyApWithBundle(const std::string &bundleName, const BundleInfo &bundleInfo,
         const int32_t userId, std::vector<std::string> &results) const;
     std::string GetSouceAp(const std::string &mergedAp, const std::string &rtAp) const;
     bool IsSupportARM64() const;
     std::string FindArkProfilePath(const std::string &bundleName, const std::string &moduleName) const;
+    void BuildSharedArgs(uint32_t versionCode, AOTArgs &aotArgs) const;
+    bool BuildAppArgs(const InnerBundleInfo &info, const std::string &compileMode, AOTArgs &aotArgs) const;
     std::optional<AOTArgs> BuildAOTArgs(const InnerBundleInfo &info, const std::string &moduleName,
-        const std::string &compileMode, bool isEnableBaselinePgo = false) const;
-    void HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode) const;
+        const std::string &compileMode, bool isEnableBaselinePgo, const uint8_t triggerType) const;
     bool NeedCompile(const InnerBundleInfo &info, const std::string &moduleName) const;
-    ErrCode HandleCompileWithSingleHap(const InnerBundleInfo &info, const std::string &moduleName,
+    ErrCode HandleCompileWithSingleModule(const InnerBundleInfo &info, const std::string &moduleName,
         const std::string &compileMode, bool isEnableBaselinePgo = false) const;
     EventInfo HandleCompileWithBundle(const std::string &bundleName, const std::string &compileMode,
         std::shared_ptr<BundleDataMgr> dataMgr) const;
@@ -66,14 +72,13 @@ private:
         std::shared_ptr<BundleDataMgr> &dataMgr, std::vector<std::string> &compileResults) const;
     ErrCode HandleCompileModules(const std::vector<std::string> &moduleNames, const std::string &compileMode,
         InnerBundleInfo &info, std::string &compileResult) const;
-    void ClearArkCacheDir() const;
-    void ResetAOTFlags() const;
+    void ResetAllSysCompAOT() const;
+    void ResetAllBundleAOT() const;
     void HandleIdleWithSingleSysComp(const std::string &abcPath) const;
-    void HandleIdleWithSingleHap(
+    void HandleIdleWithSingleModule(
         const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
     bool CheckDeviceState() const;
     ErrCode AOTInternal(const std::optional<AOTArgs> &aotArgs, uint32_t versionCode) const;
-    AOTCompileStatus ConvertToAOTCompileStatus(const ErrCode ret) const;
     void HandleOTACompile();
     void BeforeOTACompile();
     void OTACompile() const;
@@ -88,9 +93,9 @@ private:
     void HandleArkPathsChange() const;
     void DelDeprecatedArkPaths() const;
     void CreateArkProfilePaths() const;
-    std::vector<std::string> GetSysCompList() const;
+    std::vector<std::string> GetAOTEnableList(const std::string &configPath) const;
     void IdleForSysComp() const;
-    void IdleForHap(const std::string &compileMode) const;
+    void IdleForBundle(const std::string &compileMode) const;
 private:
     std::atomic<bool> OTACompileDeadline_ { false };
     mutable std::mutex executeMutex_;

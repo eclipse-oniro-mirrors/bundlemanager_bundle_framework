@@ -43,6 +43,7 @@ bool SharedModuleInfo::ReadFromParcel(Parcel &parcel)
     versionName = Str16ToStr8(parcel.ReadString16());
     description = Str16ToStr8(parcel.ReadString16());
     descriptionId = parcel.ReadUint32();
+    aotCompileStatus = static_cast<AOTCompileStatus>(parcel.ReadInt32());
     compressNativeLibs = parcel.ReadBool();
     hapPath = Str16ToStr8(parcel.ReadString16());
     cpuAbi = Str16ToStr8(parcel.ReadString16());
@@ -64,6 +65,7 @@ bool SharedModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(versionName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, descriptionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(aotCompileStatus));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, compressNativeLibs);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
@@ -95,6 +97,7 @@ void to_json(nlohmann::json &jsonObject, const SharedModuleInfo &sharedModuleInf
         {SHARED_MODULE_INFO_VERSION_NAME, sharedModuleInfo.versionName},
         {SHARED_MODULE_INFO_DESCRIPTION, sharedModuleInfo.description},
         {SHARED_MODULE_INFO_DESCRIPTION_ID, sharedModuleInfo.descriptionId},
+        {Constants::AOT_COMPILE_STATUS, sharedModuleInfo.aotCompileStatus},
         {SHARED_MODULE_INFO_COMPRESS_NATIVE_LIBS, sharedModuleInfo.compressNativeLibs},
         {SHARED_MODULE_INFO_HAP_PATH, sharedModuleInfo.hapPath},
         {SHARED_MODULE_INFO_CPU_ABI, sharedModuleInfo.cpuAbi},
@@ -124,6 +127,10 @@ void from_json(const nlohmann::json &jsonObject, SharedModuleInfo &sharedModuleI
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_DESCRIPTION_ID,
         sharedModuleInfo.descriptionId, JsonType::NUMBER, false, parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<AOTCompileStatus>(jsonObject, jsonObjectEnd,
+        Constants::AOT_COMPILE_STATUS,
+        sharedModuleInfo.aotCompileStatus, JsonType::NUMBER, false, parseResult,
         ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_COMPRESS_NATIVE_LIBS,

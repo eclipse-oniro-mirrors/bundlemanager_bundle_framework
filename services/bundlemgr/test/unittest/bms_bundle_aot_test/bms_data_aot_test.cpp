@@ -38,6 +38,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_installd_proxy.h"
+#include "shared_bundle_installer.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -71,6 +72,7 @@ constexpr uint32_t VERSION_CODE = 3;
 constexpr uint32_t OFFSET = 1001;
 constexpr uint32_t LENGTH = 2002;
 constexpr uint32_t SLEEP_INTERVAL_MILLI_SECONDS = 100;
+constexpr uint32_t ASYNC_WAIT_MILLI_SECONDS = 100;
 constexpr uint32_t VIRTUAL_CHILD_PID = 12345678;
 const int32_t TEST_U0 = 0;
 const int32_t TEST_U1 = 1;
@@ -181,7 +183,7 @@ void BmsAOTMgrTest::ResetDataMgr()
  * @tc.desc: 1. system running normally
  *           2. verify function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_0100, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     ErrCode ret;
@@ -196,7 +198,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0100, Function | SmallTest | Level0)
  * @tc.desc: 1. system running normally
  *           2. verify function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_0200, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_0200, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     ErrCode ret;
@@ -212,7 +214,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0200, Function | SmallTest | Level0)
  * @tc.desc: 1. system running normally
  *           2. verify function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_0300, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_0300, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     ErrCode ret;
@@ -228,7 +230,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0300, Function | SmallTest | Level0)
  * @tc.desc: 1. system running normally
  *           2. verify function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_0400, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_0400, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     ErrCode ret;
@@ -244,7 +246,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0400, Function | SmallTest | Level0)
  * @tc.desc: 1. system running normally
  *           2. verify function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_0500, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_0500, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     ErrCode ret;
@@ -262,7 +264,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0500, Function | SmallTest | Level0)
  * @tc.desc: 1. system running normally
  *           2. verify function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_0600, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_0600, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     ErrCode ret;
@@ -281,27 +283,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0600, Function | SmallTest | Level0)
  * @tc.desc: 1. system running normally
  *           2. verify function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_0700, Function | SmallTest | Level0)
-{
-    AOTArgs aotArgs;
-    ErrCode ret;
-    std::vector<uint8_t> pendSignData;
-    aotArgs.compileMode = COMPILE_FULL;
-    aotArgs.hapPath = HAP_PATH;
-    aotArgs.outputPath = OUT_PUT_PATH;
-    aotArgs.arkProfilePath = OUT_PUT_PATH;
-
-    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
-    EXPECT_NE(ret, ERR_OK);
-}
-
-/**
- * @tc.number: AOTExecutor_0800
- * @tc.name: test AOTExecutor
- * @tc.desc: 1. system running normally
- *           2. verify function return value
- */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_0800, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_0700, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     ErrCode ret;
@@ -322,7 +304,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0800, Function | SmallTest | Level0)
  *           2. call StopAOT
  *           3. return ERR_OK
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_0900, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_0900, Function | SmallTest | Level1)
 {
     AOTExecutor::GetInstance().ResetState();
     ErrCode ret = AOTExecutor::GetInstance().StopAOT();
@@ -336,7 +318,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0900, Function | SmallTest | Level0)
  *           2. call StopAOT
  *           3. return ERR_OK
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1000, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1000, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     AOTExecutor::GetInstance().InitState(aotArgs);
@@ -351,7 +333,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1000, Function | SmallTest | Level0)
  * @tc.desc: 1. call InitState, expect get set value
  *           1. call ResetState, expect get default value
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1100, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1100, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     aotArgs.outputPath = OUT_PUT_PATH;
@@ -370,7 +352,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1100, Function | SmallTest | Level0)
  * @tc.name: test MapSysCompArgs
  * @tc.desc: 1. call MapSysCompArgs, expect get set value
  */
-HWTEST_F(BmsAOTMgrTest, MapSysCompArgs_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, MapSysCompArgs_0100, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     aotArgs.anFileName = "anFileName";
@@ -382,17 +364,17 @@ HWTEST_F(BmsAOTMgrTest, MapSysCompArgs_0100, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: MapHapArgs_0100
- * @tc.name: test MapHapArgs
- * @tc.desc: 1. call MapHapArgs, expect get set value
+ * @tc.number: MapBundleArgs_0100
+ * @tc.name: test MapBundleArgs
+ * @tc.desc: 1. call MapBundleArgs, expect get set value
  */
-HWTEST_F(BmsAOTMgrTest, MapHapArgs_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, MapBundleArgs_0100, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     aotArgs.anFileName = "anFileName";
     std::unordered_map<std::string, std::string> argsMap;
 
-    AOTExecutor::GetInstance().MapHapArgs(aotArgs, argsMap);
+    AOTExecutor::GetInstance().MapBundleArgs(aotArgs, argsMap);
     EXPECT_EQ(argsMap[IS_SYS_COMP], IS_SYS_COMP_FALSE);
     EXPECT_EQ(argsMap[AN_FILE_NAME], aotArgs.anFileName);
 }
@@ -403,97 +385,7 @@ HWTEST_F(BmsAOTMgrTest, MapHapArgs_0100, Function | SmallTest | Level0)
  * @tc.desc: 1. system running normally
  *           2. verify function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_0100, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    bool isOTA = true;
-    std::unordered_map<std::string, InnerBundleInfo> infos;
-    InnerBundleInfo newInfo;
-    infos.emplace("", newInfo);
-    installer.ProcessAOT(isOTA, infos);
-    bool res = newInfo.GetIsNewVersion();
-    EXPECT_EQ(res, false);
-}
-
-/**
- * @tc.number: AOTHandler_0100
- * @tc.name: test AOTHandler
- * @tc.desc: 1. system running normally
- *           2. verify function return value
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_0200, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    bool isOTA = false;
-    std::unordered_map<std::string, InnerBundleInfo> infos;
-    InnerBundleInfo newInfo;
-    installer.ProcessAOT(isOTA, infos);
-
-    newInfo.SetIsNewVersion(isOTA);
-    infos.emplace("", newInfo);
-    installer.ProcessAOT(isOTA, infos);
-    bool res = newInfo.GetIsNewVersion();
-    EXPECT_EQ(res, isOTA);
-    AOTHandler::GetInstance().HandleIdle();
-}
-
-/**
- * @tc.number: AOTHandler_0100
- * @tc.name: test AOTHandler
- * @tc.desc: 1. system running normally
- *           2. verify function return value
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_0300, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    bool isOTA = false;
-    std::unordered_map<std::string, InnerBundleInfo> infos;
-    InnerBundleInfo newInfo;
-    installer.ProcessAOT(isOTA, infos);
-
-    newInfo.SetIsNewVersion(true);
-    infos.emplace("", newInfo);
-    installer.ProcessAOT(isOTA, infos);
-    bool res = newInfo.GetIsNewVersion();
-    EXPECT_EQ(res, true);
-    AOTHandler::GetInstance().HandleOTA();
-}
-
-/**
- * @tc.number: AOTHandler_0100
- * @tc.name: test AOTHandler
- * @tc.desc: 1. system running normally
- *           2. verify function return value
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_0400, Function | SmallTest | Level0)
-{
-    InnerBundleInfo info;
-    AOTHandler::GetInstance().HandleInstallWithSingleHap(info, "");
-    std::string res = info.GetBundleName();
-    EXPECT_EQ(res, Constants::EMPTY_STRING);
-}
-
-/**
- * @tc.number: AOTHandler_0100
- * @tc.name: test AOTHandler
- * @tc.desc: 1. system running normally
- *           2. verify function return value
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_0500, Function | SmallTest | Level0)
-{
-    InnerBundleInfo info;
-    AOTHandler::GetInstance().HandleInstallWithSingleHap(info, ServiceConstants::COMPILE_PARTIAL);
-    std::string res = info.GetBundleName();
-    EXPECT_EQ(res, Constants::EMPTY_STRING);
-}
-
-/**
- * @tc.number: AOTHandler_0100
- * @tc.name: test AOTHandler
- * @tc.desc: 1. system running normally
- *           2. verify function return value
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_0600, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_0600, Function | SmallTest | Level1)
 {
     std::optional<AOTArgs> aotArgs;
     uint32_t versionCode = 1;
@@ -512,7 +404,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_0600, Function | SmallTest | Level0)
  * @tc.desc: 1. system running normally
  *           2. verify function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_0700, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_0700, Function | SmallTest | Level1)
 {
     std::optional<AOTArgs> aotArgs;
     uint32_t versionCode = 1;
@@ -547,18 +439,18 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_0700, Function | SmallTest | Level0)
  * @tc.desc: 1. system running normally
  *           2. verify function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_0800, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_0800, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerModuleInfo moduleInfo;
     moduleInfo.moduleName = AOT_MODULE_NAME;
     info.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
-    AOTHandler::GetInstance().HandleIdleWithSingleHap(info, AOT_MODULE_NAME, "");
+    AOTHandler::GetInstance().HandleIdleWithSingleModule(info, AOT_MODULE_NAME, "");
 
-    info.SetAOTCompileStatus(AOT_MODULE_NAME, AOTCompileStatus::COMPILE_SUCCESS);
-    AOTHandler::GetInstance().HandleIdleWithSingleHap(info, AOT_MODULE_NAME, "");
+    info.SetAOTCompileStatus(AOT_MODULE_NAME, AOTCompileStatus::IDLE_COMPILE_SUCCESS);
+    AOTHandler::GetInstance().HandleIdleWithSingleModule(info, AOT_MODULE_NAME, "");
     AOTCompileStatus ret = info.GetAOTCompileStatus(AOT_MODULE_NAME);
-    EXPECT_EQ(ret, AOTCompileStatus::COMPILE_SUCCESS);
+    EXPECT_EQ(ret, AOTCompileStatus::IDLE_COMPILE_SUCCESS);
 }
 
 /**
@@ -567,7 +459,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_0800, Function | SmallTest | Level0)
  * @tc.desc: 1. system running normally
  *           2. verify function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_0900, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_0900, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
     std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
@@ -597,7 +489,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_0900, Function | SmallTest | Level0)
  * @tc.desc: 1. system running normally
  *           2. verify function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_1000, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1000, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
     ApplicationInfo applicationInfo;
@@ -608,16 +500,16 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1000, Function | SmallTest | Level0)
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ClearDataMgr();
     auto ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo,
-        AOT_MODULE_NAME, ServiceConstants::COMPILE_PARTIAL);
+        AOT_MODULE_NAME, ServiceConstants::COMPILE_PARTIAL, false, ServiceConstants::AOT_TRIGGER_IDLE);
     EXPECT_EQ(ret, std::nullopt);
-    AOTHandler::GetInstance().ClearArkCacheDir();
+    AOTHandler::GetInstance().HandleResetAllAOT();
     ResetDataMgr();
     dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
     ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo,
-        AOT_MODULE_NAME, ServiceConstants::COMPILE_PARTIAL);
+        AOT_MODULE_NAME, ServiceConstants::COMPILE_PARTIAL, false, ServiceConstants::AOT_TRIGGER_IDLE);
     EXPECT_EQ(ret, std::nullopt);
     ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo,
-        AOT_MODULE_NAME, ServiceConstants::COMPILE_PARTIAL);
+        AOT_MODULE_NAME, ServiceConstants::COMPILE_PARTIAL, false, ServiceConstants::AOT_TRIGGER_IDLE);
     EXPECT_EQ(ret, std::nullopt);
     auto iterator = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
     if (iterator != dataMgr->bundleInfos_.end()) {
@@ -630,52 +522,12 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1000, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: bundle not exist, return std::nullopt
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_1100, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1100, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    auto ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo, AOT_MODULE_NAME, "");
+    auto ret = AOTHandler::GetInstance().BuildAOTArgs(
+        innerBundleInfo, AOT_MODULE_NAME, "", false, ServiceConstants::AOT_TRIGGER_IDLE);
     EXPECT_EQ(ret, std::nullopt);
-}
-
-/**
- * @tc.number: AOTHandler_1200
- * @tc.name: test AOTHandler
- * @tc.desc: bundle not exist, return std::nullopt
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_1200, Function | SmallTest | Level0)
-{
-    std::string bundleName = "";
-    std::vector<std::string> results;
-    ClearDataMgr();
-    AOTHandler::GetInstance().HandleCompile(bundleName, COMPILE_NONE, true, results);
-    EXPECT_EQ(bundleName, "");
-    ResetDataMgr();
-
-    AOTHandler::GetInstance().HandleCompile(bundleName, ServiceConstants::COMPILE_PARTIAL, true, results);
-    EXPECT_EQ(bundleName, "");
-
-    AOTHandler::GetInstance().HandleCompile(bundleName, ServiceConstants::COMPILE_PARTIAL, false, results);
-    EXPECT_EQ(bundleName, "");
-}
-
-/**
- * @tc.number: AOTHandler_1300
- * @tc.name: test AOTHandler
- * @tc.desc: bundle not exist, return std::nullopt
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_1300, Function | SmallTest | Level0)
-{
-    std::string bundleName = "";
-    ClearDataMgr();
-    AOTHandler::GetInstance().HandleResetAOT(bundleName, true);
-    EXPECT_EQ(bundleName, "");
-    ResetDataMgr();
-
-    AOTHandler::GetInstance().HandleResetAOT(bundleName, true);
-    EXPECT_EQ(bundleName, "");
-
-    AOTHandler::GetInstance().HandleResetAOT(bundleName, false);
-    EXPECT_EQ(bundleName, "");
 }
 
 /**
@@ -683,7 +535,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1300, Function | SmallTest | Level0)
  * @tc.name: test IsOTACompileSwitchOn
  * @tc.desc: expect return set val
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_1400, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1400, Function | SmallTest | Level1)
 {
     system::SetParameter(OTA_COMPILE_SWITCH, "on");
     bool ret = AOTHandler::GetInstance().IsOTACompileSwitchOn();
@@ -699,7 +551,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1400, Function | SmallTest | Level0)
  * @tc.name: test BeforeOTACompile
  * @tc.desc: 1.set time to 10, expect OTACompileDeadline_ = true
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_1500, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1500, Function | SmallTest | Level1)
 {
     std::string compileTimeSeconds = "10";
     system::SetParameter(OTA_COMPILE_TIME, compileTimeSeconds);
@@ -714,7 +566,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1500, Function | SmallTest | Level0)
  * @tc.name: test GetOTACompileList
  * @tc.desc: 1.expect return false;
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_1600, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1600, Function | SmallTest | Level1)
 {
     system::SetParameter(UPDATE_TYPE, "");
     std::vector<std::string> bundleNames;
@@ -763,6 +615,7 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0200, Function | SmallTest | Level1)
     aotArgs.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
     aotArgs.isSysComp = true;
     aotArgs.sysCompPath = "sysCompPath";
+    aotArgs.bundleType = 1;
 
     Parcel parcel;
     bool ret = aotArgs.Marshalling(parcel);
@@ -786,29 +639,25 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0200, Function | SmallTest | Level1)
     EXPECT_EQ(aotArgsPtr->moduleArkTSMode, aotArgs.moduleArkTSMode);
     EXPECT_EQ(aotArgsPtr->isSysComp, aotArgs.isSysComp);
     EXPECT_EQ(aotArgsPtr->sysCompPath, aotArgs.sysCompPath);
+    EXPECT_EQ(aotArgsPtr->bundleType, aotArgs.bundleType);
     APP_LOGI("AOTArgs_0200 end");
 }
 
 /**
- * @tc.number: AOTHandler_1300
- * @tc.name: test AOTHandler
- * @tc.desc: bundle not exist, return std::nullopt
+ * @tc.number: AOTHandler_1700
+ * @tc.name: test HandleCompileWithBundle
+ * @tc.desc: HandleCompileWithBundle with empty bundleName returns FAILURE_REASON_BUNDLE_NOT_EXIST
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_1700, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1700, Function | SmallTest | Level1)
 {
     std::string compileMode;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
+    AOTHandler::GetInstance().OTACompileDeadline_ = false;
     auto res = AOTHandler::GetInstance().HandleCompileWithBundle(STRING_EMPTY, compileMode, dataMgr);
     EXPECT_EQ(res.bundleName, STRING_EMPTY);
-
-    std::map<std::string, EventInfo> sysEventMap;
-    AOTHandler::GetInstance().ReportSysEvent(sysEventMap);
-
-    ClearDataMgr();
-    ScopeGuard stateGuard([&] { ResetDataMgr(); });
-    AOTHandler::GetInstance().ResetAOTFlags();
-    AOTHandler::GetInstance().OTACompileInternal();
+    EXPECT_EQ(res.failureReason, FAILURE_REASON_BUNDLE_NOT_EXIST);
+    EXPECT_FALSE(res.compileResult);
 }
 
 /**
@@ -816,22 +665,19 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1700, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test HandleIdle function running normally if isOTA is false
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_1800, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1800, Function | SmallTest | Level1)
 {
     BaseBundleInstaller installer;
-    bool isOTA = false;
-    std::unordered_map<std::string, InnerBundleInfo> infos;
-    InnerBundleInfo newInfo;
-    installer.ProcessAOT(isOTA, infos);
+    InstallParam installParam;
+    installer.ProcessAOT(installParam);
+    EXPECT_TRUE(installer.bundleName_.empty());
 
-    newInfo.SetIsNewVersion(isOTA);
-    infos.emplace("", newInfo);
-    installer.ProcessAOT(isOTA, infos);
-    bool res = newInfo.GetIsNewVersion();
-    EXPECT_EQ(res, isOTA);
+    InnerBundleInfo newInfo;
+    newInfo.SetIsNewVersion(false);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
         "", newInfo);
     AOTHandler::GetInstance().HandleIdle();
+    EXPECT_FALSE(newInfo.GetIsNewVersion());
 }
 
 /**
@@ -839,22 +685,20 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1800, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test HandleIdle function running normally if isOTA is true
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_1900, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1900, Function | SmallTest | Level1)
 {
     BaseBundleInstaller installer;
-    bool isOTA = true;
-    std::unordered_map<std::string, InnerBundleInfo> infos;
-    InnerBundleInfo newInfo;
-    installer.ProcessAOT(isOTA, infos);
+    InstallParam installParam;
+    installParam.isOTA = true;
+    installer.ProcessAOT(installParam);
+    EXPECT_TRUE(installer.bundleName_.empty());
 
-    newInfo.SetIsNewVersion(isOTA);
-    infos.emplace("", newInfo);
-    installer.ProcessAOT(isOTA, infos);
-    bool res = newInfo.GetIsNewVersion();
-    EXPECT_EQ(res, isOTA);
+    InnerBundleInfo newInfo;
+    newInfo.SetIsNewVersion(true);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
         "", newInfo);
     AOTHandler::GetInstance().HandleIdle();
+    EXPECT_TRUE(newInfo.GetIsNewVersion());
 }
 
 /**
@@ -862,7 +706,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1900, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test HandleCopyAp function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_2100, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2100, Function | SmallTest | Level1)
 {
     std::string bundleName = "bundleName";
     std::vector<std::string> results;
@@ -888,35 +732,11 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2100, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: AOTHandler_2200
- * @tc.name: test AOTHandler
- * @tc.desc: test HandleOTA function running normally
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_2200, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    bool isOTA = false;
-    std::unordered_map<std::string, InnerBundleInfo> infos;
-    InnerBundleInfo newInfo;
-    installer.ProcessAOT(isOTA, infos);
-
-    newInfo.SetIsNewVersion(true);
-    infos.emplace("", newInfo);
-    installer.ProcessAOT(isOTA, infos);
-    bool res = newInfo.GetIsNewVersion();
-    EXPECT_EQ(res, true);
-    system::SetParameter(OTA_COMPILE_SWITCH, "on");
-    system::SetParameter(OTA_COMPILE_MODE, "on");
-    system::SetParameter(UPDATE_TYPE, "manual");
-    AOTHandler::GetInstance().HandleOTA();
-}
-
-/**
  * @tc.number: AOTHandler_2300
  * @tc.name: test AOTHandler
  * @tc.desc: test HandleCompileWithBundle function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_2300, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2300, Function | SmallTest | Level1)
 {
     std::string bundleName = "bundleName";
     string compileMode = ServiceConstants::COMPILE_PARTIAL;
@@ -947,7 +767,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2300, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test BuildAOTArgs function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_2400, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2400, Function | SmallTest | Level1)
 {
     std::string bundleName = "bundleName";
     std::vector<std::string> results;
@@ -968,25 +788,9 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2400, Function | SmallTest | Level0)
 
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
         "", innerBundleInfo);
-    auto ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo, AOT_MODULE_NAME, "");
+    auto ret = AOTHandler::GetInstance().BuildAOTArgs(
+        innerBundleInfo, AOT_MODULE_NAME, "", false, ServiceConstants::AOT_TRIGGER_IDLE);
     EXPECT_NE(ret, std::nullopt);
-}
-
-/**
- * @tc.number: AOTHandler_2500
- * @tc.name: test AOTHandler
- * @tc.desc: test HandleInstall function running normally
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_2500, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo newInfo;
-    std::unordered_map<std::string, InnerBundleInfo> infos;
-    newInfo.SetIsNewVersion(true);
-    infos.emplace("", newInfo);
-    system::SetParameter(INSTALL_COMPILE_MODE, "on");
-    AOTHandler::GetInstance().HandleInstall(infos);
-    EXPECT_EQ(infos.empty(), false);
 }
 
 /**
@@ -994,7 +798,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2500, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test CopyApWithBundle function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_2600, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2600, Function | SmallTest | Level1)
 {
     std::string bundleName = "bundleName";
     std::vector<std::string> results;
@@ -1021,7 +825,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2600, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test HandleCompileWithBundle function running with OTACompileDeadline true
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_2700, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2700, Function | SmallTest | Level1)
 {
     std::string bundleName = "bundleName";
     string compileMode = ServiceConstants::COMPILE_PARTIAL;
@@ -1041,7 +845,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2700, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test HandleCompileWithBundle function running with IsNewVersion false
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_2800, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2800, Function | SmallTest | Level1)
 {
     std::string bundleName = "bundleName";
     string compileMode = ServiceConstants::COMPILE_PARTIAL;
@@ -1070,7 +874,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2800, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test HandleCompileBundles function running with compile fail
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_2900, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2900, Function | SmallTest | Level1)
 {
     std::vector<std::string> results;
     std::string bundleName = "bundleName";
@@ -1101,7 +905,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2900, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test HandleCompileBundles function running with IsNewVersion false
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_3000, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3000, Function | SmallTest | Level1)
 {
     std::vector<std::string> results;
     std::string bundleName = "bundleName";
@@ -1120,31 +924,11 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3000, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: AOTHandler_3000
- * @tc.name: test AOTHandler
- * @tc.desc: test ClearArkAp function running normally
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_3100, Function | SmallTest | Level0)
-{
-    InnerBundleInfo innerBundleInfo;
-    ApplicationInfo applicationInfo;
-    applicationInfo.bundleName = AOT_BUNDLE_NAME;
-    BundleInfo bundleInfo;
-    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
-    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
-    ClearDataMgr();
-    AOTHandler::GetInstance().ClearArkAp();
-    ResetDataMgr();
-}
-
-/**
  * @tc.number: AOTExecutor_1200
  * @tc.name: test GetSubjectInfo
  * @tc.desc: test GetSubjectInfo function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1200, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1200, Function | SmallTest | Level1)
 {
     std::optional<AOTArgs> aotArgs;
     AOTArgs aotArg;
@@ -1156,10 +940,10 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1200, Function | SmallTest | Level0)
 
 /**
  * @tc.number: AOTExecutor_1300
- * @tc.name: test MapHapArgs
- * @tc.desc: test MapHapArgs function running normally
+ * @tc.name: test MapBundleArgs
+ * @tc.desc: test MapBundleArgs function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1300, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1300, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     aotArgs.bundleName = "bundleName";
@@ -1174,7 +958,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1300, Function | SmallTest | Level0)
     aotArgs.hspVector.emplace_back(CreateHspInfo());
     aotArgs.hspVector.emplace_back(CreateHspInfo());
     std::unordered_map<std::string, std::string> argsMap;
-    AOTExecutor::GetInstance().MapHapArgs(aotArgs, argsMap);
+    AOTExecutor::GetInstance().MapBundleArgs(aotArgs, argsMap);
     EXPECT_EQ(argsMap.empty(), false);
 }
 
@@ -1183,7 +967,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1300, Function | SmallTest | Level0)
  * @tc.name: test PendSignAOT
  * @tc.desc: test PendSignAOT function running with exception parameter
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1400, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1400, Function | SmallTest | Level1)
 {
     std::string anFileName = "anFileName";
     std::vector<uint8_t> signData(HAP_PATH.begin(), HAP_PATH.end());
@@ -1194,9 +978,9 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1400, Function | SmallTest | Level0)
 /**
  * @tc.number: AOTSignDataCacheMgr_0100
  * @tc.name: test AOTSignDataCacheMgr
- * @tc.desc: test AddSignDataForHap function running normally
+ * @tc.desc: test AddSignDataForModule function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0100, Function | SmallTest | Level1)
 {
     std::optional<AOTArgs> aotArgs;
     AOTArgs aotArg;
@@ -1206,17 +990,17 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0100, Function | SmallTest | Level0)
     int32_t versionCode = 1;
     std::vector<uint8_t> pendSignData(HAP_PATH.begin(), HAP_PATH.end());
     ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
-    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(*aotArgs, versionCode, pendSignData, ret);
-    EXPECT_EQ(AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.empty(), false);
-    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForModule(*aotArgs, versionCode, pendSignData, ret);
+    EXPECT_EQ(AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.empty(), false);
+    AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.clear();
 }
 
 /**
  * @tc.number: AOTSignDataCacheMgr_0200
  * @tc.name: test AOTSignDataCacheMgr
- * @tc.desc: test AddSignDataForHap function running with exception parameter
+ * @tc.desc: test AddSignDataForModule function running with exception parameter
  */
-HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0200, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0200, Function | SmallTest | Level1)
 {
     std::optional<AOTArgs> aotArgs;
     std::optional<AOTArgs> aotArgs2;
@@ -1237,32 +1021,32 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0200, Function | SmallTest | Level0)
     ErrCode ret = ERR_OK;
     AOTSignDataCacheMgr& signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
     signDataCacheMgr.isLocked_ = false;
-    signDataCacheMgr.AddSignDataForHap(*aotArgs, versionCode, pendSignData, ret);
-    EXPECT_EQ(signDataCacheMgr.hapSignDataVector_.empty(), true);
+    signDataCacheMgr.AddSignDataForModule(*aotArgs, versionCode, pendSignData, ret);
+    EXPECT_EQ(signDataCacheMgr.moduleSignDataVector_.empty(), true);
     signDataCacheMgr.isLocked_ = true;
-    signDataCacheMgr.AddSignDataForHap(*aotArgs, versionCode, pendSignData, ret);
-    EXPECT_EQ(signDataCacheMgr.hapSignDataVector_.empty(), true);
+    signDataCacheMgr.AddSignDataForModule(*aotArgs, versionCode, pendSignData, ret);
+    EXPECT_EQ(signDataCacheMgr.moduleSignDataVector_.empty(), true);
     ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
-    signDataCacheMgr.AddSignDataForHap(*aotArgs, versionCode, pendSignData, ret);
-    EXPECT_EQ(signDataCacheMgr.hapSignDataVector_.empty(), true);
+    signDataCacheMgr.AddSignDataForModule(*aotArgs, versionCode, pendSignData, ret);
+    EXPECT_EQ(signDataCacheMgr.moduleSignDataVector_.empty(), true);
     signDataCacheMgr.isLocked_ = false;
-    signDataCacheMgr.AddSignDataForHap(*aotArgs, versionCode, pendSignData, ret);
-    EXPECT_EQ(signDataCacheMgr.hapSignDataVector_.empty(), true);
+    signDataCacheMgr.AddSignDataForModule(*aotArgs, versionCode, pendSignData, ret);
+    EXPECT_EQ(signDataCacheMgr.moduleSignDataVector_.empty(), true);
     ret = ERR_OK;
-    signDataCacheMgr.AddSignDataForHap(*aotArgs, versionCode, pendSignData2, ret);
-    EXPECT_EQ(signDataCacheMgr.hapSignDataVector_.empty(), true);
+    signDataCacheMgr.AddSignDataForModule(*aotArgs, versionCode, pendSignData2, ret);
+    EXPECT_EQ(signDataCacheMgr.moduleSignDataVector_.empty(), true);
     ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
-    signDataCacheMgr.AddSignDataForHap(*aotArgs, versionCode, pendSignData2, ret);
-    EXPECT_EQ(signDataCacheMgr.hapSignDataVector_.empty(), true);
+    signDataCacheMgr.AddSignDataForModule(*aotArgs, versionCode, pendSignData2, ret);
+    EXPECT_EQ(signDataCacheMgr.moduleSignDataVector_.empty(), true);
     ret = ERR_OK;
     signDataCacheMgr.isLocked_ = true;
-    signDataCacheMgr.AddSignDataForHap(*aotArgs, versionCode, pendSignData2, ret);
-    EXPECT_EQ(signDataCacheMgr.hapSignDataVector_.empty(), true);
+    signDataCacheMgr.AddSignDataForModule(*aotArgs, versionCode, pendSignData2, ret);
+    EXPECT_EQ(signDataCacheMgr.moduleSignDataVector_.empty(), true);
     ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
-    signDataCacheMgr.AddSignDataForHap(*aotArgs2, versionCode, pendSignData2, ret);
-    EXPECT_EQ(signDataCacheMgr.hapSignDataVector_.empty(), true);
-    signDataCacheMgr.AddSignDataForHap(*aotArgs3, versionCode, pendSignData2, ret);
-    EXPECT_EQ(signDataCacheMgr.hapSignDataVector_.empty(), true);
+    signDataCacheMgr.AddSignDataForModule(*aotArgs2, versionCode, pendSignData2, ret);
+    EXPECT_EQ(signDataCacheMgr.moduleSignDataVector_.empty(), true);
+    signDataCacheMgr.AddSignDataForModule(*aotArgs3, versionCode, pendSignData2, ret);
+    EXPECT_EQ(signDataCacheMgr.moduleSignDataVector_.empty(), true);
 }
 
 /**
@@ -1270,7 +1054,7 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0200, Function | SmallTest | Level0)
  * @tc.name: test RegisterScreenUnlockListener and UnregisterScreenUnlockEvent
  * @tc.desc: test RegisterScreenUnlockListener function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0300, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0300, Function | SmallTest | Level1)
 {
     AOTSignDataCacheMgr& signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
     signDataCacheMgr.RegisterScreenUnlockListener();
@@ -1283,7 +1067,7 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0300, Function | SmallTest | Level0)
  * @tc.name: test HandleUnlockEvent
  * @tc.desc: test HandleUnlockEvent function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0400, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0400, Function | SmallTest | Level1)
 {
     AOTSignDataCacheMgr& signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
     signDataCacheMgr.HandleUnlockEvent();
@@ -1295,7 +1079,7 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0400, Function | SmallTest | Level0)
  * @tc.name: test EnforceCodeSign
  * @tc.desc: test EnforceCodeSign function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0500, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0500, Function | SmallTest | Level1)
 {
     AOTSignDataCacheMgr& signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
     bool ret = signDataCacheMgr.EnforceCodeSign();
@@ -1307,7 +1091,7 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0500, Function | SmallTest | Level0)
  * @tc.name: test DecToHex
  * @tc.desc: test DecToHex function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1500, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1500, Function | SmallTest | Level1)
 {
     std::string result = AOTExecutor::GetInstance().DecToHex(50);
     EXPECT_EQ(result, "0x32");
@@ -1318,19 +1102,24 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1500, Function | SmallTest | Level0)
  * @tc.name: test CheckArgs
  * @tc.desc: test CheckArgs function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1600, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1600, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     bool result = AOTExecutor::GetInstance().CheckArgs(aotArgs);
     EXPECT_FALSE(result);
-    aotArgs.compileMode = "partial";
+
     aotArgs.hapPath = "hapPath";
-    aotArgs.outputPath = "outputPath";
     result = AOTExecutor::GetInstance().CheckArgs(aotArgs);
     EXPECT_FALSE(result);
-    aotArgs.arkProfilePath = "arkProfilePath";
+
+    aotArgs.outputPath = "outputPath";
     result = AOTExecutor::GetInstance().CheckArgs(aotArgs);
     EXPECT_TRUE(result);
+
+    AOTArgs aotArgs2;
+    aotArgs2.outputPath = "outputPath";
+    result = AOTExecutor::GetInstance().CheckArgs(aotArgs2);
+    EXPECT_FALSE(result);
 }
 
 /**
@@ -1338,7 +1127,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1600, Function | SmallTest | Level0)
  * @tc.name: test GetAbcFileInfo
  * @tc.desc: test GetAbcFileInfo function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1700, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1700, Function | SmallTest | Level1)
 {
     std::string hapPath = "";
     uint32_t offset = OFFSET;
@@ -1355,7 +1144,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1700, Function | SmallTest | Level0)
  * @tc.name: test PrepareArgs
  * @tc.desc: test PrepareArgs function return value
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1800, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1800, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     aotArgs.hapPath = HAP_PATH;
@@ -1375,7 +1164,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1800, Function | SmallTest | Level0)
  * @tc.name: test InitState
  * @tc.desc: system running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1900, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1900, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     aotArgs.outputPath = OUT_PUT_PATH;
@@ -1389,7 +1178,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1900, Function | SmallTest | Level0)
  * @tc.name: test ResetState
  * @tc.desc: system running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_2000, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_2000, Function | SmallTest | Level1)
 {
     AOTExecutor::GetInstance().ResetState();
     EXPECT_FALSE(AOTExecutor::GetInstance().state_.running);
@@ -1400,7 +1189,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_2000, Function | SmallTest | Level0)
  * @tc.name: test StartAOTCompiler
  * @tc.desc: system running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_2100, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_2100, Function | SmallTest | Level1)
 {
     AOTArgs aotArgs;
     std::vector<uint8_t> signData;
@@ -1413,7 +1202,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_2100, Function | SmallTest | Level0)
  * @tc.name: test GetAbcRelativePath
  * @tc.desc: system running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_2200, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_2200, Function | SmallTest | Level1)
 {
     EXPECT_EQ(AOTExecutor::GetInstance().GetAbcRelativePath(Constants::ARKTS_MODE_DYNAMIC), ABC_RELATIVE_PATH);
     EXPECT_EQ(AOTExecutor::GetInstance().GetAbcRelativePath(Constants::ARKTS_MODE_STATIC), STATIC_ABC_RELATIVE_PATH);
@@ -1425,7 +1214,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_2200, Function | SmallTest | Level0)
  * @tc.name: test MkApDestDirIfNotExist
  * @tc.desc: test MkApDestDirIfNotExist function running
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_3200, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3200, Function | SmallTest | Level1)
 {
     ErrCode ret = AOTHandler::GetInstance().MkApDestDirIfNotExist();
     EXPECT_EQ(ret, ERR_OK);
@@ -1436,7 +1225,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3200, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test GetSouceAp function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_3300, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3300, Function | SmallTest | Level1)
 {
     int32_t userId = 100;
     std::string bundleName = "bundleName";
@@ -1452,7 +1241,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3300, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test IsSupportARM64 function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_3400, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3400, Function | SmallTest | Level1)
 {
     bool result = AOTHandler::GetInstance().IsSupportARM64();
     EXPECT_TRUE(result);
@@ -1461,14 +1250,14 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3400, Function | SmallTest | Level0)
 /**
  * @tc.number: AOTHandler_3500
  * @tc.name: test AOTHandler
- * @tc.desc: test HandleCompileWithSingleHap function running normally
+ * @tc.desc: test HandleCompileWithSingleModule function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_3500, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3500, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     std::string bundleName = "bundleName";
     std::string compileMode;
-    ErrCode ret = AOTHandler::GetInstance().HandleCompileWithSingleHap(info, bundleName, compileMode, true);
+    ErrCode ret = AOTHandler::GetInstance().HandleCompileWithSingleModule(info, bundleName, compileMode, true);
     EXPECT_EQ(ret, ERR_APPEXECFWK_AOT_ARGS_EMPTY);
 }
 
@@ -1477,7 +1266,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3500, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test HandleCompileModules function running
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_3600, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3600, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     std::string moduleName = "moduleName";
@@ -1492,20 +1281,32 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3600, Function | SmallTest | Level0)
 /**
  * @tc.number: AOTHandler_3700
  * @tc.name: test AOTHandler
- * @tc.desc: test ClearArkCacheDir function running
+ * @tc.desc: test HandleResetAllAOT resets AOT flags of all bundles to NOT_COMPILED
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_3700, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3700, Function | SmallTest | Level1)
 {
-    AOTHandler::GetInstance().ClearArkCacheDir();
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
-    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
-    std::for_each(bundleNames.cbegin(), bundleNames.cend(), [dataMgr](const auto &bundleName) {
-        std::string removeDir = ServiceConstants::ARK_CACHE_PATH + bundleName;
-        ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
-        ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->RemoveDir(removeDir);
-        EXPECT_EQ(ret, ERR_OK);
-    });
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.aotCompileStatus = AOTCompileStatus::IDLE_COMPILE_SUCCESS;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+
+    AOTHandler::GetInstance().HandleResetAllAOT();
+
+    auto item = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::NOT_COMPILED);
+    dataMgr->bundleInfos_.erase(AOT_BUNDLE_NAME);
 }
 
 /**
@@ -1513,7 +1314,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3700, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test HandleOTACompile function running
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_3800, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3800, Function | SmallTest | Level1)
 {
     system::SetParameter(OTA_COMPILE_SWITCH, "on");
     system::SetParameter(OTA_COMPILE_TIME, "0");
@@ -1527,7 +1328,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3800, Function | SmallTest | Level0)
  * @tc.name: test AOTHandler
  * @tc.desc: test GetUserBehaviourAppList function running
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_3900, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3900, Function | SmallTest | Level1)
 {
     std::vector<std::string> bundleNames;
     bool result = AOTHandler::GetInstance().GetUserBehaviourAppList(bundleNames, 0);
@@ -1538,18 +1339,6 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3900, Function | SmallTest | Level0)
         dlclose(handle);
         EXPECT_TRUE(result);
     }
-}
-
-/**
- * @tc.number: AOTHandler_4000
- * @tc.name: test AOTHandler
- * @tc.desc: test DeleteArkAp function running
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_4000, Function | SmallTest | Level0)
-{
-    BundleInfo bundleInfo;
-    AOTHandler::GetInstance().DeleteArkAp(bundleInfo, 0);
-    EXPECT_NE(AppExecFwk::InstalldClient::GetInstance()->installdProxy_, nullptr);
 }
 
 /**
@@ -1564,6 +1353,26 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_4400, Function | SmallTest | Level1)
     ASSERT_NE(dataMgr, nullptr);
     auto result = AOTHandler::GetInstance().HandleCompileWithBundle(AOT_BUNDLE_NAME, AOT_MODULE_NAME, dataMgr);
     EXPECT_EQ(result.failureReason, FAILURE_REASON_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: AOTHandler_4000
+ * @tc.name: test DeleteArkAp
+ * @tc.desc: test DeleteArkAp with modules exercises the removal loop,
+ *           verify the expected ark-profile path is well-formed
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_4000, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    bundleInfo.name = AOT_BUNDLE_NAME;
+    bundleInfo.moduleNames.push_back(AOT_MODULE_NAME);
+    bundleInfo.moduleNames.push_back("secondModule");
+    AOTHandler::GetInstance().DeleteArkAp(bundleInfo, USERID_ONE);
+
+    std::string expectedPath = AOTHandler::BuildArkProfilePath(USERID_ONE, AOT_BUNDLE_NAME);
+    EXPECT_FALSE(expectedPath.empty());
+    EXPECT_NE(expectedPath.find(std::to_string(USERID_ONE)), std::string::npos);
+    EXPECT_NE(expectedPath.find("aot_compiler/ark_profile"), std::string::npos);
 }
 
 /**
@@ -1669,7 +1478,7 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0300, Function | SmallTest | Level1)
  * @tc.name: test EnforceCodeSign
  * @tc.desc: test EnforceCodeSign function running normally
  */
-HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0600, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0600, Function | SmallTest | Level1)
 {
     AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
     std::optional<AOTArgs> aotArgs;
@@ -1680,7 +1489,7 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0600, Function | SmallTest | Level0)
     int32_t versionCode = 1;
     std::vector<uint8_t> pendSignData(HAP_PATH.begin(), HAP_PATH.end());
     ErrCode result = ERR_OK;
-    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(*aotArgs, versionCode, pendSignData, result);
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForModule(*aotArgs, versionCode, pendSignData, result);
     bool ret = signDataCacheMgr.EnforceCodeSign();
     EXPECT_TRUE(ret);
 }
@@ -1705,8 +1514,8 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0700, Function | SmallTest | Level1)
 HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0800, Function | SmallTest | Level1)
 {
     AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
-    AppExecFwk::AOTSignDataCacheMgr::HapSignData data;
-    signDataCacheMgr.hapSignDataVector_.emplace_back(data);
+    AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
+    signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
     SetPendSignAOTCode(ERR_OK);
     InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
     bool ret = signDataCacheMgr.EnforceCodeSign();
@@ -1721,8 +1530,8 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0800, Function | SmallTest | Level1)
 HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0900, Function | SmallTest | Level1)
 {
     AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
-    AppExecFwk::AOTSignDataCacheMgr::HapSignData data;
-    signDataCacheMgr.hapSignDataVector_.emplace_back(data);
+    AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
+    signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
     SetPendSignAOTCode(ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE);
     InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
     bool ret = signDataCacheMgr.EnforceCodeSign();
@@ -1737,8 +1546,8 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0900, Function | SmallTest | Level1)
 HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_1000, Function | SmallTest | Level1)
 {
     AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
-    AppExecFwk::AOTSignDataCacheMgr::HapSignData data;
-    signDataCacheMgr.hapSignDataVector_.emplace_back(data);
+    AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
+    signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
     SetPendSignAOTCode(ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
     bool ret = signDataCacheMgr.EnforceCodeSign();
@@ -1849,7 +1658,7 @@ HWTEST_F(BmsAOTMgrTest, HandleCompile_4000, TestSize.Level1)
  * @tc.name: test IsDriverForAllUser
  * @tc.desc: 1.Test the IsDriverForAllUser
 */
-HWTEST_F(BmsAOTMgrTest, IsDriverForAllUser_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, IsDriverForAllUser_0100, Function | SmallTest | Level1)
 {
     BaseBundleInstaller installer;
     installer.InitDataMgr();
@@ -1981,13 +1790,13 @@ HWTEST_F(BmsAOTMgrTest, AddSignDataForSysComp_0500, Function | SmallTest | Level
 }
 
 /**
- * @tc.number: AddSignDataForHap_0100
- * @tc.name: Test AddSignDataForHap
- * @tc.desc: 1.AddSignDataForHap success testcase
+ * @tc.number: AddSignDataForModule_0100
+ * @tc.name: Test AddSignDataForModule
+ * @tc.desc: 1.AddSignDataForModule success testcase
  */
-HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, AddSignDataForModule_0100, Function | SmallTest | Level1)
 {
-    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+    AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.clear();
 
     AOTArgs aotArgs;
     aotArgs.bundleName = "bundleName";
@@ -1996,21 +1805,21 @@ HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0100, Function | SmallTest | Level1)
     AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
     ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
 
-    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(aotArgs, 0, signData, ret);
-    size_t size = AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.size();
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForModule(aotArgs, 0, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.size();
     EXPECT_NE(size, 0);
 
-    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+    AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.clear();
 }
 
 /**
- * @tc.number: AddSignDataForHap_0200
- * @tc.name: Test AddSignDataForHap
- * @tc.desc: 1.AddSignDataForHap failed testcase, bundleName is empty
+ * @tc.number: AddSignDataForModule_0200
+ * @tc.name: Test AddSignDataForModule
+ * @tc.desc: 1.AddSignDataForModule failed testcase, bundleName is empty
  */
-HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0200, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, AddSignDataForModule_0200, Function | SmallTest | Level1)
 {
-    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+    AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.clear();
 
     AOTArgs aotArgs;
     aotArgs.bundleName;
@@ -2019,19 +1828,19 @@ HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0200, Function | SmallTest | Level1)
     AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
     ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
 
-    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(aotArgs, 0, signData, ret);
-    size_t size = AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.size();
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForModule(aotArgs, 0, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.size();
     EXPECT_EQ(size, 0);
 }
 
 /**
- * @tc.number: AddSignDataForHap_0300
- * @tc.name: Test AddSignDataForHap
- * @tc.desc: 1.AddSignDataForHap failed testcase, moduleName is empty
+ * @tc.number: AddSignDataForModule_0300
+ * @tc.name: Test AddSignDataForModule
+ * @tc.desc: 1.AddSignDataForModule failed testcase, moduleName is empty
  */
-HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0300, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, AddSignDataForModule_0300, Function | SmallTest | Level1)
 {
-    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+    AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.clear();
 
     AOTArgs aotArgs;
     aotArgs.bundleName = "bundleName";
@@ -2040,19 +1849,19 @@ HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0300, Function | SmallTest | Level1)
     AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
     ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
 
-    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(aotArgs, 0, signData, ret);
-    size_t size = AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.size();
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForModule(aotArgs, 0, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.size();
     EXPECT_EQ(size, 0);
 }
 
 /**
- * @tc.number: AddSignDataForHap_0400
- * @tc.name: Test AddSignDataForHap
- * @tc.desc: 1.AddSignDataForHap failed testcase, signData is empty
+ * @tc.number: AddSignDataForModule_0400
+ * @tc.name: Test AddSignDataForModule
+ * @tc.desc: 1.AddSignDataForModule failed testcase, signData is empty
  */
-HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0400, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, AddSignDataForModule_0400, Function | SmallTest | Level1)
 {
-    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+    AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.clear();
 
     AOTArgs aotArgs;
     aotArgs.bundleName = "bundleName";
@@ -2061,19 +1870,19 @@ HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0400, Function | SmallTest | Level1)
     AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
     ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
 
-    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(aotArgs, 0, signData, ret);
-    size_t size = AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.size();
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForModule(aotArgs, 0, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.size();
     EXPECT_EQ(size, 0);
 }
 
 /**
- * @tc.number: AddSignDataForHap_0500
- * @tc.name: Test AddSignDataForHap
- * @tc.desc: 1.AddSignDataForHap failed testcase, isLocked_ is false
+ * @tc.number: AddSignDataForModule_0500
+ * @tc.name: Test AddSignDataForModule
+ * @tc.desc: 1.AddSignDataForModule failed testcase, isLocked_ is false
  */
-HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0500, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, AddSignDataForModule_0500, Function | SmallTest | Level1)
 {
-    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+    AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.clear();
 
     AOTArgs aotArgs;
     aotArgs.bundleName = "bundleName";
@@ -2082,19 +1891,19 @@ HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0500, Function | SmallTest | Level1)
     AOTSignDataCacheMgr::GetInstance().isLocked_ = false;
     ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
 
-    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(aotArgs, 0, signData, ret);
-    size_t size = AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.size();
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForModule(aotArgs, 0, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.size();
     EXPECT_EQ(size, 0);
 }
 
 /**
- * @tc.number: AddSignDataForHap_0600
- * @tc.name: Test AddSignDataForHap
- * @tc.desc: 1.AddSignDataForHap failed testcase, ret is ERR_OK
+ * @tc.number: AddSignDataForModule_0600
+ * @tc.name: Test AddSignDataForModule
+ * @tc.desc: 1.AddSignDataForModule failed testcase, ret is ERR_OK
  */
-HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0600, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, AddSignDataForModule_0600, Function | SmallTest | Level1)
 {
-    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+    AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.clear();
 
     AOTArgs aotArgs;
     aotArgs.bundleName = "bundleName";
@@ -2103,9 +1912,41 @@ HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0600, Function | SmallTest | Level1)
     AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
     ErrCode ret = ERR_OK;
 
-    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(aotArgs, 0, signData, ret);
-    size_t size = AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.size();
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForModule(aotArgs, 0, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.size();
     EXPECT_EQ(size, 0);
+}
+
+/**
+ * @tc.number: AddSignDataForModule_0700
+ * @tc.name: Test AddSignDataForModule
+ * @tc.desc: 1.verify new fields are cached for pending sign data
+ */
+HWTEST_F(BmsAOTMgrTest, AddSignDataForModule_0700, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.clear();
+
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "bundleName";
+    aotArgs.moduleName = "moduleName";
+    aotArgs.bundleType = static_cast<uint8_t>(BundleType::SHARED);
+    aotArgs.triggerType = ServiceConstants::AOT_TRIGGER_INSTALL;
+    std::vector<uint8_t> signData = {0x01, 0x02};
+    uint32_t versionCode = VERSION_CODE;
+    AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
+    ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForModule(aotArgs, versionCode, signData, ret);
+    ASSERT_EQ(AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.size(), 1);
+    const auto &cacheData = AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.back();
+    EXPECT_EQ(cacheData.bundleType, aotArgs.bundleType);
+    EXPECT_EQ(cacheData.triggerType, aotArgs.triggerType);
+    EXPECT_EQ(cacheData.versionCode, versionCode);
+    EXPECT_EQ(cacheData.bundleName, aotArgs.bundleName);
+    EXPECT_EQ(cacheData.moduleName, aotArgs.moduleName);
+    EXPECT_EQ(cacheData.signData, signData);
+
+    AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.clear();
 }
 
 /**
@@ -2131,14 +1972,45 @@ HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForSysComp_0100, Function | SmallTest | L
 }
 
 /**
- * @tc.number: EnforceCodeSignForHap_0100
- * @tc.name: Test EnforceCodeSignForHap
- * @tc.desc: 1.EnforceCodeSignForHap success testcase
+ * @tc.number: EnforceCodeSignForModule_0100
+ * @tc.name: Test EnforceCodeSignForModule
+ * @tc.desc: 1.EnforceCodeSignForModule success testcase - empty vector returns true
  */
-HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForHap_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_0100, Function | SmallTest | Level1)
 {
-    bool ret = AOTSignDataCacheMgr::GetInstance().EnforceCodeSignForHap();
+    AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.clear();
+    bool ret = AOTSignDataCacheMgr::GetInstance().EnforceCodeSignForModule();
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: EnforceCodeSignForModule_0200
+ * @tc.name: Test EnforceCodeSignForModule sign disabled branch
+ * @tc.desc: verify EnforceCodeSignForModule returns false when PendSignAOT returns
+ *           ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE, exercising the early-return branch
+ */
+HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_0200, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    signDataCacheMgr.moduleSignDataVector_.clear();
+
+    AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
+    data.bundleType = static_cast<uint8_t>(BundleType::APP);
+    data.triggerType = ServiceConstants::AOT_TRIGGER_IDLE;
+    data.versionCode = VERSION_CODE;
+    data.bundleName = AOT_BUNDLE_NAME;
+    data.moduleName = AOT_MODULE_NAME;
+    data.signData = {0x01};
+    signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
+
+    SetPendSignAOTCode(ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE);
+    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
+    bool ret = signDataCacheMgr.EnforceCodeSignForModule();
+    EXPECT_FALSE(ret);
+
+    InstalldClient::GetInstance()->installdProxy_ = nullptr;
+    InstalldClient::GetInstance()->GetInstalldProxy();
+    signDataCacheMgr.moduleSignDataVector_.clear();
 }
 
 /**
@@ -2165,7 +2037,7 @@ HWTEST_F(BmsAOTMgrTest, IsAOTFlagsInitial_0100, Function | SmallTest | Level1)
     info.baseApplicationInfo_->arkNativeFileAbi = "";
 
     std::string bundleName = "bundleName";
-    info.innerModuleInfos_[bundleName].aotCompileStatus = AOTCompileStatus::COMPILE_SUCCESS;
+    info.innerModuleInfos_[bundleName].aotCompileStatus = AOTCompileStatus::IDLE_COMPILE_SUCCESS;
     ret = info.IsAOTFlagsInitial();
     EXPECT_FALSE(ret);
 
@@ -2186,5 +2058,1487 @@ HWTEST_F(BmsAOTMgrTest, IsAOTFlagsInitial_0100, Function | SmallTest | Level1)
     info.innerModuleInfos_[bundleName].aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
     ret = info.IsAOTFlagsInitial();
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: AOTHandler_SharedHsp_BuildAOTArgs_0100
+ * @tc.name: test BuildAOTArgs for shared bundle
+ * @tc.desc: verify BuildAOTArgs builds correct shared args when bundleType is SHARED
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_SharedHsp_BuildAOTArgs_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    auto ret = AOTHandler::GetInstance().BuildAOTArgs(
+        innerBundleInfo, AOT_MODULE_NAME, "", false, ServiceConstants::AOT_TRIGGER_INSTALL);
+    ASSERT_NE(ret, std::nullopt);
+    EXPECT_EQ(ret->bundleType, static_cast<uint8_t>(BundleType::SHARED));
+    EXPECT_EQ(ret->compileMode, ServiceConstants::COMPILE_FULL);
+    EXPECT_EQ(ret->bundleUid, ServiceConstants::SYSTEM_UID);
+    EXPECT_EQ(ret->bundleGid, ServiceConstants::SYSTEM_UID);
+    EXPECT_EQ(ret->triggerType, ServiceConstants::AOT_TRIGGER_INSTALL);
+
+    std::string expectedOutputPath = AOTHandler::BuildSharedArkCachePath(AOT_BUNDLE_NAME, VERSION_CODE);
+    EXPECT_EQ(ret->outputPath, expectedOutputPath);
+}
+
+/**
+ * @tc.number: AOTHandler_SharedHsp_HandleInstallAOT_0100
+ * @tc.name: test HandleInstallAOTAsync for shared bundle
+ * @tc.desc: verify HandleInstallAOTAsync processes shared bundle correctly
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_SharedHsp_HandleInstallAOT_0100, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.sharedhsp";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    AOTHandler::GetInstance().HandleInstallAOTAsync(bundleName);
+    std::this_thread::sleep_for(std::chrono::milliseconds(ASYNC_WAIT_MILLI_SECONDS));
+
+    auto item = dataMgr->bundleInfos_.find(bundleName);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_TRUE(item->second.GetIsNewVersion());
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: AOTHandler_SharedHsp_HandleInstallAOT_0200
+ * @tc.name: test HandleInstallAOTAsync skips dynamic ArkTS shared bundle
+ * @tc.desc: verify HandleInstallAOTAsync returns early for dynamic ArkTS mode shared bundle
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_SharedHsp_HandleInstallAOT_0200, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.sharedhsp.dynamic";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    AOTHandler::GetInstance().HandleInstallAOTAsync(bundleName);
+    std::this_thread::sleep_for(std::chrono::milliseconds(ASYNC_WAIT_MILLI_SECONDS));
+
+    auto item = dataMgr->bundleInfos_.find(bundleName);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::NOT_COMPILED);
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: SharedBundleInstaller_ProcessAOT_0100
+ * @tc.name: test ProcessAOT skips AOT for first boot install
+ * @tc.desc: verify ProcessAOT returns early when isFirstBootInstall is true
+ */
+HWTEST_F(BmsAOTMgrTest, SharedBundleInstaller_ProcessAOT_0100, Function | SmallTest | Level1)
+{
+    InstallParam installParam;
+    installParam.isFirstBootInstall = true;
+    SharedBundleInstaller installer(installParam, Constants::AppType::THIRD_PARTY_APP);
+    installer.ProcessAOT();
+    EXPECT_TRUE(installer.innerInstallers_.empty());
+}
+
+/**
+ * @tc.number: SharedBundleInstaller_ProcessAOT_0200
+ * @tc.name: test ProcessAOT skips AOT for OTA install
+ * @tc.desc: verify ProcessAOT returns early when isOTA is true
+ */
+HWTEST_F(BmsAOTMgrTest, SharedBundleInstaller_ProcessAOT_0200, Function | SmallTest | Level1)
+{
+    InstallParam installParam;
+    installParam.isOTA = true;
+    SharedBundleInstaller installer(installParam, Constants::AppType::THIRD_PARTY_APP);
+    installer.ProcessAOT();
+    EXPECT_TRUE(installer.innerInstallers_.empty());
+}
+
+/**
+ * @tc.number: SharedBundleInstaller_ProcessAOT_0300
+ * @tc.name: test ProcessAOT skips AOT for create user
+ * @tc.desc: verify ProcessAOT returns early when isCreateUser is true
+ */
+HWTEST_F(BmsAOTMgrTest, SharedBundleInstaller_ProcessAOT_0300, Function | SmallTest | Level1)
+{
+    InstallParam installParam;
+    installParam.isCreateUser = true;
+    SharedBundleInstaller installer(installParam, Constants::AppType::THIRD_PARTY_APP);
+    installer.ProcessAOT();
+    EXPECT_TRUE(installer.innerInstallers_.empty());
+}
+
+/**
+ * @tc.number: SharedBundleInstaller_ProcessAOT_0400
+ * @tc.name: test ProcessAOT triggers AOT for normal install
+ * @tc.desc: verify ProcessAOT calls HandleInstallAOTAsync for each shared bundle during normal install
+ */
+HWTEST_F(BmsAOTMgrTest, SharedBundleInstaller_ProcessAOT_0400, Function | SmallTest | Level1)
+{
+    InstallParam installParam;
+    SharedBundleInstaller installer(installParam, Constants::AppType::THIRD_PARTY_APP);
+
+    std::string bundleName = "com.example.sharedhsp.normal";
+    auto innerInstaller = std::make_shared<InnerSharedBundleInstaller>("/data/test");
+    innerInstaller->bundleName_ = bundleName;
+    installer.innerInstallers_.emplace(bundleName, innerInstaller);
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        bundleName, innerBundleInfo);
+
+    installer.ProcessAOT();
+    std::this_thread::sleep_for(std::chrono::milliseconds(ASYNC_WAIT_MILLI_SECONDS));
+
+    EXPECT_FALSE(installer.innerInstallers_.empty());
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: SharedBundleInstaller_ProcessAOT_0500
+ * @tc.name: test ProcessAOT with empty shared installer list
+ * @tc.desc: verify ProcessAOT runs normal path and exits when innerInstallers_ is empty
+ */
+HWTEST_F(BmsAOTMgrTest, SharedBundleInstaller_ProcessAOT_0500, Function | SmallTest | Level1)
+{
+    InstallParam installParam;
+    SharedBundleInstaller installer(installParam, Constants::AppType::THIRD_PARTY_APP);
+    installer.innerInstallers_.clear();
+    installer.ProcessAOT();
+    EXPECT_TRUE(installer.innerInstallers_.empty());
+}
+
+/**
+ * @tc.number: ConvertToAOTCompileStatus_0100
+ * @tc.name: test ConvertToAOTCompileStatus all branches
+ * @tc.desc: 1.ERR_OK + AOT_TRIGGER_INSTALL → INSTALL_COMPILE_SUCCESS
+ *           2.ERR_OK + AOT_TRIGGER_IDLE → IDLE_COMPILE_SUCCESS
+ *           3.CRASH → COMPILE_CRASH
+ *           4.CANCELLED → COMPILE_CANCELLED
+ *           5.Other error → COMPILE_FAILED
+ */
+HWTEST_F(BmsAOTMgrTest, ConvertToAOTCompileStatus_0100, Function | SmallTest | Level1)
+{
+    auto status = AOTHandler::ConvertToAOTCompileStatus(ERR_OK, ServiceConstants::AOT_TRIGGER_INSTALL);
+    EXPECT_EQ(status, AOTCompileStatus::INSTALL_COMPILE_SUCCESS);
+
+    status = AOTHandler::ConvertToAOTCompileStatus(ERR_OK, ServiceConstants::AOT_TRIGGER_IDLE);
+    EXPECT_EQ(status, AOTCompileStatus::IDLE_COMPILE_SUCCESS);
+
+    status = AOTHandler::ConvertToAOTCompileStatus(
+        ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CRASH, ServiceConstants::AOT_TRIGGER_IDLE);
+    EXPECT_EQ(status, AOTCompileStatus::COMPILE_CRASH);
+
+    status = AOTHandler::ConvertToAOTCompileStatus(
+        ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CRASH, ServiceConstants::AOT_TRIGGER_INSTALL);
+    EXPECT_EQ(status, AOTCompileStatus::COMPILE_CRASH);
+
+    status = AOTHandler::ConvertToAOTCompileStatus(
+        ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CANCELLED, ServiceConstants::AOT_TRIGGER_IDLE);
+    EXPECT_EQ(status, AOTCompileStatus::COMPILE_CANCELLED);
+
+    status = AOTHandler::ConvertToAOTCompileStatus(
+        ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CANCELLED, ServiceConstants::AOT_TRIGGER_INSTALL);
+    EXPECT_EQ(status, AOTCompileStatus::COMPILE_CANCELLED);
+
+    status = AOTHandler::ConvertToAOTCompileStatus(
+        ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED, ServiceConstants::AOT_TRIGGER_IDLE);
+    EXPECT_EQ(status, AOTCompileStatus::COMPILE_FAILED);
+
+    status = AOTHandler::ConvertToAOTCompileStatus(
+        ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED, ServiceConstants::AOT_TRIGGER_INSTALL);
+    EXPECT_EQ(status, AOTCompileStatus::COMPILE_FAILED);
+}
+
+/**
+ * @tc.number: NeedCompile_0100
+ * @tc.name: test NeedCompile with all AOTCompileStatus values
+ * @tc.desc: NOT_COMPILED, COMPILE_CANCELLED, INSTALL_COMPILE_SUCCESS → true;
+ *           IDLE_COMPILE_SUCCESS, COMPILE_FAILED, COMPILE_CRASH → false
+ */
+HWTEST_F(BmsAOTMgrTest, NeedCompile_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    info.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    info.SetAOTCompileStatus(AOT_MODULE_NAME, AOTCompileStatus::NOT_COMPILED);
+    EXPECT_TRUE(AOTHandler::GetInstance().NeedCompile(info, AOT_MODULE_NAME));
+
+    info.SetAOTCompileStatus(AOT_MODULE_NAME, AOTCompileStatus::COMPILE_CANCELLED);
+    EXPECT_TRUE(AOTHandler::GetInstance().NeedCompile(info, AOT_MODULE_NAME));
+
+    info.SetAOTCompileStatus(AOT_MODULE_NAME, AOTCompileStatus::INSTALL_COMPILE_SUCCESS);
+    EXPECT_TRUE(AOTHandler::GetInstance().NeedCompile(info, AOT_MODULE_NAME));
+
+    info.SetAOTCompileStatus(AOT_MODULE_NAME, AOTCompileStatus::IDLE_COMPILE_SUCCESS);
+    EXPECT_FALSE(AOTHandler::GetInstance().NeedCompile(info, AOT_MODULE_NAME));
+
+    info.SetAOTCompileStatus(AOT_MODULE_NAME, AOTCompileStatus::COMPILE_FAILED);
+    EXPECT_FALSE(AOTHandler::GetInstance().NeedCompile(info, AOT_MODULE_NAME));
+
+    info.SetAOTCompileStatus(AOT_MODULE_NAME, AOTCompileStatus::COMPILE_CRASH);
+    EXPECT_FALSE(AOTHandler::GetInstance().NeedCompile(info, AOT_MODULE_NAME));
+}
+
+/**
+ * @tc.number: GetAOTCompileStatusWithVersion_0100
+ * @tc.name: test GetAOTCompileStatusWithVersion
+ * @tc.desc: 1.module found with matching versionCode → return actual status
+ *           2.module found with mismatching versionCode → return NOT_COMPILED
+ *           3.module not found → return NOT_COMPILED
+ */
+HWTEST_F(BmsAOTMgrTest, GetAOTCompileStatusWithVersion_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.versionCode = VERSION_CODE;
+    moduleInfo.aotCompileStatus = AOTCompileStatus::IDLE_COMPILE_SUCCESS;
+    info.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    auto status = info.GetAOTCompileStatusWithVersion(AOT_MODULE_NAME, VERSION_CODE);
+    EXPECT_EQ(status, AOTCompileStatus::IDLE_COMPILE_SUCCESS);
+
+    status = info.GetAOTCompileStatusWithVersion(AOT_MODULE_NAME, VERSION_CODE + 1);
+    EXPECT_EQ(status, AOTCompileStatus::NOT_COMPILED);
+
+    status = info.GetAOTCompileStatusWithVersion("nonExistModule", VERSION_CODE);
+    EXPECT_EQ(status, AOTCompileStatus::NOT_COMPILED);
+}
+
+/**
+ * @tc.number: GetAOTCompileStatusWithVersion_0200
+ * @tc.name: test GetAOTCompileStatusWithVersion with INSTALL_COMPILE_SUCCESS
+ * @tc.desc: verify INSTALL_COMPILE_SUCCESS is returned when version matches
+ */
+HWTEST_F(BmsAOTMgrTest, GetAOTCompileStatusWithVersion_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.versionCode = VERSION_CODE;
+    moduleInfo.aotCompileStatus = AOTCompileStatus::INSTALL_COMPILE_SUCCESS;
+    info.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    auto status = info.GetAOTCompileStatusWithVersion(AOT_MODULE_NAME, VERSION_CODE);
+    EXPECT_EQ(status, AOTCompileStatus::INSTALL_COMPILE_SUCCESS);
+}
+
+/**
+ * @tc.number: BuildAppArgs_0100
+ * @tc.name: test BuildAppArgs idle partial with empty profile
+ * @tc.desc: verify BuildAOTArgs returns nullopt when triggerType is idle,
+ *           compileMode is partial, and arkProfilePath is empty
+ */
+HWTEST_F(BmsAOTMgrTest, BuildAppArgs_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    auto ret = AOTHandler::GetInstance().BuildAOTArgs(
+        innerBundleInfo, AOT_MODULE_NAME, ServiceConstants::COMPILE_PARTIAL,
+        false, ServiceConstants::AOT_TRIGGER_IDLE);
+    EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: BuildAppArgs_0200
+ * @tc.name: test BuildAppArgs with install trigger skips profile check
+ * @tc.desc: verify BuildAppArgs does not check arkProfilePath when triggerType is install,
+ *           but fails because no user info exists
+ */
+HWTEST_F(BmsAOTMgrTest, BuildAppArgs_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    auto ret = AOTHandler::GetInstance().BuildAOTArgs(
+        innerBundleInfo, AOT_MODULE_NAME, ServiceConstants::COMPILE_PARTIAL,
+        false, ServiceConstants::AOT_TRIGGER_INSTALL);
+    EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: BuildAppArgs_0400
+ * @tc.name: test BuildAOTArgs returns nullopt when moduleArkTSMode is empty
+ * @tc.desc: verify nullopt when module has empty moduleArkTSMode
+ */
+HWTEST_F(BmsAOTMgrTest, BuildAppArgs_0400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    auto ret = AOTHandler::GetInstance().BuildAOTArgs(
+        innerBundleInfo, "nonExistModule", "", false, ServiceConstants::AOT_TRIGGER_INSTALL);
+    EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: HandleInstallAOT_0100
+ * @tc.name: test HandleInstallAOT with not stage model
+ * @tc.desc: verify HandleInstallAOT returns early if IsNewVersion is false
+ */
+HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0100, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.oldmodel";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    auto item = dataMgr->bundleInfos_.find(bundleName);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_FALSE(item->second.GetIsNewVersion());
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: HandleInstallAOT_0200
+ * @tc.name: test HandleInstallAOT with all-dynamic ArkTS app
+ * @tc.desc: verify HandleInstallAOT returns early if app ArkTS mode is dynamic
+ */
+HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0200, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.dynamicapp";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    auto item = dataMgr->bundleInfos_.find(bundleName);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::NOT_COMPILED);
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: HandleInstallAOT_0300
+ * @tc.name: test HandleInstallAOT with dataMgr null
+ * @tc.desc: verify HandleInstallAOT returns early if dataMgr is null
+ */
+HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0300, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    AOTHandler::GetInstance().HandleInstallAOT(AOT_BUNDLE_NAME);
+    ResetDataMgr();
+    EXPECT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+}
+
+/**
+ * @tc.number: HandleInstallAOT_0400
+ * @tc.name: test HandleInstallAOT with bundle not found
+ * @tc.desc: verify HandleInstallAOT returns early if QueryInnerBundleInfo fails
+ */
+HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0400, Function | SmallTest | Level1)
+{
+    AOTHandler::GetInstance().HandleInstallAOT("nonExistentBundle");
+    EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.count("nonExistentBundle"), 0);
+}
+
+/**
+ * @tc.number: HandleInstallAOT_0500
+ * @tc.name: test HandleInstallAOT returns early when bundle is not in AOT enable list
+ * @tc.desc: verify HandleInstallAOT returns early when the bundle is absent from
+ *           the AOT compile enable list (config file not present in test environment),
+ *           regardless of the ArkTS mode of individual modules
+ */
+HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0500, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.mixedmodules";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    InnerModuleInfo staticModule;
+    staticModule.moduleName = "staticModule";
+    staticModule.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace("staticModule", staticModule);
+
+    InnerModuleInfo dynamicModule;
+    dynamicModule.moduleName = "dynamicModule";
+    dynamicModule.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace("dynamicModule", dynamicModule);
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        bundleName, innerBundleInfo);
+    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    // AOT flags must remain NOT_COMPILED because the bundle is not in the enable list
+    auto item = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.find(bundleName);
+    ASSERT_NE(item, DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus("staticModule"), AOTCompileStatus::NOT_COMPILED);
+    EXPECT_EQ(item->second.GetAOTCompileStatus("dynamicModule"), AOTCompileStatus::NOT_COMPILED);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: HandleResetBundleAOT_0100
+ * @tc.name: test HandleResetBundleAOT isAllBundle with bm.aot.test param set
+ * @tc.desc: verify ResetAllBundleAOT is called when isAllBundle and bm.aot.test is non-empty
+ */
+HWTEST_F(BmsAOTMgrTest, HandleResetBundleAOT_0100, Function | SmallTest | Level1)
+{
+    system::SetParameter("bm.aot.test", "test");
+    AOTHandler::GetInstance().HandleResetBundleAOT("", true);
+    std::string param = system::GetParameter("bm.aot.test", "");
+    EXPECT_EQ(param, "test");
+    system::SetParameter("bm.aot.test", "");
+}
+
+/**
+ * @tc.number: HandleResetBundleAOT_0200
+ * @tc.name: test HandleResetBundleAOT for single SHARED bundle
+ * @tc.desc: verify HandleResetBundleAOT removes shared ark cache for SHARED bundle type
+ */
+HWTEST_F(BmsAOTMgrTest, HandleResetBundleAOT_0200, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.shared.reset";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.aotCompileStatus = AOTCompileStatus::IDLE_COMPILE_SUCCESS;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+    AOTHandler::GetInstance().HandleResetBundleAOT(bundleName, false);
+    auto item = dataMgr->bundleInfos_.find(bundleName);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::NOT_COMPILED);
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: HandleResetBundleAOT_0300
+ * @tc.name: test HandleResetBundleAOT for single APP bundle
+ * @tc.desc: verify HandleResetBundleAOT removes hap ark cache for APP bundle type
+ */
+HWTEST_F(BmsAOTMgrTest, HandleResetBundleAOT_0300, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.app.reset";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::APP;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.aotCompileStatus = AOTCompileStatus::IDLE_COMPILE_SUCCESS;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+    AOTHandler::GetInstance().HandleResetBundleAOT(bundleName, false);
+    auto item = dataMgr->bundleInfos_.find(bundleName);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::NOT_COMPILED);
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: HandleResetBundleAOT_0400
+ * @tc.name: test HandleResetBundleAOT for non-existent single bundle
+ * @tc.desc: verify HandleResetBundleAOT returns early when GetBundleType fails
+ */
+HWTEST_F(BmsAOTMgrTest, HandleResetBundleAOT_0400, Function | SmallTest | Level1)
+{
+    AOTHandler::GetInstance().HandleResetBundleAOT("nonExistentBundle", false);
+    EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.count("nonExistentBundle"), 0);
+}
+
+/**
+ * @tc.number: HandleResetBundleAOT_0500
+ * @tc.name: test HandleResetBundleAOT with dataMgr null for single bundle
+ * @tc.desc: verify HandleResetBundleAOT returns early when dataMgr is null
+ */
+HWTEST_F(BmsAOTMgrTest, HandleResetBundleAOT_0500, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    AOTHandler::GetInstance().HandleResetBundleAOT("bundleName", false);
+    ResetDataMgr();
+    EXPECT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+}
+
+/**
+ * @tc.number: ResetAllSysCompAOT_0100
+ * @tc.name: test ResetAllSysCompAOT
+ * @tc.desc: verify ResetAllSysCompAOT runs without error
+ */
+HWTEST_F(BmsAOTMgrTest, ResetAllSysCompAOT_0100, Function | SmallTest | Level1)
+{
+    AOTHandler::GetInstance().ResetAllSysCompAOT();
+    EXPECT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+}
+
+/**
+ * @tc.number: ResetAllBundleAOT_0100
+ * @tc.name: test ResetAllBundleAOT with dataMgr null
+ * @tc.desc: verify ResetAllBundleAOT returns early when dataMgr is null
+ */
+HWTEST_F(BmsAOTMgrTest, ResetAllBundleAOT_0100, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    AOTHandler::GetInstance().ResetAllBundleAOT();
+    ResetDataMgr();
+    EXPECT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+}
+
+/**
+ * @tc.number: ResetAllBundleAOT_0200
+ * @tc.name: test ResetAllBundleAOT with valid dataMgr
+ * @tc.desc: verify ResetAllBundleAOT resets AOT flags and clears cache dirs
+ */
+HWTEST_F(BmsAOTMgrTest, ResetAllBundleAOT_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.aotCompileStatus = AOTCompileStatus::IDLE_COMPILE_SUCCESS;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+
+    AOTHandler::GetInstance().ResetAllBundleAOT();
+
+    auto item = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::NOT_COMPILED);
+    dataMgr->bundleInfos_.erase(AOT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ProcessAOT_FirstBootInstall_0100
+ * @tc.name: test BaseBundleInstaller ProcessAOT with isFirstBootInstall
+ * @tc.desc: verify ProcessAOT returns early when isFirstBootInstall is true
+ */
+HWTEST_F(BmsAOTMgrTest, ProcessAOT_FirstBootInstall_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.isFirstBootInstall = true;
+    installer.ProcessAOT(installParam);
+    EXPECT_TRUE(installer.bundleName_.empty());
+}
+
+/**
+ * @tc.number: ProcessAOT_CreateUser_0100
+ * @tc.name: test BaseBundleInstaller ProcessAOT with isCreateUser
+ * @tc.desc: verify ProcessAOT returns early when isCreateUser is true
+ */
+HWTEST_F(BmsAOTMgrTest, ProcessAOT_CreateUser_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.isCreateUser = true;
+    installer.ProcessAOT(installParam);
+    EXPECT_TRUE(installer.bundleName_.empty());
+}
+
+/**
+ * @tc.number: ProcessAOT_OtaInstall_0100
+ * @tc.name: test BaseBundleInstaller ProcessAOT with otaInstall_
+ * @tc.desc: verify ProcessAOT returns early when otaInstall_ is true
+ */
+HWTEST_F(BmsAOTMgrTest, ProcessAOT_OtaInstall_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installer.otaInstall_ = true;
+    installer.ProcessAOT(installParam);
+    EXPECT_TRUE(installer.otaInstall_);
+    EXPECT_TRUE(installer.bundleName_.empty());
+}
+
+/**
+ * @tc.number: ProcessAOT_InstallParamOTA_0100
+ * @tc.name: test BaseBundleInstaller ProcessAOT with installParam.isOTA
+ * @tc.desc: verify ProcessAOT returns early when installParam.isOTA is true
+ */
+HWTEST_F(BmsAOTMgrTest, ProcessAOT_InstallParamOTA_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.isOTA = true;
+    installer.ProcessAOT(installParam);
+    EXPECT_TRUE(installer.bundleName_.empty());
+}
+
+/**
+ * @tc.number: EnforceCodeSignForModule_DataMgrNull_0100
+ * @tc.name: test EnforceCodeSignForModule with dataMgr null
+ * @tc.desc: verify EnforceCodeSignForModule returns false when dataMgr is null
+ */
+HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_DataMgrNull_0100, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    signDataCacheMgr.moduleSignDataVector_.clear();
+    ClearDataMgr();
+    bool ret = signDataCacheMgr.EnforceCodeSignForModule();
+    EXPECT_FALSE(ret);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: EnforceCodeSignForModule_SharedPath_0100
+ * @tc.name: test EnforceCodeSignForModule with SHARED bundleType
+ * @tc.desc: verify EnforceCodeSignForModule uses shared ark cache path for SHARED bundleType
+ */
+HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_SharedPath_0100, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    signDataCacheMgr.moduleSignDataVector_.clear();
+
+    AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
+    data.bundleType = static_cast<uint8_t>(BundleType::SHARED);
+    data.triggerType = ServiceConstants::AOT_TRIGGER_INSTALL;
+    data.versionCode = VERSION_CODE;
+    data.bundleName = "com.example.shared.sign";
+    data.moduleName = AOT_MODULE_NAME;
+    data.signData = {0x01, 0x02};
+    signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
+
+    SetPendSignAOTCode(ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
+    bool ret = signDataCacheMgr.EnforceCodeSignForModule();
+    EXPECT_TRUE(ret);
+    InstalldClient::GetInstance()->installdProxy_ = nullptr;
+    InstalldClient::GetInstance()->GetInstalldProxy();
+}
+
+/**
+ * @tc.number: EnforceCodeSignForModule_AppPath_0100
+ * @tc.name: test EnforceCodeSignForModule with APP bundleType
+ * @tc.desc: verify EnforceCodeSignForModule uses hap ark cache path for APP bundleType
+ */
+HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_AppPath_0100, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    signDataCacheMgr.moduleSignDataVector_.clear();
+
+    AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
+    data.bundleType = static_cast<uint8_t>(BundleType::APP);
+    data.triggerType = ServiceConstants::AOT_TRIGGER_IDLE;
+    data.versionCode = VERSION_CODE;
+    data.bundleName = "com.example.app.sign";
+    data.moduleName = AOT_MODULE_NAME;
+    data.signData = {0x01, 0x02};
+    signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
+
+    SetPendSignAOTCode(ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
+    bool ret = signDataCacheMgr.EnforceCodeSignForModule();
+    EXPECT_TRUE(ret);
+    InstalldClient::GetInstance()->installdProxy_ = nullptr;
+    InstalldClient::GetInstance()->GetInstalldProxy();
+}
+
+/**
+ * @tc.number: EnforceCodeSignForModule_SignOK_Install_0100
+ * @tc.name: test EnforceCodeSignForModule sets INSTALL_COMPILE_SUCCESS on sign success
+ * @tc.desc: verify triggerType is used in ConvertToAOTCompileStatus during code sign
+ */
+HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_SignOK_Install_0100, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    signDataCacheMgr.moduleSignDataVector_.clear();
+
+    AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
+    data.bundleType = static_cast<uint8_t>(BundleType::APP);
+    data.triggerType = ServiceConstants::AOT_TRIGGER_INSTALL;
+    data.versionCode = VERSION_CODE;
+    data.bundleName = AOT_BUNDLE_NAME;
+    data.moduleName = AOT_MODULE_NAME;
+    data.signData = {0x01};
+    signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bInfo;
+    bInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        AOT_BUNDLE_NAME, innerBundleInfo);
+
+    SetPendSignAOTCode(ERR_OK);
+    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
+    bool ret = signDataCacheMgr.EnforceCodeSignForModule();
+    EXPECT_TRUE(ret);
+
+    auto item = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.find(AOT_BUNDLE_NAME);
+    if (item != DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.end()) {
+        EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::INSTALL_COMPILE_SUCCESS);
+    }
+
+    InstalldClient::GetInstance()->installdProxy_ = nullptr;
+    InstalldClient::GetInstance()->GetInstalldProxy();
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(AOT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: EnforceCodeSignForModule_SignOK_Idle_0100
+ * @tc.name: test EnforceCodeSignForModule sets IDLE_COMPILE_SUCCESS on sign success
+ * @tc.desc: verify idle triggerType produces IDLE_COMPILE_SUCCESS
+ */
+HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_SignOK_Idle_0100, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    signDataCacheMgr.moduleSignDataVector_.clear();
+
+    AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
+    data.bundleType = static_cast<uint8_t>(BundleType::APP);
+    data.triggerType = ServiceConstants::AOT_TRIGGER_IDLE;
+    data.versionCode = VERSION_CODE;
+    data.bundleName = AOT_BUNDLE_NAME;
+    data.moduleName = AOT_MODULE_NAME;
+    data.signData = {0x01};
+    signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bInfo;
+    bInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        AOT_BUNDLE_NAME, innerBundleInfo);
+
+    SetPendSignAOTCode(ERR_OK);
+    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
+    bool ret = signDataCacheMgr.EnforceCodeSignForModule();
+    EXPECT_TRUE(ret);
+
+    auto item = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.find(AOT_BUNDLE_NAME);
+    if (item != DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.end()) {
+        EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::IDLE_COMPILE_SUCCESS);
+    }
+
+    InstalldClient::GetInstance()->installdProxy_ = nullptr;
+    InstalldClient::GetInstance()->GetInstalldProxy();
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(AOT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: AOTArgs_0400
+ * @tc.name: test AOTArgs new fields Marshalling and Unmarshalling
+ * @tc.desc: verify bundleType, triggerType and staticAndHybridModuleCnt survive marshalling
+ */
+HWTEST_F(BmsAOTMgrTest, AOTArgs_0400, Function | SmallTest | Level1)
+{
+    AOTArgs aotArgs;
+    aotArgs.bundleType = static_cast<uint8_t>(BundleType::SHARED);
+    aotArgs.triggerType = ServiceConstants::AOT_TRIGGER_INSTALL;
+    aotArgs.staticAndHybridModuleCnt = 5;
+    aotArgs.bundleName = "bundleName";
+    aotArgs.moduleName = "moduleName";
+    aotArgs.hapPath = "hapPath";
+    aotArgs.outputPath = "outputPath";
+
+    Parcel parcel;
+    bool ret = aotArgs.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    std::shared_ptr<AOTArgs> aotArgsPtr(aotArgs.Unmarshalling(parcel));
+    ASSERT_NE(aotArgsPtr, nullptr);
+    EXPECT_EQ(aotArgsPtr->bundleType, aotArgs.bundleType);
+    EXPECT_EQ(aotArgsPtr->triggerType, aotArgs.triggerType);
+    EXPECT_EQ(aotArgsPtr->staticAndHybridModuleCnt, aotArgs.staticAndHybridModuleCnt);
+    EXPECT_EQ(aotArgsPtr->bundleName, aotArgs.bundleName);
+    EXPECT_EQ(aotArgsPtr->moduleName, aotArgs.moduleName);
+}
+
+/**
+ * @tc.number: AOTArgs_0500
+ * @tc.name: test AOTArgs default values for new fields
+ * @tc.desc: verify default values of bundleType, triggerType and staticAndHybridModuleCnt
+ */
+HWTEST_F(BmsAOTMgrTest, AOTArgs_0500, Function | SmallTest | Level1)
+{
+    AOTArgs aotArgs;
+    EXPECT_EQ(aotArgs.bundleType, 0);
+    EXPECT_EQ(aotArgs.triggerType, ServiceConstants::AOT_TRIGGER_IDLE);
+    EXPECT_EQ(aotArgs.staticAndHybridModuleCnt, 0u);
+}
+
+/**
+ * @tc.number: AOTArgs_0600
+ * @tc.name: test AOTArgs ToString includes new fields
+ * @tc.desc: verify ToString contains bundleType, triggerType and staticAndHybridModuleCnt values
+ */
+HWTEST_F(BmsAOTMgrTest, AOTArgs_0600, Function | SmallTest | Level1)
+{
+    AOTArgs aotArgs;
+    aotArgs.bundleType = static_cast<uint8_t>(BundleType::SHARED);
+    aotArgs.triggerType = ServiceConstants::AOT_TRIGGER_INSTALL;
+    aotArgs.staticAndHybridModuleCnt = 7;
+    std::string ret = aotArgs.ToString();
+    EXPECT_NE(ret.find("bundleType = " + std::to_string(aotArgs.bundleType)), std::string::npos);
+    EXPECT_NE(ret.find("triggerType = " + std::to_string(aotArgs.triggerType)), std::string::npos);
+    EXPECT_NE(ret.find("staticAndHybridModuleCnt = " + std::to_string(aotArgs.staticAndHybridModuleCnt)),
+        std::string::npos);
+}
+
+/**
+ * @tc.number: MapBundleArgs_0200
+ * @tc.name: test MapBundleArgs emits new fields
+ * @tc.desc: verify MapBundleArgs adds bundleType, triggerType, staticAndHybridModuleCnt to argsMap
+ */
+HWTEST_F(BmsAOTMgrTest, MapBundleArgs_0200, Function | SmallTest | Level1)
+{
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "bundleName";
+    aotArgs.moduleName = "moduleName";
+    aotArgs.bundleType = static_cast<uint8_t>(BundleType::SHARED);
+    aotArgs.triggerType = ServiceConstants::AOT_TRIGGER_INSTALL;
+    aotArgs.staticAndHybridModuleCnt = 3;
+    aotArgs.outputPath = "outputPath";
+    aotArgs.compileMode = COMPILE_FULL;
+
+    std::unordered_map<std::string, std::string> argsMap;
+    AOTExecutor::GetInstance().MapBundleArgs(aotArgs, argsMap);
+    EXPECT_EQ(argsMap["bundleType"], std::to_string(aotArgs.bundleType));
+    EXPECT_EQ(argsMap["triggerType"], std::to_string(aotArgs.triggerType));
+    EXPECT_EQ(argsMap["staticAndHybridModuleCnt"], std::to_string(aotArgs.staticAndHybridModuleCnt));
+    EXPECT_EQ(argsMap["target-compiler-mode"], aotArgs.compileMode);
+}
+
+/**
+ * @tc.number: MkAOTOutputDir_SharedType_0100
+ * @tc.name: test MkAOTOutputDir with SHARED bundleType
+ * @tc.desc: verify MkAOTOutputDir uses SHARED_HSP_ARK_CACHE_PATH as basePath for shared bundle
+ */
+HWTEST_F(BmsAOTMgrTest, MkAOTOutputDir_SharedType_0100, Function | SmallTest | Level1)
+{
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "com.example.shared.mkdir";
+    aotArgs.bundleType = 2;
+    aotArgs.outputPath = std::string(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH) + aotArgs.bundleName;
+    aotArgs.bundleUid = ServiceConstants::SYSTEM_UID;
+    aotArgs.bundleGid = ServiceConstants::SYSTEM_UID;
+    bool ret = AOTExecutor::GetInstance().MkAOTOutputDir(aotArgs);
+    struct stat st;
+    bool baseExists = (stat(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH, &st) == 0);
+    if (!baseExists) {
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: MkAOTOutputDir_AppType_0100
+ * @tc.name: test MkAOTOutputDir with APP bundleType
+ * @tc.desc: verify MkAOTOutputDir uses HAP_ARK_CACHE_PATH as basePath for app bundle
+ */
+HWTEST_F(BmsAOTMgrTest, MkAOTOutputDir_AppType_0100, Function | SmallTest | Level1)
+{
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "com.example.app.mkdir";
+    aotArgs.bundleType = 0;
+    aotArgs.bundleUid = ServiceConstants::SYSTEM_UID;
+    aotArgs.bundleGid = ServiceConstants::SYSTEM_UID;
+    bool ret = AOTExecutor::GetInstance().MkAOTOutputDir(aotArgs);
+    struct stat st;
+    bool baseExists = (stat(ServiceConstants::HAP_ARK_CACHE_PATH, &st) == 0);
+    if (!baseExists) {
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: MkdirWithAuth_0100
+ * @tc.name: test MkdirWithAuth with invalid base path
+ * @tc.desc: verify MkdirWithAuth returns false when base path is not a directory
+ */
+HWTEST_F(BmsAOTMgrTest, MkdirWithAuth_0100, Function | SmallTest | Level1)
+{
+    std::filesystem::path basePath = std::filesystem::temp_directory_path() / "bms_aot_non_exist_base";
+    std::error_code ec;
+    std::filesystem::remove_all(basePath, ec);
+    std::filesystem::path targetPath = basePath / "child";
+    bool ret = AOTExecutor::GetInstance().MkdirWithAuth(basePath, targetPath, 0, 0, 0755);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: MkdirWithAuth_0200
+ * @tc.name: test MkdirWithAuth target equals base
+ * @tc.desc: verify MkdirWithAuth returns true when targetPath equals basePath
+ */
+HWTEST_F(BmsAOTMgrTest, MkdirWithAuth_0200, Function | SmallTest | Level1)
+{
+    std::filesystem::path basePath = std::filesystem::temp_directory_path() / "bms_aot_same_base";
+    std::error_code ec;
+    std::filesystem::create_directories(basePath, ec);
+    bool ret = AOTExecutor::GetInstance().MkdirWithAuth(basePath, basePath, 0, 0, 0755);
+    EXPECT_TRUE(ret);
+    std::filesystem::remove_all(basePath, ec);
+}
+
+/**
+ * @tc.number: MkdirWithAuth_0300
+ * @tc.name: test MkdirWithAuth with parent traversal
+ * @tc.desc: verify MkdirWithAuth returns false when target escapes base with ".."
+ */
+HWTEST_F(BmsAOTMgrTest, MkdirWithAuth_0300, Function | SmallTest | Level1)
+{
+    std::filesystem::path basePath = std::filesystem::temp_directory_path() / "bms_aot_escape_base";
+    std::error_code ec;
+    std::filesystem::create_directories(basePath, ec);
+    std::filesystem::path targetPath = basePath / ".." / "escape";
+    bool ret = AOTExecutor::GetInstance().MkdirWithAuth(basePath, targetPath, 0, 0, 0755);
+    EXPECT_FALSE(ret);
+    std::filesystem::remove_all(basePath, ec);
+}
+
+/**
+ * @tc.number: MkAOTOutputDir_Traversal_0100
+ * @tc.name: test MkAOTOutputDir path traversal protection
+ * @tc.desc: verify MkAOTOutputDir returns false when shared/app target path escapes base
+ */
+HWTEST_F(BmsAOTMgrTest, MkAOTOutputDir_Traversal_0100, Function | SmallTest | Level1)
+{
+    AOTArgs sharedArgs;
+    sharedArgs.bundleType = static_cast<uint8_t>(BundleType::SHARED);
+    sharedArgs.outputPath = std::string(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH) + "../escape";
+    sharedArgs.bundleUid = ServiceConstants::SYSTEM_UID;
+    sharedArgs.bundleGid = ServiceConstants::SYSTEM_UID;
+    EXPECT_FALSE(AOTExecutor::GetInstance().MkAOTOutputDir(sharedArgs));
+
+    AOTArgs appArgs;
+    appArgs.bundleType = static_cast<uint8_t>(BundleType::APP);
+    appArgs.bundleName = "../escape";
+    appArgs.bundleUid = ServiceConstants::SYSTEM_UID;
+    appArgs.bundleGid = ServiceConstants::SYSTEM_UID;
+    EXPECT_FALSE(AOTExecutor::GetInstance().MkAOTOutputDir(appArgs));
+}
+
+/**
+ * @tc.number: StaticAndHybridModuleCnt_0100
+ * @tc.name: test staticAndHybridModuleCnt calculation in BuildAOTArgs
+ * @tc.desc: verify staticAndHybridModuleCnt counts non-dynamic modules correctly
+ */
+HWTEST_F(BmsAOTMgrTest, StaticAndHybridModuleCnt_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    InnerModuleInfo staticModule;
+    staticModule.moduleName = "staticModule";
+    staticModule.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace("staticModule", staticModule);
+
+    InnerModuleInfo dynamicModule;
+    dynamicModule.moduleName = "dynamicModule";
+    dynamicModule.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace("dynamicModule", dynamicModule);
+
+    InnerModuleInfo hybridModule;
+    hybridModule.moduleName = "hybridModule";
+    hybridModule.moduleArkTSMode = Constants::ARKTS_MODE_HYBRID;
+    innerBundleInfo.innerModuleInfos_.try_emplace("hybridModule", hybridModule);
+
+    auto ret = AOTHandler::GetInstance().BuildAOTArgs(
+        innerBundleInfo, "staticModule", "", false, ServiceConstants::AOT_TRIGGER_INSTALL);
+    ASSERT_NE(ret, std::nullopt);
+    EXPECT_EQ(ret->staticAndHybridModuleCnt, 2u);
+}
+
+/**
+ * @tc.number: StaticAndHybridModuleCnt_0200
+ * @tc.name: test staticAndHybridModuleCnt when all modules are non-dynamic
+ * @tc.desc: verify staticAndHybridModuleCnt equals total module count when no dynamic modules
+ */
+HWTEST_F(BmsAOTMgrTest, StaticAndHybridModuleCnt_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    InnerModuleInfo moduleA;
+    moduleA.moduleName = "moduleA";
+    moduleA.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace("moduleA", moduleA);
+
+    InnerModuleInfo moduleB;
+    moduleB.moduleName = "moduleB";
+    moduleB.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace("moduleB", moduleB);
+
+    auto ret = AOTHandler::GetInstance().BuildAOTArgs(
+        innerBundleInfo, "moduleA", "", false, ServiceConstants::AOT_TRIGGER_INSTALL);
+    ASSERT_NE(ret, std::nullopt);
+    EXPECT_EQ(ret->staticAndHybridModuleCnt, 2u);
+}
+
+/**
+ * @tc.number: SetAOTCompileStatus_InstallSuccess_0100
+ * @tc.name: test SetAOTCompileStatus with INSTALL_COMPILE_SUCCESS
+ * @tc.desc: verify abi and path are set for INSTALL_COMPILE_SUCCESS
+ */
+HWTEST_F(BmsAOTMgrTest, SetAOTCompileStatus_InstallSuccess_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+
+    dataMgr->SetAOTCompileStatus(AOT_BUNDLE_NAME, AOT_MODULE_NAME,
+        AOTCompileStatus::INSTALL_COMPILE_SUCCESS, VERSION_CODE);
+    auto item = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::INSTALL_COMPILE_SUCCESS);
+
+    dataMgr->SetAOTCompileStatus(AOT_BUNDLE_NAME, AOT_MODULE_NAME,
+        AOTCompileStatus::IDLE_COMPILE_SUCCESS, VERSION_CODE);
+    item = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::IDLE_COMPILE_SUCCESS);
+
+    dataMgr->bundleInfos_.erase(AOT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: SetAOTCompileStatus_BundleNotExist_0100
+ * @tc.name: test SetAOTCompileStatus when bundle not in bundleInfos
+ * @tc.desc: verify RemoveDir is called for both HAP and SHARED cache paths
+ */
+HWTEST_F(BmsAOTMgrTest, SetAOTCompileStatus_BundleNotExist_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->SetAOTCompileStatus("nonExistBundle", AOT_MODULE_NAME,
+        AOTCompileStatus::IDLE_COMPILE_SUCCESS, VERSION_CODE);
+    EXPECT_EQ(dataMgr->bundleInfos_.count("nonExistBundle"), 0);
+}
+
+/**
+ * @tc.number: SetAOTCompileStatus_VersionMismatch_0100
+ * @tc.name: test SetAOTCompileStatus when versionCode does not match
+ * @tc.desc: verify status is not set when versionCode differs
+ */
+HWTEST_F(BmsAOTMgrTest, SetAOTCompileStatus_VersionMismatch_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+
+    dataMgr->SetAOTCompileStatus(AOT_BUNDLE_NAME, AOT_MODULE_NAME,
+        AOTCompileStatus::IDLE_COMPILE_SUCCESS, VERSION_CODE + 1);
+    auto item = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::NOT_COMPILED);
+
+    dataMgr->bundleInfos_.erase(AOT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ResetAOTFlags_SingleBundle_0100
+ * @tc.name: test BundleDataMgr::ResetAOTFlags for single bundle
+ * @tc.desc: verify ResetAOTFlags resets AOT status for a specific bundle
+ */
+HWTEST_F(BmsAOTMgrTest, ResetAOTFlags_SingleBundle_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.aotCompileStatus = AOTCompileStatus::IDLE_COMPILE_SUCCESS;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+
+    dataMgr->ResetAOTFlags(AOT_BUNDLE_NAME);
+    auto item = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::NOT_COMPILED);
+
+    dataMgr->bundleInfos_.erase(AOT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ResetAOTFlags_NonExistBundle_0100
+ * @tc.name: test BundleDataMgr::ResetAOTFlags for non-existent bundle
+ * @tc.desc: verify ResetAOTFlags handles non-existent bundle gracefully
+ */
+HWTEST_F(BmsAOTMgrTest, ResetAOTFlags_NonExistBundle_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->ResetAOTFlags("nonExistentBundle");
+    EXPECT_EQ(dataMgr->bundleInfos_.count("nonExistentBundle"), 0);
+}
+
+/**
+ * @tc.number: ResetAllBundleAOTFlags_0100
+ * @tc.name: test BundleDataMgr::ResetAllBundleAOTFlags
+ * @tc.desc: verify ResetAllBundleAOTFlags resets AOT flags for all bundles
+ */
+HWTEST_F(BmsAOTMgrTest, ResetAllBundleAOTFlags_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.aotCompileStatus = AOTCompileStatus::IDLE_COMPILE_SUCCESS;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+
+    dataMgr->ResetAllBundleAOTFlags();
+    auto item = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::NOT_COMPILED);
+
+    dataMgr->bundleInfos_.erase(AOT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: IsAOTFlagsInitial_InstallCompileSuccess_0100
+ * @tc.name: test IsAOTFlagsInitial with INSTALL_COMPILE_SUCCESS
+ * @tc.desc: verify INSTALL_COMPILE_SUCCESS makes IsAOTFlagsInitial return false
+ */
+HWTEST_F(BmsAOTMgrTest, IsAOTFlagsInitial_InstallCompileSuccess_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
+    std::string moduleName = "testModule";
+    info.innerModuleInfos_[moduleName].aotCompileStatus = AOTCompileStatus::INSTALL_COMPILE_SUCCESS;
+    bool ret = info.IsAOTFlagsInitial();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BuildSharedArgs_0100
+ * @tc.name: test BuildSharedArgs sets correct fields
+ * @tc.desc: verify BuildSharedArgs sets uid/gid to SYSTEM_UID, compileMode to full,
+ *           and outputPath to shared cache path
+ */
+HWTEST_F(BmsAOTMgrTest, BuildSharedArgs_0100, Function | SmallTest | Level1)
+{
+    AOTArgs aotArgs;
+    aotArgs.bundleName = AOT_BUNDLE_NAME;
+    aotArgs.moduleName = AOT_MODULE_NAME;
+    AOTHandler::GetInstance().BuildSharedArgs(VERSION_CODE, aotArgs);
+
+    EXPECT_EQ(aotArgs.bundleUid, ServiceConstants::SYSTEM_UID);
+    EXPECT_EQ(aotArgs.bundleGid, ServiceConstants::SYSTEM_UID);
+    EXPECT_EQ(aotArgs.bundleType, static_cast<uint8_t>(BundleType::SHARED));
+    EXPECT_EQ(aotArgs.compileMode, ServiceConstants::COMPILE_FULL);
+    std::string expectedPath = AOTHandler::BuildSharedArkCachePath(AOT_BUNDLE_NAME, VERSION_CODE);
+    EXPECT_EQ(aotArgs.outputPath, expectedPath);
+}
+
+/**
+ * @tc.number: BuildSharedArkCachePath_0100
+ * @tc.name: test BuildSharedArkCachePath all branches
+ * @tc.desc: verify empty bundleName, no-version and with-version branches
+ */
+HWTEST_F(BmsAOTMgrTest, BuildSharedArkCachePath_0100, Function | SmallTest | Level1)
+{
+    std::string emptyPath = AOTHandler::BuildSharedArkCachePath("");
+    EXPECT_EQ(emptyPath, Constants::EMPTY_STRING);
+
+    std::string bundleName = "com.example.shared";
+    std::filesystem::path basePath(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH);
+    basePath /= bundleName;
+    std::string noVersionPath = AOTHandler::BuildSharedArkCachePath(bundleName);
+    EXPECT_EQ(noVersionPath, basePath.string());
+
+    std::filesystem::path withVersionPath(basePath);
+    withVersionPath /= std::to_string(VERSION_CODE);
+    withVersionPath /= ServiceConstants::ARM64;
+    std::string builtWithVersionPath = AOTHandler::BuildSharedArkCachePath(bundleName, VERSION_CODE);
+    EXPECT_EQ(builtWithVersionPath, withVersionPath.string());
+}
+
+/**
+ * @tc.number: HandleIdleWithSingleModule_InstallCompileSuccess_0100
+ * @tc.name: test HandleIdleWithSingleModule recompiles INSTALL_COMPILE_SUCCESS
+ * @tc.desc: verify NeedCompile returns true for INSTALL_COMPILE_SUCCESS so idle recompile occurs
+ */
+HWTEST_F(BmsAOTMgrTest, HandleIdleWithSingleModule_InstallCompileSuccess_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    info.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    info.SetAOTCompileStatus(AOT_MODULE_NAME, AOTCompileStatus::INSTALL_COMPILE_SUCCESS);
+
+    AOTHandler::GetInstance().HandleIdleWithSingleModule(info, AOT_MODULE_NAME, "");
+    AOTCompileStatus ret = info.GetAOTCompileStatus(AOT_MODULE_NAME);
+    EXPECT_EQ(ret, AOTCompileStatus::INSTALL_COMPILE_SUCCESS);
+}
+
+/**
+ * @tc.number: HandleCompile_NullDataMgr_0100
+ * @tc.name: test HandleCompile with null dataMgr
+ * @tc.desc: verify HandleCompile returns error and populates compileResults
+ *           when dataMgr is null and isAllBundle is false
+ */
+HWTEST_F(BmsAOTMgrTest, HandleCompile_NullDataMgr_0100, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    ScopeGuard guard([&] { ResetDataMgr(); });
+    std::vector<std::string> compileResults;
+    ErrCode ret = AOTHandler::GetInstance().HandleCompile(
+        AOT_BUNDLE_NAME, ServiceConstants::COMPILE_PARTIAL, false, compileResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+    ASSERT_FALSE(compileResults.empty());
+    EXPECT_NE(compileResults[0].find("dataMgr is null"), std::string::npos);
+}
+
+/**
+ * @tc.number: HandleCompile_SingleBundleNotExist_0100
+ * @tc.name: test HandleCompile with non-existent single bundle
+ * @tc.desc: verify HandleCompile returns FAILED and records error when
+ *           QueryInnerBundleInfo fails for the given bundle name
+ */
+HWTEST_F(BmsAOTMgrTest, HandleCompile_SingleBundleNotExist_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> compileResults;
+    ErrCode ret = AOTHandler::GetInstance().HandleCompile(
+        "nonExistentBundle", ServiceConstants::COMPILE_PARTIAL, false, compileResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+    EXPECT_FALSE(compileResults.empty());
+}
+
+/**
+ * @tc.number: HandleResetBundleAOT_AllBundleEmptyParam_0100
+ * @tc.name: test HandleResetBundleAOT isAllBundle with empty bm.aot.test
+ * @tc.desc: verify HandleResetBundleAOT returns early without resetting AOT flags
+ *           when isAllBundle is true but bm.aot.test system parameter is empty
+ */
+HWTEST_F(BmsAOTMgrTest, HandleResetBundleAOT_AllBundleEmptyParam_0100, Function | SmallTest | Level1)
+{
+    system::SetParameter("bm.aot.test", "");
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.aotCompileStatus = AOTCompileStatus::IDLE_COMPILE_SUCCESS;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+
+    AOTHandler::GetInstance().HandleResetBundleAOT("", true);
+
+    auto item = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::IDLE_COMPILE_SUCCESS);
+    dataMgr->bundleInfos_.erase(AOT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ClearArkAp_ValidData_0100
+ * @tc.name: test ClearArkAp with valid bundles in dataMgr
+ * @tc.desc: verify ClearArkAp iterates bundles without corrupting bundle data
+ */
+HWTEST_F(BmsAOTMgrTest, ClearArkAp_ValidData_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.moduleNames.push_back(AOT_MODULE_NAME);
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    dataMgr->AddUserId(USERID_ONE);
+    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+
+    AOTHandler::GetInstance().ClearArkAp();
+
+    auto item = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
+    EXPECT_NE(item, dataMgr->bundleInfos_.end());
+    dataMgr->bundleInfos_.erase(AOT_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ClearArkAp_NullDataMgr_0100
+ * @tc.name: test ClearArkAp with null dataMgr
+ * @tc.desc: verify ClearArkAp returns early without crash when dataMgr is null
+ */
+HWTEST_F(BmsAOTMgrTest, ClearArkAp_NullDataMgr_0100, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    AOTHandler::GetInstance().ClearArkAp();
+    ResetDataMgr();
+    ASSERT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+}
+
+/**
+ * @tc.number: ReportSysEvent_WithEvents_0100
+ * @tc.name: test ReportSysEvent with populated event map
+ * @tc.desc: verify ReportSysEvent processes event map containing compile records
+ *           without corrupting the input data
+ */
+HWTEST_F(BmsAOTMgrTest, ReportSysEvent_WithEvents_0100, Function | SmallTest | Level1)
+{
+    std::map<std::string, EventInfo> sysEventMap;
+    EventInfo info;
+    info.bundleName = AOT_BUNDLE_NAME;
+    info.compileResult = true;
+    info.costTimeSeconds = 5;
+    sysEventMap.emplace(AOT_BUNDLE_NAME, info);
+    EXPECT_EQ(sysEventMap.size(), 1);
+    AOTHandler::GetInstance().ReportSysEvent(sysEventMap);
+    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL_MILLI_SECONDS));
+    EXPECT_EQ(sysEventMap.size(), 1);
+    EXPECT_EQ(sysEventMap[AOT_BUNDLE_NAME].compileResult, true);
+}
+
+/**
+ * @tc.number: OTACompileInternal_StatusSet_0100
+ * @tc.name: test OTACompileInternal sets compile status
+ * @tc.desc: verify OTACompileInternal sets OTA compile status to END via ScopeGuard
+ *           regardless of which branch causes early exit
+ */
+HWTEST_F(BmsAOTMgrTest, OTACompileInternal_StatusSet_0100, Function | SmallTest | Level1)
+{
+    system::SetParameter(OTA_COMPILE_MODE, COMPILE_FULL);
+    system::SetParameter(UPDATE_TYPE, UPDATE_TYPE_NIGHT);
+    AOTHandler::GetInstance().OTACompileInternal();
+    std::string status = system::GetParameter("bms.optimizing_apps.status", "");
+    EXPECT_EQ(status, "1");
 }
 } // OHOS

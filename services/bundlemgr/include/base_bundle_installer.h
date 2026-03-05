@@ -687,7 +687,7 @@ private:
     bool ExtractSoFiles(const std::string &soPath, const std::string &cpuAbi) const;
     void ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
-    void ProcessAOT(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    void ProcessAOT(const InstallParam &installParam) const;
     void RemoveOldHapIfOTA(const InstallParam &installParam,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
     ErrCode CopyHapsToSecurityDir(const InstallParam &installParam, std::vector<std::string> &bundlePaths);
