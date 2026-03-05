@@ -3290,4 +3290,20 @@ HWTEST_F(BmsEventHandlerTest, OTAInstallSystemBundleTargetUser_0100, Function | 
     ret = handler->OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, userIds);
     EXPECT_TRUE(ret);
 }
+
+/**
+ * @tc.number: SendBundleUpdateFailedEvent_0100
+ * @tc.name: test SendBundleUpdateFailedEvent with odid
+ * @tc.desc: test SendBundleUpdateFailedEvent with odid field
+ */
+HWTEST_F(BmsEventHandlerTest, SendBundleUpdateFailedEvent_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.versionCode = 1000000;
+    bundleInfo.isPreInstallApp = false;
+    handler->SendBundleUpdateFailedEvent(bundleInfo, ERR_APPEXECFWK_OTA_INSTALL_VERSION_DOWNGRADE);
+}
 } // OHOS

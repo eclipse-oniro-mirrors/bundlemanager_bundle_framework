@@ -188,6 +188,10 @@ void SharedBundleInstaller::SendBundleSystemEvent(const EventInfo &eventTemplate
     commonEventInfo.errCode = errCode;
     commonEventInfo.isFreeInstallMode = (installParam_.installFlag == InstallFlag::FREE_INSTALL);
     GetCallingEventInfo(commonEventInfo);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr != nullptr) {
+        dataMgr->GetOdidByBundleName(commonEventInfo.bundleName, commonEventInfo.odid);
+    }
 
     for (auto installer : innerInstallers_) {
         installer.second->SendBundleSystemEvent(commonEventInfo);

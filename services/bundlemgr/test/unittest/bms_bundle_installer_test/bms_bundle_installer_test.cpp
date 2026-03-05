@@ -7534,6 +7534,28 @@ HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0040, Function | SmallTes
 }
 
 /**
+ * @tc.number: SendBundleSystemEvent_0050
+ * @tc.name: test SendBundleSystemEvent with odid
+ * @tc.desc: 1.SendBundleSystemEvent with odid field
+ */
+HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0050, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    BaseBundleInstaller installer;
+    installer.SendBundleSystemEvent(
+        "bundleName", BundleEventType::INSTALL, installParam, InstallScene::NORMAL, ERR_OK);
+    ASSERT_TRUE(installer.sysEventInfo_.odid.empty());
+
+    installer.SendBundleSystemEvent(
+        "bundleName", BundleEventType::UNINSTALL, installParam, InstallScene::NORMAL, ERR_OK);
+    ASSERT_TRUE(installer.sysEventInfo_.odid.empty());
+
+    installer.SendBundleSystemEvent(
+        "bundleName", BundleEventType::UPDATE, installParam, InstallScene::NORMAL, ERR_OK);
+    ASSERT_TRUE(installer.sysEventInfo_.odid.empty());
+}
+
+/**
  * @tc.number: CreateSharedBundleTempDir_0100
  * @tc.name: test CreateSharedBundleTempDir
  * @tc.desc: 1.test CreateSharedBundleTempDir of BundleUtil

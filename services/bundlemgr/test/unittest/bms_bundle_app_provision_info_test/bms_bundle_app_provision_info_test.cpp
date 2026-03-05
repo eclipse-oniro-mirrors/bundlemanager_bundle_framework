@@ -1466,13 +1466,27 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, SetCheckResultMsg_0001, Function | Small
 /**
  * @tc.number: SendBundleSystemEvent_0001
  * @tc.name: test the start function of SendBundleSystemEvent
-*/
+ */
 HWTEST_F(BmsBundleAppProvisionInfoTest, SendBundleSystemEvent_0001, Function | SmallTest | Level0)
 {
     InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
     EventInfo eventTemplate;
     installer.SendBundleSystemEvent(eventTemplate);
     ASSERT_FALSE(installer.isBundleExist_);
+}
+
+/**
+ * @tc.number: SendBundleSystemEvent_0002
+ * @tc.name: test SendBundleSystemEvent with odid
+ * @tc.desc: test SendBundleSystemEvent with odid field of InnerSharedBundleInstaller
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, SendBundleSystemEvent_0002, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    EventInfo eventTemplate;
+    eventTemplate.bundleName = "test.bundle";
+    installer.SendBundleSystemEvent(eventTemplate);
+    ASSERT_TRUE(eventTemplate.odid.empty());
 }
 
 /**

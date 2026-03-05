@@ -4774,6 +4774,10 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, 
     eventInfo.errCode = errorCode;
     eventInfo.isPreInstallApp = bundleInfo.isPreInstallApp;
     eventInfo.callingUid = IPCSkeleton::GetCallingUid();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr != nullptr) {
+        dataMgr->GetOdidByBundleName(bundleInfo.name, eventInfo.odid);
+    }
     EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
 }
 
