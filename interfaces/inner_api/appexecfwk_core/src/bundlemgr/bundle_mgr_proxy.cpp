@@ -7015,7 +7015,7 @@ ErrCode BundleMgrProxy::RemoveBackupBundleData(const std::string &bundleName,
     return reply.ReadInt32();
 }
 
-ErrCode BundleMgrProxy::CreateNewBundleEl5Dir(int32_t userId)
+ErrCode BundleMgrProxy::CreateNewBundleDir(int32_t userId)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
@@ -7024,12 +7024,12 @@ ErrCode BundleMgrProxy::CreateNewBundleEl5Dir(int32_t userId)
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to CreateNewBundleEl5Dir due to write userId fail");
+        APP_LOGE("fail to CreateNewBundleDir due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::CREATE_NEW_BUNDLE_EL5_DIR, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CREATE_NEW_BUNDLE_DIR, data, reply)) {
         APP_LOGE("SendTransactCmd failed");
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }

@@ -1344,7 +1344,7 @@ public:
     virtual ErrCode RemoveBackupBundleData(const std::string &bundleName,
         const int32_t userId, const int32_t appIndex) override;
 
-    virtual ErrCode CreateNewBundleEl5Dir(int32_t userId) override;
+    virtual ErrCode CreateNewBundleDir(int32_t userId) override;
 
     /**
      * @brief Obtains all JSON profile info designated by profileType and userId.

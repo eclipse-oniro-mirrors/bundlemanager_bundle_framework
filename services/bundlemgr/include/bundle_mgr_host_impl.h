@@ -1243,7 +1243,7 @@ public:
         const int32_t userId, const int32_t appIndex) override;
     virtual ErrCode RemoveBackupBundleData(const std::string &bundleName,
         const int32_t userId, const int32_t appIndex) override;
-    virtual ErrCode CreateNewBundleEl5Dir(int32_t userId) override;
+    virtual ErrCode CreateNewBundleDir(int32_t userId) override;
     virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
         std::vector<JsonProfileInfo> &profileInfos) override;
     virtual ErrCode GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,

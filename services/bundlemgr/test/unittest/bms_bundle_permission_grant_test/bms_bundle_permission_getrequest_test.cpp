@@ -19,6 +19,7 @@
 #include <sstream>
 #include <string>
 
+#include "ability_manager_helper.h"
 #include "app_provision_info_manager.h"
 #include "bundle_info.h"
 #include "bundle_mgr_host_impl.h"
@@ -319,5 +320,32 @@ HWTEST_F(BmsBundlePermissionGetRequestTest, ParseSizeFromProvision_0010, Functio
     DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, provisionInfo);
     handler->ParseSizeFromProvision(bundleName, uid, sizeMb);
     EXPECT_EQ(sizeMb, 1024);
+}
+
+/**
+ * @tc.number: CreateNewBundleEl5Dir_0010
+ * @tc.name: CreateNewBundleEl5Dir_0010
+ * @tc.desc: test CreateNewBundleDir
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, CreateNewBundleEl5Dir_0010, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> impl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    ErrCode ret = impl->CreateNewBundleDir(100);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetUserLockedBundleList_0010
+ * @tc.name: GetUserLockedBundleList_0010
+ * @tc.desc: test GetUserLockedBundleList
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, GetUserLockedBundleList_0010, Function | SmallTest | Level1)
+{
+    std::unordered_set<std::string> bundleNames;
+    int32_t userId = 100;
+    int32_t ret = AbilityManagerHelper::GetUserLockedBundleList(userId, bundleNames);
+    EXPECT_NE(ret, 0);
+    EXPECT_EQ(bundleNames.size(), 0);
 }
 } // OHOS

@@ -4041,7 +4041,7 @@ HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_2210, Function | SmallTest | 
 HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_2220, Function | SmallTest | Level0)
 {
     BundleMgrHost bundleMgrHost;
-    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_NEW_BUNDLE_EL5_DIR);
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_NEW_BUNDLE_DIR);
     MessageParcel data;
     std::u16string descriptor = BundleMgrHost::GetDescriptor();
     data.WriteInterfaceToken(descriptor);

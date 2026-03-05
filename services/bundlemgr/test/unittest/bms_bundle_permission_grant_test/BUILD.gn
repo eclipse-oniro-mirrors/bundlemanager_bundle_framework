@@ -1343,6 +1343,13 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
+  if (ability_runtime_enable) {
+    external_deps += [
+      "ability_runtime:ability_manager",
+      "ability_runtime:app_manager",
+    ]
+    defines += [ "ABILITY_RUNTIME_ENABLE" ]
+  }
 }
 
 ohos_unittest("BmsBundlePermissionIpcSkeletonTest") {
