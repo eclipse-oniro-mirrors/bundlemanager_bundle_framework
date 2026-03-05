@@ -305,6 +305,8 @@ constexpr const char* BMS_PARA_INSTALL_ALLOW_DOWNGRADE = "ohos.bms.param.install
 // for original install source
 constexpr const char* BMS_PARA_ORIGINAL_INSTALL_SOURCE = "ohos.bms.param.originalInstallSource";
 
+constexpr const char* BMS_PARA_INSTALL_GRANT_PERMISSION = "ohos.bms.param.installAddPermission";
+
 //plugin file path
 constexpr const char* PLUGIN_FILE_PATH = "+plugins";
 

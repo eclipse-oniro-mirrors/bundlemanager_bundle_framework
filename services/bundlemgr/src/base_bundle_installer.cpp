@@ -1062,9 +1062,9 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
             isKeepTokenId_ = oldInfo.HasKeepTokenIdMetadata();
-            if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)
+            if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo, false)
                 && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult,
-                verifyRes_.GetProvisionInfo().appServiceCapabilities) != ERR_OK) {
+                verifyRes_.GetProvisionInfo().appServiceCapabilities, false) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
                 SetVerifyPermissionResult(checkResult);
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -1100,7 +1100,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             }
         }
     }
-
+    bool isDebugGrant = CheckIsDebugGrant(installParam, newInfos.begin()->second.GetAppProvisionType());
     auto it = newInfos.begin();
     if (!isAppExist_) {
         if (AccountHelper::CheckOsAccountConstraintEnabled(userId_, ServiceConstants::CONSTRAINT_APPS_INSTALL)) {
@@ -1119,7 +1119,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         newInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
         newInfo.SetIsFreeInstallApp(InstallFlag::FREE_INSTALL == installParam.installFlag);
         SetApplicationFlagsAndInstallSource(newInfos, installParam);
-        result = ProcessBundleInstallStatus(newInfo, uid);
+        result = ProcessBundleInstallStatus(newInfo, uid, isDebugGrant);
         CHECK_RESULT(result, "ProcessBundleInstallStatus failed %{public}d");
 
         it++;
@@ -1182,7 +1182,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         }
     }
     if (result == ERR_OK) {
-        result = InnerProcessUpdateHapToken(isOldSystemApp);
+        result = InnerProcessUpdateHapToken(isOldSystemApp, isDebugGrant);
         CHECK_RESULT(result, "InnerProcessUpdateHapToken failed %{public}d");
     }
 
@@ -1229,7 +1229,7 @@ void BaseBundleInstaller::ProcessUpdateShortcut()
     dataMgr_->UpdateShortcutInfos(bundleName_);
 }
 
-ErrCode BaseBundleInstaller::InnerProcessUpdateHapToken(const bool isOldSystemApp)
+ErrCode BaseBundleInstaller::InnerProcessUpdateHapToken(const bool isOldSystemApp, const bool isDebugGrant)
 {
     InnerBundleInfo newBundleInfo;
     if (!GetTempBundleInfo(newBundleInfo)) {
@@ -1250,7 +1250,7 @@ ErrCode BaseBundleInstaller::InnerProcessUpdateHapToken(const bool isOldSystemAp
             }
         }
     }
-    ErrCode result = UpdateHapToken(isOldSystemApp != newBundleInfo.IsSystemApp(), newBundleInfo);
+    ErrCode result = UpdateHapToken(isOldSystemApp != newBundleInfo.IsSystemApp(), newBundleInfo, isDebugGrant);
     if (result != ERR_OK) {
         APP_LOGE("bundleName:%{public}s update hapToken failed, errCode:%{public}d", bundleName_.c_str(), result);
         return result;
@@ -1507,6 +1507,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     result = CheckPreAppAllowHdcInstall(installParam, hapVerifyResults);
     CHECK_RESULT(result, "not allowed install os_integration bundle, %{public}d");
+
+    result = CheckInstallGrantPermission(installParam, hapVerifyResults);
+    CHECK_RESULT(result, "check grantPermission install failed %{public}d");
 
     // parse the bundle infos for all haps
     // key is bundlePath , value is innerBundleInfo
@@ -2862,7 +2865,7 @@ void BaseBundleInstaller::RollbackHnpInstall(const std::string &bundleName, cons
     }
 }
 
-ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, int32_t &uid)
+ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, int32_t &uid, const bool isDebugGrant)
 {
     modulePackage_ = info.GetCurrentModulePackage();
     LOG_D(BMS_TAG_INSTALLER, "ProcessBundleInstallStatus with bundleName %{public}s and packageName %{public}s",
@@ -2878,9 +2881,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
     isKeepTokenId_ = info.HasKeepTokenIdMetadata();
-    if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, info)) {
+    if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, info, isDebugGrant)) {
         if (BundlePermissionMgr::InitHapToken(info, userId_, 0, accessTokenIdEx, checkResult,
-            verifyRes_.GetProvisionInfo().appServiceCapabilities) != ERR_OK) {
+            verifyRes_.GetProvisionInfo().appServiceCapabilities, isDebugGrant) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
             SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -7289,7 +7292,7 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
     return otaInstall_ || HasAllOldModuleUpdate(oldInfo, newInfos);
 }
 
-ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo)
+ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo, const bool isDebugGrant)
 {
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start, needUpdate:%{public}d",
         bundleName_.c_str(), needUpdate);
@@ -7306,7 +7309,7 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
         Security::AccessToken::HapInfoCheckResult checkResult;
         if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, userId, checkResult,
-            verifyRes_.GetProvisionInfo().appServiceCapabilities) != ERR_OK) {
+            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, isDebugGrant) != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -8215,7 +8218,8 @@ ErrCode BaseBundleInstaller::CheckShellCanInstallPreApp(
 }
 
 bool BaseBundleInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,
-    Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo)
+    Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
+    const bool isDebugGrant)
 {
     UninstallBundleInfo uninstallBundleInfo;
     if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
@@ -8232,7 +8236,7 @@ bool BaseBundleInstaller::RecoverHapToken(const std::string &bundleName, const i
         accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenIdEx;
         Security::AccessToken::HapInfoCheckResult checkResult;
         if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId, checkResult,
-            verifyRes_.GetProvisionInfo().appServiceCapabilities) == ERR_OK) {
+            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, isDebugGrant) == ERR_OK) {
             return true;
         } else {
             LOG_W(BMS_TAG_INSTALLER, "bundleName:%{public}s UpdateHapToken failed", bundleName.c_str());
@@ -8365,6 +8369,35 @@ ErrCode BaseBundleInstaller::CheckPreAppAllowHdcInstall(const InstallParam &inst
         return ERR_OK;
     }
     return ERR_APPEXECFWK_INSTALL_OS_INTEGRATION_BUNDLE_NOT_ALLOWED_FOR_SHELL;
+}
+
+ErrCode BaseBundleInstaller::CheckInstallGrantPermission(const InstallParam &installParam,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    if (!installParam.isCallByShell || hapVerifyRes.empty()) {
+        return ERR_OK;
+    }
+    auto item = installParam.parameters.find(ServiceConstants::BMS_PARA_INSTALL_GRANT_PERMISSION);
+    if ((item == installParam.parameters.end()) || (item->second != ServiceConstants::BMS_TRUE)) {
+        return ERR_OK;
+    }
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
+    if (provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
+        return ERR_APPEXECFWK_INSTALL_GRANT_PERMISSION_NOT_DEBUG_BUNDLE;
+    }
+    return ERR_OK;
+}
+
+bool BaseBundleInstaller::CheckIsDebugGrant(const InstallParam &installParam,
+    const std::string &appProvisionType)
+{
+    auto item = installParam.parameters.find(ServiceConstants::BMS_PARA_INSTALL_GRANT_PERMISSION);
+    if ((item != installParam.parameters.end()) && (item->second == ServiceConstants::BMS_TRUE) &&
+        installParam.isCallByShell &&
+        appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG) {
+        return true;
+    }
+    return false;
 }
 
 void BaseBundleInstaller::CheckPreBundleRecoverResult(ErrCode &result)

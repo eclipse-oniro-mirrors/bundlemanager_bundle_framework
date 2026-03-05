@@ -144,6 +144,7 @@ public:
     bool isRestore = false;
     AccessTokenID tokenID = INVALID_TOKENID;
     bool isAtomicService;
+    std::string appProvisionType = "release";
 };
 
 /**
@@ -160,6 +161,7 @@ public:
     std::string appDistributionType;
     bool isAtomicService;
     bool dataRefresh = false;
+    std::string appProvisionType = "release";
 };
 
 class PreAuthorizationInfo final {
@@ -193,6 +195,7 @@ public:
     std::vector<PreAuthorizationInfo> preAuthorizationInfo;
     HapPolicyCheckIgnore checkIgnore = HapPolicyCheckIgnore::None;
     std::map<std::string, std::string> aclExtendedMap;
+    bool isDebugGrant = false;
 };
 
 /**

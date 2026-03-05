@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -255,6 +255,8 @@ public:
         ERR_INSTALL_DECOMPRESS_APP_FAILED = 9568446,
         ERR_INSTALL_NO_SUITABLE_BUNDLES = 9568447,
         ERR_INSTALL_VERIFY_APP_SIGNATURE_FAILED = 9568448,
+
+        ERR_INSTALL_GRANT_PERMISSION_NOT_DEBUG_BUNDLE = 9568450,
 
         // insufficient number of system inodes
         ERR_INSTALL_INSUFFICIENT_NUMBER_OF_SYSTEM_INODES = 95684460,

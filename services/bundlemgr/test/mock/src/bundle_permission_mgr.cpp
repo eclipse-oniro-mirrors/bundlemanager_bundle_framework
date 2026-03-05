@@ -402,7 +402,8 @@ Security::AccessToken::ATokenAplEnum BundlePermissionMgr::GetTokenApl(const std:
 }
 
 Security::AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(
-    const InnerBundleInfo &innerBundleInfo, const std::string &appServiceCapabilities)
+    const InnerBundleInfo &innerBundleInfo, const std::string &appServiceCapabilities,
+    const bool isDebugGrant)
 {
     Security::AccessToken::HapPolicyParams policy;
     return policy;
@@ -458,28 +459,32 @@ Security::AccessToken::HapInfoParams CreateHapInfoParams(const InnerBundleInfo &
 #ifdef BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE
 int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities)
+    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
+    const bool isDebugGrant)
 {
     return -1;
 }
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
     const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
-    const std::string &appServiceCapabilities, bool dataRefresh)
+    const std::string &appServiceCapabilities, bool dataRefresh,
+    const bool isDebugGrant)
 {
     return -1;
 }
 #else
 int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities)
+    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
+    const bool isDebugGrant)
 {
     return 0;
 }
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
     const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
-    const std::string &appServiceCapabilities, bool dataRefresh)
+    const std::string &appServiceCapabilities, bool dataRefresh,
+    const bool isDebugGrant)
 {
     return 0;
 }
