@@ -1441,6 +1441,18 @@ void CommonFunc::SetAppInstallExtendedInfoBasicProperties(napi_env env,
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appInstallExtendedInfo.compatibleVersion, &nCompatibleVersion));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInstallExtendedInfo,
         "compatibleVersion", nCompatibleVersion));
+
+    napi_value nCompatibleMinorVersion;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_uint32(env, appInstallExtendedInfo.compatibleMinorVersion, &nCompatibleMinorVersion));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, objAppInstallExtendedInfo, "compatibleMinorVersion", nCompatibleMinorVersion));
+
+    napi_value nCompatiblePatchVersion;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_uint32(env, appInstallExtendedInfo.compatiblePatchVersion, &nCompatiblePatchVersion));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, objAppInstallExtendedInfo, "compatiblePatchVersion", nCompatiblePatchVersion));
 }
 
 void CommonFunc::SetAppInstallExtendedInfoHashParam(napi_env env,

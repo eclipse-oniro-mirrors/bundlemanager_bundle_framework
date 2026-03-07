@@ -743,6 +743,25 @@ public:
     {
         return baseBundleInfo_->compatibleVersion;
     }
+
+    /**
+     * @brief Get compatible minor version in application.
+     * @return Returns compatible minor version.
+     */
+    uint32_t GetCompatibleMinorVersion() const
+    {
+        return baseBundleInfo_->compatibleMinorVersion;
+    }
+
+    /**
+     * @brief Get compatible patch version in application.
+     * @return Returns compatible patch version.
+     */
+    uint32_t GetCompatiblePatchVersion() const
+    {
+        return baseBundleInfo_->compatiblePatchVersion;
+    }
+
     /**
      * @brief Get target version in application.
      * @return Returns target version.

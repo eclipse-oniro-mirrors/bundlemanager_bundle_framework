@@ -165,6 +165,8 @@ struct BundleInfo : public Parcelable {
     uint32_t minCompatibleVersionCode = 0;
 
     uint32_t compatibleVersion = 0;
+    uint32_t compatibleMinorVersion = 0;
+    uint32_t compatiblePatchVersion = 0;
     uint32_t targetVersion = 0;
     int32_t targetMinorApiVersion = 0;
     int32_t targetPatchApiVersion = 0;

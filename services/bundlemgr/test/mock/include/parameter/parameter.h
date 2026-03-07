@@ -19,6 +19,8 @@
 namespace OHOS {
 char *GetDeviceType();
 int GetSdkApiVersion();
+int GetSdkMinorApiVersion();
+int GetSdkPatchApiVersion();
 int GetParameter(const char *key, const char *def, char *value, int len);
 int GetIntParameter(const char *key, int def);
 int SetParameter(const char *key, const char *value);

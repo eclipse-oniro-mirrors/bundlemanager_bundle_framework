@@ -45,6 +45,8 @@ const char* BUNDLE_INFO_MAIN_ENTRY = "mainEntry";
 const char* BUNDLE_INFO_CPU_ABI = "cpuAbi";
 const char* BUNDLE_INFO_APPID = "appId";
 const char* BUNDLE_INFO_COMPATIBLE_VERSION = "compatibleVersion";
+const char* BUNDLE_INFO_COMPATIBLE_MINOR_VERSION = "compatibleMinorVersion";
+const char* BUNDLE_INFO_COMPATIBLE_PATCH_VERSION = "compatiblePatchVersion";
 const char* BUNDLE_INFO_TARGET_VERSION = "targetVersion";
 const char* BUNDLE_INFO_TARGET_MINOR_API_VERSION = "targetMinorApiVersion";
 const char* BUNDLE_INFO_TARGET_PATCH_API_VERSION = "targetPatchApiVersion";
@@ -456,6 +458,8 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
     versionName = Str16ToStr8(parcel.ReadString16());
     minCompatibleVersionCode = parcel.ReadUint32();
     compatibleVersion = parcel.ReadUint32();
+    compatibleMinorVersion = parcel.ReadUint32();
+    compatiblePatchVersion = parcel.ReadUint32();
     targetVersion = parcel.ReadUint32();
     targetMinorApiVersion = parcel.ReadInt32();
     targetPatchApiVersion = parcel.ReadInt32();
@@ -622,6 +626,8 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(versionName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, minCompatibleVersionCode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, compatibleVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, compatibleMinorVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, compatiblePatchVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, targetVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, targetMinorApiVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, targetPatchApiVersion);
@@ -891,6 +897,8 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_CPU_ABI, bundleInfo.cpuAbi},
         {BUNDLE_INFO_APPID, bundleInfo.appId},
         {BUNDLE_INFO_COMPATIBLE_VERSION, bundleInfo.compatibleVersion},
+        {BUNDLE_INFO_COMPATIBLE_MINOR_VERSION, bundleInfo.compatibleMinorVersion},
+        {BUNDLE_INFO_COMPATIBLE_PATCH_VERSION, bundleInfo.compatiblePatchVersion},
         {BUNDLE_INFO_TARGET_VERSION, bundleInfo.targetVersion},
         {BUNDLE_INFO_TARGET_MINOR_API_VERSION, bundleInfo.targetMinorApiVersion},
         {BUNDLE_INFO_TARGET_PATCH_API_VERSION, bundleInfo.targetPatchApiVersion},
@@ -1058,6 +1066,22 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         jsonObjectEnd,
         BUNDLE_INFO_COMPATIBLE_VERSION,
         bundleInfo.compatibleVersion,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_COMPATIBLE_MINOR_VERSION,
+        bundleInfo.compatibleMinorVersion,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_COMPATIBLE_PATCH_VERSION,
+        bundleInfo.compatiblePatchVersion,
         JsonType::NUMBER,
         false,
         parseResult,

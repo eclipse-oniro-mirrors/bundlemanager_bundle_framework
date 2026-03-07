@@ -26,6 +26,8 @@ namespace OHOS {
 namespace AppExecFwk {
 struct AppInstallExtendedInfo : public Parcelable {
     uint32_t compatibleVersion = 0;
+    uint32_t compatibleMinorVersion = 0;
+    uint32_t compatiblePatchVersion = 0;
     int64_t crowdtestDeadline = 0;
     std::string bundleName;
     std::string specifiedDistributionType;

@@ -252,6 +252,8 @@ struct ApplicationInfo : public Parcelable {
     uint32_t versionCode = 0;
 
     uint32_t apiCompatibleVersion = 0;
+    uint32_t compatibleMinorVersion = 0;
+    uint32_t compatiblePatchVersion = 0;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;

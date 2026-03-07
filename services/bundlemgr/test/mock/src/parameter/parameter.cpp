@@ -50,6 +50,16 @@ int GetSdkApiVersion()
     return DEFAULT_SDK_API;
 }
 
+int GetSdkMinorApiVersion()
+{
+    return 0;
+}
+
+int GetSdkPatchApiVersion()
+{
+    return 0;
+}
+
 int GetParameter(const char *key, const char *def, char *value, int len)
 {
     if ((key != nullptr) && (value != nullptr) &&

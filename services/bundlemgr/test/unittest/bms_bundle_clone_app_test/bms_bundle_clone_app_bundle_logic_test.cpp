@@ -163,6 +163,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
         "allowCommonEvent":[
         ],
         "apiCompatibleVersion":9,
+        "compatibleMinorVersion":0,
+        "compatiblePatchVersion":0,
         "apiReleaseType":"Beta3",
         "apiTargetVersion":9,
         "appDetailAbilityLibraryPath":"",
