@@ -190,6 +190,7 @@ const std::string TEST_AMS_EXTENSION_CONFIG = "ams_extension_config";
 const std::string TEST_EXTENSION_TYPE_NAME = "extension_type_name";
 const std::string TEST_PATH = "../test";
 const std::string TEST_ERROR_STRING = "test.error.string";
+const int32_t TEST_EL5_USERID = 2000;
 }  // namespace
 
 class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
@@ -14753,6 +14754,152 @@ HWTEST_F(BmsBundleInstallerTest, CreateDataGroupDir_0100, Function | SmallTest |
     createDirParam.gid = ZERO_CODE;
     ret = impl.CreateDataGroupDir(createDirParam);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateEl5DataGroupDir_0100
+ * @tc.name: test CreateEl5DataGroupDir with invalid params
+ * @tc.desc: test CreateEl5DataGroupDir of InstalldHostImpl with invalid parameters
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateEl5DataGroupDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.uuid = TEST_EMPTY_STRING;
+    ErrCode ret = impl.CreateEl5DataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.uuid = TEST_ERROR_STRING;
+    createDirParam.userId = INVAILD_CODE;
+    ret = impl.CreateEl5DataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.userId = USERID;
+    createDirParam.uid = INVAILD_CODE;
+    ret = impl.CreateEl5DataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.uid = ZERO_CODE;
+    createDirParam.gid = INVAILD_CODE;
+    ret = impl.CreateEl5DataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.userId = TEST_EL5_USERID;
+    createDirParam.gid = ZERO_CODE;
+    ret = impl.CreateEl5DataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+}
+
+/**
+ * @tc.number: CreateEl5DataGroupDir_0200
+ * @tc.name: test CreateEl5DataGroupDir with valid params and existing user dir
+ * @tc.desc: test CreateEl5DataGroupDir when user dir exists and group dir doesn't exist
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateEl5DataGroupDir_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.uuid = TEST_ERROR_STRING;
+    createDirParam.userId = TEST_EL5_USERID;
+    createDirParam.uid = ZERO_CODE;
+    createDirParam.gid = ZERO_CODE;
+    createDirParam.hasInputMethodExtension = false;
+
+    std::string userDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(TEST_EL5_USERID);
+    std::string groupDir = userDir + ServiceConstants::DATA_GROUP_PATH + TEST_ERROR_STRING;
+
+    OHOS::ForceRemoveDirectory(groupDir);
+    InstalldOperator::MkOwnerDir(userDir, 0755, 0, 0);
+
+    ErrCode ret = impl.CreateEl5DataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_OK);
+    
+    OHOS::ForceRemoveDirectory(groupDir);
+    OHOS::ForceRemoveDirectory(userDir);
+}
+
+/**
+ * @tc.number: CreateEl5DataGroupDir_0300
+ * @tc.name: test CreateEl5DataGroupDir with existing group dir
+ * @tc.desc: test CreateEl5DataGroupDir when group dir already exists
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateEl5DataGroupDir_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.uuid = TEST_ERROR_STRING;
+    createDirParam.userId = TEST_EL5_USERID;
+    createDirParam.uid = ZERO_CODE;
+    createDirParam.gid = ZERO_CODE;
+    createDirParam.hasInputMethodExtension = false;
+
+    std::string userDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(TEST_EL5_USERID);
+    std::string groupDir = userDir + ServiceConstants::DATA_GROUP_PATH + TEST_ERROR_STRING;
+
+    InstalldOperator::MkOwnerDir(userDir, 0755, 0, 0);
+    InstalldOperator::MkOwnerDir(groupDir, 0755, 0, 0);
+
+    ErrCode ret = impl.CreateEl5DataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_OK);
+    
+    OHOS::ForceRemoveDirectory(groupDir);
+    OHOS::ForceRemoveDirectory(userDir);
+}
+
+/**
+ * @tc.number: CreateEl5DataGroupDir_0400
+ * @tc.name: test CreateEl5DataGroupDir with hasInputMethodExtension true
+ * @tc.desc: test CreateEl5DataGroupDir when hasInputMethodExtension is true
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateEl5DataGroupDir_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.uuid = TEST_ERROR_STRING;
+    createDirParam.userId = TEST_EL5_USERID;
+    createDirParam.uid = ZERO_CODE;
+    createDirParam.gid = ZERO_CODE;
+    createDirParam.hasInputMethodExtension = true;
+
+    std::string userDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(TEST_EL5_USERID);
+    std::string groupDir = userDir + ServiceConstants::DATA_GROUP_PATH + TEST_ERROR_STRING;
+
+    OHOS::ForceRemoveDirectory(groupDir);
+    InstalldOperator::MkOwnerDir(userDir, 0755, 0, 0);
+
+    ErrCode ret = impl.CreateEl5DataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_OK);
+
+    OHOS::ForceRemoveDirectory(groupDir);
+    OHOS::ForceRemoveDirectory(userDir);
+}
+
+/**
+ * @tc.number: CreateEl5DataGroupDir_0500
+ * @tc.name: test CreateEl5DataGroupDir with existing group dir and hasInputMethodExtension true
+ * @tc.desc: test CreateEl5DataGroupDir when group dir exists and hasInputMethodExtension is true
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateEl5DataGroupDir_0500, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.uuid = TEST_ERROR_STRING;
+    createDirParam.userId = TEST_EL5_USERID;
+    createDirParam.uid = ZERO_CODE;
+    createDirParam.gid = ZERO_CODE;
+    createDirParam.hasInputMethodExtension = true;
+
+    std::string userDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(TEST_EL5_USERID);
+    std::string groupDir = userDir + ServiceConstants::DATA_GROUP_PATH + TEST_ERROR_STRING;
+
+    InstalldOperator::MkOwnerDir(userDir, 0755, 0, 0);
+    InstalldOperator::MkOwnerDir(groupDir, 0755, 0, 0);
+
+    ErrCode ret = impl.CreateEl5DataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_OK);
+
+    OHOS::ForceRemoveDirectory(groupDir);
+    OHOS::ForceRemoveDirectory(userDir);
 }
 
 /**
