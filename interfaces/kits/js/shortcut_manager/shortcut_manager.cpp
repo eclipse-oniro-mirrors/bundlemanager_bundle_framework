@@ -830,5 +830,105 @@ napi_value DeleteDynamicShortcutInfos(napi_env env, napi_callback_info info)
     return nullptr;
 #endif
 }
+
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
+static ErrCode InnerGetShortcutInfoByAbility(const std::string &bundleName,
+    const std::string &moduleName, const std::string &abilityName,
+    int32_t userId, int32_t appIndex, std::vector<OHOS::AppExecFwk::ShortcutInfo> &shortcutInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    return iBundleMgr->GetShortcutInfoByAbility(bundleName, moduleName, abilityName,
+        userId, appIndex, shortcutInfos);
+}
+
+static bool ParseGetShortcutInfoByAbilityParam(napi_env env, napi_callback_info info, std::string &bundleName,
+    std::string &moduleName, std::string &abilityName, int32_t &userId, int32_t &appIndex)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_FIVE)) {
+        APP_LOGE("Args init is error");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return false;
+    }
+
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("Parse bundleName is error");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return false;
+    }
+
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], moduleName)) {
+        APP_LOGE("Parse moduleName is error");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, "moduleName", TYPE_STRING);
+        return false;
+    }
+
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_TWO], abilityName)) {
+        APP_LOGE("Parse abilityName is error");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, "abilityName", TYPE_STRING);
+        return false;
+    }
+
+    if (args.GetArgc() >= ARGS_SIZE_FOUR) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_THREE], userId)) {
+            APP_LOGW("Parse userId failed");
+        }
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+
+    if (args.GetArgc() == ARGS_SIZE_FIVE) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_SIZE_FOUR], appIndex)) {
+            APP_LOGW("Parse appIndex failed");
+        }
+    }
+
+    return true;
+}
+#endif
+
+napi_value GetShortcutInfoByAbility(napi_env env, napi_callback_info info)
+{
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
+    APP_LOGD("Napi begin GetShortcutInfoByAbility");
+    std::string bundleName;
+    std::string moduleName;
+    std::string abilityName;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t appIndex = 0;
+    if (!ParseGetShortcutInfoByAbilityParam(env, info, bundleName, moduleName, abilityName, userId, appIndex)) {
+        APP_LOGE("ParseGetShortcutInfoByAbilityParam failed");
+        return nullptr;
+    }
+
+    std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        InnerGetShortcutInfoByAbility(bundleName, moduleName, abilityName, userId, appIndex, shortcutInfos));
+    if (ret != SUCCESS) {
+        APP_LOGE("GetShortcutInfoByAbility failed ret:%{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(env, ret, GET_SHORTCUT_INFO_BY_ABILITY,
+            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    napi_value nShortcutInfos = nullptr;
+    NAPI_CALL(env, napi_create_array(env, &nShortcutInfos));
+    CommonFunc::ConvertShortCutInfos(env, shortcutInfos, nShortcutInfos);
+    APP_LOGD("Call GetShortcutInfoByAbility done");
+    return nShortcutInfos;
+#else
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        GET_SHORTCUT_INFO_BY_ABILITY);
+    napi_throw(env, error);
+    return nullptr;
+#endif
+}
 } // AppExecFwk
 } // OHOS

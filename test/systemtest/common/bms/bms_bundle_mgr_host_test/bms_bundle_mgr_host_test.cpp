@@ -976,6 +976,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetShortcutInfoByAppIndex_0100, Function | 
 }
 
 /**
+ * @tc.number: HandleGetShortcutInfoByAbility_0100
+ * @tc.name: test the HandleGetShortcutInfoByAbility
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetShortcutInfoByAbility
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetShortcutInfoByAbility_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetShortcutInfoByAbility(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
  * @tc.number: HandleGetAllCommonEventInfo_0100
  * @tc.name: test the HandleGetAllCommonEventInfo
  * @tc.desc: 1. system running normally

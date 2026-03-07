@@ -633,6 +633,19 @@ public:
     ErrCode GetShortcutInfoByAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::vector<ShortcutInfo> &shortcutInfos) const;
     /**
+     * @brief Obtains the ShortcutInfo objects provided by a specified ability.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param moduleName Indicates the module name.
+     * @param abilityName Indicates the host ability name.
+     * @param userId Indicates the user ID.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param shortcutInfos List of ShortcutInfo objects if obtained.
+     * @return Returns errcode of the result.
+     */
+    ErrCode GetShortcutInfoByAbility(const std::string &bundleName,
+        const std::string &moduleName, const std::string &abilityName,
+        int32_t userId, int32_t appIndex, std::vector<ShortcutInfo> &shortcutInfos) const;
+    /**
      * @brief Obtains the CommonEventInfo objects provided by an event key on the device.
      * @param eventKey Indicates the event of the subscribe.
      * @param commonEventInfos List of CommonEventInfo objects if obtained.
@@ -1494,8 +1507,11 @@ private:
         int32_t originalUserId, BundleInfo &bundleInfo, const InnerBundleInfo &innerBundleInfo) const;
     void GetExtensionAbilityInfoByTypeName(uint32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos, const std::string &typeName) const;
+    bool ProcessShortcutInfo(const AbilityInfo &abilityInfo, ShortcutJson &shortcutJson) const;
     bool GetShortcutInfosByInnerBundleInfo(
         const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const;
+    bool GetShortcutInfosByAbilityInfo(const InnerBundleInfo &info, const AbilityInfo &abilityInfo,
+        std::vector<ShortcutInfo> &shortcutInfos) const;
     std::string TryGetRawDataByExtractor(const std::string &hapPath, const std::string &profileName,
         const AbilityInfo &abilityInfo) const;
     void RestoreUidAndGidFromUninstallInfo();
@@ -1525,6 +1541,8 @@ private:
     void GetAllInstallBundleUids(const int32_t userId, const int32_t requestUserId, int32_t &responseUserId,
         std::vector<int32_t> &uids, std::vector<std::string> &bundleNames) const;
     bool ProcessUninstallBundle(std::vector<BundleOptionInfo> &bundleOptionInfos) const;
+    void ProcessDynamicShortcutInfo(const InnerBundleInfo &info, const int32_t appIndex, const int32_t requestUserId,
+        std::vector<ShortcutInfo> &shortcutInfos) const;
 
 private:
     bool initialUserFlag_ = false;

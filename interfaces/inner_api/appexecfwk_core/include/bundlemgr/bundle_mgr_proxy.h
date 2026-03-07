@@ -826,6 +826,20 @@ public:
         std::vector<ShortcutInfo> &shortcutInfos) override;
 
     /**
+     * @brief Obtains the ShortcutInfo objects provided by a specified ability.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param moduleName Indicates the module name.
+     * @param abilityName Indicates the host ability name.
+     * @param userId Indicates the user ID.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param shortcutInfos List of ShortcutInfo objects if obtained.
+     * @return Returns err code of result.
+     */
+    virtual ErrCode GetShortcutInfoByAbility(const std::string &bundleName,
+        const std::string &moduleName, const std::string &abilityName,
+        int32_t userId, int32_t appIndex, std::vector<ShortcutInfo> &shortcutInfos) override;
+
+    /**
      * @brief Obtains the CommonEventInfo objects provided by an event key on the device.
      * @param eventKey Indicates the event of the subscribe.
      * @param commonEventInfos List of CommonEventInfo objects if obtained.

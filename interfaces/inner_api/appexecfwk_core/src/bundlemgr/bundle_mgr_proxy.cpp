@@ -2977,6 +2977,58 @@ ErrCode BundleMgrProxy::GetShortcutInfoByAppIndex(const std::string &bundleName,
         BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_APPINDEX, data, shortcutInfos);
 }
 
+ErrCode BundleMgrProxy::GetShortcutInfoByAbility(const std::string &bundleName,
+    const std::string &moduleName, const std::string &abilityName,
+    int32_t userId, int32_t appIndex, std::vector<ShortcutInfo> &shortcutInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bundleName.empty()) {
+        APP_LOGE_NOFUNC("fail to GetShortcutInfoByAbility due to bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (moduleName.empty()) {
+        APP_LOGE_NOFUNC("fail to GetShortcutInfoByAbility due to moduleName empty");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    if (abilityName.empty()) {
+        APP_LOGE_NOFUNC("fail to GetShortcutInfoByAbility due to abilityName empty");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE_NOFUNC("fail to GetShortcutInfoByAbility due to appIndex out of range");
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("fail to GetShortcutInfoByAbility due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE_NOFUNC("fail to GetShortcutInfoByAbility due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE_NOFUNC("fail to GetShortcutInfoByAbility due to write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(abilityName)) {
+        APP_LOGE_NOFUNC("fail to GetShortcutInfoByAbility due to write abilityName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE_NOFUNC("fail to GetShortcutInfoByAbility due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE_NOFUNC("fail to GetShortcutInfoByAbility due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<ShortcutInfo>(
+        BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_ABILITY, data, shortcutInfos);
+}
+
 bool BundleMgrProxy::GetAllCommonEventInfo(const std::string &eventKey, std::vector<CommonEventInfo> &commonEventInfos)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

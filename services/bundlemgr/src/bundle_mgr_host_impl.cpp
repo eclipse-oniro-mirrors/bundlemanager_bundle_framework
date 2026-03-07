@@ -3289,6 +3289,33 @@ ErrCode BundleMgrHostImpl::GetShortcutInfoByAppIndex(const std::string &bundleNa
     return dataMgr->GetShortcutInfoByAppIndex(bundleName, appIndex, shortcutInfos);
 }
 
+ErrCode BundleMgrHostImpl::GetShortcutInfoByAbility(const std::string &bundleName,
+    const std::string &moduleName, const std::string &abilityName,
+    int32_t userId, int32_t appIndex, std::vector<ShortcutInfo> &shortcutInfos)
+{
+    APP_LOGD("start GetShortcutInfoByAbility, -n:%{public}s -m:%{public}s -a:%{public}s -u:%{public}d -i:%{public}d",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), userId, appIndex);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)
+        && !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        APP_LOGE("verify permission across local account failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetShortcutInfoByAbility(bundleName, moduleName, abilityName, userId, appIndex, shortcutInfos);
+}
+
 bool BundleMgrHostImpl::GetAllCommonEventInfo(const std::string &eventKey,
     std::vector<CommonEventInfo> &commonEventInfos)
 {
