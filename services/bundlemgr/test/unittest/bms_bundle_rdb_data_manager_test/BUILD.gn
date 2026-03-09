@@ -59,6 +59,7 @@ ohos_unittest("BmsBundleRdbDataManagerTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "ipc:ipc_single",
     "jsoncpp:jsoncpp",
     "relational_store:native_rdb",
   ]

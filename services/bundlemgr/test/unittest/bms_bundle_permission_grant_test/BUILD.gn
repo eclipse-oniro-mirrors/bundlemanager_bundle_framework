@@ -1406,6 +1406,7 @@ ohos_unittest("BmsBundlePermissionIpcSkeletonTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "ipc:ipc_single",
     "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
