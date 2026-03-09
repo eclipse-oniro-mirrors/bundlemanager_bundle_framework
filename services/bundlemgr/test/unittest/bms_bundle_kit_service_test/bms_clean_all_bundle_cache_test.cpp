@@ -1046,7 +1046,7 @@ HWTEST_F(BmsCleanAllBundleCacheTest, HandleCleanBundleCacheFilesForSelf_0200, Fu
     MessageParcel data;
     MessageParcel reply;
     
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto hostImpl = std::make_unique<BundleMgrHost>();
     sptr<IRemoteObject> mockObject = hostImpl->AsObject();
     ASSERT_NE(mockObject, nullptr);
     
