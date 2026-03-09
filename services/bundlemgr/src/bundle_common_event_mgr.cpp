@@ -66,6 +66,12 @@ constexpr const char* CROSS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* IS_RECOVER = "isRecover";
 constexpr const char* IS_ENABLED = "isEnabled";
 constexpr const char* PACKAGE_UNINSTALLED_DATA_CLEARED = "usual.event.PACKAGE_UNINSTALLED_DATA_CLEARED";
+constexpr const char* IS_BMS_EXTENSION_UNINSTALLED = "isBmsExtensionUninstalled";
+constexpr const char* ADDED_SKILLS = "added";
+constexpr const char* CHANGED_SKILLS = "changed";
+constexpr const char* REMOVED_SKILLS = "removed";
+constexpr const char* SKILL_TYPE = "skillType";
+constexpr int32_t CONTROL_API_VERSION = 25;
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -268,10 +274,12 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(RESULT_CODE, installResult.resultCode);
     want.SetParam(KEEP_DATA, installResult.keepData);
     want.SetParam(IS_APP_UPDATE, installResult.isAppUpdate);
-    if (want.GetAction() == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED
-        && !installResult.assetAccessGroups.empty()) {
-        want.SetParam(ASSET_ACCESS_GROUPS, installResult.assetAccessGroups);
-        want.SetParam(DEVELOPERID, installResult.developerId);
+    if (want.GetAction() == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED) {
+        want.SetParam(IS_BMS_EXTENSION_UNINSTALLED, false);
+        if (!installResult.assetAccessGroups.empty()) {
+            want.SetParam(ASSET_ACCESS_GROUPS, installResult.assetAccessGroups);
+            want.SetParam(DEVELOPERID, installResult.developerId);
+        }
     }
     want.SetParam(IS_BUNDLE_EXIST, installResult.isBundleExist);
     want.SetParam(CROSS_APP_SHARED_CONFIG, installResult.crossAppSharedConfig);
