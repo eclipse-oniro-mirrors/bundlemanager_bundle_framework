@@ -26,6 +26,8 @@
 #include "appexecfwk_errors.h"
 #include "bundle_pack_info.h"
 #include "bundle_verify_mgr.h"
+#include "ipc/check_encryption_param.h"
+#include "ipc/code_signature_param.h"
 #include "inner_bundle_info.h"
 #include "install_param.h"
 
@@ -217,6 +219,9 @@ public:
 
     static bool CheckSaneDriverIsolation(const Security::Verify::HapVerifyResult &hapVerifyResult, const int32_t userId,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+
+    void ProcessCodeSignatureParam(const Security::Verify::HapVerifyResult &hapVerifyResult,
+        CodeSignatureParam &codeSignatureParam);
 
 private:
 

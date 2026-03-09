@@ -24,6 +24,7 @@
 #include "parameters.h"
 #include "privilege_extension_ability_type.h"
 #include "scope_guard.h"
+#include "securec.h"
 #include "systemcapability.h"
 
 namespace OHOS {
@@ -1953,6 +1954,36 @@ bool BundleInstallChecker::CheckInternaltestingBundle(Security::Verify::HapVerif
         return true;
     }
     return false;
+}
+
+void BundleInstallChecker::ProcessCodeSignatureParam(
+    const Security::Verify::HapVerifyResult &hapVerifyResult,
+    CodeSignatureParam &codeSignatureParam)
+{
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyResult.GetProvisionInfo();
+    if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING) {
+        unsigned char *originalProfile = provisionInfo.profileBlock.get();
+        if (originalProfile == nullptr) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "invalid originalProfile");
+            return;
+        }
+        auto tempProfilePtr = std::make_unique<unsigned char[]>(provisionInfo.profileBlockLength);
+        unsigned char *tempProfileData = tempProfilePtr.get();
+        if (tempProfileData == nullptr) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "invalid tempProfileData");
+            return;
+        }
+        if (memcpy_s(tempProfileData, provisionInfo.profileBlockLength, originalProfile,
+            provisionInfo.profileBlockLength) != 0) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "process CodeSignatureParam memcpy_s failed");
+            return;
+        }
+        codeSignatureParam.profileBlockLength = provisionInfo.profileBlockLength;
+        codeSignatureParam.profileBlock = std::move(tempProfilePtr);
+    }
 }
 
 std::string BundleInstallChecker::GetCheckResultMsg() const

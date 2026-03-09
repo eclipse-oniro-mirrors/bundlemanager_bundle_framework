@@ -75,6 +75,7 @@ private:
     std::unordered_map<std::string, InnerBundleInfo> parsedBundles_;
     PluginBundleInfo oldPluginInfo_;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
+    Security::Verify::HapVerifyResult verifyRes_;
 
     DISALLOW_COPY_AND_MOVE(PluginInstaller);
 
