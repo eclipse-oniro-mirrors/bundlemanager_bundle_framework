@@ -1826,6 +1826,10 @@ static ani_object ConvertAppInstallExtendedInfo(ani_env* env, const AppInstallEx
         AAFwk::Long::Box(static_cast<int64_t>(appInstallExtendedInfo.crowdtestDeadline)));
     wantParams.SetParam("compatibleVersion",
         AAFwk::Long::Box(static_cast<int64_t>(appInstallExtendedInfo.compatibleVersion)));
+    wantParams.SetParam("compatibleMinorVersion",
+        AAFwk::Long::Box(static_cast<int64_t>(appInstallExtendedInfo.compatibleMinorVersion)));
+    wantParams.SetParam("compatiblePatchVersion",
+        AAFwk::Long::Box(static_cast<int64_t>(appInstallExtendedInfo.compatiblePatchVersion)));
 
     // hashParam
     sptr<AAFwk::IArray> hashParamArray =
