@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -738,6 +738,11 @@ private:
     static std::vector<std::string> ObtainRealPath(const std::vector<std::string> &paths);
     void RegisterRelabelEvent();
     bool ProcessIdleInfo();
+    static bool GetBundleNameAndUserIdFromPath(const std::string &path, std::vector<int32_t> &userIds,
+        std::string &bundleName);
+    std::vector<int32_t> GetUserIdIntersection(
+        const std::vector<int32_t> &vec1, const std::vector<int32_t> &vec2);
+    void LoadPreInstallWhiteList();
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;

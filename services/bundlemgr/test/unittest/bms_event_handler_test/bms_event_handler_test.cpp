@@ -3306,4 +3306,40 @@ HWTEST_F(BmsEventHandlerTest, SendBundleUpdateFailedEvent_0100, Function | Small
     bundleInfo.isPreInstallApp = false;
     handler->SendBundleUpdateFailedEvent(bundleInfo, ERR_APPEXECFWK_OTA_INSTALL_VERSION_DOWNGRADE);
 }
+
+/**
+ * @tc.number: GetBundleNameFromPath_0100
+ * @tc.name: GetBundleNameFromPath
+ * @tc.desc: test GetBundleNameFromPath
+ */
+HWTEST_F(BmsEventHandlerTest, GetBundleNameFromPath_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::string path;
+    std::vector<int32_t> userIds;
+    std::string bundleName;
+    auto ret = handler->GetBundleNameAndUserIdFromPath(path, userIds, bundleName);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(bundleName.empty());
+    bundleName = BUNDLE_NAME;
+    ret = handler->GetBundleNameAndUserIdFromPath(path, userIds, bundleName);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetUserIdIntersection_0100
+ * @tc.name: GetUserIdIntersection
+ * @tc.desc: test GetUserIdIntersection
+ */
+HWTEST_F(BmsEventHandlerTest, GetUserIdIntersection_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::vector<int32_t> vec1 { 100, 101, 102 };
+    std::vector<int32_t> vec2 { 101 };
+    auto userIds = handler->GetUserIdIntersection(vec1, vec2);
+    EXPECT_TRUE(userIds.size() == 1);
+    EXPECT_TRUE(userIds.front() == 101);
+}
 } // OHOS
