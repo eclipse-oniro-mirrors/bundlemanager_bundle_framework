@@ -24,6 +24,7 @@
 
 #include "appexecfwk_errors.h"
 #include "application_info.h"
+#include "libxml/parser.h"
 #include "nlohmann/json.hpp"
 
 namespace OHOS {
@@ -255,8 +256,17 @@ public:
     static ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias);
     static std::vector<std::string> GetPathsToSetContext(const std::string &bundleName,
         int32_t userId, int32_t appIndex);
+    static std::string GetWhiteListPathByDisplayName(const std::string &displayName);
+    static std::string GetDisPlayManagerConfigPath();
+    static bool IsValidNode(const xmlNode& currNode);
+    static uint64_t ParseStrToUll(const std::string &contentStr);
+    static void ParseDisplaysMap(const xmlNodePtr &currNode, std::unordered_map<std::string, uint64_t> &displaysMap);
+    static bool GetDisplaysMapFromConfigXml(std::unordered_map<std::string, uint64_t> &displaysMap);
+    static bool PatchReadWhiteListXml(std::unordered_map<uint64_t, std::vector<std::string>> &logicalIdWhiteListMap);
 private:
     static std::mutex g_mutex;
+    static std::recursive_mutex configXmlMutex_;
+    static std::recursive_mutex whiteListXmlMutex_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

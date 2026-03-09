@@ -67,6 +67,7 @@ constexpr const char* HSP_FILE_SUFFIX = ".hsp";
 constexpr const char* APP_FILE_SUFFIX = ".app";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
 constexpr const char* CER_SUFFIX = ".cer";
+constexpr const char* XML_FILE_SUFFIX = ".xml";
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
 constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";

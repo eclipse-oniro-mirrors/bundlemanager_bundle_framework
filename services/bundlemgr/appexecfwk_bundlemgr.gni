@@ -176,6 +176,7 @@ bundle_install_external_deps = [
   "appspawn:appspawn_client",
   "ffrt:libffrt",
   "hitrace:libhitracechain",
+  "libxml2:libxml2",
   "memmgr:memmgrclient",
   "openssl:libcrypto_shared",
   "os_account:libaccountkits",

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -146,6 +146,28 @@ int32_t AccountHelper::GetCurrentActiveUserIdWithRetry(bool isOtaInstall)
     } while (retryCnt < RETRY_TIMES);
 
     return localId;
+#else
+    APP_LOGI("ACCOUNT_ENABLE is false");
+    return Constants::INVALID_USERID;
+#endif
+}
+
+int32_t AccountHelper::GetUserIdByDisplayIdWithRetry(const uint64_t displayId)
+{
+#ifdef ACCOUNT_ENABLE
+    int32_t userId = Constants::INVALID_USERID;
+int32_t retryCnt = 0;
+    do {
+        int32_t ret = AccountSA::OsAccountManager::GetDefaultActivatedOsAccount(displayId, userId);
+        if (ret == 0) {
+            break;
+        }
+        ++retryCnt;
+        std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_INTERVAL));
+        APP_LOGW("get foregroud osAccount failed, retry count: %{public}d, ret: %{public}d", retryCnt, ret);
+    } while (retryCnt < RETRY_TIMES);
+
+    return userId;
 #else
     APP_LOGI("ACCOUNT_ENABLE is false");
     return Constants::INVALID_USERID;

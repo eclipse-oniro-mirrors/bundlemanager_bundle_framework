@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -139,6 +139,9 @@ std::set<PreBundleConfigInfo> installListCapabilities_;
 std::set<std::string> extensiontype_;
 bool hasLoadPreInstallProFile_ = false;
 std::vector<std::string> bundleNameList_;
+std::set<int32_t> allUserIds_;
+std::set<int32_t> whiteListUserIds_;
+std::unordered_map<int32_t, std::vector<std::string>> xmlMap_;
 
 #ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
@@ -439,6 +442,9 @@ void BMSEventHandler::BundleRebootStartEvent()
     ProcessAppTmpPath();
     ProcessUpdateExtensionDirsApl();
     needNotifyBundleScanStatus_ = true;
+    allUserIds_.clear();
+    whiteListUserIds_.clear();
+    xmlMap_.clear();
 }
 
 ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
@@ -571,6 +577,32 @@ bool BMSEventHandler::AnalyzeUserData(
     }
 
     userMaps.at(userDataBundleName).emplace_back(innerBundleUserInfo);
+    return true;
+}
+
+bool BMSEventHandler::GetBundleNameAndUserIdFromPath(const std::string &path,
+    std::vector<int32_t> &userIds, std::string &bundleName)
+{
+    if (bundleName.empty()) {
+        std::unordered_map<std::string, InnerBundleInfo> infos;
+        if (!ParseHapFiles(path, infos) || infos.empty()) {
+            LOG_NOFUNC_E(BMS_TAG_DEFAULT, "obtain bundleinfo failed : %{public}s ", path.c_str());
+            return false;
+        }
+        bundleName = infos.begin()->second.GetBundleName();
+    }
+
+    userIds.clear();
+    for (const auto &userId : allUserIds_) {
+        if (userId == Constants::DEFAULT_USERID) {
+            continue;
+        }
+        if (whiteListUserIds_.count(userId) == 1 && std::find(xmlMap_[userId].begin(),
+            xmlMap_[userId].end(), bundleName) == xmlMap_[userId].end()) {
+            continue;
+        }
+        userIds.emplace_back(userId);
+    }
     return true;
 }
 
@@ -2089,9 +2121,41 @@ bool BMSEventHandler::LoadAllPreInstallBundleInfos()
     return !preInstallBundleInfos.empty();
 }
 
+void BMSEventHandler::LoadPreInstallWhiteList()
+{
+    allUserIds_.clear();
+    whiteListUserIds_.clear();
+    xmlMap_.clear();
+    std::unordered_map<uint64_t, std::vector<std::string>> logicalIdWhiteListMap;
+    bool isWhiteListExist = BundleUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
+    if (!isWhiteListExist) {
+        LOG_E(BMS_TAG_DEFAULT, "load preInstallWhiteListMap fail or whiteList not exist");
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    allUserIds_ = dataMgr->GetAllUser();
+    for (const auto &logicalIdWhiteList : logicalIdWhiteListMap) {
+        uint64_t logicalId = logicalIdWhiteList.first;
+        int32_t userId = AccountHelper::GetUserIdByDisplayIdWithRetry(logicalId);
+        if (userId == Constants::INVALID_USERID) {
+            LOG_E(BMS_TAG_DEFAULT, "get userId by displayId fail");
+            continue;
+        } else {
+            whiteListUserIds_.emplace(userId);
+            xmlMap_[userId] = logicalIdWhiteList.second;
+        }
+    }
+}
+
 void BMSEventHandler::ProcessRebootBundleInstall()
 {
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler Process reboot bundle install start");
+    // to do 获取白名单
+    LoadPreInstallWhiteList();
 #ifdef USE_PRE_BUNDLE_PROFILE
     if (LoadPreInstallProFile()) {
         ProcessReBootPreBundleProFileInstall();
@@ -2141,6 +2205,23 @@ void BMSEventHandler::ProcessRebootBundleInstallFromScan()
     InnerProcessRebootBundleInstall(bundleDirs, Constants::AppType::SYSTEM_APP);
     InnerProcessStockBundleProvisionInfo();
     InnerProcessStockBundleRouterInfo();
+}
+
+std::vector<int32_t> BMSEventHandler::GetUserIdIntersection(
+    const std::vector<int32_t> &vec1, const std::vector<int32_t> &vec2)
+{
+    std::vector<int32_t> sortedVec1 = vec1;
+    std::vector<int32_t> sortedVec2 = vec2;
+
+    std::sort(sortedVec1.begin(), sortedVec1.end());
+    std::sort(sortedVec2.begin(), sortedVec2.end());
+
+    std::vector<int32_t> result;
+    std::set_intersection(
+        sortedVec1.begin(), sortedVec1.end(),
+        sortedVec2.begin(), sortedVec2.end(),
+        std::back_inserter(result));
+    return result;
 }
 
 void BMSEventHandler::InnerProcessRebootBundleInstall(
@@ -2207,7 +2288,15 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             LOG_NOFUNC_I(BMS_TAG_DEFAULT, "app(%{public}s) in force install list and need OTA install",
                 bundleName.c_str());
             std::vector<std::string> filePaths { scanPathIter };
-            if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
+            bool ret = false;
+            if (!whiteListUserIds_.empty()) {
+                std::vector<int32_t> userIds;
+                GetBundleNameAndUserIdFromPath(scanPathIter, userIds, bundleName);
+                ret = OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, userIds);
+            } else {
+                ret = OTAInstallSystemBundle(filePaths, appType, removable);
+            }
+            if (!ret) {
                 LOG_E(BMS_TAG_DEFAULT, "OTA force Install bundle(%{public}s) error", bundleName.c_str());
                 SavePreInstallException(scanPathIter);
             }
@@ -2316,7 +2405,15 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 bundleName.c_str(), scanPathIter.c_str());
             // After the patch app is uninstalled, install the preconfigured app of the ota version.
             std::vector<std::string> filePaths{scanPathIter};
-            if (!OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, currentBundleUserIds)) {
+            std::vector<int32_t> allowedUserIds;
+            if (!whiteListUserIds_.empty()) {
+                std::vector<int32_t> userIds;
+                GetBundleNameAndUserIdFromPath(scanPathIter, userIds, bundleName);
+                allowedUserIds = GetUserIdIntersection(currentBundleUserIds, userIds);
+            } else {
+                allowedUserIds = currentBundleUserIds;
+            }
+            if (!OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, allowedUserIds)) {
                 LOG_E(BMS_TAG_DEFAULT, "OTA install prefab bundle(%{public}s) error", bundleName.c_str());
                 SavePreInstallException(scanPathIter);
             }
@@ -2346,7 +2443,17 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         }
     }
     for (auto &item : needInstallSysMap) {
-        if (!OTAInstallSystemBundle(BMSEventHandler::ObtainRealPath(item.second.first), appType, item.second.second)) {
+        auto path = BMSEventHandler::ObtainRealPath(item.second.first);
+        bool ret = false;
+        if (!whiteListUserIds_.empty()) {
+            std::vector<int32_t> userIds;
+            std::string bundleName = item.first;
+            GetBundleNameAndUserIdFromPath(path.front(), userIds, bundleName);
+            ret = OTAInstallSystemBundleTargetUser(path, item.first, appType, item.second.second, userIds);
+        } else {
+            ret = OTAInstallSystemBundle(path, appType, item.second.second);
+        }
+        if (!ret) {
             LOG_E(BMS_TAG_DEFAULT, "OTA Install new bundle(%{public}s) error", item.first.c_str());
             SavePreInstallExceptionBundleName(item.first);
         } else {
@@ -3668,7 +3775,18 @@ void BMSEventHandler::HandlePreInstallAppPathsException(std::shared_ptr<PreInsta
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "HandlePreInstallException path:%{public}s", pathIter.c_str());
         std::vector<std::string> filePaths { pathIter };
         bool removable = IsPreInstallRemovable(pathIter);
-        if (!OTAInstallSystemBundle(filePaths, Constants::AppType::SYSTEM_APP, removable)) {
+        bool ret = false;
+        if (!whiteListUserIds_.empty()) {
+            std::vector<int32_t> userIds;
+            std::string bundleName;
+            if (GetBundleNameAndUserIdFromPath(pathIter, userIds, bundleName)) {
+                ret = OTAInstallSystemBundleTargetUser(filePaths, bundleName, Constants::AppType::SYSTEM_APP,
+                    removable, userIds);
+            }
+        } else {
+            ret = OTAInstallSystemBundle(filePaths, Constants::AppType::SYSTEM_APP, removable);
+        }
+        if (!ret) {
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException path(%{public}s) error", pathIter.c_str());
             // If the bundle cannot be removed and the path is not empty, need try again
             if (!removable && !OHOS::IsEmptyFolder(pathIter)) {
@@ -3747,8 +3865,18 @@ void BMSEventHandler::HandlePreInstallBundleNamesException(
         }
 
         const auto &preInstallBundleInfo = iter->second;
-        if (!OTAInstallSystemBundle(preInstallBundleInfo.GetBundlePaths(),
-            Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable())) {
+        bool ret = false;
+        if (!whiteListUserIds_.empty()) {
+            std::vector<int32_t> userIds;
+            std::string bundleName = bundleNameIter;
+            GetBundleNameAndUserIdFromPath(preInstallBundleInfo.GetBundlePaths().front(), userIds, bundleName);
+            ret = OTAInstallSystemBundleTargetUser(preInstallBundleInfo.GetBundlePaths(), bundleNameIter,
+                Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable(), userIds);
+        } else {
+            ret = OTAInstallSystemBundle(preInstallBundleInfo.GetBundlePaths(),
+                Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable());
+        }
+        if (!ret) {
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName(%{public}s) error",
                 bundleNameIter.c_str());
             if (!preInstallBundleInfo.IsRemovable()) {
@@ -3811,7 +3939,12 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
     installParam.isOTA = true;
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
     SystemBundleInstaller installer;
-    ErrCode ret = installer.OTAInstallSystemBundleNeedCheckUser(filePaths, installParam, bundleName, appType);
+    std::vector<int32_t> userIds;
+    std::string validBundleName = bundleName;
+    if (!whiteListUserIds_.empty()) {
+        GetBundleNameAndUserIdFromPath(filePaths.front(), userIds, validBundleName);
+    }
+    ErrCode ret = installer.OTAInstallSystemBundleNeedCheckUser(filePaths, installParam, bundleName, appType, userIds);
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "bundle %{public}s with return code: %{public}d", bundleName.c_str(), ret);
     if ((ret != ERR_OK) && (ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
         APP_LOGE("OTA bundle(%{public}s) failed, errCode:%{public}d", bundleName.c_str(), ret);
@@ -3845,7 +3978,8 @@ bool BMSEventHandler::OTAInstallSystemBundleTargetUser(const std::vector<std::st
     installParam.isOTA = true;
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
     SystemBundleInstaller installer;
-    ErrCode ret = installer.OTAInstallSystemBundleTargetUser(filePaths, installParam, bundleName, appType, userIds);
+    ErrCode ret = installer.OTAInstallSystemBundleTargetUser(filePaths, installParam, bundleName, appType, userIds,
+        !whiteListUserIds_.empty());
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "bundle %{public}s with return code: %{public}d", bundleName.c_str(), ret);
     if ((ret != ERR_OK) && (ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
         APP_LOGE("OTA bundle(%{public}s) failed, errCode:%{public}d", bundleName.c_str(), ret);
@@ -4604,8 +4738,13 @@ bool BMSEventHandler::InstallSystemBundleNeedCheckUserForPatch(const std::vector
     installParam.withCopyHaps = true;
     installParam.isPatch = true;
     SystemBundleInstaller installer;
+    std::vector<int32_t> userIds;
+    if (isOta && !whiteListUserIds_.empty()) {
+        std::string validBundleName = bundleName;
+        GetBundleNameAndUserIdFromPath(filePaths.front(), userIds, validBundleName);
+    }
     if (installer.OTAInstallSystemBundleNeedCheckUser(
-        filePaths, installParam, bundleName, Constants::AppType::SYSTEM_APP) != ERR_OK) {
+        filePaths, installParam, bundleName, Constants::AppType::SYSTEM_APP, userIds) != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "-n %{public}s patch bundle install failed", bundleName.c_str());
         return false;
     }
@@ -5602,13 +5741,23 @@ bool BMSEventHandler::CleanAllBundleEl1ArkStartupCacheLocal()
 bool BMSEventHandler::IsRecoverListEmpty(const std::string &bundleName, std::vector<int32_t> &userIds)
 {
     bool isEmpty = true;
+    std::vector<int32_t> notInstallUserIds;
     for (const auto &[userId, installAndRecoverPair] : userInstallAndRecoverMap_) {
         const auto &recoverList = installAndRecoverPair.second;
         if (std::find(recoverList.begin(), recoverList.end(), bundleName) != recoverList.end()) {
             isEmpty = false;
         } else {
-            userIds.emplace_back(userId);
+            notInstallUserIds.emplace_back(userId);
         }
+    }
+    if (!whiteListUserIds_.empty()) {
+        std::string path;
+        std::vector<int32_t> needInstallUserIds;
+        std::string validBundleName = bundleName;
+        GetBundleNameAndUserIdFromPath(path, needInstallUserIds, validBundleName);
+        userIds = GetUserIdIntersection(notInstallUserIds, needInstallUserIds);
+    } else {
+        userIds = notInstallUserIds;
     }
     return isEmpty;
 }
