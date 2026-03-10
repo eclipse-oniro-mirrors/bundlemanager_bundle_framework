@@ -3940,15 +3940,13 @@ void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
         if (asyncCallbackInfo->isSavedInCache) {
-            std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
-            auto item = cache.find(Query(
-                asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
-                asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
-            if (item == cache.end()) {
+            if (asyncCallbackInfo->cachedRef != nullptr) {
+                NAPI_CALL_RETURN_VOID(env,
+                    napi_get_reference_value(env, asyncCallbackInfo->cachedRef, &result[ARGS_POS_ONE]));
+            } else {
                 APP_LOGE("cannot find result in cache");
                 return;
             }
-            NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[ARGS_POS_ONE]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
             CommonFunc::ConvertBundleInfo(env,
@@ -3982,6 +3980,7 @@ void GetBundleInfoExec(napi_env env, void *data)
                 GET_BUNDLE_INFO, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
             if (item != cache.end()) {
                 asyncCallbackInfo->isSavedInCache = true;
+                asyncCallbackInfo->cachedRef = item->second;
                 APP_LOGD("GetBundleInfo param from cache");
                 return;
             }
@@ -4012,6 +4011,7 @@ void GetBundleInfoForSelfExec(napi_env env, void *data)
             asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
         if (item != cache.end()) {
             asyncCallbackInfo->isSavedInCache = true;
+            asyncCallbackInfo->cachedRef = item->second;
             APP_LOGD("GetBundleInfo param from cache");
             return;
         }

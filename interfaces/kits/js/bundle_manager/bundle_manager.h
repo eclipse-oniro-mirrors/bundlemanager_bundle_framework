@@ -274,6 +274,7 @@ struct BundleInfosCallbackInfo : public BaseCallbackInfo {
 struct BundleInfoCallbackInfo : public BaseCallbackInfo {
     explicit BundleInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
     bool isSavedInCache = false;
+    napi_ref cachedRef = nullptr;
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     int32_t uid = 0;
