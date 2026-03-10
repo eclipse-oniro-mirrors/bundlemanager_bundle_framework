@@ -549,9 +549,8 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0009, Function | SmallTest | Level3
     currentBundleUserIds = dataMgr->GetUserIds(BUNDLE_OTAUPDATETEST_NAME);
     EXPECT_EQ(currentBundleUserIds.size(), 1);
 
-    std::vector<int32_t> userIds;
     ret = installer->OTAInstallSystemBundleNeedCheckUser(bundleFiles, installParam, BUNDLE_OTAUPDATETEST_NAME,
-        Constants::AppType::SYSTEM_APP, userIds);
+        Constants::AppType::SYSTEM_APP);
     EXPECT_EQ(ret, ERR_OK);
     currentBundleUserIds = dataMgr->GetUserIds(BUNDLE_OTAUPDATETEST_NAME);
     EXPECT_EQ(currentBundleUserIds.size(), 1);
@@ -648,44 +647,6 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0200, Function | SmallTest | Level3
     auto installer = std::make_unique<SystemBundleInstaller>();
     setuid(Constants::FOUNDATION_UID);
     ret = installer->UninstallSystemBundle(bundleName);
-    setuid(Constants::ROOT_UID);
-    EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
-}
-
-/**
- * @tc.number: SUB_BMS_OTA_0300
- * @tc.name: test the right system bundle file can be installed
- * @tc.desc: 1. the system bundle file exists
- */
-HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0300, Function | SmallTest | Level3)
-{
-    auto dataMgr = GetBundleDataMgr();
-    ASSERT_NE(dataMgr, nullptr) << "the dataMgr is nullptr";
-    dataMgr->AddUserId(USERID);
-    dataMgr->AddUserId(USERID_2);
-    std::string bundleFile = RESOURCE_ROOT_PATH + OTAUPDATETESTBASIS_BUNDLE;
-    std::vector<string> bundleFiles;
-    bundleFiles.push_back(bundleFile);
-    InstallParam installParam;
-    installParam.userId = USERID;
-    installParam.isPreInstallApp = true;
-    setuid(Constants::FOUNDATION_UID);
-    installParam.SetKillProcess(false);
-    setuid(Constants::ROOT_UID);
-    installParam.needSendEvent = false;
-    installParam.copyHapToInstallPath = false;
-    installParam.isOTA = true;
-    std::vector<int32_t> userIds { USERID, USERID_2 };
-
-    auto installer = std::make_unique<SystemBundleInstaller>();
-    ret = installer->OTAInstallSystemBundleNeedCheckUser(bundleFiles, installParam, BUNDLE_OTAUPDATETEST_NAME,
-        Constants::AppType::SYSTEM_APP, userIds);
-    EXPECT_EQ(ret, ERR_OK);
-    currentBundleUserIds = dataMgr->GetUserIds(BUNDLE_OTAUPDATETEST_NAME);
-    EXPECT_EQ(currentBundleUserIds.size(), 1);
-
-    setuid(Constants::FOUNDATION_UID);
-    ret = installer->UninstallSystemBundle(BUNDLE_OTAUPDATETEST_NAME);
     setuid(Constants::ROOT_UID);
     EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
 }

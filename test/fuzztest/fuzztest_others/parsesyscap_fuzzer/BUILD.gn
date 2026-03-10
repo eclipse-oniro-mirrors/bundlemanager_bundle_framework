@@ -42,6 +42,7 @@ ohos_fuzztest("ParseSysCapFuzzTest") {
     "access_token:libaccesstoken_sdk",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "libxml2:libxml2",
   ]
   defines = []
   if (global_resmgr_enable) {

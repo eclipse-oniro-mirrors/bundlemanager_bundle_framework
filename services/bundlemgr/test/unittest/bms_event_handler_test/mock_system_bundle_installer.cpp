@@ -204,8 +204,7 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
     const std::vector<std::string> &filePaths,
     InstallParam &installParam,
     const std::string &bundleName,
-    Constants::AppType appType,
-    const std::vector<int32_t> &userIds)
+    Constants::AppType appType)
 {
     return OTAInstallSystemBundle(filePaths, installParam, appType);
 }

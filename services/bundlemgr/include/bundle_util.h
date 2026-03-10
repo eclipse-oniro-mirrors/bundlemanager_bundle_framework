@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -263,6 +263,7 @@ public:
     static void ParseDisplaysMap(const xmlNodePtr &currNode, std::unordered_map<std::string, uint64_t> &displaysMap);
     static bool GetDisplaysMapFromConfigXml(std::unordered_map<std::string, uint64_t> &displaysMap);
     static bool PatchReadWhiteListXml(std::unordered_map<uint64_t, std::vector<std::string>> &logicalIdWhiteListMap);
+    static void ParseAllowedNodeConfig(const xmlNodePtr &rootPtr, std::vector<std::string> &bundleNames);
 private:
     static std::mutex g_mutex;
     static std::recursive_mutex configXmlMutex_;

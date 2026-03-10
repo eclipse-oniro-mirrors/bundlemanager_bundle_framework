@@ -101,8 +101,7 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
     const std::vector<std::string> &filePaths,
     InstallParam &installParam,
     const std::string &bundleName,
-    Constants::AppType appType,
-    const std::vector<int32_t> &userIds)
+    Constants::AppType appType)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -111,21 +110,8 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
     }
 
     auto currentBundleUserIds = dataMgr->GetUserIds(bundleName);
-    std::vector<int32_t> needInstallUserIds;
-    if (installParam.isOTA && !userIds.empty()) {
-        std::vector<int32_t> sortUserIds = userIds;
-        std::sort(sortUserIds.begin(), sortUserIds.end());
-        std::sort(currentBundleUserIds.begin(), currentBundleUserIds.end());
-
-        std::set_intersection(
-            sortUserIds.begin(), sortUserIds.end(),
-            currentBundleUserIds.begin(), currentBundleUserIds.end(),
-            std::back_inserter(needInstallUserIds));
-    } else {
-        needInstallUserIds = currentBundleUserIds;
-    }
     std::set<int32_t> userIdSet;
-    for (auto userId : needInstallUserIds) {
+    for (auto userId : currentBundleUserIds) {
         userIdSet.insert(userId);
     }
     if (!installParam.removable) {

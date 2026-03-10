@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,15 +60,13 @@ public:
      * @param installParam Indicates the installParam.
      * @param bundleName Indicates the bundleName.
      * @param appType Indicates the bundle type.
-     * @param userIds Indicates the userIds.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
     ErrCode OTAInstallSystemBundleNeedCheckUser(
         const std::vector<std::string> &filePaths,
         InstallParam &installParam,
         const std::string &bundleName,
-        Constants::AppType appType,
-        const std::vector<int32_t> &userIds);
+        Constants::AppType appType);
     /**
      * @brief OTA Install preinstall app.
      * @param filePath Indicates the filePaths.

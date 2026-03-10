@@ -71,7 +71,7 @@ const char* APPLIST_WHITELIST_DIR = "/etc/user_center/";
 #endif
 const char* NO_DISABLING_CONFIG_PATH_DEFAULT =
     "/system/etc/ability_runtime/resident_process_in_extreme_memory.json";
-const char* DISPLAY_MANAGER_CONFIG_PATH_DEFAULT = "/system/etc/window/resources/display_manager_config.xml";
+const char* DISPLAY_MANAGER_CONFIG_PATH_DEFAULT = "/sys_prod/etc/window/resources/display_manager_config.xml";
 const char* APPLIST_WHITELIST_DIR_DEFAULT = "/sys_prod/etc/user_center/";
 const std::string EMPTY_STRING = "";
 constexpr int64_t DISK_REMAINING_SIZE_LIMIT = 1024 * 1024 * 10; // 10M
@@ -1217,16 +1217,17 @@ uint64_t BundleUtil::ParseStrToUll(const std::string& contentStr)
 
 void BundleUtil::ParseDisplaysMap(const xmlNodePtr& currNode, std::unordered_map<std::string, uint64_t> &displaysMap)
 {
+    APP_LOGI("start parse displays config");
     for (xmlNodePtr displayNode = currNode->xmlChildrenNode; displayNode != nullptr; displayNode = displayNode->next) {
         if (!IsValidNode(*displayNode) ||
             xmlStrcmp(displayNode->name, reinterpret_cast<const xmlChar*>("display")) != 0) {
             continue;
         }
-        APP_LOGI("start parse displays config");
         std::string name;
         uint64_t logicalId;
         for (xmlNodePtr fileNode = displayNode->xmlChildrenNode; fileNode != nullptr; fileNode = fileNode->next) {
             if (!IsValidNode(*fileNode)) {
+                APP_LOGE("invalid node!");
                 continue;
             }
             std::string nodeName = reinterpret_cast<const char*>(fileNode->name);
@@ -1284,7 +1285,7 @@ bool BundleUtil::PatchReadWhiteListXml(std::unordered_map<uint64_t, std::vector<
 {
     std::unordered_map<std::string, uint64_t> displaysMap;
     if (!GetDisplaysMapFromConfigXml(displaysMap) || displaysMap.empty()) {
-        APP_LOGI("displaysMap is empty!");
+        APP_LOGE("displaysMap is empty!");
         return false;
     }
     bool isWhiteListExist = false;
@@ -1297,7 +1298,7 @@ bool BundleUtil::PatchReadWhiteListXml(std::unordered_map<uint64_t, std::vector<
             docPtr = xmlReadFile(whiteListFilePath.c_str(), nullptr, XML_PARSE_NOBLANKS);
         }
         if (docPtr == nullptr) {
-            APP_LOGI("load xml error or file not exist!");
+            APP_LOGE("load xml error or file not exist!");
             continue;
         }
         uint64_t logicalId = displayInfo.second;
@@ -1315,28 +1316,32 @@ bool BundleUtil::PatchReadWhiteListXml(std::unordered_map<uint64_t, std::vector<
             xmlFreeDoc(docPtr);
             continue;
         }
-        for (xmlNodePtr curNodePtr = rootPtr->xmlChildrenNode; curNodePtr != nullptr; curNodePtr = curNodePtr->next) {
-            if (!IsValidNode(*curNodePtr)) {
-                continue;
-            }
-            std::string nodeName = reinterpret_cast<const char*>(curNodePtr->name);
-            if (nodeName != "allowed") {
-                continue;
-            }
-            xmlChar* attrValue = xmlGetProp(curNodePtr, reinterpret_cast<const xmlChar*>("name"));
-            if (attrValue == nullptr) {
-                continue;
-            }
-            std::string bundleName = reinterpret_cast<const char*>(attrValue);
-            bundleNames.emplace_back(bundleName);
-            xmlFree(attrValue);
-            attrValue = nullptr;
-        }
+        ParseAllowedNodeConfig(rootPtr, bundleNames);
         logicalIdWhiteListMap.emplace(logicalId, bundleNames);
         xmlFreeDoc(docPtr);
         isWhiteListExist = true;
     }
     return isWhiteListExist;
+}
+
+void BundleUtil::ParseAllowedNodeConfig(const xmlNodePtr &rootPtr, std::vector<std::string> &bundleNames)
+{
+    for (xmlNodePtr curNodePtr = rootPtr->xmlChildrenNode; curNodePtr != nullptr; curNodePtr = curNodePtr->next) {
+        if (!IsValidNode(*curNodePtr)) {
+            APP_LOGE("invalid node!");
+            continue;
+        }
+        std::string nodeName = reinterpret_cast<const char*>(curNodePtr->name);
+        if (nodeName == "allowed") {
+            xmlChar* attrValue = xmlGetProp(curNodePtr, reinterpret_cast<const xmlChar*>("name"));
+            if (attrValue != nullptr) {
+                std::string bundleName = reinterpret_cast<const char*>(attrValue);
+                bundleNames.emplace_back(bundleName);
+                xmlFree(attrValue);
+                attrValue = nullptr;
+            }
+        }
+    }
 }
 
 uint32_t BundleUtil::ExtractNumberFromString(nlohmann::json &jsonObject, const std::string &key)

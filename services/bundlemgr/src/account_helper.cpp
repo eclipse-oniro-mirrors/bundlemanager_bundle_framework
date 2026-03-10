@@ -156,7 +156,7 @@ int32_t AccountHelper::GetUserIdByDisplayIdWithRetry(const uint64_t displayId)
 {
 #ifdef ACCOUNT_ENABLE
     int32_t userId = Constants::INVALID_USERID;
-int32_t retryCnt = 0;
+    int32_t retryCnt = 0;
     do {
         int32_t ret = AccountSA::OsAccountManager::GetDefaultActivatedOsAccount(displayId, userId);
         if (ret == 0) {
@@ -166,7 +166,6 @@ int32_t retryCnt = 0;
         std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_INTERVAL));
         APP_LOGW("get foregroud osAccount failed, retry count: %{public}d, ret: %{public}d", retryCnt, ret);
     } while (retryCnt < RETRY_TIMES);
-
     return userId;
 #else
     APP_LOGI("ACCOUNT_ENABLE is false");

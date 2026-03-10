@@ -46,6 +46,7 @@ ohos_unittest("BundleUtilTest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "libxml2:libxml2",
   ]
   defines = []
 }
