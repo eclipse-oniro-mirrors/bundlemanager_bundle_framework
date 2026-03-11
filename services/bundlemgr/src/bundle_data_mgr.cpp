@@ -766,6 +766,10 @@ bool BundleDataMgr::RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundl
         return false;
     }
     if (statusItem->second == InstallState::UNINSTALL_START || statusItem->second == InstallState::ROLL_BACK) {
+        if (!DeleteRouterInfoForSharedBundle(info, versionCode)) {
+            APP_LOGE("delete router map failed bundle:%{public}s", bundleName.c_str());
+            return false;
+        }
         info.DeleteHspModuleByVersion(versionCode);
         info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         if (dataStorage_->SaveStorageBundleInfo(info)) {
@@ -775,6 +779,19 @@ bool BundleDataMgr::RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundl
         }
     }
     return true;
+}
+
+bool BundleDataMgr::DeleteRouterInfoForSharedBundle(const InnerBundleInfo &info, const int32_t versionCode)
+{
+    std::vector<std::string> moduleNames;
+    info.GetModuleNames(moduleNames);
+    bool ret = true;
+    for (auto &moduleName : moduleNames) {
+        if (!routerStorage_->DeleteRouterInfo(info.GetBundleName(), moduleName, versionCode)) {
+            ret = false;
+        }
+    }
+    return ret;
 }
 
 ErrCode BundleDataMgr::AddInnerBundleUserInfo(
@@ -3394,6 +3411,10 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag,
     // get plugin router info
     std::vector<RouterItem> pluginRouterInfos;
     GetRouterInfoForPlugin(bundleInfo.name, userId, pluginRouterInfos);
+    // get hsp router info
+    std::vector<RouterItem> sharedBundleRouterInfos;
+    GetRouterInfoForSharedBundle(bundleInfo.name, sharedBundleRouterInfos);
+    MergeRouterItems(sharedBundleRouterInfos, pluginRouterInfos);
     RouterMapHelper::MergeRouter(bundleInfo, pluginRouterInfos);
 }
 
@@ -3421,6 +3442,56 @@ void BundleDataMgr::GetRouterInfoForPlugin(const std::string &hostBundleName,
             routerInfos.insert(routerInfos.end(), tempInfos.begin(), tempInfos.end());
             tempInfos.clear();
         }
+    }
+}
+
+void BundleDataMgr::GetRouterInfoForSharedBundle(const std::string &bundleName,
+    std::vector<RouterItem> &routerInfos) const
+{
+    std::vector<BaseSharedBundleInfo> baseSharedBundleInfos;
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("get bundle info failed, bundleName:%{public}s", bundleName.c_str());
+        return;
+    }
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    std::vector<Dependency> dependencies = innerBundleInfo.GetDependencies();
+    for (const auto &item : dependencies) {
+        BaseSharedBundleInfo baseSharedBundleInfo;
+        if (GetBaseSharedBundleInfo(item, baseSharedBundleInfo)) {
+            baseSharedBundleInfos.emplace_back(baseSharedBundleInfo);
+        }
+    }
+
+    std::vector<RouterItem> tempInfos;
+    for (auto &info : baseSharedBundleInfos) {
+        if (!routerStorage_->GetRouterInfo(info.bundleName, info.moduleName,
+            info.versionCode, tempInfos) || tempInfos.empty()) {
+            continue;
+        }
+        routerInfos.insert(routerInfos.end(), tempInfos.begin(), tempInfos.end());
+        tempInfos.clear();
+    }
+}
+
+void BundleDataMgr::MergeRouterItems(
+    const std::vector<RouterItem>& sharedBundleRouterInfos,
+    std::vector<RouterItem>& pluginRouterInfos) const
+{
+    std::unordered_map<std::string, RouterItem> routerMap;
+    
+    for (const auto& item : pluginRouterInfos) {
+        routerMap[item.name] = item;
+    }
+    
+    for (const auto& item : sharedBundleRouterInfos) {
+        routerMap[item.name] = item;
+    }
+    
+    pluginRouterInfos.clear();
+    pluginRouterInfos.reserve(routerMap.size());
+    for (const auto& pair : routerMap) {
+        pluginRouterInfos.push_back(pair.second);
     }
 }
 

@@ -1543,6 +1543,10 @@ private:
     bool ProcessUninstallBundle(std::vector<BundleOptionInfo> &bundleOptionInfos) const;
     void ProcessDynamicShortcutInfo(const InnerBundleInfo &info, const int32_t appIndex, const int32_t requestUserId,
         std::vector<ShortcutInfo> &shortcutInfos) const;
+    bool DeleteRouterInfoForSharedBundle(const InnerBundleInfo &info, const int32_t versionCode);
+    void GetRouterInfoForSharedBundle(const std::string &bundleName, std::vector<RouterItem> &routerInfos) const;
+    void MergeRouterItems(const std::vector<RouterItem>& sharedBundleRouterInfos,
+        std::vector<RouterItem>& pluginRouterInfos) const;
 
 private:
     bool initialUserFlag_ = false;

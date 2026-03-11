@@ -592,6 +592,10 @@ ErrCode BaseBundleInstaller::UninstallHspBundle(std::string &uninstallDir, const
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
     (void)InstalldClient::GetInstance()->RemoveDir(AOTHandler::BuildSharedArkCachePath(bundleName));
+    // delete router map for hsp
+    if (!dataMgr_->DeleteRouterInfo(bundleName)) {
+        LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete router map failed", bundleName.c_str());
+    }
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed", bundleName.c_str());
     }

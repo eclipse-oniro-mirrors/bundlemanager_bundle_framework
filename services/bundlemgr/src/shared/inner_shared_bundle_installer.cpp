@@ -234,6 +234,7 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
     newBundleInfo_.ResetAOTFlags();
     (void)InstalldClient::GetInstance()->RemoveDir(AOTHandler::BuildSharedArkCachePath(bundleName_));
 
+    UpdateRouterInfoForSharedBundle(newBundleInfo_);
     result = SavePreInstallInfo(installParam);
     CHECK_RESULT(result, "save pre install info failed %{public}d");
 
@@ -898,6 +899,16 @@ ErrCode InnerSharedBundleInstaller::MarkInstallFinish()
         }
     }
     return ERR_OK;
+}
+
+void InnerSharedBundleInstaller::UpdateRouterInfoForSharedBundle(const InnerBundleInfo &newBundleInfo)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+    dataMgr->InsertRouterInfo(newBundleInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
