@@ -128,6 +128,7 @@ namespace bundleManager {
     DISTRIBUTED = 28,
     APP_SERVICE = 29,
     LIVE_FORM = 30,
+    SELECTION = 31,
     WEB_NATIVE_MESSAGING = 32,
     FAULT_LOG = 33,
     NOTIFICATION_SUBSCRIBER = 34,
