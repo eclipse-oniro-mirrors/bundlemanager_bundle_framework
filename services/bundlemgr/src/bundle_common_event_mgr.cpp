@@ -627,7 +627,6 @@ void BundleCommonEventMgr::ProcessEventQueue()
     while (true) {
         std::vector<EventPublishFunc> batch;
         batch.reserve(MAX_EVENTS_PER_BATCH);
-        bool hasMoreEvents = false;
 
         // Extract a batch of events
         {
@@ -642,9 +641,6 @@ void BundleCommonEventMgr::ProcessEventQueue()
                 batch.push_back(eventQueue_.front());
                 eventQueue_.pop();
             }
-
-            // Check if there are more events after this batch
-            hasMoreEvents = !eventQueue_.empty();
         }
 
         // Process the batch: execute each publish function
@@ -654,12 +650,9 @@ void BundleCommonEventMgr::ProcessEventQueue()
             }
         }
 
-        APP_LOGD("Processed batch of %{public}zu events", batch.size());
+        std::this_thread::sleep_for(std::chrono::milliseconds(BATCH_INTERVAL_MS));
 
-        // Sleep outside the lock to avoid blocking other threads
-        if (hasMoreEvents) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(BATCH_INTERVAL_MS));
-        }
+        APP_LOGD("Processed batch of %{public}zu events", batch.size());
     }
 
     APP_LOGI_NOFUNC("ProcessEventQueue finished");
