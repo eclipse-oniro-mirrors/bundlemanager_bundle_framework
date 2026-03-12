@@ -2299,8 +2299,13 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             }
 
             if (hasInstalledInfo.versionCode > hapVersionCode) {
+                updateBundle = false;
                 if (CheckIsBundleUpdatedByHapPath(hasInstalledInfo)) {
                     break;
+                }
+                if (item.second.IsHsp()) {
+                    updateBundle = true;
+                    continue;
                 }
                 LOG_NOFUNC_E(BMS_TAG_DEFAULT, "-n %{public}s update failed versionCode:%{public}d lower than "
                     "current:%{public}d", bundleName.c_str(), hapVersionCode, hasInstalledInfo.versionCode);
