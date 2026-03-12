@@ -30,6 +30,8 @@
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_verify_mgr.h"
+#include "directory_ex.h"
+#include "file_ex.h"
 #include "inner_bundle_info.h"
 #include "inner_shared_bundle_installer.h"
 #include "installd/installd_service.h"
@@ -1162,9 +1164,28 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1300, Fun
 {
     InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
     installer.nativeLibraryPath_ = "path/testModuleName";
-    std::string versionDir = "data/test";
+    std::string versionDir = "data/test_not_exist";
     auto ret = installer.MoveSoToRealPath(TEST_MODULE_NAME, versionDir);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_1301
+ * @tc.name: test MoveSoToRealPath with existing temp so path
+ * @tc.desc: 1.Test MoveSoToRealPath when temp so path exists and MoveFiles is called
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1301, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    installer.nativeLibraryPath_ = "path/testModuleName";
+    std::string versionDir = EXIST_PATH2;
+    std::string createPath = versionDir + "/"+
+        installer.ObtainTempSoPath(TEST_MODULE_NAME, installer.nativeLibraryPath_);
+    auto ans = OHOS::ForceCreateDirectory(createPath);
+    EXPECT_TRUE(ans);
+    auto ret = installer.MoveSoToRealPath(TEST_MODULE_NAME, versionDir);
+    EXPECT_EQ(ret, ERR_OK);
+    OHOS::ForceRemoveDirectory(createPath);
 }
 
 /**
