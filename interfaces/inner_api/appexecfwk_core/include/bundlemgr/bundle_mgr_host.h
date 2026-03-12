@@ -916,6 +916,8 @@ private:
 
     ErrCode HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetOdidResetCount(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetOdidByBundleName(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetSignatureInfoByBundleName(MessageParcel &data, MessageParcel &reply);

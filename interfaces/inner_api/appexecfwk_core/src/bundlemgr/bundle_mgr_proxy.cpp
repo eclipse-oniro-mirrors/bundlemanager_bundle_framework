@@ -5978,6 +5978,33 @@ ErrCode BundleMgrProxy::GetOdidByBundleName(const std::string &bundleName, std::
     return ret;
 }
 
+ErrCode BundleMgrProxy::GetOdidResetCount(const std::string &bundleName, std::string &odid, int32_t &count)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("GetOdidResetCount Called");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("Write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ODID_RESET_COUNT, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        odid = reply.ReadString();
+        count = reply.ReadInt32();
+    }
+    APP_LOGD("GetOdidResetCount ret: %{public}d, count: %{public}d", ret, count);
+    return ret;
+}
+
 ErrCode BundleMgrProxy::GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

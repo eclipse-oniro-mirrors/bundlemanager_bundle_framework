@@ -9729,10 +9729,10 @@ HWTEST_F(BmsBundleInstallerTest, SetBundleFirstInstallTime_0100, Function | Medi
     InnerBundleUserInfo userInfo;
     applicationInfo.bundleName = BUNDLE_NAME;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
-    std::string key = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(Constants::ALL_USERID);
+    std::string key = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(Constants::DEFAULT_USERID);
     innerBundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
     BaseBundleInstaller installer;
-    installer.userId_ = Constants::ALL_USERID;
+    installer.userId_ = Constants::DEFAULT_USERID;
     installer.dataMgr_ = GetBundleDataMgr();
     int64_t time = 200;
     installer.SetFirstInstallTime(BUNDLE_NAME, time, innerBundleInfo);

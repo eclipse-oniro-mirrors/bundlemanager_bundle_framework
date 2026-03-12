@@ -1091,6 +1091,7 @@ public:
     std::string GenerateOdidNoLock(const std::string &developerId) const;
     ErrCode GetOdid(std::string &odid) const;
     ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
+    ErrCode GetOdidResetCount(const std::string &bundleName, std::string &odid, int32_t &count);
     void UpdateRouterInfo(const std::string &bundleName);
     void UpdateRouterInfo(InnerBundleInfo &innerBundleInfo);
     void FindRouterHapPath(const InnerBundleInfo &innerBundleInfo,

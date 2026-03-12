@@ -29,6 +29,7 @@
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
+#include "first_install_data_mgr/first_install_bundle_info.h"
 #include "int_wrapper.h"
 #include "json_constants.h"
 #include "json_serializer.h"
@@ -9029,4 +9030,132 @@ HWTEST_F(BmsDataMgrTest, CreateEl5GroupDirs_0001, Function | MediumTest | Level1
     ErrCode ret = bundleDataMgr.CreateEl5GroupDirs(dataGroupInfos, baseParam.userId);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: GetOdidResetCount_0100
+ * @tc.name: test GetOdidResetCount with empty bundleName
+ * @tc.desc: 1.test GetOdidResetCount with empty bundleName should return error
+ */
+HWTEST_F(BmsDataMgrTest, GetOdidResetCount_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "";
+    int32_t count = 0;
+    std::string odid;
+    ErrCode ret = dataMgr->GetOdidResetCount(bundleName, odid, count);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetOdidResetCount_0200
+ * @tc.name: test GetOdidResetCount with non-existent bundle
+ * @tc.desc: 1.test GetOdidResetCount with non-existent bundle should return error
+ */
+HWTEST_F(BmsDataMgrTest, GetOdidResetCount_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "com.test.nonexistent";
+    int32_t count = 0;
+    std::string odid;
+    ErrCode ret = dataMgr->GetOdidResetCount(bundleName, odid, count);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: FirstInstallBundleInfo_OdidResetCount_0100
+ * @tc.name: test FirstInstallBundleInfo odidResetCount and lastOdid serialization
+ * @tc.desc: 1.test odidResetCount and lastOdid fields in FirstInstallBundleInfo
+ */
+HWTEST_F(BmsDataMgrTest, FirstInstallBundleInfo_OdidResetCount_0100, Function | SmallTest | Level1)
+{
+    FirstInstallBundleInfo info;
+    info.firstInstallTime = 1234567890;
+    info.odidResetCount = 5;
+    info.lastOdid = "testOdid123";
+
+    std::string jsonStr = info.ToString();
+    EXPECT_TRUE(jsonStr.find("1234567890") != std::string::npos);
+    EXPECT_TRUE(jsonStr.find("5") != std::string::npos);
+    EXPECT_TRUE(jsonStr.find("testOdid123") != std::string::npos);
+
+    // Test deserialization
+    nlohmann::json jsonObject = nlohmann::json::parse(jsonStr);
+    FirstInstallBundleInfo deserializedInfo = jsonObject.get<FirstInstallBundleInfo>();
+    EXPECT_EQ(deserializedInfo.firstInstallTime, 1234567890);
+    EXPECT_EQ(deserializedInfo.odidResetCount, 5);
+    EXPECT_EQ(deserializedInfo.lastOdid, "testOdid123");
+}
+
+/**
+ * @tc.number: FirstInstallBundleInfo_OdidResetCount_0200
+ * @tc.name: test FirstInstallBundleInfo odidResetCount deserialization
+ * @tc.desc: 1.test odidResetCount deserialization from json
+ */
+HWTEST_F(BmsDataMgrTest, FirstInstallBundleInfo_OdidResetCount_0200, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["firstInstallTime"] = 1234567890;
+    jsonObject["odidResetCount"] = 7;
+
+    FirstInstallBundleInfo info;
+    from_json(jsonObject, info);
+    EXPECT_EQ(info.firstInstallTime, 1234567890);
+    EXPECT_EQ(info.odidResetCount, 7);
+}
+
+/**
+ * @tc.number: FirstInstallBundleInfo_OdidResetCount_0300
+ * @tc.name: test FirstInstallBundleInfo odidResetCount deserialization
+ * @tc.desc: 1.test odidResetCount deserialization from json
+ */
+ HWTEST_F(BmsDataMgrTest, FirstInstallBundleInfo_OdidResetCount_0300, Function | SmallTest | Level1)
+ {
+     nlohmann::json jsonObject;
+     jsonObject["firstInstallTime"] = 1234567890;
+     jsonObject["odidResetCount"] = 9999999;
+ 
+     FirstInstallBundleInfo info;
+     from_json(jsonObject, info);
+     info.IncrementOdidResetCount();
+     EXPECT_EQ(info.firstInstallTime, 1234567890);
+     EXPECT_EQ(info.odidResetCount, 99999);
+ }
+
+ /**
+ * @tc.number: FirstInstallBundleInfo_OdidResetCount_0400
+ * @tc.name: test FirstInstallBundleInfo odidResetCount deserialization
+ * @tc.desc: 1.test odidResetCount deserialization from json
+ */
+ HWTEST_F(BmsDataMgrTest, FirstInstallBundleInfo_OdidResetCount_0400, Function | SmallTest | Level1)
+ {
+     nlohmann::json jsonObject;
+     jsonObject["firstInstallTime"] = 1234567890;
+     jsonObject["odidResetCount"] = -1;
+ 
+     FirstInstallBundleInfo info;
+     from_json(jsonObject, info);
+     info.IncrementOdidResetCount();
+     EXPECT_EQ(info.firstInstallTime, 1234567890);
+     EXPECT_EQ(info.odidResetCount, 99999);
+ }
+
+/**
+ * @tc.number: FirstInstallBundleInfo_OdidResetCount_0500
+ * @tc.name: test FirstInstallBundleInfo default odidResetCount
+ * @tc.desc: 1.test odidResetCount default value when not in json
+ */
+HWTEST_F(BmsDataMgrTest, FirstInstallBundleInfo_OdidResetCount_0500, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["firstInstallTime"] = 1234567890;
+    // No odidResetCount field
+
+    FirstInstallBundleInfo info;
+    from_json(jsonObject, info);
+    EXPECT_EQ(info.firstInstallTime, 1234567890);
+    EXPECT_EQ(info.odidResetCount, 0);  // Default value
+}
+
 } // OHOS

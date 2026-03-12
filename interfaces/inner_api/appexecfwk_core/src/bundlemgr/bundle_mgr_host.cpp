@@ -618,6 +618,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID_BY_BUNDLENAME):
             errCode = this->HandleGetOdidByBundleName(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID_RESET_COUNT):
+            errCode = this->HandleGetOdidResetCount(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::ADD_DESKTOP_SHORTCUT_INFO):
             errCode = this->HandleAddDesktopShortcutInfo(data, reply);
             break;
@@ -4642,6 +4645,29 @@ ErrCode BundleMgrHost::HandleGetOdidByBundleName(MessageParcel &data, MessagePar
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     APP_LOGD("odid is %{private}s", odid.c_str());
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetOdidResetCount(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t count = 0;
+    std::string odid;
+    auto ret = GetOdidResetCount(bundleName, odid, count);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(odid)) {
+        APP_LOGE("write odid failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteInt32(count)) {
+        APP_LOGE("write count failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    APP_LOGD("odid %{private}s count %{public}d ", odid.c_str(), count);
     return ERR_OK;
 }
 

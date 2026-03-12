@@ -6092,6 +6092,21 @@ ErrCode BundleMgrHostImpl::GetOdidByBundleName(const std::string &bundleName, st
     return dataMgr->GetOdidByBundleName(bundleName, odid);
 }
 
+ErrCode BundleMgrHostImpl::GetOdidResetCount(const std::string &bundleName, std::string &odid, int32_t &count)
+{
+    APP_LOGD("start GetOdidResetCount");
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetOdidResetCount(bundleName, odid, count);
+}
+
 bool BundleMgrHostImpl::GetBundleInfosForContinuation(int32_t flags, std::vector<BundleInfo> &bundleInfos,
     int32_t userId)
 {

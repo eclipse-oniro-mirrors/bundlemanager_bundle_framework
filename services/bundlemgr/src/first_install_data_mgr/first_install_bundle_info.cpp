@@ -18,12 +18,17 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const char* const KEY_FIRST_INSTALL_TIME = "firstInstallTime";
+const char* const KEY_ODID_RESET_COUNT = "odidResetCount";
+const char* const KEY_LAST_ODID = "lastOdid";
+constexpr int32_t MAX_RESET_COUNT = 99999;
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const FirstInstallBundleInfo& firstInstallBundleInfo)
 {
     jsonObject = nlohmann::json {
         {KEY_FIRST_INSTALL_TIME, firstInstallBundleInfo.firstInstallTime},
+        {KEY_ODID_RESET_COUNT, firstInstallBundleInfo.odidResetCount},
+        {KEY_LAST_ODID, firstInstallBundleInfo.lastOdid},
     };
 }
 
@@ -33,9 +38,22 @@ void from_json(const nlohmann::json& jsonObject, FirstInstallBundleInfo& firstIn
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<int64_t>(jsonObject, jsonObjectEnd, KEY_FIRST_INSTALL_TIME,
         firstInstallBundleInfo.firstInstallTime, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, KEY_ODID_RESET_COUNT,
+        firstInstallBundleInfo.odidResetCount, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, KEY_LAST_ODID,
+        firstInstallBundleInfo.lastOdid, false, parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read firstInstallBundleUserInfo from jsonObject error, error code : %{public}d", parseResult);
     }
+}
+
+void FirstInstallBundleInfo::IncrementOdidResetCount()
+{
+    if (odidResetCount >= MAX_RESET_COUNT || odidResetCount < 0) {
+        odidResetCount = MAX_RESET_COUNT;
+        return;
+    }
+    odidResetCount++;
 }
 
 std::string FirstInstallBundleInfo::ToString() const

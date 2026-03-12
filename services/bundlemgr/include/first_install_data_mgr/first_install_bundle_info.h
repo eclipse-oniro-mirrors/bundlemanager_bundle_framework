@@ -22,7 +22,9 @@ namespace OHOS {
 namespace AppExecFwk {
 struct FirstInstallBundleInfo {
     int64_t firstInstallTime = 0;
-
+    int32_t odidResetCount = 0;  // odid reset count
+    std::string lastOdid;  // last odid value, used to detect if odid is reset
+    void IncrementOdidResetCount();
     std::string ToString() const;
 };
 
