@@ -4969,7 +4969,6 @@ bool BMSEventHandler::InnerCheckSingletonBundleUserInfo(const InnerBundleInfo &b
     installParam.userId = Constants::DEFAULT_USERID;
     installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
-    installParam.isOTA = true;
     if (!bundleInfo.IsSingleton()) {
         LOG_I(BMS_TAG_DEFAULT, "-n %{public}s delete 0 userInfo", bundleName.c_str());
         SystemBundleInstaller installer;
