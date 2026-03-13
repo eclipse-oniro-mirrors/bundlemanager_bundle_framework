@@ -180,6 +180,7 @@ struct EventInfo {
     int32_t targetAPIVersion = 0;
     uint32_t minAPIVersion = 0;
     int32_t uid = 0;
+    int32_t applicationInfoSize = 0;
 
     // only used in fault event
     ErrCode errCode = ERR_OK;
