@@ -50,13 +50,11 @@
 #include "default_app_mgr.h"
 #endif
 #include "event_report.h"
-#include "ffrt.h"
 #include "hitrace_meter.h"
 #include "inner_bundle_clone_common.h"
 #include "installd_client.h"
 #include "interfaces/hap_verify.h"
 #include "ipc_skeleton.h"
-#include "iservice_registry.h"
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_config.h"
 #include "locale_info.h"
@@ -77,11 +75,6 @@
 
 #ifdef APP_DOMAIN_VERIFY_ENABLED
 #include "app_domain_verify_mgr_client.h"
-#endif
-
-#ifdef STORAGE_SERVICE_ENABLE
-#include "storage_manager_proxy.h"
-#include "storage_service_errno.h"
 #endif
 
 #include "router_data_storage_rdb.h"
@@ -134,9 +127,6 @@ constexpr const char* EXTEND_DATASIZE_PATH_SUFFIX = "/etc/hap_extend_datasize_ra
 constexpr const char* HAP_EXTEND_DATASIZE_RELATIONS = "hap.extend.datasize.ralations";
 constexpr const char* BUNDLE_NAME_KEY = "bundle_name";
 constexpr const char* SA_UID = "sa_uid";
-#ifdef STORAGE_SERVICE_ENABLE
-constexpr int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
-#endif // STORAGE_SERVICE_ENABLE
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -13677,46 +13667,6 @@ bool BundleDataMgr::ProcessUninstallBundle(std::vector<BundleOptionInfo> &bundle
             }
         }
     }
-    return true;
-}
-
-bool BundleDataMgr::UMountCryptoPath(const int32_t userId, const std::string &bundleName) const
-{
-    APP_LOGI_NOFUNC("umount start -u:%{public}d -n:%{public}s", userId, bundleName.c_str());
-    if (userId < 0 || bundleName.empty()) {
-        return false;
-    }
-#ifdef STORAGE_SERVICE_ENABLE
-    auto task = [userId, bundleName]() {
-        auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (!systemAbilityManager) {
-            APP_LOGW_NOFUNC("umount, systemAbilityManager error");
-            return;
-        }
-
-        auto remote = systemAbilityManager->CheckSystemAbility(STORAGE_MANAGER_MANAGER_ID);
-        if (!remote) {
-            APP_LOGW_NOFUNC("umount, CheckSystemAbility error");
-            return;
-        }
-
-        auto proxy = iface_cast<StorageManager::IStorageManager>(remote);
-        if (!proxy) {
-            APP_LOGW_NOFUNC("umount, proxy get error");
-            return;
-        }
-        
-        int result = proxy->ClearSecondMountPoint(userId, bundleName);
-        if (result != ERR_OK && result != ErrNo::E_NOT_NEED_CLEAR_SECOND_MOUNT_POINT) {
-            result = proxy->ClearSecondMountPoint(userId, bundleName);
-            if (result != ERR_OK && result != ErrNo::E_NOT_NEED_CLEAR_SECOND_MOUNT_POINT) {
-                APP_LOGW_NOFUNC("umount failed %{public}d", result);
-                return;
-            }
-        }
-    };
-    ffrt::submit(task, {}, {}, ffrt::task_attr().name("UMountCryptoPath"));
-#endif // STORAGE_SERVICE_ENABLE
     return true;
 }
 

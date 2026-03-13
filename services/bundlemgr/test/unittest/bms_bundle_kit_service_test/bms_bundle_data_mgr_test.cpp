@@ -7308,36 +7308,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllAppInstallExtendedInfo_0400, Function | Sma
 }
 
 /**
- * @tc.number: UMountCryptoPath_0100
- * @tc.name: test UMountCryptoPath
- * @tc.desc: 1.Test the UMountCryptoPath
- */
-HWTEST_F(BmsBundleDataMgrTest, UMountCryptoPath_0100, Function | SmallTest | Level1)
-{
-    auto dataMgr = GetBundleDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    int32_t userId = -1;
-    std::string path = BUNDLE_NAME_TEST;
-    bool ret = dataMgr->UMountCryptoPath(userId, path);
-    EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: UMountCryptoPath_0200
- * @tc.name: test UMountCryptoPath
- * @tc.desc: 1.Test the UMountCryptoPath
- */
-HWTEST_F(BmsBundleDataMgrTest, UMountCryptoPath_0200, Function | SmallTest | Level1)
-{
-    auto dataMgr = GetBundleDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    int32_t userId = 100;
-    std::string path;
-    bool ret = dataMgr->UMountCryptoPath(userId, path);
-    EXPECT_FALSE(ret);
-}
-
-/**
  * @tc.number: HasKeepTokenIdMetadata_0100
  * @tc.name: HasKeepTokenIdMetadata
  * @tc.desc: innerModuleInfos is empty
