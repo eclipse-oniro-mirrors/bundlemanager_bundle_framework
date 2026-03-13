@@ -202,6 +202,15 @@ BundleDataMgr::~BundleDataMgr()
     bundleInfos_.clear();
 }
 
+void BundleDataMgr::DefragMemory()
+{
+    APP_LOGI_NOFUNC("start to defrag bundleInfos memory");
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::map<std::string, InnerBundleInfo> compactedMap(bundleInfos_);
+    bundleInfos_.swap(compactedMap);
+    APP_LOGI_NOFUNC("defrag bundleInfos memory done, size: %{public}zu", bundleInfos_.size());
+}
+
 bool BundleDataMgr::LoadDataFromPersistentStorage()
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);

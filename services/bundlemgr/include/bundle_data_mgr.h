@@ -966,6 +966,8 @@ public:
         return bundleInfos_;
     }
 
+    void DefragMemory();
+
     bool QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
 
     void SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);

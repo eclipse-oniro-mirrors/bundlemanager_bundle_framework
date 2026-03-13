@@ -44,6 +44,7 @@
 #include "inner_patch_info.h"
 #include "installd_client.h"
 #include "install_exception_mgr.h"
+#include "memory/memory_compactor.h"
 #include "module_json_updater.h"
 #include "new_bundle_data_dir_mgr.h"
 #include "parameter.h"
@@ -339,6 +340,7 @@ void BMSEventHandler::AfterBmsStart()
         APP_LOGI_NOFUNC("relabel is true");
         RegisterRelabelEvent();
     }
+    MemoryCompactor::RegisterScreenOffListener();
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
 }
 
