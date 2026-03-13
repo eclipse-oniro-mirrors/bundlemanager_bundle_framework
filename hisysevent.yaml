@@ -139,6 +139,7 @@ BUNDLE_INSTALL:
   START_TIME: {type: INT64, desc: bundle installation start time}
   END_TIME: {type: INT64, desc: bundle installation end time}
   ODID: {type: STRING, desc: odid}
+  APPLICATION_INFO_SIZE: {type: INT32, desc: total number of installed applications}
 
 
 BUNDLE_UNINSTALL:
@@ -157,6 +158,7 @@ BUNDLE_UNINSTALL:
   START_TIME: {type: INT64, desc: bundle uninstallation start time}
   END_TIME: {type: INT64, desc: bundle uninstallation end time}
   ODID: {type: STRING, desc: odid}
+  APPLICATION_INFO_SIZE: {type: INT32, desc: total number of installed applications}
 
 BUNDLE_UPDATE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle update}
@@ -184,6 +186,7 @@ BUNDLE_UPDATE:
   START_TIME: {type: INT64, desc: bundle update start time}
   END_TIME: {type: INT64, desc: bundle update end time}
   ODID: {type: STRING, desc: odid}
+  APPLICATION_INFO_SIZE: {type: INT32, desc: total number of installed applications}
 
 PRE_BUNDLE_RECOVER:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: prebundle recover}

@@ -6162,6 +6162,7 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
     GetCallingEventInfo(sysEventInfo_);
     if (InitDataMgr()) {
         dataMgr_->GetOdidByBundleName(bundleName, sysEventInfo_.odid);
+        sysEventInfo_.applicationInfoSize = static_cast<int32_t>(dataMgr_->GetAllBundleName().size());
     }
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo_);
 }
