@@ -2531,9 +2531,11 @@ ErrCode BundleMgrHost::HandleGetShortcutInfoV9(MessageParcel &data, MessageParce
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret == ERR_OK && !WriteParcelableVector(infos, reply)) {
-        APP_LOGE("write shortcut infos failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
+            APP_LOGE("WriteVectorToParcelIntelligent failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }
@@ -2549,9 +2551,11 @@ ErrCode BundleMgrHost::HandleGetShortcutInfoByAppIndex(MessageParcel &data, Mess
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret == ERR_OK && !WriteParcelableVector(infos, reply)) {
-        APP_LOGE("write shortcut infos failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
+            APP_LOGE("WriteVectorToParcelIntelligent failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }
@@ -2586,9 +2590,11 @@ ErrCode BundleMgrHost::HandleGetShortcutInfoByAbility(MessageParcel &data, Messa
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret == ERR_OK && !WriteParcelableVector(infos, reply)) {
-        APP_LOGE("write shortcut infos failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
+            APP_LOGE("WriteVectorToParcelIntelligent failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }

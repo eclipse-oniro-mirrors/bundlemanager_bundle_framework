@@ -3666,13 +3666,13 @@ HWTEST_F(BmsBundleDataMgrTest2, GetShortcutInfosByAbilityInfo_0300, Function | S
 }
 
 /**
- * @tc.number: ProcessDynamicShortcutInfo_0100
- * @tc.name: test ProcessDynamicShortcutInfo with valid parameters
+ * @tc.number: ProcessShortcutInfos_0100
+ * @tc.name: test ProcessShortcutInfos with valid parameters
  * @tc.desc: 1.create InnerBundleInfo with shortcuts
- *           2.call ProcessDynamicShortcutInfo
+ *           2.call ProcessShortcutInfos
  *           3.verify shortcutInfos is processed
  */
-HWTEST_F(BmsBundleDataMgrTest2, ProcessDynamicShortcutInfo_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest2, ProcessShortcutInfos_0100, Function | SmallTest | Level1)
 {
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
@@ -3689,19 +3689,19 @@ HWTEST_F(BmsBundleDataMgrTest2, ProcessDynamicShortcutInfo_0100, Function | Smal
     ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_TEST, SHORTCUT_TEST_ID);
     shortcutInfos.push_back(shortcutInfo);
 
-    dataMgr->ProcessDynamicShortcutInfo(innerInfo, 0, USERID, shortcutInfos);
+    dataMgr->ProcessShortcutInfos(innerInfo, MODULE_NAME_TEST, ABILITY_NAME_TEST, 0, USERID, shortcutInfos);
 
     EXPECT_FALSE(shortcutInfos.empty());
 }
 
 /**
- * @tc.number: ProcessDynamicShortcutInfo_0200
- * @tc.name: test ProcessDynamicShortcutInfo with empty shortcutInfos
+ * @tc.number: ProcessShortcutInfos_0200
+ * @tc.name: test ProcessShortcutInfos with empty shortcutInfos
  * @tc.desc: 1.create InnerBundleInfo
- *           2.call ProcessDynamicShortcutInfo with empty shortcutInfos
+ *           2.call ProcessShortcutInfos with empty shortcutInfos
  *           3.verify no crash occurs
  */
-HWTEST_F(BmsBundleDataMgrTest2, ProcessDynamicShortcutInfo_0200, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest2, ProcessShortcutInfos_0200, Function | SmallTest | Level1)
 {
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
@@ -3716,19 +3716,19 @@ HWTEST_F(BmsBundleDataMgrTest2, ProcessDynamicShortcutInfo_0200, Function | Smal
 
     std::vector<ShortcutInfo> shortcutInfos;
 
-    dataMgr->ProcessDynamicShortcutInfo(innerInfo, 0, USERID, shortcutInfos);
+    dataMgr->ProcessShortcutInfos(innerInfo, MODULE_NAME_TEST, ABILITY_NAME_TEST, 0, USERID, shortcutInfos);
 
     EXPECT_TRUE(shortcutInfos.empty());
 }
 
 /**
- * @tc.number: ProcessDynamicShortcutInfo_0300
- * @tc.name: test ProcessDynamicShortcutInfo with appIndex
+ * @tc.number: ProcessShortcutInfos_0300
+ * @tc.name: test ProcessShortcutInfos with appIndex
  * @tc.desc: 1.create InnerBundleInfo
- *           2.call ProcessDynamicShortcutInfo with appIndex = 1
+ *           2.call ProcessShortcutInfos with appIndex = 1
  *           3.verify shortcutInfos appIndex is set
  */
-HWTEST_F(BmsBundleDataMgrTest2, ProcessDynamicShortcutInfo_0300, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest2, ProcessShortcutInfos_0300, Function | SmallTest | Level1)
 {
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
@@ -3747,19 +3747,20 @@ HWTEST_F(BmsBundleDataMgrTest2, ProcessDynamicShortcutInfo_0300, Function | Smal
     shortcutInfos.push_back(shortcutInfo);
 
     int32_t appIndex = 1;
-    dataMgr->ProcessDynamicShortcutInfo(innerInfo, appIndex, USERID, shortcutInfos);
+    dataMgr->ProcessShortcutInfos(innerInfo, MODULE_NAME_TEST, ABILITY_NAME_TEST, appIndex, USERID,
+        shortcutInfos);
 
     EXPECT_FALSE(shortcutInfos.empty());
 }
 
 /**
- * @tc.number: ProcessDynamicShortcutInfo_0400
- * @tc.name: test ProcessDynamicShortcutInfo with different userId
+ * @tc.number: ProcessShortcutInfos_0400
+ * @tc.name: test ProcessShortcutInfos with different userId
  * @tc.desc: 1.create InnerBundleInfo
- *           2.call ProcessDynamicShortcutInfo with different userId
+ *           2.call ProcessShortcutInfos with different userId
  *           3.verify no crash occurs
  */
-HWTEST_F(BmsBundleDataMgrTest2, ProcessDynamicShortcutInfo_0400, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest2, ProcessShortcutInfos_0400, Function | SmallTest | Level1)
 {
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
@@ -3776,7 +3777,8 @@ HWTEST_F(BmsBundleDataMgrTest2, ProcessDynamicShortcutInfo_0400, Function | Smal
     ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_TEST, SHORTCUT_TEST_ID);
     shortcutInfos.push_back(shortcutInfo);
 
-    dataMgr->ProcessDynamicShortcutInfo(innerInfo, 0, MULTI_USERID, shortcutInfos);
+    dataMgr->ProcessShortcutInfos(innerInfo, MODULE_NAME_TEST, ABILITY_NAME_TEST, 0, MULTI_USERID,
+        shortcutInfos);
 
     EXPECT_FALSE(shortcutInfos.empty());
     ClearDataMgr();

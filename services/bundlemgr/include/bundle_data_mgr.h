@@ -1536,8 +1536,8 @@ private:
     void GetAllInstallBundleUids(const int32_t userId, const int32_t requestUserId, int32_t &responseUserId,
         std::vector<int32_t> &uids, std::vector<std::string> &bundleNames) const;
     bool ProcessUninstallBundle(std::vector<BundleOptionInfo> &bundleOptionInfos) const;
-    void ProcessDynamicShortcutInfo(const InnerBundleInfo &info, const int32_t appIndex, const int32_t requestUserId,
-        std::vector<ShortcutInfo> &shortcutInfos) const;
+    void ProcessShortcutInfos(const InnerBundleInfo &info, const std::string moduleName, const std::string abilityName,
+        const int32_t appIndex, const int32_t requestUserId, std::vector<ShortcutInfo> &shortcutInfos) const;
     bool DeleteRouterInfoForSharedBundle(const InnerBundleInfo &info, const int32_t versionCode);
     void GetRouterInfoForSharedBundle(const std::string &bundleName, std::vector<RouterItem> &routerInfos) const;
     void MergeRouterItems(const std::vector<RouterItem>& sharedBundleRouterInfos,
