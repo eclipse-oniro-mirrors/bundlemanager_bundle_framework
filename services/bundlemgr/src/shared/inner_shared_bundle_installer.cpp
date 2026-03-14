@@ -728,6 +728,11 @@ ErrCode InnerSharedBundleInstaller::MoveSoToRealPath(const std::string &moduleNa
         return ERR_OK;
     }
     std::string tempSoPath = versionDir + ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;
+    // check path whether exist
+    if (!BundleUtil::IsExistDirNoLog(tempSoPath)) {
+        APP_LOGI("-m %{public}s -err %{public}d so path not exist, no need to move", moduleName.c_str(), errno);
+        return ERR_OK;
+    }
     APP_LOGD("move so files from path %{public}s to path %{public}s", tempSoPath.c_str(), realSoPath.c_str());
     result = InstalldClient::GetInstance()->MoveFiles(tempSoPath, realSoPath);
     if (result != ERR_OK) {
