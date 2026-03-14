@@ -313,6 +313,17 @@ static ani_object GetShortcutInfoByAbilityNative(ani_env* env, ani_string aniBun
 #endif
 }
 
+static ani_boolean IsShortcutSupportedNative(ani_env* env)
+{
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
+    APP_LOGD("ani IsShortcutSupportedNative called");
+    return ANI_TRUE;
+#else
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    return ANI_FALSE;
+#endif
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -348,6 +359,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(SetShortcutsEnabledNative) },
         ani_native_function { "getShortcutInfoByAbilityNative", nullptr,
             reinterpret_cast<void*>(GetShortcutInfoByAbilityNative) },
+        ani_native_function { "isShortcutSupportedNative", nullptr,
+            reinterpret_cast<void*>(IsShortcutSupportedNative) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

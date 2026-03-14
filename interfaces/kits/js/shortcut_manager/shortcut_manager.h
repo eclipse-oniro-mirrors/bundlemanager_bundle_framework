@@ -87,6 +87,7 @@ napi_value AddDynamicShortcutInfos(napi_env env, napi_callback_info info);
 napi_value DeleteDynamicShortcutInfos(napi_env env, napi_callback_info info);
 napi_value SetShortcutsEnabled(napi_env env, napi_callback_info info);
 napi_value GetShortcutInfoByAbility(napi_env env, napi_callback_info info);
+napi_value IsShortcutSupported(napi_env env, napi_callback_info info);
 }
 }
 #endif
