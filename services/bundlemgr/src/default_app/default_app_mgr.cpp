@@ -37,6 +37,8 @@ constexpr int8_t TYPE_PART_COUNT = 2;
 constexpr int8_t INDEX_ZERO = 0;
 constexpr int8_t INDEX_ONE = 1;
 constexpr uint16_t TYPE_MAX_SIZE = 512;
+constexpr int32_t INT_TWO = 2;
+constexpr int32_t EDC_DEFAULT_USER_ID = -100;
 constexpr const char* SPLIT = "/";
 constexpr const char* SCHEME_SIGN = "://";
 constexpr const char* EMAIL_ACTION = "ohos.want.action.sendToData";
@@ -270,6 +272,39 @@ ErrCode DefaultAppMgr::SetDefaultApplication(
     return ERR_OK;
 }
 
+ErrCode DefaultAppMgr::SetDefaultApplicationForCustom(
+    int32_t userId, const std::string& type, const Element& element) const
+{
+    ErrCode ret = VerifyPermission(Constants::PERMISSION_SET_DEFAULT_APPLICATION);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+
+    if (!IsUserIdExist(userId)) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "userId not exist");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    std::vector<std::string> normalizedTypeVector = Normalize(type);
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "normalized:%{public}s", BundleUtil::ToString(normalizedTypeVector).c_str());
+    if (normalizedTypeVector.empty()) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "normalizedTypeVector empty");
+        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
+    }
+
+    bool isAnySet = false;
+    for (const std::string& normalizedType : normalizedTypeVector) {
+        ret = SetDefaultApplicationInternalForCustom(userId, normalizedType, element);
+        if (ret == ERR_OK) {
+            isAnySet = true;
+        }
+    }
+    if (!isAnySet) {
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode DefaultAppMgr::SetDefaultApplicationInternal(
     int32_t userId, const std::string& normalizedType, const Element& element) const
 {
@@ -298,6 +333,19 @@ ErrCode DefaultAppMgr::SetDefaultApplicationInternal(
         return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
     }
     LOG_D(BMS_TAG_DEFAULT, "SetDefaultApplication success");
+    return ERR_OK;
+}
+
+ErrCode DefaultAppMgr::SetDefaultApplicationInternalForCustom(
+    int32_t userId, const std::string& normalizedType, const Element& element) const
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    int32_t edcUserId = GetEdcUserId(userId);
+    bool ret = defaultAppDb_->SetDefaultApplicationInfo(edcUserId, normalizedType, element);
+    if (!ret) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "SetDefaultApplicationInfo for edc failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     return ERR_OK;
 }
 
@@ -338,40 +386,61 @@ ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string
 ErrCode DefaultAppMgr::ResetDefaultApplicationInternal(int32_t userId, const std::string& normalizedType) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    int32_t edcUserId = GetEdcUserId(userId);
     Element element;
-    bool ret = defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, normalizedType, element);
-    if (!ret) {
-        LOG_I(BMS_TAG_DEFAULT, "directly delete default info");
-        if (defaultAppDb_->DeleteDefaultApplicationInfo(userId, normalizedType)) {
+    bool ret = false;
+    
+    // Priority 1: Try to restore to enterprise customization configuration
+    ret = defaultAppDb_->GetDefaultApplicationInfo(edcUserId, normalizedType, element);
+    if (ret) {
+        if (IsElementValid(userId, normalizedType, element)) {
+            ret = defaultAppDb_->SetDefaultApplicationInfo(userId, normalizedType, element);
+            if (!ret) {
+                LOG_NOFUNC_W(BMS_TAG_DEFAULT, "SetDefaultApplicationInfo to edc failed");
+                return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+            }
+            LOG_NOFUNC_D(BMS_TAG_DEFAULT, "reset to edc success, type:%{public}s", normalizedType.c_str());
             return ERR_OK;
         }
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    ret = IsElementValid(userId, normalizedType, element);
-    if (!ret) {
-        LOG_W(BMS_TAG_DEFAULT, "invalid element");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    // Priority 2: Try to restore to system preset configuration
+    ret = defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, normalizedType, element);
+    if (ret) {
+        ret = IsElementValid(userId, normalizedType, element);
+        if (!ret) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "invalid element");
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        }
+        ret = defaultAppDb_->SetDefaultApplicationInfo(userId, normalizedType, element);
+        if (!ret) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "SetDefaultApplicationInfo to system preset failed");
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        }
+        LOG_NOFUNC_D(BMS_TAG_DEFAULT, "reset to system preset success, type:%{public}s", normalizedType.c_str());
+        return ERR_OK;
     }
-    ret = defaultAppDb_->SetDefaultApplicationInfo(userId, normalizedType, element);
-    if (!ret) {
-        LOG_W(BMS_TAG_DEFAULT, "SetDefaultApplicationInfo failed");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    
+    // Priority 3: Neither enterprise customization nor system preset exists, delete user configuration
+    LOG_NOFUNC_D(BMS_TAG_DEFAULT, "directly delete default info");
+    if (defaultAppDb_->DeleteDefaultApplicationInfo(userId, normalizedType)) {
+        return ERR_OK;
     }
-    LOG_D(BMS_TAG_DEFAULT, "ResetDefaultApplication success");
-    return ERR_OK;
+    return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
 }
 
 void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bundleName, int32_t appIndex) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     LOG_D(BMS_TAG_DEFAULT, "begin");
+    int32_t edcUserId = GetEdcUserId(userId);
     std::map<std::string, Element> currentInfos;
     bool ret = defaultAppDb_->GetDefaultApplicationInfos(userId, currentInfos);
     if (!ret) {
         LOG_W(BMS_TAG_DEFAULT, "GetDefaultApplicationInfos failed");
         return;
     }
-    // if type exist in default_app.json, use it
+    std::map<std::string, Element> customInfos;
+    defaultAppDb_->GetDefaultApplicationInfos(edcUserId, customInfos);
     std::map<std::string, Element> newInfos;
     std::vector<std::string> changedTypeVec;
     for (const auto& item : currentInfos) {
@@ -380,16 +449,71 @@ void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bun
             continue;
         }
         Element element;
-        if (defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, item.first, element)) {
-            LOG_I(BMS_TAG_DEFAULT, "set default application to preset, type : %{public}s", item.first.c_str());
+        if (customInfos.find(item.first) != customInfos.end() &&
+            IsElementValid(userId, item.first, customInfos[item.first])) {
+            LOG_NOFUNC_D(BMS_TAG_DEFAULT, "fallback to edc, type:%{public}s", item.first.c_str());
+            newInfos.emplace(item.first, customInfos[item.first]);
+        } else if (defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, item.first, element)) {
+            LOG_NOFUNC_D(BMS_TAG_DEFAULT, "fallback to system preset, type:%{public}s", item.first.c_str());
             newInfos.emplace(item.first, element);
         } else {
-            LOG_D(BMS_TAG_DEFAULT, "erase uninstalled application type:%{public}s", item.first.c_str());
+            LOG_NOFUNC_D(BMS_TAG_DEFAULT, "erase uninstalled application type:%{public}s", item.first.c_str());
         }
         changedTypeVec.emplace_back(item.first);
     }
     defaultAppDb_->SetDefaultApplicationInfos(userId, newInfos);
     (void)SendDefaultAppChangeEvent(userId, changedTypeVec);
+}
+
+void DefaultAppMgr::HandleInstallBundle(int32_t userId, const std::string& bundleName) const
+{
+    LOG_NOFUNC_D(BMS_TAG_DEFAULT, "HandleInstallBundle begin, -u %{public}d -n %{public}s", userId, bundleName.c_str());
+    std::map<std::string, Element> customInfos;
+    std::map<std::string, Element> currentUserInfos;
+    std::map<std::string, Element> systemPresetInfos;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        int32_t edcUserId = GetEdcUserId(userId);
+        bool ret = defaultAppDb_->GetDefaultApplicationInfos(edcUserId, customInfos);
+        if (!ret) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "no EDC config found for userId:%{public}d", userId);
+            return;
+        }
+        ret = defaultAppDb_->GetDefaultApplicationInfos(userId, currentUserInfos);
+        if (!ret) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "GetDefaultApplicationInfos failed for userId: %{public}d", userId);
+            return;
+        }
+        ret = defaultAppDb_->GetDefaultApplicationInfos(INITIAL_USER_ID, systemPresetInfos);
+        if (!ret) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "GetDefaultApplicationInfos failed for userId: %{public}d", INITIAL_USER_ID);
+            return;
+        }
+    }
+    for (const auto& item : customInfos) {
+        const std::string& type = item.first;
+        const Element& customElement = item.second;
+        if (customElement.bundleName != bundleName) {
+            continue;
+        }
+        auto currentUserIt = currentUserInfos.find(type);
+        auto systemPresetIt = systemPresetInfos.find(type);
+        bool userConfigExists = (currentUserIt != currentUserInfos.end());
+        bool systemPresetExists = (systemPresetIt != systemPresetInfos.end());
+        if (userConfigExists && systemPresetExists) {
+            if (currentUserIt->second == systemPresetIt->second) {
+                LOG_NOFUNC_D(
+                    BMS_TAG_DEFAULT, "user config same as system preset, update to enterprise custom -t:%{public}s",
+                    type.c_str());
+                (void)SetDefaultApplication(userId, type, customElement);
+            }
+        } else if (!userConfigExists && !systemPresetExists) {
+            LOG_NOFUNC_D(BMS_TAG_DEFAULT,
+                "both do not exist, update to enterprise custom, type:%{public}s", type.c_str());
+            (void)SetDefaultApplication(userId, type, customElement);
+        }
+    }
+    LOG_NOFUNC_D(BMS_TAG_DEFAULT, "HandleInstallBundle success");
 }
 
 void DefaultAppMgr::HandleCreateUser(int32_t userId) const
@@ -409,7 +533,9 @@ void DefaultAppMgr::HandleRemoveUser(int32_t userId) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     LOG_D(BMS_TAG_DEFAULT, "begin");
+    int32_t edcUserId = GetEdcUserId(userId);
     defaultAppDb_->DeleteDefaultApplicationInfos(userId);
+    defaultAppDb_->DeleteDefaultApplicationInfos(edcUserId);
 }
 
 bool DefaultAppMgr::IsBrowserWant(const Want& want) const
@@ -954,6 +1080,15 @@ bool DefaultAppMgr::SendDefaultAppChangeEvent(const int32_t userId, const std::v
     commonEventMgr->NotifyDefaultAppChanged(userId, utdIdVec);
     LOG_I(BMS_TAG_DEFAULT, "Send default app change event success");
     return true;
+}
+
+int32_t DefaultAppMgr::GetEdcUserId(int32_t userId) const
+{
+    if (userId <= INT_TWO) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "get edc userId, invalid userId: %{public}d", userId);
+        return EDC_DEFAULT_USER_ID;
+    }
+    return -userId;
 }
 }
 }

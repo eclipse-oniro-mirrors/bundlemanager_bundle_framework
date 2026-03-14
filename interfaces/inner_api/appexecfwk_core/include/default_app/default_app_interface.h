@@ -50,6 +50,18 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+    /**
+     * @brief Set default application for enterprise customization.
+     * @param userId Indicates the user ID.
+     * @param type Indicates the default application type.
+     * @param want Indicates the want that contains element name.
+     * @return Returns ERR_OK if the default application is set successfully; returns error code otherwise.
+     * @note This method is called by system during setup wizard for enterprise customization.
+     */
+    virtual ErrCode SetDefaultApplicationForCustom(const int32_t userId, const std::string& type, const Want& want)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 }
 }

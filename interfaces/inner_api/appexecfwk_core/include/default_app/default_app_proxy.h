@@ -33,6 +33,8 @@ public:
     virtual ErrCode ResetDefaultApplication(int32_t userId, const std::string& type) override;
     virtual ErrCode SetDefaultApplicationForAppClone(const int32_t userId, const int32_t appIndex,
         const std::string& type, const Want& want) override;
+    virtual ErrCode SetDefaultApplicationForCustom(const int32_t userId, const std::string& type,
+        const Want& want) override;
 
 private:
     template <typename T>

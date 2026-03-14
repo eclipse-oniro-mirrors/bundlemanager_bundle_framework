@@ -36,6 +36,7 @@ private:
     ErrCode HandleSetDefaultApplication(Parcel& data, Parcel& reply);
     ErrCode HandleResetDefaultApplication(Parcel& data, Parcel& reply);
     ErrCode HandleSetDefaultApplicationForAppClone(Parcel& data, Parcel& reply);
+    ErrCode HandleSetDefaultApplicationForCustom(Parcel& data, Parcel& reply);
 
     DISALLOW_COPY_AND_MOVE(DefaultAppHost);
 };

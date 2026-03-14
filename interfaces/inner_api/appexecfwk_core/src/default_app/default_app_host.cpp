@@ -58,6 +58,8 @@ int DefaultAppHost::OnRemoteRequest(
             return HandleResetDefaultApplication(data, reply);
         case static_cast<uint32_t>(DefaultAppInterfaceCode::SET_DEFAULT_APPLICATION_FOR_APP_CLONE):
             return HandleSetDefaultApplicationForAppClone(data, reply);
+        case static_cast<uint32_t>(DefaultAppInterfaceCode::SET_DEFAULT_APPLICATION_FOR_CUSTOM):
+            return HandleSetDefaultApplicationForCustom(data, reply);
         default:
             LOG_W(BMS_TAG_DEFAULT, "DefaultAppHost receive unknown code, code =  %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -153,6 +155,25 @@ ErrCode DefaultAppHost::HandleSetDefaultApplicationForAppClone(Parcel& data, Par
     ErrCode ret = SetDefaultApplicationForAppClone(userId, appIndex, type, *want);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_DEFAULT, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode DefaultAppHost::HandleSetDefaultApplicationForCustom(Parcel& data, Parcel& reply)
+{
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "begin to HandleSetDefaultApplicationForCustom");
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    int32_t userId = data.ReadInt32();
+    std::string type = data.ReadString();
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "ReadParcelable<Want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = SetDefaultApplicationForCustom(userId, type, *want);
+    if (!reply.WriteInt32(ret)) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

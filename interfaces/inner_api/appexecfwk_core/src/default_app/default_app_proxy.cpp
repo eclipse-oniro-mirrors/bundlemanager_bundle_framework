@@ -157,6 +157,39 @@ ErrCode DefaultAppProxy::SetDefaultApplicationForAppClone(const int32_t userId, 
     return reply.ReadInt32();
 }
 
+ErrCode DefaultAppProxy::SetDefaultApplicationForCustom(const int32_t userId, const std::string& type,
+    const Want& want)
+{
+    LOG_NOFUNC_D(BMS_TAG_DEFAULT, "begin to SetDefaultApplicationForCustom");
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(type)) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "write type failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "write want failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendRequest(DefaultAppInterfaceCode::SET_DEFAULT_APPLICATION_FOR_CUSTOM, data, reply)) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "SendRequest failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return reply.ReadInt32();
+}
+
 ErrCode DefaultAppProxy::ResetDefaultApplication(int32_t userId, const std::string& type)
 {
     LOG_D(BMS_TAG_DEFAULT, "begin to ResetDefaultApplication");
