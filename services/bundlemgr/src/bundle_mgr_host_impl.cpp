@@ -1529,6 +1529,62 @@ ErrCode BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, const 
     return dataMgr->GetAbilityLabel(bundleName, moduleName, abilityName, label);
 }
 
+ErrCode BundleMgrHostImpl::GetApplicationLabel(const std::string &bundleName, int32_t appIndex, std::string &label)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll(
+        {Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED})) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    bool isInstalled = false;
+    ErrCode result = dataMgr->IsBundleInstalled(bundleName, userId, appIndex, isInstalled);
+    if (result != ERR_OK || !isInstalled) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    bool isEnabled = false;
+    result = dataMgr->IsApplicationEnabled(bundleName, appIndex, isEnabled, userId);
+    if (result != ERR_OK) {
+        APP_LOGE("IsApplicationEnabled failed ret:%{public}d", result);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (!isEnabled) {
+        APP_LOGE("application is disabled");
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+    }
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    // Get BundleResourceProxy
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("manager nullptr, bundleName %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    // Call GetBundleResourceInfo to get BundleResourceInfo
+    BundleResourceInfo bundleResourceInfo;
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
+    if (!manager->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex)) {
+        APP_LOGE("failed to get bundle resource info");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    // Extract label field
+    if (bundleResourceInfo.label.empty()) {
+        APP_LOGW("bundle label is empty for %{public}s", bundleName.c_str());
+    }
+    label = bundleResourceInfo.label;
+#else
+    APP_LOGW("BUNDLE_FRAMEWORK_BUNDLE_RESOURCE not Support");
+    return ERR_BUNDLE_MANAGER_GLOBAL_RES_MGR_ENABLE_DISABLED;
+#endif
+    APP_LOGD("application label:%{public}s for %{public}s, appIndex: %{public}d",
+        label.c_str(), bundleName.c_str(), appIndex);
+    return ERR_OK;
+}
+
 bool BundleMgrHostImpl::GetBundleArchiveInfo(
     const std::string &hapFilePath, const BundleFlag flag, BundleInfo &bundleInfo)
 {

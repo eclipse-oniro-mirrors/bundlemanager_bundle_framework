@@ -1025,6 +1025,59 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAbilityLabel_0200, Function | MediumTest | Le
 }
 
 /**
+ * @tc.number: GetApplicationLabel_0100
+ * @tc.name: test the GetApplicationLabel
+ * @tc.desc: 1. system running normally
+ *           2. test GetApplicationLabel with empty bundleName
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetApplicationLabel_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "";
+    int32_t appIndex = 0;
+    std::string label;
+    auto res = bundleMgrProxy.GetApplicationLabel(bundleName, appIndex, label);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetApplicationLabel_0200
+ * @tc.name: test the GetApplicationLabel
+ * @tc.desc: 1. system running normally
+ *           2. test GetApplicationLabel with valid bundleName
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetApplicationLabel_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    std::string label;
+    auto res = bundleMgrProxy.GetApplicationLabel(bundleName, appIndex, label);
+    // When impl is nullptr, SendTransactCmd fails and returns ERR_BUNDLE_MANAGER_IPC_TRANSACTION
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetApplicationLabel_0300
+ * @tc.name: test the GetApplicationLabel
+ * @tc.desc: 1. system running normally
+ *           2. test GetApplicationLabel with appIndex for clone app
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetApplicationLabel_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 1;  // clone app index
+    std::string label;
+    auto res = bundleMgrProxy.GetApplicationLabel(bundleName, appIndex, label);
+    // When impl is nullptr, SendTransactCmd fails and returns ERR_BUNDLE_MANAGER_IPC_TRANSACTION
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
  * @tc.number: GetLaunchWantForBundle_0100
  * @tc.name: test the GetLaunchWantForBundle
  * @tc.desc: 1. system running normally

@@ -251,6 +251,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_BUNDLE_INODE_COUNT = 225,
     GET_SHORTCUT_INFO_BY_ABILITY = 226,
     GET_ODID_RESET_COUNT = 227,
+    GET_APPLICATION_LABEL = 228,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

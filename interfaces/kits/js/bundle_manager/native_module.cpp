@@ -117,6 +117,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("isAbilityEnabledSync", IsAbilityEnabledSync),
         DECLARE_NAPI_FUNCTION("getAbilityLabel", GetAbilityLabel),
         DECLARE_NAPI_FUNCTION("getAbilityLabelSync", GetAbilityLabelSync),
+        DECLARE_NAPI_FUNCTION("getApplicationLabel", GetApplicationLabel),
         DECLARE_NAPI_FUNCTION("getAbilityIcon", GetAbilityIcon),
         DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", CleanBundleCacheFiles),
         DECLARE_NAPI_FUNCTION("cleanBundleCacheFilesForSelf", CleanBundleCacheFilesForSelf),

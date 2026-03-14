@@ -151,6 +151,13 @@ struct AbilityLabelCallbackInfo : public BaseCallbackInfo {
     std::string abilityLabel;
 };
 
+struct ApplicationLabelCallbackInfo : public BaseCallbackInfo {
+    explicit ApplicationLabelCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    int32_t appIndex = 0;
+    std::string applicationLabel;
+};
+
 struct ApplicationEnableCallbackInfo : public BaseCallbackInfo {
     explicit ApplicationEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     bool isEnable = false;
@@ -373,6 +380,7 @@ napi_value BatchQueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfosSync(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
 napi_value GetAbilityLabel(napi_env env, napi_callback_info info);
+napi_value GetApplicationLabel(napi_env env, napi_callback_info info);
 napi_value GetAbilityIcon(napi_env env, napi_callback_info info);
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);
 napi_value CleanBundleCacheFilesForSelf(napi_env env, napi_callback_info info);

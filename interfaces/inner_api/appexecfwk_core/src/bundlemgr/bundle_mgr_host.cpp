@@ -212,6 +212,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_LABEL_WITH_MODULE_NAME):
             errCode = this->HandleGetAbilityLabelWithModuleName(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_LABEL):
+            errCode = this->HandleGetApplicationLabel(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_IS_SYSTEM_APP_BY_UID):
             errCode = this->HandleCheckIsSystemAppByUid(data, reply);
             break;
@@ -1734,6 +1737,34 @@ ErrCode BundleMgrHost::HandleGetAbilityLabelWithModuleName(MessageParcel &data, 
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetApplicationLabel(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    int32_t appIndex = data.ReadInt32();
+
+    APP_LOGD("bundleName: %{public}s, appIndex: %{public}d", bundleName.c_str(), appIndex);
+
+    std::string label;
+    ErrCode ret = GetApplicationLabel(bundleName, appIndex, label);
+
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if ((ret == ERR_OK) && !reply.WriteString(label)) {
+        APP_LOGE("write label failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
     return ERR_OK;
 }
 
