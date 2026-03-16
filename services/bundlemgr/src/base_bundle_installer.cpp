@@ -1168,6 +1168,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             RemoveBundleUserData(oldInfo, false);
         }
     });
+    (void)InnerProcessCodePathCreateNewDir(bundleName_, isFeatureNeedUninstall_);
 
     // update haps
     for (; it != newInfos.end(); ++it) {
@@ -4512,12 +4513,16 @@ ErrCode BaseBundleInstaller::RemoveBundleDataDir(
     return ERR_OK;
 }
 
-void BaseBundleInstaller::RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const
+void BaseBundleInstaller::RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const bool isBundleUpdate) const
 {
     for (const auto &item : infos) {
         const InnerBundleInfo &info = item.second;
-        std::string moduleDir = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR
-            + info.GetCurrentModulePackage();
+        std::string moduleDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR;
+        if (isBundleUpdate) {
+            moduleDir += ServiceConstants::BUNDLE_NEW_CODE_DIR;
+        }
+        moduleDir += info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + info.GetCurrentModulePackage();
         bool isDirEmpty = false;
         InstalldClient::GetInstance()->IsDirEmpty(moduleDir, isDirEmpty);
         if (isDirEmpty) {
@@ -7041,7 +7046,8 @@ ErrCode BaseBundleInstaller::FinalProcessHapAndSoForBundleUpdate(
 }
 
 ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
-    const std::unordered_map<std::string, InnerBundleInfo> &infos, bool needDeleteOldLibraryPath)
+    const std::unordered_map<std::string, InnerBundleInfo> &infos, bool needDeleteOldLibraryPath,
+    bool isBundleUpdate)
 {
     LOG_D(BMS_TAG_INSTALLER, "start to move so file to real installation dir");
     if (infos.empty()) {
@@ -7049,11 +7055,13 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
         return ERR_OK;
     }
     std::string bundleName = infos.begin()->second.GetBundleName();
+    std::string bundleCodePathName = isBundleUpdate ?
+        (std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName) : bundleName;
     if (needDeleteOldLibraryPath) {
         // first delete libs+tmp dir, make sure is empty
         std::string tempSoDir;
         tempSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
-            .append(bundleName).append(ServiceConstants::PATH_SEPARATOR).append(LIBS_TMP);
+            .append(bundleCodePathName).append(ServiceConstants::PATH_SEPARATOR).append(LIBS_TMP);
         InstalldClient::GetInstance()->RemoveDir(tempSoDir);
     }
     for (const auto &info : infos) {
@@ -7070,7 +7078,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
         if (isSoExisted) {
             std::string tempSoDir;
             tempSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
-                .append(bundleName).append(ServiceConstants::PATH_SEPARATOR)
+                .append(bundleCodePathName).append(ServiceConstants::PATH_SEPARATOR)
                 .append(info.second.GetCurrentModulePackage())
                 .append(ServiceConstants::TMP_SUFFIX).append(ServiceConstants::PATH_SEPARATOR)
                 .append(nativeLibraryPath);
@@ -7079,7 +7087,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
                 LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s not existed not need move", tempSoDir.c_str());
                 continue;
             }
-            std::string realSoDir = GetRealSoPath(bundleName, nativeLibraryPath, needDeleteOldLibraryPath);
+            std::string realSoDir = GetRealSoPath(bundleCodePathName, nativeLibraryPath, needDeleteOldLibraryPath);
             LOG_D(BMS_TAG_INSTALLER, "move file from %{public}s to %{public}s", tempSoDir.c_str(), realSoDir.c_str());
             isDirExisted = BundleUtil::IsExistDirNoLog(realSoDir);
             if (!isDirExisted) {
@@ -7285,12 +7293,15 @@ void BaseBundleInstaller::DeleteOldNativeLibraryPath() const
     }
 }
 
-void BaseBundleInstaller::RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &innerBundleInfo) const
+void BaseBundleInstaller::RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &innerBundleInfo,
+    const bool isBundleUpdate) const
 {
     LOG_D(BMS_TAG_INSTALLER, "start");
+    std::string bundleCodePathName = isBundleUpdate ? (std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) +
+        innerBundleInfo.GetBundleName()) : innerBundleInfo.GetBundleName();
     std::string tempDir;
     tempDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
-        .append(innerBundleInfo.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR)
+        .append(bundleCodePathName).append(ServiceConstants::PATH_SEPARATOR)
         .append(innerBundleInfo.GetCurrentModulePackage())
         .append(ServiceConstants::TMP_SUFFIX);
     bool isDirEmpty = false;
@@ -8530,57 +8541,30 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
         return result;
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessBundleCodePath start -n %{public}s", bundleName.c_str());
-    // rename real code path to +old- code path
+    // rename so path
+    ErrCode result = MoveSoFileToRealInstallationDir(newInfos, false, true);
+    CHECK_RESULT(result, "move so file to install path failed %{public}d");
+    RemoveEmptyDirs(newInfos, true);
+    for (const auto &item : newInfos) {
+        RemoveTempPathOnlyUsedForSo(item.second, true);
+    }
+    // process files in +new-
     std::string realAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         bundleName;
-    std::string oldAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-        std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
-    auto result = InstalldClient::GetInstance()->RenameModuleDir(realAppCodePath, oldAppCodePath);
-    if (result != ERR_OK) {
-        if (!BundleUtil::IsExistDir(realAppCodePath) && errno == ENOENT) {
-            APP_LOGW("realAppCodePath(%{public}s) is not exist, continue", realAppCodePath.c_str());
-        } else {
-            APP_LOGE("rename real to +old- code path failed, error is %{public}d", result);
-            return result;
-        }
-    }
-    
-    InstallExceptionInfo exceptionInfo;
-    exceptionInfo.status = InstallRenameExceptionStatus::RENAME_RELA_TO_OLD_PATH;
-    exceptionInfo.versionCode = oldInfo.GetVersionCode();
-    result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->SaveBundleExceptionInfo(bundleName,
-        exceptionInfo);
-    if (result != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "save bundle exception failed, error is %{public}d", result);
-    }
-    // rename +new- code path to real code path
     std::string newAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
-    result = InstalldClient::GetInstance()->RenameModuleDir(newAppCodePath, realAppCodePath);
-    CHECK_RESULT(result, "rename +new- to real code path failed, error is %{public}d");
-
-    exceptionInfo.status = InstallRenameExceptionStatus::RENAME_NEW_TO_RELA_PATH;
-    result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->SaveBundleExceptionInfo(bundleName,
-        exceptionInfo);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "save bundle exception failed, error is %{public}d", result);
-    }
-    // rename so path
-    result = MoveSoFileToRealInstallationDir(newInfos, false);
-    CHECK_RESULT(result, "move so file to install path failed %{public}d");
-    RemoveEmptyDirs(newInfos);
-    for (const auto &item : newInfos) {
-        RemoveTempPathOnlyUsedForSo(item.second);
-    }
     // process dynamic icon file
-    result = ProcessDynamicIconFileWhenUpdate(oldInfo, oldAppCodePath, realAppCodePath);
-    if (result != ERR_OK) {
-        APP_LOGE("copy extend resource to install path failed %{public}d", result);
-    }
+    result = ProcessDynamicIconFileWhenUpdate(oldInfo, realAppCodePath, newAppCodePath);
+    CHECK_RESULT(result, "copy extend resource to install path failed %{public}d");
     // process plugin dir
-    result = ProcessPluginFilesWhenUpdate(oldInfo, oldAppCodePath, realAppCodePath);
+    result = ProcessPluginFilesWhenUpdate(oldInfo, realAppCodePath, newAppCodePath);
     CHECK_RESULT(result, "copy plugin file to install path failed %{public}d");
-
+    // rename real code path to +old code path
+    result = InnerProcessCodePathRealToOld(bundleName, oldInfo.GetVersionCode());
+    CHECK_RESULT(result, "rename rename real to +old code path failed, error is %{public}d");
+    // rename +new- code path to real code path
+    result = InnerProcessCodePathNewToReal(bundleName, oldInfo.GetVersionCode());
+    CHECK_RESULT(result, "rename rename +new to real code path failed, error is %{public}d");
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessBundleCodePath end -n %{public}s", bundleName.c_str());
     return ERR_OK;
 }
@@ -8653,6 +8637,68 @@ ErrCode BaseBundleInstaller::ProcessPluginFilesWhenUpdate(
     return ERR_OK;
 }
 
+ErrCode BaseBundleInstaller::InnerProcessCodePathCreateNewDir(const std::string &bundleName,
+    const bool isBundleUpdate)
+{
+    if (!isBundleUpdate) {
+        return ERR_OK;
+    }
+    (void)DelayedSingleton<InstallExceptionMgr>::GetInstance()->HandleBundleExceptionInfo(bundleName);
+    InstallExceptionInfo exceptionInfo;
+    exceptionInfo.status = InstallRenameExceptionStatus::CREATE_NEW_DIR;
+    ErrCode result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->SaveBundleExceptionInfo(bundleName,
+        exceptionInfo);
+    CHECK_RESULT(result, "save create new dir exception failed, error is %{public}d");
+    return result;
+}
+
+ErrCode BaseBundleInstaller::InnerProcessCodePathRealToOld(
+    const std::string &bundleName, const uint32_t oldVersionCode)
+{
+    // 1. save real to +old- status
+    InstallExceptionInfo exceptionInfo;
+    exceptionInfo.status = InstallRenameExceptionStatus::RENAME_RELA_TO_OLD_PATH;
+    exceptionInfo.versionCode = oldVersionCode;
+    ErrCode result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->SaveBundleExceptionInfo(bundleName,
+        exceptionInfo);
+    CHECK_RESULT(result, "save real to +old exception failed, error is %{public}d");
+    // 2. rename real to +old-
+    std::string realAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        bundleName;
+    std::string oldAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
+    result = InstalldClient::GetInstance()->RenameModuleDir(realAppCodePath, oldAppCodePath);
+    if (result != ERR_OK) {
+        if (!BundleUtil::IsExistDir(realAppCodePath) && errno == ENOENT) {
+            APP_LOGW("realAppCodePath(%{public}s) is not exist, continue", realAppCodePath.c_str());
+        } else {
+            APP_LOGE("rename real to +old- code path failed, error is %{public}d", result);
+            return result;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::InnerProcessCodePathNewToReal(
+    const std::string &bundleName, const uint32_t oldVersionCode)
+{
+    // 1. save +new to real status
+    InstallExceptionInfo exceptionInfo;
+    exceptionInfo.status = InstallRenameExceptionStatus::RENAME_NEW_TO_REAL_PATH;
+    exceptionInfo.versionCode = oldVersionCode;
+    ErrCode result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->SaveBundleExceptionInfo(bundleName,
+        exceptionInfo);
+    CHECK_RESULT(result, "save +new to real exception failed, error is %{public}d");
+    // 2. rename +new to real
+    std::string newAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
+    std::string realAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        bundleName;
+    result = InstalldClient::GetInstance()->RenameModuleDir(newAppCodePath, realAppCodePath);
+    CHECK_RESULT(result, "rename +new to real path failed, error is %{public}d");
+    return ERR_OK;
+}
+
 void BaseBundleInstaller::ProcessOldCodePath(
     const std::string &bundleName, const bool isBundleUpdate)
 {
@@ -8665,7 +8711,8 @@ void BaseBundleInstaller::ProcessOldCodePath(
     ErrCode result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->SaveBundleExceptionInfo(bundleName,
         exceptionInfo);
     if (result != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "save bundle exception failed, error is %{public}d", result);
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "save delete +old -bundle %{public}s exception failed, error is %{public}d",
+            bundleName.c_str(), result);
     }
     // rename first
     std::string oldAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
@@ -8699,25 +8746,16 @@ void BaseBundleInstaller::RollbackCodePath(const std::string &bundleName, bool i
     if (!isBundleUpdate) {
         return;
     }
-    // rename +old- to real code path
-    std::string realAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-        bundleName;
-    std::string oldAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-        std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
-    auto result = InstalldClient::GetInstance()->RenameModuleDir(oldAppCodePath, realAppCodePath);
-    if (result != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "bundle %{public}s rename +old- to real code path failed, error is %{public}d",
-            bundleName.c_str(), result);
-    } else {
-        (void)DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);
-    }
-    // delete +new- code path
-    std::string newAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-        std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
-    result = InstalldClient::GetInstance()->RemoveDir(newAppCodePath);
-    if (result != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "bundle %{public}s remove +new- code path failed, error is %{public}d",
-            bundleName.c_str(), result);
+    bool result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->HandleBundleExceptionInfo(bundleName);
+    if (!result) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "Rollback codePath failed -n %{public}s", bundleName.c_str());
+        // check real path whether exist
+        std::string realPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+            bundleName;
+        if (!BundleUtil::IsExistDirNoLog(realPath)) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "real codePath not exist -n %{public}s -e %{public}d",
+                bundleName.c_str(), errno);
+        }
     }
 }
 

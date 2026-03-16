@@ -126,5 +126,24 @@ void InstallExceptionMgrRdb::GetAllBundleExceptionInfo(
         }
     }
 }
+
+bool InstallExceptionMgrRdb::GetBundleExceptionInfo(
+    const std::string &bundleName, InstallExceptionInfo &installExceptionInfo)
+{
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return false;
+    }
+    std::string value;
+    if (!rdbDataManager_->QueryData(bundleName, value)) {
+        APP_LOGD ("-n %{public}s exception not exist", bundleName.c_str());
+        return false;
+    }
+    return installExceptionInfo.FromString(value);
+}
 } // AppExecFwk
 } // OHOS
