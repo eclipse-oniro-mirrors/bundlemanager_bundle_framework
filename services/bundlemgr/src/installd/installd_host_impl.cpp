@@ -2913,9 +2913,35 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
         LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+    if (verifyBinParam.binFilePaths.empty()) {
+        LOG_D(BMS_TAG_INSTALLD, "binFilePaths is empty");
+        return ERR_OK;
+    }
+    std::string prefix = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        verifyBinParam.bundleName + ServiceConstants::PATH_SEPARATOR;
+    mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
     std::vector<BinarySecurityServiceKit::BinInfo> infos;
+#endif
     for (const auto &binFilePath : verifyBinParam.binFilePaths) {
+        if (!InstalldOperator::IsFileNameValid(binFilePath)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid file path: %{public}s", binFilePath.c_str());
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+        if (binFilePath.find(prefix) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid file path: %{public}s", binFilePath.c_str());
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+        if (access(binFilePath.c_str(), F_OK) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "file not exist: %{public}s", binFilePath.c_str());
+            return ERR_APPEXECFWK_INSTALL_ACCESS_FILE_FAILED;
+        }
+        if (chmod(binFilePath.c_str(), mode) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "chmod failed for %{public}s, errno:%{public}d",
+                binFilePath.c_str(), errno);
+            return ERR_APPEXECFWK_INSTALLD_CHMOD_FAILED;
+        }
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
         ErrCode result = InstalldOperator::SetBinFileLabel(binFilePath);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "SetBinFileLabel failed for %{public}s, errcode:%{public}d",
@@ -2925,9 +2951,11 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
         BinarySecurityServiceKit::BinInfo binInfo;
         binInfo.path = binFilePath;
         infos.emplace_back(binInfo);
+#endif
     }
-    LOG_D(BMS_TAG_INSTALLD, "ValidateBinPermissions, bundleName:%{public}s, appIdentifier:%{public}s",
-        verifyBinParam.bundleName.c_str(), verifyBinParam.appIdentifier.c_str());
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+    LOG_D(BMS_TAG_INSTALLD, "bundleName:%{public}s, appIdentifier:%{public}s, infos size:%{public}zu",
+        verifyBinParam.bundleName.c_str(), verifyBinParam.appIdentifier.c_str(), infos.size());
     auto result = BinarySecurityServiceKit::ProcessHapBinInstall(verifyBinParam.bundleName,
         verifyBinParam.appIdentifier, verifyBinParam.userId, infos);
     if (result != ERR_OK) {

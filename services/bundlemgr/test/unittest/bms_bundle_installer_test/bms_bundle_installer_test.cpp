@@ -15798,18 +15798,17 @@ HWTEST_F(BmsBundleInstallerTest, CheckHapBinInstallCondition_004, Function | Sma
 
 /**
  * @tc.number: GetBinFilePaths_001
- * @tc.name: test GetBinFilePaths with HAP_BIN_INSTALL_ENABLE=false
- * @tc.desc: 1. HAP_BIN_INSTALL_ENABLE=false
+ * @tc.name: test GetBinFilePaths with empty nativeLibraryPath
+ * @tc.desc: 1. nativeLibraryPath is empty
  *           2. verify binFilePaths is empty
  */
 HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_001, Function | SmallTest | Level0)
 {
     BaseBundleInstaller baseBundleInstaller;
     InnerBundleInfo info;
-    std::vector<std::string> binFilePaths;
-    std::string targetSoPath = "/data/app/el1/bundle/public/com.example.test/libs";
+    std::string nativeLibraryPath;
 
-    baseBundleInstaller.GetBinFilePaths(info, targetSoPath, binFilePaths);
+    auto binFilePaths = baseBundleInstaller.GetBinFilePaths(info, nativeLibraryPath);
     EXPECT_TRUE(binFilePaths.empty());
 }
 
@@ -15829,20 +15828,17 @@ HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_002, Function | SmallTest | Lev
     moduleInfos[MODULE_NAME] = moduleInfo;
     info.AddInnerModuleInfo(moduleInfos);
 
-    OHOS::system::SetParameter("const.bms.bin_install", "true");
-    std::vector<std::string> binFilePaths;
-    std::string targetSoPath = "/data/app/el1/bundle/public/com.example.test/libs";
+    std::string nativeLibraryPath = "libs/arm64-v8a";
 
-    baseBundleInstaller.GetBinFilePaths(info, targetSoPath, binFilePaths);
+    auto binFilePaths = baseBundleInstaller.GetBinFilePaths(info, nativeLibraryPath);
     EXPECT_TRUE(binFilePaths.empty());
-    OHOS::system::SetParameter("const.bms.bin_install", "false");
 }
 
 /**
  * @tc.number: GetBinFilePaths_003
- * @tc.name: test GetBinFilePaths with normal bin path
- * @tc.desc: 1. normal bin path
- *           2. verify path is correctly concatenated
+ * @tc.name: test GetBinFilePaths with bin path not starting with libs/<cpuabi>/
+ * @tc.desc: 1. bin path does not start with libs/<cpuabi>/
+ *           2. verify path is skipped
  */
 HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_003, Function | SmallTest | Level0)
 {
@@ -15851,54 +15847,115 @@ HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_003, Function | SmallTest | Lev
     InnerModuleInfo moduleInfo;
     moduleInfo.name = MODULE_NAME;
     ExecutableBinaryPath binPath;
-    binPath.path = "libs/test.bin";
+    binPath.path = "test.bin";
     moduleInfo.executableBinaryPaths.push_back(binPath);
     std::map<std::string, InnerModuleInfo> moduleInfos;
     moduleInfos[MODULE_NAME] = moduleInfo;
     info.AddInnerModuleInfo(moduleInfos);
+    info.SetCpuAbi("arm64-v8a");
 
-    std::vector<std::string> binFilePaths;
-    std::string targetSoPath = "/data/app/el1/bundle/public/com.example.test";
-    OHOS::system::SetParameter("const.bms.bin_install", "true");
+    std::string nativeLibraryPath = "libs/arm64-v8a";
 
-    baseBundleInstaller.GetBinFilePaths(info, targetSoPath, binFilePaths);
+    auto binFilePaths = baseBundleInstaller.GetBinFilePaths(info, nativeLibraryPath);
+    EXPECT_TRUE(binFilePaths.empty());
+}
 
-    EXPECT_FALSE(binFilePaths.empty());
-    EXPECT_EQ(binFilePaths[0], "/data/app/el1/bundle/public/com.example.test/libs/test.bin");
-    OHOS::system::SetParameter("const.bms.bin_install", "false");
+/**
+ * @tc.number: GetBinFilePaths_004
+ * @tc.name: test GetBinFilePaths with path containing ".."
+ * @tc.desc: 1. bin path contains ".."
+ *           2. verify path is skipped for security
+ */
+HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_004, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = MODULE_NAME;
+    ExecutableBinaryPath binPath;
+    binPath.path = "libs/arm64-v8a/../test.bin";
+    moduleInfo.executableBinaryPaths.push_back(binPath);
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    moduleInfos[MODULE_NAME] = moduleInfo;
+    info.AddInnerModuleInfo(moduleInfos);
+    info.SetCpuAbi("arm64-v8a");
+
+    std::string nativeLibraryPath = "libs/arm64-v8a";
+
+    auto binFilePaths = baseBundleInstaller.GetBinFilePaths(info, nativeLibraryPath);
+    EXPECT_TRUE(binFilePaths.empty());
+}
+
+/**
+ * @tc.number: GetBinFilePaths_005
+ * @tc.name: test GetBinFilePaths with multiple bin paths including invalid ones
+ * @tc.desc: 1. multiple bin paths with different formats
+ *           2. paths not starting with libs/<cpuabi>/ are skipped
+ *           3. paths containing ".." are skipped
+ *           4. files not existing are skipped by IsExecutableBinaryFile
+ */
+HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_005, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = MODULE_NAME;
+    
+    ExecutableBinaryPath binPath1;
+    binPath1.path = "libs/arm64-v8a/test1.bin";
+    moduleInfo.executableBinaryPaths.push_back(binPath1);
+    
+    ExecutableBinaryPath binPath2;
+    binPath2.path = "test2.bin";
+    moduleInfo.executableBinaryPaths.push_back(binPath2);
+    
+    ExecutableBinaryPath binPath3;
+    binPath3.path = "libs/arm64-v8a/subdir/../test3.bin";
+    moduleInfo.executableBinaryPaths.push_back(binPath3);
+    
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    moduleInfos[MODULE_NAME] = moduleInfo;
+    info.AddInnerModuleInfo(moduleInfos);
+    info.SetCpuAbi("arm64-v8a");
+
+    std::string nativeLibraryPath = "libs/arm64-v8a";
+
+    auto binFilePaths = baseBundleInstaller.GetBinFilePaths(info, nativeLibraryPath);
+
+    EXPECT_TRUE(binFilePaths.empty());
 }
 
 /**
  * @tc.number: ProcessBinFiles_001
- * @tc.name: test ProcessBinFiles with HAP_BIN_INSTALL_ENABLE=false
- * @tc.desc: 1. HAP_BIN_INSTALL_ENABLE=false
+ * @tc.name: test ProcessBinFiles with empty infos
+ * @tc.desc: 1. infos is empty
  *           2. verify return ERR_OK
  */
 HWTEST_F(BmsBundleInstallerTest, ProcessBinFiles_001, Function | SmallTest | Level0)
 {
     BaseBundleInstaller baseBundleInstaller;
-    InnerBundleInfo info;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
 
-    auto result = baseBundleInstaller.ProcessBinFiles(info);
+    auto result = baseBundleInstaller.ProcessBinFiles(infos);
     EXPECT_EQ(result, ERR_OK);
 }
 
 /**
  * @tc.number: ProcessBinFiles_002
- * @tc.name: test ProcessBinFiles with HAP_BIN_INSTALL_ENABLE=true and empty info
- * @tc.desc: 1. HAP_BIN_INSTALL_ENABLE=true
- *           2. InnerBundleInfo is empty (no module name, no bundle name)
- *           3. verify return ERR_OK (no bin files to process)
+ * @tc.name: test ProcessBinFiles with non-empty infos but no bin files
+ * @tc.desc: 1. infos is not empty
+ *           2. no bin files to process
+ *           3. verify return ERR_OK
  */
 HWTEST_F(BmsBundleInstallerTest, ProcessBinFiles_002, Function | SmallTest | Level0)
 {
     BaseBundleInstaller baseBundleInstaller;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
     InnerBundleInfo info;
+    infos["test"] = info;
 
-    OHOS::system::SetParameter("const.bms.bin_install", "true");
-    auto result = baseBundleInstaller.ProcessBinFiles(info);
+    auto result = baseBundleInstaller.ProcessBinFiles(infos);
     EXPECT_EQ(result, ERR_OK);
-    OHOS::system::SetParameter("const.bms.bin_install", "false");
 }
 
 /**

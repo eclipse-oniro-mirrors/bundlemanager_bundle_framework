@@ -1731,8 +1731,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     });
 
     // process bin file permission
-    result = ChangeBinFileStat(newInfos);
-    CHECK_RESULT_WITH_ROLLBACK(result, "change bin file stat failed %{public}d", newInfos, oldInfo);
+    result = ProcessBinFiles(newInfos);
+    CHECK_RESULT_WITH_ROLLBACK(result, "process bin files failed %{public}d", newInfos, oldInfo);
 
     // install cross-app hsp which has rollback operation in sharedBundleInstaller when some one failure occurs
     result = sharedBundleInstaller.Install(sysEventInfo_);
@@ -5091,19 +5091,22 @@ ErrCode BaseBundleInstaller::CheckHapBinInstallCondition(const std::unordered_ma
     return ERR_OK;
 }
 
-void BaseBundleInstaller::GetBinFilePaths(const InnerBundleInfo &info, const std::string &targetSoPath,
-    std::vector<std::string> &binFilePaths) const
+std::vector<std::string> BaseBundleInstaller::GetBinFilePaths(const InnerBundleInfo &info,
+    const std::string &nativeLibraryPath) const
 {
-    if (targetSoPath.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "targetSoPath is empty");
-        return;
+    std::vector<std::string> binFilePaths;
+    if (nativeLibraryPath.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "nativeLibraryPath is empty");
+        return binFilePaths;
     }
-    auto innerModuleInfos = info.GetInnerModuleInfos();
-    std::string prefix = targetSoPath;
+    std::string prefix = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
     if (prefix.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
         prefix += ServiceConstants::FILE_SEPARATOR_CHAR;
     }
- 
+    auto innerModuleInfos = info.GetInnerModuleInfos();
+    std::string cpuAbi = info.GetCpuAbi();
+    std::string libsPrefix = ServiceConstants::LIBS + cpuAbi + ServiceConstants::PATH_SEPARATOR;
     for (const auto &modulePair : innerModuleInfos) {
         const InnerModuleInfo &moduleInfo = modulePair.second;
         const auto &executableBinaryPaths = moduleInfo.executableBinaryPaths;
@@ -5111,28 +5114,43 @@ void BaseBundleInstaller::GetBinFilePaths(const InnerBundleInfo &info, const std
             if (executableBinaryPath.path.find("..") != std::string::npos) {
                 continue;
             }
-            binFilePaths.push_back(prefix + executableBinaryPath.path);
+            std::string binPath = executableBinaryPath.path;
+            if (binPath.find(libsPrefix) != 0) {
+                continue;
+            }
+            binPath = binPath.substr(libsPrefix.length());
+            std::string fullPath = prefix + binPath;
+            if (!BundleUtil::IsExecutableBinaryFile(fullPath)) {
+                LOG_D(BMS_TAG_INSTALLER, "skip non-executable file: %{private}s", fullPath.c_str());
+                continue;
+            }
+            binFilePaths.push_back(fullPath);
         }
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "binFilePaths size: %{public}zu", binFilePaths.size());
+    return binFilePaths;
 }
 
-ErrCode BaseBundleInstaller::ProcessBinFiles(const InnerBundleInfo &info) const
+ErrCode BaseBundleInstaller::ProcessBinFiles(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos) const
 {
-    std::string targetSoPath;
-    auto iter = targetSoPathMap_.find(info.GetCurModuleName());
-    if (iter != targetSoPathMap_.end()) {
-        targetSoPath = iter->second;
-    }
-
-    std::vector<std::string> binFilePaths;
-    GetBinFilePaths(info, targetSoPath, binFilePaths);
-    if (binFilePaths.empty()) {
+    if (infos.empty()) {
         return ERR_OK;
     }
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessBinFiles start -n %{public}s", info.GetBundleName().c_str());
+    std::vector<std::string> binFilePaths;
+    for (const auto &infoPair : infos) {
+        const InnerBundleInfo &info = infoPair.second;
+        std::string nativeLibraryPath = info.GetNativeLibraryPath();
+        auto paths = GetBinFilePaths(info, nativeLibraryPath);
+        binFilePaths.insert(binFilePaths.end(), paths.begin(), paths.end());
+    }
+    if (binFilePaths.empty()) {
+        LOG_D(BMS_TAG_INSTALLER, "binFilePaths is empty");
+        return ERR_OK;
+    }
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessBinFiles start -n %{public}s", bundleName_.c_str());
     VerifyBinParam verifyBinParam;
-    verifyBinParam.bundleName = info.GetBundleName();
+    verifyBinParam.bundleName = bundleName_;
     verifyBinParam.appIdentifier = appIdentifier_;
     verifyBinParam.userId = userId_;
     verifyBinParam.binFilePaths = binFilePaths;
@@ -6013,11 +6031,6 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
                 LOG_E(BMS_TAG_INSTALLER, "enable code signature failed: %{public}d", result);
                 return result;
             }
-            std::unordered_map<std::string, InnerBundleInfo>::const_iterator iter;
-            if ((iter = infos.find(hapPathRecord.first)) != infos.end()) {
-                result = ProcessBinFiles(iter->second);
-                CHECK_RESULT(result, "fail to ProcessBinFiles, error is %{public}d");
-            }
         }
     }
     LOG_I(BMS_TAG_INSTALLER, "codesign end");
@@ -6457,11 +6470,6 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         // check whether the hap or hsp is encrypted
         result = CheckSoEncryption(info, cpuAbi, targetSoPath);
         CHECK_RESULT(result, "fail to CheckSoEncryption, error is %{public}d");
-        // Process bin files
-        if (!copyHapToInstallPath_) {
-            result = ProcessBinFiles(info);
-            CHECK_RESULT(result, "fail to ProcessBinFiles, error is %{public}d");
-        }
     } else {
         auto result = InstalldClient::GetInstance()->CreateBundleDir(modulePath);
         CHECK_RESULT(result, "fail to create temp bundle dir, error is %{public}d");
@@ -8949,33 +8957,6 @@ void BaseBundleInstaller::NotifyBundleCallback(const NotifyType &type, int32_t u
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyPluginEvents(event, dataMgr_, true);
-}
-
-ErrCode BaseBundleInstaller::ChangeBinFileStat(const std::unordered_map<std::string,
-    InnerBundleInfo> &infos) const
-{
-    if (infos.empty()) {
-        return ERR_OK;
-    }
-    std::string nativeLibraryPath = infos.begin()->second.GetNativeLibraryPath();
-    std::string realBinPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-        bundleName_ + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath + ServiceConstants::PATH_SEPARATOR;
-    std::vector<std::string> binFiles;
-    for (const auto &item : infos) {
-        const auto &info = item.second;
-        GetBinFilePaths(info, realBinPath, binFiles);
-    }
-    if (binFiles.empty()) {
-        return ERR_OK;
-    }
-
-    mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-    auto result = InstalldClient::GetInstance()->ChmodFiles(binFiles, mode, bundleName_, nativeLibraryPath);
-    if (result != ERR_OK) {
-        return result;
-    }
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "change bin file mode end, total %{public}zu files", binFiles.size());
-    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
