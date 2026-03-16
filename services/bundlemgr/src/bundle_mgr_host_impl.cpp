@@ -2014,7 +2014,7 @@ bool BundleMgrHostImpl::CleanBundleCacheByInodeCount(const std::string &bundleNa
     } else {
         cleanCacheSize = initialInodeCount - inodeCount;
     }
-    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "bundle: %{public}s, inode count: %{public}llu", bundleName.c_str(),
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "bundle: %{public}s, inode count: %{public}" PRIu64, bundleName.c_str(),
         cleanCacheSize);
     return true;
 }
