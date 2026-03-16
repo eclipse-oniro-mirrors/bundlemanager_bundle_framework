@@ -4048,10 +4048,6 @@ ErrCode BundleMgrHostImpl::GetBundleInodeCount(const std::string &bundleName, in
         APP_LOGE_NOFUNC("bundleName empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    if (userId < 0) {
-        APP_LOGE_NOFUNC("invalid userId: %{public}d", userId);
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-    }
     if (appIndex < 0) {
         APP_LOGE_NOFUNC("invalid appIndex: %{public}d", appIndex);
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -4061,6 +4057,10 @@ ErrCode BundleMgrHostImpl::GetBundleInodeCount(const std::string &bundleName, in
     if (dataMgr == nullptr) {
         APP_LOGE_NOFUNC("DataMgr is nullptr");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    if (userId < 0 || !dataMgr->HasUserId(userId)) {
+        APP_LOGE("userId is invalid or not exist");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     // Get uid by bundleName, appIndex and userId
     int32_t uid = dataMgr->GetUidByBundleName(bundleName, userId, appIndex);

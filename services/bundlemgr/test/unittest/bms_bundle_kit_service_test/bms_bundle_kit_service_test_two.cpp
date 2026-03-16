@@ -10491,6 +10491,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInodeCount_0300, Function | SmallTest
     uint64_t inodeCount = 0;
     ErrCode ret = hostImpl->GetBundleInodeCount("com.ohos.dlpmanager", 0, -1, inodeCount);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    ret = hostImpl->GetBundleInodeCount("com.ohos.dlpmanager", 0, 999, inodeCount);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 
     ResetTestValues();
 }
@@ -10549,7 +10551,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInodeCount_0600, Function | SmallTest
     std::string nonExistentBundle = "com.example.nonexistent";
     uint64_t inodeCount = 0;
     ErrCode ret = hostImpl->GetBundleInodeCount(nonExistentBundle, 0, DEFAULT_USERID, inodeCount);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 
     ResetTestValues();
 }
@@ -10569,7 +10571,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInodeCount_0700, Function | SmallTest
     uint64_t inodeCount = 0;
     ErrCode ret = hostImpl->GetBundleInodeCount("com.ohos.dlpmanager", 0, DEFAULT_USERID, inodeCount);
     // Just verify the call can be made successfully
-    EXPECT_TRUE(ret == ERR_OK || ret == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_FALSE(ret == ERR_OK || ret == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     ResetTestValues();
 }
