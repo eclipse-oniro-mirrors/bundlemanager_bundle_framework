@@ -94,7 +94,7 @@ bool UninstallDataMgrStorageRdb::GetUninstallBundleInfo(const std::string &bundl
         APP_LOGE("GetString failed, ret: %{public}d", ret);
         return false;
     }
-    nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("error key");
         return false;
@@ -130,7 +130,7 @@ void UninstallDataMgrStorageRdb::TransformStrToInfo(const std::map<std::string, 
 
     for (auto &data : datas) {
         UninstallBundleInfo uninstallBundleInfo;
-        nlohmann::json jsonObject = nlohmann::json::parse(data.second, nullptr, false);
+        nlohmann::json jsonObject = nlohmann::json::parse(data.second, nullptr, false, true);
         if (jsonObject == nullptr || jsonObject.is_discarded()) {
             APP_LOGE("error key: %{public}s", data.first.c_str());
             continue;

@@ -1217,7 +1217,7 @@ std::unordered_map<std::string, std::string> BundleUtil::ParseMapFromJson(const 
         return result;
     }
     APP_LOGD("ParseMapFromJson from %{public}s", jsonStr.c_str());
-    nlohmann::json jsonBuf = nlohmann::json::parse(jsonStr, nullptr, false);
+    nlohmann::json jsonBuf = nlohmann::json::parse(jsonStr, nullptr, false, true);
     if (jsonBuf.is_discarded()) {
         APP_LOGE("json file discarded");
         return result;

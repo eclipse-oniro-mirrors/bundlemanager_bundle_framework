@@ -62,7 +62,7 @@ UninstallBundleResourceRdb::~UninstallBundleResourceRdb()
 std::map<std::string, std::string> UninstallBundleResourceRdb::FromString(const std::string &labels)
 {
     std::map<std::string, std::string> labelMap;
-    nlohmann::json jsonObject = nlohmann::json::parse(labels, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(labels, nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("failed parse labels: %{public}s", labels.c_str());
         return labelMap;

@@ -30,7 +30,7 @@ const char* const VERSION_CODE = "versionCode";
 
 bool InstallExceptionInfo::FromString(const std::string &installExceptionInfoStr)
 {
-    nlohmann::json jsonObject = nlohmann::json::parse(installExceptionInfoStr, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(installExceptionInfoStr, nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("failed parse installExceptionInfoStr: %{public}s", installExceptionInfoStr.c_str());
         return false;

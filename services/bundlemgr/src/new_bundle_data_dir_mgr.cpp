@@ -87,7 +87,7 @@ bool NewBundleDataDirMgr::LoadNewBundleDataDirInfosFromDb()
         return true;
     }
 
-    nlohmann::json jsonObject = nlohmann::json::parse(newBundleDataDirStr, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(newBundleDataDirStr, nullptr, false, true);
     if (jsonObject.is_discarded() || !jsonObject.is_object()) {
         APP_LOGE("jsonObject is invalid");
         return false;

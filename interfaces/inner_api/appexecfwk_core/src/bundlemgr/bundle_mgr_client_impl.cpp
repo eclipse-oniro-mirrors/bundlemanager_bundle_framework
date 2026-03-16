@@ -391,7 +391,7 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
             return false;
         }
         std::string rawData(fileContentPtr.get(), fileContentPtr.get() + len);
-        nlohmann::json profileJson = nlohmann::json::parse(rawData, nullptr, false);
+        nlohmann::json profileJson = nlohmann::json::parse(rawData, nullptr, false, true);
         if (profileJson.is_discarded()) {
             APP_LOGE("bad profile file");
             return false;
@@ -452,7 +452,7 @@ bool BundleMgrClientImpl::TransformFileToJsonString(const std::string &resPath, 
         return false;
     }
     in.seekg(0, std::ios::beg);
-    nlohmann::json profileJson = nlohmann::json::parse(in, nullptr, false);
+    nlohmann::json profileJson = nlohmann::json::parse(in, nullptr, false, true);
     if (profileJson.is_discarded()) {
         APP_LOGE("bad profile file");
         in.close();

@@ -179,7 +179,7 @@ bool ParseInfoFromJsonStr(const char *data, T &t)
         return false;
     }
 
-    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("jsonObject discarded");
         return false;

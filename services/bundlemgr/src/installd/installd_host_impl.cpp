@@ -2504,7 +2504,7 @@ bool InstalldHostImpl::ReadFileIntoJson(const std::string &filePath, nlohmann::j
     }
 
     in.seekg(0, std::ios::beg);
-    jsonBuf = nlohmann::json::parse(in, nullptr, false);
+    jsonBuf = nlohmann::json::parse(in, nullptr, false, true);
     in.close();
     if (jsonBuf.is_discarded()) {
         LOG_E(BMS_TAG_INSTALLD, "bad profile file");

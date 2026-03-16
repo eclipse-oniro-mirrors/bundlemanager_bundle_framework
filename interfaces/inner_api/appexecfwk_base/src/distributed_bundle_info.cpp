@@ -118,7 +118,7 @@ std::string DistributedBundleInfo::ToString() const
 
 bool DistributedBundleInfo::FromJsonString(const std::string &jsonString)
 {
-    nlohmann::json jsonObject = nlohmann::json::parse(jsonString, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(jsonString, nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("failed parse DistributedBundleInfo: %{public}s", jsonString.c_str());
         return false;

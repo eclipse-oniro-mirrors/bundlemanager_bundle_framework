@@ -75,7 +75,7 @@ bool OnDemandInstallDataStorageRdb::GetOnDemandInstallBundleInfo(const std::stri
         APP_LOGE("GetOnDemandInstallBundleInfo QueryData failed");
         return ret;
     }
-    nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false, true);
     if (jsonObject.is_discarded() || (preInstallBundleInfo.FromJson(jsonObject) != ERR_OK)) {
         APP_LOGE("error key : %{public}s", bundleName.c_str());
         return false;
@@ -105,7 +105,7 @@ void OnDemandInstallDataStorageRdb::TransformStrToInfo(
     std::map<std::string, PreInstallBundleInfo> updateInfos;
     for (const auto &data : datas) {
         PreInstallBundleInfo preInstallBundleInfo;
-        nlohmann::json jsonObject = nlohmann::json::parse(data.second, nullptr, false);
+        nlohmann::json jsonObject = nlohmann::json::parse(data.second, nullptr, false, true);
         if (jsonObject.is_discarded()) {
             APP_LOGE("Error key: %{public}s", data.first.c_str());
             rdbDataManager_->DeleteData(data.first);

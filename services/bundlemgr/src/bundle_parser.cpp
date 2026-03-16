@@ -91,7 +91,7 @@ bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json 
     }
 
     in.seekg(0, std::ios::beg);
-    jsonBuf = nlohmann::json::parse(in, nullptr, false);
+    jsonBuf = nlohmann::json::parse(in, nullptr, false, true);
     in.close();
     if (jsonBuf.is_discarded()) {
         APP_LOGE_NOFUNC("bad profile file %{public}s ", filePath.c_str());
@@ -315,7 +315,7 @@ std::map<std::string, std::string> BundleParser::ParseAclExtendedMap(const std::
         return aclExtendedMap;
     }
     APP_LOGD("ParseAclExtendedMap from %{private}s", appServiceCapabilities.c_str());
-    nlohmann::json jsonBuf = nlohmann::json::parse(appServiceCapabilities, nullptr, false);
+    nlohmann::json jsonBuf = nlohmann::json::parse(appServiceCapabilities, nullptr, false, true);
     if (jsonBuf.is_discarded()) {
         APP_LOGE("json file discarded");
         return aclExtendedMap;
@@ -370,7 +370,7 @@ ErrCode BundleParser::ParseRouterArray(
         return ERR_APPEXECFWK_PARSE_NO_PROFILE;
     }
     APP_LOGD("Parse RouterItem from %{private}s", jsonString.c_str());
-    nlohmann::json jsonBuf = nlohmann::json::parse(jsonString, nullptr, false);
+    nlohmann::json jsonBuf = nlohmann::json::parse(jsonString, nullptr, false, true);
     if (jsonBuf.is_discarded()) {
         APP_LOGE("json file %{private}s discarded", jsonString.c_str());
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;

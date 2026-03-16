@@ -2284,7 +2284,7 @@ void ToAbilityStartWindow(
         APP_LOGE("extract profile failed");
         return;
     }
-    nlohmann::json profileJson = nlohmann::json::parse(profileStream.str(), nullptr, false);
+    nlohmann::json profileJson = nlohmann::json::parse(profileStream.str(), nullptr, false, true);
     if (profileJson.is_discarded()) {
         APP_LOGE("bad profile file");
         return;
@@ -3068,7 +3068,7 @@ ErrCode ModuleProfile::TransformTo(
     InnerBundleInfo &innerBundleInfo) const
 {
     APP_LOGD("transform module.json stream to InnerBundleInfo");
-    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
@@ -3126,7 +3126,7 @@ ErrCode ModuleProfile::TransformToTestRunner(
     ModuleTestRunner &moduleTestRunner) const
 {
     APP_LOGD("transform module.json stream to TestRunner");
-    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;

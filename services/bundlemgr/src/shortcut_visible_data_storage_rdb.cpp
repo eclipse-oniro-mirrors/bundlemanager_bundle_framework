@@ -247,7 +247,7 @@ void ShortcutVisibleDataStorageRdb::GetStorageShortcutInfos(const std::string &b
             APP_LOGE("GetString shortcutInfo failed");
             return;
         }
-        nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
+        nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false, true);
         if (jsonObject.is_discarded()) {
             APP_LOGE("Shortcut jsonObject is discarded");
             return;

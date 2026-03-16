@@ -373,7 +373,7 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
 bool BundleResourceParser::ParseIconIdFromJson(
     const std::string &jsonBuff, uint32_t &foregroundId, uint32_t &backgroundId)
 {
-    nlohmann::json jsonObject = nlohmann::json::parse(jsonBuff, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(jsonBuff, nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("failed to parse jsonBuff %{public}s", jsonBuff.c_str());
         return false;

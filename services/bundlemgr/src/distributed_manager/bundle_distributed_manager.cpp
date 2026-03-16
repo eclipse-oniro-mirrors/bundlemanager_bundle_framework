@@ -78,7 +78,7 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
     }
     std::string jsonData = profile.GetOsSysCap();
     APP_LOGI("CharacteristicProfileJson:%{public}s", jsonData.c_str());
-    nlohmann::json jsonObject = nlohmann::json::parse(jsonData, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(jsonData, nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("jsonObject is_discarded");
         return ErrorCode::DECODE_SYS_CAP_FAILED;

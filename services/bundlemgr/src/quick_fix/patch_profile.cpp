@@ -300,7 +300,7 @@ bool PatchProfile::ParseNativeSo(const PatchExtractor &patchExtractor, AppqfInfo
 ErrCode PatchProfile::TransformTo(
     const std::ostringstream &source, const PatchExtractor &patchExtractor, AppQuickFix &appQuickFix)
 {
-    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false, true);
     if (jsonObject.is_discarded()) {
         LOG_E(BMS_TAG_DEFAULT, "bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;

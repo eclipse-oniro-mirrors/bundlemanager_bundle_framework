@@ -5997,4 +5997,193 @@ HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0013, Function | SmallTest
     EXPECT_EQ(inodes, 3);
 }
 
+HWTEST_F(BmsBundleParserTest, JsonParse_ValidJson_0100, Function | SmallTest | Level1)
+{
+    std::string data = R"({"name": "test", "value": 123})";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, true);
+    EXPECT_FALSE(jsonObject.is_discarded());
+    EXPECT_TRUE(jsonObject.is_object());
+    EXPECT_EQ(jsonObject["name"], "test");
+    EXPECT_EQ(jsonObject["value"], 123);
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_WithComments_0200, Function | SmallTest | Level1)
+{
+    std::string data = R"({
+        // This is a comment
+        "name": "test",
+        /* multi-line comment */
+        "value": 123
+    })";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, true);
+    EXPECT_FALSE(jsonObject.is_discarded());
+    EXPECT_TRUE(jsonObject.is_object());
+    EXPECT_EQ(jsonObject["name"], "test");
+    EXPECT_EQ(jsonObject["value"], 123);
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_WithTrailingCommas_0300, Function | SmallTest | Level1)
+{
+    std::string data = R"({
+        "name": "test",
+        "value": 123,
+    })";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, true);
+    EXPECT_FALSE(jsonObject.is_discarded());
+    EXPECT_TRUE(jsonObject.is_object());
+    EXPECT_EQ(jsonObject["name"], "test");
+    EXPECT_EQ(jsonObject["value"], 123);
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_ArrayWithTrailingCommas_0400, Function | SmallTest | Level1)
+{
+    std::string data = R"([1, 2, 3,])";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, true);
+    EXPECT_FALSE(jsonObject.is_discarded());
+    EXPECT_TRUE(jsonObject.is_array());
+    EXPECT_EQ(jsonObject.size(), 3);
+    EXPECT_EQ(jsonObject[0], 1);
+    EXPECT_EQ(jsonObject[1], 2);
+    EXPECT_EQ(jsonObject[2], 3);
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_InvalidJson_0500, Function | SmallTest | Level1)
+{
+    std::string data = R"({"name": "test", "value": )";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, true);
+    EXPECT_TRUE(jsonObject.is_discarded());
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_EmptyString_0600, Function | SmallTest | Level1)
+{
+    std::string data = "";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, true);
+    EXPECT_TRUE(jsonObject.is_discarded());
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_ComplexJson_0700, Function | SmallTest | Level1)
+{
+    std::string data = R"({
+        "app": {
+            "name": "MyApp",
+            "version": "1.0.0",
+            "permissions": ["READ", "WRITE"],
+        },
+        "modules": [
+            {"name": "module1", "type": "entry"},
+            {"name": "module2", "type": "feature"},
+        ]
+    })";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, true);
+    EXPECT_FALSE(jsonObject.is_discarded());
+    EXPECT_TRUE(jsonObject.is_object());
+    EXPECT_EQ(jsonObject["app"]["name"], "MyApp");
+    EXPECT_EQ(jsonObject["app"]["version"], "1.0.0");
+    EXPECT_EQ(jsonObject["app"]["permissions"].size(), 2);
+    EXPECT_EQ(jsonObject["modules"].size(), 2);
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_WithCommentsAndTrailingCommas_0800, Function | SmallTest | Level1)
+{
+    std::string data = R"({
+        // configuration
+        "config": {
+            "debug": true,
+            "logLevel": "info",
+        }, // end of config
+        // features
+        "features": [
+            "feature1",
+            "feature2",
+        ], // end of features
+    })";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, true);
+    EXPECT_FALSE(jsonObject.is_discarded());
+    EXPECT_TRUE(jsonObject.is_object());
+    EXPECT_TRUE(jsonObject["config"]["debug"]);
+    EXPECT_EQ(jsonObject["config"]["logLevel"], "info");
+    EXPECT_EQ(jsonObject["features"].size(), 2);
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_MalformedJson_0900, Function | SmallTest | Level1)
+{
+    std::string data = R"({name: "test", value: 123})";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, true);
+    EXPECT_TRUE(jsonObject.is_discarded());
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_WhitespaceOnly_1000, Function | SmallTest | Level1)
+{
+    std::string data = "   \n\t   ";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, true);
+    EXPECT_TRUE(jsonObject.is_discarded());
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_StrictMode_WithComments_1100, Function | SmallTest | Level1)
+{
+    std::string data = R"({
+        // This is a comment
+        "name": "test",
+        "value": 123
+    })";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, false);
+    EXPECT_TRUE(jsonObject.is_discarded());
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_StrictMode_WithTrailingCommas_1200, Function | SmallTest | Level1)
+{
+    std::string data = R"({
+        "name": "test",
+        "value": 123,
+    })";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, false);
+    EXPECT_TRUE(jsonObject.is_discarded());
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_StrictMode_ArrayWithTrailingCommas_1300, Function | SmallTest | Level1)
+{
+    std::string data = R"([1, 2, 3,])";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, false);
+    EXPECT_TRUE(jsonObject.is_discarded());
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_StrictMode_ValidJson_1400, Function | SmallTest | Level1)
+{
+    std::string data = R"({"name": "test", "value": 123})";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, false);
+    EXPECT_FALSE(jsonObject.is_discarded());
+    EXPECT_TRUE(jsonObject.is_object());
+    EXPECT_EQ(jsonObject["name"], "test");
+    EXPECT_EQ(jsonObject["value"], 123);
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_StrictMode_ComplexJson_1500, Function | SmallTest | Level1)
+{
+    std::string data = R"({
+        "app": {
+            "name": "MyApp",
+            "version": "1.0.0",
+            "permissions": ["READ", "WRITE"]
+        },
+        "modules": [
+            {"name": "module1", "type": "entry"},
+            {"name": "module2", "type": "feature"}
+        ]
+    })";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, false);
+    EXPECT_FALSE(jsonObject.is_discarded());
+    EXPECT_TRUE(jsonObject.is_object());
+    EXPECT_EQ(jsonObject["app"]["name"], "MyApp");
+    EXPECT_EQ(jsonObject["app"]["version"], "1.0.0");
+    EXPECT_EQ(jsonObject["app"]["permissions"].size(), 2);
+    EXPECT_EQ(jsonObject["modules"].size(), 2);
+}
+
+HWTEST_F(BmsBundleParserTest, JsonParse_StrictMode_MalformedJson_1600, Function | SmallTest | Level1)
+{
+    std::string data = R"({name: "test", value: 123})";
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, false);
+    EXPECT_TRUE(jsonObject.is_discarded());
+}
+
 } // OHOS
