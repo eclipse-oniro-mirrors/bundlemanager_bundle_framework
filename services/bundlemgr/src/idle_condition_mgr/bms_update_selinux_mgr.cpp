@@ -111,13 +111,13 @@ ErrCode BmsUpdateSelinuxMgr::StartUpdateSelinuxLabel(const int32_t userId)
 
 ErrCode BmsUpdateSelinuxMgr::StopUpdateSelinuxLabel(const int32_t reason, const std::string stopReason)
 {
-    APP_LOGI_NOFUNC("stop relabel -r %{public}d -n %{public}s", reason, createDirParam_.bundleName.c_str());
     if (needStop_.load()) {
         APP_LOGI_NOFUNC("already stoped -r %{public}d", reason);
         return ERR_OK;
     }
     needStop_.store(true);
     std::lock_guard<std::mutex> lock(createDirParamMutex_);
+    APP_LOGI_NOFUNC("stop relabel -r %{public}d -n %{public}s", reason, createDirParam_.bundleName.c_str());
     createDirParam_.stopReason = stopReason;
     auto ret = InstalldClient::GetInstance()->StopSetFileCon(createDirParam_, reason);
     if (ret != ERR_OK) {
