@@ -904,7 +904,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "upgradeFlag":0,
             "virtualMachine":"ark",
             "compressNativeLibs": true,
-            "nativeLibraryFileNames": []
+            "nativeLibraryFileNames": [],
+            "librarySupportDirectory": []
         }
     },
     "installMark":{

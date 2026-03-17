@@ -334,6 +334,7 @@ struct Module {
     std::string mainElement;
     std::vector<std::string> deviceTypes;
     std::map<std::string, std::vector<std::string>> requiredDeviceFeatures;
+    std::map<std::string, std::vector<std::string>> librarySupportDirectory;
     std::string virtualMachine = MODULE_VIRTUAL_MACHINE_DEFAULT_VALUE;
     std::string pages;
     std::string systemTheme;
@@ -1533,6 +1534,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         jsonObjectEnd,
         MODULE_REQUIRED_DEVICE_FEATURES,
         module.requiredDeviceFeatures,
+        false,
+        g_parseResult,
+        JsonType::ARRAY,
+        ArrayType::STRING);
+    GetMapValueIfFindKey<std::map<std::string, std::vector<std::string>>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_LIBRARY_SUPPORT_DIRECTORY,
+        module.librarySupportDirectory,
         false,
         g_parseResult,
         JsonType::ARRAY,
@@ -3014,6 +3023,41 @@ bool ToInnerBundleInfo(
 }
 }  // namespace
 
+ErrCode ProcessLibrarySupportDirectory(
+    const std::map<std::string, std::vector<std::string>> &librarySupportDirectoryMap,
+    InnerBundleInfo &innerBundleInfo)
+{
+    if (librarySupportDirectoryMap.empty()) {
+        return ERR_OK;
+    }
+    std::string cpuAbi = innerBundleInfo.GetCpuAbi();
+    if (cpuAbi.empty()) {
+        return ERR_OK;
+    }
+    auto libSupportDirIter = librarySupportDirectoryMap.find(cpuAbi);
+    if (libSupportDirIter != librarySupportDirectoryMap.end()) {
+        const auto &dirs = libSupportDirIter->second;
+        if (dirs.size() > Constants::MAX_JSON_ARRAY_LENGTH) {
+            APP_LOGE_NOFUNC("librarySupportDirectory size %{public}zu exceeds max 1024", dirs.size());
+            return ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR;
+        }
+        std::vector<std::string> filteredDirs;
+        for (const auto &dir : dirs) {
+            if (dir.size() > Constants::MAX_JSON_STRING_LENGTH) {
+                APP_LOGW_NOFUNC("skip librarySupportDirectory dir due to length exceeds 4096");
+                continue;
+            }
+            if (dir.find(ServiceConstants::RELATIVE_PATH_NAME) != std::string::npos) {
+                APP_LOGW_NOFUNC("skip librarySupportDirectory %{public}s due to path traversal", dir.c_str());
+                continue;
+            }
+            filteredDirs.emplace_back(dir);
+        }
+        innerBundleInfo.SetModuleLibrarySupportDirectory(filteredDirs);
+    }
+    return ERR_OK;
+}
+
 OverlayMsg ModuleProfile::ObtainOverlayType(const nlohmann::json &jsonObject) const
 {
     APP_LOGD("check if overlay installation");
@@ -3117,6 +3161,12 @@ ErrCode ModuleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_AN_FAILED;
 #endif
         APP_LOGW("Parser ark native file failed");
+    }
+
+    ErrCode ret = ProcessLibrarySupportDirectory(moduleJson.module.librarySupportDirectory, innerBundleInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("ProcessLibrarySupportDirectory failed, ret: %{public}d", ret);
+        return ret;
     }
     return ERR_OK;
 }

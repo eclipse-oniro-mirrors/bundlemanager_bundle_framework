@@ -1742,7 +1742,7 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoV9(const std::string &hapFilePath, i
         APP_LOGE("fail to GetBundleArchiveInfoV9 due to write flags fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfoWithErrCode<BundleInfo>(
+    return GetParcelInfoIntelligent<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
 }
 
@@ -3442,7 +3442,8 @@ ErrCode BundleMgrProxy::GetSandboxBundleInfo(const std::string &bundleName, int3
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<BundleInfo>(BundleMgrInterfaceCode::GET_SANDBOX_APP_BUNDLE_INFO, data, info);
+    return GetParcelInfoIntelligent<BundleInfo>(
+        BundleMgrInterfaceCode::GET_SANDBOX_APP_BUNDLE_INFO, data, info);
 }
 
 bool BundleMgrProxy::GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
@@ -3975,7 +3976,7 @@ ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, 
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<HapModuleInfo>(BundleMgrInterfaceCode::GET_SANDBOX_MODULE_INFO, data, info);
+    return GetParcelInfoIntelligent<HapModuleInfo>(BundleMgrInterfaceCode::GET_SANDBOX_MODULE_INFO, data, info);
 }
 
 ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::string &moduleName,
@@ -5840,8 +5841,7 @@ ErrCode BundleMgrProxy::GetCloneBundleInfo(const std::string &bundleName, int32_
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<BundleInfo>(
-        BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO, data, bundleInfo);
+    return GetParcelInfoIntelligent<BundleInfo>(BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO, data, bundleInfo);
 }
 
 ErrCode BundleMgrProxy::GetCloneBundleInfoExt(const std::string &bundleName, uint32_t flags, int32_t appIndex,
@@ -5871,8 +5871,7 @@ ErrCode BundleMgrProxy::GetCloneBundleInfoExt(const std::string &bundleName, uin
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<BundleInfo>(
-        BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO_EXT, data, bundleInfo);
+    return GetParcelInfoIntelligent<BundleInfo>(BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO_EXT, data, bundleInfo);
 }
 
 ErrCode BundleMgrProxy::GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
@@ -6743,7 +6742,7 @@ ErrCode BundleMgrProxy::GetPluginHapModuleInfo(const std::string &hostBundleName
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<HapModuleInfo>(
+    return GetParcelInfoIntelligent<HapModuleInfo>(
         BundleMgrInterfaceCode::GET_PLUGIN_HAP_MODULE_INFO, data, hapModuleInfo);
 }
 

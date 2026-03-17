@@ -1807,10 +1807,7 @@ ErrCode BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlagsV9(MessageParcel &d
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
-        if (!reply.WriteParcelable(&info)) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
+        return WriteParcelInfoIntelligent<BundleInfo>(info, reply);
     }
     return ERR_OK;
 }
@@ -3022,7 +3019,7 @@ ErrCode BundleMgrHost::HandleGetSandboxBundleInfo(MessageParcel &data, MessagePa
         APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
-    if ((res == ERR_OK) && (!reply.WriteParcelable(&info))) {
+    if ((res == ERR_OK) && (WriteParcelInfoIntelligent<BundleInfo>(info, reply) != ERR_OK)) {
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -3227,9 +3224,8 @@ ErrCode BundleMgrHost::HandleGetSandboxHapModuleInfo(MessageParcel &data, Messag
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if ((res == ERR_OK) && (!reply.WriteParcelable(&info))) {
-        APP_LOGE("write hap module info failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (res == ERR_OK) {
+        return WriteParcelInfoIntelligent<HapModuleInfo>(info, reply);
     }
     return ERR_OK;
 }
@@ -4547,9 +4543,8 @@ ErrCode BundleMgrHost::HandleGetCloneBundleInfo(MessageParcel &data, MessageParc
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret == ERR_OK && !reply.WriteParcelable(&bundleInfo)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (ret == ERR_OK) {
+        return WriteParcelInfoIntelligent<BundleInfo>(bundleInfo, reply);
     }
     return ERR_OK;
 }
@@ -4568,9 +4563,8 @@ ErrCode BundleMgrHost::HandleGetCloneBundleInfoExt(MessageParcel &data, MessageP
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret == ERR_OK && !reply.WriteParcelable(&bundleInfo)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (ret == ERR_OK) {
+        return WriteParcelInfoIntelligent<BundleInfo>(bundleInfo, reply);
     }
     return ERR_OK;
 }
@@ -5136,10 +5130,7 @@ ErrCode BundleMgrHost::HandleGetPluginHapModuleInfo(MessageParcel &data, Message
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
-        if (!reply.WriteParcelable(&info)) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
+        return WriteParcelInfoIntelligent<HapModuleInfo>(info, reply);
     }
     return ERR_OK;
 }

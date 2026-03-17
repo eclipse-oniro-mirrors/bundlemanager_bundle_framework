@@ -388,6 +388,7 @@ constexpr const char* MODULE_PROCESS = "process";
 constexpr const char* MODULE_MAIN_ELEMENT = "mainElement";
 constexpr const char* MODULE_DEVICE_TYPES = "deviceTypes";
 constexpr const char* MODULE_REQUIRED_DEVICE_FEATURES = "requiredDeviceFeatures";
+constexpr const char* MODULE_LIBRARY_SUPPORT_DIRECTORY = "librarySupportDirectory";
 constexpr const char* MODULE_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
