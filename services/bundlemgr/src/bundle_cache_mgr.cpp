@@ -137,7 +137,7 @@ ErrCode BundleCacheMgr::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
     }
 
     inodeCount = totalInodeCount;
-    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "succeeded, uid: %{public}d, inodeCount: %{public}" PRIu64,
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "succeeded, uid: %{public}d, inodeCount: %{public}llu",
         uid, inodeCount);
 
     return ERR_OK;
