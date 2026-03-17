@@ -48,8 +48,8 @@ bool CheckSystemInodeSatisfied(const std::string &bundleName)
         LOG_E(BMS_TAG_INSTALLER, "free inodes not satisfied");
         return false;
     }
-    LOG_D(BMS_TAG_INSTALLER, "total inodes: %{public}lu, free inodes: %{public}lu",
-        static_cast<unsigned long>(stat.f_files), static_cast<unsigned long>(stat.f_ffree));
+    LOG_D(BMS_TAG_INSTALLER, "total inodes: %{public}llu, free inodes: %{public}llu",
+        stat.f_files, stat.f_ffree);
     return BundleUtil::CheckOrphanNodeUseRateIsSufficient();
 }
 } // namespace
