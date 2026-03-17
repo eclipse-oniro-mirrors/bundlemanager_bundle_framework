@@ -220,8 +220,8 @@ bool IdleConditionMgr::CheckInodeForCommericalDevice()
         APP_LOGI("free inodes over threshold");
         return false;
     }
-    APP_LOGD("total inodes: %{public}lu, free inodes: %{public}lu",
-        static_cast<unsigned long>(stat.f_files), static_cast<unsigned long>(stat.f_ffree));
+    APP_LOGD("total inodes: %{public}llu, free inodes: %{public}llu",
+        stat.f_files, stat.f_ffree);
     return true;
 }
 
