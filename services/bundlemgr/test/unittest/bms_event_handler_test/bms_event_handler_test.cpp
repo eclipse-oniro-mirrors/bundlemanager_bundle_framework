@@ -3227,6 +3227,26 @@ HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0100, Function | SmallTest |
 }
 
 /**
+ * @tc.number: GetBundleNameAndUserIdFromPath_0100
+ * @tc.name: GetBundleNameAndUserIdFromPath
+ * @tc.desc: test GetBundleNameAndUserIdFromPath
+ */
+HWTEST_F(BmsEventHandlerTest, GetBundleNameAndUserIdFromPath_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::string path;
+    std::vector<int32_t> userIds;
+    std::string bundleName;
+    auto ret = handler->GetBundleNameAndUserIdFromPath(path, userIds, bundleName);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(bundleName.empty());
+    bundleName = BUNDLE_NAME;
+    ret = handler->GetBundleNameAndUserIdFromPath(path, userIds, bundleName);
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: InnerProcessUninstallAppServiceModule_0100
  * @tc.name: InnerProcessUninstallAppServiceModule
  * @tc.desc: test InnerProcessUninstallAppServiceModule

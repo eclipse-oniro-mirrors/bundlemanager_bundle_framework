@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -153,7 +153,11 @@ int32_t AccountHelper::GetCurrentActiveUserIdWithRetry(bool isOtaInstall)
 
 int32_t AccountHelper::GetUserIdByDisplayIdWithRetry(const uint64_t displayId)
 {
-    return Constants::INVALID_USERID;
+    if (displayId == 1) {
+        return Constants::START_USERID;
+    } else {
+        return Constants::INVALID_USERID;
+    }
 }
 
 bool AccountHelper::CheckOsAccountConstraintEnabled(const int32_t userId, const std::string &constraint)
