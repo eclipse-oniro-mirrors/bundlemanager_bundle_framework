@@ -151,6 +151,11 @@ int32_t AccountHelper::GetCurrentActiveUserIdWithRetry(bool isOtaInstall)
 #endif
 }
 
+int32_t AccountHelper::GetUserIdByDisplayIdWithRetry(const uint64_t displayId)
+{
+    return Constants::INVALID_USERID;
+}
+
 bool AccountHelper::CheckOsAccountConstraintEnabled(const int32_t userId, const std::string &constraint)
 {
     return true;
