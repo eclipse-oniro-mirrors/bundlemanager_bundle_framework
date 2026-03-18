@@ -29,11 +29,15 @@ void RouterMapHelper::MergeRouter(BundleInfo &info, const std::vector<RouterItem
     std::vector<RouterItem> routerArrayList;
     std::set<std::string> moduleNameSet;
     std::set<std::string> nameSet;
-    for (const auto &hapModuleInfo : info.hapModuleInfos) {
+    for (auto &hapModuleInfo : info.hapModuleInfos) {
         if (hapModuleInfo.moduleType == ModuleType::ENTRY || hapModuleInfo.moduleType == ModuleType::FEATURE) {
             moduleNameSet.insert(hapModuleInfo.name);
         }
-        for (const auto &routerItem : hapModuleInfo.routerArray) {
+        for (auto &routerItem : hapModuleInfo.routerArray) {
+            if (routerItem.bundleName != info.name) {
+                APP_LOGI_NOFUNC("Updating bundle name for router item: %{public}s", routerItem.name.c_str());
+                routerItem.bundleName = info.name;
+            }
             routerArrayList.emplace_back(routerItem);
             nameSet.insert(routerItem.name);
         }

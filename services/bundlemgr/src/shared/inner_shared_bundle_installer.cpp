@@ -913,6 +913,8 @@ void InnerSharedBundleInstaller::UpdateRouterInfoForSharedBundle(const InnerBund
         APP_LOGE("Get dataMgr shared_ptr nullptr");
         return;
     }
+    // delete old router info before insert, in case of same version update with router deleted
+    dataMgr->DeleteRouterInfoForSharedBundle(newBundleInfo, newBundleInfo.GetVersionCode());
     dataMgr->InsertRouterInfo(newBundleInfo);
 }
 }  // namespace AppExecFwk

@@ -1885,4 +1885,36 @@ HWTEST_F(BmsBundleNavigationTest, UninstallDataMgrStorageRdb_0008, Function | Sm
     auto ret = uninstallDataMgrStorageRdb->DeleteUninstallBundleInfo(bundleName);
     EXPECT_FALSE(ret);
 }
+/**
+ * @tc.number: RouterMapMerge_0014
+ * @tc.name: test merge function for router map
+ * @tc.desc: 1.RouterMapMerge
+ *          2.test routerItem.bundleName updated when different from BundleInfo.name
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterMapMerge_0014, Function | SmallTest | Level0)
+{
+    ASSERT_EQ(routerArrayTest_.size(), ROUTER_ITEM_TEST_SIZE);
+    BundleInfo info;
+    info.name = "com.example.test";
+    
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.moduleName = "entry";
+    hapModuleInfo.moduleType = ModuleType::ENTRY;
+    
+    RouterItem routerItem;
+    routerItem.name = "DynamicPage1";
+    routerItem.bundleName = "com.example.different";
+    routerItem.pageSourceFile = "entry/src/index";
+    routerItem.buildFunction = "myBuildFunction1";
+    routerItem.ohmurl = "ohmurlTest&com.example.test&entry&entry/resources/base/profile&1.2.1";
+    routerItem.moduleName = "entry";
+    
+    hapModuleInfo.routerArray.emplace_back(routerItem);
+    info.hapModuleInfos.emplace_back(hapModuleInfo);
+
+    RouterMapHelper::MergeRouter(info);
+    
+    ASSERT_EQ(info.routerArray.size(), static_cast<size_t>(1));
+    EXPECT_EQ(info.routerArray[0].bundleName, "com.example.test");
+}
 } // OHOS
