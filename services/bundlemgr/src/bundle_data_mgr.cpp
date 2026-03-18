@@ -4869,7 +4869,7 @@ void BundleDataMgr::GetBundleModuleNames(const std::string &bundleName,
 
 bool BundleDataMgr::GetAllUnisntallBundleUids(const int32_t requestUserId,
     const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
-    std::vector<int32_t> &uids) const
+    std::unordered_set<int32_t> &uids) const
 {
     for (const auto &info : uninstallBundleInfos) {
         std::string bundleName = info.first;
@@ -4887,9 +4887,9 @@ bool BundleDataMgr::GetAllUnisntallBundleUids(const int32_t requestUserId,
         for (const auto& pair : info.second.userInfos) {
             const std::string& key = pair.first;
             if (key == mainBundle || key.find(cloneBundle) == 0) {
-                uids.push_back(pair.second.uid);
-                APP_LOGD("get uid: %{public}d for app: %{public}s", pair.second.uid,
-                    key.c_str());
+                uids.emplace(pair.second.uid);
+                APP_LOGI("get uid: %{public}d for app: %{public}s", pair.second.uid,
+                    bundleName.c_str());
             }
         }
     }
@@ -4897,7 +4897,7 @@ bool BundleDataMgr::GetAllUnisntallBundleUids(const int32_t requestUserId,
 }
 
 void BundleDataMgr::GetAllInstallBundleUids(const int32_t userId, const int32_t requestUserId, int32_t &responseUserId,
-    std::vector<int32_t> &uids, std::vector<std::string> &bundleNames) const
+    std::unordered_set<int32_t> &uids, std::vector<std::string> &bundleNames) const
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     responseUserId = userId;
@@ -4923,7 +4923,7 @@ void BundleDataMgr::GetAllInstallBundleUids(const int32_t userId, const int32_t 
         }
         for (int32_t appIndex: allAppIndexes) {
             int32_t uid = info.GetUid(responseUserId, appIndex);
-            uids.emplace_back(uid);
+            uids.emplace(uid);
         }
         if (isActiveUserId) {
             bundleNames.emplace_back(bundleName);
@@ -4933,7 +4933,7 @@ void BundleDataMgr::GetAllInstallBundleUids(const int32_t userId, const int32_t 
 
 bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const
 {
-    std::vector<int32_t> uids;
+    std::unordered_set<int32_t> uids;
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGE("invalid userid :%{public}d", userId);
@@ -4948,16 +4948,15 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
         for (const auto &bundleName : bundleNames) {
             auto saUids = GetBindingSAUidsByBundleName(bundleName, saUidMap);
             if (!saUids.empty()) {
-                std::unordered_set<int32_t> tempSet(uids.begin(), uids.end());
-                tempSet.insert(saUids.begin(), saUids.end());
-                uids.assign(tempSet.begin(), tempSet.end());
+                uids.insert(saUids.begin(), saUids.end());
             }
         }
     }
     std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
     GetAllUninstallBundleInfo(uninstallBundleInfos);
     GetAllUnisntallBundleUids(requestUserId, uninstallBundleInfos, uids);
-    if (InstalldClient::GetInstance()->GetAllBundleStats(responseUserId, bundleStats, uids) != ERR_OK) {
+    std::vector<int32_t> uidVec(uids.begin(), uids.end());
+    if (InstalldClient::GetInstance()->GetAllBundleStats(responseUserId, bundleStats, uidVec) != ERR_OK) {
         APP_LOGW("GetAllBundleStats failed, userId: %{public}d", responseUserId);
         return false;
     }

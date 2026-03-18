@@ -25,6 +25,7 @@
 #include <set>
 #include <shared_mutex>
 #include <string>
+#include <unordered_set>
 
 #include "bundle_dir.h"
 #include "want.h"
@@ -884,7 +885,7 @@ public:
     bool GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const;
     bool GetAllUnisntallBundleUids(const int32_t requestUserId,
         const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
-        std::vector<int32_t> &uids) const;
+        std::unordered_set<int32_t> &uids) const;
     bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
         std::vector<std::string> &dependentModuleNames);
@@ -1534,7 +1535,7 @@ private:
         std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
         std::vector<BundleStorageStats> &bundleStats) const;
     void GetAllInstallBundleUids(const int32_t userId, const int32_t requestUserId, int32_t &responseUserId,
-        std::vector<int32_t> &uids, std::vector<std::string> &bundleNames) const;
+        std::unordered_set<int32_t> &uids, std::vector<std::string> &bundleNames) const;
     bool ProcessUninstallBundle(std::vector<BundleOptionInfo> &bundleOptionInfos) const;
     void ProcessShortcutInfos(const InnerBundleInfo &info, const std::string moduleName, const std::string abilityName,
         const int32_t appIndex, const int32_t requestUserId, std::vector<ShortcutInfo> &shortcutInfos) const;
