@@ -405,7 +405,7 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, const std::string &
     }
 
     realBundleDir += std::string(ServiceConstants::PATH_SEPARATOR) + labelPath;
-    int32_t bundleIdFd = open(realBundleDir.c_str(), O_WRONLY | O_TRUNC);
+    int32_t bundleIdFd = open(realBundleDir.c_str(), O_WRONLY | O_TRUNC | O_UNCACHE);
     if (bundleIdFd < 0) {
         APP_LOGE("open file %{public}s failed, errorNo: %{public}d:%{public}s",
             realBundleDir.c_str(), errno, strerror(errno));
@@ -507,7 +507,7 @@ int32_t BundleUtil::CreateFileDescriptor(const std::string &bundlePath, long lon
         APP_LOGE("the length of the bundlePath exceeds maximum limitation");
         return fd;
     }
-    if ((fd = open(bundlePath.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)) < 0) {
+    if ((fd = open(bundlePath.c_str(), O_CREAT | O_RDWR | O_UNCACHE, S_IRUSR | S_IWUSR)) < 0) {
         APP_LOGE("open bundlePath %{public}s failed errno:%{public}d", bundlePath.c_str(), errno);
         return fd;
     }
@@ -530,7 +530,7 @@ int32_t BundleUtil::CreateFileDescriptorForReadOnly(const std::string &bundlePat
         return fd;
     }
 
-    if ((fd = open(realPath.c_str(), O_RDONLY)) < 0) {
+    if ((fd = open(realPath.c_str(), O_RDONLY | O_UNCACHE)) < 0) {
         APP_LOGE("open bundlePath %{public}s failed errno:%{public}d", realPath.c_str(), errno);
         return fd;
     }
@@ -751,29 +751,29 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
         return false;
     }
 
-    FILE* sourceFp = fopen(sourcePath.c_str(), "r");
-    if (sourceFp == nullptr) {
+    int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY | O_UNCACHE);
+    if (sourceFd < 0) {
         APP_LOGE("sourcePath open failed, errno : %{public}d", errno);
         return CopyFile(sourcePath, destPath);
     }
-    int32_t sourceFd = fileno(sourceFp);
+    fdsan_exchange_owner_tag(sourceFd, 0, LOG_DOMAIN);
     struct stat sourceStat;
     if (fstat(sourceFd, &sourceStat) == -1) {
         APP_LOGE("fstat failed, errno : %{public}d", errno);
-        (void)fclose(sourceFp);
+        fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
         return CopyFile(sourcePath, destPath);
     }
     if (sourceStat.st_size < 0) {
         APP_LOGE("invalid st_size");
-        (void)fclose(sourceFp);
+        fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
         return CopyFile(sourcePath, destPath);
     }
 
     int32_t destFd = open(
-        destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (destFd == -1) {
         APP_LOGE("destPath open failed, errno : %{public}d", errno);
-        (void)fclose(sourceFp);
+        fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
         return CopyFile(sourcePath, destPath);
     }
     fdsan_exchange_owner_tag(destFd, 0, LOG_DOMAIN);
@@ -788,12 +788,12 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
     if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
         APP_LOGE("sendfile failed, errno : %{public}d, send count : %{public}zu , file size : %{public}zu",
             errno, transferCount, static_cast<size_t>(sourceStat.st_size));
-        (void)fclose(sourceFp);
+        fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
         fdsan_close_with_tag(destFd, LOG_DOMAIN);
         return CopyFile(sourcePath, destPath);
     }
 
-    (void)fclose(sourceFp);
+    fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
     if (needFsync) {
         (void)fsync(destFd);
     }
