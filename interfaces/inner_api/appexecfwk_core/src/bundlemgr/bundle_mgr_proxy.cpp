@@ -2946,7 +2946,7 @@ ErrCode BundleMgrProxy::GetShortcutInfoV9(const std::string &bundleName,
         APP_LOGE("fail to GetShortcutInfos due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<ShortcutInfo>(
+    return GetVectorFromParcelIntelligentWithErrCode<ShortcutInfo>(
         BundleMgrInterfaceCode::GET_SHORTCUT_INFO_V9, data, shortcutInfos);
 }
 
@@ -2973,7 +2973,7 @@ ErrCode BundleMgrProxy::GetShortcutInfoByAppIndex(const std::string &bundleName,
         APP_LOGE("fail to GetShortcutInfoByAppIndex due to write appIndex fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<ShortcutInfo>(
+    return GetVectorFromParcelIntelligentWithErrCode<ShortcutInfo>(
         BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_APPINDEX, data, shortcutInfos);
 }
 
@@ -3025,7 +3025,7 @@ ErrCode BundleMgrProxy::GetShortcutInfoByAbility(const std::string &bundleName,
         APP_LOGE_NOFUNC("fail to GetShortcutInfoByAbility due to write appIndex fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<ShortcutInfo>(
+    return GetVectorFromParcelIntelligentWithErrCode<ShortcutInfo>(
         BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_ABILITY, data, shortcutInfos);
 }
 

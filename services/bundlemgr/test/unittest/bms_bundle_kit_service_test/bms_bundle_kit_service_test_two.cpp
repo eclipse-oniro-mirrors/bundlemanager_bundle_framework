@@ -2436,6 +2436,86 @@ HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoByAbility_0100, Function | Medi
 }
 
 /**
+ * @tc.number: GetShortcutInfoByAbility_0200
+ * @tc.name: test GetShortcutInfoByAbility
+ * @tc.desc: test GetShortcutInfoByAbility
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoByAbility_0200, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ErrCode testRet = hostImpl->GetShortcutInfoByAbility("", MODULE_NAME_TEST, ABILITY_NAME_TEST,
+        100, 0, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0300
+ * @tc.name: test GetShortcutInfoByAbility
+ * @tc.desc: test GetShortcutInfoByAbility
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoByAbility_0300, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ErrCode testRet = hostImpl->GetShortcutInfoByAbility(BUNDLE_NAME_TEST, "", ABILITY_NAME_TEST,
+        100, 0, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0400
+ * @tc.name: test GetShortcutInfoByAbility
+ * @tc.desc: test GetShortcutInfoByAbility
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoByAbility_0400, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ErrCode testRet = hostImpl->GetShortcutInfoByAbility(BUNDLE_NAME_TEST, MODULE_NAME_TEST, "",
+        100, 0, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0500
+ * @tc.name: test GetShortcutInfoByAbility
+ * @tc.desc: test GetShortcutInfoByAbility
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoByAbility_0500, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ErrCode testRet = hostImpl->GetShortcutInfoByAbility(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST,
+        100, -1, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAbility_0600
+ * @tc.name: test GetShortcutInfoByAbility
+ * @tc.desc: test GetShortcutInfoByAbility
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoByAbility_0600, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ErrCode testRet = hostImpl->GetShortcutInfoByAbility(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST,
+        100, 6, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: BundleStreamInstallerHostImplInit_0100
  * @tc.name: test Init
  * @tc.desc: Init is false

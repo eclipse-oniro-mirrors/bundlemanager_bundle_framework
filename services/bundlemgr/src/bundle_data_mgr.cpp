@@ -6721,8 +6721,7 @@ ErrCode BundleDataMgr::GetShortcutInfoByAbility(const std::string &bundleName,
         info.appIndex = appIndex;
     }
 
-    ProcessDynamicShortcutInfo(*innerBundleInfo, appIndex, requestUserId, allShortcutInfos);
-    shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, allShortcutInfos);
+    ProcessShortcutInfos(*innerBundleInfo, moduleName, abilityName, appIndex, requestUserId, allShortcutInfos);
 
     // Filter by host ability
     for (const auto &shortcutInfo : allShortcutInfos) {
@@ -6734,18 +6733,32 @@ ErrCode BundleDataMgr::GetShortcutInfoByAbility(const std::string &bundleName,
     return ERR_OK;
 }
 
-void BundleDataMgr::ProcessDynamicShortcutInfo(const InnerBundleInfo &innerBundleInfo, const int32_t appIndex,
+void BundleDataMgr::ProcessShortcutInfos(const InnerBundleInfo &innerBundleInfo, const std::string moduleName,
+    const std::string abilityName, const int32_t appIndex,
     const int32_t requestUserId, std::vector<ShortcutInfo> &shortcutInfos) const
 {
-    std::vector<ShortcutInfo> dynamicShortcutInfos;
-    shortcutVisibleStorage_->GetStorageShortcutInfos(innerBundleInfo.GetBundleName(), appIndex,
-        requestUserId, dynamicShortcutInfos);
+    auto moduleInfo = innerBundleInfo.GetInnerModuleInfoForEntry();
     std::string mainAbilityName = innerBundleInfo.GetMainAbility();
-    for (auto &shortcut : dynamicShortcutInfos) {
+    std::string bundleName = innerBundleInfo.GetBundleName();
+    if (!moduleInfo) {
+        APP_LOGW("bundle %{public}s has no entry", bundleName.c_str());
+        shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex,
+            requestUserId, shortcutInfos, true);
+    } else {
+        if (moduleName == moduleInfo->moduleName && abilityName == mainAbilityName) {
+            shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex,
+                requestUserId, shortcutInfos);
+            shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
+        } else {
+            shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex,
+                requestUserId, shortcutInfos, true);
+        }
+    }
+    
+    for (auto &shortcut : shortcutInfos) {
         if (shortcut.hostAbility.empty()) {
             shortcut.hostAbility = mainAbilityName;
         }
-        shortcutInfos.emplace_back(shortcut);
     }
 }
 
