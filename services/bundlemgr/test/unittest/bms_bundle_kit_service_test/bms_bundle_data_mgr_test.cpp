@@ -19,6 +19,7 @@
 #include <chrono>
 #include <fstream>
 #include <thread>
+#include <unordered_set>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -4778,7 +4779,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetTestRunner_0200, Function | MediumTest | Level
  */
 HWTEST_F(BmsBundleDataMgrTest, UninstallBundleInfo_0002, Function | SmallTest | Level1)
 {
-    std::vector<int32_t> uids;
+    std::unordered_set<int32_t> uids;
     // test add one uninstallbudnleinfo, but no userInfos
     std::string bundleName = "com.test.UninstallBundleInfo_0002_1";
     UninstallBundleInfo uninstallBundleInfo;
@@ -4833,7 +4834,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllUnisntallBundleUids_0001, Function | SmallT
     ResetDataMgr();
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
-    std::vector<int32_t> uids;
+    std::unordered_set<int32_t> uids;
     std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
 
     // add four uninstallbudnleinfo
@@ -6854,7 +6855,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0100, Function | SmallTes
     innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
     innerBundleInfo.SetApplicationBundleType(BundleType::SHARED);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
-    std::vector<int32_t> uids;
+    std::unordered_set<int32_t> uids;
     std::vector<std::string> bundleNames;
     int32_t responseUserId = USERID;
     dataMgr->GetAllInstallBundleUids(USERID, Constants::ANY_USERID, responseUserId, uids, bundleNames);
@@ -6878,7 +6879,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0200, Function | SmallTes
     innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
     innerBundleInfo.SetApplicationBundleType(BundleType::APP);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
-    std::vector<int32_t> uids;
+    std::unordered_set<int32_t> uids;
     std::vector<std::string> bundleNames;
     int32_t responseUserId = USERID;
     dataMgr->GetAllInstallBundleUids(USERID, Constants::ANY_USERID, responseUserId, uids, bundleNames);
@@ -6902,7 +6903,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0300, Function | SmallTes
     innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
     innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
-    std::vector<int32_t> uids;
+    std::unordered_set<int32_t> uids;
     std::vector<std::string> bundleNames;
     int32_t responseUserId = USERID;
     dataMgr->GetAllInstallBundleUids(USERID, Constants::ANY_USERID, responseUserId, uids, bundleNames);
@@ -6926,7 +6927,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0400, Function | SmallTes
     innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
     innerBundleInfo.SetApplicationBundleType(BundleType::APP);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
-    std::vector<int32_t> uids;
+    std::unordered_set<int32_t> uids;
     std::vector<std::string> bundleNames;
     int32_t responseUserId = USERID;
     dataMgr->GetAllInstallBundleUids(USERID, Constants::ANY_USERID, responseUserId, uids, bundleNames);
@@ -6950,7 +6951,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0500, Function | SmallTes
     innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
     innerBundleInfo.SetApplicationBundleType(BundleType::APP);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
-    std::vector<int32_t> uids;
+    std::unordered_set<int32_t> uids;
     std::vector<std::string> bundleNames;
     int32_t responseUserId = USERID;
     dataMgr->GetAllInstallBundleUids(USERID, Constants::ANY_USERID, responseUserId, uids, bundleNames);
