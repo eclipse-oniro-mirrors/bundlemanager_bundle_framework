@@ -738,6 +738,9 @@ private:
     static std::vector<std::string> ObtainRealPath(const std::vector<std::string> &paths);
     void RegisterRelabelEvent();
     bool ProcessIdleInfo();
+    static bool GetBundleNameAndUserIdFromPath(const std::string &path, std::vector<int32_t> &userIds,
+        std::string &bundleName);
+    void LoadPreInstallWhiteList();
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;

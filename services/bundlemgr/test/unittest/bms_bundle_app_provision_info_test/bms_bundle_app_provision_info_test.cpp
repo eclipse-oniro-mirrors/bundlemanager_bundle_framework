@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1282,6 +1282,12 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ParseHapFiles_0001, Function | SmallTest
     std::unordered_map<std::string, InnerBundleInfo> infos;
     auto iter = handler->ParseHapFiles(HSP_FILE_PATH1, infos);
     EXPECT_EQ(iter, true);
+
+    std::vector<int32_t> userIds;
+    std::string bundleName;
+    auto ret = handler->GetBundleNameAndUserIdFromPath(HSP_FILE_PATH1, userIds, bundleName);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(bundleName.empty());
 
     ErrCode unInstallResult = UninstallSharedBundle(HSP_BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);

@@ -69,6 +69,7 @@
                 "memmgr",
                 "kv_store",
                 "libpng",
+                "libxml2",
                 "libuv",
                 "napi",
                 "openssl",

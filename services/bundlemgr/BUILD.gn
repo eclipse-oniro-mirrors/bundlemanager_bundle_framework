@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -202,6 +202,7 @@ ohos_source_set("bundle_parser") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "libxml2:libxml2",
   ]
 
   public_external_deps = [
@@ -370,6 +371,7 @@ ohos_shared_library("libbms") {
     "hitrace:libhitracechain",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "libxml2:libxml2",
     "memmgr:memmgrclient",
     "os_account:libaccountkits",
     "safwk:system_ability_fwk",
@@ -638,6 +640,7 @@ ohos_shared_library("installs") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "libxml2:libxml2",
     "memmgr:memmgrclient",
     "openssl:libcrypto_shared",
     "safwk:system_ability_fwk",
