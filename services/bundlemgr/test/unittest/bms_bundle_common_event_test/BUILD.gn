@@ -76,6 +76,7 @@ ohos_unittest("BmsBundleCommonEventMgrTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "libxml2:libxml2",
     "json:nlohmann_json_static",
     "jsoncpp:jsoncpp",
     "os_account:os_account_innerkits",
