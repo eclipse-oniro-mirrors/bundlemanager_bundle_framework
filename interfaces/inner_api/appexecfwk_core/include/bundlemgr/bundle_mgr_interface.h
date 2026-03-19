@@ -1809,6 +1809,11 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode GetOdidResetCount(const std::string &bundleName, std::string &odid, int32_t &count)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;

@@ -1689,5 +1689,56 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAllAppInstallExtendedInfo_0100, Function | Me
     ErrCode ret = bundleMgrProxy.GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
+
+/**
+ * @tc.number: GetOdidResetCount_0100
+ * @tc.name: test GetOdidResetCount with null remote object
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify GetOdidResetCount returns error
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetOdidResetCount_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "com.example.test";
+    int32_t count = 0;
+    std::string odid;
+    ErrCode ret = bundleMgrProxy.GetOdidResetCount(bundleName, odid, count);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetOdidResetCount_0200
+ * @tc.name: test GetOdidResetCount with empty bundleName
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify GetOdidResetCount with empty bundleName
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetOdidResetCount_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "";
+    int32_t count = 0;
+    std::string odid;
+    ErrCode ret = bundleMgrProxy.GetOdidResetCount(bundleName, odid, count);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetOdidResetCount_0300
+ * @tc.name: test GetOdidResetCount normal call
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify GetOdidResetCount returns parcel error when IPC fails
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetOdidResetCount_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "com.example.testbundle";
+    int32_t count = 0;
+    std::string odid;
+    ErrCode ret = bundleMgrProxy.GetOdidResetCount(bundleName, odid, count);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
 }
 }

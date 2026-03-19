@@ -1343,5 +1343,39 @@ HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleResourceHostImpl_0010, 
         optiontList, flags, launcherAbilityResourceInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: BundleMgrHostImpl_GetOdidResetCount_0001
+ * @tc.name: GetOdidResetCount
+ * @tc.desc: GetOdidResetCount VerifyCallingPermissionsForAll denied
+ */
+HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_GetOdidResetCount_0001, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "com.example.test";
+    int32_t count = 0;
+    std::string odid;
+    auto ret = localBundleMgrHostImpl->GetOdidResetCount(bundleName, odid, count);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_GetOdidResetCount_0002
+ * @tc.name: GetOdidResetCount with empty bundleName
+ * @tc.desc: GetOdidResetCount VerifyCallingPermissionsForAll denied with empty bundleName
+ */
+HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_GetOdidResetCount_0002, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "";
+    int32_t count = 0;
+    std::string odid;
+    auto ret = localBundleMgrHostImpl->GetOdidResetCount(bundleName, odid, count);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 #endif
 } // namespace OHOS

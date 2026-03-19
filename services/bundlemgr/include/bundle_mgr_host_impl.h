@@ -1175,6 +1175,8 @@ public:
 
     virtual ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) override;
 
+    virtual ErrCode GetOdidResetCount(const std::string &bundleName, std::string &odid, int32_t &count) override;
+
     virtual ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) override;
 
     virtual ErrCode GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo) override;

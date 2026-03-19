@@ -4019,6 +4019,18 @@ bool BaseBundleInstaller::SaveFirstInstallBundleInfo(const std::string &bundleNa
         LOG_E(BMS_TAG_INSTALLER, "failed to add first install info for bundle %{public}s", bundleName.c_str());
         return false;
     }
+    // Save odidResetCount and lastOdid from InnerBundleInfo
+    InnerBundleInfo innerBundleInfo;
+    FirstInstallBundleInfo odidCount;
+    if (GetTempBundleInfo(innerBundleInfo)) {
+        std::string currentOdid;
+        innerBundleInfo.GetOdid(currentOdid);
+        odidCount.lastOdid = currentOdid;
+        LOG_I(BMS_TAG_INSTALLER, "save odidResetCount for %{public}s", bundleName.c_str());
+    }
+    if (!dataMgr_->AddFirstInstallBundleInfo(bundleName, Constants::ALL_USERID, odidCount)) {
+        LOG_W(BMS_TAG_INSTALLER, "failed to add odidCount for bundle %{public}s", bundleName.c_str());
+    }
     return true;
 }
 
