@@ -82,10 +82,6 @@ constexpr uint32_t ID_INVALID = 0;
 constexpr const char* COLON = ":";
 constexpr const char* DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE = "Cover";
 constexpr const char* APP_INSTALL_PREFIX = "+app_install+";
-// ELF file format constants
-// constexpr int EI_NIDENT = 16;
-// constexpr int SELFMAG = 4;
-// constexpr char ELFMAG[SELFMAG + 1] = "\177ELF";
 }
 
 std::mutex BundleUtil::g_mutex;
@@ -1601,24 +1597,24 @@ bool BundleUtil::IsExecutableBinaryFile(const std::string &filePath)
     size_t readLen = fread(buff, sizeof(char), EI_NIDENT, fp);
     if (readLen != EI_NIDENT) {
         APP_LOGD("Failed to read ELF ident: %{private}s", filePath.c_str());
-        fclose(fp);
+        (void)fclose(fp);
         return false;
     }
     if (memcmp(buff, ELFMAG, SELFMAG) != 0) {
         APP_LOGD("Not an ELF file: %{private}s", filePath.c_str());
-        fclose(fp);
+        (void)fclose(fp);
         return false;
     }
     uint8_t elfClass = static_cast<uint8_t>(buff[EI_CLASS]);
     if (elfClass != ELFCLASS32 && elfClass != ELFCLASS64) {
         APP_LOGD("Unknown ELF class: %{public}d for file: %{private}s", elfClass, filePath.c_str());
-        fclose(fp);
+        (void)fclose(fp);
         return false;
     }
     int ret = fseek(fp, 0, SEEK_SET);
     if (ret != 0) {
         APP_LOGD("Failed to seek file: %{private}s", filePath.c_str());
-        fclose(fp);
+        (void)fclose(fp);
         return false;
     }
     bool isExec = false;
@@ -1627,7 +1623,7 @@ bool BundleUtil::IsExecutableBinaryFile(const std::string &filePath)
         readLen = fread(&ehdr, sizeof(Elf32_Ehdr), 1, fp);
         if (readLen != 1) {
             APP_LOGD("Failed to read ELF32 header: %{private}s", filePath.c_str());
-            fclose(fp);
+            (void)fclose(fp);
             return false;
         }
         isExec = (ehdr.e_type == ET_DYN && ehdr.e_entry != 0) || (ehdr.e_type == ET_EXEC);
@@ -1637,13 +1633,13 @@ bool BundleUtil::IsExecutableBinaryFile(const std::string &filePath)
         readLen = fread(&ehdr, sizeof(Elf64_Ehdr), 1, fp);
         if (readLen != 1) {
             APP_LOGD("Failed to read ELF64 header: %{private}s", filePath.c_str());
-            fclose(fp);
+            (void)fclose(fp);
             return false;
         }
         isExec = (ehdr.e_type == ET_DYN && ehdr.e_entry != 0) || (ehdr.e_type == ET_EXEC);
         APP_LOGD("ELF64 file %{private}s isExec: %{public}d", filePath.c_str(), isExec);
     }
-    fclose(fp);
+    (void)fclose(fp);
     return isExec;
 }
 }  // namespace AppExecFwk

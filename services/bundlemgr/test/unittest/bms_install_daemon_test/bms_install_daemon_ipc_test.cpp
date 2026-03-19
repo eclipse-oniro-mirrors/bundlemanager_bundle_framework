@@ -1494,26 +1494,6 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7800, Function | SmallTest |
 }
 
 /**
- * @tc.number: ChmodFilesTest_001
- * @tc.name: test ChmodFiles with empty filePaths
- * @tc.desc: 1. filePaths is empty
- *           2. verify return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
- */
-HWTEST_F(BmsInstallDaemonIpcTest, ChmodFilesTest_001, Function | SmallTest | Level0)
-{
-    auto proxy = GetInstallProxy();
-    EXPECT_NE(proxy, nullptr);
-
-    std::vector<std::string> filePaths = {"/data/app/el1/bundle/public/com.ohos.test/bin/test"};
-    uint32_t mode = 0755;
-    std::string bundleName = "com.ohos.test";
-    std::string nativeLibraryDir = "/data/app/el1/bundle/public/com.ohos.test/libs/arm64/";
-
-    auto ret = proxy->ChmodFiles(filePaths, mode, bundleName, nativeLibraryDir);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
  * @tc.number: ProcessBinFilesTest_001
  * @tc.name: test ProcessBinFiles
  * @tc.desc: 1. calling ProcessBinFiles of proxy

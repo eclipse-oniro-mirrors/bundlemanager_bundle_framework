@@ -79,7 +79,6 @@
                 "resource_management",
                 "samgr",
                 "selinux",
-                "security_privacy_server",
                 "selinux_adapter",
                 "syscap_codec",
                 "storage_service",
