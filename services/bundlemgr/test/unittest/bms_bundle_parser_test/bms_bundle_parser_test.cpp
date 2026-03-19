@@ -5997,60 +5997,6 @@ HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0013, Function | SmallTest
     EXPECT_EQ(inodes, 3);
 }
 
-/**
-* @tc.number: GetExtractedFileInodes_0014
-* @tc.name: test BundleExtractor::GetExtractedFileInodes with only hnp condition
-* @tc.desc: 1. test with only hnp extraction enabled
-*           2. verify HNP files are counted
-*/
-HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0014, Function | SmallTest | Level0)
-{
-    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
-    BundleExtractor bundleExtractor(bundlePath);
-
-    std::vector<OHOS::AppExecFwk::HnpPackage> hnpPackages;
-    OHOS::AppExecFwk::HnpPackage hnpPkg;
-    hnpPkg.package = "test_hnp";
-    hnpPackages.push_back(hnpPkg);
-
-    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
-        false,        // isCompressNativeLibrary
-        false,        // hasArkNativeFile
-        hnpPackages);  // hnpPackages
-    EXPECT_GE(totalInodes, 0);
-}
-
-/**
-* @tc.number: GetExtractedFileInodes_0015
-* @tc.name: test BundleExtractor::GetExtractedFileInodes all conditions disabled
-* @tc.desc: 1. test with all extraction conditions disabled
-*           2. verify only AP and resources files are counted
-*/
-HWTEST_F(BmsBundleParserTest, GetExtractedFileInodes_0015, Function | SmallTest | Level0)
-{
-    std::string bundlePath = RESOURCE_ROOT_PATH + "base.hap";
-    BundleExtractor bundleExtractor(bundlePath);
-
-    uint32_t totalInodes = bundleExtractor.GetExtractedFileInodes(
-        false,  // isCompressNativeLibrary
-        false,  // hasArkNativeFile
-        {});     // hnpPackages
-    EXPECT_GE(totalInodes, 0);
-}
-
-/**
-* @tc.number: CalculateRequiredInodes_0013
-* @tc.name: test BundleExtractor::CalculateRequiredInodes just below threshold 2
-* @tc.desc: 1. fileSize = 11835 KB (threshold 2 - 1)
-*           2. verify inode count = 3
-*/
-HWTEST_F(BmsBundleParserTest, CalculateRequiredInodes_0013, Function | SmallTest | Level0)
-{
-    uint64_t fileSizeKb = 11835;
-    uint32_t inodes = BundleExtractor::CalculateRequiredInodes(fileSizeKb);
-    EXPECT_EQ(inodes, 3);
-}
-
 HWTEST_F(BmsBundleParserTest, JsonParse_ValidJson_0100, Function | SmallTest | Level1)
 {
     std::string data = R"({"name": "test", "value": 123})";
