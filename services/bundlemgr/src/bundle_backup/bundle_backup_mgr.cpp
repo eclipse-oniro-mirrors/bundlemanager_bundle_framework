@@ -80,7 +80,7 @@ ErrCode BundleBackupMgr::OnRestore(MessageParcel& data, MessageParcel& reply)
         APP_LOGE("Invalid JSON format");
         return ERR_APPEXECFWK_BACKUP_INVALID_JSON_STRUCTURE;
     }
-    auto json = nlohmann::json::parse(config, nullptr, false);
+    auto json = nlohmann::json::parse(config, nullptr, false, true);
     if (json.is_null()) {
         APP_LOGE("Invalid JSON structure");
         return ERR_APPEXECFWK_BACKUP_INVALID_JSON_STRUCTURE;

@@ -2457,7 +2457,7 @@ ErrCode BundleProfile::TransformTo(
     InnerBundleInfo &innerBundleInfo) const
 {
     APP_LOGI("transform profile stream to bundle info");
-    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
@@ -2492,7 +2492,7 @@ ErrCode BundleProfile::TransformTo(
 ErrCode BundleProfile::TransformTo(const std::ostringstream &source, BundlePackInfo &bundlePackInfo)
 {
     APP_LOGD("transform packinfo stream to bundle pack info");
-    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;

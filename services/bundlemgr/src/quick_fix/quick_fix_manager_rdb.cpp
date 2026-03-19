@@ -96,7 +96,7 @@ bool QuickFixManagerRdb::GetAllDataFromDb(std::map<std::string, InnerAppQuickFix
         return false;
     }
     for (auto iter = values.begin(); iter != values.end(); ++iter) {
-        nlohmann::json jsonObject = nlohmann::json::parse(iter->second, nullptr, false);
+        nlohmann::json jsonObject = nlohmann::json::parse(iter->second, nullptr, false, true);
         InnerAppQuickFix appQuickFix;
         if (jsonObject.is_discarded() || (appQuickFix.FromJson(jsonObject) != ERR_OK)) {
             LOG_E(BMS_TAG_DEFAULT, "error key : %{public}s", iter->first.c_str());
@@ -122,7 +122,7 @@ bool QuickFixManagerRdb::GetDataFromDb(const std::string &bundleName, InnerAppQu
         return false;
     }
 
-    nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false, true);
     if (jsonObject.is_discarded() || (innerAppQuickFix.FromJson(jsonObject) != ERR_OK)) {
         LOG_E(BMS_TAG_DEFAULT, "error key : %{public}s", bundleName.c_str());
         rdbDataManager_->DeleteData(bundleName);

@@ -122,7 +122,7 @@ void ShortcutDataStorageRdb::GetAllDesktopShortcutInfo(int32_t userId, std::vect
             APP_LOGE("GetString shortcutInfo failed, ret: %{public}d", ret);
             return;
         }
-        nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
+        nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false, true);
         if (jsonObject.is_discarded()) {
             APP_LOGE("Shortcut jsonObject is discarded");
             return;
@@ -221,7 +221,7 @@ void ShortcutDataStorageRdb::GetDesktopShortcutInfosByDefaultUserId(std::vector<
             APP_LOGE("GetString shortcutInfo failed, ret: %{public}d", ret);
             return;
         }
-        nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
+        nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false, true);
         if (jsonObject.is_discarded()) {
             APP_LOGE("Shortcut jsonObject is discarded");
             return;
@@ -277,7 +277,7 @@ bool ShortcutDataStorageRdb::GetAllTableDataToJson(nlohmann::json &jsonResult)
         
         std::string shortcutInfoJson;
         if (absSharedResultSet->GetString(SHORTCUT_INFO_INDEX, shortcutInfoJson) == NativeRdb::E_OK) {
-            auto jsonObj = nlohmann::json::parse(shortcutInfoJson, nullptr, false);
+            auto jsonObj = nlohmann::json::parse(shortcutInfoJson, nullptr, false, true);
             if (!jsonObj.is_discarded()) {
                 rowData[SHORTCUT_INFO] = jsonObj;
             }

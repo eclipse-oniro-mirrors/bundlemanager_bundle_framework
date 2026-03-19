@@ -278,7 +278,7 @@ bool DefaultAppRdb::GetDataFromDb(int32_t userId, std::map<std::string, Element>
     }
 
     DefaultAppData defaultAppData;
-    nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false, true);
     if (jsonObject.is_discarded() || defaultAppData.FromJson(jsonObject) != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "error key : %{public}s", key.c_str());
         rdbDataManager_->DeleteData(key);

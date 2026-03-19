@@ -871,7 +871,7 @@ ErrCode ExtensionFormProfile::TransformTo(
     const std::string &formProfile, std::vector<ExtensionFormInfo> &infos, int32_t &privacyLevel)
 {
     APP_LOGD("transform profile to extension form infos");
-    nlohmann::json jsonObject = nlohmann::json::parse(formProfile, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(formProfile, nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;

@@ -230,7 +230,7 @@ std::string DisposedRule::ToString() const
 bool DisposedRule::FromString(const std::string &ruleString, DisposedRule &rule)
 {
     APP_LOGD("FromString %{public}s", ruleString.c_str());
-    nlohmann::json jsonObject = nlohmann::json::parse(ruleString, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(ruleString, nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("failed parse ruleString: %{public}s", ruleString.c_str());
         return false;
@@ -323,7 +323,7 @@ std::string UninstallDisposedRule::ToString() const
 bool UninstallDisposedRule::FromString(const std::string &ruleString, UninstallDisposedRule &rule)
 {
     APP_LOGD("FromString %{public}s", ruleString.c_str());
-    nlohmann::json jsonObject = nlohmann::json::parse(ruleString, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(ruleString, nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("failed parse ruleString: %{public}s", ruleString.c_str());
         return false;

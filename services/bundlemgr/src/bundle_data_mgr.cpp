@@ -6448,7 +6448,7 @@ bool BundleDataMgr::ProcessShortcutInfo(const AbilityInfo &abilityInfo, Shortcut
         APP_LOGE("shortcutinfo is empty");
         return false;
     }
-    nlohmann::json jsonObject = nlohmann::json::parse(rawData, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(rawData, nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("shortcuts json invalid");
         return false;

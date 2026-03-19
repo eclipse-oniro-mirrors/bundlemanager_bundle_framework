@@ -131,7 +131,7 @@ bool FirstInstallDataMgrStorageRdb::GetFirstInstallBundleInfo(const std::string 
         APP_LOGE("GetString failed, ret: %{public}d", ret);
         return false;
     }
-    nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("error key");
         return false;

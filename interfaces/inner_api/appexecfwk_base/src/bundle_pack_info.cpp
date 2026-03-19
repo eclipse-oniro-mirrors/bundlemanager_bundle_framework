@@ -551,7 +551,7 @@ bool BundlePackInfo::ReadFromParcel(Parcel &parcel)
         APP_LOGE("Fail read raw length = %{public}d", length);
         return false;
     }
-    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, true);
     if (jsonObject.is_discarded()) {
         APP_LOGE("failed to parse BundleInfo");
         return false;

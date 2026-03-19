@@ -256,7 +256,7 @@ bool BundleStateStorage::GetBundleStateJson(nlohmann::json &jParse)
         return true;
     }
     i.seekg(0, std::ios::beg);
-    jParse = nlohmann::json::parse(i, nullptr, false);
+    jParse = nlohmann::json::parse(i, nullptr, false, true);
     if (jParse.is_discarded()) {
         i.close();
         APP_LOGE("Get failed due to data is discarded");

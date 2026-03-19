@@ -43,7 +43,7 @@ void TransResult(const std::string &key, const std::string &jsonStr, ThreadResul
 {
     result.totalSize += static_cast<uint64_t>(jsonStr.size());
     InnerBundleInfo innerBundleInfo;
-    nlohmann::json jsonObject = nlohmann::json::parse(jsonStr, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(jsonStr, nullptr, false, true);
     // Collect error keys for later batch deletion
     if (jsonObject.is_discarded()) {
         result.errorKeys.push_back(key);

@@ -74,7 +74,7 @@ bool PreInstallExceptionMgr::LoadPreInstallExceptionInfosFromDb()
         return false;
     }
 
-    nlohmann::json jsonObject = nlohmann::json::parse(preInstallExceptionStr, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(preInstallExceptionStr, nullptr, false, true);
     if (jsonObject.is_discarded() || !jsonObject.is_object()) {
         APP_LOGE("jsonObject is invalid");
         return false;

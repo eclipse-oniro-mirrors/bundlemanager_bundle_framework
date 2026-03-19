@@ -70,7 +70,7 @@ bool BmsExtensionProfile::ReadFileIntoJson(const std::string &filePath, nlohmann
     }
 
     in.seekg(0, std::ios::beg);
-    jsonBuf = nlohmann::json::parse(in, nullptr, false);
+    jsonBuf = nlohmann::json::parse(in, nullptr, false, true);
     in.close();
     if (jsonBuf.is_discarded()) {
         APP_LOGE("bad profile file");

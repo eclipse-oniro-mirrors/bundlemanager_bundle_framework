@@ -95,7 +95,7 @@ bool SandboxManagerRdb::GetAllDataFromDb(std::unordered_map<std::string, InnerBu
         return false;
     }
     for (auto iter = values.begin(); iter != values.end(); ++iter) {
-        nlohmann::json jsonObject = nlohmann::json::parse(iter->second, nullptr, false);
+        nlohmann::json jsonObject = nlohmann::json::parse(iter->second, nullptr, false, true);
         InnerBundleInfo innerBundleInfo;
         if (jsonObject.is_discarded() || (innerBundleInfo.FromJson(jsonObject) != ERR_OK)) {
             APP_LOGE("error key : %{public}s", iter->first.c_str());
@@ -125,7 +125,7 @@ bool SandboxManagerRdb::GetDataFromDb(const std::string &bundleName, InnerBundle
         return false;
     }
 
-    nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
+    nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false, true);
     if (jsonObject.is_discarded() || (innerBundleInfo.FromJson(jsonObject) != ERR_OK)) {
         APP_LOGE("error key : %{public}s", bundleName.c_str());
         rdbDataManager_->DeleteData(bundleName);
