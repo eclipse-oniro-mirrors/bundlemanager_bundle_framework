@@ -1069,7 +1069,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             ScopeGuard userGuard([&] {
                 if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
                     Constants::INITIAL_APP_INDEX)) {
-                    RemoveBundleUserData(oldInfo, false);
+                    InstallParam installParam;
+                    RemoveBundleUserData(oldInfo, installParam);
                 }
             });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
@@ -1165,7 +1166,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     ScopeGuard userGuard([&] {
         if ((!hasInstalledInUser_ || (!isAppExist_)) &&
             !dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_, Constants::INITIAL_APP_INDEX)) {
-            RemoveBundleUserData(oldInfo, false);
+            InstallParam installParam;
+            RemoveBundleUserData(oldInfo, installParam);
         }
     });
 
@@ -2155,7 +2157,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "rm hnp failed");
         }
-        auto res = RemoveBundleUserData(oldInfo, installParam.isKeepData, !installParam.isRemoveUser);
+        auto res = RemoveBundleUserData(oldInfo, installParam, !installParam.isRemoveUser);
         if (res != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "remove bundle user data failed");
             return res;
@@ -2201,7 +2203,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
     }
 
-    ErrCode result = RemoveBundle(oldInfo, installParam.isKeepData, !installParam.isRemoveUser);
+    ErrCode result = RemoveBundle(oldInfo, installParam, !installParam.isRemoveUser);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove whole bundle failed");
         return result;
@@ -2457,7 +2459,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId_, 0);
         }
         if (onlyInstallInUser) {
-            result = RemoveBundle(oldInfo, installParam.isKeepData);
+            result = RemoveBundle(oldInfo, installParam);
             if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "remove bundle failed");
                 return result;
@@ -2498,7 +2500,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, false);
             return ERR_OK;
         }
-        auto removeRes = RemoveBundleUserData(oldInfo, installParam.isKeepData);
+        auto removeRes = RemoveBundleUserData(oldInfo, installParam);
         if (removeRes != ERR_OK) {
             return removeRes;
         }
@@ -2657,7 +2659,8 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             ScopeGuard userGuard([&] {
                 if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
                     Constants::INITIAL_APP_INDEX)) {
-                    RemoveBundleUserData(oldInfo, false);
+                    InstallParam installParam;
+                    RemoveBundleUserData(oldInfo, installParam);
                 }
             });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
@@ -2754,12 +2757,13 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     return resultCode;
 }
 
-ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData, const bool async)
+ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, const InstallParam &installParam, const bool async)
 {
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::UNINSTALL_SUCCESS, isKeepData)) {
+    if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(),
+        InstallState::UNINSTALL_SUCCESS, installParam.isKeepData)) {
         LOG_E(BMS_TAG_INSTALLER, "delete inner info failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
@@ -2774,15 +2778,15 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
             PrepareBundleDirQuota(info.GetBundleName(), uid, bundleDataDir, 0);
         }
     }
-    ErrCode result = RemoveBundleAndDataDir(info, isKeepData, async);
+    ErrCode result = RemoveBundleAndDataDir(info, installParam.isKeepData, async);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove bundle dir failed");
     }
 
     accessTokenId_ = info.GetAccessTokenId(userId_);
     isKeepTokenId_ = info.HasKeepTokenIdMetadata();
-    if (!isKeepData) {
-        bool keepTokenParam = isKeepTokenId_ && async;
+    if (!installParam.isKeepData) {
+        bool keepTokenParam = isKeepTokenId_ && !installParam.isRemoveUser;
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DeleteAccessTokenId keepTokenParam=%{public}d", keepTokenParam);
         if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_, keepTokenParam) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
@@ -5867,7 +5871,7 @@ bool BaseBundleInstaller::CheckReleaseTypeIsCompatible(
 }
 
 ErrCode BaseBundleInstaller::RemoveBundleUserData(
-    InnerBundleInfo &innerBundleInfo, bool isKeepData, const bool async)
+    InnerBundleInfo &innerBundleInfo, const InstallParam &installParam, const bool async)
 {
     auto bundleName = innerBundleInfo.GetBundleName();
     LOG_D(BMS_TAG_INSTALLER, "remove user(%{public}d) in bundle(%{public}s)", userId_, bundleName.c_str());
@@ -5881,8 +5885,8 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
     // delete accessTokenId
     accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
     isKeepTokenId_ = innerBundleInfo.HasKeepTokenIdMetadata();
-    if (!isKeepData) {
-        bool keepTokenParam = isKeepTokenId_ && async;
+    if (!installParam.isKeepData) {
+        bool keepTokenParam = isKeepTokenId_ && !installParam.isRemoveUser;
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DeleteAccessTokenId keepTokenParam=%{public}d", keepTokenParam);
         if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_, keepTokenParam) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
@@ -5909,7 +5913,7 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
     }
 
     ErrCode result = ERR_OK;
-    if (!isKeepData) {
+    if (!installParam.isKeepData) {
         result = RemoveBundleDataDir(innerBundleInfo, false, async);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "remove user data directory failed");
@@ -5925,7 +5929,7 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
         LOG_E(BMS_TAG_INSTALLER, "fail to remove asan log path, error is %{public}d", result);
     }
 
-    if (!isKeepData) {
+    if (!installParam.isKeepData) {
         result = dataMgr_->DeleteDesktopShortcutInfo(bundleName, userId_, 0);
         if (result != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "fail to delete shortcut info");

@@ -2474,13 +2474,14 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0600, Function | SmallTest 
     BaseBundleInstaller installer;
     InnerBundleInfo innerBundleInfo;
     InnerBundleUserInfo userInfo;
-    bool needRemoveData = false;
-    auto ret = installer.RemoveBundleUserData(innerBundleInfo, needRemoveData);
+    InstallParam installParam;
+    installParam.isKeepData = false;
+    auto ret = installer.RemoveBundleUserData(innerBundleInfo, installParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
     innerBundleInfo.innerBundleUserInfos_.emplace("key", userInfo);
     installer.userId_ = Constants::ALL_USERID;
     installer.dataMgr_ = GetBundleDataMgr();
-    ret = installer.RemoveBundleUserData(innerBundleInfo, needRemoveData);
+    ret = installer.RemoveBundleUserData(innerBundleInfo, installParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_RMV_USERINFO_ERROR);
 }
 
@@ -2779,10 +2780,13 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2200, Function | SmallTest 
     BaseBundleInstaller installer;
     InnerBundleInfo info;
     installer.InitDataMgr();
-    ErrCode res = installer.RemoveBundle(info, false);
+    InstallParam installParam;
+    installParam.isKeepData = false;
+    ErrCode res = installer.RemoveBundle(info, installParam);
     EXPECT_EQ(res, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 
-    res = installer.RemoveBundle(info, true);
+    installParam.isKeepData = true;
+    res = installer.RemoveBundle(info, installParam);
     EXPECT_EQ(res, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 }
 
