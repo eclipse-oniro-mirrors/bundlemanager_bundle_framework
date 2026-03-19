@@ -49,6 +49,7 @@
 #include "installd/installd_load_callback.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
+#include "install_exception_mgr.h"
 #include "mock_status_receiver.h"
 #include "parameter.h"
 #include "parameters.h"
@@ -10743,9 +10744,17 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9500, Function | MediumTest
 
    BaseBundleInstaller installer;
    installer.RollbackCodePath(BUNDLE_NAME_FOR_TEST, false);
+   installer.RollbackCodePath("", true);
+   installer.RollbackCodePath(BUNDLE_NAME_FOR_TEST, true);
    auto exist = access(BUNDLE_CODE_PATH_DIR_OLD.c_str(), F_OK);
    EXPECT_EQ(exist, 0);
-
+   auto mgr = DelayedSingleton<InstallExceptionMgr>::GetInstance();
+   ASSERT_NE(mgr, nullptr);
+   InstallExceptionInfo exceptionInfo;
+   exceptionInfo.status = InstallRenameExceptionStatus::RENAME_RELA_TO_OLD_PATH;
+   exceptionInfo.versionCode = 1000;
+   ErrCode result = mgr->SaveBundleExceptionInfo(BUNDLE_NAME_FOR_TEST, exceptionInfo);
+   EXPECT_EQ(result, ERR_OK);
    installer.RollbackCodePath(BUNDLE_NAME_FOR_TEST, true);
    exist = access(BUNDLE_CODE_PATH_DIR_OLD.c_str(), F_OK);
    EXPECT_NE(exist, 0);
@@ -10755,6 +10764,8 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9500, Function | MediumTest
 
    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+   result = mgr->DeleteBundleExceptionInfo(BUNDLE_NAME_FOR_TEST);
+   EXPECT_EQ(result, ERR_OK);
 }
 
 /**
@@ -10917,6 +10928,10 @@ HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0040, Function
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+    auto mgr = DelayedSingleton<InstallExceptionMgr>::GetInstance();
+    ASSERT_NE(mgr, nullptr);
+    ret = mgr->DeleteBundleExceptionInfo(BUNDLE_NAME_FOR_TEST);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -10937,17 +10952,18 @@ HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0050, Function
     EXPECT_TRUE(ans);
 
     BaseBundleInstaller installer;
+    // DynamicIconFile not exist
     auto ret = installer.ProcessBundleCodePath(newInfos, oldInfo, BUNDLE_NAME_FOR_TEST, true, true);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_NE(ret, ERR_OK);
 
     auto exist = access(BUNDLE_CODE_PATH_DIR_REAL.c_str(), F_OK);
     EXPECT_EQ(exist, 0);
 
     exist = access(BUNDLE_CODE_PATH_DIR_NEW.c_str(), F_OK);
-    EXPECT_NE(exist, 0);
+    EXPECT_EQ(exist, 0);
 
     exist = access(BUNDLE_CODE_PATH_DIR_OLD.c_str(), F_OK);
-    EXPECT_EQ(exist, 0);
+    EXPECT_NE(exist, 0);
 
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);

@@ -365,6 +365,7 @@ HWTEST_F(BmsInstallExceptionMgrTest, installExceptionMgrTest_0013, TestSize.Leve
 {
     auto mgr = DelayedSingleton<InstallExceptionMgr>::GetInstance();
     ASSERT_NE(mgr, nullptr);
+    mgr->installExceptionMgr_ = std::make_shared<InstallExceptionMgrRdb>();
     ASSERT_NE(mgr->installExceptionMgr_, nullptr);
     bool result = mgr->HandleBundleExceptionInfo("");
     EXPECT_FALSE(result);
@@ -495,6 +496,8 @@ HWTEST_F(BmsInstallExceptionMgrTest, installExceptionMgrTest_0019, TestSize.Leve
     auto exist = access(OLD_BUNDLE_DIR_NAME.c_str(), F_OK);
     EXPECT_NE(exist, 0);
     exist = access(REAL_BUNDLE_DIR_NAME.c_str(), F_OK);
+    EXPECT_NE(exist, 0);
+    exist = access(NEW_BUNDLE_DIR_NAME.c_str(), F_OK);
     EXPECT_EQ(exist, 0);
     (void)OHOS::ForceRemoveDirectory(OLD_BUNDLE_DIR_NAME);
     (void)OHOS::ForceRemoveDirectory(NEW_BUNDLE_DIR_NAME);
@@ -605,6 +608,8 @@ HWTEST_F(BmsInstallExceptionMgrTest, installExceptionMgrTest_0025, TestSize.Leve
     EXPECT_NE(exist, 0);
     (void)OHOS::ForceRemoveDirectory(OLD_BUNDLE_DIR_NAME);
     (void)OHOS::ForceRemoveDirectory(TEMP_BUNDLE_DIR_NAME);
+    ret = mgr->DeleteBundleExceptionInfo(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -727,25 +732,31 @@ HWTEST_F(BmsInstallExceptionMgrTest, installExceptionMgrRdbTest_0007, TestSize.L
     auto mgr = DelayedSingleton<InstallExceptionMgr>::GetInstance();
     ASSERT_NE(mgr, nullptr);
     ASSERT_NE(mgr->installExceptionMgr_, nullptr);
-    InstallExceptionInfo info;
-    info.status = InstallRenameExceptionStatus::CREATE_NEW_DIR;
-    info.versionCode = 1001;
-    ErrCode ret = mgr->SaveBundleExceptionInfo(BUNDLE_NAME, info);
+    ASSERT_NE(mgr->installExceptionMgr_->rdbDataManager_, nullptr);
+    bool result = mgr->installExceptionMgr_->rdbDataManager_->InsertData(BUNDLE_NAME, "{invalid}");
+    EXPECT_TRUE(result);
+    InstallExceptionInfo installExceptionInfo;
+    result = mgr->installExceptionMgr_->GetBundleExceptionInfo(BUNDLE_NAME, installExceptionInfo);
+    EXPECT_FALSE(result);
+    ErrCode ret = mgr->DeleteBundleExceptionInfo(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK);
-    std::map<std::string, std::string> datas;
-    mgr->installExceptionMgr_->rdbDataManager_->QueryAllData(datas);
-    if (!datas.empty()) {
-        for (auto &item : datas) {
-            if (item.first == BUNDLE_NAME) {
-                item.second = "{invalid}";
-            }
-        }
-    }
+}
+
+/**
+ * @tc.number: installExceptionMgrRdbTest_0008
+ * @tc.name: test GetBundleExceptionInfo with nullptr
+ * @tc.desc: test GetBundleExceptionInfo when returns false
+ */
+HWTEST_F(BmsInstallExceptionMgrTest, installExceptionMgrRdbTest_0008, TestSize.Level1)
+{
+    auto mgr = DelayedSingleton<InstallExceptionMgr>::GetInstance();
+    ASSERT_NE(mgr, nullptr);
+    ASSERT_NE(mgr->installExceptionMgr_, nullptr);
+    mgr->installExceptionMgr_->rdbDataManager_ = nullptr;
     InstallExceptionInfo installExceptionInfo;
     bool result = mgr->installExceptionMgr_->GetBundleExceptionInfo(BUNDLE_NAME, installExceptionInfo);
     EXPECT_FALSE(result);
-    ret = mgr->DeleteBundleExceptionInfo(BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_OK);
+    mgr->installExceptionMgr_ = std::make_shared<InstallExceptionMgrRdb>();
 }
 
 /**
@@ -788,6 +799,7 @@ HWTEST_F(BmsInstallExceptionMgrTest, baseBundleInstallerCodePathTest_0003, TestS
     mgr->installExceptionMgr_ = nullptr;
     ErrCode result = installer.InnerProcessCodePathRealToOld(BUNDLE_NAME, 1001);
     EXPECT_NE(result, ERR_OK);
+    mgr->installExceptionMgr_ = std::make_shared<InstallExceptionMgrRdb>();
 }
 
 /**
@@ -802,7 +814,8 @@ HWTEST_F(BmsInstallExceptionMgrTest, baseBundleInstallerCodePathTest_0004, TestS
     EXPECT_EQ(result, ERR_OK);
     auto mgr = DelayedSingleton<InstallExceptionMgr>::GetInstance();
     ASSERT_NE(mgr, nullptr);
-    mgr->DeleteBundleExceptionInfo(BUNDLE_NAME);
+    result = mgr->DeleteBundleExceptionInfo(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
 }
 
 /**
@@ -812,13 +825,21 @@ HWTEST_F(BmsInstallExceptionMgrTest, baseBundleInstallerCodePathTest_0004, TestS
  */
 HWTEST_F(BmsInstallExceptionMgrTest, baseBundleInstallerCodePathTest_0005, TestSize.Level1)
 {
+    (void)OHOS::ForceRemoveDirectory(REAL_BUNDLE_DIR_NAME);
+    (void)OHOS::ForceRemoveDirectory(OLD_BUNDLE_DIR_NAME);
     BaseBundleInstaller installer;
-    std::string realPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + BUNDLE_NAME;
-    bool ans = OHOS::ForceCreateDirectory(realPath);
-    EXPECT_TRUE(ans);
     ErrCode result = installer.InnerProcessCodePathRealToOld(BUNDLE_NAME, 1001);
-    EXPECT_NE(result, ERR_OK);
-    (void)OHOS::ForceRemoveDirectory(realPath);
+    EXPECT_EQ(result, ERR_OK);
+    bool ans = OHOS::ForceCreateDirectory(REAL_BUNDLE_DIR_NAME);
+    EXPECT_TRUE(ans);
+    result = installer.InnerProcessCodePathRealToOld(BUNDLE_NAME, 1001);
+    EXPECT_EQ(result, ERR_OK);
+    auto exist = access(REAL_BUNDLE_DIR_NAME.c_str(), F_OK);
+    EXPECT_NE(exist, 0);
+    exist = access(OLD_BUNDLE_DIR_NAME.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+    (void)OHOS::ForceRemoveDirectory(REAL_BUNDLE_DIR_NAME);
+    (void)OHOS::ForceRemoveDirectory(OLD_BUNDLE_DIR_NAME);
     auto mgr = DelayedSingleton<InstallExceptionMgr>::GetInstance();
     ASSERT_NE(mgr, nullptr);
     mgr->DeleteBundleExceptionInfo(BUNDLE_NAME);
@@ -837,6 +858,7 @@ HWTEST_F(BmsInstallExceptionMgrTest, baseBundleInstallerCodePathTest_0006, TestS
     mgr->installExceptionMgr_ = nullptr;
     ErrCode result = installer.InnerProcessCodePathNewToReal(BUNDLE_NAME, 1001);
     EXPECT_NE(result, ERR_OK);
+    mgr->installExceptionMgr_ = std::make_shared<InstallExceptionMgrRdb>();
 }
 
 /**
@@ -862,13 +884,16 @@ HWTEST_F(BmsInstallExceptionMgrTest, baseBundleInstallerCodePathTest_0007, TestS
 HWTEST_F(BmsInstallExceptionMgrTest, baseBundleInstallerCodePathTest_0008, TestSize.Level1)
 {
     BaseBundleInstaller installer;
-    std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-        std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + BUNDLE_NAME;
-    bool ans = OHOS::ForceCreateDirectory(newPath);
+    bool ans = OHOS::ForceCreateDirectory(NEW_BUNDLE_DIR_NAME);
     EXPECT_TRUE(ans);
     ErrCode result = installer.InnerProcessCodePathNewToReal(BUNDLE_NAME, 1001);
-    EXPECT_NE(result, ERR_OK);
-    (void)OHOS::ForceRemoveDirectory(newPath);
+    EXPECT_EQ(result, ERR_OK);
+    auto exist = access(NEW_BUNDLE_DIR_NAME.c_str(), F_OK);
+    EXPECT_NE(exist, 0);
+    exist = access(REAL_BUNDLE_DIR_NAME.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+    (void)OHOS::ForceRemoveDirectory(NEW_BUNDLE_DIR_NAME);
+    (void)OHOS::ForceRemoveDirectory(REAL_BUNDLE_DIR_NAME);
     auto mgr = DelayedSingleton<InstallExceptionMgr>::GetInstance();
     ASSERT_NE(mgr, nullptr);
     mgr->DeleteBundleExceptionInfo(BUNDLE_NAME);
