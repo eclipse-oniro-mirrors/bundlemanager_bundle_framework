@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::regex ALNUM_REGEX("^[a-zA-Z0-9]*$");	 
+const std::regex ALNUM_REGEX("^[a-zA-Z0-9]*$");
 const std::regex NUM_REGEX("^[0-9]+$");
 }
 
@@ -85,7 +85,7 @@ void RouterMapHelper::MergeRouter(const std::vector<RouterItem>& routerArrayList
 int32_t RouterMapHelper::CompareIdentifiers(const std::string& a, const std::string& b)
 {
     try {
-        if (!std::regex_match(a, ALNUM_REGEX) || !std::regex_match(b, ALNUM_REGEX)) { 
+        if (!std::regex_match(a, ALNUM_REGEX) || !std::regex_match(b, ALNUM_REGEX)) {
             return 1;
         }
     } catch (const std::regex_error& e) {
