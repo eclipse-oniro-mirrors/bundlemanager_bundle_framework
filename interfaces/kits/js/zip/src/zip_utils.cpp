@@ -75,6 +75,7 @@ bool FilePathCheckValid(const std::string &str)
         return false;
     } catch (const std::regex_error& e) {
         return false;
+    }
 }
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
