@@ -1794,7 +1794,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateAppInstallControlled(userId_);
     extensionDirGuard.Dismiss();
     ScreenLockFileProtectionDirGuard.Dismiss();
-    if (isAppExist_) {
+    if (isAppExist_ && isModuleUpdate_ && (versionCode_ != oldInfo.GetVersionCode())) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "need to remove data/preload/app hap files for bundle:%{public}s",
+            bundleName_.c_str());
         RemoveDataPreloadHapFiles(bundleName_);
     }
     RemoveOldExtensionDirs();

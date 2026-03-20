@@ -3781,6 +3781,42 @@ HWTEST_F(BmsBundleDataMgrTest2, ProcessShortcutInfos_0400, Function | SmallTest 
         shortcutInfos);
 
     EXPECT_FALSE(shortcutInfos.empty());
+}
+
+/**
+ * @tc.number: ProcessShortcutInfos_0500
+ * @tc.name: test ProcessShortcutInfos
+ * @tc.desc: 1.create InnerBundleInfo
+ *           2.call ProcessShortcutInfos
+ *           3.verify no crash occurs
+ */
+HWTEST_F(BmsBundleDataMgrTest2, ProcessShortcutInfos_0500, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    moduleInfo.isEntry = true;
+    innerInfo.innerModuleInfos_.try_emplace(MODULE_NAME_TEST, moduleInfo);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_TEST, SHORTCUT_TEST_ID);
+    shortcutInfos.push_back(shortcutInfo);
+
+    dataMgr->ProcessShortcutInfos(innerInfo, MODULE_NAME_TEST, ABILITY_NAME_TEST, 0, MULTI_USERID,
+        shortcutInfos);
+
+    EXPECT_FALSE(shortcutInfos.empty());
     ClearDataMgr();
 }
 } // OHOS
