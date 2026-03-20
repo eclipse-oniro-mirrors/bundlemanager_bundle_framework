@@ -8670,9 +8670,9 @@ ErrCode BaseBundleInstaller::InnerProcessCodePathRealToOld(
     result = InstalldClient::GetInstance()->RenameModuleDir(realAppCodePath, oldAppCodePath);
     if (result != ERR_OK) {
         if (!BundleUtil::IsExistDir(realAppCodePath) && errno == ENOENT) {
-            APP_LOGW("realAppCodePath(%{public}s) is not exist, continue", realAppCodePath.c_str());
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "realAppCodePath(%{public}s) is not exist", realAppCodePath.c_str());
         } else {
-            APP_LOGE("rename real to +old- code path failed, error is %{public}d", result);
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "rename real to +old- code path failed, error is %{public}d", result);
             return result;
         }
     }
@@ -8724,18 +8724,18 @@ void BaseBundleInstaller::ProcessOldCodePath(
         // delete +temp- code path
         result = InstalldClient::GetInstance()->RemoveDir(tempPath);
     } else {
-        LOG_W(BMS_TAG_INSTALLER, "rename bundle %{public}s old to temp path error is %{public}d",
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "rename bundle %{public}s old to temp path error is %{public}d",
             bundleName.c_str(), result);
         result = InstalldClient::GetInstance()->RemoveDir(oldAppCodePath);
     }
     if (result == ERR_OK) {
         result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);
     } else {
-        LOG_W(BMS_TAG_INSTALLER, "remove bundle %{public}s old code path error is %{public}d",
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "remove bundle %{public}s old code path error is %{public}d",
             bundleName.c_str(), result);
     }
     if (result != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "delete bundle %{public}s exception error is %{public}d",
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "delete bundle %{public}s exception error is %{public}d",
             bundleName.c_str(), result);
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessOldCodePath end -n %{public}s", bundleName.c_str());

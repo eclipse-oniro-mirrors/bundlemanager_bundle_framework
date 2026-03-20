@@ -15,6 +15,7 @@
 
 #include "install_exception_mgr_rdb.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "json_util.h"
@@ -131,16 +132,16 @@ bool InstallExceptionMgrRdb::GetBundleExceptionInfo(
     const std::string &bundleName, InstallExceptionInfo &installExceptionInfo)
 {
     if (rdbDataManager_ == nullptr) {
-        APP_LOGE("rdbDataManager is null");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "rdbDataManager is null");
         return false;
     }
     if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "bundleName is empty");
         return false;
     }
     std::string value;
     if (!rdbDataManager_->QueryData(bundleName, value)) {
-        APP_LOGD ("-n %{public}s exception not exist", bundleName.c_str());
+        LOG_NOFUNC_D(BMS_TAG_INSTALLER, "-n %{public}s exception not exist", bundleName.c_str());
         return false;
     }
     return installExceptionInfo.FromString(value);
