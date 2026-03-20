@@ -39,6 +39,13 @@ namespace AppExecFwk {
 using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::string, std::string> &,
     const CodeCryptoHapInfo &, bool &);
 
+enum class BundleDirScene {
+    SET_DIR_APL = 0,
+    EXTRACT_HNP_FILES = 1,
+    SET_FILE_CON_FORCE = 2,
+    EXTRACT_DRIVER_SO_FILES = 3,
+};
+
 class InstalldOperator {
 public:
     /**
@@ -350,6 +357,21 @@ public:
     static bool FsyncFile(const std::string &path);
 
     static ErrCode DeleteCertAndRemoveKey(const std::string &path);
+
+    static bool IsValidBundleName(const std::string &bundleName);
+
+    static bool IsValidUserId(const int32_t userId);
+
+    static bool IsValidUid(const int32_t uid);
+
+    static bool IsValidAppIndex(const int32_t appIndex);
+
+    static bool IsValidApl(const std::string &apl);
+
+    static bool IsValidPathByBundleDirScene(const BundleDirScene &scene, const std::string &path);
+
+    static bool IsValidUuid(const std::string &uuid);
+
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);

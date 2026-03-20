@@ -125,6 +125,20 @@ std::mutex mMountsLock;
 static std::map<std::string, std::string> mQuotaReverseMounts;
 using ApplyPatch = int32_t (*)(const std::string, const std::string, const std::string);
 
+static const std::map<BundleDirScene, std::vector<std::string>> ALLOWED_PATH_PREFIXES = {
+    {BundleDirScene::SET_DIR_APL, {"/data/app/"}},
+    {BundleDirScene::EXTRACT_HNP_FILES, {"/data/app/el1/bundle/public/"}},
+    {BundleDirScene::SET_FILE_CON_FORCE, {"/data/app/", "/data/service/"}},
+    {BundleDirScene::EXTRACT_DRIVER_SO_FILES, {"/data/app/el1/bundle/public/"}},
+
+};
+
+static const std::set<std::string> ALLOWED_APL = {
+    "normal",
+    "system_basic",
+    "system_core",
+};
+
 static std::string HandleScanResult(
     const std::string &dir, const std::string &subName, ResultMode resultMode)
 {
@@ -3176,6 +3190,103 @@ bool InstalldOperator::ReadCert(const std::string &path, std::vector<unsigned ch
     LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported");
 #endif
     return true;
+}
+
+bool InstalldOperator::IsValidBundleName(const std::string &bundleName)
+{
+    if (bundleName.empty() || !IsFileNameValid(bundleName)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s", bundleName.c_str());
+        return false;
+    }
+    // clone bundleName: +clone-<appIndex>+<bundleName>
+    std::string tempBundleName = bundleName;
+    if (bundleName.find(ServiceConstants::CLONE_PREFIX) == 0) {
+        tempBundleName = bundleName.substr(strlen(ServiceConstants::CLONE_PREFIX));
+        size_t plusPos = tempBundleName.find(ServiceConstants::PLUS_SIGN);
+        if (plusPos == std::string::npos) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid clone bundle name -n %{public}s", bundleName.c_str());
+            return false;
+        }
+        int32_t appIndex = 0;
+        if (!OHOS::StrToInt(tempBundleName.substr(0, plusPos), appIndex)) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "StrToInt failed -n %{public}s", bundleName.c_str());
+            return false;
+        }
+        tempBundleName = tempBundleName.substr(plusPos + 1);
+    }
+    // sanbox bundleName: <appIndex>_<bundleName>
+    auto pos = bundleName.find(Constants::FILE_UNDERLINE);
+    if (pos != std::string::npos) {
+        int32_t appIndex = 0;
+        if (OHOS::StrToInt(bundleName.substr(0, pos), appIndex)) {
+            tempBundleName = bundleName.substr(pos + 1);
+        }
+    }
+    // for normal bundleName
+    if (tempBundleName.size() < Constants::MIN_BUNDLE_NAME || tempBundleName.size() > Constants::MAX_BUNDLE_NAME) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name size -n %{public}s", tempBundleName.c_str());
+        return false;
+    }
+    char head = tempBundleName.at(0);
+    if (!isalpha(head)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s isalpha false", tempBundleName.c_str());
+        return false;
+    }
+    for (const auto &c : tempBundleName) {
+        if (!isalnum(static_cast<unsigned char>(c)) && (c != '.') && (c != '_')) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s isalnum false", tempBundleName.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
+bool InstalldOperator::IsValidUserId(const int32_t userId)
+{
+    return userId >= 0;
+}
+
+bool InstalldOperator::IsValidUid(const int32_t uid)
+{
+    return uid >= 0;
+}
+
+bool InstalldOperator::IsValidAppIndex(const int32_t appIndex)
+{
+    return (appIndex >= Constants::INITIAL_APP_INDEX) && (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX);
+}
+
+bool InstalldOperator::IsValidApl(const std::string &apl)
+{
+    return ALLOWED_APL.find(apl) != ALLOWED_APL.end();
+}
+
+bool InstalldOperator::IsValidPathByBundleDirScene(const BundleDirScene &scene, const std::string &path)
+{
+    if (!IsFileNameValid(path)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    auto iter = ALLOWED_PATH_PREFIXES.find(scene);
+    if (iter == ALLOWED_PATH_PREFIXES.end()) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "scene not exist in ALLOWED_PATH_PREFIXES");
+        return false;
+    }
+    for (const auto &pre : iter->second) {
+        if (path.find(pre) == 0) {
+            return true;
+        }
+    }
+    LOG_NOFUNC_E(BMS_TAG_INSTALLD, "path is invalid");
+    return false;
+}
+
+bool InstalldOperator::IsValidUuid(const std::string &uuid)
+{
+    if (uuid.empty()) {
+        return false;
+    }
+    return IsFileNameValid(uuid);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
