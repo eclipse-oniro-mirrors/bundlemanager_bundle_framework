@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -87,6 +87,7 @@ enum class ExtensionAbilityType {
     PARTNER_AGENT = 36,
     AGENT = 37,
     AGENT_UI = 38,
+    MODULAR_OBJECT = 39,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
