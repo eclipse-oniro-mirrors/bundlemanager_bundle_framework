@@ -57,6 +57,7 @@ namespace shortcutManager {
   native function deleteDynamicShortcutInfosNative(bundleName: string, appIndex: int, userId: int, ids: Array<string>): void;
   native function setShortcutsEnabledNative(shortcutInfo: Array<ShortcutInfo>, isEnabled: boolean): void;
   native function getShortcutInfoByAbilityNative(bundleName: string, moduleName: string, abilityName: string, userId: int, appIndex: int): Array<ShortcutInfo>;
+  native function isShortcutSupportedNative(): boolean;
 
   function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: int): Promise<void> {
     if (shortcutInfo.appIndex < MAIN_APP_INDEX || shortcutInfo.sourceType === ERROR_SOURCETYPE) {
@@ -241,6 +242,10 @@ namespace shortcutManager {
       throw createBusinessError(ERROR_INVALID_APPINDEX_CODE, ERROR_INVALID_APPINDEX_MSG);
     }
     return getShortcutInfoByAbilityNative(bundleName, moduleName, abilityName, userIdInfo, appIndexInfo);
+  }
+
+  function isShortcutSupported(): boolean {
+    return isShortcutSupportedNative();
   }
 
   export type ShortcutInfo = _ShortcutInfo;

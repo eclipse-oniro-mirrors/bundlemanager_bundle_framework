@@ -38,6 +38,7 @@ static napi_value ShortcutManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("deleteDynamicShortcutInfos", DeleteDynamicShortcutInfos),
         DECLARE_NAPI_FUNCTION("setShortcutsEnabled", SetShortcutsEnabled),
         DECLARE_NAPI_FUNCTION("getShortcutInfoByAbility", GetShortcutInfoByAbility),
+        DECLARE_NAPI_FUNCTION("isShortcutSupported", IsShortcutSupported),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

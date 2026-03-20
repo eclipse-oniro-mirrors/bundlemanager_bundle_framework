@@ -930,5 +930,18 @@ napi_value GetShortcutInfoByAbility(napi_env env, napi_callback_info info)
     return nullptr;
 #endif
 }
+
+napi_value IsShortcutSupported(napi_env env, napi_callback_info info)
+{
+    napi_value isSupported = nullptr;
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
+    APP_LOGD("Napi begin IsShortcutSupported");
+    NAPI_CALL(env, napi_get_boolean(env, true, &isSupported));
+#else
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    NAPI_CALL(env, napi_get_boolean(env, false, &isSupported));
+#endif
+    return isSupported;
+}
 } // AppExecFwk
 } // OHOS
