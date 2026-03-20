@@ -520,6 +520,10 @@ bool InstalldOperator::ExtractFiles(const std::map<std::string, std::string> &hn
                 LOG_E(BMS_TAG_INSTALLD, "illegal native bundle");
                 continue;
             }
+            if (targetName.find("..") != std::string::npos) {
+                LOG_E(BMS_TAG_INSTALLD, "hnp target name err: %{public}s", targetName.c_str());
+                continue;
+            }
             targetPathAndName = extractParam.targetPath + hnpPackageInfoMap[targetName]
                                 + ServiceConstants::PATH_SEPARATOR + targetName;
             if (targetPathAndName.find("..") != std::string::npos) {
@@ -3253,7 +3257,7 @@ bool InstalldOperator::IsValidUid(const int32_t uid)
 
 bool InstalldOperator::IsValidAppIndex(const int32_t appIndex)
 {
-    return (appIndex >= Constants::INITIAL_APP_INDEX) && (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX);
+    return (appIndex >= Constants::MAIN_APP_INDEX) && (appIndex <= Constants::CLONE_APP_INDEX_MAX);
 }
 
 bool InstalldOperator::IsValidApl(const std::string &apl)

@@ -236,7 +236,7 @@ ErrCode InstalldHostImpl::ProcessBundleUnInstallNative(const std::string &userId
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (!InstalldOperator::IsValidBundleName(packageName)) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function ProcessBundleInstallNative with invalid param");
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function ProcessBundleUnInstallNative with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::ProcessBundleUnInstallNative(userId, packageName)) {
@@ -1492,7 +1492,7 @@ ErrCode InstalldHostImpl::SetFileConForce(const std::vector<std::string> &paths,
 #ifdef WITH_SELINUX
     for (const auto &path : paths) {
         if (!InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::SET_FILE_CON_FORCE, path)) {
-            LOG_E(BMS_TAG_INSTALLD, "path param error -n %{public}s", createDirParam.bundleName.c_str());
+            LOG_E(BMS_TAG_INSTALLD, "path param error, not support");
             return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
         }
     }
