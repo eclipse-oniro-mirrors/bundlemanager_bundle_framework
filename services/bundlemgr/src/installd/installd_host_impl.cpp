@@ -95,6 +95,7 @@ constexpr const char* SHELL_ENTRY_TXT = "g:2000:rwx";
 constexpr int32_t APP_DATA_SIZE_INDEX = 0;
 constexpr int32_t BUNDLE_DATA_SIZE_INDEX = 1;
 constexpr uint64_t VECTOR_SIZE_MAX = 200;
+constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1024;
 constexpr int32_t INSTALLS_UID = 3060;
 constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t TEN_GB = ONE_GB * 10;
@@ -197,8 +198,9 @@ ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::strin
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-
-    if (extractParam.srcPath.empty() || extractParam.targetPath.empty() || hnpPackageMap.empty()) {
+    if (!InstalldOperator::IsFileNameValid(extractParam.srcPath) ||
+        !InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::EXTRACT_HNP_FILES, extractParam.targetPath) ||
+        hnpPackageMap.empty()) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function ExtractFiles with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
@@ -217,6 +219,10 @@ ErrCode InstalldHostImpl::ProcessBundleInstallNative(const InstallHnpParam &inst
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+    if (!InstalldOperator::IsValidBundleName(installHnpParam.packageName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function ProcessBundleInstallNative with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
     if (!InstalldOperator::ProcessBundleInstallNative(installHnpParam)) {
         return ERR_APPEXECFWK_NATIVE_INSTALL_FAILED;
     }
@@ -228,6 +234,10 @@ ErrCode InstalldHostImpl::ProcessBundleUnInstallNative(const std::string &userId
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidBundleName(packageName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function ProcessBundleInstallNative with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::ProcessBundleUnInstallNative(userId, packageName)) {
         return ERR_APPEXECFWK_NATIVE_UNINSTALL_FAILED;
@@ -482,6 +492,10 @@ ErrCode InstalldHostImpl::AddUserDirDeleteDfx(int32_t userId)
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidUserId(userId)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function AddUserDirDeleteDfx with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
     elPath.push_back(ServiceConstants::DIR_EL5);
@@ -1103,7 +1117,7 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (bundleName.empty() || userId < 0) {
+    if (!InstalldOperator::IsValidBundleName(bundleName) || !InstalldOperator::IsValidUserId(userId)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function CreateBundleDataDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
@@ -1218,7 +1232,8 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (bundleName.empty() || userid < 0 || appIndex < 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
+    if (!InstalldOperator::IsValidBundleName(bundleName) || !InstalldOperator::IsValidUserId(userid) ||
+        !InstalldOperator::IsValidAppIndex(appIndex)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function CleanBundleDataDirByName with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
@@ -1379,13 +1394,19 @@ ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bu
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (bundleNames.size() == 0) {
-        LOG_E(BMS_TAG_INSTALLD, "bundleNames is empty impl");
+    if ((bundleNames.size() == 0) || (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE)) {
+        LOG_E(BMS_TAG_INSTALLD, "bundleNames is empty or size out of range");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (bundleNames.size() != uidMap.size()) {
         LOG_E(BMS_TAG_INSTALLD, "bundleNames and bundleModulesListMap size not equal impl");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    for (const auto &name : bundleNames) {
+        if (!InstalldOperator::IsValidBundleName(name)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid bundle name %{public}s", name.c_str());
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
     }
     for (auto &name : bundleNames) {
         BundleStorageStats stats;
@@ -1469,8 +1490,14 @@ ErrCode InstalldHostImpl::SetFileConForce(const std::vector<std::string> &paths,
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
 #ifdef WITH_SELINUX
-    if (paths.empty() || createDirParam.bundleName.empty() || createDirParam.apl.empty() ||
-        createDirParam.uid <= Constants::INVALID_UID) {
+    for (const auto &path : paths) {
+        if (!InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::SET_FILE_CON_FORCE, path)) {
+            LOG_E(BMS_TAG_INSTALLD, "path param error -n %{public}s", createDirParam.bundleName.c_str());
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+    }
+    if (paths.empty() || !InstalldOperator::IsValidBundleName(createDirParam.bundleName) ||
+        !InstalldOperator::IsValidApl(createDirParam.apl) || !InstalldOperator::IsValidUid(createDirParam.uid)) {
         LOG_E(BMS_TAG_INSTALLD, "param error size:%{public}zu, bundleName:%{public}s, apl:%{public}s, uid:%{public}d",
             paths.size(), createDirParam.bundleName.c_str(), createDirParam.apl.c_str(), createDirParam.uid);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -1976,9 +2003,16 @@ ErrCode InstalldHostImpl::ExtractDriverSoFiles(const std::string &srcPath,
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (dirMap.empty()) {
+    if (dirMap.empty() || !InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::EXTRACT_DRIVER_SO_FILES,
+        srcPath)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function ExtractDriverSoFiles with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    for (const auto &iter : dirMap) {
+        if (!InstalldOperator::IsFileNameValid(iter.first) || !InstalldOperator::IsFileNameValid(iter.second)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid param in dirMap");
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
     }
 
     if (!InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap)) {
@@ -2356,10 +2390,18 @@ ErrCode InstalldHostImpl::CreateExtensionDataDir(const CreateDirParam &createDir
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (createDirParam.bundleName.empty() || createDirParam.userId < 0 ||
-        createDirParam.uid < 0 || createDirParam.gid < 0 || createDirParam.extensionDirs.empty()) {
+    if (!InstalldOperator::IsValidBundleName(createDirParam.bundleName) || !InstalldOperator::IsValidUserId(createDirParam.userId) ||
+        !InstalldOperator::IsValidUid(createDirParam.uid) || !InstalldOperator::IsValidUid(createDirParam.gid) ||
+        createDirParam.extensionDirs.empty() || !InstalldOperator::IsValidApl(createDirParam.apl) ||
+        (createDirParam.extensionDirs.size() > MAX_BATCH_QUERY_BUNDLE_SIZE)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function CreateExtensionDataDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    for (const auto &extensionDir : createDirParam.extensionDirs) {
+        if (!InstalldOperator::IsFileNameValid(extensionDir)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid extensionDir param");
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
     }
     LOG_I(BMS_TAG_INSTALLD, "begin to create extension dir for bundle %{public}s, which has %{public}zu extension dir",
         createDirParam.bundleName.c_str(), createDirParam.extensionDirs.size());
@@ -2688,6 +2730,13 @@ ErrCode InstalldHostImpl::CreateDataGroupDirs(const std::vector<CreateDirParam> 
         LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+    for (const CreateDirParam &param : params) {
+        if (!InstalldOperator::IsValidUserId(param.userId) || !InstalldOperator::IsValidUid(param.uid) ||
+            !InstalldOperator::IsValidUid(param.gid) || !InstalldOperator::IsValidUuid(param.uuid)) {
+            LOG_E(BMS_TAG_INSTALLD, "Calling the function CreateDataGroupDirs with invalid param");
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+    }
     ErrCode result = ERR_OK;
     for (const CreateDirParam &param : params) {
         if (param.dataDirEl == DataDirEl::EL5) {
@@ -2789,10 +2838,16 @@ ErrCode InstalldHostImpl::DeleteDataGroupDirs(const std::vector<std::string> &uu
         LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (uuidList.empty() || userId < 0) {
+    if (uuidList.empty() || !InstalldOperator::IsValidUserId(userId)) {
         LOG_E(BMS_TAG_INSTALLD, "invalid param, uuidList size %{public}zu "
             "-u %{public}d", uuidList.size(), userId);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    for (const std::string &uuid : uuidList) {
+        if (!InstalldOperator::IsValidUuid(uuid)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid uuid param");
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
     }
     // remove el2~el4 group dirs (el5 is handled separately)
     ErrCode result = ERR_OK;
