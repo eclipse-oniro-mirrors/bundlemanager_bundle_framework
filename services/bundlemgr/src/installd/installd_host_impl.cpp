@@ -2390,7 +2390,8 @@ ErrCode InstalldHostImpl::CreateExtensionDataDir(const CreateDirParam &createDir
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (!InstalldOperator::IsValidBundleName(createDirParam.bundleName) || !InstalldOperator::IsValidUserId(createDirParam.userId) ||
+    if (!InstalldOperator::IsValidBundleName(createDirParam.bundleName) ||
+        !InstalldOperator::IsValidUserId(createDirParam.userId) ||
         !InstalldOperator::IsValidUid(createDirParam.uid) || !InstalldOperator::IsValidUid(createDirParam.gid) ||
         createDirParam.extensionDirs.empty() || !InstalldOperator::IsValidApl(createDirParam.apl) ||
         (createDirParam.extensionDirs.size() > MAX_BATCH_QUERY_BUNDLE_SIZE)) {

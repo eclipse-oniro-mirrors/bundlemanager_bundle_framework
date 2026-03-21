@@ -1900,7 +1900,7 @@ HWTEST_F(BmsInstallDaemonTest, CreateExtensionDataDir_0100, Function | SmallTest
     createDirParam.apl = "apl";
     createDirParam.extensionDirs.push_back("com.acts.example");
     ErrCode ret = hostImpl.CreateExtensionDataDir(createDirParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**

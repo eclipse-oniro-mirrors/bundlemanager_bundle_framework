@@ -520,10 +520,6 @@ bool InstalldOperator::ExtractFiles(const std::map<std::string, std::string> &hn
                 LOG_E(BMS_TAG_INSTALLD, "illegal native bundle");
                 continue;
             }
-            if (targetName.find("..") != std::string::npos) {
-                LOG_E(BMS_TAG_INSTALLD, "hnp target name err: %{public}s", targetName.c_str());
-                continue;
-            }
             targetPathAndName = extractParam.targetPath + hnpPackageInfoMap[targetName]
                                 + ServiceConstants::PATH_SEPARATOR + targetName;
             if (targetPathAndName.find("..") != std::string::npos) {

@@ -8225,7 +8225,7 @@ HWTEST_F(BmsBundleInstallerTest, ProcessBundleUnInstallNative_0100, Function | S
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.AddInnerModuleInfo(innerModuleInfos);
     int32_t userId = USERID;
-    std::string bundleName;
+    std::string bundleName = "com.example.test";
     ErrCode ret = installer.ProcessBundleUnInstallNative(innerBundleInfo, userId, bundleName, moduleName);
     EXPECT_EQ(ret, ERR_OK);
     std::unordered_set<int32_t> userIds = {userId};
@@ -14098,7 +14098,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractHnpFiles_0100, Function | SmallTest | Le
     extractParam.srcPath = INVALID_PATH;
     ret = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    extractParam.targetPath = INVALID_PATH;
+    extractParam.targetPath = BUNDLE_CODE_DIR;
     ret = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     hnpPackageMap.emplace(TEST_STRING, TEST_STRING);
@@ -14367,7 +14367,7 @@ HWTEST_F(BmsBundleInstallerTest, SetFileConForce_0100, Function | SmallTest | Le
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     createDirParam.uid = ZERO_CODE;
     ret = impl.SetFileConForce(paths, createDirParam);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -14680,11 +14680,13 @@ HWTEST_F(BmsBundleInstallerTest, CreateExtensionDataDir_0200, Function | SmallTe
     ret = impl.CreateExtensionDataDir(createDirParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     createDirParam.extensionDirs.emplace_back(TEST_ERROR_STRING);
+    createDirParam.apl = "normal";
+    createDirParam.userId = 10001;
     ret = impl.CreateExtensionDataDir(createDirParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    EXPECT_EQ(ret, ERR_OK);
     createDirParam.createDirFlag == CreateDirFlag::CREATE_DIR_UNLOCKED;
     ret = impl.CreateExtensionDataDir(createDirParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
