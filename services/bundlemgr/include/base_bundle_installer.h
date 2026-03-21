@@ -613,7 +613,7 @@ private:
     bool CheckReleaseTypeIsCompatible(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
         const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
-    void SetAPIAndSdkVersions(int32_t targetAPIVersion, uint32_t minAPIVersion, const std::string &compileSdlVersion);
+    void SetAPIAndSdkVersions(int32_t targetAPIVersion, uint32_t minAPIVersion, const std::string &compileSdkVersion);
     void SetUid(int32_t uid);
     void StopRelable(const InnerBundleInfo &info);
     void SetIsAbcCompressed();

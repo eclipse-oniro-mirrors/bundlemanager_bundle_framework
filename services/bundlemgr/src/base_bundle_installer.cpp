@@ -2721,6 +2721,10 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             }
             // process resource
             BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId_, ADD_RESOURCE_TYPE::CREATE_USER);
+            SetAPIAndSdkVersions(oldInfo.GetBaseApplicationInfo().apiTargetVersion,
+                oldInfo.GetBaseApplicationInfo().apiCompatibleVersion,
+                oldInfo.GetBaseApplicationInfo().compileSdkVersion);
+            SetUid(uid);
             return ERR_OK;
         }
     }
@@ -8849,11 +8853,11 @@ bool BaseBundleInstaller::IsBundleCrossAppSharedConfig(const std::unordered_map<
 }
 
 void BaseBundleInstaller::SetAPIAndSdkVersions(int32_t targetAPIVersion,
-    uint32_t minAPIVersion, const std::string &compileSdlVersion)
+    uint32_t minAPIVersion, const std::string &compileSdkVersion)
 {
     sysEventInfo_.minAPIVersion = minAPIVersion;
     sysEventInfo_.targetAPIVersion = targetAPIVersion;
-    sysEventInfo_.compileSdkVersion = compileSdlVersion;
+    sysEventInfo_.compileSdkVersion = compileSdkVersion;
 }
 
 void BaseBundleInstaller::SetUid(int32_t uid)
