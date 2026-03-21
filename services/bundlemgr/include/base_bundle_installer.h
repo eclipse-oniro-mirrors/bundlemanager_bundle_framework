@@ -572,7 +572,8 @@ private:
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info, bool async) const;
     ErrCode RemoveBundleDataDir(
         const InnerBundleInfo &info, bool forException = false, const bool async = false);
-    void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const bool isBundleUpdate = false) const;
     std::string GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     ErrCode UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo, const bool isDebugGrant = false);
     ErrCode SetDirApl(const InnerBundleInfo &info);
@@ -708,7 +709,7 @@ private:
     void UpdateAppInstallControlled(int32_t userId);
     void UpdateHasCloudkitConfig();
     ErrCode MoveSoFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos,
-        bool needDeleteOldLibraryPath);
+        bool needDeleteOldLibraryPath, bool isBundleUpdate = false);
     ErrCode FinalProcessHapAndSoForBundleUpdate(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         bool needCopyHapToInstallPath, bool needDeleteOldLibraryPath);
     void GetDataGroupIds(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
@@ -752,7 +753,7 @@ private:
     void DeleteOldNativeLibraryPath() const;
     std::string GetRealSoPath(const std::string &bundleName, const std::string &nativeLibraryPath,
         bool isNeedDeleteOldPath) const;
-    void RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &innerBundleInfo) const;
+    void RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &innerBundleInfo, const bool isBundleUpdate = false) const;
     void UpdateDeveloperId(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
@@ -883,6 +884,9 @@ private:
     ErrCode ProcessBundleCodePath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const InnerBundleInfo &oldInfo, const std::string &bundleName,
         const bool isBundleUpdate, const bool needCopyHap);
+    ErrCode InnerProcessCodePathCreateNewDir(const std::string &bundleName, const bool isBundleUpdate);
+    ErrCode InnerProcessCodePathRealToOld(const std::string &bundleName, const uint32_t oldVersionCode);
+    ErrCode InnerProcessCodePathNewToReal(const std::string &bundleName, const uint32_t oldVersionCode);
     void ProcessOldCodePath(const std::string &bundleName, const bool isBundleUpdate);
     void RollbackCodePath(const std::string &bundleName, bool isBundleUpdate);
     void InnerProcessTargetSoPath(const InnerBundleInfo &info, const bool isBundleUpdate,

@@ -32,8 +32,14 @@ public:
     ErrCode DeleteBundleExceptionInfo(const std::string &bundleName);
     void HandleBundleExceptionInfo(const std::string &bundleName, const InstallExceptionInfo &installExceptionInfo);
     void HandleAllBundleExceptionInfo();
+    bool HandleBundleExceptionInfo(const std::string &bundleName);
 
 private:
+    ErrCode InnerProcessCreateNewDir(const std::string &bundleName);
+    ErrCode InnerProcessRealToOldPath(const std::string &bundleName);
+    ErrCode InnerProcessNewToRealPath(const std::string &bundleName, const uint32_t oldVersionCode);
+    ErrCode InnerProcessDeleteOldPath(const std::string &bundleName);
+
     std::shared_ptr<InstallExceptionMgrRdb> installExceptionMgr_;
 };
 }  // namespace AppExecFwk

@@ -26,14 +26,14 @@ namespace OHOS {
 namespace AppExecFwk {
 
 enum class InstallRenameExceptionStatus : uint8_t {
-    UNKOWN_STATUS = 0,
+    CREATE_NEW_DIR = 0,
     RENAME_RELA_TO_OLD_PATH = 1,
-    RENAME_NEW_TO_RELA_PATH = 2,
+    RENAME_NEW_TO_REAL_PATH = 2,
     DELETE_OLD_PATH = 3,
 };
 
 struct InstallExceptionInfo {
-    InstallRenameExceptionStatus status = InstallRenameExceptionStatus::UNKOWN_STATUS;
+    InstallRenameExceptionStatus status = InstallRenameExceptionStatus::CREATE_NEW_DIR;
     uint32_t versionCode = 0;
     bool FromString(const std::string &installExceptionInfoStr);
     std::string ToString() const;
@@ -46,6 +46,7 @@ public:
     ErrCode SaveBundleExceptionInfo(const std::string &bundleName, const InstallExceptionInfo &installExceptionInfo);
     ErrCode DeleteBundleExceptionInfo(const std::string &bundleName);
     void GetAllBundleExceptionInfo(std::map<std::string, InstallExceptionInfo> &bundleExceptionInfos);
+    bool GetBundleExceptionInfo(const std::string &bundleName, InstallExceptionInfo &installExceptionInfo);
 
 private:
     std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;

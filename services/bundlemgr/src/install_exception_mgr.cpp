@@ -15,6 +15,7 @@
 
 #include "install_exception_mgr.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_mgr_service.h"
@@ -56,60 +57,28 @@ ErrCode InstallExceptionMgr::DeleteBundleExceptionInfo(const std::string &bundle
 void InstallExceptionMgr::HandleBundleExceptionInfo(
     const std::string &bundleName, const InstallExceptionInfo &installExceptionInfo)
 {
-    APP_LOGI("bundle %{public}s install exception status %{public}d", bundleName.c_str(),
-        static_cast<int32_t>(installExceptionInfo.status));
+    LOG_NOFUNC_W(BMS_TAG_INSTALLER, "exception mgr bundle %{public}s exception status %{public}d",
+        bundleName.c_str(), static_cast<int32_t>(installExceptionInfo.status));
     switch (installExceptionInfo.status) {
-        case InstallRenameExceptionStatus::RENAME_RELA_TO_OLD_PATH :
-        case InstallRenameExceptionStatus::RENAME_NEW_TO_RELA_PATH : {
-            InnerBundleInfo bundleInfo;
-            auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-            if ((dataMgr != nullptr) && (!dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo))) {
-                APP_LOGW("bundle %{public}s not exist", bundleName.c_str());
-            }
-            if (bundleInfo.GetVersionCode() == installExceptionInfo.versionCode) {
-                std::string realPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-                    bundleName;
-                std::string oldPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-                    std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
-                ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, realPath);
-                if (result == ERR_OK) {
-                    (void)DeleteBundleExceptionInfo(bundleName);
-                } else {
-                    APP_LOGE("rename module dir failed, error is %{public}d, errno %{public}d", result, errno);
-                }
-                std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-                    std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
-                result = InstalldClient::GetInstance()->RemoveDir(newPath);
-                if (result != ERR_OK) {
-                    APP_LOGE("remove dir failed, error is %{public}d, errno %{public}d", result, errno);
-                }
-                return;
-            }
+        case InstallRenameExceptionStatus::CREATE_NEW_DIR : {
+            InnerProcessCreateNewDir(bundleName);
+            break;
+        }
+        case InstallRenameExceptionStatus::RENAME_RELA_TO_OLD_PATH : {
+            InnerProcessRealToOldPath(bundleName);
+            break;
+        }
+        case InstallRenameExceptionStatus::RENAME_NEW_TO_REAL_PATH : {
+            InnerProcessNewToRealPath(bundleName, installExceptionInfo.versionCode);
+            break;
         }
         case InstallRenameExceptionStatus::DELETE_OLD_PATH : {
-            std::string oldPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-                std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
-            std::string tempPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-                std::string(ServiceConstants::BUNDLE_TEMP_CODE_DIR) + bundleName;
-            // rename first
-            ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, tempPath);
-            if (result == ERR_OK) {
-                result = InstalldClient::GetInstance()->RemoveDir(tempPath);
-            } else {
-                APP_LOGE("rename temp dir failed, error is %{public}d, errno %{public}d", result, errno);
-                result = InstalldClient::GetInstance()->RemoveDir(oldPath);
-            }
-            if (result == ERR_OK) {
-                (void)DeleteBundleExceptionInfo(bundleName);
-            } else {
-                APP_LOGE("remove dir failed, error is %{public}d, errno %{public}d", result, errno);
-            }
+            InnerProcessDeleteOldPath(bundleName);
             break;
         }
         default :
             APP_LOGE("bundle %{public}s install unknown exception status %{public}d",
                 bundleName.c_str(), static_cast<int32_t>(installExceptionInfo.status));
-            (void)DeleteBundleExceptionInfo(bundleName);
     }
 }
 
@@ -125,52 +94,127 @@ void InstallExceptionMgr::HandleAllBundleExceptionInfo()
     for (const auto &exceptionInfo : bundleExceptionInfos) {
         HandleBundleExceptionInfo(exceptionInfo.first, exceptionInfo.second);
     }
-    // process +old- +new- path throw scan code path
-    std::vector<std::string> allCodePath;
-    ErrCode result = InstalldClient::GetInstance()->ScanDir(Constants::BUNDLE_CODE_DIR,
-        ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, allCodePath);
+    APP_LOGI("handle exception end, all size %{public}zu", bundleExceptionInfos.size());
+}
+
+bool InstallExceptionMgr::HandleBundleExceptionInfo(const std::string &bundleName)
+{
+    if (installExceptionMgr_ == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "installExceptionMgr_ is null");
+        return false;
+    }
+    if (bundleName.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "exception mgr bundleName is empty");
+        return false;
+    }
+    InstallExceptionInfo installExceptionInfo;
+    if (!installExceptionMgr_->GetBundleExceptionInfo(bundleName, installExceptionInfo)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "exception mgr -n %{public}s not exist in db", bundleName.c_str());
+        return false;
+    }
+    HandleBundleExceptionInfo(bundleName, installExceptionInfo);
+    return true;
+}
+
+ErrCode InstallExceptionMgr::InnerProcessCreateNewDir(const std::string &bundleName)
+{
+    std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
+    ErrCode result = InstalldClient::GetInstance()->RemoveDir(newPath);
+    if (result == ERR_OK) {
+        (void)DeleteBundleExceptionInfo(bundleName);
+    } else {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, " exception mgr delete -n %{public}s new path failed", bundleName.c_str());
+    }
+    return result;
+}
+
+ErrCode InstallExceptionMgr::InnerProcessRealToOldPath(const std::string &bundleName)
+{
+    /**
+     * 1.rename +old- to real
+     *  +old exist, real not exist
+     *  +old not exist, real exist
+     */
+    std::string oldPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
+    std::string realPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        bundleName;
+    ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, realPath);
+    if (result == ERR_OK) {
+        (void)DeleteBundleExceptionInfo(bundleName);
+    } else {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "exception mgr rename +old- to real dir failed -e %{public}d", result);
+    }
+    // 2.delete +new-
+    std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
+    result = InstalldClient::GetInstance()->RemoveDir(newPath);
     if (result != ERR_OK) {
-        APP_LOGW("ScanDir code path failed");
-        return;
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "exception mgr delete -n %{public}s new path failed", bundleName.c_str());
     }
-    for (const auto &codePath : allCodePath) {
-        if (codePath.find(ServiceConstants::BUNDLE_OLD_CODE_DIR) == 0) {
-            APP_LOGI("+old- code path %{public}s", codePath.c_str());
-            std::string bundleName = codePath.substr(std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR).size());
-            if (bundleName.empty() || (bundleExceptionInfos.find(bundleName) != bundleExceptionInfos.end())) {
-                continue;
-            }
-            std::string oldCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
-                ServiceConstants::PATH_SEPARATOR + codePath;
-            std::string realCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
-                ServiceConstants::PATH_SEPARATOR + bundleName;
-            // realPath exist, then delete +old-
-            if (std::find(allCodePath.begin(), allCodePath.end(), bundleName) != allCodePath.end()) {
-                (void)InstalldClient::GetInstance()->RemoveDir(oldCodePath);
-                continue;
-            }
-            // realPath not exist, then rename +old-
-            ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldCodePath, realCodePath);
-            if (result != ERR_OK) {
-                APP_LOGW("rename +old- to real code path failed, error is %{public}d", result);
-            }
-            continue;
-        }
-        if (codePath.find(ServiceConstants::BUNDLE_NEW_CODE_DIR) == 0) {
-            APP_LOGI("+new- code path %{public}s", codePath.c_str());
-            std::string newCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
-                ServiceConstants::PATH_SEPARATOR + codePath;
-            (void)InstalldClient::GetInstance()->RemoveDir(newCodePath);
-            continue;
-        }
-        if (codePath.find(ServiceConstants::BUNDLE_TEMP_CODE_DIR) == 0) {
-            APP_LOGI("+temp- code path %{public}s", codePath.c_str());
-            std::string tempCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
-                ServiceConstants::PATH_SEPARATOR + codePath;
-            (void)InstalldClient::GetInstance()->RemoveDir(tempCodePath);
-        }
+    return result;
+}
+
+ErrCode InstallExceptionMgr::InnerProcessNewToRealPath(const std::string &bundleName, const uint32_t oldVersionCode)
+{
+    InnerBundleInfo bundleInfo;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if ((dataMgr != nullptr) && (!dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo))) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, " exception mgr bundle %{public}s not exist", bundleName.c_str());
     }
-    APP_LOGI("handle exception end");
+    /**
+     * rename +old- to real, or delete +old-
+     * versionCode same:
+     *  +old- exist, +new- exist, real not exist
+     *  +old- exist, +new- not exist, real exist
+     * versionCode not same:
+     *  delete +old-
+     */
+    ErrCode result = ERR_OK;
+    if (bundleInfo.GetVersionCode() == oldVersionCode) {
+        std::string realPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+            bundleName;
+        std::string oldPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
+        result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, realPath);
+        if (result == ERR_OK) {
+            (void)DeleteBundleExceptionInfo(bundleName);
+        } else {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, " exception mgr rename +old to real dir failed -e %{public}d", result);
+        }
+        std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+            std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
+        result = InstalldClient::GetInstance()->RemoveDir(newPath);
+        if (result != ERR_OK) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "exception mgr remove dir failed, -e %{public}d errno %{public}d",
+                result, errno);
+        }
+    } else {
+        result = InnerProcessDeleteOldPath(bundleName);
+    }
+    return result;
+}
+
+ErrCode InstallExceptionMgr::InnerProcessDeleteOldPath(const std::string &bundleName)
+{
+    std::string oldPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
+    std::string tempPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_TEMP_CODE_DIR) + bundleName;
+    // rename first
+    ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, tempPath);
+    if (result == ERR_OK) {
+        result = InstalldClient::GetInstance()->RemoveDir(tempPath);
+    } else {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "exception mgr rename temp dir failed -e %{public}d", result);
+    }
+    if (result == ERR_OK) {
+        (void)DeleteBundleExceptionInfo(bundleName);
+    } else {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "exception mgr remove temp dir failed -e %{public}d", result);
+    }
+    return result;
 }
 } // AppExecFwk
 } // OHOS
