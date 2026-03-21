@@ -498,11 +498,5 @@ ErrCode InstalldClient::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
 {
     return ERR_OK;
 }
-
-ErrCode InstalldClient::ChmodFiles(const std::vector<std::string> &filePaths, uint32_t mode,
-    const std::string &bundleName, const std::string &nativeLibraryPath)
-{
-    return ERR_OK;
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

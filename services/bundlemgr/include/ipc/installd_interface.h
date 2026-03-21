@@ -561,12 +561,6 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode ChmodFiles(const std::vector<std::string> &filePaths, uint32_t mode,
-        const std::string &bundleName, const std::string &nativeLibraryPath)
-    {
-        return ERR_OK;
-    }
-
     virtual ErrCode ResetBmsDBSecurity()
     {
         return ERR_OK;

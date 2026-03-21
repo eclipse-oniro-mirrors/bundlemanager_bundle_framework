@@ -297,9 +297,6 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::PROCESS_BIN_FILES):
             result = HandleProcessBinFiles(data, reply);
             break;
-        case static_cast<uint32_t>(InstalldInterfaceCode::CHMOD_FILES):
-            result = HandleChmodFiles(data, reply);
-            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1384,35 +1381,6 @@ bool InstalldHost::HandleProcessBinFiles(MessageParcel &data, MessageParcel &rep
     }
 
     ErrCode result = ProcessBinFiles(*verifyBinParam);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    return true;
-}
-
-bool InstalldHost::HandleChmodFiles(MessageParcel &data, MessageParcel &reply)
-{
-    int32_t size = data.ReadInt32();
-    if (size <= 0 || size > MAX_VEC_SIZE) {
-        LOG_E(BMS_TAG_INSTALLD, "filePaths size is invalid");
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-        return false;
-    }
-
-    std::vector<std::string> filePaths;
-    filePaths.reserve(size);
-    for (int32_t i = 0; i < size; ++i) {
-        std::string path = Str16ToStr8(data.ReadString16());
-        if (path.empty()) {
-            LOG_E(BMS_TAG_INSTALLD, "filePath %{public}d is empty", i);
-            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-            return false;
-        }
-        filePaths.emplace_back(path);
-    }
-
-    uint32_t mode = data.ReadUint32();
-    std::string bundleName = data.ReadString();
-    std::string nativeLibraryPath = data.ReadString();
-    ErrCode result = ChmodFiles(filePaths, mode, bundleName, nativeLibraryPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

@@ -745,12 +745,6 @@ ErrCode InstalldClient::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
     return CallService(&IInstalld::ProcessBinFiles, verifyBinParam);
 }
 
-ErrCode InstalldClient::ChmodFiles(const std::vector<std::string> &filePaths, uint32_t mode,
-    const std::string &bundleName, const std::string &nativeLibraryPath)
-{
-    return CallService(&IInstalld::ChmodFiles, filePaths, mode, bundleName, nativeLibraryPath);
-}
-
 ErrCode InstalldClient::ResetBmsDBSecurity()
 {
     return CallService(&IInstalld::ResetBmsDBSecurity);

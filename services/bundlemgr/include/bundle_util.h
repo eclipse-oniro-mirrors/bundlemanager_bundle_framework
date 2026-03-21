@@ -264,6 +264,7 @@ public:
     static bool GetDisplaysMapFromConfigXml(std::unordered_map<std::string, uint64_t> &displaysMap);
     static bool PatchReadWhiteListXml(std::unordered_map<uint64_t, std::vector<std::string>> &logicalIdWhiteListMap);
     static void ParseAllowedNodeConfig(const xmlNodePtr &rootPtr, std::vector<std::string> &bundleNames);
+    static bool IsExecutableBinaryFile(const std::string &filePath);
 private:
     static std::mutex g_mutex;
     static std::recursive_mutex configXmlMutex_;

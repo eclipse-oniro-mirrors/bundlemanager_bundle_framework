@@ -13,17 +13,20 @@
 * limitations under the License.
 */
 
+#include <cstring>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include "bundle_util.h"
+#include "elf.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
 namespace {
+const std::string TEST_FILE_PATH = "/data/local/tmp/test_elf_file";
 }  // namespace
 
 class BundleUtilTest : public testing::Test {
@@ -38,6 +41,7 @@ public:
     void TearDown() override
     {
         std::remove(tempFile.c_str());
+        std::remove(TEST_FILE_PATH.c_str());
     }
     std::string tempFile;
 };
@@ -121,5 +125,163 @@ HWTEST_F(BundleUtilTest, GetOrphanNodes_FileDataValid, TestSize.Level2)
 HWTEST_F(BundleUtilTest, CheckOrphanNOdeUseRateIsSufficient_Normal, TestSize.Level2)
 {
     EXPECT_TRUE(BundleUtil::CheckOrphanNodeUseRateIsSufficient());
+}
+
+/**
+ * @tc.number: IsExecutableBinaryFile_001
+ * @tc.name: test IsExecutableBinaryFile with empty file
+ * @tc.desc: 1. file is empty
+ *           2. return false
+ */
+HWTEST_F(BundleUtilTest, IsExecutableBinaryFile_001, TestSize.Level2)
+{
+    std::ofstream file(TEST_FILE_PATH);
+    file.close();
+    EXPECT_FALSE(BundleUtil::IsExecutableBinaryFile(TEST_FILE_PATH));
+}
+
+/**
+ * @tc.number: IsExecutableBinaryFile_002
+ * @tc.name: test IsExecutableBinaryFile with non-ELF file
+ * @tc.desc: 1. file content is not ELF format
+ *           2. return false
+ */
+HWTEST_F(BundleUtilTest, IsExecutableBinaryFile_002, TestSize.Level2)
+{
+    std::ofstream file(TEST_FILE_PATH, std::ios::binary);
+    const char *data = "Not an ELF file content";
+    file.write(data, strlen(data));
+    file.close();
+    EXPECT_FALSE(BundleUtil::IsExecutableBinaryFile(TEST_FILE_PATH));
+}
+
+/**
+ * @tc.number: IsExecutableBinaryFile_003
+ * @tc.name: test IsExecutableBinaryFile with invalid ELF class
+ * @tc.desc: 1. ELF magic is correct but class is invalid
+ *           2. return false
+ */
+HWTEST_F(BundleUtilTest, IsExecutableBinaryFile_003, TestSize.Level2)
+{
+    std::ofstream file(TEST_FILE_PATH, std::ios::binary);
+    unsigned char data[EI_NIDENT] = {0};
+    data[EI_MAG0] = ELFMAG0;
+    data[EI_MAG1] = ELFMAG1;
+    data[EI_MAG2] = ELFMAG2;
+    data[EI_MAG3] = ELFMAG3;
+    data[EI_CLASS] = 0;
+    file.write(reinterpret_cast<char*>(data), sizeof(data));
+    file.close();
+    EXPECT_FALSE(BundleUtil::IsExecutableBinaryFile(TEST_FILE_PATH));
+}
+
+/**
+ * @tc.number: IsExecutableBinaryFile_004
+ * @tc.name: test IsExecutableBinaryFile with ELF64 shared library
+ * @tc.desc: 1. ELF64 file with ET_DYN type and e_entry=0
+ *           2. return false (not executable)
+ */
+HWTEST_F(BundleUtilTest, IsExecutableBinaryFile_004, TestSize.Level2)
+{
+    std::ofstream file(TEST_FILE_PATH, std::ios::binary);
+    Elf64_Ehdr ehdr = {};
+    ehdr.e_ident[EI_MAG0] = ELFMAG0;
+    ehdr.e_ident[EI_MAG1] = ELFMAG1;
+    ehdr.e_ident[EI_MAG2] = ELFMAG2;
+    ehdr.e_ident[EI_MAG3] = ELFMAG3;
+    ehdr.e_ident[EI_CLASS] = ELFCLASS64;
+    ehdr.e_type = ET_DYN;
+    ehdr.e_entry = 0;
+    file.write(reinterpret_cast<char*>(&ehdr), sizeof(ehdr));
+    file.close();
+    EXPECT_FALSE(BundleUtil::IsExecutableBinaryFile(TEST_FILE_PATH));
+}
+
+/**
+ * @tc.number: IsExecutableBinaryFile_005
+ * @tc.name: test IsExecutableBinaryFile with ELF64 executable
+ * @tc.desc: 1. ELF64 file with ET_EXEC type
+ *           2. return true
+ */
+HWTEST_F(BundleUtilTest, IsExecutableBinaryFile_005, TestSize.Level2)
+{
+    std::ofstream file(TEST_FILE_PATH, std::ios::binary);
+    Elf64_Ehdr ehdr = {};
+    ehdr.e_ident[EI_MAG0] = ELFMAG0;
+    ehdr.e_ident[EI_MAG1] = ELFMAG1;
+    ehdr.e_ident[EI_MAG2] = ELFMAG2;
+    ehdr.e_ident[EI_MAG3] = ELFMAG3;
+    ehdr.e_ident[EI_CLASS] = ELFCLASS64;
+    ehdr.e_type = ET_EXEC;
+    ehdr.e_entry = 0x1000;
+    file.write(reinterpret_cast<char*>(&ehdr), sizeof(ehdr));
+    file.close();
+    EXPECT_TRUE(BundleUtil::IsExecutableBinaryFile(TEST_FILE_PATH));
+}
+
+/**
+ * @tc.number: IsExecutableBinaryFile_006
+ * @tc.name: test IsExecutableBinaryFile with ELF64 PIE executable
+ * @tc.desc: 1. ELF64 file with ET_DYN type and e_entry!=0
+ *           2. return true
+ */
+HWTEST_F(BundleUtilTest, IsExecutableBinaryFile_006, TestSize.Level2)
+{
+    std::ofstream file(TEST_FILE_PATH, std::ios::binary);
+    Elf64_Ehdr ehdr = {};
+    ehdr.e_ident[EI_MAG0] = ELFMAG0;
+    ehdr.e_ident[EI_MAG1] = ELFMAG1;
+    ehdr.e_ident[EI_MAG2] = ELFMAG2;
+    ehdr.e_ident[EI_MAG3] = ELFMAG3;
+    ehdr.e_ident[EI_CLASS] = ELFCLASS64;
+    ehdr.e_type = ET_DYN;
+    ehdr.e_entry = 0x1000;
+    file.write(reinterpret_cast<char*>(&ehdr), sizeof(ehdr));
+    file.close();
+    EXPECT_TRUE(BundleUtil::IsExecutableBinaryFile(TEST_FILE_PATH));
+}
+
+/**
+ * @tc.number: IsExecutableBinaryFile_007
+ * @tc.name: test IsExecutableBinaryFile with ELF32 executable
+ * @tc.desc: 1. ELF32 file with ET_EXEC type
+ *           2. return true
+ */
+HWTEST_F(BundleUtilTest, IsExecutableBinaryFile_007, TestSize.Level2)
+{
+    std::ofstream file(TEST_FILE_PATH, std::ios::binary);
+    Elf32_Ehdr ehdr = {};
+    ehdr.e_ident[EI_MAG0] = ELFMAG0;
+    ehdr.e_ident[EI_MAG1] = ELFMAG1;
+    ehdr.e_ident[EI_MAG2] = ELFMAG2;
+    ehdr.e_ident[EI_MAG3] = ELFMAG3;
+    ehdr.e_ident[EI_CLASS] = ELFCLASS32;
+    ehdr.e_type = ET_EXEC;
+    ehdr.e_entry = 0x1000;
+    file.write(reinterpret_cast<char*>(&ehdr), sizeof(ehdr));
+    file.close();
+    EXPECT_TRUE(BundleUtil::IsExecutableBinaryFile(TEST_FILE_PATH));
+}
+
+/**
+ * @tc.number: IsExecutableBinaryFile_008
+ * @tc.name: test IsExecutableBinaryFile with ELF32 PIE executable
+ * @tc.desc: 1. ELF32 file with ET_DYN type and e_entry!=0
+ *           2. return true
+ */
+HWTEST_F(BundleUtilTest, IsExecutableBinaryFile_008, TestSize.Level2)
+{
+    std::ofstream file(TEST_FILE_PATH, std::ios::binary);
+    Elf32_Ehdr ehdr = {};
+    ehdr.e_ident[EI_MAG0] = ELFMAG0;
+    ehdr.e_ident[EI_MAG1] = ELFMAG1;
+    ehdr.e_ident[EI_MAG2] = ELFMAG2;
+    ehdr.e_ident[EI_MAG3] = ELFMAG3;
+    ehdr.e_ident[EI_CLASS] = ELFCLASS32;
+    ehdr.e_type = ET_DYN;
+    ehdr.e_entry = 0x1000;
+    file.write(reinterpret_cast<char*>(&ehdr), sizeof(ehdr));
+    file.close();
+    EXPECT_TRUE(BundleUtil::IsExecutableBinaryFile(TEST_FILE_PATH));
 }
 } // OHOS

@@ -32,7 +32,7 @@
 #include "aot/aot_executor.h"
 #include "app_log_tag_wrapper.h"
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
-#include "binary_security_service_kit.h"
+#include "installd/binary_security_wrapper.h"
 #endif
 #include "bundle_constants.h"
 #include "bundle_service_constants.h"
@@ -105,9 +105,6 @@ enum class DirType : uint8_t {
 constexpr int32_t CONTENT_EDIT = 2;
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
-#endif
-#ifdef SECURITY_PRIVACY_SERVER_ENABLE
-using namespace AppSecurityPrivacy::SecurityPrivacyServer::BinarySecurity;
 #endif
 }
 
@@ -2913,68 +2910,56 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
         LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+    if (verifyBinParam.binFilePaths.empty()) {
+        LOG_D(BMS_TAG_INSTALLD, "binFilePaths is empty");
+        return ERR_OK;
+    }
+    std::string prefix = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        verifyBinParam.bundleName + ServiceConstants::PATH_SEPARATOR;
+    mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
-    std::vector<BinarySecurityServiceKit::BinInfo> infos;
+    std::vector<BinFileInfo> infos;
+#endif
     for (const auto &binFilePath : verifyBinParam.binFilePaths) {
+        if (!InstalldOperator::IsFileNameValid(binFilePath)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid file path: %{public}s", binFilePath.c_str());
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+        if (binFilePath.find(prefix) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid file path: %{public}s", binFilePath.c_str());
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+        if (access(binFilePath.c_str(), F_OK) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "file not exist: %{public}s", binFilePath.c_str());
+            return ERR_APPEXECFWK_INSTALL_ACCESS_FILE_FAILED;
+        }
+        if (chmod(binFilePath.c_str(), mode) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "chmod failed for %{public}s, errno:%{public}d",
+                binFilePath.c_str(), errno);
+            return ERR_APPEXECFWK_INSTALLD_CHMOD_FAILED;
+        }
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
         ErrCode result = InstalldOperator::SetBinFileLabel(binFilePath);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "SetBinFileLabel failed for %{public}s, errcode:%{public}d",
                 binFilePath.c_str(), result);
             return result;
         }
-        BinarySecurityServiceKit::BinInfo binInfo;
+        BinFileInfo binInfo;
         binInfo.path = binFilePath;
         infos.emplace_back(binInfo);
+#endif
     }
-    LOG_D(BMS_TAG_INSTALLD, "ValidateBinPermissions, bundleName:%{public}s, appIdentifier:%{public}s",
+    LOG_D(BMS_TAG_INSTALLD, "bundleName:%{public}s, appIdentifier:%{public}s",
         verifyBinParam.bundleName.c_str(), verifyBinParam.appIdentifier.c_str());
-    auto result = BinarySecurityServiceKit::ProcessHapBinInstall(verifyBinParam.bundleName,
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+    auto result = BinarySecurityWrapper::GetInstance().ProcessHapBinInstall(verifyBinParam.bundleName,
         verifyBinParam.appIdentifier, verifyBinParam.userId, infos);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "ProcessHapBinInstall failed %{public}d", result);
         return ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION;
     }
 #endif
-    return ERR_OK;
-}
-
-ErrCode InstalldHostImpl::ChmodFiles(const std::vector<std::string> &filePaths, uint32_t mode,
-    const std::string &bundleName, const std::string &nativeLibraryPath)
-{
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "permission denied");
-        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
-    }
-
-    if (filePaths.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "filePaths is empty");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    std::string prefix = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-        bundleName + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
-
-    for (const auto &filePath : filePaths) {
-        if (!InstalldOperator::IsFileNameValid(filePath)) {
-            LOG_E(BMS_TAG_INSTALLD, "invalid file path: %{public}s", filePath.c_str());
-            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-        }
-        if (filePath.find(prefix) != 0) {
-            LOG_E(BMS_TAG_INSTALLD, "invalid file path: %{public}s", filePath.c_str());
-            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-        }
-
-        if (access(filePath.c_str(), F_OK) != 0) {
-            LOG_E(BMS_TAG_INSTALLD, "file not exist: %{public}s", filePath.c_str());
-            return ERR_APPEXECFWK_INSTALL_ACCESS_FILE_FAILED;
-        }
-
-        if (chmod(filePath.c_str(), mode) != 0) {
-            LOG_E(BMS_TAG_INSTALLD, "chmod failed for %{public}s, errno:%{public}d",
-                filePath.c_str(), errno);
-            return ERR_APPEXECFWK_INSTALLD_CHMOD_FAILED;
-        }
-    }
-
     return ERR_OK;
 }
 
