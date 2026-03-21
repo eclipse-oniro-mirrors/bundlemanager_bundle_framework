@@ -177,7 +177,7 @@ ErrCode InstallExceptionMgr::InnerProcessNewToRealPath(const std::string &bundle
             bundleName;
         std::string oldPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
-        ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, realPath);
+        result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, realPath);
         if (result == ERR_OK) {
             (void)DeleteBundleExceptionInfo(bundleName);
         } else {
