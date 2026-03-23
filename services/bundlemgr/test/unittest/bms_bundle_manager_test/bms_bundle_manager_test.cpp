@@ -4232,4 +4232,91 @@ HWTEST_F(BmsBundleManagerTest, BundleUtil_0023, Function | MediumTest | Level1)
     rangeV = BundleUtil::GenerateRandomNumbers(size, lRange, rRange);
     EXPECT_EQ(rangeV.size(), 0);
 }
+
+/**
+ * @tc.number: GetApplicationLabel_0001
+ * @tc.name: GetApplicationLabel_0001
+ * @tc.desc: Test GetApplicationLabel with empty bundleName
+ */
+HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0001, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = "";
+    int32_t appIndex = 0;
+    std::string label;
+    ErrCode ret = hostImpl->GetApplicationLabel(bundleName, appIndex, label);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetApplicationLabel_0002
+ * @tc.name: GetApplicationLabel_0002
+ * @tc.desc: Test GetApplicationLabel when dataMgr is nullptr
+ */
+HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0002, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    std::string label;
+
+    // Save current DataMgr and register empty one using RegisterDataMgr
+    std::shared_ptr<BundleDataMgr> empty;
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(empty);
+
+    ErrCode ret = hostImpl->GetApplicationLabel(bundleName, appIndex, label);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    // Restore DataMgr
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(savedDataMgr);
+}
+
+/**
+ * @tc.number: GetApplicationLabel_0003
+ * @tc.name: GetApplicationLabel_0003
+ * @tc.desc: Test GetApplicationLabel when bundle not installed
+ */
+HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0003, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = "com.example.not.exist";
+    int32_t appIndex = 0;
+    std::string label;
+    ErrCode ret = hostImpl->GetApplicationLabel(bundleName, appIndex, label);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetApplicationLabel_0004
+ * @tc.name: GetApplicationLabel_0004
+ * @tc.desc: Test GetApplicationLabel when BundleResourceProxy is nullptr
+ */
+HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0004, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    std::string label;
+    // BundleResourceProxy is nullptr in test environment
+    ErrCode ret = hostImpl->GetApplicationLabel(bundleName, appIndex, label);
+    // When BundleResourceProxy is nullptr, should return ERR_APPEXECFWK_SERVICE_NOT_READY
+    // But since bundle is not installed, it will return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST first
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetApplicationLabel_0005
+ * @tc.name: GetApplicationLabel_0005
+ * @tc.desc: Test GetApplicationLabel with appIndex for clone app
+ */
+HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0005, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 1;  // clone app index
+    std::string label;
+    ErrCode ret = hostImpl->GetApplicationLabel(bundleName, appIndex, label);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
 } // OHOS

@@ -503,6 +503,14 @@ public:
     virtual ErrCode GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, std::string &label) override;
     /**
+     * @brief Obtains the label of a specified application.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index for clone apps, 0 for main app.
+     * @param label Indicates the obtained label.
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    virtual ErrCode GetApplicationLabel(const std::string &bundleName, int32_t appIndex, std::string &label) override;
+    /**
      * @brief Obtains information about an application bundle contained in an ohos Ability Package (HAP).
      * @param hapFilePath Indicates the absolute file path of the HAP.
      * @param flag Indicates the information contained in the BundleInfo object to be returned.

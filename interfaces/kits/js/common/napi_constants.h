@@ -97,6 +97,7 @@ constexpr const char* IS_APPLICATION_ENABLED = "IsApplicationEnabled";
 constexpr const char* QUERY_ABILITY_INFOS_SYNC = "QueryAbilityInfosSync";
 constexpr const char* GET_APP_CLONE_IDENTITY = "getAppCloneIdentity";
 constexpr const char* GET_ABILITY_LABEL = "GetAbilityLabel";
+constexpr const char* GET_APPLICATION_LABEL = "GetApplicationLabel";
 constexpr const char* QUERY_EXTENSION_INFOS_SYNC = "QueryExtensionInfosSync";
 constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE_SYNC = "GetLaunchWantForBundleSync";
 constexpr const char* IS_ABILITY_ENABLED_SYNC = "IsAbilityEnabledSync";

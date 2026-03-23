@@ -2584,5 +2584,80 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleInodeCount_0001, Function | Medium
     EXPECT_EQ(res, ERR_OK);
 }
 
+/**
+ * @tc.number: HandleGetApplicationLabel_0001
+ * @tc.name: test the HandleGetApplicationLabel
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetApplicationLabel with empty data
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetApplicationLabel_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetApplicationLabel(data, reply);
+    // When data is empty, ReadString returns empty string, bundleName is empty
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: HandleGetApplicationLabel_0002
+ * @tc.name: test the HandleGetApplicationLabel
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetApplicationLabel with bundleName and appIndex
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetApplicationLabel_0002, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("com.test.bundle");
+    data.WriteInt32(0);  // appIndex
+    ErrCode res = bundleMgrHost.HandleGetApplicationLabel(data, reply);
+    // HandleGetApplicationLabel returns ERR_OK after writing reply,
+    // even if GetApplicationLabel returns an error
+    EXPECT_EQ(res, ERR_OK);
+    // Read the error code from reply
+    ErrCode innerRet = reply.ReadInt32();
+    // GetApplicationLabel in BundleMgrHost base class returns ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR
+    EXPECT_EQ(innerRet, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetApplicationLabel_0003
+ * @tc.name: test the HandleGetApplicationLabel
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetApplicationLabel with empty bundleName
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetApplicationLabel_0003, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("");
+    data.WriteInt32(0);  // appIndex
+    ErrCode res = bundleMgrHost.HandleGetApplicationLabel(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: HandleGetApplicationLabel_0004
+ * @tc.name: test the HandleGetApplicationLabel
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetApplicationLabel with appIndex for clone app
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetApplicationLabel_0004, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("com.test.bundle");
+    data.WriteInt32(1);  // clone app index
+    ErrCode res = bundleMgrHost.HandleGetApplicationLabel(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    ErrCode innerRet = reply.ReadInt32();
+    EXPECT_EQ(innerRet, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
 } // AppExecFwk
 } // OHOS

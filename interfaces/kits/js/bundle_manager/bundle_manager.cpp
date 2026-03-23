@@ -826,6 +826,17 @@ static ErrCode InnerGetAbilityLabel(const std::string &bundleName, const std::st
     return CommonFunc::ConvertErrCode(ret);
 }
 
+static ErrCode InnerGetApplicationLabel(const std::string &bundleName, int32_t appIndex, std::string &applicationLabel)
+{
+    auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("CommonFunc::GetBundleMgr failed");
+        return ERROR_SYSTEM_ABILITY_NOT_FOUND;
+    }
+    ErrCode ret = bundleMgr->GetApplicationLabel(bundleName, appIndex, applicationLabel);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 #ifdef BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED
 static std::shared_ptr<Media::PixelMap> LoadImageFile(const uint8_t *data, size_t len)
 {
@@ -1665,6 +1676,95 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
 #else
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "getAbilityLabel");
+    napi_throw(env, error);
+    return nullptr;
+#endif
+}
+
+void GetApplicationLabelExec(napi_env env, void *data)
+{
+    ApplicationLabelCallbackInfo *asyncCallbackInfo = reinterpret_cast<ApplicationLabelCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is nullptr");
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetApplicationLabel(asyncCallbackInfo->bundleName,
+        asyncCallbackInfo->appIndex, asyncCallbackInfo->applicationLabel);
+}
+
+void GetApplicationLabelComplete(napi_env env, napi_status status, void *data)
+{
+    ApplicationLabelCallbackInfo *asyncCallbackInfo = reinterpret_cast<ApplicationLabelCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<ApplicationLabelCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[2] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->applicationLabel.c_str(),
+            NAPI_AUTO_LENGTH, &result[1]));
+    } else if (asyncCallbackInfo->err == ERROR_PARAM_CHECK_ERROR) {
+        APP_LOGW("bundleName is empty");
+        result[0] = BusinessError::CreateError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+    } else {
+        APP_LOGE("asyncCallbackInfo errCode: %{public}d", asyncCallbackInfo->err);
+        result[0] = BusinessError::CreateCommonError(
+            env, asyncCallbackInfo->err, GET_APPLICATION_LABEL, BUNDLE_PERMISSIONS);
+    }
+    CommonFunc::NapiReturnDeferred<ApplicationLabelCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetApplicationLabel(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to GetApplicationLabel");
+#ifdef GLOBAL_RESMGR_ENABLE
+    NapiArg args(env, info);
+    ApplicationLabelCallbackInfo *asyncCallbackInfo = new (std::nothrow) ApplicationLabelCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<ApplicationLabelCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("Napi func init failed");
+        return nullptr;
+    }
+    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
+        if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+            return nullptr;
+        }
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], asyncCallbackInfo->appIndex)) {
+            APP_LOGW("parse appIndex failed, use default value 0");
+            asyncCallbackInfo->appIndex = 0;
+        }
+        if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
+            napi_valuetype valueType = napi_undefined;
+            napi_typeof(env, args[ARGS_POS_TWO], &valueType);
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_TWO],
+                    NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+            }
+        }
+    } else {
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    if (asyncCallbackInfo->bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationLabelCallbackInfo>(
+        env, asyncCallbackInfo, "GetApplicationLabel", GetApplicationLabelExec, GetApplicationLabelComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetApplicationLabel done");
+    return promise;
+#else
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "getApplicationLabel");
     napi_throw(env, error);
     return nullptr;
 #endif
