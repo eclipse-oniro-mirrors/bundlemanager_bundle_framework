@@ -612,6 +612,35 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_2600, Function | SmallTest |
 }
 
 /**
+ * @tc.number: CodeSignatureParamTest_0100
+ * @tc.name: test Marshalling and Unmarshalling of CodeSignatureParam
+ * @tc.desc: 1. write CodeSignatureParam into parcel
+ *           2. verify enterprise resigned and internaltesting flags are retained
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParamTest_0100, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = TEST_STRING;
+    codeSignatureParam.cpuAbi = TEST_STRING;
+    codeSignatureParam.targetSoPath = TEST_STRING;
+    codeSignatureParam.signatureFileDir = TEST_STRING;
+    codeSignatureParam.isEnterpriseBundle = true;
+    codeSignatureParam.isEnterpriseResigned = true;
+    codeSignatureParam.appIdentifier = TEST_STRING;
+    codeSignatureParam.isPreInstalledBundle = true;
+    codeSignatureParam.isCompileSdkOpenHarmony = true;
+
+    Parcel parcel;
+    EXPECT_TRUE(codeSignatureParam.Marshalling(parcel));
+    std::unique_ptr<CodeSignatureParam> unmarshalled(CodeSignatureParam::Unmarshalling(parcel));
+    ASSERT_NE(unmarshalled, nullptr);
+    EXPECT_TRUE(unmarshalled->isEnterpriseBundle);
+    EXPECT_TRUE(unmarshalled->isEnterpriseResigned);
+    EXPECT_TRUE(unmarshalled->isPreInstalledBundle);
+    EXPECT_TRUE(unmarshalled->isCompileSdkOpenHarmony);
+}
+
+/**
  * @tc.number: InstalldProxyTest_2700
  * @tc.name: test Marshalling function of FileStat
  * @tc.desc: 1. calling ExecuteAOT of proxy

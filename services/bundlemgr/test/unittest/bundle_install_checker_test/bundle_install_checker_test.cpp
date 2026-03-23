@@ -1038,14 +1038,18 @@ HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0042, TestSize.Level
     hapVerifyResult.SetProvisionInfo(provisionInfo);
     bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
     EXPECT_EQ(codeSignatureParam.profileBlockLength, 0);
+    EXPECT_FALSE(codeSignatureParam.isEnterpriseResigned);
 
     provisionInfo.profileBlockLength = 100;
     provisionInfo.profileBlock = std::make_unique<unsigned char[]>(provisionInfo.profileBlockLength);
     provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_NORMAL;
+    provisionInfo.isEnterpriseResigned = true;
     hapVerifyResult.SetProvisionInfo(provisionInfo);
     codeSignatureParam.profileBlockLength = 0;
+    codeSignatureParam.isEnterpriseResigned = false;
     bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
     EXPECT_EQ(codeSignatureParam.profileBlockLength, 100);
+    EXPECT_TRUE(codeSignatureParam.isEnterpriseResigned);
 
     provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_MDM;
     hapVerifyResult.SetProvisionInfo(provisionInfo);

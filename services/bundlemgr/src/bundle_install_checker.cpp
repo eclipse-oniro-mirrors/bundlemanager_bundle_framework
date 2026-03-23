@@ -2010,6 +2010,7 @@ void BundleInstallChecker::ProcessCodeSignatureParam(
     CodeSignatureParam &codeSignatureParam)
 {
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyResult.GetProvisionInfo();
+    codeSignatureParam.isEnterpriseResigned = provisionInfo.isEnterpriseResigned;
     if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||

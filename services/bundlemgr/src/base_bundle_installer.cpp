@@ -7275,6 +7275,10 @@ ErrCode BaseBundleInstaller::DeliveryProfileToCodeSign() const
         LOG_D(BMS_TAG_INSTALLER, "Emulator does not verify signature");
         return ERR_OK;
     }
+    if (provisionInfo.isEnterpriseResigned) {
+        LOG_I(BMS_TAG_INSTALLER, "enterprise resigned, skip delivery profile to code signature");
+        return ERR_OK;
+    }
     if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||

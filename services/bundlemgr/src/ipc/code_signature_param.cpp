@@ -30,6 +30,7 @@ constexpr const char* CODE_SIGNATURE_CPU_ABI = "cpuAbi";
 constexpr const char* CODE_SIGNATURE_TARGET_SO_PATH = "targetSoPath";
 constexpr const char* CODE_SIGNATURE_SIGNATURE_FILE_PATH = "signatureFileDir";
 constexpr const char* CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE = "isEnterpriseBundle";
+constexpr const char* CODE_SIGNATURE_IS_ENTERPRISE_RESIGNED = "isEnterpriseResigned";
 constexpr const char* CODE_SIGNATURE_APP_IDENTIFIER = "appIdentifier";
 constexpr const char* CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE = "isPreInstalledBundle";
 constexpr const char* CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY = "isCompileSdkOpenHarmony";
@@ -46,6 +47,7 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
     targetSoPath = Str16ToStr8(parcel.ReadString16());
     signatureFileDir = Str16ToStr8(parcel.ReadString16());
     isEnterpriseBundle = parcel.ReadBool();
+    isEnterpriseResigned = parcel.ReadBool();
     appIdentifier = Str16ToStr8(parcel.ReadString16());
     isPreInstalledBundle = parcel.ReadBool();
     isCompileSdkOpenHarmony = parcel.ReadBool();
@@ -81,6 +83,7 @@ bool CodeSignatureParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(targetSoPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(signatureFileDir));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEnterpriseBundle);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEnterpriseResigned);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPreInstalledBundle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isCompileSdkOpenHarmony);
@@ -116,6 +119,7 @@ std::string CodeSignatureParam::ToString() const
         { CODE_SIGNATURE_TARGET_SO_PATH, targetSoPath },
         { CODE_SIGNATURE_SIGNATURE_FILE_PATH, signatureFileDir },
         { CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE, isEnterpriseBundle },
+        { CODE_SIGNATURE_IS_ENTERPRISE_RESIGNED, isEnterpriseResigned },
         { CODE_SIGNATURE_APP_IDENTIFIER, appIdentifier },
         { CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE, isPreInstalledBundle },
         { CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY, isCompileSdkOpenHarmony },
