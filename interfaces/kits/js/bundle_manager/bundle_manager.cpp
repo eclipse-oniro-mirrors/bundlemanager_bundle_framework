@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -4546,6 +4546,11 @@ void CreateProfileTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(
         env, static_cast<int32_t>(ProfileType::INTENT_PROFILE), &nIntentProfile));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "INTENT_PROFILE", nIntentProfile));
+
+    napi_value nCloudProfile;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(
+        env, static_cast<int32_t>(ProfileType::CLOUD_PROFILE), &nCloudProfile));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CLOUD_PROFILE", nCloudProfile));
 }
 
 void GetAppProvisionInfoExec(napi_env env, void *data)

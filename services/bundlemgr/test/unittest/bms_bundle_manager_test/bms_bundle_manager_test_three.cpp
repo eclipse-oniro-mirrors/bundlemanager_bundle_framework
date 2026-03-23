@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1476,6 +1476,49 @@ HWTEST_F(BmsBundleManagerTest3, GetJsonProfile_0007, Function | SmallTest | Leve
     auto ret = dataMgr->GetJsonProfile(profileType, BUNDLE_PREVIEW_NAME, EMPTY_STRING, profile, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST);
     UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
+ * @tc.number: GetJsonProfile_0008
+ * @tc.name: GetJsonProfile
+ * @tc.desc: 1. GetJsonProfile with wrong bundle name
+ *           2. GetJsonProfile failed, return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleManagerTest3, GetJsonProfile_0008, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string wrongName = "wrong";
+    std::string profile;
+
+    auto ret = dataMgr->GetJsonProfile(static_cast<ProfileType>(100), wrongName, MODULE_NAME, profile, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST);
+}
+ 
+ /**
+  * @tc.number: GetJsonProfile_0009
+  * @tc.name: GetJsonProfile
+  * @tc.desc: 1. GetJsonProfile
+  *           2. GetJsonProfile failed, return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+  */
+HWTEST_F(BmsBundleManagerTest3, GetJsonProfile_0009, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ProfileType profileType = AppExecFwk::ProfileType::INTENT_PROFILE;
+    std::string profile;
+
+    auto it = dataMgr->bundleInfos_.find(BUNDLE_BACKUP_NAME);
+    if (it != dataMgr->bundleInfos_.end()) {
+        it->second.innerBundleUserInfos_.clear();
+    }
+    auto ret = dataMgr->GetJsonProfile(profileType, BUNDLE_BACKUP_NAME, MODULE_NAME, profile, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
 /**

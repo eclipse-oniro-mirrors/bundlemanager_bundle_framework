@@ -4732,6 +4732,40 @@ HWTEST_F(BmsDataMgrTest, GetJsonProfile_0001, Function | MediumTest | Level1)
 }
 
 /**
+ * @tc.number: GetJsonProfileByExtractor_0001
+ * @tc.name: GetJsonProfileByExtractor
+ * @tc.desc: empty hapPath, bundle extractor init failed,
+ *           return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR
+ */
+HWTEST_F(BmsDataMgrTest, GetJsonProfileByExtractor_0001, Function | SmallTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hapPath = "";
+    std::string profilePath = "module.json";
+    std::string profile;
+    ErrCode ret = bundleDataMgr.GetJsonProfileByExtractor(hapPath, profilePath, profile);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+    EXPECT_TRUE(profile.empty());
+}
+
+/**
+ * @tc.number: GetJsonProfileByExtractor_0002
+ * @tc.name: GetJsonProfileByExtractor
+ * @tc.desc: valid hapPath but profile not in HAP,
+ *           return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, GetJsonProfileByExtractor_0002, Function | SmallTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hapPath = HAP_FILE_PATH1;
+    std::string profilePath = "nonexistent_profile_path.json";
+    std::string profile;
+    ErrCode ret = bundleDataMgr.GetJsonProfileByExtractor(hapPath, profilePath, profile);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST);
+    EXPECT_TRUE(profile.empty());
+}
+
+/**
  * @tc.number: GenerateNewUserDataGroupInfos_0001
  * @tc.name: GenerateNewUserDataGroupInfos
  * @tc.desc: test GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId)

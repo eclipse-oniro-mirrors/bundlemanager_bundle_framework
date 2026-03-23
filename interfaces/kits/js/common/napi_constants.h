@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -192,7 +192,7 @@ constexpr const char* REMOVE_BACKUP_BUNDLE_DATA = "RemoveBackupBundleData";
 constexpr const char* GET_BUNDLE_INSTALL_STATUS = "getBundleInstallStatus";
 constexpr const char* IS_APPLICATION_DISABLE_FORBIDDEN = "isApplicationDisableForbidden";
 
-inline const std::set<int32_t> SUPPORTED_PROFILE_LIST = { 1 };
+inline const std::set<int32_t> SUPPORTED_PROFILE_LIST = { 1, 8 };
 inline const std::set<int32_t> UNINSTALL_COMPONENT_TYPE_LIST = { 1, 2 };
 
 inline std::map<int32_t, std::string> APP_DISTRIBUTION_TYPE_MAP = {
