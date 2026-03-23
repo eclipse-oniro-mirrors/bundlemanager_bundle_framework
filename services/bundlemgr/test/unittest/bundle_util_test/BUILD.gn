@@ -40,6 +40,7 @@ ohos_unittest("BundleUtilTest") {
   ]
 
   external_deps = [
+    "c_utils:utils",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -49,6 +50,10 @@ ohos_unittest("BundleUtilTest") {
     "libxml2:libxml2",
   ]
   defines = []
+  if (configpolicy_enable) {
+    deps += [ "config_policy_utils_mock:config_policy_utils_mock"]
+    defines += [ "CONFIG_POLOCY_ENABLE" ]
+  }
 }
 
 group("unittest") {

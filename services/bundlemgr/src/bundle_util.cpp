@@ -1147,7 +1147,6 @@ std::string BundleUtil::GetNoDisablingConfigPath()
 #endif
 }
 
-
 std::string BundleUtil::GetWhiteListPathByDisplayName(const std::string& displayName)
 {
     std::string displayNameDefaultPath = std::string(APPLIST_WHITELIST_DIR_DEFAULT) + "applist"
@@ -1206,6 +1205,10 @@ uint64_t BundleUtil::ParseStrToUll(const std::string& contentStr)
     }
     uint64_t num;
     auto result = std::from_chars(contentStr.data(), contentStr.data() + contentStr.size(), num);
+    if (result.ptr != contentStr.data() + contentStr.size()) {
+        APP_LOGE("Invalid value with trailing chars: %{public}s", contentStr.c_str());
+        return 0;
+    }
     if (result.ec == std::errc::invalid_argument) {
         APP_LOGE("Invalid value: %{public}s", contentStr.c_str());
         return 0;
@@ -1263,7 +1266,7 @@ bool BundleUtil::GetDisplaysMapFromConfigXml(std::unordered_map<std::string, uin
     }
     xmlNodePtr rootPtr = xmlDocGetRootElement(docPtr);
     if (rootPtr == nullptr || rootPtr->name == nullptr ||
-        xmlStrcmp(rootPtr->name, reinterpret_cast<const xmlChar*>("Configs"))) {
+        xmlStrcmp(rootPtr->name, reinterpret_cast<const xmlChar*>("Configs")) != 0) {
         APP_LOGE("get root element failed!");
         xmlFreeDoc(docPtr);
         return false;
@@ -1290,29 +1293,28 @@ bool BundleUtil::PatchReadWhiteListXml(std::unordered_map<uint64_t, std::vector<
         return false;
     }
     bool isWhiteListExist = false;
-    for (auto displayInfo : displaysMap) {
-        std::string displayName = displayInfo.first;
+    for (const auto &[displayName, logicalId] : displaysMap) {
         auto whiteListFilePath = GetWhiteListPathByDisplayName(displayName);
         xmlDocPtr docPtr = nullptr;
         {
             std::lock_guard<std::recursive_mutex> lock(whiteListXmlMutex_);
             docPtr = xmlReadFile(whiteListFilePath.c_str(), nullptr, XML_PARSE_NOBLANKS);
         }
-        if (docPtr == nullptr) {
-            APP_LOGE("load xml error or file not exist!");
-            continue;
-        }
-        uint64_t logicalId = displayInfo.second;
         std::vector<std::string> bundleNames;
-        xmlNodePtr rootPtr = xmlDocGetRootElement(docPtr);
-        if (rootPtr == nullptr || rootPtr->name == nullptr) {
-            APP_LOGE("get root element failed or xml is empty!");
-            xmlFreeDoc(docPtr);
-            logicalIdWhiteListMap.emplace(logicalId, bundleNames);
-            isWhiteListExist = true;
+        if (docPtr == nullptr) {
+            const xmlError *err = xmlGetLastError();
+            if (err != NULL && err->domain == XML_FROM_PARSER && err->code == XML_ERR_DOCUMENT_EMPTY) {
+                APP_LOGI("xml file is empty");
+                logicalIdWhiteListMap.emplace(logicalId, bundleNames);
+                isWhiteListExist = true;
+                continue;
+            }
+            APP_LOGE("load xml error");
             continue;
         }
-        if (xmlStrcmp(rootPtr->name, reinterpret_cast<const xmlChar*>("AppList"))) {
+        xmlNodePtr rootPtr = xmlDocGetRootElement(docPtr);
+        if (rootPtr == nullptr || rootPtr->name == nullptr ||
+                xmlStrcmp(rootPtr->name, reinterpret_cast<const xmlChar*>("AppList")) != 0) {
             APP_LOGE("xml format error!");
             xmlFreeDoc(docPtr);
             continue;
