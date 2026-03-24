@@ -1544,6 +1544,7 @@ private:
     void GetRouterInfoForSharedBundle(const std::string &bundleName, std::vector<RouterItem> &routerInfos) const;
     void MergeRouterItems(const std::vector<RouterItem>& sharedBundleRouterInfos,
         std::vector<RouterItem>& pluginRouterInfos) const;
+    bool ParseUserKey(const std::string &userKey, int32_t &userId, int32_t &appIndex) const;
 
 private:
     bool initialUserFlag_ = false;

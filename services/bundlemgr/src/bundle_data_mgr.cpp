@@ -12239,29 +12239,63 @@ void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
         if (info.second.userInfos.empty()) {
             continue;
         }
-        int32_t userId = -1;
-        if (!OHOS::StrToInt(info.second.userInfos.begin()->first, userId)) {
-            APP_LOGW("strToInt fail");
-            continue;
-        }
-        int32_t bundleId = info.second.userInfos.begin()->second.uid
-            - userId * Constants::BASE_USER_RANGE;
-        if (bundleId < Constants::BASE_APP_UID || bundleId >= MAX_APP_UID) {
-            APP_LOGW("invalid bundleId");
-            continue;
-        }
-        auto item = bundleIdMap_.find(bundleId);
-        if (item == bundleIdMap_.end()) {
-            uninstallBundleIdMap.emplace(bundleId, info.first);
-            BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
-            BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
-            BundleUtil::MakeFsConfig(info.first, ServiceConstants::HMDFS_CONFIG_PATH,
-                info.second.appProvisionType, Constants::APP_PROVISION_TYPE_FILE_NAME);
+
+        for (const auto &userInfoPair : info.second.userInfos) {
+            const std::string &userKey = userInfoPair.first;
+            const UninstallDataUserInfo &userInfo = userInfoPair.second;
+
+            int32_t userId = -1;
+            int32_t appIndex = 0;
+            if (!ParseUserKey(userKey, userId, appIndex)) {
+                continue;
+            }
+
+            int32_t bundleId = userInfo.uid - userId * Constants::BASE_USER_RANGE;
+            if (bundleId < Constants::BASE_APP_UID || bundleId >= MAX_APP_UID) {
+                APP_LOGW("invalid bundleId: %{public}d", bundleId);
+                continue;
+            }
+
+            std::string bundleName;
+            if (appIndex > 0) {
+                bundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(info.first, appIndex);
+            } else {
+                bundleName = info.first;
+            }
+
+            auto item = bundleIdMap_.find(bundleId);
+            if (item == bundleIdMap_.end()) {
+                uninstallBundleIdMap.emplace(bundleId, bundleName);
+                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(info.first, ServiceConstants::HMDFS_CONFIG_PATH,
+                    info.second.appProvisionType, Constants::APP_PROVISION_TYPE_FILE_NAME);
+            }
         }
     }
     for (const auto &item : uninstallBundleIdMap) {
         bundleIdMap_.emplace(item.first, item.second);
     }
+}
+
+bool BundleDataMgr::ParseUserKey(const std::string &userKey, int32_t &userId, int32_t &appIndex) const
+{
+    size_t underscorePos = userKey.find(ServiceConstants::UNDER_LINE);
+    if (underscorePos != std::string::npos) {
+        std::string userIdStr = userKey.substr(0, underscorePos);
+        std::string appIndexStr = userKey.substr(underscorePos + 1);
+        if (!OHOS::StrToInt(userIdStr, userId) ||
+            !OHOS::StrToInt(appIndexStr, appIndex)) {
+            APP_LOGW_NOFUNC("parse userKey fail: %{public}s", userKey.c_str());
+            return false;
+        }
+    } else {
+        if (!OHOS::StrToInt(userKey, userId)) {
+            APP_LOGW_NOFUNC("parse userId fail: %{public}s", userKey.c_str());
+            return false;
+        }
+    }
+    return true;
 }
 
 ErrCode BundleDataMgr::GetAssetAccessGroups(const std::string &bundleName,
