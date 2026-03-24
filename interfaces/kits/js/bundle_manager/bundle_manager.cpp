@@ -1711,7 +1711,7 @@ void GetApplicationLabelComplete(napi_env env, napi_status status, void *data)
     } else {
         APP_LOGE("asyncCallbackInfo errCode: %{public}d", asyncCallbackInfo->err);
         result[0] = BusinessError::CreateCommonError(
-            env, asyncCallbackInfo->err, GET_APPLICATION_LABEL, BUNDLE_PERMISSIONS);
+            env, asyncCallbackInfo->err, GET_APPLICATION_LABEL, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     CommonFunc::NapiReturnDeferred<ApplicationLabelCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
@@ -1738,7 +1738,8 @@ napi_value GetApplicationLabel(napi_env env, napi_callback_info info)
         }
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], asyncCallbackInfo->appIndex)) {
             APP_LOGW("parse appIndex failed, use default value 0");
-            asyncCallbackInfo->appIndex = 0;
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+            return nullptr;
         }
         if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
             napi_valuetype valueType = napi_undefined;
@@ -1750,11 +1751,6 @@ napi_value GetApplicationLabel(napi_env env, napi_callback_info info)
         }
     } else {
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
-    if (asyncCallbackInfo->bundleName.empty()) {
-        APP_LOGW("bundleName is empty");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationLabelCallbackInfo>(

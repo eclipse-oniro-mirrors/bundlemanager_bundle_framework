@@ -1749,9 +1749,11 @@ ErrCode BundleMgrHost::HandleGetApplicationLabel(MessageParcel &data, MessagePar
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     int32_t appIndex = data.ReadInt32();
-
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGW("appIndex: %{public}d not in valid range", appIndex);
+        return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
+    }
     APP_LOGD("bundleName: %{public}s, appIndex: %{public}d", bundleName.c_str(), appIndex);
-
     std::string label;
     ErrCode ret = GetApplicationLabel(bundleName, appIndex, label);
 

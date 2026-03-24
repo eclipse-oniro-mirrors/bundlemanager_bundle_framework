@@ -561,6 +561,44 @@ static ani_string GetAbilityLabelNative(ani_env* env,
 #endif
 }
 
+static ani_string GetApplicationLabelNative(ani_env* env,
+    ani_string aniBundleName, ani_int aniAppIndex)
+{
+#ifdef GLOBAL_RESMGR_ENABLE
+    APP_LOGD("ani GetApplicationLabel called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("GetBundleMgr failed");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    std::string applicationLabel;
+    ErrCode ret = iBundleMgr->GetApplicationLabel(bundleName, aniAppIndex, applicationLabel);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetApplicationLabel failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+            GET_APPLICATION_LABEL, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+    ani_string aniApplicationLabel = nullptr;
+    if (!CommonFunAni::StringToAniStr(env, applicationLabel, aniApplicationLabel)) {
+        APP_LOGE("StringToAniStr failed");
+        return nullptr;
+    }
+    return aniApplicationLabel;
+#else
+    APP_LOGW("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_APPLICATION_LABEL, "");
+    return nullptr;
+#endif
+}
+
 static ani_object GetLaunchWantForBundleNative(ani_env* env,
     ani_string aniBundleName, ani_int aniUserId, ani_boolean aniIsSync)
 {
@@ -2395,6 +2433,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getAppCloneIdentityNative", nullptr,
             reinterpret_cast<void*>(GetAppCloneIdentityNative) },
         ani_native_function { "getAbilityLabelNative", nullptr, reinterpret_cast<void*>(GetAbilityLabelNative) },
+        ani_native_function { "getApplicationLabelNative", nullptr, reinterpret_cast<void*>(GetApplicationLabelNative) },
         ani_native_function { "getLaunchWantForBundleNative", nullptr,
             reinterpret_cast<void*>(GetLaunchWantForBundleNative) },
         ani_native_function { "getAppCloneBundleInfoNative", nullptr,

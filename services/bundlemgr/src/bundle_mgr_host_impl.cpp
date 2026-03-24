@@ -1543,19 +1543,9 @@ ErrCode BundleMgrHostImpl::GetApplicationLabel(const std::string &bundleName, in
     }
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     bool isInstalled = false;
-    ErrCode result = dataMgr->IsBundleInstalled(bundleName, userId, appIndex, isInstalled);
+    ErrCode result = dataMgr->IsBundleInstalled(bundleName, userId, 0, isInstalled);
     if (result != ERR_OK || !isInstalled) {
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    }
-    bool isEnabled = false;
-    result = dataMgr->IsApplicationEnabled(bundleName, appIndex, isEnabled, userId);
-    if (result != ERR_OK) {
-        APP_LOGE("IsApplicationEnabled failed ret:%{public}d", result);
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-    }
-    if (!isEnabled) {
-        APP_LOGE("application is disabled");
-        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     // Get BundleResourceProxy
@@ -1569,7 +1559,7 @@ ErrCode BundleMgrHostImpl::GetApplicationLabel(const std::string &bundleName, in
     uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
     if (!manager->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex)) {
         APP_LOGE("failed to get bundle resource info");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
     }
     // Extract label field
     if (bundleResourceInfo.label.empty()) {
