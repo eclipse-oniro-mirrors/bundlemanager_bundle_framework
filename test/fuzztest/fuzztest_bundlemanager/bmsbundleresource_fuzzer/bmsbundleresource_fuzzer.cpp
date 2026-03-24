@@ -92,6 +92,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         fdp.ConsumeBool(), fdp.ConsumeBool());
     std::string language = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    cfg.InitResourceGlobalConfig(resourceManager);
     std::shared_ptr<Global::Resource::ResourceManager> manager = nullptr;
     cfg.UpdateResourceGlobalConfig(language, manager);
     cfg.UpdateResourceGlobalConfig(language, resourceManager);
