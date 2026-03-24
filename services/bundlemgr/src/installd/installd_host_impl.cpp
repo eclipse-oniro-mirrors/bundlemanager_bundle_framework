@@ -1585,7 +1585,7 @@ ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool 
             LOG_E(BMS_TAG_INSTALLD, "Calling the function SetDirsApl with invalid dir");
             return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
         }
-    } 
+    }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp,
         createDirParam.debug, createDirParam.isDlpSandbox, createDirParam.dlpType, isExtensionDir);
     ErrCode res = ERR_OK;

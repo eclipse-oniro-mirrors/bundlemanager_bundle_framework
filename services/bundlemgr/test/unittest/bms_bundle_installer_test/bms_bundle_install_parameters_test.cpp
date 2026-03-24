@@ -2357,7 +2357,7 @@ HWTEST_F(BmsBundleInstallParametersTest, SetDirApl_0900, Function | SmallTest | 
  */
 HWTEST_F(BmsBundleInstallParametersTest, ExtractDriverSoFiles_0100, Function | SmallTest | Level0)
 {
-       InstalldHostImpl impl;
+    InstalldHostImpl impl;
     std::string srcPath = "";
     std::unordered_multimap<std::string, std::string> dirMap = {{"so1", "dest1"}};
     auto ret = impl.ExtractDriverSoFiles(srcPath, dirMap);
@@ -2737,5 +2737,165 @@ HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0500, Function | SmallT
     std::string fileName = "dir1/../dir2/test.txt";
     bool result = InstalldOperator::IsFileNameValid(fileName);
     EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0100
+ * @tc.name: test CreateBundleDataDir with invalid bundleName (empty string)
+ * @tc.desc: 1. test empty bundleName should return param error (line 564-565)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "";
+    param.userId = 100;
+    param.uid = 10000;
+    param.gid = 10000;
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0200
+ * @tc.name: test CreateBundleDataDir with invalid userId (negative value)
+ * @tc.desc: 1. test negative userId should return param error (line 565)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = -1;
+    param.uid = 10000;
+    param.gid = 10000;
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0300
+ * @tc.name: test CreateBundleDataDir with invalid uid (negative value)
+ * @tc.desc: 1. test negative uid should return param error (line 566)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 100;
+    param.uid = -1;
+    param.gid = 10000;
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0400
+ * @tc.name: test CreateBundleDataDir with invalid gid (negative value)
+ * @tc.desc: 1. test negative gid should return param error (line 566)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 100;
+    param.uid = 10000;
+    param.gid = -1;
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0500
+ * @tc.name: test CreateBundleDataDir with empty extensionDirs
+ * @tc.desc: 1. test empty extensionDirs should skip validation loop and pass parameter check (line 572-577)
+ *           2. function should proceed without returning param error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0500, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 100000;
+    param.uid = 10000;
+    param.gid = 10000;
+    param.extensionDirs = {};
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0600
+ * @tc.name: test CreateBundleDataDir with valid extensionDirs
+ * @tc.desc: 1. test valid extensionDirs should pass validation (line 572-577)
+ *           2. all extension directories should be validated successfully
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0600, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 10000;
+    param.uid = 10000;
+    param.gid = 10000;
+    param.extensionDirs = {"extension", "test_ext"};
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0700
+ * @tc.name: test CreateBundleDataDir with invalid extensionDirs (containing ../)
+ * @tc.desc: 1. test invalid extensionDirs with ../ should return param error (line 573-575)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0700, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 100;
+    param.uid = 10000;
+    param.gid = 10000;
+    param.extensionDirs = {"../invalid_extension"};
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0800
+ * @tc.name: test CreateBundleDataDir with invalid extensionDirs (empty string)
+ * @tc.desc: 1. test invalid extensionDirs with empty string should return param error (line 573-575)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0800, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 100;
+    param.uid = 10000;
+    param.gid = 10000;
+    param.extensionDirs = {""};
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0900
+ * @tc.name: test CreateBundleDataDir with mixed valid and invalid extensionDirs
+ * @tc.desc: 1. test mixed extensionDirs should return param error when invalid one is encountered (line 573-575)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0900, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 100;
+    param.uid = 10000;
+    param.gid = 10000;
+    param.extensionDirs = {"valid_extension", "../invalid"};
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 } // namespace OHOS
