@@ -219,6 +219,9 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     applyAccessTokenGuard.Dismiss();
     createUserDataDirGuard.Dismiss();
     addBundleUserGuard.Dismiss();
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    DefaultAppMgr::GetInstance().HandleInstallBundle(userId, bundleName);
+#endif
     APP_LOGI("InstallExisted %{public}s succesfully", bundleName.c_str());
     return ERR_OK;
 }
