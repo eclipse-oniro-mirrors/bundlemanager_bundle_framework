@@ -92,6 +92,8 @@ namespace OHOS {
         bundleMgrProxy.QueryKeepAliveBundleInfos(bundleInfos);
         std::string abilityName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         bundleMgrProxy.GetAbilityLabel(bundleName, abilityName);
+        uint32_t flags1 = fdp.ConsumeIntegral<uint32_t>();
+        bundleMgrProxy.GetInstalledBundleList(flags1, userId, bundleInfos);
         return true;
     }
 }

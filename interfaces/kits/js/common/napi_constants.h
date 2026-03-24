@@ -92,6 +92,7 @@ constexpr const char* INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action, entities, uri, type, or linkFeature) non-empty.";
 constexpr const char* APP_CLONE_IDENTITY_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 constexpr const char* GET_BUNDLE_INFOS = "GetBundleInfos";
+constexpr const char* GET_INSTALLED_BUNDLE_LIST = "GetInstalledBundleList";
 constexpr const char* GET_APPLICATION_INFOS = "GetApplicationInfos";
 constexpr const char* IS_APPLICATION_ENABLED = "IsApplicationEnabled";
 constexpr const char* QUERY_ABILITY_INFOS_SYNC = "QueryAbilityInfosSync";
