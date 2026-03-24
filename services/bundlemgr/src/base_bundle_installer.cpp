@@ -5387,15 +5387,24 @@ bool BaseBundleInstaller::InitDataMgr()
 void BaseBundleInstaller::CheckInstallAllowDowngrade(
     const InstallParam &installParam, const InnerBundleInfo &oldBundleInfo, ErrCode &result)
 {
-    if ((result != ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE) || oldBundleInfo.IsSystemApp()) {
+    if (result != ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE) {
         return;
     }
-    if ((oldBundleInfo.GetAppDistributionType() != Constants::APP_DISTRIBUTION_TYPE_NONE) &&
-        (oldBundleInfo.GetAppDistributionType() != Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY)) {
+    // system app without patch downgrade flag, return directly
+    if (oldBundleInfo.IsSystemApp() && !installParam.allowPatchDowngrade) {
         return;
+    }
+    // pre-installed app with patch downgrade flag, skip AppDistributionType check
+    if (!installParam.allowPatchDowngrade) {
+        if ((oldBundleInfo.GetAppDistributionType() != Constants::APP_DISTRIBUTION_TYPE_NONE) &&
+            (oldBundleInfo.GetAppDistributionType() != Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY)) {
+            return;
+        }
     }
     auto item = installParam.parameters.find(ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE);
-    if ((item == installParam.parameters.end()) || (item->second != ServiceConstants::BMS_TRUE)) {
+    bool allowDowngrade = (item != installParam.parameters.end()) &&
+        (item->second == ServiceConstants::BMS_TRUE);
+    if (!allowDowngrade && !installParam.allowPatchDowngrade) {
         return;
     }
     // check provision type

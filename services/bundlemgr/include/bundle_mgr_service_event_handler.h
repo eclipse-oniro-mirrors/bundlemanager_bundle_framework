@@ -477,6 +477,7 @@ private:
      * @param appType Indicates the bundle type.
      * @param removable Indicates whether it can be removed.
      * @param userIds Indicates the user to which the app needs to be installed.
+     * @param isPatchDowngrade Indicates whether this is a patch app downgrade install.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
     static bool OTAInstallSystemBundleTargetUser(
@@ -484,7 +485,8 @@ private:
         const std::string &bundleName,
         Constants::AppType appType,
         bool removable,
-        const std::vector<int32_t> &userIds);
+        const std::vector<int32_t> &userIds,
+        bool isPatchDowngrade = false);
     /**
      * @brief OTA Install system app and system vendor shared bundles.
      * @param filePaths Indicates the filePaths.

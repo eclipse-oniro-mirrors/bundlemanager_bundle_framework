@@ -86,6 +86,7 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         parameters.emplace(key, value);
     }
     isPatch = parcel.ReadBool();
+    allowPatchDowngrade = parcel.ReadBool();
     return true;
 }
 
@@ -141,6 +142,7 @@ bool InstallParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(parameter.second));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPatch);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowPatchDowngrade);
     return true;
 }
 
