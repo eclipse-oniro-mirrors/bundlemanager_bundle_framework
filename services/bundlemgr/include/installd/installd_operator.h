@@ -27,6 +27,7 @@
 #include "bundle_extractor.h"
 #include "code_sign_helper.h"
 #include "installd/installd_constants.h"
+#include "interfaces/hap_verify.h"
 #include "ipc/check_encryption_param.h"
 #include "ipc/code_signature_param.h"
 #include "ipc/encryption_param.h"
@@ -372,6 +373,8 @@ public:
 
     static bool IsValidUuid(const std::string &uuid);
 
+    static bool ObtainSignInfoForPlugin(
+        const std::string &filePath, std::string &appIdentifier, std::string &pluginId);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
@@ -412,6 +415,11 @@ private:
         const std::string &sourcePaths, std::string &destinationPath, const OwnershipInfo &info);
     static bool ReadCert(const std::string &path, std::vector<unsigned char> &certData);
     static std::optional<struct dqblk> GetQuotaData(int32_t uid);
+    static bool CheckDeviceMode(char *buf);
+    static bool CheckEfuseStatus(char *buf);
+    static bool IsRdDevice();
+    static bool ParsePluginId(const std::string &appServiceCapabilities, std::vector<std::string> &pluginIds);
+    static ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

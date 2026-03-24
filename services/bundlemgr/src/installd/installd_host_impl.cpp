@@ -2132,8 +2132,11 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
                 codeSignatureParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
         } else if (codeSignatureParam.isPlugin) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for plugin");
-            ret = codeSignHelper->EnforceCodeSignForAppWithPluginId(codeSignatureParam.appIdentifier,
-                codeSignatureParam.pluginId, codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
+            std::string appIdentifier;
+            std::string pluginId;
+            InstalldOperator::ObtainSignInfoForPlugin(codeSignatureParam.modulePath, appIdentifier, pluginId);
+            ret = codeSignHelper->EnforceCodeSignForAppWithPluginId(appIdentifier,
+                pluginId, codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
         } else {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for non-enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForApp(

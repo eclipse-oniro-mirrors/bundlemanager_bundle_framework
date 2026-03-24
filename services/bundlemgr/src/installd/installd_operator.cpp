@@ -54,6 +54,7 @@
 #include "ffrt.h"
 #include "ipc/critical_manager.h"
 #include "parameters.h"
+#include "provision/provision_verify.h"
 #include "securec.h"
 #include "hnp_api.h"
 #include "policycoreutils.h"
@@ -93,6 +94,7 @@ static const char CODE_CRYPTO_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15
 constexpr int64_t BUFFER_SIZE = 8192;
 static constexpr int32_t PERMISSION_DENIED = 13;
 static constexpr int32_t RESULT_OK = 0;
+static constexpr int32_t CMDLINE_MAX_BUF_LEN = 4096;
 static constexpr int16_t INSTALLS_UID = 3060;
 static constexpr int16_t MODE_BASE = 07777;
 static constexpr int8_t KEY_ID_STEP = 2;
@@ -106,6 +108,11 @@ constexpr const char* AI_SUFFIX = ".ai";
 constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* BUNDLE_BACKUP_KEEP_DIR = "/.backup";
 constexpr const char* ATOMIC_SERVICE_PATH = "+auid-";
+constexpr const char* PROC_CMDLINE_FILE_PATH = "/proc/cmdline";
+constexpr const char* PERMISSION_KEY = "ohos.permission.kernel.SUPPORT_PLUGIN";
+constexpr const char* PLUGIN_ID = "pluginDistributionIDs";
+constexpr const char* PLUGIN_ID_SEPARATOR_OTHER = "|";
+constexpr const char* PLUGIN_ID_SEPARATOR = ",";
 const std::vector<std::string> DRIVER_EXECUTE_DIR {
     "/print_service/cups/serverbin/filter",
     "/print_service/sane/backend",
@@ -3287,6 +3294,123 @@ bool InstalldOperator::IsValidUuid(const std::string &uuid)
         return false;
     }
     return IsFileNameValid(uuid);
+}
+
+bool InstalldOperator::CheckDeviceMode(char *buf)
+{
+    bool status = false;
+    char *onStr = strstr(buf, "oemmode=rd");
+    char *offStr = strstr(buf, "oemmode=user");
+    char *statusStr = strstr(buf, "oemmode=");
+    if (onStr == nullptr && offStr == nullptr) {
+        LOG_D(BMS_TAG_INSTALLD, "Not rd mode, cmdline = %{private}s", buf);
+    } else if (offStr != nullptr && statusStr != nullptr && offStr != statusStr) {
+        LOG_E(BMS_TAG_INSTALLD, "cmdline attacked, cmdline = %{private}s", buf);
+    } else if (onStr != nullptr && offStr == nullptr) {
+        status = true;
+        LOG_D(BMS_TAG_INSTALLD, "Oemode is rd");
+    }
+    return status;
+}
+
+bool InstalldOperator::CheckEfuseStatus(char *buf)
+{
+    bool status = false;
+    char *onStr = strstr(buf, "efuse_status=1");
+    char *offStr = strstr(buf, "efuse_status=0");
+    char *statusStr = strstr(buf, "efuse_status=");
+    if (onStr == nullptr && offStr == nullptr) {
+        LOG_D(BMS_TAG_INSTALLD, "device is efused, cmdline = %{private}s", buf);
+    } else if (offStr != nullptr && statusStr != nullptr && offStr != statusStr) {
+        LOG_E(BMS_TAG_INSTALLD, "cmdline attacked, cmdline = %{private}s", buf);
+    } else if (onStr != nullptr && offStr == nullptr) {
+        status = true;
+        LOG_D(BMS_TAG_INSTALLD, "device is not efused");
+    }
+    return status;
+}
+
+bool InstalldOperator::IsRdDevice()
+{
+    int32_t fd = open(PROC_CMDLINE_FILE_PATH, O_RDONLY);
+    if (fd < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "open %{public}s failed, %{public}s",
+            PROC_CMDLINE_FILE_PATH, strerror(errno));
+        return false;
+    }
+    std::vector<char> buf(CMDLINE_MAX_BUF_LEN, 0);
+    ssize_t bufLen = read(fd, buf.data(), CMDLINE_MAX_BUF_LEN - 1);
+    if (bufLen < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Read %{public}s failed, %{public}s.",
+            PROC_CMDLINE_FILE_PATH, strerror(errno));
+        close(fd);
+        return false;
+    }
+    close(fd);
+    return CheckDeviceMode(buf.data()) || CheckEfuseStatus(buf.data());
+}
+
+ErrCode InstalldOperator::HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult)
+{
+    if (IsRdDevice()) {
+        Security::Verify::SetRdDevice(true);
+        Security::Verify::SetDevMode(Security::Verify::DevMode::DEV);
+    }
+    return Security::Verify::HapVerify(filePath, hapVerifyResult);
+}
+
+bool InstalldOperator::ParsePluginId(const std::string &appServiceCapabilities,
+    std::vector<std::string> &pluginIds)
+{
+    if (appServiceCapabilities.empty()) {
+        APP_LOGE("appServiceCapabilities is empty");
+        return false;
+    }
+    auto appServiceCapabilityMap = BundleUtil::ParseMapFromJson(appServiceCapabilities);
+    for (auto &item : appServiceCapabilityMap) {
+        if (item.first == PERMISSION_KEY) {
+            std::unordered_map<std::string, std::string> pluginIdMap = BundleUtil::ParseMapFromJson(item.second);
+            auto it = pluginIdMap.find(PLUGIN_ID);
+            if (it == pluginIdMap.end()) {
+                APP_LOGE("pluginDistributionIDs not found in appServiceCapability");
+                return false;
+            }
+            if (it->second.find(PLUGIN_ID_SEPARATOR_OTHER) != std::string::npos) {
+                OHOS::SplitStr(it->second, PLUGIN_ID_SEPARATOR_OTHER, pluginIds);
+            } else {
+                OHOS::SplitStr(it->second, PLUGIN_ID_SEPARATOR, pluginIds);
+            }
+            return true;
+        }
+    }
+    APP_LOGE("support plugin permission not found in appServiceCapability");
+    return false;
+}
+
+bool InstalldOperator::ObtainSignInfoForPlugin(
+    const std::string &filePath, std::string &appIdentifier, std::string &pluginId)
+{
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    ErrCode errCode = HapVerify(filePath, hapVerifyResult);
+    if (errCode != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "HapVerify failed, errCode: %{public}d", errCode);
+        return false;
+    }
+    std::vector<std::string> pluginIds;
+    if (!ParsePluginId(hapVerifyResult.GetProvisionInfo().appServiceCapabilities, pluginIds)) {
+        APP_LOGE("parse plugin id failed");
+        return false;
+    }
+    std::ostringstream oss;
+    for (size_t i = 0; i < pluginIds.size(); ++i) {
+        if (i != 0) {
+            oss << std::string(PLUGIN_ID_SEPARATOR);
+        }
+        oss << pluginIds[i];
+    }
+    pluginId = oss.str();
+    appIdentifier = hapVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
