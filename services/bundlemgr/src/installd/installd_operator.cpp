@@ -3253,7 +3253,7 @@ bool InstalldOperator::IsValidUid(const int32_t uid)
 
 bool InstalldOperator::IsValidAppIndex(const int32_t appIndex)
 {
-    return (appIndex >= Constants::INITIAL_APP_INDEX) && (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX);
+    return (appIndex >= Constants::MAIN_APP_INDEX) && (appIndex <= Constants::CLONE_APP_INDEX_MAX);
 }
 
 bool InstalldOperator::IsValidApl(const std::string &apl)
