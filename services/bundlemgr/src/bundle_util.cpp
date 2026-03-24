@@ -82,6 +82,27 @@ constexpr uint32_t ID_INVALID = 0;
 constexpr const char* COLON = ":";
 constexpr const char* DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE = "Cover";
 constexpr const char* APP_INSTALL_PREFIX = "+app_install+";
+constexpr const char* APP_CLONE_PREFIX = "+app_clone+";
+constexpr const char* DATA_CLONE_PATH = "dataclone/";
+
+std::string GetRenameInstallPrefixTag(const std::string &filePath)
+{
+    std::string appInstallPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::GALLERY_DOWNLOAD_PATH;
+    if (filePath.find(appInstallPrefix) != 0) {
+        return "";
+    }
+    std::string userPath = filePath.substr(appInstallPrefix.length());
+    auto pos = userPath.find(ServiceConstants::PATH_SEPARATOR);
+    if (pos == std::string::npos || pos == userPath.length() - 1) {
+        return "";
+    }
+    std::string remainPath = userPath.substr(pos + 1);
+    if (remainPath.find(std::string(ServiceConstants::GALLERY_CLONE_PATH).substr(1)) == 0) {
+        return APP_CLONE_PREFIX;
+    }
+    return APP_INSTALL_PREFIX;
+}
 }
 
 std::mutex BundleUtil::g_mutex;
@@ -968,6 +989,8 @@ std::string BundleUtil::GetAppInstallPrefix(const std::string &filePath, bool re
 {
     // get ${bundleName} and ${userId} from
     // /data/service/el1/public/bms/bundle_manager_service/app_install/${userId}/${bundleName}/${fileName}.hap
+    // /data/service/el1/public/bms/bundle_manager_service/app_install/${userId}/app_clone/dataclone/
+    // ${bundleName}/${fileName}.hap
     if (!rename) {
         return "";
     }
@@ -976,28 +999,40 @@ std::string BundleUtil::GetAppInstallPrefix(const std::string &filePath, bool re
     if (filePath.find(prefix) != 0) {
         return "";
     }
-    // ${userId}/${bundleName}/${fileName}.hap
     std::string tempStr = filePath.substr(prefix.length());
     auto pos = tempStr.rfind(ServiceConstants::PATH_SEPARATOR);
     if (pos == std::string::npos) {
         return "";
     }
-    // ${userId}/${bundleName}
+    // ${userId}/${bundleName} or ${userId}/app_clone/dataclone/${bundleName}
     tempStr = tempStr.substr(0, pos);
-    pos = tempStr.rfind(ServiceConstants::PATH_SEPARATOR);
+    std::string installPrefix = GetRenameInstallPrefixTag(filePath);
+    if (installPrefix.empty()) {
+        return "";
+    }
+    pos = tempStr.find(ServiceConstants::PATH_SEPARATOR);
     if (pos == std::string::npos) {
         return "";
     }
-    if (pos != tempStr.find(ServiceConstants::PATH_SEPARATOR)) {
+    std::string userId = tempStr.substr(0, pos);
+    if (installPrefix == APP_INSTALL_PREFIX && pos != tempStr.rfind(ServiceConstants::PATH_SEPARATOR)) {
         return "";
     }
-    std::string bundleName = tempStr.substr(pos + 1);
-    std::string userId = tempStr.substr(0, pos);
+    if (installPrefix == APP_CLONE_PREFIX) {
+        // app_clone/dataclone/${bundleName}
+        std::string clonePath = tempStr.substr(pos + 1);
+        // app_clone/dataclone/
+        std::string appClonePath = std::string(ServiceConstants::GALLERY_CLONE_PATH).substr(1) + DATA_CLONE_PATH;
+        if (clonePath.find(appClonePath) != 0 || clonePath.size() <= appClonePath.size()) {
+            return "";
+        }
+    }
+    std::string bundleName = tempStr.substr(tempStr.rfind(ServiceConstants::PATH_SEPARATOR) + 1);
     if (bundleName.empty() || userId.empty()) {
         return "";
     }
-    // +app_install+${bundleName}+${userId}+
-    std::string newPrefix = std::string(APP_INSTALL_PREFIX) + bundleName + ServiceConstants::PLUS_SIGN + userId +
+    // +app_install+${bundleName}+${userId}+ or +app_clone+${bundleName}+${userId}+
+    std::string newPrefix = installPrefix + bundleName + ServiceConstants::PLUS_SIGN + userId +
         ServiceConstants::PLUS_SIGN;
     APP_LOGI("newPrefix is %{public}s", newPrefix.c_str());
     return newPrefix;
@@ -1021,11 +1056,12 @@ void BundleUtil::RestoreAppInstallHaps()
             continue;
         }
         std::string dirName = std::string(entry->d_name);
-        if (dirName.find(APP_INSTALL_PREFIX) != 0) {
+        if (dirName.find(APP_INSTALL_PREFIX) != 0 && dirName.find(APP_CLONE_PREFIX) != 0) {
             continue;
         }
+        std::string restorePrefix = dirName.find(APP_CLONE_PREFIX) == 0 ? APP_CLONE_PREFIX : APP_INSTALL_PREFIX;
         // parse bundleName and userId from +app_install+${bundleName}+${userId}+${fileName}
-        std::string temp = dirName.substr(strlen(APP_INSTALL_PREFIX));
+        std::string temp = dirName.substr(restorePrefix.size());
         auto pos = temp.find(ServiceConstants::PLUS_SIGN);
         if (pos == std::string::npos) {
             continue;
@@ -1052,6 +1088,11 @@ void BundleUtil::RestoreHaps(const std::string &sourcePath, const std::string &b
     }
     std::string destPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH +
         userId + ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR;
+    if (sourcePath.find(APP_CLONE_PREFIX) != std::string::npos) {
+        destPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH +
+            userId + ServiceConstants::GALLERY_CLONE_PATH + DATA_CLONE_PATH + bundleName +
+            ServiceConstants::PATH_SEPARATOR;
+    }
     struct stat buf = {};
     if (stat(destPath.c_str(), &buf) != 0 || !S_ISDIR(buf.st_mode)) {
         APP_LOGE("app install bundlename dir not exist");

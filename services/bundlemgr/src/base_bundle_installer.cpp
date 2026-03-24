@@ -6165,10 +6165,14 @@ void BaseBundleInstaller::RestoreHaps(const std::vector<std::string> &bundlePath
         return;
     }
     const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
-        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR;
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId_);
     std::string targetDir = bundlePaths.front().substr(0, bundlePaths.front().find_last_of('/') + 1);
     if (bundlePaths.front().find(APP_INSTALL_SANDBOX_PATH) == 0) {
-        targetDir = newPrefix + targetDir.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
+        targetDir = newPrefix + ServiceConstants::PATH_SEPARATOR +
+            targetDir.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
+    } else if (bundlePaths.front().find(ServiceConstants::APP_CLONE_SANDBOX_PATH) == 0) {
+        targetDir = newPrefix + ServiceConstants::GALLERY_CLONE_PATH +
+            targetDir.substr(std::strlen(ServiceConstants::APP_CLONE_SANDBOX_PATH));
     } else {
         LOG_W(BMS_TAG_INSTALLER, "Invalid bundle path: %{public}s", bundlePaths.front().c_str());
         return;
@@ -6704,7 +6708,7 @@ ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
     int32_t userId = userId_ < Constants::START_USERID ?
         sysEventInfo_.callingUid / Constants::BASE_USER_RANGE : userId_;
     const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
-        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR;
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId);
 
     for (const auto &bundlePath : inBundlePaths) {
         if (bundlePath.find("..") != std::string::npos) {
@@ -6712,7 +6716,13 @@ ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
         if (bundlePath.find(APP_INSTALL_SANDBOX_PATH) == 0) {
-            std::string newPath = newPrefix + bundlePath.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
+            std::string newPath = newPrefix + ServiceConstants::PATH_SEPARATOR +
+                bundlePath.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
+            parsedPaths.push_back(newPath);
+            LOG_D(BMS_TAG_INSTALLER, "parsed path: %{public}s", newPath.c_str());
+        } else if (bundlePath.find(ServiceConstants::APP_CLONE_SANDBOX_PATH) == 0) {
+            std::string newPath = newPrefix + ServiceConstants::GALLERY_CLONE_PATH +
+                bundlePath.substr(std::strlen(ServiceConstants::APP_CLONE_SANDBOX_PATH));
             parsedPaths.push_back(newPath);
             LOG_D(BMS_TAG_INSTALLER, "parsed path: %{public}s", newPath.c_str());
         } else {

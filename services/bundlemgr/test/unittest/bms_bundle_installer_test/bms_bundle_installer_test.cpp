@@ -9824,7 +9824,8 @@ HWTEST_F(BmsBundleInstallerTest, UtdHandler_0400, Function | SmallTest | Level0)
 HWTEST_F(BmsBundleInstallerTest, GetAppInstallPrefix_0100, Function | SmallTest | Level1)
 {
     BundleUtil util;
-    std::string prefix = "/data/service/el1/public/bms/bundle_manager_service/app_install/";
+    std::string prefix = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH;
+    std::string clonePrefix = prefix + "100" + ServiceConstants::GALLERY_CLONE_PATH;
     std::string filePath = prefix + "100/com.test.test/entry.hap";
     EXPECT_EQ(util.GetAppInstallPrefix(filePath, false), "");
 
@@ -9844,6 +9845,24 @@ HWTEST_F(BmsBundleInstallerTest, GetAppInstallPrefix_0100, Function | SmallTest 
 
     filePath = prefix + "100/com.test.test/entry.hap";
     EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "+app_install+com.test.test+100+");
+
+    filePath = clonePrefix + "com.test.clone/entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
+
+    filePath = clonePrefix + "dataclone/com.test.clone/entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "+app_clone+com.test.clone+100+");
+
+    filePath = clonePrefix + "dataclone/entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
+
+    filePath = clonePrefix + "entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
+
+    filePath = clonePrefix + "com.test.clone";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
+
+    filePath = clonePrefix + "/entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
 }
 
 /**
@@ -9867,6 +9886,17 @@ HWTEST_F(BmsBundleInstallerTest, RestoreAppInstallHaps_0100, Function | SmallTes
     util.RestoreHaps("", "", "");
     util.RestoreHaps(prefix + "+app_install+com.test.test+100+123123", "com.test.test", "100");
     EXPECT_TRUE(util.IsExistDir(prefix + "+app_install+com.test.test+100+123123"));
+
+    std::string sourcePath = prefix + "+app_clone+com.test.clone+100+123123" + ServiceConstants::PATH_SEPARATOR;
+    std::string targetPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH +
+        "100" + ServiceConstants::GALLERY_CLONE_PATH + "dataclone/com.test.clone/";
+    OHOS::ForceCreateDirectory(sourcePath);
+    OHOS::ForceCreateDirectory(targetPath);
+    std::ofstream outFile(sourcePath + "entry.hap");
+    outFile << "test";
+    outFile.close();
+    util.RestoreHaps(sourcePath, "com.test.clone", "100");
+    EXPECT_TRUE(util.IsExistFile(targetPath + "entry.hap"));
 }
 
 /*
