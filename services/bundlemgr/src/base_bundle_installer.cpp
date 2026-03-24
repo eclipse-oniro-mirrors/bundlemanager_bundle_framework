@@ -7378,11 +7378,13 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             continue;
         }
         int32_t userId = uerInfo.second.bundleUserInfo.userId;
+        // Only apply isDebugGrant for the current installing user to avoid affecting other users
+        bool userDebugGrant = (userId == userId_) ? isDebugGrant : false;
         Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
         accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
         Security::AccessToken::HapInfoCheckResult checkResult;
         if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, userId, checkResult,
-            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, isDebugGrant) != ERR_OK) {
+            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, userDebugGrant) != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
