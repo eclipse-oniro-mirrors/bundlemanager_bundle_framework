@@ -561,12 +561,19 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (createDirParam.bundleName.empty() || createDirParam.userId < 0 ||
-        createDirParam.uid < 0 || createDirParam.gid < 0) {
+    if (!InstalldOperator::IsValidBundleName(createDirParam.bundleName) ||
+        !InstalldOperator::IsValidUserId(createDirParam.userId) ||
+        !InstalldOperator::IsValidUid(createDirParam.uid) || !InstalldOperator::IsValidUid(createDirParam.gid)) {
         LOG_E(BMS_TAG_INSTALLD, "param -n %{public}s -u %{public}d -uid %{public}d -gid %{public}d",
             createDirParam.bundleName.c_str(),
             createDirParam.userId, createDirParam.uid, createDirParam.gid);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    for (const auto &extensionDir : createDirParam.extensionDirs) {
+        if (!InstalldOperator::IsFileNameValid(extensionDir)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid extensionDir param");
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
     }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
         createDirParam.isDlpSandbox, createDirParam.dlpType, false);
@@ -1440,8 +1447,15 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (uids.empty()) {
+    if (uids.empty() || !InstalldOperator::IsValidUserId(userId)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid uid or userId");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    for (const auto &uid : uids) {
+        if (!InstalldOperator::IsValidUid(uid)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid uid %{public}d", uid);
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
     }
     int64_t totalFileSize = InstalldOperator::GetDiskUsageFromQuota(INSTALLS_UID);
     int64_t totalDataSize = 0;
@@ -1530,7 +1544,8 @@ ErrCode InstalldHostImpl::StopSetFileCon(const CreateDirParam &createDirParam, i
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
 #ifdef WITH_SELINUX
-    if (createDirParam.bundleName.empty() || createDirParam.uid <= Constants::INVALID_UID) {
+    if (!InstalldOperator::IsValidBundleName(createDirParam.bundleName) ||
+        !InstalldOperator::IsValidApl(createDirParam.apl) || !InstalldOperator::IsValidUid(createDirParam.uid)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function StopSetFileCon with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
@@ -1559,6 +1574,18 @@ ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool 
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+    if (!InstalldOperator::IsValidBundleName(createDirParam.bundleName) ||
+        !InstalldOperator::IsValidUid(createDirParam.uid) ||
+        createDirParam.extensionDirs.empty() || (createDirParam.extensionDirs.size() > MAX_BATCH_QUERY_BUNDLE_SIZE)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function SetDirsApl with invalid param size");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    for (const auto &dir : createDirParam.extensionDirs) {
+        if (!InstalldOperator::IsFileNameValid(dir)) {
+            LOG_E(BMS_TAG_INSTALLD, "Calling the function SetDirsApl with invalid dir");
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+    } 
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp,
         createDirParam.debug, createDirParam.isDlpSandbox, createDirParam.dlpType, isExtensionDir);
     ErrCode res = ERR_OK;
@@ -1598,9 +1625,15 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (dir.empty() || bundleName.empty() || uid <= Constants::INVALID_UID) {
+    // check param
+    if (!InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::SET_DIR_APL, dir) ||
+        !InstalldOperator::IsValidBundleName(bundleName) || !InstalldOperator::IsValidUid(uid)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function SetDirApl with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::IsValidApl(apl)) {
+        LOG_E(BMS_TAG_INSTALLD, "invaild apl %{public}s", apl.c_str());
+        return ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED;
     }
 
     HapFileInfo hapFileInfo;
@@ -2266,8 +2299,18 @@ ErrCode InstalldHostImpl::SetEncryptionPolicy(const EncryptionParam &encryptionP
         LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (encryptionParam.bundleName.empty() && encryptionParam.groupId.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "invalid param");
+    if (!InstalldOperator::IsValidUid(encryptionParam.uid)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid encryptionParam.uid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if ((encryptionParam.encryptionDirType == EncryptionDirType::APP) &&
+        !InstalldOperator::IsValidBundleName(encryptionParam.bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid encryptionParam.bundleName");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if ((encryptionParam.encryptionDirType == EncryptionDirType::GROUP) &&
+        encryptionParam.groupId.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid encryptionParam.groupId");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::GenerateKeyIdAndSetPolicy(encryptionParam, keyId)) {
@@ -2283,8 +2326,18 @@ ErrCode InstalldHostImpl::DeleteEncryptionKeyId(const EncryptionParam &encryptio
         LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (encryptionParam.bundleName.empty() && encryptionParam.groupId.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "invalid param");
+    if (!InstalldOperator::IsValidUserId(encryptionParam.userId)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid encryptionParam.userId");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if ((encryptionParam.encryptionDirType == EncryptionDirType::APP) &&
+        !InstalldOperator::IsValidBundleName(encryptionParam.bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid encryptionParam.bundleName");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if ((encryptionParam.encryptionDirType == EncryptionDirType::GROUP) &&
+        encryptionParam.groupId.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid encryptionParam.groupId");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::DeleteKeyId(encryptionParam)) {

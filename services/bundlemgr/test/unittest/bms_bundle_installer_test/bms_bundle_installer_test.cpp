@@ -6146,11 +6146,11 @@ HWTEST_F(BmsBundleInstallerTest, SetDirsApl_0100, Function | SmallTest | Level0)
  
     CreateDirParam para1 =  PrepareCreateDirParam(dirs, BUNDLE_NAME, "", isPreInstallApp, debug, 0);
     auto ret = impl.SetDirsApl(para1, true);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
  
     CreateDirParam para2 =  PrepareCreateDirParam(dirs, "", "", isPreInstallApp, debug, 0);
     ret = impl.SetDirsApl(para2, true);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
  
     dirs.emplace_back(BUNDLE_DATA_DIR);
     CreateDirParam para3 =  PrepareCreateDirParam(dirs, "", "", isPreInstallApp, debug, 0);
@@ -14387,7 +14387,7 @@ HWTEST_F(BmsBundleInstallerTest, StopSetFileCon_0100, Function | SmallTest | Lev
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     createDirParam.uid = ZERO_CODE;
     ret = impl.StopSetFileCon(createDirParam, reason);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -14578,15 +14578,15 @@ HWTEST_F(BmsBundleInstallerTest, SetEncryptionPolicy_0200, Function | SmallTest 
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     encryptionParam.bundleName = TEST_ERROR_STRING;
     ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     encryptionParam.bundleName = TEST_EMPTY_STRING;
     encryptionParam.groupId = TEST_ERROR_STRING;
     ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     encryptionParam.bundleName = TEST_ERROR_STRING;
     encryptionParam.groupId = TEST_ERROR_STRING;
     ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -14609,7 +14609,7 @@ HWTEST_F(BmsBundleInstallerTest, DeleteEncryptionKeyId_0200, Function | SmallTes
     encryptionParam.bundleName = TEST_EMPTY_STRING;
     encryptionParam.groupId = TEST_ERROR_STRING;
     ret = impl.DeleteEncryptionKeyId(encryptionParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     encryptionParam.bundleName = TEST_ERROR_STRING;
     encryptionParam.groupId = TEST_ERROR_STRING;
     ret = impl.DeleteEncryptionKeyId(encryptionParam);

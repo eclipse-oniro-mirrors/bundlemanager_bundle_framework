@@ -3049,6 +3049,9 @@ ErrCode InstalldOperator::SetBinFileLabel(const std::string &binFilePath)
 
 bool InstalldOperator::IsFileNameValid(const std::string &fileName)
 {
+    if (fileName.empty()) {
+        return false;
+    }
     if (fileName.find("../") != std::string::npos
         || fileName.find("/..") != std::string::npos) {
         return false;
