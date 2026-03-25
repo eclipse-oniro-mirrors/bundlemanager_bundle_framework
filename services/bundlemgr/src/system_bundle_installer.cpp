@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -144,7 +144,7 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
 
 ErrCode SystemBundleInstaller::OTAInstallSystemBundleTargetUser(const std::vector<std::string> &filePaths,
     InstallParam &installParam, const std::string &bundleName, Constants::AppType appType,
-    const std::vector<int32_t> &userIds, const bool hasWhiteList)
+    const std::vector<int32_t> &userIds)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -156,7 +156,7 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleTargetUser(const std::vecto
     for (auto userId : userIds) {
         userIdSet.insert(userId);
     }
-    if (!installParam.removable && !hasWhiteList) {
+    if (!installParam.removable) {
         PreInstallBundleInfo preInstallBundleInfo;
         if (!(dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) ||
             !preInstallBundleInfo.HasForceUninstalledUser(Constants::START_USERID)) {
