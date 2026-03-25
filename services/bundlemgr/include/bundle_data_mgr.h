@@ -1267,6 +1267,7 @@ public:
     ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex, int32_t userId,
         const std::vector<std::string> &ids);
     void UpdateShortcutInfoResId(const std::string &bundleName, const int32_t userId);
+    void RemoveInvalidShortcutInfo(std::vector<ShortcutInfo> &shortcutInfos) const;
     ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled);
     ErrCode DeleteShortcutEnabledInfo(const std::string &bundleName);
     ErrCode GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32_t userId, std::unordered_map<std::string,

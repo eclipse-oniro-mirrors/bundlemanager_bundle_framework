@@ -7873,9 +7873,7 @@ HWTEST_F(BmsDataMgrTest, GetStorageShortcutInfos_0003, Function | MediumTest | L
  */
 HWTEST_F(BmsDataMgrTest, GetStorageShortcutInfos_0004, Function | MediumTest | Level1)
 {
-    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
-        std::make_shared<ShortcutVisibleDataStorageRdb>();
-    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
+    BundleDataMgr bundleDataMgr;
     std::string bundleName = "com.ohos.hello";
     std::string shortcutId = "id_test1";
     int32_t appIndex = 0;
@@ -7886,17 +7884,16 @@ HWTEST_F(BmsDataMgrTest, GetStorageShortcutInfos_0004, Function | MediumTest | L
     shortcutInfo.label = "$labelString:123456";
     std::vector<ShortcutInfo> shortcutInfos;
     shortcutInfos.push_back(shortcutInfo);
-
-    auto ret = shortcutVisibleDataStorageRdb->AddDynamicShortcutInfos(shortcutInfos, userId);
-    EXPECT_TRUE(ret);
+    bool result = bundleDataMgr.shortcutVisibleStorage_->AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_TRUE(result);
     shortcutInfo.sourceType = 1;
     std::vector<ShortcutInfo> storgeShortcutInfos;
     storgeShortcutInfos.push_back(shortcutInfo);
-    shortcutVisibleDataStorageRdb->GetStorageShortcutInfos(bundleName, appIndex, userId, storgeShortcutInfos);
+    bundleDataMgr.shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, userId, storgeShortcutInfos);
+    bundleDataMgr.RemoveInvalidShortcutInfo(storgeShortcutInfos);
     ASSERT_EQ(storgeShortcutInfos.size(), 1);
     EXPECT_EQ(storgeShortcutInfos[0].sourceType, 2);
-
-    bool result = shortcutVisibleDataStorageRdb->DeleteShortcutVisibleInfo(bundleName, userId, 0);
+    result = bundleDataMgr.shortcutVisibleStorage_->DeleteShortcutVisibleInfo(bundleName, userId, 0);
     EXPECT_TRUE(result);
 }
 
