@@ -486,6 +486,7 @@ constexpr const char* EXTENSION_ABILITY_READ_PERMISSION = "readPermission";
 constexpr const char* EXTENSION_ABILITY_WRITE_PERMISSION = "writePermission";
 constexpr const char* EXTENSION_PROCESS_MODE = "extensionProcessMode";
 constexpr const char* DATA_GROUP_IDS = "dataGroupIds";
+constexpr const char* SKIP_ABILITY_STAGE_LIFECYCLE = "skipAbilityStageLifecycle";
 // requestPermission
 constexpr const char* REQUESTPERMISSION_NAME = "name";
 constexpr const char* REQUESTPERMISSION_REASON = "reason";

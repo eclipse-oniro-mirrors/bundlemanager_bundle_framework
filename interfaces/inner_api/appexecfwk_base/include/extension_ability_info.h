@@ -168,6 +168,7 @@ struct ExtensionAbilityInfo : public Parcelable {
 
     // Specifies whether the ability can run in an independent process
     bool isolationProcess = false;
+    bool skipAbilityStageLifecycle = false;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;

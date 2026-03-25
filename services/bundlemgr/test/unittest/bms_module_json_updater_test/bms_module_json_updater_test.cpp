@@ -77,6 +77,7 @@ const uint32_t START_WINDOW_ID = 21;
 const ExtensionAbilityType TYPE_LIVE_FORM = ExtensionAbilityType::LIVE_FORM;
 const std::vector<std::string> APP_IDENTIFIER_ALLOW_LIST = {"com.example.bundleA"};
 const bool ISOLATION_PROCESS = true;
+const bool SKIP_ABILITY_STAGE_LIFECYCLE = true;
 }  // namespace
 
 class BmsModuleJsonUpdaterTest : public testing::Test {
@@ -595,6 +596,7 @@ HWTEST_F(BmsModuleJsonUpdaterTest, UpdatePartialInnerBundleInfo_0700, Function |
     innerExtensionInfo.type = TYPE_LIVE_FORM;
     innerExtensionInfo.appIdentifierAllowList = APP_IDENTIFIER_ALLOW_LIST;
     innerExtensionInfo.isolationProcess = ISOLATION_PROCESS;
+    innerExtensionInfo.skipAbilityStageLifecycle = SKIP_ABILITY_STAGE_LIFECYCLE;
     innerExtensionInfo.arkTSMode = ARK_TS_MODE;
     innerExtensionInfo.metadata = METADATA;
     innerExtensionInfos.try_emplace(EXTENSION_A, innerExtensionInfo);
@@ -607,6 +609,7 @@ HWTEST_F(BmsModuleJsonUpdaterTest, UpdatePartialInnerBundleInfo_0700, Function |
     EXPECT_EQ(item->second.type, TYPE_LIVE_FORM);
     EXPECT_EQ(item->second.appIdentifierAllowList, APP_IDENTIFIER_ALLOW_LIST);
     EXPECT_EQ(item->second.isolationProcess, ISOLATION_PROCESS);
+    EXPECT_EQ(item->second.skipAbilityStageLifecycle, SKIP_ABILITY_STAGE_LIFECYCLE);
     EXPECT_EQ(item->second.arkTSMode, ARK_TS_MODE);
     EXPECT_FALSE(item->second.metadata.empty());
 }

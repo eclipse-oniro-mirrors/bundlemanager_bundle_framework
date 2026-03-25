@@ -246,6 +246,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
 
     needCreateSandbox = parcel.ReadBool();
     isolationProcess = parcel.ReadBool();
+    skipAbilityStageLifecycle = parcel.ReadBool();
     int32_t dataGroupIdsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataGroupIdsSize);
     CONTAINER_SECURITY_VERIFY(parcel, dataGroupIdsSize, &dataGroupIds);
@@ -341,6 +342,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, needCreateSandbox);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isolationProcess);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, skipAbilityStageLifecycle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataGroupIds.size());
     for (auto &dataGroupId : dataGroupIds) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));

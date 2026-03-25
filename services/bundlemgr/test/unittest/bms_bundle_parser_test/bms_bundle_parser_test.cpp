@@ -1584,6 +1584,7 @@ const nlohmann::json MODULE_JSON_12 = R"(
                 "srcEntry": "./ets/entrybackupability/EntryBackupAbility.ets",
                 "name": "EntryBackupAbility",
                 "isolationProcess": true,
+                "skipAbilityStageLifecycle": false,
                 "type": "sys/commonUI"
             },
             {
@@ -1598,6 +1599,7 @@ const nlohmann::json MODULE_JSON_12 = R"(
                 "srcEntry": "./ets/entrybackupability/EntryBackupAbility.ets",
                 "name": "EntryBackupAbilitySecond",
                 "isolationProcess": false,
+                "skipAbilityStageLifecycle": false,
                 "type": "sys/commonUI"
             }
         ],
