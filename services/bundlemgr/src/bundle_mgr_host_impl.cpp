@@ -1599,6 +1599,28 @@ ErrCode BundleMgrHostImpl::GetApplicationLabel(const std::string &bundleName, in
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::SetBundleFirstLaunch(
+    const std::string &bundleName, int32_t userId, int32_t appIndex, bool isBundleFirstLaunched)
+{
+    APP_LOGD("SetBundleFirstLaunch :%{public}s, :%{public}d, :%{public}d, :%{public}d",
+        bundleName.c_str(), userId, appIndex, isBundleFirstLaunched);
+
+    // Only allow foundation process to call
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE("uid: %{public}d not foundation", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    return dataMgr->SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+}
+
 bool BundleMgrHostImpl::GetBundleArchiveInfo(
     const std::string &hapFilePath, const BundleFlag flag, BundleInfo &bundleInfo)
 {

@@ -27,6 +27,7 @@ struct InnerBundleUserInfo {
     // app install control
     bool isRemovable = true;
     bool canUninstall = true;
+    bool isBundleFirstLaunched = false;
 
     int32_t uid = Constants::INVALID_UID;
     uint32_t accessTokenId = 0;

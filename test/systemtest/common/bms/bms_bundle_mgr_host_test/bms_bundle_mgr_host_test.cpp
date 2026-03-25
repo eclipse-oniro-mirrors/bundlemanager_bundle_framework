@@ -2731,5 +2731,85 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetInstalledBundleList_0400, Function | Med
     EXPECT_EQ(res, ERR_OK);
 }
 
+/**
+ * @tc.number: HandleSetBundleFirstLaunch_0001
+ * @tc.name: test the HandleSetBundleFirstLaunch
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetBundleFirstLaunch with empty data (empty bundleName)
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleSetBundleFirstLaunch_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleSetBundleFirstLaunch(data, reply);
+    // When data is empty, ReadString returns empty string, bundleName is empty
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleSetBundleFirstLaunch_0002
+ * @tc.name: test the HandleSetBundleFirstLaunch
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetBundleFirstLaunch with valid parameters
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleSetBundleFirstLaunch_0002, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("com.test.bundle");
+    data.WriteInt32(100);  // userId
+    data.WriteInt32(0);    // appIndex
+    data.WriteBool(true);  // isBundleFirstLaunched
+    ErrCode res = bundleMgrHost.HandleSetBundleFirstLaunch(data, reply);
+    // HandleSetBundleFirstLaunch returns ERR_OK after writing reply
+    EXPECT_EQ(res, ERR_OK);
+    // Read the error code from reply
+    ErrCode innerRet = reply.ReadInt32();
+    // SetBundleFirstLaunch in BundleMgrHost base class returns error since bundle doesn't exist
+    EXPECT_NE(innerRet, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleSetBundleFirstLaunch_0003
+ * @tc.name: test the HandleSetBundleFirstLaunch
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetBundleFirstLaunch with empty bundleName explicitly
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleSetBundleFirstLaunch_0003, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("");  // empty bundleName
+    data.WriteInt32(100);  // userId
+    data.WriteInt32(0);    // appIndex
+    data.WriteBool(true);  // isBundleFirstLaunched
+    ErrCode res = bundleMgrHost.HandleSetBundleFirstLaunch(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleSetBundleFirstLaunch_0004
+ * @tc.name: test the HandleSetBundleFirstLaunch
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetBundleFirstLaunch with clone appIndex
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleSetBundleFirstLaunch_0004, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("com.test.bundle");
+    data.WriteInt32(100);  // userId
+    data.WriteInt32(1);    // clone appIndex
+    data.WriteBool(false); // isBundleFirstLaunched
+    ErrCode res = bundleMgrHost.HandleSetBundleFirstLaunch(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    ErrCode innerRet = reply.ReadInt32();
+    EXPECT_NE(innerRet, ERR_OK);
+}
+
 } // AppExecFwk
 } // OHOS

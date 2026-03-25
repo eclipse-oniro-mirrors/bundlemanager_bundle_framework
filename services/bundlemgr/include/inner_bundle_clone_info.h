@@ -24,6 +24,7 @@ namespace AppExecFwk {
 struct InnerBundleCloneInfo {
     // Indicates whether the bundle is disabled.
     bool enabled = true;
+    bool isBundleFirstLaunched = false;
 
     bool encryptedKeyExisted = false;
 

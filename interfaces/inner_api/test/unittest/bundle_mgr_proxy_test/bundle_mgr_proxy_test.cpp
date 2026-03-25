@@ -717,5 +717,41 @@ HWTEST_F(BundleMgrProxyTest, GetBundleInodeCount_0100, Function | MediumTest | L
     ErrCode ret = bundleMgrProxy.GetBundleInodeCount(bundleName, appIndex, userId, inodeCount);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
 }
+
+/**
+ * @tc.number: SetBundleFirstLaunch_0100
+ * @tc.name: test SetBundleFirstLaunch with empty bundleName
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify SetBundleFirstLaunch returns error when bundleName is empty
+ */
+HWTEST_F(BundleMgrProxyTest, SetBundleFirstLaunch_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName;
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    bool isBundleFirstLaunched = true;
+    ErrCode ret = bundleMgrProxy.SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetBundleFirstLaunch_0200
+ * @tc.name: test SetBundleFirstLaunch with null remote object
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify SetBundleFirstLaunch returns IPC error when remote is null
+ */
+HWTEST_F(BundleMgrProxyTest, SetBundleFirstLaunch_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "com.example.test";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    bool isBundleFirstLaunched = true;
+    ErrCode ret = bundleMgrProxy.SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
+}
 } // AppExecFwk
 } // OHOS

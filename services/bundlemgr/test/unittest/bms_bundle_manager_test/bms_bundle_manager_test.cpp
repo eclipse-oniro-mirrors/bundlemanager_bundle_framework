@@ -4369,4 +4369,71 @@ HWTEST_F(BmsBundleManagerTest, GetInstalledBundleList_0400, Function | MediumTes
     ErrCode ret = hostImpl->GetInstalledBundleList(flags, userId, bundleInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
+
+/**
+ * @tc.number: SetBundleFirstLaunch_0001
+ * @tc.name: test SetBundleFirstLaunch permission denied
+ * @tc.desc: 1.calling uid is not foundation uid
+ *           2.return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleManagerTest, SetBundleFirstLaunch_0001, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::DEFAULT_USERID;
+    int32_t appIndex = 0;
+    bool isBundleFirstLaunched = true;
+
+    // Set uid to non-foundation uid to trigger permission denied
+    setuid(Constants::ROOT_UID);
+    ErrCode ret = hostImpl->SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: SetBundleFirstLaunch_0002
+ * @tc.name: test SetBundleFirstLaunch bundle not exist
+ * @tc.desc: 1.calling uid is foundation uid
+ *           2.bundle not exist
+ *           3.return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleManagerTest, SetBundleFirstLaunch_0002, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto dataMgr = hostImpl->GetDataMgrFromService();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "com.example.not.exist";
+    int32_t userId = Constants::DEFAULT_USERID;
+    int32_t appIndex = 0;
+    bool isBundleFirstLaunched = true;
+
+    dataMgr->AddUserId(userId);
+    // Set uid to foundation uid
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode ret = hostImpl->SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    setuid(Constants::ROOT_UID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetBundleFirstLaunch_0003
+ * @tc.name: test SetBundleFirstLaunch with invalid userId
+ * @tc.desc: 1.calling uid is foundation uid
+ *           2.userId is invalid
+ *           3.return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleManagerTest, SetBundleFirstLaunch_0003, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::INVALID_USERID;
+    int32_t appIndex = 0;
+    bool isBundleFirstLaunched = true;
+
+    // Set uid to foundation uid
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode ret = hostImpl->SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    setuid(Constants::ROOT_UID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
 } // OHOS

@@ -511,6 +511,16 @@ public:
     ErrCode SetApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
         const std::string &caller, int32_t userId, bool &stateChanged);
     /**
+     * @brief Sets whether the bundle is first launch.
+     * @param bundleName Indicates the bundle name.
+     * @param userId Indicates the user id.
+     * @param appIndex Indicates the app index, 0 for normal app, > 0 for clone app.
+     * @param isBundleFirstLaunched Specifies whether the bundle is first launch.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    ErrCode SetBundleFirstLaunch(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, bool isBundleFirstLaunched);
+    /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability to check.
      * @param isEnable Indicates the ability status is enabled.

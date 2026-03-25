@@ -4037,6 +4037,40 @@ ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appInd
     return ERR_OK;
 }
 
+ErrCode InnerBundleInfo::SetBundleFirstLaunch(bool isBundleFirstLaunched, int32_t userId)
+{
+    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE_NOFUNC("SetBundleFirstLaunch not find:%{public}s bundleUserInfo in userId:%{public}d",
+            GetBundleName().c_str(), userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    infoItem->second.isBundleFirstLaunched = isBundleFirstLaunched;
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::SetCloneBundleFirstLaunch(bool isBundleFirstLaunched, int32_t appIndex, int32_t userId)
+{
+    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE_NOFUNC("SetCloneBundleFirstLaunch not find:%{public}s bundleUserInfo in userId:%{public}d",
+            GetBundleName().c_str(), userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    auto iter = infoItem->second.cloneInfos.find(std::to_string(appIndex));
+    if (iter == infoItem->second.cloneInfos.end()) {
+        APP_LOGE_NOFUNC("SetCloneBundleFirstLaunch not find:%{public}d appIndex in userId:%{public}d",
+            appIndex, userId);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
+    }
+    iter->second.isBundleFirstLaunched = isBundleFirstLaunched;
+    return ERR_OK;
+}
+
 const std::string InnerBundleInfo::GetCurModuleName() const
 {
     if (innerModuleInfos_.find(currentPackage_) != innerModuleInfos_.end()) {
@@ -5485,6 +5519,7 @@ bool InnerBundleInfo::GetApplicationInfoAdaptBundleClone(
         appInfo.accessTokenId = innerBundleUserInfo.accessTokenId;
         appInfo.accessTokenIdEx = innerBundleUserInfo.accessTokenIdEx;
         appInfo.enabled = innerBundleUserInfo.bundleUserInfo.enabled;
+        appInfo.isBundleFirstLaunched = innerBundleUserInfo.isBundleFirstLaunched;
         appInfo.uid = innerBundleUserInfo.uid;
         return true;
     }
@@ -5497,6 +5532,7 @@ bool InnerBundleInfo::GetApplicationInfoAdaptBundleClone(
     appInfo.accessTokenId = iter->second.accessTokenId;
     appInfo.accessTokenIdEx = iter->second.accessTokenIdEx;
     appInfo.enabled = iter->second.enabled;
+    appInfo.isBundleFirstLaunched = iter->second.isBundleFirstLaunched;
     appInfo.uid = iter->second.uid;
     appInfo.appIndex = iter->second.appIndex;
     return true;
