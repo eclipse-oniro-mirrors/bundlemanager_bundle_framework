@@ -107,6 +107,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "faultLog", ExtensionAbilityType::FAULT_LOG },
     { "notificationSubscriber", ExtensionAbilityType::NOTIFICATION_SUBSCRIBER },
     { "crypto", ExtensionAbilityType::CRYPTO },
+    { "assetCache", ExtensionAbilityType::ASSET_CACHE },
     { "awc/webpage", ExtensionAbilityType::AWC_WEBPAGE },
     { "awc/newsfeed", ExtensionAbilityType::AWC_NEWSFEED },
     { "contentEmbed", ExtensionAbilityType::CONTENT_EMBED },
