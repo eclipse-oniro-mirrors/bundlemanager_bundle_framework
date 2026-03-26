@@ -498,7 +498,7 @@ HWTEST_F(BmsInstallExceptionMgrTest, installExceptionMgrTest_0019, TestSize.Leve
     exist = access(REAL_BUNDLE_DIR_NAME.c_str(), F_OK);
     EXPECT_NE(exist, 0);
     exist = access(NEW_BUNDLE_DIR_NAME.c_str(), F_OK);
-    EXPECT_EQ(exist, 0);
+    EXPECT_NE(exist, 0);
     (void)OHOS::ForceRemoveDirectory(OLD_BUNDLE_DIR_NAME);
     (void)OHOS::ForceRemoveDirectory(NEW_BUNDLE_DIR_NAME);
     (void)OHOS::ForceRemoveDirectory(REAL_BUNDLE_DIR_NAME);

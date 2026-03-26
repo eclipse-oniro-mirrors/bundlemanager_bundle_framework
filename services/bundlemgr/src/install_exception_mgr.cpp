@@ -57,8 +57,9 @@ ErrCode InstallExceptionMgr::DeleteBundleExceptionInfo(const std::string &bundle
 void InstallExceptionMgr::HandleBundleExceptionInfo(
     const std::string &bundleName, const InstallExceptionInfo &installExceptionInfo)
 {
-    LOG_NOFUNC_W(BMS_TAG_INSTALLER, "exception mgr bundle %{public}s exception status %{public}d",
-        bundleName.c_str(), static_cast<int32_t>(installExceptionInfo.status));
+    LOG_NOFUNC_E(BMS_TAG_INSTALLER, "exception mgr bundle %{public}s exception status %{public}d -v %{public}d",
+        bundleName.c_str(), static_cast<int32_t>(installExceptionInfo.status),
+        static_cast<int32_t>(installExceptionInfo.versionCode));
     switch (installExceptionInfo.status) {
         case InstallRenameExceptionStatus::CREATE_NEW_DIR : {
             InnerProcessCreateNewDir(bundleName);
@@ -109,7 +110,7 @@ bool InstallExceptionMgr::HandleBundleExceptionInfo(const std::string &bundleNam
     }
     InstallExceptionInfo installExceptionInfo;
     if (!installExceptionMgr_->GetBundleExceptionInfo(bundleName, installExceptionInfo)) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "exception mgr -n %{public}s not exist in db", bundleName.c_str());
+        LOG_NOFUNC_D(BMS_TAG_INSTALLER, "exception mgr -n %{public}s not exist in db", bundleName.c_str());
         return false;
     }
     HandleBundleExceptionInfo(bundleName, installExceptionInfo);
@@ -162,6 +163,10 @@ ErrCode InstallExceptionMgr::InnerProcessNewToRealPath(const std::string &bundle
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if ((dataMgr != nullptr) && (!dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo))) {
         LOG_NOFUNC_W(BMS_TAG_INSTALLER, " exception mgr bundle %{public}s not exist", bundleName.c_str());
+        // for bundle already uninstalled, need to delete +new- dir
+        std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+            std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
+        (void)InstalldClient::GetInstance()->RemoveDir(newPath);
     }
     /**
      * rename +old- to real, or delete +old-

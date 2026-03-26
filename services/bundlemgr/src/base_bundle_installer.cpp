@@ -4473,6 +4473,8 @@ ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info,
 
 ErrCode BaseBundleInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info, const bool async) const
 {
+    // process install exception mgr
+    (void)DelayedSingleton<InstallExceptionMgr>::GetInstance()->HandleBundleExceptionInfo(info.GetBundleName());
     auto result = InstalldClient::GetInstance()->RemoveDir(info.GetAppCodePath(), async);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove bundle code dir %{public}s, error is %{public}d",
