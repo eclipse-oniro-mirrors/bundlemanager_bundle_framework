@@ -1542,10 +1542,9 @@ ErrCode BundleMgrHostImpl::GetApplicationLabel(const std::string &bundleName, in
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    bool isInstalled = false;
-    ErrCode result = dataMgr->IsBundleInstalled(bundleName, userId, 0, isInstalled);
-    if (result != ERR_OK || !isInstalled) {
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    ErrCode result = dataMgr->CheckBundleExist(bundleName, userId, appIndex);
+    if (result != ERR_OK) {
+        return result;
     }
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     // Get BundleResourceProxy
@@ -1559,7 +1558,7 @@ ErrCode BundleMgrHostImpl::GetApplicationLabel(const std::string &bundleName, in
     uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
     if (!manager->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex)) {
         APP_LOGE("failed to get bundle resource info");
-        return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     // Extract label field
     if (bundleResourceInfo.label.empty()) {
