@@ -246,6 +246,8 @@ namespace bundleManager {
 
   native function getAbilityLabelNative(bundleName: string, moduleName: string, abilityName: string, isSync: boolean): string;
 
+  native function getApplicationLabelNative(bundleName: string, appIndex: int): string;
+
   native function getLaunchWantForBundleNative(bundleName: string, userId: int, isSync: boolean): Want;
 
   native function getAppCloneBundleInfoNative(bundleName: string, appIndex: int,
@@ -823,6 +825,24 @@ namespace bundleManager {
     },(err: Error): void => {
       callback(err as BusinessError, undefined);
     });
+  }
+
+  function getApplicationLabel(bundleName: string, appIndex: int): Promise<string> {
+    let p = new Promise<string>((
+      resolve: (label: string) => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): string => {
+        return getApplicationLabelNative(bundleName, appIndex);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let label: string = e as string;
+        resolve(label);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
   }
 
   function getLaunchWantForBundle(bundleName: string, userId?: int): Promise<Want> {

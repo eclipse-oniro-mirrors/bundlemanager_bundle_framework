@@ -1038,7 +1038,7 @@ HWTEST_F(BmsBundleMgrProxyTest, GetApplicationLabel_0100, Function | MediumTest 
     int32_t appIndex = 0;
     std::string label;
     auto res = bundleMgrProxy.GetApplicationLabel(bundleName, appIndex, label);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**

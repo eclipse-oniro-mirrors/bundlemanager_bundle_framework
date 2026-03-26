@@ -1665,9 +1665,12 @@ ErrCode BundleMgrProxy::GetApplicationLabel(const std::string &bundleName, int32
     APP_LOGD("begin to GetApplicationLabel of %{public}s, appIndex: %{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("fail to GetApplicationLabel due to bundleName empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGW("appIndex: %{public}d not in valid range", appIndex);
+        return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetApplicationLabel due to write InterfaceToken fail");
