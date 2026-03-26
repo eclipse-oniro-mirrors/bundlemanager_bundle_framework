@@ -1880,4 +1880,1022 @@ HWTEST_F(BmsBundleInstallParametersTest, SetFileConForce_2000, Function | SmallT
     ErrCode result = impl.SetFileConForce(paths, createDirParam);
     EXPECT_EQ(result, ERR_OK);
 }
+
+/**
+ * @tc.number: GetAllBundleStats_0100
+ * @tc.name: test GetAllBundleStats with empty uids
+ * @tc.desc: 1. test GetAllBundleStats with empty uids should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, GetAllBundleStats_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<int64_t> bundleStats;
+    std::vector<int32_t> uids;
+    auto ret = impl.GetAllBundleStats(100, bundleStats, uids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetAllBundleStats_0200
+ * @tc.name: test GetAllBundleStats with negative userId
+ * @tc.desc: 1. test GetAllBundleStats with negative userId should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, GetAllBundleStats_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<int64_t> bundleStats;
+    std::vector<int32_t> uids = {10000};
+    auto ret = impl.GetAllBundleStats(-1, bundleStats, uids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetAllBundleStats_0300
+ * @tc.name: test GetAllBundleStats with negative userId and empty uids
+ * @tc.desc: 1. test GetAllBundleStats with negative userId and empty uids should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, GetAllBundleStats_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<int64_t> bundleStats;
+    std::vector<int32_t> uids;
+    auto ret = impl.GetAllBundleStats(-1, bundleStats, uids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetAllBundleStats_0400
+ * @tc.name: test GetAllBundleStats with invalid uid in uids
+ * @tc.desc: 1. test GetAllBundleStats with negative uid in uids should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, GetAllBundleStats_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<int64_t> bundleStats;
+    std::vector<int32_t> uids = {10000, -1};
+    auto ret = impl.GetAllBundleStats(100, bundleStats, uids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetAllBundleStats_0500
+ * @tc.name: test GetAllBundleStats with all invalid uids
+ * @tc.desc: 1. test GetAllBundleStats with all negative uids should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, GetAllBundleStats_0500, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<int64_t> bundleStats;
+    std::vector<int32_t> uids = {-1, -2, -3};
+    auto ret = impl.GetAllBundleStats(100, bundleStats, uids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetAllBundleStats_0600
+ * @tc.name: test GetAllBundleStats with mixed valid and invalid uids
+ * @tc.desc: 1. test GetAllBundleStats with first uid valid and second uid invalid should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, GetAllBundleStats_0600, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<int64_t> bundleStats;
+    std::vector<int32_t> uids = {10000, 10001, -1};
+    auto ret = impl.GetAllBundleStats(100, bundleStats, uids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: StopSetFileCon_0100
+ * @tc.name: test StopSetFileCon with empty bundleName
+ * @tc.desc: 1. test StopSetFileCon with empty bundleName should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, StopSetFileCon_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "";
+    createDirParam.apl = "normal";
+    createDirParam.uid = 10000;
+    int32_t reason = 0;
+    auto ret = impl.StopSetFileCon(createDirParam, reason);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: StopSetFileCon_0200
+ * @tc.name: test StopSetFileCon with invalid bundleName
+ * @tc.desc: 1. test StopSetFileCon with invalid bundleName should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, StopSetFileCon_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = INVALID_BUNDLE_NAME_1;
+    createDirParam.apl = "normal";
+    createDirParam.uid = 10000;
+    int32_t reason = 0;
+    auto ret = impl.StopSetFileCon(createDirParam, reason);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: StopSetFileCon_0300
+ * @tc.name: test StopSetFileCon with empty apl
+ * @tc.desc: 1. test StopSetFileCon with empty apl should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, StopSetFileCon_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "com.example.test";
+    createDirParam.apl = "";
+    createDirParam.uid = 10000;
+    int32_t reason = 0;
+    auto ret = impl.StopSetFileCon(createDirParam, reason);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: StopSetFileCon_0400
+ * @tc.name: test StopSetFileCon with invalid apl
+ * @tc.desc: 1. test StopSetFileCon with invalid apl should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, StopSetFileCon_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "com.example.test";
+    createDirParam.apl = "invalid_apl";
+    createDirParam.uid = 10000;
+    int32_t reason = 0;
+    auto ret = impl.StopSetFileCon(createDirParam, reason);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: StopSetFileCon_0500
+ * @tc.name: test StopSetFileCon with negative uid
+ * @tc.desc: 1. test StopSetFileCon with negative uid should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, StopSetFileCon_0500, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "com.example.test";
+    createDirParam.apl = "normal";
+    createDirParam.uid = -1;
+    int32_t reason = 0;
+    auto ret = impl.StopSetFileCon(createDirParam, reason);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: StopSetFileCon_0600
+ * @tc.name: test StopSetFileCon with all invalid parameters
+ * @tc.desc: 1. test StopSetFileCon with all invalid parameters should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, StopSetFileCon_0600, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "";
+    createDirParam.apl = "";
+    createDirParam.uid = -1;
+    int32_t reason = 0;
+    auto ret = impl.StopSetFileCon(createDirParam, reason);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: StopSetFileCon_0700
+ * @tc.name: test StopSetFileCon with clone bundle name
+ * @tc.desc: 1. test StopSetFileCon with clone bundle name should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, StopSetFileCon_0700, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = VALID_CLONE_BUNDLE_NAME;
+    createDirParam.apl = "normal";
+    createDirParam.uid = -1;
+    int32_t reason = 0;
+    auto ret = impl.StopSetFileCon(createDirParam, reason);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirsApl_0100
+ * @tc.name: test SetDirsApl with empty bundleName
+ * @tc.desc: 1. test SetDirsApl with empty bundleName should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirsApl_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "";
+    createDirParam.uid = 10000;
+    createDirParam.extensionDirs = {"extension1"};
+    bool isExtensionDir = false;
+    auto ret = impl.SetDirsApl(createDirParam, isExtensionDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirsApl_0200
+ * @tc.name: test SetDirsApl with invalid bundleName
+ * @tc.desc: 1. test SetDirsApl with invalid bundleName should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirsApl_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = INVALID_BUNDLE_NAME_1;
+    createDirParam.uid = 10000;
+    createDirParam.extensionDirs = {"extension1"};
+    bool isExtensionDir = false;
+    auto ret = impl.SetDirsApl(createDirParam, isExtensionDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirsApl_0300
+ * @tc.name: test SetDirsApl with negative uid
+ * @tc.desc: 1. test SetDirsApl with negative uid should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirsApl_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "com.example.test";
+    createDirParam.uid = -1;
+    createDirParam.extensionDirs = {"extension1"};
+    bool isExtensionDir = false;
+    auto ret = impl.SetDirsApl(createDirParam, isExtensionDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirsApl_0400
+ * @tc.name: test SetDirsApl with empty extensionDirs
+ * @tc.desc: 1. test SetDirsApl with empty extensionDirs should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirsApl_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "com.example.test";
+    createDirParam.uid = 10000;
+    createDirParam.extensionDirs = {};
+    bool isExtensionDir = false;
+    auto ret = impl.SetDirsApl(createDirParam, isExtensionDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirsApl_0500
+ * @tc.name: test SetDirsApl with extensionDirs size exceeding limit
+ * @tc.desc: 1. test SetDirsApl with extensionDirs size > 1024 should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirsApl_0500, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "com.example.test";
+    createDirParam.uid = 10000;
+    std::vector<std::string> dirs(1025, "extension");
+    createDirParam.extensionDirs = dirs;
+    bool isExtensionDir = false;
+    auto ret = impl.SetDirsApl(createDirParam, isExtensionDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirsApl_0600
+ * @tc.name: test SetDirsApl with invalid dir name containing ../
+ * @tc.desc: 1. test SetDirsApl with dir containing ../ should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirsApl_0600, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "com.example.test";
+    createDirParam.uid = 10000;
+    createDirParam.extensionDirs = {"../extension"};
+    bool isExtensionDir = false;
+    auto ret = impl.SetDirsApl(createDirParam, isExtensionDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirsApl_0700
+ * @tc.name: test SetDirsApl with invalid dir name containing /..
+ * @tc.desc: 1. test SetDirsApl with dir containing /.. should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirsApl_0700, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "com.example.test";
+    createDirParam.uid = 10000;
+    createDirParam.extensionDirs = {"extension/.."};
+    bool isExtensionDir = false;
+    auto ret = impl.SetDirsApl(createDirParam, isExtensionDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirsApl_0800
+ * @tc.name: test SetDirsApl with mixed valid and invalid dir names
+ * @tc.desc: 1. test SetDirsApl with first dir valid and second dir invalid should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirsApl_0800, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "com.example.test";
+    createDirParam.uid = 10000;
+    createDirParam.extensionDirs = {"extension1", "../extension2"};
+    bool isExtensionDir = false;
+    auto ret = impl.SetDirsApl(createDirParam, isExtensionDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirsApl_0900
+ * @tc.name: test SetDirsApl with all invalid parameters
+ * @tc.desc: 1. test SetDirsApl with all invalid parameters should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirsApl_0900, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "";
+    createDirParam.uid = -1;
+    createDirParam.extensionDirs = {};
+    bool isExtensionDir = false;
+    auto ret = impl.SetDirsApl(createDirParam, isExtensionDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirApl_0100
+ * @tc.name: test SetDirApl with empty dir
+ * @tc.desc: 1. test SetDirApl with empty dir should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirApl_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string dir = "";
+    std::string bundleName = "com.example.test";
+    std::string apl = "normal";
+    int32_t uid = 10000;
+    auto ret = impl.SetDirApl(dir, bundleName, apl, false, false, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirApl_0200
+ * @tc.name: test SetDirApl with invalid dir path
+ * @tc.desc: 1. test SetDirApl with invalid dir path should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirApl_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string dir = "/tmp/test";
+    std::string bundleName = "com.example.test";
+    std::string apl = "normal";
+    int32_t uid = 10000;
+    auto ret = impl.SetDirApl(dir, bundleName, apl, false, false, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirApl_0300
+ * @tc.name: test SetDirApl with dir containing ..
+ * @tc.desc: 1. test SetDirApl with dir containing .. should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirApl_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string dir = "/data/app/el1/../bundle";
+    std::string bundleName = "com.example.test";
+    std::string apl = "normal";
+    int32_t uid = 10000;
+    auto ret = impl.SetDirApl(dir, bundleName, apl, false, false, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirApl_0400
+ * @tc.name: test SetDirApl with empty bundleName
+ * @tc.desc: 1. test SetDirApl with empty bundleName should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirApl_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string dir = "/data/app/el1/bundle/public";
+    std::string bundleName = "";
+    std::string apl = "normal";
+    int32_t uid = 10000;
+    auto ret = impl.SetDirApl(dir, bundleName, apl, false, false, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirApl_0500
+ * @tc.name: test SetDirApl with invalid bundleName
+ * @tc.desc: 1. test SetDirApl with invalid bundleName should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirApl_0500, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string dir = "/data/app/el1/bundle/public";
+    std::string bundleName = INVALID_BUNDLE_NAME_1;
+    std::string apl = "normal";
+    int32_t uid = 10000;
+    auto ret = impl.SetDirApl(dir, bundleName, apl, false, false, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirApl_0600
+ * @tc.name: test SetDirApl with negative uid
+ * @tc.desc: 1. test SetDirApl with negative uid should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirApl_0600, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string dir = "/data/app/el1/bundle/public";
+    std::string bundleName = "com.example.test";
+    std::string apl = "normal";
+    int32_t uid = -1;
+    auto ret = impl.SetDirApl(dir, bundleName, apl, false, false, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirApl_0900
+ * @tc.name: test SetDirApl with all invalid parameters
+ * @tc.desc: 1. test SetDirApl with all invalid parameters should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetDirApl_0900, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string dir = "";
+    std::string bundleName = "";
+    std::string apl = "";
+    int32_t uid = -1;
+    auto ret = impl.SetDirApl(dir, bundleName, apl, false, false, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractDriverSoFiles_0100
+ * @tc.name: test ExtractDriverSoFiles with empty srcPath
+ * @tc.desc: 1. test ExtractDriverSoFiles with empty srcPath should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, ExtractDriverSoFiles_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string srcPath = "";
+    std::unordered_multimap<std::string, std::string> dirMap = {{"so1", "dest1"}};
+    auto ret = impl.ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractDriverSoFiles_0200
+ * @tc.name: test ExtractDriverSoFiles with invalid srcPath
+ * @tc.desc: 1. test ExtractDriverSoFiles with invalid srcPath should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, ExtractDriverSoFiles_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string srcPath = "/tmp/test";
+    std::unordered_multimap<std::string, std::string> dirMap = {{"so1", "dest1"}};
+    auto ret = impl.ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractDriverSoFiles_0300
+ * @tc.name: test ExtractDriverSoFiles with srcPath containing ..
+ * @tc.desc: 1. test ExtractDriverSoFiles with srcPath containing .. should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, ExtractDriverSoFiles_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string srcPath = "/data/app/el1/bundle/../public";
+    std::unordered_multimap<std::string, std::string> dirMap = {{"so1", "dest1"}};
+    auto ret = impl.ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractDriverSoFiles_0400
+ * @tc.name: test ExtractDriverSoFiles with empty dirMap
+ * @tc.desc: 1. test ExtractDriverSoFiles with empty dirMap should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, ExtractDriverSoFiles_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string srcPath = "/data/app/el1/bundle/public/test";
+    std::unordered_multimap<std::string, std::string> dirMap = {};
+    auto ret = impl.ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractDriverSoFiles_0500
+ * @tc.name: test ExtractDriverSoFiles with invalid key in dirMap containing ../
+ * @tc.desc: 1. test ExtractDriverSoFiles with key containing ../ should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, ExtractDriverSoFiles_0500, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string srcPath = "/data/app/el1/bundle/public/test";
+    std::unordered_multimap<std::string, std::string> dirMap = {{"../so1", "dest1"}};
+    auto ret = impl.ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractDriverSoFiles_0600
+ * @tc.name: test ExtractDriverSoFiles with invalid value in dirMap containing /..
+ * @tc.desc: 1. test ExtractDriverSoFiles with value containing /.. should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, ExtractDriverSoFiles_0600, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string srcPath = "/data/app/el1/bundle/public/test";
+    std::unordered_multimap<std::string, std::string> dirMap = {{"so1", "dest1/.."}};
+    auto ret = impl.ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractDriverSoFiles_0700
+ * @tc.name: test ExtractDriverSoFiles with mixed valid and invalid entries in dirMap
+ * @tc.desc: 1. test ExtractDriverSoFiles with first entry valid and second entry invalid should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, ExtractDriverSoFiles_0700, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string srcPath = "/data/app/el1/bundle/public/test";
+    std::unordered_multimap<std::string, std::string> dirMap = {{"so1", "dest1"}, {"../so2", "dest2"}};
+    auto ret = impl.ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractDriverSoFiles_0800
+ * @tc.name: test ExtractDriverSoFiles with all invalid parameters
+ * @tc.desc: 1. test ExtractDriverSoFiles with all invalid parameters should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, ExtractDriverSoFiles_0800, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string srcPath = "";
+    std::unordered_multimap<std::string, std::string> dirMap = {};
+    auto ret = impl.ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetEncryptionPolicy_0100
+ * @tc.name: test SetEncryptionPolicy with negative uid
+ * @tc.desc: 1. test SetEncryptionPolicy with negative uid should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetEncryptionPolicy_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.uid = -1;
+    encryptionParam.encryptionDirType = EncryptionDirType::APP;
+    encryptionParam.bundleName = "com.example.test";
+    std::string keyId;
+    auto ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetEncryptionPolicy_0200
+ * @tc.name: test SetEncryptionPolicy with APP type and empty bundleName
+ * @tc.desc: 1. test SetEncryptionPolicy with APP type and empty bundleName should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetEncryptionPolicy_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.uid = 10000;
+    encryptionParam.encryptionDirType = EncryptionDirType::APP;
+    encryptionParam.bundleName = "";
+    std::string keyId;
+    auto ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetEncryptionPolicy_0300
+ * @tc.name: test SetEncryptionPolicy with APP type and invalid bundleName
+ * @tc.desc: 1. test SetEncryptionPolicy with APP type and invalid bundleName should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetEncryptionPolicy_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.uid = 10000;
+    encryptionParam.encryptionDirType = EncryptionDirType::APP;
+    encryptionParam.bundleName = INVALID_BUNDLE_NAME_1;
+    std::string keyId;
+    auto ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetEncryptionPolicy_0400
+ * @tc.name: test SetEncryptionPolicy with GROUP type and empty groupId
+ * @tc.desc: 1. test SetEncryptionPolicy with GROUP type and empty groupId should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetEncryptionPolicy_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.uid = 10000;
+    encryptionParam.encryptionDirType = EncryptionDirType::GROUP;
+    encryptionParam.groupId = "";
+    std::string keyId;
+    auto ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetEncryptionPolicy_0500
+ * @tc.name: test SetEncryptionPolicy with all invalid parameters
+ * @tc.desc: 1. test SetEncryptionPolicy with all invalid parameters should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetEncryptionPolicy_0500, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.uid = -1;
+    encryptionParam.encryptionDirType = EncryptionDirType::APP;
+    encryptionParam.bundleName = "";
+    std::string keyId;
+    auto ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetEncryptionPolicy_0800
+ * @tc.name: test SetEncryptionPolicy with zero uid
+ * @tc.desc: 1. test SetEncryptionPolicy with zero uid
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetEncryptionPolicy_0800, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.uid = 0;
+    encryptionParam.encryptionDirType = EncryptionDirType::APP;
+    encryptionParam.bundleName = VALID_CLONE_BUNDLE_NAME;
+    std::string keyId;
+    auto ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+}
+
+/**
+ * @tc.number: SetEncryptionPolicy_1000
+ * @tc.name: test SetEncryptionPolicy with APP type and sandbox bundle name
+ * @tc.desc: 1. test SetEncryptionPolicy with APP type and sandbox bundle name
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetEncryptionPolicy_1000, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.uid = 10000;
+    encryptionParam.encryptionDirType = EncryptionDirType::APP;
+    encryptionParam.bundleName = VALID_SANDBOX_BUNDLE_NAME;
+    std::string keyId;
+    auto ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+}
+
+/**
+ * @tc.number: SetEncryptionPolicy_1100
+ * @tc.name: test SetEncryptionPolicy with GROUP type and negative uid
+ * @tc.desc: 1. test SetEncryptionPolicy with GROUP type and negative uid should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, SetEncryptionPolicy_1100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.uid = 10000;
+    encryptionParam.encryptionDirType = EncryptionDirType::GROUP;
+    encryptionParam.groupId = "test_group";
+    encryptionParam.userId = 100;
+    std::string keyId;
+    auto ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+}
+
+/**
+ * @tc.number: DeleteEncryptionKeyId_0100
+ * @tc.name: test DeleteEncryptionKeyId with negative userId
+ * @tc.desc: 1. test DeleteEncryptionKeyId with negative userId should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, DeleteEncryptionKeyId_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.userId = -1;
+    encryptionParam.encryptionDirType = EncryptionDirType::APP;
+    encryptionParam.bundleName = "com.example.test";
+    auto ret = impl.DeleteEncryptionKeyId(encryptionParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeleteEncryptionKeyId_0200
+ * @tc.name: test DeleteEncryptionKeyId with APP type and empty bundleName
+ * @tc.desc: 1. test DeleteEncryptionKeyId with APP type and empty bundleName should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, DeleteEncryptionKeyId_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.userId = 100;
+    encryptionParam.encryptionDirType = EncryptionDirType::APP;
+    encryptionParam.bundleName = "";
+    auto ret = impl.DeleteEncryptionKeyId(encryptionParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeleteEncryptionKeyId_0300
+ * @tc.name: test DeleteEncryptionKeyId with APP type and invalid bundleName
+ * @tc.desc: 1. test DeleteEncryptionKeyId with APP type and invalid bundleName should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, DeleteEncryptionKeyId_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.userId = 100;
+    encryptionParam.encryptionDirType = EncryptionDirType::APP;
+    encryptionParam.bundleName = INVALID_BUNDLE_NAME_1;
+    auto ret = impl.DeleteEncryptionKeyId(encryptionParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeleteEncryptionKeyId_0400
+ * @tc.name: test DeleteEncryptionKeyId with GROUP type and empty groupId
+ * @tc.desc: 1. test DeleteEncryptionKeyId with GROUP type and empty groupId should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, DeleteEncryptionKeyId_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.userId = 100;
+    encryptionParam.encryptionDirType = EncryptionDirType::GROUP;
+    encryptionParam.groupId = "";
+    auto ret = impl.DeleteEncryptionKeyId(encryptionParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeleteEncryptionKeyId_0500
+ * @tc.name: test DeleteEncryptionKeyId with all invalid parameters
+ * @tc.desc: 1. test DeleteEncryptionKeyId with all invalid parameters should return error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, DeleteEncryptionKeyId_0500, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.userId = -1;
+    encryptionParam.encryptionDirType = EncryptionDirType::APP;
+    encryptionParam.bundleName = "";
+    auto ret = impl.DeleteEncryptionKeyId(encryptionParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: IsFileNameValid_0100
+ * @tc.name: test IsFileNameValid with valid file name
+ * @tc.desc: 1. test IsFileNameValid with valid file name should return true
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0100, Function | SmallTest | Level0)
+{
+    std::string fileName = "test_file.txt";
+    bool result = InstalldOperator::IsFileNameValid(fileName);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: IsFileNameValid_0200
+ * @tc.name: test IsFileNameValid with empty file name
+ * @tc.desc: 1. test IsFileNameValid with empty file name should return true
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0200, Function | SmallTest | Level0)
+{
+    std::string fileName = "";
+    bool result = InstalldOperator::IsFileNameValid(fileName);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: IsFileNameValid_0300
+ * @tc.name: test IsFileNameValid with file name containing ../
+ * @tc.desc: 1. test IsFileNameValid with file name containing ../ should return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0300, Function | SmallTest | Level0)
+{
+    std::string fileName = "../test.txt";
+    bool result = InstalldOperator::IsFileNameValid(fileName);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: IsFileNameValid_0400
+ * @tc.name: test IsFileNameValid with file name containing /..
+ * @tc.desc: 1. test IsFileNameValid with file name containing /.. should return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0400, Function | SmallTest | Level0)
+{
+    std::string fileName = "test/..";
+    bool result = InstalldOperator::IsFileNameValid(fileName);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: IsFileNameValid_0500
+ * @tc.name: test IsFileNameValid with file name containing ../ in middle
+ * @tc.desc: 1. test IsFileNameValid with file name containing ../ in middle should return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0500, Function | SmallTest | Level0)
+{
+    std::string fileName = "dir1/../dir2/test.txt";
+    bool result = InstalldOperator::IsFileNameValid(fileName);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0100
+ * @tc.name: test CreateBundleDataDir with invalid bundleName (empty string)
+ * @tc.desc: 1. test empty bundleName should return param error (line 564-565)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "";
+    param.userId = 100;
+    param.uid = 10000;
+    param.gid = 10000;
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0200
+ * @tc.name: test CreateBundleDataDir with invalid userId (negative value)
+ * @tc.desc: 1. test negative userId should return param error (line 565)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = -1;
+    param.uid = 10000;
+    param.gid = 10000;
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0300
+ * @tc.name: test CreateBundleDataDir with invalid uid (negative value)
+ * @tc.desc: 1. test negative uid should return param error (line 566)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 100;
+    param.uid = -1;
+    param.gid = 10000;
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0400
+ * @tc.name: test CreateBundleDataDir with invalid gid (negative value)
+ * @tc.desc: 1. test negative gid should return param error (line 566)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 100;
+    param.uid = 10000;
+    param.gid = -1;
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0500
+ * @tc.name: test CreateBundleDataDir with empty extensionDirs
+ * @tc.desc: 1. test empty extensionDirs should skip validation loop and pass parameter check (line 572-577)
+ *           2. function should proceed without returning param error
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0500, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 100000;
+    param.uid = 10000;
+    param.gid = 10000;
+    param.extensionDirs = {};
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0600
+ * @tc.name: test CreateBundleDataDir with valid extensionDirs
+ * @tc.desc: 1. test valid extensionDirs should pass validation (line 572-577)
+ *           2. all extension directories should be validated successfully
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0600, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 10000;
+    param.uid = 10000;
+    param.gid = 10000;
+    param.extensionDirs = {"extension", "test_ext"};
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0700
+ * @tc.name: test CreateBundleDataDir with invalid extensionDirs (containing ../)
+ * @tc.desc: 1. test invalid extensionDirs with ../ should return param error (line 573-575)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0700, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 100;
+    param.uid = 10000;
+    param.gid = 10000;
+    param.extensionDirs = {"../invalid_extension"};
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0800
+ * @tc.name: test CreateBundleDataDir with invalid extensionDirs (empty string)
+ * @tc.desc: 1. test invalid extensionDirs with empty string should return param error (line 573-575)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0800, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 100;
+    param.uid = 10000;
+    param.gid = 10000;
+    param.extensionDirs = {""};
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0900
+ * @tc.name: test CreateBundleDataDir with mixed valid and invalid extensionDirs
+ * @tc.desc: 1. test mixed extensionDirs should return param error when invalid one is encountered (line 573-575)
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0900, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam param;
+    param.bundleName = "com.example.test";
+    param.userId = 100;
+    param.uid = 10000;
+    param.gid = 10000;
+    param.extensionDirs = {"valid_extension", "../invalid"};
+    ErrCode result = impl.CreateBundleDataDir(param);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
 } // namespace OHOS
