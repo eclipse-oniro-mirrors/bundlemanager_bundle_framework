@@ -977,5 +977,78 @@ HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_Unmarshalling_001, Function | Smal
     EXPECT_EQ(unmarshalledParam->binFilePaths[0], originalParam.binFilePaths[0]);
     delete unmarshalledParam;
 }
+
+/**
+ * @tc.number: LibrarySupportDirectory_Marshalling_001
+ * @tc.name: test Marshalling interface for librarySupportDirectory
+ * @tc.desc: test vector<string> librarySupportDirectory serialization
+ */
+HWTEST_F(BmsHapModuleInfoTest, LibrarySupportDirectory_Marshalling_001, Function | SmallTest | Level0)
+{
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.librarySupportDirectory = {"subA/subB", "subA/subC"};
+    Parcel parcel;
+    bool ret = hapModuleInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: LibrarySupportDirectory_Marshalling_002
+ * @tc.name: test Marshalling interface for empty librarySupportDirectory
+ * @tc.desc: test empty vector<string> librarySupportDirectory serialization
+ */
+HWTEST_F(BmsHapModuleInfoTest, LibrarySupportDirectory_Marshalling_002, Function | SmallTest | Level0)
+{
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.librarySupportDirectory = {};
+    Parcel parcel;
+    bool ret = hapModuleInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: LibrarySupportDirectory_to_json_001
+ * @tc.name: test to_json interface for librarySupportDirectory
+ * @tc.desc: test vector<string> librarySupportDirectory to_json
+ */
+HWTEST_F(BmsHapModuleInfoTest, LibrarySupportDirectory_to_json_001, Function | SmallTest | Level0)
+{
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.librarySupportDirectory = {"subA/subB", "subA/subC"};
+    nlohmann::json jsonObject;
+    to_json(jsonObject, hapModuleInfo);
+    EXPECT_EQ(jsonObject["librarySupportDirectory"].size(), 2);
+}
+
+/**
+ * @tc.number: LibrarySupportDirectory_from_json_001
+ * @tc.name: test from_json interface for librarySupportDirectory
+ * @tc.desc: test vector<string> librarySupportDirectory from_json
+ */
+HWTEST_F(BmsHapModuleInfoTest, LibrarySupportDirectory_from_json_001, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject = {
+        {"librarySupportDirectory", {"subA/subB", "subA/subC"}}
+    };
+    HapModuleInfo hapModuleInfo;
+    from_json(jsonObject, hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.librarySupportDirectory.size(), 2);
+    EXPECT_EQ(hapModuleInfo.librarySupportDirectory[0], "subA/subB");
+}
+
+/**
+ * @tc.number: LibrarySupportDirectory_from_json_002
+ * @tc.name: test from_json interface for empty librarySupportDirectory
+ * @tc.desc: test empty vector<string> librarySupportDirectory from_json
+ */
+HWTEST_F(BmsHapModuleInfoTest, LibrarySupportDirectory_from_json_002, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject = {
+        {"librarySupportDirectory", {}}
+    };
+    HapModuleInfo hapModuleInfo;
+    from_json(jsonObject, hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.librarySupportDirectory.size(), 0);
+}
 }
 }

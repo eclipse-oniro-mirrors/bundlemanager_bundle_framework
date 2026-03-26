@@ -147,6 +147,7 @@ struct InnerModuleInfo {
     std::vector<std::string> skillKeys;
     std::vector<std::string> deviceTypes;
     std::map<std::string, std::vector<std::string>> requiredDeviceFeatures;
+    std::vector<std::string> librarySupportDirectory;
     std::vector<std::string> extensionKeys;
     std::vector<std::string> extensionSkillKeys;
     std::vector<std::string> nativeLibraryFileNames;
@@ -1205,6 +1206,13 @@ public:
     {
         if (innerModuleInfos_.count(currentPackage_) == 1) {
             innerModuleInfos_.at(currentPackage_).cpuAbi = cpuAbi;
+        }
+    }
+
+    void SetModuleLibrarySupportDirectory(const std::vector<std::string> &librarySupportDirectory)
+    {
+        if (innerModuleInfos_.count(currentPackage_) == 1) {
+            innerModuleInfos_.at(currentPackage_).librarySupportDirectory = librarySupportDirectory;
         }
     }
 
