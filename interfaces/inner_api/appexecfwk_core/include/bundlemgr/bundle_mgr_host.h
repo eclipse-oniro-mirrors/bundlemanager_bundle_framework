@@ -906,6 +906,8 @@ private:
      */
     ErrCode HandleGetAllPreinstalledApplicationInfos(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAllNewPreinstalledApplicationInfos(MessageParcel &data, MessageParcel &reply);
+
     /**
      * @brief Handles the CanOpenLink function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.

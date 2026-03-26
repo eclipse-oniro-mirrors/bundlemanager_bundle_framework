@@ -1409,6 +1409,22 @@ static ani_object GetAllPreinstalledApplicationInfoNative(ani_env* env)
         env, preinstalledApplicationInfos, CommonFunAni::ConvertPreinstalledApplicationInfo);
 }
 
+static ani_object GetAllNewPreinstalledApplicationInfoNative(ani_env* env)
+{
+    APP_LOGD("ani GetAllNewPreinstalledApplicationInfoNative called");
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+    ErrCode ret = BundleManagerHelper::InnerGetAllNewPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetAllNewPreinstalledApplicationInfos failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(
+            env, ret, GET_ALL_NEW_PREINSTALLED_APP_INFOS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+
+    return CommonFunAni::ConvertAniArray(
+        env, preinstalledApplicationInfos, CommonFunAni::ConvertPreinstalledApplicationInfo);
+}
+
 static ani_object GetAllBundleInfoByDeveloperId(ani_env* env, ani_string aniDeveloperId)
 {
     APP_LOGD("ani GetAllBundleInfoByDeveloperId called");
@@ -2474,6 +2490,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "canOpenLink", nullptr, reinterpret_cast<void*>(CanOpenLink) },
         ani_native_function { "getAllPreinstalledApplicationInfoNative", nullptr,
             reinterpret_cast<void*>(GetAllPreinstalledApplicationInfoNative) },
+        ani_native_function { "getAllNewPreinstalledApplicationInfoNative", nullptr,
+            reinterpret_cast<void*>(GetAllNewPreinstalledApplicationInfoNative) },
         ani_native_function { "getAllBundleInfoByDeveloperId", nullptr,
             reinterpret_cast<void*>(GetAllBundleInfoByDeveloperId) },
         ani_native_function { "switchUninstallState", nullptr, reinterpret_cast<void*>(SwitchUninstallState) },

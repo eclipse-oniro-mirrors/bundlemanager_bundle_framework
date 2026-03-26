@@ -42,6 +42,8 @@ public:
 
     static bool CheckOsAccountConstraintEnabled(const int32_t userId, const std::string &constraint);
 
+    static bool IsPrivateSpaceUser(const int32_t userId);
+
     static bool CheckUserIsolation(const int32_t targetUserId, const std::unordered_set<int32_t> &installedUserIds);
 private:
     static std::set<int32_t> GetEnterpriseUserIds();

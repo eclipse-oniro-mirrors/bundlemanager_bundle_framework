@@ -8373,6 +8373,23 @@ bool BundleDataMgr::FetchInnerBundleInfo(
     return true;
 }
 
+bool BundleDataMgr::IsHideDesktopIconForEvent(const std::string &bundleName) const
+{
+    APP_LOGD("IsHideDesktopIconForEvent %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return false;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW_NOFUNC("IsHideDesktopIconForEvent not found %{public}s", bundleName.c_str());
+        return false;
+    }
+    return infoItem->second.IsHideDesktopIconForEvent();
+}
+
 bool BundleDataMgr::GetInnerBundleInfoUsers(const std::string &bundleName, std::set<int32_t> &userIds)
 {
     InnerBundleInfo info;

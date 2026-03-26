@@ -33,6 +33,8 @@ constexpr const char* SYSTEM_APP = "systemApp";
 constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* FORCE_UNINSTALL_USERS = "forceUninstallUsers";
 constexpr const char* U1_ENABLE = "u1Enable";
+constexpr const char* OTA_NEW_INSTALL_USERS = "otaNewInstallUsers";
+constexpr const char* DESCRIPTION_ID = "descriptionId";
 
 }  // namespace
 
@@ -42,12 +44,14 @@ void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[VERSION_CODE] = versionCode_;
     jsonObject[BUNDLE_PATHS] = bundlePaths_;
     jsonObject[FORCE_UNINSTALL_USERS] = forceUninstalledUsers_;
+    jsonObject[OTA_NEW_INSTALL_USERS] = otaNewInstallUsers_;
     jsonObject[APP_TYPE] = appType_;
     jsonObject[REMOVABLE] = removable_;
     jsonObject[IS_UNINSTALLED] = isUninstalled_;
     jsonObject[MODULE_NAME] = moduleName_;
     jsonObject[LABEL_ID] = labelId_;
     jsonObject[ICON_ID] = iconId_;
+    jsonObject[DESCRIPTION_ID] = descriptionId_;
     jsonObject[SYSTEM_APP] = systemApp_;
     jsonObject[BUNDLE_TYPE] = bundleType_;
     jsonObject[U1_ENABLE] = u1Enable_;
@@ -65,6 +69,8 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         bundlePaths_, JsonType::ARRAY, true, parseResult, ArrayType::STRING);
     GetValueIfFindKey<std::vector<int32_t>>(jsonObject, jsonObjectEnd, FORCE_UNINSTALL_USERS,
         forceUninstalledUsers_, JsonType::ARRAY, false, parseResult, ArrayType::NUMBER);
+    GetValueIfFindKey<std::vector<int32_t>>(jsonObject, jsonObjectEnd, OTA_NEW_INSTALL_USERS,
+        otaNewInstallUsers_, JsonType::ARRAY, false, parseResult, ArrayType::NUMBER);
     GetValueIfFindKey<Constants::AppType>(jsonObject, jsonObjectEnd, APP_TYPE,
         appType_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, REMOVABLE,
@@ -77,6 +83,8 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         labelId_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, ICON_ID,
         iconId_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, DESCRIPTION_ID,
+        descriptionId_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, SYSTEM_APP,
         systemApp_, false, parseResult);
     GetValueIfFindKey<BundleType>(jsonObject, jsonObjectEnd, BUNDLE_TYPE,
@@ -93,12 +101,14 @@ std::string PreInstallBundleInfo::ToString() const
     jsonObject[VERSION_CODE] = versionCode_;
     jsonObject[BUNDLE_PATHS] = bundlePaths_;
     jsonObject[FORCE_UNINSTALL_USERS] = forceUninstalledUsers_;
+    jsonObject[OTA_NEW_INSTALL_USERS] = otaNewInstallUsers_;
     jsonObject[APP_TYPE] = appType_;
     jsonObject[REMOVABLE] = removable_;
     jsonObject[IS_UNINSTALLED] = isUninstalled_;
     jsonObject[MODULE_NAME] = moduleName_;
     jsonObject[LABEL_ID] = labelId_;
     jsonObject[ICON_ID] = iconId_;
+    jsonObject[DESCRIPTION_ID] = descriptionId_;
     jsonObject[SYSTEM_APP] = systemApp_;
     jsonObject[BUNDLE_TYPE] = bundleType_;
     jsonObject[U1_ENABLE] = u1Enable_;

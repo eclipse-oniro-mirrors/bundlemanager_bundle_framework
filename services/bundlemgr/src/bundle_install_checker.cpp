@@ -1335,6 +1335,25 @@ void BundleInstallChecker::ParseAppPrivilegeCapability(
 #endif
 }
 
+bool BundleInstallChecker::GetHideDesktopIconByBundlePath(const std::string &bundlePath, bool &hideDesktopIcon)
+{
+    if (bundlePath.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "bundlePath is empty");
+        return false;
+    }
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    ErrCode ret = BundleVerifyMgr::ParseHapProfile(bundlePath, hapVerifyResult, true);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "ParseHapProfile failed, bundlePath:%{public}s, ret:%{public}d",
+            bundlePath.c_str(), ret);
+        return false;
+    }
+    AppPrivilegeCapability appPrivilegeCapability;
+    ParseAppPrivilegeCapability(hapVerifyResult.GetProvisionInfo(), appPrivilegeCapability);
+    hideDesktopIcon = appPrivilegeCapability.hideDesktopIcon;
+    return true;
+}
+
 ErrCode BundleInstallChecker::CheckModuleNameForMulitHaps(
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {

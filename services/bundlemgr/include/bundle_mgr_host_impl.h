@@ -1170,6 +1170,10 @@ public:
      */
     virtual ErrCode GetAllPreinstalledApplicationInfos(
         std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos) override;
+
+    virtual ErrCode GetAllNewPreinstalledApplicationInfos(
+        std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos) override;
+
     virtual ErrCode GetAllBundleInfoByDeveloperId(const std::string &developerId,
         std::vector<BundleInfo> &bundleInfos, int32_t userId) override;
 

@@ -1763,6 +1763,17 @@ public:
     }
 
     /**
+     * @brief Get OTA new preinstalled application infos for current user.
+     * @param preinstalledApplicationInfos Indicates the obtained PreinstalledApplicationInfo objects.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode GetAllNewPreinstalledApplicationInfos(
+        std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    /**
      * @brief Check whether the link can be opened.
      * @param link link Indicates the link to be opened.
      * @param canOpen Indicates whether the link can be opened.

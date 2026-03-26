@@ -579,6 +579,47 @@ HWTEST_F(BmsHapModuleInfoTest, Marshalling_0500, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: PreinstalledApplicationInfo_Marshalling_0600
+ * @tc.name: test PreinstalledApplicationInfo Marshalling with descriptionId round trip
+ */
+HWTEST_F(BmsHapModuleInfoTest, PreinstalledApplicationInfo_Marshalling_0600, Function | SmallTest | Level0)
+{
+    PreinstalledApplicationInfo orig;
+    orig.bundleName = BUNDLENAME;
+    orig.moduleName = MODULENAME;
+    orig.labelId = LABEL_ID;
+    orig.iconId = ICON_ID;
+    orig.descriptionId = 16777216;
+    Parcel parcel;
+    EXPECT_TRUE(orig.Marshalling(parcel));
+    auto* unm = PreinstalledApplicationInfo::Unmarshalling(parcel);
+    ASSERT_NE(unm, nullptr);
+    EXPECT_EQ(unm->bundleName, orig.bundleName);
+    EXPECT_EQ(unm->moduleName, orig.moduleName);
+    EXPECT_EQ(unm->labelId, orig.labelId);
+    EXPECT_EQ(unm->iconId, orig.iconId);
+    EXPECT_EQ(unm->descriptionId, orig.descriptionId);
+    delete unm;
+}
+
+/**
+ * @tc.number: PreinstalledApplicationInfo_Marshalling_0700
+ * @tc.name: test PreinstalledApplicationInfo Unmarshalling without trailing descriptionId
+ */
+HWTEST_F(BmsHapModuleInfoTest, PreinstalledApplicationInfo_Marshalling_0700, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    parcel.WriteString16(Str8ToStr16(BUNDLENAME));
+    parcel.WriteString16(Str8ToStr16(MODULENAME));
+    parcel.WriteUint32(LABEL_ID);
+    parcel.WriteUint32(ICON_ID);
+    auto* unm = PreinstalledApplicationInfo::Unmarshalling(parcel);
+    ASSERT_NE(unm, nullptr);
+    EXPECT_EQ(unm->descriptionId, 0);
+    delete unm;
+}
+
+/**
  * @tc.number: BmsCodeProtectBundleInfoTest_0100
  * @tc.name: test ReadFromParcel interface in CodeProtectBundleInfo.
  * @tc.desc: 1.construct parcel.

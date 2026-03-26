@@ -3009,6 +3009,24 @@ HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1640, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: OnRemoteRequest_1641
+ * @tc.name: test the OnRemoteRequest GET_ALL_NEW_PREINSTALLED_APPLICATION_INFOS
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1641, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_NEW_PREINSTALLED_APPLICATION_INFOS);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: OnRemoteRequest_1650
  * @tc.name: test the OnRemoteRequest
  * @tc.desc: 1. system running normally

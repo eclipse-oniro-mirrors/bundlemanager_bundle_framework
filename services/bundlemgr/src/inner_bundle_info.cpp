@@ -5646,6 +5646,12 @@ void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &application
                 applicationInfo.iconResource.moduleName = mainAbilityInfo.moduleName;
                 applicationInfo.iconResource.bundleName = mainAbilityInfo.bundleName;
             }
+            if (mainAbilityInfo.descriptionId != 0) {
+                applicationInfo.descriptionId = mainAbilityInfo.descriptionId;
+                applicationInfo.descriptionResource.id = mainAbilityInfo.descriptionId;
+                applicationInfo.descriptionResource.moduleName = mainAbilityInfo.moduleName;
+                applicationInfo.descriptionResource.bundleName = mainAbilityInfo.bundleName;
+            }
             if (item.second.isEntry) {
                 return;
             }
