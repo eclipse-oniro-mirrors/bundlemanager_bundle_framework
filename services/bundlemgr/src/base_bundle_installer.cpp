@@ -311,8 +311,8 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .bundleName = bundleName,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+            .isInstallByBundleName = true,
             .metadataConfigInfos = tokenIdMetadataInfos,
-            .isInstallByBundleName = true
         };
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
@@ -359,8 +359,8 @@ ErrCode BaseBundleInstaller::Recover(
             .bundleName = bundleName,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .metadataConfigInfos = tokenIdMetadataInfos,
-            .isRecover = true
+            .isRecover = true,
+            .metadataConfigInfos = tokenIdMetadataInfos
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
@@ -622,7 +622,7 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
         LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", uninstallDir.c_str());
         return errCode;
     }
-    if (versionCode == info.GetVersionCode()) {
+    if (static_cast<uint32_t>(versionCode) == info.GetVersionCode()) {
         info.ResetAOTFlags();
         (void)InstalldClient::GetInstance()->RemoveDir(AOTHandler::BuildSharedArkCachePath(info.GetBundleName()));
     } else {
@@ -3984,8 +3984,8 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
         .bundleName = bundleName,
         .appId = uninstallBundleInfo.appId,
         .appIdentifier = uninstallBundleInfo.appIdentifier,
-        .metadataConfigInfos = tokenIdMetadataInfos,
         .keepData = false,
+        .metadataConfigInfos = tokenIdMetadataInfos
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyUninstalledBundleCleared(installRes);
