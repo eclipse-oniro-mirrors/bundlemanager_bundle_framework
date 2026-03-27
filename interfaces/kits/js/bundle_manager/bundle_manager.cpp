@@ -4316,7 +4316,7 @@ napi_value GetInstalledBundleList(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
+            if (!CommonFunc::ParseUint(env, args[i], asyncCallbackInfo->flags)) {
                 APP_LOGE("Flags %{public}d invalid", asyncCallbackInfo->flags);
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, TYPE_NUMBER);
                 return nullptr;
