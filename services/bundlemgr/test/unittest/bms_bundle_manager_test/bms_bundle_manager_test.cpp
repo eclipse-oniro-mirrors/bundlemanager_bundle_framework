@@ -4245,7 +4245,7 @@ HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0001, Function | MediumTest |
     int32_t appIndex = 0;
     std::string label;
     ErrCode ret = hostImpl->GetApplicationLabel(bundleName, appIndex, label);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
 
 /**
