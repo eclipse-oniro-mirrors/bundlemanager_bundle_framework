@@ -434,6 +434,43 @@ HWTEST_F(BmsPluginInstallerTest, ParseHapPaths_0003, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: ParseHapPaths_0004
+ * @tc.name: test ParseHapPaths with app clone sandbox path
+*/
+HWTEST_F(BmsPluginInstallerTest, ParseHapPaths_0004, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.userId_ = USER_ID;
+    InstallPluginParam pluginParam;
+    std::string path = "/data/bms_app_clone/dataclone/test.hsp";
+    std::vector<std::string> inBundlePath = {path};
+    std::vector<std::string> parsedPath;
+    ErrCode ret = installer.ParseHapPaths(pluginParam, inBundlePath, parsedPath);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(parsedPath.size(), 1);
+    EXPECT_EQ(parsedPath[0], std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(USER_ID) +
+        ServiceConstants::GALLERY_CLONE_PATH + "dataclone/test.hsp");
+}
+
+/**
+ * @tc.number: ParseHapPaths_0005
+ * @tc.name: test ParseHapPaths with invalid app clone sandbox path
+*/
+HWTEST_F(BmsPluginInstallerTest, ParseHapPaths_0005, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InstallPluginParam pluginParam;
+    pluginParam.userId = USER_ID;
+    std::string path = "/data/bms_app_clone/dataclone/../test.hsp";
+    std::vector<std::string> inBundlePath = {path};
+    std::vector<std::string> parsedPath;
+    ErrCode ret = installer.ParseHapPaths(pluginParam, inBundlePath, parsedPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_TRUE(parsedPath.empty());
+}
+
+/**
  * @tc.number: CopyHspToSecurityDir_0001
  * @tc.name: test CopyHspToSecurityDir
 */
