@@ -294,6 +294,9 @@ constexpr uint32_t VALUE_AV_PLAYBACK_AND_RECORD = 1 << 11;
 // 1 0000 0000 0000 represents special scenario processing service
 constexpr uint32_t VALUE_SPECIAL_SCENARIO_PROCESSING = 1 << 12;
 
+// 10 0000 0000 0000 represents nearlink service
+constexpr uint32_t VALUE_NEARLINK = 1 << 13;
+
 constexpr const char* KEY_DATA_TRANSFER = "dataTransfer";
 constexpr const char* KEY_AUDIO_PLAYBACK = "audioPlayback";
 constexpr const char* KEY_AUDIO_RECORDING = "audioRecording";
@@ -307,6 +310,7 @@ constexpr const char* KEY_PICTURE_IN_PICTURE = "pictureInPicture";
 constexpr const char* KEY_SCREEN_FETCH = "screenFetch";
 constexpr const char* KEY_AV_PLAYBACK_AND_RECORD = "avPlaybackAndRecord";
 constexpr const char* KEY_SPECIAL_SCENARIO_PROCESSING = "specialScenarioProcessing";
+constexpr const char* KEY_NEARLINK = "nearlink";
 }  // namespace ProfileReader
 
 namespace Profile {
