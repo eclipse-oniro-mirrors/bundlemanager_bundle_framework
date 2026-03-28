@@ -225,15 +225,14 @@ ErrCode InstalldClient::BatchGetBundleStats(const std::vector<std::string> &bund
     return CallService(&IInstalld::BatchGetBundleStats, bundleNames, uidMap, bundleStats);
 }
 
-ErrCode InstalldClient::GetAllBundleStats(const int32_t userId,
-    std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+ErrCode InstalldClient::GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
     if (uids.empty()) {
         APP_LOGE("uids is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::GetAllBundleStats, userId, bundleStats, uids);
+    return CallService(&IInstalld::GetAllBundleStats, bundleStats, uids);
 }
 
 ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,

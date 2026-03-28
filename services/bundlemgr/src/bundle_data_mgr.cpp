@@ -4972,7 +4972,7 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
     GetAllUninstallBundleInfo(uninstallBundleInfos);
     GetAllUnisntallBundleUids(requestUserId, uninstallBundleInfos, uids);
     std::vector<int32_t> uidVec(uids.begin(), uids.end());
-    if (InstalldClient::GetInstance()->GetAllBundleStats(responseUserId, bundleStats, uidVec) != ERR_OK) {
+    if (InstalldClient::GetInstance()->GetAllBundleStats(bundleStats, uidVec) != ERR_OK) {
         APP_LOGW("GetAllBundleStats failed, userId: %{public}d", responseUserId);
         return false;
     }

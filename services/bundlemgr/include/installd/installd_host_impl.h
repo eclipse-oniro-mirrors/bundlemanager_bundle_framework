@@ -163,8 +163,7 @@ public:
         const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
         std::vector<BundleStorageStats> &bundleStats) override;
 
-    virtual ErrCode GetAllBundleStats(const int32_t userId,
-        std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids) override;
+    virtual ErrCode GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids) override;
     /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.

@@ -693,7 +693,6 @@ bool InstalldHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel 
 
 bool InstalldHost::HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t userId = data.ReadInt32();
     auto uidSize = data.ReadInt32();
     if (uidSize == 0 || uidSize > Constants::CAPACITY_SIZE) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
@@ -705,7 +704,7 @@ bool InstalldHost::HandleGetAllBundleStats(MessageParcel &data, MessageParcel &r
         uids.emplace_back(uid);
     }
     std::vector<int64_t> bundleStats;
-    ErrCode result = GetAllBundleStats(userId, bundleStats, uids);
+    ErrCode result = GetAllBundleStats(bundleStats, uids);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64Vector(bundleStats)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetAllBundleStats write failed");

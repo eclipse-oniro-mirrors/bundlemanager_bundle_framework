@@ -1440,8 +1440,7 @@ ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bu
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
-    std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+ErrCode InstalldHostImpl::GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");

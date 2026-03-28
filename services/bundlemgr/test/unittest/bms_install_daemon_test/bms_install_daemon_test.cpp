@@ -1755,7 +1755,7 @@ HWTEST_F(BmsInstallDaemonTest, GetAllBundleStats_0100, Function | SmallTest | Le
     int32_t userId = 100;
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids;
-    ErrCode ret = hostImpl.GetAllBundleStats(userId, bundleStats, uids);
+    ErrCode ret = hostImpl.GetAllBundleStats(bundleStats, uids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1772,7 +1772,7 @@ HWTEST_F(BmsInstallDaemonTest, GetAllBundleStats_0200, Function | SmallTest | Le
     std::vector<int32_t> uids;
     uids.push_back(101);
     uids.push_back(102);
-    ErrCode ret = hostImpl.GetAllBundleStats(userId, bundleStats, uids);
+    ErrCode ret = hostImpl.GetAllBundleStats(bundleStats, uids);
     EXPECT_EQ(ret, ERR_OK);
 }
 

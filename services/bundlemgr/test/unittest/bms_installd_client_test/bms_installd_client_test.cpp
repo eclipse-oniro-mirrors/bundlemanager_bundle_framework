@@ -1665,7 +1665,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAllBundleStats_0100, Te
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids;
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->GetAllBundleStats(userId, bundleStats, uids);
+    ErrCode result = installClient_->GetAllBundleStats(bundleStats, uids);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1680,7 +1680,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAllBundleStats_0200, Te
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids;
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->GetAllBundleStats(userId, bundleStats, uids);
+    ErrCode result = installClient_->GetAllBundleStats(bundleStats, uids);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1697,7 +1697,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAllBundleStats_0300, Te
     uids.push_back(100);
     uids.push_back(101);
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->GetAllBundleStats(userId, bundleStats, uids);
+    ErrCode result = installClient_->GetAllBundleStats(bundleStats, uids);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 

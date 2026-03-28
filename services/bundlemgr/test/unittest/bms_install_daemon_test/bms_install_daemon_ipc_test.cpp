@@ -732,7 +732,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3300, Function | SmallTest |
     std::vector<int32_t> uids;
     bundleStats.push_back(LAST_MODIFY_TIME);
     uids.push_back(UID);
-    auto ret = installdProxy->GetAllBundleStats(UID, bundleStats, uids);
+    auto ret = installdProxy->GetAllBundleStats(bundleStats, uids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 
