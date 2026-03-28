@@ -126,6 +126,8 @@ struct Version {
 
 struct ApiVersion {
     uint32_t compatible = 0;
+    uint32_t compatibleMinorAPIVersion = 0;
+    uint32_t compatiblePatchAPIVersion = 0;
     uint32_t target = 0;
     std::string releaseType = "Release";
     std::string compileSdkVersion;
@@ -415,6 +417,22 @@ void from_json(const nlohmann::json &jsonObject, ApiVersion &apiVersion)
         g_parseResult,
         ArrayType::NOT_ARRAY);
     // these are not required fields.
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_COMPATIBLE_MINOR_API_VERSION,
+        apiVersion.compatibleMinorAPIVersion,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_COMPATIBLE_PATCH_API_VERSION,
+        apiVersion.compatiblePatchAPIVersion,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         BUNDLE_APP_PROFILE_KEY_TARGET,
@@ -2010,6 +2028,8 @@ bool ToApplicationInfo(
     }
 
     applicationInfo.apiCompatibleVersion = configJson.app.apiVersion.compatible;
+    applicationInfo.compatibleMinorVersion = configJson.app.apiVersion.compatibleMinorAPIVersion;
+    applicationInfo.compatiblePatchVersion = configJson.app.apiVersion.compatiblePatchAPIVersion;
     applicationInfo.apiTargetVersion = configJson.app.apiVersion.target;
     applicationInfo.apiReleaseType = configJson.app.apiVersion.releaseType;
     applicationInfo.asanEnabled = configJson.app.asanEnabled;
@@ -2082,6 +2102,8 @@ bool ToBundleInfo(
     bundleInfo.minCompatibleVersionCode = static_cast<uint32_t>(applicationInfo.minCompatibleVersionCode);
 
     bundleInfo.compatibleVersion = static_cast<uint32_t>(applicationInfo.apiCompatibleVersion);
+    bundleInfo.compatibleMinorVersion = applicationInfo.compatibleMinorVersion;
+    bundleInfo.compatiblePatchVersion = applicationInfo.compatiblePatchVersion;
     bundleInfo.targetVersion = static_cast<uint32_t>(applicationInfo.apiTargetVersion);
 
     bundleInfo.isKeepAlive = applicationInfo.keepAlive;

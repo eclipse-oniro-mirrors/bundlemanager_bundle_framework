@@ -82,6 +82,8 @@ const nlohmann::json CONFIG_JSON = R"(
             },
             "apiVersion": {
                 "compatible": 3,
+                "compatibleMinorAPIVersion": 0,
+                "compatiblePatchAPIVersion": 0,
                 "target": 3,
                 "releaseType": "Beta1"
             }
@@ -242,6 +244,8 @@ const nlohmann::json CONFIG_JSON_2 = R"(
     "app":{
         "apiVersion":{
             "compatible":8,
+            "compatibleMinorAPIVersion": 0,
+            "compatiblePatchAPIVersion": 0,
             "releaseType":"Release",
             "target":8
         },
@@ -314,6 +318,8 @@ const nlohmann::json CONFIG_JSON_3 = R"(
     "app":{
         "apiVersion":{
             "compatible":8,
+            "compatibleMinorAPIVersion": 0,
+            "compatiblePatchAPIVersion": 0,
             "releaseType":"Release",
             "target":8
         },
@@ -1851,7 +1857,13 @@ const nlohmann::json MODULE_JSON_16 = R"(
         "bundleName": "com.example.app",
         "vendor": "example",
         "version": { "code": 1, "name": "1.0" },
-        "apiVersion": { "compatible": 8, "target": 8, "releaseType": "Release" },
+        "apiVersion": {
+            "compatible": 8,
+            "compatibleMinorAPIVersion": 0,
+            "compatiblePatchAPIVersion": 0,
+            "target": 8,
+            "releaseType": "Release"
+        },
         "2in1": {
             "minAPIVersion": 9,
             "keepAlive": true,

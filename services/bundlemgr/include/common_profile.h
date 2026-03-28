@@ -60,6 +60,8 @@ constexpr const char* BUNDLE_APP_PROFILE_KEY_CODE = "code";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
 // sub BUNDLE_APP_PROFILE_KEY_API_VERSION
 constexpr const char* BUNDLE_APP_PROFILE_KEY_COMPATIBLE = "compatible";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_COMPATIBLE_MINOR_API_VERSION = "compatibleMinorAPIVersion";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_COMPATIBLE_PATCH_API_VERSION = "compatiblePatchAPIVersion";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_TARGET = "target";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_RELEASE_TYPE = "releaseType";
 constexpr const char* APP_RELEASE_TYPE_VALUE_RELEASE = "Release";
