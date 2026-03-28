@@ -49,8 +49,8 @@ const nlohmann::json MODULE_JSON = R"(
         "minMinorAPIVersion": 0,
         "minPatchAPIVersion": 0,
         "targetAPIVersion": 9,
-        "targetMinorApiVersion": 1,
-        "targetPatchApiVersion": 2,
+        "targetMinorAPIVersion": 1,
+        "targetPatchAPIVersion": 2,
         "vendor": "example",
         "versionCode": 1000000,
         "versionName": "1.0.0"
