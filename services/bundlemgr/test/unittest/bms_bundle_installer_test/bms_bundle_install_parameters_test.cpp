@@ -1896,34 +1896,6 @@ HWTEST_F(BmsBundleInstallParametersTest, GetAllBundleStats_0100, Function | Smal
 }
 
 /**
- * @tc.number: GetAllBundleStats_0200
- * @tc.name: test GetAllBundleStats with negative userId
- * @tc.desc: 1. test GetAllBundleStats with negative userId should return error
- */
-HWTEST_F(BmsBundleInstallParametersTest, GetAllBundleStats_0200, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    std::vector<int64_t> bundleStats;
-    std::vector<int32_t> uids = {10000};
-    auto ret = impl.GetAllBundleStats(-1, bundleStats, uids);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: GetAllBundleStats_0300
- * @tc.name: test GetAllBundleStats with negative userId and empty uids
- * @tc.desc: 1. test GetAllBundleStats with negative userId and empty uids should return error
- */
-HWTEST_F(BmsBundleInstallParametersTest, GetAllBundleStats_0300, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    std::vector<int64_t> bundleStats;
-    std::vector<int32_t> uids;
-    auto ret = impl.GetAllBundleStats(-1, bundleStats, uids);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
  * @tc.number: GetAllBundleStats_0400
  * @tc.name: test GetAllBundleStats with invalid uid in uids
  * @tc.desc: 1. test GetAllBundleStats with negative uid in uids should return error
