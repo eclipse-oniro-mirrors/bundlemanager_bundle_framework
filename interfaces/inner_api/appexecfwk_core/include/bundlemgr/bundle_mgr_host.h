@@ -947,6 +947,8 @@ private:
 
     ErrCode HandleGetSignatureInfoByUid(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetApiTargetVersionByUid(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleDeleteDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);

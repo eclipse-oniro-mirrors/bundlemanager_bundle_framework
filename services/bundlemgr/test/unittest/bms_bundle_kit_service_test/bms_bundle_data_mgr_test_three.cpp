@@ -4445,4 +4445,46 @@ HWTEST_F(BmsBundleDataMgrTest3, ParseUserKey_0500, Function | MediumTest | Level
     EXPECT_EQ(userId, 100);
     EXPECT_EQ(appIndex, 0);
 }
+
+/**
+ * @tc.number: GetApiTargetVersionByUid_0001
+ * @tc.name: GetApiTargetVersionByUid_0001
+ * @tc.desc: test GetApiTargetVersionByUid with invalid uid, expect ERR_BUNDLE_MANAGER_INVALID_UID
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetApiTargetVersionByUid_0001, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    int32_t apiTargetVersion = 0;
+    ErrCode ret = bundleDataMgr->GetApiTargetVersionByUid(100, apiTargetVersion);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: GetApiTargetVersionByUid_0002
+ * @tc.name: GetApiTargetVersionByUid_0002
+ * @tc.desc: test GetApiTargetVersionByUid via BundleMgrHostImpl with invalid uid,
+ *           expect ERR_BUNDLE_MANAGER_INVALID_UID
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetApiTargetVersionByUid_0002, Function | MediumTest | Level1)
+{
+    int32_t apiTargetVersion = 0;
+    ErrCode ret = bundleMgrHostImpl_->GetApiTargetVersionByUid(100, apiTargetVersion);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: GetApiTargetVersionByUid_0003
+ * @tc.name: GetApiTargetVersionByUid_0003
+ * @tc.desc: test GetApiTargetVersionByUid with negative uid, expect ERR_BUNDLE_MANAGER_INVALID_UID
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetApiTargetVersionByUid_0003, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleDataMgr> localBundleDataMgr = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(localBundleDataMgr, nullptr);
+    int32_t apiTargetVersion = 0;
+    ErrCode ret = localBundleDataMgr->GetApiTargetVersionByUid(-1, apiTargetVersion);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
 } // OHOS

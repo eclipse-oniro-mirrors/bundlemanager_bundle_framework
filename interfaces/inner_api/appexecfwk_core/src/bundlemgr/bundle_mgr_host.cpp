@@ -789,6 +789,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_ABILITY):
             errCode = HandleGetShortcutInfoByAbility(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_API_TARGET_VERSION_BY_UID):
+            errCode = HandleGetApiTargetVersionByUid(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -4814,6 +4817,28 @@ ErrCode BundleMgrHost::HandleGetSignatureInfoByUid(MessageParcel &data, MessageP
     }
     APP_LOGE("errCode: %{public}d, uid: %{public}d", ret, uid);
     return ret;
+}
+
+ErrCode BundleMgrHost::HandleGetApiTargetVersionByUid(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    int32_t uid = data.ReadInt32();
+    int32_t apiTargetVersion = 0;
+    if (uid < 0) {
+        APP_LOGW_NOFUNC("host GetApiTargetVersionByUid invalid uid %{public}d", uid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    ErrCode ret = GetApiTargetVersionByUid(uid, apiTargetVersion);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteInt32(apiTargetVersion)) {
+        APP_LOGE("write apiTargetVersion failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    APP_LOGD("GetApiTargetVersionByUid errCode: %{public}d, uid: %{public}d", ret, uid);
+    return ERR_OK;
 }
 
 ErrCode BundleMgrHost::HandleUpdateAppEncryptedStatus(MessageParcel &data, MessageParcel &reply)

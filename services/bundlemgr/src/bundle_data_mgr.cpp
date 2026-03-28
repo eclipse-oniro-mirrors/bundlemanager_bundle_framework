@@ -11920,6 +11920,25 @@ ErrCode BundleDataMgr::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &s
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetApiTargetVersionByUid(const int32_t uid, int32_t &apiTargetVersion) const
+{
+    std::string bundleName;
+    int32_t appIndex = 0;
+    ErrCode ret = GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    auto bundleInfoIter = bundleInfos_.find(bundleName);
+    if (bundleInfoIter == bundleInfos_.end()) {
+        APP_LOGE("bundleName %{public}s is not existed in bundleInfos_", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    apiTargetVersion = bundleInfoIter->second.GetBaseApplicationInfo().apiTargetVersion;
+    APP_LOGD("GetApiTargetVersionByUid success, uid: %{public}d, apiTargetVersion: %{public}d",
+        uid, apiTargetVersion);
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::UpdateAppEncryptedStatus(
     const std::string &bundleName, bool isExisted, int32_t appIndex, bool needSaveStorage)
 {

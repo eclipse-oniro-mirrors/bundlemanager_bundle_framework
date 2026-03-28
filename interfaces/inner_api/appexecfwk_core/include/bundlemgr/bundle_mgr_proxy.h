@@ -1286,6 +1286,8 @@ public:
 
     virtual ErrCode GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo) override;
 
+    virtual ErrCode GetApiTargetVersionByUid(const int32_t uid, int32_t &apiTargetVersion) override;
+
     virtual ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
 
     virtual ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;

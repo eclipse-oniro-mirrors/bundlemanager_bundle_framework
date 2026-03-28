@@ -1212,6 +1212,14 @@ public:
 
     virtual ErrCode GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo) override;
 
+    /**
+     * @brief Obtains the apiTargetVersion based on a given uid.
+     * @param uid Indicates the uid of the application.
+     * @param apiTargetVersion Indicates the obtained apiTargetVersion value.
+     * @return Returns ERR_OK if successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetApiTargetVersionByUid(const int32_t uid, int32_t &apiTargetVersion) override;
+
     virtual ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
 
     virtual ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;

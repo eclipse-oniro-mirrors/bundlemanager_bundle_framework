@@ -6149,6 +6149,39 @@ ErrCode BundleMgrProxy::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &
         BundleMgrInterfaceCode::GET_SIGNATURE_INFO_BY_UID, data, signatureInfo);
 }
 
+ErrCode BundleMgrProxy::GetApiTargetVersionByUid(const int32_t uid, int32_t &apiTargetVersion)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin GetApiTargetVersionByUid, uid: %{public}d", uid);
+    if (uid < 0) {
+        APP_LOGW_NOFUNC("proxy GetApiTargetVersionByUid invalid uid %{public}d", uid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("GetApiTargetVersionByUid write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(uid)) {
+        APP_LOGE_NOFUNC("GetApiTargetVersionByUid write uid fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_API_TARGET_VERSION_BY_UID, data, reply)) {
+        APP_LOGE_NOFUNC("GetApiTargetVersionByUid SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        apiTargetVersion = reply.ReadInt32();
+    }
+
+    APP_LOGD("GetApiTargetVersionByUid ret: %{public}d, apiTargetVersion: %{public}d", ret, apiTargetVersion);
+    return ret;
+}
+
 ErrCode BundleMgrProxy::UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

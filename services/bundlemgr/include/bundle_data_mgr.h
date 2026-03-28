@@ -1185,6 +1185,14 @@ public:
 
     ErrCode GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo) const;
 
+    /**
+     * @brief Obtains the apiTargetVersion based on a given uid.
+     * @param uid Indicates the uid of the application.
+     * @param apiTargetVersion Indicates the obtained apiTargetVersion value.
+     * @return Returns ERR_OK if successfully obtained; returns error code otherwise.
+     */
+    ErrCode GetApiTargetVersionByUid(const int32_t uid, int32_t &apiTargetVersion) const;
+
     ErrCode GetInnerBundleInfoWithSandboxByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
 
     ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted,

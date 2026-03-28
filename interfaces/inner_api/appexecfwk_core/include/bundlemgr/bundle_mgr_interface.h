@@ -1891,6 +1891,17 @@ public:
     }
 
     /**
+     * @brief Obtains the apiTargetVersion based on a given uid.
+     * @param uid Indicates the uid of the application.
+     * @param apiTargetVersion Indicates the obtained apiTargetVersion value.
+     * @return Returns ERR_OK if successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetApiTargetVersionByUid(const int32_t uid, int32_t &apiTargetVersion)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    /**
      * @brief Obtains BundleInfo of all continuable bundles available in the system.
      * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.
      * @param bundleInfos Indicates all of the obtained BundleInfo objects.

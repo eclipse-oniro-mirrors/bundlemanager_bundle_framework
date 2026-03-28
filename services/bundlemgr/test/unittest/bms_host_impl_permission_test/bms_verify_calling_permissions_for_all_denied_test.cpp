@@ -1377,5 +1377,21 @@ HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_GetOdidRese
     auto ret = localBundleMgrHostImpl->GetOdidResetCount(bundleName, odid, count);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: BundleMgrHostImpl_0084
+ * @tc.name: VerifyCallingPermissionsForAllDeniedTest
+ * @tc.desc: GetApiTargetVersionByUid VerifyCallingPermissionsForAll denied
+ */
+HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0084, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    int32_t uid = 1000;
+    int32_t apiTargetVersion = 0;
+    auto ret = localBundleMgrHostImpl->GetApiTargetVersionByUid(uid, apiTargetVersion);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 #endif
 } // namespace OHOS

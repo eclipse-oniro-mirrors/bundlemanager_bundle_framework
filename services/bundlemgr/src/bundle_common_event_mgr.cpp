@@ -66,6 +66,7 @@ constexpr const char* CROSS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* IS_RECOVER = "isRecover";
 constexpr const char* IS_ENABLED = "isEnabled";
 constexpr const char* PACKAGE_UNINSTALLED_DATA_CLEARED = "usual.event.PACKAGE_UNINSTALLED_DATA_CLEARED";
+constexpr int32_t CONTROL_API_VERSION = 25;
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -167,9 +168,9 @@ bool BundleCommonEventMgr::PublishCommonEvent(
     if (appDistributionType.empty()) {
         APP_LOGD("appDistributionType is empty");
     }
+    EventFwk::CommonEventPublishInfo publishInfo;
     if (eventSet_.find(action) != eventSet_.end() &&
         appDistributionType != Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE) {
-        EventFwk::CommonEventPublishInfo publishInfo;
         std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
         publishInfo.SetSubscriberPermissions(permissionVec);
         publishInfo.SetBundleName(bundleName);
@@ -180,7 +181,11 @@ bool BundleCommonEventMgr::PublishCommonEvent(
             return false;
         }
     } else {
-        if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishUserId)) {
+        publishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
+        publishInfo.SetSubscriberMaximumVersion(CONTROL_API_VERSION);
+        publishInfo.SetBundleName(bundleName);
+        publishInfo.SetValidationRule(EventFwk::ValidationRule::OR);
+        if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishInfo, publishUserId)) {
             APP_LOGE("PublishCommonEventAsUser failed, userId:%{public}d", publishUserId);
             return false;
         }
