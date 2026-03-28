@@ -276,6 +276,9 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(IS_BUNDLE_EXIST, installResult.isBundleExist);
     want.SetParam(CROSS_APP_SHARED_CONFIG, installResult.crossAppSharedConfig);
     want.SetParam(IS_RECOVER, installResult.isRecover);
+    for (const auto &item : installResult.metadataConfigInfos) {
+            want.SetParam(item.first, item.second);
+    }
 }
 
 ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info, int32_t uid, int32_t userId,

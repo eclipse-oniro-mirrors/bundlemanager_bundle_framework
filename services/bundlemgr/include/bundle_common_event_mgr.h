@@ -30,6 +30,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+static constexpr size_t MAX_METADATA_CONFIG_SIZE = 1024;
 enum class NotifyType : uint8_t {
     INSTALL = 1,
     UPDATE,
@@ -80,6 +81,24 @@ struct NotifyBundleEvents {
     bool isRecover = false;
     bool isInstallByBundleName = false;
     std::map<std::string, std::string> metadataConfigInfos;
+
+    void SetMetadataConfigInfos(const std::map<std::string, std::string>& configs)
+    {
+        if (configs.size() <= MAX_METADATA_CONFIG_SIZE) {
+            metadataConfigInfos = configs;
+            return;
+        }
+        metadataConfigInfos.clear();
+        size_t count = 0;
+        for (const auto& [key, value] : configs) {
+            if (count >= MAX_METADATA_CONFIG_SIZE) {
+                APP_LOGE("Config count exceeds limit: %zu/%zu", configs.size(), MAX_METADATA_CONFIG_SIZE);
+                return;
+            }
+            metadataConfigInfos[key] = value;
+            ++count;
+        }
+    }
 };
 
 class BundleCommonEventMgr : public std::enable_shared_from_this<BundleCommonEventMgr> {

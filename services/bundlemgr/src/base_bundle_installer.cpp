@@ -258,10 +258,11 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .bundleName = bundleName_,
             .modulePackage = moduleName_,
             .abilityName = mainAbility_,
+            .appIdentifier = appIdentifier_,
             .appDistributionType = appDistributionType_,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .metadataConfigInfos = tokenIdMetadataInfos
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
         };
+        installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (installParam.allUser || IsDriverForAllUser(bundleName_) ||
             IsEnterpriseForAllUser(installParam, bundleName_)) {
             AddBundleStatus(installRes);
@@ -309,11 +310,12 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .userId = userId_,
             .bundleName = bundleName,
+            .appIdentifier = appIdentifier_,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .isInstallByBundleName = true,
-            .metadataConfigInfos = tokenIdMetadataInfos,
+            .isInstallByBundleName = true
         };
+        installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
         } else if (IsDriverForAllUser(bundleName) || IsEnterpriseForAllUser(installParam, bundleName)) {
@@ -357,11 +359,12 @@ ErrCode BaseBundleInstaller::Recover(
             .uid = uid,
             .bundleType = static_cast<int32_t>(bundleType_),
             .bundleName = bundleName,
+            .appIdentifier = appIdentifier_,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .isRecover = true,
-            .metadataConfigInfos = tokenIdMetadataInfos
+            .isRecover = true
         };
+        installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
         }
@@ -441,13 +444,14 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .bundleType = static_cast<int32_t>(bundleType_),
             .bundleName = bundleName,
             .appId = uninstallBundleAppId_,
+            .appIdentifier = appIdentifier_,
             .appDistributionType = appDistributionType_,
             .developerId = developerId,
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .metadataConfigInfos = tokenIdMetadataInfos
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
         };
+        installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
 
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
@@ -713,14 +717,15 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .bundleName = bundleName,
             .modulePackage = modulePackage,
             .appId = uninstallBundleAppId_,
+            .appIdentifier = appIdentifier_,
             .appDistributionType = appDistributionType_,
             .developerId = developerId,
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData,
             .isBundleExist = isBundleExist_,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .metadataConfigInfos = tokenIdMetadataInfos
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
         };
+        installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
         }
@@ -2371,6 +2376,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
     appDistributionType_ = oldInfo.GetAppDistributionType();
+    appIdentifier_ = oldInfo.GetAppIdentifier();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
@@ -2628,6 +2634,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             }
 
             versionCode_ = oldInfo.GetVersionCode();
+            appIdentifier_ = oldInfo.GetAppIdentifier();
             if (oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
                 LOG_D(BMS_TAG_INSTALLER, "Appservice (%{public}s) only install in U0", bundleName.c_str());
                 bundleType_ = BundleType::APP_SERVICE_FWK;
@@ -3988,9 +3995,9 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
         .bundleName = bundleName,
         .appId = uninstallBundleInfo.appId,
         .appIdentifier = uninstallBundleInfo.appIdentifier,
-        .keepData = false,
-        .metadataConfigInfos = tokenIdMetadataInfos
+        .keepData = false
     };
+    installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyUninstalledBundleCleared(installRes);
     return true;
