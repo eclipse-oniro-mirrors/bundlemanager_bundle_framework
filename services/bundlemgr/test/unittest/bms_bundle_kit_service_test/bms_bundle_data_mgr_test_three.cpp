@@ -85,6 +85,7 @@ const std::string ABILITY_NAME_TEST1 = ".Reading1";
 const int32_t BASE_TEST_UID = 65535;
 const int32_t TEST_UID = 20065535;
 const int32_t TEST_MAX_UID = 20065534;
+const int32_t TEST_NORMAL_UID = 20065530;
 const std::string BUNDLE_LABEL = "Hello, OHOS";
 const std::string BUNDLE_DESCRIPTION = "example helloworld";
 const std::string BUNDLE_VENDOR = "example";
@@ -4233,9 +4234,215 @@ HWTEST_F(BmsBundleDataMgrTest3, DeleteRouterInfoForSharedBundle_0200, Function |
     InnerModuleInfo moduleInfo;
     moduleInfo.modulePackage = "com.test.shared.module1";
     info.InsertInnerModuleInfo(moduleInfo.modulePackage, moduleInfo);
-    
+
     int32_t versionCode = 1;
     bool ret = bundleDataMgr->DeleteRouterInfoForSharedBundle(info, versionCode);
     EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: RestoreUidAndGidFromUninstallInfo_CloneApp_0100
+ * @tc.name: RestoreUidAndGidFromUninstallInfo for clone app
+ * @tc.desc: test RestoreUidAndGidFromUninstallInfo with clone app (userId_appIndex format)
+ */
+HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGidFromUninstallInfo_CloneApp_0100, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    UninstallBundleInfo uninstallBundleInfo;
+    uninstallBundleInfo.appId = "test.app.id";
+    uninstallBundleInfo.bundleType = BundleType::APP;
+
+    UninstallDataUserInfo mainUserInfo;
+    mainUserInfo.uid = TEST_NORMAL_UID;
+    mainUserInfo.accessTokenId = 1000;
+    uninstallBundleInfo.userInfos["100"] = mainUserInfo;
+
+    UninstallDataUserInfo cloneUserInfo;
+    cloneUserInfo.uid = TEST_NORMAL_UID + 1;
+    cloneUserInfo.accessTokenId = 1001;
+    uninstallBundleInfo.userInfos["100_1"] = cloneUserInfo;
+
+    auto ret = bundleDataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME_TEST, uninstallBundleInfo);
+    ASSERT_TRUE(ret);
+
+    bundleDataMgr->RestoreUidAndGidFromUninstallInfo();
+
+    for (auto &item : bundleDataMgr->bundleIdMap_) {
+        APP_LOGE("bmsTag bundleIdMap:%{public}d.", item.first);
+    }
+
+    auto mainBundleId = TEST_NORMAL_UID - USERID * Constants::BASE_USER_RANGE;
+    auto mainIter = bundleDataMgr->bundleIdMap_.find(mainBundleId);
+    EXPECT_TRUE(mainIter != bundleDataMgr->bundleIdMap_.end());
+    if (mainIter != bundleDataMgr->bundleIdMap_.end()) {
+        EXPECT_EQ(mainIter->second, BUNDLE_NAME_TEST);
+    }
+
+    auto cloneBundleId = (TEST_NORMAL_UID + 1) - USERID * Constants::BASE_USER_RANGE;
+    auto cloneIter = bundleDataMgr->bundleIdMap_.find(cloneBundleId);
+    EXPECT_TRUE(cloneIter != bundleDataMgr->bundleIdMap_.end());
+    if (cloneIter != bundleDataMgr->bundleIdMap_.end()) {
+        std::string expectedCloneName = BundleCloneCommonHelper::GetCloneBundleIdKey(BUNDLE_NAME_TEST, 1);
+        EXPECT_EQ(cloneIter->second, expectedCloneName);
+    }
+
+    bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, USERID);
+    bundleDataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME_TEST, USERID, 1);
+    bundleDataMgr->bundleIdMap_.erase(mainBundleId);
+    if (cloneIter != bundleDataMgr->bundleIdMap_.end()) {
+        bundleDataMgr->bundleIdMap_.erase(cloneBundleId);
+    }
+}
+
+/**
+ * @tc.number: RestoreUidAndGidFromUninstallInfo_CloneApp_0200
+ * @tc.name: RestoreUidAndGidFromUninstallInfo for multiple clone apps
+ * @tc.desc: test RestoreUidAndGidFromUninstallInfo with multiple clone apps
+ */
+HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGidFromUninstallInfo_CloneApp_0200, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    UninstallBundleInfo uninstallBundleInfo;
+    uninstallBundleInfo.bundleType = BundleType::APP;
+
+    UninstallDataUserInfo mainUserInfo;
+    mainUserInfo.uid = TEST_NORMAL_UID;
+    uninstallBundleInfo.userInfos["100"] = mainUserInfo;
+
+    UninstallDataUserInfo cloneUserInfo1;
+    cloneUserInfo1.uid = TEST_NORMAL_UID + 1;
+    uninstallBundleInfo.userInfos["100_1"] = cloneUserInfo1;
+
+    UninstallDataUserInfo cloneUserInfo2;
+    cloneUserInfo2.uid = TEST_NORMAL_UID + 2;
+    uninstallBundleInfo.userInfos["100_2"] = cloneUserInfo2;
+
+    auto ret = bundleDataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME_TEST, uninstallBundleInfo);
+    ASSERT_TRUE(ret);
+
+    bundleDataMgr->RestoreUidAndGidFromUninstallInfo();
+    for (auto &item : bundleDataMgr->bundleIdMap_) {
+        APP_LOGE("bmsTag bundleIdMap:%{public}d.", item.first);
+    }
+
+    EXPECT_TRUE(bundleDataMgr->bundleIdMap_.find(TEST_NORMAL_UID - USERID * Constants::BASE_USER_RANGE) !=
+                  bundleDataMgr->bundleIdMap_.end());
+    EXPECT_TRUE(bundleDataMgr->bundleIdMap_.find((TEST_NORMAL_UID + 1) - USERID * Constants::BASE_USER_RANGE) !=
+                  bundleDataMgr->bundleIdMap_.end());
+    EXPECT_TRUE(bundleDataMgr->bundleIdMap_.find((TEST_NORMAL_UID + 2) - USERID * Constants::BASE_USER_RANGE) !=
+                  bundleDataMgr->bundleIdMap_.end());
+
+    bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, USERID);
+    bundleDataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME_TEST, USERID, 1);
+    bundleDataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME_TEST, USERID, 2);
+    bundleDataMgr->bundleIdMap_.erase(TEST_NORMAL_UID - USERID * Constants::BASE_USER_RANGE);
+    bundleDataMgr->bundleIdMap_.erase((TEST_NORMAL_UID + 1) - USERID * Constants::BASE_USER_RANGE);
+    bundleDataMgr->bundleIdMap_.erase((TEST_NORMAL_UID + 2) - USERID * Constants::BASE_USER_RANGE);
+}
+
+/**
+ * @tc.number: ParseUserKey_0100
+ * @tc.name: test ParseUserKey
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest3, ParseUserKey_0100, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::string userKey = "100";
+    int32_t userId = -1;
+    int32_t appIndex = 0;
+    bool ret = bundleDataMgr->ParseUserKey(userKey, userId, appIndex);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(userId, 100);
+    EXPECT_EQ(appIndex, 0);
+}
+
+/**
+ * @tc.number: ParseUserKey_0200
+ * @tc.name: test ParseUserKey
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest3, ParseUserKey_0200, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::string userKey = "aaa";
+    int32_t userId = -1;
+    int32_t appIndex = 0;
+    bool ret = bundleDataMgr->ParseUserKey(userKey, userId, appIndex);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(userId, -1);
+    EXPECT_EQ(appIndex, 0);
+}
+
+/**
+ * @tc.number: ParseUserKey_0300
+ * @tc.name: test ParseUserKey
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest3, ParseUserKey_0300, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::string userKey = "100_1";
+    int32_t userId = -1;
+    int32_t appIndex = 0;
+    bool ret = bundleDataMgr->ParseUserKey(userKey, userId, appIndex);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(userId, 100);
+    EXPECT_EQ(appIndex, 1);
+}
+
+/**
+ * @tc.number: ParseUserKey_0400
+ * @tc.name: test ParseUserKey
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest3, ParseUserKey_0400, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::string userKey = "aaa_1";
+    int32_t userId = -1;
+    int32_t appIndex = 0;
+    bool ret = bundleDataMgr->ParseUserKey(userKey, userId, appIndex);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(userId, -1);
+    EXPECT_EQ(appIndex, 0);
+}
+
+/**
+ * @tc.number: ParseUserKey_0500
+ * @tc.name: test ParseUserKey
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest3, ParseUserKey_0500, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::string userKey = "100_a";
+    int32_t userId = -1;
+    int32_t appIndex = 0;
+    bool ret = bundleDataMgr->ParseUserKey(userKey, userId, appIndex);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(userId, 100);
+    EXPECT_EQ(appIndex, 0);
 }
 } // OHOS
