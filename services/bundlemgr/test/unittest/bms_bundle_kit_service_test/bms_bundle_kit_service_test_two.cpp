@@ -10124,6 +10124,44 @@ HWTEST_F(BmsBundleKitServiceTest, GetJsonProfilefImpl_0200, Function | SmallTest
 }
 
 /**
+ * @tc.number: GetJsonProfilefImpl_0300
+ * @tc.name: test GetJsonProfile with non-system app calling
+ * @tc.desc: 1. test GetJsonProfile when non-system app calling
+ *           2. should return ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetJsonProfilefImpl_0300, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ProfileType profileType = AppExecFwk::ProfileType::NETWORK_PROFILE;
+    std::string profile = "";
+    auto ret = hostImpl->GetJsonProfile(
+        profileType, BUNDLE_NAME_TEST, MODULE_NAME_TEST, profile, INVALID_UID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetJsonProfilefImpl_0400
+ * @tc.name: test GetJsonProfile with non-system app calling
+ * @tc.desc: 1. test GetJsonProfile when non-system app calling
+ *           2. should return ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetJsonProfilefImpl_0400, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ProfileType profileType = AppExecFwk::ProfileType::PKG_CONTEXT_PROFILE;
+    std::string profile = "";
+    auto ret = hostImpl->GetJsonProfile(
+        profileType, BUNDLE_NAME_TEST, MODULE_NAME_TEST, profile, INVALID_UID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    ResetTestValues();
+}
+
+/**
  * @tc.number: CreateBundleDataDirImpl_0100
  * @tc.name: test CreateBundleDataDir with no permission
  * @tc.desc: 1. test CreateBundleDataDir when no permission
