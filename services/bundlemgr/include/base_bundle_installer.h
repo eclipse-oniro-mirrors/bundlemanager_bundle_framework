@@ -284,7 +284,7 @@ private:
      * @param isKeepData Indicates that whether to save data.
      * @return Returns ERR_OK if the bundle removed successfully; returns error code otherwise.
      */
-    ErrCode RemoveBundle(InnerBundleInfo &info, bool isKeepData, const bool async = false);
+    ErrCode RemoveBundle(InnerBundleInfo &info, const InstallParam &installParam, const bool async = false);
     /**
      * @brief Create the code and data directories of a bundle.
      * @param info Indicates the InnerBundleInfo object of a bundle.
@@ -549,7 +549,8 @@ private:
      * @return Returns BundleUserMgr.
      */
     ErrCode RemoveBundleUserData(
-        InnerBundleInfo &innerBundleInfo, bool needRemoveData = true, const bool async = false);
+        InnerBundleInfo &innerBundleInfo, const InstallParam &installParam, const bool async = false);
+
     /**
      * @brief Create bundle user data.
      * @param innerBundleInfo Indicates the bundle type of the application.
