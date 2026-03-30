@@ -55,7 +55,10 @@ static ani_object ConvertCRCTable(ani_env* env, const tableType* table, const si
         CHECK_PARAM_NULL_RETURN(longObj, nullptr);
         ani_status status =
             env->Object_CallMethodByName_Void(arrayObj, "$_set", setterSig.c_str(), static_cast<ani_int>(i), longObj);
-        env->Reference_Delete(longObj);
+        ani_status deleteStatus = env->Reference_Delete(longObj);
+        if (deleteStatus != ANI_OK) {
+            APP_LOGW("Reference_Delete failed %{public}d", status);
+        }
         if (status != ANI_OK) {
             APP_LOGE("Object_CallMethodByName_Void failed %{public}d", status);
             return nullptr;

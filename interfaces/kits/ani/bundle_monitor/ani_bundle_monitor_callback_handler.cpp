@@ -32,17 +32,21 @@ void ANIBundleMonitorCallbackHandler::AddCallback(ani_env* env, ani_object aniCa
 {
     APP_LOGI("AddCallback entry");
     RETURN_IF_NULL(env);
+    ani_status status = ANI_OK;
     std::lock_guard<std::mutex> lock(callbackMutex_);
     for (auto iter = callbackList_.begin(); iter != callbackList_.end(); ++iter) {
         ani_boolean isEqual = ANI_FALSE;
-        env->Reference_StrictEquals(aniCallback, *iter, &isEqual);
+        status = env->Reference_StrictEquals(aniCallback, *iter, &isEqual);
+        if (status != ANI_OK) {
+            APP_LOGW_NOFUNC("AddCallback Reference_StrictEquals error. result: %{public}d", status);
+        }
         if (isEqual == ANI_TRUE) {
             APP_LOGI("callback already exists");
             return;
         }
     }
     ani_ref callbackRef = nullptr;
-    ani_status status = env->GlobalReference_Create(aniCallback, &callbackRef);
+    status = env->GlobalReference_Create(aniCallback, &callbackRef);
     if (status != ANI_OK) {
         APP_LOGE("GlobalReference_Create error. result: %{public}d", status);
         return;
@@ -60,13 +64,20 @@ void ANIBundleMonitorCallbackHandler::RemoveCallback(ani_env* env, ani_object an
     APP_LOGI("RemoveCallback entry");
     RETURN_IF_NULL(env);
     std::lock_guard<std::mutex> lock(callbackMutex_);
+    ani_status status = ANI_OK;
     for (auto iter = callbackList_.begin(); iter != callbackList_.end();) {
         ani_boolean isEqual = ANI_FALSE;
-        env->Reference_StrictEquals(aniCallback, *iter, &isEqual);
+        status = env->Reference_StrictEquals(aniCallback, *iter, &isEqual);
+        if (status != ANI_OK) {
+            APP_LOGW_NOFUNC("RemoveCallback Reference_StrictEquals error. result: %{public}d", status);
+        }
         if (isEqual == ANI_TRUE) {
             if (notifyCounter_ == 0) {
                 APP_LOGD("direct clear");
-                env->GlobalReference_Delete(*iter);
+                status = env->GlobalReference_Delete(*iter);
+                if (status != ANI_OK) {
+                    APP_LOGW_NOFUNC("RemoveCallback GlobalReference_Delete failed: %{public}d", status);
+                }
             } else {
                 removedCallbackList_.emplace_back(*iter);
                 APP_LOGD("delayed clear, size: %{public}zu", removedCallbackList_.size());
@@ -122,7 +133,13 @@ void ANIBundleMonitorCallbackHandler::InvokeCallback(ani_env* env, const BundleC
         }
         ani_ref result = nullptr;
         ani_status ret = env->FunctionalObject_Call(fnObject, callbackArgs.size(), callbackArgs.data(), &result);
-        if (ret != ANI_OK) {
+        if (ret == ANI_PENDING_ERROR) {
+            ani_boolean hasError = ANI_FALSE;
+            if (env->ExistUnhandledError(&hasError) == ANI_OK && hasError) {
+                env->ResetError();
+            }
+            APP_LOGW_NOFUNC("InvokeCallback FunctionalObject_Call ANI_PENDING_ERROR, reset");
+        } else if (ret != ANI_OK) {
             APP_LOGE("FunctionalObject_Call failed: %{public}d", ret);
         }
     }
