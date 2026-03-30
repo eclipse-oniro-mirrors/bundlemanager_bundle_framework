@@ -1793,5 +1793,56 @@ HWTEST_F(BmsBundleMgrProxyTest, GetOdidResetCount_0300, Function | MediumTest | 
     ErrCode ret = bundleMgrProxy.GetOdidResetCount(bundleName, odid, count);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
+
+/**
+ * @tc.number: GetInstalledBundleList_0100
+ * @tc.name: test GetInstalledBundleList with null remote object
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify GetInstalledBundleList returns parcel error when IPC fails
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetInstalledBundleList_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    uint32_t flags = 0;
+    int32_t userId = 100;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = bundleMgrProxy.GetInstalledBundleList(flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetInstalledBundleList_0200
+ * @tc.name: test GetInstalledBundleList with different flags
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify GetInstalledBundleList with various flag values
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetInstalledBundleList_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    uint32_t flags = 0x00000001;
+    int32_t userId = 0;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = bundleMgrProxy.GetInstalledBundleList(flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetInstalledBundleList_0300
+ * @tc.name: test GetInstalledBundleList with negative userId
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify GetInstalledBundleList error handling
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetInstalledBundleList_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    uint32_t flags = 0;
+    int32_t userId = -1;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = bundleMgrProxy.GetInstalledBundleList(flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
 }
 }

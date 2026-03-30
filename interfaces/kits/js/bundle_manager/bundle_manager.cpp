@@ -3856,6 +3856,18 @@ static ErrCode InnerGetBundleInfos(int32_t flags,
     return CommonFunc::ConvertErrCode(ret);
 }
 
+static ErrCode InnerGetInstalledBundleList(uint32_t flags,
+    int32_t userId, std::vector<BundleInfo> &bundleInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetInstalledBundleList(flags, userId, bundleInfos);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 void CreateBundleFlagObject(napi_env env, napi_value value)
 {
     napi_value nBundleInfoDefault;
@@ -4241,6 +4253,85 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, GET_BUNDLE_INFOS, GetBundleInfosExec, GetBundleInfosComplete);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetBundleInfos done");
+    return promise;
+}
+
+void GetInstalledBundleListExec(napi_env env, void *data)
+{
+    InstalledBundleListCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstalledBundleListCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetInstalledBundleList(asyncCallbackInfo->flags,
+        asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfos);
+}
+
+void GetInstalledBundleListComplete(napi_env env, napi_status status, void *data)
+{
+    InstalledBundleListCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<InstalledBundleListCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<InstalledBundleListCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        ProcessBundleInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->bundleInfos, asyncCallbackInfo->flags);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_INSTALLED_BUNDLE_LIST, Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
+    }
+    CommonFunc::NapiReturnDeferred<InstalledBundleListCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetInstalledBundleList(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI_GetInstalledBundleList called");
+    NapiArg args(env, info);
+    InstalledBundleListCallbackInfo *asyncCallbackInfo = new (std::nothrow) InstalledBundleListCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<InstalledBundleListCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    if (args.GetMaxArgc() < ARGS_SIZE_ONE) {
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseUint(env, args[i], asyncCallbackInfo->flags)) {
+                APP_LOGE("Flags %{public}d invalid", asyncCallbackInfo->flags);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                break;
+            }
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<InstalledBundleListCallbackInfo>(
+        env, asyncCallbackInfo, GET_INSTALLED_BUNDLE_LIST, GetInstalledBundleListExec, GetInstalledBundleListComplete);
+    callbackPtr.release();
+    APP_LOGD("call NAPI_GetInstalledBundleList done");
     return promise;
 }
 

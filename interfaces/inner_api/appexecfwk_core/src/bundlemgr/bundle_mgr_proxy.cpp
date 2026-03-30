@@ -763,6 +763,28 @@ ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> 
         BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9, data, bundleInfos);
 }
 
+ErrCode BundleMgrProxy::GetInstalledBundleList(uint32_t flags, int32_t userId, std::vector<BundleInfo> &bundleInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_NOFUNC_I(BMS_TAG_QUERY, "begin to GetInstalledBundleList");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetInstalledBundleList due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(flags)) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetInstalledBundleList due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetInstalledBundleList due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    LOG_NOFUNC_I(BMS_TAG_QUERY, "GetInstalledBundleList end");
+    return GetVectorFromParcelIntelligentWithErrCode<BundleInfo>(
+        BundleMgrInterfaceCode::GET_INSTALLED_BUNDLE_LIST, data, bundleInfos);
+}
+
 int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int userId)
 {
     return GetUidByBundleName(bundleName, userId, 0);

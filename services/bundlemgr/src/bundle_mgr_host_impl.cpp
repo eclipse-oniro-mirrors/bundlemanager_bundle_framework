@@ -716,6 +716,31 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
     return res;
 }
 
+ErrCode BundleMgrHostImpl::GetInstalledBundleList(uint32_t flags, int32_t userId, std::vector<BundleInfo> &bundleInfos)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
+        Constants::PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST)) {
+        LOG_E(BMS_TAG_QUERY, "permission denied");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGI_NOFUNC("GetInstalledBundleList -p:%{public}d, -f:%{public}d, -u:%{public}d",
+        IPCSkeleton::GetCallingPid(), flags, userId);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST, 0, 1);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto res = dataMgr->GetBundleInfosV9(flags, bundleInfos, userId);
+    if (res == ERR_OK) {
+        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST, 1, 0);
+    } else {
+        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST, 0, 1);
+    }
+    APP_LOGI_NOFUNC("GetInstalledBundleList size:%{public}zu", bundleInfos.size());
+    return res;
+}
+
 bool BundleMgrHostImpl::GetBundleNameForUid(const int uid, std::string &bundleName)
 {
     APP_LOGD("start GetBundleNameForUid, uid : %{public}d", uid);

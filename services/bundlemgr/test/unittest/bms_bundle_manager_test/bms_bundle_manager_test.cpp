@@ -4319,4 +4319,54 @@ HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0005, Function | MediumTest |
     ErrCode ret = hostImpl->GetApplicationLabel(bundleName, appIndex, label);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
+
+/**
+ * @tc.number: GetInstalledBundleList_0100
+ * @tc.name: test GetInstalledBundleList without permission
+ * @tc.desc: 1. system running normally
+ *           2. test GetInstalledBundleList permission denied
+ */
+HWTEST_F(BmsBundleManagerTest, GetInstalledBundleList_0100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    uint32_t flags = 0;
+    int32_t userId = 100;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = hostImpl->GetInstalledBundleList(flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetInstalledBundleList_0200
+ * @tc.name: test GetInstalledBundleList with empty data mgr
+ * @tc.desc: 1. system running normally
+' *           2. test GetInstalledBundleList when dataMgr is nullptr
+ */
+HWTEST_F(BmsBundleManagerTest, GetInstalledBundleList_0200, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    uint32_t flags = 0;
+    int32_t userId = 100;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = hostImpl->GetInstalledBundleList(flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetInstalledBundleList_0300
+ * @tc.name: test GetInstalledBundleList with negative userId
+ * @tc.desc: 1. system running normally
+ *           2. test GetInstalledBundleList error handling
+ */
+HWTEST_F(BmsBundleManagerTest, GetInstalledBundleList_0400, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    uint32_t flags = 0;
+    int32_t userId = -1;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = hostImpl->GetInstalledBundleList(flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
 } // OHOS

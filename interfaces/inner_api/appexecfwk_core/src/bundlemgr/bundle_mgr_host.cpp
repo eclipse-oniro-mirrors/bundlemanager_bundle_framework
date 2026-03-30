@@ -137,6 +137,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9):
             errCode = this->HandleGetBundleInfosWithIntFlagsV9(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_INSTALLED_BUNDLE_LIST):
+            errCode = this->HandleGetInstalledBundleList(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_NAME_FOR_UID):
             errCode = this->HandleGetBundleNameForUid(data, reply);
             break;
@@ -1180,6 +1183,29 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9(MessageParcel &data, M
 
     std::vector<BundleInfo> infos;
     auto ret = GetBundleInfosV9(flags, infos, userId);
+    size_t vectorSize = infos.size();
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    APP_LOGI("bundles %{public}zu, size %{public}zu", vectorSize, reply.GetRawDataSize());
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetInstalledBundleList(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    uint32_t flags = data.ReadUint32();
+    int32_t userId = data.ReadInt32();
+
+    std::vector<BundleInfo> infos;
+    auto ret = GetInstalledBundleList(flags, userId, infos);
     size_t vectorSize = infos.size();
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
