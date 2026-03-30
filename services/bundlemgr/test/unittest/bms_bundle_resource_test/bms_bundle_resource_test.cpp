@@ -7194,4 +7194,366 @@ HWTEST_F(BmsBundleResourceTest, GetBundleResourceInfo_0002, Function | SmallTest
     
     EXPECT_TRUE(ret);
 }
+
+/**
+ * @tc.number: GetUserIdsForAddResource_0001
+ * @tc.name: test GetUserIdsForAddResource with DEFAULT_USERID
+ * @tc.desc: 1. system running normally
+ *           2. test GetUserIdsForAddResource when userId is DEFAULT_USERID(0)
+ *           3. verify that all active users are returned except DEFAULT_USERID and U1
+ */
+HWTEST_F(BmsBundleResourceTest, GetUserIdsForAddResource_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Test with DEFAULT_USERID (0)
+    std::set<int32_t> userIds = manager->GetUserIdsForAddResource(Constants::DEFAULT_USERID);
+
+    // Verify that DEFAULT_USERID and U1 are not in the result
+    EXPECT_EQ(userIds.count(Constants::DEFAULT_USERID), 0);
+    EXPECT_EQ(userIds.count(Constants::U1), 0);
+}
+
+/**
+ * @tc.number: GetUserIdsForAddResource_0002
+ * @tc.name: test GetUserIdsForAddResource with U1
+ * @tc.desc: 1. system running normally
+ *           2. test GetUserIdsForAddResource when userId is U1(1)
+ *           3. verify that all active users are returned except DEFAULT_USERID and U1
+ */
+HWTEST_F(BmsBundleResourceTest, GetUserIdsForAddResource_0002, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Test with U1 (1)
+    std::set<int32_t> userIds = manager->GetUserIdsForAddResource(Constants::U1);
+
+    // Verify that DEFAULT_USERID and U1 are not in the result
+    EXPECT_EQ(userIds.count(Constants::DEFAULT_USERID), 0);
+    EXPECT_EQ(userIds.count(Constants::U1), 0);
+}
+
+/**
+ * @tc.number: GetUserIdsForAddResource_0003
+ * @tc.name: test GetUserIdsForAddResource with normal user
+ * @tc.desc: 1. system running normally
+ *           2. test GetUserIdsForAddResource when userId is a normal user (100)
+ *           3. verify that only the specified user is returned
+ */
+HWTEST_F(BmsBundleResourceTest, GetUserIdsForAddResource_0003, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    // Test with normal userId (100)
+    std::set<int32_t> userIds = manager->GetUserIdsForAddResource(USERID);
+
+    // Verify that only USERID is in the result
+    EXPECT_EQ(userIds.size(), 1);
+    EXPECT_EQ(userIds.count(USERID), 1);
+}
+
+/**
+ * @tc.number: GetUserIdsForAddResource_0004
+ * @tc.name: test GetUserIdsForAddResource with nullptr dataMgr
+ * @tc.desc: 1. system running normally
+ *           2. test GetUserIdsForAddResource when dataMgr is nullptr
+ *           3. verify that the input userId is returned when dataMgr is nullptr
+ */
+HWTEST_F(BmsBundleResourceTest, GetUserIdsForAddResource_0004, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    // Save original dataMgr
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+
+    // Set dataMgr to nullptr
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(nullptr);
+
+    // Test with DEFAULT_USERID when dataMgr is nullptr
+    std::set<int32_t> userIds = manager->GetUserIdsForAddResource(Constants::DEFAULT_USERID);
+
+    // Verify that only DEFAULT_USERID is in the result
+    EXPECT_EQ(userIds.size(), 1);
+    EXPECT_EQ(userIds.count(Constants::DEFAULT_USERID), 1);
+
+    // Restore dataMgr
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(savedDataMgr);
+}
+
+/**
+ * @tc.number: InnerProcessThemeResourceWhenInstall_0001
+ * @tc.name: test InnerProcessThemeResourceWhenInstall when theme does not exist
+ * @tc.desc: 1. system running normally
+ *           2. test InnerProcessThemeResourceWhenInstall when bundle theme does not exist
+ *           3. verify that the function returns true
+ */
+HWTEST_F(BmsBundleResourceTest, InnerProcessThemeResourceWhenInstall_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    std::string bundleName = "com.example.nothemebundle";
+    int32_t userId = USERID;
+
+    std::vector<ResourceInfo> resourceInfos;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.label_ = "No Theme Bundle";
+    resourceInfo.icon_ = "data:image/png;base64,test_icon";
+    resourceInfos.push_back(resourceInfo);
+
+    // Test when theme does not exist
+    bool ret = manager->InnerProcessThemeResourceWhenInstall(resourceInfos, bundleName, userId);
+
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InnerProcessThemeResourceWhenInstall_0002
+ * @tc.name: test InnerProcessThemeResourceWhenInstall with theme bundle
+ * @tc.desc: 1. system running normally
+ *           2. test InnerProcessThemeResourceWhenInstall with theme bundle
+ *           3. verify that theme resources are processed correctly
+ */
+HWTEST_F(BmsBundleResourceTest, InnerProcessThemeResourceWhenInstall_0002, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    std::string bundleName = BUNDLE_NAME;
+    int32_t userId = THEME_TEST_USERID;
+
+    std::vector<ResourceInfo> resourceInfos;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.abilityName_ = ABILITY_NAME;
+    resourceInfo.label_ = "Theme Bundle";
+    resourceInfos.push_back(resourceInfo);
+
+    // Test with theme bundle, theme icon not exist
+    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+    bool ret = manager->InnerProcessThemeResourceWhenInstall(resourceInfos, bundleName, userId);
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: DeleteDynamicIconMultiUser_0001
+ * @tc.name: test DeleteDynamicIconResource with DEFAULT_USERID
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteDynamicIconResource with DEFAULT_USERID
+ *           3. verify that dynamic icon is deleted for all users
+ */
+HWTEST_F(BmsBundleResourceTest, DeleteDynamicIconMultiUser_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    std::string bundleName = BUNDLE_NAME;
+    int32_t appIndex = APP_INDEX;
+
+    // First add dynamic icon for DEFAULT_USERID
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.label_ = "Test Dynamic Icon";
+    resourceInfo.icon_ = "data:image/png;base64,dynamic_icon";
+
+    bool addRet = manager->AddDynamicIconResource(bundleName, Constants::DEFAULT_USERID, appIndex, resourceInfo);
+    EXPECT_TRUE(addRet);
+    // Now delete with DEFAULT_USERID
+    bool delRet = manager->DeleteDynamicIconResource(bundleName, Constants::DEFAULT_USERID, appIndex);
+    // Verify deletion succeeded
+    EXPECT_TRUE(delRet);
+}
+
+/**
+ * @tc.number: DeleteDynamicIconMultiUser_0002
+ * @tc.name: test DeleteDynamicIconResource with U1
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteDynamicIconResource with U1
+ *           3. verify that dynamic icon is deleted for all users
+ */
+HWTEST_F(BmsBundleResourceTest, DeleteDynamicIconMultiUser_0002, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    std::string bundleName = BUNDLE_NAME;
+    int32_t appIndex = APP_INDEX;
+
+    // First add dynamic icon for U1
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.label_ = "Test Dynamic Icon";
+    resourceInfo.icon_ = "data:image/png;base64,dynamic_icon";
+
+    bool addRet = manager->AddDynamicIconResource(bundleName, Constants::U1, appIndex, resourceInfo);
+    EXPECT_TRUE(addRet);
+    // Now delete with U1
+    bool delRet = manager->DeleteDynamicIconResource(bundleName, Constants::U1, appIndex);
+    // Verify deletion succeeded
+    EXPECT_TRUE(delRet);
+    delRet = manager->DeleteDynamicIconResource("", Constants::U1, appIndex);
+    // Verify deletion succeeded
+    EXPECT_FALSE(delRet);
+}
+
+/**
+ * @tc.number: DeleteBundleResourceMultiUser_0001
+ * @tc.name: test DeleteBundleResourceInfo with DEFAULT_USERID
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteBundleResourceInfo with DEFAULT_USERID
+ *           3. verify that bundle resources are deleted for all users
+ */
+HWTEST_F(BmsBundleResourceTest, DeleteBundleResourceMultiUser_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    std::string bundleName = BUNDLE_NAME;
+
+    // First add bundle resource for DEFAULT_USERID
+    ResourceInfo bundleResource;
+    bundleResource.bundleName_ = bundleName;
+    bundleResource.label_ = "Test Bundle Resource";
+    bundleResource.icon_ = "data:image/png;base64,bundle_icon";
+
+    bool addRet = manager->bundleResourceRdb_->AddResourceInfo(bundleResource);
+    EXPECT_TRUE(addRet);
+    // Now delete with DEFAULT_USERID
+    bool delRet = manager->DeleteBundleResourceInfo(bundleName, Constants::DEFAULT_USERID, false);
+    // Verify deletion succeeded
+    EXPECT_TRUE(delRet);
+}
+
+/**
+ * @tc.number: DeleteBundleResourceMultiUser_0002
+ * @tc.name: test DeleteBundleResourceInfo with U1
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteBundleResourceInfo with U1
+ *           3. verify that bundle resources are deleted for all users
+ */
+HWTEST_F(BmsBundleResourceTest, DeleteBundleResourceMultiUser_0002, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    std::string bundleName = BUNDLE_NAME;
+
+    // First add bundle resource for U1
+    ResourceInfo bundleResource;
+    bundleResource.bundleName_ = bundleName;
+    bundleResource.label_ = "Test Bundle Resource";
+    bundleResource.icon_ = "data:image/png;base64,bundle_icon";
+
+    bool addRet = manager->bundleResourceRdb_->AddResourceInfo(bundleResource);
+    EXPECT_TRUE(addRet);
+    // Now delete with U1
+    bool delRet = manager->DeleteBundleResourceInfo(bundleName, Constants::U1, false);
+    // Verify deletion succeeded
+    EXPECT_TRUE(delRet);
+    delRet = manager->DeleteBundleResourceInfo("", Constants::U1, false);
+    // Verify deletion succeeded
+    EXPECT_FALSE(delRet);
+}
+
+/**
+ * @tc.number: InnerProcessCloneThemeResourceWhenInstall_0001
+ * @tc.name: test InnerProcessCloneThemeResourceWhenInstall when theme does not exist
+ * @tc.desc: 1. system running normally
+ *           2. test InnerProcessCloneThemeResourceWhenInstall when bundle theme does not exist
+ *           3. verify that the function returns true
+ */
+HWTEST_F(BmsBundleResourceTest, InnerProcessCloneThemeResourceWhenInstall_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    std::string bundleName = "com.example.nothemebundle";
+    int32_t userId = USERID;
+    int32_t appIndex = 1;
+
+    // Test when theme does not exist
+    bool ret = manager->InnerProcessCloneThemeResourceWhenInstall(bundleName, userId, appIndex);
+    // Should return true when theme does not exist
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InnerProcessCloneThemeResourceWhenInstall_0002
+ * @tc.name: test InnerProcessCloneThemeResourceWhenInstall with theme bundle
+ * @tc.desc: 1. system running normally
+ *           2. test InnerProcessCloneThemeResourceWhenInstall with theme bundle
+ *           3. verify that clone theme resources are processed correctly
+ */
+HWTEST_F(BmsBundleResourceTest, InnerProcessCloneThemeResourceWhenInstall_0002, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    std::string bundleName = BUNDLE_NAME;
+    int32_t userId = THEME_TEST_USERID;
+    int32_t appIndex = 1;
+
+    // Test with theme bundle
+    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+    bool ret = manager->InnerProcessCloneThemeResourceWhenInstall(bundleName, userId, appIndex);
+    EXPECT_FALSE(ret);
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+}
+
+/**
+ * @tc.number: AddCloneBundleResourceMultiUser_0001
+ * @tc.name: test AddCloneBundleResourceInfoWhenInstall with DEFAULT_USERID
+ * @tc.desc: 1. system running normally
+ *           2. test AddCloneBundleResourceInfoWhenInstall with DEFAULT_USERID
+ *           3. verify that clone bundle resources are added for all active users
+ */
+HWTEST_F(BmsBundleResourceTest, AddCloneBundleResourceMultiUser_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    // Test with DEFAULT_USERID (0), theme not exist
+    bool ret = manager->AddCloneBundleResourceInfoWhenInstall(BUNDLE_NAME, Constants::DEFAULT_USERID, 1, true);
+    EXPECT_TRUE(ret);
+    ret = manager->DeleteCloneBundleResourceInfoWhenUninstall(BUNDLE_NAME, Constants::DEFAULT_USERID, 1, true);
+    EXPECT_TRUE(ret);
+    ret = manager->DeleteCloneBundleResourceInfoWhenUninstall("", Constants::DEFAULT_USERID, 1, true);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: AddCloneBundleResourceMultiUser_0002
+ * @tc.name: test AddCloneBundleResourceInfoWhenInstall with DEFAULT_USERID
+ * @tc.desc: 1. system running normally
+ *           2. test AddCloneBundleResourceInfoWhenInstall with DEFAULT_USERID
+ *           3. verify that clone bundle resources are added for all active users
+ */
+HWTEST_F(BmsBundleResourceTest, AddCloneBundleResourceMultiUser_0002, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    auto dataMgr = GetBundleDataMgr();
+    dataMgr->AddUserId(THEME_TEST_USERID);
+
+    // Test with DEFAULT_USERID (0), theme exist, but iconResource not exist
+    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+    bool ret = manager->AddCloneBundleResourceInfoWhenInstall(BUNDLE_NAME, Constants::DEFAULT_USERID, 1, true);
+    EXPECT_FALSE(ret);
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    ret = manager->DeleteCloneBundleResourceInfoWhenUninstall(BUNDLE_NAME, Constants::DEFAULT_USERID, 1, true);
+    EXPECT_TRUE(ret);
+}
 } // OHOS

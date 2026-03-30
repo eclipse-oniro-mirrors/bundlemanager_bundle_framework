@@ -16,6 +16,7 @@
 #include "bundle_resource_manager.h"
 
 #include "account_helper.h"
+#include "app_log_tag_wrapper.h"
 #include "bms_extension_client.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_permission_mgr.h"
@@ -568,36 +569,71 @@ bool BundleResourceManager::AddResourceInfoByBundleNameWhenInstall(
             (void)ProcessCloneBundleResourceInfo(resourceInfos[0].bundleName_, appIndex);
         }
     }
-    // 5. if theme not exist, then return
+    std::set<int32_t> userIds = GetUserIdsForAddResource(userId);
+    for (const auto user : userIds) {
+        ret &= InnerProcessThemeResourceWhenInstall(resourceInfos, bundleName, user);
+    }
+    return ret;
+}
+
+std::set<int32_t> BundleResourceManager::GetUserIdsForAddResource(const int32_t userId)
+{
+    std::set<int32_t> userIds;
+    // need check userId, if user is equal 0 or 1, need add all user to bundleIconResource
+    if ((userId == Constants::DEFAULT_USERID) || (userId == Constants::U1)) {
+        std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr != nullptr) {
+            userIds = dataMgr->GetAllUser();
+            userIds.erase(Constants::DEFAULT_USERID);
+            userIds.erase(Constants::U1);
+        } else {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "dataMgr is nullptr, get all user failed for resource");
+        }
+    }
+    if (userIds.empty()) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "add resource userIds is empty, insert -u %{public}d", userId);
+        userIds.insert(userId);
+    }
+    return userIds;
+}
+
+bool BundleResourceManager::InnerProcessThemeResourceWhenInstall(
+    const std::vector<ResourceInfo> &resourceInfos,
+    const std::string &bundleName, const int32_t userId)
+{
+    // 1.if theme not exist, then return
     if (!BundleResourceThemeProcess::IsBundleThemeExist(bundleName, userId)) {
-        return ret;
+        return true;
     }
     std::vector<ResourceInfo> themeResourceInfos;
     themeResourceInfos.emplace_back(resourceInfos[0]);
-    // 5. traverse all resourceInfo to determine if ability theme exist
+    // 2.traverse all resourceInfo to determine if ability theme exist
     for (const auto &resource : resourceInfos) {
         if (BundleResourceThemeProcess::IsAbilityThemeExist(resource.bundleName_, resource.moduleName_,
             resource.abilityName_, userId)) {
             themeResourceInfos.emplace_back(resource);
         }
     }
-    // clear icon data
+    // 3.clear icon data
     for (auto resource : themeResourceInfos) {
         resource.icon_ = "";
         resource.foreground_.clear();
         resource.background_.clear();
     }
-    // 6. parse resource with theme
+    // 4.parse resource with theme
+    BundleResourceParser parser;
     if (!parser.ParseIconResourceInfosWithTheme(userId, themeResourceInfos)) {
-        APP_LOGE("parse theme resource failed -n %{public}s -u %{public}d", bundleName.c_str(), userId);
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "parse theme resource failed -n %{public}s -u %{public}d when install",
+            bundleName.c_str(), userId);
         return false;
     }
-    // 7. add theme resource to bundleResourceIconRdb
+    // 5.add theme resource to bundleResourceIconRdb
     if (!bundleResourceIconRdb_->AddResourceIconInfos(userId, IconResourceType::THEME_ICON, themeResourceInfos)) {
-        APP_LOGE("add theme resource failed -n %{public}s -u %{public}d", bundleName.c_str(), userId);
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "add theme resource failed -n %{public}s -u %{public}d when install",
+            bundleName.c_str(), userId);
         return false;
     }
-    return ret;
+    return true;
 }
 
 bool BundleResourceManager::AddResourceInfoByBundleNameWhenUpdate(
@@ -734,6 +770,14 @@ bool BundleResourceManager::DeleteBundleResourceInfo(
             APP_LOGE("delete -n %{public}s -u %{public}d in bundleResourceRdb failed", bundleName.c_str(), userId);
         }
     }
+    if ((userId == Constants::DEFAULT_USERID) || (userId == Constants::U1)) {
+        if (!bundleResourceIconRdb_->DeleteResourceIconInfos(bundleName)) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "delete icon resource -n %{public}s -u %{public}d failed",
+                bundleName.c_str(), userId);
+            return false;
+        }
+        return ret;
+    }
 
     if (!bundleResourceIconRdb_->DeleteResourceIconInfos(bundleName, userId)) {
         APP_LOGE("delete -n %{public}s -u %{public}d in bundleResourceIconRdb failed", bundleName.c_str(), userId);
@@ -755,10 +799,13 @@ bool BundleResourceManager::AddDynamicIconResource(
             APP_LOGE("parse clone resource failed -n %{public}s -u %{public}d -a %{public}d",
                 bundleName.c_str(), userId, appIndex);
         }
-        if (!bundleResourceIconRdb_->AddResourceIconInfo(userId, IconResourceType::DYNAMIC_ICON, resourceInfo)) {
-            APP_LOGE("add dynamic icon failed -n %{public}s -u %{public}d -a %{public}d",
-                bundleName.c_str(), userId, appIndex);
-            return false;
+        std::set<int32_t> userIds = GetUserIdsForAddResource(userId);
+        for (const auto user : userIds) {
+            if (!bundleResourceIconRdb_->AddResourceIconInfo(user, IconResourceType::DYNAMIC_ICON, resourceInfo)) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLD, "add dynamic icon failed -n %{public}s -u %{public}d -a %{public}d",
+                    bundleName.c_str(), user, appIndex);
+                return false;
+            }
         }
         return true;
     }
@@ -771,8 +818,12 @@ bool BundleResourceManager::AddDynamicIconResource(
     bool ret = true;
     auto userIds = dataMgr->GetUserIds(bundleName);
     for (const auto &user : userIds) {
+        std::set<int32_t> tempUserIds = GetUserIdsForAddResource(user);
         resourceInfo.appIndex_ = 0;
-        ret &= bundleResourceIconRdb_->AddResourceIconInfo(user, IconResourceType::DYNAMIC_ICON, resourceInfo);
+        for (const int32_t tempUserId : tempUserIds) {
+            ret &= bundleResourceIconRdb_->AddResourceIconInfo(tempUserId,
+                IconResourceType::DYNAMIC_ICON, resourceInfo);
+        }
         auto appIndexes = dataMgr->GetCloneAppIndexes(bundleName, user);
         // process icon with badge
         BundleResourceParser parser;
@@ -783,7 +834,15 @@ bool BundleResourceManager::AddDynamicIconResource(
                 APP_LOGE("parse clone resource failed -n %{public}s -u %{public}d -a %{public}d",
                     bundleName.c_str(), user, index);
             }
-            ret &= bundleResourceIconRdb_->AddResourceIconInfo(user, IconResourceType::DYNAMIC_ICON, newResourceInfo);
+            for (const int32_t tempUserId : tempUserIds) {
+                ret &= bundleResourceIconRdb_->AddResourceIconInfo(tempUserId, IconResourceType::DYNAMIC_ICON,
+                    newResourceInfo);
+            }
+        }
+        if ((user == Constants::DEFAULT_USERID) || (user == Constants::U1)) {
+            LOG_NOFUNC_I(BMS_TAG_INSTALLD, "-n %{public}s -u %{public}d -a %{public}d add dynamic icon",
+                bundleName.c_str(), user, appIndex);
+            break;
         }
     }
     if (!ret) {
@@ -797,11 +856,14 @@ bool BundleResourceManager::DeleteDynamicIconResource(
     const std::string &bundleName, const int32_t userId, const int32_t appIndex)
 {
     if (userId != Constants::UNSPECIFIED_USERID) {
-        if (!bundleResourceIconRdb_->DeleteResourceIconInfo(bundleName, userId, appIndex,
-            IconResourceType::DYNAMIC_ICON)) {
-            APP_LOGE("delete dynamic icon failed -n %{public}s -u %{public}d -a %{public}d",
-                bundleName.c_str(), userId, appIndex);
-            return false;
+        std::set<int32_t> userIds = GetUserIdsForAddResource(userId);
+        for (const auto user : userIds) {
+            if (!bundleResourceIconRdb_->DeleteResourceIconInfo(bundleName, user, appIndex,
+                IconResourceType::DYNAMIC_ICON)) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLD, "delete dynamic icon failed -n %{public}s -u %{public}d -a %{public}d",
+                    bundleName.c_str(), user, appIndex);
+                return false;
+            }
         }
         return true;
     }
@@ -1095,11 +1157,27 @@ bool BundleResourceManager::AddCloneBundleResourceInfoWhenInstall(
                 bundleName.c_str(), userId, appIndex);
         }
     }
-    // 2. if theme not exist, then return
-    if (!BundleResourceThemeProcess::IsBundleThemeExist(bundleName, userId)) {
-        return ret;
+    std::set<int32_t> userIds = GetUserIdsForAddResource(userId);
+    for (const int32_t user : userIds) {
+        if (!InnerProcessCloneThemeResourceWhenInstall(bundleName, user, appIndex)) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "processCloneThemeResource failed -n %{public}s -u %{public}d -a %{public}d",
+                bundleName.c_str(), user, appIndex);
+            ret = false;
+        }
     }
-    // 3. process clone resource icon in bundleResourceIconRdb
+    return ret;
+}
+
+bool BundleResourceManager::InnerProcessCloneThemeResourceWhenInstall(
+    const std::string &bundleName,
+    const int32_t userId,
+    const int32_t appIndex)
+{
+    // 1. if theme not exist, then return
+    if (!BundleResourceThemeProcess::IsBundleThemeExist(bundleName, userId)) {
+        return true;
+    }
+    // 2. process clone resource icon in bundleResourceIconRdb
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
     if (!bundleResourceIconRdb_->GetResourceIconInfos(bundleName, userId, 0,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
@@ -1109,7 +1187,7 @@ bool BundleResourceManager::AddCloneBundleResourceInfoWhenInstall(
             bundleName.c_str(), userId, appIndex);
         return false;
     }
-    // 4. process icon with badge
+    // 3. process icon with badge
     std::vector<ResourceInfo> resourceInfos;
     for (auto &info : launcherAbilityResourceInfos) {
         info.appIndex = appIndex;
@@ -1122,13 +1200,13 @@ bool BundleResourceManager::AddCloneBundleResourceInfoWhenInstall(
         APP_LOGE("-n %{public}s -u %{public}d -a %{public}d parse clone resource failed",
             bundleName.c_str(), userId, appIndex);
     }
-    // 5. add theme icon to bundleResourceIconRdb
+    // 4. add theme icon to bundleResourceIconRdb
     if (!bundleResourceIconRdb_->AddResourceIconInfos(userId, IconResourceType::THEME_ICON, resourceInfos)) {
         APP_LOGE("-n %{public}s -u %{public}d -a %{public}d add clone resource failed",
             bundleName.c_str(), userId, appIndex);
         return false;
     }
-    return ret;
+    return true;
 }
 
 bool BundleResourceManager::DeleteCloneBundleResourceInfoWhenUninstall(
@@ -1153,10 +1231,13 @@ bool BundleResourceManager::DeleteCloneBundleResourceInfoWhenUninstall(
                 bundleName.c_str(), userId, appIndex);
         }
     }
-    if (!bundleResourceIconRdb_->DeleteResourceIconInfo(bundleName, userId, appIndex)) {
-        APP_LOGE("-n %{public}s -u %{public}d -a %{public}d delete resource failed",
-            bundleName.c_str(), userId, appIndex);
-        return false;
+    std::set<int32_t> userIds = GetUserIdsForAddResource(userId);
+    for (const int32_t user : userIds) {
+        if (!bundleResourceIconRdb_->DeleteResourceIconInfo(bundleName, user, appIndex)) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "-n %{public}s -u %{public}d -a %{public}d delete iconResource failed",
+                bundleName.c_str(), user, appIndex);
+            ret = false;
+        }
     }
     return ret;
 }

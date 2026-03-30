@@ -182,6 +182,14 @@ private:
 
     bool IsNeedInterrupted(const uint32_t tempTaskNumber, const BundleResourceChangeType type);
 
+    bool InnerProcessThemeResourceWhenInstall(const std::vector<ResourceInfo> &resourceInfos,
+        const std::string &bundleName, const int32_t userId);
+
+    bool InnerProcessCloneThemeResourceWhenInstall(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex);
+
+    std::set<int32_t> GetUserIdsForAddResource(const int32_t userId);
+
     std::atomic_uint currentTaskNum_ = 0;
     std::atomic_uint currentChangeType_ = 0;
     std::mutex mutex_;
