@@ -1447,8 +1447,8 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (uids.empty() || !InstalldOperator::IsValidUserId(userId)) {
-        LOG_E(BMS_TAG_INSTALLD, "invalid uid or userId");
+    if (uids.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid uid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     for (const auto &uid : uids) {
