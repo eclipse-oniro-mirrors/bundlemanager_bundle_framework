@@ -1288,7 +1288,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6700, Function | SmallTest |
     std::vector<int32_t> uids;
     bundleStats.push_back(LAST_MODIFY_TIME);
     uids.push_back(UID);
-    auto ret = proxy->GetAllBundleStats(UID, bundleStats, uids);
+    auto ret = proxy->GetAllBundleStats(bundleStats, uids);
     EXPECT_EQ(ret, ERR_OK);
 }
 
