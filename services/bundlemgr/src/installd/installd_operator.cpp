@@ -113,6 +113,7 @@ constexpr const char* PERMISSION_KEY = "ohos.permission.kernel.SUPPORT_PLUGIN";
 constexpr const char* PLUGIN_ID = "pluginDistributionIDs";
 constexpr const char* PLUGIN_ID_SEPARATOR_OTHER = "|";
 constexpr const char* PLUGIN_ID_SEPARATOR = ",";
+constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 const std::vector<std::string> DRIVER_EXECUTE_DIR {
     "/print_service/cups/serverbin/filter",
     "/print_service/sane/backend",
@@ -3412,7 +3413,11 @@ bool InstalldOperator::ObtainSignInfoForPlugin(
         oss << pluginIds[i];
     }
     pluginId = oss.str();
-    appIdentifier = hapVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+    if (hapVerifyResult.GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) {
+        appIdentifier = DEBUG_APP_IDENTIFIER;
+    } else {
+        appIdentifier = hapVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+    }
     return true;
 }
 }  // namespace AppExecFwk
