@@ -463,12 +463,10 @@ ErrCode InstalldProxy::BatchGetBundleStats(const std::vector<std::string> &bundl
     return ret;
 }
 
-ErrCode InstalldProxy::GetAllBundleStats(const int32_t userId,
-    std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+ErrCode InstalldProxy::GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, Int32, userId);
     uint32_t uidSize = uids.size();
     INSTALLD_PARCEL_WRITE(data, Uint32, uidSize);
     for (const auto &uid : uids) {

@@ -2350,9 +2350,6 @@ HWTEST_F(BmsBundleInstallerIPCTest, HandleGetAllBundleStats_0100, Function | Sma
 {
     InstalldHost host;
     MessageParcel datas;
-    std::u16string descriptor = InstalldHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteInt32(100);
     datas.WriteInt32(0);
     MessageParcel reply;
     bool res = host.HandleGetAllBundleStats(datas, reply);

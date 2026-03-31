@@ -247,8 +247,7 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode GetAllBundleStats(const int32_t userId,
-        std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+    virtual ErrCode GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
     {
         return ERR_OK;
     }

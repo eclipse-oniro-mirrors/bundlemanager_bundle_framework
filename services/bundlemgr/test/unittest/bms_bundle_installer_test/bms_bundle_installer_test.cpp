@@ -7372,7 +7372,7 @@ HWTEST_F(BmsBundleInstallerTest, GetAllBundleStats_0100, Function | SmallTest | 
     std::vector<int64_t> bundleStats = { 0 };
     std::vector<int32_t> uids;
     uids.push_back(EDM_UID);
-    auto ret = hostImpl.GetAllBundleStats(EDM_UID, bundleStats, uids);
+    auto ret = hostImpl.GetAllBundleStats(bundleStats, uids);
     EXPECT_EQ(ret, ERR_OK);
 }
 

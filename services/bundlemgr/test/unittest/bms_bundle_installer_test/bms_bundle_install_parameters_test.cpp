@@ -1891,7 +1891,7 @@ HWTEST_F(BmsBundleInstallParametersTest, GetAllBundleStats_0100, Function | Smal
     InstalldHostImpl impl;
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids;
-    auto ret = impl.GetAllBundleStats(100, bundleStats, uids);
+    auto ret = impl.GetAllBundleStats(bundleStats, uids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1905,7 +1905,7 @@ HWTEST_F(BmsBundleInstallParametersTest, GetAllBundleStats_0400, Function | Smal
     InstalldHostImpl impl;
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids = {10000, -1};
-    auto ret = impl.GetAllBundleStats(100, bundleStats, uids);
+    auto ret = impl.GetAllBundleStats(bundleStats, uids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1919,7 +1919,7 @@ HWTEST_F(BmsBundleInstallParametersTest, GetAllBundleStats_0500, Function | Smal
     InstalldHostImpl impl;
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids = {-1, -2, -3};
-    auto ret = impl.GetAllBundleStats(100, bundleStats, uids);
+    auto ret = impl.GetAllBundleStats(bundleStats, uids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1933,7 +1933,7 @@ HWTEST_F(BmsBundleInstallParametersTest, GetAllBundleStats_0600, Function | Smal
     InstalldHostImpl impl;
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids = {10000, 10001, -1};
-    auto ret = impl.GetAllBundleStats(100, bundleStats, uids);
+    auto ret = impl.GetAllBundleStats(bundleStats, uids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

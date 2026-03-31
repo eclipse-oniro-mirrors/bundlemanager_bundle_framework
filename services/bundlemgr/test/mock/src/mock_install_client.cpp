@@ -195,8 +195,7 @@ ErrCode InstalldClient::BatchGetBundleStats(const std::vector<std::string> &bund
     return 0;
 }
 
-ErrCode InstalldClient::GetAllBundleStats(const int32_t userId,
-    std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+ErrCode InstalldClient::GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
     return 0;
 }
