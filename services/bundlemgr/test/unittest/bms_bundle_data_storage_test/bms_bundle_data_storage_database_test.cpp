@@ -108,6 +108,7 @@ const std::vector<std::string> DATA_GROUP_IDS_VAL = {"dg1", "dg2"};
 const std::vector<std::string> VALID_DATA_GROUP_IDS_VAL = {"vdg1", "vdg2"};
 const std::string CUSTOM_PROCESS_VAL = "cp";
 const bool ISOLATION_PROCESS_VAL = true;
+const bool SKIP_ABILITY_STAGE_LIFECYCLE_VAL = true;
 const std::string ARKTS_MODE_VAL = "static";
 const bool ABILITY_VISIBLE = true;
 const bool ABILITY_IS_LAUNCHER_ABILITY = true;
@@ -1897,6 +1898,7 @@ T MakeExtensionInfo()
     info.validDataGroupIds = VALID_DATA_GROUP_IDS_VAL;
     info.customProcess = CUSTOM_PROCESS_VAL;
     info.isolationProcess = ISOLATION_PROCESS_VAL;
+    info.skipAbilityStageLifecycle = SKIP_ABILITY_STAGE_LIFECYCLE_VAL;
     info.arkTSMode = ARKTS_MODE_VAL;
     return info;
 }
@@ -1936,6 +1938,7 @@ nlohmann::json MakeExtensionJson()
         {Constants::VALID_DATA_GROUP_IDS, VALID_DATA_GROUP_IDS_VAL},
         {Constants::CUSTOM_PROCESS, CUSTOM_PROCESS_VAL},
         {Constants::ISOLATION_PROCESS, ISOLATION_PROCESS_VAL},
+        {Constants::SKIP_ABILITY_STAGE_LIFECYCLE, SKIP_ABILITY_STAGE_LIFECYCLE_VAL},
         {Constants::ARKTS_MODE, ARKTS_MODE_VAL}
     };
     return jsonObject;
@@ -1975,6 +1978,7 @@ void CheckExtensionInfo(const T& info)
     EXPECT_EQ(info.validDataGroupIds, VALID_DATA_GROUP_IDS_VAL);
     EXPECT_EQ(info.customProcess, CUSTOM_PROCESS_VAL);
     EXPECT_EQ(info.isolationProcess, ISOLATION_PROCESS_VAL);
+    EXPECT_EQ(info.skipAbilityStageLifecycle, SKIP_ABILITY_STAGE_LIFECYCLE_VAL);
     EXPECT_EQ(info.arkTSMode, ARKTS_MODE_VAL);
 }
 
@@ -2012,6 +2016,7 @@ void CheckExtensionJson(const nlohmann::json& jsonObject)
     EXPECT_EQ(jsonObject[Constants::VALID_DATA_GROUP_IDS], VALID_DATA_GROUP_IDS_VAL);
     EXPECT_EQ(jsonObject[Constants::CUSTOM_PROCESS], CUSTOM_PROCESS_VAL);
     EXPECT_EQ(jsonObject[Constants::ISOLATION_PROCESS], ISOLATION_PROCESS_VAL);
+    EXPECT_EQ(jsonObject[Constants::SKIP_ABILITY_STAGE_LIFECYCLE], SKIP_ABILITY_STAGE_LIFECYCLE_VAL);
     EXPECT_EQ(jsonObject[Constants::ARKTS_MODE], ARKTS_MODE_VAL);
 }
 

@@ -229,6 +229,7 @@ struct Ability {
 struct Extension {
     bool visible = false;
     bool isolationProcess = false;
+    bool skipAbilityStageLifecycle = false;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
@@ -924,6 +925,12 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         jsonObjectEnd,
         ABILITY_ISOLATION_PROCESS,
         extension.isolationProcess,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKIP_ABILITY_STAGE_LIFECYCLE,
+        extension.skipAbilityStageLifecycle,
         false,
         g_parseResult);
     GetValueIfFindKey<std::vector<Skill>>(jsonObject,
@@ -2665,6 +2672,7 @@ void ToExtensionInfo(
     extensionInfo.appIdentifierAllowList = extension.appIdentifierAllowList;
     extensionInfo.visible = extension.visible;
     extensionInfo.isolationProcess = extension.isolationProcess;
+    extensionInfo.skipAbilityStageLifecycle = extension.skipAbilityStageLifecycle;
     GetMetadata(extensionInfo.metadata, extension.metadata);
     extensionInfo.bundleName = moduleJson.app.bundleName;
     extensionInfo.moduleName = moduleJson.module.name;

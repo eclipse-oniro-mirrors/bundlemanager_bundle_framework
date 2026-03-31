@@ -2263,6 +2263,7 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
         }
         innerExtensionInfo.appIdentifierAllowList = item->second.appIdentifierAllowList;
         innerExtensionInfo.isolationProcess = item->second.isolationProcess;
+        innerExtensionInfo.skipAbilityStageLifecycle = item->second.skipAbilityStageLifecycle;
         innerExtensionInfo.arkTSMode = item->second.arkTSMode;
         innerExtensionInfo.metadata = item->second.metadata;
     }
