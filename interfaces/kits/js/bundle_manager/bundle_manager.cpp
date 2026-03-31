@@ -3503,6 +3503,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::AGENT_UI), &nAgentUI));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AGENT_UI", nAgentUI));
+
+    napi_value nModularObject;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::MODULAR_OBJECT), &nModularObject));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "MODULAR_OBJECT", nModularObject));
 }
 
 void CreateApplicationFlagObject(napi_env env, napi_value value)

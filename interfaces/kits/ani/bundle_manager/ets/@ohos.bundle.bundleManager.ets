@@ -136,6 +136,7 @@ namespace bundleManager {
     PARTNER_AGENT = 36,
     AGENT = 37,
     AGENT_UI = 38,
+    MODULAR_OBJECT = 39,
     UNSPECIFIED = 255
   }
 
