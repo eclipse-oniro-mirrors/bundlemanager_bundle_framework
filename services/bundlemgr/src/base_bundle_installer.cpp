@@ -5387,7 +5387,17 @@ bool BaseBundleInstaller::InitDataMgr()
 void BaseBundleInstaller::CheckInstallAllowDowngrade(
     const InstallParam &installParam, const InnerBundleInfo &oldBundleInfo, ErrCode &result)
 {
-    if ((result != ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE) || oldBundleInfo.IsSystemApp()) {
+    if (result != ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE) {
+        return;
+    }
+    if (installParam.allowPatchDowngrade) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "-n %{public}s -v %{public}d  allow downgrade",
+            bundleName_.c_str(), versionCode_);
+        isFeatureNeedUninstall_ = true;
+        result = ERR_OK;
+        return;
+    }
+    if (oldBundleInfo.IsSystemApp()) {
         return;
     }
     if ((oldBundleInfo.GetAppDistributionType() != Constants::APP_DISTRIBUTION_TYPE_NONE) &&

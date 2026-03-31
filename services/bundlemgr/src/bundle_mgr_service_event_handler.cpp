@@ -2410,9 +2410,10 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             hapVersionCode, currentBundleUserIds)) {
             LOG_I(BMS_TAG_DEFAULT, "OTA Install prefab bundle(%{public}s) by path(%{public}s) for hotPatch upgrade",
                 bundleName.c_str(), scanPathIter.c_str());
-            // After the patch app is uninstalled, install the preconfigured app of the ota version.
+            // Support patch app downgrade install, no need to uninstall first.
             std::vector<std::string> filePaths{scanPathIter};
-            if (!OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, currentBundleUserIds)) {
+            if (!OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable,
+                currentBundleUserIds, true)) {
                 LOG_E(BMS_TAG_DEFAULT, "OTA install prefab bundle(%{public}s) error", bundleName.c_str());
                 SavePreInstallException(scanPathIter);
             }
@@ -2518,19 +2519,10 @@ bool BMSEventHandler::HotPatchAppProcessing(const std::string &bundleName, uint3
     if (IsQuickfixPatchApp(bundleName, hasInstallVersionCode)) {
         LOG_I(BMS_TAG_DEFAULT, "hasInstallVersionCode: %{public}u, hapVersionCode: %{public}u",
             hasInstallVersionCode, hapVersionCode);
-        // installed patch application version greater than or equal to OTA Preconfigured APP Version
+        // installed patch application version greater than OTA Preconfigured APP Version
+        // support downgrade install for patch app, no need to uninstall first
         if (hasInstallVersionCode > hapVersionCode) {
-            BundleInfo bundleInfo;
-            bundleInfo.name = bundleName;
-            bundleInfo.versionCode = hapVersionCode;
-            SendBundleUpdateFailedEvent(bundleInfo, ERR_APPEXECFWK_UNINSTALL_AND_INSTALL);
-            LOG_I(BMS_TAG_DEFAULT, "get patch success, bundleName: %{public}s", bundleName.c_str());
-            // uninstall the patch app
-            SystemBundleInstaller installer;
-            if (!installer.UninstallSystemBundle(bundleName, true)) {
-                LOG_E(BMS_TAG_DEFAULT, "keep data to uninstall app failed, bundleName: %{public}s", bundleName.c_str());
-                return false;
-            }
+            LOG_I(BMS_TAG_DEFAULT, "patch app downgrade install, bundleName: %{public}s", bundleName.c_str());
         }
         // delete patch data
         if (!PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName)) {
@@ -3940,7 +3932,8 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
 }
 
 bool BMSEventHandler::OTAInstallSystemBundleTargetUser(const std::vector<std::string> &filePaths,
-    const std::string &bundleName, Constants::AppType appType, bool removable, const std::vector<int32_t> &userIds)
+    const std::string &bundleName, Constants::AppType appType, bool removable, const std::vector<int32_t> &userIds,
+    bool isPatchDowngrade)
 {
     if (filePaths.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "File path is empty");
@@ -3960,6 +3953,10 @@ bool BMSEventHandler::OTAInstallSystemBundleTargetUser(const std::vector<std::st
     installParam.copyHapToInstallPath = false;
     installParam.isOTA = true;
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
+    // support patch app downgrade install
+    if (isPatchDowngrade) {
+        installParam.allowPatchDowngrade = true;
+    }
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundleTargetUser(filePaths, installParam, bundleName, appType, userIds);
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "bundle %{public}s with return code: %{public}d", bundleName.c_str(), ret);
