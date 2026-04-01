@@ -3342,6 +3342,271 @@ HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0600, Function | SmallT
 }
 
 /**
+ * @tc.number: SetLaunchWantActionAndEntity_0100
+ * @tc.name: test SetLaunchWantActionAndEntity
+ * @tc.desc: Skill with ACTION_HOME and ENTITY_HOME, action and entity should be set to want.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.isEntry = true;
+    std::string keyName = BUNDLE_NAME_TEST + "." + MODULE_NAME_TEST + "." + ABILITY_NAME_TEST;
+    moduleInfo.entryAbilityKey = keyName;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+
+    Skill skill;
+    skill.actions = {Constants::ACTION_HOME};
+    skill.entities = {Constants::ENTITY_HOME};
+    std::vector<Skill> skills = {skill};
+    innerBundleInfo.InsertSkillInfo(keyName, skills);
+
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    Want want;
+    dataMgr->SetLaunchWantActionAndEntity(&innerBundleInfo, want);
+    EXPECT_EQ(want.GetAction(), Constants::ACTION_HOME);
+    EXPECT_TRUE(want.HasEntity(Constants::ENTITY_HOME));
+}
+
+/**
+ * @tc.number: SetLaunchWantActionAndEntity_0200
+ * @tc.name: test SetLaunchWantActionAndEntity
+ * @tc.desc: Skill with WANT_ACTION_HOME and ENTITY_HOME, action should be WANT_ACTION_HOME.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.isEntry = true;
+    std::string keyName = BUNDLE_NAME_TEST + "." + MODULE_NAME_TEST + "." + ABILITY_NAME_TEST;
+    moduleInfo.entryAbilityKey = keyName;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+
+    Skill skill;
+    skill.actions = {Constants::WANT_ACTION_HOME};
+    skill.entities = {Constants::ENTITY_HOME};
+    std::vector<Skill> skills = {skill};
+    innerBundleInfo.InsertSkillInfo(keyName, skills);
+
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    Want want;
+    dataMgr->SetLaunchWantActionAndEntity(&innerBundleInfo, want);
+    EXPECT_EQ(want.GetAction(), Constants::WANT_ACTION_HOME);
+    EXPECT_TRUE(want.HasEntity(Constants::ENTITY_HOME));
+}
+
+/**
+ * @tc.number: SetLaunchWantActionAndEntity_0300
+ * @tc.name: test SetLaunchWantActionAndEntity
+ * @tc.desc: No entry module, want should not be modified.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.isEntry = false;
+    std::string keyName = BUNDLE_NAME_TEST + "." + MODULE_NAME_TEST + "." + ABILITY_NAME_TEST;
+    moduleInfo.entryAbilityKey = keyName;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+
+    Skill skill;
+    skill.actions = {Constants::ACTION_HOME};
+    skill.entities = {Constants::ENTITY_HOME};
+    std::vector<Skill> skills = {skill};
+    innerBundleInfo.InsertSkillInfo(keyName, skills);
+
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    Want want;
+    dataMgr->SetLaunchWantActionAndEntity(&innerBundleInfo, want);
+    EXPECT_EQ(want.GetAction(), Constants::ACTION_HOME);
+    EXPECT_TRUE(want.HasEntity(Constants::ENTITY_HOME));
+}
+
+/**
+ * @tc.number: SetLaunchWantActionAndEntity_0400
+ * @tc.name: test SetLaunchWantActionAndEntity
+ * @tc.desc: Entry module exists but entryAbilityKey has no matching skill, fallback to default.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.isEntry = true;
+    moduleInfo.entryAbilityKey = "non.existent.key";
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+
+    Skill skill;
+    skill.actions = {Constants::ACTION_HOME};
+    skill.entities = {Constants::ENTITY_HOME};
+    std::vector<Skill> skills = {skill};
+    innerBundleInfo.InsertSkillInfo("different.key", skills);
+
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    Want want;
+    dataMgr->SetLaunchWantActionAndEntity(&innerBundleInfo, want);
+    EXPECT_EQ(want.GetAction(), Constants::ACTION_HOME);
+    EXPECT_TRUE(want.HasEntity(Constants::ENTITY_HOME));
+}
+
+/**
+ * @tc.number: SetLaunchWantActionAndEntity_0500
+ * @tc.name: test SetLaunchWantActionAndEntity
+ * @tc.desc: Skill has matching action but no matching entity, fallback to default.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0500, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.isEntry = true;
+    std::string keyName = BUNDLE_NAME_TEST + "." + MODULE_NAME_TEST + "." + ABILITY_NAME_TEST;
+    moduleInfo.entryAbilityKey = keyName;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+
+    Skill skill;
+    skill.actions = {Constants::ACTION_HOME};
+    skill.entities = {"entity.other"};
+    std::vector<Skill> skills = {skill};
+    innerBundleInfo.InsertSkillInfo(keyName, skills);
+
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    Want want;
+    dataMgr->SetLaunchWantActionAndEntity(&innerBundleInfo, want);
+    EXPECT_EQ(want.GetAction(), Constants::ACTION_HOME);
+    EXPECT_TRUE(want.HasEntity(Constants::ENTITY_HOME));
+}
+
+/**
+ * @tc.number: SetLaunchWantActionAndEntity_0600
+ * @tc.name: test SetLaunchWantActionAndEntity
+ * @tc.desc: Skill has matching entity but no matching action, fallback to default.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0600, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.isEntry = true;
+    std::string keyName = BUNDLE_NAME_TEST + "." + MODULE_NAME_TEST + "." + ABILITY_NAME_TEST;
+    moduleInfo.entryAbilityKey = keyName;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+
+    Skill skill;
+    skill.actions = {"action.other"};
+    skill.entities = {Constants::ENTITY_HOME};
+    std::vector<Skill> skills = {skill};
+    innerBundleInfo.InsertSkillInfo(keyName, skills);
+
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    Want want;
+    dataMgr->SetLaunchWantActionAndEntity(&innerBundleInfo, want);
+    EXPECT_EQ(want.GetAction(), Constants::ACTION_HOME);
+    EXPECT_TRUE(want.HasEntity(Constants::ENTITY_HOME));
+}
+
+/**
+ * @tc.number: SetLaunchWantActionAndEntity_0700
+ * @tc.name: test SetLaunchWantActionAndEntity
+ * @tc.desc: Multiple skills, first without match, second with match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0700, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.isEntry = true;
+    std::string keyName = BUNDLE_NAME_TEST + "." + MODULE_NAME_TEST + "." + ABILITY_NAME_TEST;
+    moduleInfo.entryAbilityKey = keyName;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+
+    Skill skill1;
+    skill1.actions = {"action.other"};
+    skill1.entities = {"entity.other"};
+    Skill skill2;
+    skill2.actions = {Constants::WANT_ACTION_HOME};
+    skill2.entities = {Constants::ENTITY_HOME};
+    std::vector<Skill> skills = {skill1, skill2};
+    innerBundleInfo.InsertSkillInfo(keyName, skills);
+
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    Want want;
+    dataMgr->SetLaunchWantActionAndEntity(&innerBundleInfo, want);
+    EXPECT_EQ(want.GetAction(), Constants::WANT_ACTION_HOME);
+    EXPECT_TRUE(want.HasEntity(Constants::ENTITY_HOME));
+}
+
+/**
+ * @tc.number: SetLaunchWantActionAndEntity_0800
+ * @tc.name: test SetLaunchWantActionAndEntity
+ * @tc.desc: Skill with empty actions and entities, fallback to default.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0800, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.isEntry = true;
+    std::string keyName = BUNDLE_NAME_TEST + "." + MODULE_NAME_TEST + "." + ABILITY_NAME_TEST;
+    moduleInfo.entryAbilityKey = keyName;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+
+    Skill skill;
+    // empty actions and entities
+    std::vector<Skill> skills = {skill};
+    innerBundleInfo.InsertSkillInfo(keyName, skills);
+
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    Want want;
+    dataMgr->SetLaunchWantActionAndEntity(&innerBundleInfo, want);
+    EXPECT_EQ(want.GetAction(), Constants::ACTION_HOME);
+    EXPECT_TRUE(want.HasEntity(Constants::ENTITY_HOME));
+}
+
+/**
  * @tc.number: GetLaunchWant_0100
  * @tc.name: test can not get the launch want
  * @tc.desc: 1.system run normally

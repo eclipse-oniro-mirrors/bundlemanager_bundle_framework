@@ -5299,9 +5299,42 @@ ErrCode BundleDataMgr::GetLaunchWantForBundle(
     }
 
     want.SetElementName("", bundleName, mainAbility);
+    SetLaunchWantActionAndEntity(innerBundleInfo, want);
+    return ERR_OK;
+}
+
+void BundleDataMgr::SetLaunchWantActionAndEntity(
+    const InnerBundleInfo *innerBundleInfo, Want &want) const
+{
+    auto entryActionMatcher = [](const std::string &action) {
+        return action == Constants::ACTION_HOME || action == Constants::WANT_ACTION_HOME;
+    };
+    
+    auto skillInfos = innerBundleInfo->GetInnerSkillInfos();
+    const std::string &key = innerBundleInfo->GetEntryAbilityKey();
+    auto skillIt = skillInfos.find(key);
+    if (skillIt == skillInfos.end()) {
+        want.SetAction(Constants::ACTION_HOME);
+        want.AddEntity(Constants::ENTITY_HOME);
+        return;
+    }
+    for (const auto &skill : skillIt->second) {
+        auto actionIt = std::find_if(skill.actions.begin(), skill.actions.end(),
+            entryActionMatcher);
+        if (actionIt == skill.actions.end()) {
+            continue;
+        }
+        auto entityIt = std::find(skill.entities.begin(), skill.entities.end(),
+            Constants::ENTITY_HOME);
+        if (entityIt == skill.entities.end()) {
+            continue;
+        }
+        want.SetAction(*actionIt);
+        want.AddEntity(*entityIt);
+        return;
+    }
     want.SetAction(Constants::ACTION_HOME);
     want.AddEntity(Constants::ENTITY_HOME);
-    return ERR_OK;
 }
 
 bool BundleDataMgr::CheckIsSystemAppByUid(const int uid) const

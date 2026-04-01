@@ -4439,6 +4439,20 @@ std::string InnerBundleInfo::GetMainAbility() const
     return abilityInfo.name;
 }
 
+std::string InnerBundleInfo::GetEntryAbilityKey() const
+{
+    std::string key;
+    for (const auto& item : innerModuleInfos_) {
+        key = item.second.entryAbilityKey;
+        if (!key.empty() && (baseAbilityInfos_.count(key) != 0)) {
+            if (item.second.isEntry) {
+                return key;
+            }
+        }
+    }
+    return key;
+}
+
 void InnerBundleInfo::GetMainAbilityInfo(AbilityInfo &abilityInfo) const
 {
     for (const auto& item : innerModuleInfos_) {
