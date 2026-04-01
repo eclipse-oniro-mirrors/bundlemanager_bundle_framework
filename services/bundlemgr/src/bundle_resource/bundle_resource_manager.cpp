@@ -579,6 +579,7 @@ bool BundleResourceManager::AddResourceInfoByBundleNameWhenInstall(
 std::set<int32_t> BundleResourceManager::GetUserIdsForAddResource(const int32_t userId)
 {
     std::set<int32_t> userIds;
+    userIds.insert(userId);
     // need check userId, if user is equal 0 or 1, need add all user to bundleIconResource
     if ((userId == Constants::DEFAULT_USERID) || (userId == Constants::U1)) {
         std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
