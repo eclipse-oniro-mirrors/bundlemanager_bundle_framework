@@ -462,6 +462,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     accessTokenId = parcel.ReadUint32();
     accessTokenIdEx = parcel.ReadUint64();
     enabled = parcel.ReadBool();
+    isBundleFirstLaunched = parcel.ReadBool();
     uid = parcel.ReadInt32();
     nativeLibraryPath = Str16ToStr8(parcel.ReadString16());
     cpuAbi = Str16ToStr8(parcel.ReadString16());
@@ -710,6 +711,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, accessTokenId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint64, parcel, accessTokenIdEx);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isBundleFirstLaunched);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(nativeLibraryPath));

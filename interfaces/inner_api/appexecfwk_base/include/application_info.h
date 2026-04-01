@@ -230,6 +230,7 @@ struct ApplicationInfo : public Parcelable {
     bool allowArkTsLargeHeap = false;
     bool allowMultiProcess = false;
     bool enabled = false;
+    bool isBundleFirstLaunched = false;
     bool tsanEnabled = false;
     bool gwpAsanEnabled = false;
     bool hasPlugin = false;

@@ -22,6 +22,7 @@ const std::string BUNDLE_CLONE_INFO_APP_INDEX = "appIndex";
 const std::string BUNDLE_CLONE_INFO_UID = "uid";
 const std::string BUNDLE_CLONE_INFO_GIDS = "gids";
 const std::string BUNDLE_CLONE_INFO_ENABLE = "enabled";
+const std::string BUNDLE_CLONE_INFO_IS_BUNDLE_FIRST_LAUNCH = "isBundleFirstLaunched";
 const std::string BUNDLE_CLONE_INFO_DISABLE_ABILITIES = "disabledAbilities";
 
 const std::string BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID = "accessTokenId";
@@ -40,6 +41,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleCloneInfo& bundleClone
         {BUNDLE_CLONE_INFO_UID, bundleCloneInfo.uid},
         {BUNDLE_CLONE_INFO_GIDS, bundleCloneInfo.gids},
         {BUNDLE_CLONE_INFO_ENABLE, bundleCloneInfo.enabled},
+        {BUNDLE_CLONE_INFO_IS_BUNDLE_FIRST_LAUNCH, bundleCloneInfo.isBundleFirstLaunched},
         {BUNDLE_CLONE_INFO_DISABLE_ABILITIES, bundleCloneInfo.disabledAbilities},
         {BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID, bundleCloneInfo.accessTokenId},
         {BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID_EX, bundleCloneInfo.accessTokenIdEx},
@@ -64,6 +66,8 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleCloneInfo& bundleClo
         bundleCloneInfo.gids, JsonType::ARRAY, false, parseResult, ArrayType::NUMBER);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_ENABLE,
         bundleCloneInfo.enabled, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_IS_BUNDLE_FIRST_LAUNCH,
+        bundleCloneInfo.isBundleFirstLaunched, false, parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_DISABLE_ABILITIES,
         bundleCloneInfo.disabledAbilities, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID,

@@ -5744,6 +5744,65 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::SetBundleFirstLaunch(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, bool isBundleFirstLaunched)
+{
+    APP_LOGD("SetBundleFirstLaunch %{public}s, :%{public}d, :%{public}d, :%{public}d",
+        bundleName.c_str(), userId, appIndex, isBundleFirstLaunched);
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGW("Request userId %{public}d is invalid, bundleName:%{public}s", userId, bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo& info = infoItem->second;
+    const InnerBundleUserInfo *innerBundleUserInfoPtr = nullptr;
+    if (!info.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfoPtr)) {
+        APP_LOGW("can not find userId %{public}d in bundle %{public}s", requestUserId, bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (!innerBundleUserInfoPtr) {
+        APP_LOGE("innerBundleUserInfoPtr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    // Check if isBundleFirstLaunched value has changed
+    bool currentValue = false;
+    if (appIndex == 0) {
+        currentValue = innerBundleUserInfoPtr->isBundleFirstLaunched;
+    } else {
+        auto iter = innerBundleUserInfoPtr->cloneInfos.find(std::to_string(appIndex));
+        if (iter == innerBundleUserInfoPtr->cloneInfos.end()) {
+            APP_LOGW("can not find appIndex %{public}d in bundle %{public}s", appIndex, bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
+        }
+        currentValue = iter->second.isBundleFirstLaunched;
+    }
+    if (currentValue == isBundleFirstLaunched) {
+        APP_LOGD("isBundleFirstLaunched value not changed, no need to update");
+        return ERR_OK;
+    }
+    ErrCode ret = ERR_OK;
+    if (appIndex == 0) {
+        ret = info.SetBundleFirstLaunch(isBundleFirstLaunched, requestUserId);
+    } else {
+        ret = info.SetCloneBundleFirstLaunch(isBundleFirstLaunched, appIndex, requestUserId);
+    }
+    if (ret != ERR_OK) {
+        APP_LOGW("SetBundleFirstLaunch failed, err %{public}d", ret);
+        return ret;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(info)) {
+        APP_LOGE("SaveStorageBundleInfo failed for bundle %{public}s", info.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
 bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, 
     bool isEnable, const int32_t userId, const int32_t callingUid)
 {

@@ -542,6 +542,8 @@ public:
     ErrCode SetApplicationEnabled(bool enabled, const std::string &caller,
         int32_t userId = Constants::UNSPECIFIED_USERID);
     ErrCode SetCloneApplicationEnabled(bool enabled, int32_t appIndex, const std::string &caller, int32_t userId);
+    ErrCode SetBundleFirstLaunch(bool isBundleFirstLaunched, int32_t userId = Constants::UNSPECIFIED_USERID);
+    ErrCode SetCloneBundleFirstLaunch(bool isBundleFirstLaunched, int32_t appIndex, int32_t userId);
     ErrCode SetCloneAbilityEnabled(const std::string &moduleName, const std::string &abilityName,
         bool isEnabled, int32_t userId, int32_t appIndex);
     /**

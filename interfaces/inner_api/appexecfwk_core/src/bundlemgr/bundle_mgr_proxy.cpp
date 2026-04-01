@@ -1718,6 +1718,45 @@ ErrCode BundleMgrProxy::GetApplicationLabel(const std::string &bundleName, int32
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::SetBundleFirstLaunch(
+    const std::string &bundleName, int32_t userId, int32_t appIndex, bool isBundleFirstLaunched)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to SetBundleFirstLaunch of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to SetBundleFirstLaunch due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to SetBundleFirstLaunch due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to SetBundleFirstLaunch due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to SetBundleFirstLaunch due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to SetBundleFirstLaunch due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isBundleFirstLaunched)) {
+        APP_LOGE("fail to SetBundleFirstLaunch due to write isBundleFirstLaunched fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_BUNDLE_FIRST_LAUNCH, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
 bool BundleMgrProxy::GetBundleArchiveInfo(const std::string &hapFilePath, const BundleFlag flag, BundleInfo &bundleInfo)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

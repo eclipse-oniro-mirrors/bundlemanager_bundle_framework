@@ -533,6 +533,16 @@ public:
      */
     virtual ErrCode GetApplicationLabel(const std::string &bundleName, int32_t appIndex, std::string &label) override;
     /**
+     * @brief Sets whether the application is first launch.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param userId Indicates the user ID.
+     * @param appIndex Indicates the app index, 0 for normal app, > 0 for clone app.
+     * @param isBundleFirstLaunched Specifies whether the application is first launch.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    virtual ErrCode SetBundleFirstLaunch(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, bool isBundleFirstLaunched) override;
+    /**
      * @brief Obtains information about an application bundle contained
      *          in an ohos Ability Package (HAP) through the proxy object.
      * @param hapFilePath Indicates the absolute file path of the HAP.

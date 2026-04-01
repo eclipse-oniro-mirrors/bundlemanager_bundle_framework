@@ -9192,4 +9192,44 @@ HWTEST_F(BmsDataMgrTest, FirstInstallBundleInfo_OdidResetCount_0500, Function | 
     EXPECT_EQ(info.odidResetCount, 0);  // Default value
 }
 
+/**
+ * @tc.number: SetBundleFirstLaunch_0001
+ * @tc.name: test SetBundleFirstLaunch with bundle not exist
+ * @tc.desc: 1.bundle not exist
+ *           2.return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, SetBundleFirstLaunch_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test.notexist";
+    int32_t userId = Constants::DEFAULT_USERID;
+    int32_t appIndex = 0;
+    bool isBundleFirstLaunched = true;
+
+    bundleDataMgr.AddUserId(userId);
+    ErrCode ret = bundleDataMgr.SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetBundleFirstLaunch_0002
+ * @tc.name: test SetBundleFirstLaunch with invalid userId
+ * @tc.desc: 1.invalid userId
+ *           2.return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, SetBundleFirstLaunch_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    int32_t userId = Constants::INVALID_USERID;
+    int32_t appIndex = 0;
+    bool isBundleFirstLaunched = true;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseBundleInfo_->name = bundleName;
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    ErrCode ret = bundleDataMgr.SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
 } // OHOS

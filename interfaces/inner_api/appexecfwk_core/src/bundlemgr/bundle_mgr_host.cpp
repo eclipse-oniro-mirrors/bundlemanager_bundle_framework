@@ -218,6 +218,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_LABEL):
             errCode = this->HandleGetApplicationLabel(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_BUNDLE_FIRST_LAUNCH):
+            errCode = this->HandleSetBundleFirstLaunch(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_IS_SYSTEM_APP_BY_UID):
             errCode = this->HandleCheckIsSystemAppByUid(data, reply);
             break;
@@ -1793,6 +1796,24 @@ ErrCode BundleMgrHost::HandleGetApplicationLabel(MessageParcel &data, MessagePar
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetBundleFirstLaunch(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    if (bundleName.empty()) {
+        APP_LOGE("fail to SetBundleFirstLaunch due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    bool isBundleFirstLaunched = data.ReadBool();
+    ErrCode ret = SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 
