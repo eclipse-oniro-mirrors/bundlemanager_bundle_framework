@@ -172,6 +172,7 @@ const std::string PREFIX_DOLLAR = "$";
 const std::string FIELD_MEDIA = "media";
 const std::string FIELD_STRING = "string";
 #endif
+constexpr int32_t DYNAMIC_SHORTCUT_TYPE = 2;
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -6480,8 +6481,27 @@ bool BundleDataMgr::GetShortcutInfos(
 
     shortcutVisibleStorage_->GetStorageShortcutInfos(
         bundleName, Constants::MAIN_APP_INDEX, requestUserId, shortcutInfos);
+    RemoveInvalidShortcutInfo(shortcutInfos);
     shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return true;
+}
+
+void BundleDataMgr::RemoveInvalidShortcutInfo(std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    std::unordered_set<std::string> dynamicIds;
+    for (const auto &info : shortcutInfos) {
+        if (info.sourceType == DYNAMIC_SHORTCUT_TYPE) {
+            dynamicIds.emplace(info.id);
+        }
+    }
+    if (dynamicIds.empty()) {
+        return;
+    }
+    shortcutInfos.erase(
+        std::remove_if(shortcutInfos.begin(), shortcutInfos.end(),
+            [&dynamicIds](const ShortcutInfo& info) {
+                return info.sourceType != DYNAMIC_SHORTCUT_TYPE && dynamicIds.find(info.id) != dynamicIds.end();
+            }), shortcutInfos.end());
 }
 
 std::string BundleDataMgr::TryGetRawDataByExtractor(const std::string &hapPath, const std::string &profileName,
@@ -6706,6 +6726,7 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
 
     shortcutVisibleStorage_->GetStorageShortcutInfos(
         bundleName, Constants::MAIN_APP_INDEX, requestUserId, shortcutInfos);
+    RemoveInvalidShortcutInfo(shortcutInfos);
     shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return ERR_OK;
 }
@@ -6741,6 +6762,7 @@ ErrCode BundleDataMgr::GetShortcutInfoByAppIndex(const std::string &bundleName, 
         info.appIndex = appIndex;
     }
     shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, requestUserId, shortcutInfos);
+    RemoveInvalidShortcutInfo(shortcutInfos);
     shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return ERR_OK;
 }
@@ -6818,14 +6840,17 @@ void BundleDataMgr::ProcessShortcutInfos(const InnerBundleInfo &innerBundleInfo,
         APP_LOGW("bundle %{public}s has no entry", bundleName.c_str());
         shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex,
             requestUserId, shortcutInfos, true);
+        RemoveInvalidShortcutInfo(shortcutInfos);
     } else {
         if (moduleName == moduleInfo->moduleName && abilityName == mainAbilityName) {
             shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex,
                 requestUserId, shortcutInfos);
+            RemoveInvalidShortcutInfo(shortcutInfos);
             shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
         } else {
             shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex,
                 requestUserId, shortcutInfos, true);
+            RemoveInvalidShortcutInfo(shortcutInfos);
         }
     }
     
@@ -12872,6 +12897,7 @@ ErrCode BundleDataMgr::SetShortcutVisibleForSelf(const std::string &shortcutId, 
         }
     }
     shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, userId, shortcutInfos);
+    RemoveInvalidShortcutInfo(shortcutInfos);
     ShortcutInfo targetShortcutInfo;
     ret = GetTargetShortcutInfo(bundleName, shortcutId, shortcutInfos, targetShortcutInfo);
     if (ret != ERR_OK) {
@@ -13057,6 +13083,7 @@ ErrCode BundleDataMgr::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shor
     }
 
     shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, userId, shortcutInfos);
+    RemoveInvalidShortcutInfo(shortcutInfos);
     shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return ERR_OK;
 }
