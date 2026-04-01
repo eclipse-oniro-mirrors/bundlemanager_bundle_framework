@@ -51,6 +51,7 @@ BundleStreamInstallerHostImpl::~BundleStreamInstallerHostImpl()
 bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam,
     const sptr<IStatusReceiver> &statusReceiver, const std::vector<std::string> &originHapPaths)
 {
+    std::lock_guard<std::mutex> lock(fdVecMutex_);
     installParam_ = installParam;
     receiver_ = statusReceiver;
     originHapPaths_ = originHapPaths;
@@ -100,9 +101,9 @@ bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam,
 
 void BundleStreamInstallerHostImpl::UnInit()
 {
+    std::lock_guard<std::mutex> lock(fdVecMutex_);
     APP_LOGD("destory stream installer with installerId %{public}d and temp dir %{public}s", installerId_,
         tempDir_.c_str());
-    std::lock_guard<std::mutex> lock(fdVecMutex_);
     BundleUtil::CloseFileDescriptor(streamFdVec_);
     BundleUtil::DeleteDir(tempDir_);
     for (const auto &path : installParam_.sharedBundleDirPaths) {
@@ -152,7 +153,12 @@ int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
         APP_LOGE("CreateStream failed due to invalid fileName");
         return Constants::DEFAULT_STREAM_FD;
     }
-    std::string filePath = tempDir_ + fileName;
+    std::string tempDir;
+    {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        tempDir = tempDir_;
+    }
+    std::string filePath = tempDir + fileName;
     int32_t fd = BundleUtil::CreateFileDescriptor(filePath, 0);
     if (fd < 0) {
         APP_LOGE("stream installer create file descriptor failed");
@@ -199,10 +205,15 @@ int32_t BundleStreamInstallerHostImpl::CreateSignatureFileStream(const std::stri
         return Constants::DEFAULT_STREAM_FD;
     }
 
-    auto iterator = installParam_.verifyCodeParams.find(moduleName);
-    if (iterator == installParam_.verifyCodeParams.end()) {
-        APP_LOGE("module name cannot be found");
-        return Constants::DEFAULT_STREAM_FD;
+    std::string signatureDir;
+    {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        auto iterator = installParam_.verifyCodeParams.find(moduleName);
+        if (iterator == installParam_.verifyCodeParams.end()) {
+            APP_LOGE("module name cannot be found");
+            return Constants::DEFAULT_STREAM_FD;
+        }
+        signatureDir = tempSignatureFileDir_;
     }
 
     // to prevent the sig copied to relevant path
@@ -210,7 +221,7 @@ int32_t BundleStreamInstallerHostImpl::CreateSignatureFileStream(const std::stri
         APP_LOGE("CreateStream failed due to invalid fileName");
         return Constants::DEFAULT_STREAM_FD;
     }
-    std::string filePath = tempSignatureFileDir_ + fileName;
+    std::string filePath = signatureDir + fileName;
     int32_t fd = BundleUtil::CreateFileDescriptor(filePath, 0);
     if (fd < 0) {
         APP_LOGE("stream installer create file descriptor failed");
@@ -219,7 +230,7 @@ int32_t BundleStreamInstallerHostImpl::CreateSignatureFileStream(const std::stri
     if (fd > 0) {
         std::lock_guard<std::mutex> lock(fdVecMutex_);
         streamFdVec_.emplace_back(fd);
-        installParam_.verifyCodeParams.at(moduleName) = filePath;
+        installParam_.verifyCodeParams[moduleName] = filePath;
     }
     return fd;
 }
@@ -258,12 +269,17 @@ int32_t BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::strin
         return Constants::DEFAULT_STREAM_FD;
     }
 
-    if (index >= installParam_.sharedBundleDirPaths.size()) {
-        APP_LOGE("invalid shared bundle index");
-        return Constants::DEFAULT_STREAM_FD;
+    std::string sharedBundleDirPath;
+    {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        if (index >= installParam_.sharedBundleDirPaths.size()) {
+            APP_LOGE("invalid shared bundle index");
+            return Constants::DEFAULT_STREAM_FD;
+        }
+        sharedBundleDirPath = installParam_.sharedBundleDirPaths[index];
     }
 
-    std::string bundlePath = installParam_.sharedBundleDirPaths[index] + hspName;
+    std::string bundlePath = sharedBundleDirPath + hspName;
     int32_t fd = BundleUtil::CreateFileDescriptor(bundlePath, 0);
     if (fd < 0) {
         APP_LOGE("stream installer create file descriptor failed");
@@ -312,7 +328,12 @@ int32_t BundleStreamInstallerHostImpl::CreatePgoFileStream(const std::string &mo
         APP_LOGE("CreateStream failed due to invalid fileName");
         return Constants::DEFAULT_STREAM_FD;
     }
-    std::string filePath = tempPgoFileDir_ + fileName;
+    std::string pgoDir;
+    {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        pgoDir = tempPgoFileDir_;
+    }
+    std::string filePath = pgoDir + fileName;
     int32_t fd = BundleUtil::CreateFileDescriptor(filePath, 0);
     if (fd < 0) {
         APP_LOGE("stream installer create file descriptor failed");
@@ -358,7 +379,12 @@ int32_t BundleStreamInstallerHostImpl::CreateExtProfileFileStream(const std::str
         APP_LOGE("CreateStream failed due to invalid fileName");
         return Constants::DEFAULT_STREAM_FD;
     }
-    std::string filePath = tempExtProfileDir_ + fileName;
+    std::string extProfileDir;
+    {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        extProfileDir = tempExtProfileDir_;
+    }
+    std::string filePath = extProfileDir + fileName;
     int32_t fd = BundleUtil::CreateFileDescriptor(filePath, 0);
     if (fd < 0) {
         APP_LOGE("stream installer create file descriptor failed");
@@ -564,9 +590,18 @@ static bool SelectApp(const std::vector<std::string> &filePaths)
 
 bool BundleStreamInstallerHostImpl::InstallApp(const std::vector<std::string> &pathVec)
 {
+    {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        if (receiver_ == nullptr) {
+            APP_LOGE("receiver_ is null");
+            return false;
+        }
+    }
+
     std::vector<std::string> appPaths;
     for (const auto &path : pathVec) {
         if ((!GetAppFilesFromBundlePath(path, appPaths) && !appPaths.empty()) || appPaths.size() > 1) {
+            std::lock_guard<std::mutex> lock(fdVecMutex_);
             receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_MORE_THAN_ONE_APP, "");
             return false;
         }
@@ -574,19 +609,23 @@ bool BundleStreamInstallerHostImpl::InstallApp(const std::vector<std::string> &p
     if (appPaths.empty()) {
         return true;
     }
-    if (!installParam_.sharedBundleDirPaths.empty()) {
-        receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_MORE_THAN_ONE_APP, "");
-        return false;
-    }
-    if (!installParam_.isCallByShell) {
-        receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID, "");
-        return false;
+    {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        if (!installParam_.sharedBundleDirPaths.empty()) {
+            receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_MORE_THAN_ONE_APP, "");
+            return false;
+        }
+        if (!installParam_.isCallByShell) {
+            receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID, "");
+            return false;
+        }
     }
 
     auto bundleInstallChecker = std::make_unique<BundleInstallChecker>();
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
     if (bundleInstallChecker == nullptr ||
         bundleInstallChecker->CheckMultipleHapsSignInfo(appPaths, hapVerifyResults) != OHOS::ERR_OK) {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
         receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_VERIFY_APP_SIGNATURE_FAILED, "");
         return false;
     }
@@ -594,6 +633,7 @@ bool BundleStreamInstallerHostImpl::InstallApp(const std::vector<std::string> &p
     std::vector<std::string> filePaths;
     for (const auto &appPath : appPaths) {
         if (!DecompressToFile(appPath, pathVec.front(), filePaths)) {
+            std::lock_guard<std::mutex> lock(fdVecMutex_);
             receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_DECOMPRESS_APP_FAILED, "");
             return false;
         }
@@ -604,6 +644,7 @@ bool BundleStreamInstallerHostImpl::InstallApp(const std::vector<std::string> &p
     }
 
     if (SelectApp(filePaths)) {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
         receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_NO_SUITABLE_BUNDLES, "");
         return false;
     }
@@ -613,24 +654,34 @@ bool BundleStreamInstallerHostImpl::InstallApp(const std::vector<std::string> &p
 bool BundleStreamInstallerHostImpl::Install()
 {
     BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Install", HITRACE_FLAG_INCLUDE_ASYNC);
-    if (receiver_ == nullptr) {
-        APP_LOGE("receiver_ is nullptr");
-        return false;
+    {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        if (receiver_ == nullptr) {
+            APP_LOGE("receiver_ is nullptr");
+            return false;
+        }
+        receiver_->SetStreamInstallId(installerId_);
     }
-    receiver_->SetStreamInstallId(installerId_);
     auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
     if (installer == nullptr) {
         APP_LOGE("get bundle installer failed");
-        receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        if (receiver_ != nullptr) {
+            receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
+        }
         return false;
     }
+
     std::vector<std::string> pathVec;
-    if (installParam_.IsRenameInstall()) {
-        pathVec = originHapPaths_;
-    } else if (!isInstallSharedBundlesOnly_) {
-        pathVec.emplace_back(tempDir_);
+    {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        if (installParam_.IsRenameInstall()) {
+            pathVec = originHapPaths_;
+        } else if (!isInstallSharedBundlesOnly_) {
+            pathVec.emplace_back(tempDir_);
+        }
+        installParam_.withCopyHaps = true;
     }
-    installParam_.withCopyHaps = true;
 
     if (!InstallApp(pathVec)) {
         APP_LOGE("install app failed");
@@ -638,11 +689,14 @@ bool BundleStreamInstallerHostImpl::Install()
     }
 
     bool res;
-    if (installParam_.isSelfUpdate) {
-        installParam_.parameters.erase(ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE);
-        res = installer->UpdateBundleForSelf(pathVec, installParam_, receiver_);
-    } else {
-        res = installer->Install(pathVec, installParam_, receiver_);
+    {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        if (installParam_.isSelfUpdate) {
+            installParam_.parameters.erase(ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE);
+            res = installer->UpdateBundleForSelf(pathVec, installParam_, receiver_);
+        } else {
+            res = installer->Install(pathVec, installParam_, receiver_);
+        }
     }
     if (!res) {
         APP_LOGE("install bundle failed");
@@ -653,11 +707,13 @@ bool BundleStreamInstallerHostImpl::Install()
 
 uint32_t BundleStreamInstallerHostImpl::GetInstallerId() const
 {
+    std::lock_guard<std::mutex> lock(fdVecMutex_);
     return installerId_;
 }
 
 void BundleStreamInstallerHostImpl::SetInstallerId(uint32_t installerId)
 {
+    std::lock_guard<std::mutex> lock(fdVecMutex_);
     installerId_ = installerId;
 }
 } // AppExecFwk
