@@ -305,7 +305,7 @@ constexpr const char* EXT_PROFILE = "ext_profile";
 constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
 constexpr const char* MANIFEST_JSON = "manifest.json";
 constexpr const char* CLOUD_PROFILE_PATH = "resources/base/profile/cloudkit_config.json";
-constexpr const char* META_KEEP_TOKEN_ID_KEY = "ohos.fileshare.supportPreservePersistentPermisson";
+constexpr const char* META_KEEP_TOKEN_ID_KEY = "ohos.fileshare.supportPreservePersistentPermission";
 // for install param
 constexpr const char* BMS_PARA_INSTALL_BUNDLE_NAME = "ohos.bms.param.installBundleName";
 // for install downgrade

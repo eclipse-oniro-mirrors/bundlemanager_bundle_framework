@@ -1043,6 +1043,7 @@ private:
     std::string entryModuleName_ = "";
     std::string appDistributionType_;
     std::string appIdentifier_ = "";
+    std::string bundleAppIdentifier_ = "";
     std::string oldShareFilesJson_;
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
