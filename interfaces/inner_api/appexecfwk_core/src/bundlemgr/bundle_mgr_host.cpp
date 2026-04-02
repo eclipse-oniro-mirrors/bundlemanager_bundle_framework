@@ -1932,7 +1932,7 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFilesAutomaticByType(MessageParcel 
             APP_LOGE_NOFUNC("WriteUint64 failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
-        APP_LOGI_NOFUNC("cleaned size %{public}llu", cleanedSize.value());
+        APP_LOGI_NOFUNC("cleaned size %{public}" PRIu64, cleanedSize.value());
     }
     return ERR_OK;
 }
