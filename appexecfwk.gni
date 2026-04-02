@@ -62,6 +62,7 @@ declare_args() {
   device_usage_statistics_enabled = true
   dfx_sigdump_handler_enabled = true
   webview_enable = true
+  bundle_framework_app_fwk_update_enable = true
   user_auth_framework_impl_enabled = true
 
   if (defined(global_parts_info) &&

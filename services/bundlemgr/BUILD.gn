@@ -570,7 +570,7 @@ ohos_shared_library("libbms") {
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 
-  if (webview_enable) {
+  if (webview_enable && bundle_framework_app_fwk_update_enable) {
     external_deps += [ "webview:app_fwk_update_service" ]
     defines += [ "WEBVIEW_ENABLE" ]
   }
