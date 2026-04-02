@@ -17,6 +17,7 @@
 #include <sstream>
 #include <sys/statfs.h>
 #include <thread>
+#include <inttypes.h>
 
 #include "account_helper.h"
 #include "app_log_wrapper.h"
@@ -220,7 +221,7 @@ bool IdleConditionMgr::CheckInodeForCommericalDevice()
         APP_LOGI("free inodes over threshold");
         return false;
     }
-    APP_LOGD("total inodes: %{public}llu, free inodes: %{public}llu",
+    APP_LOGD("total inodes: %{public} " PRIu64 ", free inodes: %{public}" PRIu64,
         stat.f_files, stat.f_ffree);
     return true;
 }
