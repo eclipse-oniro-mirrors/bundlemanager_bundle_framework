@@ -27,6 +27,7 @@ ohos_unittest("BundleUtilTest") {
   include_dirs = []
   sources = [ 
     "${services_path}/bundlemgr/src/bundle_util.cpp",
+    "${services_path}/bundlemgr/src/xml_util.cpp",
     "bundle_util_test.cpp",
   ]
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]

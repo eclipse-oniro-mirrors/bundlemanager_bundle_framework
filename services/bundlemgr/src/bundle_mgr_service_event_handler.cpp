@@ -60,6 +60,7 @@
 #include "quick_fix_boot_scanner.h"
 #endif
 #include "user_unlocked_event_subscriber.h"
+#include "xml_util.h"
 #ifdef STORAGE_SERVICE_ENABLE
 #include "storage_manager_proxy.h"
 #include "iservice_registry.h"
@@ -2103,7 +2104,7 @@ void BMSEventHandler::LoadPreInstallWhiteList()
     xmlMap_.clear();
     needInstallUserIds_.clear();
     std::unordered_map<uint64_t, std::vector<std::string>> logicalIdWhiteListMap;
-    bool isWhiteListExist = BundleUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
+    bool isWhiteListExist = XmlUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
     if (!isWhiteListExist) {
         LOG_NOFUNC_E(BMS_TAG_DEFAULT, "load preInstallWhiteListMap fail or whiteList not exist");
         return;
