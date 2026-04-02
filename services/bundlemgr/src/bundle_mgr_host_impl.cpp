@@ -14,7 +14,7 @@
  */
 
 #include "bundle_mgr_host_impl.h"
-
+#include <cinttypes>
 #include "ability_manager_helper.h"
 #include "account_helper.h"
 #include "app_disable_forbidden/app_disable_forbidden_mgr.h"
@@ -2014,7 +2014,7 @@ bool BundleMgrHostImpl::CleanBundleCacheByInodeCount(const std::string &bundleNa
     } else {
         cleanCacheSize = initialInodeCount - inodeCount;
     }
-    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "bundle: %{public}s, inode count: %{public}llu", bundleName.c_str(),
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "bundle: %{public}s, inode count: %{public}" PRIu64, bundleName.c_str(),
         cleanCacheSize);
     return true;
 }
