@@ -15,6 +15,7 @@
 
 #include "bundle_installer.h"
 
+#include <inttypes.h>
 #include <cinttypes>
 #include <fstream>
 #include <sys/statfs.h>
@@ -48,7 +49,7 @@ bool CheckSystemInodeSatisfied(const std::string &bundleName)
         LOG_E(BMS_TAG_INSTALLER, "free inodes not satisfied");
         return false;
     }
-    LOG_D(BMS_TAG_INSTALLER, "total inodes: %{public}llu, free inodes: %{public}llu",
+    LOG_D(BMS_TAG_INSTALLER, "total inodes: %{public}" PRIu64 ", free inodes: %{public}" PRIu64,
         stat.f_files, stat.f_ffree);
     return BundleUtil::CheckOrphanNodeUseRateIsSufficient();
 }
