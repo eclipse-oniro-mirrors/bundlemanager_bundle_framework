@@ -31,6 +31,7 @@
 #include "bundle_resource_manager.h"
 #endif
 #include "bundle_service_constants.h"
+#include "bundle_util.h"
 #include "bundle_resource_helper.h"
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 #include "distributed_bms_proxy.h"
@@ -5592,6 +5593,33 @@ ErrCode BundleMgrHostImpl::GetAllPreinstalledApplicationInfos(
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::GetAllNewPreinstalledApplicationInfos(
+    std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    int32_t userId = BundleUtil::GetUserIdByCallingUid();
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+    for (auto &preInstallBundleInfo : preInstallBundleInfos) {
+        if (!preInstallBundleInfo.HasOtaNewInstallUser(userId)) {
+            continue;
+        }
+        AddPreinstalledApplicationInfo(preInstallBundleInfo, preinstalledApplicationInfos);
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHostImpl::GetAllBundleInfoByDeveloperId(const std::string &developerId,
     std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
@@ -6636,6 +6664,7 @@ void BundleMgrHostImpl::AddPreinstalledApplicationInfo(PreInstallBundleInfo &pre
     preinstalledApplicationInfo.moduleName = preInstallBundleInfo.GetModuleName();
     preinstalledApplicationInfo.labelId = preInstallBundleInfo.GetLabelId();
     preinstalledApplicationInfo.iconId = preInstallBundleInfo.GetIconId();
+    preinstalledApplicationInfo.descriptionId = preInstallBundleInfo.GetDescriptionId();
     preinstalledApplicationInfos.emplace_back(preinstalledApplicationInfo);
 }
 

@@ -165,6 +165,11 @@ bool AccountHelper::CheckOsAccountConstraintEnabled(const int32_t userId, const 
     return true;
 }
 
+bool AccountHelper::IsPrivateSpaceUser(const int32_t userId)
+{
+    return false;
+}
+
 bool AccountHelper::CheckUserIsolation(
     const int32_t targetUserId, const std::unordered_set<int32_t> &installedUserIds)
 {

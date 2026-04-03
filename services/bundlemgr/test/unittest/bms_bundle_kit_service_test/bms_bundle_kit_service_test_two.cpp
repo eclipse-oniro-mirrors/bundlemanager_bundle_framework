@@ -52,6 +52,7 @@
 #include "mock_bundle_status.h"
 #include "nlohmann/json.hpp"
 #include "parameter.h"
+#include "pre_install_bundle_info.h"
 #include "perf_profile.h"
 #include "process_cache_callback_host.h"
 #include "scope_guard.h"
@@ -2023,6 +2024,39 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllPreinstalledApplicationInfos_0100, Funct
     std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
     ErrCode ret = hostImpl->GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllNewPreinstalledApplicationInfos_0100
+ * @tc.name: test GetAllNewPreinstalledApplicationInfos
+ * @tc.desc: 1.Test the GetAllNewPreinstalledApplicationInfos by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllNewPreinstalledApplicationInfos_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+    ErrCode ret = hostImpl->GetAllNewPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PreInstallBundleInfoDescriptionIdJson_0100
+ * @tc.name: PreInstallBundleInfo descriptionId json round trip
+ * @tc.desc: 1.Test ToJson/FromJson preserves descriptionId
+ */
+HWTEST_F(BmsBundleKitServiceTest, PreInstallBundleInfoDescriptionIdJson_0100, Function | SmallTest | Level1)
+{
+    PreInstallBundleInfo info;
+    info.SetBundleName("com.test.description");
+    info.SetVersionCode(1U);
+    info.AddBundlePath("/data/test.hap");
+    info.SetDescriptionId(16777219U);
+    nlohmann::json j;
+    info.ToJson(j);
+    PreInstallBundleInfo restored;
+    EXPECT_EQ(restored.FromJson(j), ERR_OK);
+    EXPECT_EQ(restored.GetDescriptionId(), 16777219U);
 }
 
 /**

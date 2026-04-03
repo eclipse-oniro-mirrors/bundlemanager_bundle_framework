@@ -544,14 +544,14 @@ private:
         int32_t taskPriority, const std::vector<PreScanInfo> &tasks, int32_t userId);
 
     bool InnerMultiProcessBundleInstall(
-        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap,
+        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &otaMultiProcessUpgradeMap,
         Constants::AppType appType);
 
     static bool InstallSystemBundleNeedCheckUserForPatch(const std::vector<std::string> &filePaths,
         const std::string &bundleName, bool isOta);
 
     static bool InnerMultiProcessBundleInstallForPatch(
-        const std::unordered_map<std::string, std::vector<std::string>> &needInstallMap, bool isOta);
+        const std::unordered_map<std::string, std::vector<std::string>> &patchInstallPathMap, bool isOta);
 
     void ProcessCheckAppDataDir();
     void InnerProcessCheckAppDataDir();
@@ -678,7 +678,7 @@ private:
     void CheckALLResourceInfo();
     void InnerProcessAllDynamicIconInfoWhenOta();
     void InnerProcessAllThemeAndDynamicIconInfoWhenOta(
-        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap);
+        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &otaMultiProcessUpgradeMap);
     // Used to add bundle resource Info that does not exist in rdb when OTA.
     void static ProcessBundleResourceInfo();
     // scan all bundle data group info
@@ -688,7 +688,7 @@ private:
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, const int32_t errorCode);
     void ProcessAppTmpPath();
     void UpdatePreinstallDB(
-        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap);
+        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &otaMultiProcessUpgradeMap);
     void UpdatePreinstallDBForNotUpdatedBundle(const std::string &bundleName,
         const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos);
     void InnerProcessRebootUninstallWrongBundle();
@@ -743,6 +743,9 @@ private:
     static bool GetBundleNameAndUserIdFromPath(const std::string &path, std::vector<int32_t> &userIds,
         std::string &bundleName);
     void LoadPreInstallWhiteList();
+    void LoadOtaNewInstallWhitelist();
+    bool NeedProcessOtaNewPreloadInstall(const std::string &bundleName,
+        const std::string &scanPath) const;
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
@@ -766,6 +769,12 @@ private:
     std::map<std::string, HmpBundlePathInfo> hmpBundlePathInfos_;
     std::unordered_map<int32_t,
         std::pair<std::vector<std::string>, std::vector<std::string>>> userInstallAndRecoverMap_;
+
+    // Used to control OTA new preload install by whitelist.
+    bool otaNewInstallEnable_ = false;
+    bool otaNewInstallWhitelistLoaded_ = false;
+    bool multiUserInstallThirdPreloadApp_ = true;
+    std::unordered_set<std::string> otaNewInstallWhitelist_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

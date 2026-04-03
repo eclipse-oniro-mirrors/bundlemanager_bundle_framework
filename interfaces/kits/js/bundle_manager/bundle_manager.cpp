@@ -48,6 +48,7 @@ constexpr const char* IS_ENABLE = "isEnable";
 constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* ICON_ID = "iconId";
 constexpr const char* LABEL_ID = "labelId";
+constexpr const char* DESCRIPTION_ID = "descriptionId";
 constexpr const char* STATE = "state";
 const std::string PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
 constexpr const char* UNSPECIFIED = "UNSPECIFIED";
@@ -5382,6 +5383,13 @@ void ConvertPreinstalledApplicationInfo(napi_env env, const PreinstalledApplicat
     napi_value nIconId;
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, preinstalledApplicationInfo.iconId, &nIconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objPreinstalledApplicationInfo, ICON_ID, nIconId));
+    if (preinstalledApplicationInfo.descriptionId != 0) {
+        napi_value nDescriptionId;
+        NAPI_CALL_RETURN_VOID(
+            env, napi_create_int64(env, preinstalledApplicationInfo.descriptionId, &nDescriptionId));
+        NAPI_CALL_RETURN_VOID(
+            env, napi_set_named_property(env, objPreinstalledApplicationInfo, DESCRIPTION_ID, nDescriptionId));
+    }
 }
 
 
@@ -5455,6 +5463,64 @@ napi_value GetAllPreinstalledApplicationInfos(napi_env env, napi_callback_info i
     auto promise = CommonFunc::AsyncCallNativeMethod<PreinstalledApplicationInfosCallbackInfo>(env, asyncCallbackInfo,
         GET_ALL_PREINSTALLED_APP_INFOS, GetAllPreinstalledApplicationInfosExec,
         GetAllPreinstalledApplicationInfosComplete);
+    callbackPtr.release();
+    return promise;
+}
+
+void GetAllNewPreinstalledApplicationInfosComplete(napi_env env, napi_status status, void *data)
+{
+    PreinstalledApplicationInfosCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<PreinstalledApplicationInfosCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("AsyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<PreinstalledApplicationInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        ProcessPreinstalledApplicationInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->preinstalledApplicationInfos);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_ALL_NEW_PREINSTALLED_APP_INFOS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+    }
+    CommonFunc::NapiReturnDeferred<PreinstalledApplicationInfosCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+void GetAllNewPreinstalledApplicationInfosExec(napi_env env, void *data)
+{
+    PreinstalledApplicationInfosCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<PreinstalledApplicationInfosCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("AsyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err =
+        BundleManagerHelper::InnerGetAllNewPreinstalledApplicationInfos(
+            asyncCallbackInfo->preinstalledApplicationInfos);
+}
+
+napi_value GetAllNewPreinstalledApplicationInfos(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("Called");
+    NapiArg args(env, info);
+    PreinstalledApplicationInfosCallbackInfo *asyncCallbackInfo =
+        new (std::nothrow) PreinstalledApplicationInfosCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("AsyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<PreinstalledApplicationInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ZERO)) {
+        APP_LOGE("Param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<PreinstalledApplicationInfosCallbackInfo>(env, asyncCallbackInfo,
+        GET_ALL_NEW_PREINSTALLED_APP_INFOS, GetAllNewPreinstalledApplicationInfosExec,
+        GetAllNewPreinstalledApplicationInfosComplete);
     callbackPtr.release();
     return promise;
 }

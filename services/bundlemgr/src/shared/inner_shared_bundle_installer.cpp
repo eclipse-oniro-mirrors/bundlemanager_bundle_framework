@@ -528,6 +528,7 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
     newBundleInfo_.AdaptMainLauncherResourceInfo(applicationInfo);
     preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
     preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+    preInstallBundleInfo.SetDescriptionId(applicationInfo.descriptionId);
     preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
     preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
     preInstallBundleInfo.SetBundleType(BundleType::SHARED);

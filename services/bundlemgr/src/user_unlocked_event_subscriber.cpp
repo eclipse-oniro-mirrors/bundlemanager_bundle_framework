@@ -21,6 +21,7 @@
 #include "account_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
+#include "pre_install_bundle_info.h"
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
 #include "dlp_permission_kit.h"
 #endif
@@ -41,6 +42,8 @@ const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/preferences",
     "/haps"
 };
+constexpr const char* OOBE_HWSTARTUPGUIDE_FINISHED_EVENT = "custom.event.OOBE.HWSTARTUPGUIDE.FINISHED";
+constexpr const char* OOBE_OTA_PARAM = "ota";
 static std::mutex TASK_MUTEX;
 static std::atomic<uint32_t> CURRENT_TASK_NUM = 0;
 
@@ -64,6 +67,30 @@ UserUnlockedEventSubscriber::~UserUnlockedEventSubscriber()
 void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
     std::string action = data.GetWant().GetAction();
+    if (action == OOBE_HWSTARTUPGUIDE_FINISHED_EVENT) {
+        if (!data.GetWant().GetBoolParam(OOBE_OTA_PARAM, false)) {
+            APP_LOGI_NOFUNC("OOBE HWSTARTUPGUIDE.FINISHED ignored, ota is not true");
+            return;
+        }
+        // OTA new-preload white list: clear otaNewInstallUsers for current foreground user.
+        int32_t foregroundUserId = AccountHelper::GetCurrentActiveUserId();
+        APP_LOGI_NOFUNC("OOBE HWSTARTUPGUIDE.FINISHED (ota=true), foregroundUserId:%{public}d", foregroundUserId);
+        if (foregroundUserId == Constants::INVALID_USERID) {
+            return;
+        }
+        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr == nullptr) {
+            return;
+        }
+        std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+        for (auto &bundleInfo : preInstallBundleInfos) {
+            if (!bundleInfo.HasOtaNewInstallUser(foregroundUserId)) {
+                continue;
+            }
+            bundleInfo.DeleteOtaNewInstallUser(foregroundUserId);
+            (void)dataMgr->SavePreInstallBundleInfo(bundleInfo.GetBundleName(), bundleInfo);
+        }
+    }
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
         int32_t userId = data.GetCode();
         APP_LOGI_NOFUNC("UserUnlockedEventSubscriber -u %{public}d unlocked", userId);

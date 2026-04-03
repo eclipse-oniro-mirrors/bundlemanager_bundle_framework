@@ -170,6 +170,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setAdditionalInfo", SetAdditionalInfo),
         DECLARE_NAPI_FUNCTION("canOpenLink", CanOpenLink),
         DECLARE_NAPI_FUNCTION("getAllPreinstalledApplicationInfo", GetAllPreinstalledApplicationInfos),
+        DECLARE_NAPI_FUNCTION("getAllNewPreinstalledApplicationInfo", GetAllNewPreinstalledApplicationInfos),
         DECLARE_NAPI_FUNCTION("getAllBundleInfoByDeveloperId", GetAllBundleInfoByDeveloperId),
         DECLARE_NAPI_FUNCTION("getDeveloperIds", GetDeveloperIds),
         DECLARE_NAPI_FUNCTION("switchUninstallState", SwitchUninstallState),

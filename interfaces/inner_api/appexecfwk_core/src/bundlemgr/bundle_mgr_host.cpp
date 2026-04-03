@@ -570,6 +570,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PREINSTALLED_APPLICATION_INFO):
             errCode = this->HandleGetAllPreinstalledApplicationInfos(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_NEW_PREINSTALLED_APPLICATION_INFOS):
+            errCode = this->HandleGetAllNewPreinstalledApplicationInfos(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTEND_RESOURCE_MANAGER):
             errCode = this->HandleGetExtendResourceManager(data, reply);
             break;
@@ -4471,6 +4474,36 @@ ErrCode BundleMgrHost::HandleGetAllPreinstalledApplicationInfos(MessageParcel &d
     APP_LOGD("Called");
     std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
     ErrCode ret = GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    int32_t vectorSize = static_cast<int32_t>(preinstalledApplicationInfos.size());
+    if (vectorSize > MAX_STATUS_VECTOR_NUM) {
+        APP_LOGE("PreinstallApplicationInfos vector is over size");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    constexpr int32_t VECTOR_SIZE_UNDER_DEFAULT_DATA = 500;
+    if (vectorSize > VECTOR_SIZE_UNDER_DEFAULT_DATA &&
+        !reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY)) {
+        APP_LOGE("SetMaxCapacity failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(preinstalledApplicationInfos, reply)) {
+        APP_LOGE("Write preinstalled app infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllNewPreinstalledApplicationInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("Called");
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+    ErrCode ret = GetAllNewPreinstalledApplicationInfos(preinstalledApplicationInfos);
     int32_t vectorSize = static_cast<int32_t>(preinstalledApplicationInfos.size());
     if (vectorSize > MAX_STATUS_VECTOR_NUM) {
         APP_LOGE("PreinstallApplicationInfos vector is over size");

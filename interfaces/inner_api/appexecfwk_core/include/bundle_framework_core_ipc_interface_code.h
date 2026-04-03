@@ -254,6 +254,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_APPLICATION_LABEL = 228,
     GET_INSTALLED_BUNDLE_LIST = 229,
     SET_BUNDLE_FIRST_LAUNCH = 230,
+    GET_ALL_NEW_PREINSTALLED_APPLICATION_INFOS = 231
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

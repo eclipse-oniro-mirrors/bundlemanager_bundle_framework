@@ -266,6 +266,34 @@ HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0008, TestSize.Level
 }
 
 /**
+ * @tc.number: BundleInstallCheckerTest_0054
+ * @tc.name: test GetHideDesktopIconByBundlePath with empty path.
+ * @tc.desc: return false when bundle path is empty.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0054, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    bool hideDesktopIcon = false;
+    bool ret = bundleInstallChecker.GetHideDesktopIconByBundlePath("", hideDesktopIcon);
+    EXPECT_FALSE(ret);
+    EXPECT_FALSE(hideDesktopIcon);
+}
+
+/**
+ * @tc.number: BundleInstallCheckerTest_0055
+ * @tc.name: test GetHideDesktopIconByBundlePath with invalid path.
+ * @tc.desc: return false when ParseHapProfile failed.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0055, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    bool hideDesktopIcon = false;
+    bool ret = bundleInstallChecker.GetHideDesktopIconByBundlePath("/invalid/path/not_exist.hap", hideDesktopIcon);
+    EXPECT_FALSE(ret);
+    EXPECT_FALSE(hideDesktopIcon);
+}
+
+/**
  * @tc.number: BundleInstallCheckerTest_0009
  * @tc.name: test the VaildInstallPermission.
  * @tc.desc: test the VaildInstallPermission.

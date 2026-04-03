@@ -5801,6 +5801,20 @@ ErrCode BundleMgrProxy::GetAllPreinstalledApplicationInfos(
         BundleMgrInterfaceCode::GET_PREINSTALLED_APPLICATION_INFO, data, preinstalledApplicationInfos);
 }
 
+ErrCode BundleMgrProxy::GetAllNewPreinstalledApplicationInfos(
+    std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("Called");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Fail to reset due to WriteInterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<PreinstalledApplicationInfo>(
+        BundleMgrInterfaceCode::GET_ALL_NEW_PREINSTALLED_APPLICATION_INFOS, data, preinstalledApplicationInfos);
+}
+
 ErrCode BundleMgrProxy::SwitchUninstallState(const std::string &bundleName, const bool &state,
     bool isNeedSendNotify)
 {

@@ -989,6 +989,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
                 innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo);
                 preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
                 preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+                preInstallBundleInfo.SetDescriptionId(applicationInfo.descriptionId);
                 preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
             }
             preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);

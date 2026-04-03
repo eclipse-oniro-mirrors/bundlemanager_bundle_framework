@@ -33,6 +33,7 @@ bool PreinstalledApplicationInfo::ReadFromParcel(Parcel &parcel)
     moduleName = Str16ToStr8(parcel.ReadString16());
     labelId = parcel.ReadUint32();
     iconId = parcel.ReadUint32();
+    descriptionId = parcel.ReadUint32();
     return true;
 }
 
@@ -57,6 +58,7 @@ bool PreinstalledApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, labelId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, iconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, descriptionId);
     return true;
 }
 }  // namespace AppExecFwk

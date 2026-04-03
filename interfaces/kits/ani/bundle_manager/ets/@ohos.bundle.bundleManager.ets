@@ -328,6 +328,8 @@ namespace bundleManager {
 
   native function getAllPreinstalledApplicationInfoNative(): Array<PreinstalledApplicationInfo>;
 
+  native function getAllNewPreinstalledApplicationInfoNative(): Array<PreinstalledApplicationInfo>;
+
   native function getAllBundleInfoByDeveloperId(developerId: string): Array<BundleInfo>;
 
   native function switchUninstallState(bundleName: string, state: boolean): void;
@@ -1479,6 +1481,24 @@ namespace bundleManager {
       (applicationInfo: Array<PreinstalledApplicationInfo>) => void, reject: (error: Error) => void) => {
       let execFun = (): Array<PreinstalledApplicationInfo> => {
         return getAllPreinstalledApplicationInfoNative();
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let applicationInfo: Array<PreinstalledApplicationInfo> = e as Array<PreinstalledApplicationInfo>;
+        resolve(applicationInfo);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAllNewPreinstalledApplicationInfo(): Promise<Array<PreinstalledApplicationInfo>> {
+    let p = new Promise<Array<PreinstalledApplicationInfo>>((resolve:
+      (applicationInfo: Array<PreinstalledApplicationInfo>) => void, reject: (error: Error) => void) => {
+      let execFun = (): Array<PreinstalledApplicationInfo> => {
+        return getAllNewPreinstalledApplicationInfoNative();
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: Any) => {

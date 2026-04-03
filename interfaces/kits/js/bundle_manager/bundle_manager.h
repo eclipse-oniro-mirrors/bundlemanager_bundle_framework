@@ -424,6 +424,7 @@ napi_value GetRecoverableApplicationInfo(napi_env env, napi_callback_info info);
 napi_value SetAdditionalInfo(napi_env env, napi_callback_info info);
 napi_value CanOpenLink(napi_env env, napi_callback_info info);
 napi_value GetAllPreinstalledApplicationInfos(napi_env env, napi_callback_info info);
+napi_value GetAllNewPreinstalledApplicationInfos(napi_env env, napi_callback_info info);
 napi_value GetAllBundleInfoByDeveloperId(napi_env env, napi_callback_info info);
 napi_value GetDeveloperIds(napi_env env, napi_callback_info info);
 napi_value SwitchUninstallState(napi_env env, napi_callback_info info);
