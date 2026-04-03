@@ -1650,6 +1650,9 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
     if (!codeSignatureParam.isCompressNativeLibrary) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_UNCOMPRESSED_NATIVE_LIBS;
     }
+    if (codeSignatureParam.isEnterpriseResigned) {
+        codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_ENTERPRISE_RESIGN;
+    }
     if (codeSignatureParam.signatureFileDir.empty()) {
         std::shared_ptr<CodeSignHelper> codeSignHelper = std::make_shared<CodeSignHelper>();
         Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?
