@@ -15263,10 +15263,10 @@ HWTEST_F(BmsBundleInstallerTest, RestoreconPath_0100, Function | SmallTest | Lev
     InstalldHostImpl impl;
     std::string path = TEST_EMPTY_STRING;
     ErrCode ret = impl.RestoreconPath(path);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_RESTORECON_PATH_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RESTORECON_PATH_FAILED);
     path = TEST_ERROR_STRING;
     ret = impl.RestoreconPath(path);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_RESTORECON_PATH_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RESTORECON_PATH_FAILED);
 }
 
 /**

@@ -67,6 +67,7 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         return OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
     }
     CriticalManager::GetInstance().BeforeRequest();
+    errno = 0;
     bool result = true;
     switch (code) {
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DIR):
@@ -313,7 +314,7 @@ bool InstalldHost::HandleCreateBundleDir(MessageParcel &data, MessageParcel &rep
     std::string bundleDir = Str16ToStr8(data.ReadString16());
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "CreateBundleDir %{public}s", bundleDir.c_str());
     ErrCode result = CreateBundleDir(bundleDir);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -325,7 +326,7 @@ bool InstalldHost::HandleExtractModuleFiles(MessageParcel &data, MessageParcel &
     std::string cpuAbi = Str16ToStr8(data.ReadString16());
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "ExtractModuleFiles %{public}s", targetPath.c_str());
     ErrCode result = ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -338,7 +339,7 @@ bool InstalldHost::HandleExtractFiles(MessageParcel &data, MessageParcel &reply)
     }
 
     ErrCode result = ExtractFiles(*info);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -359,7 +360,7 @@ bool InstalldHost::HandleExtractHnpFiles(MessageParcel &data, MessageParcel &rep
     }
 
     ErrCode result = ExtractHnpFiles(hnpPackageMap, *info);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -372,7 +373,7 @@ bool InstalldHost::HandleProcessBundleInstallNative(MessageParcel &data, Message
     }
 
     ErrCode result = ProcessBundleInstallNative(*info);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -382,7 +383,7 @@ bool InstalldHost::HandleProcessBundleUnInstallNative(MessageParcel &data, Messa
     std::string packageName = Str16ToStr8(data.ReadString16());
 
     ErrCode result = ProcessBundleUnInstallNative(userId, packageName);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -396,7 +397,7 @@ bool InstalldHost::HandleExecuteAOT(MessageParcel &data, MessageParcel &reply)
 
     std::vector<uint8_t> pendSignData;
     ErrCode result = ExecuteAOT(*aotArgs, pendSignData);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (result == ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
         if (!reply.WriteUInt8Vector(pendSignData)) {
             LOG_E(BMS_TAG_INSTALLD, "WriteParcelable ExecuteAOT failed");
@@ -415,14 +416,14 @@ bool InstalldHost::HandlePendSignAOT(MessageParcel &data, MessageParcel &reply)
         return false;
     }
     ErrCode result = PendSignAOT(anFileName, signData);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
 bool InstalldHost::HandleStopAOT(MessageParcel &data, MessageParcel &reply)
 {
     ErrCode result = StopAOT();
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -443,7 +444,7 @@ bool InstalldHost::HandleDeleteUninstallTmpDirs(MessageParcel &data, MessageParc
         dirs.emplace_back(dir);
     }
     ErrCode result = DeleteUninstallTmpDirs(dirs);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -452,7 +453,7 @@ bool InstalldHost::HandleRenameModuleDir(MessageParcel &data, MessageParcel &rep
     std::string oldPath = Str16ToStr8(data.ReadString16());
     std::string newPath = Str16ToStr8(data.ReadString16());
     ErrCode result = RenameModuleDir(oldPath, newPath);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -464,7 +465,7 @@ bool InstalldHost::HandleCreateBundleDataDir(MessageParcel &data, MessageParcel 
         return false;
     }
     ErrCode result = CreateBundleDataDir(*info);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -472,7 +473,7 @@ bool InstalldHost::HandleCreateBundleDataDirWithVector(MessageParcel &data, Mess
 {
     auto createDirParamSize = data.ReadInt32();
     if (createDirParamSize <= 0 || createDirParamSize > Constants::MAX_APP_UID) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
     std::vector<CreateDirParam> createDirParams;
@@ -486,7 +487,7 @@ bool InstalldHost::HandleCreateBundleDataDirWithVector(MessageParcel &data, Mess
     }
 
     ErrCode result = CreateBundleDataDirWithVector(createDirParams);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -497,16 +498,16 @@ bool InstalldHost::HandleRemoveBundleDataDir(MessageParcel &data, MessageParcel 
     bool isAtomicService = data.ReadBool();
     bool async = data.ReadBool();
     ErrCode result = RemoveBundleDataDir(bundleName, userId, isAtomicService, async);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
 bool InstalldHost::HandleRemoveModuleDataDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string moduleName = Str16ToStr8(data.ReadString16());
-    int userid = data.ReadInt32();
-    ErrCode result = RemoveModuleDataDir(moduleName, userid);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    int userId = data.ReadInt32();
+    ErrCode result = RemoveModuleDataDir(moduleName, userId);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -515,7 +516,7 @@ bool InstalldHost::HandleRemoveDir(MessageParcel &data, MessageParcel &reply)
     std::string removedDir = Str16ToStr8(data.ReadString16());
     bool async = data.ReadBool();
     ErrCode result = RemoveDir(removedDir, async);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -524,7 +525,7 @@ bool InstalldHost::HandleGetDiskUsage(MessageParcel &data, MessageParcel &reply)
     std::string dir = Str16ToStr8(data.ReadString16());
     bool isRealPath = data.ReadBool();
     ErrCode result = GetDiskUsage(dir, isRealPath);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -532,7 +533,7 @@ bool InstalldHost::HandleGetDiskUsageFromPath(MessageParcel &data, MessageParcel
 {
     auto cachePathSize = data.ReadUint32();
     if (cachePathSize == 0 || cachePathSize > Constants::MAX_CACHE_DIR_SIZE) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
     std::vector<std::string> cachePaths;
@@ -545,7 +546,7 @@ bool InstalldHost::HandleGetDiskUsageFromPath(MessageParcel &data, MessageParcel
     int64_t timeoutMs = data.ReadInt64();
     int64_t statSize = 0;
     ErrCode result = GetDiskUsageFromPath(cachePaths, statSize, timeoutMs);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64(statSize)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetDiskUsageFromPath write failed");
         return false;
@@ -575,7 +576,7 @@ bool InstalldHost::HandleCleanBundleDataDir(MessageParcel &data, MessageParcel &
 {
     std::string bundleDir = Str16ToStr8(data.ReadString16());
     ErrCode result = CleanBundleDataDir(bundleDir);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -586,7 +587,7 @@ bool InstalldHost::HandleCleanBundleDataDirByName(MessageParcel &data, MessagePa
     int appIndex = data.ReadInt32();
     bool isAtomicService = data.ReadBool();
     ErrCode result = CleanBundleDataDirByName(bundleName, userid, appIndex, isAtomicService);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -606,7 +607,7 @@ bool InstalldHost::HandleCleanBundleDirs(MessageParcel &data, MessageParcel &rep
     
     bool keepParent = data.ReadBool();
     ErrCode result = CleanBundleDirs(dirs, keepParent);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -632,7 +633,7 @@ bool InstalldHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &repl
     }
     std::vector<int64_t> bundleStats;
     ErrCode result = GetBundleStats(bundleName, userId, bundleStats, uids, appIndex, statFlag, moduleNameList);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64Vector(bundleStats)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetBundleStats write failed");
         return false;
@@ -676,7 +677,7 @@ bool InstalldHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel 
     }
     std::vector<BundleStorageStats> bundleStats;
     ErrCode result = BatchGetBundleStats(bundleNames, uidMap, bundleStats);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     int32_t statsSize = static_cast<int32_t>(bundleStats.size());
     if (!reply.WriteInt32(statsSize)) {
         LOG_E(BMS_TAG_INSTALLD, "Write bundleStats size failed");
@@ -695,7 +696,7 @@ bool InstalldHost::HandleGetAllBundleStats(MessageParcel &data, MessageParcel &r
 {
     auto uidSize = data.ReadInt32();
     if (uidSize == 0 || uidSize > Constants::CAPACITY_SIZE) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
     std::vector<int32_t> uids;
@@ -705,7 +706,7 @@ bool InstalldHost::HandleGetAllBundleStats(MessageParcel &data, MessageParcel &r
     }
     std::vector<int64_t> bundleStats;
     ErrCode result = GetAllBundleStats(bundleStats, uids);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64Vector(bundleStats)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetAllBundleStats write failed");
         return false;
@@ -722,7 +723,7 @@ bool InstalldHost::HandleSetDirApl(MessageParcel &data, MessageParcel &reply)
     bool debug = data.ReadBool();
     int32_t uid = data.ReadInt32();
     ErrCode result = SetDirApl(dataDir, bundleName, apl, isPreInstallApp, debug, uid);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -736,7 +737,7 @@ bool InstalldHost::HandleSetDirsApl(MessageParcel &data, MessageParcel &reply)
 
     bool isExtensionDir = data.ReadBool();
     ErrCode result = SetDirsApl(*info, isExtensionDir);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -758,7 +759,7 @@ bool InstalldHost::HandleSetFileConForce(MessageParcel &data, MessageParcel &rep
         return false;
     }
     ErrCode result = SetFileConForce(paths, *info);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -771,7 +772,7 @@ bool InstalldHost::HandleStopSetFileCon(MessageParcel &data, MessageParcel &repl
     }
     int32_t reason = data.ReadInt32();
     ErrCode result = StopSetFileCon(*info, reason);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -779,7 +780,7 @@ bool InstalldHost::HandleSetArkStartupCacheApl(MessageParcel &data, MessageParce
 {
     std::string dataDir = Str16ToStr8(data.ReadString16());
     ErrCode result = SetArkStartupCacheApl(dataDir);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -788,7 +789,7 @@ bool InstalldHost::HandleGetBundleCachePath(MessageParcel &data, MessageParcel &
     std::string dir = Str16ToStr8(data.ReadString16());
     std::vector<std::string> cachePath;
     ErrCode result = GetBundleCachePath(dir, cachePath);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteStringVector(cachePath)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to GetBundleCachePath from reply");
         return false;
@@ -803,7 +804,7 @@ bool InstalldHost::HandleScanDir(MessageParcel &data, MessageParcel &reply)
     ResultMode resultMode = static_cast<ResultMode>(data.ReadInt32());
     std::vector<std::string> paths;
     ErrCode result = ScanDir(dir, scanMode, resultMode, paths);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteStringVector(paths)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to Scan from reply");
         return false;
@@ -817,7 +818,7 @@ bool InstalldHost::HandleMoveFile(MessageParcel &data, MessageParcel &reply)
     std::string oldPath = Str16ToStr8(data.ReadString16());
     std::string newPath = Str16ToStr8(data.ReadString16());
     ErrCode result = MoveFile(oldPath, newPath);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -826,7 +827,7 @@ bool InstalldHost::HandleRenameFile(MessageParcel &data, MessageParcel &reply)
     std::string oldPath = Str16ToStr8(data.ReadString16());
     std::string newPath = Str16ToStr8(data.ReadString16());
     ErrCode result = RenameFile(oldPath, newPath);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -837,7 +838,7 @@ bool InstalldHost::HandleCopyFile(MessageParcel &data, MessageParcel &reply)
     std::string signatureFilePath = Str16ToStr8(data.ReadString16());
 
     ErrCode result = CopyFile(oldPath, newPath, signatureFilePath);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -848,7 +849,7 @@ bool InstalldHost::HandleMkdir(MessageParcel &data, MessageParcel &reply)
     int32_t uid = data.ReadInt32();
     int32_t gid = data.ReadInt32();
     ErrCode result = Mkdir(dir, mode, uid, gid);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -857,7 +858,7 @@ bool InstalldHost::HandleGetFileStat(MessageParcel &data, MessageParcel &reply)
     std::string file = Str16ToStr8(data.ReadString16());
     FileStat fileStat;
     ErrCode result = GetFileStat(file, fileStat);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteParcelable(&fileStat)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to GetFileStat from reply");
         return false;
@@ -876,7 +877,7 @@ bool InstalldHost::HandleChangeFileStat(MessageParcel &data, MessageParcel &repl
     }
 
     ErrCode result = ChangeFileStat(file, *info);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -886,7 +887,7 @@ bool InstalldHost::HandleExtractDiffFiles(MessageParcel &data, MessageParcel &re
     std::string targetPath = Str16ToStr8(data.ReadString16());
     std::string cpuAbi = Str16ToStr8(data.ReadString16());
     ErrCode result = ExtractDiffFiles(filePath, targetPath, cpuAbi);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -898,7 +899,7 @@ bool InstalldHost::HandleApplyDiffPatch(MessageParcel &data, MessageParcel &repl
     int32_t uid = data.ReadInt32();
 
     ErrCode result = ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, uid);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -907,7 +908,7 @@ bool InstalldHost::HandleIsExistDir(MessageParcel &data, MessageParcel &reply)
     std::string path = Str16ToStr8(data.ReadString16());
     bool isExist = false;
     ErrCode result = IsExistDir(path, isExist);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isExist)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to IsExistDir from reply");
         return false;
@@ -920,7 +921,7 @@ bool InstalldHost::HandleIsExistFile(MessageParcel &data, MessageParcel &reply)
     std::string path = Str16ToStr8(data.ReadString16());
     bool isExist = false;
     ErrCode result = IsExistFile(path, isExist);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isExist)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to IsExistFile from reply");
         return false;
@@ -933,7 +934,7 @@ bool InstalldHost::HandleIsExistApFile(MessageParcel &data, MessageParcel &reply
     std::string path = Str16ToStr8(data.ReadString16());
     bool isExist = false;
     ErrCode result = IsExistApFile(path, isExist);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isExist)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to IsExistApFile from reply");
         return false;
@@ -946,7 +947,7 @@ bool InstalldHost::HandleIsDirEmpty(MessageParcel &data, MessageParcel &reply)
     std::string dir = Str16ToStr8(data.ReadString16());
     bool isDirEmpty = false;
     ErrCode result = IsDirEmpty(dir, isDirEmpty);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isDirEmpty)) {
         LOG_E(BMS_TAG_INSTALLD, "write isDirEmpty failed");
         return false;
@@ -959,7 +960,7 @@ bool InstalldHost::HandObtainQuickFixFileDir(MessageParcel &data, MessageParcel 
     std::string dir = Str16ToStr8(data.ReadString16());
     std::vector<std::string> dirVec;
     ErrCode result = ObtainQuickFixFileDir(dir, dirVec);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if ((result == ERR_OK) && !reply.WriteStringVector(dirVec)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to obtain quick fix file dir from reply");
         return false;
@@ -973,7 +974,7 @@ bool InstalldHost::HandCopyFiles(MessageParcel &data, MessageParcel &reply)
     std::string destinationDir = Str16ToStr8(data.ReadString16());
 
     ErrCode result = CopyFiles(sourceDir, destinationDir);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -983,7 +984,7 @@ bool InstalldHost::HandGetNativeLibraryFileNames(MessageParcel &data, MessagePar
     std::string cupAbi = Str16ToStr8(data.ReadString16());
     std::vector<std::string> fileNames;
     ErrCode result = GetNativeLibraryFileNames(filePath, cupAbi, fileNames);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if ((result == ERR_OK) && !reply.WriteStringVector(fileNames)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to obtain fileNames from reply");
         return false;
@@ -1000,7 +1001,7 @@ bool InstalldHost::HandVerifyCodeSignature(MessageParcel &data, MessageParcel &r
     }
 
     ErrCode result = VerifyCodeSignature(*info);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1014,7 +1015,7 @@ bool InstalldHost::HandleCheckEncryption(MessageParcel &data, MessageParcel &rep
 
     bool isEncryption = false;
     ErrCode result = CheckEncryption(*info, isEncryption);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isEncryption)) {
         LOG_E(BMS_TAG_INSTALLD, "write isEncryption failed");
         return false;
@@ -1028,7 +1029,7 @@ bool InstalldHost::HandMoveFiles(MessageParcel &data, MessageParcel &reply)
     std::string desDir = Str16ToStr8(data.ReadString16());
 
     ErrCode result = MoveFiles(srcDir, desDir);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1046,7 +1047,7 @@ bool InstalldHost::HandExtractDriverSoFiles(MessageParcel &data, MessageParcel &
     }
 
     ErrCode result = ExtractDriverSoFiles(srcPath, dirMap);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1059,7 +1060,7 @@ bool InstalldHost::HandExtractEncryptedSoFiles(MessageParcel &data, MessageParce
     int32_t uid = data.ReadInt32();
 
     ErrCode result = ExtractEncryptedSoFiles(hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1072,7 +1073,7 @@ bool InstalldHost::HandVerifyCodeSignatureForHap(MessageParcel &data, MessagePar
     }
 
     ErrCode result = VerifyCodeSignatureForHap(*info);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1081,22 +1082,22 @@ bool InstalldHost::HandDeliverySignProfile(MessageParcel &data, MessageParcel &r
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t profileBlockLength = data.ReadInt32();
     if (profileBlockLength <= 0 || profileBlockLength > Constants::MAX_PARCEL_CAPACITY) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
     auto dataInfo = data.ReadRawData(profileBlockLength);
     if (!dataInfo) {
         LOG_E(BMS_TAG_INSTALLD, "readRawData failed");
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
     const unsigned char *profileBlock = reinterpret_cast<const unsigned char *>(dataInfo);
     if (profileBlock == nullptr) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
     ErrCode result = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1105,7 +1106,7 @@ bool InstalldHost::HandRemoveSignProfile(MessageParcel &data, MessageParcel &rep
     std::string bundleName = Str16ToStr8(data.ReadString16());
 
     ErrCode result = RemoveSignProfile(bundleName);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1114,22 +1115,22 @@ bool InstalldHost::HandleAddCertAndEnableKey(MessageParcel &data, MessageParcel 
     std::string certPath = Str16ToStr8(data.ReadString16());
     size_t dataSize = data.ReadUint32();
     if (dataSize == 0 || dataSize > Constants::CAPACITY_SIZE) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
     const char *content = reinterpret_cast<const char *>(data.ReadRawData(dataSize));
     if (!content) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
     std::string certContent(content, dataSize);
     if (certPath.empty() || certContent.empty() || certPath.size() > Constants::BMS_MAX_PATH_LENGTH ||
         certContent.size() > Constants::CAPACITY_SIZE) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
     ErrCode result = AddCertAndEnableKey(certPath, certContent);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1143,7 +1144,7 @@ bool InstalldHost::HandleSetEncryptionDir(MessageParcel &data, MessageParcel &re
     std::string keyId = "";
 
     ErrCode result = SetEncryptionPolicy(*info, keyId);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteString(keyId)) {
         LOG_E(BMS_TAG_INSTALLD, "write keyId failed");
         return false;
@@ -1160,7 +1161,7 @@ bool InstalldHost::HandleDeleteEncryptionKeyId(MessageParcel &data, MessageParce
     }
 
     ErrCode result = DeleteEncryptionKeyId(*info);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1182,7 +1183,7 @@ bool InstalldHost::HandleRemoveExtensionDir(MessageParcel &data, MessageParcel &
         extensionBundleDirs.push_back(extensionBundleDir);
     }
     ErrCode result = RemoveExtensionDir(userId, extensionBundleDirs);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1193,7 +1194,7 @@ bool InstalldHost::HandleIsExistExtensionDir(MessageParcel &data, MessageParcel 
 
     bool isExist = false;
     ErrCode result = IsExistExtensionDir(userId, extensionBundleDir, isExist);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isExist)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to write bool from reply");
         return false;
@@ -1205,7 +1206,7 @@ bool InstalldHost::HandleGetExtensionSandboxTypeList(MessageParcel &data, Messag
 {
     std::vector<std::string> typeList;
     ErrCode result = GetExtensionSandboxTypeList(typeList);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (result == ERR_OK) {
         if (!reply.WriteStringVector(typeList)) {
             APP_LOGE("write failed");
@@ -1219,7 +1220,7 @@ bool InstalldHost::HandleAddUserDirDeleteDfx(MessageParcel &data, MessageParcel 
 {
     int32_t userId = data.ReadInt32();
     ErrCode result = AddUserDirDeleteDfx(userId);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (result != ERR_OK) {
         return false;
     }
@@ -1234,7 +1235,7 @@ bool InstalldHost::HandleCreateExtensionDataDir(MessageParcel &data, MessageParc
         return false;
     }
     ErrCode result = CreateExtensionDataDir(*info);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1244,7 +1245,7 @@ bool InstalldHost::HandleMoveHapToCodeDir(MessageParcel &data, MessageParcel &re
     std::string targetPath = Str16ToStr8(data.ReadString16());
 
     ErrCode result = MoveHapToCodeDir(originPath, targetPath);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1252,7 +1253,7 @@ bool InstalldHost::HandleCreateDataGroupDirs(MessageParcel &data, MessageParcel 
 {
     auto dataGroupSize = data.ReadUint32();
     if (dataGroupSize == 0 || dataGroupSize > MAX_VEC_SIZE) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
     std::vector<CreateDirParam> params;
@@ -1266,7 +1267,7 @@ bool InstalldHost::HandleCreateDataGroupDirs(MessageParcel &data, MessageParcel 
     }
 
     ErrCode result = CreateDataGroupDirs(params);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1288,7 +1289,7 @@ bool InstalldHost::HandleDeleteDataGroupDirs(MessageParcel &data, MessageParcel 
     }
     int32_t userId = data.ReadInt32();
     ErrCode result = DeleteDataGroupDirs(uuidList, userId);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1304,13 +1305,13 @@ bool InstalldHost::HandleMigrateData(MessageParcel &data, MessageParcel &reply)
     std::string destinationPath = Str16ToStr8(data.ReadString16());
     ErrCode result = MigrateData(sourcePaths, destinationPath);
 
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
 bool InstalldHost::HandleLoadInstalls(MessageParcel &data, MessageParcel &reply)
 {
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_OK);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_OK);
     return true;
 }
 
@@ -1318,7 +1319,7 @@ bool InstalldHost::HandleClearDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string dir = data.ReadString();
     ErrCode result = ClearDir(dir);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1330,7 +1331,7 @@ bool InstalldHost::HandleHashSoFile(MessageParcel &data, MessageParcel &reply)
     std::vector<std::string> soName;
     std::vector<std::string> soHash;
     ErrCode result = HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     
     if (!reply.WriteStringVector(soName)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to get so name from reply");
@@ -1354,7 +1355,7 @@ bool InstalldHost::HandleHashFiles(MessageParcel &data, MessageParcel &reply)
     }
     std::vector<std::string> filesHash;
     ErrCode result = HashFiles(files, filesHash);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteStringVector(filesHash)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to get so name from reply");
         return false;
@@ -1366,7 +1367,7 @@ bool InstalldHost::HandleRestoreconPath(MessageParcel &data, MessageParcel &repl
 {
     std::string path = data.ReadString();
     ErrCode result = RestoreconPath(path);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1375,19 +1376,19 @@ bool InstalldHost::HandleProcessBinFiles(MessageParcel &data, MessageParcel &rep
     std::unique_ptr<VerifyBinParam> verifyBinParam(data.ReadParcelable<VerifyBinParam>());
     if (verifyBinParam == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "fail to read VerifyBinParam from data");
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
         return false;
     }
 
     ErrCode result = ProcessBinFiles(*verifyBinParam);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
 bool InstalldHost::HandleResetBmsDBSecurity(MessageParcel &data, MessageParcel &reply)
 {
     ErrCode result = ResetBmsDBSecurity();
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1397,7 +1398,7 @@ bool InstalldHost::HandleCopyDir(MessageParcel &data, MessageParcel &reply)
     std::string destDir = data.ReadString();
 
     ErrCode result = CopyDir(srcDir, destDir);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -1406,7 +1407,7 @@ bool InstalldHost::HandleDeleteCertAndRemoveKey(MessageParcel &data, MessageParc
     int32_t pathSize = data.ReadInt32();
     if (pathSize <= 0 || pathSize > ServiceConstants::MAX_ENTERPRISE_RESIGN_CERT_NUM) {
         APP_LOGE("pathSize is error");
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
         return false;
     }
     std::vector<std::string> certPaths;
@@ -1416,14 +1417,14 @@ bool InstalldHost::HandleDeleteCertAndRemoveKey(MessageParcel &data, MessageParc
         std::string path = Str16ToStr8(data.ReadString16());
         if (path.empty() || path.size() > Constants::BMS_MAX_PATH_LENGTH) {
             APP_LOGE("path is empty or size is too large");
-            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+            WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
             return false;
         }
         certPaths.emplace_back(std::move(path));
     }
 
     ErrCode result = DeleteCertAndRemoveKey(certPaths);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 }  // namespace AppExecFwk
