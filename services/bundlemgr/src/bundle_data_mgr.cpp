@@ -10629,6 +10629,7 @@ void BundleDataMgr::ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &i
             baseSharedBundleInfo.moduleArkTSMode = hapModule.moduleArkTSMode;
             baseSharedBundleInfo.compressNativeLibs = hapModule.compressNativeLibs;
             baseSharedBundleInfo.nativeLibraryFileNames = hapModule.nativeLibraryFileNames;
+            baseSharedBundleInfo.librarySupportDirectory = hapModule.librarySupportDirectory;
             baseSharedBundleInfos.emplace_back(baseSharedBundleInfo);
         }
         return;

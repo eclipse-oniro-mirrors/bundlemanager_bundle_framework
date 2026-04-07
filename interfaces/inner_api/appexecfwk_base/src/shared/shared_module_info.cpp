@@ -34,6 +34,7 @@ const char* SHARED_MODULE_INFO_HAP_PATH = "hapPath";
 const char* SHARED_MODULE_INFO_CPU_ABI = "cpuAbi";
 const char* SHARED_MODULE_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 const char* SHARED_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
+const char* SHARED_MODULE_INFO_LIBRARY_SUPPORT_DIRECTORY = "librarySupportDirectory";
 }
 
 bool SharedModuleInfo::ReadFromParcel(Parcel &parcel)
@@ -55,6 +56,12 @@ bool SharedModuleInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < nativeLibraryFileNamesSize; ++i) {
         nativeLibraryFileNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
+    int32_t librarySupportDirectorySize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, librarySupportDirectorySize);
+    CONTAINER_SECURITY_VERIFY(parcel, librarySupportDirectorySize, &librarySupportDirectory);
+    for (int32_t i = 0; i < librarySupportDirectorySize; ++i) {
+        librarySupportDirectory.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
     return true;
 }
 
@@ -74,6 +81,10 @@ bool SharedModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNames.size());
     for (auto &fileName : nativeLibraryFileNames) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileName));
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, librarySupportDirectory.size());
+    for (auto &dir : librarySupportDirectory) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dir));
     }
     return true;
 }
@@ -103,7 +114,8 @@ void to_json(nlohmann::json &jsonObject, const SharedModuleInfo &sharedModuleInf
         {SHARED_MODULE_INFO_CPU_ABI, sharedModuleInfo.cpuAbi},
         {SHARED_MODULE_INFO_NATIVE_LIBRARY_PATH, sharedModuleInfo.nativeLibraryPath},
         {SHARED_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, sharedModuleInfo.nativeLibraryFileNames},
-        {Constants::MODULE_ARKTS_MODE, sharedModuleInfo.moduleArkTSMode}
+        {Constants::MODULE_ARKTS_MODE, sharedModuleInfo.moduleArkTSMode},
+        {SHARED_MODULE_INFO_LIBRARY_SUPPORT_DIRECTORY, sharedModuleInfo.librarySupportDirectory}
     };
 }
 
@@ -150,6 +162,10 @@ void from_json(const nlohmann::json &jsonObject, SharedModuleInfo &sharedModuleI
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES,
         sharedModuleInfo.nativeLibraryFileNames, JsonType::ARRAY, false, parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd,
+        SHARED_MODULE_INFO_LIBRARY_SUPPORT_DIRECTORY,
+        sharedModuleInfo.librarySupportDirectory, JsonType::ARRAY, false, parseResult,
         ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("read SharedModuleInfo error : %{public}d", parseResult);

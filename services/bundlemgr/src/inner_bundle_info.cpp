@@ -2473,6 +2473,7 @@ bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleNam
     baseSharedBundleInfo.moduleArkTSMode = innerModuleInfo.moduleArkTSMode;
     baseSharedBundleInfo.compressNativeLibs = innerModuleInfo.compressNativeLibs;
     baseSharedBundleInfo.nativeLibraryFileNames = innerModuleInfo.nativeLibraryFileNames;
+    baseSharedBundleInfo.librarySupportDirectory = innerModuleInfo.librarySupportDirectory;
     baseSharedBundleInfo.aotCompileStatus =
         GetAOTCompileStatusWithVersion(moduleName, innerModuleInfo.versionCode);
     return true;
@@ -2505,6 +2506,7 @@ bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uin
             baseSharedBundleInfo.moduleArkTSMode = item.moduleArkTSMode;
             baseSharedBundleInfo.compressNativeLibs = item.compressNativeLibs;
             baseSharedBundleInfo.nativeLibraryFileNames = item.nativeLibraryFileNames;
+            baseSharedBundleInfo.librarySupportDirectory = item.librarySupportDirectory;
             baseSharedBundleInfo.aotCompileStatus =
                 GetAOTCompileStatusWithVersion(moduleName, versionCode);
             return true;
@@ -2586,6 +2588,7 @@ bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) co
             sharedModuleInfo.nativeLibraryPath = info.nativeLibraryPath;
             sharedModuleInfo.moduleArkTSMode = info.moduleArkTSMode;
             sharedModuleInfo.nativeLibraryFileNames = info.nativeLibraryFileNames;
+            sharedModuleInfo.librarySupportDirectory = info.librarySupportDirectory;
             sharedModuleInfo.aotCompileStatus =
                 GetAOTCompileStatusWithVersion(infoVector.first, info.versionCode);
             sharedModuleInfos.emplace_back(sharedModuleInfo);
@@ -4762,6 +4765,7 @@ void InnerBundleInfo::UpdateSharedModuleInfo()
             iter->cpuAbi = moduleInfoIter->second.cpuAbi;
             iter->nativeLibraryPath = moduleInfoIter->second.nativeLibraryPath;
             iter->nativeLibraryFileNames = moduleInfoIter->second.nativeLibraryFileNames;
+            iter->librarySupportDirectory = moduleInfoIter->second.librarySupportDirectory;
             return;
         }
     }
