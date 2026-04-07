@@ -295,6 +295,7 @@ constexpr const char* INSTALL_PERMISSION =
     "ohos.permission.INSTALL_INTERNALTESTING_BUNDLE or "
     "(ohos.permission.INSTALL_BUNDLE and ohos.permission.INSTALL_ALLOW_DOWNGRADE)";
 constexpr const char* UNINSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.UNINSTALL_BUNDLE";
+constexpr const char* UNINSTALL_BUNDLE_PERMISSION = "ohos.permission.UNINSTALL_BUNDLE";
 constexpr const char* RECOVER_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.RECOVER_BUNDLE";
 constexpr const char* INSTALL_SELF_PERMISSION = "ohos.permission.INSTALL_SELF_BUNDLE";
 constexpr const char* PARAMETERS = "parameters";
@@ -307,6 +308,7 @@ constexpr const char* PARAM_HAPS_FILE_EMPTY_ERROR =
 constexpr const char* CREATE_APP_CLONE = "CreateAppClone";
 constexpr const char* DESTROY_APP_CLONE = "destroyAppClone";
 constexpr const char* INSTALL_PREEXISTING_APP = "installPreexistingApp";
+constexpr const char* UNINSTALL_NEW_PREINSTALLED_APPS = "uninstallNewPreinstalledApps";
 constexpr const char* INSTALL_PLUGIN = "InstallPlugin";
 constexpr const char* UNINSTALL_PLUGIN = "UninstallPlugin";
 constexpr const char* PLUGIN_BUNDLE_NAME = "pluginBundleName";

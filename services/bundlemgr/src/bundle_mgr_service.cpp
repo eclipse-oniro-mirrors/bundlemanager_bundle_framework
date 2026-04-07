@@ -135,6 +135,8 @@ bool BundleMgrService::Init()
     CHECK_INIT_RESULT(InitBundleMgrHost(), "Init bundleMgr fail");
     CHECK_INIT_RESULT(InitBundleInstaller(), "Init bundleInstaller fail");
     InitBundleDataMgr();
+    APP_LOGI_NOFUNC("BundleMgrService InitOobePreloadUninstallMgr");
+    InitOobePreloadUninstallMgr();
     CHECK_INIT_RESULT(InitBundleUserMgr(), "Init bundleUserMgr fail");
     CHECK_INIT_RESULT(InitVerifyManager(), "Init verifyManager fail");
     CHECK_INIT_RESULT(InitExtendResourceManager(), "Init extendResourceManager fail");
@@ -161,6 +163,11 @@ void BundleMgrService::InitBmsParam()
 void BundleMgrService::InitPreInstallExceptionMgr()
 {
     preInstallExceptionMgr_ = std::make_shared<PreInstallExceptionMgr>();
+}
+
+void BundleMgrService::InitOobePreloadUninstallMgr()
+{
+    oobePreloadUninstallMgr_ = std::make_shared<OobePreloadUninstallMgr>();
 }
 
 bool BundleMgrService::InitBundleMgrHost()
@@ -445,6 +452,11 @@ const std::shared_ptr<BmsParam> BundleMgrService::GetBmsParam() const
 const std::shared_ptr<PreInstallExceptionMgr> BundleMgrService::GetPreInstallExceptionMgr() const
 {
     return preInstallExceptionMgr_;
+}
+
+const std::shared_ptr<OobePreloadUninstallMgr> BundleMgrService::GetOobePreloadUninstallMgr() const
+{
+    return oobePreloadUninstallMgr_;
 }
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP

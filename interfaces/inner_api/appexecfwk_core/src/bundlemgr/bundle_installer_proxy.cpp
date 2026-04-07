@@ -1132,5 +1132,28 @@ ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCert(int32_t userId, std::
     LOG_I(BMS_TAG_INSTALLER, "get sign cert size: %{public}zu", certificateAlias.size());
     return ERR_OK;
 }
+
+ErrCode BundleInstallerProxy::UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "write interface token failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteStringVector(bundleNames)) {
+        LOG_E(BMS_TAG_INSTALLER, "write bundleNames failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = SendInstallRequestWithErrCode(
+        BundleInstallerInterfaceCode::UNINSTALL_NEW_PREINSTALLED_APPS, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "send request failed");
+        return ret;
+    }
+    return reply.ReadInt32();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

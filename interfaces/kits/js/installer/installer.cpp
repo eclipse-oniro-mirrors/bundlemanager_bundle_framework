@@ -1652,6 +1652,60 @@ napi_value InstallPreexistingApp(napi_env env, napi_callback_info info)
     return promise;
 }
 
+void UninstallNewPreinstalledAppsExec(napi_env env, void *data)
+{
+    UninstallNewPreinstalledAppsCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<UninstallNewPreinstalledAppsCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = InstallerHelper::InnerUninstallNewPreinstalledApps(asyncCallbackInfo->bundleNames);
+}
+
+void UninstallNewPreinstalledAppsComplete(napi_env env, napi_status status, void *data)
+{
+    UninstallNewPreinstalledAppsCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<UninstallNewPreinstalledAppsCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<UninstallNewPreinstalledAppsCallbackInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
+
+    napi_value result[ARGS_SIZE_ONE] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
+    } else {
+        result[FIRST_PARAM] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            UNINSTALL_NEW_PREINSTALLED_APPS, UNINSTALL_BUNDLE_PERMISSION);
+    }
+    CommonFunc::NapiReturnDeferred<UninstallNewPreinstalledAppsCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value UninstallNewPreinstalledApps(napi_env env, napi_callback_info info)
+{
+    NapiArg args(env, info);
+    std::unique_ptr<UninstallNewPreinstalledAppsCallbackInfo> asyncCallbackInfo =
+        std::make_unique<UninstallNewPreinstalledAppsCallbackInfo>(env);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    if (!CommonFunc::ParseStringArray(env, asyncCallbackInfo->bundleNames, args[FIRST_PARAM])) {
+        APP_LOGE("bundleNames invalid");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, TYPE_ARRAY);
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<UninstallNewPreinstalledAppsCallbackInfo>(
+        env, asyncCallbackInfo.get(), UNINSTALL_NEW_PREINSTALLED_APPS,
+        UninstallNewPreinstalledAppsExec, UninstallNewPreinstalledAppsComplete);
+    asyncCallbackInfo.release();
+    return promise;
+}
 
 void ParseInstallPluginParam(napi_env env, napi_value args, InstallPluginParam &installPluginParam)
 {

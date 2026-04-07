@@ -32,6 +32,8 @@
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_util.h"
+#include "datetime_ex.h"
 #include "directory_ex.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
@@ -138,6 +140,9 @@ int BundleInstallerHost::OnRemoteRequest(
             break;
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::GET_ENTERPRISE_RE_SIGNATURE_CERT):
             HandleGetEnterpriseReSignatureCert(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_NEW_PREINSTALLED_APPS):
+            HandleUninstallNewPreinstalledApps(data, reply);
             break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1141,6 +1146,36 @@ void BundleInstallerHost::HandleInstallExisted(MessageParcel &data, MessageParce
         LOG_E(BMS_TAG_INSTALLER, "write failed");
     }
     LOG_D(BMS_TAG_INSTALLER, "handle installExisted message finished");
+}
+
+ErrCode BundleInstallerHost::UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_UNINSTALL_BUNDLE)) {
+        LOG_E(BMS_TAG_INSTALLER, "verify uninstall permission failed");
+        return ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED;
+    }
+    auto installer = std::make_shared<BundleInstaller>(GetMicroTickCount(), nullptr);
+    installer->SetCallingUid(IPCSkeleton::GetCallingUid());
+    installer->SetCallingTokenId(IPCSkeleton::GetCallingTokenID());
+    return installer->UninstallNewPreinstalledApps(bundleNames, BundleUtil::GetUserIdByCallingUid());
+}
+
+void BundleInstallerHost::HandleUninstallNewPreinstalledApps(MessageParcel &data, MessageParcel &reply)
+{
+    std::vector<std::string> bundleNames;
+    if (!data.ReadStringVector(&bundleNames)) {
+        LOG_E(BMS_TAG_INSTALLER, "read bundle names failed");
+        reply.WriteInt32(ERR_APPEXECFWK_PARCEL_ERROR);
+        return;
+    }
+    auto ret = UninstallNewPreinstalledApps(bundleNames);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "write failed");
+    }
 }
 
 bool BundleInstallerHost::CheckUninstallDisposedRule(

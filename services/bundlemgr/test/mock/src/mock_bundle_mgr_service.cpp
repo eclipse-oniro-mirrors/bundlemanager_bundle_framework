@@ -231,6 +231,11 @@ const std::shared_ptr<PreInstallExceptionMgr> BundleMgrService::GetPreInstallExc
     return nullptr;
 }
 
+const std::shared_ptr<OobePreloadUninstallMgr> BundleMgrService::GetOobePreloadUninstallMgr() const
+{
+    return nullptr;
+}
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 sptr<IDefaultApp> BundleMgrService::GetDefaultAppProxy() const
 {
