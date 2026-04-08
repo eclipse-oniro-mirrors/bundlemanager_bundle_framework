@@ -5625,7 +5625,7 @@ void InnerBundleInfo::UpdateReleaseType(const InnerBundleInfo &newInfo)
     }
 }
 
-void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const
+void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo, bool getDesc) const
 {
     if (ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(GetBundleName()) !=
         ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
@@ -5646,7 +5646,7 @@ void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &application
                 applicationInfo.iconResource.moduleName = mainAbilityInfo.moduleName;
                 applicationInfo.iconResource.bundleName = mainAbilityInfo.bundleName;
             }
-            if (mainAbilityInfo.descriptionId != 0) {
+            if (getDesc && mainAbilityInfo.descriptionId != 0) {
                 applicationInfo.descriptionId = mainAbilityInfo.descriptionId;
                 applicationInfo.descriptionResource.id = mainAbilityInfo.descriptionId;
                 applicationInfo.descriptionResource.moduleName = mainAbilityInfo.moduleName;
