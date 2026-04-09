@@ -2432,7 +2432,7 @@ public:
     bool GetBundleInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
         BundleInfo &bundleInfo) const;
     ErrCode VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appIndex);
-    void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const;
+    void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo, bool getDesc = false) const;
     bool IsHwasanEnabled() const;
     bool IsUbsanEnabled() const;
     ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex);

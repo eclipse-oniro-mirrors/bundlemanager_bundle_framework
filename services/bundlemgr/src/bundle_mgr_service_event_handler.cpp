@@ -2326,6 +2326,26 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         }
         return true;
     };
+    auto markOtaNewInstallUser = [&dataMgr](const std::string &bundleName, const std::vector<int32_t> &userIds)->void {
+        PreInstallBundleInfo preInstallBundleInfo;
+        if (!dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+            return;
+        }
+        InnerBundleInfo innerBundleInfo;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+            return;
+        }
+        if (innerBundleInfo.IsSingleton()) {
+            preInstallBundleInfo.AddOtaNewInstallUser(Constants::DEFAULT_USERID);
+        } else if (innerBundleInfo.IsU1Enable()) {
+            preInstallBundleInfo.AddOtaNewInstallUser(Constants::U1);
+        } else {
+            for (auto userId : userIds) {
+                preInstallBundleInfo.AddOtaNewInstallUser(userId);
+            }
+        }
+        (void)dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    };
     std::unordered_map<int32_t, bool> isPrivateUserCache;
     auto isPrivateUser = [&isPrivateUserCache](int32_t userId) {
         auto iter = isPrivateUserCache.find(userId);
@@ -2626,13 +2646,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             auto targetUsersIter = otaNewInstallTargetUsersForNew.find(bundleName);
             if (targetUsersIter != otaNewInstallTargetUsersForNew.end() && !targetUsersIter->second.empty() &&
                 canMarkOtaNewInstallUser(bundleName)) {
-                PreInstallBundleInfo preInstallBundleInfo;
-                if (dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
-                    for (auto userId : targetUsersIter->second) {
-                        preInstallBundleInfo.AddOtaNewInstallUser(userId);
-                    }
-                    (void)dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
-                }
+                markOtaNewInstallUser(bundleName, targetUsersIter->second);
             }
             if (newBundleDirMgr != nullptr) {
                 (void)newBundleDirMgr->AddNewBundleDirInfo(bundleName,
@@ -2670,14 +2684,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             const std::vector<int32_t> &targetUsers = std::get<2>(item.second);
             bool ret = OTAInstallSystemBundleTargetUser(realFilePaths, bundleName, appType, removable, targetUsers);
             if (ret && canMarkOtaNewInstallUser(bundleName)) {
-                PreInstallBundleInfo preInstallBundleInfo;
-                if (!dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
-                    continue;
-                }
-                for (auto userId : targetUsers) {
-                    preInstallBundleInfo.AddOtaNewInstallUser(userId);
-                }
-                (void)dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+                markOtaNewInstallUser(bundleName, targetUsers);
             }
         }
     }
@@ -5144,7 +5151,7 @@ void BMSEventHandler::UpdatePreinstallDBForNotUpdatedBundle(const std::string &b
         preInstallBundleInfo.AddBundlePath(item.first);
         if (!findEntry) {
             auto applicationInfo = item.second.GetBaseApplicationInfo();
-            item.second.AdaptMainLauncherResourceInfo(applicationInfo);
+            item.second.AdaptMainLauncherResourceInfo(applicationInfo, true);
             preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
             preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
             preInstallBundleInfo.SetDescriptionId(applicationInfo.descriptionId);
@@ -5674,7 +5681,7 @@ void BMSEventHandler::ConvertToOnDemandInstallBundleInfo(const std::unordered_ma
     preInstallBundleInfo.SetIsUninstalled(false);
     for (const auto &innerBundleInfo : infos) {
         auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
-        innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo);
+        innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo, true);
         preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
         preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
         preInstallBundleInfo.SetDescriptionId(applicationInfo.descriptionId);
@@ -5964,7 +5971,7 @@ void BMSEventHandler::ProcessRecoverList(const std::string &bundleName, const st
         preInstallBundleInfo.AddBundlePath(item.first);
         if (!findEntry) {
             auto applicationInfo = item.second.GetBaseApplicationInfo();
-            item.second.AdaptMainLauncherResourceInfo(applicationInfo);
+            item.second.AdaptMainLauncherResourceInfo(applicationInfo, true);
             preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
             preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
             preInstallBundleInfo.SetDescriptionId(applicationInfo.descriptionId);

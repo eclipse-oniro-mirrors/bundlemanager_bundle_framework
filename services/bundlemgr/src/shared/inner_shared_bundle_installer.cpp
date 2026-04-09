@@ -525,7 +525,7 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
     preInstallBundleInfo.SetRemovable(newBundleInfo_.IsRemovable());
 #endif
     auto applicationInfo = newBundleInfo_.GetBaseApplicationInfo();
-    newBundleInfo_.AdaptMainLauncherResourceInfo(applicationInfo);
+    newBundleInfo_.AdaptMainLauncherResourceInfo(applicationInfo, true);
     preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
     preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
     preInstallBundleInfo.SetDescriptionId(applicationInfo.descriptionId);

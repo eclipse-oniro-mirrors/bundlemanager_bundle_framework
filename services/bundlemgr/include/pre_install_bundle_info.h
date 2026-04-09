@@ -306,9 +306,6 @@ public:
      */
     void AddOtaNewInstallUser(const int32_t &userId)
     {
-        if (userId == Constants::DEFAULT_USERID) {
-            return;
-        }
         bool ret = std::find(otaNewInstallUsers_.begin(), otaNewInstallUsers_.end(), userId) !=
             otaNewInstallUsers_.end();
         if (!ret) {
@@ -335,9 +332,6 @@ public:
      */
     bool HasOtaNewInstallUser(const int32_t &userId) const
     {
-        if (userId == Constants::DEFAULT_USERID) {
-            return false;
-        }
         return std::find(otaNewInstallUsers_.begin(), otaNewInstallUsers_.end(), userId) !=
             otaNewInstallUsers_.end();
     }
