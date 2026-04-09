@@ -85,6 +85,11 @@ struct PluginCallbackInfo : public BaseCallbackInfo {
     OHOS::AppExecFwk::InstallPluginParam installPluginParam;
 };
 
+struct UninstallNewPreinstalledAppsCallbackInfo : public BaseCallbackInfo {
+    explicit UninstallNewPreinstalledAppsCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::vector<std::string> bundleNames;
+};
+
 napi_value GetBundleInstaller(napi_env env, napi_callback_info info);
 napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info);
 napi_value Install(napi_env env, napi_callback_info info);
@@ -98,6 +103,7 @@ napi_value RemoveExtResource(napi_env env, napi_callback_info info);
 napi_value CreateAppClone(napi_env env, napi_callback_info info);
 napi_value DestroyAppClone(napi_env env, napi_callback_info info);
 napi_value InstallPreexistingApp(napi_env env, napi_callback_info info);
+napi_value UninstallNewPreinstalledApps(napi_env env, napi_callback_info info);
 napi_value InstallPlugin(napi_env env, napi_callback_info info);
 napi_value UninstallPlugin(napi_env env, napi_callback_info info);
 } // AppExecFwk

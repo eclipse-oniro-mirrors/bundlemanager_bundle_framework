@@ -149,6 +149,8 @@ public:
 
     virtual ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias) override;
 
+    virtual ErrCode UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames) override;
+
 private:
     bool SendInstallRequest(BundleInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply,
         MessageOption& option);

@@ -214,6 +214,10 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     if (dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
         DeleteUninstallBundleInfo(bundleName, userId);
     }
+    auto pendingMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetOobePreloadUninstallMgr();
+    if (pendingMgr != nullptr) {
+        pendingMgr->RemovePendingBundle(bundleName, userId);
+    }
 
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();

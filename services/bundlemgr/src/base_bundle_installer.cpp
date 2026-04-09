@@ -1816,6 +1816,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, inBundlePaths,
         versionCode_, AppPatchType::INTERNAL, installParam.isPatch);
     UpdateHasCloudkitConfig();
+    auto pendingMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetOobePreloadUninstallMgr();
+    if (pendingMgr != nullptr) {
+        pendingMgr->RemovePendingBundle(bundleName_, userId_);
+    }
     // check mark install finish
     result = MarkInstallFinish();
     if (result != ERR_OK) {
@@ -2737,6 +2741,10 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                 oldInfo.GetBaseApplicationInfo().apiCompatibleVersion,
                 oldInfo.GetBaseApplicationInfo().compileSdkVersion);
             SetUid(uid);
+            auto pendingMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetOobePreloadUninstallMgr();
+            if (pendingMgr != nullptr) {
+                pendingMgr->RemovePendingBundle(bundleName_, userId_);
+            }
             return ERR_OK;
         }
     }

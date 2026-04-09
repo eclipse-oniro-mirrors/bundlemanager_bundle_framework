@@ -100,6 +100,10 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
             std::thread updateDataDirThread(UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel, userId);
             updateDataDirThread.detach();
             std::thread(UpdateAppDataMgr::DeleteUninstallTmpDirs, std::set<int32_t>{userId}).detach();
+            auto preloadUninstallMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetOobePreloadUninstallMgr();
+            if (preloadUninstallMgr != nullptr) {
+                preloadUninstallMgr->RecoverPendingBundles(userId);
+            }
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
             DelayedSingleton<AppControlManager>::GetInstance()->SetAppInstallControlStatus();
 #endif
