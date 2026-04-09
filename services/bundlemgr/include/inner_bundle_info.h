@@ -1077,6 +1077,8 @@ public:
 
     std::string GetMainAbility() const;
 
+    std::string GetEntryAbilityKey() const;
+
     void GetMainAbilityInfo(AbilityInfo &abilityInfo) const;
 
     std::string GetModuleDir(std::string modulePackage) const
