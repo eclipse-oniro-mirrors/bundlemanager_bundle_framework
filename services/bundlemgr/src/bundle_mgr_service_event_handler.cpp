@@ -420,6 +420,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::PROCESS_ROUTER_MAP);
     UpdateOtaFlag(OTAFlag::UPDATE_EXTENSION_DIRS_SELINUX_APL);
     UpdateOtaFlag(OTAFlag::ADD_IDLE_INFO);
+    UpdateOtaFlag(OTAFlag::UPDATE_ALTERNATE_ICONS);
     (void)SaveUpdatePermissionsFlag();
     PerfProfile::GetInstance().Dump();
 }

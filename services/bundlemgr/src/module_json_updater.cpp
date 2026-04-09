@@ -36,13 +36,16 @@ void ModuleJsonUpdater::UpdateModuleJsonAsync()
 {
     bool isHandled = false;
     (void)BMSEventHandler::CheckOtaFlag(OTAFlag::UPDATE_MODULE_JSON, isHandled);
-    if (isHandled) {
+    bool isAlternateIconsHandled = false;
+    (void)BMSEventHandler::CheckOtaFlag(OTAFlag::UPDATE_ALTERNATE_ICONS, isAlternateIconsHandled);
+    if (isHandled && isAlternateIconsHandled) {
         ClearIgnoreBundleNames();
         return;
     }
     std::thread([]() {
         UpdateModuleJson();
         (void)BMSEventHandler::UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON);
+        (void)BMSEventHandler::UpdateOtaFlag(OTAFlag::UPDATE_ALTERNATE_ICONS);
     }).detach();
 }
 

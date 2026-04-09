@@ -138,6 +138,10 @@ const char* APPLICATION_MULTI_APP_MODE_TYPE = "multiAppModeType";
 const char* APPLICATION_MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER = "maxCount";
 const char* APP_ENVIRONMENTS_NAME = "name";
 const char* APP_ENVIRONMENTS_VALUE = "value";
+const char* APPLICATION_ALTERNATE_ICONS = "alternateIcons";
+const char* APPLICATION_ALTERNATE_ICONS_NAME = "name";
+const char* APPLICATION_ALTERNATE_ICONS_ICON = "icon";
+const char* APPLICATION_ALTERNATE_ICONS_ICON_ID = "iconId";
 const char* APPLICATION_ORGANIZATION = "organization";
 const char* APPLICATION_MAX_CHILD_PROCESS = "maxChildProcess";
 const char* APPLICATION_APP_INDEX = "appIndex";
@@ -376,6 +380,71 @@ void from_json(const nlohmann::json &jsonObject, ApplicationEnvironment &applica
     }
 }
 
+bool AlternateIcon::ReadFromParcel(Parcel &parcel)
+{
+    name = Str16ToStr8(parcel.ReadString16());
+    icon = Str16ToStr8(parcel.ReadString16());
+    iconId = parcel.ReadUint32();
+    return true;
+}
+
+bool AlternateIcon::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(icon));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, iconId);
+    return true;
+}
+
+AlternateIcon *AlternateIcon::Unmarshalling(Parcel &parcel)
+{
+    AlternateIcon *info = new (std::nothrow) AlternateIcon();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const AlternateIcon &alternateIcon)
+{
+    jsonObject = nlohmann::json {
+        {APPLICATION_ALTERNATE_ICONS_NAME, alternateIcon.name},
+        {APPLICATION_ALTERNATE_ICONS_ICON, alternateIcon.icon},
+        {APPLICATION_ALTERNATE_ICONS_ICON_ID, alternateIcon.iconId}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, AlternateIcon &alternateIcon)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_ALTERNATE_ICONS_NAME,
+        alternateIcon.name,
+        true,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_ALTERNATE_ICONS_ICON,
+        alternateIcon.icon,
+        true,
+        parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_ALTERNATE_ICONS_ICON_ID,
+        alternateIcon.iconId,
+        JsonType::NUMBER,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read alternateIcon error : %{public}d", parseResult);
+    }
+}
+
 bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
 {
     name = Str16ToStr8(parcel.ReadString16());
@@ -599,6 +668,17 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
         }
         appEnvironments.emplace_back(*applicationEnvironment);
     }
+    int32_t alternateIconsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, alternateIconsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, alternateIconsSize, &alternateIcons);
+    for (int32_t i = 0; i < alternateIconsSize; ++i) {
+        std::unique_ptr<AlternateIcon> alternateIcon(parcel.ReadParcelable<AlternateIcon>());
+        if (!alternateIcon) {
+            APP_LOGE("ReadParcelable<AlternateIcon> failed");
+            return false;
+        }
+        alternateIcons.emplace_back(*alternateIcon);
+    }
     organization = Str16ToStr8(parcel.ReadString16());
 
     std::unique_ptr<MultiAppModeData> multiAppModePtr(parcel.ReadParcelable<MultiAppModeData>());
@@ -797,6 +877,10 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hwasanEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appEnvironments.size());
     for (auto &item : appEnvironments) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, alternateIcons.size());
+    for (auto &item : alternateIcons) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(organization));
@@ -1070,6 +1154,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_RESERVED_FLAG, applicationInfo.applicationReservedFlag},
         {APPLICATION_TSAN_ENABLED, applicationInfo.tsanEnabled},
         {APPLICATION_APP_ENVIRONMENTS, applicationInfo.appEnvironments},
+        {APPLICATION_ALTERNATE_ICONS, applicationInfo.alternateIcons},
         {APPLICATION_ORGANIZATION, applicationInfo.organization},
         {APPLICATION_MULTI_APP_MODE, applicationInfo.multiAppMode},
         {APPLICATION_MAX_CHILD_PROCESS, applicationInfo.maxChildProcess},
@@ -1289,6 +1374,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
     GetValueIfFindKey<std::vector<ApplicationEnvironment>>(jsonObject, jsonObjectEnd,
         APPLICATION_APP_ENVIRONMENTS,
         applicationInfo.appEnvironments, JsonType::ARRAY, false, parseResult, ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<AlternateIcon>>(jsonObject, jsonObjectEnd, APPLICATION_ALTERNATE_ICONS,
+        applicationInfo.alternateIcons, JsonType::ARRAY, false, parseResult, ArrayType::OBJECT);
     GetValueIfFindKey<MultiAppModeData>(jsonObject, jsonObjectEnd, APPLICATION_MULTI_APP_MODE,
         applicationInfo.multiAppMode, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_APP_INDEX,

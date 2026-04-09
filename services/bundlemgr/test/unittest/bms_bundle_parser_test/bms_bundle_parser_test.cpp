@@ -6201,4 +6201,323 @@ HWTEST_F(BmsBundleParserTest, JsonParse_StrictMode_MalformedJson_1600, Function 
     nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false, false);
     EXPECT_TRUE(jsonObject.is_discarded());
 }
+
+/**
+ * @tc.number: BmsBundleParserTest_AlternateIcon_Parcel_0100
+ * @tc.name: Test AlternateIcon Parcel Marshalling and Unmarshalling
+ * @tc.desc: 1. Test AlternateIcon serialization via Parcel
+ */
+HWTEST_F(BmsBundleParserTest, AlternateIcon_Parcel_0100, Function | SmallTest | Level1)
+{
+    AlternateIcon originalIcon;
+    originalIcon.name = "dark_mode";
+    originalIcon.icon = "$media:icon_dark";
+    originalIcon.iconId = 10001;
+
+    Parcel parcel;
+    EXPECT_TRUE(originalIcon.Marshalling(parcel));
+
+    AlternateIcon *restoredIcon = AlternateIcon::Unmarshalling(parcel);
+    EXPECT_NE(restoredIcon, nullptr);
+
+    if (restoredIcon != nullptr) {
+        EXPECT_EQ(restoredIcon->name, "dark_mode");
+        EXPECT_EQ(restoredIcon->icon, "$media:icon_dark");
+        EXPECT_EQ(restoredIcon->iconId, 10001);
+        delete restoredIcon;
+    }
+}
+
+/**
+ * @tc.number: BmsBundleParserTest_AlternateIcon_Parcel_0200
+ * @tc.name: Test AlternateIcon with empty values
+ * @tc.desc: 1. Test AlternateIcon with empty name and icon
+ */
+HWTEST_F(BmsBundleParserTest, AlternateIcon_Parcel_0200, Function | SmallTest | Level1)
+{
+    AlternateIcon originalIcon;
+    originalIcon.name = "";
+    originalIcon.icon = "";
+    originalIcon.iconId = 0;
+
+    Parcel parcel;
+    EXPECT_TRUE(originalIcon.Marshalling(parcel));
+
+    AlternateIcon *restoredIcon = AlternateIcon::Unmarshalling(parcel);
+    EXPECT_NE(restoredIcon, nullptr);
+
+    if (restoredIcon != nullptr) {
+        EXPECT_EQ(restoredIcon->name, "");
+        EXPECT_EQ(restoredIcon->icon, "");
+        EXPECT_EQ(restoredIcon->iconId, 0);
+        delete restoredIcon;
+    }
+}
+
+/**
+ * @tc.number: BmsBundleParserTest_ApplicationInfo_AlternateIcons_0100
+ * @tc.name: Test ApplicationInfo with alternateIcons Parcel serialization
+ * @tc.desc: 1. Test ApplicationInfo containing multiple alternateIcons
+ */
+HWTEST_F(BmsBundleParserTest, ApplicationInfo_AlternateIcons_0100, Function | SmallTest | Level1)
+{
+    ApplicationInfo appInfo;
+    appInfo.name = "com.ohos.test";
+    appInfo.bundleName = "com.ohos.test";
+
+    AlternateIcon icon1;
+    icon1.name = "dark_mode";
+    icon1.icon = "$media:icon_dark";
+    icon1.iconId = 10001;
+    appInfo.alternateIcons.push_back(icon1);
+
+    AlternateIcon icon2;
+    icon2.name = "light_mode";
+    icon2.icon = "$media:icon_light";
+    icon2.iconId = 10002;
+    appInfo.alternateIcons.push_back(icon2);
+
+    AlternateIcon icon3;
+    icon3.name = "seasonal";
+    icon3.icon = "$media:icon_spring";
+    icon3.iconId = 10003;
+    appInfo.alternateIcons.push_back(icon3);
+
+    Parcel parcel;
+    EXPECT_TRUE(appInfo.Marshalling(parcel));
+
+    ApplicationInfo *restoredInfo = ApplicationInfo::Unmarshalling(parcel);
+    EXPECT_NE(restoredInfo, nullptr);
+
+    if (restoredInfo != nullptr) {
+        EXPECT_EQ(restoredInfo->name, "com.ohos.test");
+        EXPECT_EQ(restoredInfo->bundleName, "com.ohos.test");
+        EXPECT_EQ(restoredInfo->alternateIcons.size(), 3);
+        EXPECT_EQ(restoredInfo->alternateIcons[0].name, "dark_mode");
+        EXPECT_EQ(restoredInfo->alternateIcons[0].icon, "$media:icon_dark");
+        EXPECT_EQ(restoredInfo->alternateIcons[0].iconId, 10001);
+        EXPECT_EQ(restoredInfo->alternateIcons[1].name, "light_mode");
+        EXPECT_EQ(restoredInfo->alternateIcons[1].icon, "$media:icon_light");
+        EXPECT_EQ(restoredInfo->alternateIcons[1].iconId, 10002);
+        EXPECT_EQ(restoredInfo->alternateIcons[2].name, "seasonal");
+        EXPECT_EQ(restoredInfo->alternateIcons[2].icon, "$media:icon_spring");
+        EXPECT_EQ(restoredInfo->alternateIcons[2].iconId, 10003);
+        delete restoredInfo;
+    }
+}
+
+/**
+ * @tc.number: BmsBundleParserTest_ApplicationInfo_AlternateIcons_0200
+ * @tc.name: Test ApplicationInfo with empty alternateIcons
+ * @tc.desc: 1. Test ApplicationInfo with empty alternateIcons vector
+ */
+HWTEST_F(BmsBundleParserTest, ApplicationInfo_AlternateIcons_0200, Function | SmallTest | Level1)
+{
+    ApplicationInfo appInfo;
+    appInfo.name = "com.ohos.test";
+    appInfo.bundleName = "com.ohos.test";
+    // alternateIcons is empty by default
+
+    Parcel parcel;
+    EXPECT_TRUE(appInfo.Marshalling(parcel));
+
+    ApplicationInfo *restoredInfo = ApplicationInfo::Unmarshalling(parcel);
+    EXPECT_NE(restoredInfo, nullptr);
+
+    if (restoredInfo != nullptr) {
+        EXPECT_EQ(restoredInfo->alternateIcons.size(), 0);
+        delete restoredInfo;
+    }
+}
+
+/**
+ * @tc.number: BmsBundleParserTest_AlternateIcon_Json_0100
+ * @tc.name: Test AlternateIcon JSON serialization
+ * @tc.desc: 1. Test AlternateIcon to_json and from_json
+ */
+HWTEST_F(BmsBundleParserTest, AlternateIcon_Json_0100, Function | SmallTest | Level1)
+{
+    AlternateIcon originalIcon;
+    originalIcon.name = "dark_mode";
+    originalIcon.icon = "$media:icon_dark";
+    originalIcon.iconId = 10001;
+
+    nlohmann::json jsonObject;
+    to_json(jsonObject, originalIcon);
+
+    EXPECT_EQ(jsonObject["name"], "dark_mode");
+    EXPECT_EQ(jsonObject["icon"], "$media:icon_dark");
+    EXPECT_EQ(jsonObject["iconId"], 10001);
+
+    AlternateIcon restoredIcon;
+    from_json(jsonObject, restoredIcon);
+
+    EXPECT_EQ(restoredIcon.name, "dark_mode");
+    EXPECT_EQ(restoredIcon.icon, "$media:icon_dark");
+    EXPECT_EQ(restoredIcon.iconId, 10001);
+}
+
+/**
+ * @tc.number: BmsBundleParserTest_AlternateIcon_Json_0200
+ * @tc.name: Test ApplicationInfo with alternateIcons JSON serialization
+ * @tc.desc: 1. Test ApplicationInfo containing alternateIcons in JSON
+ */
+HWTEST_F(BmsBundleParserTest, AlternateIcon_Json_0200, Function | SmallTest | Level1)
+{
+    ApplicationInfo appInfo;
+    appInfo.name = "com.ohos.test";
+    appInfo.bundleName = "com.ohos.test";
+
+    AlternateIcon icon1;
+    icon1.name = "dark_mode";
+    icon1.icon = "$media:icon_dark";
+    icon1.iconId = 10001;
+    appInfo.alternateIcons.push_back(icon1);
+
+    AlternateIcon icon2;
+    icon2.name = "light_mode";
+    icon2.icon = "$media:icon_light";
+    icon2.iconId = 10002;
+    appInfo.alternateIcons.push_back(icon2);
+
+    nlohmann::json jsonObject;
+    to_json(jsonObject, appInfo);
+
+    EXPECT_TRUE(jsonObject.contains("alternateIcons"));
+    EXPECT_TRUE(jsonObject["alternateIcons"].is_array());
+    EXPECT_EQ(jsonObject["alternateIcons"].size(), 2);
+    EXPECT_EQ(jsonObject["alternateIcons"][0]["name"], "dark_mode");
+    EXPECT_EQ(jsonObject["alternateIcons"][0]["icon"], "$media:icon_dark");
+    EXPECT_EQ(jsonObject["alternateIcons"][0]["iconId"], 10001);
+    EXPECT_EQ(jsonObject["alternateIcons"][1]["name"], "light_mode");
+    EXPECT_EQ(jsonObject["alternateIcons"][1]["icon"], "$media:icon_light");
+    EXPECT_EQ(jsonObject["alternateIcons"][1]["iconId"], 10002);
+
+    ApplicationInfo restoredInfo;
+    from_json(jsonObject, restoredInfo);
+
+    EXPECT_EQ(restoredInfo.alternateIcons.size(), 2);
+    EXPECT_EQ(restoredInfo.alternateIcons[0].name, "dark_mode");
+    EXPECT_EQ(restoredInfo.alternateIcons[0].icon, "$media:icon_dark");
+    EXPECT_EQ(restoredInfo.alternateIcons[0].iconId, 10001);
+    EXPECT_EQ(restoredInfo.alternateIcons[1].name, "light_mode");
+    EXPECT_EQ(restoredInfo.alternateIcons[1].icon, "$media:icon_light");
+    EXPECT_EQ(restoredInfo.alternateIcons[1].iconId, 10002);
+}
+
+/**
+ * @tc.number: BmsBundleParserTest_AlternateIcon_Json_0300
+ * @tc.name: Test ApplicationInfo from JSON with alternateIcons
+ * @tc.desc: 1. Test parsing ApplicationInfo from JSON containing alternateIcons
+ */
+HWTEST_F(BmsBundleParserTest, AlternateIcon_Json_0300, Function | SmallTest | Level1)
+{
+    std::string jsonData = R"({
+        "name": "com.ohos.test",
+        "bundleName": "com.ohos.test",
+        "label": "Test App",
+        "iconPath": "/data/app/el1/budle/public/com.ohos.test",
+        "alternateIcons": [
+            {
+                "name": "dark_mode",
+                "icon": "$media:icon_dark",
+                "iconId": 10001
+            },
+            {
+                "name": "light_mode",
+                "icon": "$media:icon_light",
+                "iconId": 10002
+            },
+            {
+                "name": "seasonal_spring",
+                "icon": "$media:icon_spring",
+                "iconId": 10003
+            }
+        ]
+    })";
+
+    nlohmann::json jsonObject = nlohmann::json::parse(jsonData);
+    ApplicationInfo appInfo;
+    from_json(jsonObject, appInfo);
+
+    EXPECT_EQ(appInfo.name, "com.ohos.test");
+    EXPECT_EQ(appInfo.bundleName, "com.ohos.test");
+    EXPECT_EQ(appInfo.alternateIcons.size(), 3);
+    EXPECT_EQ(appInfo.alternateIcons[0].name, "dark_mode");
+    EXPECT_EQ(appInfo.alternateIcons[0].icon, "$media:icon_dark");
+    EXPECT_EQ(appInfo.alternateIcons[0].iconId, 10001);
+    EXPECT_EQ(appInfo.alternateIcons[1].name, "light_mode");
+    EXPECT_EQ(appInfo.alternateIcons[1].icon, "$media:icon_light");
+    EXPECT_EQ(appInfo.alternateIcons[1].iconId, 10002);
+    EXPECT_EQ(appInfo.alternateIcons[2].name, "seasonal_spring");
+    EXPECT_EQ(appInfo.alternateIcons[2].icon, "$media:icon_spring");
+    EXPECT_EQ(appInfo.alternateIcons[2].iconId, 10003);
+}
+
+/**
+ * @tc.number: BmsBundleParserTest_AlternateIcon_Json_0400
+ * @tc.name: Test ApplicationInfo from JSON with empty alternateIcons
+ * @tc.desc: 1. Test parsing ApplicationInfo from JSON with empty alternateIcons array
+ */
+HWTEST_F(BmsBundleParserTest, AlternateIcon_Json_0400, Function | SmallTest | Level1)
+{
+    std::string jsonData = R"({
+        "name": "com.ohos.test",
+        "bundleName": "com.ohos.test",
+        "label": "Test App",
+        "alternateIcons": []
+    })";
+
+    nlohmann::json jsonObject = nlohmann::json::parse(jsonData);
+    ApplicationInfo appInfo;
+    from_json(jsonObject, appInfo);
+
+    EXPECT_EQ(appInfo.name, "com.ohos.test");
+    EXPECT_EQ(appInfo.alternateIcons.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleParserTest_AlternateIcon_Profile_0100
+ * @tc.name: Test parsing alternateIcons from module profile
+ * @tc.desc: 1. Test parsing App profile with alternateIcons configuration
+ */
+HWTEST_F(BmsBundleParserTest, AlternateIcon_Profile_0100, Function | SmallTest | Level1)
+{
+    std::string profileData = R"({
+        "app": {
+            "bundleName": "com.ohos.test",
+            "vendor": "example",
+            "version": {
+                "code": 1,
+                "name": "1.0"
+            },
+            "alternateIcons": [
+                {
+                    "name": "dark_theme",
+                    "icon": "$media:icon_dark",
+                    "iconId": 10001
+                },
+                {
+                    "name": "light_theme",
+                    "icon": "$media:icon_light",
+                    "iconId": 10002
+                }
+            ]
+        },
+        "module": {
+            "package": "com.ohos.test.entry",
+            "name": "entry",
+            "deviceType": ["default"]
+        }
+    })";
+
+    nlohmann::json jsonObject = nlohmann::json::parse(profileData);
+    EXPECT_TRUE(jsonObject.contains("app"));
+    EXPECT_TRUE(jsonObject["app"].contains("alternateIcons"));
+    EXPECT_TRUE(jsonObject["app"]["alternateIcons"].is_array());
+    EXPECT_EQ(jsonObject["app"]["alternateIcons"].size(), 2);
+    EXPECT_EQ(jsonObject["app"]["alternateIcons"][0]["name"], "dark_theme");
+    EXPECT_EQ(jsonObject["app"]["alternateIcons"][0]["icon"], "$media:icon_dark");
+    EXPECT_EQ(jsonObject["app"]["alternateIcons"][0]["iconId"], 10001);
+}
 } // OHOS

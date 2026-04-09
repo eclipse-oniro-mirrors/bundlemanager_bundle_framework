@@ -1305,6 +1305,18 @@ protected:
                 "icon": "",
                 "iconId": 218103847,
                 "iconPath": "$media: icon",
+                "alternateIcons": [
+                    {
+                        "icon": "icon",
+                        "iconId": 218103847,
+                        "name": "$media: icon"
+                    },
+                    {
+                        "icon": "icon2",
+                        "iconId": 218103847,
+                        "name": "$media: icon"
+                    }
+                ],
                 "iconResource": {
                     "bundleName": "",
                     "id": 0,

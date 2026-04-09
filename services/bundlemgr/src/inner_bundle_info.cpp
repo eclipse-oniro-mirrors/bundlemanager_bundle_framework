@@ -2226,6 +2226,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->organization = applicationInfo.organization;
     baseApplicationInfo_->multiProjects = applicationInfo.multiProjects;
     baseApplicationInfo_->appEnvironments = applicationInfo.appEnvironments;
+    baseApplicationInfo_->alternateIcons = applicationInfo.alternateIcons;
     baseApplicationInfo_->maxChildProcess = applicationInfo.maxChildProcess;
     baseApplicationInfo_->multiAppMode = applicationInfo.multiAppMode;
     baseApplicationInfo_->configuration = applicationInfo.configuration;
@@ -2255,6 +2256,7 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
         }
         baseApplicationInfo_->cloudStructuredDataSyncEnabled =
             info.baseApplicationInfo_->cloudStructuredDataSyncEnabled;
+        baseApplicationInfo_->alternateIcons = info.baseApplicationInfo_->alternateIcons;
     }
     // update BundleInfo
     if (baseBundleInfo_ != nullptr && info.baseApplicationInfo_ != nullptr) {

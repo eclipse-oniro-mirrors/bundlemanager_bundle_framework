@@ -178,6 +178,16 @@ struct ApplicationEnvironment : public Parcelable {
     static ApplicationEnvironment *Unmarshalling(Parcel &parcel);
 };
 
+struct AlternateIcon : public Parcelable {
+    std::string name;
+    std::string icon;
+    uint32_t iconId = 0;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static AlternateIcon *Unmarshalling(Parcel &parcel);
+};
+
 struct ApplicationInfo;
 
 struct CompatibleApplicationInfo : public Parcelable {
@@ -350,6 +360,7 @@ struct ApplicationInfo : public Parcelable {
     // Installation-free
     std::vector<std::string> targetBundleList;
     std::vector<ApplicationEnvironment> appEnvironments;
+    std::vector<AlternateIcon> alternateIcons;
     std::vector<std::string> assetAccessGroups;
     std::map<std::string, std::vector<HnpPackage>> hnpPackages;
     std::map<std::string, std::vector<CustomizeData>> metaData;
