@@ -4472,7 +4472,19 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     appInfo.associatedWakeUp = preBundleConfigInfo.associatedWakeUp;
     appInfo.allowCommonEvent = preBundleConfigInfo.allowCommonEvent;
     appInfo.resourcesApply = preBundleConfigInfo.resourcesApply;
-    appInfo.allowAppRunWhenDeviceFirstLocked = preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked;
+    // For system apps, default allowAppRunWhenDeviceFirstLocked to true;
+    // only override if explicitly configured in JSON
+    InnerBundleInfo innerBundleInfo;
+    bool isSystemApp = dataMgr->FetchInnerBundleInfo(preBundleConfigInfo.bundleName, innerBundleInfo) &&
+        innerBundleInfo.IsSystemApp();
+    static const std::string ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED = "allowAppRunWhenDeviceFirstLocked";
+    auto it = std::find(preBundleConfigInfo.existInJsonFile.cbegin(),
+        preBundleConfigInfo.existInJsonFile.cend(), ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED);
+    if (it != preBundleConfigInfo.existInJsonFile.cend()) {
+        appInfo.allowAppRunWhenDeviceFirstLocked = preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked;
+    } else if (isSystemApp) {
+        appInfo.allowAppRunWhenDeviceFirstLocked = true;
+    }
     appInfo.allowEnableNotification = preBundleConfigInfo.allowEnableNotification;
     appInfo.hideDesktopIcon = preBundleConfigInfo.hideDesktopIcon;
     appInfo.allowMultiProcess = preBundleConfigInfo.allowMultiProcess;

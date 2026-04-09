@@ -2397,6 +2397,9 @@ void InnerBundleInfo::ResetPrivilegeCapability()
     std::vector<std::string> allowCommonEvent;
     SetAllowCommonEvent(allowCommonEvent);
     SetAllowAppRunWhenDeviceFirstLocked(false);
+    if (baseApplicationInfo_->isSystemApp) {
+        SetAllowAppRunWhenDeviceFirstLocked(true);
+    }
     std::vector<int32_t> resourcesApply;
     baseApplicationInfo_->resourcesApply = resourcesApply;
     baseApplicationInfo_->allowEnableNotification = false;
