@@ -4050,6 +4050,7 @@ bool BaseBundleInstaller::SaveFirstInstallBundleInfo(const std::string &bundleNa
     InnerBundleInfo innerBundleInfo;
     FirstInstallBundleInfo odidCount;
     if (GetTempBundleInfo(innerBundleInfo)) {
+        dataMgr_->GetFirstInstallBundleInfo(bundleName, Constants::ALL_USERID, odidCount);
         std::string currentOdid;
         innerBundleInfo.GetOdid(currentOdid);
         odidCount.lastOdid = currentOdid;

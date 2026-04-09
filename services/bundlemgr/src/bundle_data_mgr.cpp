@@ -736,7 +736,7 @@ bool BundleDataMgr::AddFirstInstallBundleInfo(const std::string &bundleName, con
     }
 
     if (firstInstallDataMgr_->IsExistFirstInstallBundleInfo(bundleName, userId)
-        || userId == Constants::ALL_USERID) {
+        && userId != Constants::ALL_USERID) {
         APP_LOGW("bundleName %{public}s, user %{public}d has been saved", bundleName.c_str(), userId);
         return true;
     }
@@ -8665,14 +8665,14 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool
         // independent of userId, only associated with bundleName
         std::string lastOdid;
         FirstInstallBundleInfo lastOdidInfo;
-        if (GetFirstInstallBundleInfo(bundleName, Constants::ALL_USERID, lastOdidInfo)) {
-            lastOdid = lastOdidInfo.lastOdid;
-        }
+        GetFirstInstallBundleInfo(bundleName, Constants::ALL_USERID, lastOdidInfo);
+        infoItem->second.GetOdid(lastOdid);
         std::string odid = GenerateOdidNoLock(developerId);
         innerBundleInfo.UpdateOdid(developerId, odid);
         // Increment odid reset count when generating new odid different from last odid
         if (!lastOdid.empty() && !odid.empty() && odid != lastOdid) {
             lastOdidInfo.IncrementOdidResetCount();
+            lastOdidInfo.lastOdid = odid;
             APP_LOGI("odid reset for bundle %{public}s, last odid:%{private}s, new odid:%{private}s, count:%{public}d",
                 bundleName.c_str(), lastOdid.c_str(), odid.c_str(), lastOdidInfo.odidResetCount);
             firstInstallDataMgr_->AddFirstInstallBundleInfo(bundleName, Constants::ALL_USERID, lastOdidInfo);
