@@ -133,6 +133,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   native createAppCloneNative(bundleName: string, createAppCloneParam: installer.CreateAppCloneParam): int;
   native destroyAppCloneNative(bundleName: string, appIndex: int, options: installer.DestroyAppCloneParam): void;
   native installPreexistingAppNative(bundleName: string, userId: int): void;
+  native uninstallNewPreinstalledAppsNative(bundleNames: Array<string>): void;
   native installPluginNative(hostBundleName: string, pluginFilePaths: Array<string>, pluginParam: installer.PluginParam): void;
   native uninstallPluginNative(hostBundleName: string, pluginBundleName: string, pluginParam: installer.PluginParam): void;
 
@@ -425,6 +426,19 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let execFun = () =>{ this.installPreexistingAppNative(bundleName, userIdNum); }
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
+          resolve(Promise.resolve());
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+  }
+
+  uninstallNewPreinstalledApps(bundleNames: Array<string>): Promise<void> {
+      let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
+      let execFun = (): void => { return this.uninstallNewPreinstalledAppsNative(bundleNames); }
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void =>  {
           resolve(Promise.resolve());
         }, (err: Error): void => {
           reject(err as BusinessError);
