@@ -43,7 +43,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr uint8_t INSTALLER_METHOD_COUNTS = 13;
+constexpr uint8_t INSTALLER_METHOD_COUNTS = 14;
 constexpr const char* INNERINSTALLER_CLASSNAME = "@ohos.bundle.installerInner.BundleInstallerInner";
 } // namespace
 static bool g_isSystemApp = false;
@@ -446,6 +446,23 @@ static void AniInstallPreexistingApp(ani_env* env, [[maybe_unused]] ani_object i
     }
 }
 
+static void AniUninstallNewPreinstalledApps(ani_env* env, [[maybe_unused]] ani_object installerObj,
+    ani_object aniBundleNames)
+{
+    APP_LOGD("ani UninstallNewPreinstalledApps called");
+    std::vector<std::string> bundleNames;
+    if (aniBundleNames == nullptr || !CommonFunAni::ParseStrArray(env, aniBundleNames, bundleNames)) {
+        APP_LOGE("bundleNames parse failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, TYPE_ARRAY);
+        return;
+    }
+    ErrCode result = CommonFunc::ConvertErrCode(InstallerHelper::InnerUninstallNewPreinstalledApps(bundleNames));
+    if (result != SUCCESS) {
+        BusinessErrorAni::ThrowCommonError(env, result,
+            UNINSTALL_NEW_PREINSTALLED_APPS, Constants::PERMISSION_UNINSTALL_BUNDLE);
+    }
+}
+
 static void AniInstallPlugin(ani_env* env, [[maybe_unused]] ani_object installerObj, ani_string aniHostBundleName,
     ani_object aniPluginFilePaths, ani_object aniPluginParam)
 {
@@ -557,6 +574,8 @@ static void GetInstallerMethods(std::array<ani_native_function, INSTALLER_METHOD
         ani_native_function { "destroyAppCloneNative", nullptr, reinterpret_cast<void*>(AniDestroyAppClone) },
         ani_native_function { "installPreexistingAppNative", nullptr,
             reinterpret_cast<void*>(AniInstallPreexistingApp) },
+        ani_native_function { "uninstallNewPreinstalledAppsNative", nullptr,
+ 	        reinterpret_cast<void*>(AniUninstallNewPreinstalledApps) },
         ani_native_function { "installPluginNative", nullptr, reinterpret_cast<void*>(AniInstallPlugin) },
         ani_native_function { "uninstallPluginNative", nullptr, reinterpret_cast<void*>(AniUninstallPlugin) },
     };

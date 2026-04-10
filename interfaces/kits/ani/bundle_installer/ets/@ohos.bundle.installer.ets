@@ -95,6 +95,8 @@ namespace installer {
 
     installPreexistingApp(bundleName: string, userId?: int): Promise<void>;
 
+    uninstallNewPreinstalledApps(bundleNames: Array<string>): Promise<void>;
+
     installPlugin(hostBundleName: string, pluginFilePaths: Array<string>, pluginParam?: PluginParam): Promise<void>;
 
     uninstallPlugin(hostBundleName: string, pluginBundleName: string, pluginParam?: PluginParam): Promise<void>;
