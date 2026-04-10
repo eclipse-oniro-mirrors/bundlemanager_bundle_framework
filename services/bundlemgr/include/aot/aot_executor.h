@@ -18,13 +18,12 @@
 
 #include <filesystem>
 #include <mutex>
-#include <nlohmann/json.hpp>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unordered_map>
 
 #include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
+#if defined(CODE_SIGNATURE_ENABLE)
+#include "aot_compiler_args.h"
+#endif
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -45,19 +44,21 @@ private:
     ~AOTExecutor() = default;
     DISALLOW_COPY_AND_MOVE(AOTExecutor);
 
-    std::string DecToHex(uint32_t decimal) const;
     bool CheckArgs(const AOTArgs &aotArgs) const;
     std::string GetAbcRelativePath(const std::string &moduleArkTSMode) const;
     bool GetAbcFileInfo(const std::string &hapPath, const std::string &moduleArkTSMode,
         uint32_t &offset, uint32_t &length) const;
     ErrCode PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) const;
-    nlohmann::json GetSubjectInfo(const AOTArgs &aotArgs) const;
-    void MapSysCompArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap);
-    void MapBundleArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap);
+    ErrCode EnforceCodeSign(const std::string &anFileName, const std::vector<uint8_t> &signData) const;
     bool MkdirWithAuth(const std::filesystem::path &basePath, const std::filesystem::path &targetPath,
         uid_t uid, gid_t gid, mode_t mode) const;
-    ErrCode EnforceCodeSign(const std::string &anFileName, const std::vector<uint8_t> &signData) const;
     bool MkAOTOutputDir(const AOTArgs &aotArgs) const;
+#if defined(CODE_SIGNATURE_ENABLE)
+    ErrCode MapSysCompArgs(const AOTArgs &aotArgs, ArkCompiler::AotCompilerArgs &args) const;
+    ErrCode MapBundleArgs(const AOTArgs &aotArgs, ArkCompiler::AotCompilerArgs &args) const;
+#endif
+    ErrCode HandleCompilerResult(ErrCode ret, const std::vector<uint8_t> &fileData,
+        std::vector<uint8_t> &signData) const;
     ErrCode StartAOTCompiler(const AOTArgs &aotArgs, std::vector<uint8_t> &signData);
     void InitState(const AOTArgs &aotArgs);
     void ResetState();

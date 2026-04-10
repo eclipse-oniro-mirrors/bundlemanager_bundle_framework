@@ -141,6 +141,7 @@ constexpr int32_t DATABASE_DIR_GID = 3012;
 constexpr int32_t DFS_GID = 1009;
 constexpr int32_t LOG_DIR_GID = 1007;
 constexpr int32_t APP_INSTALL_GID = 2002;
+constexpr int32_t COMPILER_SERVICE_GID = 5300;
 // first isntall time
 constexpr int64_t DEFAULT_FIRST_INSTALL_TIME = 0;
 constexpr int64_t PREINSTALL_FIRST_INSTALL_TIME = 1533657660000; // 2018-08-08 00:01:00

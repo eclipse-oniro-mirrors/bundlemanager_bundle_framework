@@ -1028,6 +1028,8 @@ ErrCode AOTHandler::HandleCompileModules(const std::vector<std::string> &moduleN
                 compileResult += "  " + moduleName + ":args-empty";
                 break;
             default:
+                APP_LOGE("HandleCompileModules: unknown errCode=%{public}d for module %{public}s",
+                    errCode, moduleName.c_str());
                 compileResult += "  " + moduleName + ":other-fail";
                 break;
         }
