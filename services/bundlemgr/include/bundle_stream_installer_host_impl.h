@@ -53,7 +53,7 @@ private:
     std::string tempSignatureFileDir_;
     std::string tempPgoFileDir_;
     sptr<IStatusReceiver> receiver_ = nullptr;
-    std::mutex fdVecMutex_;
+    mutable std::mutex fdVecMutex_;
     std::vector<int32_t> streamFdVec_;
     std::vector<std::string> originHapPaths_;
     InstallParam installParam_;
