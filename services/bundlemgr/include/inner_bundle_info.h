@@ -72,6 +72,12 @@ struct DefinePermission {
     std::string availableType;
 };
 
+struct SkillsAgent {
+    std::string name;
+    std::string relativeAbility;
+    std::vector<std::string> srcEntry;
+};
+
 struct InnerModuleInfo {
     bool isEntry = false;
     bool installationFree = false;
@@ -159,6 +165,7 @@ struct InnerModuleInfo {
     std::vector<DefinePermission> definePermissions;
     std::vector<RequestPermission> requestPermissions;
     std::vector<Metadata> metadata;
+    std::vector<SkillsAgent> skillsAgents;
     std::vector<Dependency> dependencies;
     std::vector<OverlayModuleInfo> overlayModuleInfo;
     std::vector<ProxyData> proxyDatas;

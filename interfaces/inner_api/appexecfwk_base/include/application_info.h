@@ -60,6 +60,7 @@ enum class BundleType {
     SHARED = 2,
     APP_SERVICE_FWK = 3,
     APP_PLUGIN = 4,
+    SKILLS = 5,
 };
 
 enum class CompatiblePolicy {

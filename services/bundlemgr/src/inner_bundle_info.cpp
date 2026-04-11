@@ -65,6 +65,7 @@ constexpr const char* MODULE_IS_ENTRY = "isEntry";
 constexpr const char* MODULE_METADATA = "metaData";
 constexpr const char* MODULE_HNP_PACKAGE = "hnpPackage";
 constexpr const char* MODULE_EXECUTABLE_BINARY_PATHS = "executableBinaryPaths";
+constexpr const char* MODULE_SKILLS_AGENTS = "skillsAgents";
 constexpr const char* MODULE_COLOR_MODE = "colorMode";
 constexpr const char* MODULE_DISTRO = "distro";
 constexpr const char* MODULE_REQ_CAPABILITIES = "reqCapabilities";
@@ -168,6 +169,10 @@ constexpr const char* MODULE_DEBUG = "debug";
 constexpr const char* MODULE_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 constexpr const char* EXECUTABLE_BINARY_PATH = "path";
+// SkillsAgent field constants
+constexpr const char* SKILLS_AGENT_NAME = "name";
+constexpr const char* SKILLS_AGENT_RELATIVE_ABILITY = "relativeAbility";
+constexpr const char* SKILLS_AGENT_SRC_ENTRY = "srcEntry";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 constexpr const char* MODULE_BOOL_SET = "boolSet";
 constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
@@ -265,6 +270,44 @@ void to_json(nlohmann::json &jsonObject, const ExecutableBinaryPath &executableB
 {
     jsonObject = nlohmann::json {
         {EXECUTABLE_BINARY_PATH, executableBinaryPath.path}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, SkillsAgent &skillsAgent)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILLS_AGENT_NAME,
+        skillsAgent.name,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILLS_AGENT_RELATIVE_ABILITY,
+        skillsAgent.relativeAbility,
+        false,
+        parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        SKILLS_AGENT_SRC_ENTRY,
+        skillsAgent.srcEntry,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read SkillsAgent from json error, error code : %{public}d", parseResult);
+    }
+}
+
+void to_json(nlohmann::json &jsonObject, const SkillsAgent &skillsAgent)
+{
+    jsonObject = nlohmann::json {
+        {SKILLS_AGENT_NAME, skillsAgent.name},
+        {SKILLS_AGENT_RELATIVE_ABILITY, skillsAgent.relativeAbility},
+        {SKILLS_AGENT_SRC_ENTRY, skillsAgent.srcEntry}
     };
 }
 
@@ -502,6 +545,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_PAGES, info.pages},
         {MODULE_SYSTEM_THEME, info.systemTheme},
         {MODULE_META_DATA, info.metadata},
+        {MODULE_SKILLS_AGENTS, info.skillsAgents},
         {MODULE_HNP_PACKAGE, info.hnpPackages},
         {MODULE_EXECUTABLE_BINARY_PATHS, info.executableBinaryPaths},
         {MODULE_REQUEST_PERMISSIONS, info.requestPermissions},
@@ -881,6 +925,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_META_DATA,
         info.metadata,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<SkillsAgent>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_SKILLS_AGENTS,
+        info.skillsAgents,
         JsonType::ARRAY,
         false,
         parseResult,

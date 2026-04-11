@@ -228,6 +228,12 @@ struct Ability {
     std::string arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
 };
 
+struct SkillsAgent {
+    std::string name;
+    std::string relativeAbility;
+    std::vector<std::string> srcEntry;
+};
+
 struct Extension {
     bool visible = false;
     bool isolationProcess = false;
@@ -344,6 +350,7 @@ struct Module {
     std::vector<Metadata> metadata;
     std::vector<HnpPackage> hnpPackages;
     std::vector<Ability> abilities;
+    std::vector<SkillsAgent> skillsAgents;
     std::vector<Extension> extensionAbilities;
     std::vector<RequestPermission> requestPermissions;
     std::vector<DefinePermission> definePermissions;
@@ -469,6 +476,32 @@ void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executabl
         executableBinaryPath.path,
         false,
         g_parseResult);
+}
+
+void from_json(const nlohmann::json &jsonObject, SkillsAgent &skillsAgent)
+{
+    APP_LOGD("read skillsAgent tag from module.json");
+    const auto &jsonObjectEnd = jsonObject.end();
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILLS_AGENT_NAME,
+        skillsAgent.name,
+        true,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILLS_AGENT_RELATIVE_ABILITY,
+        skillsAgent.relativeAbility,
+        true,
+        g_parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        SKILLS_AGENT_SRC_ENTRY,
+        skillsAgent.srcEntry,
+        JsonType::ARRAY,
+        true,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, Ability &ability)
@@ -1659,6 +1692,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         jsonObjectEnd,
         MODULE_ABILITIES,
         module.abilities,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<SkillsAgent>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_SKILLS_AGENT,
+        module.skillsAgents,
         JsonType::ARRAY,
         false,
         g_parseResult,
@@ -2956,6 +2997,15 @@ bool ToInnerBundleInfo(
                 break;
             }
         }
+    }
+
+    // handle skillsAgents
+    for (const Profile::SkillsAgent &skillsAgent : moduleJson.module.skillsAgents) {
+        SkillsAgent agent;
+        agent.name = skillsAgent.name;
+        agent.relativeAbility = skillsAgent.relativeAbility;
+        agent.srcEntry = skillsAgent.srcEntry;
+        innerModuleInfo.skillsAgents.emplace_back(agent);
     }
 
     // handle extensionAbilities
