@@ -6738,8 +6738,7 @@ ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
         return ERR_OK;
     }
     LOG_I(BMS_TAG_INSTALLER, "rename install");
-    int32_t userId = userId_ < Constants::START_USERID ?
-        sysEventInfo_.callingUid / Constants::BASE_USER_RANGE : userId_;
+    int32_t userId = sysEventInfo_.callingUid / Constants::BASE_USER_RANGE;
     const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
         ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId);
 
