@@ -260,7 +260,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .bundleName = bundleName_,
             .modulePackage = moduleName_,
             .abilityName = mainAbility_,
-            .appIdentifier = appIdentifier_,
+            .appIdentifier = bundleAppIdentifier_,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_
         };
@@ -312,7 +312,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .userId = userId_,
             .bundleName = bundleName,
-            .appIdentifier = appIdentifier_,
+            .appIdentifier = bundleAppIdentifier_,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .isInstallByBundleName = true
@@ -361,7 +361,7 @@ ErrCode BaseBundleInstaller::Recover(
             .uid = uid,
             .bundleType = static_cast<int32_t>(bundleType_),
             .bundleName = bundleName,
-            .appIdentifier = appIdentifier_,
+            .appIdentifier = bundleAppIdentifier_,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .isRecover = true
@@ -1057,6 +1057,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
                 installedModules_[packageName] = true;
             }
         }
+        isKeepTokenId_ = oldInfo.HasKeepTokenIdMetadata();
 
         hasInstalledInUser_ = oldInfo.HasInnerBundleUserInfo(userId_);
         if (!hasInstalledInUser_) {
@@ -1083,7 +1084,6 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
-            isKeepTokenId_ = oldInfo.HasKeepTokenIdMetadata();
             if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo, false)
                 && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult,
                 verifyRes_.GetProvisionInfo().appServiceCapabilities, false) != ERR_OK) {
@@ -2673,7 +2673,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             }
 
             versionCode_ = oldInfo.GetVersionCode();
-            appIdentifier_ = oldInfo.GetAppIdentifier();
+            bundleAppIdentifier_ = oldInfo.GetAppIdentifier();
             if (oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
                 LOG_D(BMS_TAG_INSTALLER, "Appservice (%{public}s) only install in U0", bundleName.c_str());
                 bundleType_ = BundleType::APP_SERVICE_FWK;
@@ -5079,6 +5079,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     isInternaltestingBundle_ = bundleInstallChecker_->CheckInternaltestingBundle(hapVerifyRes[0]);
     appIdentifier_ = (hapVerifyRes[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
         DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
+    bundleAppIdentifier_ = hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     SetAppDistributionType(infos);
     UpdateExtensionSandboxInfo(infos, hapVerifyRes);
     return ret;
@@ -6498,6 +6499,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     isEnterpriseBundle_ = false;
     isInternaltestingBundle_ = false;
     appIdentifier_.clear();
+    bundleAppIdentifier_.clear();
     targetSoPathMap_.clear();
     isAppService_ = false;
     oldApplicationReservedFlag_ = 0;
