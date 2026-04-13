@@ -1144,7 +1144,10 @@ ani_object CommonFunAni::ConvertSignatureInfo(ani_env* env, const SignatureInfo&
     if (StringToAniStr(env, signatureInfo.certificate, certificate)) {
         certificateRef = certificate;
     } else {
-        env->GetUndefined(&certificateRef);
+        ani_status status = env->GetUndefined(&certificateRef);
+        if (status != ANI_OK) {
+            APP_LOGW("GetUndefined failed %{public}d", status);
+        }
     }
 
     ani_value args[] = {

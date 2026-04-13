@@ -2577,11 +2577,17 @@ void ANIClearCacheListener::DoClearCache()
         APP_LOGE("env is empty");
     } else {
         for (auto& item : g_aniCache) {
-            env->GlobalReference_Delete(item.second);
+            status = env->GlobalReference_Delete(item.second);
+            if (status != ANI_OK) {
+                APP_LOGW("GlobalReference_Delete fail %{public}d", status);
+            }
         }
     }
     if (needDetach) {
-        g_vm->DetachCurrentThread();
+        status = g_vm->DetachCurrentThread();
+        if (status != ANI_OK) {
+            APP_LOGW("DetachCurrentThread fail %{public}d", status);
+        }
     }
     g_aniCache.clear();
 }

@@ -58,9 +58,12 @@ ani_object BusinessErrorAni::WrapError(ani_env *env, const std::string &msg)
     }
 
     ani_ref undefRef;
-    env->GetUndefined(&undefRef);
+    ani_status status = env->GetUndefined(&undefRef);
+    if (status != ANI_OK) {
+        APP_LOGW("GetUndefined failed %{public}d", status);
+    }
 
-    ani_status status = env->FindClass("std.core.Error", &cls);
+    status = env->FindClass("std.core.Error", &cls);
     if (status != ANI_OK) {
         APP_LOGE("FindClass err : %{public}d", status);
         return nullptr;

@@ -1048,7 +1048,7 @@ ani_string GzgetsNative(ani_env* env, ani_object instance, ani_arraybuffer aniBu
     if (status != ANI_OK) {
         APP_LOGE("ArrayBuffer_GetInfo failed: %{public}d", status);
         AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
-        return 0;
+        return nullptr;
     }
     CHECK_PARAM_NULL_THROW_RETURN(buf, EINVAL, nullptr);
 

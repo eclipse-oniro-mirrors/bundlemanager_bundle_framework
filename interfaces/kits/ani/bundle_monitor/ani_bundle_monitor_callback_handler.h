@@ -47,7 +47,10 @@ private:
     void inline ClearCallbackList(ani_env* env, std::list<ani_ref>& list)
     {
         for (auto& iter : list) {
-            env->GlobalReference_Delete(iter);
+            ani_status status = env->GlobalReference_Delete(iter);
+            if (status != ANI_OK) {
+                APP_LOGW("ClearCallbackList GlobalReference_Delete failed: %{public}d", status);
+            }
         }
         list.clear();
     }
