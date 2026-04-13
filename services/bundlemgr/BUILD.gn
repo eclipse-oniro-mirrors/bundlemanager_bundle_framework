@@ -44,6 +44,7 @@ config("bundlemgr_common_config") {
     "include/navigation",
     "include/shared",
     "include/quick_fix/state/include",
+    "include/skills_installer",
     "include/utd",
     "include/verify",
     "include/plugin",
