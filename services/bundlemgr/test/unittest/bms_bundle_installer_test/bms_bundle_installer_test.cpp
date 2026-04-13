@@ -12775,6 +12775,66 @@ HWTEST_F(BmsBundleInstallerTest, GetU1Enable_0001, Function | SmallTest | Level0
 }
 
 /**
+ * @tc.number: HasOtaNewInstallUser_0001
+ * @tc.name: test HasOtaNewInstallUser
+ * @tc.desc: 1.directly hit queried user in otaNewInstallUsers_
+ */
+HWTEST_F(BmsBundleInstallerTest, HasOtaNewInstallUser_0001, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+    constexpr int32_t userId = 100;
+    preInstallBundleInfo.AddOtaNewInstallUser(userId);
+    EXPECT_TRUE(preInstallBundleInfo.HasOtaNewInstallUser(userId));
+}
+
+/**
+ * @tc.number: HasOtaNewInstallUser_0002
+ * @tc.name: test HasOtaNewInstallUser
+ * @tc.desc: 1.fallback to U1 when queried user is not U1/default
+ */
+HWTEST_F(BmsBundleInstallerTest, HasOtaNewInstallUser_0002, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.AddOtaNewInstallUser(Constants::U1);
+    EXPECT_TRUE(preInstallBundleInfo.HasOtaNewInstallUser(TEST_U100));
+}
+
+/**
+ * @tc.number: HasOtaNewInstallUser_0003
+ * @tc.name: test HasOtaNewInstallUser
+ * @tc.desc: 1.fallback to default user when queried user is not U1/default
+ */
+HWTEST_F(BmsBundleInstallerTest, HasOtaNewInstallUser_0003, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.AddOtaNewInstallUser(Constants::DEFAULT_USERID);
+    EXPECT_TRUE(preInstallBundleInfo.HasOtaNewInstallUser(TEST_U100));
+}
+
+/**
+ * @tc.number: HasOtaNewInstallUser_0004
+ * @tc.name: test HasOtaNewInstallUser
+ * @tc.desc: 1.return false when U1/default queried and not found
+ */
+HWTEST_F(BmsBundleInstallerTest, HasOtaNewInstallUser_0004, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+    EXPECT_FALSE(preInstallBundleInfo.HasOtaNewInstallUser(Constants::U1));
+    EXPECT_FALSE(preInstallBundleInfo.HasOtaNewInstallUser(Constants::DEFAULT_USERID));
+}
+
+/**
+ * @tc.number: HasOtaNewInstallUser_0005
+ * @tc.name: test HasOtaNewInstallUser
+ * @tc.desc: 1.return false when queried user is not U1/default and no global markers exist
+ */
+HWTEST_F(BmsBundleInstallerTest, HasOtaNewInstallUser_0005, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+    EXPECT_FALSE(preInstallBundleInfo.HasOtaNewInstallUser(TEST_U100));
+}
+
+/**
  * @tc.number: GetConfirmUserId_0001
  * @tc.name: test GetConfirmUserId
  * @tc.desc: 1.GetConfirmUserId, otaInstall_ is false, innerBundleInfo1 is singleton
