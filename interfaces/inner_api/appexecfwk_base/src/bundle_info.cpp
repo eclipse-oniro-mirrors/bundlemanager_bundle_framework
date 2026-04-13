@@ -76,7 +76,7 @@ const char* REQUESTPERMISSION_ABILITIES = "abilities";
 const char* REQUESTPERMISSION_ABILITY = "ability";
 const char* REQUESTPERMISSION_WHEN = "when";
 const char* REQUESTPERMISSION_MODULE_NAME = "moduleName";
-const char* REQUESTPERMISSION_REQUIRE_FEATURE = "requireFeature";
+const char* REQUESTPERMISSION_REQUIRED_FEATURE = "requiredFeature";
 const char* SIGNATUREINFO_APPID = "appId";
 const char* SIGNATUREINFO_FINGERPRINT = "fingerprint";
 const char* BUNDLE_INFO_APP_INDEX = "appIndex";
@@ -145,7 +145,7 @@ bool RequestPermission::ReadFromParcel(Parcel &parcel)
     }
     usedScene = *scene;
     moduleName = Str16ToStr8(parcel.ReadString16());
-    requireFeature = Str16ToStr8(parcel.ReadString16());
+    requiredFeature = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -156,7 +156,7 @@ bool RequestPermission::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reasonId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &usedScene);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(requireFeature));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(requiredFeature));
     return true;
 }
 
@@ -756,7 +756,7 @@ void to_json(nlohmann::json &jsonObject, const RequestPermission &requestPermiss
         {REQUESTPERMISSION_REASON_ID, requestPermission.reasonId},
         {REQUESTPERMISSION_USEDSCENE, requestPermission.usedScene},
         {REQUESTPERMISSION_MODULE_NAME, requestPermission.moduleName},
-        {REQUESTPERMISSION_REQUIRE_FEATURE, requestPermission.requireFeature}
+        {REQUESTPERMISSION_REQUIRED_FEATURE, requestPermission.requiredFeature}
     };
 }
 
@@ -850,8 +850,8 @@ void from_json(const nlohmann::json &jsonObject, RequestPermission &requestPermi
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        REQUESTPERMISSION_REQUIRE_FEATURE,
-        requestPermission.requireFeature,
+        REQUESTPERMISSION_REQUIRED_FEATURE,
+        requestPermission.requiredFeature,
         false,
         parseResult);
     if (parseResult != ERR_OK) {

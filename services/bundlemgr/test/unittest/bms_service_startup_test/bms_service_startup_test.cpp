@@ -1073,7 +1073,7 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_4000, Function | SmallTest |
     InnerModuleInfo innerModuleInfo;
     RequestPermission reqPermission;
     reqPermission.name = "name";
-    reqPermission.requireFeature = "requireFeature";
+    reqPermission.requiredFeature = "requiredFeature";
     innerModuleInfo.requestPermissions.push_back(reqPermission);
     std::string moduleName = "moduleName";
     innerBundleInfo.InsertInnerModuleInfo(moduleName, innerModuleInfo);
@@ -1081,7 +1081,7 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_4000, Function | SmallTest |
         = BundlePermissionMgr::GetPermissionStateFullList(innerBundleInfo);
     EXPECT_EQ(permFull.size(), 1);
     EXPECT_EQ(permFull[0].permissionName, "name");
-    EXPECT_EQ(permFull[0].feature, "requireFeature");
+    EXPECT_EQ(permFull[0].feature, "requiredFeature");
 }
 
 /**
