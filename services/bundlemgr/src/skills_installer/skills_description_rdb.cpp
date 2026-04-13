@@ -89,7 +89,7 @@ ErrCode SkillsDescriptionRdb::AddSkillDescriptions(const std::vector<SkillsPacka
         APP_LOGE("AddSkillDescriptions failed, BatchInsertData returned false");
         return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
     }
-    if (valuesBuckets.size() != static_cast<uint64_t>(insertNum)) {
+    if (valuesBucketList.size() != static_cast<uint64_t>(insertNum)) {
         APP_LOGE("BatchInsert size not expected");
         return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
     }
@@ -121,7 +121,7 @@ ErrCode SkillsDescriptionRdb::DeleteSkillDescriptions(const std::string &bundleN
     }
 
     NativeRdb::AbsRdbPredicates absRdbPredicates(SKILLS_DESCRIPTION_TABLE_NAME);
-    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName)
+    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
     absRdbPredicates.EqualTo(MODULE_NAME, moduleName);
     if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
         APP_LOGE("DeleteSkillDescriptions failed, DeleteData returned false");
@@ -139,8 +139,8 @@ ErrCode SkillsDescriptionRdb::DeleteSkillDescriptions(const std::string &bundleN
     }
 
     NativeRdb::AbsRdbPredicates absRdbPredicates(SKILLS_DESCRIPTION_TABLE_NAME);
-    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName)
-    absRdbPredicates.EqualTo(MODULE_NAME, moduleName)
+    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
+    absRdbPredicates.EqualTo(MODULE_NAME, moduleName);
     absRdbPredicates.EqualTo(SKILL_NAME, skillName);
     if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
         APP_LOGE("DeleteSkillDescriptions failed, DeleteData returned false");
