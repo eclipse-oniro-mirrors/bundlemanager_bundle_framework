@@ -9235,9 +9235,7 @@ ErrCode BaseBundleInstaller::RecoverOnDemandInstallBundle(const std::string &bun
     innerInstallParam.removable = true;
     innerInstallParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_PREINSTALLED_APP;
     innerInstallParam.isDataPreloadHap = IsDataPreloadHap(pathVec.empty() ? "" : pathVec.front());
-    if (!innerInstallParam.isDataPreloadHap) {
-        innerInstallParam.copyHapToInstallPath = false;
-    }
+    innerInstallParam.copyHapToInstallPath = false;
     ErrCode result = ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid, true);
     if (result == ERR_OK) {
         OnDemandInstallDataMgr::GetInstance().DeleteOnDemandInstallBundleInfo(bundleName);
