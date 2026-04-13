@@ -65,7 +65,7 @@ constexpr const char* MODULE_IS_ENTRY = "isEntry";
 constexpr const char* MODULE_METADATA = "metaData";
 constexpr const char* MODULE_HNP_PACKAGE = "hnpPackage";
 constexpr const char* MODULE_EXECUTABLE_BINARY_PATHS = "executableBinaryPaths";
-constexpr const char* MODULE_SKILLS_AGENTS = "skillsAgents";
+constexpr const char* MODULE_AGENT_SKILLS = "agentSkills";
 constexpr const char* MODULE_COLOR_MODE = "colorMode";
 constexpr const char* MODULE_DISTRO = "distro";
 constexpr const char* MODULE_REQ_CAPABILITIES = "reqCapabilities";
@@ -171,8 +171,9 @@ constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDeleg
 constexpr const char* EXECUTABLE_BINARY_PATH = "path";
 // SkillsAgent field constants
 constexpr const char* SKILLS_AGENT_NAME = "name";
-constexpr const char* SKILLS_AGENT_RELATIVE_ABILITY = "relativeAbility";
-constexpr const char* SKILLS_AGENT_SRC_ENTRY = "srcEntry";
+constexpr const char* SKILLS_AGENT_ABILITY_NAME = "abilityName";
+constexpr const char* SKILLS_AGENT_SRC_ENTRIES = "srcEntries";
+constexpr const char* SKILLS_AGENT_PERMISSIONS = "permissions";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 constexpr const char* MODULE_BOOL_SET = "boolSet";
 constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
@@ -273,41 +274,50 @@ void to_json(nlohmann::json &jsonObject, const ExecutableBinaryPath &executableB
     };
 }
 
-void from_json(const nlohmann::json &jsonObject, SkillsAgent &skillsAgent)
+void from_json(const nlohmann::json &jsonObject, AgentSkill &agentSkill)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         SKILLS_AGENT_NAME,
-        skillsAgent.name,
+        agentSkill.name,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        SKILLS_AGENT_RELATIVE_ABILITY,
-        skillsAgent.relativeAbility,
+        SKILLS_AGENT_ABILITY_NAME,
+        agentSkill.abilityName,
         false,
         parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
-        SKILLS_AGENT_SRC_ENTRY,
-        skillsAgent.srcEntry,
+        SKILLS_AGENT_SRC_ENTRIES,
+        agentSkill.srcEntries,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        SKILLS_AGENT_PERMISSIONS,
+        agentSkill.permissions,
         JsonType::ARRAY,
         false,
         parseResult,
         ArrayType::STRING);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read SkillsAgent from json error, error code : %{public}d", parseResult);
+        APP_LOGE("read AgentSkill from json error, error code : %{public}d", parseResult);
     }
 }
 
-void to_json(nlohmann::json &jsonObject, const SkillsAgent &skillsAgent)
+void to_json(nlohmann::json &jsonObject, const AgentSkill &agentSkill)
 {
     jsonObject = nlohmann::json {
-        {SKILLS_AGENT_NAME, skillsAgent.name},
-        {SKILLS_AGENT_RELATIVE_ABILITY, skillsAgent.relativeAbility},
-        {SKILLS_AGENT_SRC_ENTRY, skillsAgent.srcEntry}
+        {SKILLS_AGENT_NAME, agentSkill.name},
+        {SKILLS_AGENT_ABILITY_NAME, agentSkill.abilityName},
+        {SKILLS_AGENT_SRC_ENTRIES, agentSkill.srcEntries},
+        {SKILLS_AGENT_PERMISSIONS, agentSkill.permissions}
     };
 }
 
@@ -545,7 +555,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_PAGES, info.pages},
         {MODULE_SYSTEM_THEME, info.systemTheme},
         {MODULE_META_DATA, info.metadata},
-        {MODULE_SKILLS_AGENTS, info.skillsAgents},
+        {MODULE_AGENT_SKILLS, info.agentSkills},
         {MODULE_HNP_PACKAGE, info.hnpPackages},
         {MODULE_EXECUTABLE_BINARY_PATHS, info.executableBinaryPaths},
         {MODULE_REQUEST_PERMISSIONS, info.requestPermissions},
@@ -929,10 +939,10 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::vector<SkillsAgent>>(jsonObject,
+    GetValueIfFindKey<std::vector<AgentSkill>>(jsonObject,
         jsonObjectEnd,
-        MODULE_SKILLS_AGENTS,
-        info.skillsAgents,
+        MODULE_AGENT_SKILLS,
+        info.agentSkills,
         JsonType::ARRAY,
         false,
         parseResult,

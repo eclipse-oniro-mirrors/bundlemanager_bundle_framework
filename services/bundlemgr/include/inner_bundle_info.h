@@ -72,10 +72,11 @@ struct DefinePermission {
     std::string availableType;
 };
 
-struct SkillsAgent {
+struct AgentSkill {
     std::string name;
-    std::string relativeAbility;
-    std::vector<std::string> srcEntry;
+    std::string abilityName;
+    std::vector<std::string> srcEntries;
+    std::vector<std::string> permissions;
 };
 
 struct InnerModuleInfo {
@@ -165,7 +166,7 @@ struct InnerModuleInfo {
     std::vector<DefinePermission> definePermissions;
     std::vector<RequestPermission> requestPermissions;
     std::vector<Metadata> metadata;
-    std::vector<SkillsAgent> skillsAgents;
+    std::vector<AgentSkill> agentSkills;
     std::vector<Dependency> dependencies;
     std::vector<OverlayModuleInfo> overlayModuleInfo;
     std::vector<ProxyData> proxyDatas;
