@@ -58,6 +58,7 @@ constexpr const char* ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeE
 constexpr const char* ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 constexpr const char* ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 constexpr const char* ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
+constexpr const char* ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED = "allowAppRunWhenDeviceFirstLocked";
 constexpr const char* APL_NORMAL = "normal";
 constexpr const char* SLASH = "/";
 constexpr const char* DOUBLE_SLASH = "//";
@@ -881,6 +882,10 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetSingleton(false);
 
     newInfo.SetRemovable(checkParam.removable);
+    // For system apps, default allowAppRunWhenDeviceFirstLocked to true
+    if (newInfo.IsSystemApp()) {
+        newInfo.SetAllowAppRunWhenDeviceFirstLocked(true);
+    }
     PreBundleConfigInfo preBundleConfigInfo;
     preBundleConfigInfo.bundleName = newInfo.GetBundleName();
     if (!BMSEventHandler::GetPreInstallCapability(preBundleConfigInfo)) {
@@ -902,7 +907,12 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
     newInfo.SetResourcesApply(preBundleConfigInfo.resourcesApply);
-    newInfo.SetAllowAppRunWhenDeviceFirstLocked(preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked);
+    // Only override allowAppRunWhenDeviceFirstLocked if explicitly configured in JSON
+    auto it = std::find(preBundleConfigInfo.existInJsonFile.cbegin(),
+        preBundleConfigInfo.existInJsonFile.cend(), ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED);
+    if (it != preBundleConfigInfo.existInJsonFile.cend()) {
+        newInfo.SetAllowAppRunWhenDeviceFirstLocked(preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked);
+    }
     newInfo.SetAllowEnableNotification(preBundleConfigInfo.allowEnableNotification);
 }
 
