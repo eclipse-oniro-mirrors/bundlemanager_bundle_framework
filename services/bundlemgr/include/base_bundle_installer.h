@@ -1075,6 +1075,7 @@ private:
     InstallerBundleTempInfo tempInfo_;
     // indicates whether the application has been restored to the preinstall
     bool isPreBundleRecovered_ = false;
+    std::vector<std::string> allowListenBundles_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

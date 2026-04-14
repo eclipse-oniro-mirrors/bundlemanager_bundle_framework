@@ -3833,4 +3833,106 @@ HWTEST_F(BmsBundleDataMgrTest2, ProcessShortcutInfos_0500, Function | SmallTest 
     EXPECT_FALSE(shortcutInfos.empty());
     ClearDataMgr();
 }
+
+/**
+ * @tc.number: GetAllowListenBundleNames_0100
+ * @tc.name: test GetAllowListenBundleNames
+ * @tc.desc: 1.bundle not exist
+ *           2.call GetAllowListenBundleNames
+ *           3.return empty vector
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetAllowListenBundleNames_0100, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    auto result = dataMgr->GetAllowListenBundleNames(BUNDLE_NAME_TEST);
+    EXPECT_TRUE(result.empty());
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: GetAllowListenBundleNames_0200
+ * @tc.name: test GetAllowListenBundleNames
+ * @tc.desc: 1.bundle exist but allowListenBundleChangedEvent is empty
+ *           2.call GetAllowListenBundleNames
+ *           3.return empty vector
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetAllowListenBundleNames_0200, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerInfo);
+
+    auto result = dataMgr->GetAllowListenBundleNames(BUNDLE_NAME_TEST);
+    EXPECT_TRUE(result.empty());
+
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: GetAllowListenBundleNames_0300
+ * @tc.name: test GetAllowListenBundleNames
+ * @tc.desc: 1.bundle exist with allowListenBundleChangedEvent set
+ *           2.target bundle's appIdentifier matches
+ *           3.call GetAllowListenBundleNames
+ *           4.return matched bundle name list
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetAllowListenBundleNames_0300, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    const std::string appIdentifier = "testAppIdentifier123";
+    InnerBundleInfo targetInfo;
+    targetInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+    targetInfo.SetAppIdentifier(appIdentifier);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, targetInfo);
+
+    InnerBundleInfo listenInfo;
+    listenInfo.baseApplicationInfo_->bundleName = BUNDLE_TEST1;
+    listenInfo.baseApplicationInfo_->allowListenBundleChangedEvent = { appIdentifier };
+    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, listenInfo);
+
+    auto result = dataMgr->GetAllowListenBundleNames(BUNDLE_TEST1);
+    EXPECT_EQ(result.size(), 1);
+    EXPECT_EQ(result[0], BUNDLE_NAME_TEST);
+
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: GetAllowListenBundleNames_0400
+ * @tc.name: test GetAllowListenBundleNames
+ * @tc.desc: 1.bundle exist with allowListenBundleChangedEvent set
+ *           2.no target bundle's appIdentifier matches
+ *           3.call GetAllowListenBundleNames
+ *           4.return empty vector
+ */
+HWTEST_F(BmsBundleDataMgrTest2, GetAllowListenBundleNames_0400, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo listenInfo;
+    listenInfo.baseApplicationInfo_->bundleName = BUNDLE_TEST1;
+    listenInfo.baseApplicationInfo_->allowListenBundleChangedEvent = { "nonExistIdentifier" };
+    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, listenInfo);
+
+    auto result = dataMgr->GetAllowListenBundleNames(BUNDLE_TEST1);
+    EXPECT_TRUE(result.empty());
+
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+    ClearDataMgr();
+}
 } // OHOS

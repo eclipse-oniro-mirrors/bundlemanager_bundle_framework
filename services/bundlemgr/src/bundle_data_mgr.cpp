@@ -14009,5 +14009,34 @@ ErrCode BundleDataMgr::CheckBundleExist(const std::string &bundleName, int32_t u
     }
     return ERR_OK;
 }
+
+std::vector<std::string> BundleDataMgr::GetAllowListenBundleNames(
+    const std::string &bundleName) const
+{
+    std::vector<std::string> bundleNames;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE_NOFUNC("GetAllowListenBundleNames bundle -n %{public}s not exist", bundleName.c_str());
+        return bundleNames;
+    }
+    std::vector<std::string> allowListenBundles = item->second.GetAllowListenBundleChangedEvent();
+    if (allowListenBundles.empty()) {
+        APP_LOGE_NOFUNC("bundle -n %{public}s allowListenBundleChangedEvent is empty", bundleName.c_str());
+        return bundleNames;
+    }
+    for (const auto &info : bundleInfos_) {
+        std::string appIdentidier = info.second.GetAppIdentifier();
+        auto item = std::find(allowListenBundles.begin(), allowListenBundles.end(), appIdentidier);
+        if (item != allowListenBundles.end()) {
+            bundleNames.emplace_back(info.first);
+        }
+        if (bundleNames.size() == allowListenBundles.size()) {
+            break;
+        }
+    }
+    APP_LOGD("allowListenBundles size:%{public}zu", allowListenBundles.size());
+    return bundleNames;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

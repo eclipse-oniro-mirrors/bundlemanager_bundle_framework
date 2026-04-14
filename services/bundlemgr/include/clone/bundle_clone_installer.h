@@ -97,6 +97,7 @@ private:
     bool isKeepData_ = false;
     int64_t startTime_ = 0;
     bool existBeforeKeepDataApp_ = false;
+    std::string appDistributionType_;
 };
 } // AppExecFwk
 } // OHOS

@@ -22,6 +22,7 @@
 #include "account_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_common_event.h"
+#include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
@@ -153,7 +154,8 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     }
 
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    (void)PublishCommonEvent(installResult.bundleName, want.GetAction(), publishUserId, commonData);
+    (void)PublishCommonEvent(installResult.bundleName, want.GetAction(), publishUserId, commonData,
+        installResult.allowListenBundles);
     (void)ProcessBundleChangedEventForOtherUsers(dataMgr, installResult, publishUserId, commonData);
     IPCSkeleton::SetCallingIdentity(identity);
 }
@@ -162,33 +164,69 @@ bool BundleCommonEventMgr::PublishCommonEvent(
     const std::string &bundleName,
     const std::string &action,
     const int32_t publishUserId,
-    const EventFwk::CommonEventData &commonData)
+    const EventFwk::CommonEventData &commonData,
+    const std::vector<std::string> &allowListenBundles)
 {
     std::string appDistributionType = commonData.GetWant().GetStringParam(APP_DISTRIBUTION_TYPE);
+    int32_t appIndex = commonData.GetWant().GetIntParam(APP_INDEX, 0);
     if (appDistributionType.empty()) {
         APP_LOGD("appDistributionType is empty");
     }
-    EventFwk::CommonEventPublishInfo publishInfo;
-    if (eventSet_.find(action) != eventSet_.end() &&
-        appDistributionType != Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE) {
-        std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
-        publishInfo.SetSubscriberPermissions(permissionVec);
-        publishInfo.SetBundleName(bundleName);
-        publishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
-        publishInfo.SetValidationRule(EventFwk::ValidationRule::OR);
-        if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishInfo, publishUserId)) {
-            APP_LOGE("PublishCommonEventAsUser failed, userId:%{public}d", publishUserId);
-            return false;
+    if (eventSet_.find(action) != eventSet_.end()) {
+        if (appDistributionType != Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE) {
+            EventFwk::CommonEventPublishInfo publishInfo;
+            std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
+            publishInfo.SetSubscriberPermissions(permissionVec);
+            publishInfo.SetBundleName(bundleName);
+            publishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
+            publishInfo.SetValidationRule(EventFwk::ValidationRule::OR);
+            if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishInfo, publishUserId)) {
+                APP_LOGE("PublishCommonEventAsUser failed, userId:%{public}d", publishUserId);
+                return false;
+            }
+        } else {
+            EventFwk::CommonEventPublishInfo publishInfo;
+            publishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
+            publishInfo.SetSubscriberMaximumVersion(CONTROL_API_VERSION);
+            publishInfo.SetBundleName(bundleName);
+            publishInfo.SetValidationRule(EventFwk::ValidationRule::OR);
+            if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishInfo, publishUserId)) {
+                APP_LOGE_NOFUNC("enterprise PublishCommonEventAsUser failed, userId:%{public}d", publishUserId);
+            }
+            std::vector<std::string> allowListenBundleNames = allowListenBundles;
+            if (commonData.GetWant().GetAction() != EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED
+                || appIndex != Constants::DEFAULT_APP_INDEX) {
+                auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+                allowListenBundleNames = dataMgr->GetAllowListenBundleNames(bundleName);
+            }
+            if (allowListenBundleNames.empty()) {
+                return true;
+            }
+            APP_LOGI_NOFUNC("allowListenBundleNames size:%{public}zu -n:%{public}s", allowListenBundleNames.size(),
+                bundleName.c_str());
+            for (const auto &allowListenBundleName : allowListenBundleNames) {
+                (void)PublishCommonEventForEnterpriseAsync(allowListenBundleName, publishUserId, commonData);
+            }
         }
     } else {
-        publishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
-        publishInfo.SetSubscriberMaximumVersion(CONTROL_API_VERSION);
-        publishInfo.SetBundleName(bundleName);
-        publishInfo.SetValidationRule(EventFwk::ValidationRule::OR);
-        if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishInfo, publishUserId)) {
+        if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishUserId)) {
             APP_LOGE("PublishCommonEventAsUser failed, userId:%{public}d", publishUserId);
             return false;
         }
+    }
+    return true;
+}
+
+bool BundleCommonEventMgr::PublishCommonEventForEnterprise(
+    const std::string &bundleName,
+    const int32_t publishUserId,
+    const EventFwk::CommonEventData &commonData)
+{
+    EventFwk::CommonEventPublishInfo publishInfo;
+    publishInfo.SetBundleName(bundleName);
+    if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishInfo, publishUserId)) {
+        APP_LOGE("PublishCommonEventAsUser failed, userId:%{public}d", publishUserId);
+        return false;
     }
     return true;
 }
@@ -681,5 +719,14 @@ void BundleCommonEventMgr::NotifyDeleteDisposedRuleAsync(const std::string &appI
     });
 }
 
+void BundleCommonEventMgr::PublishCommonEventForEnterpriseAsync(
+    const std::string &bundleName,
+    const int32_t publishUserId,
+    const EventFwk::CommonEventData &commonData)
+{
+    SubmitEventAsync([this, bundleName, publishUserId, commonData]() {
+        PublishCommonEventForEnterprise(bundleName, publishUserId, commonData);
+    });
+}
 } // AppExecFwk
 } // OHOS

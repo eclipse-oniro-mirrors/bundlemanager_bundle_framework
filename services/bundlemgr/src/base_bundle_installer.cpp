@@ -453,7 +453,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .developerId = developerId,
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+            .allowListenBundles = allowListenBundles_,
         };
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
 
@@ -727,7 +728,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData,
             .isBundleExist = isBundleExist_,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+            .allowListenBundles = allowListenBundles_,
         };
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (NotifyBundleStatus(installRes) != ERR_OK) {
@@ -2083,6 +2085,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     appIdentifier_ = oldInfo.GetAppIdentifier();
     appDistributionType_ = oldInfo.GetAppDistributionType();
     isBundleCrossAppSharedConfig_ = oldInfo.IsBundleCrossAppSharedConfig();
+    if (appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE) {
+        allowListenBundles_ = dataMgr_->GetAllowListenBundleNames(bundleName);
+    }
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
@@ -2405,6 +2410,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     versionCode_ = oldInfo.GetVersionCode();
     appDistributionType_ = oldInfo.GetAppDistributionType();
     appIdentifier_ = oldInfo.GetAppIdentifier();
+    if (appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE) {
+        allowListenBundles_ = dataMgr_->GetAllowListenBundleNames(bundleName);
+    }
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
@@ -2676,6 +2684,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
 
             versionCode_ = oldInfo.GetVersionCode();
             bundleAppIdentifier_ = oldInfo.GetAppIdentifier();
+            appDistributionType_ = oldInfo.GetAppDistributionType();
             moduleName_ = oldInfo.GetEventModuleName();
             if (oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
                 LOG_D(BMS_TAG_INSTALLER, "Appservice (%{public}s) only install in U0", bundleName.c_str());
@@ -6513,6 +6522,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     isBundleCrossAppSharedConfig_ = false;
     isKeepTokenId_ = false;
     appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
+    allowListenBundles_.clear();
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool killProcess)

@@ -2236,6 +2236,8 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     }
     baseApplicationInfo_->appSignType = applicationInfo.appSignType;
     baseApplicationInfo_->profileable = applicationInfo.profileable;
+    baseApplicationInfo_->allowListenBundleChangedEvent =
+        applicationInfo.allowListenBundleChangedEvent;
 }
 
 void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
@@ -2248,6 +2250,8 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
         if (info.HasEntry()) {
             baseApplicationInfo_->assetAccessGroups = info.baseApplicationInfo_->assetAccessGroups;
             baseApplicationInfo_->appPreloadPhase = info.baseApplicationInfo_->appPreloadPhase;
+            baseApplicationInfo_->allowListenBundleChangedEvent =
+                info.baseApplicationInfo_->allowListenBundleChangedEvent;
         }
         baseApplicationInfo_->cloudStructuredDataSyncEnabled =
             info.baseApplicationInfo_->cloudStructuredDataSyncEnabled;
