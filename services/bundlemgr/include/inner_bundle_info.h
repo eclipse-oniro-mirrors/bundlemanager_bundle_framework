@@ -1298,6 +1298,7 @@ public:
     std::optional<std::vector<HnpPackage>> GetInnerModuleInfoHnpInfo(const std::string &moduleName) const;
     std::string GetInnerModuleInfoHnpPath(const std::string &moduleName) const;
     void GetModuleNames(std::vector<std::string> &moduleNames) const;
+    std::string GetEventModuleName() const;
 
     void AddExtendResourceInfos(std::vector<ExtendResourceInfo> extendResourceInfos)
     {

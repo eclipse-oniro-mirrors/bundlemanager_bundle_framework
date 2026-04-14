@@ -6176,6 +6176,52 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15200, Function | Sma
 }
 
 /**
+ * @tc.number: InnerBundleInfo_15300
+ * @tc.name: Test GetEventModuleName
+ * @tc.desc: Test GetEventModuleName of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string eventModuleName = info.GetEventModuleName();
+    EXPECT_TRUE(eventModuleName.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_15400
+ * @tc.name: Test GetEventModuleName
+ * @tc.desc: Test GetEventModuleName of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    info.InsertInnerModuleInfo(TEST_KEY, innerModuleInfo);
+    std::string eventModuleName = info.GetEventModuleName();
+    EXPECT_EQ(eventModuleName, MODULE_NAME);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_15500
+ * @tc.name: Test GetEventModuleName
+ * @tc.desc: Test GetEventModuleName of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    InnerModuleInfo innerModuleInfo1;
+    innerModuleInfo1.moduleName = MODULE_NAME_TEST;
+    info.InsertInnerModuleInfo(TEST_KEY, innerModuleInfo);
+    info.InsertInnerModuleInfo(TEST_KEY1, innerModuleInfo1);
+    std::string eventModuleName = info.GetEventModuleName();
+    std::string expectModuleName = MODULE_NAME + ServiceConstants::MODULE_NAME_SEPARATOR + MODULE_NAME_TEST;
+    EXPECT_EQ(eventModuleName, expectModuleName);
+}
+
+/**
  * @tc.number: GetApplicationArkTSMode_0001
  * @tc.name: test GetApplicationArkTSMode
  * @tc.desc: 1. test GetApplicationArkTSMode of InnerBundleInfo on empty innerModuleInfos_

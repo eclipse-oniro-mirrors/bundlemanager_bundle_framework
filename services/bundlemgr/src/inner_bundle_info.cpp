@@ -3460,6 +3460,19 @@ void InnerBundleInfo::GetModuleNames(std::vector<std::string> &moduleNames) cons
     }
 }
 
+std::string InnerBundleInfo::GetEventModuleName() const
+{
+    std::string moduleName;
+    for (const auto &innerModuleInfo : innerModuleInfos_) {
+        moduleName.append(innerModuleInfo.second.moduleName).append(ServiceConstants::MODULE_NAME_SEPARATOR);
+    }
+    if (!moduleName.empty()) {
+        moduleName.pop_back();
+    }
+    LOG_D(BMS_TAG_INSTALLER, "eventModuleNames : %{public}s", moduleName.c_str());
+    return moduleName;
+}
+
 int32_t InnerBundleInfo::GetModuleSize() const
 {
     return innerModuleInfos_.size();

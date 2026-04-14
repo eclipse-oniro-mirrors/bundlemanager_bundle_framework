@@ -73,6 +73,7 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
         .bundleName = bundleName,
         .appDistributionType = appDistributionType_,
         .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+        .modulePackage = moduleName_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
@@ -109,6 +110,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     }
     dataMgr_->DisableBundle(bundleName);
     isBundleCrossAppSharedConfig_ = info.IsBundleCrossAppSharedConfig();
+    moduleName_ = info.GetEventModuleName();
 
     // 2. obtain userId
     if (!dataMgr_->HasUserId(userId)) {
@@ -337,6 +339,7 @@ void BundleMultiUserInstaller::ResetInstallProperties()
     accessTokenId_ = 0;
     isBundleCrossAppSharedConfig_ = false;
     appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
+    moduleName_.clear();
 }
 
 bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,
