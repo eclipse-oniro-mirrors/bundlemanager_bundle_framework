@@ -5532,12 +5532,7 @@ std::vector<std::string> BaseBundleInstaller::GetBinFilePaths(const InnerBundleI
                 continue;
             }
             binPath = binPath.substr(libsPrefix.length());
-            std::string fullPath = prefix + binPath;
-            if (!BundleUtil::IsExecutableBinaryFile(fullPath)) {
-                LOG_D(BMS_TAG_INSTALLER, "skip non-executable file: %{private}s", fullPath.c_str());
-                continue;
-            }
-            binFilePaths.push_back(fullPath);
+            binFilePaths.push_back(prefix + binPath);
         }
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "binFilePaths size: %{public}zu", binFilePaths.size());

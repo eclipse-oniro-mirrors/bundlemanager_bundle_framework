@@ -255,7 +255,6 @@ public:
     static ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias);
     static std::vector<std::string> GetPathsToSetContext(const std::string &bundleName,
         int32_t userId, int32_t appIndex);
-    static bool IsExecutableBinaryFile(const std::string &filePath);
 private:
     static std::mutex g_mutex;
     static std::recursive_mutex configXmlMutex_;
