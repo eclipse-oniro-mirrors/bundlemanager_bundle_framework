@@ -328,45 +328,6 @@ std::string BundleUtil::GetNoDisablingConfigPath()
     return "";
 }
 
-std::string BundleUtil::GetWhiteListPathByDisplayName(const std::string& displayName)
-{
-    return "";
-}
-
-std::string BundleUtil::GetDisPlayManagerConfigPath()
-{
-    return "";
-}
-
-bool BundleUtil::IsValidNode(const xmlNode& currNode)
-{
-    return true;
-}
-
-uint64_t BundleUtil::ParseStrToUll(const std::string& contentStr)
-{
-    return 0;
-}
-
-void BundleUtil::ParseDisplaysMap(const xmlNodePtr& currNode, std::unordered_map<std::string, uint64_t> &displaysMap)
-{
-}
-
-bool BundleUtil::GetDisplaysMapFromConfigXml(std::unordered_map<std::string, uint64_t> &displaysMap)
-{
-    return true;
-}
-
-bool BundleUtil::PatchReadWhiteListXml(std::unordered_map<uint64_t, std::vector<std::string>> &logicalIdWhiteListMap)
-{
-    std::vector<std::string> bundleNames = {"com.test.test"};
-    logicalIdWhiteListMap.emplace(1, bundleNames);
-    return true;
-}
-
-void BundleUtil::ParseAllowedNodeConfig(const xmlNodePtr &rootPtr, std::vector<std::string> &bundleNames)
-{
-}
 
 bool BundleUtil::IsExecutableBinaryFile(const std::string &filePath)
 {
@@ -711,43 +672,6 @@ std::string BundleUtil::GetNoDisablingConfigPath()
     return "";
 }
 
-std::string BundleUtil::GetWhiteListPathByDisplayName(const std::string& displayName)
-{
-    return "";
-}
-
-std::string BundleUtil::GetDisPlayManagerConfigPath()
-{
-    return "";
-}
-
-bool BundleUtil::IsValidNode(const xmlNode& currNode)
-{
-    return false;
-}
-
-uint64_t BundleUtil::ParseStrToUll(const std::string& contentStr)
-{
-    return 0;
-}
-
-void BundleUtil::ParseDisplaysMap(const xmlNodePtr& currNode, std::unordered_map<std::string, uint64_t> &displaysMap)
-{
-}
-
-bool BundleUtil::GetDisplaysMapFromConfigXml(std::unordered_map<std::string, uint64_t> &displaysMap)
-{
-    return false;
-}
-
-bool BundleUtil::PatchReadWhiteListXml(std::unordered_map<uint64_t, std::vector<std::string>> &logicalIdWhiteListMap)
-{
-    return false;
-}
-
-void BundleUtil::ParseAllowedNodeConfig(const xmlNodePtr &rootPtr, std::vector<std::string> &bundleNames)
-{
-}
 
 bool BundleUtil::IsExecutableBinaryFile(const std::string &filePath)
 {

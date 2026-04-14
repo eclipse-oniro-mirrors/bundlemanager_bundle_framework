@@ -30,6 +30,7 @@
 #endif
 #include "file_ex.h"
 #include "elf.h"
+#include "xml_util.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -185,56 +186,56 @@ HWTEST_F(BundleUtilTest, GetWhiteListPathByDisplayNameTest, TestSize.Level2)
 #ifdef CONFIG_POLOCY_ENABLE
     ConfigPolicyUtilsMock cfgPolicyUtils;
     cfgPolicyUtils.whiteListConfigPath = nullptr;
-    auto path = BundleUtil::GetWhiteListPathByDisplayName(displayName);
+    auto path = XmlUtil::GetWhiteListPathByDisplayName(displayName);
     EXPECT_EQ(path, displayNameDefaultPath);
 
     cfgPolicyUtils.whiteListConfigPath = g_cfgErrorName;
-    path = BundleUtil::GetWhiteListPathByDisplayName(displayName);
+    path = XmlUtil::GetWhiteListPathByDisplayName(displayName);
     EXPECT_EQ(path, displayNameDefaultPath);
 
     std::string overLengthStr(257, 'c');
     cfgPolicyUtils.whiteListConfigPath = overLengthStr.data();
-    path = BundleUtil::GetWhiteListPathByDisplayName(displayName);
+    path = XmlUtil::GetWhiteListPathByDisplayName(displayName);
     EXPECT_EQ(path, displayNameDefaultPath);
 
     std::string ansStr = "abc";
     cfgPolicyUtils.whiteListConfigPath = ansStr.data();
-    path = BundleUtil::GetWhiteListPathByDisplayName(displayName);
+    path = XmlUtil::GetWhiteListPathByDisplayName(displayName);
     EXPECT_EQ(path, ansStr);
 #else
-    auto path = BundleUtil::GetWhiteListPathByDisplayName(displayName);
+    auto path = XmlUtil::GetWhiteListPathByDisplayName(displayName);
     EXPECT_EQ(path, displayNameDefaultPath);
 #endif
 }
 
 /**
- * @tc.number: GetDisPlayManagerConfigPathTest
- * @tc.name: test the GetDisPlayManagerConfigPath.
- * @tc.desc: test the GetDisPlayManagerConfigPath.
+ * @tc.number: GetDisplayManagerConfigPathTest
+ * @tc.name: test the GetDisplayManagerConfigPath.
+ * @tc.desc: test the GetDisplayManagerConfigPath.
  */
-HWTEST_F(BundleUtilTest, GetDisPlayManagerConfigPathTest, TestSize.Level2)
+HWTEST_F(BundleUtilTest, GetDisplayManagerConfigPathTest, TestSize.Level2)
 {
 #ifdef CONFIG_POLOCY_ENABLE
     ConfigPolicyUtilsMock cfgPolicyUtils;
     cfgPolicyUtils.displayManagerConfigPath = nullptr;
-    auto path = BundleUtil::GetDisPlayManagerConfigPath();
+    auto path = XmlUtil::GetDisplayManagerConfigPath();
     EXPECT_EQ(path, DISPLAY_MANAGER_CONFIG_PATH_DEFAULT);
 
     cfgPolicyUtils.displayManagerConfigPath = g_cfgErrorName;
-    path = BundleUtil::GetDisPlayManagerConfigPath();
+    path = XmlUtil::GetDisplayManagerConfigPath();
     EXPECT_EQ(path, DISPLAY_MANAGER_CONFIG_PATH_DEFAULT);
 
     std::string overLengthStr(257, 'c');
     cfgPolicyUtils.displayManagerConfigPath = overLengthStr.data();
-    path = BundleUtil::GetDisPlayManagerConfigPath();
+    path = XmlUtil::GetDisplayManagerConfigPath();
     EXPECT_EQ(path, DISPLAY_MANAGER_CONFIG_PATH_DEFAULT);
 
     std::string ansStr = "abc";
     cfgPolicyUtils.displayManagerConfigPath = ansStr.data();
-    path = BundleUtil::GetDisPlayManagerConfigPath();
+    path = XmlUtil::GetDisplayManagerConfigPath();
     EXPECT_EQ(path, ansStr);
 #else
-    auto path = BundleUtil::GetDisPlayManagerConfigPath();
+    auto path = XmlUtil::GetDisplayManagerConfigPath();
     EXPECT_EQ(path, DISPLAY_MANAGER_CONFIG_PATH_DEFAULT);
 #endif
 }
@@ -251,7 +252,7 @@ HWTEST_F(BundleUtilTest, GetDisplaysMapFromConfigXmlTest, TestSize.Level2)
     ConfigPolicyUtilsMock cfgPolicyUtils;
     cfgPolicyUtils.displayManagerConfigPath = errorNamePath.data();
     std::unordered_map<std::string, uint64_t> displaysMap;
-    auto res = BundleUtil::GetDisplaysMapFromConfigXml(displaysMap);
+    auto res = XmlUtil::GetDisplaysMapFromConfigXml(displaysMap);
     EXPECT_FALSE(res);
     EXPECT_TRUE(displaysMap.empty());
 
@@ -261,7 +262,7 @@ HWTEST_F(BundleUtilTest, GetDisplaysMapFromConfigXmlTest, TestSize.Level2)
     auto ret = xmlSaveFormatFileEnc(errorNamePath.c_str(), doc, "UTF-8", 1);
     xmlFreeDoc(doc);
     EXPECT_TRUE(ret);
-    res = BundleUtil::GetDisplaysMapFromConfigXml(displaysMap);
+    res = XmlUtil::GetDisplaysMapFromConfigXml(displaysMap);
     EXPECT_FALSE(res);
     EXPECT_TRUE(displaysMap.empty());
     BundleUtil::DeleteDir(errorNamePath);
@@ -269,13 +270,13 @@ HWTEST_F(BundleUtilTest, GetDisplaysMapFromConfigXmlTest, TestSize.Level2)
     std::string path = "/data/test/display_manager_config.xml";
     cfgPolicyUtils.displayManagerConfigPath = path.data();
     EXPECT_TRUE(MakeTestDisPlayManagerConfigFile(path));
-    res = BundleUtil::GetDisplaysMapFromConfigXml(displaysMap);
+    res = XmlUtil::GetDisplaysMapFromConfigXml(displaysMap);
     EXPECT_TRUE(res);
     EXPECT_FALSE(displaysMap.empty());
     BundleUtil::DeleteDir(path);
 #else
     std::unordered_map<std::string, uint64_t> displaysMap;
-    auto res = BundleUtil::GetDisplaysMapFromConfigXml(displaysMap);
+    auto res = XmlUtil::GetDisplaysMapFromConfigXml(displaysMap);
     EXPECT_TRUE(res);
 #endif
 }
@@ -292,7 +293,7 @@ HWTEST_F(BundleUtilTest, PatchReadWhiteListXmlTest_0001, TestSize.Level2)
     ConfigPolicyUtilsMock cfgPolicyUtils;
     std::string emptyConfigsPath = "/data/test/EmptyConfigs.xml";
     cfgPolicyUtils.whiteListConfigPath = emptyConfigsPath.data();
-    auto res = BundleUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
+    auto res = XmlUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
     EXPECT_FALSE(res);
     EXPECT_TRUE(logicalIdWhiteListMap.empty());
 
@@ -302,13 +303,13 @@ HWTEST_F(BundleUtilTest, PatchReadWhiteListXmlTest_0001, TestSize.Level2)
     auto ret = xmlSaveFormatFileEnc(emptyConfigsPath.c_str(), doc, "UTF-8", 1);
     xmlFreeDoc(doc);
     EXPECT_TRUE(ret);
-    res = BundleUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
+    res = XmlUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
     EXPECT_FALSE(res);
     EXPECT_TRUE(logicalIdWhiteListMap.empty());
     BundleUtil::DeleteDir(emptyConfigsPath);
 #else
     std::unordered_map<uint64_t, std::vector<std::string>> logicalIdWhiteListMap;
-    auto res = BundleUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
+    auto res = XmlUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
     EXPECT_FALSE(res);
 #endif
 }
@@ -331,7 +332,7 @@ HWTEST_F(BundleUtilTest, PatchReadWhiteListXmlTest_0002, TestSize.Level2)
     EXPECT_TRUE(MakeTestDisPlayManagerConfigFile(displayConfigsPath));
     std::ofstream emptyFile(whiteListPath);
     emptyFile.close();
-    auto res = BundleUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
+    auto res = XmlUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
     EXPECT_TRUE(res);
     EXPECT_FALSE(logicalIdWhiteListMap.empty());
     BundleUtil::DeleteDir(whiteListPath);
@@ -343,20 +344,20 @@ HWTEST_F(BundleUtilTest, PatchReadWhiteListXmlTest_0002, TestSize.Level2)
     auto ret = xmlSaveFormatFileEnc(whiteListPath.c_str(), doc, "UTF-8", 1);
     xmlFreeDoc(doc);
     EXPECT_TRUE(ret);
-    res = BundleUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
+    res = XmlUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
     EXPECT_FALSE(res);
     EXPECT_TRUE(logicalIdWhiteListMap.empty());
     BundleUtil::DeleteDir(whiteListPath);
 
     EXPECT_TRUE(MakeTestWhiteListConfigFile(whiteListPath));
-    res = BundleUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
+    res = XmlUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
     EXPECT_TRUE(res);
     EXPECT_FALSE(logicalIdWhiteListMap.empty());
     BundleUtil::DeleteDir(displayConfigsPath);
     BundleUtil::DeleteDir(whiteListPath);
 #else
     std::unordered_map<uint64_t, std::vector<std::string>> logicalIdWhiteListMap;
-    auto res = BundleUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
+    auto res = XmlUtil::PatchReadWhiteListXml(logicalIdWhiteListMap);
     EXPECT_FALSE(res);
 #endif
 }
@@ -369,31 +370,31 @@ HWTEST_F(BundleUtilTest, PatchReadWhiteListXmlTest_0002, TestSize.Level2)
 HWTEST_F(BundleUtilTest, ParseStrToUllTest, TestSize.Level1)
 {
     std::string input = "12345";
-    uint64_t result = BundleUtil::ParseStrToUll(input);
+    uint64_t result = XmlUtil::ParseStrToUll(input);
     EXPECT_EQ(result, 12345u);
 
     input = "abc123";
-    result = BundleUtil::ParseStrToUll(input);
+    result = XmlUtil::ParseStrToUll(input);
     EXPECT_EQ(result, 0u);
 
     input = "123abc";
-    result = BundleUtil::ParseStrToUll(input);
+    result = XmlUtil::ParseStrToUll(input);
     EXPECT_EQ(result, 0u);
 
     input = "";
-    result = BundleUtil::ParseStrToUll(input);
+    result = XmlUtil::ParseStrToUll(input);
     EXPECT_EQ(result, 0u);
 
     input = "18446744073709551615";
-    result = BundleUtil::ParseStrToUll(input);
+    result = XmlUtil::ParseStrToUll(input);
     EXPECT_EQ(result, 18446744073709551615ULL);
 
     input = "18446744073709551616";
-    result = BundleUtil::ParseStrToUll(input);
+    result = XmlUtil::ParseStrToUll(input);
     EXPECT_EQ(result, 0u);
 
     input = " 123 ";
-    result = BundleUtil::ParseStrToUll(input);
+    result = XmlUtil::ParseStrToUll(input);
     EXPECT_EQ(result, 0u);
 }
 
@@ -405,18 +406,18 @@ HWTEST_F(BundleUtilTest, ParseStrToUllTest, TestSize.Level1)
 HWTEST_F(BundleUtilTest, IsValidNodeTest, TestSize.Level2)
 {
     xmlNode emptyNode;
-    auto result = BundleUtil::IsValidNode(emptyNode);
+    auto result = XmlUtil::IsValidNode(emptyNode);
     ASSERT_EQ(false, result);
 
     const xmlChar xmlStringText[] = { 't', 'e', 'x', 't', 0 };
     xmlNode node;
     node.name = xmlStringText;
     node.type = XML_TEXT_NODE;
-    result = BundleUtil::IsValidNode(node);
+    result = XmlUtil::IsValidNode(node);
     ASSERT_EQ(true, result);
 
     node.type = XML_COMMENT_NODE;
-    result = BundleUtil::IsValidNode(node);
+    result = XmlUtil::IsValidNode(node);
     ASSERT_EQ(false, result);
 }
 
@@ -440,7 +441,7 @@ HWTEST_F(BundleUtilTest, ParseDisplaysMapTest, TestSize.Level2)
     errorDisplayNode->type = XML_COMMENT_NODE;
 
     std::unordered_map<std::string, uint64_t> displaysMap;
-    BundleUtil::ParseDisplaysMap(displaysNode, displaysMap);
+    XmlUtil::ParseDisplaysMap(displaysNode, displaysMap);
     ASSERT_EQ(displaysMap.size(), 1);
     xmlFreeNode(displaysNode);
 }
@@ -461,7 +462,7 @@ HWTEST_F(BundleUtilTest, ParseAllowedNodeConfigTest, TestSize.Level2)
     errorNode->type = XML_COMMENT_NODE;
 
     std::vector<std::string> bundleNames;
-    BundleUtil::ParseAllowedNodeConfig(appListNode, bundleNames);
+    XmlUtil::ParseAllowedNodeConfig(appListNode, bundleNames);
     ASSERT_EQ(bundleNames.size(), 1);
     xmlFreeNode(appListNode);
 }

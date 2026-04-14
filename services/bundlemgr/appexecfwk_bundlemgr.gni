@@ -93,6 +93,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/system_bundle_installer.cpp",
   "${services_path}/bundlemgr/src/utd/utd_handler.cpp",
   "${services_path}/bundlemgr/src/xcollie_helper.cpp",
+  "${services_path}/bundlemgr/src/xml_util.cpp",
   "${services_path}/bundlemgr/src/driver_install_ext.cpp",
 ]
 
