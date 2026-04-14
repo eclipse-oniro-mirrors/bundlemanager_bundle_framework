@@ -408,7 +408,13 @@ constexpr const char* MODULE_UI_SYNTAX_DEFAULT_VALUE = "hml";
 constexpr const char* MODULE_PAGES = "pages";
 constexpr const char* MODULE_APP_SYSTEM_THEME = "systemTheme";
 constexpr const char* MODULE_ABILITIES = "abilities";
+constexpr const char* MODULE_AGENT_SKILLS = "agentSkills";
 constexpr const char* MODULE_EXTENSION_ABILITIES = "extensionAbilities";
+// skills agent fields
+constexpr const char* SKILLS_AGENT_NAME = "name";
+constexpr const char* SKILLS_AGENT_ABILITY_NAME = "abilityName";
+constexpr const char* SKILLS_AGENT_SRC_ENTRIES = "srcEntries";
+constexpr const char* SKILLS_AGENT_PERMISSIONS = "permissions";
 constexpr const char* MODULE_REQUEST_PERMISSIONS = "requestPermissions";
 constexpr const char* MODULE_DEFINE_PERMISSIONS = "definePermissions";
 constexpr const char* MODULE_DEPENDENCIES = "dependencies";
