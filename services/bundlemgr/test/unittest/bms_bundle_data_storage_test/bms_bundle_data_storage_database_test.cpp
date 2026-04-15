@@ -234,6 +234,30 @@ const nlohmann::json DEPENDENCY_ERROR_JSON = R"(
 {
     "moduleName":[]
 })"_json;
+const nlohmann::json SKILL_PROFILE_JSON = R"(
+{
+    "name":"testSkill",
+    "abilityName":"TestAbility",
+    "srcEntries":["entry/src/main/ets/TestAbility.ts"],
+    "permissions":["ohos.permission.PERMISSION1"]
+})"_json;
+const nlohmann::json SKILL_PROFILES_ARRAY_JSON = R"(
+{
+    "skillProfiles":[
+        {
+            "name":"skill1",
+            "abilityName":"Ability1",
+            "srcEntries":["entry/src/main/ets/Ability1.ts"],
+            "permissions":["ohos.permission.PERMISSION1"]
+        },
+        {
+            "name":"skill2",
+            "abilityName":"Ability2",
+            "srcEntries":["entry/src/main/ets/Ability2.ts"],
+            "permissions":["ohos.permission.PERMISSION1", "ohos.permission.PERMISSION2"]
+        }
+    ]
+})"_json;
 const nlohmann::json INNER_BUNDLE_INFO_ERROR_JSON = R"(
 {
     "appType":0,
@@ -6583,5 +6607,186 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfoToString_0001, Functio
     innerBundleInfo.baseBundleInfo_->description = "\xC4\xE3\xBA\xCA";
     std::string dataEmpty =  innerBundleInfo.ToString();
     EXPECT_TRUE(dataEmpty.empty());
+}
+
+/**
+ * @tc.number: SkillProfile_0001
+ * @tc.name: Test SkillProfile from_json
+ * @tc.desc: 1. Test from_json with SkillProfile
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0001, Function | SmallTest | Level1)
+{
+    SkillProfile skillProfile;
+    from_json(SKILL_PROFILE_JSON, skillProfile);
+    EXPECT_EQ(skillProfile.name, "testSkill");
+    EXPECT_EQ(skillProfile.abilityName, "TestAbility");
+    EXPECT_EQ(skillProfile.srcEntries.size(), 1);
+    EXPECT_EQ(skillProfile.srcEntries[0], "entry/src/main/ets/TestAbility.ts");
+    EXPECT_EQ(skillProfile.permissions.size(), 1);
+    EXPECT_EQ(skillProfile.permissions[0], "ohos.permission.PERMISSION1");
+}
+
+/**
+ * @tc.number: SkillProfile_0002
+ * @tc.name: Test SkillProfile to_json
+ * @tc.desc: 1. Test to_json with SkillProfile
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0002, Function | SmallTest | Level1)
+{
+    SkillProfile skillProfile;
+    skillProfile.name = "testSkill";
+    skillProfile.abilityName = "TestAbility";
+    skillProfile.srcEntries = {"entry/src/main/ets/TestAbility.ts"};
+    skillProfile.permissions = {"ohos.permission.PERMISSION1"};
+
+    nlohmann::json jsonObject;
+    to_json(jsonObject, skillProfile);
+
+    EXPECT_EQ(jsonObject["name"], "testSkill");
+    EXPECT_EQ(jsonObject["abilityName"], "TestAbility");
+    EXPECT_EQ(jsonObject["srcEntries"].is_array(), true);
+    EXPECT_EQ(jsonObject["srcEntries"].size(), 1);
+    EXPECT_EQ(jsonObject["srcEntries"][0], "entry/src/main/ets/TestAbility.ts");
+    EXPECT_EQ(jsonObject["permissions"].is_array(), true);
+    EXPECT_EQ(jsonObject["permissions"].size(), 1);
+    EXPECT_EQ(jsonObject["permissions"][0], "ohos.permission.PERMISSION1");
+}
+
+/**
+ * @tc.number: SkillProfile_0003
+ * @tc.name: Test SkillProfile serialization and deserialization
+ * @tc.desc: 1. Test round-trip serialization with SkillProfile
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0003, Function | SmallTest | Level1)
+{
+    SkillProfile originalSkillProfile;
+    originalSkillProfile.name = "skill1";
+    originalSkillProfile.abilityName = "Ability1";
+    originalSkillProfile.srcEntries = {"entry/src/main/ets/Ability1.ts"};
+    originalSkillProfile.permissions = {"ohos.permission.PERMISSION1"};
+
+    // Serialize to JSON
+    nlohmann::json jsonObject;
+    to_json(jsonObject, originalSkillProfile);
+
+    // Deserialize from JSON
+    SkillProfile deserializedSkillProfile;
+    from_json(jsonObject, deserializedSkillProfile);
+
+    // Verify the data matches
+    EXPECT_EQ(deserializedSkillProfile.name, originalSkillProfile.name);
+    EXPECT_EQ(deserializedSkillProfile.abilityName, originalSkillProfile.abilityName);
+    EXPECT_EQ(deserializedSkillProfile.srcEntries.size(), originalSkillProfile.srcEntries.size());
+    EXPECT_EQ(deserializedSkillProfile.srcEntries[0], originalSkillProfile.srcEntries[0]);
+    EXPECT_EQ(deserializedSkillProfile.permissions.size(), originalSkillProfile.permissions.size());
+    EXPECT_EQ(deserializedSkillProfile.permissions[0], originalSkillProfile.permissions[0]);
+}
+
+/**
+ * @tc.number: SkillProfile_0004
+ * @tc.name: Test SkillProfile array parsing
+ * @tc.desc: 1. Test parsing array of SkillProfile from JSON
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0004, Function | SmallTest | Level1)
+{
+    auto jsonArray = SKILL_PROFILES_ARRAY_JSON["skillProfiles"];
+    EXPECT_EQ(jsonArray.is_array(), true);
+    EXPECT_EQ(jsonArray.size(), 2);
+
+    std::vector<SkillProfile> skillProfiles;
+    for (const auto& jsonSkill : jsonArray) {
+        SkillProfile skillProfile;
+        from_json(jsonSkill, skillProfile);
+        skillProfiles.emplace_back(skillProfile);
+    }
+
+    EXPECT_EQ(skillProfiles.size(), 2);
+    EXPECT_EQ(skillProfiles[0].name, "skill1");
+    EXPECT_EQ(skillProfiles[0].abilityName, "Ability1");
+    EXPECT_EQ(skillProfiles[0].srcEntries.size(), 1);
+    EXPECT_EQ(skillProfiles[0].permissions.size(), 1);
+
+    EXPECT_EQ(skillProfiles[1].name, "skill2");
+    EXPECT_EQ(skillProfiles[1].abilityName, "Ability2");
+    EXPECT_EQ(skillProfiles[1].srcEntries.size(), 1);
+    EXPECT_EQ(skillProfiles[1].permissions.size(), 2);
+}
+
+/**
+ * @tc.number: SkillProfile_0005
+ * @tc.name: Test InnerModuleInfo with SkillProfile
+ * @tc.desc: 1. Test InnerModuleInfo serialization with skillProfiles field
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0005, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "testModule";
+    moduleInfo.modulePackage = "com.example.test";
+
+    // Add skill profiles
+    SkillProfile skillProfile1;
+    skillProfile1.name = "skill1";
+    skillProfile1.abilityName = "Ability1";
+    skillProfile1.srcEntries = {"entry/src/main/ets/Ability1.ts"};
+    skillProfile1.permissions = {"ohos.permission.PERMISSION1"};
+
+    SkillProfile skillProfile2;
+    skillProfile2.name = "skill2";
+    skillProfile2.abilityName = "Ability2";
+    skillProfile2.srcEntries = {"entry/src/main/ets/Ability2.ts"};
+    skillProfile2.permissions = {"ohos.permission.PERMISSION1", "ohos.permission.PERMISSION2"};
+
+    moduleInfo.skillProfiles = {skillProfile1, skillProfile2};
+
+    // Serialize to JSON
+    nlohmann::json jsonObject;
+    to_json(jsonObject, moduleInfo);
+
+    // Verify skillProfiles field exists
+    EXPECT_EQ(jsonObject.contains("skillProfiles"), true);
+    EXPECT_EQ(jsonObject["skillProfiles"].is_array(), true);
+    EXPECT_EQ(jsonObject["skillProfiles"].size(), 2);
+    EXPECT_EQ(jsonObject["skillProfiles"][0]["name"], "skill1");
+    EXPECT_EQ(jsonObject["skillProfiles"][1]["name"], "skill2");
+}
+
+/**
+ * @tc.number: SkillProfile_0006
+ * @tc.name: Test InnerModuleInfo SkillProfile deserialization
+ * @tc.desc: 1. Test InnerModuleInfo deserialization with skillProfiles field
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0006, Function | SmallTest | Level1)
+{
+    nlohmann::json moduleJson = R"(
+    {
+        "moduleName": "testModule",
+        "modulePackage": "com.example.test",
+        "skillProfiles": [
+            {
+                "name": "skill1",
+                "abilityName": "Ability1",
+                "srcEntries": ["entry/src/main/ets/Ability1.ts"],
+                "permissions": ["ohos.permission.PERMISSION1"]
+            },
+            {
+                "name": "skill2",
+                "abilityName": "Ability2",
+                "srcEntries": ["entry/src/main/ets/Ability2.ts"],
+                "permissions": ["ohos.permission.PERMISSION1", "ohos.permission.PERMISSION2"]
+            }
+        ]
+    })"_json;
+
+    InnerModuleInfo moduleInfo;
+    from_json(moduleJson, moduleInfo);
+
+    EXPECT_EQ(moduleInfo.moduleName, "testModule");
+    EXPECT_EQ(moduleInfo.modulePackage, "com.example.test");
+    EXPECT_EQ(moduleInfo.skillProfiles.size(), 2);
+    EXPECT_EQ(moduleInfo.skillProfiles[0].name, "skill1");
+    EXPECT_EQ(moduleInfo.skillProfiles[0].abilityName, "Ability1");
+    EXPECT_EQ(moduleInfo.skillProfiles[1].name, "skill2");
+    EXPECT_EQ(moduleInfo.skillProfiles[1].abilityName, "Ability2");
+    EXPECT_EQ(moduleInfo.skillProfiles[1].permissions.size(), 2);
 }
 } // OHOS

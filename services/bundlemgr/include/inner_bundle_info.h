@@ -72,7 +72,7 @@ struct DefinePermission {
     std::string availableType;
 };
 
-struct AgentSkill {
+struct SkillProfile {
     std::string name;
     std::string abilityName;
     std::vector<std::string> srcEntries;
@@ -166,7 +166,7 @@ struct InnerModuleInfo {
     std::vector<DefinePermission> definePermissions;
     std::vector<RequestPermission> requestPermissions;
     std::vector<Metadata> metadata;
-    std::vector<AgentSkill> agentSkills;
+    std::vector<SkillProfile> skillProfiles;
     std::vector<Dependency> dependencies;
     std::vector<OverlayModuleInfo> overlayModuleInfo;
     std::vector<ProxyData> proxyDatas;
@@ -2607,8 +2607,10 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
 void from_json(const nlohmann::json &jsonObject, Dependency &dependency);
 void from_json(const nlohmann::json &jsonObject, OverlayBundleInfo &overlayBundleInfo);
 void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResourceInfo);
+void from_json(const nlohmann::json &jsonObject, SkillProfile &skillProfile);
 void to_json(nlohmann::json &jsonObject, const ExtendResourceInfo &extendResourceInfo);
 void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info);
+void to_json(nlohmann::json &jsonObject, const SkillProfile &skillProfile);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_INFO_H
