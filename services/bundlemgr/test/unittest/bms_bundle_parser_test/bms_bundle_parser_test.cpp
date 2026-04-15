@@ -85,6 +85,8 @@ const nlohmann::json CONFIG_JSON = R"(
                 "compatibleMinorAPIVersion": 0,
                 "compatiblePatchAPIVersion": 0,
                 "target": 3,
+                "targetMinorAPIVersion": 0,
+                "targetPatchAPIVersion": 0,
                 "releaseType": "Beta1"
             }
         },
@@ -247,7 +249,9 @@ const nlohmann::json CONFIG_JSON_2 = R"(
             "compatibleMinorAPIVersion": 0,
             "compatiblePatchAPIVersion": 0,
             "releaseType":"Release",
-            "target":8
+            "target":8,
+            "targetMinorAPIVersion": 0,
+            "targetPatchAPIVersion": 0
         },
         "bundleName":"com.example.myapplication",
         "vendor":"example",
@@ -321,7 +325,9 @@ const nlohmann::json CONFIG_JSON_3 = R"(
             "compatibleMinorAPIVersion": 0,
             "compatiblePatchAPIVersion": 0,
             "releaseType":"Release",
-            "target":8
+            "target":8,
+            "targetMinorAPIVersion": 0,
+            "targetPatchAPIVersion": 0
         },
         "bundleName":"com.example.myapplication",
         "vendor":"example",
@@ -1864,6 +1870,8 @@ const nlohmann::json MODULE_JSON_16 = R"(
             "compatibleMinorAPIVersion": 0,
             "compatiblePatchAPIVersion": 0,
             "target": 8,
+            "targetMinorAPIVersion": 0,
+            "targetPatchAPIVersion": 0,
             "releaseType": "Release"
         },
         "2in1": {
@@ -2249,6 +2257,8 @@ HWTEST_F(BmsBundleParserTest, TestParse_0600, Function | SmallTest | Level0)
         // sub BUNDLE_APP_PROFILE_KEY_API_VERSION
         BUNDLE_APP_PROFILE_KEY_VENDOR,
         BUNDLE_APP_PROFILE_KEY_TARGET,
+        BUNDLE_APP_PROFILE_KEY_TARGET_MINOR_API_VERSION,
+        BUNDLE_APP_PROFILE_KEY_TARGET_PATCH_API_VERSION,
         BUNDLE_APP_PROFILE_KEY_RELEASE_TYPE,
     };
 
