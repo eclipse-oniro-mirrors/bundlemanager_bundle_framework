@@ -228,7 +228,7 @@ struct Ability {
     std::string arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
 };
 
-struct AgentSkill {
+struct SkillProfile {
     std::string name;
     std::string abilityName;
     std::vector<std::string> srcEntries;
@@ -351,7 +351,7 @@ struct Module {
     std::vector<Metadata> metadata;
     std::vector<HnpPackage> hnpPackages;
     std::vector<Ability> abilities;
-    std::vector<AgentSkill> agentSkills;
+    std::vector<SkillProfile> skillProfiles;
     std::vector<Extension> extensionAbilities;
     std::vector<RequestPermission> requestPermissions;
     std::vector<DefinePermission> definePermissions;
@@ -479,34 +479,34 @@ void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executabl
         g_parseResult);
 }
 
-void from_json(const nlohmann::json &jsonObject, AgentSkill &agentSkill)
+void from_json(const nlohmann::json &jsonObject, SkillProfile &skillProfile)
 {
-    APP_LOGD("read agentSkill tag from module.json");
+    APP_LOGD("read skillProfile tag from module.json");
     const auto &jsonObjectEnd = jsonObject.end();
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        SKILLS_AGENT_NAME,
-        agentSkill.name,
+        SKILL_PROFILE_NAME,
+        skillProfile.name,
         true,
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        SKILLS_AGENT_ABILITY_NAME,
-        agentSkill.abilityName,
+        SKILL_PROFILE_ABILITY_NAME,
+        skillProfile.abilityName,
         false,
         g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
-        SKILLS_AGENT_SRC_ENTRIES,
-        agentSkill.srcEntries,
+        SKILL_PROFILE_SRC_ENTRIES,
+        skillProfile.srcEntries,
         JsonType::ARRAY,
         false,
         g_parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
-        SKILLS_AGENT_PERMISSIONS,
-        agentSkill.permissions,
+        SKILL_PROFILE_PERMISSIONS,
+        skillProfile.permissions,
         JsonType::ARRAY,
         false,
         g_parseResult,
@@ -1705,10 +1705,10 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::vector<AgentSkill>>(jsonObject,
+    GetValueIfFindKey<std::vector<SkillProfile>>(jsonObject,
         jsonObjectEnd,
-        MODULE_AGENT_SKILLS,
-        module.agentSkills,
+        MODULE_SKILL_PROFILES,
+        module.skillProfiles,
         JsonType::ARRAY,
         false,
         g_parseResult,
@@ -3008,14 +3008,14 @@ bool ToInnerBundleInfo(
         }
     }
 
-    // handle agentSkills
-    for (const Profile::AgentSkill &agentSkill : moduleJson.module.agentSkills) {
-        AgentSkill agent;
-        agent.name = agentSkill.name;
-        agent.abilityName = agentSkill.abilityName;
-        agent.srcEntries = agentSkill.srcEntries;
-        agent.permissions = agentSkill.permissions;
-        innerModuleInfo.agentSkills.emplace_back(agent);
+    // handle skillProfiles
+    for (const Profile::SkillProfile &skillProfile : moduleJson.module.skillProfiles) {
+        SkillProfile skill;
+        skill.name = skillProfile.name;
+        skill.abilityName = skillProfile.abilityName;
+        skill.srcEntries = skillProfile.srcEntries;
+        skill.permissions = skillProfile.permissions;
+        innerModuleInfo.skillProfiles.emplace_back(skill);
     }
 
     // handle extensionAbilities
