@@ -6063,6 +6063,26 @@ ErrCode BundleMgrHostImpl::GetSignatureInfoByUid(const int32_t uid, SignatureInf
     return dataMgr->GetSignatureInfoByUid(uid, signatureInfo);
 }
 
+ErrCode BundleMgrHostImpl::GetApiTargetVersionByUid(const int32_t uid, int32_t &apiTargetVersion)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (uid < 0) {
+        APP_LOGW_NOFUNC("impl GetApiTargetVersionByUid invalid uid %{public}d", uid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    if (!BundlePermissionMgr::IsSystemApp() ||
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetApiTargetVersionByUid(uid, apiTargetVersion);
+}
+
 bool BundleMgrHostImpl::CheckCanSetEnable(const std::string &bundleName)
 {
     std::vector<std::string> noDisablingList;
