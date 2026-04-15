@@ -2191,7 +2191,12 @@ bool BMSEventHandler::NeedProcessOtaNewPreloadInstall(const std::string &bundleN
     } else {
         bool hideDesktopIcon = false;
         BundleInstallChecker bundleInstallChecker;
-        if (bundleInstallChecker.GetHideDesktopIconByBundlePath(scanPath, hideDesktopIcon)) {
+        std::vector<std::string> filePaths = BMSEventHandler::ObtainRealPath({scanPath});
+        if (filePaths.empty()) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "obtain real path failed : %{public}s", bundleName.c_str());
+            return false;
+        }
+        if (bundleInstallChecker.GetHideDesktopIconByBundlePath(filePaths.front(), hideDesktopIcon)) {
             bypassByHideDesktopIcon = hideDesktopIcon;
         }
     }

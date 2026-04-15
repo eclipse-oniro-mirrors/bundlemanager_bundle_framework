@@ -88,6 +88,9 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
                 continue;
             }
             bundleInfo.DeleteOtaNewInstallUser(foregroundUserId);
+            // Delete ota new install user for default user and u1 user
+            bundleInfo.DeleteOtaNewInstallUser(Constants::DEFAULT_USERID);
+            bundleInfo.DeleteOtaNewInstallUser(Constants::U1);
             (void)dataMgr->SavePreInstallBundleInfo(bundleInfo.GetBundleName(), bundleInfo);
         }
     }
