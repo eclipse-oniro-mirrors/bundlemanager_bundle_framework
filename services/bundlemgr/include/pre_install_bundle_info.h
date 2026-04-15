@@ -332,8 +332,18 @@ public:
      */
     bool HasOtaNewInstallUser(const int32_t &userId) const
     {
-        return std::find(otaNewInstallUsers_.begin(), otaNewInstallUsers_.end(), userId) !=
-            otaNewInstallUsers_.end();
+        const auto hasUser = [this](int32_t id) {
+            return std::find(otaNewInstallUsers_.begin(), otaNewInstallUsers_.end(), id) !=
+                otaNewInstallUsers_.end();
+        };
+        if (hasUser(userId)) {
+            return true;
+        }
+        if (userId == Constants::U1 || userId == Constants::DEFAULT_USERID) {
+            return false;
+        }
+        // U1 and default user markers are globally visible to all other users.
+        return hasUser(Constants::U1) || hasUser(Constants::DEFAULT_USERID);
     }
 
     /**

@@ -169,7 +169,10 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleTargetUser(const std::vecto
     } else {
         // for non-singleton hap
         userIdSet.insert(Constants::DEFAULT_USERID);
-        userIdSet.insert(Constants::U1);
+        auto allUserIds = dataMgr->GetAllUser();
+        if (allUserIds.find(Constants::U1) != allUserIds.end()) {
+            userIdSet.insert(Constants::U1);
+        }
     }
     ErrCode result = ERR_OK;
     for (auto userId : userIdSet) {

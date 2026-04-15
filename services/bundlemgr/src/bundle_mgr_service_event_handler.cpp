@@ -2393,7 +2393,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 const auto allUsers = dataMgr->GetAllUser();
                 if (multiUserInstallThirdPreloadApp_) {
                     for (auto userId : allUsers) {
-                        if (userId == Constants::DEFAULT_USERID || isPrivateUser(userId)) {
+                        if (userId <= Constants::U1 || isPrivateUser(userId)) {
                             continue;
                         }
                         targetUserIds.emplace_back(userId);
@@ -2479,7 +2479,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             if (multiUserInstallThirdPreloadApp_) {
                 const auto allUsers = dataMgr->GetAllUser();
                 for (auto userId : allUsers) {
-                    if (userId == Constants::DEFAULT_USERID || isPrivateUser(userId)) {
+                    if (userId <= Constants::U1 || isPrivateUser(userId)) {
                         continue;
                     }
                     if (!dataMgr->HasUserInstallInBundle(bundleName, userId)) {
