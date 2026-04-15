@@ -4323,8 +4323,8 @@ ErrCode BundleMgrProxy::GetAllAppProvisionInfo(const int32_t userId, std::vector
         APP_LOGE("fail to GetAllAppProvisionInfo due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<AppProvisionInfo>(BundleMgrInterfaceCode::GET_ALL_APP_PROVISION_INFO,
-        data, appProvisionInfos);
+    return GetVectorFromParcelIntelligentWithErrCode<AppProvisionInfo>
+        (BundleMgrInterfaceCode::GET_ALL_APP_PROVISION_INFO, data, appProvisionInfos);
 }
 
 ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,

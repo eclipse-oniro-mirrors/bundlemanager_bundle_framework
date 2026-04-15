@@ -3725,7 +3725,7 @@ ErrCode BundleMgrHost::HandleGetAllAppProvisionInfo(MessageParcel &data, Message
         APP_LOGE("HandleGetAllAppProvisionInfo write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if ((ret == ERR_OK) && !WriteParcelableVector(appProvisionInfos, reply)) {
+    if ((ret == ERR_OK) && !WriteVectorToParcelIntelligent(appProvisionInfos, reply)) {
         APP_LOGE("write appProvisionInfos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
