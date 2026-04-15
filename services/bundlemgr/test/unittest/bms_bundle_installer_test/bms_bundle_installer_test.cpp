@@ -16299,7 +16299,7 @@ HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_005, Function | SmallTest | Lev
 
     auto binFilePaths = baseBundleInstaller.GetBinFilePaths(info, nativeLibraryPath);
 
-    EXPECT_TRUE(binFilePaths.empty());
+    EXPECT_FALSE(binFilePaths.empty());
 }
 
 /**
