@@ -2178,7 +2178,7 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
         close(dev_fd);
         return result;
     }
-    auto fd = open(newfilePath.c_str(), O_RDONLY);
+    auto fd = open(newfilePath.c_str(), O_RDONLY | O_UNCACHE);
     if (fd < 0) {
         LOG_E(BMS_TAG_INSTALLD, "open hap failed errno:%{public}d", errno);
         close(dev_fd);
@@ -2963,7 +2963,7 @@ bool InstalldOperator::WriteCertToFile(const std::string &certFilePath, const st
     }
 
     std::string tmpPath = certFilePath + ".tmp";
-    int fd = open(tmpPath.c_str(), O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    int fd = open(tmpPath.c_str(), O_CREAT | O_TRUNC | O_WRONLY | O_UNCACHE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd < 0) {
         LOG_E(BMS_TAG_INSTALLD, "open tmp cert file failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
         return false;
