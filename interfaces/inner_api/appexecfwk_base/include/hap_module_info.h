@@ -36,7 +36,8 @@ enum class ModuleType {
     UNKNOWN = 0,
     ENTRY = 1,
     FEATURE = 2,
-    SHARED = 3
+    SHARED = 3,
+    SKILL = 4,
 };
 
 enum class AtomicServiceModuleType {

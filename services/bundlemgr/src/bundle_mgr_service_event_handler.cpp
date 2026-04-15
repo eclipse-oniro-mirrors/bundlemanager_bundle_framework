@@ -25,6 +25,7 @@
 #include "app_service_fwk_installer.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
+#include "independent_skills_installer.h"
 #include "bundle_install_checker.h"
 #include "bundle_installer.h"
 #include "bundle_parser.h"
@@ -109,6 +110,7 @@ constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
 constexpr const char* MODULE_UPDATE_PRODUCT_SUFFIX = "/etc/app/module_update";
 constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
 constexpr const char* APP_SERVICE_FWK_INSTALL_LIST_CONFIG = "/app_service_fwk_install_list.json";
+constexpr const char* SKILLS_INSTALL_LIST_CONFIG = "/skills_install_list.json";
 constexpr const char* UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
 constexpr const char* INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability.json";
 constexpr const char* EXTENSION_TYPE_LIST_CONFIG = "/extension_type_config.json";
@@ -142,6 +144,7 @@ constexpr const char* OOBE_AGREE_TERMS_EVENT = "custom.event.OOBE.HWSTARTUPGUIDE
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> onDemandInstallList_;
 std::set<PreScanInfo> systemHspList_;
+std::set<PreScanInfo> skillsList_;
 std::set<std::string> uninstallList_;
 std::set<PreBundleConfigInfo> installListCapabilities_;
 std::set<std::string> extensiontype_;
@@ -727,6 +730,7 @@ void BMSEventHandler::ClearPreInstallCache()
     installList_.clear();
     uninstallList_.clear();
     systemHspList_.clear();
+    skillsList_.clear();
     installListCapabilities_.clear();
     extensiontype_.clear();
     hasLoadPreInstallProFile_ = false;
@@ -770,6 +774,8 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
         dir + INSTALL_LIST_CONFIG, installList_);
     bundleParser.ParsePreInstallConfig(
         dir + APP_SERVICE_FWK_INSTALL_LIST_CONFIG, systemHspList_);
+    bundleParser.ParsePreInstallConfig(
+        dir + SKILLS_INSTALL_LIST_CONFIG, skillsList_);
     bundleParser.ParsePreUnInstallConfig(
         dir + UNINSTALL_LIST_CONFIG, uninstallList_);
     bundleParser.ParsePreInstallAbilityConfig(
@@ -1000,6 +1006,7 @@ void BMSEventHandler::OnBundleBootStart(int32_t userId)
     if (LoadPreInstallProFile()) {
         LOG_I(BMS_TAG_DEFAULT, "Process boot bundle install from pre bundle proFile for userId:%{public}d", userId);
         InnerProcessBootSystemHspInstall();
+        InnerProcessBootSkillsInstall(userId);
         InnerProcessBootPreBundleProFileInstall(userId);
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
         ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
@@ -1095,6 +1102,30 @@ bool BMSEventHandler::ProcessSystemHspInstall(const std::string &systemHspDir)
         return false;
     }
     return true;
+}
+
+void BMSEventHandler::InnerProcessBootSkillsInstall(int32_t userId)
+{
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "boot install skills size:%{public}zu", skillsList_.size());
+    for (const auto &skillsPath : skillsList_) {
+        ProcessSystemSkillsInstall(skillsPath, userId);
+    }
+}
+
+void BMSEventHandler::ProcessSystemSkillsInstall(const PreScanInfo &preScanInfo, int32_t userId)
+{
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.isFirstBootInstall = true;
+    installParam.removable = false;
+    installParam.copyHapToInstallPath = false;
+    installParam.needSavePreInstallInfo = true;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
+    installParam.needSendEvent = false;
+    installParam.userId = userId;
+    IndependentSkillsInstaller installer;
+    ErrCode ret = installer.Install({preScanInfo.bundleDir}, installParam);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "Install skills %{public}s result %{public}d", preScanInfo.bundleDir.c_str(), ret);
 }
 
 void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
@@ -2251,7 +2282,13 @@ void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
         systemHspDirs.emplace_back(systemHspScanInfo.bundleDir);
     }
 
+    std::list<std::string> skillsDirs;
+    for (const auto &skillsScanInfo : skillsList_) {
+        skillsDirs.emplace_back(skillsScanInfo.bundleDir);
+    }
+
     InnerProcessRebootSystemHspInstall(systemHspDirs);
+    InnerProcessRebootSkillsInstall(skillsDirs);
     InnerProcessRebootSharedBundleInstall(sharedBundleDirs, Constants::AppType::SYSTEM_APP);
     InnerProcessRebootBundleInstall(bundleDirs, Constants::AppType::SYSTEM_APP);
     InnerProcessStockBundleProvisionInfo();
@@ -2942,6 +2979,48 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
     }
 }
 
+void BMSEventHandler::InnerProcessRebootSkillsInstall(const std::list<std::string> &scanPathList)
+{
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InnerProcessRebootSkillsInstall");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr is nullptr");
+        return;
+    }
+
+    for (const auto &scanPath : scanPathList) {
+        std::unordered_map<std::string, InnerBundleInfo> infos;
+        if (!ParseHapFiles(scanPath, infos) || infos.empty()) {
+            LOG_E(BMS_TAG_INSTALLER, "obtain bundleinfo failed : %{public}s ", scanPath.c_str());
+            continue;
+        }
+        auto bundleName = infos.begin()->second.GetBundleName();
+        auto versionCode = infos.begin()->second.GetVersionCode();
+        AddParseInfosToMap(bundleName, infos);
+        auto mapIter = loadExistData_.find(bundleName);
+        if (mapIter == loadExistData_.end()) {
+            auto ret = OTAInstallSystemSkills({scanPath}, dataMgr->GetAllUser());
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "OTA Install new skills(%{public}s) by path(%{public}s) ret %{public}d",
+                bundleName.c_str(), scanPath.c_str(), ret);
+            continue;
+        }
+        InnerBundleInfo oldBundleInfo;
+        bool hasInstalled = dataMgr->FetchInnerBundleInfo(bundleName, oldBundleInfo);
+        if (hasInstalled && oldBundleInfo.GetVersionCode() > versionCode) {
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s installed version %{public}d is greater then curVer %{public}d",
+                bundleName.c_str(), oldBundleInfo.GetVersionCode(), versionCode);
+            continue;
+        }
+        std::set<int32_t> userIds;
+        for (const auto userId : dataMgr->GetUserIds(bundleName)) {
+            userIds.insert(userId);
+        }
+        auto ret = OTAInstallSystemSkills({scanPath}, userIds);
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "OTA Install skills(%{public}s) by path(%{public}s) ret %{public}d",
+            bundleName.c_str(), scanPath.c_str(), ret);
+    }
+}
+
 void BMSEventHandler::ProcessRebootAppServiceUninstall()
 {
     APP_LOGI("Reboot scan and OTA uninstall for appServiceFwk start");
@@ -3130,6 +3209,42 @@ ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string> &fil
     AppServiceFwkInstaller installer;
 
     return installer.Install(filePaths, installParam);
+}
+
+ErrCode BMSEventHandler::OTAInstallSystemSkills(const std::vector<std::string> &filePaths,
+    const std::set<int32_t> &userIds)
+{
+    if (filePaths.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "File paths is empty");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+
+    if (userIds.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "UserIds is empty");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.removable = false;
+    installParam.isOTA = true;
+    installParam.copyHapToInstallPath = false;
+    installParam.needSavePreInstallInfo = true;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
+    ErrCode ret = ERR_OK;
+    for (const auto userId : userIds) {
+        if ((userId == Constants::DEFAULT_USERID) || (userId == Constants::U1)) {
+            continue;
+        }
+        IndependentSkillsInstaller installer;
+        installParam.userId = userId;
+        ErrCode tempRet = installer.Install(filePaths, installParam);
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "Install skills for userId %{public}d, ret %{public}d", userId, tempRet);
+        if (tempRet != ERR_OK) {
+            ret = tempRet;
+        }
+    }
+    return ret;
 }
 
 void BMSEventHandler::SaveSystemFingerprint()

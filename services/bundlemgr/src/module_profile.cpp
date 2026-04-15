@@ -35,7 +35,8 @@ std::mutex g_mutex;
 const std::unordered_set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
-    "shared"
+    "shared",
+    "skill"
 };
 
 const std::unordered_set<std::string> VIRTUAL_MACHINE_SET = {
@@ -137,7 +138,8 @@ const std::unordered_map<std::string, BundleType> BUNDLE_TYPE_MAP = {
     {"app", BundleType::APP},
     {"atomicService", BundleType::ATOMIC_SERVICE},
     {"shared", BundleType::SHARED},
-    {"appService", BundleType::APP_SERVICE_FWK}
+    {"appService", BundleType::APP_SERVICE_FWK},
+    {"skill", BundleType::SKILL}
 };
 const size_t MAX_QUERYSCHEMES_LENGTH = 200;
 
@@ -2214,6 +2216,8 @@ bool ParserAtomicConfig(const nlohmann::json &jsonObject, InnerBundleInfo &inner
             bundleType = BundleType::APP_SERVICE_FWK;
         } else if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_PLUGIN) {
             bundleType = BundleType::APP_PLUGIN;
+        } else if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_SKILL) {
+            bundleType = BundleType::SKILL;
         }
     }
 
