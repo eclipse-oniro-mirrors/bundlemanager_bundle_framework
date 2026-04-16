@@ -19,6 +19,8 @@
 #include "parcel.h"
 
 #include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
+#include <cerrno>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -67,6 +69,18 @@ namespace AppExecFwk {
             return false;                                                                                 \
         }                                                                                                 \
     } while (0)
+
+#define WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(type, parcel, data)                                     \
+    do {                                                                                                        \
+        int32_t _errcode = (data);                                                                              \
+        int32_t _errno = (_errcode != ERR_OK) ? errno : 0;                                                      \
+        int32_t _combinedCode = (_errcode >= APPEXECFWK_INSTALLD_ERR_OFFSET) ? (_errcode + _errno) : _errcode;  \
+        if (!(parcel).Write##type(_combinedCode)) {                                                             \
+            APP_LOGE("fail to write %{public}s type into parcel", #type);                                       \
+            return false;                                                                                       \
+        }                                                                                                       \
+    } while (0)
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_PARCEL_MACRO_H

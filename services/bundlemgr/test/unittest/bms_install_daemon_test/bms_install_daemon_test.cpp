@@ -499,7 +499,8 @@ HWTEST_F(BmsInstallDaemonTest, BundleDir_0200, Function | SmallTest | Level0)
 HWTEST_F(BmsInstallDaemonTest, BundleDir_0300, Function | SmallTest | Level0)
 {
     int result1 = CreateBundleDir(SYSTEM_DIR);
-    EXPECT_EQ(result1, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    EXPECT_GE(result1, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    EXPECT_LT(result1, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED + ERRNO_MAX_SIZE);
     bool dirExist = CheckBundleDirExist();
     EXPECT_FALSE(dirExist);
 }
@@ -737,7 +738,8 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0400, Function | SmallTest | Level
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     ret = InstalldClient::GetInstance()->MoveFile(
         BUNDLE_DATA_DIR, BUNDLE_DATA_DIR);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+    EXPECT_GE(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+    EXPECT_LT(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED + ERRNO_MAX_SIZE);
 }
 
 /**
@@ -804,9 +806,11 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0700, Function | SmallTest | Level
     }
     FileStat fileStat;
     ErrCode ret = InstalldClient::GetInstance()->GetFileStat("", fileStat);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_GE(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_LT(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR + ERRNO_MAX_SIZE);
     ret = InstalldClient::GetInstance()->GetFileStat("data/test/wrongpath", fileStat);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_GE(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_LT(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR + ERRNO_MAX_SIZE);
 }
 
 /**

@@ -15,6 +15,7 @@
 
 #include "status_receiver_proxy.h"
 
+#include "appexecfwk_errors.h"
 #include "bundle_mgr_service.h"
 
 namespace OHOS {
@@ -921,9 +922,19 @@ void StatusReceiverProxy::OnFinished(const int32_t resultCode, const std::string
     }
 }
 
+static int32_t ExtractInstalldBusinessErrCode(int32_t resultCode)
+{
+    if (resultCode >= APPEXECFWK_INSTALLD_ERR_OFFSET) {
+        int32_t errnoPart = (resultCode - APPEXECFWK_INSTALLD_ERR_OFFSET) % ERRNO_MAX_SIZE;
+        return resultCode - errnoPart;
+    }
+    return resultCode;
+}
+
 void StatusReceiverProxy::TransformResult(const int32_t resultCode)
 {
-    auto result = MAP_RECEIVED_RESULTS.find(resultCode);
+    int32_t businessCode = ExtractInstalldBusinessErrCode(resultCode);
+    auto result = MAP_RECEIVED_RESULTS.find(businessCode);
     if (result != MAP_RECEIVED_RESULTS.end()) {
         resultCode_ = result->second.clientCode;
         resultMsg_ = result->second.clientMessage;

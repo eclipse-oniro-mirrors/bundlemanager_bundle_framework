@@ -2848,7 +2848,7 @@ ErrCode InstalldHostImpl::CreateDataGroupDir(const CreateDirParam &param)
             // default is data_app_el2_file, now is data_app_el2_group_file
             if (!InstalldOperator::RestoreconPath(groupDir)) {
                 LOG_NOFUNC_E(BMS_TAG_INSTALLD, "RestoreconPath el2-el5 failed");
-                result = ERR_APPEXECFWK_RESTORECON_PATH_FAILED;
+                result = ERR_APPEXECFWK_INSTALLD_RESTORECON_PATH_FAILED;
             }
         }
     }
@@ -2885,7 +2885,7 @@ ErrCode InstalldHostImpl::CreateEl5DataGroupDir(const CreateDirParam &param)
         // default is data_app_el5_file, now is data_app_el5_group_file
         if (!InstalldOperator::RestoreconPath(groupDir)) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLD, "RestoreconPath el5 failed");
-            result = ERR_APPEXECFWK_RESTORECON_PATH_FAILED;
+            result = ERR_APPEXECFWK_INSTALLD_RESTORECON_PATH_FAILED;
         }
     }
     return result;
@@ -3013,7 +3013,7 @@ ErrCode InstalldHostImpl::RestoreconPath(const std::string &path)
 
     if (!InstalldOperator::RestoreconPath(path)) {
         LOG_E(BMS_TAG_INSTALLD, "RestoreconPath failed");
-        return ERR_APPEXECFWK_RESTORECON_PATH_FAILED;
+        return ERR_APPEXECFWK_INSTALLD_RESTORECON_PATH_FAILED;
     }
     return ERR_OK;
 }
