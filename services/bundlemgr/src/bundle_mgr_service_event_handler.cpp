@@ -2505,6 +2505,13 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         std::vector<std::string> filePaths;
         bool updateSelinuxLabel = false;
         bool updateBundle = false;
+        bool hasEntry = false;
+        for (auto item : infos) {
+            if (item.second.HasEntry()) {
+                hasEntry = true;
+                break;
+            }
+        }
         for (auto item : infos) {
             auto parserModuleNames = item.second.GetModuleNameVec();
             if (parserModuleNames.empty()) {
@@ -2557,7 +2564,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                     hasInstalledInfo.hapModuleNames.begin(), hasInstalledInfo.hapModuleNames.end(),
                     parserModuleNames[0]) != hasInstalledInfo.hapModuleNames.end();
                 if (hasModuleInstalled) {
-                    if (UpdateModuleByHash(hasInstalledInfo, item.second)) {
+                    if (UpdateModuleByHash(hasInstalledInfo, item.second) || (!hasEntry && item.second.IsHsp())) {
                         updateBundle = true;
                         break;
                     }
