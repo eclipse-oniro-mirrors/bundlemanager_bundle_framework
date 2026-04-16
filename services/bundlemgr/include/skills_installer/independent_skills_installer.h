@@ -64,9 +64,6 @@ private:
     ErrCode CheckFileType(const std::vector<std::string> &bundlePaths);
     ErrCode ExtractModule(
         InnerBundleInfo &newInfo, const std::string &bundlePath, bool copyHapToInstallPath, bool isModuleExist);
-    void SendBundleSystemEvent(
-        const std::string &bundleName, BundleEventType bundleEventType,
-        const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
     ErrCode MkdirIfNotExist(const std::string &dir);
     void MergeBundleInfos(InnerBundleInfo &info);
     ErrCode SaveBundleInfoToStorage();
@@ -77,7 +74,7 @@ private:
     void RollBack();
     void RollBack(const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const ErrCode result);
     void RemoveInfo(const std::string &bundleName);
-    void SavePreInstallBundleInfo(ErrCode installResult,
+    void SavePreInstallBundleInfo(
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InstallParam &installParam);
     ErrCode UpdateSkillsPackage(InnerBundleInfo &oldInfo,
         std::unordered_map<std::string, InnerBundleInfo> &newInfos,

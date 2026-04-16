@@ -69,8 +69,7 @@ ErrCode IndependentSkillsInstaller::Install(
     startTime_ = BundleUtil::GetCurrentTimeMs();
     ErrCode result = ProcessInstall(hspPaths, installParam);
     if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "install skills failed %{public}s %{public}s result %{public}d",
-            hspPaths[0].c_str(), bundleName_.c_str(), result);
+        LOG_E(BMS_TAG_INSTALLER, "install skills failed -n %{public}s result %{public}d", bundleName_.c_str(), result);
     } else {
         LOG_I(BMS_TAG_INSTALLER, "install skills succeed -n %{public}s -u %{public}d", bundleName_.c_str(), userId_);
     }
@@ -260,7 +259,7 @@ ErrCode IndependentSkillsInstaller::CheckAndParseFiles(
     result = CheckAppLabelInfo(newInfos);
     CHECK_SKILLS_RESULT(result, "Check app label failed %{public}d");
     if (installParam.needSavePreInstallInfo) {
-        SavePreInstallBundleInfo(ERR_OK, newInfos, installParam);
+        SavePreInstallBundleInfo(newInfos, installParam);
     }
     userId_ = installParam.userId;
     // check user
@@ -332,6 +331,9 @@ ErrCode IndependentSkillsInstaller::CheckFileType(const std::vector<std::string>
 ErrCode IndependentSkillsInstaller::CheckAppLabelInfo(
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
+    if (infos.empty()) {
+        return ERR_SKILLS_HAS_NO_MODULE;
+    }
     for (const auto &info : infos) {
         if (info.second.GetApplicationBundleType() != BundleType::SKILL) {
             LOG_E(BMS_TAG_INSTALLER, "App BundleType is not skills");
@@ -345,7 +347,7 @@ ErrCode IndependentSkillsInstaller::CheckAppLabelInfo(
         }
         // skills only has 1 skillProfiles
         if (moduleInfo && (moduleInfo->skillProfiles.size() != 1)) {
-            LOG_E(BMS_TAG_INSTALLER, "App ModuleType skillProfiles size %{public}zu error", moduleInfo->skillProfiles.size());
+            LOG_E(BMS_TAG_INSTALLER, "App skillProfiles size %{public}zu error", moduleInfo->skillProfiles.size());
             return ERR_SKILLS_ONLY_ALLOW_ONE_SKILLS_AGENT;
         }
     }
@@ -361,7 +363,7 @@ ErrCode IndependentSkillsInstaller::CheckAppLabelInfo(
     return ERR_OK;
 }
 
-void IndependentSkillsInstaller::SavePreInstallBundleInfo(ErrCode installResult,
+void IndependentSkillsInstaller::SavePreInstallBundleInfo(
     const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InstallParam &installParam)
 {
     if (newInfos.empty()) {
@@ -863,12 +865,11 @@ void IndependentSkillsInstaller::RollBack()
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove bundle dir %{public}s failed", bundleDir.c_str());
     }
-    /*
     result = SkillsDescriptionManager::GetInstance()->DeleteSkillDescriptions(bundleName_);
     if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "delete skill descriptions %{public}s  -u %{public}d failed", bundleDir.c_str(), userId_);
+        LOG_E(BMS_TAG_INSTALLER, "delete skill descriptions %{public}s -u %{public}d failed",
+            bundleName_.c_str(), userId_);
     }
-    */
 }
 
 void IndependentSkillsInstaller::RollBack(
@@ -983,6 +984,9 @@ void IndependentSkillsInstaller::ResetProperties()
     isEnterpriseBundle_ = false;
     appIdentifier_ = "";
     compileSdkType_ = "";
+    hasInstalledInUser_ = false;
+    userId_ = -1;
+    bundleName_ = "";
 }
 
 void IndependentSkillsInstaller::RemoveOldSkillsPath()
