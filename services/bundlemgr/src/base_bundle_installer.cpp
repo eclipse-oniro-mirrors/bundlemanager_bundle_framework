@@ -1881,7 +1881,7 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
 {
     LOG_D(BMS_TAG_INSTALLER, "start rollback due to install failed");
 
-    // 回滚 shareFiles
+    // Rollback shareFiles
     RollbackShareFiles(oldInfo);
 
     if (!isAppExist_) {
@@ -2172,12 +2172,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
 #ifdef BMS_ACCESSCONTROL_SANDBOX_MANAGER
-    // 应用卸载时：处理 shareFiles 清理，失败时中断卸载流程
     ErrCode ret = ProcessUninstallShareFiles(oldInfo, userId_);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "process uninstall shareFiles failed for bundle=%{public}s, result=%{public}d",
+        LOG_W(BMS_TAG_INSTALLER, "process uninstall shareFiles failed for bundle=%{public}s, result=%{public}d",
             bundleName.c_str(), ret);
-        return ret;
     }
 #endif
 
@@ -2469,14 +2467,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     GetUninstallBundleInfo(installParam.isKeepData, userId_, oldInfo, uninstallBundleInfo);
 
 #ifdef BMS_ACCESSCONTROL_SANDBOX_MANAGER
-    // 模块卸载时：如果是entry模块，处理 shareFiles 清理，失败时中断卸载流程
     if (oldInfo.IsEntryModule(modulePackage)) {
         ErrCode ret = ProcessUninstallShareFiles(oldInfo, userId_);
         if (ret != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER,
+            LOG_W(BMS_TAG_INSTALLER,
                 "process uninstall shareFiles failed for bundle=%{public}s, module=%{public}s, result=%{public}d",
                 bundleName.c_str(), modulePackage.c_str(), ret);
-            return ret;
         }
     }
 #endif
@@ -4348,17 +4344,22 @@ ErrCode BaseBundleInstaller::ProcessBundleShareFiles(const std::unordered_map<st
         LOG_E(BMS_TAG_INSTALLER, "newInfos is empty");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-    // 如果是更新场景，先保存旧的 shareFile JSON 配置用于回滚
+    // Check if shareFiles processing is needed
+    if (!ShouldProcessShareFiles(isAppExist_, newInfos, oldInfo)) {
+        LOG_D(BMS_TAG_INSTALLER, "No shareFiles configured, skip processing");
+        return ERR_OK;
+    }
+    // If this is an update scenario, save the old shareFile JSON configuration for rollback first
     if (isAppExist_) {
         hasOldShareFilesJsonSaved_ = false;
         oldShareFilesJson_.clear();
         ErrCode ret = SaveOldShareFilesForRollback(oldInfo);
         if (ret != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "Failed to save old shareFiles JSON for rollback, ret=%{public}d", ret);
-            // 继续执行，保存失败不影响更新流程
+            // Continue execution, save failure does not affect the update process
         }
     }
-    // 遍历处理所有 bundleInfos
+    // Iterate through all bundleInfos
     for (const auto &infoPair : newInfos) {
         const std::string &hapPath = infoPair.first;
         const InnerBundleInfo &bundleInfo = infoPair.second;
@@ -4369,15 +4370,10 @@ ErrCode BaseBundleInstaller::ProcessBundleShareFiles(const std::unordered_map<st
         auto moduleInfos = bundleInfo.GetInnerModuleInfos();
         for (const auto &modulePair : moduleInfos) {
             const InnerModuleInfo &moduleInfo = modulePair.second;
-            // 只处理 entry 模块
+            // Only process entry module
             if (!moduleInfo.isEntry) {
                 LOG_D(BMS_TAG_INSTALLER, "skip non-entry module: %{public}s", moduleInfo.moduleName.c_str());
                 continue;
-            }
-            // 首次安装、且entry未配置shareFiles，忽略
-            if (!isAppExist_ && moduleInfo.shareFiles.empty()) {
-                LOG_D(BMS_TAG_INSTALLER, "skip entry with no shareFiles: %{public}s", moduleInfo.moduleName.c_str());
-                break;
             }
             ErrCode ret = ProcessModuleShareFiles(hapPath, moduleInfo, bundleName, oldInfo);
             if (ret != ERR_OK) {
@@ -4398,7 +4394,7 @@ ErrCode BaseBundleInstaller::ProcessModuleShareFiles(const std::string &hapPath,
         LOG_E(BMS_TAG_INSTALLER, "null dataMgr_");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    // 获取 shareFiles JSON 内容
+    // Get shareFiles JSON content
     std::string shareFilesJson;
     ErrCode ret = dataMgr_->GetShareFilesJsonFromHap(hapPath, moduleInfo, shareFilesJson);
     if (ret != ERR_OK) {
@@ -4408,15 +4404,15 @@ ErrCode BaseBundleInstaller::ProcessModuleShareFiles(const std::string &hapPath,
         return ret;
     }
     if (isAppExist_) {
-        // 更新场景：遍历所有已安装实例
+        // Update scenario: iterate through all installed instances
         return UpdateShareFileInfoForAllInstances(shareFilesJson, bundleName, oldInfo);
     } else {
-        // 新安装场景：只设置当前用户
-        LOG_D(BMS_TAG_INSTALLER, "Set shareFileInfo for bundle=%{public}s", bundleName.c_str());
+        // New installation scenario: only set for current user
         int32_t result = ShareFileHelper::SetShareFileInfo(shareFilesJson, bundleName, userId_, accessTokenId_);
         if (result != 0) {
-            LOG_E(BMS_TAG_INSTALLER, "Failed to set shareFileInfo, ret=%{public}d", result);
-            return ERR_APPEXECFWK_INSTALL_FAILED_SET_SHARE_FILES_FAIL;
+            LOG_W(BMS_TAG_INSTALLER,
+                "SetShareFileInfo failed but continuing install, bundle=%{public}s, ret=%{public}d",
+                bundleName.c_str(), result);
         }
         hasShareFilesProcessed_ = true;
         return ERR_OK;
@@ -4431,20 +4427,17 @@ ErrCode BaseBundleInstaller::UpdateShareFileInfoForAllInstances(
     LOG_D(BMS_TAG_INSTALLER, "Update shareFileInfo for all instances of bundle=%{public}s",
         bundleName.c_str());
     int32_t failCount = 0;
-    // 遍历所有用户（多用户 + 主应用 + 分身应用）
+    // Iterate through all users (multi-user + main app + clone apps)
     const auto &userInfos = oldInfo.GetInnerBundleUserInfos();
     for (const auto &[userIdKey, userInfo] : userInfos) {
         failCount += UpdateMultiUserInstances(shareFilesJson, bundleName, userInfo);
     }
     hasShareFilesProcessed_ = true;
     if (failCount > 0) {
-        LOG_E(BMS_TAG_INSTALLER,
-            "Update shareFiles completed with %{public}d failures for bundle=%{public}s",
+        LOG_W(BMS_TAG_INSTALLER,
+            "UpdateShareFileInfo completed with %{public}d failures but continuing update, bundle=%{public}s",
             failCount, bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_FAILED_SET_SHARE_FILES_FAIL;
     }
-    LOG_D(BMS_TAG_INSTALLER, "Successfully updated shareFileInfo for all instances of bundle=%{public}s",
-        bundleName.c_str());
     return ERR_OK;
 }
 
@@ -4456,7 +4449,7 @@ int32_t BaseBundleInstaller::UpdateMultiUserInstances(
     int32_t failCount = 0;
     int32_t userId = userInfo.bundleUserInfo.userId;
 
-    // 1. 更新主应用 (appIndex = 0)
+    // 1. Update main app (appIndex = 0)
     uint32_t tokenId = userInfo.accessTokenId;
     int32_t ret = ShareFileHelper::UpdateShareFileInfo(
         shareFilesJson, bundleName, userId, tokenId);
@@ -4465,12 +4458,8 @@ int32_t BaseBundleInstaller::UpdateMultiUserInstances(
             "Failed to update shareFiles for %{public}s, userId=%{public}d, ret=%{public}d",
             bundleName.c_str(), userId, ret);
         failCount++;
-    } else {
-        LOG_D(BMS_TAG_INSTALLER,
-            "Successfully updated shareFiles for %{public}s, userId=%{public}d", bundleName.c_str(), userId);
     }
-
-    // 2. 遍历该用户的分身应用 (0 < appIndex <= 1000)
+    // 2. Iterate through the clone applications of this user (0 < appIndex <= 1000)
     for (const auto &[appIndexKey, cloneInfo] : userInfo.cloneInfos) {
         int32_t appIndex = cloneInfo.appIndex;
         uint32_t cloneTokenId = cloneInfo.accessTokenId;
@@ -4483,34 +4472,65 @@ int32_t BaseBundleInstaller::UpdateMultiUserInstances(
                 "Failed to update shareFiles for %{public}s, userId=%{public}d, ret=%{public}d",
                 cloneBundleName.c_str(), userId, ret);
             failCount++;
-        } else {
-            LOG_D(BMS_TAG_INSTALLER,
-                "Successfully updated shareFiles for %{public}s, userId=%{public}d", cloneBundleName.c_str(), userId);
         }
     }
     return failCount;
+}
+
+bool BaseBundleInstaller::HasEntryShareFiles(const InnerBundleInfo &bundleInfo)
+{
+    auto moduleInfos = bundleInfo.GetInnerModuleInfos();
+    for (const auto &modulePair : moduleInfos) {
+        const InnerModuleInfo &moduleInfo = modulePair.second;
+        if (moduleInfo.isEntry && !moduleInfo.shareFiles.empty()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool BaseBundleInstaller::ShouldProcessShareFiles(bool isAppExist,
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const InnerBundleInfo &oldInfo)
+{
+    // Check if any bundle in the new version has shareFiles configured
+    bool newHasShareFiles = false;
+    for (const auto &infoPair : newInfos) {
+        if (HasEntryShareFiles(infoPair.second)) {
+            newHasShareFiles = true;
+            break;
+        }
+    }
+    // New installation scenario: if the new version has no shareFiles configured, no processing is needed
+    if (!isAppExist) {
+        return newHasShareFiles;
+    }
+    // Update scenario: check if the old version has shareFiles configured
+    bool oldHasShareFiles = HasEntryShareFiles(oldInfo);
+    // If neither old nor new version has shareFiles configured, no processing is needed
+    return newHasShareFiles || oldHasShareFiles;
 }
 
 ErrCode BaseBundleInstaller::SaveOldShareFilesForRollback(const InnerBundleInfo &oldBundleInfo)
 {
     LOG_D(BMS_TAG_INSTALLER, "SaveOldShareFilesForRollback begin for bundle=%{public}s",
         oldBundleInfo.GetBundleName().c_str());
-    // 遍历已安装应用的模块
+    // Iterate through modules of the installed app
     auto moduleInfos = oldBundleInfo.GetInnerModuleInfos();
     for (const auto &modulePair : moduleInfos) {
         const InnerModuleInfo &moduleInfo = modulePair.second;
-        // 只处理 entry 模块
+        // Only process entry modules
         if (!moduleInfo.isEntry) {
             continue;
         }
-        // entry模块未配置 shareFiles
+        // Entry module has no shareFiles configured
         if (moduleInfo.shareFiles.empty()) {
             oldShareFilesJson_ = "";
             hasOldShareFilesJsonSaved_ = true;
             break;
         }
-        // 从 hapPath 中读取旧的 JSON 内容
-        // 此时 hap 文件还未被替换，所以可以读取到旧内容
+        // Read old JSON content from hapPath
+        // The hap file has not been replaced yet, so old content can be read
         std::string oldJson;
         ErrCode ret = dataMgr_->GetShareFilesJsonFromHap(moduleInfo.hapPath, moduleInfo, oldJson);
         if (ret != ERR_OK) {
@@ -4519,7 +4539,7 @@ ErrCode BaseBundleInstaller::SaveOldShareFilesForRollback(const InnerBundleInfo 
                 moduleInfo.moduleName.c_str(), moduleInfo.hapPath.c_str(), ret);
             return ret;
         }
-        // 保存旧的 JSON 配置用于回滚
+        // Save old JSON configuration for rollback
         oldShareFilesJson_ = oldJson;
         hasOldShareFilesJsonSaved_ = true;
         LOG_D(BMS_TAG_INSTALLER,
@@ -4540,8 +4560,8 @@ ErrCode BaseBundleInstaller::ProcessUninstallShareFiles(const InnerBundleInfo &i
         if (!moduleInfo.isEntry || moduleInfo.shareFiles.empty()) {
             continue;
         }
-        // 清理当前用户的主应用的 shareFiles
-        // 此处不需要考虑分身、沙箱，前置卸载流程中会调用接口卸载分身、沙箱
+        // Clean up shareFiles for the current user's main app
+        // No need to consider clones and sandbox here, as the pre-uninstall process will uninstall clones and sandbox
         const auto &userInfos = info.GetInnerBundleUserInfos();
         std::string userKey = bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
         auto it = userInfos.find(userKey);
@@ -4550,10 +4570,9 @@ ErrCode BaseBundleInstaller::ProcessUninstallShareFiles(const InnerBundleInfo &i
             int32_t ret = ShareFileHelper::UnsetShareFileInfo(
                 userInfo.accessTokenId, bundleName, userId);
             if (ret != 0) {
-                LOG_E(BMS_TAG_INSTALLER,
-                    "Failed to unset shareFiles for %{public}s, userId=%{public}d, ret=%{public}d",
+                LOG_W(BMS_TAG_INSTALLER,
+                    "UnsetShareFileInfo failed, bundle=%{public}s, userId=%{public}d, ret=%{public}d",
                     bundleName.c_str(), userId, ret);
-                return ERR_APPEXECFWK_INSTALL_FAILED_SET_SHARE_FILES_FAIL;
             }
         } else {
             LOG_W(BMS_TAG_INSTALLER, "User %{public}d not found in bundle info", userId);
@@ -4563,7 +4582,7 @@ ErrCode BaseBundleInstaller::ProcessUninstallShareFiles(const InnerBundleInfo &i
             bundleName.c_str(), userId);
         return ERR_OK;
     }
-    // 没有 entry 模块
+    // No entry module found
     LOG_D(BMS_TAG_INSTALLER,
         "unset shareFiles skip no-entry %{public}s, userId=%{public}d", bundleName.c_str(), userId);
     return ERR_OK;
@@ -4577,10 +4596,10 @@ void BaseBundleInstaller::RollbackShareFiles(const InnerBundleInfo &oldInfo)
     }
     int32_t failCount = 0;
     if (!isAppExist_) {
-        // 新安装失败：清理 shareFiles
+        // New installation failed: clean up shareFiles
         failCount = RollbackShareFilesForNewInstall();
     } else {
-        // 更新失败：恢复旧配置
+        // Update failed: restore old configuration
         failCount = RollbackShareFilesForUpdate(oldInfo);
     }
     if (failCount > 0) {
@@ -4588,7 +4607,7 @@ void BaseBundleInstaller::RollbackShareFiles(const InnerBundleInfo &oldInfo)
             "Rollback: completed with %{public}d failures for bundle=%{public}s",
             failCount, bundleName_.c_str());
     }
-    // 清理标志和保存的旧配置
+    // Clear flags and saved old configuration
     hasOldShareFilesJsonSaved_ = false;
     hasShareFilesProcessed_ = false;
     oldShareFilesJson_.clear();
@@ -4615,18 +4634,15 @@ int32_t BaseBundleInstaller::RollbackShareFilesForUpdate(const InnerBundleInfo &
             bundleName_.c_str());
         return 0;
     }
-
     LOG_I(BMS_TAG_INSTALLER, "Rollback: restore old shareFileInfo for bundle=%{public}s",
         bundleName_.c_str());
 
     int32_t failCount = 0;
-
-    // 遍历所有用户的主应用和分身应用
+    // Iterate through all users' main apps and clone apps
     const auto &userInfos = oldInfo.GetInnerBundleUserInfos();
     for (const auto &[userIdKey, userInfo] : userInfos) {
         failCount += RollbackUserInstances(userInfo, oldInfo);
     }
-
     return failCount;
 }
 
@@ -4635,8 +4651,7 @@ int32_t BaseBundleInstaller::RollbackUserInstances(const InnerBundleUserInfo &us
 {
     int32_t failCount = 0;
     int32_t userId = userInfo.bundleUserInfo.userId;
-
-    // 1. 恢复主应用 (appIndex = 0)
+    // 1. Restore main app (appIndex = 0)
     uint32_t tokenId = userInfo.accessTokenId;
     int32_t ret = ShareFileHelper::UpdateShareFileInfo(
         oldShareFilesJson_, bundleName_, userId, tokenId);
@@ -4650,8 +4665,7 @@ int32_t BaseBundleInstaller::RollbackUserInstances(const InnerBundleUserInfo &us
             "Rollback: successfully restored for %{public}s userId=%{public}d, appIndex=0",
             bundleName_.c_str(), userId);
     }
-
-    // 2. 恢复分身应用 (0 < appIndex <= 1000)
+    // 2. Restore clone apps (0 < appIndex <= 1000)
     for (const auto &[appIndexKey, cloneInfo] : userInfo.cloneInfos) {
         int32_t appIndex = cloneInfo.appIndex;
         uint32_t cloneTokenId = cloneInfo.accessTokenId;
