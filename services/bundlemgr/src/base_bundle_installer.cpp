@@ -315,7 +315,8 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .appIdentifier = bundleAppIdentifier_,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .isInstallByBundleName = true
+            .isInstallByBundleName = true,
+            .modulePackage = moduleName_,
         };
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (installParam.concentrateSendEvent) {
@@ -364,7 +365,8 @@ ErrCode BaseBundleInstaller::Recover(
             .appIdentifier = bundleAppIdentifier_,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .isRecover = true
+            .isRecover = true,
+            .modulePackage = moduleName_,
         };
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (NotifyBundleStatus(installRes) != ERR_OK) {
@@ -2674,6 +2676,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
 
             versionCode_ = oldInfo.GetVersionCode();
             bundleAppIdentifier_ = oldInfo.GetAppIdentifier();
+            moduleName_ = oldInfo.GetEventModuleName();
             if (oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
                 LOG_D(BMS_TAG_INSTALLER, "Appservice (%{public}s) only install in U0", bundleName.c_str());
                 bundleType_ = BundleType::APP_SERVICE_FWK;
