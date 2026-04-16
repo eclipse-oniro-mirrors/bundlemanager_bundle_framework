@@ -232,6 +232,32 @@ ohos_unittest("BmsBundleHitraceChainTest") {
     "hilog:libhilog",
   ]
 }
+
+ohos_unittest("BmsXcollieHelperTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  use_exceptions = true
+  module_out_path = module_output_path
+  include_dirs = [ "${services_path}/bundlemgr/include" ]
+  sources = []
+  sources += [
+    "xcollie_helper_test.cpp",
+    "${services_path}/bundlemgr/src/xcollie_helper.cpp"
+  ]
+  deps = [ "${common_path}:libappexecfwk_common" ]
+  external_deps = [ 
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+  defines = []
+  if (hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+}
 group("unittest") {
   testonly = true
   if (ability_runtime_enable) {
@@ -239,6 +265,7 @@ group("unittest") {
       ":BmsBundleHitraceChainTest",
       ":BmsBundleTaskHitraceChainTest",
       ":BmsBundleCommonTest",
+      ":BmsXcollieHelperTest",
     ]
   }
 }
