@@ -564,13 +564,14 @@ ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputF
     size_t buffer = 524288; // 0.5M
     size_t transferCount = 0;
     ssize_t singleTransfer = 0;
+    errno = 0;
     while ((singleTransfer = sendfile(outputFd, inputFd, nullptr, buffer)) > 0) {
         transferCount += static_cast<size_t>(singleTransfer);
     }
 
     if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
-        LOG_E(BMS_TAG_INSTALLER, "errno: %{public}d, send count: %{public}zu, file size: %{public}zu",
-            errno, transferCount, static_cast<size_t>(sourceStat.st_size));
+        LOG_E(BMS_TAG_INSTALLER, "errno: %{public}d, singleTransfer: %{public}zd, send count: %{public}zu, "
+            "file size: %{public}zu", errno, singleTransfer, transferCount, static_cast<size_t>(sourceStat.st_size));
         fdsan_close_with_tag(inputFd, LOG_DOMAIN);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
