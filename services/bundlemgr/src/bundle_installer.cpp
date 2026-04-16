@@ -20,6 +20,7 @@
 #include <sys/statfs.h>
 #include <sstream>
 #include <unordered_set>
+#include <utility>
 
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
@@ -68,6 +69,22 @@ std::vector<std::string> DeduplicateBundleNames(const std::vector<std::string> &
         result.emplace_back(bundleName);
     }
     return result;
+}
+
+int32_t GetUninstallUserIdForOobePreload(const std::shared_ptr<BundleDataMgr> &dataMgr, const std::string &bundleName,
+    int32_t userId)
+{
+    if (dataMgr == nullptr) {
+        return userId;
+    }
+    auto userIds = dataMgr->GetUserIds(bundleName);
+    if (userIds.size() != 1) {
+        return userId;
+    }
+    if (userIds[0] == Constants::DEFAULT_USERID || userIds[0] == Constants::U1) {
+        return userIds[0];
+    }
+    return userId;
 }
 } // namespace
 BundleInstaller::BundleInstaller(const int64_t installerId, const sptr<IStatusReceiver> &statusReceiver)
@@ -428,16 +445,19 @@ ErrCode BundleInstaller::UninstallNewPreinstalledApps(const std::vector<std::str
         return ERR_OK;
     }
 
+    std::vector<std::pair<std::string, int32_t>> pendingBundles;
     for (const auto &bundleName : validBundleNames) {
+        int32_t uninstallUserId = GetUninstallUserIdForOobePreload(dataMgr, bundleName, userId);
         InstallParam installParam;
-        installParam.userId = userId;
+        installParam.userId = uninstallUserId;
         installParam.isKeepData = true;
         ErrCode ret = UninstallBundle(bundleName, installParam);
         if (ret != ERR_OK) {
             APP_LOGE("first stage uninstall failed, bundleName:%{public}s ret:%{public}d", bundleName.c_str(), ret);
             continue;
         }
-        if (!pendingMgr->AddPendingBundle(bundleName, userId)) {
+        pendingBundles.emplace_back(bundleName, uninstallUserId);
+        if (!pendingMgr->AddPendingBundle(bundleName, uninstallUserId)) {
             APP_LOGE("AddPendingBundle failed, bundleName:%{public}s", bundleName.c_str());
             continue;
         }
@@ -447,16 +467,16 @@ ErrCode BundleInstaller::UninstallNewPreinstalledApps(const std::vector<std::str
             APP_LOGE("GetPreInstallBundleInfo failed, bundleName:%{public}s", bundleName.c_str());
             continue;
         }
-        preInstallBundleInfo.DeleteOtaNewInstallUser(userId);
+        preInstallBundleInfo.DeleteOtaNewInstallUser(uninstallUserId);
         if (!dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
             APP_LOGE("SavePreInstallBundleInfo failed, bundleName:%{public}s", bundleName.c_str());
             continue;
         }
         APP_LOGI("first stage uninstall succeeded, bundleName:%{public}s, userId:%{public}d",
-            bundleName.c_str(), userId);
+            bundleName.c_str(), uninstallUserId);
     }
 
-    auto task = [validBundleNames, userId]() {
+    auto task = [pendingBundles]() {
         auto service = DelayedSingleton<BundleMgrService>::GetInstance();
         if (service == nullptr) {
             APP_LOGE("service is nullptr");
@@ -468,15 +488,17 @@ ErrCode BundleInstaller::UninstallNewPreinstalledApps(const std::vector<std::str
             return;
         }
         auto installer = std::make_shared<BundleInstaller>(GetMicroTickCount(), nullptr);
-        for (const auto &bundleName : validBundleNames) {
+        for (const auto &pendingBundle : pendingBundles) {
+            const auto &bundleName = pendingBundle.first;
+            int32_t uninstallUserId = pendingBundle.second;
             InstallParam installParam;
-            installParam.userId = userId;
+            installParam.userId = uninstallUserId;
             installParam.isKeepData = false;
             ErrCode ret = installer->UninstallForInternal(bundleName, installParam);
             if (ret == ERR_OK) {
-                (void)pendingMgr->RemovePendingBundle(bundleName, userId);
+                (void)pendingMgr->RemovePendingBundle(bundleName, uninstallUserId);
                 APP_LOGI("second stage uninstall succeeded, bundleName:%{public}s, userId:%{public}d",
-                    bundleName.c_str(), userId);
+                    bundleName.c_str(), uninstallUserId);
             } else {
                 APP_LOGE("second stage uninstall failed, bundleName:%{public}s ret:%{public}d",
                     bundleName.c_str(), ret);
