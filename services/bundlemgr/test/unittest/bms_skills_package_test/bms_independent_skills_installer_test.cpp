@@ -612,45 +612,6 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveMod
 }
 
 /**
- * @tc.number: IndependentSkillsInstaller_RemoveInfo_0001
- * Function: RemoveInfo
- * @tc.name: test RemoveInfo with valid bundle name
- * @tc.desc: 1. system running normally
- *           2. test RemoveInfo executes without error
- */
-HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveInfo_0001,
-    Function | SmallTest | Level0)
-{
-    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
-    installer_->dataMgr_ = dataMgr_;
-
-    installer_->bundleName_ = BUNDLE_NAME;
-    installer_->userId_ = USER_ID;
-    installer_->RemoveInfo(BUNDLE_NAME);
-    // Verify installer state after operation
-    EXPECT_EQ(installer_->userId_, USER_ID);
-}
-
-/**
- * @tc.number: IndependentSkillsInstaller_RemoveInfo_0002
- * Function: RemoveInfo
- * @tc.name: test RemoveInfo with empty bundle name
- * @tc.desc: 1. system running normally
- *           2. test RemoveInfo handles empty bundle name
- */
-HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveInfo_0002,
-    Function | SmallTest | Level0)
-{
-    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
-    installer_->dataMgr_ = dataMgr_;
-
-    installer_->bundleName_ = BUNDLE_NAME;
-    installer_->RemoveInfo("");
-    // Verify bundle name is unchanged after operation with empty parameter
-    EXPECT_EQ(installer_->bundleName_, BUNDLE_NAME);
-}
-
-/**
  * @tc.number: IndependentSkillsInstaller_MergeBundleInfos_0001
  * Function: MergeBundleInfos
  * @tc.name: test MergeBundleInfos

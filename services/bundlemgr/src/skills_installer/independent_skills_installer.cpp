@@ -100,6 +100,10 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
 {
     ErrCode result = BeforeInstall(hspPaths, installParam);
     CHECK_SKILLS_RESULT(result, "BeforeInstall check failed %{public}d");
+    if (dataMgr_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     // check user
     if (!dataMgr_->HasUserId(installParam.userId)) {
         LOG_E(BMS_TAG_INSTALLER, "userId %{public}d not exist", installParam.userId);
@@ -129,7 +133,12 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
     if (versionUpgrade_ || moduleUpdate_) {
         result = UpdateSkillsPackage(oldInfo, newInfos, installParam);
         // need rollback
-        RollBack(newInfos, result);
+        if (result != ERR_OK) {
+            RollBack(newInfos, result);
+            LOG_E(BMS_TAG_INSTALLER, "skills -n %{public}s -u %{public}d update failed %{public}d",
+                bundleName_.c_str(), userId_, result);
+            return result;
+        }
         CHECK_SKILLS_RESULT(result, "UpdateSkillsPackage failed %{public}d");
     } else {
         result = InnerProcessInstall(newInfos, installParam);
@@ -653,7 +662,7 @@ ErrCode IndependentSkillsInstaller::ExtractModule(
     for (const auto &skills : moduleInfos.begin()->second.skillProfiles) {
         skillNameList.emplace_back(skills.name);
     }
-    std::string moduleName = newInfo.GetInnerModuleInfos().begin()->second.moduleName;
+    std::string moduleName = moduleInfos.begin()->second.moduleName;
     std::string tempModuleName = moduleName;
     if (isModuleExist) {
         tempModuleName += TEMP_PATH;
@@ -745,6 +754,10 @@ bool IndependentSkillsInstaller::FetchInnerBundleInfo(InnerBundleInfo &info, boo
 
 void IndependentSkillsInstaller::RemoveInfo(const std::string &bundleName)
 {
+    if (dataMgr_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr is nullptr");
+        return;
+    }
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "Delete inner info failed");
     }
