@@ -329,6 +329,11 @@ std::string BundleUtil::GetNoDisablingConfigPath()
 }
 
 
+bool BundleUtil::IsExecutableBinaryFile(const std::string &filePath)
+{
+    return true;
+}
+
 uint32_t BundleUtil::ExtractNumberFromString(nlohmann::json &jsonObject, const std::string &key)
 {
     return 0;
@@ -667,6 +672,11 @@ std::string BundleUtil::GetNoDisablingConfigPath()
     return "";
 }
 
+
+bool BundleUtil::IsExecutableBinaryFile(const std::string &filePath)
+{
+    return false;
+}
 
 uint32_t BundleUtil::ExtractNumberFromString(nlohmann::json &jsonObject, const std::string &key)
 {

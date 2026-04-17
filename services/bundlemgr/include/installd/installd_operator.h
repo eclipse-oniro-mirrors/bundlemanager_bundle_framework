@@ -333,6 +333,8 @@ public:
 
     static ErrCode SetBinFileLabel(const std::string &binFilePath);
 
+    static bool CheckElfFile(const std::string &filePath);
+
     static std::string Sha256File(const std::string& filePath);
  
     static ErrCode HashSoFile(const std::string& soPath,

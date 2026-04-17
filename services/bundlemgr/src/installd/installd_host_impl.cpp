@@ -3034,7 +3034,12 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
     std::vector<BinFileInfo> infos;
 #endif
-    for (const auto &binFilePath : verifyBinParam.binFilePaths) {
+    for (const auto &path : verifyBinParam.binFilePaths) {
+        std::string binFilePath;
+        if (!PathToRealPath(path, binFilePath)) {
+            LOG_E(BMS_TAG_INSTALLD, "not real path: %{public}s", path.c_str());
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
         if (!InstalldOperator::IsFileNameValid(binFilePath)) {
             LOG_E(BMS_TAG_INSTALLD, "invalid file path: %{public}s", binFilePath.c_str());
             return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -3051,6 +3056,10 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
             LOG_E(BMS_TAG_INSTALLD, "chmod failed for %{public}s, errno:%{public}d",
                 binFilePath.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_CHMOD_FAILED;
+        }
+        if (!InstalldOperator::CheckElfFile(binFilePath)) {
+            LOG_W(BMS_TAG_INSTALLD, "skip non-executable file: %{public}s", binFilePath.c_str());
+            continue;
         }
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
         ErrCode result = InstalldOperator::SetBinFileLabel(binFilePath);
