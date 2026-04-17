@@ -53,6 +53,8 @@ private:
     DISALLOW_COPY_AND_MOVE(AOTHandler);
 
     void HandleInstallAOT(const std::string &bundleName) const;
+    bool ShouldCompileSharedModule(const InnerModuleInfo &moduleInfo) const;
+    bool ShouldCompileAppModule(const InnerModuleInfo &moduleInfo) const;
     ErrCode MkApDestDirIfNotExist() const;
     void CopyApWithBundle(const std::string &bundleName, const BundleInfo &bundleInfo,
         const int32_t userId, std::vector<std::string> &results) const;

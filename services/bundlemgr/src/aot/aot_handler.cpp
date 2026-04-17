@@ -29,6 +29,7 @@
 #include "aot/aot_sign_data_cache_mgr.h"
 #endif
 #include "app_log_tag_wrapper.h"
+#include "bundle_extractor.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "scope_guard.h"
 #include "installd_client.h"
@@ -312,6 +313,34 @@ void AOTHandler::HandleInstallAOTAsync(const std::string &bundleName) const
     ffrt::submit(task, {}, {}, ffrt::task_attr().name("InstallAOTTask"));
 }
 
+bool AOTHandler::ShouldCompileSharedModule(const InnerModuleInfo &moduleInfo) const
+{
+    if (moduleInfo.moduleArkTSMode == Constants::ARKTS_MODE_DYNAMIC) {
+        APP_LOGD("shared module %{public}s is dynamic, skip", moduleInfo.moduleName.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool AOTHandler::ShouldCompileAppModule(const InnerModuleInfo &moduleInfo) const
+{
+    if (moduleInfo.moduleArkTSMode == Constants::ARKTS_MODE_DYNAMIC) {
+        APP_LOGD("module %{public}s is dynamic, skip", moduleInfo.moduleName.c_str());
+        return false;
+    }
+    BundleExtractor bundleExtractor(moduleInfo.hapPath);
+    if (!bundleExtractor.Init()) {
+        APP_LOGW_NOFUNC("extractor init failed for module %{public}s", moduleInfo.moduleName.c_str());
+        return false;
+    }
+    std::string bapFile = ServiceConstants::BAP_DIR + moduleInfo.moduleName + ServiceConstants::BAP_SUFFIX;
+    if (!bundleExtractor.HasEntry(bapFile)) {
+        APP_LOGD("module %{public}s has no bap file", moduleInfo.moduleName.c_str());
+        return false;
+    }
+    return true;
+}
+
 void AOTHandler::HandleInstallAOT(const std::string &bundleName) const
 {
     APP_LOGI_NOFUNC("HandleInstallAOT begin, bundleName: %{public}s", bundleName.c_str());
@@ -337,18 +366,24 @@ void AOTHandler::HandleInstallAOT(const std::string &bundleName) const
         APP_LOGD("arkTSMode is dynamic, no need to AOT");
         return;
     }
-    std::vector<std::string> enableList = GetAOTEnableList(BUNDLE_INSTALL_AOT_CONFIG_PATH);
-    if (std::find(enableList.begin(), enableList.end(), bundleName) == enableList.end()) {
-        APP_LOGD("bundle %{public}s not in AOT enable list", bundleName.c_str());
-        return;
+
+    bool isShared = (info.GetApplicationBundleType() == BundleType::SHARED);
+    if (isShared) {
+        std::vector<std::string> enableList = GetAOTEnableList(BUNDLE_INSTALL_AOT_CONFIG_PATH);
+        if (std::find(enableList.begin(), enableList.end(), bundleName) == enableList.end()) {
+            APP_LOGD("shared bundle %{public}s not in AOT enable list", bundleName.c_str());
+            return;
+        }
     }
+
     for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
-        if (moduleInfo.moduleArkTSMode == Constants::ARKTS_MODE_DYNAMIC) {
+        bool shouldCompile = isShared ? ShouldCompileSharedModule(moduleInfo) : ShouldCompileAppModule(moduleInfo);
+        if (!shouldCompile) {
             continue;
         }
         APP_LOGI_NOFUNC("AOT compile for %{public}s/%{public}s", bundleName.c_str(), moduleName.c_str());
         std::optional<AOTArgs> aotArgs = BuildAOTArgs(
-            info, moduleName, "", false, ServiceConstants::AOT_TRIGGER_INSTALL);
+            info, moduleName, ServiceConstants::COMPILE_FULL, false, ServiceConstants::AOT_TRIGGER_INSTALL);
         (void)AOTInternal(aotArgs, info.GetVersionCode());
     }
     APP_LOGI_NOFUNC("HandleInstallAOT end");

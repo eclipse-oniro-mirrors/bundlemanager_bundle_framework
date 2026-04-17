@@ -296,4 +296,96 @@ HWTEST_F(BmsAOTHandlerTest, BuildSharedArkCachePath_0100, Function | SmallTest |
     path = AOTHandler::BuildSharedArkCachePath(bundleName, std::nullopt);
     EXPECT_EQ(path, bundlePath);
 }
+
+/**
+ * @tc.number: ShouldCompileSharedModule_0100
+ * @tc.name: test ShouldCompileSharedModule returns false for dynamic module
+ * @tc.desc: 1.create InnerModuleInfo with dynamic ArkTS mode
+ *           2.call ShouldCompileSharedModule, expect return false
+ */
+HWTEST_F(BmsAOTHandlerTest, ShouldCompileSharedModule_0100, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "sharedDynamic";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    bool result = AOTHandler::GetInstance().ShouldCompileSharedModule(moduleInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: ShouldCompileSharedModule_0200
+ * @tc.name: test ShouldCompileSharedModule returns true for static module
+ * @tc.desc: 1.create InnerModuleInfo with static ArkTS mode
+ *           2.call ShouldCompileSharedModule, expect return true
+ */
+HWTEST_F(BmsAOTHandlerTest, ShouldCompileSharedModule_0200, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "sharedStatic";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    bool result = AOTHandler::GetInstance().ShouldCompileSharedModule(moduleInfo);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: ShouldCompileSharedModule_0300
+ * @tc.name: test ShouldCompileSharedModule returns true for hybrid module
+ * @tc.desc: 1.create InnerModuleInfo with hybrid ArkTS mode
+ *           2.call ShouldCompileSharedModule, expect return true
+ */
+HWTEST_F(BmsAOTHandlerTest, ShouldCompileSharedModule_0300, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "sharedHybrid";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_HYBRID;
+    bool result = AOTHandler::GetInstance().ShouldCompileSharedModule(moduleInfo);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: ShouldCompileAppModule_0100
+ * @tc.name: test ShouldCompileAppModule returns false for dynamic module
+ * @tc.desc: 1.create InnerModuleInfo with dynamic ArkTS mode
+ *           2.call ShouldCompileAppModule, expect return false
+ */
+HWTEST_F(BmsAOTHandlerTest, ShouldCompileAppModule_0100, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "appDynamic";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    bool result = AOTHandler::GetInstance().ShouldCompileAppModule(moduleInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: ShouldCompileAppModule_0200
+ * @tc.name: test ShouldCompileAppModule returns false when BundleExtractor init fails
+ * @tc.desc: 1.create InnerModuleInfo with static mode and invalid hap path
+ *           2.call ShouldCompileAppModule, expect return false
+ */
+HWTEST_F(BmsAOTHandlerTest, ShouldCompileAppModule_0200, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "appModule";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    moduleInfo.hapPath = "/invalid/path/not_exist.hap";
+    bool result = AOTHandler::GetInstance().ShouldCompileAppModule(moduleInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: ShouldCompileAppModule_0300
+ * @tc.name: test ShouldCompileAppModule returns false when no bap entry
+ * @tc.desc: 1.create InnerModuleInfo with static mode and valid hap without bap
+ *           2.call ShouldCompileAppModule, expect return false
+ */
+HWTEST_F(BmsAOTHandlerTest, ShouldCompileAppModule_0300, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "appModule";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    moduleInfo.hapPath = "/system/etc/graphic/bootpic.zip";
+    bool result = AOTHandler::GetInstance().ShouldCompileAppModule(moduleInfo);
+    EXPECT_FALSE(result);
+}
 } // OHOS
