@@ -3051,6 +3051,14 @@ ErrCode InstalldOperator::SetBinFileLabel(const std::string &binFilePath)
     return ERR_OK;
 }
 
+bool InstalldOperator::CheckElfFile(const std::string &filePath)
+{
+    if (filePath.empty()) {
+        return false;
+    }
+    return BundleUtil::IsExecutableBinaryFile(filePath);
+}
+
 bool InstalldOperator::IsFileNameValid(const std::string &fileName)
 {
     if (fileName.empty()) {
