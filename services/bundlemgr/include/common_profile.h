@@ -438,6 +438,7 @@ constexpr const char* MODULE_DEDUPLICATE_HAR = "deduplicateHar";
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
 constexpr const char* MODULE_TYPE_FEATURE = "feature";
 constexpr const char* MODULE_TYPE_SHARED = "shared";
+constexpr const char* MODULE_TYPE_SKILLS = "skill";
 // deviceConfig
 constexpr const char* MIN_API_VERSION = "minAPIVersion";
 constexpr const char* MIN_MINOR_API_VERSION = "minMinorAPIVersion";
@@ -563,6 +564,7 @@ constexpr const char* BUNDLE_TYPE_ATOMIC_SERVICE = "atomicService";
 constexpr const char* BUNDLE_TYPE_SHARED = "shared";
 constexpr const char* BUNDLE_TYPE_APP_SERVICE_FWK = "appService";
 constexpr const char* BUNDLE_TYPE_PLUGIN = "appPlugin";
+constexpr const char* BUNDLE_TYPE_SKILL = "skill";
 
 // compileSdkType
 constexpr const char* COMPILE_SDK_VERSION = "compileSdkVersion";

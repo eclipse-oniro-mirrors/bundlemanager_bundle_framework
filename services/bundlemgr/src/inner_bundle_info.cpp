@@ -1817,6 +1817,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         hapInfo.moduleType = ModuleType::FEATURE;
     } else if (moduleType == Profile::MODULE_TYPE_SHARED) {
         hapInfo.moduleType = ModuleType::SHARED;
+    } else if (moduleType == Profile::MODULE_TYPE_SKILLS) {
+        hapInfo.moduleType = ModuleType::SKILL;
     } else {
         hapInfo.moduleType = ModuleType::UNKNOWN;
     }

@@ -390,6 +390,12 @@ private:
      */
     void InnerProcessRebootSystemHspInstall(const std::list<std::string> &scanPathList);
     /**
+     * @brief Process reboot install skills by bundleList.
+     * @param scanPathList Indicates store bundle list.
+     * @return
+     */
+    void InnerProcessRebootSkillsInstall(const std::list<std::string> &scanPathList);
+    /**
      * @brief Reboot uninstall system and system vendor bundles.
      * @return
      */
@@ -505,6 +511,14 @@ private:
      */
     ErrCode OTAInstallSystemHsp(const std::vector<std::string> &filePaths);
     /**
+     * @brief OTA Install system skills.
+     * @param filePaths Indicates the filePaths.
+     * @param userIds Indicates the userIds to install for.
+     * @return Returns ERR_OK if this function called successfully; returns false otherwise.
+     */
+    ErrCode OTAInstallSystemSkills(const std::vector<std::string> &filePaths,
+        const std::set<int32_t> &userIds);
+    /**
      * @brief Used to determine whether the module has been installed. If the installation has
      *        been uninstalled, OTA install and upgrade will not be allowed.
      * @param bundleName Indicates the bundleName.
@@ -610,6 +624,8 @@ private:
     void InnerProcessBootSystemHspInstall();
     void ProcessSystemHspInstall(const PreScanInfo &preScanInfo);
     bool ProcessSystemHspInstall(const std::string &systemHspDir);
+    void InnerProcessBootSkillsInstall(int32_t userId);
+    void ProcessSystemSkillsInstall(const PreScanInfo &preScanInfo, int32_t userId = Constants::UNSPECIFIED_USERID);
 
     static void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,

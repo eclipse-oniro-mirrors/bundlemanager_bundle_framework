@@ -20,7 +20,9 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include "securec.h"
+
 #include "aot_handler.h"
+#include "app_log_tag_wrapper.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
 #include "bms_update_selinux_mgr.h"
@@ -29,6 +31,7 @@
 #include "bundle_resource_helper.h"
 #include "bundle_util.h"
 #include "hitrace_meter.h"
+#include "independent_skills_installer.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "new_bundle_data_dir_mgr.h"
@@ -232,6 +235,15 @@ ErrCode BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPr
         installParam.isCreateUser = true;
         installParam.installFlag = InstallFlag::NORMAL;
         installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
+        if (info.GetBundleType() == BundleType::SKILL) {
+            IndependentSkillsInstaller installer;
+            auto ret = installer.InstallBundleByBundleName(info.GetBundleName(), installParam);
+            if (ret != ERR_OK) {
+                APP_LOGE("-n %{public}s -u %{public}d install skills failed", info.GetBundleName().c_str(), userId);
+            }
+            g_installedHapNum++;
+            continue;
+        }
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.GetBundleName(), needReinstall));
         if (userReceiverImpl == nullptr) {
