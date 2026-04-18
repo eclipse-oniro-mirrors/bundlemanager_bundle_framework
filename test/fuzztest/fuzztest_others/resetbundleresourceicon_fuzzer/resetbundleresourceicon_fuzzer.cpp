@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,7 +22,11 @@ namespace OHOS {
     bool fuzzelResetBundleResourceIconCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        bool ret = impl.ResetBundleResourceIcon(std::string(reinterpret_cast<const char*>(data), size));
+        int32_t userId = Constants::UNSPECIFIED_USERID;
+        int32_t appIndex = Constants::DEFAULT_APP_INDEX;
+        IconResourceType type = IconResourceType::DYNAMIC_ICON;
+        bool ret = impl.ResetBundleResourceIcon(std::string(reinterpret_cast<const char*>(data), size),
+            userId, appIndex, type);
         return ret;
     }
 }

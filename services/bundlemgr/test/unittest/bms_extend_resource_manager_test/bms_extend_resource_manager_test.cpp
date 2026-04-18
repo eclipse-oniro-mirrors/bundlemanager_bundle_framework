@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include <sstream>
 #include <string>
 
+#include "alternate_icon_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_resource_process.h"
@@ -391,8 +392,16 @@ HWTEST_F(BmsExtendResourceManagerTest, DynamicIconTest_0100, Function | SmallTes
     auto ret = impl.EnableDynamicIcon(emptyStr, emptyStr);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.emplace(TEST_BUNDLE, info);
     ret = impl.EnableDynamicIcon(TEST_BUNDLE, emptyStr);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    auto item = dataMgr->bundleInfos_.find(TEST_BUNDLE);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
+    }
 
     ret = impl.EnableDynamicIcon(TEST_BUNDLE, TEST_MODULE);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
@@ -498,7 +507,10 @@ HWTEST_F(BmsExtendResourceManagerTest, CreateFd_0100, Function | SmallTest | Lev
 HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0100, Function | SmallTest | Level1)
 {
     ExtendResourceManagerHostImpl impl;
-    bool ret = impl.ResetBundleResourceIcon(EXT_RESOURCE_FILE);
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t appIndex = Constants::DEFAULT_APP_INDEX;
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
+    bool ret = impl.ResetBundleResourceIcon(EXT_RESOURCE_FILE, userId, appIndex, type);
     EXPECT_FALSE(ret);
 }
 
@@ -512,7 +524,10 @@ HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0100, Function | Smal
     ExtendResourceManagerHostImpl impl;
     std::string bundleName = BUNDLE_NAME;
     ExtendResourceInfo extendResourceInfo;
-    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo);
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t appIndex = Constants::DEFAULT_APP_INDEX;
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, userId, appIndex, type);
     EXPECT_EQ(ret, false);
 }
 
@@ -1321,7 +1336,10 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_1003, Function | SmallTes
 HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0200, Function | SmallTest | Level1)
 {
     ExtendResourceManagerHostImpl impl;
-    bool ret = impl.ResetBundleResourceIcon(TEST_BUNDLE);
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t appIndex = Constants::DEFAULT_APP_INDEX;
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
+    bool ret = impl.ResetBundleResourceIcon(TEST_BUNDLE, userId, appIndex, type);
     EXPECT_FALSE(ret);
 }
 
@@ -1336,7 +1354,10 @@ HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0300, Function | 
     DelayedSingleton<BundleResourceInfo>::GetInstance();
     auto manager = DelayedSingleton<BundleResourceInfo>::GetInstance();
     ASSERT_NE(manager, nullptr);
-    bool ret = impl.ResetBundleResourceIcon("");
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t appIndex = Constants::DEFAULT_APP_INDEX;
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
+    bool ret = impl.ResetBundleResourceIcon("", userId, appIndex, type);
     EXPECT_FALSE(ret);
 }
 
@@ -1353,7 +1374,10 @@ HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0200, Function | Smal
     ExtendResourceInfo extendResourceInfo;
     extendResourceInfo.filePath = "";
     extendResourceInfo.iconId = 0;
-    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo);
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t appIndex = Constants::DEFAULT_APP_INDEX;
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, userId, appIndex, type);
     EXPECT_FALSE(ret);
 }
 
@@ -1370,11 +1394,13 @@ HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0300, Function | Smal
     ExtendResourceInfo extendResourceInfo;
     extendResourceInfo.filePath = "";
     extendResourceInfo.iconId = 0;
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
     bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo,
-        Constants::UNSPECIFIED_USERID, Constants::DEFAULT_APP_INDEX);
+        Constants::UNSPECIFIED_USERID, Constants::DEFAULT_APP_INDEX, type);
     EXPECT_FALSE(ret);
 
-    ret = impl.ParseBundleResource(bundleName, extendResourceInfo, Constants::UNSPECIFIED_USERID, 1);
+    ret = impl.ParseBundleResource(bundleName, extendResourceInfo, Constants::UNSPECIFIED_USERID, 1,
+        type);
     EXPECT_FALSE(ret);
 }
 
@@ -1391,10 +1417,11 @@ HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0400, Function | Smal
     ExtendResourceInfo extendResourceInfo;
     extendResourceInfo.filePath = "";
     extendResourceInfo.iconId = 0;
-    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, USER_ID, 0);
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, USER_ID, 0, type);
     EXPECT_FALSE(ret);
 
-    ret = impl.ParseBundleResource(bundleName, extendResourceInfo, USER_ID, 1);
+    ret = impl.ParseBundleResource(bundleName, extendResourceInfo, USER_ID, 1, type);
     EXPECT_FALSE(ret);
 }
 
@@ -1422,7 +1449,8 @@ HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0500, Function | Smal
     extendResourceInfo.filePath = "";
     extendResourceInfo.iconId = 0;
     ExtendResourceManagerHostImpl impl;
-    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, INVALID_ID, 0);
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, INVALID_ID, 0, type);
     EXPECT_FALSE(ret);
     auto iter = dataMgr->bundleInfos_.find(TEST_BUNDLE);
     if (iter != dataMgr->bundleInfos_.end()) {
@@ -1443,7 +1471,8 @@ HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0600, Function | Smal
     extendResourceInfo.iconId = 1;
 
     ExtendResourceManagerHostImpl impl;
-    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, USER_ID, 0);
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, USER_ID, 0, type);
     EXPECT_FALSE(ret);
 }
 
@@ -1455,7 +1484,10 @@ HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0600, Function | Smal
 HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0500, Function | SmallTest | Level1)
 {
     ExtendResourceManagerHostImpl impl;
-    bool ret = impl.ResetBundleResourceIcon(EMPTY_STRING);
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t appIndex = Constants::DEFAULT_APP_INDEX;
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
+    bool ret = impl.ResetBundleResourceIcon(EMPTY_STRING, userId, appIndex, type);
     EXPECT_FALSE(ret);
 }
 
@@ -1467,7 +1499,10 @@ HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0500, Function | 
 HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0700, Function | SmallTest | Level1)
 {
     ExtendResourceManagerHostImpl impl;
-    bool ret = impl.ResetBundleResourceIcon(INVALID_PATH);
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t appIndex = Constants::DEFAULT_APP_INDEX;
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
+    bool ret = impl.ResetBundleResourceIcon(INVALID_PATH, userId, appIndex, type);
     EXPECT_FALSE(ret);
 }
 
@@ -1479,7 +1514,8 @@ HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0700, Function | 
 HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0800, Function | SmallTest | Level1)
 {
     ExtendResourceManagerHostImpl impl;
-    bool ret = impl.ResetBundleResourceIcon("not_exist", Constants::UNSPECIFIED_USERID, 1);
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
+    bool ret = impl.ResetBundleResourceIcon("not_exist", Constants::UNSPECIFIED_USERID, 1, type);
     EXPECT_FALSE(ret);
 }
 
@@ -1494,7 +1530,8 @@ HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0900, Function | 
     DelayedSingleton<BundleResourceInfo>::GetInstance();
     auto manager = DelayedSingleton<BundleResourceInfo>::GetInstance();
     ASSERT_NE(manager, nullptr);
-    bool ret = impl.ResetBundleResourceIcon("not_exist", USER_ID, 1);
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
+    bool ret = impl.ResetBundleResourceIcon("not_exist", USER_ID, 1, type);
     EXPECT_FALSE(ret);
 }
 
@@ -1517,7 +1554,8 @@ HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_1000, Function | 
     dataMgr->bundleInfos_.emplace(TEST_BUNDLE, info);
 
     ExtendResourceManagerHostImpl impl;
-    bool ret = impl.ResetBundleResourceIcon(TEST_BUNDLE, INVALID_ID, 1);
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
+    bool ret = impl.ResetBundleResourceIcon(TEST_BUNDLE, INVALID_ID, 1, type);
     EXPECT_FALSE(ret);
     auto iter = dataMgr->bundleInfos_.find(TEST_BUNDLE);
     if (iter != dataMgr->bundleInfos_.end()) {
@@ -1850,5 +1888,432 @@ HWTEST_F(BmsExtendResourceManagerTest, CheckWhetherDynamicIconNeedProcess_0003, 
 
     ret = OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetAlternateIconInfo_0100
+ * @tc.name: Test GetAlternateIconInfo
+ * @tc.desc: 1.GetAlternateIconInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetAlternateIconInfo_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string alternateIconName;
+    ExtendResourceInfo extendResourceInfo;
+    auto res = impl.GetAlternateIconInfo(EMPTY_STRING, alternateIconName, extendResourceInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SaveCurAlternateIcon_0100
+ * @tc.name: Test SaveCurAlternateIcon
+ * @tc.desc: 1.SaveCurAlternateIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, SaveCurAlternateIcon_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "test_bundle";
+    InnerBundleInfo info;
+    InnerBundleUserInfo userInfo;
+    userInfo.curAlternateIconName = "";
+    info.innerBundleUserInfos_.emplace("userInfo", userInfo);
+    dataMgr->bundleInfos_[bundleName] = info;
+
+    ExtendResourceManagerHostImpl impl;
+    std::string alternateIconName = "test";
+    int32_t userId = -2;
+
+    impl.SaveCurAlternateIcon(bundleName, alternateIconName, userId);
+    std::string resultName =  "";
+    auto item = dataMgr->bundleInfos_.find(bundleName);
+    if (item != dataMgr->bundleInfos_.end()) {
+        resultName = item->second.innerBundleUserInfos_["userInfo"].curAlternateIconName;
+    }
+    EXPECT_EQ(resultName, alternateIconName);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
+    }
+}
+
+/**
+ * @tc.number: DisableAlternateIcon_0100
+ * @tc.name: Test DisableAlternateIcon
+ * @tc.desc: 1.DisableAlternateIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, DisableAlternateIcon_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string bundleName = "";
+    int32_t userId = 100;
+
+    ErrCode result = impl.DisableAlternateIcon(bundleName, userId);
+    EXPECT_EQ(result, ERR_EXT_RESOURCE_MANAGER_SET_ALTERNATE_ICON_FAILED);
+}
+
+/**
+ * @tc.number: DisableAlternateIcon_0200
+ * @tc.name: Test DisableAlternateIcon
+ * @tc.desc: 1.DisableAlternateIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, DisableAlternateIcon_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string infoBundleName = "test_bundle";
+    InnerBundleInfo info;
+    InnerBundleUserInfo userInfo;
+    userInfo.curAlternateIconName = "not_null";
+    info.innerBundleUserInfos_.emplace("userInfo", userInfo);
+    dataMgr->bundleInfos_[infoBundleName] = info;
+
+    ExtendResourceManagerHostImpl impl;
+    std::string bundleName = "test_bundle";
+    int32_t userId = -2;
+
+    ErrCode result = impl.DisableAlternateIcon(bundleName, userId);
+    EXPECT_EQ(result, ERR_OK);
+
+    auto item = dataMgr->bundleInfos_.find(infoBundleName);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
+    }
+}
+
+/**
+ * @tc.number: DisableAlternateIcon_0300
+ * @tc.name: Test DisableAlternateIcon
+ * @tc.desc: 1.DisableAlternateIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, DisableAlternateIcon_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string infoBundleName = "test_bundle";
+    InnerBundleInfo info;
+    InnerBundleUserInfo userInfo;
+    userInfo.curAlternateIconName = "";
+    info.innerBundleUserInfos_.emplace("userInfo", userInfo);
+    dataMgr->bundleInfos_[infoBundleName] = info;
+
+    ExtendResourceManagerHostImpl impl;
+    std::string bundleName = "test_bundle";
+    int32_t userId = -2;
+
+    ErrCode result = impl.DisableAlternateIcon(bundleName, userId);
+    EXPECT_EQ(result, ERR_EXT_RESOURCE_MANAGER_NO_ALTERNATE_ICON_ENABLED);
+
+    auto item = dataMgr->bundleInfos_.find(infoBundleName);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
+    }
+}
+
+/**
+ * @tc.number: EnableAlternateIcon_0100
+ * @tc.name: Test EnableAlternateIcon
+ * @tc.desc: 1.EnableAlternateIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, EnableAlternateIcon_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string alternateIconName = "icon";
+    std::string bundleName = "";
+    int32_t userId = -2;
+
+    ErrCode result = impl.EnableAlternateIcon(alternateIconName, bundleName, userId);
+    EXPECT_EQ(result, ERR_EXT_RESOURCE_MANAGER_SET_ALTERNATE_ICON_FAILED);
+}
+
+/**
+ * @tc.number: EnableAlternateIcon_0200
+ * @tc.name: Test EnableAlternateIcon
+ * @tc.desc: 1.EnableAlternateIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, EnableAlternateIcon_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string infoBundleName = "test_bundle";
+    InnerBundleInfo info;
+    AlternateIcon alternateIcon;
+    alternateIcon.name = "icon";
+    info.baseApplicationInfo_->alternateIcons.emplace_back(alternateIcon);
+    dataMgr->bundleInfos_[infoBundleName] = info;
+
+    ExtendResourceManagerHostImpl impl;
+    std::string alternateIconName = "icon";
+    int32_t userId = -2;
+
+    ErrCode result = impl.EnableAlternateIcon(alternateIconName, infoBundleName, userId);
+    EXPECT_EQ(result, ERR_EXT_RESOURCE_MANAGER_SET_ALTERNATE_ICON_FAILED);
+
+    auto item = dataMgr->bundleInfos_.find(infoBundleName);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
+    }
+}
+
+/**
+ * @tc.number: SetAlternateIcon_0100
+ * @tc.name: Test SetAlternateIcon
+ * @tc.desc: 1.SetAlternateIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, SetAlternateIcon_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string alternateIconName = "";
+
+    ErrCode result = impl.SetAlternateIcon(alternateIconName);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: GetCurAlternateIcon_0010
+ * @tc.name: test GetCurAlternateIcon
+ * @tc.desc: 1.GetCurAlternateIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetCurAlternateIcon_0010, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curAlternateIconName = "";
+    info.innerBundleUserInfos_.emplace(BUNDLE_NAME2, innerBundleUserInfo);
+    int32_t userId = -2;
+    std::string result = info.GetCurAlternateIcon(userId);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.number: GetCurAlternateIcon_0020
+ * @tc.name: test GetCurAlternateIcon
+ * @tc.desc: 1.GetCurAlternateIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetCurAlternateIcon_0020, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME2;
+    int32_t userId = 100;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curAlternateIconName = "";
+    info.innerBundleUserInfos_.emplace(BUNDLE_NAME2, innerBundleUserInfo);
+    std::string result = info.GetCurAlternateIcon(userId);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.number: GetCurAlternateIcon_0030
+ * @tc.name: test GetCurAlternateIcon
+ * @tc.desc: 1.GetCurAlternateIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetCurAlternateIcon_0030, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME2;
+    int32_t userId = 100;
+    std::string key =  BUNDLE_NAME2 + Constants::FILE_UNDERLINE + std::to_string(userId);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curAlternateIconName = "user_name";
+    info.innerBundleUserInfos_.emplace(key, innerBundleUserInfo);
+    std::string result = info.GetCurAlternateIcon(userId);
+    EXPECT_EQ(result, innerBundleUserInfo.curAlternateIconName);
+}
+
+/**
+ * @tc.number: SetCurAlternateIcon_0010
+ * @tc.name: test SetCurAlternateIcon
+ * @tc.desc: 1.SetCurAlternateIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, SetCurAlternateIcon_0010, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME2;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curAlternateIconName = "user_name";
+    info.innerBundleUserInfos_.emplace(BUNDLE_NAME2, innerBundleUserInfo);
+    std::string alternateIconName = "new_name";
+    int32_t userId = -2;
+    info.SetCurAlternateIcon(alternateIconName, userId);
+    std::string result = info.GetCurAlternateIcon(userId);
+    EXPECT_EQ(result, alternateIconName);
+}
+
+/**
+ * @tc.number: SetCurAlternateIcon_0020
+ * @tc.name: test SetCurAlternateIcon
+ * @tc.desc: 1.SetCurAlternateIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, SetCurAlternateIcon_0020, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME2;
+    int32_t userId = 100;
+    std::string keyUser = BUNDLE_NAME2 + Constants::FILE_UNDERLINE + std::to_string(userId);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curAlternateIconName = "user_name";
+    info.innerBundleUserInfos_.emplace(keyUser, innerBundleUserInfo);
+    std::string alternateIconName = "new_name";
+    info.SetCurAlternateIcon(alternateIconName, userId);
+    std::string result = info.GetCurAlternateIcon(userId);
+    EXPECT_EQ(result, alternateIconName);
+}
+
+/**
+ * @tc.number: SetCurAlternateIcon_0030
+ * @tc.name: test SetCurAlternateIcon
+ * @tc.desc: 1.SetCurAlternateIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, SetCurAlternateIcon_0030, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME2;
+    int32_t userId = 100;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curAlternateIconName = "user_name";
+    info.innerBundleUserInfos_.emplace(BUNDLE_NAME2, innerBundleUserInfo);
+    std::string alternateIconName = "new_name";
+    info.SetCurAlternateIcon(alternateIconName, userId);
+    std::string result = info.GetCurAlternateIcon(userId);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.number: FindAlternateIconInfoByName_0010
+ * @tc.name: test FindAlternateIconInfoByName
+ * @tc.desc: 1.FindAlternateIconInfoByName
+ */
+HWTEST_F(BmsExtendResourceManagerTest, FindAlternateIconInfoByName_0010, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+
+    std::string alternateIconName = BUNDLE_NAME2;
+    ExtendResourceInfo extendResourceInfo;
+    ErrCode result = info.FindAlternateIconInfoByName(alternateIconName, extendResourceInfo);
+    EXPECT_EQ(result, ERR_EXT_RESOURCE_MANAGER_INVALID_ALTERNATE_ICON_NAME);
+    EXPECT_EQ(extendResourceInfo.iconId, 0);
+}
+
+/**
+ * @tc.number: FindAlternateIconInfoByName_0020
+ * @tc.name: test FindAlternateIconInfoByName
+ * @tc.desc: 1.FindAlternateIconInfoByName
+ */
+HWTEST_F(BmsExtendResourceManagerTest, FindAlternateIconInfoByName_0020, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    AlternateIcon alternateIcon;
+    alternateIcon.name = TEST_BUNDLE;
+    alternateIcon.iconId = 1;
+    info.baseApplicationInfo_->alternateIcons.emplace_back(alternateIcon);
+
+    std::string alternateIconName = BUNDLE_NAME2;
+    ExtendResourceInfo extendResourceInfo;
+    ErrCode result = info.FindAlternateIconInfoByName(alternateIconName, extendResourceInfo);
+    EXPECT_EQ(result, ERR_EXT_RESOURCE_MANAGER_INVALID_ALTERNATE_ICON_NAME);
+    EXPECT_EQ(extendResourceInfo.iconId, 0);
+}
+
+/**
+ * @tc.number: FindAlternateIconInfoByName_0030
+ * @tc.name: test FindAlternateIconInfoByName
+ * @tc.desc: 1.FindAlternateIconInfoByName
+ */
+HWTEST_F(BmsExtendResourceManagerTest, FindAlternateIconInfoByName_0030, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    AlternateIcon alternateIcon;
+    alternateIcon.name = BUNDLE_NAME2;
+    alternateIcon.iconId = 1;
+    info.baseApplicationInfo_->alternateIcons.emplace_back(alternateIcon);
+
+    std::string alternateIconName = BUNDLE_NAME2;
+    ExtendResourceInfo extendResourceInfo;
+    ErrCode result = info.FindAlternateIconInfoByName(alternateIconName, extendResourceInfo);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(extendResourceInfo.iconId, 1);
+}
+
+/**
+ * @tc.number: GetAlternateIconInfoWhenUpdate_0010
+ * @tc.name: test GetAlternateIconInfoWhenUpdate
+ * @tc.desc: 1.GetAlternateIconInfoWhenUpdate
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetAlternateIconInfoWhenUpdate_0010, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    AlternateIcon alternateIcon;
+    alternateIcon.name = BUNDLE_NAME2;
+    alternateIcon.iconId = 1;
+    info.baseApplicationInfo_->alternateIcons.emplace_back(alternateIcon);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curAlternateIconName = "";
+    info.innerBundleUserInfos_.emplace(BUNDLE_NAME2, innerBundleUserInfo);
+
+    std::vector<AlternateIconInfo> alternateIconInfos;
+    info.GetAlternateIconInfoWhenUpdate(alternateIconInfos);
+    EXPECT_TRUE(alternateIconInfos.empty());
+}
+
+/**
+ * @tc.number: GetAlternateIconInfoWhenUpdate_0020
+ * @tc.name: test GetAlternateIconInfoWhenUpdate
+ * @tc.desc: 1.GetAlternateIconInfoWhenUpdate
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetAlternateIconInfoWhenUpdate_0020, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    AlternateIcon alternateIcon;
+    alternateIcon.name = TEST_MODULE;
+    alternateIcon.iconId = 1;
+    info.baseApplicationInfo_->alternateIcons.emplace_back(alternateIcon);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curAlternateIconName = BUNDLE_NAME2;
+    info.innerBundleUserInfos_.emplace(BUNDLE_NAME2, innerBundleUserInfo);
+
+    std::vector<AlternateIconInfo> alternateIconInfos;
+    info.GetAlternateIconInfoWhenUpdate(alternateIconInfos);
+    EXPECT_FALSE(alternateIconInfos.empty());
+}
+
+/**
+ * @tc.number: GetAlternateIconInfoWhenUpdate_0030
+ * @tc.name: test GetAlternateIconInfoWhenUpdate
+ * @tc.desc: 1.GetAlternateIconInfoWhenUpdate
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetAlternateIconInfoWhenUpdate_0030, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    AlternateIcon alternateIcon;
+    alternateIcon.name = BUNDLE_NAME2;
+    alternateIcon.iconId = 1;
+    info.baseApplicationInfo_->alternateIcons.emplace_back(alternateIcon);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curAlternateIconName = BUNDLE_NAME2;
+    info.innerBundleUserInfos_.emplace(BUNDLE_NAME2, innerBundleUserInfo);
+
+    std::vector<AlternateIconInfo> alternateIconInfos;
+    info.GetAlternateIconInfoWhenUpdate(alternateIconInfos);
+    EXPECT_FALSE(alternateIconInfos.empty());
+    if (!alternateIconInfos.empty()) {
+        auto item = alternateIconInfos.front();
+        EXPECT_EQ(item.iconId, 1);
+    }
+}
+
+/**
+ * @tc.number: IsDynamicIconModuleExist_0100
+ * @tc.name: Test IsDynamicIconModuleExist
+ * @tc.desc: 1.IsDynamicIconModuleExist
+ */
+HWTEST_F(BmsExtendResourceManagerTest, IsDynamicIconModuleExist_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string bundleName = "test_name";
+    auto res = impl.IsDynamicIconModuleExist(bundleName);
+    EXPECT_FALSE(res);
 }
 } // OHOS

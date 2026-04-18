@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -443,7 +443,8 @@ void BundleResourceIconRdb::InnerProcessResourceIconInfos(const LauncherAbilityR
     }
     // if exist, need to process theme or dynamic icon
     if (((type == IconResourceType::THEME_ICON) && GetIsOnlineTheme(userId)) ||
-        ((type == IconResourceType::DYNAMIC_ICON) && !GetIsOnlineTheme(userId))) {
+        ((type == IconResourceType::DYNAMIC_ICON || type == IconResourceType::ALTERNATE_ICON) &&
+        !GetIsOnlineTheme(userId))) {
         for (auto iter = launcherAbilityResourceInfos.begin(); iter != launcherAbilityResourceInfos.end();) {
             if ((iter->bundleName == resourceInfo.bundleName) && (iter->appIndex == resourceInfo.appIndex)) {
                 iter = launcherAbilityResourceInfos.erase(iter);

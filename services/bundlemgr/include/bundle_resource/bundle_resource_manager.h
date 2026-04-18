@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -86,6 +86,11 @@ public:
     bool AddResourceInfoByBundleNameWhenInstall(const std::string &bundleName, const int32_t userId,
         const bool isBundleFirstInstall = true);
 
+    bool UpdateAlternateResourceInfo(const std::string &bundleName);
+
+    bool ParseAndAddAlternateIconResource(const std::string &bundleName, const AlternateIconInfo &alternateIconInfo,
+        const IconResourceType type);
+
     bool AddResourceInfoByBundleNameWhenUpdate(const std::string &bundleName, const int32_t userId);
 
     bool AddResourceInfoByBundleNameWhenCreateUser(const std::string &bundleName, const int32_t userId);
@@ -93,9 +98,11 @@ public:
     bool DeleteBundleResourceInfo(const std::string &bundleName, const int32_t userId, const bool isExistInOtherUser);
 
     bool AddDynamicIconResource(
-        const std::string &bundleName, const int32_t userId, const int32_t appIndex, ResourceInfo &resourceInfo);
+        const std::string &bundleName, const int32_t userId, const int32_t appIndex, ResourceInfo &resourceInfo,
+        const IconResourceType type = IconResourceType::UNKNOWN);
 
-    bool DeleteDynamicIconResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+    bool DeleteDynamicIconResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex,
+        const IconResourceType type = IconResourceType::UNKNOWN);
 
     bool AddAllResourceInfo(const int32_t userId, const uint32_t type);
 

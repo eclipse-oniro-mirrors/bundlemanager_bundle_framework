@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@
 #include "bundle_resource/resource_info.h"
 #endif
 #include "installd_client.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -446,6 +447,12 @@ ErrCode ExtendResourceManagerHostImpl::EnableDynamicIcon(
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
+    InnerBundleInfo info;
+    if (!GetInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("GetInnerBundleInfo failed %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
     if (moduleName.empty()) {
         APP_LOGE("fail to EnableDynamicIcon due to moduleName is empty");
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
@@ -474,14 +481,53 @@ ErrCode ExtendResourceManagerHostImpl::EnableDynamicIcon(
         APP_LOGE("%{public}s enable failed due to existing custom themes", bundleName.c_str());
         return ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED_DUE_TO_EXISTING_CUSTOM_THEMES;
     }
-    if (!ParseBundleResource(bundleName, extendResourceInfo, userId, appIndex)) {
+    if (!ParseBundleResource(bundleName, extendResourceInfo, userId, appIndex, IconResourceType::DYNAMIC_ICON)) {
         APP_LOGE("%{public}s no extend Resources", bundleName.c_str());
         return ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED;
     }
 
     SaveCurDynamicIcon(bundleName, moduleName, userId, appIndex);
-    SendBroadcast(bundleName, true, userId, appIndex);
+    if (appIndex == Constants::DEFAULT_APP_INDEX && !info.GetCurAlternateIcon(userId).empty()) {
+        SaveCurAlternateIcon(bundleName, "", userId);
+        (void)ResetBundleResourceIcon(bundleName, userId, appIndex, IconResourceType::ALTERNATE_ICON);
+    }
+    SendBroadcast(bundleName, true, DynamicIconType::DYNAMIC_ICON, userId, appIndex);
     return ERR_OK;
+}
+
+ErrCode ExtendResourceManagerHostImpl::GetAlternateIconInfo(const std::string &bundleName,
+    const std::string &alternateIconName, ExtendResourceInfo &extendResourceInfo)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    return dataMgr->GetAlternateIconInfoByName(bundleName, alternateIconName, extendResourceInfo);
+}
+
+void ExtendResourceManagerHostImpl::SaveCurAlternateIcon(const std::string &bundleName,
+    const std::string &alternateIconName, const int32_t userId)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+
+    dataMgr->UpdateCurAlternateIcon(bundleName, alternateIconName, userId);
+}
+
+bool ExtendResourceManagerHostImpl::IsDynamicIconModuleExist(const std::string &bundleName)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+
+    return dataMgr->IsDynamicIconModuleExist(bundleName);
 }
 
 void ExtendResourceManagerHostImpl::SaveCurDynamicIcon(
@@ -497,16 +543,16 @@ void ExtendResourceManagerHostImpl::SaveCurDynamicIcon(
 }
 
 void ExtendResourceManagerHostImpl::SendBroadcast(
-    const std::string &bundleName, bool isEnableDynamicIcon,
+    const std::string &bundleName, bool isEnableDynamicIcon, const DynamicIconType type,
     const int32_t userId, const int32_t appIndex)
 {
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    commonEventMgr->NotifyDynamicIconEvent(bundleName, isEnableDynamicIcon, userId, appIndex);
+    commonEventMgr->NotifyDynamicIconEvent(bundleName, isEnableDynamicIcon, userId, appIndex, type);
 }
 
 bool ExtendResourceManagerHostImpl::ParseBundleResource(
     const std::string &bundleName, const ExtendResourceInfo &extendResourceInfo,
-    const int32_t userId, const int32_t appIndex)
+    const int32_t userId, const int32_t appIndex, const IconResourceType type)
 {
     APP_LOGI("ParseBundleResource %{public}s", bundleName.c_str());
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -529,7 +575,7 @@ bool ExtendResourceManagerHostImpl::ParseBundleResource(
         APP_LOGE("failed, manager is nullptr");
         return false;
     }
-    if (!manager->AddDynamicIconResource(bundleName, userId, appIndex, info)) {
+    if (!manager->AddDynamicIconResource(bundleName, userId, appIndex, info, type)) {
         APP_LOGE("UpdateBundleIcon failed, bundleName:%{public}s", bundleName.c_str());
         return false;
     }
@@ -617,13 +663,13 @@ ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bun
     }
 
     SaveCurDynamicIcon(bundleName, "", userId, appIndex);
-    (void)ResetBundleResourceIcon(bundleName, userId, appIndex);
-    SendBroadcast(bundleName, false, userId, appIndex);
+    (void)ResetBundleResourceIcon(bundleName, userId, appIndex, IconResourceType::DYNAMIC_ICON);
+    SendBroadcast(bundleName, false, DynamicIconType::DYNAMIC_ICON, userId, appIndex);
     return ERR_OK;
 }
 
 bool ExtendResourceManagerHostImpl::ResetBundleResourceIcon(const std::string &bundleName,
-    const int32_t userId, const int32_t appIndex)
+    const int32_t userId, const int32_t appIndex, const IconResourceType type)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     APP_LOGI("ResetBundleResourceIcon %{public}s userId %{public}d appIndex %{public}d", bundleName.c_str(),
@@ -633,7 +679,7 @@ bool ExtendResourceManagerHostImpl::ResetBundleResourceIcon(const std::string &b
         APP_LOGE("failed, manager is nullptr");
         return false;
     }
-    if (!manager->DeleteDynamicIconResource(bundleName, userId, appIndex)) {
+    if (!manager->DeleteDynamicIconResource(bundleName, userId, appIndex, type)) {
         APP_LOGE("%{public}s userId %{public}d appIndex %{public}d add resource failed", bundleName.c_str(),
             userId, appIndex);
         return false;
@@ -823,6 +869,88 @@ ErrCode ExtendResourceManagerHostImpl::GetDynamicIconInfo(const std::string &bun
     }
     if (ret != ERR_OK) {
         APP_LOGE("-n %{public}s get dynamic info failed ret %{public}d", bundleName.c_str(), ret);
+    }
+    return ret;
+}
+
+ErrCode ExtendResourceManagerHostImpl::DisableAlternateIcon(const std::string &bundleName, const int32_t userId)
+{
+    InnerBundleInfo info;
+    if (!GetInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("GetInnerBundleInfo failed %{public}s", bundleName.c_str());
+        return ERR_EXT_RESOURCE_MANAGER_SET_ALTERNATE_ICON_FAILED;
+    }
+    if (!info.GetCurAlternateIcon(userId).empty()) {
+        SaveCurAlternateIcon(bundleName, "", userId);
+        (void)ResetBundleResourceIcon(bundleName, userId, Constants::DEFAULT_APP_INDEX,
+            IconResourceType::ALTERNATE_ICON);
+        SendBroadcast(bundleName, false, DynamicIconType::ALTERNATE_ICON, userId);
+        return ERR_OK;
+    }
+    return ERR_EXT_RESOURCE_MANAGER_NO_ALTERNATE_ICON_ENABLED;
+}
+
+ErrCode ExtendResourceManagerHostImpl::EnableAlternateIcon(const std::string &alternateIconName,
+    const std::string &bundleName, const int32_t userId)
+{
+    InnerBundleInfo info;
+    if (!GetInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("GetInnerBundleInfo failed %{public}s", bundleName.c_str());
+        return ERR_EXT_RESOURCE_MANAGER_SET_ALTERNATE_ICON_FAILED;
+    }
+    if (!CheckWhetherDynamicIconNeedProcess(bundleName, userId)) {
+        APP_LOGE("%{public}s enable failed due to existing custom themes", bundleName.c_str());
+        return ERR_EXT_RESOURCE_MANAGER_SET_ALTERNATE_ICON_FAILED;
+    }
+    ExtendResourceInfo extendResourceInfo;
+    ErrCode ret = GetAlternateIconInfo(bundleName, alternateIconName, extendResourceInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAlternateIconInfo failed, alternateIconName %{public}s", alternateIconName.c_str());
+        return ret;
+    }
+    if (!ParseBundleResource(bundleName, extendResourceInfo, userId, Constants::DEFAULT_APP_INDEX,
+        IconResourceType::ALTERNATE_ICON)) {
+        APP_LOGE("%{public}s no extend Resources", bundleName.c_str());
+        return ERR_EXT_RESOURCE_MANAGER_SET_ALTERNATE_ICON_FAILED;
+    }
+    SaveCurAlternateIcon(bundleName, alternateIconName, userId);
+    if (!info.GetCurDynamicIconModule(userId, Constants::DEFAULT_APP_INDEX).empty()) {
+        SaveCurDynamicIcon(bundleName, "", userId, Constants::DEFAULT_APP_INDEX);
+        (void)ResetBundleResourceIcon(bundleName, userId, Constants::DEFAULT_APP_INDEX,
+            IconResourceType::DYNAMIC_ICON);
+    }
+    if (!IsDynamicIconModuleExist(bundleName)) {
+        SaveCurDynamicIcon(bundleName, "", Constants::UNSPECIFIED_USERID, Constants::DEFAULT_APP_INDEX);
+    }
+    SendBroadcast(bundleName, true, DynamicIconType::ALTERNATE_ICON, userId);
+    return ret;
+}
+
+ErrCode ExtendResourceManagerHostImpl::SetAlternateIcon(const std::string &alternateIconName)
+{
+    APP_LOGI("SetAlternateIcon, alternateIconName %{public}s", alternateIconName.c_str());
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    std::string bundleName;
+    int32_t appIndex = Constants::DEFAULT_APP_INDEX;
+    ErrCode ret = dataMgr->GetBundleNameAndIndexForUid(callingUid, bundleName, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetBundleNameAndIndexForUid failed, uid %{public}d, ret %{public}d", callingUid, ret);
+        return ret;
+    }
+    if (appIndex != Constants::DEFAULT_APP_INDEX) {
+        return ERR_EXT_RESOURCE_MANAGER_SET_ALTERNATE_ICON_FAILED;
+    }
+    int32_t userId = callingUid / Constants::BASE_USER_RANGE;
+    APP_LOGI("SetAlternateIcon, -u %{public}d", userId);
+    if (alternateIconName.empty()) {
+        ret = DisableAlternateIcon(bundleName, userId);
+    } else {
+        ret = EnableAlternateIcon(alternateIconName, bundleName, userId);
     }
     return ret;
 }

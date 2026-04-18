@@ -54,6 +54,11 @@ enum class SandboxInstallType : uint8_t {
     UNINSTALL,
 };
 
+enum class DynamicIconType : uint8_t {
+    DYNAMIC_ICON = 0,
+    ALTERNATE_ICON = 1,
+};
+
 struct NotifyBundleEvents {
     bool isAgingUninstall = false;
     bool isBmsExtensionUninstalled = false;
@@ -115,7 +120,8 @@ public:
     void NotifySetDisposedRule(const std::string &appId, int32_t userId, const std::string &data, int32_t appIndex);
     void NotifyDeleteDisposedRule(const std::string &appId, int32_t userId, int32_t appIndex);
     void NotifyDynamicIconEvent(
-        const std::string &bundleName, bool isEnableDynamicIcon, int32_t userId, int32_t appIndex);
+        const std::string &bundleName, bool isEnableDynamicIcon, int32_t userId, int32_t appIndex,
+        const DynamicIconType type);
     void NotifyUninstalledBundleCleared(const NotifyBundleEvents &installResult);
     void NotifyBundleResourcesChanged(const int32_t userId, const uint32_t type);
     void NotifyDefaultAppChanged(const int32_t userId, std::vector<std::string> &utdIdVec);

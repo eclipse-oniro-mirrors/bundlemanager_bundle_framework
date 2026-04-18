@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -3099,6 +3099,67 @@ ErrCode BundleDataMgr::GetExtendResourceInfo(
     }
     extendResourceInfo = iter->second;
     return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAlternateIconInfoByName(const std::string &bundleName, const std::string &alternateIconName,
+    ExtendResourceInfo &extendResourceInfo)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    return infoItem->second.FindAlternateIconInfoByName(alternateIconName, extendResourceInfo);
+}
+
+void BundleDataMgr::UpdateCurAlternateIcon(const std::string &bundleName, const std::string &alternateIconName,
+    const int32_t userId)
+{
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return;
+    }
+
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
+
+    auto info = infoItem->second;
+    info.SetCurAlternateIcon(alternateIconName, userId);
+    if (!dataStorage_->SaveStorageBundleInfo(info)) {
+        APP_LOGW("SaveStorageBundleInfo failed %{public}s", bundleName.c_str());
+        return;
+    }
+
+    bundleInfos_.at(bundleName) = info;
+}
+
+ErrCode BundleDataMgr::GetAlternateIconInfoWhenUpdate(const std::string &bundleName,
+    std::vector<AlternateIconInfo> &alternateIconInfos)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGW("bundleName: %{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    item->second.GetAlternateIconInfoWhenUpdate(alternateIconInfos);
+    return ERR_OK;
+}
+
+bool BundleDataMgr::IsDynamicIconModuleExist(const std::string &bundleName)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGW("bundleName: %{public}s not exist", bundleName.c_str());
+        return false;
+    }
+    return item->second.IsDynamicIconModuleExist();
 }
 
 bool BundleDataMgr::UpateCurDynamicIconModule(

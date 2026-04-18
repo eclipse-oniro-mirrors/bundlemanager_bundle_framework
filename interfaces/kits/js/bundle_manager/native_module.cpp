@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -197,6 +197,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getBundleInstallStatus", GetBundleInstallStatus),
         DECLARE_NAPI_PROPERTY("BundleInstallStatus", nBundleInstallStatus),
         DECLARE_NAPI_FUNCTION("getAllAppProvisionInfo", GetAllAppProvisionInfo),
+        DECLARE_NAPI_FUNCTION("setAlternateIcon", SetAlternateIcon),
         DECLARE_NAPI_FUNCTION("getAllBundleInstallInfo", GetAllInstallInfo),
         DECLARE_NAPI_FUNCTION("isApplicationDisableForbidden", IsApplicationDisableForbidden),
     };

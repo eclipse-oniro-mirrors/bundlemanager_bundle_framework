@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include <sstream>
 #include <string>
 
+#include "alternate_icon_info.h"
 #include "application_info.h"
 #include "bms_extension_client.h"
 #include "bundle_info.h"
@@ -5538,14 +5539,17 @@ HWTEST_F(BmsBundleResourceTest, AddDynamicIconResource_0010, Function | SmallTes
     EXPECT_NE(manager, nullptr);
     if (manager != nullptr) {
         ResourceInfo resourceInfo;
-        bool ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 0, resourceInfo);
+        IconResourceType type = IconResourceType::DYNAMIC_ICON;
+        bool ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 0, resourceInfo, type);
         EXPECT_TRUE(ret);
-        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 0);
+        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 0, type);
         EXPECT_TRUE(ret);
 
-        ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0, resourceInfo);
+        ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0,
+            resourceInfo, type);
         EXPECT_TRUE(ret);
-        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0);
+        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0,
+            type);
         EXPECT_TRUE(ret);
     }
 }
@@ -5567,9 +5571,10 @@ HWTEST_F(BmsBundleResourceTest, AddDynamicIconResource_0020, Function | SmallTes
     if (manager != nullptr) {
         ResourceInfo resourceInfo;
         resourceInfo.icon_ = "111";
-        bool ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 1, resourceInfo);
+        IconResourceType type = IconResourceType::DYNAMIC_ICON;
+        bool ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 1, resourceInfo, type);
         EXPECT_TRUE(ret);
-        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 1);
+        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 1, type);
         EXPECT_TRUE(ret);
 
         BundleResourceRdb resourceRdb;
@@ -5578,9 +5583,9 @@ HWTEST_F(BmsBundleResourceTest, AddDynamicIconResource_0020, Function | SmallTes
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
         EXPECT_TRUE(ret);
         resourceInfo.icon_ = info.icon;
-        ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 2, resourceInfo);
+        ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 2, resourceInfo, type);
         EXPECT_TRUE(ret);
-        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 2);
+        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 2, type);
         EXPECT_TRUE(ret);
     }
 
@@ -5615,10 +5620,11 @@ HWTEST_F(BmsBundleResourceTest, AddDynamicIconResource_0030, Function | SmallTes
     if (manager != nullptr) {
         ResourceInfo resourceInfo;
         resourceInfo.icon_ = "111";
+        IconResourceType type = IconResourceType::DYNAMIC_ICON;
         bool ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0,
-            resourceInfo);
+            resourceInfo, type);
         EXPECT_TRUE(ret);
-        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0);
+        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0, type);
         EXPECT_TRUE(ret);
 
         BundleResourceRdb resourceRdb;
@@ -5627,9 +5633,10 @@ HWTEST_F(BmsBundleResourceTest, AddDynamicIconResource_0030, Function | SmallTes
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
         EXPECT_TRUE(ret);
         resourceInfo.icon_ = info.icon;
-        ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0, resourceInfo);
+        ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0,
+            resourceInfo, type);
         EXPECT_TRUE(ret);
-        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0);
+        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0, type);
         EXPECT_TRUE(ret);
     }
 
@@ -7362,6 +7369,7 @@ HWTEST_F(BmsBundleResourceTest, DeleteDynamicIconMultiUser_0001, Function | Smal
 
     std::string bundleName = BUNDLE_NAME;
     int32_t appIndex = APP_INDEX;
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
 
     // First add dynamic icon for DEFAULT_USERID
     ResourceInfo resourceInfo;
@@ -7369,10 +7377,10 @@ HWTEST_F(BmsBundleResourceTest, DeleteDynamicIconMultiUser_0001, Function | Smal
     resourceInfo.label_ = "Test Dynamic Icon";
     resourceInfo.icon_ = "data:image/png;base64,dynamic_icon";
 
-    bool addRet = manager->AddDynamicIconResource(bundleName, Constants::DEFAULT_USERID, appIndex, resourceInfo);
+    bool addRet = manager->AddDynamicIconResource(bundleName, Constants::DEFAULT_USERID, appIndex, resourceInfo, type);
     EXPECT_TRUE(addRet);
     // Now delete with DEFAULT_USERID
-    bool delRet = manager->DeleteDynamicIconResource(bundleName, Constants::DEFAULT_USERID, appIndex);
+    bool delRet = manager->DeleteDynamicIconResource(bundleName, Constants::DEFAULT_USERID, appIndex, type);
     // Verify deletion succeeded
     EXPECT_TRUE(delRet);
 }
@@ -7391,6 +7399,7 @@ HWTEST_F(BmsBundleResourceTest, DeleteDynamicIconMultiUser_0002, Function | Smal
 
     std::string bundleName = BUNDLE_NAME;
     int32_t appIndex = APP_INDEX;
+    IconResourceType type = IconResourceType::DYNAMIC_ICON;
 
     // First add dynamic icon for U1
     ResourceInfo resourceInfo;
@@ -7398,13 +7407,13 @@ HWTEST_F(BmsBundleResourceTest, DeleteDynamicIconMultiUser_0002, Function | Smal
     resourceInfo.label_ = "Test Dynamic Icon";
     resourceInfo.icon_ = "data:image/png;base64,dynamic_icon";
 
-    bool addRet = manager->AddDynamicIconResource(bundleName, Constants::U1, appIndex, resourceInfo);
+    bool addRet = manager->AddDynamicIconResource(bundleName, Constants::U1, appIndex, resourceInfo, type);
     EXPECT_TRUE(addRet);
     // Now delete with U1
-    bool delRet = manager->DeleteDynamicIconResource(bundleName, Constants::U1, appIndex);
+    bool delRet = manager->DeleteDynamicIconResource(bundleName, Constants::U1, appIndex, type);
     // Verify deletion succeeded
     EXPECT_TRUE(delRet);
-    delRet = manager->DeleteDynamicIconResource("", Constants::U1, appIndex);
+    delRet = manager->DeleteDynamicIconResource("", Constants::U1, appIndex, type);
     // Verify deletion succeeded
     EXPECT_FALSE(delRet);
 }
@@ -7555,5 +7564,111 @@ HWTEST_F(BmsBundleResourceTest, AddCloneBundleResourceMultiUser_0002, Function |
     OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
     ret = manager->DeleteCloneBundleResourceInfoWhenUninstall(BUNDLE_NAME, Constants::DEFAULT_USERID, 1, true);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: UpdateAlternateResourceInfo_0001
+ * @tc.name: test UpdateAlternateResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateAlternateResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, UpdateAlternateResourceInfo_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    std::string bundleName = "test_name";
+    bool ret = manager->UpdateAlternateResourceInfo(bundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UpdateAlternateResourceInfo_0002
+ * @tc.name: test UpdateAlternateResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateAlternateResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, UpdateAlternateResourceInfo_0002, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "test_name";
+    InnerBundleInfo info;
+    AlternateIcon alternateIcon;
+    alternateIcon.name = bundleName;
+    alternateIcon.iconId = 1;
+    info.baseApplicationInfo_->alternateIcons.emplace_back(alternateIcon);
+    info.baseApplicationInfo_->bundleName = bundleName;
+    int32_t userId = 100;
+    std::string keyUser = bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curAlternateIconName = bundleName;
+    info.innerBundleUserInfos_.emplace(keyUser, innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(bundleName, info);
+    bool ret = manager->UpdateAlternateResourceInfo(bundleName);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: UpdateAlternateResourceInfo_0003
+ * @tc.name: test UpdateAlternateResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateAlternateResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, UpdateAlternateResourceInfo_0003, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "test_name";
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.emplace(bundleName, info);
+    bool ret = manager->UpdateAlternateResourceInfo(bundleName);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: UpdateAlternateResourceInfo_0004
+ * @tc.name: test UpdateAlternateResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateAlternateResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, UpdateAlternateResourceInfo_0004, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "test_name";
+    InnerBundleInfo info;
+    AlternateIcon alternateIcon;
+    alternateIcon.name = bundleName;
+    alternateIcon.iconId = 1;
+    info.baseApplicationInfo_->alternateIcons.emplace_back(alternateIcon);
+    info.baseApplicationInfo_->bundleName = bundleName;
+    int32_t userId = 100;
+    dataMgr->bundleInfos_.emplace(bundleName, info);
+    bool ret = manager->UpdateAlternateResourceInfo(bundleName);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: ParseAndAddAlternateIconResource_0001
+ * @tc.name: test ParseAndAddAlternateIconResource
+ * @tc.desc: 1. system running normally
+ *           2. test ParseAndAddAlternateIconResource
+ */
+HWTEST_F(BmsBundleResourceTest, ParseAndAddAlternateIconResource_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    std::string bundleName = TEST_BUNDLE_NAME;
+    AlternateIconInfo alternateIconInfo;
+    IconResourceType type = IconResourceType::ALTERNATE_ICON;
+    bool ret = manager->ParseAndAddAlternateIconResource(bundleName, alternateIconInfo, type);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

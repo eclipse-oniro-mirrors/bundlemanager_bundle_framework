@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -140,8 +140,9 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     manager->AddResourceInfoByBundleNameWhenCreateUser(bundleName, userId);
     bool isExistInOtherUser = fdp.ConsumeBool();
     manager->DeleteBundleResourceInfo(bundleName, userId, isExistInOtherUser);
-    manager->AddDynamicIconResource(bundleName, userId, appIndex, resourceInfo);
-    manager->DeleteDynamicIconResource(bundleName, userId, appIndex);
+    IconResourceType resourceType = IconResourceType::DYNAMIC_ICON;
+    manager->AddDynamicIconResource(bundleName, userId, appIndex, resourceInfo, resourceType);
+    manager->DeleteDynamicIconResource(bundleName, userId, appIndex, resourceType);
     manager->AddAllResourceInfo(userId, type);
     manager->IsNeedInterrupted(tempTaskNumber, BundleResourceChangeType::SYSTEM_THEME_CHANGE);
     manager->AddResourceInfosWhenSystemLanguageChanged(resourceInfosMap, userId, tempTaskNumber);

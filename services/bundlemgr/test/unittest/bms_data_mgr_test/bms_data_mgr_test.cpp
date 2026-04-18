@@ -21,6 +21,7 @@
 
 #include "ability_manager_helper.h"
 #include "access_token.h"
+#include "alternate_icon_info.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "app_provision_info_manager.h"
@@ -9461,5 +9462,213 @@ HWTEST_F(BmsDataMgrTest, GetTopNLargestItemsInAppDataDir_0002, Function | SmallT
 
     ErrCode ret = client.GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, nullptr);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetAlternateIconInfoByName_0100
+ * @tc.name: test GetAlternateIconInfoByName
+ * @tc.desc: 1.GetAlternateIconInfoByName
+ */
+HWTEST_F(BmsDataMgrTest, GetAlternateIconInfoByName_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::map<std::string, InnerBundleInfo> infos;
+    dataMgr->bundleInfos_.swap(infos);
+
+    std::string alternateIconName = "icon";
+    ExtendResourceInfo extendResourceInfo;
+    ErrCode ret = dataMgr->GetAlternateIconInfoByName(BUNDLE_NAME, alternateIconName, extendResourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAlternateIconInfoByName_0200
+ * @tc.name: test GetAlternateIconInfoByName
+ * @tc.desc: 1.GetAlternateIconInfoByName
+ */
+HWTEST_F(BmsDataMgrTest, GetAlternateIconInfoByName_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+
+    std::string alternateIconName = "icon";
+    ExtendResourceInfo extendResourceInfo;
+    ErrCode ret = dataMgr->GetAlternateIconInfoByName(BUNDLE_NAME, alternateIconName, extendResourceInfo);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_INVALID_ALTERNATE_ICON_NAME);
+}
+
+/**
+ * @tc.number: UpdateCurAlternateIcon_0100
+ * @tc.name: test UpdateCurAlternateIcon
+ * @tc.desc: 1.UpdateCurAlternateIcon
+ */
+HWTEST_F(BmsDataMgrTest, UpdateCurAlternateIcon_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curAlternateIconName = "icon";
+    innerBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME, innerBundleUserInfo);
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+
+    std::string bundleName = "";
+    std::string alternateIconName = "icon_new";
+    int32_t userId = -2;
+    dataMgr->UpdateCurAlternateIcon(bundleName, alternateIconName, userId);
+    std::string result = "";
+    auto item = dataMgr->bundleInfos_.find(BUNDLE_NAME);
+    if (item != dataMgr->bundleInfos_.end()) {
+        auto useritem = item->second.innerBundleUserInfos_.find(BUNDLE_NAME);
+        if (useritem != item->second.innerBundleUserInfos_.end()) {
+            result = useritem->second.curAlternateIconName;
+        }
+    }
+    EXPECT_EQ(innerBundleUserInfo.curAlternateIconName, result);
+}
+
+/**
+ * @tc.number: UpdateCurAlternateIcon_0200
+ * @tc.name: test UpdateCurAlternateIcon
+ * @tc.desc: 1.UpdateCurAlternateIcon
+ */
+HWTEST_F(BmsDataMgrTest, UpdateCurAlternateIcon_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curAlternateIconName = "icon";
+    innerBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME, innerBundleUserInfo);
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+
+    std::string bundleName = "no_have";
+    std::string alternateIconName = "icon_new";
+    int32_t userId = -2;
+    dataMgr->UpdateCurAlternateIcon(bundleName, alternateIconName, userId);
+    std::string result = "";
+    auto item = dataMgr->bundleInfos_.find(BUNDLE_NAME);
+    if (item != dataMgr->bundleInfos_.end()) {
+        auto useritem = item->second.innerBundleUserInfos_.find(BUNDLE_NAME);
+        if (useritem != item->second.innerBundleUserInfos_.end()) {
+            result = useritem->second.curAlternateIconName;
+        }
+    }
+    EXPECT_EQ(innerBundleUserInfo.curAlternateIconName, result);
+}
+
+/**
+ * @tc.number: UpdateCurAlternateIcon_0300
+ * @tc.name: test UpdateCurAlternateIcon
+ * @tc.desc: 1.UpdateCurAlternateIcon
+ */
+HWTEST_F(BmsDataMgrTest, UpdateCurAlternateIcon_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curAlternateIconName = "icon";
+    innerBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME, innerBundleUserInfo);
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+
+    std::string alternateIconName = "icon_new";
+    int32_t userId = -2;
+    dataMgr->UpdateCurAlternateIcon(BUNDLE_NAME, alternateIconName, userId);
+    std::string result = "";
+    auto item = dataMgr->bundleInfos_.find(BUNDLE_NAME);
+    if (item != dataMgr->bundleInfos_.end()) {
+        auto useritem = item->second.innerBundleUserInfos_.find(BUNDLE_NAME);
+        if (useritem != item->second.innerBundleUserInfos_.end()) {
+            result = useritem->second.curAlternateIconName;
+        }
+    }
+    EXPECT_EQ(alternateIconName, result);
+}
+
+/**
+ * @tc.number: GetAlternateIconInfoWhenUpdate_0100
+ * @tc.name: test GetAlternateIconInfoWhenUpdate
+ * @tc.desc: 1.GetAlternateIconInfoWhenUpdate
+ */
+HWTEST_F(BmsDataMgrTest, GetAlternateIconInfoWhenUpdate_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+
+    std::string bundleName = "";
+    std::vector<AlternateIconInfo> alternateIconInfos;
+    ErrCode ret = dataMgr->GetAlternateIconInfoWhenUpdate(bundleName, alternateIconInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAlternateIconInfoWhenUpdate_0200
+ * @tc.name: test GetAlternateIconInfoWhenUpdate
+ * @tc.desc: 1.GetAlternateIconInfoWhenUpdate
+ */
+HWTEST_F(BmsDataMgrTest, GetAlternateIconInfoWhenUpdate_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+
+    std::vector<AlternateIconInfo> alternateIconInfos;
+    ErrCode ret = dataMgr->GetAlternateIconInfoWhenUpdate(BUNDLE_NAME, alternateIconInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IsDynamicIconModuleExist_0100
+ * @tc.name: test IsDynamicIconModuleExist
+ * @tc.desc: 1.IsDynamicIconModuleExist
+ */
+HWTEST_F(BmsDataMgrTest, IsDynamicIconModuleExist_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "";
+    ErrCode ret = dataMgr->IsDynamicIconModuleExist(bundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsDynamicIconModuleExist_0200
+ * @tc.name: test IsDynamicIconModuleExist
+ * @tc.desc: 1.IsDynamicIconModuleExist
+ */
+HWTEST_F(BmsDataMgrTest, IsDynamicIconModuleExist_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.curDynamicIconModule = "green_icon";
+    innerBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME, innerBundleUserInfo);
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+
+    ErrCode ret = dataMgr->IsDynamicIconModuleExist(BUNDLE_NAME);
+    EXPECT_TRUE(ret);
 }
 } // OHOS

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -147,6 +147,7 @@ const char* APPLICATION_MAX_CHILD_PROCESS = "maxChildProcess";
 const char* APPLICATION_APP_INDEX = "appIndex";
 const char* APPLICATION_INSTALL_SOURCE = "installSource";
 const char* APPLICATION_CONFIGURATION = "configuration";
+const char* APPLICATION_ALTERNATE_ICON_MODULE_NAME = "curAlternateIconModuleName";
 const char* APPLICATION_HWASAN_ENABLED = "hwasanEnabled";
 const char* APPLICATION_CLOUD_FILE_SYNC_ENABLED = "cloudFileSyncEnabled";
 const char* APPLICATION_CLOUD_STRUCTURED_DATA_SYNC_ENABLED = "cloudStructuredDataSyncEnabled";
@@ -694,6 +695,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
 
     configuration = Str16ToStr8(parcel.ReadString16());
     arkTSMode = parcel.ReadString();
+    curAlternateIconModuleName = Str16ToStr8(parcel.ReadString16());
     cloudFileSyncEnabled = parcel.ReadBool();
     cloudStructuredDataSyncEnabled = parcel.ReadBool();
     applicationFlags = parcel.ReadInt32();
@@ -893,6 +895,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(configuration));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, arkTSMode);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(curAlternateIconModuleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, cloudFileSyncEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, cloudStructuredDataSyncEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, applicationFlags);
@@ -1164,6 +1167,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_INSTALL_SOURCE, applicationInfo.installSource},
         {APPLICATION_CONFIGURATION, applicationInfo.configuration},
         {Constants::ARKTS_MODE, applicationInfo.arkTSMode},
+        {APPLICATION_ALTERNATE_ICON_MODULE_NAME, applicationInfo.curAlternateIconModuleName},
         {APPLICATION_CLOUD_FILE_SYNC_ENABLED, applicationInfo.cloudFileSyncEnabled},
         {APPLICATION_CLOUD_STRUCTURED_DATA_SYNC_ENABLED, applicationInfo.cloudStructuredDataSyncEnabled},
         {APPLICATION_APPLICATION_FLAGS, applicationInfo.applicationFlags},
@@ -1392,6 +1396,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.configuration, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, Constants::ARKTS_MODE,
         applicationInfo.arkTSMode, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALTERNATE_ICON_MODULE_NAME,
+        applicationInfo.curAlternateIconModuleName, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CLOUD_FILE_SYNC_ENABLED,
         applicationInfo.cloudFileSyncEnabled, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CLOUD_STRUCTURED_DATA_SYNC_ENABLED,

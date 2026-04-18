@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -133,6 +133,9 @@ constexpr ErrCode ERROR_ENABLE_DYNAMIC_ICON = 17700304;
 constexpr ErrCode ERROR_DISABLE_DYNAMIC_ICON = 17700305;
 constexpr ErrCode ERROR_GET_DYNAMIC_ICON = 17700306;
 constexpr ErrCode ERROR_ENABLE_DYNAMIC_ICON_DUE_TO_EXISTING_CUSTOM_THEMES = 17700307;
+constexpr ErrCode ERROR_INVALID_ALTERNATE_ICON_NAME = 17700308;
+constexpr ErrCode ERROR_NO_ALTERNATE_ICON_ENABLED = 17700309;
+constexpr ErrCode ERROR_SET_ALTERNATE_ICON = 17700310;
 
 // setAbilityFileTypesForSelf
 constexpr ErrCode ERROR_SET_ABILITY_FILE_TYPES_FOR_SELF = 17700351;

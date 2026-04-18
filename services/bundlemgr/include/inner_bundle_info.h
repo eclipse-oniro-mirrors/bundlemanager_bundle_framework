@@ -20,6 +20,7 @@
 
 #include "ability_info.h"
 #include "access_token.h"
+#include "alternate_icon_info.h"
 #include "aot/aot_args.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
@@ -1333,8 +1334,14 @@ public:
 
     const std::string GetCurDynamicIconModule(const int32_t userId, const int32_t appIndex) const;
 
+    const std::string GetCurAlternateIcon(const int32_t userId) const;
+
     bool SetCurDynamicIconModule(const std::string &curDynamicIconModule,
         const int32_t userId, const int32_t appIndex);
+
+    void SetCurAlternateIcon(const std::string &alternateIconName, const int32_t userId);
+
+    ErrCode FindAlternateIconInfoByName(const std::string &alternateIconName, ExtendResourceInfo &extendResourceInfo);
 
     bool IsDynamicIconModuleExist() const;
 
@@ -2480,6 +2487,7 @@ public:
     bool UpdatePluginBundleInfo(const PluginBundleInfo &pluginBundleInfo);
     bool RemovePluginFromUserInfo(const std::string &pluginBundleName, const int32_t userId);
     void GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos) const;
+    void GetAlternateIconInfoWhenUpdate(std::vector<AlternateIconInfo> &alternateIconInfos);
     std::string GetApplicationArkTSMode() const;
     void UpdateHasCloudkitConfig();
     bool GetModuleDeduplicateHar() const;

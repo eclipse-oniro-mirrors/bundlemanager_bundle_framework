@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,6 +58,22 @@ void BundleResourceHelper::RegisterCommonEventSubscriber()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     BundleResourceRegister::RegisterCommonEventSubscriber();
+#endif
+}
+
+void BundleResourceHelper::UpdateAlternateResourceInfoByBundleName(const std::string &bundleName)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGI_NOFUNC("-n %{public}s update resource start", bundleName.c_str());
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return;
+    }
+    if (!manager->UpdateAlternateResourceInfo(bundleName)) {
+        APP_LOGW("update failed, bundleName:%{public}s", bundleName.c_str());
+    }
+    APP_LOGI_NOFUNC("-n %{public}s update resource end", bundleName.c_str());
 #endif
 }
 

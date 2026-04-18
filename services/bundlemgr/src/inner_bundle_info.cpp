@@ -2227,6 +2227,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->multiProjects = applicationInfo.multiProjects;
     baseApplicationInfo_->appEnvironments = applicationInfo.appEnvironments;
     baseApplicationInfo_->alternateIcons = applicationInfo.alternateIcons;
+    baseApplicationInfo_->curAlternateIconModuleName = newInfo.GetCurrentModulePackage();
     baseApplicationInfo_->maxChildProcess = applicationInfo.maxChildProcess;
     baseApplicationInfo_->multiAppMode = applicationInfo.multiAppMode;
     baseApplicationInfo_->configuration = applicationInfo.configuration;
@@ -6029,6 +6030,78 @@ const std::string InnerBundleInfo::GetCurDynamicIconModule(const int32_t userId,
         return "";
     }
     return cloneInfoItem->second.curDynamicIconModule;
+}
+
+const std::string InnerBundleInfo::GetCurAlternateIcon(const int32_t userId) const
+{
+    if ((userId == Constants::UNSPECIFIED_USERID)) {
+        for (auto &item : innerBundleUserInfos_) {
+            if (!item.second.curAlternateIconName.empty()) {
+                return item.second.curAlternateIconName;
+            }
+        }
+        return "";
+    }
+    std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE("can not find bundleUserInfo in userId: %{public}d", userId);
+        return "";
+    }
+    return infoItem->second.curAlternateIconName;
+}
+
+void InnerBundleInfo::SetCurAlternateIcon(const std::string &alternateIconName, const int32_t userId)
+{
+    if ((userId == Constants::UNSPECIFIED_USERID)) {
+        for (auto &item : innerBundleUserInfos_) {
+            item.second.curAlternateIconName = alternateIconName;
+        }
+        return;
+    }
+    std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE("can not find bundleUserInfo in userId: %{public}d", userId);
+        return;
+    }
+    infoItem->second.curAlternateIconName = alternateIconName;
+}
+
+ErrCode InnerBundleInfo::FindAlternateIconInfoByName(const std::string &alternateIconName,
+    ExtendResourceInfo &extendResourceInfo)
+{
+    for (const auto &icon : baseApplicationInfo_->alternateIcons) {
+        if (icon.name == alternateIconName) {
+            extendResourceInfo.iconId = icon.iconId;
+            extendResourceInfo.filePath = GetModuleHapPath(baseApplicationInfo_->curAlternateIconModuleName);
+            return ERR_OK;
+        }
+    }
+    return ERR_EXT_RESOURCE_MANAGER_INVALID_ALTERNATE_ICON_NAME;
+}
+
+void InnerBundleInfo::GetAlternateIconInfoWhenUpdate(std::vector<AlternateIconInfo> &alternateIconInfos)
+{
+    for (auto &item : innerBundleUserInfos_) {
+        if (!item.second.curAlternateIconName.empty()) {
+            auto alternateIcon = std::find_if(baseApplicationInfo_->alternateIcons.begin(),
+                baseApplicationInfo_->alternateIcons.end(),
+                [&item](const auto &alternateIcon) {
+                    return alternateIcon.name == item.second.curAlternateIconName;
+                });
+            AlternateIconInfo alternateIconInfo;
+            if (alternateIcon != baseApplicationInfo_->alternateIcons.end()) {
+                alternateIconInfo.iconId = alternateIcon->iconId;
+            } else {
+                item.second.curAlternateIconName = "";
+            }
+            alternateIconInfo.filePath = GetModuleHapPath(baseApplicationInfo_->curAlternateIconModuleName);
+            alternateIconInfo.alternateIconName = item.second.curAlternateIconName;
+            alternateIconInfo.userId = item.second.bundleUserInfo.userId;
+            alternateIconInfos.emplace_back(alternateIconInfo);
+        }
+    }
 }
 
 bool InnerBundleInfo::SetCurDynamicIconModule(

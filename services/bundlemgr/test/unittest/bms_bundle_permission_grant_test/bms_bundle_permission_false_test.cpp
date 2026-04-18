@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1917,9 +1917,17 @@ HWTEST_F(BmsBundlePermissionFalseTest, ExtendResourceTest_0002, Function | Small
 {
     auto proxy = bundleMgrHostImpl_->GetExtendResourceManager();
     EXPECT_NE(proxy, nullptr);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
     if (proxy != nullptr) {
         auto ret = proxy->EnableDynamicIcon(BUNDLE_NAME, MOUDLE_NAME);
         EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
+    }
+    auto item = dataMgr->bundleInfos_.find(BUNDLE_NAME);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
     }
 }
 
