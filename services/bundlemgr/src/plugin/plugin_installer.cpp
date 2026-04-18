@@ -422,6 +422,7 @@ ErrCode PluginInstaller::VerifyCodeSignatureForNativeFiles(const std::string &bu
     APP_LOGD("begin to verify code signature for hsp native files");
     bool isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
     CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = bundleName_;
     codeSignatureParam.modulePath = bundlePath;
     codeSignatureParam.cpuAbi = cpuAbi;
     codeSignatureParam.targetSoPath = targetSoPath;
@@ -443,6 +444,7 @@ ErrCode PluginInstaller::VerifyCodeSignatureForHsp(const std::string &hspPath,
 {
     APP_LOGI("begin to verify code signature for hsp");
     CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = bundleName_;
     codeSignatureParam.modulePath = hspPath;
     codeSignatureParam.cpuAbi = cpuAbi_;
     codeSignatureParam.targetSoPath = soPath_;

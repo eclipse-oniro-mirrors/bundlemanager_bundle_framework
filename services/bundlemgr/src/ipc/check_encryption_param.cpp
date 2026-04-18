@@ -22,6 +22,7 @@ namespace OHOS {
 namespace AppExecFwk {
 bool CheckEncryptionParam::ReadFromParcel(Parcel &parcel)
 {
+    bundleName = Str16ToStr8(parcel.ReadString16());
     modulePath = Str16ToStr8(parcel.ReadString16());
     cpuAbi = Str16ToStr8(parcel.ReadString16());
     targetSoPath = Str16ToStr8(parcel.ReadString16());
@@ -35,6 +36,7 @@ bool CheckEncryptionParam::ReadFromParcel(Parcel &parcel)
 
 bool CheckEncryptionParam::Marshalling(Parcel &parcel) const
 {
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(modulePath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(targetSoPath));

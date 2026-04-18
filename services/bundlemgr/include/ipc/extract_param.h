@@ -32,6 +32,7 @@ enum ExtractFileType : uint8_t {
 };
 
 struct ExtractParam : public Parcelable {
+    std::string bundleName;
     std::string srcPath;
     std::string targetPath;
     std::string cpuAbi;

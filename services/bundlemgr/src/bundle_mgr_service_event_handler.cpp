@@ -1744,7 +1744,7 @@ void BMSEventHandler::CleanBundleCloneEl1ShaderCacheLocal(const std::string &bun
     el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"),
         1, std::to_string(userId));
     el1ShaderCachePath = el1ShaderCachePath + cloneBundleName;
-    ErrCode res = InstalldClient::GetInstance()->CleanBundleDataDir(el1ShaderCachePath);
+    ErrCode res = InstalldClient::GetInstance()->CleanBundleDataDir(el1ShaderCachePath, bundleName, userId);
     if (res != ERR_OK) {
         LOG_NOFUNC_W(BMS_TAG_DEFAULT, "%{public}s clean shader cache fail %{public}d",
             bundleName.c_str(), res);
@@ -5583,7 +5583,7 @@ void BMSEventHandler::CleanAllBundleShaderCache() const
         }
         std::string shaderCachePath;
         shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleInfo.name);
-        ErrCode res = InstalldClient::GetInstance()->CleanBundleDataDir(shaderCachePath);
+        ErrCode res = InstalldClient::GetInstance()->CleanBundleDataDir(shaderCachePath, bundleInfo.name, 0);
         if (res != ERR_OK) {
             LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s clean shader fail %{public}d", bundleInfo.name.c_str(), res);
         }
@@ -5971,7 +5971,7 @@ ErrCode BMSEventHandler::CheckSystemOptimizeBundleShaderCache(const std::string 
             systemOptimizeShaderCache.c_str(), errno);
         return ret;
     }
-    return InstalldClient::GetInstance()->SetArkStartupCacheApl(systemOptimizeShaderCache);
+    return InstalldClient::GetInstance()->SetArkStartupCacheApl(cloneBundleName, systemOptimizeShaderCache);
 }
 
 ErrCode BMSEventHandler::CheckSystemOptimizeShaderCache()
@@ -6008,7 +6008,7 @@ ErrCode BMSEventHandler::CleanSystemOptimizeBundleShaderCache(const std::string 
         1, std::to_string(userId));
     systemOptimizeShaderCache = systemOptimizeShaderCache +
         cloneBundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
-    return InstalldClient::GetInstance()->CleanBundleDataDir(systemOptimizeShaderCache);
+    return InstalldClient::GetInstance()->CleanBundleDataDir(systemOptimizeShaderCache, bundleName, userId);
 }
 
 ErrCode BMSEventHandler::CleanSystemOptimizeShaderCache()
@@ -6099,7 +6099,7 @@ bool BMSEventHandler::CleanAllBundleEl1ArkStartupCacheLocal()
         for (auto &bundleName : bundleNames) {
             std::string el1BundleArkStartupCachePath = el1ArkStartupCachePath +
                 bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
-            InstalldClient::GetInstance()->CleanBundleDataDir(el1BundleArkStartupCachePath);
+            InstalldClient::GetInstance()->CleanBundleDataDir(el1BundleArkStartupCachePath, bundleName, userId);
         }
     }
     return true;

@@ -561,6 +561,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2700, Function | Sma
     auto ret = InstalldOperator::ExtractFiles(extractParam);
     EXPECT_FALSE(ret);
 
+    extractParam.bundleName = "com.example.test";
     extractParam.srcPath = HAP_FILE_PATH;
     extractParam.targetPath = TEST_PATH;
     extractParam.cpuAbi = TEST_CPU_ABI;
@@ -773,6 +774,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4100, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4200, Function | SmallTest | Level0)
 {
     ExtractParam extractParam;
+    extractParam.bundleName = "com.example.test";
     extractParam.srcPath = "/system/etc/graphic/bootpic.zip";
 #ifdef USE_ARM64
     EXPECT_NO_THROW(InstalldOperator::ExtractFiles(extractParam));
@@ -3119,5 +3121,168 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17800, Function | Sm
     EXPECT_TRUE(description.empty());
 
     DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17900
+ * @tc.name: test IsValidPathByBundleDirScene with valid and invalid paths
+ * @tc.desc: 1. test EXTRACT_FILES with valid path returns true
+ *           2. test EXTRACT_FILES with invalid path returns false
+ *           3. test path containing .. returns false
+ *           4. test unknown scene returns false
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17900, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::EXTRACT_FILES, "/data/app/el1/bundle/public/test"));
+    EXPECT_TRUE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::EXTRACT_FILES, "/data/service/el1/public/test"));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::EXTRACT_FILES, "/tmp/invalid"));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::EXTRACT_FILES, "/data/app/el1/../bundle/public/test"));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        static_cast<BundleDirScene>(999), "/data/app/el1/bundle/public/test"));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18000
+ * @tc.name: test MatchPathTemplate with various patterns
+ * @tc.desc: 1. test simple prefix match
+ *           2. test wildcard % match
+ *           3. test mismatch returns false
+ *           4. test pattern with .. returns false
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18000, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::MatchPathTemplate(
+        "/data/app/el1/100/system_optimize/", "/data/app/el1/%/system_optimize/"));
+    EXPECT_TRUE(InstalldOperator::MatchPathTemplate(
+        "/data/app/el1/bundle/public/test", "/data/app/el1/bundle/public/"));
+    EXPECT_FALSE(InstalldOperator::MatchPathTemplate(
+        "/data/app/el2/100/system_optimize/", "/data/app/el1/%/system_optimize/"));
+    EXPECT_FALSE(InstalldOperator::MatchPathTemplate(
+        "/data/app/el1/100/system_optimize/", "/data/app/el1/%/other/"));
+    EXPECT_FALSE(InstalldOperator::MatchPathTemplate(
+        "/data/app/test", "/data/app/../test"));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18100
+ * @tc.name: test IsValidAppIdentifier with various inputs
+ * @tc.desc: 1. test empty returns true
+ *           2. test valid returns true
+ *           3. test too long returns false
+ *           4. test invalid chars returns false
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18100, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::IsValidAppIdentifier(""));
+    EXPECT_TRUE(InstalldOperator::IsValidAppIdentifier("abc-123_def.X"));
+    EXPECT_FALSE(InstalldOperator::IsValidAppIdentifier(std::string(257, 'a')));
+    EXPECT_FALSE(InstalldOperator::IsValidAppIdentifier("abc@123"));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18200
+ * @tc.name: test EndsWith with various inputs
+ * @tc.desc: 1. test matching suffix returns true
+ *           2. test mismatch returns false
+ *           3. test source shorter than suffix returns false
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18200, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::EndsWith("test.an", ".an"));
+    EXPECT_FALSE(InstalldOperator::EndsWith("test.txt", ".an"));
+    EXPECT_FALSE(InstalldOperator::EndsWith(".an", "test.an"));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18300
+ * @tc.name: test IsValidApl and IsValidUid with various inputs
+ * @tc.desc: 1. test valid apl values return true
+ *           2. test invalid apl returns false
+ *           3. test valid uid returns true
+ *           4. test invalid uid returns false
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18300, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::IsValidApl("normal"));
+    EXPECT_TRUE(InstalldOperator::IsValidApl("system_basic"));
+    EXPECT_TRUE(InstalldOperator::IsValidApl("system_core"));
+    EXPECT_FALSE(InstalldOperator::IsValidApl("invalid"));
+    EXPECT_TRUE(InstalldOperator::IsValidUid(0));
+    EXPECT_TRUE(InstalldOperator::IsValidUid(10000));
+    EXPECT_FALSE(InstalldOperator::IsValidUid(-1));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18400
+ * @tc.name: test IsValidUserId with boundary values
+ * @tc.desc: 1. test userId = 0 returns true
+ *           2. test userId = 10000 returns true
+ *           3. test userId = -1 returns false
+ *           4. test userId = 10001 returns false
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18400, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::IsValidUserId(0));
+    EXPECT_TRUE(InstalldOperator::IsValidUserId(10000));
+    EXPECT_FALSE(InstalldOperator::IsValidUserId(-1));
+    EXPECT_FALSE(InstalldOperator::IsValidUserId(10001));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18500
+ * @tc.name: test IsValidPathByBundleDirScene for newly added scenes
+ * @tc.desc: 1. test SET_ARK_STARTUP_CACHE_APL with valid path
+ *           2. test PEND_SIGN_AOT with valid path
+ *           3. test VERIFY_CODE_SIGNATURE with valid path
+ *           4. test REMOVE_EXTENSION_DIR with valid path
+ *           5. test CLEAN_BUNDLE_DATA_DIR with valid path
+ *           6. test each scene with invalid path returns false
+ *           7. test each scene with path containing .. returns false
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18500, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::SET_ARK_STARTUP_CACHE_APL, "/data/app/el1/100/system_optimize/com.example.test"));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::SET_ARK_STARTUP_CACHE_APL, "/data/app/el1/100/other/com.example.test"));
+
+    EXPECT_TRUE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::PEND_SIGN_AOT, "/data/app/el1/public/aot_compiler/ark_cache/test.an"));
+    EXPECT_TRUE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::PEND_SIGN_AOT, "/data/service/el1/public/for-all-app/test.an"));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::PEND_SIGN_AOT, "/data/app/el1/public/other/test.an"));
+
+    EXPECT_TRUE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::VERIFY_CODE_SIGNATURE, "/data/app/el1/bundle/public/com.example.test/entry.hap"));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::VERIFY_CODE_SIGNATURE, "/data/app/el1/public/com.example.test/entry.hap"));
+
+    EXPECT_TRUE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::REMOVE_EXTENSION_DIR, "/data/app/el1/100/extension/com.example.test"));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::REMOVE_EXTENSION_DIR, "/data/app/el2/100/extension/com.example.test"));
+
+    EXPECT_TRUE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::CLEAN_BUNDLE_DATA_DIR, "/data/app/el2/100/base/com.example.test/cache"));
+    EXPECT_TRUE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::CLEAN_BUNDLE_DATA_DIR, "/data/local/shader_cache/com.example.test"));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::CLEAN_BUNDLE_DATA_DIR, "/tmp/invalid"));
+
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::SET_ARK_STARTUP_CACHE_APL, "/data/app/el1/100/system_optimize/../test"));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::PEND_SIGN_AOT, "/data/app/el1/public/aot_compiler/ark_cache/../test.an"));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::VERIFY_CODE_SIGNATURE, "/data/app/el1/bundle/../test"));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::REMOVE_EXTENSION_DIR, "/data/app/el1/../test"));
+    EXPECT_FALSE(InstalldOperator::IsValidPathByBundleDirScene(
+        BundleDirScene::CLEAN_BUNDLE_DATA_DIR, "/data/app/../test"));
 }
 } // OHOS

@@ -143,7 +143,7 @@ bool RecentlyUnuseBundleAgingHandler::CleanCache(const AgingBundleInfo &agingBun
     bool hasCleanCache = false;
     for (const auto &cache : caches) {
         APP_LOGD("cache path: %{public}s", cache.c_str());
-        ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
+        ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache, agingBundle.GetBundleName(), 0);
         if (ret != ERR_OK) {
             APP_LOGE("CleanBundleDataDir failed, path %{private}s", cache.c_str());
             continue;

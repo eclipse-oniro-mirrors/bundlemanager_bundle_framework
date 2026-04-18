@@ -17,6 +17,7 @@
 
 #include "app_log_tag_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
 #include "nlohmann/json.hpp"
 #include "parcel_macro.h"
 #include "securec.h"
@@ -25,6 +26,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr const char* CODE_SIGNATURE_BUNDLE_NAME = "bundleName";
 constexpr const char* CODE_SIGNATURE_MODULE_PATH = "modulePath";
 constexpr const char* CODE_SIGNATURE_CPU_ABI = "cpuAbi";
 constexpr const char* CODE_SIGNATURE_TARGET_SO_PATH = "targetSoPath";
@@ -37,11 +39,11 @@ constexpr const char* CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY = "isCompileSdkO
 constexpr const char* CODE_SIGNATURE_IS_COMPRESS_NATIVE_LIBRARY = "isCompressNativeLibrary";
 constexpr const char* CODE_SIGNATURE_IS_PLUGIN = "isPlugin";
 constexpr const char* CODE_SIGNATURE_PLUGIN_ID = "pluginId";
-constexpr int32_t MAX_PROFILE_LENGTH = 1 * 1024 * 1000; // 1M
 } // namespace
 
 bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
 {
+    bundleName = Str16ToStr8(parcel.ReadString16());
     modulePath = Str16ToStr8(parcel.ReadString16());
     cpuAbi = Str16ToStr8(parcel.ReadString16());
     targetSoPath = Str16ToStr8(parcel.ReadString16());
@@ -55,7 +57,7 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
     isPlugin = parcel.ReadBool();
     pluginId = Str16ToStr8(parcel.ReadString16());
     profileBlockLength = parcel.ReadUint32();
-    if (profileBlockLength > 0 && profileBlockLength < MAX_PROFILE_LENGTH) {
+    if (profileBlockLength > 0 && profileBlockLength < ServiceConstants::MAX_PROFILE_BLOCK_LENGTH) {
         uint8_t* originData = const_cast<uint8_t*>(parcel.ReadBuffer(profileBlockLength));
         if (originData == nullptr) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "Failed to read profile buffer");
@@ -78,6 +80,7 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
 
 bool CodeSignatureParam::Marshalling(Parcel &parcel) const
 {
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(modulePath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(targetSoPath));
@@ -91,7 +94,7 @@ bool CodeSignatureParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPlugin);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pluginId));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, profileBlockLength);
-    if (profileBlockLength > 0 && profileBlockLength < MAX_PROFILE_LENGTH) {
+    if (profileBlockLength > 0 && profileBlockLength < ServiceConstants::MAX_PROFILE_BLOCK_LENGTH) {
         if (!parcel.WriteBuffer(profileBlock.get(), profileBlockLength)) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "Failed to write profile buffer");
             return false;
@@ -114,6 +117,7 @@ CodeSignatureParam *CodeSignatureParam::Unmarshalling(Parcel &parcel)
 std::string CodeSignatureParam::ToString() const
 {
     nlohmann::json codeSignatureParamJson = nlohmann::json {
+        { CODE_SIGNATURE_BUNDLE_NAME, bundleName },
         { CODE_SIGNATURE_MODULE_PATH, modulePath },
         { CODE_SIGNATURE_CPU_ABI, cpuAbi },
         { CODE_SIGNATURE_TARGET_SO_PATH, targetSoPath },

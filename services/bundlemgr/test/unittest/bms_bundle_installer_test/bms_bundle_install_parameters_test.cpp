@@ -23,6 +23,7 @@
 #include "installd/installd_operator.h"
 #include "ipc/encryption_param.h"
 #include "ipc/install_hnp_param.h"
+#include "ipc/verify_bin_param.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -246,6 +247,39 @@ HWTEST_F(BmsBundleInstallParametersTest, CheckUserIdIsValid_0200, Function | Sma
 HWTEST_F(BmsBundleInstallParametersTest, CheckUserIdIsValid_0300, Function | SmallTest | Level0)
 {
     bool result = InstalldOperator::IsValidUserId(-1);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckUserIdIsValid_0400
+ * @tc.name: test CheckUserIdIsValid with max boundary value (10000)
+ * @tc.desc: 1. test user id = 10000 should return true [NEW]
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CheckUserIdIsValid_0400, Function | SmallTest | Level0)
+{
+    bool result = InstalldOperator::IsValidUserId(10000);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: CheckUserIdIsValid_0500
+ * @tc.name: test CheckUserIdIsValid exceeding max limit (10001)
+ * @tc.desc: 1. test user id > 10000 should return false [NEW]
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CheckUserIdIsValid_0500, Function | SmallTest | Level0)
+{
+    bool result = InstalldOperator::IsValidUserId(10001);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckUserIdIsValid_0600
+ * @tc.name: test CheckUserIdIsValid with large value exceeding limit
+ * @tc.desc: 1. test large user id should return false [NEW]
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CheckUserIdIsValid_0600, Function | SmallTest | Level0)
+{
+    bool result = InstalldOperator::IsValidUserId(99999);
     EXPECT_FALSE(result);
 }
 
@@ -2790,7 +2824,7 @@ HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0500, Function | Sm
     InstalldHostImpl impl;
     CreateDirParam param;
     param.bundleName = "com.example.test";
-    param.userId = 100000;
+    param.userId = 10000;
     param.uid = 10000;
     param.gid = 10000;
     param.extensionDirs = {};

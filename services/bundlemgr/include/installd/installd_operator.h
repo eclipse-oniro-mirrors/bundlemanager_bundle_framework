@@ -42,13 +42,6 @@ namespace AppExecFwk {
 using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::string, std::string> &,
     const CodeCryptoHapInfo &, bool &);
 
-enum class BundleDirScene {
-    SET_DIR_APL = 0,
-    EXTRACT_HNP_FILES = 1,
-    SET_FILE_CON_FORCE = 2,
-    EXTRACT_DRIVER_SO_FILES = 3,
-};
-
 class InstalldOperator {
 public:
     /**
@@ -416,10 +409,15 @@ public:
 
     static bool IsValidPathByBundleDirScene(const BundleDirScene &scene, const std::string &path);
 
+    static bool IsValidAppIdentifier(const std::string &appIdentifier);
+
     static bool IsValidUuid(const std::string &uuid);
 
     static bool ObtainSignInfoForPlugin(
         const std::string &filePath, std::string &appIdentifier, std::string &pluginId);
+
+    static bool EndsWith(const std::string &sourceString, const std::string &targetSuffix);
+    
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
@@ -465,6 +463,20 @@ private:
     static bool IsRdDevice();
     static bool ParsePluginId(const std::string &appServiceCapabilities, std::vector<std::string> &pluginIds);
     static ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
+
+private:
+    /**
+     * @brief Match path against a pattern with '%' wildcard.
+     * @param path The path to validate.
+     * @param pattern The pattern with '%' as wildcard (e.g., "/data/app/el1/%/system_optimize/").
+     * @return Returns true if path matches pattern; returns false otherwise.
+     *
+     * Matching rules:
+     * 1. If pattern contains no '%', perform simple prefix match
+     * 2. Split pattern by '%', first segment must match path beginning
+     * 3. Subsequent segments must be contained in path (in order)
+     */
+    static bool MatchPathTemplate(const std::string &path, const std::string &pattern);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
