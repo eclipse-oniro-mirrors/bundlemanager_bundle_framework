@@ -154,6 +154,7 @@ const char* APPLICATION_HAS_PLUGIN = "hasPlugin";
 const char* APPLICATION_START_MODE = "startMode";
 const char* APPLICATION_APP_PRELOAD_PHASE = "appPreloadPhase";
 const char* APPLICATION_APP_SIGN_TYPE = "appSignType";
+const char* APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT = "allowListenBundleChangedEvent";
 }
 
 bool MultiAppModeData::ReadFromParcel(Parcel &parcel)
@@ -622,6 +623,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     startMode = static_cast<StartMode>(parcel.ReadUint8());
     appPreloadPhase = static_cast<AppPreloadPhase>(parcel.ReadUint8());
     appSignType = Str16ToStr8(parcel.ReadString16());
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, &allowListenBundleChangedEvent);
     return true;
 }
 
@@ -815,6 +817,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(startMode));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(appPreloadPhase));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appSignType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, allowListenBundleChangedEvent);
     return true;
 }
 
@@ -1083,7 +1086,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_HAS_PLUGIN, applicationInfo.hasPlugin},
         {APPLICATION_START_MODE, applicationInfo.startMode},
         {APPLICATION_APP_PRELOAD_PHASE, applicationInfo.appPreloadPhase},
-        {APPLICATION_APP_SIGN_TYPE, applicationInfo.appSignType}
+        {APPLICATION_APP_SIGN_TYPE, applicationInfo.appSignType},
+        {APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT, applicationInfo.allowListenBundleChangedEvent}
     };
 }
 
@@ -1319,6 +1323,9 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.appPreloadPhase, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_APP_SIGN_TYPE,
         applicationInfo.appSignType, false, parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd,
+        APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT,
+        applicationInfo.allowListenBundleChangedEvent, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error : %{public}d", parseResult);
     }

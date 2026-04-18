@@ -3790,12 +3790,14 @@ HWTEST_F(BmsBundleDataMgrTest, PublishCommonEvent_0100, Function | MediumTest | 
 {
     EventFwk::CommonEventData commonData;
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    std::vector<std::string> allowListenBundles;
     bool ret = commonEventMgr->PublishCommonEvent("notExist",
-        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED, USERID, commonData);
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED, USERID, commonData, allowListenBundles);
     EXPECT_FALSE(ret);
 
     ret = commonEventMgr->PublishCommonEvent("notExist",
-        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_INSTALLATION_STARTED, USERID, commonData);
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_INSTALLATION_STARTED, USERID, commonData,
+        allowListenBundles);
     EXPECT_FALSE(ret);
 }
 

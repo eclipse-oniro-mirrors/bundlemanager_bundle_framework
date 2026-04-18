@@ -324,6 +324,7 @@ struct App {
     std::string appPreloadPhase;
     std::vector<std::string> assetAccessGroups;
     std::string startMode = Profile::START_MODE_MAIN_TASK;
+    std::vector<std::string> allowListenBundleChangedEvent;
 };
 
 struct Module {
@@ -1557,6 +1558,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.profileable,
         false,
         g_parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        APP_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT,
+        app.allowListenBundleChangedEvent,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -2520,6 +2529,7 @@ bool ToApplicationInfo(
     }
     applicationInfo.cloudFileSyncEnabled = app.cloudFileSyncEnabled;
     applicationInfo.cloudStructuredDataSyncEnabled = app.cloudStructuredDataSyncEnabled;
+    applicationInfo.allowListenBundleChangedEvent = app.allowListenBundleChangedEvent;
     return true;
 }
 

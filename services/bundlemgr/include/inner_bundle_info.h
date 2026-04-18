@@ -2233,6 +2233,11 @@ public:
         return baseApplicationInfo_->assetAccessGroups;
     }
 
+    std::vector<std::string> GetAllowListenBundleChangedEvent() const
+    {
+        return baseApplicationInfo_->allowListenBundleChangedEvent;
+    }
+
     std::string GetDeveloperId() const
     {
         return developerId_;

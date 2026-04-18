@@ -2052,6 +2052,11 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
     cleanCacheSize = cleanSize;
     EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed, callingUid, callingBundleName);
     APP_LOGI("CleanCacheFiles with succeed %{public}d", succeed);
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("get innerBundleInfo fail");
+        return;
+    }
     InnerBundleUserInfo innerBundleUserInfo;
     if (!this->GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
@@ -2062,7 +2067,8 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
         .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
         .uid = innerBundleUserInfo.uid,
-        .bundleName = bundleName
+        .bundleName = bundleName,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
     };
     NotifyBundleStatus(installRes);
 }
@@ -2278,6 +2284,13 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             APP_LOGW("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
             return;
         }
+
+        InnerBundleInfo innerBundleInfo;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+            APP_LOGE("get innerBundleInfo fail");
+            return;
+        }
+
         NotifyBundleEvents installRes;
         if (appIndex > 0) {
             std::map<std::string, InnerBundleCloneInfo> cloneInfos = innerBundleUserInfo.cloneInfos;
@@ -2294,7 +2307,8 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
                 .accessTokenId = innerBundleUserInfo.accessTokenId,
                 .uid = uid,
                 .appIndex = appIndex,
-                .bundleName = bundleName
+                .bundleName = bundleName,
+                .appDistributionType = innerBundleInfo.GetAppDistributionType(),
             };
             NotifyBundleStatus(installRes);
             return;
@@ -2304,7 +2318,8 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             .resultCode = ERR_OK,
             .accessTokenId = innerBundleUserInfo.accessTokenId,
             .uid = innerBundleUserInfo.uid,
-            .bundleName = bundleName
+            .bundleName = bundleName,
+            .appDistributionType = innerBundleInfo.GetAppDistributionType(),
         };
         NotifyBundleStatus(installRes);
     };
@@ -2934,6 +2949,12 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         return ERR_OK;
     }
     
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("get innerBundleInfo fail");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
@@ -2945,7 +2966,8 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
         .uid = innerBundleUserInfo.uid,
-        .bundleName = bundleName
+        .bundleName = bundleName,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
     };
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
@@ -3001,6 +3023,12 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
         return ERR_OK;
     }
 
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("get innerBundleInfo fail");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
@@ -3013,7 +3041,8 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
         .accessTokenId = innerBundleUserInfo.accessTokenId,
         .uid = innerBundleUserInfo.uid,
         .appIndex = appIndex,
-        .bundleName = bundleName
+        .bundleName = bundleName,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
     };
     NotifyBundleStatus(installRes);
     APP_LOGD("SetCloneApplicationEnabled finish");
@@ -3108,18 +3137,26 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
         return ERR_OK;
     }
 
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(abilityInfo.bundleName, innerBundleInfo)) {
+        APP_LOGE("get innerBundleInfo fail");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+
     NotifyBundleEvents installRes = {
         .type = NotifyType::APPLICATION_ENABLE,
         .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
         .uid = innerBundleUserInfo.uid,
         .bundleName = abilityInfo.bundleName,
-        .abilityName = abilityInfo.name
+        .abilityName = abilityInfo.name,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
     };
     NotifyBundleStatus(installRes);
     return ERR_OK;
@@ -3174,6 +3211,12 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
         return ERR_OK;
     }
 
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(abilityInfo.bundleName, innerBundleInfo)) {
+        APP_LOGE("get innerBundleInfo fail");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
@@ -3186,7 +3229,8 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
         .uid = innerBundleUserInfo.uid,
         .appIndex = appIndex,
         .bundleName = abilityInfo.bundleName,
-        .abilityName = abilityInfo.name
+        .abilityName = abilityInfo.name,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
     };
     NotifyBundleStatus(installRes);
     return ERR_OK;

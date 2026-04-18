@@ -1320,6 +1320,7 @@ public:
     bool ProcessIdleInfo() const;
     ErrCode CheckBundleExist(const std::string &bundleName, int32_t userId, int32_t appIndex) const;
     bool DeleteRouterInfoForSharedBundle(const InnerBundleInfo &info, const int32_t versionCode);
+    std::vector<std::string> GetAllowListenBundleNames(const std::string &bundleName) const;
 private:
     /**
      * @brief Init transferStates.

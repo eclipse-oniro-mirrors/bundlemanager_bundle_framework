@@ -81,6 +81,7 @@ struct NotifyBundleEvents {
     bool isRecover = false;
     bool isInstallByBundleName = false;
     std::map<std::string, std::string> metadataConfigInfos;
+    std::vector<std::string> allowListenBundles;
 
     void SetMetadataConfigInfos(const std::map<std::string, std::string>& configs)
     {
@@ -144,7 +145,13 @@ private:
     std::string GetCommonEventData(const NotifyType &type);
     void SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBundleEvents &installResult);
     bool PublishCommonEvent(const std::string &bundleName, const std::string &action,
-        const int32_t publishUserId, const EventFwk::CommonEventData &commonData);
+        const int32_t publishUserId, const EventFwk::CommonEventData &commonData,
+        const std::vector<std::string> &allowListenBundles);
+    bool PublishCommonEventForEnterprise(const std::string &bundleName, const int32_t publishUserId,
+        const EventFwk::CommonEventData &commonData);
+    // Async version of PublishCommonEventForEnterPrise
+    void PublishCommonEventForEnterpriseAsync(const std::string &bundleName, const int32_t publishUserId,
+        const EventFwk::CommonEventData &commonData);
     bool ProcessBundleChangedEventForOtherUsers(const std::shared_ptr<BundleDataMgr> &dataMgr,
         const NotifyBundleEvents &event, const int32_t publishUserId,
         const EventFwk::CommonEventData &commonData);

@@ -358,6 +358,7 @@ struct ApplicationInfo : public Parcelable {
     AppQuickFix appQuickFix;
     AppPreloadPhase appPreloadPhase = AppPreloadPhase::DEFAULT;
     std::string appSignType = Constants::APP_SIGN_TYPE_NONE;
+    std::vector<std::string> allowListenBundleChangedEvent;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

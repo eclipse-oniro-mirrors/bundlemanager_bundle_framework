@@ -1409,7 +1409,8 @@ protected:
                 "hasPlugin": false,
                 "startMode":1,
                 "appPreloadPhase":0,
-                "appSignType": "none"
+                "appSignType": "none",
+                "allowListenBundleChangedEvent": []
             },
             "baseBundleInfo": {
                 "abilityInfos": [

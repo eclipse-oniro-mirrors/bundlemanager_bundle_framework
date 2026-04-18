@@ -380,6 +380,7 @@ constexpr const char* APP_CONFIGURATION = "configuration";
 constexpr const char* APP_CLOUD_FILE_SYNC_ENABLED = "cloudFileSyncEnabled";
 constexpr const char* APP_CLOUD_STRUCTURED_DATA_SYNC_ENABLED = "cloudStructuredDataSyncEnabled";
 constexpr const char* APP_ASSET_ACCESS_GROUPS = "assetAccessGroups";
+constexpr const char* APP_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT = "allowListenBundleChangedEvent";
 constexpr const char* APP_PRELOAD_PHASE = "appPreloadPhase";
 constexpr const char* APP_PROFILEABLE = "profileable";
 // multiappmode
