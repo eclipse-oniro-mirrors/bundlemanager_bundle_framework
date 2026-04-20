@@ -1311,6 +1311,7 @@ public:
         std::vector<BundleProfileData> &profileDataList) const;
     ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
         std::vector<JsonProfileInfo> &profileInfos) const;
+    ErrCode GetAllIndependentSKills(const int32_t userId, std::vector<std::string> &bundleNames);
     ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
         const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo);
     bool CheckDeveloperIdSameWithDataGroupIds(const std::unordered_set<std::string> &dataGroupIds,

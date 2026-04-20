@@ -1019,7 +1019,6 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_MemberVar
     EXPECT_NE(installer->bundleInstallChecker_, nullptr);
     EXPECT_TRUE(installer->uninstallModuleVec_.empty());
     EXPECT_TRUE(installer->deleteBundlePath_.empty());
-    EXPECT_TRUE(installer->deleteSkillNamePath_.empty());
     EXPECT_TRUE(installer->toDeleteTempHspPath_.empty());
 }
 
@@ -1048,7 +1047,6 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_MemberVar
     installer_->compileSdkType_ = COMPILE_SDK_TYPE;
     installer_->uninstallModuleVec_.push_back(MODULE_NAME);
     installer_->deleteBundlePath_.push_back(TEST_HSP_PATH);
-    installer_->deleteSkillNamePath_.push_back(SKILL_NAME);
     installer_->toDeleteTempHspPath_.push_back("/data/temp/test.hsp");
 
     EXPECT_EQ(installer_->versionUpgrade_, true);
@@ -1063,7 +1061,6 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_MemberVar
     EXPECT_EQ(installer_->compileSdkType_, COMPILE_SDK_TYPE);
     EXPECT_EQ(installer_->uninstallModuleVec_.size(), 1);
     EXPECT_EQ(installer_->deleteBundlePath_.size(), 1);
-    EXPECT_EQ(installer_->deleteSkillNamePath_.size(), 1);
     EXPECT_EQ(installer_->toDeleteTempHspPath_.size(), 1);
 }
 

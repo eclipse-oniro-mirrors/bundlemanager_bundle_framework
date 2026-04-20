@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_SKILLS_INSTALLER_INDEPENDENT_SKILLS_INSTALLER_H
 
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -28,6 +29,7 @@
 #include "inner_bundle_info.h"
 #include "install_param.h"
 #include "nocopyable.h"
+#include "skills_package_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -39,6 +41,8 @@ public:
     ErrCode Install(const std::vector<std::string> &hspPaths, const InstallParam &installParam);
 
     ErrCode InstallBundleByBundleName(const std::string &bundleName, const InstallParam &installParam);
+
+    ErrCode Uninstall(const std::string &bundleName, const InstallParam &installParam);
 
 private:
     ErrCode ProcessInstallBundleByBundleName(const std::string &bundleName, const InstallParam &installParam);
@@ -96,6 +100,10 @@ private:
     ErrCode MarkInstallFinish();
     void RemoveOldSkillsPath();
     void MarkPreInstallState(const std::string &bundleName, bool isUninstalled);
+    ErrCode BeforeUninstall(const std::string &bundleName, const int32_t userId);
+    ErrCode ProcessUninstall(const std::string &bundleName, const InstallParam &installParam);
+    void InnerProcessNeedDeleteSkillPackage(const InnerBundleInfo &currentBundleInfo);
+    void RemoveSkillDir(const std::string &bundleName, const std::string &moduleName, const std::string &skillsName);
 
     bool versionUpgrade_ = false;
     bool moduleUpdate_ = false;
@@ -111,7 +119,7 @@ private:
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     std::vector<std::string> uninstallModuleVec_;
     std::vector<std::string> deleteBundlePath_;
-    std::vector<std::string> deleteSkillNamePath_;
+    std::vector<SkillsPackageInfo> needDeleteSkillsPackageInfo_;
     std::vector<std::string> toDeleteTempHspPath_;
     InnerBundleInfo newInnerBundleInfo_;
     // used to rollback when update failed

@@ -478,6 +478,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
 
     ClearBundleEvents();
     InnerUninstallBundle(userId, bundleInfos);
+    ProcessUninstallSkills(userId);
     RemoveArkProfile(userId);
     RemoveAsanLogDirectory(userId);
     RemoveSystemOptimizeDir(userId);
@@ -817,6 +818,43 @@ ErrCode BundleUserMgrHostImpl::CheckCriticalAppAreInstalled(
         }
     }
     return ERR_OK;
+}
+
+bool BundleUserMgrHostImpl::ProcessUninstallSkills(const int32_t userId)
+{
+    LOG_I(BMS_TAG_INSTALLER, "process uninstall skills -u %{public}d", userId);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr is nullptr");
+        return false;
+    }
+    std::vector<std::string> bundleNames;
+    if (dataMgr->GetAllIndependentSKills(userId, bundleNames) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "get skills name -u %{public}d failed", userId);
+        return false;
+    }
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    InstallParam installParam;
+    installParam.userId = userId;
+    installParam.SetForceExecuted(true);
+    installParam.concentrateSendEvent = true;
+    installParam.isPreInstallApp = true;
+    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.isRemoveUser = true;
+    // if user is 100, no need to kill process
+    installParam.SetKillProcess(userId != Constants::START_USERID);
+    bool res = true;
+    for (const auto &name : bundleNames) {
+        IndependentSkillsInstaller installer;
+        ErrCode ret = installer.Uninstall(name, installParam);
+        if (ret != ERR_OK) {
+            res = false;
+            LOG_E(BMS_TAG_INSTALLER, "uninstall skills name -n %{public}s -u %{public}d -e %{public}d failed",
+                name.c_str(), userId, ret);
+        }
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+    return res;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
