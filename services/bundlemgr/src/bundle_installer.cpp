@@ -15,7 +15,6 @@
 
 #include "bundle_installer.h"
 
-#include <inttypes.h>
 #include <cinttypes>
 #include <fstream>
 #include <sys/statfs.h>
