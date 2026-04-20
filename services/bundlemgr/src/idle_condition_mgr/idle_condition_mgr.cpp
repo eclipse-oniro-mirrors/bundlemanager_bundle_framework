@@ -17,7 +17,6 @@
 #include <sstream>
 #include <sys/statfs.h>
 #include <thread>
-#include <inttypes.h>
 
 #include "account_helper.h"
 #include "app_log_wrapper.h"
