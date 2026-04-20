@@ -406,6 +406,11 @@ private:
      */
     void ProcessRebootAppServiceUninstall();
     /**
+     * @brief Reboot uninstall skills bundles.
+     * @return
+     */
+    void ProcessRebootSkillsUninstall();
+    /**
      * @brief Get bundle dir by scan.
      * @param bundleDirs Indicates the return bundleDirs.
      * @return

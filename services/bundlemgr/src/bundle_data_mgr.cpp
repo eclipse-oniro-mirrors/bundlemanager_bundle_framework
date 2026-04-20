@@ -13843,6 +13843,24 @@ std::vector<CreateDirParam> BundleDataMgr::GetAllExtensionDirsToUpdateSelinuxApl
     return allExtensionDirsToUpdateSelinuxApl;
 }
 
+ErrCode BundleDataMgr::GetAllIndependentSKills(const int32_t userId, std::vector<std::string> &bundleNames)
+{
+    if (!HasUserId(userId)) {
+        APP_LOGE("userId %{public}d not exist", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        if (item.second.GetApplicationBundleType() != BundleType::SKILL) {
+            continue;
+        }
+        if (item.second.HasInnerBundleUserInfo(userId)) {
+            bundleNames.emplace_back(item.second.GetBundleName());
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::GetCreateDirParamByBundleOption(
     const BundleOptionInfo &optionInfo, CreateDirParam &createDirParam) const
 {

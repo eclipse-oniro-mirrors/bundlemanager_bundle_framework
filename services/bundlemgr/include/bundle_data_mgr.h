@@ -1310,6 +1310,7 @@ public:
     void GetProfileDataList(ProfileType profileType, int32_t requestUserId,
         std::vector<BundleProfileData> &profileDataList) const;
     ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
+    ErrCode GetAllIndependentSKills(const int32_t userId, std::vector<std::string> &bundleNames);
         std::vector<JsonProfileInfo> &profileInfos) const;
     ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
         const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo);

@@ -86,6 +86,8 @@ private:
 
     ErrCode CheckCriticalAppAreInstalled(int32_t userId, const std::set<PreInstallBundleInfo> &preInfos);
 
+    bool ProcessUninstallSkills(const int32_t userId);
+
     std::mutex bundleUserMgrMutex_;
 
     std::mutex bundleEventMutex_;

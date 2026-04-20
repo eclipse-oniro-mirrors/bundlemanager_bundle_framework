@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -89,6 +89,21 @@ ErrCode IndependentSkillsInstaller::InstallBundleByBundleName(
             bundleName.c_str(), installParam.userId);
     } else {
         LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s userId %{public}d install by name succeed",
+            bundleName.c_str(), installParam.userId);
+    }
+    // normal unInstall need to NotifyBundleStatus, preUninstall no need to NotifyBundleStatus.
+    return result;
+}
+
+ErrCode IndependentSkillsInstaller::Uninstall(const std::string &bundleName, const InstallParam &installParam)
+{
+    startTime_ = BundleUtil::GetCurrentTimeMs();
+    ErrCode result = ProcessUninstall(bundleName, installParam);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s userId %{public}d uninstall failed",
+            bundleName.c_str(), installParam.userId);
+    } else {
+        LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s userId %{public}d uninstall succeed",
             bundleName.c_str(), installParam.userId);
     }
     // normal unInstall need to NotifyBundleStatus, preUninstall no need to NotifyBundleStatus.
@@ -295,6 +310,26 @@ ErrCode IndependentSkillsInstaller::CheckAndParseFiles(
 void IndependentSkillsInstaller::RemoveModuleDir(
     const std::string &bundleName, const std::string &moduleName)
 {
+    if (bundleName.empty() || moduleName.empty()) {
+        LOG_W(BMS_TAG_INSTALLER, "bundle or module is empty, no need to process");
+        return;
+    }
+    std::string moduleDir =
+        std::string(BASE_SKILL_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
+        bundleName + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
+    LOG_I(BMS_TAG_INSTALLER, "start to remove module dir: %{public}s", moduleDir.c_str());
+    if (InstalldClient::GetInstance()->RemoveDir(moduleDir) != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "remove module dir %{public}s failed", moduleDir.c_str());
+    }
+}
+
+void IndependentSkillsInstaller::RemoveSkillDir(
+    const std::string &bundleName, const std::string &moduleName, const std::string &skillsName)
+{
+    if (bundleName.empty() || moduleName.empty() || skillsName.empty()) {
+        LOG_W(BMS_TAG_INSTALLER, "bundle or module or skillsName is empty, no need to process");
+        return;
+    }
     std::string moduleDir =
         std::string(BASE_SKILL_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
         bundleName + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
@@ -537,7 +572,7 @@ ErrCode IndependentSkillsInstaller::UpdateSkillsPackage(
             LOG_E(BMS_TAG_INSTALLER, "UninstallLowerVersion failed %{public}d, can not rollback", result);
         }
     }
-
+    InnerProcessNeedDeleteSkillPackage(oldInfo);
     return ERR_OK;
 }
 
@@ -658,9 +693,9 @@ ErrCode IndependentSkillsInstaller::ExtractModule(
     if (moduleInfos.empty()) {
         return ERR_SKILLS_HAS_NO_MODULE;
     }
-    std::vector<std::string> skillNameList;
+    std::vector<std::string> skillsNameList;
     for (const auto &skills : moduleInfos.begin()->second.skillProfiles) {
-        skillNameList.emplace_back(skills.name);
+        skillsNameList.emplace_back(skills.name);
     }
     std::string moduleName = moduleInfos.begin()->second.moduleName;
     std::string tempModuleName = moduleName;
@@ -728,7 +763,11 @@ ErrCode IndependentSkillsInstaller::UninstallLowerVersion(const std::vector<std:
                 LOG_E(BMS_TAG_INSTALLER, "RemoveModuleInfo failed");
                 return ERR_APPEXECFWK_RMV_MODULE_ERROR;
             }
-            RemoveModuleDir(bundleName_, package);
+            // After successfully saving the bundleInfo, delete the path
+            SkillsPackageInfo packageInfo;
+            packageInfo.bundleName = bundleName_;
+            packageInfo.moduleName = package;
+            needDeleteSkillsPackageInfo_.emplace_back(packageInfo);
         }
     }
 
@@ -1000,9 +1039,158 @@ void IndependentSkillsInstaller::ResetProperties()
     hasInstalledInUser_ = false;
     userId_ = -1;
     bundleName_ = "";
+    needDeleteSkillsPackageInfo_.clear();
 }
 
 void IndependentSkillsInstaller::RemoveOldSkillsPath()
-{}
+{
+    if (needDeleteSkillsPackageInfo_.empty()) {
+        return;
+    }
+    auto manager = SkillsDescriptionManager::GetInstance();
+    if (manager == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s remove old failed, manager is nullptr", bundleName_.c_str());
+        return;
+    }
+    std::string bundlePath = std::string(BASE_SKILL_DIR);
+    for (const auto &packageInfo : needDeleteSkillsPackageInfo_) {
+        if (packageInfo.skillsName.empty()) {
+            // delete module
+            RemoveModuleDir(packageInfo.bundleName, packageInfo.moduleName);
+            auto result = manager->DeleteSkillDescriptions(packageInfo.bundleName, packageInfo.moduleName);
+            if (result != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "delete skill failed -n %{public}s -m %{public}s %{public}d",
+                    packageInfo.bundleName.c_str(), packageInfo.moduleName.c_str(), result);
+            }
+        } else {
+            // delete skill
+            RemoveSkillDir(packageInfo.bundleName, packageInfo.moduleName, packageInfo.skillsName);
+            auto result = manager->DeleteSkillDescriptions(packageInfo.bundleName, packageInfo.moduleName,
+                packageInfo.skillsName);
+            if (result != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "delete skill failed -n %{public}s -m %{public}s -s %{public}s %{public}d",
+                    packageInfo.bundleName.c_str(), packageInfo.moduleName.c_str(), packageInfo.skillsName.c_str(),
+                    result);
+            }
+        }
+    }
+}
+
+ErrCode IndependentSkillsInstaller::ProcessUninstall(const std::string &bundleName, const InstallParam &installParam)
+{
+    LOG_I(BMS_TAG_INSTALLER, "Uninstall bundle %{public}s userId %{public}d", bundleName.c_str(), installParam.userId);
+    ErrCode result = BeforeUninstall(bundleName, installParam.userId);
+    CHECK_SKILLS_RESULT(result, "BeforeUninstallInstall check failed %{public}d");
+    if (dataMgr_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    if (!oldInnerBundleInfo_.IsRemovable()) {
+        if (installParam.GetKillProcess() && !installParam.GetForceExecuted()) {
+            LOG_E(BMS_TAG_INSTALLER, "skills -n %{public}s system app not support uninstall", bundleName.c_str());
+            return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
+        }
+    }
+    auto &mtx = dataMgr_->GetBundleMutex(bundleName);
+    std::lock_guard lock {mtx};
+    // multi-user only remove userInfo
+    if (oldInnerBundleInfo_.GetInnerBundleUserInfos().size() > 1) {
+        if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, installParam.userId)) {
+            LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s delete userInfo %{public}d failed", bundleName.c_str(),
+                installParam.userId);
+            return ERR_APPEXECFWK_RMV_USERINFO_ERROR;
+        }
+        return ERR_OK;
+    }
+    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall already start");
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
+    }
+    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
+        LOG_E(BMS_TAG_INSTALLER, "delete inner info failed for bundle %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
+    }
+    MarkPreInstallState(bundleName, true);
+    std::string bundleDir =
+        std::string(BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
+    LOG_I(BMS_TAG_INSTALLER, "start to remove bundle dir: %{public}s", bundleDir.c_str());
+    if (InstalldClient::GetInstance()->RemoveDir(bundleDir) != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "remove bundle dir %{public}s failed", bundleDir.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode IndependentSkillsInstaller::BeforeUninstall(const std::string &bundleName,
+    const int32_t userId)
+{
+    userId_ = userId;
+    bundleName_ = bundleName;
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "bundleName is empty");
+        return ERR_SKILLS_UNINSTALL_BUNDLENAME_NOT_EXIST;
+    }
+
+    dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    if (!dataMgr_->HasUserId(userId)) {
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
+    }
+
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName, oldInnerBundleInfo_)) {
+        LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s not exist", bundleName.c_str());
+        return ERR_SKILLS_UNINSTALL_BUNDLENAME_NOT_EXIST;
+    }
+    if (oldInnerBundleInfo_.GetApplicationBundleType() != BundleType::SKILL) {
+        LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s type error, not skills", bundleName.c_str());
+        return ERR_SKILLS_UNINSTALL_WRONG_BUNDLE_TYPE;
+    }
+    if (!oldInnerBundleInfo_.HasInnerBundleUserInfo(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s get user %{public}d failed", bundleName.c_str(), userId);
+        return ERR_APPEXECFWK_USER_NOT_INSTALL_HAP;
+    }
+    return ERR_OK;
+}
+
+void IndependentSkillsInstaller::InnerProcessNeedDeleteSkillPackage(const InnerBundleInfo &currentBundleInfo)
+{
+    // Compare skillProfiles between currentBundleInfo and oldInnerBundleInfo_ to identify deleted skills
+    auto oldModuleInfos = oldInnerBundleInfo_.GetInnerModuleInfos();
+    auto currentModuleInfos = currentBundleInfo.GetInnerModuleInfos();
+
+    for (const auto &oldModulePair : oldModuleInfos) {
+        const std::string &moduleName = oldModulePair.first;
+        const InnerModuleInfo &oldModuleInfo = oldModulePair.second;
+        // Check if module exists in current info, already process in UninstallLowerVersion
+        auto currentModuleIter = currentModuleInfos.find(moduleName);
+        if (currentModuleIter == currentModuleInfos.end()) {
+            continue;
+        }
+
+        // Module exists, compare skillProfiles
+        const InnerModuleInfo &currentModuleInfo = currentModuleIter->second;
+        // Create a set of current skill names for quick lookup
+        std::set<std::string> currentskillsNames;
+        for (const auto &skillProfile : currentModuleInfo.skillProfiles) {
+            currentskillsNames.insert(skillProfile.name);
+        }
+        // Find skillProfiles that exist in oldModuleInfo but not in currentModuleInfo
+        for (const auto &skillProfile : oldModuleInfo.skillProfiles) {
+            if (currentskillsNames.find(skillProfile.name) == currentskillsNames.end()) {
+                // This skillProfile was deleted
+                SkillsPackageInfo packageInfo;
+                packageInfo.bundleName = bundleName_;
+                packageInfo.moduleName = moduleName;
+                packageInfo.skillsName = skillProfile.name;
+                needDeleteSkillsPackageInfo_.emplace_back(packageInfo);
+                LOG_I(BMS_TAG_INSTALLER, "Skill %{public}s in module %{public}s deleted, added to delete list",
+                    skillProfile.name.c_str(), moduleName.c_str());
+            }
+        }
+    }
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

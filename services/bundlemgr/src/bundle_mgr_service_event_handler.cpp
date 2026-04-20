@@ -1365,6 +1365,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
     ProcessRebootAppServiceUninstall();
+    ProcessRebootSkillsUninstall();
     //refresh application permissions
     ProcessUpdatePermissions();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
@@ -3137,6 +3138,59 @@ bool BMSEventHandler::InnerProcessUninstallAppServiceModule(const InnerBundleInf
         }
     }
     return true;
+}
+
+void BMSEventHandler::ProcessRebootSkillsUninstall()
+{
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "Reboot scan and OTA uninstall for skills start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr is nullptr");
+        return;
+    }
+    for (const auto &loadIter : loadExistData_) {
+        if (loadIter.second.GetBundleType() != BundleType::SKILL) {
+            continue;
+        }
+        std::string bundleName = loadIter.first;
+        auto listIter = hapParseInfoMap_.find(bundleName);
+        if (listIter == hapParseInfoMap_.end()) {
+            LOG_I(BMS_TAG_DEFAULT, "ProcessRebootBundleUninstall OTA uninstall skills %{public}s", bundleName.c_str());
+            InnerBundleInfo info;
+            if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+                APP_LOGW("app(%{public}s) maybe has been uninstall.", bundleName.c_str());
+                continue;
+            }
+            auto userIds = dataMgr->GetUserIds(bundleName);
+            if (userIds.empty()) {
+                LOG_W(BMS_TAG_INSTALLER, "skills %{public}s maybe has been uninstall, no user", bundleName.c_str());
+                continue;
+            }
+            // need check whether kills already upgrade
+            ErrCode ret = ERR_OK;
+            for (const auto user : userIds) {
+                InstallParam installParam;
+                installParam.isPreInstallApp = true;
+                installParam.isFirstBootInstall = false;
+                installParam.needSavePreInstallInfo = false;
+                installParam.SetKillProcess(false);
+                installParam.userId = user;
+                IndependentSkillsInstaller installer;
+                ErrCode tempRet = installer.Uninstall(bundleName, installParam);
+                if (tempRet != ERR_OK) {
+                    LOG_E(BMS_TAG_INSTALLER, "skills -n %{public}s -u %{public}d uninstall failed",
+                        bundleName.c_str(), user);
+                    ret = tempRet;
+                }
+            }
+            if (ret == ERR_OK) {
+                LOG_I(BMS_TAG_DEFAULT, "OTA uninstall preInstall skills:%{public}s succeed", bundleName.c_str());
+                std::string moduleName;
+                DeletePreInfoInDb(bundleName, moduleName, true);
+            }
+        }
+    }
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "Reboot scan and OTA uninstall for skills success");
 }
 
 void BMSEventHandler::ProcessCheckAppExtensionAbility()
