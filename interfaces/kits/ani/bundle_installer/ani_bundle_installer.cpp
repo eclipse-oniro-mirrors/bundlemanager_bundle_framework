@@ -456,6 +456,11 @@ static void AniUninstallNewPreinstalledApps(ani_env* env, [[maybe_unused]] ani_o
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, TYPE_ARRAY);
         return;
     }
+    if (bundleNames.size() > Constants::MAX_UNINSTALL_PREINSTALLED_APP_NUM) {
+        APP_LOGE("bundleNames size exceeds the limit %{public}zu", bundleNames.size());
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLE_NAMES_SIZE_EXCEEDS_LIMIT);
+        return;
+    }
     ErrCode result = CommonFunc::ConvertErrCode(InstallerHelper::InnerUninstallNewPreinstalledApps(bundleNames));
     if (result != SUCCESS) {
         BusinessErrorAni::ThrowCommonError(env, result,

@@ -312,6 +312,8 @@ constexpr const char* UNINSTALL_NEW_PREINSTALLED_APPS = "uninstallNewPreinstalle
 constexpr const char* INSTALL_PLUGIN = "InstallPlugin";
 constexpr const char* UNINSTALL_PLUGIN = "UninstallPlugin";
 constexpr const char* PLUGIN_BUNDLE_NAME = "pluginBundleName";
+constexpr const char* PARAM_BUNDLE_NAMES_SIZE_EXCEEDS_LIMIT =
+ 	"BusinessError 401: Parameter error. bundleNames size exceeds the limit";
 
 // app_control
 constexpr const char* TYPE_WANT = "want";

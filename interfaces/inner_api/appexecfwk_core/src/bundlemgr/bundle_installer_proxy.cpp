@@ -1134,6 +1134,10 @@ ErrCode BundleInstallerProxy::UninstallNewPreinstalledApps(const std::vector<std
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
 
+    if (bundleNames.size() > Constants::MAX_UNINSTALL_PREINSTALLED_APP_NUM) {
+        LOG_E(BMS_TAG_INSTALLER, "bundleNames size exceeds the maximum limit: %{public}zu", bundleNames.size());
+        return ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
+    }
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_INSTALLER, "write interface token failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

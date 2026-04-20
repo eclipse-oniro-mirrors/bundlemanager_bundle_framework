@@ -1158,6 +1158,10 @@ ErrCode BundleInstallerHost::UninstallNewPreinstalledApps(const std::vector<std:
         LOG_E(BMS_TAG_INSTALLER, "verify uninstall permission failed");
         return ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED;
     }
+    if (bundleNames.size() > Constants::MAX_UNINSTALL_PREINSTALLED_APP_NUM) {
+        LOG_E(BMS_TAG_INSTALLER, "the number of bundles to uninstall exceeds the limit");
+        return ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
+    }
     auto installer = std::make_shared<BundleInstaller>(GetMicroTickCount(), nullptr);
     installer->SetCallingUid(IPCSkeleton::GetCallingUid());
     installer->SetCallingTokenId(IPCSkeleton::GetCallingTokenID());
