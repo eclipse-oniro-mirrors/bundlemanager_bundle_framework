@@ -833,6 +833,26 @@ private:
      */
     ErrCode SaveOldShareFilesForRollback(const InnerBundleInfo &oldBundleInfo);
 
+    /**
+     * @brief Check if the bundle info has shareFiles configured in entry module.
+     * @param bundleInfo The bundle info to check.
+     * @return Returns true if entry module has shareFiles configured; returns false otherwise.
+     */
+    static bool HasEntryShareFiles(const InnerBundleInfo &bundleInfo);
+
+    /**
+     * @brief Check if shareFiles processing is needed during install or update.
+     * @param isAppExist Indicates whether this is an update scenario (true) or new install (false).
+     * @param newInfos The new bundle infos to be installed.
+     * @param oldInfo The old bundle info (used only in update scenario).
+     * @return Returns true if shareFiles processing is needed; returns false otherwise.
+     * @note For new install: returns true only if new version has shareFiles configured.
+     * @note For update: returns true only if either old or new version has shareFiles configured.
+     */
+    static bool ShouldProcessShareFiles(bool isAppExist,
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const InnerBundleInfo &oldInfo);
+
     ErrCode ExtractHnpFileDir(const std::string &cpuAbi, const std::map<std::string, std::string> &hnpPackageMap,
         const std::string &modulePath) const;
     void DeleteOldNativeLibraryPath() const;

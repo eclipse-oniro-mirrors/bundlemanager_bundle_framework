@@ -826,8 +826,7 @@ HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_3500, TestSize.Level1)
     auto ret = installer->ProcessModuleShareFiles(TEST_HAP_PATH, moduleInfo, TEST_BUNDLE_NAME, oldInfo);
     // May fail due to non-existent hap file, which is expected
     EXPECT_TRUE(ret == ERR_OK || ret == ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST ||
-               ret == ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL ||
-               ret == ERR_APPEXECFWK_INSTALL_FAILED_SET_SHARE_FILES_FAIL);
+               ret == ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
 
     GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_3500 end";
 }
@@ -2266,8 +2265,7 @@ HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_7800, TestSize.Level1)
     auto ret = cloneInstaller->ProcessBundleShareFiles(info, cloneBundleName, userId, tokenId);
     // May fail due to non-existent hap file, which is expected in test environment
     EXPECT_TRUE(ret == ERR_OK || ret == ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST ||
-               ret == ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL ||
-               ret == ERR_APPEXECFWK_INSTALL_FAILED_SET_SHARE_FILES_FAIL);
+               ret == ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
 
     GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_7800 end";
 }
@@ -2322,6 +2320,303 @@ HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_7900, TestSize.Level1)
                ret == ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
 
     GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_7900 end";
+}
+
+/**
+ * @tc.number: BmsBundleShareFilesTest_HasEntryShareFiles_0100
+ * @tc.name: HasEntryShareFiles
+ * @tc.desc: test HasEntryShareFiles when entry module has shareFiles
+ */
+HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_HasEntryShareFiles_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_HasEntryShareFiles_0100 start";
+
+    InnerBundleInfo bundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = TEST_MODULE_NAME;
+    moduleInfo.isEntry = true;
+    moduleInfo.shareFiles = TEST_SHARE_FILES_JSON;
+    AddModuleInfo(bundleInfo, moduleInfo);
+
+    bool result = BaseBundleInstaller::HasEntryShareFiles(bundleInfo);
+    EXPECT_TRUE(result);
+
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_HasEntryShareFiles_0100 end";
+}
+
+/**
+ * @tc.number: BmsBundleShareFilesTest_HasEntryShareFiles_0200
+ * @tc.name: HasEntryShareFiles
+ * @tc.desc: test HasEntryShareFiles when entry module has no shareFiles
+ */
+HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_HasEntryShareFiles_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_HasEntryShareFiles_0200 start";
+
+    InnerBundleInfo bundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = TEST_MODULE_NAME;
+    moduleInfo.isEntry = true;
+    moduleInfo.shareFiles.clear();
+    AddModuleInfo(bundleInfo, moduleInfo);
+
+    bool result = BaseBundleInstaller::HasEntryShareFiles(bundleInfo);
+    EXPECT_FALSE(result);
+
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_HasEntryShareFiles_0200 end";
+}
+
+/**
+ * @tc.number: BmsBundleShareFilesTest_HasEntryShareFiles_0300
+ * @tc.name: HasEntryShareFiles
+ * @tc.desc: test HasEntryShareFiles when only non-entry module has shareFiles
+ */
+HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_HasEntryShareFiles_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_HasEntryShareFiles_0300 start";
+
+    InnerBundleInfo bundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo featureModule;
+    featureModule.moduleName = "feature";
+    featureModule.isEntry = false;
+    featureModule.shareFiles = TEST_SHARE_FILES_JSON;
+    AddModuleInfo(bundleInfo, featureModule);
+
+    bool result = BaseBundleInstaller::HasEntryShareFiles(bundleInfo);
+    EXPECT_FALSE(result);
+
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_HasEntryShareFiles_0300 end";
+}
+
+/**
+ * @tc.number: BmsBundleShareFilesTest_HasEntryShareFiles_0400
+ * @tc.name: HasEntryShareFiles
+ * @tc.desc: test HasEntryShareFiles when no modules exist
+ */
+HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_HasEntryShareFiles_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_HasEntryShareFiles_0400 start";
+
+    InnerBundleInfo bundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+
+    bool result = BaseBundleInstaller::HasEntryShareFiles(bundleInfo);
+    EXPECT_FALSE(result);
+
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_HasEntryShareFiles_0400 end";
+}
+
+/**
+ * @tc.number: BmsBundleShareFilesTest_ShouldProcessShareFiles_0100
+ * @tc.name: ShouldProcessShareFiles
+ * @tc.desc: test ShouldProcessShareFiles in new install scenario with shareFiles
+ */
+HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_ShouldProcessShareFiles_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0100 start";
+
+    InnerBundleInfo newBundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo entryModule;
+    entryModule.moduleName = TEST_MODULE_NAME;
+    entryModule.isEntry = true;
+    entryModule.shareFiles = TEST_SHARE_FILES_JSON;
+    AddModuleInfo(newBundleInfo, entryModule);
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos[TEST_HAP_PATH] = newBundleInfo;
+    InnerBundleInfo oldInfo;
+
+    bool result = BaseBundleInstaller::ShouldProcessShareFiles(false, newInfos, oldInfo);
+    EXPECT_TRUE(result);
+
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0100 end";
+}
+
+/**
+ * @tc.number: BmsBundleShareFilesTest_ShouldProcessShareFiles_0200
+ * @tc.name: ShouldProcessShareFiles
+ * @tc.desc: test ShouldProcessShareFiles in new install scenario without shareFiles
+ */
+HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_ShouldProcessShareFiles_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0200 start";
+
+    InnerBundleInfo newBundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo entryModule;
+    entryModule.moduleName = TEST_MODULE_NAME;
+    entryModule.isEntry = true;
+    entryModule.shareFiles.clear();
+    AddModuleInfo(newBundleInfo, entryModule);
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos[TEST_HAP_PATH] = newBundleInfo;
+    InnerBundleInfo oldInfo;
+
+    bool result = BaseBundleInstaller::ShouldProcessShareFiles(false, newInfos, oldInfo);
+    EXPECT_FALSE(result);
+
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0200 end";
+}
+
+/**
+ * @tc.number: BmsBundleShareFilesTest_ShouldProcessShareFiles_0300
+ * @tc.name: ShouldProcessShareFiles
+ * @tc.desc: test ShouldProcessShareFiles in update scenario where both old and new have shareFiles
+ */
+HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_ShouldProcessShareFiles_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0300 start";
+
+    InnerBundleInfo newBundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo newEntryModule;
+    newEntryModule.moduleName = TEST_MODULE_NAME;
+    newEntryModule.isEntry = true;
+    newEntryModule.shareFiles = TEST_SHARE_FILES_JSON;
+    AddModuleInfo(newBundleInfo, newEntryModule);
+
+    InnerBundleInfo oldBundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo oldEntryModule;
+    oldEntryModule.moduleName = TEST_MODULE_NAME;
+    oldEntryModule.isEntry = true;
+    oldEntryModule.shareFiles = TEST_SHARE_FILES_JSON;
+    AddModuleInfo(oldBundleInfo, oldEntryModule);
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos[TEST_HAP_PATH] = newBundleInfo;
+
+    bool result = BaseBundleInstaller::ShouldProcessShareFiles(true, newInfos, oldBundleInfo);
+    EXPECT_TRUE(result);
+
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0300 end";
+}
+
+/**
+ * @tc.number: BmsBundleShareFilesTest_ShouldProcessShareFiles_0400
+ * @tc.name: ShouldProcessShareFiles
+ * @tc.desc: test ShouldProcessShareFiles in update scenario where only new has shareFiles
+ */
+HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_ShouldProcessShareFiles_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0400 start";
+
+    InnerBundleInfo newBundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo newEntryModule;
+    newEntryModule.moduleName = TEST_MODULE_NAME;
+    newEntryModule.isEntry = true;
+    newEntryModule.shareFiles = TEST_SHARE_FILES_JSON;
+    AddModuleInfo(newBundleInfo, newEntryModule);
+
+    InnerBundleInfo oldBundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo oldEntryModule;
+    oldEntryModule.moduleName = TEST_MODULE_NAME;
+    oldEntryModule.isEntry = true;
+    oldEntryModule.shareFiles.clear();
+    AddModuleInfo(oldBundleInfo, oldEntryModule);
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos[TEST_HAP_PATH] = newBundleInfo;
+
+    bool result = BaseBundleInstaller::ShouldProcessShareFiles(true, newInfos, oldBundleInfo);
+    EXPECT_TRUE(result);
+
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0400 end";
+}
+
+/**
+ * @tc.number: BmsBundleShareFilesTest_ShouldProcessShareFiles_0500
+ * @tc.name: ShouldProcessShareFiles
+ * @tc.desc: test ShouldProcessShareFiles in update scenario where only old has shareFiles
+ */
+HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_ShouldProcessShareFiles_0500, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0500 start";
+
+    InnerBundleInfo newBundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo newEntryModule;
+    newEntryModule.moduleName = TEST_MODULE_NAME;
+    newEntryModule.isEntry = true;
+    newEntryModule.shareFiles.clear();
+    AddModuleInfo(newBundleInfo, newEntryModule);
+
+    InnerBundleInfo oldBundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo oldEntryModule;
+    oldEntryModule.moduleName = TEST_MODULE_NAME;
+    oldEntryModule.isEntry = true;
+    oldEntryModule.shareFiles = TEST_SHARE_FILES_JSON;
+    AddModuleInfo(oldBundleInfo, oldEntryModule);
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos[TEST_HAP_PATH] = newBundleInfo;
+
+    bool result = BaseBundleInstaller::ShouldProcessShareFiles(true, newInfos, oldBundleInfo);
+    EXPECT_TRUE(result);
+
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0500 end";
+}
+
+/**
+ * @tc.number: BmsBundleShareFilesTest_ShouldProcessShareFiles_0600
+ * @tc.name: ShouldProcessShareFiles
+ * @tc.desc: test ShouldProcessShareFiles in update scenario where neither old nor new has shareFiles
+ */
+HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_ShouldProcessShareFiles_0600, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0600 start";
+
+    InnerBundleInfo newBundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo newEntryModule;
+    newEntryModule.moduleName = TEST_MODULE_NAME;
+    newEntryModule.isEntry = true;
+    newEntryModule.shareFiles.clear();
+    AddModuleInfo(newBundleInfo, newEntryModule);
+
+    InnerBundleInfo oldBundleInfo = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo oldEntryModule;
+    oldEntryModule.moduleName = TEST_MODULE_NAME;
+    oldEntryModule.isEntry = true;
+    oldEntryModule.shareFiles.clear();
+    AddModuleInfo(oldBundleInfo, oldEntryModule);
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos[TEST_HAP_PATH] = newBundleInfo;
+
+    bool result = BaseBundleInstaller::ShouldProcessShareFiles(true, newInfos, oldBundleInfo);
+    EXPECT_FALSE(result);
+
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0600 end";
+}
+
+/**
+ * @tc.number: BmsBundleShareFilesTest_ShouldProcessShareFiles_0700
+ * @tc.name: ShouldProcessShareFiles
+ * @tc.desc: test ShouldProcessShareFiles with multiple bundles in new install scenario
+ */
+HWTEST_F(BmsBundleShareFilesTest, BmsBundleShareFilesTest_ShouldProcessShareFiles_0700, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0700 start";
+
+    InnerBundleInfo newBundleInfo1 = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo entryModule1;
+    entryModule1.moduleName = "entry1";
+    entryModule1.isEntry = true;
+    entryModule1.shareFiles.clear();
+    AddModuleInfo(newBundleInfo1, entryModule1);
+
+    InnerBundleInfo newBundleInfo2 = CreateTestBundleInfo(TEST_BUNDLE_NAME);
+    InnerModuleInfo entryModule2;
+    entryModule2.moduleName = "entry2";
+    entryModule2.isEntry = true;
+    entryModule2.shareFiles = TEST_SHARE_FILES_JSON;
+    AddModuleInfo(newBundleInfo2, entryModule2);
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos["/data/test/hap1.hap"] = newBundleInfo1;
+    newInfos["/data/test/hap2.hap"] = newBundleInfo2;
+    InnerBundleInfo oldInfo;
+
+    bool result = BaseBundleInstaller::ShouldProcessShareFiles(false, newInfos, oldInfo);
+    EXPECT_TRUE(result);
+
+    GTEST_LOG_(INFO) << "BmsBundleShareFilesTest_ShouldProcessShareFiles_0700 end";
 }
 
 }  // namespace OHOS

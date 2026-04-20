@@ -399,9 +399,13 @@ ErrCode BundleMultiUserInstaller::ProcessBundleShareFiles(const InnerBundleInfo 
     auto moduleInfos = info.GetInnerModuleInfos();
     for (const auto &modulePair : moduleInfos) {
         const InnerModuleInfo &moduleInfo = modulePair.second;
-        // 只处理 entry 模块
+        // Only process entry modules
         if (!moduleInfo.isEntry) {
             continue;
+        }
+        // If shareFiles is not configured, skip it
+        if (moduleInfo.shareFiles.empty()) {
+            break;
         }
         // Get shareFiles JSON from hap
         std::string shareFilesJson;
@@ -414,13 +418,10 @@ ErrCode BundleMultiUserInstaller::ProcessBundleShareFiles(const InnerBundleInfo 
         }
         int32_t setResult = ShareFileHelper::SetShareFileInfo(shareFilesJson, bundleName, userId, tokenId);
         if (setResult != 0) {
-            LOG_E(BMS_TAG_INSTALLER, "Failed to set shareFileInfo for bundle=%{public}s, ret=%{public}d",
+            LOG_W(BMS_TAG_INSTALLER,
+                "SetShareFileInfo failed but continuing install, bundle=%{public}s, ret=%{public}d",
                 bundleName.c_str(), setResult);
-            return ERR_APPEXECFWK_INSTALL_FAILED_SET_SHARE_FILES_FAIL;
         }
-        LOG_D(BMS_TAG_INSTALLER,
-            "Successfully set shareFileInfo for bundle=%{public}s, module=%{public}s, userId=%{public}d",
-            bundleName.c_str(), moduleInfo.moduleName.c_str(), userId);
         return ERR_OK;
     }
     LOG_D(BMS_TAG_INSTALLER, "No shareFiles configuration found for bundle=%{public}s", bundleName.c_str());

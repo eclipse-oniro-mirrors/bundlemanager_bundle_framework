@@ -2631,8 +2631,7 @@ HWTEST_F(BmsSandboxAppTest, ProcessBundleShareFiles_1000, Function | SmallTest |
     auto ret = sandboxInstaller->ProcessBundleShareFiles(info, sandboxKey, userId, tokenId);
     // May fail due to non-existent hap file, which is expected in test environment
     EXPECT_TRUE(ret == ERR_OK || ret == ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST ||
-               ret == ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL ||
-               ret == ERR_APPEXECFWK_INSTALL_FAILED_SET_SHARE_FILES_FAIL);
+               ret == ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
 
     ClearDataMgr();
 }
