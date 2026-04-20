@@ -1700,6 +1700,11 @@ napi_value UninstallNewPreinstalledApps(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, TYPE_ARRAY);
         return nullptr;
     }
+    if (asyncCallbackInfo->bundleNames.size() > Constants::MAX_UNINSTALL_PREINSTALLED_APP_NUM) {
+        APP_LOGE("bundleNames size exceeds the limit %{public}zu", asyncCallbackInfo->bundleNames.size());
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLE_NAMES_SIZE_EXCEEDS_LIMIT);
+        return nullptr;
+    }
     auto promise = CommonFunc::AsyncCallNativeMethod<UninstallNewPreinstalledAppsCallbackInfo>(
         env, asyncCallbackInfo.get(), UNINSTALL_NEW_PREINSTALLED_APPS,
         UninstallNewPreinstalledAppsExec, UninstallNewPreinstalledAppsComplete);

@@ -52,6 +52,7 @@ constexpr int8_t DEFAULT_INSTALLERID = -1;
 constexpr int8_t DEFAULT_APP_INDEX = 0;
 constexpr int16_t MAX_FILE_NAME_LENGTH = 256;
 constexpr int16_t BMS_MAX_PATH_LENGTH = 4096;
+constexpr int16_t MAX_UNINSTALL_PREINSTALLED_APP_NUM = 200;
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;
