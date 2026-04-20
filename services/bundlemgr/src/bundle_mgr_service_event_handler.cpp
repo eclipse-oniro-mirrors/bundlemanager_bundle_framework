@@ -56,12 +56,14 @@
 #ifdef WINDOW_ENABLE
 #include "scene_board_judgement.h"
 #endif
+#include "scope_guard.h"
 #include "status_receiver_host.h"
 #include "system_bundle_installer.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_boot_scanner.h"
 #endif
 #include "user_unlocked_event_subscriber.h"
+#include "xcollie_helper.h"
 #include "xml_util.h"
 #ifdef STORAGE_SERVICE_ENABLE
 #include "storage_manager_proxy.h"
@@ -140,6 +142,11 @@ constexpr const char* OTA_NEW_INSTALL_WHITELIST_PATH = "/sys_prod/etc/app/allow_
 constexpr const char* OTA_NEW_INSTALL_MULTIUSER_PARAM = "const.bms.multiUserInstallThirdPreloadApp";
 constexpr const char* OTA_NEW_INSTALL_LIST_KEY = "install_list";
 constexpr const char* OOBE_AGREE_TERMS_EVENT = "custom.event.OOBE.HWSTARTUPGUIDE.FINISHED";
+constexpr int32_t OTA_TIMEOUT_SECONDS = 60 * 9;
+constexpr const char* OTA_SYSTEM_HSP_TASK = "OTA_SYSTEM_HSP_TASK";
+constexpr const char* OTA_SHARED_HSP_TASK = "OTA_SHARED_HSP_TASK";
+constexpr const char* OTA_PREINSTALL_BUNDLE_TASK = "OTA_PREINSTALL_BUNDLE_TASK";
+constexpr const char* OTA_PATCH_BUNDLE_TASK = "OTA_PATCH_BUNDLE_TASK";
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> onDemandInstallList_;
@@ -1354,6 +1361,7 @@ void BMSEventHandler::ProcessRebootBundle()
     BundleResourceHelper::DeleteNotExistResourceInfo();
     InnerProcessRebootUninstallWrongBundle();
     ProcessRebootCheckOnDemandBundle();
+    XCollieHelper::PauseFoundationWatchdog();
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
     ProcessRebootAppServiceUninstall();
@@ -1361,6 +1369,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessUpdatePermissions();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
     ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
+    XCollieHelper::ResumeFoundationWatchdog();
     ProcessBundleResourceInfo();
     ProcessAllBundleDataGroupInfo();
 #ifdef CHECK_ELDIR_ENABLED
@@ -2469,6 +2478,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             LOG_NOFUNC_I(BMS_TAG_DEFAULT, "app(%{public}s) in force install list and need OTA install",
                 bundleName.c_str());
             std::vector<std::string> filePaths { scanPathIter };
+            int32_t timerId = XCollieHelper::SetOTATimer(OTA_PREINSTALL_BUNDLE_TASK, OTA_TIMEOUT_SECONDS);
+            ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
             if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
                 LOG_E(BMS_TAG_DEFAULT, "OTA force Install bundle(%{public}s) error", bundleName.c_str());
                 SavePreInstallException(scanPathIter);
@@ -2639,6 +2650,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 bundleName.c_str(), scanPathIter.c_str());
             // Support patch app downgrade install, no need to uninstall first.
             std::vector<std::string> filePaths{scanPathIter};
+            int32_t timerId = XCollieHelper::SetOTATimer(OTA_PATCH_BUNDLE_TASK, OTA_TIMEOUT_SECONDS);
+            ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
             if (!OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable,
                 currentBundleUserIds, true)) {
                 LOG_E(BMS_TAG_DEFAULT, "OTA install prefab bundle(%{public}s) error", bundleName.c_str());
@@ -2678,6 +2691,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             continue;
         }
         bool ret = false;
+        int32_t timerId = XCollieHelper::SetOTATimer(OTA_PREINSTALL_BUNDLE_TASK, OTA_TIMEOUT_SECONDS);
+        ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
         auto targetUsersIter = otaNewInstallTargetUsersForNew.find(bundleName);
         if (targetUsersIter != otaNewInstallTargetUsersForNew.end()) {
             ret = OTAInstallSystemBundleTargetUser(path, bundleName, appType, item.second.second,
@@ -2732,6 +2747,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             }
             bool removable = std::get<1>(item.second);
             const std::vector<int32_t> &targetUsers = std::get<2>(item.second);
+            int32_t timerId = XCollieHelper::SetOTATimer(OTA_PREINSTALL_BUNDLE_TASK, OTA_TIMEOUT_SECONDS);
+            ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
             bool ret = OTAInstallSystemBundleTargetUser(realFilePaths, bundleName, appType, removable, targetUsers);
             if (ret && canMarkOtaNewInstallUser(bundleName)) {
                 markOtaNewInstallUser(bundleName, targetUsers);
@@ -2882,6 +2899,8 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
     const std::list<std::string> &scanPathList, Constants::AppType appType)
 {
     LOG_I(BMS_TAG_DEFAULT, "InnerProcessRebootSharedBundleInstall");
+    int32_t timerId = XCollieHelper::SetOTATimer(OTA_SHARED_HSP_TASK, OTA_TIMEOUT_SECONDS);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
@@ -2936,6 +2955,8 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
 void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::string> &scanPathList)
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "InnerProcessRebootSystemHspInstall");
+    int32_t timerId = XCollieHelper::SetOTATimer(OTA_SYSTEM_HSP_TASK, OTA_TIMEOUT_SECONDS);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
@@ -4215,7 +4236,6 @@ bool BMSEventHandler::OTAInstallSystemBundle(
         LOG_E(BMS_TAG_DEFAULT, "File path is empty");
         return false;
     }
-
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.SetKillProcess(false);
@@ -4244,7 +4264,8 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
         LOG_E(BMS_TAG_DEFAULT, "File path is empty");
         return false;
     }
-
+    int32_t timerId = XCollieHelper::SetOTATimer(OTA_PREINSTALL_BUNDLE_TASK, OTA_TIMEOUT_SECONDS);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.SetKillProcess(false);
@@ -5058,6 +5079,15 @@ bool BMSEventHandler::InstallSystemBundleNeedCheckUserForPatch(const std::vector
         LOG_E(BMS_TAG_DEFAULT, "File path is empty");
         return false;
     }
+    int32_t timerId = -1;
+    if (isOta) {
+        timerId = XCollieHelper::SetOTATimer(OTA_PATCH_BUNDLE_TASK, OTA_TIMEOUT_SECONDS);
+    }
+    ScopeGuard cancelTimerIdGuard([timerId] {
+        if (timerId != -1) {
+            XCollieHelper::CancelTimer(timerId);
+        }
+    });
     InstallParam installParam;
     installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
@@ -6101,6 +6131,8 @@ void BMSEventHandler::ProcessRecoverList(const std::string &bundleName, const st
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "ProcessRecoverList start -n %{public}s", bundleName.c_str());
     // 1. install the bundle for empty recoverList user
     std::vector<std::string> filePaths{filePath};
+    int32_t timerId = XCollieHelper::SetOTATimer(OTA_PREINSTALL_BUNDLE_TASK, OTA_TIMEOUT_SECONDS);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (!OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, userIds)) {
         LOG_E(BMS_TAG_DEFAULT, "OTA install new bundle(%{public}s) error", bundleName.c_str());
     }

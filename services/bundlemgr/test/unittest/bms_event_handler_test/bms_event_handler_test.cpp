@@ -3011,6 +3011,26 @@ HWTEST_F(BmsEventHandlerTest, InstallSystemBundleNeedCheckUserForPatch_0100, Fun
 }
 
 /**
+ * @tc.number: InstallSystemBundleNeedCheckUserForPatch_0200
+ * @tc.name: InstallSystemBundleNeedCheckUserForPatch
+ * @tc.desc: test InstallSystemBundleNeedCheckUserForPatch
+ */
+HWTEST_F(BmsEventHandlerTest, InstallSystemBundleNeedCheckUserForPatch_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::vector<std::string> filePaths;
+        filePaths.push_back("");
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        ASSERT_NE(dataMgr, nullptr);
+        bool ret = handler->InstallSystemBundleNeedCheckUserForPatch(filePaths, "", true); // no user
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
  * @tc.number: InnerMultiProcessBundleInstallForPatch_0100
  * @tc.name: InnerMultiProcessBundleInstallForPatch
  * @tc.desc: test InnerMultiProcessBundleInstallForPatch
