@@ -168,6 +168,10 @@ void BundleMgrService::InitPreInstallExceptionMgr()
 void BundleMgrService::InitOobePreloadUninstallMgr()
 {
     oobePreloadUninstallMgr_ = std::make_shared<OobePreloadUninstallMgr>();
+    if (oobePreloadUninstallMgr_ != nullptr) {
+        oobePreloadUninstallMgr_->RecoverPendingBundles(Constants::DEFAULT_USERID);
+        oobePreloadUninstallMgr_->RecoverPendingBundles(Constants::U1);
+    }
 }
 
 bool BundleMgrService::InitBundleMgrHost()
