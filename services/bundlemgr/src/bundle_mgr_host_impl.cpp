@@ -5435,6 +5435,11 @@ sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
 #endif
 }
 
+sptr<IBundleSkillManager> BundleMgrHostImpl::GetSkillManagerProxy()
+{
+    return DelayedSingleton<BundleMgrService>::GetInstance()->GetSkillManagerProxy();
+}
+
 bool BundleMgrHostImpl::GetPreferableBundleInfoFromHapPaths(const std::vector<std::string> &hapPaths,
     BundleInfo &bundleInfo)
 {

@@ -320,6 +320,10 @@ constexpr const char* BMS_PARA_INSTALL_GRANT_PERMISSION = "ohos.bms.param.instal
 //plugin file path
 constexpr const char* PLUGIN_FILE_PATH = "+plugins";
 
+//skill path
+constexpr const char* SKILL_FILE_PATH = "/data/app/el1/skills/public";
+constexpr const char* SKILL_DIR = "skills";
+
 // enterprise re sign cert
 constexpr const char* DELETE_CERT_PREFIX = ".deleteCer";
 

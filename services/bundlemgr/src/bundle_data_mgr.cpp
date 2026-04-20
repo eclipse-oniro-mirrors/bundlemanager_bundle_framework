@@ -55,6 +55,7 @@
 #include "installd_client.h"
 #include "interfaces/hap_verify.h"
 #include "ipc_skeleton.h"
+#include "skills_description_manager.h"
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_config.h"
 #include "locale_info.h"
@@ -14055,6 +14056,239 @@ std::vector<std::string> BundleDataMgr::GetAllowListenBundleNames(
     }
     APP_LOGD("allowListenBundles size:%{public}zu", allowListenBundles.size());
     return bundleNames;
+}
+
+void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
+    const InnerModuleInfo &moduleInfo, const SkillProfile &profile,
+    SkillType skillType, uint32_t flags, SkillInfo &skillInfo)
+{
+    skillInfo.bundleName = info.GetBundleName();
+    skillInfo.moduleName = moduleInfo.moduleName;
+    skillInfo.skillName = profile.name;
+    skillInfo.skillId = 0;
+    skillInfo.skillType = skillType;
+    skillInfo.hapPath = moduleInfo.hapPath;
+    skillInfo.abilityName = profile.abilityName;
+    skillInfo.skillPath = std::string(ServiceConstants::SKILL_FILE_PATH) + ServiceConstants::PATH_SEPARATOR +
+        skillInfo.bundleName + ServiceConstants::PATH_SEPARATOR + skillInfo.moduleName + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::SKILL_DIR + ServiceConstants::PATH_SEPARATOR + skillInfo.skillName;
+
+    if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_SRC_ENTRIES)) ==
+        static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_SRC_ENTRIES)) {
+        skillInfo.srcEntries = profile.srcEntries;
+    }
+    if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_PERMISSIONS)) ==
+        static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_PERMISSIONS)) {
+        skillInfo.permissions = profile.permissions;
+    }
+    if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS)) ==
+        static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS)) {
+        for (const auto &reqPerm : moduleInfo.requestPermissions) {
+            skillInfo.requestPermissions.emplace_back(reqPerm.name);
+        }
+    }
+    if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_DESCRIPTION)) ==
+        static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_DESCRIPTION)) {
+        std::string description;
+        auto ret = DelayedSingleton<SkillsDescriptionManager>::GetInstance()->GetSkillDescription(
+            skillInfo.bundleName, skillInfo.moduleName, skillInfo.skillName, description);
+        if (ret == ERR_OK) {
+            skillInfo.description = description;
+        }
+    }
+}
+
+ErrCode BundleDataMgr::GetSkillInfoForSelf(const std::string &moduleName,
+    const std::string &skillName, int32_t userId, uint32_t flags, SkillInfo &skillInfo)
+{
+    APP_LOGD("get skill info for self, moduleName:%{public}s, skillName:%{public}s, flags:%{public}u",
+        moduleName.c_str(), skillName.c_str(), flags);
+
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    std::string bundleName;
+    int32_t appIndex = 0;
+    ErrCode err = GetBundleNameAndIndex(callingUid, bundleName, appIndex);
+    if (err != ERR_OK) {
+        APP_LOGE("GetBundleNameAndIndex failed, uid:%{public}d, err:%{public}d", callingUid, err);
+        return err;
+    }
+    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID) {
+        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
+            APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+    }
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName:%{public}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &info = item->second;
+
+    auto moduleInfo = info.GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo.has_value()) {
+        APP_LOGE("module not found, moduleName:%{public}s", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    for (const auto &profile : moduleInfo->skillProfiles) {
+        if (profile.name == skillName) {
+            GetSkillInfoWithFlags(info, moduleInfo.value(), profile, SkillType::APP_SKILL, flags, skillInfo);
+            break;
+        }
+    }
+    if (skillInfo.skillName.empty()) {
+        APP_LOGE("skill not found, skillName:%{public}s", skillName.c_str());
+        return ERR_BUNDLE_MANAGER_SKILL_INFO_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetSkillInfosForSelf(uint32_t flags, int32_t userId,
+    std::vector<SkillInfo> &skillInfos)
+{
+    APP_LOGD("get skill infos for self, flags:%{public}u, userId:%{public}d", flags, userId);
+
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    std::string bundleName;
+    int32_t appIndex = 0;
+    ErrCode err = GetBundleNameAndIndex(callingUid, bundleName, appIndex);
+    if (err != ERR_OK) {
+        APP_LOGE("GetBundleNameAndIndex failed, uid:%{public}d, err:%{public}d", callingUid, err);
+        return err;
+    }
+    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID) {
+        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
+            APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+    }
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName:%{public}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &info = item->second;
+    for (const auto &[modName, moduleInfo] : info.GetInnerModuleInfos()) {
+        for (const auto &profile : moduleInfo.skillProfiles) {
+            SkillInfo skillInfo;
+            GetSkillInfoWithFlags(info, moduleInfo, profile, SkillType::APP_SKILL, flags, skillInfo);
+            skillInfos.emplace_back(std::move(skillInfo));
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetSkillInfo(const std::string &bundleName, const std::string &moduleName,
+    const std::string &skillName, uint32_t flags, int32_t userId, SkillInfo &skillInfo)
+{
+    APP_LOGD("get skill info, bundleName:%{public}s, moduleName:%{public}s, skillName:%{public}s, flags:%{public}u",
+        bundleName.c_str(), moduleName.c_str(), skillName.c_str(), flags);
+    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID) {
+        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
+            APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+    }
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName:%{public}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &info = item->second;
+    auto moduleInfo = info.GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo.has_value()) {
+        APP_LOGE("module not found, moduleName:%{public}s", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    for (const auto &profile : moduleInfo->skillProfiles) {
+        if (profile.name == skillName) {
+            GetSkillInfoWithFlags(info, moduleInfo.value(), profile,
+                SkillType::INDEPENDENT_SKILL, flags, skillInfo);
+            break;
+        }
+    }
+    if (skillInfo.skillName.empty()) {
+        APP_LOGE("skill not found, skillName:%{public}s", skillName.c_str());
+        return ERR_BUNDLE_MANAGER_SKILL_INFO_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetSkillInfos(const std::string &bundleName, uint32_t flags,
+    int32_t userId, std::vector<SkillInfo> &skillInfos)
+{
+    APP_LOGD("get skill infos, bundleName:%{public}s, flags:%{public}u, userId:%{public}d",
+        bundleName.c_str(), flags, userId);
+    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID) {
+        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
+            APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+    }
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName:%{public}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &info = item->second;
+    for (const auto &[modName, moduleInfo] : info.GetInnerModuleInfos()) {
+        for (const auto &profile : moduleInfo.skillProfiles) {
+            SkillInfo si;
+            GetSkillInfoWithFlags(info, moduleInfo, profile,
+                SkillType::INDEPENDENT_SKILL, flags, si);
+            skillInfos.emplace_back(std::move(si));
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAllSkillInfos(uint32_t flags, int32_t userId,
+    std::vector<SkillInfo> &skillInfos)
+{
+    APP_LOGD("get all skill infos, flags:%{public}u, userId:%{public}d", flags, userId);
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &[bName, info] : bundleInfos_) {
+        if (info.GetApplicationBundleType() != BundleType::SKILL) {
+            continue;
+        }
+        for (const auto &[modName, moduleInfo] : info.GetInnerModuleInfos()) {
+            for (const auto &profile : moduleInfo.skillProfiles) {
+                SkillInfo si;
+                GetSkillInfoWithFlags(info, moduleInfo, profile,
+                    SkillType::INDEPENDENT_SKILL, flags, si);
+                skillInfos.emplace_back(std::move(si));
+            }
+        }
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
