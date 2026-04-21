@@ -477,8 +477,8 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
     }
 
     ClearBundleEvents();
-    InnerUninstallBundle(userId, bundleInfos);
     ProcessUninstallSkills(userId);
+    InnerUninstallBundle(userId, bundleInfos);
     RemoveArkProfile(userId);
     RemoveAsanLogDirectory(userId);
     RemoveSystemOptimizeDir(userId);
@@ -832,6 +832,9 @@ bool BundleUserMgrHostImpl::ProcessUninstallSkills(const int32_t userId)
     if (dataMgr->GetAllIndependentSKills(userId, bundleNames) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "get skills name -u %{public}d failed", userId);
         return false;
+    }
+    if (bundleNames.empty()) {
+        return true;
     }
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     InstallParam installParam;

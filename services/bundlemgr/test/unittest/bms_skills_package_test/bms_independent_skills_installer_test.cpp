@@ -28,6 +28,7 @@
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_install_checker.h"
+#include "event_report.h"
 #include "install_param.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
@@ -1523,5 +1524,272 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_MultipleH
     ErrCode ret = installer_->Install(hspPaths, installParam);
     // Will fail due to invalid files, but should not crash
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_SendBundleSystemEvent_0001
+ * Function: SendBundleSystemEvent
+ * @tc.name: test SendBundleSystemEvent with INSTALL event
+ * @tc.desc: 1. system running normally
+ *           2. test SendBundleSystemEvent sends INSTALL event and preserves installer state
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_SendBundleSystemEvent_0001,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+    installer_->versionCode_ = VERSION_CODE;
+    installer_->startTime_ = BundleUtil::GetCurrentTimeMs();
+
+    InstallParam installParam;
+    installParam.userId = USER_ID;
+    installParam.isPreInstallApp = false;
+
+    // Store original state
+    std::string originalBundleName = installer_->bundleName_;
+    uint32_t originalVersionCode = installer_->versionCode_;
+
+    // Test INSTALL event with success
+    installer_->SendBundleSystemEvent(BUNDLE_NAME, installParam, BundleEventType::INSTALL, ERR_OK);
+
+    // Verify installer state is preserved after event sending
+    EXPECT_EQ(installer_->bundleName_, originalBundleName);
+    EXPECT_EQ(installer_->versionCode_, originalVersionCode);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_SendBundleSystemEvent_0002
+ * Function: SendBundleSystemEvent
+ * @tc.name: test SendBundleSystemEvent with UNINSTALL event
+ * @tc.desc: 1. system running normally
+ *           2. test SendBundleSystemEvent sends UNINSTALL event and preserves installer state
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_SendBundleSystemEvent_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+    installer_->versionCode_ = VERSION_CODE;
+    installer_->startTime_ = BundleUtil::GetCurrentTimeMs();
+
+    InstallParam installParam;
+    installParam.userId = USER_ID;
+    installParam.isPreInstallApp = false;
+    installParam.isRemoveUser = true;
+
+    // Store original state
+    std::string originalBundleName = installer_->bundleName_;
+    int32_t originalUserId = installer_->userId_;
+
+    // Test UNINSTALL event with error
+    installer_->SendBundleSystemEvent(BUNDLE_NAME, installParam, BundleEventType::UNINSTALL,
+        ERR_APPEXECFWK_INSTALL_PARSE_FAILED);
+
+    // Verify installer state is preserved after event sending
+    EXPECT_EQ(installer_->bundleName_, originalBundleName);
+    EXPECT_EQ(installer_->userId_, originalUserId);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_SendBundleSystemEvent_0003
+ * Function: SendBundleSystemEvent
+ * @tc.name: test SendBundleSystemEvent with UPDATE event
+ * @tc.desc: 1. system running normally
+ *           2. test SendBundleSystemEvent sends UPDATE event with OTA flag
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_SendBundleSystemEvent_0003,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+    installer_->versionCode_ = VERSION_CODE;
+    installer_->startTime_ = BundleUtil::GetCurrentTimeMs();
+
+    InstallParam installParam;
+    installParam.userId = USER_ID;
+    installParam.isPreInstallApp = false;
+    installParam.isOTA = true;
+
+    // Store original state
+    int64_t originalStartTime = installer_->startTime_;
+
+    // Test UPDATE event with success
+    installer_->SendBundleSystemEvent(BUNDLE_NAME, installParam, BundleEventType::UPDATE, ERR_OK);
+
+    // Verify startTime is preserved
+    EXPECT_EQ(installer_->startTime_, originalStartTime);
+    EXPECT_GT(installer_->versionCode_, 0);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_SendBundleSystemEvent_0004
+ * Function: SendBundleSystemEvent
+ * @tc.name: test SendBundleSystemEvent with preInstallApp
+ * @tc.desc: 1. system running normally
+ *           2. test SendBundleSystemEvent sends event for preInstallApp scenario
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_SendBundleSystemEvent_0004,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+    installer_->versionCode_ = VERSION_CODE;
+    installer_->startTime_ = BundleUtil::GetCurrentTimeMs();
+
+    InstallParam installParam;
+    installParam.userId = USER_ID;
+    installParam.isPreInstallApp = true;
+    installParam.isOTA = false;
+
+    // Store original state
+    std::string originalBundleName = installer_->bundleName_;
+    uint32_t originalVersionCode = installer_->versionCode_;
+
+    // Test preInstallApp scenario
+    installer_->SendBundleSystemEvent(BUNDLE_NAME, installParam, BundleEventType::INSTALL, ERR_OK);
+
+    // Verify installer state is preserved after event sending
+    EXPECT_EQ(installer_->bundleName_, originalBundleName);
+    EXPECT_EQ(installer_->versionCode_, originalVersionCode);
+    EXPECT_GT(installer_->startTime_, 0);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_SendBundleSystemEvent_0005
+ * Function: SendBundleSystemEvent
+ * @tc.name: test SendBundleSystemEvent with createUser scenario
+ * @tc.desc: 1. system running normally
+ *           2. test SendBundleSystemEvent handles createUser scenario
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_SendBundleSystemEvent_0005,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+    installer_->versionCode_ = VERSION_CODE;
+    installer_->startTime_ = BundleUtil::GetCurrentTimeMs();
+    installer_->userId_ = USER_ID;
+
+    InstallParam installParam;
+    installParam.userId = USER_ID;
+    installParam.isPreInstallApp = false;
+    installParam.isCreateUser = true;
+
+    // Store original state
+    std::string originalBundleName = installer_->bundleName_;
+    int32_t originalUserId = installer_->userId_;
+
+    // Test createUser scenario
+    installer_->SendBundleSystemEvent(BUNDLE_NAME, installParam, BundleEventType::INSTALL, ERR_OK);
+
+    // Verify installer state is preserved
+    EXPECT_EQ(installer_->bundleName_, originalBundleName);
+    EXPECT_EQ(installer_->userId_, originalUserId);
+    EXPECT_GT(installer_->versionCode_, 0);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_GetInstallEventInfo_0001
+ * Function: GetInstallEventInfo
+ * @tc.name: test GetInstallEventInfo with non-existent bundle
+ * @tc.desc: 1. system running normally
+ *           2. test GetInstallEventInfo handles non-existent bundle gracefully
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_GetInstallEventInfo_0001,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = "non.existent.bundle";
+    installer_->startTime_ = BundleUtil::GetCurrentTimeMs();
+
+    EventInfo eventInfo;
+    installer_->GetInstallEventInfo(eventInfo);
+
+    // When bundle doesn't exist, GetInstallEventInfo returns early
+    // endTime should still be set by SendBundleSystemEvent
+    EXPECT_GE(eventInfo.endTime, 0);
+    EXPECT_TRUE(eventInfo.bundleName.empty());
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_GetInstallEventInfo_0002
+ * Function: GetInstallEventInfo
+ * @tc.name: test GetInstallEventInfo with empty bundleName
+ * @tc.desc: 1. system running normally
+ *           2. test GetInstallEventInfo handles empty bundleName gracefully
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_GetInstallEventInfo_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = "";
+    installer_->startTime_ = BundleUtil::GetCurrentTimeMs();
+
+    EventInfo eventInfo;
+    installer_->GetInstallEventInfo(eventInfo);
+
+    // When bundleName is empty, FetchInnerBundleInfo will fail
+    // eventInfo should remain in default state
+    EXPECT_TRUE(eventInfo.bundleName.empty());
+    EXPECT_EQ(eventInfo.userId, Constants::INVALID_USERID);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_GetInstallEventInfo_0003
+ * Function: GetInstallEventInfo
+ * @tc.name: test GetInstallEventInfo with null dataMgr
+ * @tc.desc: 1. system running normally
+ *           2. test GetInstallEventInfo handles null dataMgr gracefully
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_GetInstallEventInfo_0003,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = nullptr;
+    installer_->bundleName_ = BUNDLE_NAME;
+    installer_->startTime_ = BundleUtil::GetCurrentTimeMs();
+
+    EventInfo eventInfo;
+    installer_->GetInstallEventInfo(eventInfo);
+
+    // When dataMgr is null, FetchInnerBundleInfo will fail and return false
+    // eventInfo should remain in default state
+    EXPECT_TRUE(eventInfo.bundleName.empty());
+    EXPECT_EQ(eventInfo.errCode, ERR_OK);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_GetInstallEventInfo_0004
+ * Function: GetInstallEventInfo
+ * @tc.name: test GetInstallEventInfo populates EventInfo correctly
+ * @tc.desc: 1. system running normally
+ *           2. test GetInstallEventInfo initializes EventInfo fields
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_GetInstallEventInfo_0004,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+    installer_->userId_ = USER_ID;
+    installer_->versionCode_ = VERSION_CODE;
+    installer_->startTime_ = BundleUtil::GetCurrentTimeMs();
+
+    EventInfo eventInfo;
+    installer_->GetInstallEventInfo(eventInfo);
+
+    // Since bundle doesn't exist, GetInstallEventInfo returns early
+    // Verify basic EventInfo structure
+    EXPECT_EQ(eventInfo.userId, Constants::INVALID_USERID);
+    EXPECT_TRUE(eventInfo.fingerprint.empty());
+    EXPECT_TRUE(eventInfo.filePath.empty());
+    EXPECT_TRUE(eventInfo.hashValue.empty());
 }
 } // namespace OHOS

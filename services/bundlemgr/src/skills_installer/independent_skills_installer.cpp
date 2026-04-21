@@ -66,6 +66,7 @@ IndependentSkillsInstaller::~IndependentSkillsInstaller()
 ErrCode IndependentSkillsInstaller::Install(
     const std::vector<std::string> &hspPaths, const InstallParam &installParam)
 {
+    LOG_I(BMS_TAG_INSTALLER, "Install skills bundle userId %{public}d start", installParam.userId);
     startTime_ = BundleUtil::GetCurrentTimeMs();
     ErrCode result = ProcessInstall(hspPaths, installParam);
     if (result != ERR_OK) {
@@ -74,6 +75,13 @@ ErrCode IndependentSkillsInstaller::Install(
         LOG_I(BMS_TAG_INSTALLER, "install skills succeed -n %{public}s -u %{public}d", bundleName_.c_str(), userId_);
     }
     // normal install need to NotifyBundleStatus, preInstall no need to NotifyBundleStatus.
+    if (!hspPaths.empty()) {
+        SendBundleSystemEvent(
+            bundleName_.empty() ? hspPaths[0] : bundleName_,
+            installParam,
+            (moduleUpdate_ || versionUpgrade_) ? BundleEventType::UPDATE : BundleEventType::INSTALL,
+            result);
+    }
     return result;
 }
 
@@ -85,28 +93,35 @@ ErrCode IndependentSkillsInstaller::InstallBundleByBundleName(
     startTime_ = BundleUtil::GetCurrentTimeMs();
     ErrCode result = ProcessInstallBundleByBundleName(bundleName, installParam);
     if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s userId %{public}d install by name failed",
+        LOG_E(BMS_TAG_INSTALLER, "skills bundle %{public}s userId %{public}d install by name failed",
             bundleName.c_str(), installParam.userId);
     } else {
-        LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s userId %{public}d install by name succeed",
+        LOG_I(BMS_TAG_INSTALLER, "skills bundle %{public}s userId %{public}d install by name succeed",
             bundleName.c_str(), installParam.userId);
     }
     // normal unInstall need to NotifyBundleStatus, preUninstall no need to NotifyBundleStatus.
+    SendBundleSystemEvent(
+        bundleName, installParam,
+        (moduleUpdate_ || versionUpgrade_) ? BundleEventType::UPDATE : BundleEventType::INSTALL,
+        result);
     return result;
 }
 
 ErrCode IndependentSkillsInstaller::Uninstall(const std::string &bundleName, const InstallParam &installParam)
 {
+    LOG_I(BMS_TAG_INSTALLER, "Uninstall skills bundle %{public}s userId %{public}d",
+        bundleName.c_str(), installParam.userId);
     startTime_ = BundleUtil::GetCurrentTimeMs();
     ErrCode result = ProcessUninstall(bundleName, installParam);
     if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s userId %{public}d uninstall failed",
+        LOG_E(BMS_TAG_INSTALLER, "skills bundle %{public}s userId %{public}d uninstall failed",
             bundleName.c_str(), installParam.userId);
     } else {
-        LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s userId %{public}d uninstall succeed",
+        LOG_I(BMS_TAG_INSTALLER, "skills bundle %{public}s userId %{public}d uninstall succeed",
             bundleName.c_str(), installParam.userId);
     }
     // normal unInstall need to NotifyBundleStatus, preUninstall no need to NotifyBundleStatus.
+    SendBundleSystemEvent(bundleName, installParam, BundleEventType::UNINSTALL, result);
     return result;
 }
 
@@ -902,6 +917,64 @@ ErrCode IndependentSkillsInstaller::MarkInstallFinish()
     return ERR_OK;
 }
 
+void IndependentSkillsInstaller::SendBundleSystemEvent(
+    const std::string &bundleName, const InstallParam &installParam,
+    BundleEventType bundleEventType, ErrCode errCode)
+{
+    EventInfo sysEventInfo;
+    sysEventInfo.bundleName = bundleName;
+    sysEventInfo.isPreInstallApp = installParam.isPreInstallApp;
+    sysEventInfo.errCode = errCode;
+    sysEventInfo.userId = installParam.userId;
+    sysEventInfo.versionCode = versionCode_;
+    InstallScene preBundleScene = installParam.isOTA ? InstallScene::REBOOT : InstallScene::BOOT;
+    if (!installParam.isPreInstallApp) {
+        preBundleScene = InstallScene::NORMAL;
+    }
+    if (installParam.isCreateUser) {
+        preBundleScene = InstallScene::CREATE_USER;
+    }
+    if (installParam.isRemoveUser) {
+        preBundleScene = InstallScene::REMOVE_USER;
+    }
+    sysEventInfo.preBundleScene = preBundleScene;
+    sysEventInfo.callingUid = IPCSkeleton::GetCallingUid();
+    sysEventInfo.startTime = startTime_;
+    sysEventInfo.endTime = BundleUtil::GetCurrentTimeMs();
+    if (dataMgr_ != nullptr) {
+        dataMgr_->GetOdidByBundleName(bundleName, sysEventInfo.odid);
+    }
+    if ((errCode == ERR_OK) && ((bundleEventType == BundleEventType::INSTALL) ||
+        (bundleEventType == BundleEventType::UPDATE))) {
+        GetInstallEventInfo(sysEventInfo);
+    }
+    EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
+}
+
+void IndependentSkillsInstaller::GetInstallEventInfo(EventInfo &eventInfo)
+{
+    APP_LOGD("GetInstallEventInfo start, bundleName:%{public}s", bundleName_.c_str());
+    InnerBundleInfo bundleInfo;
+    bool isExist = false;
+    if (!FetchInnerBundleInfo(bundleInfo, isExist) || !isExist) {
+        LOG_E(BMS_TAG_INSTALLER, "fetch -n %{public}s failed, may not exist", bundleName_.c_str());
+        return;
+    }
+    eventInfo.fingerprint = bundleInfo.GetCertificateFingerprint();
+    eventInfo.appDistributionType = bundleInfo.GetAppDistributionType();
+    eventInfo.hideDesktopIcon = bundleInfo.IsHideDesktopIconForEvent();
+    eventInfo.timeStamp = bundleInfo.GetBundleUpdateTime(userId_);
+    eventInfo.isAbcCompressed = bundleInstallChecker_->GetIsAbcCompressed();
+    eventInfo.minAPIVersion = bundleInfo.GetBaseApplicationInfo().apiCompatibleVersion;
+    eventInfo.targetAPIVersion = bundleInfo.GetBaseApplicationInfo().apiTargetVersion;
+    eventInfo.compileSdkVersion = bundleInfo.GetBaseApplicationInfo().compileSdkVersion;
+    // report hapPath and hashValue
+    for (const auto &innerModuleInfo : bundleInfo.GetInnerModuleInfos()) {
+        eventInfo.filePath.push_back(innerModuleInfo.second.hapPath);
+        eventInfo.hashValue.push_back(innerModuleInfo.second.hashValue);
+    }
+}
+
 void IndependentSkillsInstaller::RollBack()
 {
     LOG_I(BMS_TAG_INSTALLER, "RollBack: %{public}s", bundleName_.c_str());
@@ -977,6 +1050,7 @@ ErrCode IndependentSkillsInstaller::ProcessInstallBundleByBundleName(
         userId_ = installParam.userId;
         bool isAppExist = dataMgr_->FetchInnerBundleInfo(bundleName, oldInnerBundleInfo_);
         if (isAppExist) {
+            versionCode_ = oldInnerBundleInfo_.GetVersionCode();
             if (oldInnerBundleInfo_.GetApplicationBundleType() != BundleType::SKILL) {
                 LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s userId %{public}d type error", bundleName.c_str(), userId_);
                 return ERR_SKILLS_INSTALL_TYPE_FAILED;
@@ -991,9 +1065,11 @@ ErrCode IndependentSkillsInstaller::ProcessInstallBundleByBundleName(
             innerBundleUserInfo.bundleName = bundleName;
             innerBundleUserInfo.installTime = BundleUtil::GetCurrentTimeMs();
             innerBundleUserInfo.updateTime = innerBundleUserInfo.installTime;
-            if (!dataMgr_->AddInnerBundleUserInfo(bundleName, innerBundleUserInfo)) {
-                LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s userId %{public}d add failed", bundleName.c_str(), userId_);
-                return ERR_SKILLS_INSTALL_ADD_USER_INFO_FAILED;
+            result = dataMgr_->AddInnerBundleUserInfo(bundleName, innerBundleUserInfo);
+            if (result != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s userId %{public}d add failed %{public}d",
+                    bundleName.c_str(), userId_, result);
+                return result;
             }
             return ERR_OK;
         }
@@ -1003,7 +1079,11 @@ ErrCode IndependentSkillsInstaller::ProcessInstallBundleByBundleName(
     if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    return ProcessInstall(preInstallBundleInfo.GetBundlePaths(), installParam);
+    auto innerInstallParam = installParam;
+    innerInstallParam.isPreInstallApp = true;
+    innerInstallParam.removable = preInstallBundleInfo.IsRemovable();
+    innerInstallParam.copyHapToInstallPath = false;
+    return ProcessInstall(preInstallBundleInfo.GetBundlePaths(), innerInstallParam);
 }
 
 void IndependentSkillsInstaller::MarkPreInstallState(const std::string &bundleName, bool isUninstalled)
@@ -1078,7 +1158,6 @@ void IndependentSkillsInstaller::RemoveOldSkillsPath()
 
 ErrCode IndependentSkillsInstaller::ProcessUninstall(const std::string &bundleName, const InstallParam &installParam)
 {
-    LOG_I(BMS_TAG_INSTALLER, "Uninstall bundle %{public}s userId %{public}d", bundleName.c_str(), installParam.userId);
     ErrCode result = BeforeUninstall(bundleName, installParam.userId);
     CHECK_SKILLS_RESULT(result, "BeforeUninstallInstall check failed %{public}d");
     if (dataMgr_ == nullptr) {
