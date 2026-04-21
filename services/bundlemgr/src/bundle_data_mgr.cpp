@@ -5301,6 +5301,34 @@ ErrCode BundleDataMgr::GetLaunchWantForBundle(
     }
 
     want.SetElementName("", bundleName, mainAbility);
+    want.SetAction(Constants::ACTION_HOME);
+    want.AddEntity(Constants::ENTITY_HOME);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetLaunchWantForBundleSync(
+    const std::string &bundleName, Want &want, int32_t userId) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const InnerBundleInfo *innerBundleInfo = nullptr;
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(
+        bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, userId);
+    if (ret != ERR_OK) {
+        APP_LOGD("GetInnerBundleInfoWithFlagsV9 failed, bundleName:%{public}s", bundleName.c_str());
+        return ret;
+    }
+    if (!innerBundleInfo) {
+        LOG_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by GetLaunchWantForBundle is null.");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    std::string mainAbility = innerBundleInfo->GetMainAbility();
+    if (mainAbility.empty()) {
+        APP_LOGW("no main ability in the bundle %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    want.SetElementName("", bundleName, mainAbility);
     SetLaunchWantActionAndEntity(innerBundleInfo, want);
     return ERR_OK;
 }
