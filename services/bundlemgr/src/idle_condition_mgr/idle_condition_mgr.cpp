@@ -220,7 +220,7 @@ bool IdleConditionMgr::CheckInodeForCommericalDevice()
         APP_LOGI("free inodes over threshold");
         return false;
     }
-    APP_LOGD("total inodes: %{public} " PRIu64 ", free inodes: %{public}" PRIu64,
+    APP_LOGD("total inodes: %{public}" PRIu64 ", free inodes: %{public}" PRIu64,
         stat.f_files, stat.f_ffree);
     return true;
 }
