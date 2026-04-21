@@ -87,6 +87,10 @@ private:
     bool FetchInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist);
     bool CheckNeedInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos, InnerBundleInfo &oldInfo,
         bool &isDowngrade);
+    void SendBundleSystemEvent(
+        const std::string &bundleName, const InstallParam &installParam,
+        BundleEventType bundleEventType, ErrCode errCode);
+    void GetInstallEventInfo(EventInfo &eventInfo);
     ErrCode ProcessBundleUpdateStatus(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo,
         const std::string &hspPath, const InstallParam &installParam);
     ErrCode ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo,

@@ -3156,7 +3156,7 @@ void BMSEventHandler::ProcessRebootSkillsUninstall()
         std::string bundleName = loadIter.first;
         auto listIter = hapParseInfoMap_.find(bundleName);
         if (listIter == hapParseInfoMap_.end()) {
-            LOG_I(BMS_TAG_DEFAULT, "ProcessRebootBundleUninstall OTA uninstall skills %{public}s", bundleName.c_str());
+            LOG_I(BMS_TAG_DEFAULT, "ProcessRebootSkillsUninstall OTA uninstall skills %{public}s", bundleName.c_str());
             InnerBundleInfo info;
             if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
                 APP_LOGW("app(%{public}s) maybe has been uninstall.", bundleName.c_str());
@@ -3843,6 +3843,10 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
             hasInstalledInfo, Constants::ANY_USERID);
         auto listIter = hapParseInfoMap_.find(bundleName);
         if (listIter == hapParseInfoMap_.end()) {
+            // no need to process skills, ProcessRebootSkillsUninstall
+            if (loadIter.second.GetBundleType() == BundleType::SKILL) {
+                continue;
+            }
             LOG_I(BMS_TAG_DEFAULT, "ProcessRebootBundleUninstall OTA uninstall app(%{public}s)", bundleName.c_str());
             if (InnerProcessUninstallForExistPreBundle(hasInstalledInfo)) {
                 continue;
