@@ -3131,7 +3131,7 @@ ErrCode ProcessLibrarySupportDirectory(
                 APP_LOGW_NOFUNC("skip librarySupportDirectory dir due to length exceeds 4096");
                 continue;
             }
-            if (dir.find(ServiceConstants::RELATIVE_PATH_NAME) != std::string::npos) {
+            if (dir.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
                 APP_LOGW_NOFUNC("skip librarySupportDirectory %{public}s due to path traversal", dir.c_str());
                 continue;
             }
