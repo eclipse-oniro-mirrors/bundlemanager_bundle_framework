@@ -2367,11 +2367,6 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     std::unordered_set<std::string> overlayBundles;
     // OTA new-preload whitelist: target install users for newly allowed bundles
     std::unordered_map<std::string, std::vector<int32_t>> otaNewInstallTargetUsersForNew;
-
-    // OTA new-preload whitelist: supplementary install queue for installed bundles.
-    // value: <file paths, removable, users not installed yet>
-    std::unordered_map<std::string, std::tuple<std::vector<std::string>, bool, std::vector<int32_t>>>
-        otaNewInstallNeedInstallUsersForInstalled;
     auto canMarkOtaNewInstallUser = [&dataMgr](const std::string &bundleName) {
         if (dataMgr->IsHideDesktopIconForEvent(bundleName)) {
             LOG_NOFUNC_I(BMS_TAG_DEFAULT, "skip ota new-install marking for hideDesktopIcon app %{public}s",
@@ -2527,31 +2522,6 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             continue;
         }
 
-        // OTA new-preload whitelist for installed bundle:
-        // queue supplementary install for users who are not installed yet.
-        if (hasBundleInstalled && needOtaNewInstall) {
-            std::vector<int32_t> usersNotInstalled;
-            if (multiUserInstallThirdPreloadApp_) {
-                const auto allUsers = dataMgr->GetAllUser();
-                for (auto userId : allUsers) {
-                    if (userId <= Constants::U1 || isPrivateUser(userId)) {
-                        continue;
-                    }
-                    if (!dataMgr->HasUserInstallInBundle(bundleName, userId)) {
-                        usersNotInstalled.emplace_back(userId);
-                    }
-                }
-            } else if (!dataMgr->HasUserInstallInBundle(bundleName, Constants::START_USERID)) {
-                usersNotInstalled.emplace_back(Constants::START_USERID);
-            }
-            if (!usersNotInstalled.empty()) {
-                otaNewInstallNeedInstallUsersForInstalled[bundleName] =
-                    std::make_tuple(std::vector<std::string>{scanPathIter}, removable, usersNotInstalled);
-            }
-            // Do not continue here: installed users still need the normal OTA update path below,
-            // which decides whether this bundle should enter needInstallMap.
-        }
-
         std::vector<std::string> filePaths;
         bool updateSelinuxLabel = false;
         bool updateBundle = false;
@@ -2696,6 +2666,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         int32_t timerId = XCollieHelper::SetOTATimer(OTA_PREINSTALL_BUNDLE_TASK, OTA_TIMEOUT_SECONDS);
         ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
         auto targetUsersIter = otaNewInstallTargetUsersForNew.find(bundleName);
+        bool hasinstalledOnStartUser = dataMgr->HasUserInstallInBundle(bundleName, Constants::START_USERID);
         if (targetUsersIter != otaNewInstallTargetUsersForNew.end()) {
             ret = OTAInstallSystemBundleTargetUser(path, bundleName, appType, item.second.second,
                 targetUsersIter->second);
@@ -2712,7 +2683,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         } else {
             auto targetUsersIter = otaNewInstallTargetUsersForNew.find(bundleName);
             if (targetUsersIter != otaNewInstallTargetUsersForNew.end() && !targetUsersIter->second.empty() &&
-                canMarkOtaNewInstallUser(bundleName)) {
+                canMarkOtaNewInstallUser(bundleName) && !hasinstalledOnStartUser) {
                 markOtaNewInstallUser(bundleName, targetUsersIter->second);
             }
             if (newBundleDirMgr != nullptr) {
@@ -2737,25 +2708,6 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     for (auto iter = needInstallMapOverlay.begin(); iter != needInstallMapOverlay.end(); ++iter) {
         (void)BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
             BMSEventHandler::ObtainRealPath(iter->second.first), iter->first, appType, iter->second.second);
-    }
-
-    // Handle OTA new-preload whitelist supplementary install for users not installed yet.
-    if (!otaNewInstallNeedInstallUsersForInstalled.empty()) {
-        for (const auto &item : otaNewInstallNeedInstallUsersForInstalled) {
-            const auto &bundleName = item.first;
-            auto realFilePaths = BMSEventHandler::ObtainRealPath(std::get<0>(item.second));
-            if (realFilePaths.empty()) {
-                continue;
-            }
-            bool removable = std::get<1>(item.second);
-            const std::vector<int32_t> &targetUsers = std::get<2>(item.second);
-            int32_t timerId = XCollieHelper::SetOTATimer(OTA_PREINSTALL_BUNDLE_TASK, OTA_TIMEOUT_SECONDS);
-            ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
-            bool ret = OTAInstallSystemBundleTargetUser(realFilePaths, bundleName, appType, removable, targetUsers);
-            if (ret && canMarkOtaNewInstallUser(bundleName)) {
-                markOtaNewInstallUser(bundleName, targetUsers);
-            }
-        }
     }
 
     UpdatePreinstallDB(needInstallMap);
