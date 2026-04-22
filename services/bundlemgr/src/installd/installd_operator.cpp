@@ -58,6 +58,8 @@
 #include "securec.h"
 #include "hnp_api.h"
 #include "policycoreutils.h"
+#include "bundle_extractor.h"
+#include "ipc/skills_package_param.h"
 #ifdef WITH_SELINUX
 #include <selinux/selinux.h>
 #endif
@@ -697,6 +699,295 @@ bool InstalldOperator::ProcessBundleUnInstallNative(const std::string &userId, c
         return false;
     }
     return true;
+}
+
+ErrCode InstalldOperator::ExtractSkillsPackage(const SkillsPackageParam &param,
+    std::vector<SkillsPackageInfo> &skillInfoList)
+{
+    LOG_I(BMS_TAG_INSTALLD, "-n %{public}s -m %{public}s skillCount=%{public}zu start",
+        param.bundleName.c_str(), param.moduleName.c_str(), param.skillNameList.size());
+
+    if (param.bundleName.empty() || param.moduleName.empty() || param.hspPath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid input parameters");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    std::string filePath = "";
+    if (!PathToRealPath(param.hspPath, filePath)) {
+        LOG_W(BMS_TAG_INSTALLD, "not real path: %{public}s", param.hspPath.c_str());
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    // Check if HSP file exists
+    if (access(filePath.c_str(), F_OK) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "HSP file not exist: %{public}s", filePath.c_str());
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+
+    // Create BundleExtractor to read HSP file
+    BundleExtractor extractor(filePath);
+    if (!extractor.Init()) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to initialize extractor for %{public}s", param.hspPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FILES_FAILED;
+    }
+    // Clear result list
+    skillInfoList.clear();
+    // Process each skill
+    for (const auto &skillName : param.skillNameList) {
+        if (!IsFileNameValid(skillName)) {
+            LOG_E(BMS_TAG_INSTALLD, "wrong name %{public}s", skillName.c_str());
+            continue;
+        }
+        // Step 1: Check if SKILL.md exists in HSP
+        std::string skillMdPathInHsp = std::string("skills/") + skillName + "/SKILL.md";
+        if (!extractor.HasEntry(skillMdPathInHsp)) {
+            LOG_E(BMS_TAG_INSTALLD, "SKILL.md not found for skill %{public}s", skillName.c_str());
+            continue;
+        }
+
+        // Step 2: Build target path for skill extraction
+        std::string targetSkillPath = std::string(Constants::BASE_SKILL_DIR) + "/" + param.bundleName +
+            "/" + param.moduleName + "/skills/" + skillName;
+        LOG_D(BMS_TAG_INSTALLD, "target path = %{public}s", targetSkillPath.c_str());
+
+        // Step 3: Extract skill folder from HSP
+        if (!ExtractSkillFromHsp(extractor, skillName, targetSkillPath)) {
+            LOG_E(BMS_TAG_INSTALLD, "failed to extract skill %{public}s", skillName.c_str());
+            continue;
+        }
+
+        // Step 4: Parse SKILL.md and validate name, get description
+        std::string extractedSkillMdPath = targetSkillPath + "/SKILL.md";
+        std::string parsedName;
+        std::string description;
+        if (ParseSkillMd(extractedSkillMdPath, parsedName, description) != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "failed to parse SKILL.md for skill %{public}s", skillName.c_str());
+            // Clean up extracted directory
+            OHOS::ForceRemoveDirectoryBMS(targetSkillPath);
+            continue;
+        }
+
+        // Validate skill name matches
+        if (parsedName != skillName) {
+            LOG_E(BMS_TAG_INSTALLD, "name mismatch for skill %{public}s, expected=%{public}s, parsed=%{public}s",
+                skillName.c_str(), skillName.c_str(), parsedName.c_str());
+            // Clean up extracted directory
+            OHOS::ForceRemoveDirectoryBMS(targetSkillPath);
+            continue;
+        }
+
+        // Success: add to result list
+        SkillsPackageInfo info;
+        info.bundleName = param.bundleName;
+        info.moduleName = param.moduleName;
+        info.skillsName = skillName;
+        info.description = description;
+        skillInfoList.emplace_back(info);
+
+        LOG_I(BMS_TAG_INSTALLD, "successfully extracted skill %{public}s", skillName.c_str());
+    }
+
+    return ERR_OK;
+}
+
+bool InstalldOperator::ExtractSkillFromHsp(
+    const BundleExtractor &extractor,
+    const std::string &skillName,
+    const std::string &targetPath)
+{
+    LOG_D(BMS_TAG_INSTALLD, "skillName=%{public}s, targetPath=%{public}s", skillName.c_str(), targetPath.c_str());
+
+    // Create target directory
+    if (!OHOS::ForceCreateDirectory(targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to create directory %{public}s", targetPath.c_str());
+        return false;
+    }
+
+    // Get all file names in HSP
+    std::vector<std::string> allFiles;
+    if (!extractor.GetZipFileNames(allFiles)) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to get file list from HSP");
+        ForceRemoveDirectory(targetPath);
+        return false;
+    }
+
+    // Extract all files under skillName folder
+    std::string skillPrefix = std::string("skills/") + skillName + "/";
+    int32_t extractedCount = 0;
+
+    for (const auto &fileName : allFiles) {
+        if (fileName.find(skillPrefix) == 0) {
+            // Calculate relative path and target file path
+            std::string relativePath = fileName.substr(skillPrefix.length());
+            std::string targetFilePath = targetPath + "/" + relativePath;
+
+            // Create parent directory if needed
+            size_t lastSlash = relativePath.find_last_of('/');
+            if (lastSlash != std::string::npos) {
+                std::string parentDir = targetPath + "/" + relativePath.substr(0, lastSlash);
+                OHOS::ForceCreateDirectory(parentDir);
+            }
+
+            // Extract file
+            if (extractor.ExtractFile(fileName, targetFilePath)) {
+                extractedCount++;
+            } else {
+                LOG_W(BMS_TAG_INSTALLD, "failed to extract file %{public}s", fileName.c_str());
+            }
+        }
+    }
+
+    if (extractedCount == 0) {
+        LOG_E(BMS_TAG_INSTALLD, "no files extracted for skill %{public}s",
+            skillName.c_str());
+        ForceRemoveDirectory(targetPath);
+        return false;
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "extracted %{public}d files for skill %{public}s", extractedCount, skillName.c_str());
+    return true;
+}
+
+bool InstalldOperator::ValidateSkillName(
+    const std::string &skillName,
+    const std::string &extractedPath)
+{
+    LOG_D(BMS_TAG_INSTALLD, "skillName=%{public}s, extractedPath=%{public}s", skillName.c_str(), extractedPath.c_str());
+
+    // Parse SKILL.md to get the name
+    std::string parsedName;
+    std::string description;
+    ErrCode ret = ParseSkillMd(extractedPath, parsedName, description);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to parse SKILL.md at %{public}s", extractedPath.c_str());
+        return false;
+    }
+
+    // Compare parsed name with expected skill name
+    if (parsedName != skillName) {
+        LOG_E(BMS_TAG_INSTALLD, "name mismatch! expected=%{public}s, parsed=%{public}s",
+            skillName.c_str(), parsedName.c_str());
+        return false;
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "name validation passed for skill %{public}s", skillName.c_str());
+    return true;
+}
+
+ErrCode InstalldOperator::ParseSkillMd(const std::string &skillMdPath,
+    std::string &name, std::string &description)
+{
+    LOG_D(BMS_TAG_INSTALLD, "parsing %{public}s", skillMdPath.c_str());
+
+    // Read SKILL.md frontmatter only. Supported example:
+    // \xEF\xBB\xBF---
+    // # skill metadata
+    // name: "my-skill"
+    // description: 'my skill description'
+    // ...
+    std::ifstream skillMdFile(skillMdPath);
+    if (!skillMdFile.is_open()) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to open file %{public}s", skillMdPath.c_str());
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+
+    std::string line;
+    name.clear();
+    description.clear();
+    auto trimString = [](std::string &value, const char *trimChars) {
+        size_t first = value.find_first_not_of(trimChars);
+        if (first == std::string::npos) {
+            value.clear();
+            return;
+        }
+        size_t last = value.find_last_not_of(trimChars);
+        value = value.substr(first, last - first + 1);
+    };
+    auto stripUtf8Bom = [](std::string &value) {
+        constexpr char UTF8_BOM[] = "\xEF\xBB\xBF";
+        if (value.compare(0, strlen(UTF8_BOM), UTF8_BOM) == 0) {
+            value.erase(0, strlen(UTF8_BOM));
+        }
+    };
+    auto stripQuotes = [](std::string &value) {
+        if (value.size() >= 2) {
+            char first = value.front();
+            char last = value.back();
+            if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
+                value = value.substr(1, value.size() - 2);
+            }
+        }
+    };
+
+    bool frontmatterStarted = false;
+    bool frontmatterEnded = false;
+    bool isFirstLine = true;
+    while (std::getline(skillMdFile, line)) {
+        if (isFirstLine) {
+            stripUtf8Bom(line);
+            isFirstLine = false;
+        }
+        trimString(line, " \t\r\n");
+        if (line.empty()) {
+            continue;
+        }
+
+        if (!frontmatterStarted) {
+            if (line == "---") {
+                frontmatterStarted = true;
+                continue;
+            }
+            LOG_E(BMS_TAG_INSTALLD, "frontmatter not found");
+            return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+        }
+
+        if (line == "---" || line == "...") {
+            frontmatterEnded = true;
+            break;
+        }
+
+        // skip comments
+        if (line[0] == '#') {
+            continue;
+        }
+
+        size_t colonPos = line.find(':');
+        if (colonPos == std::string::npos) {
+            continue;
+        }
+
+        std::string key = line.substr(0, colonPos);
+        std::string value = line.substr(colonPos + 1);
+        trimString(key, " \t");
+        trimString(value, " \t");
+        stripQuotes(value);
+
+        if (key == "name" && name.empty()) {
+            name = value;
+            LOG_D(BMS_TAG_INSTALLD, "found name = %{public}s", name.c_str());
+        } else if (key == "description" && description.empty()) {
+            description = value;
+            LOG_D(BMS_TAG_INSTALLD, "found description = %{public}s", description.c_str());
+        }
+
+        if (!name.empty() && !description.empty()) {
+            break;
+        }
+    }
+
+    skillMdFile.close();
+
+    if (!frontmatterStarted) {
+        LOG_E(BMS_TAG_INSTALLD, "frontmatter start not found");
+        return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+    }
+    if (!frontmatterEnded && (name.empty() || description.empty())) {
+        LOG_W(BMS_TAG_INSTALLD, "frontmatter end not found before EOF");
+    }
+    if (name.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "name not found in SKILL.md");
+        return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+    }
+
+    return ERR_OK;
 }
 
 bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,

@@ -1366,6 +1366,39 @@ ErrCode InstalldProxy::CopyDir(const std::string &sourceDir, const std::string &
     return TransactInstalldCmd(InstalldInterfaceCode::COPY_DIR, data, reply, option);
 }
 
+ErrCode InstalldProxy::ExtractSkillsPackage(const SkillsPackageParam &param,
+    std::vector<SkillsPackageInfo> &skillInfoList)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Parcelable, &param);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_SKILLS_PACKAGE, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractSkillsPackage TransactInstalldCmd failed");
+        return ret;
+    }
+    // Read vector size
+    int32_t size = reply.ReadInt32();
+    if (size < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractSkillsPackage: invalid size");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    skillInfoList.clear();
+    for (int32_t i = 0; i < size; ++i) {
+        auto *info = reply.ReadParcelable<SkillsPackageInfo>();
+        if (info == nullptr) {
+            LOG_E(BMS_TAG_INSTALLD, "ExtractSkillsPackage: failed to read item %{public}d", i);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        skillInfoList.emplace_back(*info);
+        delete info;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)
 {
     if (certPaths.empty() || certPaths.size() > ServiceConstants::MAX_ENTERPRISE_RESIGN_CERT_NUM) {

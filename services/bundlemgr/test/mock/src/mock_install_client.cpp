@@ -510,5 +510,11 @@ ErrCode InstalldClient::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::ExtractSkillsPackage(const SkillsPackageParam &param,
+    std::vector<SkillsPackageInfo> &skillInfoList)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

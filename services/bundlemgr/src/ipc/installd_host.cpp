@@ -19,6 +19,8 @@
 #include "bundle_constants.h"
 #include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
+#include "skills_installer/skills_package_info.h"
+#include "ipc/skills_package_param.h"
 #include "ipc/verify_bin_param.h"
 #include "mem_mgr_client.h"
 #include "parcel_macro.h"
@@ -291,6 +293,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_DIR):
             result = HandleCopyDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_SKILLS_PACKAGE):
+            result = HandleExtractSkillsPackage(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_CERT_AND_REMOVE_KEY):
             result = HandleDeleteCertAndRemoveKey(data, reply);
@@ -1399,6 +1404,34 @@ bool InstalldHost::HandleCopyDir(MessageParcel &data, MessageParcel &reply)
 
     ErrCode result = CopyDir(srcDir, destDir);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractSkillsPackage(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<SkillsPackageParam> param(data.ReadParcelable<SkillsPackageParam>());
+    if (param == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleExtractSkillsPackage: read SkillsPackageParam failed");
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+        return false;
+    }
+
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode result = ExtractSkillsPackage(*param, skillInfoList);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+
+    // Write vector size
+    if (!reply.WriteInt32(static_cast<int32_t>(skillInfoList.size()))) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleExtractSkillsPackage: failed to write size");
+        return false;
+    }
+    // Write each element
+    for (const auto &info : skillInfoList) {
+        if (!reply.WriteParcelable(&info)) {
+            LOG_E(BMS_TAG_INSTALLD, "HandleExtractSkillsPackage: failed to write item");
+            return false;
+        }
+    }
     return true;
 }
 

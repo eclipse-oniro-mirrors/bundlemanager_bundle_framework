@@ -313,6 +313,15 @@ public:
 
     ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths);
 
+    /**
+     * @brief Extract skills package with validation.
+     * @param param Contains bundleName, moduleName, hspPath and skillNameList.
+     * @param skillInfoList Output parameter containing skill extraction results with description.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    ErrCode ExtractSkillsPackage(const SkillsPackageParam &param,
+        std::vector<SkillsPackageInfo> &skillInfoList);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

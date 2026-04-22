@@ -33,7 +33,9 @@
 #include "ipc/encryption_param.h"
 #include "ipc/extract_param.h"
 #include "ipc/install_hnp_param.h"
+#include "ipc/skills_package_param.h"
 #include "nocopyable.h"
+#include "skills_installer/skills_package_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -124,6 +126,47 @@ public:
         const ExtractFileType &extractFileType = ExtractFileType::SO);
     static bool ProcessBundleInstallNative(const InstallHnpParam &installHnpParam);
     static bool ProcessBundleUnInstallNative(const std::string &userId, const std::string &bundleName);
+
+    /**
+     * @brief Extract skills package with validation.
+     * @param param Contains bundleName, moduleName, hspPath and skillNameList.
+     * @param skillInfoList Output parameter containing skill extraction results with description.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    static ErrCode ExtractSkillsPackage(const SkillsPackageParam &param,
+        std::vector<SkillsPackageInfo> &skillInfoList);
+
+    /**
+     * @brief Parse SKILL.md to extract name and description.
+     * @param skillMdPath Path to SKILL.md file.
+     * @param name Output parameter for skill name.
+     * @param description Output parameter for skill description.
+     * @return Returns ERR_OK if parsed successfully; returns error code otherwise.
+     */
+    static ErrCode ParseSkillMd(const std::string &skillMdPath,
+        std::string &name, std::string &description);
+
+    /**
+     * @brief Extract a single skill folder from HSP file.
+     * @param extractor Reference to initialized BundleExtractor.
+     * @param skillName Skill name.
+     * @param targetPath Target extraction path.
+     * @return Returns true if extraction successful; returns false otherwise.
+     */
+    static bool ExtractSkillFromHsp(
+        const BundleExtractor &extractor,
+        const std::string &skillName,
+        const std::string &targetPath);
+
+    /**
+     * @brief Validate skill name by parsing SKILL.md.
+     * @param skillName Expected skill name.
+     * @param extractedPath Path to extracted SKILL.md file.
+     * @return Returns true if validation passed; returns false otherwise.
+     */
+    static bool ValidateSkillName(
+        const std::string &skillName,
+        const std::string &extractedPath);
 
     static bool DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
         std::string &prefix);
