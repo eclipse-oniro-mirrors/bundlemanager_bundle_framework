@@ -762,5 +762,15 @@ ErrCode InstalldClient::DeleteCertAndRemoveKey(const std::vector<std::string> &c
     }
     return CallService(&IInstalld::DeleteCertAndRemoveKey, certPaths);
 }
+
+ErrCode InstalldClient::ExtractSkillsPackage(const SkillsPackageParam &param,
+    std::vector<SkillsPackageInfo> &skillInfoList)
+{
+    if (param.bundleName.empty() || param.moduleName.empty() || param.hspPath.empty()) {
+        APP_LOGE("bundleName, moduleName or hspPath is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractSkillsPackage, param, skillInfoList);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -34,8 +34,10 @@
 #include "ipc/extract_param.h"
 #include "ipc/file_stat.h"
 #include "ipc/install_hnp_param.h"
+#include "ipc/skills_package_param.h"
 #include "ipc/verify_bin_param.h"
 #include "installd/installd_constants.h"
+#include "skills_installer/skills_package_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -571,6 +573,18 @@ public:
     }
 
     virtual ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)
+    {
+        return ERR_OK;
+    }
+
+    /**
+     * @brief Extract skills package with validation.
+     * @param param Contains bundleName, moduleName, hspPath and skillNameList.
+     * @param skillInfoList Output parameter containing skill extraction results with description.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractSkillsPackage(const SkillsPackageParam &param,
+        std::vector<SkillsPackageInfo> &skillInfoList)
     {
         return ERR_OK;
     }

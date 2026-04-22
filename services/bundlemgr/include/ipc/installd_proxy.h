@@ -305,6 +305,15 @@ public:
      */
     virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir) override;
 
+    /**
+     * @brief Extract skills package with validation.
+     * @param param Contains bundleName, moduleName, hspPath and skillNameList.
+     * @param skillInfoList Output parameter containing skill extraction results with description.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractSkillsPackage(const SkillsPackageParam &param,
+        std::vector<SkillsPackageInfo> &skillInfoList) override;
+
     virtual ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths) override;
 
 private:

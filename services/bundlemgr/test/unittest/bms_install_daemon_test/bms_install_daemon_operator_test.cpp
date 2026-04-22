@@ -33,6 +33,8 @@
 #include "driver_install_ext.h"
 #include "file_ex.h"
 #include "installd/installd_operator.h"
+#include "ipc/skills_package_param.h"
+#include "skills_installer/skills_package_info.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -2675,5 +2677,447 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16000, Function | Me
     int32_t uid = -1;
     auto ret = InstalldOperator::GetBundleInodeCount(uid);
     EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16100
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with empty path
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16100, Function | SmallTest | Level0)
+{
+    std::string emptyPath;
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(emptyPath, name, description);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_TRUE(name.empty());
+    EXPECT_TRUE(description.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16200
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with non-existent file
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16200, Function | SmallTest | Level0)
+{
+    std::string nonExistentPath = "/data/test/nonexistent_skill_md_12345/SKILL.md";
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(nonExistentPath, name, description);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_TRUE(name.empty());
+    EXPECT_TRUE(description.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16300
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with valid frontmatter file
+ *           2. verify name and description parsed correctly
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16300, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_md_test_16300";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with YAML frontmatter format
+    std::string content = "---\n";
+    content += "name: testSkill\n";
+    content += "description: This is a test skill description\n";
+    content += "---\n";
+    CreateFile(skillMdPath, content);
+
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(skillMdPath, name, description);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(name, "testSkill");
+    EXPECT_EQ(description, "This is a test skill description");
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16400
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with markdown format (# name:)
+ *           2. verify parse failed because frontmatter is required
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16400, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_md_test_16400";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with markdown format
+    std::string content = "# name: markdownSkill\n";
+    content += "# description: This is a markdown format skill\n";
+    CreateFile(skillMdPath, content);
+
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(skillMdPath, name, description);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARSE_FAILED);
+    EXPECT_TRUE(name.empty());
+    EXPECT_TRUE(description.empty());
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16500
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd without name field
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16500, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_md_test_16500";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md without name field
+    std::string content = "description: This skill has no name\n";
+    CreateFile(skillMdPath, content);
+
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(skillMdPath, name, description);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARSE_FAILED);
+    EXPECT_TRUE(name.empty());
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16600
+ * @tc.name: test ValidateSkillName function of InstalldOperator
+ * @tc.desc: 1. calling ValidateSkillName with non-existent file
+ *           2. verify validation fails
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16600, Function | SmallTest | Level0)
+{
+    std::string skillName = "testSkill";
+    std::string nonExistentPath = "/data/test/nonexistent_skill_16600/SKILL.md";
+
+    bool ret = InstalldOperator::ValidateSkillName(skillName, nonExistentPath);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16700
+ * @tc.name: test ValidateSkillName function of InstalldOperator
+ * @tc.desc: 1. calling ValidateSkillName with matching name in frontmatter
+ *           2. verify validation passes
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16700, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_validate_test_16700";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with matching name in YAML frontmatter
+    std::string content = "---\n";
+    content += "name: matchingSkill\n";
+    content += "description: Test skill for validation\n";
+    content += "---\n";
+    CreateFile(skillMdPath, content);
+
+    bool ret = InstalldOperator::ValidateSkillName("matchingSkill", skillMdPath);
+    EXPECT_TRUE(ret);
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16800
+ * @tc.name: test ValidateSkillName function of InstalldOperator
+ * @tc.desc: 1. calling ValidateSkillName with mismatched name
+ *           2. verify validation fails
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16800, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_validate_test_16800";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with different name
+    std::string content = "name: differentSkill\n";
+    content += "description: Test skill with mismatched name\n";
+    CreateFile(skillMdPath, content);
+
+    bool ret = InstalldOperator::ValidateSkillName("expectedSkill", skillMdPath);
+    EXPECT_FALSE(ret);
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16900
+ * @tc.name: test ExtractSkillFromHsp function of InstalldOperator
+ * @tc.desc: 1. calling ExtractSkillFromHsp with invalid target path
+ *           2. verify extraction fails
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16900, Function | SmallTest | Level0)
+{
+    // Create a mock extractor (using real HAP file)
+    std::string testHapPath = "/system/app/ShellAssistant/ShellAssistant_Feature_Anco.hap";
+    if (!InstalldOperator::IsExistFile(testHapPath)) {
+        // Skip test if HAP file doesn't exist
+        GTEST_LOG_(INFO) << "Test HAP file not found, skipping test";
+        return;
+    }
+
+    BundleExtractor extractor(testHapPath);
+    if (!extractor.Init()) {
+        GTEST_LOG_(INFO) << "Failed to initialize extractor, skipping test";
+        return;
+    }
+
+    // Use invalid target path (too long)
+    std::string invalidTargetPath(300, 'x');
+
+    bool ret = InstalldOperator::ExtractSkillFromHsp(extractor, "testSkill", invalidTargetPath);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17000
+ * @tc.name: test ExtractSkillsPackage function of InstalldOperator
+ * @tc.desc: 1. calling ExtractSkillsPackage with empty bundleName
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17000, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "";  // Empty bundleName
+    param.moduleName = "testModule";
+    param.hspPath = "/data/test/test.hsp";
+    param.skillNameList.push_back("skill1");
+
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_TRUE(skillInfoList.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17100
+ * @tc.name: test ExtractSkillsPackage function of InstalldOperator
+ * @tc.desc: 1. calling ExtractSkillsPackage with empty moduleName
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17100, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "";  // Empty moduleName
+    param.hspPath = "/data/test/test.hsp";
+    param.skillNameList.push_back("skill1");
+
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_TRUE(skillInfoList.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17200
+ * @tc.name: test ExtractSkillsPackage function of InstalldOperator
+ * @tc.desc: 1. calling ExtractSkillsPackage with empty hspPath
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17200, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.hspPath = "";  // Empty hspPath
+    param.skillNameList.push_back("skill1");
+
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_TRUE(skillInfoList.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17300
+ * @tc.name: test ExtractSkillsPackage function of InstalldOperator
+ * @tc.desc: 1. calling ExtractSkillsPackage with non-existent HSP file
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17300, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.hspPath = "/data/test/nonexistent_file_17300.hsp";  // Non-existent file
+    param.skillNameList.push_back("skill1");
+
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_TRUE(skillInfoList.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17400
+ * @tc.name: test ExtractSkillsPackage function of InstalldOperator
+ * @tc.desc: 1. calling ExtractSkillsPackage with empty skillNameList
+ *           2. verify success with empty result list
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17400, Function | SmallTest | Level0)
+{
+    // Create a temporary valid HSP file path for testing
+    std::string testHapPath = "/system/app/ShellAssistant/ShellAssistant_Feature_Anco.hap";
+    if (!InstalldOperator::IsExistFile(testHapPath)) {
+        GTEST_LOG_(INFO) << "Test HAP file not found, skipping test";
+        return;
+    }
+
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.hspPath = testHapPath;
+    // Empty skillNameList - no skills to extract
+
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
+
+    // Should succeed with empty result list
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(skillInfoList.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17500
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with non-frontmatter mixed format
+ *           2. verify parse failed
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17500, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_md_test_17500";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with mixed format
+    std::string content = "#name: mixedFormatSkill\n";
+    content += "description: This is a mixed format skill\n";
+    CreateFile(skillMdPath, content);
+
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(skillMdPath, name, description);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARSE_FAILED);
+    EXPECT_TRUE(name.empty());
+    EXPECT_TRUE(description.empty());
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17600
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with frontmatter and extra whitespace
+ *           2. verify whitespace trimmed correctly
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17600, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_md_test_17600";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with YAML frontmatter and extra whitespace
+    std::string content = "---\n";
+    content += "name:  \t  whitespaceSkill  \t \n";
+    content += "description:  \t  Description with whitespace  \t \n";
+    content += "---\n";
+    CreateFile(skillMdPath, content);
+
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(skillMdPath, name, description);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(name, "whitespaceSkill");
+    EXPECT_EQ(description, "Description with whitespace");
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17700
+ * @tc.name: test ValidateSkillName function of InstalldOperator
+ * @tc.desc: 1. calling ValidateSkillName with markdown format name
+ *           2. verify validation fails because frontmatter is required
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17700, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_validate_test_17700";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with markdown format
+    std::string content = "# name: markdownNameSkill\n";
+    content += "# description: Test skill with markdown format\n";
+    CreateFile(skillMdPath, content);
+
+    bool ret = InstalldOperator::ValidateSkillName("markdownNameSkill", skillMdPath);
+    EXPECT_FALSE(ret);
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17800
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with frontmatter name but no description
+ *           2. verify success with empty description
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17800, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_md_test_17800";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with YAML frontmatter and only name
+    std::string content = "---\n";
+    content += "name: skillWithoutDescription\n";
+    content += "---\n";
+    CreateFile(skillMdPath, content);
+
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(skillMdPath, name, description);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(name, "skillWithoutDescription");
+    EXPECT_TRUE(description.empty());
+
+    DeleteQuickFileDir(testDir);
 }
 } // OHOS

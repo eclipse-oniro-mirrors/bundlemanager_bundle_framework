@@ -3225,5 +3225,15 @@ ErrCode InstalldHostImpl::DeleteCertAndRemoveKey(const std::vector<std::string> 
     
     return ret;
 }
+
+ErrCode InstalldHostImpl::ExtractSkillsPackage(const SkillsPackageParam &param,
+    std::vector<SkillsPackageInfo> &skillInfoList)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    return InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

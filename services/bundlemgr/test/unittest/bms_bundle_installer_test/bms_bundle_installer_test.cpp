@@ -63,6 +63,8 @@
 #include "installd/installd_permission_mgr.h"
 #include "bundle_cache_mgr.h"
 #include "process_cache_callback_host.h"
+#include "ipc/skills_package_param.h"
+#include "skills_installer/skills_package_info.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -15397,6 +15399,79 @@ HWTEST_F(BmsBundleInstallerTest, DeleteCertAndRemoveKey_0100, Function | SmallTe
     certPaths.emplace_back(TEST_EMPTY_STRING);
     ret = impl.DeleteCertAndRemoveKey(certPaths);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractSkillsPackage_0100
+ * @tc.name: test ExtractSkillsPackage
+ * @tc.desc: test ExtractSkillsPackage of InstalldHostImpl with empty parameters
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractSkillsPackage_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    SkillsPackageParam param;
+    std::vector<SkillsPackageInfo> skillInfoList;
+
+    // Test with empty bundleName
+    param.bundleName = TEST_EMPTY_STRING;
+    param.moduleName = TEST_STRING;
+    param.hspPath = TEST_STRING;
+    param.skillNameList.clear();
+    ErrCode ret = impl.ExtractSkillsPackage(param, skillInfoList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    // Test with empty moduleName
+    param.bundleName = TEST_STRING;
+    param.moduleName = TEST_EMPTY_STRING;
+    param.hspPath = TEST_STRING;
+    param.skillNameList.clear();
+    ret = impl.ExtractSkillsPackage(param, skillInfoList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    // Test with empty hspPath
+    param.bundleName = TEST_STRING;
+    param.moduleName = TEST_STRING;
+    param.hspPath = TEST_EMPTY_STRING;
+    param.skillNameList.clear();
+    ret = impl.ExtractSkillsPackage(param, skillInfoList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractSkillsPackage_0200
+ * @tc.name: test ExtractSkillsPackage
+ * @tc.desc: test ExtractSkillsPackage of InstalldHostImpl with non-existent HSP file
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractSkillsPackage_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    SkillsPackageParam param;
+    param.bundleName = TEST_STRING;
+    param.moduleName = TEST_STRING;
+    param.hspPath = TEST_ERROR_STRING;
+    param.skillNameList.clear();
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = impl.ExtractSkillsPackage(param, skillInfoList);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ExtractSkillsPackage_0300
+ * @tc.name: test ExtractSkillsPackage
+ * @tc.desc: test ExtractSkillsPackage of InstalldHostImpl with skillNameList
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractSkillsPackage_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    SkillsPackageParam param;
+    param.bundleName = TEST_STRING;
+    param.moduleName = TEST_STRING;
+    param.hspPath = TEST_ERROR_STRING;
+    param.skillNameList.clear();
+    param.skillNameList.emplace_back(TEST_STRING);
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = impl.ExtractSkillsPackage(param, skillInfoList);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
