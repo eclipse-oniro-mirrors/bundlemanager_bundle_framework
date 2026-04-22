@@ -313,6 +313,7 @@ struct App {
     std::string apiReleaseType = APP_API_RELEASETYPE_DEFAULT_VALUE;
     std::pair<bool, bool> removable = std::make_pair<>(false, true);
     std::vector<std::string> targetBundleList;
+    std::vector<AlternateIcon> alternateIcons;
     std::map<std::string, DeviceConfig> deviceConfigs;
     std::string targetBundle;
     std::string bundleType = Profile::BUNDLE_TYPE_APP;
@@ -1534,6 +1535,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::vector<AlternateIcon>>(jsonObject,
+        jsonObjectEnd,
+        APP_ALTERNATE_ICONS,
+        app.alternateIcons,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::OBJECT);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         START_MODE,
@@ -2503,6 +2512,7 @@ bool ToApplicationInfo(
     applicationInfo.hwasanEnabled = app.hwasanEnabled;
     applicationInfo.ubsanEnabled = app.ubsanEnabled;
     applicationInfo.appEnvironments = app.appEnvironments;
+    applicationInfo.alternateIcons = app.alternateIcons;
     if (moduleJson.module.type == Profile::MODULE_TYPE_ENTRY) {
         applicationInfo.assetAccessGroups = app.assetAccessGroups;
     }

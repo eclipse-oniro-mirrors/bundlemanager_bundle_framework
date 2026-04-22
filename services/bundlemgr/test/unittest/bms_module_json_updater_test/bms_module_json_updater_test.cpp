@@ -158,6 +158,7 @@ HWTEST_F(BmsModuleJsonUpdaterTest, UpdateModuleJsonAsync_0100, Function | SmallT
 {
     ModuleJsonUpdater::SetIgnoreBundleNames({BUNDLE_A, BUNDLE_B});
     BmsModuleJsonUpdaterTest::UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON);
+    BmsModuleJsonUpdaterTest::UpdateOtaFlag(OTAFlag::UPDATE_ALTERNATE_ICONS);
     ModuleJsonUpdater::UpdateModuleJsonAsync();
     std::set<std::string> ignoredBundles = ModuleJsonUpdater::GetIgnoreBundleNames();
     EXPECT_TRUE(ignoredBundles.empty());
