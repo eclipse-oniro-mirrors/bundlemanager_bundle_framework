@@ -3651,7 +3651,7 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
         APP_LOGE("fail to GetBundleStats from reply");
         return false;
     }
-    APP_LOGI("end %{public}s", bundleName.c_str());
+    APP_LOGI_NOFUNC("GetBundleStats end %{public}s", bundleName.c_str());
     return true;
 }
 
@@ -7292,7 +7292,7 @@ ErrCode BundleMgrProxy::GetBundleInstallStatus(const std::string &bundleName, co
 ErrCode BundleMgrProxy::GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo &assetGroupInfo)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    APP_LOGI("begin to GetAssetGroupsInfo of %{public}d", uid);
+    APP_LOGI_NOFUNC("begin to GetAssetGroupsInfo of %{public}d", uid);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetAssetGroupsInfo due to write InterfaceToken fail");

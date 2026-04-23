@@ -962,8 +962,9 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
     if (!bundleName.empty() && !abilityName.empty()) {
         bool ret = ExplicitQueryAbilityInfo(want, flags, requestUserId, abilityInfo, appIndex);
         if (!ret) {
-            LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility no match -n %{public}s -a %{public}s -u %{public}d"
-                " -i %{public}d", bundleName.c_str(), abilityName.c_str(), userId, appIndex);
+            LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility no match -n %{public}s -m %{public}s -a %{public}s"
+                " -u %{public}d -i %{public}d", bundleName.c_str(), element.GetModuleName().c_str(),
+                abilityName.c_str(), userId, appIndex);
             return false;
         }
         return true;
@@ -1044,8 +1045,9 @@ bool BundleDataMgr::QueryAbilityInfos(
         }
         // get cloneApp's abilityInfos
         GetCloneAbilityInfos(abilityInfos, element, flags, userId);
-        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility size:%{public}zu -n %{public}s -a %{public}s -u %{public}d",
-            abilityInfos.size(), bundleName.c_str(), abilityName.c_str(), userId);
+        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility size:%{public}zu -n %{public}s -m %{public}s -a %{public}s"
+            " -u %{public}d", abilityInfos.size(), bundleName.c_str(), element.GetModuleName().c_str(),
+            abilityName.c_str(), userId);
         return !abilityInfos.empty();
     }
     // implicit query
@@ -1085,8 +1087,9 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
         }
         // get cloneApp's abilityInfos
         GetCloneAbilityInfosV9(abilityInfos, element, flags, userId);
-        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility V9 size:%{public}zu -n %{public}s -a %{public}s -u %{public}d",
-            abilityInfos.size(), bundleName.c_str(), abilityName.c_str(), userId);
+        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility V9 size:%{public}zu -n %{public}s -m %{public}s -a %{public}s"
+            " -u %{public}d", abilityInfos.size(), bundleName.c_str(), element.GetModuleName().c_str(),
+            abilityName.c_str(), userId);
         if (abilityInfos.empty()) {
             return ret;
         }
@@ -4558,7 +4561,7 @@ std::vector<int32_t> BundleDataMgr::GetNoRunningBundleCloneIndexes(const sptr<IA
     for (const auto &appIndex : cloneAppIndexes) {
         bool running = SystemAbilityHelper::IsAppRunning(appMgrProxy, bundleName, appIndex, userId);
         if (running) {
-            APP_LOGW("No del cache for %{public}s[%{public}d] in user[%{public}d]: is running",
+            APP_LOGW_NOFUNC("No del cache -n %{public}s -i %{public}d -u %{public}d is running",
                 bundleName.c_str(), appIndex, userId);
             continue;
         }
@@ -7187,8 +7190,9 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
         if (ExplicitQueryExtensionInfo(want, flags, requestUserId, info, appIndex)) {
             extensionInfos.emplace_back(info);
         }
-        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryExtension size:%{public}zu -n %{public}s -e %{public}s -u %{public}d"
-            " -i %{public}d", extensionInfos.size(), bundleName.c_str(), extensionName.c_str(), userId, appIndex);
+        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryExtension size:%{public}zu -n %{public}s -m %{public}s -e %{public}s"
+            " -u %{public}d -i %{public}d", extensionInfos.size(), bundleName.c_str(), element.GetModuleName().c_str(),
+            extensionName.c_str(), userId, appIndex);
         return !extensionInfos.empty();
     }
 
