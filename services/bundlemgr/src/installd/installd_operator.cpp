@@ -105,6 +105,7 @@ constexpr const char* PROC_MOUNTS_PATH = "/proc/mounts";
 constexpr const char* QUOTA_DEVICE_DATA_PATH = "/data";
 constexpr const char* CACHE_DIR = "cache";
 constexpr const char* BUNDLE_BASE_CODE_DIR = "/data/app/el1/bundle";
+constexpr const char* SKILL_BASE_CODE_DIR = "/data/app/el1/skills";
 constexpr const char* AP_PATH = "ap/";
 constexpr const char* AI_SUFFIX = ".ai";
 constexpr const char* DIFF_SUFFIX = ".diff";
@@ -1261,7 +1262,8 @@ bool InstalldOperator::IsValidCodePath(const std::string &codePath)
         LOG_E(BMS_TAG_INSTALLD, "code path is empty");
         return false;
     }
-    return IsValidPath(std::string(BUNDLE_BASE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR, codePath);
+    return IsValidPath(std::string(BUNDLE_BASE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR, codePath) ||
+        IsValidPath(std::string(SKILL_BASE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR, codePath);
 }
 
 bool InstalldOperator::DeleteFiles(const std::string &dataPath)

@@ -1516,6 +1516,28 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8900, Function | Sma
 }
 
 /**
+ * @tc.number: InstalldOperatorTest_8910
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling IsValidCodePath of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8910, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::IsValidCodePath("/data/app/el1/skills/public/com.test");
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8920
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling IsValidCodePath of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8920, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::IsValidCodePath("/data/app/el1/skills/public/../com.test");
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: InstalldOperatorTest_9000
  * @tc.name: test function of InstalldOperator
  * @tc.desc: 1. calling PerformCodeSignatureCheck of InstalldOperator

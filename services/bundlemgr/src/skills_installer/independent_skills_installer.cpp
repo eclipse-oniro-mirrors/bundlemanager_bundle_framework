@@ -19,6 +19,7 @@
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
+#include "bundle_permission_mgr.h"
 #include "inner_patch_info.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
@@ -526,6 +527,18 @@ ErrCode IndependentSkillsInstaller::SaveBundleInfoToStorage()
         LOG_E(BMS_TAG_INSTALLER, "UpdateBundleInstallState failed");
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
+    // init hapToken
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    ErrCode result = BundlePermissionMgr::InitHapToken(newInnerBundleInfo_, userId_, 0, accessTokenIdEx, checkResult,
+        verifyRes_.GetProvisionInfo().appServiceCapabilities, false);
+    if (result != ERR_OK) {
+        auto msg = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s init hapToken failed msg %{public}s, err %{public}d",
+            bundleName_.c_str(), msg.c_str(), result);
+        return result;
+    }
+
     newInnerBundleInfo_.SetBundleInstallTime(BundleUtil::GetCurrentTimeMs(), userId_);
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, newInnerBundleInfo_)) {
         dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_START);
@@ -586,6 +599,17 @@ ErrCode IndependentSkillsInstaller::UpdateSkillsPackage(
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "UninstallLowerVersion failed %{public}d, can not rollback", result);
         }
+    }
+    // update hapToken
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    result = BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, oldInfo, userId_, checkResult,
+        verifyRes_.GetProvisionInfo().appServiceCapabilities, false, false);
+    if (result != ERR_OK) {
+        auto msg = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s update hapToken failed msg %{public}s, err %{public}d",
+            bundleName_.c_str(), msg.c_str(), result);
+        return result;
     }
     InnerProcessNeedDeleteSkillPackage(oldInfo);
     return ERR_OK;

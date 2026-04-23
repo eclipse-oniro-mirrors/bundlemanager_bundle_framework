@@ -146,6 +146,8 @@ public:
     AccessTokenID tokenID = INVALID_TOKENID;
     bool isAtomicService;
     std::string appProvisionType = "release";
+    /** Whether hap is a skill */
+    bool isSkillHap = false;
 };
 
 /**
@@ -163,6 +165,8 @@ public:
     bool isAtomicService;
     bool dataRefresh = false;
     std::string appProvisionType = "release";
+    /** Whether hap is a skill */
+    bool isSkillHap = false;
 };
 
 class PreAuthorizationInfo final {
