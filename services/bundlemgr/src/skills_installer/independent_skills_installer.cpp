@@ -26,6 +26,7 @@
 #include "patch_data_mgr.h"
 #include "scope_guard.h"
 #include "skills_description_manager.h"
+#include "skills_installer_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -730,28 +731,23 @@ ErrCode IndependentSkillsInstaller::ExtractModule(
     ErrCode result = ERR_OK;
     auto moduleInfos = newInfo.GetInnerModuleInfos();
     if (moduleInfos.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s has no module", bundleName_.c_str());
         return ERR_SKILLS_HAS_NO_MODULE;
     }
-    std::vector<std::string> skillsNameList;
-    for (const auto &skills : moduleInfos.begin()->second.skillProfiles) {
-        skillsNameList.emplace_back(skills.name);
-    }
+    std::string bundleDir = std::string(BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_;
+    result = MkdirIfNotExist(bundleDir);
+    CHECK_SKILLS_RESULT(result, "Check bundle dir failed %{public}d");
+    newInfo.SetAppCodePath(bundleDir);
     std::string moduleName = moduleInfos.begin()->second.moduleName;
     std::string tempModuleName = moduleName;
     if (isModuleExist) {
         tempModuleName += TEMP_PATH;
     }
-    // need to extract module
-    std::vector<SkillsPackageInfo> validSkillInfoList;
-    if (!validSkillInfoList.empty()) {
-        result = SkillsDescriptionManager::GetInstance()->AddSkillDescriptions(validSkillInfoList);
-        CHECK_SKILLS_RESULT(result, "AddSkillDescriptions failed %{public}d");
-    }
-    std::string bundleDir = std::string(BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_;
-    newInfo.SetAppCodePath(bundleDir);
     std::string moduleDir = bundleDir + ServiceConstants::PATH_SEPARATOR + tempModuleName;
     result = MkdirIfNotExist(moduleDir);
     CHECK_SKILLS_RESULT(result, "Check module dir failed %{public}d");
+    result = ExtractSkills(newInfo, moduleInfos.begin()->second, bundlePath, isModuleExist);
+    CHECK_SKILLS_RESULT(result, "extract skill failed %{public}d");
     // preInstallHsp does not need to copy
     if (copyHapToInstallPath) {
         std::string tempHspPath = moduleDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
@@ -766,16 +762,61 @@ ErrCode IndependentSkillsInstaller::ExtractModule(
     } else {
         newInfo.SetModuleHapPath(bundlePath);
     }
+    std::string realModuleDir = bundleDir + ServiceConstants::PATH_SEPARATOR + moduleName;
     // rename +temp
     if (isModuleExist) {
-        std::string realModuleDir = bundleDir + ServiceConstants::PATH_SEPARATOR + moduleName;
         result = InstalldClient::GetInstance()->RenameModuleDir(moduleDir, realModuleDir);
         CHECK_SKILLS_RESULT(result, "rename +temp path failed %{public}d");
     }
     // save killName and description
-    newInfo.AddModuleSrcDir(moduleDir);
-    newInfo.AddModuleResPath(moduleDir);
+    newInfo.AddModuleSrcDir(realModuleDir);
+    newInfo.AddModuleResPath(realModuleDir);
     newInfo.SetHideDesktopIcon(true);
+    return ERR_OK;
+}
+
+ErrCode IndependentSkillsInstaller::ExtractSkills(
+    InnerBundleInfo &newInfo, const InnerModuleInfo &moduleInfo, const std::string &bundlePath, bool isModuleExist)
+{
+    std::vector<std::string> skillsNameList;
+    for (const auto &skills : moduleInfo.skillProfiles) {
+        // not allow ../ in name
+        if (skills.name.find(ServiceConstants::RELATIVE_PATH) == std::string::npos) {
+            skillsNameList.emplace_back(skills.name);
+        }
+    }
+    if (skillsNameList.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s has no skillProfiles", bundleName_.c_str());
+        return ERR_SKILLS_HAS_NO_SKILLS_AGENT;
+    }
+    std::string moduleName = moduleInfo.moduleName;
+    std::string tempModuleName = moduleName;
+    if (isModuleExist) {
+        tempModuleName += TEMP_PATH;
+    }
+    std::vector<SkillsPackageInfo> validSkillInfoList;
+    ErrCode result = SkillsInstallerUtil::ExtractSkillsPackage(bundleName_, tempModuleName, bundlePath, skillsNameList,
+        validSkillInfoList);
+    CHECK_SKILLS_RESULT(result, "ExtractSkillsPackage failed %{public}d");
+    if (validSkillInfoList.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s has no validSkillInfoList", bundleName_.c_str());
+        return ERR_SKILLS_HAS_NO_SKILLS_AGENT;
+    }
+    if (isModuleExist) {
+        for (auto &info : validSkillInfoList) {
+            info.moduleName = moduleName;
+        }
+    }
+    result = SkillsInstallerUtil::RemoveInvalidSkillProfiles(validSkillInfoList, newInfo);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s remove skill failed %{public}d", bundleName_.c_str(), result);
+        return result;
+    }
+    result = SkillsDescriptionManager::GetInstance()->AddSkillDescriptions(validSkillInfoList);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s add description failed %{public}d", bundleName_.c_str(), result);
+        return result;
+    }
     return ERR_OK;
 }
 
