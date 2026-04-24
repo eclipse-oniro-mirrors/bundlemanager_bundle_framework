@@ -68,6 +68,8 @@ private:
     ErrCode CheckFileType(const std::vector<std::string> &bundlePaths);
     ErrCode ExtractModule(
         InnerBundleInfo &newInfo, const std::string &bundlePath, bool copyHapToInstallPath, bool isModuleExist);
+    ErrCode ExtractSkills(
+        InnerBundleInfo &newInfo, const InnerModuleInfo &moduleInfo, const std::string &bundlePath, bool isModuleExist);
     ErrCode MkdirIfNotExist(const std::string &dir);
     void MergeBundleInfos(InnerBundleInfo &info);
     ErrCode SaveBundleInfoToStorage();

@@ -692,6 +692,12 @@ ErrCode InstalldClient::DeleteCertAndRemoveKey(const std::vector<std::string> &c
     return CallService(&IInstalld::DeleteCertAndRemoveKey, certPaths);
 }
 
+ErrCode InstalldClient::ExtractSkillsPackage(const SkillsPackageParam &param,
+    std::vector<SkillsPackageInfo> &skillInfoList)
+{
+    return CallService(&IInstalld::ExtractSkillsPackage, param, skillInfoList);
+}
+
 void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject>& remoteObject) {}
 
 void InstalldClient::OnLoadSystemAbilityFail() {}
