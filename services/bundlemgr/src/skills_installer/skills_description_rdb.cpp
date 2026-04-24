@@ -64,7 +64,6 @@ ErrCode SkillsDescriptionRdb::AddSkillDescriptions(const std::vector<SkillsPacka
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
-    std::vector<NativeRdb::ValuesBucket> valuesBucketList;
     for (const auto &skillInfo : skillInfoList) {
         if (skillInfo.bundleName.empty() || skillInfo.moduleName.empty() || skillInfo.skillsName.empty()) {
             APP_LOGE("AddSkillDescriptions failed, bundleName or moduleName or skillsName is empty");
@@ -76,22 +75,14 @@ ErrCode SkillsDescriptionRdb::AddSkillDescriptions(const std::vector<SkillsPacka
         valuesBucket.PutString(MODULE_NAME, skillInfo.moduleName);
         valuesBucket.PutString(SKILL_NAME, skillInfo.skillsName);
         valuesBucket.PutString(DESCRIPTION, skillInfo.description);
-        valuesBucketList.push_back(valuesBucket);
-    }
-
-    if (valuesBucketList.empty()) {
-        APP_LOGE("AddSkillDescriptions failed, no valid skillInfo to insert");
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
-    }
-
-    int64_t insertNum = 0;
-    if (!rdbDataManager_->BatchInsert(insertNum, valuesBucketList)) {
-        APP_LOGE("AddSkillDescriptions failed, BatchInsertData returned false");
-        return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
-    }
-    if (valuesBucketList.size() != static_cast<uint64_t>(insertNum)) {
-        APP_LOGE("BatchInsert size not expected");
-        return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
+        NativeRdb::AbsRdbPredicates absRdbPredicates(SKILLS_DESCRIPTION_TABLE_NAME);
+        absRdbPredicates.EqualTo(BUNDLE_NAME, skillInfo.bundleName);
+        absRdbPredicates.EqualTo(MODULE_NAME, skillInfo.moduleName);
+        absRdbPredicates.EqualTo(SKILL_NAME, skillInfo.skillsName);
+        if (!rdbDataManager_->UpdateOrInsertData(valuesBucket, absRdbPredicates)) {
+            APP_LOGE("AddSkillDescriptions failed, UpdateOrInsertData returned false");
+            return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
+        }
     }
 
     return ERR_OK;
