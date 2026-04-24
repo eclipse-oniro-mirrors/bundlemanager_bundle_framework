@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,9 +17,12 @@
 
 #include <thread>
 
+#include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_resource_callback.h"
 #include "bundle_system_state.h"
+#include "bundle_util.h"
+#include "event_report.h"
 
 #ifdef ABILITY_RUNTIME_ENABLE
 #include "configuration.h"
@@ -28,6 +31,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 #ifdef ABILITY_RUNTIME_ENABLE
+constexpr int64_t RESOURCE_CHANGE_TIMEOUT_MS = 15000;
+
 BundleResourceObserver::BundleResourceObserver()
 {}
 
@@ -76,17 +81,53 @@ void BundleResourceObserver::OnSystemColorModeChanged(const std::string &colorMo
     callback.OnSystemColorModeChanged(colorMode, type);
 }
 
+void BundleResourceObserver::ReportResourceSwitchEvent(const uint32_t type, int32_t userId,
+    int64_t startTime, int64_t endTime)
+{
+    EventInfo eventInfo;
+    eventInfo.actionType = static_cast<int32_t>(MonitorEventActionType::RESOURCE_SWITCH_EXCEPTION);
+    eventInfo.userId = userId;
+    eventInfo.startTime = startTime;
+    eventInfo.endTime = endTime;
+    if ((type & static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) != 0) {
+        eventInfo.operationType = static_cast<int32_t>(MonitorEventOperationType::THEME_SWITCH_EXCEPTION);
+    } else {
+        eventInfo.operationType = static_cast<int32_t>(MonitorEventOperationType::LANGUAGE_SWITCH_EXCEPTION);
+    }
+    EventReport::SendHighRiskEvent(eventInfo);
+}
+
 void BundleResourceObserver::OnSystemLanguageChange(const std::string &language, const uint32_t type)
 {
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (currentUserId <= 0) {
+        currentUserId = Constants::START_USERID;
+    }
+    auto startTime = BundleUtil::GetCurrentTimeMs();
     BundleResourceCallback callback;
-    callback.OnSystemLanguageChange(language, type);
+    bool result = callback.OnSystemLanguageChange(language, type);
+    auto endTime = BundleUtil::GetCurrentTimeMs();
+    auto elapsed = endTime - startTime;
+    if (!result || elapsed >= RESOURCE_CHANGE_TIMEOUT_MS) {
+        ReportResourceSwitchEvent(type, currentUserId, startTime, endTime);
+    }
 }
 
 void BundleResourceObserver::OnApplicationThemeChanged(const std::string &theme,
     const int32_t themeId, const int32_t themeIcon, const uint32_t type)
 {
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (currentUserId <= 0) {
+        currentUserId = Constants::START_USERID;
+    }
+    int64_t startTime = BundleUtil::GetCurrentTimeMs();
     BundleResourceCallback callback;
-    callback.OnApplicationThemeChanged(theme, themeId, themeIcon, type);
+    bool result = callback.OnApplicationThemeChanged(theme, themeId, themeIcon, type);
+    int64_t endTime = BundleUtil::GetCurrentTimeMs();
+    auto elapsed = endTime - startTime;
+    if (!result || elapsed >= RESOURCE_CHANGE_TIMEOUT_MS) {
+        ReportResourceSwitchEvent(type, currentUserId, startTime, endTime);
+    }
 }
 
 void BundleResourceObserver::ProcessResourceChangeByType(const std::string &language,

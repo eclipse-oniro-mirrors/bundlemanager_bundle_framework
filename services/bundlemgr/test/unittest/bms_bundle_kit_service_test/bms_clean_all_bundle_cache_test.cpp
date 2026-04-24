@@ -1059,6 +1059,38 @@ HWTEST_F(BmsCleanAllBundleCacheTest, HandleCleanBundleCacheFilesForSelf_0200, Fu
 }
 
 /**
+ * @tc.number: GetAllBundleCacheStat_0100
+ * @tc.name: test elapsedTime calculation and timeout branch
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, GetAllBundleCacheStat_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true);
+    CreateFileDir();
+    auto callback = sptr<ProcessCacheCallbackHost>(new ProcessCacheCallbackHost());
+    auto result = BundleCacheMgr::GetAllBundleCacheStat(callback);
+    EXPECT_EQ(result, ERR_OK);
+    std::this_thread::sleep_for(std::chrono::seconds(21));
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanAllBundleCache_0100
+ * @tc.name: test CleanAllBundleCache timeout branch
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanAllBundleCache_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true);
+    CreateFileDir();
+    auto callback = sptr<ProcessCacheCallbackHost>(new ProcessCacheCallbackHost());
+    auto result = BundleCacheMgr::CleanAllBundleCache(callback);
+    EXPECT_EQ(result, ERR_OK);
+    std::this_thread::sleep_for(std::chrono::seconds(21));
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: CleanBundleCacheByInodeCount_0100
  * @tc.name: test with valid uid
  * @tc.desc: 1. Set target data to dataMgr
