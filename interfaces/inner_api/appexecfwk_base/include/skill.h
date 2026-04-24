@@ -20,6 +20,7 @@
 
 #include "parcel.h"
 #include "application_info.h"
+#include "nlohmann/json.hpp"
 #include "want.h"
 
 namespace OHOS {
