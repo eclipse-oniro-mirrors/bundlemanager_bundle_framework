@@ -3037,11 +3037,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     info.SetBundleInstallTime(currentTime, userId_);
     SetFirstInstallTime(bundleName_, currentTime, info);
     tempInfo_.SetTempBundleInfo(info);
-    result = CommitAppSkills(info);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "commit app skills failed");
-        return result;
-    }
+    (void)CommitAppSkills(info);
     stateGuard.Dismiss();
     bundleGuard.Dismiss();
 
@@ -3199,11 +3195,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
             modulePackage_.c_str(), bundleName_.c_str());
         return ERR_APPEXECFWK_ADD_MODULE_ERROR;
     }
-    result = CommitAppSkills(newInfo);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "commit app skills failed, ret=%{public}d", result);
-        return result;
-    }
+    (void)CommitAppSkills(newInfo);
     tempInfo_.SetTempBundleInfo(oldInfo);
     moduleGuard.Dismiss();
     skillGuard.Dismiss();
@@ -3291,8 +3283,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     }
     ScopeGuard skillGuard([&] { RemoveAppSkillsDir(newInfo.GetBundleName(), newInfo.GetCurModuleName(), true); });
 
-    result = FinalizeAppSkills(newInfo);
-    CHECK_RESULT(result, "finalize app skills failed %{public}d");
+    (void)FinalizeAppSkills(newInfo);
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "old module update state failed");
@@ -3306,11 +3297,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         LOG_E(BMS_TAG_INSTALLER, "update innerBundleInfo %{public}s failed", bundleName_.c_str());
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
-    result = CommitAppSkills(newInfo);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "commit app skills failed, ret=%{public}d", result);
-        return result;
-    }
+    (void)CommitAppSkills(newInfo);
     tempInfo_.SetTempBundleInfo(oldInfo);
     needDeleteQuickFixInfo_ = true;
     skillGuard.Dismiss();
@@ -4359,8 +4346,7 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     info.AddModuleSrcDir(moduleDir);
     info.AddModuleResPath(moduleDir);
     info.AddModuleHnpsPath(modulePath);
-    result = ProcessAppSkills(info);
-    CHECK_RESULT(result, "fail to process app skills, error is %{public}d");
+    (void)ProcessAppSkills(info);
     return ERR_OK;
 }
 
@@ -4390,7 +4376,8 @@ ErrCode BaseBundleInstaller::ProcessAppSkills(InnerBundleInfo &info)
 
     std::vector<std::string> skillNameList;
     for (const auto &skillProfile : moduleInfo.skillProfiles) {
-        if (!skillProfile.name.empty()) {
+        if (!skillProfile.name.empty() &&
+            skillProfile.name.find(ServiceConstants::RELATIVE_PATH) == std::string::npos) {
             skillNameList.emplace_back(skillProfile.name);
         }
     }
