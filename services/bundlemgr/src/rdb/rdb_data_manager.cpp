@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -101,8 +101,22 @@ std::mutex &RdbDataManager::GetRdbRestoreMutex(const std::string &dbName)
     return restoreRdbMap_[dbName];
 }
 
+void RdbDataManager::ReportRdbLostEvent(MonitorEventOperationType operation, int32_t userId,
+    const std::string &bundleName, int64_t startTime, int64_t endTime)
+{
+    EventInfo eventInfo;
+    eventInfo.actionType = static_cast<int32_t>(MonitorEventActionType::TRIGGER_FALLBACK);
+    eventInfo.operationType = static_cast<int32_t>(operation);
+    eventInfo.userId = userId;
+    eventInfo.bundleName = bundleName;
+    eventInfo.startTime = startTime;
+    eventInfo.endTime = endTime;
+    EventReport::SendHighRiskEvent(eventInfo);
+}
+
 ErrCode RdbDataManager::GetRdbStoreFromNative()
 {
+    int64_t startTime = BundleUtil::GetCurrentTimeMs();
     auto &mutex = GetRdbRestoreMutex(bmsRdbConfig_.dbName);
     std::lock_guard<std::mutex> restoreLock(mutex);
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
@@ -112,10 +126,14 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
     rdbStoreConfig.SetHaMode(NativeRdb::HAMode::MAIN_REPLICA);
     // for check db exist or not
     bool isNewDb = false;
+    bool needReportFallBack = false;
     if (access(rdbStoreConfig.GetPath().c_str(), F_OK) != 0) {
         APP_LOGW_NOFUNC("bms db :%{public}s is not exist, need to create. errno:%{public}d",
             rdbStoreConfig.GetPath().c_str(), errno);
         isNewDb = true;
+        if (isInitial_) {
+            needReportFallBack = true;
+        }
     }
     int32_t errCode = NativeRdb::E_OK;
     BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
@@ -125,8 +143,16 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
         bmsRdbOpenCallback, errCode);
     if (rdbStore_ == nullptr) {
         APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
+        if (needReportFallBack) {
+            ReportRdbLostEvent(MonitorEventOperationType::DB_OPEN_FAILED,
+                Constants::INVALID_USERID, "", startTime, BundleUtil::GetCurrentTimeMs());
+        }
         SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::OPEN), errCode);
         return errCode;
+    }
+    if (needReportFallBack) {
+        ReportRdbLostEvent(MonitorEventOperationType::DB_FALLBACK_CREATED,
+            Constants::INVALID_USERID, "", startTime, BundleUtil::GetCurrentTimeMs());
     }
     CheckSystemSizeAndHisysEvent(bmsRdbConfig_.dbPath, bmsRdbConfig_.dbName);
     bool isNeedRebuildDb = false;

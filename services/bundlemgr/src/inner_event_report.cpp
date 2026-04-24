@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -52,6 +52,7 @@ constexpr const char* QUERY_BUNDLE_INFO = "QUERY_BUNDLE_INFO";
 constexpr const char* BUNDLE_DYNAMIC_SHORTCUTINFO = "BUNDLE_DYNAMIC_SHORTCUTINFO";
 constexpr const char* DESKTOP_SHORTCUT = "DESKTOP_SHORTCUT";
 constexpr const char* APP_STATUS_CHANGE = "APP_STATUS_CHANGE";
+constexpr const char* HIGH_RISK_EVENT = "HIGH_RISK_EVENT";
 
 // event params
 const char* EVENT_PARAM_PNAMEID = "PNAMEID";
@@ -356,6 +357,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::APP_STATUS_CHANGE,
             [](const EventInfo& eventInfo) {
                 InnerSendAppDisableForbiddenEvent(eventInfo);
+            } },
+        { BMSEventType::HIGH_RISK_EVENT,
+            [](const EventInfo& eventInfo) {
+                InnerSendHighRiskEvent(eventInfo);
             } },
     };
 
@@ -880,6 +885,19 @@ void InnerEventReport::InnerSendAppDisableForbiddenEvent(const EventInfo& eventI
         EVENT_PARAM_DISABLE_FORBIDDEN, eventInfo.disableForbidden,
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid);
+}
+
+void InnerEventReport::InnerSendHighRiskEvent(const EventInfo& eventInfo)
+{
+    InnerSystemEventWrite(
+        HIGH_RISK_EVENT,
+        HiSysEventType::STATISTIC,
+        EVENT_PARAM_ACTION_TYPE, eventInfo.actionType,
+        EVENT_PARAM_OPERATION_TYPE, eventInfo.operationType,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_START_TIME, eventInfo.startTime,
+        EVENT_PARAM_END_TIME, eventInfo.endTime);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

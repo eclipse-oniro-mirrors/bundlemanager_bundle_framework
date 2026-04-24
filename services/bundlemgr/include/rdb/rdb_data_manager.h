@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 
 #include "bms_rdb_config.h"
 #include "bms_rdb_open_callback.h"
+#include "event_report.h"
 #include "rdb_helper.h"
 #include "single_delayed_task_mgr.h"
 
@@ -61,7 +62,10 @@ public:
     bool CheckIsSatisfyTime();
 
     void SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode);
-    
+
+    void ReportRdbLostEvent(MonitorEventOperationType operation, int32_t userId,
+        const std::string &bundleName, int64_t startTime, int64_t endTime);
+
     bool ExecuteSql();
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore(ErrCode &result);

@@ -36,6 +36,8 @@ public:
     void ProcessResourceChangeByType(const std::string &language, const std::string &theme,
         const int32_t id, const int32_t themeIcon, const uint32_t type);
 
+    static void ReportResourceSwitchEvent(const uint32_t type, int32_t userId,
+        int64_t startTime, int64_t endTime);
 private:
 
     static void OnSystemColorModeChanged(const std::string &colorMode, const uint32_t type);
