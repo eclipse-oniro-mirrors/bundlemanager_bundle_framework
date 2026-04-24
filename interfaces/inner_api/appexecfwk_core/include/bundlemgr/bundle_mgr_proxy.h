@@ -33,6 +33,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 
+#if defined(__GNUC__) && __GNUC__ >= 4
+    #define BUNDLE_HIDDEN __attribute__((visibility("hidden")))
+#else
+    #define BUNDLE_HIDDEN
+#endif
 class BundleMgrProxy : public IRemoteProxy<IBundleMgr> {
 public:
     explicit BundleMgrProxy(const sptr<IRemoteObject> &impl);
@@ -1496,7 +1501,7 @@ private:
     ErrCode InnerGetBigString(MessageParcel &reply, std::string &result);
 
     ErrCode GetMediaDataFromAshMem(MessageParcel &reply, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len);
-    static inline BrokerDelegator<BundleMgrProxy> delegator_;
+    BUNDLE_HIDDEN static inline BrokerDelegator<BundleMgrProxy> delegator_;
 
     template<typename T>
     ErrCode WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const;
