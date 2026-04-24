@@ -5580,7 +5580,9 @@ ErrCode BaseBundleInstaller::ProcessBinFiles(
     std::vector<std::string> binFilePaths;
     for (const auto &infoPair : infos) {
         const InnerBundleInfo &info = infoPair.second;
-        std::string nativeLibraryPath = info.GetNativeLibraryPath();
+        std::string cpuAbi;
+        std::string nativeLibraryPath;
+        info.FetchNativeSoAttrs(info.GetCurrentModulePackage(), cpuAbi, nativeLibraryPath);
         auto paths = GetBinFilePaths(info, nativeLibraryPath);
         binFilePaths.insert(binFilePaths.end(), paths.begin(), paths.end());
     }
