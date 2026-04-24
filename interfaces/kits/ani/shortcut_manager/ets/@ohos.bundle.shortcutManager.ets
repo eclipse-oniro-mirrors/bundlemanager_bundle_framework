@@ -20,7 +20,7 @@ namespace shortcutManager {
 
   loadLibraryWithPermissionCheck("ani_shortcut_manager.z", "@ohos.bundle.shortcutManager");
 
-  function createBusinessError(code: int, message: string) {
+  function createBusinessError(code: int, message: string): BusinessError {
     let err = new BusinessError();
     err.code = code;
     err.name = 'Error';
