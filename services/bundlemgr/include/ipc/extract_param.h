@@ -28,7 +28,8 @@ enum ExtractFileType : uint8_t {
     AP,
     RESOURCE,
     RES_FILE,
-    HNPS_FILE
+    HNPS_FILE,
+    NPAPI_PLUGIN
 };
 
 struct ExtractParam : public Parcelable {

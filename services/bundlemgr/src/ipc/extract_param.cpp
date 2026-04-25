@@ -29,13 +29,14 @@ constexpr const char* TYPE_AP = "Ap";
 constexpr const char* TYPE_RESOURCE = "Resource";
 constexpr const char* TYPE_RES_FILE = "ResFile";
 constexpr const char* TYPE_HNPS_FILE = "HnpsFile";
+constexpr const char* TYPE_NPAPI_PLUGIN = "NpapiPlugin";
 constexpr const char* TYPE_OTHER = "Other";
 const ExtractFileType ARGS_MAP_KEY[] = {
     ExtractFileType::ALL, ExtractFileType::SO, ExtractFileType::AN, ExtractFileType::PATCH, ExtractFileType::AP,
-    ExtractFileType::RESOURCE, ExtractFileType::RES_FILE, ExtractFileType::HNPS_FILE,
+    ExtractFileType::RESOURCE, ExtractFileType::RES_FILE, ExtractFileType::HNPS_FILE, ExtractFileType::NPAPI_PLUGIN,
 };
 constexpr const char* ARGS_MAP_VALUE[] = {
-    TYPE_ALL, TYPE_SO, TYPE_AN, TYPE_PATCH, TYPE_AP, TYPE_RESOURCE, TYPE_RES_FILE, TYPE_HNPS_FILE,
+    TYPE_ALL, TYPE_SO, TYPE_AN, TYPE_PATCH, TYPE_AP, TYPE_RESOURCE, TYPE_RES_FILE, TYPE_HNPS_FILE, TYPE_NPAPI_PLUGIN,
 };
 
 std::string GetExtractFileTypeStrVal(const ExtractFileType &extractFileType)

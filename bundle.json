@@ -30,6 +30,7 @@
             "bundle_framework_form_dimension_2_3",
             "bundle_framework_form_dimension_3_3",
             "bundle_framework_bss_enable",
+            "bundle_framework_npapi_enable",
             "bundle_framework_app_fwk_update_enable"
         ],
         "hisysevent_config": [
@@ -48,6 +49,7 @@
                 "access_token",
                 "api_metrics",
                 "app_domain_verify",
+                "app_file_service",
                 "appverify",
                 "battery_manager",
                 "common_event_service",
@@ -56,6 +58,7 @@
                 "device_info_manager",
                 "device_manager",
                 "device_usage_statistics",
+                "dfs_service",
                 "display_manager",
                 "ecological_rule_manager",
                 "eventhandler",
