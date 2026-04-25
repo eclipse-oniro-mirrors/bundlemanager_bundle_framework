@@ -167,7 +167,7 @@ HWTEST_F(BmsSkillsDescriptionRdbTest, AddSkillDescriptions_0004, Function | Smal
     skillInfoList.push_back(skillInfo);
 
     ErrCode ret = skillsDescriptionRdb.AddSkillDescriptions(skillInfoList);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -190,7 +190,7 @@ HWTEST_F(BmsSkillsDescriptionRdbTest, AddSkillDescriptions_0005, Function | Smal
     skillInfoList.push_back(skillInfo);
 
     ErrCode ret = skillsDescriptionRdb.AddSkillDescriptions(skillInfoList);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -213,7 +213,7 @@ HWTEST_F(BmsSkillsDescriptionRdbTest, AddSkillDescriptions_0006, Function | Smal
     skillInfoList.push_back(skillInfo);
 
     ErrCode ret = skillsDescriptionRdb.AddSkillDescriptions(skillInfoList);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

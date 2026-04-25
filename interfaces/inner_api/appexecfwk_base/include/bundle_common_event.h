@@ -31,6 +31,7 @@ constexpr const char* DEFAULT_APPLICATION_CHANGED = "usual.event.DEFAULT_APPLICA
 constexpr const char* PLUGIN_PACKAGE_CHANGED = "usual.event.PLUGIN_PACKAGE_CHANGED";
 constexpr const char* PLUGIN_PACKAGE_ADDED = "usual.event.PLUGIN_PACKAGE_ADDED";
 constexpr const char* PLUGIN_PACKAGE_REMOVED = "usual.event.PLUGIN_PACKAGE_REMOVED";
+constexpr const char* SKILL_CHANGED = "usual.event.SKILL_CHANGED";
 } // AppExecFwk
 } // OHOS
 #endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_COMMON_EVENT_H
