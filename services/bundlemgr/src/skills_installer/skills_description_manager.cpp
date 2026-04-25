@@ -53,5 +53,14 @@ ErrCode SkillsDescriptionManager::DeleteSkillDescriptions(const std::string &bun
         bundleName.c_str(), moduleName.c_str(), skillName.c_str());
     return skillsDescriptionRdb_->DeleteSkillDescriptions(bundleName, moduleName, skillName);
 }
+
+ErrCode SkillsDescriptionManager::GetSkillDescription(const std::string &bundleName,
+    const std::string &moduleName, const std::string &skillName, std::string &description)
+{
+    APP_LOGD("SkillsDescriptionManager::GetSkillDescription bundleName:%{public}s, "
+        "moduleName:%{public}s, skillName:%{public}s",
+        bundleName.c_str(), moduleName.c_str(), skillName.c_str());
+    return skillsDescriptionRdb_->GetSkillDescription(bundleName, moduleName, skillName, description);
+}
 } // namespace AppExecFwk
 } // namespace OHOS

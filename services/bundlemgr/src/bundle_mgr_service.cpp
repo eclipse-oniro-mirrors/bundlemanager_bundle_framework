@@ -149,6 +149,7 @@ bool BundleMgrService::Init()
     CHECK_INIT_RESULT(InitQuickFixManager(), "Init quickFixManager fail");
     CHECK_INIT_RESULT(InitOverlayManager(), "Init overlayManager fail");
     CHECK_INIT_RESULT(InitBundleResourceMgr(), "Init BundleResourceMgr fail");
+    CHECK_INIT_RESULT(InitSkillManager(), "Init SkillManager fail");
     BundleResourceHelper::BundleSystemStateInit();
     ready_ = true;
     APP_LOGI_NOFUNC("BundleMgrService Init success");
@@ -370,6 +371,18 @@ bool BundleMgrService::InitBundleResourceMgr()
     return true;
 }
 
+bool BundleMgrService::InitSkillManager()
+{
+    if (skillManagerHostImpl_ == nullptr) {
+        skillManagerHostImpl_ = new (std::nothrow) SkillManagerHostImpl();
+        if (skillManagerHostImpl_ == nullptr) {
+            APP_LOGE("create skillManagerHostImpl failed");
+            return false;
+        }
+    }
+    return true;
+}
+
 sptr<BundleInstallerHost> BundleMgrService::GetBundleInstaller() const
 {
     return installer_;
@@ -502,6 +515,11 @@ sptr<IBundleResource> BundleMgrService::GetBundleResourceProxy() const
     return bundleResourceHostImpl_;
 }
 #endif
+
+sptr<IBundleSkillManager> BundleMgrService::GetSkillManagerProxy() const
+{
+    return skillManagerHostImpl_;
+}
 
 void BundleMgrService::CheckAllUser()
 {

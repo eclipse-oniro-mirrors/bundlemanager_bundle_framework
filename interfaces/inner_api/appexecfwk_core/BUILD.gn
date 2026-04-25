@@ -44,6 +44,7 @@ config("bundlemgr_sdk_config") {
     "include",
     "include/app_control",
     "include/bundle_resource",
+    "include/bundle_skill",
     "include/bundlemgr",
     "include/default_app",
     "include/extend_resource",
@@ -68,6 +69,7 @@ ohos_shared_headers("appexecfwk_core_headers") {
     "include",
     "include/app_control",
     "include/bundle_resource",
+    "include/bundle_skill",
     "include/bundlemgr",
     "include/default_app",
     "include/extend_resource",
@@ -223,6 +225,11 @@ ohos_shared_library("appexecfwk_core") {
       "src/bundle_resource/bundle_resource_proxy.cpp",
     ]
   }
+
+  sources += [
+    "src/bundle_skill/skill_manager_host.cpp",
+    "src/bundle_skill/skill_manager_proxy.cpp",
+  ]
 
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]

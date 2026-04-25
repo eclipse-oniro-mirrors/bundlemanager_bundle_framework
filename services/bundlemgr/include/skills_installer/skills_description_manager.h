@@ -63,6 +63,17 @@ public:
     ErrCode DeleteSkillDescriptions(const std::string &bundleName, const std::string &moduleName,
         const std::string &skillName);
 
+    /**
+     * @brief Get skill description by bundle name, module name and skill name.
+     * @param bundleName Indicates the bundle name.
+     * @param moduleName Indicates the module name.
+     * @param skillName Indicates the skill name.
+     * @param description Output the description string.
+     * @return Returns ERR_OK if query successfully; returns error code otherwise.
+     */
+    ErrCode GetSkillDescription(const std::string &bundleName, const std::string &moduleName,
+        const std::string &skillName, std::string &description);
+
 private:
     std::shared_ptr<SkillsDescriptionRdb> skillsDescriptionRdb_;
 };

@@ -55,6 +55,7 @@
 #include "bundle_resource_host_impl.h"
 #endif
 #include "verify_manager_host_impl.h"
+#include "skill_manager_host_impl.h"
 namespace OHOS {
 namespace AppExecFwk {
 class BundleMgrService : public SystemAbility {
@@ -128,6 +129,7 @@ public:
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     sptr<IBundleResource> GetBundleResourceProxy() const;
 #endif
+    sptr<IBundleSkillManager> GetSkillManagerProxy() const;
     /**
      * @brief Check all user.
      */
@@ -189,6 +191,7 @@ private:
     bool InitOverlayManager();
     void CreateBmsServiceDir();
     bool InitBundleResourceMgr();
+    bool InitSkillManager();
 
 private:
     bool ready_ = false;
@@ -235,6 +238,8 @@ private:
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     sptr<BundleResourceHostImpl> bundleResourceHostImpl_;
 #endif
+
+    sptr<SkillManagerHostImpl> skillManagerHostImpl_;
 
 #define CHECK_INIT_RESULT(result, errmsg)                                         \
     do {                                                                          \

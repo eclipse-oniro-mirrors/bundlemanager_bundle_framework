@@ -543,6 +543,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_PROXY):
             errCode = this->HandleGetBundleResourceProxy(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SKILL_MANAGER_PROXY):
+            errCode = this->HandleGetSkillManagerProxy(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_VERIFY_MANAGER):
             errCode = this->HandleGetVerifyManager(data, reply);
             break;
@@ -4173,6 +4176,22 @@ ErrCode BundleMgrHost::HandleGetBundleResourceProxy(MessageParcel &data, Message
     }
 
     if (!reply.WriteRemoteObject(bundleResourceProxy->AsObject())) {
+        APP_LOGE("WriteRemoteObject failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetSkillManagerProxy(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    sptr<IBundleSkillManager> skillManagerProxy = GetSkillManagerProxy();
+    if (skillManagerProxy == nullptr) {
+        APP_LOGE("skillManagerProxy is nullptr");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteRemoteObject(skillManagerProxy->AsObject())) {
         APP_LOGE("WriteRemoteObject failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

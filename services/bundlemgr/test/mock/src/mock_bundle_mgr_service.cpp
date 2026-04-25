@@ -307,5 +307,15 @@ int32_t BundleMgrService::OnExtension(const std::string& extension, MessageParce
 {
     return 0;
 }
+
+bool BundleMgrService::InitSkillManager()
+{
+    return false;
+}
+
+sptr<IBundleSkillManager> BundleMgrService::GetSkillManagerProxy() const
+{
+    return nullptr;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -1187,6 +1187,8 @@ public:
 
     virtual sptr<IBundleResource> GetBundleResourceProxy() override;
 
+    virtual sptr<IBundleSkillManager> GetSkillManagerProxy() override;
+
     virtual ErrCode GetRecoverableApplicationInfo(
         std::vector<RecoverableApplicationInfo> &recoverableApplications) override;
 

@@ -4950,6 +4950,32 @@ sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
     return bundleResourceProxy;
 }
 
+sptr<IBundleSkillManager> BundleMgrProxy::GetSkillManagerProxy()
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write InterfaceToken failed");
+        return nullptr;
+    }
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_SKILL_MANAGER_PROXY, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("reply failed");
+        return nullptr;
+    }
+    sptr<IBundleSkillManager> skillManagerProxy = iface_cast<IBundleSkillManager>(object);
+    if (skillManagerProxy == nullptr) {
+        APP_LOGE("skillManagerProxy is nullptr");
+    }
+
+    return skillManagerProxy;
+}
+
 ErrCode BundleMgrProxy::GetRecoverableApplicationInfo(
     std::vector<RecoverableApplicationInfo> &recoverableApplications)
 {

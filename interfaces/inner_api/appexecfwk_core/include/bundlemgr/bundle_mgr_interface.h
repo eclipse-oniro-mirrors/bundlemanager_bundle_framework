@@ -38,6 +38,7 @@
 #include "data_group_info.h"
 #include "app_control_interface.h"
 #include "bundle_resource_interface.h"
+#include "bundle_skill/skill_manager_interface.h"
 #include "default_app_interface.h"
 #include "extend_resource_manager_interface.h"
 #include "ibundle_mgr_ext.h"
@@ -1717,6 +1718,11 @@ public:
     }
 
     virtual sptr<IBundleResource> GetBundleResourceProxy()
+    {
+        return nullptr;
+    }
+
+    virtual sptr<IBundleSkillManager> GetSkillManagerProxy()
     {
         return nullptr;
     }
