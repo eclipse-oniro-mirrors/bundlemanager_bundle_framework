@@ -795,8 +795,8 @@ ErrCode IndependentSkillsInstaller::ExtractSkills(
         tempModuleName += TEMP_PATH;
     }
     std::vector<SkillsPackageInfo> validSkillInfoList;
-    ErrCode result = SkillsInstallerUtil::ExtractSkillsPackage(bundleName_, tempModuleName, bundlePath, skillsNameList,
-        validSkillInfoList);
+    ErrCode result = SkillsInstallerUtil::ExtractSkillsPackage(bundleName_, moduleName, tempModuleName,
+        bundlePath, skillsNameList, validSkillInfoList);
     CHECK_SKILLS_RESULT(result, "ExtractSkillsPackage failed %{public}d");
     if (validSkillInfoList.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "skills %{public}s has no validSkillInfoList", bundleName_.c_str());

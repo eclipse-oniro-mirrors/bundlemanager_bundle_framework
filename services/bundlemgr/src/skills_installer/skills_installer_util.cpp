@@ -25,12 +25,15 @@ namespace AppExecFwk {
 ErrCode SkillsInstallerUtil::ExtractSkillsPackage(
     const std::string &bundleName,
     const std::string &moduleName,
+    const std::string &extractModuleName,
     const std::string &hspPath,
     const std::vector<std::string> &skillNameList,
     std::vector<SkillsPackageInfo> &skillInfoList)
 {
-    LOG_I(BMS_TAG_INSTALLER, "bundleName=%{public}s, moduleName=%{public}s, hspPath=%{public}s, "
-        "skillCount=%{public}zu", bundleName.c_str(), moduleName.c_str(), hspPath.c_str(), skillNameList.size());
+    const std::string &realExtractModuleName = extractModuleName.empty() ? moduleName : extractModuleName;
+    LOG_I(BMS_TAG_INSTALLER, "bundleName=%{public}s, moduleName=%{public}s, "
+        "extractModuleName=%{public}s, hspPath=%{public}s, skillCount=%{public}zu", bundleName.c_str(),
+        moduleName.c_str(), realExtractModuleName.c_str(), hspPath.c_str(), skillNameList.size());
 
     if (bundleName.empty() || moduleName.empty() || hspPath.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "invalid input parameters");
@@ -41,6 +44,7 @@ ErrCode SkillsInstallerUtil::ExtractSkillsPackage(
     SkillsPackageParam param;
     param.bundleName = bundleName;
     param.moduleName = moduleName;
+    param.extractModuleName = realExtractModuleName;
     param.hspPath = hspPath;
     param.skillNameList = skillNameList;
 

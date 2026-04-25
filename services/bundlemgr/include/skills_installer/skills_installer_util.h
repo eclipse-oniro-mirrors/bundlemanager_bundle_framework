@@ -46,6 +46,7 @@ public:
     static ErrCode ExtractSkillsPackage(
         const std::string &bundleName,
         const std::string &moduleName,
+        const std::string &extractModuleName,
         const std::string &hspPath,
         const std::vector<std::string> &skillNameList,
         std::vector<SkillsPackageInfo> &skillInfoList);

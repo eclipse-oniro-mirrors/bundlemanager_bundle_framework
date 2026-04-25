@@ -705,8 +705,9 @@ bool InstalldOperator::ProcessBundleUnInstallNative(const std::string &userId, c
 ErrCode InstalldOperator::ExtractSkillsPackage(const SkillsPackageParam &param,
     std::vector<SkillsPackageInfo> &skillInfoList)
 {
-    LOG_I(BMS_TAG_INSTALLD, "-n %{public}s -m %{public}s skillCount=%{public}zu start",
-        param.bundleName.c_str(), param.moduleName.c_str(), param.skillNameList.size());
+    const std::string &extractModuleName = param.extractModuleName.empty() ? param.moduleName : param.extractModuleName;
+    LOG_I(BMS_TAG_INSTALLD, "-n %{public}s -m %{public}s -e %{public}s skillCount=%{public}zu start",
+        param.bundleName.c_str(), param.moduleName.c_str(), extractModuleName.c_str(), param.skillNameList.size());
 
     if (param.bundleName.empty() || param.moduleName.empty() || param.hspPath.empty()) {
         LOG_E(BMS_TAG_INSTALLD, "invalid input parameters");
@@ -746,7 +747,7 @@ ErrCode InstalldOperator::ExtractSkillsPackage(const SkillsPackageParam &param,
 
         // Step 2: Build target path for skill extraction
         std::string targetSkillPath = std::string(Constants::BASE_SKILL_DIR) + "/" + param.bundleName +
-            "/" + param.moduleName + "/skills/" + skillName;
+            "/" + extractModuleName + "/skills/" + skillName;
         LOG_D(BMS_TAG_INSTALLD, "target path = %{public}s", targetSkillPath.c_str());
 
         // Step 3: Extract skill folder from HSP

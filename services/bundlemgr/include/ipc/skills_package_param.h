@@ -27,6 +27,7 @@ namespace AppExecFwk {
 struct SkillsPackageParam : public Parcelable {
     std::string bundleName;
     std::string moduleName;
+    std::string extractModuleName;
     std::string hspPath;
     std::vector<std::string> skillNameList;
 
@@ -53,6 +54,9 @@ struct SkillsPackageParam : public Parcelable {
         if (!parcel.ReadString(moduleName)) {
             return false;
         }
+        if (!parcel.ReadString(extractModuleName)) {
+            return false;
+        }
         if (!parcel.ReadString(hspPath)) {
             return false;
         }
@@ -73,6 +77,9 @@ struct SkillsPackageParam : public Parcelable {
             return false;
         }
         if (!parcel.WriteString(moduleName)) {
+            return false;
+        }
+        if (!parcel.WriteString(extractModuleName)) {
             return false;
         }
         if (!parcel.WriteString(hspPath)) {
@@ -107,6 +114,7 @@ struct SkillsPackageParam : public Parcelable {
     {
         std::string result = "bundleName: " + bundleName +
                            ", moduleName: " + moduleName +
+                           ", extractModuleName: " + extractModuleName +
                            ", hspPath: " + hspPath +
                            ", skillCount: " + std::to_string(skillNameList.size());
         return result;
