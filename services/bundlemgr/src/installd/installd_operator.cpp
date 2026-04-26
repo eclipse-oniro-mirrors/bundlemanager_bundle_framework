@@ -4230,16 +4230,10 @@ bool InstalldOperator::GetBundleDataDirPaths(const std::string &bundleName, cons
         bundleName.c_str(), appIndex, userId);
 
     // Validate input parameters
-    if (bundleName.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: bundleName is empty");
+    if (bundleName.empty() || userId < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: bundleName is empty or invalid user");
         return false;
     }
-
-    if (userId < 0) {
-        LOG_E(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: invalid userId=%{public}d", userId);
-        return false;
-    }
-
     // Clear output parameter
     dataDirPaths.clear();
 
@@ -4252,35 +4246,56 @@ bool InstalldOperator::GetBundleDataDirPaths(const std::string &bundleName, cons
     // Collect all data subdirectories
     std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
     elPath.push_back(ServiceConstants::DIR_EL5);
-
-    // Define data subdirectories
-    static const std::vector<std::string> BUNDLE_DATA_DIR = {
-        "/cache",
-        "/files",
-        "/temp",
-        "/preferences",
-        "/haps"
-    };
-
     for (const auto &el : elPath) {
+        // /data/app/elx/<userId>/base/<bundleName>
         std::string basePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
             ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir;
-
-        // Add all standard data subdirectories
-        for (const auto &subDir : BUNDLE_DATA_DIR) {
-            std::string fullPath = basePath + subDir;
-            dataDirPaths.push_back(fullPath);
-        }
-
-        // Add sharefiles directory for el2
-        if (ServiceConstants::BUNDLE_EL[1] == el) {
-            std::string sharefilesPath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
-                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES +
-                bundleNameDir;
-            dataDirPaths.push_back(sharefilesPath);
-        }
+        dataDirPaths.push_back(basePath);
+        // /data/app/elx/<userId>/database/<bundleName>
+        std::string dataBasePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::DATABASE + bundleNameDir;
+        dataDirPaths.push_back(dataBasePath);
     }
-
+    // /data/app/el2/<userId>/sharefiles/<bundleName>
+    std::string sharefilesPath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) +
+        ServiceConstants::BUNDLE_EL[1] + ServiceConstants::PATH_SEPARATOR + std::to_string(userId) +
+        ServiceConstants::SHAREFILES + bundleNameDir;
+    dataDirPaths.push_back(sharefilesPath);
+    // /data/app/el2/<userId>/log/<bundleName>
+    std::string logPath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) +
+        ServiceConstants::BUNDLE_EL[1] + ServiceConstants::PATH_SEPARATOR + std::to_string(userId) +
+        ServiceConstants::LOG + bundleNameDir;
+    dataDirPaths.push_back(logPath);
+    // /data/app/el1/<userId>/system_optimize/<bundleName>
+    std::string optimizePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) +
+        ServiceConstants::BUNDLE_EL[0] + ServiceConstants::PATH_SEPARATOR + std::to_string(userId) +
+        ServiceConstants::LOG + bundleNameDir;
+    // /data/app/el1/<userId>/system_optimize/<bundleName>
+    std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
+        bundleNameDir + ServiceConstants::ARK_STARTUP_CACHE_DIR;
+    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+        std::to_string(userId));
+    dataDirPaths.push_back(el1ArkStartupCachePath);
+    // /data/app/el1/<userId>/shader_cache/<bundleName>
+    std::string el1ShaderCachePath = ServiceConstants::NEW_SHADER_CACHE_PATH + bundleNameDir;
+    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId));
+    dataDirPaths.emplace_back(el1ShaderCachePath);
+    // service
+    std::string servicePath = std::string("/data/service/el1/") + std::to_string(userId) +
+        std::string("/backup/bundles/") + bundleNameDir;
+    dataDirPaths.emplace_back(servicePath);
+    servicePath = std::string("/data/service/el2/") + std::to_string(userId) +
+        std::string("/share/") + bundleNameDir;
+    dataDirPaths.emplace_back(servicePath);
+    servicePath = std::string("/data/service/el2/") + std::to_string(userId) +
+        std::string("/hmdfs/account/data/") + bundleNameDir;
+    dataDirPaths.emplace_back(servicePath);
+    servicePath = std::string("/data/service/el2/") + std::to_string(userId) +
+        std::string("/hmdfs/cloud/data/") + bundleNameDir;
+    dataDirPaths.emplace_back(servicePath);
+    servicePath = std::string("/data/service/el2/") + std::to_string(userId) +
+        std::string("/backup/bundles/") + bundleNameDir;
+    dataDirPaths.emplace_back(servicePath);
     LOG_D(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: collected %{public}zu data directory paths",
         dataDirPaths.size());
     return true;
