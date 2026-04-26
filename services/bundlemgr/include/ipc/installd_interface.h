@@ -578,6 +578,20 @@ public:
     }
 
     /**
+     * @brief Get top N largest items in application data directory.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param resultPathsWithSize Output parameter containing vector of (path, size) pairs for largest items.
+     * @return Returns ERR_OK if get successfully; returns error code otherwise.
+     */
+    virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+    {
+        return ERR_OK;
+    }
+
+    /**
      * @brief Extract skills package with validation.
      * @param param Contains bundleName, moduleName, hspPath and skillNameList.
      * @param skillInfoList Output parameter containing skill extraction results with description.

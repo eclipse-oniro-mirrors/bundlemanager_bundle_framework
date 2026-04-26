@@ -203,6 +203,17 @@ public:
     virtual ErrCode ScanDir(
         const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths) override;
 
+    /**
+     * @brief Get top N largest items in application data directory.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param resultPathsWithSize Output parameter containing vector of (path, size) pairs for largest items.
+     * @return Returns ERR_OK if get successfully; returns error code otherwise.
+     */
+    virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize) override;
+
     virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath) override;
 
     virtual ErrCode RenameFile(const std::string &oldPath, const std::string &newPath) override;

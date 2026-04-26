@@ -772,5 +772,16 @@ ErrCode InstalldClient::ExtractSkillsPackage(const SkillsPackageParam &param,
     }
     return CallService(&IInstalld::ExtractSkillsPackage, param, skillInfoList);
 }
+
+ErrCode InstalldClient::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::GetTopNLargestItemsInAppDataDir, bundleName, appIndex, userId,
+        resultPathsWithSize);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

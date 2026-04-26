@@ -602,6 +602,45 @@ ErrCode InstalldProxy::ScanDir(
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, appIndex);
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
+        return ret;
+    }
+
+    // Read the number of items
+    uint32_t itemCount = 0;
+    if (!reply.ReadUint32(itemCount)) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to read item count");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    // Read each (path, size) pair
+    resultPathsWithSize.clear();
+    for (uint32_t i = 0; i < itemCount; ++i) {
+        std::string path = Str16ToStr8(reply.ReadString16());
+        uint64_t size = 0;
+        if (!reply.ReadUint64(size)) {
+            LOG_E(BMS_TAG_INSTALLD, "failed to read size for item %{public}u", i);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        resultPathsWithSize.emplace_back(path, size);
+    }
+
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::MoveFile(const std::string &oldPath, const std::string &newPath)
 {
     MessageParcel data;

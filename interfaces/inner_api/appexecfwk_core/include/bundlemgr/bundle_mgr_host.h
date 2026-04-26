@@ -778,6 +778,8 @@ private:
 
     ErrCode HandleGetBundleInodeCount(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetTopNLargestItemsInAppDataDir(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetAllBundleCacheStat(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleCleanAllBundleCache(MessageParcel &data, MessageParcel &reply);

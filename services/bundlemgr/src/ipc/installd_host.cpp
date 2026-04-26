@@ -126,6 +126,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::SCAN_DIR):
             result = this->HandleScanDir(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR):
+            result = this->HandleGetTopNLargestItemsInAppDataDir(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILE):
             result = this->HandleMoveFile(data, reply);
             break;
@@ -814,6 +817,43 @@ bool InstalldHost::HandleScanDir(MessageParcel &data, MessageParcel &reply)
         LOG_E(BMS_TAG_INSTALLD, "fail to Scan from reply");
         return false;
     }
+
+    return true;
+}
+
+bool InstalldHost::HandleGetTopNLargestItemsInAppDataDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+
+    LOG_D(BMS_TAG_INSTALLD, "HandleGetTopNLargestItemsInAppDataDir: bundleName=%{public}s, appIndex=%{public}d, userId=%{public}d",
+        bundleName.c_str(), appIndex, userId);
+
+    std::vector<std::pair<std::string, uint64_t>> resultPathsWithSize;
+    ErrCode result = GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, resultPathsWithSize);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+
+    // Write the number of items
+    if (!reply.WriteUint32(resultPathsWithSize.size())) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to write result size");
+        return false;
+    }
+
+    // Write each (path, size) pair
+    for (const auto &item : resultPathsWithSize) {
+        if (!reply.WriteString16(Str8ToStr16(item.first))) {
+            LOG_E(BMS_TAG_INSTALLD, "failed to write path");
+            return false;
+        }
+        if (!reply.WriteUint64(item.second)) {
+            LOG_E(BMS_TAG_INSTALLD, "failed to write size");
+            return false;
+        }
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "HandleGetTopNLargestItemsInAppDataDir: returned %{public}zu items",
+        resultPathsWithSize.size());
 
     return true;
 }

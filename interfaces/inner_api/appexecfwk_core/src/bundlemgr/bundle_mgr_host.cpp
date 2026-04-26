@@ -401,6 +401,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_BUNDLE_STATS):
             errCode = this->HandleBatchGetBundleStats(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR):
+            errCode = this->HandleGetTopNLargestItemsInAppDataDir(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_STATS):
             errCode = this->HandleGetAllBundleStats(data, reply);
             break;
@@ -3553,6 +3556,37 @@ ErrCode BundleMgrHost::HandleBatchGetBundleStats(MessageParcel &data, MessagePar
     if (ret == ERR_OK && !WriteVectorToParcelIntelligent(bundleStats, reply)) {
         APP_LOGE("write bundleStats failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ret;
+}
+
+ErrCode BundleMgrHost::HandleGetTopNLargestItemsInAppDataDir(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<std::pair<std::string, uint64_t>> resultPathsWithSize;
+    ErrCode ret = GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, resultPathsWithSize);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteUint32(resultPathsWithSize.size())) {
+            APP_LOGE("write item count failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        for (const auto &item : resultPathsWithSize) {
+            if (!reply.WriteString(item.first)) {
+                APP_LOGE("write path failed");
+                return ERR_APPEXECFWK_PARCEL_ERROR;
+            }
+            if (!reply.WriteUint64(item.second)) {
+                APP_LOGE("write size failed");
+                return ERR_APPEXECFWK_PARCEL_ERROR;
+            }
+        }
     }
     return ret;
 }

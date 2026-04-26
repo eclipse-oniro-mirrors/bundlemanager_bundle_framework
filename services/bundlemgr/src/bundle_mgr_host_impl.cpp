@@ -4117,6 +4117,56 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
     return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex, statFlag);
 }
 
+ErrCode BundleMgrHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+{
+    auto startTime = std::chrono::steady_clock::now();
+    LOG_I(BMS_TAG_DEFAULT, "begin to get top N largest items in app data dir, bundleName: %{public}s, "
+        "appIndex: %{public}d, userId: %{public}d", bundleName.c_str(), appIndex, userId);
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        LOG_E(BMS_TAG_DEFAULT, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    ErrCode result = dataMgr->CheckBundleExist(bundleName, userId, appIndex);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "check bundle exist failed, bundleName: %{public}s, userId: %{public}d, "
+            "appIndex: %{public}d", bundleName.c_str(), userId, appIndex);
+        return result;
+    }
+
+    auto installdClient = DelayedSingleton<InstalldClient>::GetInstance();
+    if (installdClient == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "installdClient is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    ErrCode errCode = installdClient->GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId,
+        resultPathsWithSize);
+    if (errCode != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "failed to get top N largest items from installd, bundleName: %{public}s, "
+            "userId: %{public}d, appIndex: %{public}d, errCode: %{public}d", bundleName.c_str(), userId,
+            appIndex, errCode);
+    }
+
+    auto endTime = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    LOG_I(BMS_TAG_DEFAULT, "end to get top N largest items in app data dir, bundleName: %{public}s, "
+        "errCode: %{public}d, cost: %{public}lld ms", bundleName.c_str(), errCode,
+        static_cast<long long>(duration));
+    return errCode;
+}
+
 ErrCode BundleMgrHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
     std::vector<BundleStorageStats> &bundleStats)
 {

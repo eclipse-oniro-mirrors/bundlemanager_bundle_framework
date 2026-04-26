@@ -420,6 +420,35 @@ public:
 
     static bool ObtainSignInfoForPlugin(
         const std::string &filePath, std::string &appIdentifier, std::string &pluginId);
+
+    /**
+     * @brief Recursively find largest files/directories up to 6 levels, then drill down to largest file.
+     * @param dirPaths Indicates the vector of directory paths to scan.
+     * @param resultPathsWithSize Output parameter containing vector of (path, size) pairs for all found items
+     *                            during 6-level recursion, plus the final largest file path from deep drilling.
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    static bool GetLargestFilesRecursive(const std::vector<std::string> &dirPaths,
+        std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize);
+
+    /**
+     * @brief Get all bundle data directory paths based on bundleName, appIndex and userId.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param dataDirPaths Output parameter containing vector of data directory paths.
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    static bool GetBundleDataDirPaths(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, std::vector<std::string> &dataDirPaths);
+
+    /**
+     * @brief Anonymize a file path by replacing every other character in directory and file names with '*'.
+     * @param path Indicates the file path to be anonymized.
+     * @return Returns the anonymized path string.
+     */
+    static std::string AnonymizePath(const std::string &path);
+
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
@@ -465,6 +494,26 @@ private:
     static bool IsRdDevice();
     static bool ParsePluginId(const std::string &appServiceCapabilities, std::vector<std::string> &pluginIds);
     static ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
+
+    /**
+     * @brief Get top 3 largest files or directories in the given path.
+     * @param dirPath Indicates the directory path to scan.
+     * @param largestPathsWithSize Output parameter containing vector of (path, size) pairs for top 3 largest items.
+     * @return Returns true if successfully; returns false otherwise.
+     * @note Internal overload with cache parameter is used by GetLargestFilesRecursive for performance.
+     */
+    static bool GetLargestFiles(const std::string &dirPath,
+        std::vector<std::pair<std::string, uint64_t>> &largestPathsWithSize);
+
+    /**
+     * @brief Get top 3 largest items (files or directories) from the given paths.
+     * @param dirPaths Indicates the vector of file or directory paths to scan.
+     *                Files use their size directly, directories calculate total size.
+     * @param largestDirsWithSize Output parameter containing vector of (path, size) pairs for top 3 largest items.
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    static bool GetLargestDirs(const std::vector<std::string> &dirPaths,
+        std::vector<std::pair<std::string, uint64_t>> &largestDirsWithSize);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

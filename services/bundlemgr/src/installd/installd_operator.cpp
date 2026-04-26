@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <filesystem>
 #include <fstream>
+#include <ftw.h>
 #include <iostream>
 #include <map>
 #include <regex>
@@ -60,6 +61,7 @@
 #include "policycoreutils.h"
 #include "bundle_extractor.h"
 #include "ipc/skills_package_param.h"
+#include "inner_bundle_clone_common.h"
 #ifdef WITH_SELINUX
 #include <selinux/selinux.h>
 #endif
@@ -175,6 +177,124 @@ static bool EndsWith(const std::string &sourceString, const std::string &targetS
     }
     return false;
 }
+
+// RAII wrapper for DIR* to prevent resource leaks
+class DirGuard {
+public:
+    explicit DirGuard(DIR *dir) : dir_(dir) {}
+    ~DirGuard()
+    {
+        if (dir_ != nullptr) {
+            closedir(dir_);
+        }
+    }
+    DIR* get() const { return dir_; }
+    DirGuard(const DirGuard&) = delete;
+    DirGuard& operator=(const DirGuard&) = delete;
+private:
+    DIR *dir_;
+};
+
+// Data structure for nftw callback to maintain state
+struct DirSizeData {
+    uint64_t totalSize;
+    bool overflow;
+    const std::string *dirPath;
+};
+
+// Thread-local storage for callback data to ensure thread safety
+static thread_local DirSizeData *g_dirSizeData = nullptr;
+
+constexpr int32_t MAX_FTW_DEPTH = 1000;  // Maximum directory traversal depth to prevent stack overflow
+constexpr uint64_t MAX_DIRECTORY_SIZE = UINT64_MAX - 1024ULL * 1024ULL * 1024ULL;  // 1GB less than max
+
+/**
+ * @brief Callback function for nftw to calculate directory size
+ * @param path The current file/directory path
+ * @param sb Stat buffer containing file information
+ * @param typeflag Type of file (FTW_F, FTW_D, etc.)
+ * @param ftwbuf Structure containing walk information including depth
+ * @return Returns 0 to continue, non-zero to stop traversal
+ */
+static int CalculateDirSizeCallback(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
+{
+    // Access thread-local data
+    DirSizeData *data = g_dirSizeData;
+    if (data == nullptr) {
+        return 1;  // Stop traversal on error
+    }
+
+    // Check depth to prevent stack overflow
+    if (ftwbuf->level > MAX_FTW_DEPTH) {
+        LOG_W(BMS_TAG_INSTALLD, "CalculateDirSizeCallback: directory too deep, level: %{public}d, path: %{public}s",
+            ftwbuf->level, path);
+        return 0;  // Continue processing other files
+    }
+
+    if (typeflag == FTW_F) {
+        // Check for overflow before adding
+        if (data->totalSize > MAX_DIRECTORY_SIZE - sb->st_size) {
+            LOG_W(BMS_TAG_INSTALLD, "CalculateDirSizeCallback: size overflow for %{public}s",
+                data->dirPath->c_str());
+            data->overflow = true;
+            return 1;  // Stop traversal
+        }
+        // Only count regular files
+        data->totalSize += sb->st_size;
+    }
+
+    return 0;  // Continue traversal
+}
+
+/**
+ * @brief Calculate directory size with caching support to avoid redundant traversals
+ * @param dirPath The directory path to calculate size for
+ * @param dirSizeCache Reference to the cache map storing already calculated directory sizes
+ * @return Returns the directory size, or 0 if calculation fails
+ */
+static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
+    std::unordered_map<std::string, uint64_t> &dirSizeCache)
+{
+    // Check cache first
+    auto it = dirSizeCache.find(dirPath);
+    if (it != dirSizeCache.end()) {
+        LOG_D(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: cache hit for %{public}s, size: %{public}" PRIu64,
+            dirPath.c_str(), it->second);
+        return it->second;
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: cache miss for %{public}s, calculating...",
+        dirPath.c_str());
+
+    // Prepare callback data
+    DirSizeData data = {0, false, &dirPath};
+
+    // Set thread-local data for callback access
+    g_dirSizeData = &data;
+
+    // Use nftw with FTW_PHYSICAL (don't follow symlinks) and FTW_MOUNT (don't cross filesystem boundaries)
+    // The third parameter is the maximum number of open file descriptors
+    int ret = nftw(dirPath.c_str(), CalculateDirSizeCallback, 10, FTW_PHYS | FTW_MOUNT);
+
+    // Clear thread-local data
+    g_dirSizeData = nullptr;
+
+    if (ret != 0 && !data.overflow) {
+        LOG_W(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: nftw failed for %{public}s, errno: %{public}d",
+            dirPath.c_str(), errno);
+        return 0;
+    }
+
+    uint64_t totalSize = data.totalSize;
+
+    // Cache the result
+    dirSizeCache[dirPath] = totalSize;
+    LOG_D(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: calculated %{public}s, size: %{public}" PRIu64,
+        dirPath.c_str(), totalSize);
+
+    return totalSize;
+}
+
 } // namespace
 
 #define FSCRYPT_KEY_DESCRIPTOR_SIZE 8
@@ -3724,6 +3844,507 @@ bool InstalldOperator::ObtainSignInfoForPlugin(
         appIdentifier = hapVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
     }
     return true;
+}
+
+// Internal overload with cache parameter for performance optimization
+static bool GetLargestFilesWithCache(const std::string &dirPath,
+    std::vector<std::pair<std::string, uint64_t>> &largestPathsWithSize,
+    std::unordered_map<std::string, uint64_t> &dirSizeCache)
+{
+    LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesWithCache start, dirPath: %{public}s", dirPath.c_str());
+
+    if (dirPath.empty() || dirPath.size() > ServiceConstants::PATH_MAX_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: invalid path");
+        return false;
+    }
+
+    std::string realPath = "";
+    if (!PathToRealPath(dirPath, realPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "path is not real path, dirPath: %{public}s", dirPath.c_str());
+        return false;
+    }
+
+    // Check if path exists and is a directory
+    struct stat statBuf;
+    if (stat(realPath.c_str(), &statBuf) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: stat failed, path: %{public}s, errno: %{public}d",
+            realPath.c_str(), errno);
+        return false;
+    }
+
+    if (!S_ISDIR(statBuf.st_mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: path is not a directory: %{public}s", realPath.c_str());
+        return false;
+    }
+
+    // Store path and size pairs
+    struct ItemSize {
+        std::string path;
+        uint64_t size;
+
+        ItemSize(const std::string &p, uint64_t s) : path(p), size(s) {}
+    };
+    std::vector<ItemSize> itemSizes;
+
+    // Open directory to read direct children
+    DIR *dir = opendir(realPath.c_str());
+    if (dir == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFiles: opendir failed, path: %{public}s, errno: %{public}d",
+            realPath.c_str(), errno);
+        return false;
+    }
+    DirGuard dirGuard(dir);  // RAII wrapper to ensure cleanup
+
+    struct dirent *entry = nullptr;
+    while ((entry = readdir(dirGuard.get())) != nullptr) {
+        // Skip . and ..
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        std::string itemPath = realPath;
+        if (itemPath.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+            itemPath += ServiceConstants::FILE_SEPARATOR_CHAR;
+        }
+        itemPath += entry->d_name;
+
+        struct stat itemStat;
+        if (lstat(itemPath.c_str(), &itemStat) != 0) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestFiles: lstat failed for %{public}s, errno: %{public}d",
+                itemPath.c_str(), errno);
+            continue;
+        }
+
+        uint64_t itemSize = 0;
+        if (S_ISREG(itemStat.st_mode)) {
+            // Regular file - use its size directly
+            itemSize = itemStat.st_size;
+        } else if (S_ISDIR(itemStat.st_mode)) {
+            // Directory - use cached calculation to avoid redundant traversals
+            itemSize = CalculateDirectorySizeWithCache(itemPath, dirSizeCache);
+        }
+        // Skip other types (symlinks, etc.)
+
+        itemSizes.emplace_back(itemPath, itemSize);
+        LOG_D(BMS_TAG_INSTALLD, "GetLargestFiles: item: %{public}s, size: %{public}" PRIu64,
+            itemPath.c_str(), itemSize);
+    }
+
+    // DirGuard will automatically close dir when going out of scope
+
+    if (itemSizes.empty()) {
+        LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: no items found in directory");
+        largestPathsWithSize.clear();
+        return true;
+    }
+
+    // Sort by size in descending order
+    std::sort(itemSizes.begin(), itemSizes.end(),
+        [](const ItemSize &a, const ItemSize &b) {
+            return a.size > b.size;
+        });
+
+    // Get top 3 largest items and add to result
+    size_t count = std::min(static_cast<size_t>(3), itemSizes.size());
+    largestPathsWithSize.clear();
+    for (size_t i = 0; i < count; ++i) {
+        largestPathsWithSize.emplace_back(itemSizes[i].path, itemSizes[i].size);
+        LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: %{public}zu. path: %{public}s, size: %{public}" PRIu64,
+            i + 1, itemSizes[i].path.c_str(), itemSizes[i].size);
+    }
+
+    LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesWithCache success, found %{public}zu items", largestPathsWithSize.size());
+    return true;
+}
+
+// Public API version - creates local cache for backward compatibility
+bool InstalldOperator::GetLargestFiles(const std::string &dirPath,
+    std::vector<std::pair<std::string, uint64_t>> &largestPathsWithSize)
+{
+    // Create local cache for single call
+    std::unordered_map<std::string, uint64_t> dirSizeCache;
+    dirSizeCache.reserve(100);  // Reserve space for typical directory structure
+    return GetLargestFilesWithCache(dirPath, largestPathsWithSize, dirSizeCache);
+}
+
+// Internal overload with cache parameter for performance optimization
+static bool GetLargestDirsExtendedWithCache(const std::vector<std::string> &dirPaths,
+    std::vector<std::pair<std::string, uint64_t>> &largestDirsWithSize,
+    std::unordered_map<std::string, uint64_t> &dirSizeCache)
+{
+    LOG_D(BMS_TAG_INSTALLD, "GetLargestDirsExtendedWithCache start, dirPaths count: %{public}zu", dirPaths.size());
+
+    if (dirPaths.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestDirsExtendedWithCache: input dirPaths is empty");
+        return false;
+    }
+
+    // Store path and size pairs (support both files and directories)
+    struct PathSize {
+        std::string path;
+        uint64_t size;
+
+        PathSize(const std::string &p, uint64_t s) : path(p), size(s) {}
+    };
+    std::vector<PathSize> pathSizes;
+
+    // Process each path (file or directory)
+    for (const auto &inputPath : dirPaths) {
+        if (inputPath.empty() || inputPath.size() > ServiceConstants::PATH_MAX_SIZE) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestDirs: invalid path, skipping");
+            continue;
+        }
+
+        std::string realPath = "";
+        if (!PathToRealPath(inputPath, realPath)) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestDirs: path is not real path, inputPath: %{public}s",
+                inputPath.c_str());
+            continue;
+        }
+
+        // Check if path exists
+        struct stat statBuf;
+        if (stat(realPath.c_str(), &statBuf) != 0) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestDirs: stat failed for %{public}s, errno: %{public}d",
+                realPath.c_str(), errno);
+            continue;
+        }
+
+        uint64_t itemSize = 0;
+
+        if (S_ISREG(statBuf.st_mode)) {
+            // It's a file, use its size directly
+            itemSize = statBuf.st_size;
+            LOG_D(BMS_TAG_INSTALLD, "GetLargestDirsExtendedWithCache: file: %{public}s, size: %{public}" PRIu64,
+                realPath.c_str(), itemSize);
+        } else if (S_ISDIR(statBuf.st_mode)) {
+            // It's a directory, use cached calculation to avoid redundant traversals
+            itemSize = CalculateDirectorySizeWithCache(realPath, dirSizeCache);
+            LOG_D(BMS_TAG_INSTALLD, "GetLargestDirsExtendedWithCache: directory: %{public}s, size: %{public}" PRIu64,
+                realPath.c_str(), itemSize);
+        } else {
+            // Other types (symlink, device, etc.), skip
+            LOG_W(BMS_TAG_INSTALLD, "unsupported file type for %{public}s", realPath.c_str());
+            continue;
+        }
+
+        pathSizes.emplace_back(realPath, itemSize);
+    }
+
+    if (pathSizes.empty()) {
+        LOG_W(BMS_TAG_INSTALLD, "GetLargestDirsExtendedWithCache: no valid files or directories found");
+        largestDirsWithSize.clear();
+        return true;
+    }
+
+    // Sort by size in descending order
+    std::sort(pathSizes.begin(), pathSizes.end(),
+        [](const PathSize &a, const PathSize &b) {
+            return a.size > b.size;
+        });
+
+    // Get top 3 largest items (files or directories) and add to result
+    size_t count = std::min(static_cast<size_t>(3), pathSizes.size());
+    largestDirsWithSize.clear();
+    for (size_t i = 0; i < count; ++i) {
+        largestDirsWithSize.emplace_back(pathSizes[i].path, pathSizes[i].size);
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "success, found %{public}zu items", largestDirsWithSize.size());
+    return true;
+}
+
+// Public API version - creates local cache for backward compatibility
+bool InstalldOperator::GetLargestDirs(const std::vector<std::string> &dirPaths,
+    std::vector<std::pair<std::string, uint64_t>> &largestDirsWithSize)
+{
+    // Create local cache for single call
+    std::unordered_map<std::string, uint64_t> dirSizeCache;
+    dirSizeCache.reserve(100);  // Reserve space for typical directory structure
+    return GetLargestDirsExtendedWithCache(dirPaths, largestDirsWithSize, dirSizeCache);
+}
+
+bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &dirPaths,
+    std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+{
+    LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive start, dirPaths count: %{public}zu", dirPaths.size());
+
+    if (dirPaths.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: input dirPaths is empty");
+        return false;
+    }
+
+    // Pre-allocate result space (estimated maximum: 3,280 items)
+    resultPathsWithSize.clear();
+    resultPathsWithSize.reserve(3280);
+
+    // Create cache for directory size calculations (shared across all levels for performance)
+    std::unordered_map<std::string, uint64_t> dirSizeCache;
+    dirSizeCache.reserve(1000);  // Reserve space for typical directory tree
+
+    // Step 1: Get top 3 largest directories from input paths
+    std::vector<std::pair<std::string, uint64_t>> largestDirs;
+    if (!GetLargestDirsExtendedWithCache(dirPaths, largestDirs, dirSizeCache)) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: GetLargestDirsExtendedWithCache failed");
+        return false;
+    }
+
+    if (largestDirs.empty()) {
+        LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: no directories found");
+        return true;
+    }
+
+    // Add initial largest directories to result
+    for (const auto &dirPair : largestDirs) {
+        resultPathsWithSize.emplace_back(dirPair.first, dirPair.second);
+        LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: level 0, added dir: %{public}s, size: %{public}" PRIu64,
+            dirPair.first.c_str(), dirPair.second);
+    }
+
+    // Step 2 & 3: Repeat 6 times - get largest files/dirs from previous level
+    std::vector<std::string> currentPaths;  // Keep paths for iteration
+    for (const auto &dirPair : largestDirs) {
+        currentPaths.push_back(dirPair.first);
+    }
+    constexpr int32_t MAX_LEVELS = 6;
+
+    for (int32_t level = 1; level <= MAX_LEVELS; ++level) {
+        // Pre-allocate space to avoid frequent reallocations
+        std::vector<std::pair<std::string, uint64_t>> allLargestItems;
+        allLargestItems.reserve(currentPaths.size() * 3);  // Maximum possible items
+
+        // For each path in current level, get largest items
+        for (const auto &path : currentPaths) {
+            // Check if it's a directory
+            struct stat statBuf;
+            if (stat(path.c_str(), &statBuf) != 0) {
+                LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: stat failed for %{public}s", path.c_str());
+                continue;
+            }
+
+            if (!S_ISDIR(statBuf.st_mode)) {
+                // It's a file, skip it
+                LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: %{public}s is a file, skip", path.c_str());
+                continue;
+            }
+
+            // Get largest files/dirs from this directory (using cache for performance)
+            std::vector<std::pair<std::string, uint64_t>> largestItems;
+            if (!GetLargestFilesWithCache(path, largestItems, dirSizeCache)) {
+                LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: GetLargestFilesWithCache failed for %{public}s",
+                    path.c_str());
+                continue;
+            }
+
+            // Add to result and collect for next level
+            for (const auto &itemPair : largestItems) {
+                resultPathsWithSize.emplace_back(itemPair.first, itemPair.second);
+                allLargestItems.emplace_back(itemPair.first, itemPair.second);
+                LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: level %{public}d, added: %{public}s, size: %{public}"
+                    PRIu64, level, itemPair.first.c_str(), itemPair.second);
+            }
+        }
+
+        // Update current paths for next iteration (only paths, not sizes)
+        currentPaths.clear();
+        for (const auto &itemPair : allLargestItems) {
+            currentPaths.push_back(itemPair.first);
+        }
+
+        if (currentPaths.empty()) {
+            LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: no more directories at level %{public}d", level);
+            break;
+        }
+    }
+
+    // Step 4 & 5: Keep drilling down from the largest item if it's a directory
+    std::string currentPath = currentPaths.empty() ? "" : currentPaths[0];
+    std::string finalFilePath;
+    uint64_t finalFileSize = 0;
+
+    while (!currentPath.empty()) {
+        // Check if current path is a directory
+        struct stat statBuf;
+        if (stat(currentPath.c_str(), &statBuf) != 0) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: stat failed for %{public}s", currentPath.c_str());
+            break;
+        }
+
+        if (!S_ISDIR(statBuf.st_mode)) {
+            // It's a file, we're done - record the final file path and size
+            finalFilePath = currentPath;
+            finalFileSize = statBuf.st_size;
+            LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: reached file: %{public}s, size: %{public}" PRIu64,
+                currentPath.c_str(), finalFileSize);
+            break;
+        }
+
+        // Get largest items from this directory (using cache for performance)
+        std::vector<std::pair<std::string, uint64_t>> largestItems;
+        if (!GetLargestFilesWithCache(currentPath, largestItems, dirSizeCache)) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: GetLargestFilesWithCache failed for %{public}s",
+                currentPath.c_str());
+            break;
+        }
+
+        if (largestItems.empty()) {
+            LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: no items found in %{public}s",
+                currentPath.c_str());
+            break;
+        }
+
+        // Get the largest item and continue drilling down
+        currentPath = largestItems[0].first;  // Get first (largest) item
+        LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: drill down to: %{public}s", currentPath.c_str());
+    }
+
+    // Only add the final file path to result if found
+    if (!finalFilePath.empty()) {
+        resultPathsWithSize.emplace_back(finalFilePath, finalFileSize);
+        LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: added final file: %{public}s, size: %{public}" PRIu64,
+            finalFilePath.c_str(), finalFileSize);
+    }
+
+    // Sort all results by size in descending order for better user experience
+    if (!resultPathsWithSize.empty()) {
+        std::sort(resultPathsWithSize.begin(), resultPathsWithSize.end(),
+            [](const std::pair<std::string, uint64_t> &a,
+                const std::pair<std::string, uint64_t> &b) {
+                return a.second > b.second;  // Descending order by size
+            });
+        LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: sorted %{public}zu items by size",
+            resultPathsWithSize.size());
+    }
+
+    // Log cache statistics for performance monitoring
+    LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesRecursive success, total items: %{public}zu, cache entries: %{public}zu",
+        resultPathsWithSize.size(), dirSizeCache.size());
+
+    return true;
+}
+
+bool InstalldOperator::GetBundleDataDirPaths(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, std::vector<std::string> &dataDirPaths)
+{
+    LOG_D(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: bundleName=%{public}s, appIndex=%{public}d, userId=%{public}d",
+        bundleName.c_str(), appIndex, userId);
+
+    // Validate input parameters
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: bundleName is empty");
+        return false;
+    }
+
+    if (userId < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: invalid userId=%{public}d", userId);
+        return false;
+    }
+
+    // Clear output parameter
+    dataDirPaths.clear();
+
+    // Build bundle data directory path based on appIndex
+    std::string bundleNameDir = bundleName;
+    if (appIndex > 0) {
+        bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
+
+    // Collect all data subdirectories
+    std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
+    elPath.push_back(ServiceConstants::DIR_EL5);
+
+    // Define data subdirectories
+    static const std::vector<std::string> BUNDLE_DATA_DIR = {
+        "/cache",
+        "/files",
+        "/temp",
+        "/preferences",
+        "/haps"
+    };
+
+    for (const auto &el : elPath) {
+        std::string basePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir;
+
+        // Add all standard data subdirectories
+        for (const auto &subDir : BUNDLE_DATA_DIR) {
+            std::string fullPath = basePath + subDir;
+            dataDirPaths.push_back(fullPath);
+        }
+
+        // Add sharefiles directory for el2
+        if (ServiceConstants::BUNDLE_EL[1] == el) {
+            std::string sharefilesPath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES +
+                bundleNameDir;
+            dataDirPaths.push_back(sharefilesPath);
+        }
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: collected %{public}zu data directory paths",
+        dataDirPaths.size());
+    return true;
+}
+
+std::string InstalldOperator::AnonymizePath(const std::string &path)
+{
+    if (path.empty()) {
+        return path;
+    }
+
+    // Pre-allocate result string with exact same size as input
+    std::string result;
+    result.reserve(path.length());
+
+    const char pathSep = ServiceConstants::PATH_SEPARATOR[0];
+    const char* pathData = path.data();
+    const char* pathEnd = pathData + path.length();
+    const char* segmentStart = pathData;
+
+    while (segmentStart < pathEnd) {
+        // Find the next path separator
+        const char* segmentEnd = static_cast<const char*>(
+            std::memchr(segmentStart, pathSep, static_cast<size_t>(pathEnd - segmentStart)));
+
+        // Calculate segment length
+        size_t segLen;
+        if (segmentEnd != nullptr) {
+            segLen = static_cast<size_t>(segmentEnd - segmentStart);
+            // Skip empty segments (e.g., consecutive separators like //)
+            if (segLen == 0) {
+                segmentStart = segmentEnd + 1;  // Safe: segmentEnd is not nullptr
+                continue;
+            }
+        } else {
+            // No separator found, process to end
+            segLen = static_cast<size_t>(pathEnd - segmentStart);
+        }
+
+        // Append path separator if not the first segment
+        if (!result.empty() && result.back() != pathSep) {
+            result.push_back(pathSep);
+        }
+
+        // Optimized: Process characters in pairs to reduce loop iterations by 50%
+        size_t i = 0;
+        const size_t pairCount = segLen & ~static_cast<size_t>(1);  // Round down to even
+
+        // Process pairs of characters
+        for (; i < pairCount; i += 2) {
+            result.push_back(segmentStart[i]);      // Even index (0, 2, 4...) - keep original
+            result.push_back('*');                  // Odd index (1, 3, 5...) - replace with *
+        }
+
+        // Handle remaining single character if length is odd
+        if (i < segLen) {
+            result.push_back(segmentStart[i]);
+        }
+
+        // Move to next segment (safe because we checked segmentEnd above)
+        segmentStart = segmentEnd ? segmentEnd + 1 : pathEnd;
+    }
+
+    return result;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

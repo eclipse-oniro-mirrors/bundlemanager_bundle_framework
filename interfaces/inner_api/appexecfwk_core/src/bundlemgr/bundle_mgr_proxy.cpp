@@ -3655,6 +3655,65 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     return true;
 }
 
+ErrCode BundleMgrProxy::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+{
+    APP_LOGI_NOFUNC("GetTopNLargestItemsInAppDataDir -n %{public}s -u %{public}d -i %{public}d",
+        bundleName.c_str(), userId, appIndex);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to GetTopNLargestItemsInAppDataDir due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR, data, reply)) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto errCode = reply.ReadInt32();
+    if (errCode != ERR_OK) {
+        APP_LOGE("GetTopNLargestItemsInAppDataDir failed with errCode: %{public}d", errCode);
+        return errCode;
+    }
+
+    // Read the number of items
+    uint32_t itemCount = 0;
+    if (!reply.ReadUint32(itemCount)) {
+        APP_LOGE("failed to read item count");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    // Read each (path, size) pair
+    resultPathsWithSize.clear();
+    for (uint32_t i = 0; i < itemCount; ++i) {
+        std::string path = reply.ReadString();
+        uint64_t size = 0;
+        if (!reply.ReadUint64(size)) {
+            APP_LOGE("failed to read size for item %{public}u", i);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        resultPathsWithSize.emplace_back(path, size);
+    }
+
+    APP_LOGI("GetTopNLargestItemsInAppDataDir success, count: %{public}u", itemCount);
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
     std::vector<BundleStorageStats> &bundleStats)
 {

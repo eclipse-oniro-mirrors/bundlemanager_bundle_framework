@@ -1470,6 +1470,12 @@ public:
         return false;
     }
 
+    virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
         std::vector<BundleStorageStats> &bundleStats)
     {
