@@ -505,7 +505,7 @@ ErrCode InstalldClient::ExtractSkillsPackage(const SkillsPackageParam &param,
 }
 
 ErrCode InstalldClient::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
-    const int32_t userId, const int32_t timeout, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+    const int32_t userId, const int32_t timeout, std::string &largestItems)
 {
     return ERR_OK;
 }

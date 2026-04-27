@@ -4118,11 +4118,10 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
 }
 
 ErrCode BundleMgrHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
-    const int32_t userId, std::string &largestItems)
+    const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
 {
-    auto startTime = std::chrono::steady_clock::now();
-    LOG_I(BMS_TAG_DEFAULT, "begin to get top N largest items in app data dir, bundleName: %{public}s, "
-        "appIndex: %{public}d, userId: %{public}d", bundleName.c_str(), appIndex, userId);
+    LOG_I(BMS_TAG_DEFAULT, "begin to get top N largest items, -n: %{public}s, -a: %{public}d, -u: %{public}d",
+        bundleName.c_str(), appIndex, userId);
 
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
@@ -4132,6 +4131,11 @@ ErrCode BundleMgrHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bu
         LOG_E(BMS_TAG_DEFAULT, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (getLargestItemsCallback == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "getLargestItemsCallback is nullptr");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
@@ -4145,28 +4149,51 @@ ErrCode BundleMgrHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bu
         return result;
     }
 
-    auto installdClient = DelayedSingleton<InstalldClient>::GetInstance();
-    if (installdClient == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "installdClient is nullptr");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-    }
+    // Execute async task
+    GetTopNLargestItemsTask(bundleName, appIndex, userId, getLargestItemsCallback);
+    return ERR_OK;
+}
 
-    // Use fixed timeout value of 3 seconds for installd layer
-    constexpr int32_t FIXED_TIMEOUT = 3;
-    ErrCode errCode = installdClient->GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId,
-        FIXED_TIMEOUT, largestItems);
-    if (errCode != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "failed to get top N largest items from installd, bundleName: %{public}s, "
-            "userId: %{public}d, appIndex: %{public}d, errCode: %{public}d",
-            bundleName.c_str(), userId, appIndex, errCode);
-    }
+void BundleMgrHostImpl::GetTopNLargestItemsTask(const std::string &bundleName, int32_t appIndex, int32_t userId,
+    const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
+{
+    LOG_I(BMS_TAG_DEFAULT, "GetTopNLargestItemsTask started, -n: %{public}s, -a: %{public}d, -u: %{public}d",
+        bundleName.c_str(), appIndex, userId);
 
-    auto endTime = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-    LOG_I(BMS_TAG_DEFAULT, "end to get top N largest items in app data dir, bundleName: %{public}s, "
-        "errCode: %{public}d, cost: %{public}lld ms", bundleName.c_str(), errCode,
-        static_cast<long long>(duration));
-    return errCode;
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto getLargestItemsFunc = [bundleName, appIndex, userId, getLargestItemsCallback, traceId]() {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
+        LOG_I(BMS_TAG_DEFAULT, "async task getLargestItemsFunc started, -n: %{public}s, "
+            "-a: %{public}d, -u: %{public}d", bundleName.c_str(), appIndex, userId);
+        auto installdClient = DelayedSingleton<InstalldClient>::GetInstance();
+        if (installdClient == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "installdClient is nullptr");
+            getLargestItemsCallback->OnGetLargestItemsFinished(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, "");
+            return;
+        }
+        auto startTime = std::chrono::steady_clock::now();
+        std::string largestItems;
+        // Use fixed timeout value of 180 seconds for installd layer
+        constexpr int32_t FIXED_TIMEOUT = 180;
+        ErrCode errCode = installdClient->GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId,
+            FIXED_TIMEOUT, largestItems);
+
+        auto endTime = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+
+        if (errCode != ERR_OK) {
+            LOG_E(BMS_TAG_DEFAULT, "async task getLargestItemsFunc failed, -n: %{public}s, "
+                "-u: %{public}d, -a: %{public}d, -e: %{public}d, cost: %{public}lld ms",
+                bundleName.c_str(), userId, appIndex, errCode, static_cast<long long>(duration));
+        } else {
+            LOG_I(BMS_TAG_DEFAULT, "async task getLargestItemsFunc succeed, -n: %{public}s, "
+                "-u: %{public}d, -a: %{public}d, cost: %{public}lld ms",
+                bundleName.c_str(), userId, appIndex, static_cast<long long>(duration));
+        }
+
+        getLargestItemsCallback->OnGetLargestItemsFinished(errCode, largestItems);
+    };
+    ffrt::submit(getLargestItemsFunc);
 }
 
 ErrCode BundleMgrHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,

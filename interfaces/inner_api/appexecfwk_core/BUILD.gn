@@ -113,6 +113,8 @@ ohos_shared_library("appexecfwk_core") {
     "src/bundlemgr/bundle_user_mgr_proxy.cpp",
     "src/bundlemgr/clean_cache_callback_host.cpp",
     "src/bundlemgr/clean_cache_callback_proxy.cpp",
+    "src/bundlemgr/get_largest_items_callback_host.cpp",
+    "src/bundlemgr/get_largest_items_callback_proxy.cpp",
     "src/bundlemgr/launcher_service.cpp",
     "src/bundlemgr/param_validator.cpp",
     "src/bundlemgr/process_cache_callback_host.cpp",

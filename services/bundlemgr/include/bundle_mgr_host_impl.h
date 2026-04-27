@@ -1016,7 +1016,7 @@ public:
         std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
     virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
-        const int32_t userId, std::string &largestItems) override;
+        const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback) override;
 
     virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
         std::vector<BundleStorageStats> &bundleStats) override;
@@ -1348,6 +1348,8 @@ private:
         int32_t userId, CleanType cleanType, int32_t appIndex, uint64_t &cleanCacheSize);
     void CleanBundleCacheTaskGetCleanSize(const std::string &bundleName, int32_t userId, CleanType cleanType,
         int32_t appIndex, int32_t callingUid, const std::string &callingBundleName, uint64_t &cleanCacheSize);
+    void GetTopNLargestItemsTask(const std::string &bundleName, int32_t appIndex, int32_t userId,
+        const sptr<IGetLargestItemsCallback> getLargestItemsCallback);
     bool CleanBundleCacheByInodeCount(const std::string &bundleName, int32_t userId,
         int32_t appIndex, const std::vector<std::string> &moduleNames, uint64_t &cleanCacheSize);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);

@@ -35,6 +35,7 @@
 #include "bundle_user_mgr_interface.h"
 #include "clean_cache_callback_interface.h"
 #include "common_event_info.h"
+#include "get_largest_items_callback_interface.h"
 #include "data_group_info.h"
 #include "app_control_interface.h"
 #include "bundle_resource_interface.h"
@@ -1471,7 +1472,7 @@ public:
     }
 
     virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
-        const int32_t userId, std::string &largestItems)
+        const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

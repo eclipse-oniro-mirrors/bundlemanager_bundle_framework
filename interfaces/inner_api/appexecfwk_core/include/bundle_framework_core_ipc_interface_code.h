@@ -344,6 +344,11 @@ enum class CleanCacheCallbackInterfaceCode : uint8_t {
     ON_CLEAN_CACHE_CALLBACK = 0,
 };
 
+/* SAID: 401-234 Interface No.234 subservice also provides the following interfaces */
+enum class GetLargestItemsCallbackInterfaceCode : uint8_t {
+    ON_GET_LARGEST_ITEMS_CALLBACK = 0,
+};
+
 /* SAID: 401-27 Interface No.26 subservice also provides the following interfaces */
 enum class ProcessCacheCallbackInterfaceCode : uint8_t {
     GET_ALL_BUNDLE_CACHE = 0,
