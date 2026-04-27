@@ -6536,7 +6536,6 @@ HWTEST_F(BmsBundleParserTest, from_json_sceneAnimationParams, Function | MediumT
     FormInfo formInfo;
     from_json(jsonObject, formInfo);
     EXPECT_EQ(formInfo.name, "testName");
-    APP_LOGE("lxg from_json_sceneAnimationParams %{public}s", formInfo.sceneAnimationParams.disabledDesktopBehaviors.c_str());
     EXPECT_EQ(formInfo.sceneAnimationParams.abilityName, "testAbilityName");
     EXPECT_EQ(formInfo.sceneAnimationParams.disabledDesktopBehaviors, "PULL_DOWN_SEARCH|LONG_CLICK");
     EXPECT_EQ(formInfo.sceneAnimationParams.triggerTypes.size(), 1);
