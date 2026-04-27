@@ -4065,9 +4065,15 @@ bool InstalldOperator::GetLargestDirs(const std::vector<std::string> &dirPaths,
 }
 
 bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &dirPaths,
-    std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+    const int32_t timeout, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
 {
-    LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive start, dirPaths count: %{public}zu", dirPaths.size());
+    // Validate and adjust timeout parameter (input is in seconds)
+    // If <= 0, use 3 seconds. If > 180, use 180 seconds (max 3 minutes).
+    const int32_t adjustedTimeoutSec = (timeout <= 0) ? 3 : ((timeout > 180) ? 180 : timeout);
+    const int32_t MAX_SCAN_TIME_MS = adjustedTimeoutSec * 1000;  // Convert to milliseconds
+
+    LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive start, dirPaths count: %{public}zu, timeout(sec): %{public}d",
+        dirPaths.size(), timeout);
 
     if (dirPaths.empty()) {
         LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: input dirPaths is empty");
@@ -4075,7 +4081,6 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
     }
 
     // Security: Set resource limits to prevent DoS attacks
-    constexpr uint32_t MAX_SCAN_TIME_MS = 60000;  // 60 second timeout
     constexpr int32_t MAX_DRILL_DOWN_DEPTH = 100;  // Maximum depth for drill-down phase
 
     auto startTime = std::chrono::steady_clock::now();
@@ -4089,7 +4094,7 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
     dirSizeCache.reserve(1000);  // Reserve space for typical directory tree
 
     // Helper lambda to check timeout
-    auto isTimeout = [&startTime]() -> bool {
+    auto isTimeout = [&startTime, MAX_SCAN_TIME_MS]() -> bool {
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - startTime).count();
         return elapsed > MAX_SCAN_TIME_MS;
@@ -4259,7 +4264,7 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
     // Log cache statistics for performance monitoring
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now() - startTime).count();
-    LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesRecursive success, total items: %{public}zu, cache entries: %{public}zu, time: %{public}lld ms",
+    LOG_I(BMS_TAG_INSTALLD, "success, total items: %{public}zu, cache entries: %{public}zu, time: %{public}lld ms",
         resultPathsWithSize.size(), dirSizeCache.size(), static_cast<long long>(elapsed));
 
     return true;

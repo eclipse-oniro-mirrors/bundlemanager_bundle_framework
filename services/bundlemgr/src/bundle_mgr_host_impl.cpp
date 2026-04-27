@@ -4118,7 +4118,7 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
 }
 
 ErrCode BundleMgrHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
-    const int32_t userId, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+    const int32_t userId, std::string &largestItems)
 {
     auto startTime = std::chrono::steady_clock::now();
     LOG_I(BMS_TAG_DEFAULT, "begin to get top N largest items in app data dir, bundleName: %{public}s, "
@@ -4151,12 +4151,14 @@ ErrCode BundleMgrHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bu
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
+    // Use fixed timeout value of 3 seconds for installd layer
+    constexpr int32_t FIXED_TIMEOUT = 3;
     ErrCode errCode = installdClient->GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId,
-        resultPathsWithSize);
+        FIXED_TIMEOUT, largestItems);
     if (errCode != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "failed to get top N largest items from installd, bundleName: %{public}s, "
-            "userId: %{public}d, appIndex: %{public}d, errCode: %{public}d", bundleName.c_str(), userId,
-            appIndex, errCode);
+            "userId: %{public}d, appIndex: %{public}d, errCode: %{public}d",
+            bundleName.c_str(), userId, appIndex, errCode);
     }
 
     auto endTime = std::chrono::steady_clock::now();

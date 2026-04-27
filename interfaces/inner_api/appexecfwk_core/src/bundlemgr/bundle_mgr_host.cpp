@@ -3566,45 +3566,28 @@ ErrCode BundleMgrHost::HandleGetTopNLargestItemsInAppDataDir(MessageParcel &data
     std::string bundleName = data.ReadString();
     int32_t appIndex = data.ReadInt32();
     int32_t userId = data.ReadInt32();
-    std::vector<std::pair<std::string, uint64_t>> resultPathsWithSize;
-    ErrCode ret = GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, resultPathsWithSize);
+    std::string largestItems;
+    ErrCode ret = GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, largestItems);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
-        // Use WriteRawData to handle large data sets, similar to WriteParcelInfo pattern
-        // This bypasses the 200KB Parcel size limit
-        Parcel tempParcel;
-        // Write the number of items
-        if (!tempParcel.WriteUint32(resultPathsWithSize.size())) {
-            APP_LOGE("failed to write result size to temp parcel");
+        // Use WriteRawData to handle large JSON strings (bypass IPC size limit)
+        size_t dataSize = largestItems.size();
+        if (!reply.WriteUint64(dataSize)) {
+            APP_LOGE("failed to write largestItems data size");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
-        // Write each (path, size) pair to temp parcel
-        for (const auto &item : resultPathsWithSize) {
-            if (!tempParcel.WriteString(item.first)) {
-                APP_LOGE("failed to write path to temp parcel");
-                return ERR_APPEXECFWK_PARCEL_ERROR;
-            }
-            if (!tempParcel.WriteUint64(item.second)) {
-                APP_LOGE("failed to write size to temp parcel");
+        if (dataSize > 0) {
+            if (!reply.WriteRawData(reinterpret_cast<const uint8_t *>(largestItems.c_str()), dataSize)) {
+                APP_LOGE("failed to write largestItems raw data, size: %{public}zu", dataSize);
                 return ERR_APPEXECFWK_PARCEL_ERROR;
             }
         }
 
-        size_t dataSize = tempParcel.GetDataSize();
-        if (!reply.WriteUint32(dataSize)) {
-            APP_LOGE("failed to write data size");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-        if (!reply.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
-            APP_LOGE("failed to write raw data");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-
-        APP_LOGD("HandleGetTopNLargestItemsInAppDataDir: returned %{public}zu items, data size: %{public}zu",
-            resultPathsWithSize.size(), dataSize);
+        APP_LOGD("HandleGetTopNLargestItemsInAppDataDir: returned JSON string, size: %{public}zu",
+            largestItems.size());
     }
     return ret;
 }

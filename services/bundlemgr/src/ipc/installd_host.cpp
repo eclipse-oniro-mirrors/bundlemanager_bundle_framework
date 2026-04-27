@@ -826,46 +826,30 @@ bool InstalldHost::HandleGetTopNLargestItemsInAppDataDir(MessageParcel &data, Me
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t appIndex = data.ReadInt32();
     int32_t userId = data.ReadInt32();
+    int32_t timeout = data.ReadInt32();
 
-    LOG_D(BMS_TAG_INSTALLD, "HandleGetTopNLargestItemsInAppDataDir: bundleName=%{public}s, appIndex=%{public}d, userId=%{public}d",
-        bundleName.c_str(), appIndex, userId);
+    LOG_D(BMS_TAG_INSTALLD, "get top N -n %{public}s, -a %{public}d, -u %{public}d, -t %{public}d",
+        bundleName.c_str(), appIndex, userId, timeout);
 
-    std::vector<std::pair<std::string, uint64_t>> resultPathsWithSize;
-    ErrCode result = GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, resultPathsWithSize);
+    std::string largestItems;
+    ErrCode result = GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, timeout, largestItems);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
 
-    // Use WriteRawData to handle large data sets, similar to WriteParcelInfo pattern
-    // This bypasses the 200KB Parcel size limit
-    Parcel tempParcel;
-    // Write the number of items
-    if (!tempParcel.WriteUint32(resultPathsWithSize.size())) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to write result size to temp parcel");
+    // Use WriteRawData to handle large JSON strings (bypass IPC size limit)
+    size_t dataSize = largestItems.size();
+    if (!reply.WriteUint64(dataSize)) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to write largestItems data size");
         return false;
     }
-    // Write each (path, size) pair to temp parcel
-    for (const auto &item : resultPathsWithSize) {
-        if (!tempParcel.WriteString16(Str8ToStr16(item.first))) {
-            LOG_E(BMS_TAG_INSTALLD, "failed to write path to temp parcel");
-            return false;
-        }
-        if (!tempParcel.WriteUint64(item.second)) {
-            LOG_E(BMS_TAG_INSTALLD, "failed to write size to temp parcel");
+    if (dataSize > 0) {
+        if (!reply.WriteRawData(reinterpret_cast<const uint8_t *>(largestItems.c_str()), dataSize)) {
+            LOG_E(BMS_TAG_INSTALLD, "failed to write largestItems raw data, size: %{public}zu", dataSize);
             return false;
         }
     }
 
-    size_t dataSize = tempParcel.GetDataSize();
-    if (!reply.WriteUint32(dataSize)) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to write data size");
-        return false;
-    }
-    if (!reply.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to write raw data");
-        return false;
-    }
-
-    LOG_D(BMS_TAG_INSTALLD, "HandleGetTopNLargestItemsInAppDataDir: returned %{public}zu items, data size: %{public}zu",
-        resultPathsWithSize.size(), dataSize);
+    LOG_D(BMS_TAG_INSTALLD, "HandleGetTopNLargestItemsInAppDataDir: returned JSON string, size: %{public}zu",
+        largestItems.size());
 
     return true;
 }

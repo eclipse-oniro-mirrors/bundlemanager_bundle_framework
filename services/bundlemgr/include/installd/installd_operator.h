@@ -424,12 +424,14 @@ public:
     /**
      * @brief Recursively find largest files/directories up to 6 levels, then drill down to largest file.
      * @param dirPaths Indicates the vector of directory paths to scan.
+     * @param timeout Indicates the maximum scan time in seconds.
+     *                  If <= 0, use 3 seconds. If > 180, use 180 seconds (max 3 minutes).
      * @param resultPathsWithSize Output parameter containing vector of (path, size) pairs for all found items
      *                            during 6-level recursion, plus the final largest file path from deep drilling.
      * @return Returns true if successfully; returns false otherwise.
      */
     static bool GetLargestFilesRecursive(const std::vector<std::string> &dirPaths,
-        std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize);
+        const int32_t timeout, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize);
 
     /**
      * @brief Get all bundle data directory paths based on bundleName, appIndex and userId.

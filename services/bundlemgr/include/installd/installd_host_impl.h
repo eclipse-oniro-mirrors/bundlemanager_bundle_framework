@@ -199,11 +199,12 @@ public:
      * @param bundleName Indicates the bundle name.
      * @param appIndex Indicates the app index.
      * @param userId Indicates the user ID.
-     * @param resultPathsWithSize Output parameter containing vector of (path, size) pairs for largest items.
+     * @param timeout Indicates the maximum scan time in seconds.
+     * @param largestItems Output parameter containing JSON string of largest items with path and size.
      * @return Returns ERR_OK if get successfully; returns error code otherwise.
      */
     ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
-        const int32_t userId, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize) override;
+        const int32_t userId, const int32_t timeout, std::string &largestItems) override;
 
     /**
      * @brief Get all cache file path.

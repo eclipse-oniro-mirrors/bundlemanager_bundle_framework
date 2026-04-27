@@ -603,13 +603,14 @@ ErrCode InstalldProxy::ScanDir(
 }
 
 ErrCode InstalldProxy::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
-    const int32_t userId, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+    const int32_t userId, const int32_t timeout, std::string &largestItems)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
     INSTALLD_PARCEL_WRITE(data, Int32, appIndex);
     INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, Int32, timeout);
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -620,49 +621,25 @@ ErrCode InstalldProxy::GetTopNLargestItemsInAppDataDir(const std::string &bundle
     }
 
     // Read data size
-    size_t dataSize = reply.ReadUint32();
+    size_t dataSize = reply.ReadUint64();
     if (dataSize == 0) {
         LOG_D(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: no data returned");
-        resultPathsWithSize.clear();
+        largestItems.clear();
         return ERR_OK;
     }
 
-    // Read raw data into a buffer
+    // Read raw data into buffer
     const void *buffer = reply.ReadRawData(dataSize);
     if (buffer == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "failed to read raw data, size: %{public}zu", dataSize);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    // Parse from temp parcel
-    MessageParcel tempParcel;
-    if (!tempParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to parse temp parcel, size: %{public}zu", dataSize);
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
+    // Convert to string
+    largestItems.assign(reinterpret_cast<const char*>(buffer), dataSize);
 
-    // Read the number of items
-    uint32_t itemCount = 0;
-    if (!tempParcel.ReadUint32(itemCount)) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to read item count from temp parcel");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    // Read each (path, size) pair
-    resultPathsWithSize.clear();
-    resultPathsWithSize.reserve(itemCount);
-    for (uint32_t i = 0; i < itemCount; ++i) {
-        std::string path = Str16ToStr8(tempParcel.ReadString16());
-        uint64_t size = 0;
-        if (!tempParcel.ReadUint64(size)) {
-            LOG_E(BMS_TAG_INSTALLD, "failed to read size for item %{public}u", i);
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-        resultPathsWithSize.emplace_back(path, size);
-    }
-
-    LOG_D(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: read %{public}zu items, data size: %{public}zu",
-        resultPathsWithSize.size(), dataSize);
+    LOG_D(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: read JSON string, size: %{public}zu",
+        largestItems.size());
     return ERR_OK;
 }
 

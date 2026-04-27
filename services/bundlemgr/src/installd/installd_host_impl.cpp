@@ -1347,11 +1347,11 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
 }
 
 ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
-    const int32_t userId, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+    const int32_t userId, const int32_t timeout, std::string &largestItems)
 {
     auto startTime = std::chrono::steady_clock::now();
-    LOG_D(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: bundleName=%{public}s, appIndex=%{public}d, userId=%{public}d",
-        bundleName.c_str(), appIndex, userId);
+    LOG_I(BMS_TAG_INSTALLD, "-n %{public}s, -a %{public}d, -u %{public}d, -t %{public}d get top N",
+        bundleName.c_str(), appIndex, userId, timeout);
 
     // Validate input parameters
     if (bundleName.empty()) {
@@ -1374,11 +1374,9 @@ ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bun
     LOG_D(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: collected %{public}zu data directory paths",
         dataDirPaths.size());
 
-    // Clear output parameter
-    resultPathsWithSize.clear();
-
     // Call GetLargestFilesRecursive to find largest items
-    if (!InstalldOperator::GetLargestFilesRecursive(dataDirPaths, resultPathsWithSize)) {
+    std::vector<std::pair<std::string, uint64_t>> resultPathsWithSize;
+    if (!InstalldOperator::GetLargestFilesRecursive(dataDirPaths, timeout, resultPathsWithSize)) {
         LOG_E(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: GetLargestFilesRecursive failed");
         return ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED;
     }
@@ -1387,6 +1385,20 @@ ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bun
     for (auto &pathWithSize : resultPathsWithSize) {
         pathWithSize.first = InstalldOperator::AnonymizePath(pathWithSize.first);
     }
+
+    // Convert result to JSON string
+    nlohmann::json resultJson;
+    nlohmann::json itemsArray = nlohmann::json::array();
+
+    for (const auto &pathWithSize : resultPathsWithSize) {
+        nlohmann::json item;
+        item["path"] = pathWithSize.first;
+        item["size"] = pathWithSize.second;
+        itemsArray.push_back(item);
+    }
+
+    resultJson["items"] = itemsArray;
+    largestItems = resultJson.dump();
 
     auto endTime = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
