@@ -62,10 +62,9 @@ ErrCode BundleSkillManagerHost::HandleGetSkillInfoForSelf(MessageParcel &data, M
 {
     std::string moduleName = data.ReadString();
     std::string skillName = data.ReadString();
-    int32_t userId = data.ReadInt32();
     uint32_t flags = data.ReadUint32();
     SkillInfo skillInfo;
-    ErrCode ret = GetSkillInfoForSelf(moduleName, skillName, userId, flags, skillInfo);
+    ErrCode ret = GetSkillInfoForSelf(moduleName, skillName, flags, skillInfo);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -82,9 +81,8 @@ ErrCode BundleSkillManagerHost::HandleGetSkillInfoForSelf(MessageParcel &data, M
 ErrCode BundleSkillManagerHost::HandleGetSkillInfosForSelf(MessageParcel &data, MessageParcel &reply)
 {
     uint32_t flags = data.ReadUint32();
-    int32_t userId = data.ReadInt32();
     std::vector<SkillInfo> skillInfos;
-    ErrCode ret = GetSkillInfosForSelf(flags, userId, skillInfos);
+    ErrCode ret = GetSkillInfosForSelf(flags, skillInfos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

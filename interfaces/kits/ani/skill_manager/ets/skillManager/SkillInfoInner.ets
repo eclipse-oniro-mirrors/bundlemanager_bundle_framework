@@ -19,10 +19,10 @@ export class SkillInfoInner implements SkillInfo {
     readonly bundleName: string = '';
     readonly moduleName: string = '';
     readonly skillName: string = '';
-    readonly skillId: int;
     readonly skillType: SkillType;
     readonly hapPath: string = '';
     readonly skillPath: string = '';
+    readonly versionCode: long;
     readonly abilityName: string = '';
     readonly description: string = '';
     readonly srcEntries: Array<string> = new Array<string>;
@@ -30,16 +30,16 @@ export class SkillInfoInner implements SkillInfo {
     readonly requestPermissions: Array<string> = new Array<string>;
 
     constructor() { }
-    constructor(bundleName: string, moduleName: string, skillName: string, skillId: int, skillType: SkillType,
-        hapPath: string, skillPath: string, abilityName: string, description: string,
+    constructor(bundleName: string, moduleName: string, skillName: string, skillType: SkillType,
+        hapPath: string, skillPath: string, versionCode: long, abilityName: string, description: string,
         srcEntries: Array<string>, permissions: Array<string>, requestPermissions: Array<string>) {
         this.bundleName = bundleName;
         this.moduleName = moduleName;
         this.skillName = skillName;
-        this.skillId = skillId;
         this.skillType = skillType;
         this.hapPath = hapPath;
         this.skillPath = skillPath;
+        this.versionCode = versionCode;
         this.abilityName = abilityName;
         this.description = description;
         this.srcEntries = srcEntries;

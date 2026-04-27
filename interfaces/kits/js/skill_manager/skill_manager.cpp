@@ -30,10 +30,9 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* SKILL_NAME = "skillName";
-constexpr const char* SKILL_ID = "skillId";
 constexpr const char* SKILL_TYPE = "skillType";
-constexpr const char* HAP_PATH = "hapPath";
 constexpr const char* SKILL_PATH = "skillPath";
+constexpr const char* VERSION_CODE = "versionCode";
 constexpr const char* DESCRIPTION = "description";
 constexpr const char* SRC_ENTRIES = "srcEntries";
 constexpr const char* PERMISSIONS = "permissions";
@@ -49,7 +48,8 @@ constexpr const char* GET_SKILL_INFO_WITH_SRC_ENTRIES = "GET_SKILL_INFO_WITH_SRC
 constexpr const char* GET_SKILL_INFO_WITH_PERMISSIONS = "GET_SKILL_INFO_WITH_PERMISSIONS";
 constexpr const char* GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS = "GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS";
 
-static void ConvertSkillInfo(napi_env env, const SkillInfo &skillInfo, napi_value objSkillInfo)
+static void ConvertSkillInfo(napi_env env, const SkillInfo &skillInfo, napi_value objSkillInfo,
+    uint32_t flags)
 {
     APP_LOGD("start");
     napi_value nBundleName;
@@ -67,23 +67,23 @@ static void ConvertSkillInfo(napi_env env, const SkillInfo &skillInfo, napi_valu
         NAPI_AUTO_LENGTH, &nSkillName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, SKILL_NAME, nSkillName));
 
-    napi_value nSkillId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, skillInfo.skillId, &nSkillId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, SKILL_ID, nSkillId));
-
     napi_value nSkillType;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(skillInfo.skillType), &nSkillType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, SKILL_TYPE, nSkillType));
 
-    napi_value nHapPath;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.hapPath.c_str(),
-        NAPI_AUTO_LENGTH, &nHapPath));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, HAP_PATH, nHapPath));
-
     napi_value nSkillPath;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.skillPath.c_str(),
+    std::string sandboxSkillPath = skillInfo.skillPath;
+    if (sandboxSkillPath.compare(0, strlen(Constants::REAL_SKILL_PATH_PREFIX),
+        Constants::REAL_SKILL_PATH_PREFIX) == 0) {
+        sandboxSkillPath.replace(0, strlen(Constants::REAL_SKILL_PATH_PREFIX), Constants::SANDBOX_SKILL_PATH_PREFIX);
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, sandboxSkillPath.c_str(),
         NAPI_AUTO_LENGTH, &nSkillPath));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, SKILL_PATH, nSkillPath));
+
+    napi_value nVersionCode;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(skillInfo.versionCode), &nVersionCode));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, VERSION_CODE, nVersionCode));
 
     napi_value nAbilityName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.abilityName.c_str(),
@@ -91,48 +91,69 @@ static void ConvertSkillInfo(napi_env env, const SkillInfo &skillInfo, napi_valu
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, ABILITY_NAME, nAbilityName));
 
     napi_value nDescription;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.description.c_str(),
-        NAPI_AUTO_LENGTH, &nDescription));
+    if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_DESCRIPTION)) ==
+        static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_DESCRIPTION)) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.description.c_str(),
+            NAPI_AUTO_LENGTH, &nDescription));
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &nDescription));
+    }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, DESCRIPTION, nDescription));
 
     napi_value nSrcEntries;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nSrcEntries));
-    for (size_t i = 0; i < skillInfo.srcEntries.size(); ++i) {
-        napi_value nEntry;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.srcEntries[i].c_str(),
-            NAPI_AUTO_LENGTH, &nEntry));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSrcEntries, i, nEntry));
+    if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_SRC_ENTRIES)) ==
+        static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_SRC_ENTRIES)) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nSrcEntries));
+        for (size_t i = 0; i < skillInfo.srcEntries.size(); ++i) {
+            napi_value nEntry;
+            NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.srcEntries[i].c_str(),
+                NAPI_AUTO_LENGTH, &nEntry));
+            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSrcEntries, i, nEntry));
+        }
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &nSrcEntries));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, SRC_ENTRIES, nSrcEntries));
 
     napi_value nPermissions;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nPermissions));
-    for (size_t i = 0; i < skillInfo.permissions.size(); ++i) {
-        napi_value nPermission;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.permissions[i].c_str(),
-            NAPI_AUTO_LENGTH, &nPermission));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermissions, i, nPermission));
+    if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_PERMISSIONS)) ==
+        static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_PERMISSIONS)) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nPermissions));
+        for (size_t i = 0; i < skillInfo.permissions.size(); ++i) {
+            napi_value nPermission;
+            NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.permissions[i].c_str(),
+                NAPI_AUTO_LENGTH, &nPermission));
+            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermissions, i, nPermission));
+        }
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &nPermissions));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, PERMISSIONS, nPermissions));
 
     napi_value nRequestPermissions;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nRequestPermissions));
-    for (size_t i = 0; i < skillInfo.requestPermissions.size(); ++i) {
-        napi_value nReqPermission;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.requestPermissions[i].c_str(),
-            NAPI_AUTO_LENGTH, &nReqPermission));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nRequestPermissions, i, nReqPermission));
+    if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS)) ==
+        static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS)) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nRequestPermissions));
+        for (size_t i = 0; i < skillInfo.requestPermissions.size(); ++i) {
+            napi_value nReqPermission;
+            NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.requestPermissions[i].c_str(),
+                NAPI_AUTO_LENGTH, &nReqPermission));
+            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nRequestPermissions, i, nReqPermission));
+        }
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &nRequestPermissions));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, REQUEST_PERMISSIONS, nRequestPermissions));
     APP_LOGD("end");
 }
 
-static void ConvertSkillInfos(napi_env env, const std::vector<SkillInfo> &skillInfos, napi_value arrSkillInfos)
+static void ConvertSkillInfos(napi_env env, const std::vector<SkillInfo> &skillInfos, napi_value arrSkillInfos,
+    uint32_t flags)
 {
     for (size_t index = 0; index < skillInfos.size(); ++index) {
         napi_value objSkillInfo = nullptr;
         napi_create_object(env, &objSkillInfo);
-        ConvertSkillInfo(env, skillInfos[index], objSkillInfo);
+        ConvertSkillInfo(env, skillInfos[index], objSkillInfo, flags);
         napi_set_element(env, arrSkillInfos, index, objSkillInfo);
     }
 }
@@ -146,7 +167,7 @@ void GetSkillInfoForSelfExec(napi_env env, void *data)
     }
     asyncCallbackInfo->err = SkillManagerHelper::InnerGetSkillInfoForSelf(
         asyncCallbackInfo->moduleName, asyncCallbackInfo->skillName,
-        asyncCallbackInfo->userId, asyncCallbackInfo->flags, asyncCallbackInfo->skillInfo);
+        asyncCallbackInfo->flags, asyncCallbackInfo->skillInfo);
 }
 
 void GetSkillInfoForSelfComplete(napi_env env, napi_status status, void *data)
@@ -161,10 +182,10 @@ void GetSkillInfoForSelfComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
-        ConvertSkillInfo(env, asyncCallbackInfo->skillInfo, result[1]);
+        ConvertSkillInfo(env, asyncCallbackInfo->skillInfo, result[1], asyncCallbackInfo->flags);
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_SKILL_INFO_FOR_SELF, PERMISSION_GET_BUNDLE_RESOURCES);
+            GET_SKILL_INFO_FOR_SELF, "");
     }
     CommonFunc::NapiReturnDeferred<SkillInfoCallback>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
@@ -187,13 +208,13 @@ napi_value GetSkillInfoForSelf(napi_env env, napi_callback_info info)
     std::unique_ptr<SkillInfoCallback> callbackPtr {asyncCallbackInfo};
 
     std::string moduleName;
-    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], moduleName) || moduleName.empty()) {
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], moduleName)) {
         APP_LOGE("parse moduleName failed");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
         return nullptr;
     }
     std::string skillName;
-    if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], skillName) || skillName.empty()) {
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], skillName)) {
         APP_LOGE("parse skillName failed");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, SKILL_NAME, TYPE_STRING);
         return nullptr;
@@ -210,14 +231,6 @@ napi_value GetSkillInfoForSelf(napi_env env, napi_callback_info info)
     asyncCallbackInfo->moduleName = moduleName;
     asyncCallbackInfo->skillName = skillName;
     asyncCallbackInfo->flags = static_cast<uint32_t>(flags);
-    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-
-    if (args.GetMaxArgc() >= ARGS_SIZE_FOUR) {
-        int32_t userId = 0;
-        if (CommonFunc::ParseInt(env, args[ARGS_POS_THREE], userId)) {
-            asyncCallbackInfo->userId = userId;
-        }
-    }
 
     auto promise = CommonFunc::AsyncCallNativeMethod<SkillInfoCallback>(
         env, asyncCallbackInfo, GET_SKILL_INFO_FOR_SELF, GetSkillInfoForSelfExec,
@@ -235,7 +248,7 @@ void GetSkillInfosForSelfExec(napi_env env, void *data)
         return;
     }
     asyncCallbackInfo->err = SkillManagerHelper::InnerGetSkillInfosForSelf(
-        asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->skillInfos);
+        asyncCallbackInfo->flags, asyncCallbackInfo->skillInfos);
 }
 
 void GetSkillInfosForSelfComplete(napi_env env, napi_status status, void *data)
@@ -250,10 +263,10 @@ void GetSkillInfosForSelfComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
-        ConvertSkillInfos(env, asyncCallbackInfo->skillInfos, result[1]);
+        ConvertSkillInfos(env, asyncCallbackInfo->skillInfos, result[1], asyncCallbackInfo->flags);
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_SKILL_INFOS_FOR_SELF, PERMISSION_GET_BUNDLE_RESOURCES);
+            GET_SKILL_INFOS_FOR_SELF, "");
     }
     CommonFunc::NapiReturnDeferred<SkillInfosCallback>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
@@ -283,13 +296,6 @@ napi_value GetSkillInfosForSelf(napi_env env, napi_callback_info info)
         flags = static_cast<int32_t>(SkillInfoFlag::GET_SKILL_INFO_DEFAULT);
     }
     asyncCallbackInfo->flags = static_cast<uint32_t>(flags);
-    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
-        int32_t userId = 0;
-        if (CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
-            asyncCallbackInfo->userId = userId;
-        }
-    }
     auto promise = CommonFunc::AsyncCallNativeMethod<SkillInfosCallback>(
         env, asyncCallbackInfo, GET_SKILL_INFOS_FOR_SELF, GetSkillInfosForSelfExec,
         GetSkillInfosForSelfComplete);
@@ -322,10 +328,10 @@ void GetSkillInfoComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
-        ConvertSkillInfo(env, asyncCallbackInfo->skillInfo, result[1]);
+        ConvertSkillInfo(env, asyncCallbackInfo->skillInfo, result[1], asyncCallbackInfo->flags);
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_SKILL_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
+            GET_SKILL_INFO, Constants::PERMISSION_MANAGE_SKILL_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
     }
     CommonFunc::NapiReturnDeferred<GetSkillInfoCallback>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
@@ -346,19 +352,19 @@ napi_value GetSkillInfo(napi_env env, napi_callback_info info)
     }
     std::unique_ptr<GetSkillInfoCallback> callbackPtr {asyncCallbackInfo};
     std::string bundleName;
-    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName) || bundleName.empty()) {
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
         APP_LOGE("parse bundleName failed");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
     std::string moduleName;
-    if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], moduleName) || moduleName.empty()) {
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], moduleName)) {
         APP_LOGE("parse moduleName failed");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
         return nullptr;
     }
     std::string skillName;
-    if (!CommonFunc::ParseString(env, args[ARGS_POS_TWO], skillName) || skillName.empty()) {
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_TWO], skillName)) {
         APP_LOGE("parse skillName failed");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, SKILL_NAME, TYPE_STRING);
         return nullptr;
@@ -414,10 +420,10 @@ void GetSkillInfosComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
-        ConvertSkillInfos(env, asyncCallbackInfo->skillInfos, result[1]);
+        ConvertSkillInfos(env, asyncCallbackInfo->skillInfos, result[1], asyncCallbackInfo->flags);
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_SKILL_INFOS, PERMISSION_GET_BUNDLE_RESOURCES);
+            GET_SKILL_INFOS, Constants::PERMISSION_MANAGE_SKILL_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
     }
     CommonFunc::NapiReturnDeferred<GetSkillInfosCallback>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
@@ -438,7 +444,7 @@ napi_value GetSkillInfos(napi_env env, napi_callback_info info)
     }
     std::unique_ptr<GetSkillInfosCallback> callbackPtr {asyncCallbackInfo};
     std::string bundleName;
-    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName) || bundleName.empty()) {
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
         APP_LOGE("parse bundleName failed");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
@@ -491,10 +497,10 @@ void GetAllSkillInfosComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
-        ConvertSkillInfos(env, asyncCallbackInfo->skillInfos, result[1]);
+        ConvertSkillInfos(env, asyncCallbackInfo->skillInfos, result[1], asyncCallbackInfo->flags);
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_ALL_SKILL_INFOS, PERMISSION_GET_BUNDLE_RESOURCES);
+            GET_ALL_SKILL_INFOS, Constants::PERMISSION_MANAGE_SKILL_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
     }
     CommonFunc::NapiReturnDeferred<SkillInfosCallback>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }

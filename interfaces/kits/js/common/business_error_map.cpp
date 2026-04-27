@@ -190,6 +190,7 @@ constexpr const char* ERROR_MSG_DESTINATION_PATH_ACCESS_FAILED =
     "The destination path cannot be accessed.";
 constexpr const char* ERROR_MSG_DATA_MIGRATION_COPY_FAILED =
     "System error occurred during copy execution.";
+constexpr const char* ERROR_MSG_SKILL_NOT_EXIST = "The specified skillName is not found.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -291,7 +292,8 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_WAITING_FOR_USER_AUTHENTICATION_TIMEOUT, ERROR_MSG_WAITING_FOR_USER_AUTHENTICATION_TIMEOUT},
     { ERROR_SOURCE_PATH_ACCESS_FAILED, ERROR_MSG_SOURCE_PATH_ACCESS_FAILED},
     { ERROR_DESTINATION_PATH_ACCESS_FAILED, ERROR_MSG_DESTINATION_PATH_ACCESS_FAILED},
-    { ERROR_DATA_MIGRATION_COPY_FAILED, ERROR_MSG_DATA_MIGRATION_COPY_FAILED}
+    { ERROR_DATA_MIGRATION_COPY_FAILED, ERROR_MSG_DATA_MIGRATION_COPY_FAILED},
+    { ERROR_SKILL_NOT_EXIST, ERROR_MSG_SKILL_NOT_EXIST}
 };
 
 static std::unordered_map<int32_t, const char*> ERR_NEW_MSG_MAP = {

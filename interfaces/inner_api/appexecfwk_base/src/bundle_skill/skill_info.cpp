@@ -24,10 +24,10 @@ bool SkillInfo::ReadFromParcel(Parcel &parcel)
     bundleName = parcel.ReadString();
     moduleName = parcel.ReadString();
     skillName = parcel.ReadString();
-    skillId = parcel.ReadInt32();
     skillType = static_cast<SkillType>(parcel.ReadInt32());
     hapPath = parcel.ReadString();
     skillPath = parcel.ReadString();
+    versionCode = parcel.ReadUint32();
     abilityName = parcel.ReadString();
     description = parcel.ReadString();
 
@@ -59,10 +59,10 @@ bool SkillInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, bundleName);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, moduleName);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, skillName);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(skillType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, hapPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, skillPath);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, abilityName);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, description);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, srcEntries.size());

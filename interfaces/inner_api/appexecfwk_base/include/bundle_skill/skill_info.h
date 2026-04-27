@@ -41,10 +41,10 @@ struct SkillInfo : public Parcelable {
     std::string bundleName;
     std::string moduleName;
     std::string skillName;
-    int32_t skillId = 0;
     SkillType skillType = SkillType::APP_SKILL;
     std::string hapPath;
     std::string skillPath;
+    uint32_t versionCode = 0;
     std::string abilityName;
     std::string description;
     std::vector<std::string> srcEntries;

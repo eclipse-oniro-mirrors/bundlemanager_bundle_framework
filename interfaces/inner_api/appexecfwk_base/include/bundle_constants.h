@@ -119,6 +119,12 @@ constexpr const char* PERMISSION_CLEAN_APPLICATION_DATA = "ohos.permission.CLEAN
 constexpr const char* PERMISSION_MANAGE_SELF_SKILLS = "ohos.permission.MANAGE_SELF_SKILLS";
 constexpr const char* PERMISSION_MANAGE_SKILL_PRIVILEGE = "ohos.permission.MANAGE_SKILL_PRIVILEGE";
 constexpr const char* PERMISSION_MANAGE_SKILL = "ohos.permission.MANAGE_SKILL";
+constexpr const char* PERMISSION_MANAGE_SKILL_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
+    "ohos.permission.MANAGE_SKILL_PRIVILEGE or ohos.permission.MANAGE_SKILL or "
+    "((ohos.permission.MANAGE_SKILL_PRIVILEGE or ohos.permission.MANAGE_SKILL) "
+    "and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
+constexpr const char* REAL_SKILL_PATH_PREFIX = "/data/app/el1/skills/public";
+constexpr const char* SANDBOX_SKILL_PATH_PREFIX = "/data/skills";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
     "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED or "
     "(ohos.permission.GET_BUNDLE_INFO_PRIVILEGED and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
