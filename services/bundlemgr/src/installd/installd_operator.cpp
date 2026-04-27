@@ -188,7 +188,7 @@ public:
             closedir(dir_);
         }
     }
-    DIR* get() const { return dir_; }
+    DIR* Get() const { return dir_; }
     DirGuard(const DirGuard&) = delete;
     DirGuard& operator=(const DirGuard&) = delete;
 private:
@@ -197,8 +197,8 @@ private:
 
 // Data structure for nftw callback to maintain state
 struct DirSizeData {
-    uint64_t totalSize;
-    bool overflow;
+    uint64_t totalSize = 0;
+    bool overflow = false;
     const std::string *dirPath;
 };
 
@@ -216,7 +216,7 @@ constexpr uint64_t MAX_DIRECTORY_SIZE = UINT64_MAX - 1024ULL * 1024ULL * 1024ULL
  * @param ftwbuf Structure containing walk information including depth
  * @return Returns 0 to continue, non-zero to stop traversal
  */
-static int CalculateDirSizeCallback(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
+static int32_t CalculateDirSizeCallback(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
 {
     // Access thread-local data
     DirSizeData *data = g_dirSizeData;
@@ -274,7 +274,7 @@ static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
 
     // Use nftw with FTW_PHYSICAL (don't follow symlinks) and FTW_MOUNT (don't cross filesystem boundaries)
     // The third parameter is the maximum number of open file descriptors
-    int ret = nftw(dirPath.c_str(), CalculateDirSizeCallback, 10, FTW_PHYS | FTW_MOUNT);
+    int32_t ret = nftw(dirPath.c_str(), CalculateDirSizeCallback, 10, FTW_PHYS | FTW_MOUNT);
 
     // Clear thread-local data
     g_dirSizeData = nullptr;
@@ -3896,7 +3896,7 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
     DirGuard dirGuard(dir);  // RAII wrapper to ensure cleanup
 
     struct dirent *entry = nullptr;
-    while ((entry = readdir(dirGuard.get())) != nullptr) {
+    while ((entry = readdir(dirGuard.Get())) != nullptr) {
         // Skip . and ..
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
             continue;
@@ -4074,6 +4074,12 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
         return false;
     }
 
+    // Security: Set resource limits to prevent DoS attacks
+    constexpr uint32_t MAX_SCAN_TIME_MS = 60000;  // 60 second timeout
+    constexpr int32_t MAX_DRILL_DOWN_DEPTH = 100;  // Maximum depth for drill-down phase
+
+    auto startTime = std::chrono::steady_clock::now();
+
     // Pre-allocate result space (estimated maximum: 3,280 items)
     resultPathsWithSize.clear();
     resultPathsWithSize.reserve(3280);
@@ -4081,6 +4087,13 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
     // Create cache for directory size calculations (shared across all levels for performance)
     std::unordered_map<std::string, uint64_t> dirSizeCache;
     dirSizeCache.reserve(1000);  // Reserve space for typical directory tree
+
+    // Helper lambda to check timeout
+    auto isTimeout = [&startTime]() -> bool {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - startTime).count();
+        return elapsed > MAX_SCAN_TIME_MS;
+    };
 
     // Step 1: Get top 3 largest directories from input paths
     std::vector<std::pair<std::string, uint64_t>> largestDirs;
@@ -4109,6 +4122,12 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
     constexpr int32_t MAX_LEVELS = 6;
 
     for (int32_t level = 1; level <= MAX_LEVELS; ++level) {
+        // Check timeout
+        if (isTimeout()) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: timeout at level %{public}d", level);
+            break;
+        }
+
         // Pre-allocate space to avoid frequent reallocations
         std::vector<std::pair<std::string, uint64_t>> allLargestItems;
         allLargestItems.reserve(currentPaths.size() * 3);  // Maximum possible items
@@ -4161,8 +4180,16 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
     std::string currentPath = currentPaths.empty() ? "" : currentPaths[0];
     std::string finalFilePath;
     uint64_t finalFileSize = 0;
+    int32_t drillDownDepth = 0;
 
-    while (!currentPath.empty()) {
+    while (!currentPath.empty() && drillDownDepth < MAX_DRILL_DOWN_DEPTH) {
+        // Check timeout
+        if (isTimeout()) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: timeout during drill down at depth %{public}d",
+                drillDownDepth);
+            break;
+        }
+
         // Check if current path is a directory
         struct stat statBuf;
         if (stat(currentPath.c_str(), &statBuf) != 0) {
@@ -4172,8 +4199,14 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
 
         if (!S_ISDIR(statBuf.st_mode)) {
             // It's a file, we're done - record the final file path and size
+            // Check for integer overflow before casting
+            if (statBuf.st_size < 0) {
+                LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: invalid file size for %{public}s",
+                    currentPath.c_str());
+                break;
+            }
             finalFilePath = currentPath;
-            finalFileSize = statBuf.st_size;
+            finalFileSize = static_cast<uint64_t>(statBuf.st_size);
             LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: reached file: %{public}s, size: %{public}" PRIu64,
                 currentPath.c_str(), finalFileSize);
             break;
@@ -4195,7 +4228,14 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
 
         // Get the largest item and continue drilling down
         currentPath = largestItems[0].first;  // Get first (largest) item
-        LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: drill down to: %{public}s", currentPath.c_str());
+        drillDownDepth++;
+        LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: drill down to: %{public}s, depth: %{public}d",
+            currentPath.c_str(), drillDownDepth);
+    }
+
+    if (drillDownDepth >= MAX_DRILL_DOWN_DEPTH) {
+        LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: reached max drill down depth %{public}d",
+            MAX_DRILL_DOWN_DEPTH);
     }
 
     // Only add the final file path to result if found
@@ -4217,8 +4257,10 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
     }
 
     // Log cache statistics for performance monitoring
-    LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesRecursive success, total items: %{public}zu, cache entries: %{public}zu",
-        resultPathsWithSize.size(), dirSizeCache.size());
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - startTime).count();
+    LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesRecursive success, total items: %{public}zu, cache entries: %{public}zu, time: %{public}lld ms",
+        resultPathsWithSize.size(), dirSizeCache.size(), static_cast<long long>(elapsed));
 
     return true;
 }

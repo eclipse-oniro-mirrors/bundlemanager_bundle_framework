@@ -3691,26 +3691,50 @@ ErrCode BundleMgrProxy::GetTopNLargestItemsInAppDataDir(const std::string &bundl
         return errCode;
     }
 
+    // Read data size
+    size_t dataSize = reply.ReadUint32();
+    if (dataSize == 0) {
+        APP_LOGD("GetTopNLargestItemsInAppDataDir: no data returned");
+        resultPathsWithSize.clear();
+        return ERR_OK;
+    }
+
+    // Read raw data into a buffer
+    const void *buffer = reply.ReadRawData(dataSize);
+    if (buffer == nullptr) {
+        APP_LOGE("failed to read raw data, size: %{public}zu", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    // Parse from temp parcel
+    MessageParcel tempParcel;
+    if (!tempParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        APP_LOGE("failed to parse temp parcel, size: %{public}zu", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
     // Read the number of items
     uint32_t itemCount = 0;
-    if (!reply.ReadUint32(itemCount)) {
-        APP_LOGE("failed to read item count");
+    if (!tempParcel.ReadUint32(itemCount)) {
+        APP_LOGE("failed to read item count from temp parcel");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     // Read each (path, size) pair
     resultPathsWithSize.clear();
+    resultPathsWithSize.reserve(itemCount);
     for (uint32_t i = 0; i < itemCount; ++i) {
-        std::string path = reply.ReadString();
+        std::string path = tempParcel.ReadString();
         uint64_t size = 0;
-        if (!reply.ReadUint64(size)) {
+        if (!tempParcel.ReadUint64(size)) {
             APP_LOGE("failed to read size for item %{public}u", i);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         resultPathsWithSize.emplace_back(path, size);
     }
 
-    APP_LOGI("GetTopNLargestItemsInAppDataDir success, count: %{public}u", itemCount);
+    APP_LOGI("GetTopNLargestItemsInAppDataDir success, count: %{public}u, data size: %{public}zu",
+        itemCount, dataSize);
     return ERR_OK;
 }
 

@@ -446,5 +446,11 @@ ErrCode InstalldHostImpl::ExtractSkillsPackage(const SkillsPackageParam &param,
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -3573,20 +3573,38 @@ ErrCode BundleMgrHost::HandleGetTopNLargestItemsInAppDataDir(MessageParcel &data
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
-        if (!reply.WriteUint32(resultPathsWithSize.size())) {
-            APP_LOGE("write item count failed");
+        // Use WriteRawData to handle large data sets, similar to WriteParcelInfo pattern
+        // This bypasses the 200KB Parcel size limit
+        Parcel tempParcel;
+        // Write the number of items
+        if (!tempParcel.WriteUint32(resultPathsWithSize.size())) {
+            APP_LOGE("failed to write result size to temp parcel");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+        // Write each (path, size) pair to temp parcel
         for (const auto &item : resultPathsWithSize) {
-            if (!reply.WriteString(item.first)) {
-                APP_LOGE("write path failed");
+            if (!tempParcel.WriteString(item.first)) {
+                APP_LOGE("failed to write path to temp parcel");
                 return ERR_APPEXECFWK_PARCEL_ERROR;
             }
-            if (!reply.WriteUint64(item.second)) {
-                APP_LOGE("write size failed");
+            if (!tempParcel.WriteUint64(item.second)) {
+                APP_LOGE("failed to write size to temp parcel");
                 return ERR_APPEXECFWK_PARCEL_ERROR;
             }
         }
+
+        size_t dataSize = tempParcel.GetDataSize();
+        if (!reply.WriteUint32(dataSize)) {
+            APP_LOGE("failed to write data size");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        if (!reply.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
+            APP_LOGE("failed to write raw data");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+
+        APP_LOGD("HandleGetTopNLargestItemsInAppDataDir: returned %{public}zu items, data size: %{public}zu",
+            resultPathsWithSize.size(), dataSize);
     }
     return ret;
 }
