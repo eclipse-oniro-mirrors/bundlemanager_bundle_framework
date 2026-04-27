@@ -6531,13 +6531,15 @@ HWTEST_F(BmsBundleParserTest, from_json_sceneAnimationParams, Function | MediumT
     nlohmann::json jsonObject;
     jsonObject["name"] = "testName";
     jsonObject["sceneAnimationParams"]["abilityName"] = "testAbilityName";
-    jsonObject["sceneAnimationParams"]["disabledDesktopBehaviors"] = {"PULL_DOWN_SEARCH", "LONG_CLICK"};
-    jsonObject["sceneAnimationParams"]["triggerTypes"] = {"shake"};
+    jsonObject["sceneAnimationParams"]["disabledDesktopBehaviors"] = "PULL_DOWN_SEARCH|LONG_CLICK";
+    jsonObject["sceneAnimationParams"]["triggerTypes"] = {SceneAnimationTriggerType::SHAKE};
     FormInfo formInfo;
     from_json(jsonObject, formInfo);
     EXPECT_EQ(formInfo.name, "testName");
+    APP_LOGE("lxg from_json_sceneAnimationParams %{public}s", formInfo.sceneAnimationParams.disabledDesktopBehaviors.c_str());
     EXPECT_EQ(formInfo.sceneAnimationParams.abilityName, "testAbilityName");
     EXPECT_EQ(formInfo.sceneAnimationParams.disabledDesktopBehaviors, "PULL_DOWN_SEARCH|LONG_CLICK");
+    EXPECT_EQ(formInfo.sceneAnimationParams.triggerTypes.size(), 1);
     EXPECT_EQ(formInfo.sceneAnimationParams.triggerTypes[0], SceneAnimationTriggerType::SHAKE);
 }
  
@@ -6557,7 +6559,8 @@ HWTEST_F(BmsBundleParserTest, to_json_sceneAnimationParams, Function | MediumTes
     to_json(jsonObject, formInfo);
     EXPECT_EQ(jsonObject["name"], "testName");
     EXPECT_EQ(jsonObject["sceneAnimationParams"]["abilityName"], "testAbilityName");
-    EXPECT_EQ(jsonObject["sceneAnimationParams"]["disabledDesktopBehaviors"][0], "PULL_DOWN_SEARCH");
-    EXPECT_EQ(jsonObject["sceneAnimationParams"]["triggerTypes"][0], "shake");
+    EXPECT_EQ(jsonObject["sceneAnimationParams"]["disabledDesktopBehaviors"], "PULL_DOWN_SEARCH|LONG_CLICK");
+    EXPECT_EQ(jsonObject["sceneAnimationParams"]["triggerTypes"].size(), 1);
+    EXPECT_EQ(jsonObject["sceneAnimationParams"]["triggerTypes"][0], SceneAnimationTriggerType::SHAKE);
 }
 } // OHOS

@@ -769,6 +769,11 @@ bool GetTriggerTypes(const ExtensionFormProfileInfo &form, ExtensionFormInfo &in
 {
     std::set<SceneAnimationTriggerType> triggerTypeSet {};
     size_t len = sizeof(TRIGGER_TYPE_KEY) / sizeof(TRIGGER_TYPE_KEY[0]);
+    size_t valueLen = sizeof(TRIGGER_TYPE_VALUE) / sizeof(TRIGGER_TYPE_VALUE[0]);
+    if (len != valueLen) {
+        APP_LOGE("trigger type len invalid");
+        return false;
+    }
     for (const auto &triggerType: form.sceneAnimationParams.triggerTypes) {
         size_t i = 0;
         for (i = 0; i < len; i++) {

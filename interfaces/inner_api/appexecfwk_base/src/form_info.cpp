@@ -140,7 +140,7 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     sceneAnimationParams.abilityName = formInfo.sceneAnimationParams.abilityName;
     sceneAnimationParams.disabledDesktopBehaviors = formInfo.sceneAnimationParams.disabledDesktopBehaviors;
     for (const auto &triggerType : formInfo.sceneAnimationParams.triggerTypes) {
-        sceneAnimationParams.triggerTypes.push_back(triggerType);
+        sceneAnimationParams.triggerTypes.emplace_back(triggerType);
     }
     SetInfoByFormExt(formInfo);
 }
