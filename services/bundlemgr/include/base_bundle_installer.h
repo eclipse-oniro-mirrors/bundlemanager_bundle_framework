@@ -751,6 +751,10 @@ private:
     ErrCode ProcessAppSkills(InnerBundleInfo &info);
     ErrCode FinalizeAppSkills(const InnerBundleInfo &info);
     ErrCode CommitAppSkills(const InnerBundleInfo &info);
+    void PrepareAppSkillStatus(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo,
+        int32_t userId = Constants::INVALID_USERID);
+    bool NotifyAppSkillStatus(const std::string &bundleName, const std::vector<std::string> &oldSkills,
+        const std::vector<std::string> &newSkills, int32_t userId = Constants::INVALID_USERID) const;
     void RemoveAppSkillsDir(const std::string &bundleName) const;
     void RemoveAppSkillsDir(const std::string &bundleName, const std::string &moduleName,
         bool isTemp = false) const;
@@ -1104,6 +1108,10 @@ private:
     bool isPreBundleRecovered_ = false;
     std::vector<std::string> allowListenBundles_;
     std::unordered_map<std::string, std::vector<SkillsPackageInfo>> moduleSkillInfoMap_;
+    std::string appSkillNotifyBundleName_;
+    std::vector<std::string> oldAppSkillNotifyItems_;
+    std::vector<std::string> newAppSkillNotifyItems_;
+    int32_t appSkillNotifyUserId_ = Constants::INVALID_USERID;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

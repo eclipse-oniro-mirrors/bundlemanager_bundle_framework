@@ -67,6 +67,10 @@ constexpr const char* CROSS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* IS_RECOVER = "isRecover";
 constexpr const char* IS_ENABLED = "isEnabled";
 constexpr const char* PACKAGE_UNINSTALLED_DATA_CLEARED = "usual.event.PACKAGE_UNINSTALLED_DATA_CLEARED";
+constexpr const char* ADDED_SKILLS = "added";
+constexpr const char* CHANGED_SKILLS = "changed";
+constexpr const char* REMOVED_SKILLS = "removed";
+constexpr const char* SKILL_TYPE = "skillType";
 constexpr int32_t CONTROL_API_VERSION = 25;
 }
 
@@ -534,6 +538,38 @@ void BundleCommonEventMgr::NotifyPluginCommonEvents(const std::string &hostBundl
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
         APP_LOGE("PublishCommonEvent failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+}
+
+void BundleCommonEventMgr::NotifySkillEvents(
+    const std::string &bundleName, int32_t userId, const std::vector<std::string> &addedSkills,
+    const std::vector<std::string> &changedSkills, const std::vector<std::string> &removedSkills, int32_t skillType)
+{
+    if (bundleName.empty() || (addedSkills.empty() && changedSkills.empty() && removedSkills.empty())) {
+        APP_LOGD("NotifySkillEvents ignored, bundleName or skill changes is empty");
+        return;
+    }
+
+    OHOS::AAFwk::Want want;
+    want.SetAction(SKILL_CHANGED);
+
+    ElementName element;
+    element.SetBundleName(bundleName);
+    want.SetElement(element);
+    want.SetParam(Constants::BUNDLE_NAME, bundleName);
+    want.SetParam(Constants::USER_ID, userId);
+    want.SetParam(ADDED_SKILLS, addedSkills);
+    want.SetParam(CHANGED_SKILLS, changedSkills);
+    want.SetParam(REMOVED_SKILLS, removedSkills);
+    want.SetParam(SKILL_TYPE, skillType);
+
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
+    publishInfo.SetSubscriberPermissions({ Constants::PERMISSION_MANAGE_SKILL_PRIVILEGE });
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("Publish skill common event failed");
     }
     IPCSkeleton::SetCallingIdentity(identity);
 }
