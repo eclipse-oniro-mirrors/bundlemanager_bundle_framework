@@ -4149,6 +4149,25 @@ ErrCode BundleMgrHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bu
         return result;
     }
 
+    // Check frequency limit: 12 hours minimum interval
+    {
+        std::lock_guard<std::mutex> lock(lastSuccessCallTimeMutex_);
+        auto now = std::chrono::steady_clock::now();
+        constexpr std::chrono::hours MIN_INTERVAL(12);  // 12 hours
+
+        if (lastSuccessCallTime_ != std::chrono::steady_clock::time_point{}) {
+            auto elapsed = std::chrono::duration_cast<std::chrono::hours>(now - lastSuccessCallTime_);
+            if (elapsed < MIN_INTERVAL) {
+                auto remaining = MIN_INTERVAL - elapsed;
+                LOG_W(BMS_TAG_DEFAULT, "GetTopNLargestItemsInAppDataDir called too frequently, "
+                    "remaining time: %{public}lld hours", static_cast<long long>(remaining.count()));
+                return ERR_BUNDLE_MANAGER_OPERATION_FREQUENT;
+            }
+        }
+        // Update last success call time
+        lastSuccessCallTime_ = now;
+    }
+
     // Execute async task
     GetTopNLargestItemsTask(bundleName, appIndex, userId, getLargestItemsCallback);
     return ERR_OK;

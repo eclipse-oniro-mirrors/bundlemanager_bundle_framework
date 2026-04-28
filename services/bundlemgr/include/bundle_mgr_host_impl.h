@@ -17,6 +17,8 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MGR_HOST_IMPL_H
 
 #include <atomic>
+#include <chrono>
+#include <mutex>
 #include "bundle_cache_mgr.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "bundle_connect_ability_mgr.h"
@@ -1394,6 +1396,10 @@ private:
 
     bool IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags) const;
     ErrCode CheckAppDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isEnabled);
+
+    // Frequency limit for GetTopNLargestItemsInAppDataDir
+    std::mutex lastSuccessCallTimeMutex_;
+    std::chrono::steady_clock::time_point lastSuccessCallTime_ = std::chrono::steady_clock::time_point{};
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

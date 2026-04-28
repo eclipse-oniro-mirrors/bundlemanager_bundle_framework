@@ -205,6 +205,20 @@ struct DirSizeData {
 // Thread-local storage for callback data to ensure thread safety
 static thread_local DirSizeData *g_dirSizeData = nullptr;
 
+/**
+ * @brief RAII guard for managing thread-local DirSizeData pointer
+ * Automatically clears the thread-local pointer when going out of scope
+ */
+class DirSizeDataGuard {
+public:
+    explicit DirSizeDataGuard(DirSizeData *data) : data_(data) {}
+    ~DirSizeDataGuard() {
+        g_dirSizeData = nullptr;
+    }
+private:
+    DirSizeData *data_;
+};
+
 constexpr int32_t MAX_FTW_DEPTH = 1000;  // Maximum directory traversal depth to prevent stack overflow
 constexpr uint64_t MAX_DIRECTORY_SIZE = UINT64_MAX - 1024ULL * 1024ULL * 1024ULL;  // 1GB less than max
 
@@ -266,18 +280,25 @@ static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
     LOG_D(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: cache miss for %{public}s, calculating...",
         dirPath.c_str());
 
+    // Prevent recursive calls in the same thread
+    if (g_dirSizeData != nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: recursive call detected, dirPath=%{public}s",
+            dirPath.c_str());
+        return 0;
+    }
+
     // Prepare callback data
     DirSizeData data = {0, false, &dirPath};
 
     // Set thread-local data for callback access
     g_dirSizeData = &data;
 
+    // Use RAII guard to ensure thread-local data is cleared when going out of scope
+    DirSizeDataGuard guard(&data);
+
     // Use nftw with FTW_PHYSICAL (don't follow symlinks) and FTW_MOUNT (don't cross filesystem boundaries)
     // The third parameter is the maximum number of open file descriptors
     int32_t ret = nftw(dirPath.c_str(), CalculateDirSizeCallback, 10, FTW_PHYS | FTW_MOUNT);
-
-    // Clear thread-local data
-    g_dirSizeData = nullptr;
 
     if (ret != 0 && !data.overflow) {
         LOG_W(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: nftw failed for %{public}s, errno: %{public}d",
@@ -4369,7 +4390,8 @@ std::string InstalldOperator::AnonymizePath(const std::string &path)
             std::memchr(segmentStart, pathSep, static_cast<size_t>(pathEnd - segmentStart)));
 
         // Calculate segment length
-        size_t segLen;
+        size_t segLen = 0;
+        bool isLastSegment = (segmentEnd == nullptr);
         if (segmentEnd != nullptr) {
             segLen = static_cast<size_t>(segmentEnd - segmentStart);
             // Skip empty segments (e.g., consecutive separators like //)
@@ -4387,19 +4409,54 @@ std::string InstalldOperator::AnonymizePath(const std::string &path)
             result.push_back(pathSep);
         }
 
-        // Optimized: Process characters in pairs to reduce loop iterations by 50%
-        size_t i = 0;
-        const size_t pairCount = segLen & ~static_cast<size_t>(1);  // Round down to even
-
-        // Process pairs of characters
-        for (; i < pairCount; i += 2) {
-            result.push_back(segmentStart[i]);      // Even index (0, 2, 4...) - keep original
-            result.push_back('*');                  // Odd index (1, 3, 5...) - replace with *
+        // Check if this is the last segment (filename) and has an extension
+        const char* dotPos = nullptr;
+        if (isLastSegment && segLen > 1) {  // Need at least 2 chars for extension (e.g., ".a")
+            // Find the last dot in the segment using standard C++ method
+            // Manual reverse search to avoid memrchr (POSIX-only, not portable)
+            const char* lastDot = nullptr;
+            // Use index-based loop to avoid pointer undefined behavior when decrementing past start
+            for (size_t i = segLen; i > 0; --i) {
+                if (segmentStart[i - 1] == '.') {
+                    lastDot = segmentStart + i - 1;
+                    break;
+                }
+            }
+            // Only consider it as extension if:
+            // 1. Dot exists and is not at the beginning (hidden files like .gitignore)
+            // 2. Dot is not at the end (no extension after dot)
+            if (lastDot != nullptr && lastDot > segmentStart && (lastDot - segmentStart) < static_cast<ptrdiff_t>(segLen) - 1) {
+                dotPos = lastDot;
+            }
         }
 
-        // Handle remaining single character if length is odd
-        if (i < segLen) {
-            result.push_back(segmentStart[i]);
+        // Process segment: anonymize name part, keep extension
+        size_t nameLen = segLen;
+        if (dotPos != nullptr) {
+            nameLen = static_cast<size_t>(dotPos - segmentStart);
+            // Anonymize the name part (before extension)
+            size_t i = 0;
+            const size_t pairCount = nameLen & ~static_cast<size_t>(1);  // Round down to even
+            for (; i < pairCount; i += 2) {
+                result.push_back(segmentStart[i]);      // Even index - keep original
+                result.push_back('*');                  // Odd index - replace with *
+            }
+            if (i < nameLen) {
+                result.push_back(segmentStart[i]);
+            }
+            // Append the extension (including dot) as-is
+            result.append(dotPos, segLen - nameLen);
+        } else {
+            // No extension, anonymize entire segment
+            size_t i = 0;
+            const size_t pairCount = nameLen & ~static_cast<size_t>(1);  // Round down to even
+            for (; i < pairCount; i += 2) {
+                result.push_back(segmentStart[i]);      // Even index - keep original
+                result.push_back('*');                  // Odd index - replace with *
+            }
+            if (i < nameLen) {
+                result.push_back(segmentStart[i]);
+            }
         }
 
         // Move to next segment (safe because we checked segmentEnd above)
