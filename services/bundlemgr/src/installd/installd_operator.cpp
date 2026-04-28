@@ -212,9 +212,11 @@ static thread_local DirSizeData *g_dirSizeData = nullptr;
 class DirSizeDataGuard {
 public:
     explicit DirSizeDataGuard(DirSizeData *data) : data_(data) {}
-    ~DirSizeDataGuard() {
+    ~DirSizeDataGuard()
+    {
         g_dirSizeData = nullptr;
     }
+
 private:
     DirSizeData *data_;
 };
@@ -286,33 +288,25 @@ static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
             dirPath.c_str());
         return 0;
     }
-
     // Prepare callback data
     DirSizeData data = {0, false, &dirPath};
-
     // Set thread-local data for callback access
     g_dirSizeData = &data;
-
     // Use RAII guard to ensure thread-local data is cleared when going out of scope
     DirSizeDataGuard guard(&data);
-
     // Use nftw with FTW_PHYSICAL (don't follow symlinks) and FTW_MOUNT (don't cross filesystem boundaries)
     // The third parameter is the maximum number of open file descriptors
     int32_t ret = nftw(dirPath.c_str(), CalculateDirSizeCallback, 10, FTW_PHYS | FTW_MOUNT);
-
     if (ret != 0 && !data.overflow) {
         LOG_W(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: nftw failed for %{public}s, errno: %{public}d",
             dirPath.c_str(), errno);
         return 0;
     }
-
     uint64_t totalSize = data.totalSize;
-
     // Cache the result
     dirSizeCache[dirPath] = totalSize;
     LOG_D(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: calculated %{public}s, size: %{public}" PRIu64,
         dirPath.c_str(), totalSize);
-
     return totalSize;
 }
 
@@ -4425,7 +4419,8 @@ std::string InstalldOperator::AnonymizePath(const std::string &path)
             // Only consider it as extension if:
             // 1. Dot exists and is not at the beginning (hidden files like .gitignore)
             // 2. Dot is not at the end (no extension after dot)
-            if (lastDot != nullptr && lastDot > segmentStart && (lastDot - segmentStart) < static_cast<ptrdiff_t>(segLen) - 1) {
+            if ((lastDot != nullptr) && (lastDot > segmentStart) &&
+                ((lastDot - segmentStart) < static_cast<ptrdiff_t>(segLen) - 1)) {
                 dotPos = lastDot;
             }
         }

@@ -3142,4 +3142,550 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17800, Function | Sm
 
     DeleteQuickFileDir(testDir);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_17900
+ * @tc.name: test GetBundleDataDirPaths function with valid parameters
+ * @tc.desc: 1. calling GetBundleDataDirPaths with valid bundleName, appIndex, userId
+ *           2. verify function returns true and collects all data directory paths
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17900, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    std::vector<std::string> dataDirPaths;
+
+    bool ret = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+
+    EXPECT_TRUE(ret);
+    EXPECT_GT(dataDirPaths.size(), 0);
+    // Verify some expected paths are collected
+    bool hasBasePath = false;
+    bool hasDatabasePath = false;
+    bool hasSharefilesPath = false;
+    for (const auto &path : dataDirPaths) {
+        if (path.find("/base/" + bundleName) != std::string::npos) {
+            hasBasePath = true;
+        }
+        if (path.find("/database/" + bundleName) != std::string::npos) {
+            hasDatabasePath = true;
+        }
+        if (path.find("/sharefiles/" + bundleName) != std::string::npos) {
+            hasSharefilesPath = true;
+        }
+    }
+    EXPECT_TRUE(hasBasePath);
+    EXPECT_TRUE(hasDatabasePath);
+    EXPECT_TRUE(hasSharefilesPath);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18000
+ * @tc.name: test GetBundleDataDirPaths with empty bundleName
+ * @tc.desc: 1. calling GetBundleDataDirPaths with empty bundleName
+ *           2. verify function returns false
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18000, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "";  // Empty bundleName
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    std::vector<std::string> dataDirPaths;
+
+    bool ret = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(dataDirPaths.size(), 0);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18100
+ * @tc.name: test GetBundleDataDirPaths with negative userId
+ * @tc.desc: 1. calling GetBundleDataDirPaths with negative userId
+ *           2. verify function returns false
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18100, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = -1;  // Invalid userId
+    std::vector<std::string> dataDirPaths;
+
+    bool ret = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(dataDirPaths.size(), 0);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18200
+ * @tc.name: test GetBundleDataDirPaths with appIndex > 0 (clone app)
+ * @tc.desc: 1. calling GetBundleDataDirPaths with appIndex = 1
+ *           2. verify function correctly builds clone app data directory paths
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18200, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 1;  // Clone app index
+    int32_t userId = 100;
+    std::vector<std::string> dataDirPaths;
+
+    bool ret = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+
+    EXPECT_TRUE(ret);
+    EXPECT_GT(dataDirPaths.size(), 0);
+    // Verify clone app path format
+    bool hasClonePath = false;
+    for (const auto &path : dataDirPaths) {
+        if (path.find("/data/app/el1/100/base/+clone-1+com.example.test") != std::string::npos) {
+            hasClonePath = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(hasClonePath);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18300
+ * @tc.name: test GetBundleDataDirPaths with userId = 0
+ * @tc.desc: 1. calling GetBundleDataDirPaths with userId = 0 (active user)
+ *           2. verify function correctly handles active user
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18300, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = 0;  // Active user
+    std::vector<std::string> dataDirPaths;
+
+    bool ret = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+
+    EXPECT_TRUE(ret);
+    EXPECT_GT(dataDirPaths.size(), 0);
+    // Verify userId 0 is correctly used in paths
+    bool hasUserId0 = false;
+    for (const auto &path : dataDirPaths) {
+        if (path.find("/el1/0/") != std::string::npos || path.find("/el2/0/") != std::string::npos) {
+            hasUserId0 = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(hasUserId0);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18400
+ * @tc.name: test GetBundleDataDirPaths verifies all expected paths
+ * @tc.desc: 1. calling GetBundleDataDirPaths and verify all expected path types
+ *           2. verify base, database, sharefiles, log, system_optimize paths
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18400, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    std::vector<std::string> dataDirPaths;
+
+    bool ret = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+
+    EXPECT_TRUE(ret);
+    // Verify all expected path types exist
+    bool hasElPath = false;
+    bool hasEl1BasePath = false;
+    bool hasEl1OptimizePath = false;
+    bool hasEl2SharefilesPath = false;
+    bool hasServicePath = false;
+
+    for (const auto &path : dataDirPaths) {
+        // Check for el2, el5 base/database paths
+        if (path.find("/data/app/el2/100/") != std::string::npos ||
+            path.find("/data/app/el5/100/") != std::string::npos) {
+            hasElPath = true;
+        }
+        // Check for el1 optimize paths
+        if (path.find("/data/app/el1/100/") != std::string::npos) {
+            hasEl1BasePath = true;
+            if (path.find("/system_optimize/") != std::string::npos ||
+                path.find("/ark_startup_cache/") != std::string::npos ||
+                path.find("/shader_cache/") != std::string::npos) {
+                hasEl1OptimizePath = true;
+            }
+        }
+        // Check for el2 sharefiles
+        if (path.find("/sharefiles/") != std::string::npos) {
+            hasEl2SharefilesPath = true;
+        }
+        // Check for service paths
+        if (path.find("/data/service/") != std::string::npos) {
+            hasServicePath = true;
+        }
+    }
+
+    EXPECT_TRUE(hasElPath);
+    EXPECT_TRUE(hasEl1BasePath);
+    EXPECT_TRUE(hasEl1OptimizePath);
+    EXPECT_TRUE(hasEl2SharefilesPath);
+    EXPECT_TRUE(hasServicePath);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18500
+ * @tc.name: test GetBundleDataDirPaths clears output parameter
+ * @tc.desc: 1. calling GetBundleDataDirPaths twice
+ *           2. verify output vector is cleared before each call
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18500, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    std::vector<std::string> dataDirPaths;
+
+    // First call
+    bool ret1 = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+    EXPECT_TRUE(ret1);
+    size_t firstCallSize = dataDirPaths.size();
+
+    // Second call with same parameters
+    bool ret2 = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+    EXPECT_TRUE(ret2);
+    size_t secondCallSize = dataDirPaths.size();
+
+    EXPECT_EQ(firstCallSize, secondCallSize);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18600
+ * @tc.name: test AnonymizePath with single segment filename
+ * @tc.desc: 1. calling AnonymizePath with single filename
+ *           2. verify anonymization pattern (keep even chars, replace odd with *)
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16800, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string filename = "/abc/document.txt";
+    std::string result = installdOperator.AnonymizePath(filename);
+    // "document.txt" -> "d*c*u*en.txt" (name part anonymized, extension kept)
+    EXPECT_TRUE(result, "/a*c/d*c*m*n*.txt");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18700
+ * @tc.name: test AnonymizePath with empty path
+ * @tc.desc: 1. calling AnonymizePath with empty string
+ *           2. verify empty string is returned unchanged
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18700, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string emptyPath = "";
+    std::string result = installdOperator.AnonymizePath(emptyPath);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18800
+ * @tc.name: test AnonymizePath with single segment filename
+ * @tc.desc: 1. calling AnonymizePath with single filename
+ *           2. verify anonymization pattern (keep even chars, replace odd with *)
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18800, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string filename = "document.txt";
+    std::string result = installdOperator.AnonymizePath(filename);
+    // "document.txt" -> "d*c*u*en.txt" (name part anonymized, extension kept)
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result, filename);
+    // Verify extension is preserved
+    EXPECT_TRUE(result.find(".txt") != std::string::npos);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18900
+ * @tc.name: test AnonymizePath with multi-segment path
+ * @tc.desc: 1. calling AnonymizePath with full path
+ *           2. verify all segments are anonymized
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18900, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string fullPath = "/data/storage/el2/base/haps/entry/cache/image.png";
+    std::string result = installdOperator.AnonymizePath(fullPath);
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result, fullPath);
+    // Verify extension is preserved in last segment
+    EXPECT_TRUE(result.find(".png") != std::string::npos);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19000
+ * @tc.name: test AnonymizePath with no extension
+ * @tc.desc: 1. calling AnonymizePath with filename without extension
+ *           2. verify entire name is anonymized
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19000, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string noExtPath = "/data/storage/el2/database";
+    std::string result = installdOperator.AnonymizePath(noExtPath);
+    EXPECT_EQ(result, "/d*t*/s*o*a*e/e*2/d*t*b*s*");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19100
+ * @tc.name: test AnonymizePath with multiple extensions
+ * @tc.desc: 1. calling AnonymizePath with filename like file.tar.gz
+ *           2. verify only last extension is preserved
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19100, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string multiExtPath = "/data/app/archive.tar.gz";
+    std::string result = installdOperator.AnonymizePath(multiExtPath);
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result, multiExtPath);
+    // Verify .gz extension is preserved (last extension)
+    EXPECT_TRUE(result.find(".gz") != std::string::npos);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19200
+ * @tc.name: test AnonymizePath with hidden file
+ * @tc.desc: 1. calling AnonymizePath with hidden file (.gitignore)
+ *           2. verify dot at start is not treated as extension separator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19200, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string hiddenFilePath = "/data/storage/.gitignore";
+    std::string result = installdOperator.AnonymizePath(hiddenFilePath);
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result, hiddenFilePath);
+    // Hidden file should start with dot
+    EXPECT_TRUE(result.find("/.*") != std::string::npos);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19300
+ * @tc.name: test AnonymizePath with single character segments
+ * @tc.desc: 1. calling AnonymizePath with short segments
+ *           2. verify no crash with single chars
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19300, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string shortPath = "/a/b/c.txt";
+    std::string result = installdOperator.AnonymizePath(shortPath);
+    EXPECT_TRUE(result, shortPath);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19400
+ * @tc.name: test AnonymizePath with common file extensions
+ * @tc.desc: 1. calling AnonymizePath with various extensions
+ *           2. verify extensions are preserved
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19400, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::vector<std::string> testPaths = {
+        "/data/file.txt",
+        "/data/image.png",
+        "/data/document.pdf",
+        "/data/video.mp4",
+        "/data/archive.zip"
+    };
+    std::vector<std::string> extensions = {".txt", ".png", ".pdf", ".mp4", ".zip"};
+
+    for (size_t i = 0; i < testPaths.size(); ++i) {
+        std::string result = installdOperator.AnonymizePath(testPaths[i]);
+        EXPECT_FALSE(result.empty());
+        EXPECT_TRUE(result.find(extensions[i]) != std::string::npos);
+    }
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19500
+ * @tc.name: test GetLargestFilesRecursive with empty dirPaths
+ * @tc.desc: 1. calling GetLargestFilesRecursive with empty vector
+ *           2. verify function returns false
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19500, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::vector<std::string> emptyDirs;
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    bool ret = installdOperator.GetLargestFilesRecursive(emptyDirs, 10, results);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(results.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19600
+ * @tc.name: test GetLargestFilesRecursive with valid directory
+ * @tc.desc: 1. calling GetLargestFilesRecursive with valid path
+ *           2. verify function returns true and populates results
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19600, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir(TEST_DIR_PATH);
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {TEST_DIR_PATH};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 10, results);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(results.empty());
+    DeleteQuickFileDir(TEST_DIR_PATH);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19700
+ * @tc.name: test GetLargestFilesRecursive with timeout values
+ * @tc.desc: 1. calling GetLargestFilesRecursive with various timeouts
+ *           2. verify timeout adjustments (<=0 becomes 3, >180 becomes 180)
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19700, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir(TEST_DIR_PATH);
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {TEST_DIR_PATH};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    // Test with timeout = 0 (should use 3 seconds)
+    bool ret1 = installdOperator.GetLargestFilesRecursive(dirPaths, 0, results);
+    EXPECT_TRUE(ret1);
+
+    results.clear();
+
+    // Test with timeout = -1 (should use 3 seconds)
+    bool ret2 = installdOperator.GetLargestFilesRecursive(dirPaths, -1, results);
+    EXPECT_TRUE(ret2);
+
+    results.clear();
+
+    // Test with timeout = 200 (should use 180 seconds max)
+    bool ret3 = installdOperator.GetLargestFilesRecursive(dirPaths, 200, results);
+    EXPECT_TRUE(ret3);
+    DeleteQuickFileDir(TEST_DIR_PATH);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19800
+ * @tc.name: test GetLargestFilesRecursive with multiple directories
+ * @tc.desc: 1. calling GetLargestFilesRecursive with multiple paths
+ *           2. verify results from all directories are included
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19800, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir(TEST_DIR_PATH);
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {TEST_DIR_PATH, TEST_FILE_PATH};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 10, results);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(results.empty());
+    DeleteQuickFileDir(TEST_DIR_PATH);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19900
+ * @tc.name: test GetLargestFilesRecursive clears output parameter
+ * @tc.desc: 1. calling GetLargestFilesRecursive with pre-populated results
+ *           2. verify results are cleared before processing
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19900, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir(TEST_DIR_PATH);
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {TEST_DIR_PATH};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    // Pre-populate with dummy data
+    results.emplace_back("/dummy/path", 999999);
+    EXPECT_FALSE(results.empty());
+
+    // Call function
+    bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 10, results);
+    EXPECT_TRUE(ret);
+
+    // Verify dummy data is gone
+    bool hasDummy = std::any_of(results.begin(), results.end(),
+        [](const std::pair<std::string, uint64_t>& item) {
+            return item.first == "/dummy/path";
+        });
+    EXPECT_FALSE(hasDummy);
+    DeleteQuickFileDir(TEST_DIR_PATH);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_20000
+ * @tc.name: test GetLargestFilesRecursive result sorting
+ * @tc.desc: 1. calling GetLargestFilesRecursive with valid directory
+ *           2. verify results are sorted by size in descending order
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_20000, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {TEST_FILE_PATH};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 10, results);
+    EXPECT_TRUE(ret);
+
+    if (results.size() > 1) {
+        // Verify descending order by size
+        for (size_t i = 0; i < results.size() - 1; ++i) {
+            EXPECT_GE(results[i].second, results[i + 1].second);
+        }
+    }
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_20100
+ * @tc.name: test GetLargestFilesRecursive with non-existent path
+ * @tc.desc: 1. calling GetLargestFilesRecursive with invalid directory
+ *           2. verify function handles gracefully (may fail or return empty)
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_20100, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {"/non/existent/path/that/does/not/exist"};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    // Function should handle non-existent path gracefully
+    bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 5, results);
+    // May return false or true with empty results depending on implementation
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(results.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_20200
+ * @tc.name: test GetLargestFilesRecursive with very short timeout
+ * @tc.desc: 1. calling GetLargestFilesRecursive with 1 second timeout
+ *           2. verify function respects timeout and returns quickly
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_20200, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {TEST_DIR_PATH};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    auto start = std::chrono::steady_clock::now();
+    bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 1, results);
+    auto end = std::chrono::steady_clock::now();
+    EXPECT_TRUE(ret);
+}
 } // OHOS

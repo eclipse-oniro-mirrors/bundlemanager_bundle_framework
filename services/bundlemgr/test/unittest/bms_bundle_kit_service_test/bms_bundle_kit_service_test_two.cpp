@@ -44,6 +44,7 @@
 #include "hidump_helper.h"
 #include "install_param.h"
 #include "extension_ability_info.h"
+#include "get_largest_items_callback_interface.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "inner_bundle_info.h"
@@ -10724,6 +10725,271 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInodeCount_0700, Function | SmallTest
     ErrCode ret = hostImpl->GetBundleInodeCount("com.ohos.dlpmanager", 0, DEFAULT_USERID, inodeCount);
     // Just verify the call can be made successfully
     EXPECT_FALSE(ret == ERR_OK || ret == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0100
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with null callback
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir with null callback
+ *           2. Should return ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0100, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir(BUNDLE_NAME_TEST, 0, DEFAULT_USERID, nullptr);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0200
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with empty bundle name
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir with empty bundle name
+ *           2. Should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0200, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    class MockCallback : public IGetLargestItemsCallback {
+    public:
+        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
+        {
+            errCodeResult = errCode;
+        }
+        ErrCode errCodeResult = ERR_OK;
+    };
+
+    sptr<MockCallback> callback = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback, nullptr);
+
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir("", 0, DEFAULT_USERID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0300
+ * @tc.name: test GetTopNLargestItemsInAppDataDir without system app permission
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir without system app permission
+ *           2. Should return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0300, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    class MockCallback : public IGetLargestItemsCallback {
+    public:
+        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
+        {
+            errCodeResult = errCode;
+        }
+        ErrCode errCodeResult = ERR_OK;
+    };
+
+    sptr<MockCallback> callback = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback, nullptr);
+
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir(BUNDLE_NAME_TEST, 0, DEFAULT_USERID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0400
+ * @tc.name: test GetTopNLargestItemsInAppDataDir without GET_BUNDLE_INFO_PRIVILEGED permission
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir without required permission
+ *           2. Should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0400, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    class MockCallback : public IGetLargestItemsCallback {
+    public:
+        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
+        {
+            errCodeResult = errCode;
+        }
+        ErrCode errCodeResult = ERR_OK;
+    };
+
+    sptr<MockCallback> callback = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback, nullptr);
+
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir(BUNDLE_NAME_TEST, 0, DEFAULT_USERID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0500
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with dataMgr nullptr
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir when dataMgr is nullptr
+ *           2. Should return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0500, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    class MockCallback : public IGetLargestItemsCallback {
+    public:
+        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
+        {
+            errCodeResult = errCode;
+        }
+        ErrCode errCodeResult = ERR_OK;
+    };
+
+    sptr<MockCallback> callback = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback, nullptr);
+
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir(BUNDLE_NAME_TEST, 0, DEFAULT_USERID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0600
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with non-existent bundle
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir with non-existent bundle
+ *           2. Should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0600, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    class MockCallback : public IGetLargestItemsCallback {
+    public:
+        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
+        {
+            errCodeResult = errCode;
+        }
+        ErrCode errCodeResult = ERR_OK;
+    };
+
+    sptr<MockCallback> callback = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback, nullptr);
+
+    std::string nonExistentBundle = "com.example.nonexistent";
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir(nonExistentBundle, 0, DEFAULT_USERID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0700
+ * @tc.name: test GetTopNLargestItemsInAppDataDir frequency limit
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir frequency limit (12 hours)
+ *           2. First call should succeed, second call should return ERR_BUNDLE_MANAGER_OPERATION_FREQUENT
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0700, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    class MockCallback : public IGetLargestItemsCallback {
+    public:
+        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
+        {
+            errCodeResult = errCode;
+            resultString = largestItems;
+        }
+        ErrCode errCodeResult = ERR_OK;
+        std::string resultString;
+    };
+
+    // Reset the frequency limit timestamp by creating a new hostImpl
+    hostImpl->lastSuccessCallTime_ = std::chrono::steady_clock::time_point{};
+
+    sptr<MockCallback> callback1 = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback1, nullptr);
+
+    // First call should return ERR_OK (async task started)
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir(BUNDLE_NAME_TEST, 0, DEFAULT_USERID, callback1);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Second immediate call should return ERR_BUNDLE_MANAGER_OPERATION_FREQUENT
+    sptr<MockCallback> callback2 = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback2, nullptr);
+
+    ret = hostImpl->GetTopNLargestItemsInAppDataDir(BUNDLE_NAME_TEST, 0, DEFAULT_USERID, callback2);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_OPERATION_FREQUENT);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0800
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with valid parameters
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir with valid parameters
+ *           2. Should return ERR_OK and initiate async task
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0800, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    class MockCallback : public IGetLargestItemsCallback {
+    public:
+        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
+        {
+            errCodeResult = errCode;
+            resultString = largestItems;
+        }
+        ErrCode errCodeResult = ERR_OK;
+        std::string resultString;
+    };
+
+    // Reset frequency limit
+    hostImpl->lastSuccessCallTime_ = std::chrono::steady_clock::time_point{};
+
+    sptr<MockCallback> callback = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback, nullptr);
+
+    // Test with existing bundle
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir("com.ohos.dlpmanager", 0, DEFAULT_USERID, callback);
+    // Should either succeed with ERR_OK (async task started) or fail with bundle not exist
+    EXPECT_TRUE(ret == ERR_OK);
 
     ResetTestValues();
 }
