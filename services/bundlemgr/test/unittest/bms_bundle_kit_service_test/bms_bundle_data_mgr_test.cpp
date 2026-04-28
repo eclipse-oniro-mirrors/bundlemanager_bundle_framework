@@ -7369,4 +7369,200 @@ HWTEST_F(BmsBundleDataMgrTest, HasKeepTokenIdMetadata_0300, Function | SmallTest
     innerBundleInfo.innerModuleInfos_["entryModule"] = moduleInfo;
     EXPECT_TRUE(innerBundleInfo.HasKeepTokenIdMetadata());
 }
+
+/**
+ * @tc.number: GetBundleInfos_0200
+ * @tc.name: test GetBundleInfos filters skill bundle
+ * @tc.desc: 1.system run normally
+ *           2.check GetBundleInfos filters out BundleType::SKILL
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleInfos_0200, Function | SmallTest | Level1)
+{
+    std::vector<BundleInfo> bundleInfos;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetApplicationBundleType(BundleType::SKILL);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    bool res = GetBundleDataMgr()->GetBundleInfos(GET_ABILITY_INFO_DEFAULT, bundleInfos, USERID);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: GetAllBundleInfos_0500
+ * @tc.name: test GetAllBundleInfos filters skill bundle
+ * @tc.desc: 1.system run normally
+ *           2.check GetAllBundleInfos filters out BundleType::SKILL
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllBundleInfos_0500, Function | SmallTest | Level1)
+{
+    std::vector<BundleInfo> bundleInfos;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetApplicationBundleType(BundleType::SKILL);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    bool res = GetBundleDataMgr()->GetAllBundleInfos(GET_ABILITY_INFO_DEFAULT, bundleInfos);
+    EXPECT_EQ(res, false);
+    EXPECT_TRUE(bundleInfos.empty());
+}
+
+/**
+ * @tc.number: GetBundleInfosV9_0200
+ * @tc.name: test GetBundleInfosV9 filters skill bundle
+ * @tc.desc: 1.system run normally
+ *           2.check GetBundleInfosV9 filters out BundleType::SKILL
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleInfosV9_0200, Function | SmallTest | Level1)
+{
+    std::vector<BundleInfo> bundleInfos;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetApplicationBundleType(BundleType::SKILL);
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->GetBundleInfosV9(GET_ABILITY_INFO_DEFAULT, bundleInfos, USERID);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_TRUE(bundleInfos.empty());
+    GetBundleDataMgr()->multiUserIdsSet_.clear();
+}
+
+/**
+ * @tc.number: GetAllBundleInfosV9_0300
+ * @tc.name: test GetAllBundleInfosV9 filters skill bundle
+ * @tc.desc: 1.system run normally
+ *           2.check GetAllBundleInfosV9 filters out BundleType::SKILL
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllBundleInfosV9_0300, Function | SmallTest | Level1)
+{
+    std::vector<BundleInfo> bundleInfos;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetApplicationBundleType(BundleType::SKILL);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->GetAllBundleInfosV9(GET_ABILITY_INFO_DEFAULT, bundleInfos);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_TRUE(bundleInfos.empty());
+}
+
+/**
+ * @tc.number: GetBundleNameList_0700
+ * @tc.name: test GetBundleNameList filters skill bundle
+ * @tc.desc: 1.Skill bundle should be filtered out from bundle name list
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleNameList_0700, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->bundleInfos_.clear();
+
+    InnerBundleInfo skillBundleInfo;
+    skillBundleInfo.SetApplicationBundleType(BundleType::SKILL);
+    InnerBundleUserInfo skillUserInfo;
+    skillUserInfo.bundleUserInfo.userId = USERID;
+    skillBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_TEST1, skillUserInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, skillBundleInfo);
+
+    std::vector<std::string> bundleNameList;
+    GetBundleDataMgr()->GetBundleNameList(USERID, bundleNameList);
+
+    EXPECT_TRUE(bundleNameList.empty());
+
+    GetBundleDataMgr()->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetBundleNameList_0800
+ * @tc.name: test GetBundleNameList mixed scenario with skill bundle
+ * @tc.desc: 1.Test mixed scenario with SKILL, SHARED, and valid APP bundles
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleNameList_0800, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->bundleInfos_.clear();
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    InnerBundleInfo sharedBundle;
+    sharedBundle.SetApplicationBundleType(BundleType::SHARED);
+    InnerBundleUserInfo sharedUser;
+    sharedUser.bundleUserInfo.userId = USERID;
+    sharedBundle.innerBundleUserInfos_.emplace(BUNDLE_TEST2, sharedUser);
+    ApplicationInfo sharedAppInfo;
+    sharedAppInfo.bundleName = BUNDLE_TEST2;
+    sharedBundle.SetBaseApplicationInfo(sharedAppInfo);
+    BundleInfo sharedBundleInfo;
+    sharedBundleInfo.name = BUNDLE_TEST2;
+    sharedBundle.SetBaseBundleInfo(sharedBundleInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST2, sharedBundle);
+
+    InnerBundleInfo skillBundle;
+    skillBundle.SetApplicationBundleType(BundleType::SKILL);
+    InnerBundleUserInfo skillUser;
+    skillUser.bundleUserInfo.userId = USERID;
+    skillBundle.innerBundleUserInfos_.emplace(BUNDLE_TEST3, skillUser);
+    ApplicationInfo skillAppInfo;
+    skillAppInfo.bundleName = BUNDLE_TEST3;
+    skillBundle.SetBaseApplicationInfo(skillAppInfo);
+    BundleInfo skillBundleInfo;
+    skillBundleInfo.name = BUNDLE_TEST3;
+    skillBundle.SetBaseBundleInfo(skillBundleInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST3, skillBundle);
+
+    std::vector<std::string> bundleNameList;
+    GetBundleDataMgr()->GetBundleNameList(USERID, bundleNameList);
+
+    EXPECT_EQ(bundleNameList.size(), 1);
+    EXPECT_EQ(bundleNameList[0], BUNDLE_TEST1);
+
+    MockUninstallBundle(BUNDLE_TEST1);
+    GetBundleDataMgr()->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetProfileDataList_0010
+ * @tc.name: test GetProfileDataList filters skill bundle
+ * @tc.desc: 1.Skill bundle should be filtered out from profile data list
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProfileDataList_0010, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetApplicationBundleType(BundleType::SKILL);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_TEST1;
+    appInfo.name = BUNDLE_TEST1;
+    appInfo.enabled = true;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_TEST1, userInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    std::vector<BundleProfileData> profileDataList;
+    GetBundleDataMgr()->GetProfileDataList(ProfileType::SHARE_FILES_PROFILE, USERID, profileDataList);
+    EXPECT_TRUE(profileDataList.empty());
+
+    GetBundleDataMgr()->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllInstallBundleUids_0600
+ * @tc.name: test GetAllInstallBundleUids includes skill bundle
+ * @tc.desc: 1.Test that skill bundles are included in uid collection like APP bundles
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0600, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::SKILL);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    std::unordered_set<int32_t> uids;
+    std::vector<std::string> bundleNames;
+    int32_t responseUserId = USERID;
+    dataMgr->GetAllInstallBundleUids(USERID, Constants::ANY_USERID, responseUserId, uids, bundleNames);
+    EXPECT_TRUE(bundleNames.empty());
+    dataMgr->bundleInfos_.clear();
+}
 } // OHOS

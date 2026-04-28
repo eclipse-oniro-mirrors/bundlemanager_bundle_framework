@@ -1365,6 +1365,7 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     bundleStats = {0, 0, 0, 0, 0};
     std::vector<std::string> bundlePath;
     bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
+    bundlePath.push_back(std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
     int64_t appDataSize = 0;
     int64_t bundleDataSize = 0;
     int64_t bundleCacheSize = 0;
@@ -1422,6 +1423,8 @@ ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bu
         std::vector<std::string> bundlePath;
         bundlePath.push_back(
             std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + stats.bundleName);
+        bundlePath.push_back(
+            std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + stats.bundleName);
         int64_t appDataSize = 0;
         int64_t bundleDataSize = 0;
         appDataSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);

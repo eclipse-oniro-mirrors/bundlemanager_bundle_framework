@@ -3953,6 +3953,9 @@ bool BundleDataMgr::GetBundleList(std::vector<std::string> &bundleNames,
     bool find = false;
     for (const auto &infoItem : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = infoItem.second;
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL) {
+            continue;
+        }
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         if (CheckInnerBundleInfoWithFlags(
             innerBundleInfo, flags, responseUserId) != ERR_OK) {
@@ -4020,8 +4023,9 @@ bool BundleDataMgr::GetBundleInfos(
     bool find = false;
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
-        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-            LOG_D(BMS_TAG_QUERY, "app %{public}s is cross-app shared bundle, ignore",
+        auto bundleType = innerBundleInfo.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
+            LOG_D(BMS_TAG_QUERY, "app %{public}s is cross-app shared bundle or skill bundle, ignore",
                 innerBundleInfo.GetBundleName().c_str());
             continue;
         }
@@ -4189,8 +4193,10 @@ bool BundleDataMgr::GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bu
             APP_LOGD("app %{public}s is disabled", info.GetBundleName().c_str());
             continue;
         }
-        if (info.GetApplicationBundleType() == BundleType::SHARED) {
-            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", info.GetBundleName().c_str());
+        auto bundleType = info.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or skill bundle, ignore",
+                info.GetBundleName().c_str());
             continue;
         }
         BundleInfo bundleInfo;
@@ -4223,8 +4229,9 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0;
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
-        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-            LOG_D(BMS_TAG_QUERY, "app %{public}s is cross-app shared bundle, ignore",
+        auto bundleType = innerBundleInfo.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
+            LOG_D(BMS_TAG_QUERY, "app %{public}s is cross-app shared bundle or skill bundle, ignore",
                 innerBundleInfo.GetBundleName().c_str());
             continue;
         }
@@ -4292,8 +4299,10 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
             APP_LOGD("app %{public}s is disabled", info.GetBundleName().c_str());
             continue;
         }
-        if (info.GetApplicationBundleType() == BundleType::SHARED) {
-            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", info.GetBundleName().c_str());
+        auto bundleType = info.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or skill bundle, ignore",
+                info.GetBundleName().c_str());
             continue;
         }
         if (((static_cast<uint32_t>(flags) &
@@ -8769,7 +8778,8 @@ void BundleDataMgr::GetBundleNameList(const int32_t userId, std::vector<std::str
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     for (const auto& [bundleName, infoItem] : bundleInfos_) {
-        if (infoItem.GetApplicationBundleType() == BundleType::SHARED) {
+        auto bundleType = infoItem.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
                 continue;
         } else {
             int32_t responseUserId = infoItem.GetResponseUserId(userId);
@@ -9220,8 +9230,9 @@ std::vector<std::string> BundleDataMgr::GetBundleNamesForNewUser() const
     std::vector<std::string> bundleNames;
     for (const auto &item : bundleInfos_) {
         if (item.second.GetApplicationBundleType() == BundleType::SHARED ||
-            item.second.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
-            APP_LOGD("app %{public}s is cross-app shared bundle or appService, ignore",
+            item.second.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK ||
+            item.second.GetApplicationBundleType() == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or appService or skill bundle, ignore",
                 item.second.GetBundleName().c_str());
             continue;
         }
@@ -9571,8 +9582,9 @@ ErrCode BundleDataMgr::GetAllAppInstallExtendedInfo(std::vector<AppInstallExtend
             APP_LOGD("app %{public}s is disabled", bundleName.c_str());
             continue;
         }
-        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-            APP_LOGD("app %{public}s is cross-app shared bundle", bundleName.c_str());
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED ||
+            innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or skill bundle", bundleName.c_str());
             continue;
         }
         if (innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
@@ -11170,8 +11182,9 @@ ErrCode BundleDataMgr::GetAllBundleInfoByDeveloperId(const std::string &develope
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
         if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED ||
-            innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
-            APP_LOGD("app %{public}s is cross-app shared bundle or appService, ignore",
+            innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK ||
+            innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or appService or skill bundle, ignore",
                 innerBundleInfo.GetBundleName().c_str());
             continue;
         }
@@ -11223,8 +11236,9 @@ ErrCode BundleDataMgr::GetDeveloperIds(const std::string &appDistributionType,
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
         if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED ||
-            innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
-            APP_LOGD("app %{public}s is cross-app shared bundle or appService, ignore",
+            innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK ||
+            innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or appService or skill bundle, ignore",
                 innerBundleInfo.GetBundleName().c_str());
             continue;
         }
@@ -11923,7 +11937,8 @@ ErrCode BundleDataMgr::GetAllBundleNames(uint32_t flags, int32_t userId, std::ve
     bool ofAnyUserFlag = (flags & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0;
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &[bundleName, innerInfo] : bundleInfos_) {
-        if (innerInfo.GetApplicationBundleType() == BundleType::SHARED) {
+        if (innerInfo.GetApplicationBundleType() == BundleType::SHARED ||
+            innerInfo.GetApplicationBundleType() == BundleType::SKILL) {
             LOG_D(BMS_TAG_QUERY, "%{public}s is not app or atomic, ignore", bundleName.c_str());
             continue;
         }
@@ -13670,8 +13685,9 @@ void BundleDataMgr::GetProfileDataList(ProfileType profileType, int32_t requestU
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &info = item.second;
         std::string bundleName = info.GetBundleName();
-        if (info.GetApplicationBundleType() == BundleType::SHARED) {
-            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", bundleName.c_str());
+        if (info.GetApplicationBundleType() == BundleType::SHARED ||
+            info.GetApplicationBundleType() == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or skill bundle, ignore", bundleName.c_str());
             continue;
         }
         int32_t responseUserId = info.GetResponseUserId(requestUserId);

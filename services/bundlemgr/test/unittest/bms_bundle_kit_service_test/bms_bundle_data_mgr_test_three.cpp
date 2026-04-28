@@ -4487,4 +4487,30 @@ HWTEST_F(BmsBundleDataMgrTest3, GetApiTargetVersionByUid_0003, Function | Medium
     ErrCode ret = localBundleDataMgr->GetApiTargetVersionByUid(-1, apiTargetVersion);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
+
+/**
+ * @tc.number: GetAllBundleDirs_0003
+ * @tc.name: GetAllBundleDirs
+ * @tc.desc: test GetAllBundleDirs filters skill bundle
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetAllBundleDirs_0003, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+    if (bundleDataMgr != nullptr) {
+        bundleDataMgr->AddUserId(100);
+        InnerBundleInfo innerBundleInfo;
+        innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::SKILL;
+        innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME_TEST + "_100", innerBundleUserInfo);
+        bundleDataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+        std::vector<BundleDir> bundleDirs;
+        auto ret = bundleDataMgr->GetAllBundleDirs(100, bundleDirs);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(bundleDirs.size(), 0);
+    }
+}
 } // OHOS

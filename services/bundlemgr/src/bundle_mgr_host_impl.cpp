@@ -2694,6 +2694,14 @@ bool BundleMgrHostImpl::DumpBundleInfo(
     const std::string &bundleName, int32_t userId, std::string &result)
 {
     APP_LOGD("DumpBundleInfo begin");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr != nullptr) {
+        BundleType bundleType;
+        if (dataMgr->GetBundleType(bundleName, bundleType) && bundleType == BundleType::SKILL) {
+            APP_LOGW("DumpBundleInfo skip skill bundle: %{public}s", bundleName.c_str());
+            return false;
+        }
+    }
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo) &&
