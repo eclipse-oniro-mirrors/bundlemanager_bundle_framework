@@ -4149,23 +4149,10 @@ ErrCode BundleMgrHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bu
         return result;
     }
 
-    // Check frequency limit: 12 hours minimum interval
-    {
-        std::lock_guard<std::mutex> lock(lastSuccessCallTimeMutex_);
-        auto now = std::chrono::steady_clock::now();
-        constexpr std::chrono::hours MIN_INTERVAL(12);  // 12 hours
-
-        if (lastSuccessCallTime_ != std::chrono::steady_clock::time_point{}) {
-            auto elapsed = std::chrono::duration_cast<std::chrono::hours>(now - lastSuccessCallTime_);
-            if (elapsed < MIN_INTERVAL) {
-                auto remaining = MIN_INTERVAL - elapsed;
-                LOG_W(BMS_TAG_DEFAULT, "GetTopNLargestItemsInAppDataDir called too frequently, "
-                    "remaining time: %{public}lld hours", static_cast<long long>(remaining.count()));
-                return ERR_BUNDLE_MANAGER_OPERATION_FREQUENT;
-            }
-        }
-        // Update last success call time
-        lastSuccessCallTime_ = now;
+    // Check frequency limit: 12 hours (production) or 5 minutes (debuggable)
+    ErrCode ret = CheckGetTopNLargestItemsFrequencyLimit();
+    if (ret != ERR_OK) {
+        return ret;
     }
 
     // Execute async task
@@ -7555,6 +7542,49 @@ ErrCode BundleMgrHostImpl::CheckAppDisableForbidden(
         APP_LOGE_NOFUNC("bundle: %{public}s is forbidden to be disabled.", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::CheckGetTopNLargestItemsFrequencyLimit()
+{
+    std::lock_guard<std::mutex> lock(lastSuccessCallTimeMutex_);
+    auto now = std::chrono::steady_clock::now();
+
+    // Read const.debuggable parameter to determine interval
+    // Debuggable mode (root/developer mode): 5 minutes
+    // Production mode: 12 hours
+    const int32_t ROOT_MODE = 1;
+    const int32_t USER_MODE = 0;
+    const char* IS_DEBUGGABLE_PARAM = "const.debuggable";
+    int32_t mode = GetIntParameter(IS_DEBUGGABLE_PARAM, USER_MODE);
+
+    std::chrono::milliseconds MIN_INTERVAL;
+    if (mode == ROOT_MODE) {
+        MIN_INTERVAL = std::chrono::minutes(5);  // 5 minutes in debuggable mode
+        LOG_D(BMS_TAG_DEFAULT, "Debuggable mode detected, using 1 minute frequency limit");
+    } else {
+        MIN_INTERVAL = std::chrono::hours(12);  // 12 hours in production mode
+    }
+
+    if (lastSuccessCallTime_ != std::chrono::steady_clock::time_point{}) {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSuccessCallTime_);
+        if (elapsed < MIN_INTERVAL) {
+            auto remaining = std::chrono::milliseconds(MIN_INTERVAL - elapsed);
+            // Format remaining time appropriately based on interval type
+            if (mode == ROOT_MODE) {
+                auto remainingSec = std::chrono::duration_cast<std::chrono::seconds>(remaining);
+                LOG_W(BMS_TAG_DEFAULT, "GetTopNLargestItemsInAppDataDir called too frequently, "
+                    "remaining time: %{public}lld seconds", static_cast<long long>(remainingSec.count()));
+            } else {
+                auto remainingHours = std::chrono::duration_cast<std::chrono::hours>(remaining);
+                LOG_W(BMS_TAG_DEFAULT, "GetTopNLargestItemsInAppDataDir called too frequently, "
+                    "remaining time: %{public}lld hours", static_cast<long long>(remainingHours.count()));
+            }
+            return ERR_BUNDLE_MANAGER_OPERATION_FREQUENT;
+        }
+    }
+    // Update last success call time
+    lastSuccessCallTime_ = now;
     return ERR_OK;
 }
 }  // namespace AppExecFwk

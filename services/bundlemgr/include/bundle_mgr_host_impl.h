@@ -1397,6 +1397,9 @@ private:
     bool IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags) const;
     ErrCode CheckAppDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isEnabled);
 
+    // Check frequency limit for GetTopNLargestItemsInAppDataDir
+    ErrCode CheckGetTopNLargestItemsFrequencyLimit();
+
     // Frequency limit for GetTopNLargestItemsInAppDataDir
     std::mutex lastSuccessCallTimeMutex_;
     std::chrono::steady_clock::time_point lastSuccessCallTime_ = std::chrono::steady_clock::time_point{};

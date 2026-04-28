@@ -11733,7 +11733,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetTopNLargestItemsInAppDataDir_0400, Function | 
     std::cout << "START GetTopNLargestItemsInAppDataDir_0400" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-
+    std::vector<std::string> resvec;
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -11792,7 +11792,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetTopNLargestItemsInAppDataDir_0600, Function | 
     std::cout << "START GetTopNLargestItemsInAppDataDir_0600" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-
+    std::vector<std::string> resvec;
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
