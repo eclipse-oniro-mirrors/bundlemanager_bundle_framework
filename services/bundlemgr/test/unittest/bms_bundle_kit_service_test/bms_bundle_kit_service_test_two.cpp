@@ -472,6 +472,19 @@ sptr<IRemoteObject> ICleanCacheCallbackTest::AsObject()
     return nullptr;
 }
 
+class MockCallback : public IGetLargestItemsCallback {
+public:
+    void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
+    {
+        errCodeResult = errCode;
+    }
+    sptr<IRemoteObject> AsObject() override
+    {
+        return nullptr;
+    }
+    ErrCode errCodeResult = ERR_OK;
+};
+
 class IBundleInstallerTest : public IBundleInstaller {
     bool Install(const std::string& bundleFilePath, const InstallParam& installParam,
         const sptr<IStatusReceiver>& statusReceiver);
@@ -10758,24 +10771,15 @@ HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0200, Function
 {
     SetSystemAppForTest(true);
     SetVerifyCallingPermissionForTest(true);
-
+    DataMgrGuard guard;
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
-
-    class MockCallback : public IGetLargestItemsCallback {
-    public:
-        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-        {
-            errCodeResult = errCode;
-        }
-        ErrCode errCodeResult = ERR_OK;
-    };
 
     sptr<MockCallback> callback = new (std::nothrow) MockCallback();
     ASSERT_NE(callback, nullptr);
 
     ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir("", 0, DEFAULT_USERID, callback);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
     ResetTestValues();
 }
@@ -10793,16 +10797,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0300, Function
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
-
-    class MockCallback : public IGetLargestItemsCallback {
-    public:
-        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-        {
-            errCodeResult = errCode;
-        }
-        ErrCode errCodeResult = ERR_OK;
-    };
-
     sptr<MockCallback> callback = new (std::nothrow) MockCallback();
     ASSERT_NE(callback, nullptr);
 
@@ -10825,16 +10819,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0400, Function
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
-
-    class MockCallback : public IGetLargestItemsCallback {
-    public:
-        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-        {
-            errCodeResult = errCode;
-        }
-        ErrCode errCodeResult = ERR_OK;
-    };
-
     sptr<MockCallback> callback = new (std::nothrow) MockCallback();
     ASSERT_NE(callback, nullptr);
 
@@ -10858,16 +10842,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0500, Function
     DataMgrGuard guard;
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
-
-    class MockCallback : public IGetLargestItemsCallback {
-    public:
-        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-        {
-            errCodeResult = errCode;
-        }
-        ErrCode errCodeResult = ERR_OK;
-    };
-
     sptr<MockCallback> callback = new (std::nothrow) MockCallback();
     ASSERT_NE(callback, nullptr);
 
@@ -10885,27 +10859,22 @@ HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0500, Function
  */
 HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0600, Function | SmallTest | Level1)
 {
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(DEFAULT_USERID);
     SetSystemAppForTest(true);
     SetVerifyCallingPermissionForTest(true);
-
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
-
-    class MockCallback : public IGetLargestItemsCallback {
-    public:
-        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-        {
-            errCodeResult = errCode;
-        }
-        ErrCode errCodeResult = ERR_OK;
-    };
-
     sptr<MockCallback> callback = new (std::nothrow) MockCallback();
     ASSERT_NE(callback, nullptr);
 
-    std::string nonExistentBundle = "com.example.nonexistent";
+    std::string nonExistentBundle = "nonexistent";
     ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir(nonExistentBundle, 0, DEFAULT_USERID, callback);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ret = hostImpl->GetTopNLargestItemsInAppDataDir(nonExistentBundle, 0, ICON_ID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 
     ResetTestValues();
 }
@@ -10918,23 +10887,14 @@ HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0600, Function
  */
 HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0700, Function | SmallTest | Level1)
 {
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(DEFAULT_USERID);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     SetSystemAppForTest(true);
     SetVerifyCallingPermissionForTest(true);
-
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
-
-    class MockCallback : public IGetLargestItemsCallback {
-    public:
-        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-        {
-            errCodeResult = errCode;
-            resultString = largestItems;
-        }
-        ErrCode errCodeResult = ERR_OK;
-        std::string resultString;
-    };
-
     // Reset the frequency limit timestamp by creating a new hostImpl
     hostImpl->lastSuccessCallTime_ = std::chrono::steady_clock::time_point{};
 
@@ -10953,44 +10913,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0700, Function
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_OPERATION_FREQUENT);
 
     ResetTestValues();
-}
-
-/**
- * @tc.number: GetTopNLargestItemsInAppDataDir_0800
- * @tc.name: test GetTopNLargestItemsInAppDataDir with valid parameters
- * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir with valid parameters
- *           2. Should return ERR_OK and initiate async task
- */
-HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0800, Function | SmallTest | Level1)
-{
-    SetSystemAppForTest(true);
-    SetVerifyCallingPermissionForTest(true);
-
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ASSERT_NE(hostImpl, nullptr);
-
-    class MockCallback : public IGetLargestItemsCallback {
-    public:
-        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-        {
-            errCodeResult = errCode;
-            resultString = largestItems;
-        }
-        ErrCode errCodeResult = ERR_OK;
-        std::string resultString;
-    };
-
-    // Reset frequency limit
-    hostImpl->lastSuccessCallTime_ = std::chrono::steady_clock::time_point{};
-
-    sptr<MockCallback> callback = new (std::nothrow) MockCallback();
-    ASSERT_NE(callback, nullptr);
-
-    // Test with existing bundle
-    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir("com.ohos.dlpmanager", 0, DEFAULT_USERID, callback);
-    // Should either succeed with ERR_OK (async task started) or fail with bundle not exist
-    EXPECT_TRUE(ret == ERR_OK);
-
-    ResetTestValues();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 }

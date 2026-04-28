@@ -1354,8 +1354,8 @@ ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bun
         bundleName.c_str(), appIndex, userId, timeout);
 
     // Validate input parameters
-    if (bundleName.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: bundleName is empty");
+    if (!InstalldOperator::IsFileNameValid(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: bundleName is invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 

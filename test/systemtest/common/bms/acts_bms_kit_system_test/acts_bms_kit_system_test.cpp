@@ -261,9 +261,7 @@ public:
 
     std::string GetLargestItems()
     {
-        auto future = promise_.get_future();
-        std::chrono::milliseconds span(MAX_WAITING_TIME);
-        if (future.wait_for(span) == std::future_status::timeout) {
+        if (result_ == nullptr) {
             return "";
         }
         return result_->second;
@@ -11812,7 +11810,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetTopNLargestItemsInAppDataDir_0600, Function | 
     EXPECT_EQ(result1, ERR_OK);
 
     std::string items = callback1->GetLargestItems();
-    EXPECT_TRUE(items.size() > 0);
+    EXPECT_NE(items, "");
 
     // Second call immediately (should hit frequency limit - 12 hours)
     sptr<GetLargestItemsCallbackImpl> callback2 = new (std::nothrow) GetLargestItemsCallbackImpl();

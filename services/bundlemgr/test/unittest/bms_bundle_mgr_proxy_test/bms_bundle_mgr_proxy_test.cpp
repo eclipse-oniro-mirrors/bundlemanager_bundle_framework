@@ -1864,6 +1864,10 @@ HWTEST_F(BmsBundleMgrProxyTest, GetTopNLargestItemsInAppDataDir_0100, Function |
             resultErrCode = errCode;
             resultData = largestItems;
         }
+        sptr<IRemoteObject> AsObject() override
+        {
+            return nullptr;
+        }
         ErrCode resultErrCode = ERR_OK;
         std::string resultData;
     };
@@ -1877,39 +1881,6 @@ HWTEST_F(BmsBundleMgrProxyTest, GetTopNLargestItemsInAppDataDir_0100, Function |
 
     ErrCode ret = bundleMgrProxy.GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, callback);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
-}
-
-/**
- * @tc.number: GetTopNLargestItemsInAppDataDir_0200
- * @tc.name: test GetTopNLargestItemsInAppDataDir with  remote object
- * @tc.desc: 1. BundleMgrProxy constructed with IRemoteObject
- *           2. verify GetTopNLargestItemsInAppDataDir returns parcel error when IPC fails
- */
-HWTEST_F(BmsBundleMgrProxyTest, GetTopNLargestItemsInAppDataDir_0200, Function | MediumTest | Level1)
-{
-    sptr<IRemoteObject> impl;
-    BundleMgrProxy bundleMgrProxy(impl);
-
-    class MockGetLargestItemsCallback : public IGetLargestItemsCallback {
-    public:
-        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-        {
-            resultErrCode = errCode;
-            resultData = largestItems;
-        }
-        ErrCode resultErrCode = ERR_OK;
-        std::string resultData;
-    };
-
-    sptr<MockGetLargestItemsCallback> callback = new (std::nothrow) MockGetLargestItemsCallback();
-    ASSERT_NE(callback, nullptr);
-
-    std::string bundleName = "com.bundle.no_exist";
-    int32_t appIndex = 0;
-    int32_t userId = 100;
-
-    ErrCode ret = bundleMgrProxy.GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, callback);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 }
 }

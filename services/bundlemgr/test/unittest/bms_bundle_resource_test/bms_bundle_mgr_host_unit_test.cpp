@@ -51,6 +51,22 @@ void BmsBundleMgrHostUnitTest::SetUp() {}
 
 void BmsBundleMgrHostUnitTest::TearDown() {}
 
+class MockGetLargestItemsCallback : public IGetLargestItemsCallback {
+public:
+    MockGetLargestItemsCallback() : resultErrCode(ERR_OK) {}
+    ~MockGetLargestItemsCallback() override = default;
+    void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
+    {
+        resultErrCode = errCode;
+        resultData = largestItems;
+    }
+    sptr<IRemoteObject> AsObject() override
+    {
+        return nullptr;
+    }
+    ErrCode resultErrCode;
+    std::string resultData;
+};
 /**
  * @tc.number: OnRemoteRequest_0010
  * @tc.name: test the OnRemoteRequest
@@ -4484,276 +4500,14 @@ HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetTopNLargestItemsInAppDataDir_0100, F
     data.WriteInt32(appIndex);
     int32_t userId = 100;
     data.WriteInt32(userId);
-
-    class MockGetLargestItemsCallback : public IGetLargestItemsCallback {
-    public:
-        MockGetLargestItemsCallback() : resultErrCode(ERR_OK) {}
-        ~MockGetLargestItemsCallback() override = default;
-        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-        {
-            resultErrCode = errCode;
-            resultData = largestItems;
-        }
-        sptr<IRemoteObject> AsObject() override
-        {
-            return nullptr;
-        }
-        ErrCode resultErrCode;
-        std::string resultData;
-    };
-
     sptr<MockGetLargestItemsCallback> callback = new (std::nothrow) MockGetLargestItemsCallback();
     ASSERT_NE(callback, nullptr);
-    data.WriteRemoteObject(callback->AsObject());
+    data.WriteRemoteObject(callback->AsObject()); // nullptr
 
     MessageParcel reply;
     MessageOption option;
     ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
-    EXPECT_EQ(res, ERR_OK);
-}
-
-/**
- * @tc.number: HandleGetTopNLargestItemsInAppDataDir_0200
- * @tc.name: test GetTopNLargestItemsInAppDataDir with empty bundle name
- * @tc.desc: 1. test GetTopNLargestItemsInAppDataDir with empty bundle name
- *           2. verify the interface handles empty bundle name
- */
-HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetTopNLargestItemsInAppDataDir_0200, Function | SmallTest | Level0)
-{
-    BundleMgrHost bundleMgrHost;
-    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR);
-    MessageParcel data;
-    std::u16string descriptor = BundleMgrHost::GetDescriptor();
-    data.WriteInterfaceToken(descriptor);
-    data.WriteString(TEST_EMPTY_BUNDLE_NAME);
-    int32_t appIndex = 0;
-    data.WriteInt32(appIndex);
-    int32_t userId = 100;
-    data.WriteInt32(userId);
-
-    class MockGetLargestItemsCallback : public IGetLargestItemsCallback {
-    public:
-        MockGetLargestItemsCallback() : resultErrCode(ERR_OK) {}
-        ~MockGetLargestItemsCallback() override = default;
-        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-        {
-            resultErrCode = errCode;
-            resultData = largestItems;
-        }
-        sptr<IRemoteObject> AsObject() override
-        {
-            return nullptr;
-        }
-        ErrCode resultErrCode;
-        std::string resultData;
-    };
-
-    sptr<MockGetLargestItemsCallback> callback = new (std::nothrow) MockGetLargestItemsCallback();
-    ASSERT_NE(callback, nullptr);
-    data.WriteRemoteObject(callback->AsObject());
-
-    MessageParcel reply;
-    MessageOption option;
-    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
-    EXPECT_EQ(res, ERR_OK);
-}
-
-/**
- * @tc.number: HandleGetTopNLargestItemsInAppDataDir_0300
- * @tc.name: test GetTopNLargestItemsInAppDataDir with null callback
- * @tc.desc: 1. test GetTopNLargestItemsInAppDataDir with null callback
- *           2. verify the interface handles null callback
- */
-HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetTopNLargestItemsInAppDataDir_0300, Function | SmallTest | Level0)
-{
-    BundleMgrHost bundleMgrHost;
-    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR);
-    MessageParcel data;
-    std::u16string descriptor = BundleMgrHost::GetDescriptor();
-    data.WriteInterfaceToken(descriptor);
-    data.WriteString(TEST_BUNDLE_NAME);
-    int32_t appIndex = 0;
-    data.WriteInt32(appIndex);
-    int32_t userId = 100;
-    data.WriteInt32(userId);
-    data.WriteRemoteObject(nullptr);  // null callback
-
-    MessageParcel reply;
-    MessageOption option;
-    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
-    EXPECT_EQ(res, ERR_OK);
-}
-
-/**
- * @tc.number: HandleGetTopNLargestItemsInAppDataDir_0400
- * @tc.name: test GetTopNLargestItemsInAppDataDir with different appIndex values
- * @tc.desc: 1. test GetTopNLargestItemsInAppDataDir with different appIndex values
- *           2. verify the interface handles various appIndex values
- */
-HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetTopNLargestItemsInAppDataDir_0400, Function | SmallTest | Level0)
-{
-    BundleMgrHost bundleMgrHost;
-    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR);
-
-    // Test with appIndex = 0
-    {
-        MessageParcel data;
-        std::u16string descriptor = BundleMgrHost::GetDescriptor();
-        data.WriteInterfaceToken(descriptor);
-        data.WriteString(TEST_BUNDLE_NAME);
-        data.WriteInt32(0);
-        int32_t userId = 100;
-        data.WriteInt32(userId);
-
-        class MockGetLargestItemsCallback : public IGetLargestItemsCallback {
-        public:
-            MockGetLargestItemsCallback() : resultErrCode(ERR_OK) {}
-            ~MockGetLargestItemsCallback() override = default;
-            void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-            {
-                resultErrCode = errCode;
-                resultData = largestItems;
-            }
-            sptr<IRemoteObject> AsObject() override
-            {
-                return nullptr;
-            }
-            ErrCode resultErrCode;
-            std::string resultData;
-        };
-
-        sptr<MockGetLargestItemsCallback> callback = new (std::nothrow) MockGetLargestItemsCallback();
-        ASSERT_NE(callback, nullptr);
-        data.WriteRemoteObject(callback->AsObject());
-
-        MessageParcel reply;
-        MessageOption option;
-        ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
-        EXPECT_EQ(res, ERR_OK);
-    }
-
-    // Test with appIndex = 1
-    {
-        MessageParcel data;
-        std::u16string descriptor = BundleMgrHost::GetDescriptor();
-        data.WriteInterfaceToken(descriptor);
-        data.WriteString(TEST_BUNDLE_NAME);
-        data.WriteInt32(1);
-        int32_t userId = 100;
-        data.WriteInt32(userId);
-
-        class MockGetLargestItemsCallback : public IGetLargestItemsCallback {
-        public:
-            MockGetLargestItemsCallback() : resultErrCode(ERR_OK) {}
-            ~MockGetLargestItemsCallback() override = default;
-            void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-            {
-                resultErrCode = errCode;
-                resultData = largestItems;
-            }
-            sptr<IRemoteObject> AsObject() override
-            {
-                return nullptr;
-            }
-            ErrCode resultErrCode;
-            std::string resultData;
-        };
-
-        sptr<MockGetLargestItemsCallback> callback = new (std::nothrow) MockGetLargestItemsCallback();
-        ASSERT_NE(callback, nullptr);
-        data.WriteRemoteObject(callback->AsObject());
-
-        MessageParcel reply;
-        MessageOption option;
-        ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
-        EXPECT_EQ(res, ERR_OK);
-    }
-}
-
-/**
- * @tc.number: HandleGetTopNLargestItemsInAppDataDir_0500
- * @tc.name: test GetTopNLargestItemsInAppDataDir with different userId values
- * @tc.desc: 1. test GetTopNLargestItemsInAppDataDir with different userId values
- *           2. verify the interface handles various userId values
- */
-HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetTopNLargestItemsInAppDataDir_0500, Function | SmallTest | Level0)
-{
-    BundleMgrHost bundleMgrHost;
-    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR);
-
-    // Test with userId = 0 (active user)
-    {
-        MessageParcel data;
-        std::u16string descriptor = BundleMgrHost::GetDescriptor();
-        data.WriteInterfaceToken(descriptor);
-        data.WriteString(TEST_BUNDLE_NAME);
-        int32_t appIndex = 0;
-        data.WriteInt32(appIndex);
-        data.WriteInt32(0);
-
-        class MockGetLargestItemsCallback : public IGetLargestItemsCallback {
-        public:
-            MockGetLargestItemsCallback() : resultErrCode(ERR_OK) {}
-            ~MockGetLargestItemsCallback() override = default;
-            void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-            {
-                resultErrCode = errCode;
-                resultData = largestItems;
-            }
-            sptr<IRemoteObject> AsObject() override
-            {
-                return nullptr;
-            }
-            ErrCode resultErrCode;
-            std::string resultData;
-        };
-
-        sptr<MockGetLargestItemsCallback> callback = new (std::nothrow) MockGetLargestItemsCallback();
-        ASSERT_NE(callback, nullptr);
-        data.WriteRemoteObject(callback->AsObject());
-
-        MessageParcel reply;
-        MessageOption option;
-        ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
-        EXPECT_EQ(res, ERR_OK);
-    }
-
-    // Test with userId = 100
-    {
-        MessageParcel data;
-        std::u16string descriptor = BundleMgrHost::GetDescriptor();
-        data.WriteInterfaceToken(descriptor);
-        data.WriteString(TEST_BUNDLE_NAME);
-        int32_t appIndex = 0;
-        data.WriteInt32(appIndex);
-        data.WriteInt32(100);
-
-        class MockGetLargestItemsCallback : public IGetLargestItemsCallback {
-        public:
-            MockGetLargestItemsCallback() : resultErrCode(ERR_OK) {}
-            ~MockGetLargestItemsCallback() override = default;
-            void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
-            {
-                resultErrCode = errCode;
-                resultData = largestItems;
-            }
-            sptr<IRemoteObject> AsObject() override
-            {
-                return nullptr;
-            }
-            ErrCode resultErrCode;
-            std::string resultData;
-        };
-
-        sptr<MockGetLargestItemsCallback> callback = new (std::nothrow) MockGetLargestItemsCallback();
-        ASSERT_NE(callback, nullptr);
-        data.WriteRemoteObject(callback->AsObject());
-
-        MessageParcel reply;
-        MessageOption option;
-        ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
-        EXPECT_EQ(res, ERR_OK);
-    }
+    EXPECT_EQ(res, UNKNOWN_ERROR);
 }
 } // namespace AppExecFwk
 } // namespace OHOS

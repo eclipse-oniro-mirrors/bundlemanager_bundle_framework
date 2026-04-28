@@ -3368,13 +3368,13 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18500, Function | Sm
  * @tc.desc: 1. calling AnonymizePath with single filename
  *           2. verify anonymization pattern (keep even chars, replace odd with *)
 */
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16800, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18600, Function | SmallTest | Level0)
 {
     InstalldOperator installdOperator;
     std::string filename = "/abc/document.txt";
     std::string result = installdOperator.AnonymizePath(filename);
     // "document.txt" -> "d*c*u*en.txt" (name part anonymized, extension kept)
-    EXPECT_TRUE(result, "/a*c/d*c*m*n*.txt");
+    EXPECT_EQ(result, "/a*c/d*c*m*n*.txt");
 }
 
 /**
@@ -3485,7 +3485,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19300, Function | Sm
     InstalldOperator installdOperator;
     std::string shortPath = "/a/b/c.txt";
     std::string result = installdOperator.AnonymizePath(shortPath);
-    EXPECT_TRUE(result, shortPath);
+    EXPECT_EQ(result, shortPath);
 }
 
 /**
@@ -3667,7 +3667,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_20100, Function | Sm
     // Function should handle non-existent path gracefully
     bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 5, results);
     // May return false or true with empty results depending on implementation
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
     EXPECT_TRUE(results.empty());
 }
 

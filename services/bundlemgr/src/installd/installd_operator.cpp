@@ -4388,8 +4388,13 @@ std::string InstalldOperator::AnonymizePath(const std::string &path)
         bool isLastSegment = (segmentEnd == nullptr);
         if (segmentEnd != nullptr) {
             segLen = static_cast<size_t>(segmentEnd - segmentStart);
-            // Skip empty segments (e.g., consecutive separators like //)
+            // Skip empty segments (e.g., consecutive separators like //), but NOT the leading separator at path start
             if (segLen == 0) {
+                // If this is at the beginning of the path, it's a leading "/", preserve it
+                if (segmentStart == pathData) {
+                    // This is a leading path separator, add it to result and move on
+                    result.push_back(pathSep);
+                }
                 segmentStart = segmentEnd + 1;  // Safe: segmentEnd is not nullptr
                 continue;
             }
