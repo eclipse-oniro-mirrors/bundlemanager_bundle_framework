@@ -127,16 +127,15 @@ enum class DefaultAppActionType : uint8_t {
     RESET = 2,
 };
 
-enum class MonitorEventActionType : uint8_t {
+enum class HighRiskActionType : uint8_t {
     RESOURCE_SWITCH_EXCEPTION = 1,
     TRIGGER_FALLBACK,
     CACHE_TIMEOUT,
 };
 
-enum class MonitorEventOperationType : uint8_t {
+enum class HighRiskOperationType: uint8_t {
     THEME_SWITCH_EXCEPTION = 1,
     LANGUAGE_SWITCH_EXCEPTION,
-    DB_OPEN_FAILED,
     DB_FALLBACK_CREATED,
     USER_DATA_PARSE_FAILED,
     GET_ALL_BUNDLE_CACHE_STAT_TIMEOUT,

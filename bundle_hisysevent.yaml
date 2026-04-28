@@ -49,6 +49,10 @@ HIGH_RISK_EVENT:
   __BASE: {type: STATISTIC, level: MINOR, desc: high risk event}
   ACTION_TYPE: {type: INT32, desc: action type}
   OPERATION_TYPE: {type: INT32, desc: operation type}
+  BUNDLE_NAME: {type: STRING, desc: bundle name}
   USERID: {type: INT32, desc: userId of the bundle}
+  APP_INDEX: {type: INT32, desc: app index}
+  VERSION: {type: UINT32, desc: versionCode}
+  FILE_PATH: {type: STRING, arrsize: 99, desc: file path}
   START_TIME: {type: INT64, desc: start time}
   END_TIME: {type: INT64, desc: end time}

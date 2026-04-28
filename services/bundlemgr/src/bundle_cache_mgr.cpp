@@ -72,11 +72,11 @@ std::vector<std::string> BundleCacheMgr::GetBundleCachePath(const std::string &b
     return cachePaths;
 }
 
-void BundleCacheMgr::ReportCacheTimeOutEvent(MonitorEventOperationType operation,
+void BundleCacheMgr::ReportCacheTimeOutEvent(HighRiskOperationType operation,
     int32_t userId, int64_t startTime, int64_t endTime)
 {
     EventInfo eventInfo;
-    eventInfo.actionType = static_cast<int32_t>(MonitorEventActionType::CACHE_TIMEOUT);
+    eventInfo.actionType = static_cast<int32_t>(HighRiskActionType::CACHE_TIMEOUT);
     eventInfo.operationType = static_cast<int32_t>(operation);
     eventInfo.userId = userId;
     eventInfo.startTime = startTime;
@@ -183,7 +183,7 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
             auto endTime = BundleUtil::GetCurrentTimeMs();
             auto elapsedTime = endTime - startTime;
             if (elapsedTime >= CACHE_TIMEOUT_MS) {
-                ReportCacheTimeOutEvent(MonitorEventOperationType::GET_ALL_BUNDLE_CACHE_STAT_TIMEOUT,
+                ReportCacheTimeOutEvent(HighRiskOperationType::GET_ALL_BUNDLE_CACHE_STAT_TIMEOUT,
                     userId, startTime, endTime);
             }
         };
@@ -253,7 +253,7 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
             auto endTime = BundleUtil::GetCurrentTimeMs();
             auto elapsedTime = endTime - startTime;
             if (elapsedTime >= CACHE_TIMEOUT_MS) {
-                ReportCacheTimeOutEvent(MonitorEventOperationType::CLEAN_ALL_BUNDLE_CACHE_TIMEOUT,
+                ReportCacheTimeOutEvent(HighRiskOperationType::CLEAN_ALL_BUNDLE_CACHE_TIMEOUT,
                     userId, startTime, endTime);
             }
         };

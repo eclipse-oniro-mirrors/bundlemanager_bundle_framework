@@ -101,21 +101,17 @@ std::mutex &RdbDataManager::GetRdbRestoreMutex(const std::string &dbName)
     return restoreRdbMap_[dbName];
 }
 
-void RdbDataManager::ReportRdbLostEvent(MonitorEventOperationType operation, int32_t userId,
-    int64_t startTime, int64_t endTime)
+void RdbDataManager::ReportRdbLostEvent(HighRiskOperationType operation, int32_t userId)
 {
     EventInfo eventInfo;
-    eventInfo.actionType = static_cast<int32_t>(MonitorEventActionType::TRIGGER_FALLBACK);
+    eventInfo.actionType = static_cast<int32_t>(HighRiskActionType::TRIGGER_FALLBACK);
     eventInfo.operationType = static_cast<int32_t>(operation);
     eventInfo.userId = userId;
-    eventInfo.startTime = startTime;
-    eventInfo.endTime = endTime;
     EventReport::SendHighRiskEvent(eventInfo);
 }
 
 ErrCode RdbDataManager::GetRdbStoreFromNative()
 {
-    int64_t startTime = BundleUtil::GetCurrentTimeMs();
     auto &mutex = GetRdbRestoreMutex(bmsRdbConfig_.dbName);
     std::lock_guard<std::mutex> restoreLock(mutex);
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
@@ -142,16 +138,11 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
         bmsRdbOpenCallback, errCode);
     if (rdbStore_ == nullptr) {
         APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
-        if (needReportFallBack) {
-            ReportRdbLostEvent(MonitorEventOperationType::DB_OPEN_FAILED,
-                Constants::INVALID_USERID, startTime, BundleUtil::GetCurrentTimeMs());
-        }
         SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::OPEN), errCode);
         return errCode;
     }
     if (needReportFallBack) {
-        ReportRdbLostEvent(MonitorEventOperationType::DB_FALLBACK_CREATED,
-            Constants::INVALID_USERID, startTime, BundleUtil::GetCurrentTimeMs());
+        ReportRdbLostEvent(HighRiskOperationType::DB_FALLBACK_CREATED, Constants::INVALID_USERID);
     }
     CheckSystemSizeAndHisysEvent(bmsRdbConfig_.dbPath, bmsRdbConfig_.dbName);
     bool isNeedRebuildDb = false;

@@ -887,14 +887,21 @@ void InnerEventReport::InnerSendAppDisableForbiddenEvent(const EventInfo& eventI
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid);
 }
 
-void InnerEventReport::InnerSendHighRiskEvent(const EventInfo& eventInfo)
+ void InnerEventReport::InnerSendHighRiskEvent(const EventInfo& eventInfo)
 {
     InnerSystemEventWrite(
         HIGH_RISK_EVENT,
         HiSysEventType::STATISTIC,
         EVENT_PARAM_ACTION_TYPE, eventInfo.actionType,
         EVENT_PARAM_OPERATION_TYPE, eventInfo.operationType,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_VERSION, eventInfo.versionCode,
+        EVENT_PARAM_FILE_PATH, eventInfo.filePath,
+        EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
+        EVENT_PARAM_MIN_API_VERSION, eventInfo.minAPIVersion,
+        EVENT_PARAM_TARGET_API_VERSION, eventInfo.targetAPIVersion,
         EVENT_PARAM_START_TIME, eventInfo.startTime,
         EVENT_PARAM_END_TIME, eventInfo.endTime);
 }

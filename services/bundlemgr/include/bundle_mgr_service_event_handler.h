@@ -145,8 +145,7 @@ public:
 
     static bool CheckOtaFlag(OTAFlag flag, bool &result);
 
-    static void ReportInfosLossedEvent(MonitorEventOperationType operation, int32_t userId,
-        int64_t startTime, int64_t endTime);
+    static void ReportInfosLossedEvent(HighRiskOperationType operation, int32_t userId);
 
     static bool UpdateOtaFlag(OTAFlag flag);
 

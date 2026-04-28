@@ -85,14 +85,14 @@ void BundleResourceObserver::ReportResourceSwitchEvent(const uint32_t type, int3
     int64_t startTime, int64_t endTime)
 {
     EventInfo eventInfo;
-    eventInfo.actionType = static_cast<int32_t>(MonitorEventActionType::RESOURCE_SWITCH_EXCEPTION);
+    eventInfo.actionType = static_cast<int32_t>(HighRiskActionType::RESOURCE_SWITCH_EXCEPTION);
     eventInfo.userId = userId;
     eventInfo.startTime = startTime;
     eventInfo.endTime = endTime;
     if ((type & static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) != 0) {
-        eventInfo.operationType = static_cast<int32_t>(MonitorEventOperationType::THEME_SWITCH_EXCEPTION);
+        eventInfo.operationType = static_cast<int32_t>(HighRiskOperationType::THEME_SWITCH_EXCEPTION);
     } else {
-        eventInfo.operationType = static_cast<int32_t>(MonitorEventOperationType::LANGUAGE_SWITCH_EXCEPTION);
+        eventInfo.operationType = static_cast<int32_t>(HighRiskOperationType::LANGUAGE_SWITCH_EXCEPTION);
     }
     EventReport::SendHighRiskEvent(eventInfo);
 }

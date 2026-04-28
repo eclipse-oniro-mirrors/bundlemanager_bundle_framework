@@ -63,8 +63,7 @@ public:
 
     void SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode);
 
-    void ReportRdbLostEvent(MonitorEventOperationType operation, int32_t userId,
-        int64_t startTime, int64_t endTime);
+    void ReportRdbLostEvent(HighRiskOperationType operation, int32_t userId);
 
     bool ExecuteSql();
 private:
