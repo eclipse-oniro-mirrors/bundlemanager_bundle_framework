@@ -6520,4 +6520,46 @@ HWTEST_F(BmsBundleParserTest, AlternateIcon_Profile_0100, Function | SmallTest |
     EXPECT_EQ(jsonObject["app"]["alternateIcons"][0]["icon"], "$media:icon_dark");
     EXPECT_EQ(jsonObject["app"]["alternateIcons"][0]["iconId"], 10001);
 }
+
+/**
+ * @tc.number: from_json_sceneAnimationParams
+ * @tc.name: Test from_json sceneAnimationParams
+ * @tc.desc: test the interface of sceneAnimationParams
+ */
+HWTEST_F(BmsBundleParserTest, from_json_sceneAnimationParams, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = "testName";
+    jsonObject["sceneAnimationParams"]["abilityName"] = "testAbilityName";
+    jsonObject["sceneAnimationParams"]["disabledDesktopBehaviors"] = "PULL_DOWN_SEARCH|LONG_CLICK";
+    jsonObject["sceneAnimationParams"]["triggerTypes"] = {SceneAnimationTriggerType::SHAKE};
+    FormInfo formInfo;
+    from_json(jsonObject, formInfo);
+    EXPECT_EQ(formInfo.name, "testName");
+    EXPECT_EQ(formInfo.sceneAnimationParams.abilityName, "testAbilityName");
+    EXPECT_EQ(formInfo.sceneAnimationParams.disabledDesktopBehaviors, "PULL_DOWN_SEARCH|LONG_CLICK");
+    EXPECT_EQ(formInfo.sceneAnimationParams.triggerTypes.size(), 1);
+    EXPECT_EQ(formInfo.sceneAnimationParams.triggerTypes[0], SceneAnimationTriggerType::SHAKE);
+}
+ 
+/**
+ * @tc.number: to_json_sceneAnimationParams
+ * @tc.name: Test to_json sceneAnimationParams
+ * @tc.desc: test the interface of sceneAnimationParams
+ */
+HWTEST_F(BmsBundleParserTest, to_json_sceneAnimationParams, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    FormInfo formInfo;
+    formInfo.name = "testName";
+    formInfo.sceneAnimationParams.abilityName = "testAbilityName";
+    formInfo.sceneAnimationParams.disabledDesktopBehaviors = "PULL_DOWN_SEARCH|LONG_CLICK";
+    formInfo.sceneAnimationParams.triggerTypes = {SceneAnimationTriggerType::SHAKE};
+    to_json(jsonObject, formInfo);
+    EXPECT_EQ(jsonObject["name"], "testName");
+    EXPECT_EQ(jsonObject["sceneAnimationParams"]["abilityName"], "testAbilityName");
+    EXPECT_EQ(jsonObject["sceneAnimationParams"]["disabledDesktopBehaviors"], "PULL_DOWN_SEARCH|LONG_CLICK");
+    EXPECT_EQ(jsonObject["sceneAnimationParams"]["triggerTypes"].size(), 1);
+    EXPECT_EQ(jsonObject["sceneAnimationParams"]["triggerTypes"][0], SceneAnimationTriggerType::SHAKE);
+}
 } // OHOS

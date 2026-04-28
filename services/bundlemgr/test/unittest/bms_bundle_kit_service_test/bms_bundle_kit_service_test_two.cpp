@@ -943,6 +943,7 @@ FormInfo BmsBundleKitServiceTest::MockFormInfo(
     formInfo.funInteractionParams.keepStateDuration = FORM_KEEP_STATE_DURATION;
     formInfo.sceneAnimationParams.abilityName = FORM_ABILITY_NAME;
     formInfo.sceneAnimationParams.disabledDesktopBehaviors = FORM_DISABLED_DESKTOP_BEHAVIORS;
+    formInfo.sceneAnimationParams.triggerTypes = {SceneAnimationTriggerType::SHAKE};
     return formInfo;
 }
 
@@ -1488,6 +1489,7 @@ void BmsBundleKitServiceTest::CheckFormInfoTest(const std::vector<FormInfo> &for
         EXPECT_EQ(formInfo.funInteractionParams.keepStateDuration, FORM_KEEP_STATE_DURATION);
         EXPECT_EQ(formInfo.sceneAnimationParams.abilityName, FORM_ABILITY_NAME);
         EXPECT_EQ(formInfo.sceneAnimationParams.disabledDesktopBehaviors, FORM_DISABLED_DESKTOP_BEHAVIORS);
+        EXPECT_EQ(formInfo.sceneAnimationParams.triggerTypes[0], SceneAnimationTriggerType::SHAKE);
     }
 }
 
@@ -1526,6 +1528,7 @@ void BmsBundleKitServiceTest::CheckFormInfoDemo(const std::vector<FormInfo> &for
         EXPECT_EQ(formInfo.funInteractionParams.keepStateDuration, FORM_KEEP_STATE_DURATION);
         EXPECT_EQ(formInfo.sceneAnimationParams.abilityName, FORM_ABILITY_NAME);
         EXPECT_EQ(formInfo.sceneAnimationParams.disabledDesktopBehaviors, FORM_DISABLED_DESKTOP_BEHAVIORS);
+        EXPECT_EQ(formInfo.sceneAnimationParams.triggerTypes[0], SceneAnimationTriggerType::SHAKE);
     }
 }
 
