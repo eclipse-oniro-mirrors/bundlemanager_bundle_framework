@@ -349,8 +349,9 @@ void IndependentSkillsInstaller::RemoveSkillDir(
     }
     std::string moduleDir =
         std::string(BASE_SKILL_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
-        bundleName + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
-    LOG_I(BMS_TAG_INSTALLER, "start to remove module dir: %{public}s", moduleDir.c_str());
+        bundleName + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName +
+        AppExecFwk::ServiceConstants::PATH_SEPARATOR + skillsName;
+    LOG_I(BMS_TAG_INSTALLER, "start to remove skill dir: %{public}s", moduleDir.c_str());
     if (InstalldClient::GetInstance()->RemoveDir(moduleDir) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "remove module dir %{public}s failed", moduleDir.c_str());
     }
