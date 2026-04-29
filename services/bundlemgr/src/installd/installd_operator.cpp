@@ -4329,10 +4329,6 @@ bool InstalldOperator::GetBundleDataDirPaths(const std::string &bundleName, cons
         ServiceConstants::LOG + bundleNameDir;
     dataDirPaths.push_back(logPath);
     // /data/app/el1/<userId>/system_optimize/<bundleName>
-    std::string optimizePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) +
-        ServiceConstants::BUNDLE_EL[0] + ServiceConstants::PATH_SEPARATOR + std::to_string(userId) +
-        ServiceConstants::LOG + bundleNameDir;
-    // /data/app/el1/<userId>/system_optimize/<bundleName>
     std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
         bundleNameDir + ServiceConstants::ARK_STARTUP_CACHE_DIR;
     el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,

@@ -1138,6 +1138,8 @@ public:
 
     void UpdateIsPreInstallApp(const std::string &bundleName, bool isPreInstallApp);
 
+    int32_t GetResponseUserId(const std::string &bundleName, const int32_t userId) const;
+
     /**
      * @brief Check whether the link can be opened.
      * @param link Indicates the link to be opened.

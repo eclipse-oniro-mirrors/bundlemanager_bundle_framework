@@ -4151,6 +4151,12 @@ ErrCode BundleMgrHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bu
             "appIndex: %{public}d", bundleName.c_str(), userId, appIndex);
         return result;
     }
+    int32_t responseUserId = dataMgr->GetResponseUserId(bundleName, userId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        LOG_E(BMS_TAG_DEFAULT, "get userId failed, -n: %{public}s, -u: %{public}d, -a: %{public}d",
+            bundleName.c_str(), userId, appIndex);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
 
     // Check frequency limit: 12 hours (production) or 5 minutes (debuggable)
     ErrCode ret = CheckGetTopNLargestItemsFrequencyLimit();
@@ -4159,7 +4165,7 @@ ErrCode BundleMgrHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bu
     }
 
     // Execute async task
-    GetTopNLargestItemsTask(bundleName, appIndex, userId, getLargestItemsCallback);
+    GetTopNLargestItemsTask(bundleName, appIndex, responseUserId, getLargestItemsCallback);
     return ERR_OK;
 }
 
@@ -4174,6 +4180,11 @@ void BundleMgrHostImpl::GetTopNLargestItemsTask(const std::string &bundleName, i
         BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         LOG_I(BMS_TAG_DEFAULT, "async task getLargestItemsFunc started, -n: %{public}s, "
             "-a: %{public}d, -u: %{public}d", bundleName.c_str(), appIndex, userId);
+        if (getLargestItemsCallback == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "async task getLargestItemsFunc nullptr error, -n: %{public}s, "
+                "-a: %{public}d, -u: %{public}d", bundleName.c_str(), appIndex, userId);
+            return;
+        }
         auto installdClient = DelayedSingleton<InstalldClient>::GetInstance();
         if (installdClient == nullptr) {
             LOG_E(BMS_TAG_DEFAULT, "installdClient is nullptr");

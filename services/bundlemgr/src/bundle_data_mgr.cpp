@@ -13927,6 +13927,22 @@ ErrCode BundleDataMgr::GetCreateDirParamByBundleOption(
     return ERR_OK;
 }
 
+int32_t BundleDataMgr::GetResponseUserId(const std::string &bundleName, const int32_t userId) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE_NOFUNC("check bundle invalid -u %{public}d", userId);
+        return Constants::INVALID_USERID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE_NOFUNC("check bundle -n %{public}s not exist", bundleName.c_str());
+        return Constants::INVALID_USERID;
+    }
+    return item->second.GetResponseUserId(requestUserId);
+}
+
 bool BundleDataMgr::ProcessIdleInfo() const
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
