@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-import { BundleInfo, AppCloneIdentity, SignatureInfo, BundleOptions, DynamicIconInfo } from 'bundleManager.BundleInfo';
+import { BundleInfo, AppCloneIdentity, SignatureInfo, BundleOptions, DynamicIconInfo,
+  AlternateIconInfo } from 'bundleManager.BundleInfo';
 import { AsyncCallback, BusinessError } from '@ohos.base';
 import { PreinstalledApplicationInfo, ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { AbilityInfo } from 'bundleManager.AbilityInfo';
@@ -380,6 +381,8 @@ namespace bundleManager {
   native function getAppCloneIdentityBySandboxDataDir(sandboxDataDir: string): AppCloneIdentity;
 
   native function getAbilityInfoNative(uri: string, abilityFlags: int): Array<AbilityInfo>;
+
+  native function getAlternateIconsNative(): Array<AlternateIconInfo>;
 
   function isApplicationEnabledSync(bundleName: string): boolean {
     return isApplicationEnabledNative(bundleName, 0, true);
@@ -1908,6 +1911,23 @@ namespace bundleManager {
 
   function getBundleInstallStatus(bundleName: string): BundleInstallStatus {
     return getBundleInstallStatusNative(bundleName);
+  }
+
+  function getAlternateIcons(): Promise<Array<AlternateIconInfo>> {
+    let p = new Promise<Array<AlternateIconInfo>>((resolve: (arrShortcutInfo: Array<AlternateIconInfo>)
+      => void, reject: (error: BusinessError) => void) => {
+      let cb = (): (Array<AlternateIconInfo>) => {
+        return getAlternateIconsNative();
+      };
+      let p1 = taskpool.execute(cb);
+      p1.then((e: Any) => {
+        let result: Array<AlternateIconInfo> = e as Array<AlternateIconInfo>;
+        resolve(result);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
   }
 }
 

@@ -1376,6 +1376,8 @@ public:
 
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos) override;
 
+    virtual ErrCode GetAlternateIcons(std::vector<AlternateIconInfo> &alternateIcons) override;
+
     virtual ErrCode AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId) override;
 
     virtual ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,

@@ -723,6 +723,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_SHORTCUT_INFO_FOR_SELF):
             errCode = HandleGetAllShortcutInfoForSelf(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALTERNATE_ICONS):
+            errCode = HandleGetAlternateIcons(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PLUGIN_INFO):
             errCode = HandleGetPluginInfo(data, reply);
             break;
@@ -5437,6 +5440,22 @@ ErrCode BundleMgrHost::HandleGetAllShortcutInfoForSelf(MessageParcel &data, Mess
     }
     if (ret == ERR_OK && !WriteVectorToParcelIntelligent(infos, reply)) {
         APP_LOGE("Write shortcut infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAlternateIcons(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::vector<AlternateIconInfo> infos;
+    auto ret = GetAlternateIcons(infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE_NOFUNC("HandleGetAlternateIcons Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteVectorToParcelIntelligent(infos, reply)) {
+        APP_LOGE_NOFUNC("Write alternate icon infos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

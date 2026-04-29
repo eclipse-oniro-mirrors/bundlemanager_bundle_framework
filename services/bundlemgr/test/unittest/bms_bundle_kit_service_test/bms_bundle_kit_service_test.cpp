@@ -9778,4 +9778,17 @@ HWTEST_F(BmsBundleKitServiceTest, GetApiTargetVersionByUid_0100, Function | Smal
     auto ret = bundleMgrProxy->GetApiTargetVersionByUid(uid, apiTargetVersion);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
+
+/**
+ * @tc.number: Mgr_Proxy_GetAlternateIcons_0100
+ * @tc.name: test BundleMgrProxy interface GetAlternateIcons
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetAlternateIcons_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<AlternateIconInfo> alternateIcons;
+    auto ret = bundleMgrProxy->GetAlternateIcons(alternateIcons);
+    EXPECT_NE(ret, ERR_OK);
+}
 }

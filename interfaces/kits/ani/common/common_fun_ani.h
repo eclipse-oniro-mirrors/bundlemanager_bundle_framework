@@ -203,6 +203,7 @@ public:
     static ani_object ConvertPackages(ani_env* env, const Packages& packages);
     static ani_object ConvertBundlePackInfo(ani_env* env, const BundlePackInfo& bundlePackInfo, const uint32_t flag);
     static ani_object ConvertDynamicIconInfo(ani_env* env, const DynamicIconInfo& dynamicIconInfo);
+    static ani_object ConvertAlternateIconInfo(ani_env* env, const AlternateIconInfo& alternateIconInfo);
     static ani_object CreateDispatchInfo(
         ani_env* env, const std::string& version, const std::string& dispatchAPIVersion);
 

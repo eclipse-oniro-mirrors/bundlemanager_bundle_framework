@@ -17,6 +17,7 @@
 #define BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H
 
 #include "ability_info.h"
+#include "alternate_icon_info.h"
 #include "app_install_extended_info.h"
 #include "app_provision_info.h"
 #include "base_cb_info.h"
@@ -203,6 +204,11 @@ struct DynamicIconInfoCallbackInfo : public BaseCallbackInfo {
 struct AlternateIconCallbackInfo : public BaseCallbackInfo {
     explicit AlternateIconCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
     std::string alternateIconName;
+};
+
+struct AlternateIconsCallbackInfo : public BaseCallbackInfo {
+    explicit AlternateIconsCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::vector<AlternateIconInfo> alternateIcons;
 };
 
 struct GetProfileCallbackInfo : public BaseCallbackInfo {
@@ -450,6 +456,7 @@ napi_value RecoverBackupBundleData(napi_env env, napi_callback_info info);
 napi_value RemoveBackupBundleData(napi_env env, napi_callback_info info);
 napi_value IsApplicationDisableForbidden(napi_env env, napi_callback_info info);
 napi_value SetAlternateIcon(napi_env env, napi_callback_info info);
+napi_value GetAlternateIcons(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);

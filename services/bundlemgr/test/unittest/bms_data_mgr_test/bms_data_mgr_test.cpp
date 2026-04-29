@@ -9671,4 +9671,59 @@ HWTEST_F(BmsDataMgrTest, IsDynamicIconModuleExist_0200, Function | SmallTest | L
     ErrCode ret = dataMgr->IsDynamicIconModuleExist(BUNDLE_NAME);
     EXPECT_TRUE(ret);
 }
+
+/**
+ * @tc.number: GetAlternateIcons_0010
+ * @tc.name: test GetAlternateIcons
+ * @tc.desc: 1.test GetAlternateIcons get bundleName and appIndex failed
+ */
+HWTEST_F(BmsDataMgrTest, GetAlternateIcons_0010, Function | MediumTest | Level1)
+{
+    std::vector<AlternateIconInfo> alternateIcons;
+    BundleDataMgr bundleDataMgr;
+    auto ret = bundleDataMgr.GetAlternateIcons(alternateIcons);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_GET_ALTERNATE_ICONS_FAILED);
+}
+
+/**
+ * @tc.number: GetAlternateIcons_0020
+ * @tc.name: test GetAlternateIcons
+ * @tc.desc: 1.test GetAlternateIcons get bundleInfo failed
+ */
+HWTEST_F(BmsDataMgrTest, GetAlternateIcons_0020, Function | MediumTest | Level1)
+{
+    std::vector<AlternateIconInfo> alternateIcons;
+    std::string bundleName = "com.ohos.test";
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    auto ret = bundleDataMgr.GetAlternateIcons(alternateIcons);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_GET_ALTERNATE_ICONS_FAILED);
+}
+
+/**
+ * @tc.number: GetAlternateIcons_0030
+ * @tc.name: test GetAlternateIcons
+ * @tc.desc: 1.test GetAlternateIcons success
+ */
+HWTEST_F(BmsDataMgrTest, GetAlternateIcons_0030, Function | MediumTest | Level1)
+{
+    std::vector<AlternateIconInfo> alternateIcons;
+    std::string bundleName = "com.ohos.test";
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo appInfo;
+    AlternateIcon icon;
+    icon.name = "test_icon";
+    icon.icon = "$media:icon_test";
+    icon.iconId = 100;
+    appInfo.alternateIcons.push_back(icon);
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    auto ret = bundleDataMgr.GetAlternateIcons(alternateIcons);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(alternateIcons.size(), static_cast<size_t>(1));
+    EXPECT_EQ(alternateIcons[0].alternateIconName, "test_icon");
+    EXPECT_EQ(alternateIcons[0].iconId, static_cast<uint32_t>(100));
+}
 } // OHOS

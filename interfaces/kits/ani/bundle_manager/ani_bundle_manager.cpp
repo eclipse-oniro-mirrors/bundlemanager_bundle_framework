@@ -2461,6 +2461,25 @@ static ani_enum_item GetBundleInstallStatusNative(ani_env* env, ani_string aniBu
     return EnumUtils::EnumNativeToETS_BundleManager_BundleInstallStatus(env, static_cast<int32_t>(status));
 }
 
+static ani_object GetAlternateIconsNative(ani_env* env)
+{
+    APP_LOGD("ani GetAlternateIcons called");
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    std::vector<AlternateIconInfo> alternateIcons;
+    ErrCode ret = iBundleMgr->GetAlternateIcons(alternateIcons);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("GetAlternateIcons failed ret:%{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), GET_ALTERNATE_ICONS, "");
+        return nullptr;
+    }
+    return CommonFunAni::ConvertAniArray(env, alternateIcons, CommonFunAni::ConvertAlternateIconInfo);
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -2580,6 +2599,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(IsApplicationDisableForbidden) },
         ani_native_function { "getBundleInstallStatusNative", nullptr,
             reinterpret_cast<void*>(GetBundleInstallStatusNative) },
+        ani_native_function { "getAlternateIconsNative", nullptr,
+            reinterpret_cast<void*>(GetAlternateIconsNative) },
     };
 
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

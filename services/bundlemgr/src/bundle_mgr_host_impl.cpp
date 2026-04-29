@@ -6928,6 +6928,17 @@ ErrCode BundleMgrHostImpl::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &
     return dataMgr->GetAllShortcutInfoForSelf(shortcutInfos);
 }
 
+ErrCode BundleMgrHostImpl::GetAlternateIcons(std::vector<AlternateIconInfo> &alternateIcons)
+{
+    // The application itself is the caller, so there is no need for permission control.
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("impl GetAlternateIcons DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetAlternateIcons(alternateIcons);
+}
+
 ErrCode BundleMgrHostImpl::AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {
