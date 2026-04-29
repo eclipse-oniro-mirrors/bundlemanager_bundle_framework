@@ -1831,6 +1831,9 @@ ErrCode BundleMgrHostImpl::GetLaunchWantForBundle(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
+    if (isSync) {
+        return dataMgr->GetLaunchWantForBundleSync(bundleName, want, userId);
+    }
     return dataMgr->GetLaunchWantForBundle(bundleName, want, userId);
 }
 
