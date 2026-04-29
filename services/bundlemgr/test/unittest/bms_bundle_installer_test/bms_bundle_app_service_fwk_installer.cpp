@@ -836,8 +836,8 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MkdirIfNotExist_0010, Function | S
     installParam.additionalInfo = BUNDLE_NAME;
     appServiceFwkInstaller.AddAppProvisionInfo(BUNDLE_NAME, provisionInfo, installParam);
 
-    auto res = appServiceFwkInstaller.MkdirIfNotExist(VERSION_ONE_LIBRARY_ONE_PATH);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    auto res = appServiceFwkInstaller.MkdirIfNotExist(BundleDirScene::BUNDLE_CODE_DIR, VERSION_ONE_LIBRARY_ONE_PATH);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -858,7 +858,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, InnerProcessInstall_0010, Function
     infos.emplace(TEST_CREATE_FILE_PATH, innerBundleInfo);
 
     auto res = appServiceFwkInstaller.InnerProcessInstall(infos, installParam);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -955,7 +955,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveSoToRealPath_0010, Function | 
     InitAppServiceFwkInstaller(appServiceFwkInstaller);
 
     auto res = appServiceFwkInstaller.MoveSoToRealPath(MODULE_NAME_LIBRARY_ONE, "data/test", MODULE_NAME_LIBRARY_ONE);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     InstallParam installParam;
     std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -976,7 +976,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveSoToRealPath_0020, Function | 
     AppServiceFwkInstaller appServiceFwkInstaller;
     InitAppServiceFwkInstaller(appServiceFwkInstaller);
     auto res = appServiceFwkInstaller.MoveSoToRealPath(MODULE_NAME_LIBRARY_ONE, "data/test", MODULE_NAME_LIBRARY_ONE);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     InstallParam installParam;
     std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -1100,7 +1100,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ExtractModule_0100, Function | Sma
     InnerBundleInfo newInfo;
     std::string bundlePath;
     auto ret = installer.ExtractModule(oldInfo, newInfo, bundlePath);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -1116,7 +1116,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ExtractModule_0200, Function | Sma
     InnerBundleInfo newInfo;
     std::string bundlePath;
     auto ret = installer.ExtractModule(oldInfo, newInfo, bundlePath);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -1131,7 +1131,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveSoToRealPath_0100, Function | 
     EXPECT_EQ(ret1, ERR_OK);
 
     auto ret2 = installer.MoveSoToRealPath(STRING, STRING, "");
-    EXPECT_EQ(ret2, ERR_OK);
+    EXPECT_EQ(ret2, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**

@@ -52,7 +52,8 @@ void SetVectorEmptyForTest(bool value)
     g_vectorEmpty = value;
 }
 
-ErrCode InstalldClient::CreateBundleDir(const std::string &bundleDir)
+ErrCode InstalldClient::CreateBundleDir(
+    const std::string &bundleName, BundleDirScene scene, const std::string &bundleDir)
 {
     return 0;
 }
@@ -104,7 +105,8 @@ ErrCode InstalldClient::DeleteUninstallTmpDirs(const std::vector<std::string> &d
     return ERR_OK;
 }
 
-ErrCode InstalldClient::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldClient::RenameModuleDir(
+    const std::string &oldPath, const std::string &newPath, const std::string &bundleName, BundleDirScene scene)
 {
     return 0;
 }
@@ -253,7 +255,8 @@ ErrCode InstalldClient::ScanDir(
     return 0;
 }
 
-ErrCode InstalldClient::MoveFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldClient::MoveFile(
+    const std::string &oldPath, const std::string &newPath, BundleDirScene scene, const std::string &bundleName)
 {
     return 0;
 }
@@ -269,7 +272,8 @@ ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &
     return 0;
 }
 
-ErrCode InstalldClient::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
+ErrCode InstalldClient::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
+    const CreateDirParam &createDirParam)
 {
     if (retIndex >= 0 && retIndex < static_cast<int32_t>(retList.size())) {
         return retList[retIndex++];

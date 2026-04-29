@@ -26,6 +26,7 @@
 #include "inner_bundle_info.h"
 #include "install_param.h"
 #include "install_plugin_param.h"
+#include "installd/installd_constants.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -84,7 +85,8 @@ private:
     ErrCode CheckPluginId(const std::string &hostBundleName);
     ErrCode ProcessPluginInstall(const InnerBundleInfo &hostBundleInfo);
     ErrCode CreatePluginDir(const std::string &hostBundleName, std::string &pluginDir);
-    ErrCode ExtractPluginBundles(const std::string &bundlePath, InnerBundleInfo &newInfo, const std::string &pluginDir);
+    ErrCode ExtractPluginBundles(const std::string &bundlePath, InnerBundleInfo &newInfo, const std::string &pluginDir,
+        const std::string &hostBundleName);
     ErrCode CheckPluginAppLabelInfo();
     void MergePluginBundleInfo(InnerBundleInfo &pluginBundleInfo);
     ErrCode SavePluginInfoToStorage(const InnerBundleInfo &pluginInfo, const InnerBundleInfo &hostBundleInfo);
@@ -99,7 +101,7 @@ private:
     bool CheckVersionCodeForUpdate() const;
     ErrCode ProcessPluginUninstall(const InnerBundleInfo &hostBundleInfo);
 
-    ErrCode MkdirIfNotExist(const std::string &dir);
+    ErrCode MkdirIfNotExist(const std::string &bundleName, BundleDirScene scene, const std::string &dir);
     ErrCode CopyHspToSecurityDir(std::vector<std::string> &bundlePaths, const InstallPluginParam &installPluginParam);
     ErrCode ObtainHspFileAndSignatureFilePath(const std::vector<std::string> &inBundlePaths,
         std::vector<std::string> &bundlePaths, std::string &signatureFilePath);

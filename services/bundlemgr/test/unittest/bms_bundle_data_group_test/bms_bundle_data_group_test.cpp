@@ -43,7 +43,7 @@ const std::string DATA_GROUP_ID_TEST_TWO = "data-group-id-2";
 const std::string DATA_GROUP_ID_TEST_THREE = "data-group-id-3";
 const std::string DATA_GROUP_UUID_ONE = "2105e98a-12ae-4a4f-8ed1-fc32e5f45416";
 const std::string DATA_GROUP_UUID_TWO = "4f4b48a2-7c27-466b-8601-8e5e9965036d";
-const std::string DATA_GROUP_DIR_TEST = "data/app/el2/100/group/2105e98a-12ae-4a4f-8ed1-fc32e5f45416";
+const std::string DATA_GROUP_DIR_TEST = "data/app/el5/100/group/2105e98a-12ae-4a4f-8ed1-fc32e5f45416";
 const std::string TEST_HAP_PATH = "/data/test/test.hap";
 const std::string TEST_USER_KEY = "com.example.demo.testDataGroup_100";
 constexpr int32_t BMS_UID = 1000;
@@ -185,8 +185,11 @@ HWTEST_F(BmsBundleDataGroupTest, RemoveDataGroupDirs_0040, Function | SmallTest 
     }
     setuid(Constants::FOUNDATION_UID);
     ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
-    auto createDirRes = InstalldClient::GetInstance()->Mkdir(DATA_GROUP_DIR_TEST, S_IRWXU, BMS_UID, BMS_UID);
-    EXPECT_EQ(createDirRes, ERR_OK);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::SCREEN_LOCK_FILE_DATA_GROUP_DIR;
+    auto createDirRes = InstalldClient::GetInstance()->Mkdir(
+        DATA_GROUP_DIR_TEST, S_IRWXU, BMS_UID, BMS_UID, createDirParam);
+    EXPECT_EQ(createDirRes, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     ErrCode ret = installer.RemoveDataGroupDirs(BUNDLE_NAME, USERID);
     EXPECT_EQ(ret, ERR_OK);

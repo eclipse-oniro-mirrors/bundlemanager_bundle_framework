@@ -881,9 +881,9 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0004, Function | Sm
 HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0005, Function | SmallTest | Level0)
 {
     InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
-    ErrCode res = installer.MkdirIfNotExist("test/test");
+    ErrCode res = installer.MkdirIfNotExist(BundleDirScene::BUNDLE_CODE_DIR, "test/test");
     installer.RollBack();
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_NE(res, ERR_OK);
 }
 
 /**
@@ -1152,7 +1152,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1200, Fun
     InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
     std::string versionDir = "data/test";
     auto ret = installer.MoveSoToRealPath(TEST_MODULE_NAME, versionDir);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -1166,7 +1166,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1300, Fun
     installer.nativeLibraryPath_ = "path/testModuleName";
     std::string versionDir = "data/test_not_exist";
     auto ret = installer.MoveSoToRealPath(TEST_MODULE_NAME, versionDir);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -1184,7 +1184,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1301, Fun
     auto ans = OHOS::ForceCreateDirectory(createPath);
     EXPECT_TRUE(ans);
     auto ret = installer.MoveSoToRealPath(TEST_MODULE_NAME, versionDir);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     OHOS::ForceRemoveDirectory(createPath);
 }
 

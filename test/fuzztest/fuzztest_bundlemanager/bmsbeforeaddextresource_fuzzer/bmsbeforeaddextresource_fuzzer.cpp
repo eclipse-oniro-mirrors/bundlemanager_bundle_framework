@@ -44,7 +44,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     auto ret = impl.BeforeAddExtResource(BUNDLE_NAME, filePaths);
     std::string dir = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     std::string filePath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    impl.MkdirIfNotExist(dir);
+    auto scene = static_cast<BundleDirScene>(fdp.ConsumeIntegral<int32_t>());
+    impl.MkdirIfNotExist(bundleName, scene, dir);
     impl.CheckFileParam(INVALID_PATH);
     impl.CheckFileParam(INVALID_SUFFIX);
     impl.CheckFileParam(INVALID_PREFIX);

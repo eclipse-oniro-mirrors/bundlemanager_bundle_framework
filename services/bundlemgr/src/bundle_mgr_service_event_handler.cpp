@@ -186,7 +186,8 @@ void MoveTempPath(const std::vector<std::string> &fromPaths,
         auto toPath = tempDir + ServiceConstants::PATH_SEPARATOR + MODULE_PREFIX
             + std::to_string(hapIndex) + ServiceConstants::INSTALL_FILE_SUFFIX;
         hapIndex++;
-        if (InstalldClient::GetInstance()->MoveFile(path, toPath) != ERR_OK) {
+        if (InstalldClient::GetInstance()->MoveFile(path, toPath, BundleDirScene::MOVE_HAP_TO_TEMP_DIR, bundleName) !=
+            ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "move from %{public}s to %{public}s failed", path.c_str(), toPath.c_str());
             continue;
         }
@@ -1662,7 +1663,11 @@ void BMSEventHandler::InnerProcessCheckShaderCacheDir()
         }
         std::string shaderCachePath;
         shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleInfo.name);
-        ErrCode res = InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, bundleInfo.uid, bundleInfo.gid);
+        CreateDirParam createDirParam;
+        createDirParam.bundleName = bundleInfo.name;
+        createDirParam.bundleDirScene = BundleDirScene::SHADER_CACHE_DIR;
+        ErrCode res = InstalldClient::GetInstance()->Mkdir(
+            shaderCachePath, S_IRWXU, bundleInfo.uid, bundleInfo.gid, createDirParam);
         if (res != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "create shader cache failed: %{public}s ", shaderCachePath.c_str());
         }
@@ -1690,9 +1695,12 @@ void BMSEventHandler::CheckBundleCloneEl1ShaderCacheLocal(const std::string &bun
     if (result == ERR_OK && isExist) {
         return;
     }
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = bundleName;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_SHADER_CACHE_DIR;
     result = InstalldClient::GetInstance()->Mkdir(el1ShaderCachePath,
-        ServiceConstants::NEW_SHADRE_CACHE_MODE,
-        uid, ServiceConstants::NEW_SHADRE_CACHE_GID);
+        ServiceConstants::NEW_SHADER_CACHE_MODE,
+        uid, ServiceConstants::NEW_SHADER_CACHE_GID, createDirParam);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "create new shadercache failed: %{public}s ", el1ShaderCachePath.c_str());
     }
@@ -1866,7 +1874,10 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
     }
     if (!cloudExist) {
         constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
-        result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_PATH, mode, info.uid, info.gid);
+        CreateDirParam createDirParam;
+        createDirParam.bundleDirScene = BundleDirScene::CLOUD_SHADER_DIR;
+        result = InstalldClient::GetInstance()->Mkdir(
+            ServiceConstants::CLOUD_SHADER_PATH, mode, info.uid, info.gid, createDirParam);
         if (result != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "Mkdir CLOUD_SHADER_PATH failed, error is %{public}d", result);
             return;
@@ -1881,8 +1892,10 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
 void BMSEventHandler::InnerProcessCheckCloudShaderCommonDir(const int32_t uid, const int32_t gid)
 {
     constexpr int32_t commonMode = (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::CLOUD_SHADER_COMMON_DIR;
     ErrCode result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_COMMON_PATH,
-        commonMode, uid, gid);
+        commonMode, uid, gid, createDirParam);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "Mkdir CLOUD_SHADER_COMMON_PATH failed, error is %{public}d", result);
         return;
@@ -5966,9 +5979,12 @@ ErrCode BMSEventHandler::CheckSystemOptimizeBundleShaderCache(const std::string 
         1, std::to_string(userId));
     systemOptimizeShaderCache = systemOptimizeShaderCache +
         cloneBundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = bundleName;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_SYSTEM_OPTIMIZE_SHADER_CACHE_DIR;
     ErrCode ret = InstalldClient::GetInstance()->Mkdir(systemOptimizeShaderCache,
-        ServiceConstants::NEW_SHADRE_CACHE_MODE,
-        uid, ServiceConstants::NEW_SHADRE_CACHE_GID);
+        ServiceConstants::NEW_SHADER_CACHE_MODE,
+        uid, ServiceConstants::NEW_SHADER_CACHE_GID, createDirParam);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "Mkdir %{public}s failed, error is %{public}d",
             systemOptimizeShaderCache.c_str(), errno);
@@ -6079,7 +6095,10 @@ bool BMSEventHandler::ProcessCheckSystemOptimizeDir()
         el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
             std::to_string(userId));
         LOG_I(BMS_TAG_DEFAULT, "create system optimize dir for -u: %{public}d", userId);
-        InstalldClient::GetInstance()->Mkdir(el1ArkStartupCachePath, ServiceConstants::SYSTEM_OPTIMIZE_MODE, 0, 0);
+        CreateDirParam createDirParam;
+        createDirParam.bundleDirScene = BundleDirScene::EL1_SYSTEM_OPTIMIZE_DIR;
+        InstalldClient::GetInstance()->Mkdir(
+            el1ArkStartupCachePath, ServiceConstants::SYSTEM_OPTIMIZE_MODE, 0, 0, createDirParam);
     }
     return true;
 }

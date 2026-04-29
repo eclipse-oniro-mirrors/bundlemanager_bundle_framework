@@ -32,6 +32,9 @@ constexpr int32_t MAX_PARCEL_CAPACITY = 101 * 1024 * 1024;
 constexpr int64_t LAST_MODIFY_TIME = 8707247;
 constexpr bool IS_DIR = false;
 std::string TEST_STRING = "test.string";
+const std::string TEST_BUNDLE_NAME = "com.example.test";
+const std::string TEST_BUNDLE_DIR = "/data/app/el1/bundle/public/com.example.test";
+const std::string TEST_SYSTEM_OPTIMIZE_DIR = "/data/app/el1/100/system_optimize/";
 }; // namespace
 class BmsInstallDaemonIpcTest : public testing::Test {
 public:
@@ -170,7 +173,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_0100, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->CreateBundleDir(TEST_STRING);
+    auto ret = proxy->CreateBundleDir(TEST_BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, TEST_BUNDLE_DIR);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -200,7 +203,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_0300, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->RenameModuleDir(TEST_STRING, TEST_STRING);
+    auto ret = proxy->RenameModuleDir(TEST_STRING, TEST_STRING, TEST_STRING, BundleDirScene::BUNDLE_CODE_DIR);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -362,7 +365,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1300, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->MoveFile(TEST_STRING, TEST_STRING);
+    auto ret = proxy->MoveFile(TEST_STRING, TEST_STRING, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, TEST_BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -407,7 +410,9 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1500, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->Mkdir(TEST_STRING, 0, 0, 0);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_SYSTEM_OPTIMIZE_DIR;
+    auto ret = proxy->Mkdir(TEST_SYSTEM_OPTIMIZE_DIR, 0, 0, 0, createDirParam);
     EXPECT_EQ(ret, ERR_OK);
 }
 

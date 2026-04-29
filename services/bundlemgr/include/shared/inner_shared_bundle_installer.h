@@ -25,6 +25,7 @@
 #include "event_report.h"
 #include "inner_bundle_info.h"
 #include "install_param.h"
+#include "installd/installd_constants.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -102,7 +103,7 @@ private:
     ErrCode CheckAppLabelInfo();
     ErrCode CheckBundleTypeWithInstalledVersion();
     ErrCode ExtractSharedBundles(const std::string &bundlePath, InnerBundleInfo &newInfo);
-    ErrCode MkdirIfNotExist(const std::string &dir);
+    ErrCode MkdirIfNotExist(BundleDirScene scene, const std::string &dir);
     void MergeBundleInfos();
     ErrCode SavePreInstallInfo(const InstallParam &installParam);
     ErrCode SaveBundleInfoToStorage();

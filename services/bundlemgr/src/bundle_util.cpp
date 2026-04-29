@@ -920,8 +920,10 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         subStr = ServiceConstants::STREAM_INSTALL_PATH;
         destination.append(ServiceConstants::SECURITY_STREAM_INSTALL_PATH);
         mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+        CreateDirParam createDirParam;
+        createDirParam.bundleDirScene = BundleDirScene::SERVICE_BMS_SECURITY_STREAM_INSTALL_DIR;
         if (InstalldClient::GetInstance()->Mkdir(
-            destination, mode, Constants::FOUNDATION_UID, ServiceConstants::BMS_GID) != ERR_OK) {
+            destination, mode, Constants::FOUNDATION_UID, ServiceConstants::BMS_GID, createDirParam) != ERR_OK) {
             APP_LOGW("installd mkdir %{private}s failed", destination.c_str());
         }
     }

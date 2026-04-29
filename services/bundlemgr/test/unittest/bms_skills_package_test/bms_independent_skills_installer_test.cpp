@@ -54,6 +54,7 @@ const std::string TEST_HSP_PATH2 = "/data/test/resource/bms/skills/test2.hsp";
 const std::string INVALID_HSP_PATH = "/invalid/path/test.hsp";
 const std::string TEST_APP_IDENTIFIER = "test.app.identifier";
 const std::string TEST_APP_ID = "test.app.id";
+const std::string BASE_SKILL_DIR = "/data/app/el1/skills/public";
 const int32_t USER_ID = 100;
 const int32_t INVALID_USER_ID = -1;
 const int32_t DEFAULT_USER_ID = 0;
@@ -764,9 +765,8 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_MkdirIfNo
 {
     auto installer_ = std::make_shared<IndependentSkillsInstaller>();
     installer_->dataMgr_ = dataMgr_;
-
-    std::string testDir = "/data/test/bms_skills_test_dir";
-
+    installer_->bundleName_ = BUNDLE_NAME;
+    std::string testDir = std::string(BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + BUNDLE_NAME;
     ErrCode ret = installer_->MkdirIfNotExist(testDir);
     EXPECT_EQ(ret, ERR_OK);
 

@@ -42,13 +42,6 @@ namespace AppExecFwk {
 using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::string, std::string> &,
     const CodeCryptoHapInfo &, bool &);
 
-enum class BundleDirScene {
-    SET_DIR_APL = 0,
-    EXTRACT_HNP_FILES = 1,
-    SET_FILE_CON_FORCE = 2,
-    EXTRACT_DRIVER_SO_FILES = 3,
-};
-
 class InstalldOperator {
 public:
     /**
@@ -451,6 +444,17 @@ public:
      */
     static std::string AnonymizePath(const std::string &path);
 
+    static bool IsValidPathByCreateBundleDirScene(
+        const BundleDirScene &scene, const std::string &bundleName, const std::string &path);
+
+    static bool IsValidPathByMkDirScene(
+        const BundleDirScene &scene, const std::string& bundleName, const std::string &path);
+
+    static bool IsValidPathByRenameModuleDir(
+        const std::string &oldPath, const std::string &newPath, const std::string &bundleName, BundleDirScene scene);
+
+    static bool IsValidPathByMoveFileScene(const std::string &oldPath, const std::string &newPath,
+        const BundleDirScene &scene, const std::string &bundleName);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
@@ -516,6 +520,15 @@ private:
      */
     static bool GetLargestDirs(const std::vector<std::string> &dirPaths,
         std::vector<std::pair<std::string, uint64_t>> &largestDirsWithSize);
+    static bool IsContainsPathPart(const std::string &path, const std::string &pathPart);
+    static bool IsContainsBundleName(const std::string &path, const std::string &bundleName);
+    static bool IsValidPathByMkDirSceneNeedBundleName(
+        const BundleDirScene &scene, const std::string &bundleName, const std::string &path);
+    static bool IsValidPathByMkDirSceneNoBundleName(const BundleDirScene &scene, const std::string &path);
+    static bool IsValidSourcePathByMoveFileScene(
+        const std::string &sourcePath, const BundleDirScene &scene, const std::string &bundleName);
+    static bool IsValidTargetPathByMoveFileScene(
+        const std::string &targetPath, const BundleDirScene &scene, const std::string &bundleName);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

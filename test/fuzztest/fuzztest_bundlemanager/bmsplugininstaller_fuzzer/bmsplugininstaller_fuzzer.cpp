@@ -48,11 +48,12 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     installer.ParseFiles(pluginFilePaths2, installPluginParam);
 
     std::string dir = "data/test";
-    installer.MkdirIfNotExist(dir);
+    auto scene = static_cast<BundleDirScene>(fdp.ConsumeIntegral<int32_t>());
+    installer.MkdirIfNotExist(hostBundleName, scene, dir);
 
     dir = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    installer.MkdirIfNotExist(dir);
-
+    scene = static_cast<BundleDirScene>(fdp.ConsumeIntegral<int32_t>());
+    installer.MkdirIfNotExist(hostBundleName, scene, dir);
     std::vector<std::string> inBundlePaths;
     std::vector<std::string> parsedPaths;
     installer.ParseHapPaths(installPluginParam, inBundlePaths, parsedPaths);
@@ -108,7 +109,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     installer.CreatePluginDir(hostBundleName, moduleDir);
     installer.CheckAppIdentifier();
     installer.CheckVersionCodeForUpdate();
-    installer.ExtractPluginBundles(bundlePath, newInfo, moduleDir);
+    installer.ExtractPluginBundles(bundlePath, newInfo, moduleDir, hostBundleName);
     installer.MergePluginBundleInfo(newInfo);
     InnerBundleInfo hostBundleInfo;
     installer.SavePluginInfoToStorage(newInfo, hostBundleInfo);

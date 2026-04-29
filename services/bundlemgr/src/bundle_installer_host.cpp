@@ -1326,8 +1326,10 @@ ErrCode BundleInstallerHost::InnerAddEnterpriseResignCert(
         std::to_string(userId);
     std::vector<std::string> existingCerts;
     if (!BundleUtil::IsExistDir(certPath)) {
+        CreateDirParam createDirParam;
+        createDirParam.bundleDirScene = BundleDirScene::SERVICE_BMS_ENTERPRISE_CERT_DIR;
         auto ret = InstalldClient::GetInstance()->Mkdir(certPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH,
-            Constants::FOUNDATION_UID, Constants::FOUNDATION_UID);
+            Constants::FOUNDATION_UID, Constants::FOUNDATION_UID, createDirParam);
         if (ret != ERR_OK) {
             APP_LOGE("mkdir failed %{public}d %{public}d", ret, errno);
             return ret;

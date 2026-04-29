@@ -757,7 +757,10 @@ ErrCode BundleUserMgrHostImpl::CreateArkStartupCacheDir(int32_t userId)
         std::to_string(userId));
     APP_LOGI("create system optimize directory %{public}s when create user: %{public}d",
         el1ArkStartupCachePath.c_str(), userId);
-    return InstalldClient::GetInstance()->Mkdir(el1ArkStartupCachePath, ServiceConstants::SYSTEM_OPTIMIZE_MODE, 0, 0);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_SYSTEM_OPTIMIZE_DIR;
+    return InstalldClient::GetInstance()->Mkdir(
+        el1ArkStartupCachePath, ServiceConstants::SYSTEM_OPTIMIZE_MODE, 0, 0, createDirParam);
 }
  
 ErrCode BundleUserMgrHostImpl::RemoveSystemOptimizeDir(int32_t userId)

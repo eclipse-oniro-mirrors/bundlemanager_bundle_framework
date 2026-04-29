@@ -30,7 +30,7 @@ namespace OHOS {
 namespace {
 constexpr int32_t USERID = 100;
 constexpr int32_t WAIT_TIME = 5; // init mocked bms
-
+const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 }; // namespace
 class BmsBundleMultiuserInstallPermissionTest : public testing::Test {
 public:
@@ -208,7 +208,7 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0005, Function
     std::string bundlePath;
     InnerBundleInfo newInfo;
     std::string pluginDir;
-    auto ret = installer.ExtractPluginBundles(bundlePath, newInfo, pluginDir);
+    auto ret = installer.ExtractPluginBundles(bundlePath, newInfo, pluginDir, BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK);
 }
 

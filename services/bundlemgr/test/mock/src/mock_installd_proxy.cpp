@@ -59,8 +59,8 @@ ErrCode MockInstalldProxy::IsExistDir(const std::string &dir, bool &isExist)
     return isExistDirCode_;
 }
 
-ErrCode MockInstalldProxy::Mkdir(
-    const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
+ErrCode MockInstalldProxy::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
+    const CreateDirParam &createDirParam)
 {
     return mkdirCode_;
 }

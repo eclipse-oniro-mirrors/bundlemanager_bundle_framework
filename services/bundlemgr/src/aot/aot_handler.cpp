@@ -496,8 +496,10 @@ ErrCode AOTHandler::MkApDestDirIfNotExist() const
         return ERR_OK;
     }
     mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP;
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::PGO_DIR;
     errCode = InstalldClient::GetInstance()->Mkdir(
-        COPY_AP_DEST_PATH, mode, Constants::FOUNDATION_UID, ServiceConstants::SHELL_UID);
+        COPY_AP_DEST_PATH, mode, Constants::FOUNDATION_UID, ServiceConstants::SHELL_UID, createDirParam);
     if (errCode != ERR_OK) {
         APP_LOGE("fail create dir err %{public}d", errCode);
         return errCode;
@@ -1070,7 +1072,10 @@ void AOTHandler::CreateArkProfilePaths() const
         auto bundles = dataMgr->GetAllLiteBundleInfo(userId);
         for (const auto &[bundleName, uid, gid] : bundles) {
             std::string arkProfilePath = BuildArkProfilePath(userId, bundleName);
-            (void)InstalldClient::GetInstance()->Mkdir(arkProfilePath, S_IRWXU, uid, gid);
+            CreateDirParam createDirParam;
+            createDirParam.bundleName = bundleName;
+            createDirParam.bundleDirScene = BundleDirScene::EL1_ARK_PROFILE_DIR;
+            (void)InstalldClient::GetInstance()->Mkdir(arkProfilePath, S_IRWXU, uid, gid, createDirParam);
         }
     }
 }
