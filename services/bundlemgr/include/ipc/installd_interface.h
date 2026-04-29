@@ -34,8 +34,10 @@
 #include "ipc/extract_param.h"
 #include "ipc/file_stat.h"
 #include "ipc/install_hnp_param.h"
+#include "ipc/skills_package_param.h"
 #include "ipc/verify_bin_param.h"
 #include "installd/installd_constants.h"
+#include "skills_installer/skills_package_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -247,8 +249,7 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode GetAllBundleStats(const int32_t userId,
-        std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+    virtual ErrCode GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
     {
         return ERR_OK;
     }
@@ -572,6 +573,33 @@ public:
     }
 
     virtual ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)
+    {
+        return ERR_OK;
+    }
+
+    /**
+     * @brief Get top N largest items in application data directory.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param timeout Indicates the maximum scan time in seconds.
+     * @param largestItems Output parameter containing JSON string of largest items with path and size.
+     * @return Returns ERR_OK if get successfully; returns error code otherwise.
+     */
+    virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const int32_t timeout, std::string &largestItems)
+    {
+        return ERR_OK;
+    }
+
+    /**
+     * @brief Extract skills package with validation.
+     * @param param Contains bundleName, moduleName, hspPath and skillNameList.
+     * @param skillInfoList Output parameter containing skill extraction results with description.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractSkillsPackage(const SkillsPackageParam &param,
+        std::vector<SkillsPackageInfo> &skillInfoList)
     {
         return ERR_OK;
     }

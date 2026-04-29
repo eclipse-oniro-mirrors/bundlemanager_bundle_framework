@@ -89,6 +89,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     int32_t fd = 0;
     std::string filePath = "data/test";
     impl.CreateFd(fileName, fd, filePath);
+    impl.UpdateExtResourcesDb(BUNDLE_NAME, extendResourceInfos);
     return true;
 }
 }

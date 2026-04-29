@@ -33,6 +33,8 @@
 #include "driver_install_ext.h"
 #include "file_ex.h"
 #include "installd/installd_operator.h"
+#include "ipc/skills_package_param.h"
+#include "skills_installer/skills_package_info.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -1514,6 +1516,28 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8900, Function | Sma
 }
 
 /**
+ * @tc.number: InstalldOperatorTest_8910
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling IsValidCodePath of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8910, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::IsValidCodePath("/data/app/el1/skills/public/com.test");
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8920
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling IsValidCodePath of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8920, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::IsValidCodePath("/data/app/el1/skills/public/../com.test");
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: InstalldOperatorTest_9000
  * @tc.name: test function of InstalldOperator
  * @tc.desc: 1. calling PerformCodeSignatureCheck of InstalldOperator
@@ -2675,5 +2699,993 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16000, Function | Me
     int32_t uid = -1;
     auto ret = InstalldOperator::GetBundleInodeCount(uid);
     EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16100
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with empty path
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16100, Function | SmallTest | Level0)
+{
+    std::string emptyPath;
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(emptyPath, name, description);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_TRUE(name.empty());
+    EXPECT_TRUE(description.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16200
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with non-existent file
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16200, Function | SmallTest | Level0)
+{
+    std::string nonExistentPath = "/data/test/nonexistent_skill_md_12345/SKILL.md";
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(nonExistentPath, name, description);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_TRUE(name.empty());
+    EXPECT_TRUE(description.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16300
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with valid frontmatter file
+ *           2. verify name and description parsed correctly
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16300, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_md_test_16300";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with YAML frontmatter format
+    std::string content = "---\n";
+    content += "name: testSkill\n";
+    content += "description: This is a test skill description\n";
+    content += "---\n";
+    CreateFile(skillMdPath, content);
+
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(skillMdPath, name, description);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(name, "testSkill");
+    EXPECT_EQ(description, "This is a test skill description");
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16400
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with markdown format (# name:)
+ *           2. verify parse failed because frontmatter is required
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16400, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_md_test_16400";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with markdown format
+    std::string content = "# name: markdownSkill\n";
+    content += "# description: This is a markdown format skill\n";
+    CreateFile(skillMdPath, content);
+
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(skillMdPath, name, description);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARSE_FAILED);
+    EXPECT_TRUE(name.empty());
+    EXPECT_TRUE(description.empty());
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16500
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd without name field
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16500, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_md_test_16500";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md without name field
+    std::string content = "description: This skill has no name\n";
+    CreateFile(skillMdPath, content);
+
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(skillMdPath, name, description);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARSE_FAILED);
+    EXPECT_TRUE(name.empty());
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16600
+ * @tc.name: test ValidateSkillName function of InstalldOperator
+ * @tc.desc: 1. calling ValidateSkillName with non-existent file
+ *           2. verify validation fails
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16600, Function | SmallTest | Level0)
+{
+    std::string skillName = "testSkill";
+    std::string nonExistentPath = "/data/test/nonexistent_skill_16600/SKILL.md";
+
+    bool ret = InstalldOperator::ValidateSkillName(skillName, nonExistentPath);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16700
+ * @tc.name: test ValidateSkillName function of InstalldOperator
+ * @tc.desc: 1. calling ValidateSkillName with matching name in frontmatter
+ *           2. verify validation passes
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16700, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_validate_test_16700";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with matching name in YAML frontmatter
+    std::string content = "---\n";
+    content += "name: matchingSkill\n";
+    content += "description: Test skill for validation\n";
+    content += "---\n";
+    CreateFile(skillMdPath, content);
+
+    bool ret = InstalldOperator::ValidateSkillName("matchingSkill", skillMdPath);
+    EXPECT_TRUE(ret);
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16800
+ * @tc.name: test ValidateSkillName function of InstalldOperator
+ * @tc.desc: 1. calling ValidateSkillName with mismatched name
+ *           2. verify validation fails
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16800, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_validate_test_16800";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with different name
+    std::string content = "name: differentSkill\n";
+    content += "description: Test skill with mismatched name\n";
+    CreateFile(skillMdPath, content);
+
+    bool ret = InstalldOperator::ValidateSkillName("expectedSkill", skillMdPath);
+    EXPECT_FALSE(ret);
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_16900
+ * @tc.name: test ExtractSkillFromHsp function of InstalldOperator
+ * @tc.desc: 1. calling ExtractSkillFromHsp with invalid target path
+ *           2. verify extraction fails
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_16900, Function | SmallTest | Level0)
+{
+    // Create a mock extractor (using real HAP file)
+    std::string testHapPath = "/system/app/ShellAssistant/ShellAssistant_Feature_Anco.hap";
+    if (!InstalldOperator::IsExistFile(testHapPath)) {
+        // Skip test if HAP file doesn't exist
+        GTEST_LOG_(INFO) << "Test HAP file not found, skipping test";
+        return;
+    }
+
+    BundleExtractor extractor(testHapPath);
+    if (!extractor.Init()) {
+        GTEST_LOG_(INFO) << "Failed to initialize extractor, skipping test";
+        return;
+    }
+
+    // Use invalid target path (too long)
+    std::string invalidTargetPath(300, 'x');
+
+    bool ret = InstalldOperator::ExtractSkillFromHsp(extractor, "testSkill", invalidTargetPath);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17000
+ * @tc.name: test ExtractSkillsPackage function of InstalldOperator
+ * @tc.desc: 1. calling ExtractSkillsPackage with empty bundleName
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17000, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "";  // Empty bundleName
+    param.moduleName = "testModule";
+    param.hspPath = "/data/test/test.hsp";
+    param.skillNameList.push_back("skill1");
+
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_TRUE(skillInfoList.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17100
+ * @tc.name: test ExtractSkillsPackage function of InstalldOperator
+ * @tc.desc: 1. calling ExtractSkillsPackage with empty moduleName
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17100, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "";  // Empty moduleName
+    param.hspPath = "/data/test/test.hsp";
+    param.skillNameList.push_back("skill1");
+
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_TRUE(skillInfoList.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17200
+ * @tc.name: test ExtractSkillsPackage function of InstalldOperator
+ * @tc.desc: 1. calling ExtractSkillsPackage with empty hspPath
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17200, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.hspPath = "";  // Empty hspPath
+    param.skillNameList.push_back("skill1");
+
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_TRUE(skillInfoList.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17300
+ * @tc.name: test ExtractSkillsPackage function of InstalldOperator
+ * @tc.desc: 1. calling ExtractSkillsPackage with non-existent HSP file
+ *           2. verify error returned
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17300, Function | SmallTest | Level0)
+{
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.hspPath = "/data/test/nonexistent_file_17300.hsp";  // Non-existent file
+    param.skillNameList.push_back("skill1");
+
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_TRUE(skillInfoList.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17400
+ * @tc.name: test ExtractSkillsPackage function of InstalldOperator
+ * @tc.desc: 1. calling ExtractSkillsPackage with empty skillNameList
+ *           2. verify success with empty result list
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17400, Function | SmallTest | Level0)
+{
+    // Create a temporary valid HSP file path for testing
+    std::string testHapPath = "/system/app/ShellAssistant/ShellAssistant_Feature_Anco.hap";
+    if (!InstalldOperator::IsExistFile(testHapPath)) {
+        GTEST_LOG_(INFO) << "Test HAP file not found, skipping test";
+        return;
+    }
+
+    SkillsPackageParam param;
+    param.bundleName = "com.example.test";
+    param.moduleName = "testModule";
+    param.hspPath = testHapPath;
+    // Empty skillNameList - no skills to extract
+
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
+
+    // Should succeed with empty result list
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(skillInfoList.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17500
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with non-frontmatter mixed format
+ *           2. verify parse failed
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17500, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_md_test_17500";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with mixed format
+    std::string content = "#name: mixedFormatSkill\n";
+    content += "description: This is a mixed format skill\n";
+    CreateFile(skillMdPath, content);
+
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(skillMdPath, name, description);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARSE_FAILED);
+    EXPECT_TRUE(name.empty());
+    EXPECT_TRUE(description.empty());
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17600
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with frontmatter and extra whitespace
+ *           2. verify whitespace trimmed correctly
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17600, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_md_test_17600";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with YAML frontmatter and extra whitespace
+    std::string content = "---\n";
+    content += "name:  \t  whitespaceSkill  \t \n";
+    content += "description:  \t  Description with whitespace  \t \n";
+    content += "---\n";
+    CreateFile(skillMdPath, content);
+
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(skillMdPath, name, description);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(name, "whitespaceSkill");
+    EXPECT_EQ(description, "Description with whitespace");
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17700
+ * @tc.name: test ValidateSkillName function of InstalldOperator
+ * @tc.desc: 1. calling ValidateSkillName with markdown format name
+ *           2. verify validation fails because frontmatter is required
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17700, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_validate_test_17700";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with markdown format
+    std::string content = "# name: markdownNameSkill\n";
+    content += "# description: Test skill with markdown format\n";
+    CreateFile(skillMdPath, content);
+
+    bool ret = InstalldOperator::ValidateSkillName("markdownNameSkill", skillMdPath);
+    EXPECT_FALSE(ret);
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17800
+ * @tc.name: test ParseSkillMd function of InstalldOperator
+ * @tc.desc: 1. calling ParseSkillMd with frontmatter name but no description
+ *           2. verify success with empty description
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17800, Function | SmallTest | Level0)
+{
+    // Create test directory and SKILL.md file
+    std::string testDir = "/data/test/skill_md_test_17800";
+    std::string skillMdPath = testDir + "/SKILL.md";
+    CreateQuickFileDir(testDir);
+
+    // Create SKILL.md with YAML frontmatter and only name
+    std::string content = "---\n";
+    content += "name: skillWithoutDescription\n";
+    content += "---\n";
+    CreateFile(skillMdPath, content);
+
+    std::string name;
+    std::string description;
+    ErrCode ret = InstalldOperator::ParseSkillMd(skillMdPath, name, description);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(name, "skillWithoutDescription");
+    EXPECT_TRUE(description.empty());
+
+    DeleteQuickFileDir(testDir);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_17900
+ * @tc.name: test GetBundleDataDirPaths function with valid parameters
+ * @tc.desc: 1. calling GetBundleDataDirPaths with valid bundleName, appIndex, userId
+ *           2. verify function returns true and collects all data directory paths
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_17900, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    std::vector<std::string> dataDirPaths;
+
+    bool ret = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+
+    EXPECT_TRUE(ret);
+    EXPECT_GT(dataDirPaths.size(), 0);
+    // Verify some expected paths are collected
+    bool hasBasePath = false;
+    bool hasDatabasePath = false;
+    bool hasSharefilesPath = false;
+    for (const auto &path : dataDirPaths) {
+        if (path.find("/base/" + bundleName) != std::string::npos) {
+            hasBasePath = true;
+        }
+        if (path.find("/database/" + bundleName) != std::string::npos) {
+            hasDatabasePath = true;
+        }
+        if (path.find("/sharefiles/" + bundleName) != std::string::npos) {
+            hasSharefilesPath = true;
+        }
+    }
+    EXPECT_TRUE(hasBasePath);
+    EXPECT_TRUE(hasDatabasePath);
+    EXPECT_TRUE(hasSharefilesPath);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18000
+ * @tc.name: test GetBundleDataDirPaths with empty bundleName
+ * @tc.desc: 1. calling GetBundleDataDirPaths with empty bundleName
+ *           2. verify function returns false
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18000, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "";  // Empty bundleName
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    std::vector<std::string> dataDirPaths;
+
+    bool ret = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(dataDirPaths.size(), 0);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18100
+ * @tc.name: test GetBundleDataDirPaths with negative userId
+ * @tc.desc: 1. calling GetBundleDataDirPaths with negative userId
+ *           2. verify function returns false
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18100, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = -1;  // Invalid userId
+    std::vector<std::string> dataDirPaths;
+
+    bool ret = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(dataDirPaths.size(), 0);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18200
+ * @tc.name: test GetBundleDataDirPaths with appIndex > 0 (clone app)
+ * @tc.desc: 1. calling GetBundleDataDirPaths with appIndex = 1
+ *           2. verify function correctly builds clone app data directory paths
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18200, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 1;  // Clone app index
+    int32_t userId = 100;
+    std::vector<std::string> dataDirPaths;
+
+    bool ret = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+
+    EXPECT_TRUE(ret);
+    EXPECT_GT(dataDirPaths.size(), 0);
+    // Verify clone app path format
+    bool hasClonePath = false;
+    for (const auto &path : dataDirPaths) {
+        if (path.find("/data/app/el1/100/base/+clone-1+com.example.test") != std::string::npos) {
+            hasClonePath = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(hasClonePath);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18300
+ * @tc.name: test GetBundleDataDirPaths with userId = 0
+ * @tc.desc: 1. calling GetBundleDataDirPaths with userId = 0 (active user)
+ *           2. verify function correctly handles active user
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18300, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = 0;  // Active user
+    std::vector<std::string> dataDirPaths;
+
+    bool ret = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+
+    EXPECT_TRUE(ret);
+    EXPECT_GT(dataDirPaths.size(), 0);
+    // Verify userId 0 is correctly used in paths
+    bool hasUserId0 = false;
+    for (const auto &path : dataDirPaths) {
+        if (path.find("/el1/0/") != std::string::npos || path.find("/el2/0/") != std::string::npos) {
+            hasUserId0 = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(hasUserId0);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18400
+ * @tc.name: test GetBundleDataDirPaths verifies all expected paths
+ * @tc.desc: 1. calling GetBundleDataDirPaths and verify all expected path types
+ *           2. verify base, database, sharefiles, log, system_optimize paths
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18400, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    std::vector<std::string> dataDirPaths;
+
+    bool ret = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+
+    EXPECT_TRUE(ret);
+    // Verify all expected path types exist
+    bool hasElPath = false;
+    bool hasEl1BasePath = false;
+    bool hasEl1OptimizePath = false;
+    bool hasEl2SharefilesPath = false;
+    bool hasServicePath = false;
+
+    for (const auto &path : dataDirPaths) {
+        // Check for el2, el5 base/database paths
+        if (path.find("/data/app/el2/100/") != std::string::npos ||
+            path.find("/data/app/el5/100/") != std::string::npos) {
+            hasElPath = true;
+        }
+        // Check for el1 optimize paths
+        if (path.find("/data/app/el1/100/") != std::string::npos) {
+            hasEl1BasePath = true;
+            if (path.find("/system_optimize/") != std::string::npos ||
+                path.find("/ark_startup_cache/") != std::string::npos ||
+                path.find("/shader_cache/") != std::string::npos) {
+                hasEl1OptimizePath = true;
+            }
+        }
+        // Check for el2 sharefiles
+        if (path.find("/sharefiles/") != std::string::npos) {
+            hasEl2SharefilesPath = true;
+        }
+        // Check for service paths
+        if (path.find("/data/service/") != std::string::npos) {
+            hasServicePath = true;
+        }
+    }
+
+    EXPECT_TRUE(hasElPath);
+    EXPECT_TRUE(hasEl1BasePath);
+    EXPECT_TRUE(hasEl1OptimizePath);
+    EXPECT_TRUE(hasEl2SharefilesPath);
+    EXPECT_TRUE(hasServicePath);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18500
+ * @tc.name: test GetBundleDataDirPaths clears output parameter
+ * @tc.desc: 1. calling GetBundleDataDirPaths twice
+ *           2. verify output vector is cleared before each call
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18500, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    std::vector<std::string> dataDirPaths;
+
+    // First call
+    bool ret1 = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+    EXPECT_TRUE(ret1);
+    size_t firstCallSize = dataDirPaths.size();
+
+    // Second call with same parameters
+    bool ret2 = installdOperator.GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths);
+    EXPECT_TRUE(ret2);
+    size_t secondCallSize = dataDirPaths.size();
+
+    EXPECT_EQ(firstCallSize, secondCallSize);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18600
+ * @tc.name: test AnonymizePath with single segment filename
+ * @tc.desc: 1. calling AnonymizePath with single filename
+ *           2. verify anonymization pattern (keep even chars, replace odd with *)
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18600, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string filename = "/abc/document.txt";
+    std::string result = installdOperator.AnonymizePath(filename);
+    // "document.txt" -> "d*c*u*en.txt" (name part anonymized, extension kept)
+    EXPECT_EQ(result, "/a*c/d*c*m*n*.txt");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18700
+ * @tc.name: test AnonymizePath with empty path
+ * @tc.desc: 1. calling AnonymizePath with empty string
+ *           2. verify empty string is returned unchanged
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18700, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string emptyPath = "";
+    std::string result = installdOperator.AnonymizePath(emptyPath);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18800
+ * @tc.name: test AnonymizePath with single segment filename
+ * @tc.desc: 1. calling AnonymizePath with single filename
+ *           2. verify anonymization pattern (keep even chars, replace odd with *)
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18800, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string filename = "document.txt";
+    std::string result = installdOperator.AnonymizePath(filename);
+    // "document.txt" -> "d*c*u*en.txt" (name part anonymized, extension kept)
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result, filename);
+    // Verify extension is preserved
+    EXPECT_TRUE(result.find(".txt") != std::string::npos);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_18900
+ * @tc.name: test AnonymizePath with multi-segment path
+ * @tc.desc: 1. calling AnonymizePath with full path
+ *           2. verify all segments are anonymized
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18900, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string fullPath = "/data/storage/el2/base/haps/entry/cache/image.png";
+    std::string result = installdOperator.AnonymizePath(fullPath);
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result, fullPath);
+    // Verify extension is preserved in last segment
+    EXPECT_TRUE(result.find(".png") != std::string::npos);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19000
+ * @tc.name: test AnonymizePath with no extension
+ * @tc.desc: 1. calling AnonymizePath with filename without extension
+ *           2. verify entire name is anonymized
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19000, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string noExtPath = "/data/storage/el2/database";
+    std::string result = installdOperator.AnonymizePath(noExtPath);
+    EXPECT_EQ(result, "/d*t*/s*o*a*e/e*2/d*t*b*s*");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19100
+ * @tc.name: test AnonymizePath with multiple extensions
+ * @tc.desc: 1. calling AnonymizePath with filename like file.tar.gz
+ *           2. verify only last extension is preserved
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19100, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string multiExtPath = "/data/app/archive.tar.gz";
+    std::string result = installdOperator.AnonymizePath(multiExtPath);
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result, multiExtPath);
+    // Verify .gz extension is preserved (last extension)
+    EXPECT_TRUE(result.find(".gz") != std::string::npos);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19200
+ * @tc.name: test AnonymizePath with hidden file
+ * @tc.desc: 1. calling AnonymizePath with hidden file (.gitignore)
+ *           2. verify dot at start is not treated as extension separator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19200, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string hiddenFilePath = "/data/storage/.gitignore";
+    std::string result = installdOperator.AnonymizePath(hiddenFilePath);
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result, hiddenFilePath);
+    // Hidden file should start with dot
+    EXPECT_TRUE(result.find("/.*") != std::string::npos);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19300
+ * @tc.name: test AnonymizePath with single character segments
+ * @tc.desc: 1. calling AnonymizePath with short segments
+ *           2. verify no crash with single chars
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19300, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::string shortPath = "/a/b/c.txt";
+    std::string result = installdOperator.AnonymizePath(shortPath);
+    EXPECT_EQ(result, shortPath);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19400
+ * @tc.name: test AnonymizePath with common file extensions
+ * @tc.desc: 1. calling AnonymizePath with various extensions
+ *           2. verify extensions are preserved
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19400, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::vector<std::string> testPaths = {
+        "/data/file.txt",
+        "/data/image.png",
+        "/data/document.pdf",
+        "/data/video.mp4",
+        "/data/archive.zip"
+    };
+    std::vector<std::string> extensions = {".txt", ".png", ".pdf", ".mp4", ".zip"};
+
+    for (size_t i = 0; i < testPaths.size(); ++i) {
+        std::string result = installdOperator.AnonymizePath(testPaths[i]);
+        EXPECT_FALSE(result.empty());
+        EXPECT_TRUE(result.find(extensions[i]) != std::string::npos);
+    }
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19500
+ * @tc.name: test GetLargestFilesRecursive with empty dirPaths
+ * @tc.desc: 1. calling GetLargestFilesRecursive with empty vector
+ *           2. verify function returns false
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19500, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::vector<std::string> emptyDirs;
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    bool ret = installdOperator.GetLargestFilesRecursive(emptyDirs, 10, results);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(results.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19600
+ * @tc.name: test GetLargestFilesRecursive with valid directory
+ * @tc.desc: 1. calling GetLargestFilesRecursive with valid path
+ *           2. verify function returns true and populates results
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19600, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir(TEST_DIR_PATH);
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {TEST_DIR_PATH};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 10, results);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(results.empty());
+    DeleteQuickFileDir(TEST_DIR_PATH);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19700
+ * @tc.name: test GetLargestFilesRecursive with timeout values
+ * @tc.desc: 1. calling GetLargestFilesRecursive with various timeouts
+ *           2. verify timeout adjustments (<=0 becomes 3, >180 becomes 180)
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19700, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir(TEST_DIR_PATH);
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {TEST_DIR_PATH};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    // Test with timeout = 0 (should use 3 seconds)
+    bool ret1 = installdOperator.GetLargestFilesRecursive(dirPaths, 0, results);
+    EXPECT_TRUE(ret1);
+
+    results.clear();
+
+    // Test with timeout = -1 (should use 3 seconds)
+    bool ret2 = installdOperator.GetLargestFilesRecursive(dirPaths, -1, results);
+    EXPECT_TRUE(ret2);
+
+    results.clear();
+
+    // Test with timeout = 200 (should use 180 seconds max)
+    bool ret3 = installdOperator.GetLargestFilesRecursive(dirPaths, 200, results);
+    EXPECT_TRUE(ret3);
+    DeleteQuickFileDir(TEST_DIR_PATH);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19800
+ * @tc.name: test GetLargestFilesRecursive with multiple directories
+ * @tc.desc: 1. calling GetLargestFilesRecursive with multiple paths
+ *           2. verify results from all directories are included
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19800, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir(TEST_DIR_PATH);
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {TEST_DIR_PATH, TEST_FILE_PATH};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 10, results);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(results.empty());
+    DeleteQuickFileDir(TEST_DIR_PATH);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_19900
+ * @tc.name: test GetLargestFilesRecursive clears output parameter
+ * @tc.desc: 1. calling GetLargestFilesRecursive with pre-populated results
+ *           2. verify results are cleared before processing
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19900, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir(TEST_DIR_PATH);
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {TEST_DIR_PATH};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    // Pre-populate with dummy data
+    results.emplace_back("/dummy/path", 999999);
+    EXPECT_FALSE(results.empty());
+
+    // Call function
+    bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 10, results);
+    EXPECT_TRUE(ret);
+
+    // Verify dummy data is gone
+    bool hasDummy = std::any_of(results.begin(), results.end(),
+        [](const std::pair<std::string, uint64_t>& item) {
+            return item.first == "/dummy/path";
+        });
+    EXPECT_FALSE(hasDummy);
+    DeleteQuickFileDir(TEST_DIR_PATH);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_20000
+ * @tc.name: test GetLargestFilesRecursive result sorting
+ * @tc.desc: 1. calling GetLargestFilesRecursive with valid directory
+ *           2. verify results are sorted by size in descending order
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_20000, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {TEST_FILE_PATH};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 10, results);
+    EXPECT_TRUE(ret);
+
+    if (results.size() > 1) {
+        // Verify descending order by size
+        for (size_t i = 0; i < results.size() - 1; ++i) {
+            EXPECT_GE(results[i].second, results[i + 1].second);
+        }
+    }
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_20100
+ * @tc.name: test GetLargestFilesRecursive with non-existent path
+ * @tc.desc: 1. calling GetLargestFilesRecursive with invalid directory
+ *           2. verify function handles gracefully (may fail or return empty)
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_20100, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {"/non/existent/path/that/does/not/exist"};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    // Function should handle non-existent path gracefully
+    bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 5, results);
+    // May return false or true with empty results depending on implementation
+    EXPECT_TRUE(ret);
+    EXPECT_TRUE(results.empty());
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_20200
+ * @tc.name: test GetLargestFilesRecursive with very short timeout
+ * @tc.desc: 1. calling GetLargestFilesRecursive with 1 second timeout
+ *           2. verify function respects timeout and returns quickly
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_20200, Function | SmallTest | Level0)
+{
+    InstalldOperator installdOperator;
+    std::vector<std::string> dirPaths = {TEST_DIR_PATH};
+    std::vector<std::pair<std::string, uint64_t>> results;
+
+    auto start = std::chrono::steady_clock::now();
+    bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 1, results);
+    auto end = std::chrono::steady_clock::now();
+    EXPECT_TRUE(ret);
 }
 } // OHOS

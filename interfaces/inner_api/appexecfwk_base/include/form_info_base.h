@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_FORM_INFO_BASE_H
 
 #include <string>
+#include <vector>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -55,9 +56,14 @@ struct FormFunInteractionParams {
     int32_t keepStateDuration = 10000;
 };
 
+enum class SceneAnimationTriggerType : int32_t {
+    SHAKE = 1,
+};
+
 struct FormSceneAnimationParams {
     std::string abilityName;
     std::string disabledDesktopBehaviors;
+    std::vector<SceneAnimationTriggerType> triggerTypes;
 };
 
 enum class FormType {

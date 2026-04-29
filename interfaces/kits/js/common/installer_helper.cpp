@@ -365,6 +365,23 @@ ErrCode InstallerHelper::InnerInstallPreexistingApp(std::string& bundleName, int
     return result;
 }
 
+ErrCode InstallerHelper::InnerUninstallNewPreinstalledApps(const std::vector<std::string>& bundleNames)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode result = iBundleInstaller->UninstallNewPreinstalledApps(bundleNames);
+    APP_LOGD("result is %{public}d", result);
+    return result;
+}
+
 ErrCode InstallerHelper::InnerInstallPlugin(const std::string& hostBundleName,
     const std::vector<std::string>& pluginFilePaths, const InstallPluginParam& installPluginParam)
 {

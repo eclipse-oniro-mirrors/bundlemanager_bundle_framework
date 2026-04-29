@@ -65,6 +65,7 @@ constexpr const char* MODULE_IS_ENTRY = "isEntry";
 constexpr const char* MODULE_METADATA = "metaData";
 constexpr const char* MODULE_HNP_PACKAGE = "hnpPackage";
 constexpr const char* MODULE_EXECUTABLE_BINARY_PATHS = "executableBinaryPaths";
+constexpr const char* MODULE_SKILL_PROFILES = "skillProfiles";
 constexpr const char* MODULE_COLOR_MODE = "colorMode";
 constexpr const char* MODULE_DISTRO = "distro";
 constexpr const char* MODULE_REQ_CAPABILITIES = "reqCapabilities";
@@ -91,6 +92,7 @@ constexpr const char* MODULE_PROCESS = "process";
 constexpr const char* MODULE_SRC_ENTRANCE = "srcEntrance";
 constexpr const char* MODULE_DEVICE_TYPES = "deviceTypes";
 constexpr const char* MODULE_REQUIRED_DEVICE_FEATURES = "requiredDeviceFeatures";
+constexpr const char* MODULE_LIBRARY_SUPPORT_DIRECTORY = "librarySupportDirectory";
 constexpr const char* MODULE_VIRTUAL_MACHINE = "virtualMachine";
 constexpr const char* MODULE_UI_SYNTAX = "uiSyntax";
 constexpr const char* MODULE_PAGES = "pages";
@@ -167,6 +169,11 @@ constexpr const char* MODULE_DEBUG = "debug";
 constexpr const char* MODULE_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 constexpr const char* EXECUTABLE_BINARY_PATH = "path";
+// SkillsAgent field constants
+constexpr const char* SKILL_PROFILE_NAME = "name";
+constexpr const char* SKILL_PROFILE_ABILITY_NAME = "abilityName";
+constexpr const char* SKILL_PROFILE_SRC_ENTRIES = "srcEntries";
+constexpr const char* SKILL_PROFILE_PERMISSIONS = "permissions";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 constexpr const char* MODULE_BOOL_SET = "boolSet";
 constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
@@ -264,6 +271,53 @@ void to_json(nlohmann::json &jsonObject, const ExecutableBinaryPath &executableB
 {
     jsonObject = nlohmann::json {
         {EXECUTABLE_BINARY_PATH, executableBinaryPath.path}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, SkillProfile &skillProfile)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_NAME,
+        skillProfile.name,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_ABILITY_NAME,
+        skillProfile.abilityName,
+        false,
+        parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_SRC_ENTRIES,
+        skillProfile.srcEntries,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_PERMISSIONS,
+        skillProfile.permissions,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read SkillProfile from json error, error code : %{public}d", parseResult);
+    }
+}
+
+void to_json(nlohmann::json &jsonObject, const SkillProfile &skillProfile)
+{
+    jsonObject = nlohmann::json {
+        {SKILL_PROFILE_NAME, skillProfile.name},
+        {SKILL_PROFILE_ABILITY_NAME, skillProfile.abilityName},
+        {SKILL_PROFILE_SRC_ENTRIES, skillProfile.srcEntries},
+        {SKILL_PROFILE_PERMISSIONS, skillProfile.permissions}
     };
 }
 
@@ -495,11 +549,13 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_SRC_ENTRANCE, info.srcEntrance},
         {MODULE_DEVICE_TYPES, info.deviceTypes},
         {MODULE_REQUIRED_DEVICE_FEATURES, info.requiredDeviceFeatures},
+        {MODULE_LIBRARY_SUPPORT_DIRECTORY, info.librarySupportDirectory},
         {MODULE_VIRTUAL_MACHINE, info.virtualMachine},
         {MODULE_UI_SYNTAX, info.uiSyntax},
         {MODULE_PAGES, info.pages},
         {MODULE_SYSTEM_THEME, info.systemTheme},
         {MODULE_META_DATA, info.metadata},
+        {MODULE_SKILL_PROFILES, info.skillProfiles},
         {MODULE_HNP_PACKAGE, info.hnpPackages},
         {MODULE_EXECUTABLE_BINARY_PATHS, info.executableBinaryPaths},
         {MODULE_REQUEST_PERMISSIONS, info.requestPermissions},
@@ -843,6 +899,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         parseResult,
         JsonType::ARRAY,
         ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_LIBRARY_SUPPORT_DIRECTORY,
+        info.librarySupportDirectory,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_VIRTUAL_MACHINE,
@@ -871,6 +935,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_META_DATA,
         info.metadata,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<SkillProfile>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_SKILL_PROFILES,
+        info.skillProfiles,
         JsonType::ARRAY,
         false,
         parseResult,
@@ -1732,6 +1804,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.isStageBasedModel = it->second.isStageBasedModel;
     hapInfo.deviceTypes = it->second.deviceTypes;
     hapInfo.requiredDeviceFeatures = it->second.requiredDeviceFeatures;
+    hapInfo.librarySupportDirectory = it->second.librarySupportDirectory;
     hapInfo.appStartup = it->second.appStartup;
     hapInfo.formExtensionModule = it->second.formExtensionModule;
     hapInfo.formWidgetModule = it->second.formWidgetModule;
@@ -1744,6 +1817,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         hapInfo.moduleType = ModuleType::FEATURE;
     } else if (moduleType == Profile::MODULE_TYPE_SHARED) {
         hapInfo.moduleType = ModuleType::SHARED;
+    } else if (moduleType == Profile::MODULE_TYPE_SKILLS) {
+        hapInfo.moduleType = ModuleType::SKILL;
     } else {
         hapInfo.moduleType = ModuleType::UNKNOWN;
     }
@@ -2151,6 +2226,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->organization = applicationInfo.organization;
     baseApplicationInfo_->multiProjects = applicationInfo.multiProjects;
     baseApplicationInfo_->appEnvironments = applicationInfo.appEnvironments;
+    baseApplicationInfo_->alternateIcons = applicationInfo.alternateIcons;
     baseApplicationInfo_->maxChildProcess = applicationInfo.maxChildProcess;
     baseApplicationInfo_->multiAppMode = applicationInfo.multiAppMode;
     baseApplicationInfo_->configuration = applicationInfo.configuration;
@@ -2161,6 +2237,8 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     }
     baseApplicationInfo_->appSignType = applicationInfo.appSignType;
     baseApplicationInfo_->profileable = applicationInfo.profileable;
+    baseApplicationInfo_->allowListenBundleChangedEvent =
+        applicationInfo.allowListenBundleChangedEvent;
 }
 
 void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
@@ -2173,9 +2251,12 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
         if (info.HasEntry()) {
             baseApplicationInfo_->assetAccessGroups = info.baseApplicationInfo_->assetAccessGroups;
             baseApplicationInfo_->appPreloadPhase = info.baseApplicationInfo_->appPreloadPhase;
+            baseApplicationInfo_->allowListenBundleChangedEvent =
+                info.baseApplicationInfo_->allowListenBundleChangedEvent;
         }
         baseApplicationInfo_->cloudStructuredDataSyncEnabled =
             info.baseApplicationInfo_->cloudStructuredDataSyncEnabled;
+        baseApplicationInfo_->alternateIcons = info.baseApplicationInfo_->alternateIcons;
     }
     // update BundleInfo
     if (baseBundleInfo_ != nullptr && info.baseApplicationInfo_ != nullptr) {
@@ -2190,6 +2271,7 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
             continue;
         }
         innerModuleInfo.requiredDeviceFeatures = item->second.requiredDeviceFeatures;
+        innerModuleInfo.librarySupportDirectory = item->second.librarySupportDirectory;
         innerModuleInfo.systemTheme = item->second.systemTheme;
         innerModuleInfo.crossAppSharedConfig = item->second.crossAppSharedConfig;
         innerModuleInfo.formExtensionModule = item->second.formExtensionModule;
@@ -2210,6 +2292,7 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
                 continue;
             }
             innerModuleInfo.requiredDeviceFeatures = item->second.requiredDeviceFeatures;
+            innerModuleInfo.librarySupportDirectory = item->second.librarySupportDirectory;
             innerModuleInfo.systemTheme = item->second.systemTheme;
             innerModuleInfo.crossAppSharedConfig = item->second.crossAppSharedConfig;
             innerModuleInfo.formExtensionModule = item->second.formExtensionModule;
@@ -2250,6 +2333,7 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
         }
         innerExtensionInfo.appIdentifierAllowList = item->second.appIdentifierAllowList;
         innerExtensionInfo.isolationProcess = item->second.isolationProcess;
+        innerExtensionInfo.skipAbilityStageLifecycle = item->second.skipAbilityStageLifecycle;
         innerExtensionInfo.arkTSMode = item->second.arkTSMode;
         innerExtensionInfo.metadata = item->second.metadata;
     }
@@ -2383,6 +2467,9 @@ void InnerBundleInfo::ResetPrivilegeCapability()
     std::vector<std::string> allowCommonEvent;
     SetAllowCommonEvent(allowCommonEvent);
     SetAllowAppRunWhenDeviceFirstLocked(false);
+    if (baseApplicationInfo_->isSystemApp) {
+        SetAllowAppRunWhenDeviceFirstLocked(true);
+    }
     std::vector<int32_t> resourcesApply;
     baseApplicationInfo_->resourcesApply = resourcesApply;
     baseApplicationInfo_->allowEnableNotification = false;
@@ -2459,6 +2546,7 @@ bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleNam
     baseSharedBundleInfo.moduleArkTSMode = innerModuleInfo.moduleArkTSMode;
     baseSharedBundleInfo.compressNativeLibs = innerModuleInfo.compressNativeLibs;
     baseSharedBundleInfo.nativeLibraryFileNames = innerModuleInfo.nativeLibraryFileNames;
+    baseSharedBundleInfo.librarySupportDirectory = innerModuleInfo.librarySupportDirectory;
     baseSharedBundleInfo.aotCompileStatus =
         GetAOTCompileStatusWithVersion(moduleName, innerModuleInfo.versionCode);
     return true;
@@ -2491,6 +2579,7 @@ bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uin
             baseSharedBundleInfo.moduleArkTSMode = item.moduleArkTSMode;
             baseSharedBundleInfo.compressNativeLibs = item.compressNativeLibs;
             baseSharedBundleInfo.nativeLibraryFileNames = item.nativeLibraryFileNames;
+            baseSharedBundleInfo.librarySupportDirectory = item.librarySupportDirectory;
             baseSharedBundleInfo.aotCompileStatus =
                 GetAOTCompileStatusWithVersion(moduleName, versionCode);
             return true;
@@ -2572,6 +2661,7 @@ bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) co
             sharedModuleInfo.nativeLibraryPath = info.nativeLibraryPath;
             sharedModuleInfo.moduleArkTSMode = info.moduleArkTSMode;
             sharedModuleInfo.nativeLibraryFileNames = info.nativeLibraryFileNames;
+            sharedModuleInfo.librarySupportDirectory = info.librarySupportDirectory;
             sharedModuleInfo.aotCompileStatus =
                 GetAOTCompileStatusWithVersion(infoVector.first, info.versionCode);
             sharedModuleInfos.emplace_back(sharedModuleInfo);
@@ -3378,6 +3468,19 @@ void InnerBundleInfo::GetModuleNames(std::vector<std::string> &moduleNames) cons
     }
 }
 
+std::string InnerBundleInfo::GetEventModuleName() const
+{
+    std::string moduleName;
+    for (const auto &innerModuleInfo : innerModuleInfos_) {
+        moduleName.append(innerModuleInfo.second.moduleName).append(ServiceConstants::MODULE_NAME_SEPARATOR);
+    }
+    if (!moduleName.empty()) {
+        moduleName.pop_back();
+    }
+    LOG_D(BMS_TAG_INSTALLER, "eventModuleNames : %{public}s", moduleName.c_str());
+    return moduleName;
+}
+
 int32_t InnerBundleInfo::GetModuleSize() const
 {
     return innerModuleInfos_.size();
@@ -4024,6 +4127,40 @@ ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appInd
     return ERR_OK;
 }
 
+ErrCode InnerBundleInfo::SetBundleFirstLaunch(bool isBundleFirstLaunched, int32_t userId)
+{
+    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE_NOFUNC("SetBundleFirstLaunch not find:%{public}s bundleUserInfo in userId:%{public}d",
+            GetBundleName().c_str(), userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    infoItem->second.isBundleFirstLaunched = isBundleFirstLaunched;
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::SetCloneBundleFirstLaunch(bool isBundleFirstLaunched, int32_t appIndex, int32_t userId)
+{
+    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE_NOFUNC("SetCloneBundleFirstLaunch not find:%{public}s bundleUserInfo in userId:%{public}d",
+            GetBundleName().c_str(), userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    auto iter = infoItem->second.cloneInfos.find(std::to_string(appIndex));
+    if (iter == infoItem->second.cloneInfos.end()) {
+        APP_LOGE_NOFUNC("SetCloneBundleFirstLaunch not find:%{public}d appIndex in userId:%{public}d",
+            appIndex, userId);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
+    }
+    iter->second.isBundleFirstLaunched = isBundleFirstLaunched;
+    return ERR_OK;
+}
+
 const std::string InnerBundleInfo::GetCurModuleName() const
 {
     if (innerModuleInfos_.find(currentPackage_) != innerModuleInfos_.end()) {
@@ -4391,6 +4528,20 @@ std::string InnerBundleInfo::GetMainAbility() const
     return abilityInfo.name;
 }
 
+std::string InnerBundleInfo::GetEntryAbilityKey() const
+{
+    std::string key;
+    for (const auto& item : innerModuleInfos_) {
+        key = item.second.entryAbilityKey;
+        if (!key.empty() && (baseAbilityInfos_.count(key) != 0)) {
+            if (item.second.isEntry) {
+                return key;
+            }
+        }
+    }
+    return key;
+}
+
 void InnerBundleInfo::GetMainAbilityInfo(AbilityInfo &abilityInfo) const
 {
     for (const auto& item : innerModuleInfos_) {
@@ -4714,6 +4865,7 @@ void InnerBundleInfo::UpdateSharedModuleInfo()
             iter->cpuAbi = moduleInfoIter->second.cpuAbi;
             iter->nativeLibraryPath = moduleInfoIter->second.nativeLibraryPath;
             iter->nativeLibraryFileNames = moduleInfoIter->second.nativeLibraryFileNames;
+            iter->librarySupportDirectory = moduleInfoIter->second.librarySupportDirectory;
             return;
         }
     }
@@ -5472,6 +5624,7 @@ bool InnerBundleInfo::GetApplicationInfoAdaptBundleClone(
         appInfo.accessTokenId = innerBundleUserInfo.accessTokenId;
         appInfo.accessTokenIdEx = innerBundleUserInfo.accessTokenIdEx;
         appInfo.enabled = innerBundleUserInfo.bundleUserInfo.enabled;
+        appInfo.isBundleFirstLaunched = innerBundleUserInfo.isBundleFirstLaunched;
         appInfo.uid = innerBundleUserInfo.uid;
         return true;
     }
@@ -5484,6 +5637,7 @@ bool InnerBundleInfo::GetApplicationInfoAdaptBundleClone(
     appInfo.accessTokenId = iter->second.accessTokenId;
     appInfo.accessTokenIdEx = iter->second.accessTokenIdEx;
     appInfo.enabled = iter->second.enabled;
+    appInfo.isBundleFirstLaunched = iter->second.isBundleFirstLaunched;
     appInfo.uid = iter->second.uid;
     appInfo.appIndex = iter->second.appIndex;
     return true;
@@ -5575,7 +5729,7 @@ void InnerBundleInfo::UpdateReleaseType(const InnerBundleInfo &newInfo)
     }
 }
 
-void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const
+void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo, bool getDesc) const
 {
     if (ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(GetBundleName()) !=
         ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
@@ -5595,6 +5749,12 @@ void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &application
                 applicationInfo.iconResource.id = mainAbilityInfo.iconId;
                 applicationInfo.iconResource.moduleName = mainAbilityInfo.moduleName;
                 applicationInfo.iconResource.bundleName = mainAbilityInfo.bundleName;
+            }
+            if (getDesc && mainAbilityInfo.descriptionId != 0) {
+                applicationInfo.descriptionId = mainAbilityInfo.descriptionId;
+                applicationInfo.descriptionResource.id = mainAbilityInfo.descriptionId;
+                applicationInfo.descriptionResource.moduleName = mainAbilityInfo.moduleName;
+                applicationInfo.descriptionResource.bundleName = mainAbilityInfo.bundleName;
             }
             if (item.second.isEntry) {
                 return;

@@ -525,9 +525,10 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
     preInstallBundleInfo.SetRemovable(newBundleInfo_.IsRemovable());
 #endif
     auto applicationInfo = newBundleInfo_.GetBaseApplicationInfo();
-    newBundleInfo_.AdaptMainLauncherResourceInfo(applicationInfo);
+    newBundleInfo_.AdaptMainLauncherResourceInfo(applicationInfo, true);
     preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
     preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+    preInstallBundleInfo.SetDescriptionId(applicationInfo.descriptionId);
     preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
     preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
     preInstallBundleInfo.SetBundleType(BundleType::SHARED);
@@ -913,6 +914,8 @@ void InnerSharedBundleInstaller::UpdateRouterInfoForSharedBundle(const InnerBund
         APP_LOGE("Get dataMgr shared_ptr nullptr");
         return;
     }
+    // delete old router info before insert, in case of same version update with router deleted
+    dataMgr->DeleteRouterInfoForSharedBundle(newBundleInfo, newBundleInfo.GetVersionCode());
     dataMgr->InsertRouterInfo(newBundleInfo);
 }
 }  // namespace AppExecFwk

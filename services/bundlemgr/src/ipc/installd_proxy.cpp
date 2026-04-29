@@ -463,12 +463,10 @@ ErrCode InstalldProxy::BatchGetBundleStats(const std::vector<std::string> &bundl
     return ret;
 }
 
-ErrCode InstalldProxy::GetAllBundleStats(const int32_t userId,
-    std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+ErrCode InstalldProxy::GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, Int32, userId);
     uint32_t uidSize = uids.size();
     INSTALLD_PARCEL_WRITE(data, Uint32, uidSize);
     for (const auto &uid : uids) {
@@ -601,6 +599,47 @@ ErrCode InstalldProxy::ScanDir(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout, std::string &largestItems)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, appIndex);
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    INSTALLD_PARCEL_WRITE(data, Int32, timeout);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
+        return ret;
+    }
+
+    // Read data size
+    size_t dataSize = reply.ReadUint64();
+    if (dataSize == 0) {
+        LOG_D(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: no data returned");
+        largestItems.clear();
+        return ERR_OK;
+    }
+
+    // Read raw data into buffer
+    const void *buffer = reply.ReadRawData(dataSize);
+    if (buffer == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to read raw data, size: %{public}zu", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    // Convert to string
+    largestItems.assign(reinterpret_cast<const char*>(buffer), dataSize);
+
+    LOG_D(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: read JSON string, size: %{public}zu",
+        largestItems.size());
     return ERR_OK;
 }
 
@@ -1366,6 +1405,39 @@ ErrCode InstalldProxy::CopyDir(const std::string &sourceDir, const std::string &
     MessageParcel reply;
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::COPY_DIR, data, reply, option);
+}
+
+ErrCode InstalldProxy::ExtractSkillsPackage(const SkillsPackageParam &param,
+    std::vector<SkillsPackageInfo> &skillInfoList)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Parcelable, &param);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_SKILLS_PACKAGE, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractSkillsPackage TransactInstalldCmd failed");
+        return ret;
+    }
+    // Read vector size
+    int32_t size = reply.ReadInt32();
+    if (size < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "ExtractSkillsPackage: invalid size");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    skillInfoList.clear();
+    for (int32_t i = 0; i < size; ++i) {
+        auto *info = reply.ReadParcelable<SkillsPackageInfo>();
+        if (info == nullptr) {
+            LOG_E(BMS_TAG_INSTALLD, "ExtractSkillsPackage: failed to read item %{public}d", i);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        skillInfoList.emplace_back(*info);
+        delete info;
+    }
+    return ERR_OK;
 }
 
 ErrCode InstalldProxy::DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)

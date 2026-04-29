@@ -648,11 +648,11 @@ void GenerateShortcutInfo(FuzzedDataProvider& fdp, ShortcutInfo &shortcutInfo)
 
 int32_t GenerateRandomUser(FuzzedDataProvider& fdp)
 {
-    uint8_t size = USERS.size();
-    if (size == 0) {
+    uint8_t usersSize = USERS.size();
+    if (usersSize == 0) {
         return Constants::START_USERID; // No users available, return 100
     }
-    uint8_t index = fdp.ConsumeIntegralInRange<uint8_t>(0, size) % size; // 0 to size-1
+    uint8_t index = fdp.ConsumeIntegralInRange<uint8_t>(0, usersSize) % usersSize; // 0 to size-1
     return USERS[index];
 }
 

@@ -14,7 +14,7 @@
  */
 
 #include "bundle_mgr_host_impl.h"
-
+#include <cinttypes>
 #include "ability_manager_helper.h"
 #include "account_helper.h"
 #include "app_disable_forbidden/app_disable_forbidden_mgr.h"
@@ -31,9 +31,11 @@
 #include "bundle_resource_manager.h"
 #endif
 #include "bundle_service_constants.h"
+#include "bundle_util.h"
 #include "bundle_resource_helper.h"
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 #include "distributed_bms_proxy.h"
+#include "distributed_bundle_mgr_client.h"
 #endif
 #include "hitrace_meter.h"
 #include "installd_client.h"
@@ -713,6 +715,31 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
     }
     APP_LOGI_NOFUNC("GetBundleInfosV9 size:%{public}zu", bundleInfos.size());
+    return res;
+}
+
+ErrCode BundleMgrHostImpl::GetInstalledBundleList(uint32_t flags, int32_t userId, std::vector<BundleInfo> &bundleInfos)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
+        Constants::PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST)) {
+        LOG_E(BMS_TAG_QUERY, "permission denied");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGI_NOFUNC("GetInstalledBundleList -p:%{public}d, -f:%{public}d, -u:%{public}d",
+        IPCSkeleton::GetCallingPid(), flags, userId);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST, 0, 1);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto res = dataMgr->GetBundleInfosV9(flags, bundleInfos, userId);
+    if (res == ERR_OK) {
+        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST, 1, 0);
+    } else {
+        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST, 0, 1);
+    }
+    APP_LOGI_NOFUNC("GetInstalledBundleList size:%{public}zu", bundleInfos.size());
     return res;
 }
 
@@ -1542,20 +1569,9 @@ ErrCode BundleMgrHostImpl::GetApplicationLabel(const std::string &bundleName, in
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    bool isInstalled = false;
-    ErrCode result = dataMgr->IsBundleInstalled(bundleName, userId, appIndex, isInstalled);
-    if (result != ERR_OK || !isInstalled) {
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    }
-    bool isEnabled = false;
-    result = dataMgr->IsApplicationEnabled(bundleName, appIndex, isEnabled, userId);
+    ErrCode result = dataMgr->CheckBundleExist(bundleName, userId, appIndex);
     if (result != ERR_OK) {
-        APP_LOGE("IsApplicationEnabled failed ret:%{public}d", result);
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-    }
-    if (!isEnabled) {
-        APP_LOGE("application is disabled");
-        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+        return result;
     }
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     // Get BundleResourceProxy
@@ -1583,6 +1599,28 @@ ErrCode BundleMgrHostImpl::GetApplicationLabel(const std::string &bundleName, in
     APP_LOGD("application label:%{public}s for %{public}s, appIndex: %{public}d",
         label.c_str(), bundleName.c_str(), appIndex);
     return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::SetBundleFirstLaunch(
+    const std::string &bundleName, int32_t userId, int32_t appIndex, bool isBundleFirstLaunched)
+{
+    APP_LOGD("SetBundleFirstLaunch :%{public}s, :%{public}d, :%{public}d, :%{public}d",
+        bundleName.c_str(), userId, appIndex, isBundleFirstLaunched);
+
+    // Only allow foundation process to call
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE("uid: %{public}d not foundation", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    return dataMgr->SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
 }
 
 bool BundleMgrHostImpl::GetBundleArchiveInfo(
@@ -1793,6 +1831,9 @@ ErrCode BundleMgrHostImpl::GetLaunchWantForBundle(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
+    if (isSync) {
+        return dataMgr->GetLaunchWantForBundleSync(bundleName, want, userId);
+    }
     return dataMgr->GetLaunchWantForBundle(bundleName, want, userId);
 }
 
@@ -2014,6 +2055,11 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
     cleanCacheSize = cleanSize;
     EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed, callingUid, callingBundleName);
     APP_LOGI("CleanCacheFiles with succeed %{public}d", succeed);
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("get innerBundleInfo fail");
+        return;
+    }
     InnerBundleUserInfo innerBundleUserInfo;
     if (!this->GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
@@ -2024,7 +2070,8 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
         .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
         .uid = innerBundleUserInfo.uid,
-        .bundleName = bundleName
+        .bundleName = bundleName,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
     };
     NotifyBundleStatus(installRes);
 }
@@ -2070,7 +2117,7 @@ bool BundleMgrHostImpl::CleanBundleCacheByInodeCount(const std::string &bundleNa
     } else {
         cleanCacheSize = initialInodeCount - inodeCount;
     }
-    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "bundle: %{public}s, inode count: %{public}llu", bundleName.c_str(),
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "bundle: %{public}s, inode count: %{public}" PRIu64, bundleName.c_str(),
         cleanCacheSize);
     return true;
 }
@@ -2240,6 +2287,13 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             APP_LOGW("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
             return;
         }
+
+        InnerBundleInfo innerBundleInfo;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+            APP_LOGE("get innerBundleInfo fail");
+            return;
+        }
+
         NotifyBundleEvents installRes;
         if (appIndex > 0) {
             std::map<std::string, InnerBundleCloneInfo> cloneInfos = innerBundleUserInfo.cloneInfos;
@@ -2256,7 +2310,8 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
                 .accessTokenId = innerBundleUserInfo.accessTokenId,
                 .uid = uid,
                 .appIndex = appIndex,
-                .bundleName = bundleName
+                .bundleName = bundleName,
+                .appDistributionType = innerBundleInfo.GetAppDistributionType(),
             };
             NotifyBundleStatus(installRes);
             return;
@@ -2266,7 +2321,8 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             .resultCode = ERR_OK,
             .accessTokenId = innerBundleUserInfo.accessTokenId,
             .uid = innerBundleUserInfo.uid,
-            .bundleName = bundleName
+            .bundleName = bundleName,
+            .appDistributionType = innerBundleInfo.GetAppDistributionType(),
         };
         NotifyBundleStatus(installRes);
     };
@@ -2896,6 +2952,12 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         return ERR_OK;
     }
     
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("get innerBundleInfo fail");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
@@ -2907,7 +2969,8 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
         .uid = innerBundleUserInfo.uid,
-        .bundleName = bundleName
+        .bundleName = bundleName,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
     };
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
@@ -2963,6 +3026,12 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
         return ERR_OK;
     }
 
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("get innerBundleInfo fail");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
@@ -2975,7 +3044,8 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
         .accessTokenId = innerBundleUserInfo.accessTokenId,
         .uid = innerBundleUserInfo.uid,
         .appIndex = appIndex,
-        .bundleName = bundleName
+        .bundleName = bundleName,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
     };
     NotifyBundleStatus(installRes);
     APP_LOGD("SetCloneApplicationEnabled finish");
@@ -3070,18 +3140,26 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
         return ERR_OK;
     }
 
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(abilityInfo.bundleName, innerBundleInfo)) {
+        APP_LOGE("get innerBundleInfo fail");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+
     NotifyBundleEvents installRes = {
         .type = NotifyType::APPLICATION_ENABLE,
         .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
         .uid = innerBundleUserInfo.uid,
         .bundleName = abilityInfo.bundleName,
-        .abilityName = abilityInfo.name
+        .abilityName = abilityInfo.name,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
     };
     NotifyBundleStatus(installRes);
     return ERR_OK;
@@ -3136,6 +3214,12 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
         return ERR_OK;
     }
 
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(abilityInfo.bundleName, innerBundleInfo)) {
+        APP_LOGE("get innerBundleInfo fail");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
@@ -3148,7 +3232,8 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
         .uid = innerBundleUserInfo.uid,
         .appIndex = appIndex,
         .bundleName = abilityInfo.bundleName,
-        .abilityName = abilityInfo.name
+        .abilityName = abilityInfo.name,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
     };
     NotifyBundleStatus(installRes);
     return ERR_OK;
@@ -3419,12 +3504,8 @@ bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, c
         APP_LOGE("verify permission failed");
         return false;
     }
-    auto distributedBundleMgr = GetDistributedBundleMgrService();
-    if (distributedBundleMgr == nullptr) {
-        APP_LOGE("DistributedBundleMgrService is nullptr");
-        return false;
-    }
-    return distributedBundleMgr->GetDistributedBundleInfo(networkId, bundleName, distributedBundleInfo);
+    return DistributedBundleMgrClient::GetInstance()->GetDistributedBundleInfo(
+        networkId, bundleName, distributedBundleInfo);
 #else
     APP_LOGW("DISTRIBUTED_BUNDLE_FRAMEWORK is false");
     return false;
@@ -3616,20 +3697,6 @@ const std::shared_ptr<BundleDataMgr> BundleMgrHostImpl::GetDataMgrFromService()
 {
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
 }
-
-#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
-const OHOS::sptr<IDistributedBms> BundleMgrHostImpl::GetDistributedBundleMgrService()
-{
-    auto saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (saMgr == nullptr) {
-        APP_LOGE("saMgr is nullptr");
-        return nullptr;
-    }
-    OHOS::sptr<OHOS::IRemoteObject> remoteObject =
-        saMgr->CheckSystemAbility(OHOS::DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    return OHOS::iface_cast<IDistributedBms>(remoteObject);
-}
-#endif
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 const std::shared_ptr<BundleConnectAbilityMgr> BundleMgrHostImpl::GetConnectAbilityMgrFromService()
@@ -4051,6 +4118,91 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         }
     }
     return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex, statFlag);
+}
+
+ErrCode BundleMgrHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
+{
+    LOG_I(BMS_TAG_DEFAULT, "begin to get top N largest items, -n: %{public}s, -a: %{public}d, -u: %{public}d",
+        bundleName.c_str(), appIndex, userId);
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        LOG_E(BMS_TAG_DEFAULT, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (getLargestItemsCallback == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "getLargestItemsCallback is nullptr");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    ErrCode result = dataMgr->CheckBundleExist(bundleName, userId, appIndex);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "check bundle exist failed, bundleName: %{public}s, userId: %{public}d, "
+            "appIndex: %{public}d", bundleName.c_str(), userId, appIndex);
+        return result;
+    }
+
+    // Check frequency limit: 12 hours (production) or 5 minutes (debuggable)
+    ErrCode ret = CheckGetTopNLargestItemsFrequencyLimit();
+    if (ret != ERR_OK) {
+        return ret;
+    }
+
+    // Execute async task
+    GetTopNLargestItemsTask(bundleName, appIndex, userId, getLargestItemsCallback);
+    return ERR_OK;
+}
+
+void BundleMgrHostImpl::GetTopNLargestItemsTask(const std::string &bundleName, int32_t appIndex, int32_t userId,
+    const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
+{
+    LOG_I(BMS_TAG_DEFAULT, "GetTopNLargestItemsTask started, -n: %{public}s, -a: %{public}d, -u: %{public}d",
+        bundleName.c_str(), appIndex, userId);
+
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto getLargestItemsFunc = [bundleName, appIndex, userId, getLargestItemsCallback, traceId]() {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
+        LOG_I(BMS_TAG_DEFAULT, "async task getLargestItemsFunc started, -n: %{public}s, "
+            "-a: %{public}d, -u: %{public}d", bundleName.c_str(), appIndex, userId);
+        auto installdClient = DelayedSingleton<InstalldClient>::GetInstance();
+        if (installdClient == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "installdClient is nullptr");
+            getLargestItemsCallback->OnGetLargestItemsFinished(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, "");
+            return;
+        }
+        auto startTime = std::chrono::steady_clock::now();
+        std::string largestItems;
+        // Use fixed timeout value of 180 seconds for installd layer
+        constexpr int32_t FIXED_TIMEOUT = 180;
+        ErrCode errCode = installdClient->GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId,
+            FIXED_TIMEOUT, largestItems);
+
+        auto endTime = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+
+        if (errCode != ERR_OK) {
+            LOG_E(BMS_TAG_DEFAULT, "async task getLargestItemsFunc failed, -n: %{public}s, "
+                "-u: %{public}d, -a: %{public}d, -e: %{public}d, cost: %{public}lld ms",
+                bundleName.c_str(), userId, appIndex, errCode, static_cast<long long>(duration));
+        } else {
+            LOG_I(BMS_TAG_DEFAULT, "async task getLargestItemsFunc succeed, -n: %{public}s, "
+                "-u: %{public}d, -a: %{public}d, cost: %{public}lld ms",
+                bundleName.c_str(), userId, appIndex, static_cast<long long>(duration));
+        }
+
+        getLargestItemsCallback->OnGetLargestItemsFinished(errCode, largestItems);
+    };
+    ffrt::submit(getLargestItemsFunc);
 }
 
 ErrCode BundleMgrHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
@@ -5371,6 +5523,11 @@ sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
 #endif
 }
 
+sptr<IBundleSkillManager> BundleMgrHostImpl::GetSkillManagerProxy()
+{
+    return DelayedSingleton<BundleMgrService>::GetInstance()->GetSkillManagerProxy();
+}
+
 bool BundleMgrHostImpl::GetPreferableBundleInfoFromHapPaths(const std::vector<std::string> &hapPaths,
     BundleInfo &bundleInfo)
 {
@@ -5552,6 +5709,33 @@ ErrCode BundleMgrHostImpl::GetAllPreinstalledApplicationInfos(
     OnDemandInstallDataMgr::GetInstance().GetAllOnDemandInstallBundleInfos(onDemandBundleInfos);
     for (auto &onDemandBundleInfo: onDemandBundleInfos) {
         AddPreinstalledApplicationInfo(onDemandBundleInfo, preinstalledApplicationInfos);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetAllNewPreinstalledApplicationInfos(
+    std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    int32_t userId = BundleUtil::GetUserIdByCallingUid();
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+    for (auto &preInstallBundleInfo : preInstallBundleInfos) {
+        if (!preInstallBundleInfo.HasOtaNewInstallUser(userId)) {
+            continue;
+        }
+        AddPreinstalledApplicationInfo(preInstallBundleInfo, preinstalledApplicationInfos);
     }
     return ERR_OK;
 }
@@ -6014,6 +6198,26 @@ ErrCode BundleMgrHostImpl::GetSignatureInfoByUid(const int32_t uid, SignatureInf
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->GetSignatureInfoByUid(uid, signatureInfo);
+}
+
+ErrCode BundleMgrHostImpl::GetApiTargetVersionByUid(const int32_t uid, int32_t &apiTargetVersion)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (uid < 0) {
+        APP_LOGW_NOFUNC("impl GetApiTargetVersionByUid invalid uid %{public}d", uid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    if (!BundlePermissionMgr::IsSystemApp() ||
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetApiTargetVersionByUid(uid, apiTargetVersion);
 }
 
 bool BundleMgrHostImpl::CheckCanSetEnable(const std::string &bundleName)
@@ -6600,6 +6804,7 @@ void BundleMgrHostImpl::AddPreinstalledApplicationInfo(PreInstallBundleInfo &pre
     preinstalledApplicationInfo.moduleName = preInstallBundleInfo.GetModuleName();
     preinstalledApplicationInfo.labelId = preInstallBundleInfo.GetLabelId();
     preinstalledApplicationInfo.iconId = preInstallBundleInfo.GetIconId();
+    preinstalledApplicationInfo.descriptionId = preInstallBundleInfo.GetDescriptionId();
     preinstalledApplicationInfos.emplace_back(preinstalledApplicationInfo);
 }
 
@@ -7340,6 +7545,49 @@ ErrCode BundleMgrHostImpl::CheckAppDisableForbidden(
         APP_LOGE_NOFUNC("bundle: %{public}s is forbidden to be disabled.", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::CheckGetTopNLargestItemsFrequencyLimit()
+{
+    std::lock_guard<std::mutex> lock(lastSuccessCallTimeMutex_);
+    auto now = std::chrono::steady_clock::now();
+
+    // Read const.debuggable parameter to determine interval
+    // Debuggable mode (root/developer mode): 5 minutes
+    // Production mode: 12 hours
+    const int32_t ROOT_MODE = 1;
+    const int32_t USER_MODE = 0;
+    const char* IS_DEBUGGABLE_PARAM = "const.debuggable";
+    int32_t mode = GetIntParameter(IS_DEBUGGABLE_PARAM, USER_MODE);
+
+    std::chrono::milliseconds MIN_INTERVAL;
+    if (mode == ROOT_MODE) {
+        MIN_INTERVAL = std::chrono::minutes(5);  // 5 minutes in debuggable mode
+        LOG_D(BMS_TAG_DEFAULT, "Debuggable mode detected, using 1 minute frequency limit");
+    } else {
+        MIN_INTERVAL = std::chrono::hours(12);  // 12 hours in production mode
+    }
+
+    if (lastSuccessCallTime_ != std::chrono::steady_clock::time_point{}) {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSuccessCallTime_);
+        if (elapsed < MIN_INTERVAL) {
+            auto remaining = std::chrono::milliseconds(MIN_INTERVAL - elapsed);
+            // Format remaining time appropriately based on interval type
+            if (mode == ROOT_MODE) {
+                auto remainingSec = std::chrono::duration_cast<std::chrono::seconds>(remaining);
+                LOG_W(BMS_TAG_DEFAULT, "GetTopNLargestItemsInAppDataDir called too frequently, "
+                    "remaining time: %{public}lld seconds", static_cast<long long>(remainingSec.count()));
+            } else {
+                auto remainingHours = std::chrono::duration_cast<std::chrono::hours>(remaining);
+                LOG_W(BMS_TAG_DEFAULT, "GetTopNLargestItemsInAppDataDir called too frequently, "
+                    "remaining time: %{public}lld hours", static_cast<long long>(remainingHours.count()));
+            }
+            return ERR_BUNDLE_MANAGER_OPERATION_FREQUENT;
+        }
+    }
+    // Update last success call time
+    lastSuccessCallTime_ = now;
     return ERR_OK;
 }
 }  // namespace AppExecFwk

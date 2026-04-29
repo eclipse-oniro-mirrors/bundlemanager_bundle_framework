@@ -28,6 +28,7 @@
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "perf_profile.h"
+#include "share_file_helper.h"
 #include "scope_guard.h"
 
 
@@ -72,6 +73,7 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
         .bundleName = bundleName,
         .appDistributionType = appDistributionType_,
         .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+        .modulePackage = moduleName_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
@@ -108,6 +110,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     }
     dataMgr_->DisableBundle(bundleName);
     isBundleCrossAppSharedConfig_ = info.IsBundleCrossAppSharedConfig();
+    moduleName_ = info.GetEventModuleName();
 
     // 2. obtain userId
     if (!dataMgr_->HasUserId(userId)) {
@@ -194,6 +197,15 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         newUserInfo.firstInstallTime = info.IsPreInstallApp() ? ServiceConstants::PREINSTALL_FIRST_INSTALL_TIME : now;
     }
 
+#ifdef BMS_ACCESSCONTROL_SANDBOX_MANAGER
+    ret = ProcessBundleShareFiles(info, userId, newTokenIdEx.tokenIdExStruct.tokenID);
+    if (ret != ERR_OK) {
+        APP_LOGW("InstallExisted process shareFiles failed, bundle=%{public}s, ret=%{public}d",
+            bundleName.c_str(), ret);
+        return ret;
+    }
+#endif
+
     ScopeGuard createUserDataDirGuard([&] { RemoveDataDir(bundleName, userId); });
     ErrCode result = CreateDataDir(info, userId, uid);
     if (result != ERR_OK) {
@@ -214,11 +226,18 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     if (dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
         DeleteUninstallBundleInfo(bundleName, userId);
     }
+    auto pendingMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetOobePreloadUninstallMgr();
+    if (pendingMgr != nullptr) {
+        pendingMgr->RemovePendingBundle(bundleName, userId);
+    }
 
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();
     createUserDataDirGuard.Dismiss();
     addBundleUserGuard.Dismiss();
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    DefaultAppMgr::GetInstance().HandleInstallBundle(userId, bundleName);
+#endif
     APP_LOGI("InstallExisted %{public}s succesfully", bundleName.c_str());
     return ERR_OK;
 }
@@ -320,6 +339,7 @@ void BundleMultiUserInstaller::ResetInstallProperties()
     accessTokenId_ = 0;
     isBundleCrossAppSharedConfig_ = false;
     appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
+    moduleName_.clear();
 }
 
 bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,
@@ -364,6 +384,48 @@ void BundleMultiUserInstaller::DeleteUninstallBundleInfo(const std::string &bund
         LOG_E(BMS_TAG_INSTALLER, "delete failed");
     }
     BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, 0);
+}
+
+ErrCode BundleMultiUserInstaller::ProcessBundleShareFiles(const InnerBundleInfo &info,
+    const int32_t userId, uint32_t tokenId)
+{
+    const std::string &bundleName = info.GetBundleName();
+    LOG_D(BMS_TAG_INSTALLER, "ProcessBundleShareFiles begin, bundleName=%{public}s, userId=%{public}d",
+        bundleName.c_str(), userId);
+    if (GetDataMgr() != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "get dataMgr failed");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    auto moduleInfos = info.GetInnerModuleInfos();
+    for (const auto &modulePair : moduleInfos) {
+        const InnerModuleInfo &moduleInfo = modulePair.second;
+        // Only process entry modules
+        if (!moduleInfo.isEntry) {
+            continue;
+        }
+        // If shareFiles is not configured, skip it
+        if (moduleInfo.shareFiles.empty()) {
+            break;
+        }
+        // Get shareFiles JSON from hap
+        std::string shareFilesJson;
+        ErrCode ret = dataMgr_->GetShareFilesJsonFromHap(moduleInfo.hapPath, moduleInfo, shareFilesJson);
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER,
+                "Failed to get shareFiles json for bundle=%{public}s, module=%{public}s, ret=%{public}d",
+                bundleName.c_str(), moduleInfo.moduleName.c_str(), ret);
+            return ret;
+        }
+        int32_t setResult = ShareFileHelper::SetShareFileInfo(shareFilesJson, bundleName, userId, tokenId);
+        if (setResult != 0) {
+            LOG_W(BMS_TAG_INSTALLER,
+                "SetShareFileInfo failed but continuing install, bundle=%{public}s, ret=%{public}d",
+                bundleName.c_str(), setResult);
+        }
+        return ERR_OK;
+    }
+    LOG_D(BMS_TAG_INSTALLER, "No shareFiles configuration found for bundle=%{public}s", bundleName.c_str());
+    return ERR_OK;
 }
 } // AppExecFwk
 } // OHOS

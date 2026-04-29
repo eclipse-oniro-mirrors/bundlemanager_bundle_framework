@@ -1061,6 +1061,30 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3900, Function | SmallTest |
 }
 
 /**
+ * @tc.number: BundlePermissionMgr_4000
+ * @tc.name: test GetPermissionStateFullList
+ * @tc.desc: 1.test GetPermissionStateFullList of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_4000, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    RequestPermission reqPermission;
+    reqPermission.name = "name";
+    reqPermission.requiredFeature = "requiredFeature";
+    innerModuleInfo.requestPermissions.push_back(reqPermission);
+    std::string moduleName = "moduleName";
+    innerBundleInfo.InsertInnerModuleInfo(moduleName, innerModuleInfo);
+    std::vector<AccessToken::PermissionStateFull> permFull
+        = BundlePermissionMgr::GetPermissionStateFullList(innerBundleInfo);
+    EXPECT_EQ(permFull.size(), 1);
+    EXPECT_EQ(permFull[0].permissionName, "name");
+    EXPECT_EQ(permFull[0].feature, "requiredFeature");
+}
+
+/**
  * @tc.number: BundleStateStorage_0100
  * @tc.name: test SaveBundleStateStorage
  * @tc.desc: 1.test SaveBundleStateStorage of BundleStateStorage

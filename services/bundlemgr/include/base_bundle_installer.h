@@ -33,6 +33,7 @@
 #include "installer_bundle_tmp_info.h"
 #include "quick_fix/appqf_info.h"
 #include "shared_bundle_installer.h"
+#include "skills_installer/skills_package_info.h"
 
 #ifdef APP_DOMAIN_VERIFY_ENABLED
 #include "app_domain_verify_mgr_client.h"
@@ -284,7 +285,7 @@ private:
      * @param isKeepData Indicates that whether to save data.
      * @return Returns ERR_OK if the bundle removed successfully; returns error code otherwise.
      */
-    ErrCode RemoveBundle(InnerBundleInfo &info, bool isKeepData, const bool async = false);
+    ErrCode RemoveBundle(InnerBundleInfo &info, const InstallParam &installParam, const bool async = false);
     /**
      * @brief Create the code and data directories of a bundle.
      * @param info Indicates the InnerBundleInfo object of a bundle.
@@ -549,7 +550,8 @@ private:
      * @return Returns BundleUserMgr.
      */
     ErrCode RemoveBundleUserData(
-        InnerBundleInfo &innerBundleInfo, bool needRemoveData = true, const bool async = false);
+        InnerBundleInfo &innerBundleInfo, const InstallParam &installParam, const bool async = false);
+
     /**
      * @brief Create bundle user data.
      * @param innerBundleInfo Indicates the bundle type of the application.
@@ -746,6 +748,122 @@ private:
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
     ErrCode ExtractResFileDir(const std::string &modulePath) const;
+    ErrCode ProcessAppSkills(InnerBundleInfo &info);
+    ErrCode FinalizeAppSkills(const InnerBundleInfo &info);
+    ErrCode CommitAppSkills(const InnerBundleInfo &info);
+    void PrepareAppSkillStatus(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo,
+        int32_t userId = Constants::INVALID_USERID);
+    bool NotifyAppSkillStatus(const std::string &bundleName, const std::vector<std::string> &oldSkills,
+        const std::vector<std::string> &newSkills, int32_t userId = Constants::INVALID_USERID) const;
+    void RemoveAppSkillsDir(const std::string &bundleName) const;
+    void RemoveAppSkillsDir(const std::string &bundleName, const std::string &moduleName,
+        bool isTemp = false) const;
+    /**
+     * @brief The process of shareFiles configuration during bundle installation/update.
+     * @param newInfos Indicates the parsed bundle infos (map of hapPath to InnerBundleInfo).
+     * @param oldInfo Indicates the old bundle info for rollback (empty for new install).
+     * @return Returns ERR_OK if processing succeeded; returns error code otherwise.
+     */
+    ErrCode ProcessBundleShareFiles(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const InnerBundleInfo &oldInfo);
+
+    /**
+     * @brief Process shareFiles for a single module.
+     * @param hapPath The HAP file path.
+     * @param moduleInfo The module info.
+     * @param bundleName The bundle name.
+     * @param oldInfo The old bundle info for update.
+     * @return Returns ERR_OK if processing succeeded; returns error code otherwise.
+     */
+    ErrCode ProcessModuleShareFiles(const std::string &hapPath,
+        const InnerModuleInfo &moduleInfo, const std::string &bundleName,
+        const InnerBundleInfo &oldInfo);
+
+    /**
+     * @brief Update shareFileInfo for all instances (multi-user, clone, sandbox).
+     * @param shareFilesJson The JSON content.
+     * @param bundleName The bundle name.
+     * @param oldInfo The old bundle info containing all instance info.
+     * @return Returns ERR_OK if operation succeeded; returns error code otherwise.
+     */
+    ErrCode UpdateShareFileInfoForAllInstances(const std::string &shareFilesJson,
+        const std::string &bundleName, const InnerBundleInfo &oldInfo);
+
+    /**
+     * @brief Update all instances for a single user (main app + clones).
+     * @param shareFilesJson The JSON content.
+     * @param bundleName The bundle name.
+     * @param userInfo The user bundle info.
+     * @return Number of failed updates.
+     */
+    int32_t UpdateMultiUserInstances(const std::string &shareFilesJson,
+        const std::string &bundleName, const InnerBundleUserInfo &userInfo);
+
+    /**
+     * @brief Process shareFiles cleanup during uninstall.
+     * @param info The bundle info.
+     * @param userId The user ID to cleanup.
+     * @return Returns ERR_OK if processing succeeded; returns error code otherwise.
+     */
+    ErrCode ProcessUninstallShareFiles(const InnerBundleInfo &info, int32_t userId);
+
+    /**
+     * @brief Rollback shareFiles during install/update failure.
+     * @details This function restores the previous shareFiles configuration:
+     *          - For new install failure: unsets all shareFiles configuration
+     *          - For update failure: restores the old shareFiles JSON saved before update
+     * @param oldInfo Indicates the old bundle info for rollback (empty for new install).
+     */
+    void RollbackShareFiles(const InnerBundleInfo &oldInfo);
+
+    /**
+     * @brief Rollback shareFiles for new install failure.
+     * @return Number of failed rollback operations.
+     */
+    int32_t RollbackShareFilesForNewInstall();
+
+    /**
+     * @brief Rollback shareFiles for update failure.
+     * @param oldInfo The old bundle info.
+     * @return Number of failed rollback operations.
+     */
+    int32_t RollbackShareFilesForUpdate(const InnerBundleInfo &oldInfo);
+
+    /**
+     * @brief Rollback shareFiles for a single user (main app + clones).
+     * @param userInfo The user bundle info.
+     * @param oldInfo The old bundle info.
+     * @return Number of failed rollback operations.
+     */
+    int32_t RollbackUserInstances(const InnerBundleUserInfo &userInfo, const InnerBundleInfo &oldInfo);
+
+    /**
+     * @brief Save old shareFiles JSON config for rollback during update.
+     * @param oldBundleInfo The old (installed) bundle info.
+     * @return Returns ERR_OK if successfully saved; returns error code otherwise.
+     */
+    ErrCode SaveOldShareFilesForRollback(const InnerBundleInfo &oldBundleInfo);
+
+    /**
+     * @brief Check if the bundle info has shareFiles configured in entry module.
+     * @param bundleInfo The bundle info to check.
+     * @return Returns true if entry module has shareFiles configured; returns false otherwise.
+     */
+    static bool HasEntryShareFiles(const InnerBundleInfo &bundleInfo);
+
+    /**
+     * @brief Check if shareFiles processing is needed during install or update.
+     * @param isAppExist Indicates whether this is an update scenario (true) or new install (false).
+     * @param newInfos The new bundle infos to be installed.
+     * @param oldInfo The old bundle info (used only in update scenario).
+     * @return Returns true if shareFiles processing is needed; returns false otherwise.
+     * @note For new install: returns true only if new version has shareFiles configured.
+     * @note For update: returns true only if either old or new version has shareFiles configured.
+     */
+    static bool ShouldProcessShareFiles(bool isAppExist,
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const InnerBundleInfo &oldInfo);
+
     ErrCode ExtractHnpFileDir(const std::string &cpuAbi, const std::map<std::string, std::string> &hnpPackageMap,
         const std::string &modulePath) const;
     void DeleteOldNativeLibraryPath() const;
@@ -933,6 +1051,8 @@ private:
     bool isBundleCrossAppSharedConfig_ = false;
     bool isHnpInstalled_ = false;
     bool isKeepTokenId_ = false;
+    bool hasShareFilesProcessed_ = false;
+    bool hasOldShareFilesJsonSaved_ = false;
     InstallerState state_ = InstallerState::INSTALL_START;
     uint32_t versionCode_ = 0;
     uint32_t accessTokenId_ = 0;
@@ -954,6 +1074,8 @@ private:
     std::string entryModuleName_ = "";
     std::string appDistributionType_;
     std::string appIdentifier_ = "";
+    std::string bundleAppIdentifier_ = "";
+    std::string oldShareFilesJson_;
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
     // key is package name, value is boolean
@@ -984,6 +1106,12 @@ private:
     InstallerBundleTempInfo tempInfo_;
     // indicates whether the application has been restored to the preinstall
     bool isPreBundleRecovered_ = false;
+    std::vector<std::string> allowListenBundles_;
+    std::unordered_map<std::string, std::vector<SkillsPackageInfo>> moduleSkillInfoMap_;
+    std::string appSkillNotifyBundleName_;
+    std::vector<std::string> oldAppSkillNotifyItems_;
+    std::vector<std::string> newAppSkillNotifyItems_;
+    int32_t appSkillNotifyUserId_ = Constants::INVALID_USERID;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

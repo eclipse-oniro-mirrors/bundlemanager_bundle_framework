@@ -62,6 +62,7 @@ declare_args() {
   device_usage_statistics_enabled = true
   dfx_sigdump_handler_enabled = true
   webview_enable = true
+  bundle_framework_app_fwk_update_enable = true
   user_auth_framework_impl_enabled = true
 
   if (defined(global_parts_info) &&
@@ -189,6 +190,12 @@ declare_args() {
       !defined(global_parts_info.useriam_user_auth_framework)) {
     user_auth_framework_impl_enabled = false
   }
+
+  bms_accesscontrol_sandbox_manager = false
+  if (defined(global_parts_info) &&
+    defined(global_parts_info.accesscontrol_sandbox_manager)) {
+    bms_accesscontrol_sandbox_manager = true
+  }
 }
 
 print("bundle_framework_power_mgr_enable = " +
@@ -217,3 +224,4 @@ print(
     "user_auth_framework_impl_enabled = " + "$user_auth_framework_impl_enabled")
 print(
     "bundle_framework_bss_enable = " + "$bundle_framework_bss_enable")
+print("bms_accesscontrol_sandbox_manager = " + "$bms_accesscontrol_sandbox_manager")

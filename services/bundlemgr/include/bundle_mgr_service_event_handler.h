@@ -64,6 +64,7 @@ enum OTAFlag : uint32_t {
     PROCESS_ROUTER_MAP = 0x00200000,
     UPDATE_EXTENSION_DIRS_SELINUX_APL = 0x00400000,
     ADD_IDLE_INFO = 0x00800000,
+    UPDATE_ALTERNATE_ICONS = 0x01000000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -390,6 +391,12 @@ private:
      */
     void InnerProcessRebootSystemHspInstall(const std::list<std::string> &scanPathList);
     /**
+     * @brief Process reboot install skills by bundleList.
+     * @param scanPathList Indicates store bundle list.
+     * @return
+     */
+    void InnerProcessRebootSkillsInstall(const std::list<std::string> &scanPathList);
+    /**
      * @brief Reboot uninstall system and system vendor bundles.
      * @return
      */
@@ -399,6 +406,11 @@ private:
      * @return
      */
     void ProcessRebootAppServiceUninstall();
+    /**
+     * @brief Reboot uninstall skills bundles.
+     * @return
+     */
+    void ProcessRebootSkillsUninstall();
     /**
      * @brief Get bundle dir by scan.
      * @param bundleDirs Indicates the return bundleDirs.
@@ -477,6 +489,7 @@ private:
      * @param appType Indicates the bundle type.
      * @param removable Indicates whether it can be removed.
      * @param userIds Indicates the user to which the app needs to be installed.
+     * @param isPatchDowngrade Indicates whether this is a patch app downgrade install.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
     static bool OTAInstallSystemBundleTargetUser(
@@ -484,7 +497,8 @@ private:
         const std::string &bundleName,
         Constants::AppType appType,
         bool removable,
-        const std::vector<int32_t> &userIds);
+        const std::vector<int32_t> &userIds,
+        bool isPatchDowngrade = false);
     /**
      * @brief OTA Install system app and system vendor shared bundles.
      * @param filePaths Indicates the filePaths.
@@ -502,6 +516,14 @@ private:
      * @return Returns ERR_OK if this function called successfully; returns false otherwise.
      */
     ErrCode OTAInstallSystemHsp(const std::vector<std::string> &filePaths);
+    /**
+     * @brief OTA Install system skills.
+     * @param filePaths Indicates the filePaths.
+     * @param userIds Indicates the userIds to install for.
+     * @return Returns ERR_OK if this function called successfully; returns false otherwise.
+     */
+    ErrCode OTAInstallSystemSkills(const std::vector<std::string> &filePaths,
+        const std::set<int32_t> &userIds);
     /**
      * @brief Used to determine whether the module has been installed. If the installation has
      *        been uninstalled, OTA install and upgrade will not be allowed.
@@ -542,14 +564,14 @@ private:
         int32_t taskPriority, const std::vector<PreScanInfo> &tasks, int32_t userId);
 
     bool InnerMultiProcessBundleInstall(
-        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap,
+        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &otaMultiProcessUpgradeMap,
         Constants::AppType appType);
 
     static bool InstallSystemBundleNeedCheckUserForPatch(const std::vector<std::string> &filePaths,
         const std::string &bundleName, bool isOta);
 
     static bool InnerMultiProcessBundleInstallForPatch(
-        const std::unordered_map<std::string, std::vector<std::string>> &needInstallMap, bool isOta);
+        const std::unordered_map<std::string, std::vector<std::string>> &patchInstallPathMap, bool isOta);
 
     void ProcessCheckAppDataDir();
     void InnerProcessCheckAppDataDir();
@@ -608,6 +630,8 @@ private:
     void InnerProcessBootSystemHspInstall();
     void ProcessSystemHspInstall(const PreScanInfo &preScanInfo);
     bool ProcessSystemHspInstall(const std::string &systemHspDir);
+    void InnerProcessBootSkillsInstall(int32_t userId);
+    void ProcessSystemSkillsInstall(const PreScanInfo &preScanInfo, int32_t userId = Constants::UNSPECIFIED_USERID);
 
     static void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
@@ -676,7 +700,7 @@ private:
     void CheckALLResourceInfo();
     void InnerProcessAllDynamicIconInfoWhenOta();
     void InnerProcessAllThemeAndDynamicIconInfoWhenOta(
-        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap);
+        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &otaMultiProcessUpgradeMap);
     // Used to add bundle resource Info that does not exist in rdb when OTA.
     void static ProcessBundleResourceInfo();
     // scan all bundle data group info
@@ -686,7 +710,7 @@ private:
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, const int32_t errorCode);
     void ProcessAppTmpPath();
     void UpdatePreinstallDB(
-        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap);
+        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &otaMultiProcessUpgradeMap);
     void UpdatePreinstallDBForNotUpdatedBundle(const std::string &bundleName,
         const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos);
     void InnerProcessRebootUninstallWrongBundle();
@@ -741,6 +765,9 @@ private:
     static bool GetBundleNameAndUserIdFromPath(const std::string &path, std::vector<int32_t> &userIds,
         std::string &bundleName);
     void LoadPreInstallWhiteList();
+    void LoadOtaNewInstallWhitelist();
+    bool NeedProcessOtaNewPreloadInstall(const std::string &bundleName,
+        const std::string &scanPath) const;
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
@@ -764,6 +791,12 @@ private:
     std::map<std::string, HmpBundlePathInfo> hmpBundlePathInfos_;
     std::unordered_map<int32_t,
         std::pair<std::vector<std::string>, std::vector<std::string>>> userInstallAndRecoverMap_;
+
+    // Used to control OTA new preload install by whitelist.
+    bool otaNewInstallEnable_ = false;
+    bool otaNewInstallWhitelistLoaded_ = false;
+    bool multiUserInstallThirdPreloadApp_ = true;
+    std::unordered_set<std::string> otaNewInstallWhitelist_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

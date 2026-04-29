@@ -23,6 +23,7 @@
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "perf_profile.h"
+#include "share_file_helper.h"
 #include "scope_guard.h"
 
 namespace OHOS {
@@ -135,6 +136,17 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     info.SetBundleInstallTime(BundleUtil::GetCurrentTime(), userId_);
     info.SetBundleUpdateTime(0, userId_);
     info.SetAccessTokenIdEx(newTokenIdEx, userId_);
+
+#ifdef BMS_ACCESSCONTROL_SANDBOX_MANAGER
+    std::string sandboxKey = std::to_string(newAppIndex) + Constants::FILE_UNDERLINE + bundleName_;
+    ErrCode shareRet = ProcessBundleShareFiles(info, sandboxKey, userId_, newTokenIdEx.tokenIdExStruct.tokenID);
+    if (shareRet != ERR_OK) {
+        APP_LOGW("InstallSandboxApp process shareFiles failed, bundle=%{public}s, appIndex=%{public}d, ret=%{public}d",
+            bundleName_.c_str(), newAppIndex, shareRet);
+        return shareRet;
+    }
+#endif
+
     APP_LOGD("InstallSandboxApp generate uid of sandbox is %{public}d", userInfo.uid);
     ErrCode result = CreateSandboxDataDir(info, userInfo.uid, newAppIndex, dlpType);
     if (result != ERR_OK) {
@@ -222,6 +234,15 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete accessToken failed");
     }
+
+#ifdef BMS_ACCESSCONTROL_SANDBOX_MANAGER
+    std::string sandboxKey = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
+    int32_t unsetRet = ShareFileHelper::UnsetShareFileInfo(accessTokenId, sandboxKey, userId_);
+    if (unsetRet != 0) {
+        APP_LOGW("UninstallSandboxApp unset shareFiles failed, key=%{public}s, appIndex=%{public}d, ret=%{public}d",
+            sandboxKey.c_str(), appIndex, unsetRet);
+    }
+#endif
 
     if (!sandboxDataMgr_->DeleteSandboxAppIndex(bundleName, appIndex)) {
         APP_LOGE("delete sandbox app index failed");
@@ -374,6 +395,47 @@ bool BundleSandboxInstaller::FetchInnerBundleInfo(InnerBundleInfo &info, bool &i
     }
     isAppExist = dataMgr_->FetchInnerBundleInfo(bundleName_, info);
     return true;
+}
+
+ErrCode BundleSandboxInstaller::ProcessBundleShareFiles(const InnerBundleInfo &info,
+    const std::string &sandboxKey, const int32_t userId, uint32_t tokenId)
+{
+    LOG_D(BMS_TAG_INSTALLER, "ProcessBundleShareFiles begin, sandbox=%{public}s, userId=%{public}d",
+        sandboxKey.c_str(), userId);
+    if (dataMgr_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "get dataMgr failed");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    auto moduleInfos = info.GetInnerModuleInfos();
+    for (const auto &modulePair : moduleInfos) {
+        const InnerModuleInfo &moduleInfo = modulePair.second;
+        // Only process entry modules
+        if (!moduleInfo.isEntry) {
+            continue;
+        }
+        // If shareFiles is not configured, skip it
+        if (moduleInfo.shareFiles.empty()) {
+            break;
+        }
+        // Get shareFiles JSON from hap
+        std::string shareFilesJson;
+        ErrCode ret = dataMgr_->GetShareFilesJsonFromHap(moduleInfo.hapPath, moduleInfo, shareFilesJson);
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER,
+                "Failed to get shareFiles json for sandbox=%{public}s, module=%{public}s, ret=%{public}d",
+                sandboxKey.c_str(), moduleInfo.moduleName.c_str(), ret);
+            return ret;
+        }
+        int32_t setResult = ShareFileHelper::SetShareFileInfo(shareFilesJson, sandboxKey, userId, tokenId);
+        if (setResult != 0) {
+            LOG_W(BMS_TAG_INSTALLER,
+                "SetShareFileInfo failed but continuing sandbox install, sandbox=%{public}s, ret=%{public}d",
+                sandboxKey.c_str(), setResult);
+        }
+        return ERR_OK;
+    }
+    LOG_D(BMS_TAG_INSTALLER, "No shareFiles configuration found for bundle=%{public}s", info.GetBundleName().c_str());
+    return ERR_OK;
 }
 } // AppExecFwk
 } // OHOS

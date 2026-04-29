@@ -32,6 +32,7 @@
 #include "inner_bundle_clone_common.h"
 #include "parameters.h"
 #include "perf_profile.h"
+#include "share_file_helper.h"
 #include "scope_guard.h"
 #include "ipc_skeleton.h"
 
@@ -70,7 +71,8 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
         .bundleName = bundleName,
         .appId = appId_,
         .appIdentifier = appIdentifier_,
-        .crossAppSharedConfig = isBundleCrossAppSharedConfig_
+        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+        .appDistributionType = appDistributionType_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -125,7 +127,8 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
         .developerId = GetDeveloperId(bundleName),
         .assetAccessGroups = GetAssetAccessGroups(bundleName),
         .keepData = isKeepData_,
-        .crossAppSharedConfig = isBundleCrossAppSharedConfig_
+        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+        .appDistributionType = appDistributionType_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -208,6 +211,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         return ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED;
     }
     isBundleCrossAppSharedConfig_ = info.IsBundleCrossAppSharedConfig();
+    appDistributionType_ = info.GetAppDistributionType();
 
     // 2. obtain userId
     if (userId < Constants::DEFAULT_USERID) {
@@ -275,6 +279,15 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     versionCode_ = info.GetVersionCode();
     appId_ = info.GetAppId();
     appIdentifier_ = info.GetAppIdentifier();
+
+#ifdef BMS_ACCESSCONTROL_SANDBOX_MANAGER
+    ErrCode shareRet = ProcessBundleShareFiles(info, cloneBundleName, userId, newTokenIdEx.tokenIdExStruct.tokenID);
+    if (shareRet != ERR_OK) {
+        APP_LOGW("InstallCloneApp process shareFiles failed, bundle=%{public}s, appIndex=%{public}d, ret=%{public}d",
+            bundleName.c_str(), appIndex, shareRet);
+        return shareRet;
+    }
+#endif
 
     ScopeGuard createCloneDataDirGuard([&] {
         if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName, userId, appIndex)) {
@@ -344,6 +357,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         return ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED;
     }
     isBundleCrossAppSharedConfig_ = info.IsBundleCrossAppSharedConfig();
+    appDistributionType_ = info.GetAppDistributionType();
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGE("the origin application is not installed at current user");
@@ -366,6 +380,17 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         APP_LOGE("RemoveCloneBundle failed");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
     }
+
+#ifdef BMS_ACCESSCONTROL_SANDBOX_MANAGER
+    // Unset shareFileInfo for this clone app
+    std::string cloneBundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
+    int32_t unsetRet = ShareFileHelper::UnsetShareFileInfo(accessTokenId_, cloneBundleName, userId);
+    if (unsetRet != 0) {
+        APP_LOGW("UninstallCloneApp unset shareFiles failed, bundle=%{public}s, ret=%{public}d",
+            cloneBundleName.c_str(), unsetRet);
+    }
+#endif
+
     auto iter = destroyAppCloneParam.parameters.find(ServiceConstants::BMS_PARA_CLONE_IS_KEEP_DATA);
     if (iter == destroyAppCloneParam.parameters.end() || iter->second != ServiceConstants::BMS_TRUE) {
         if (RemoveCloneDataDir(bundleName, userId, appIndex, sync) != ERR_OK) {
@@ -652,6 +677,7 @@ void BundleCloneInstaller::ResetInstallProperties()
     isBundleCrossAppSharedConfig_ = false;
     isKeepData_ = false;
     existBeforeKeepDataApp_ = false;
+    appDistributionType_.clear();
 }
 
 std::string BundleCloneInstaller::GetAssetAccessGroups(const std::string &bundleName)
@@ -759,6 +785,48 @@ void BundleCloneInstaller::StopRelable(const InnerBundleInfo &info, int32_t uid)
     param.isPreInstallApp = info.IsPreInstallApp();
     param.stopReason = "ProcessCloneBundleUninstall";
     InstalldClient::GetInstance()->StopSetFileCon(param, ServiceConstants::StopReason::DELETE);
+}
+
+ErrCode BundleCloneInstaller::ProcessBundleShareFiles(const InnerBundleInfo &info,
+    const std::string &cloneBundleName, const int32_t userId, uint32_t tokenId)
+{
+    LOG_D(BMS_TAG_INSTALLER, "ProcessBundleShareFiles begin, cloneBundleName=%{public}s, userId=%{public}d",
+        cloneBundleName.c_str(), userId);
+    if (GetDataMgr() != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "get dataMgr failed");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+
+    auto moduleInfos = info.GetInnerModuleInfos();
+    for (const auto &modulePair : moduleInfos) {
+        const InnerModuleInfo &moduleInfo = modulePair.second;
+        // Only process entry modules
+        if (!moduleInfo.isEntry) {
+            continue;
+        }
+        // If shareFiles is not configured, skip it
+        if (moduleInfo.shareFiles.empty()) {
+            break;
+        }
+        // Get shareFiles JSON from hap
+        std::string shareFilesJson;
+        ErrCode ret = dataMgr_->GetShareFilesJsonFromHap(moduleInfo.hapPath, moduleInfo, shareFilesJson);
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER,
+                "Failed to get shareFiles json for bundle=%{public}s, module=%{public}s, ret=%{public}d",
+                cloneBundleName.c_str(), moduleInfo.moduleName.c_str(), ret);
+            return ret;
+        }
+        int32_t setResult = ShareFileHelper::SetShareFileInfo(shareFilesJson, cloneBundleName, userId, tokenId);
+        if (setResult != 0) {
+            LOG_W(BMS_TAG_INSTALLER,
+                "SetShareFileInfo failed but continuing clone install, clone=%{public}s, ret=%{public}d",
+                cloneBundleName.c_str(), setResult);
+        }
+        return ERR_OK;
+    }
+    LOG_D(BMS_TAG_INSTALLER, "No shareFiles configuration found for bundle=%{public}s", info.GetBundleName().c_str());
+    return ERR_OK;
 }
 } // AppExecFwk
 } // OHOS

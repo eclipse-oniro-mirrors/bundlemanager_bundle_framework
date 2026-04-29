@@ -163,8 +163,7 @@ public:
         const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
         std::vector<BundleStorageStats> &bundleStats) override;
 
-    virtual ErrCode GetAllBundleStats(const int32_t userId,
-        std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids) override;
+    virtual ErrCode GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids) override;
     /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.
@@ -194,6 +193,18 @@ public:
 
     std::string GetAppDataPath(const std::string &bundleName, const std::string &el,
         const int32_t userId, const int32_t appIndex);
+
+    /**
+     * @brief Get top N largest items in application data directory.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param timeout Indicates the maximum scan time in seconds.
+     * @param largestItems Output parameter containing JSON string of largest items with path and size.
+     * @return Returns ERR_OK if get successfully; returns error code otherwise.
+     */
+    ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const int32_t timeout, std::string &largestItems) override;
 
     /**
      * @brief Get all cache file path.
@@ -303,6 +314,15 @@ public:
     virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir) override;
 
     virtual ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths) override;
+
+    /**
+     * @brief Extract skills package with validation.
+     * @param param Contains bundleName, moduleName, hspPath and skillNameList.
+     * @param skillInfoList Output parameter containing skill extraction results with description.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractSkillsPackage(const SkillsPackageParam &param,
+        std::vector<SkillsPackageInfo> &skillInfoList) override;
 
 private:
     std::string GetExtensionConfigPath() const;

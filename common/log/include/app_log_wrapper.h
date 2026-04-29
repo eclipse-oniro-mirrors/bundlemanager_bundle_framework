@@ -29,6 +29,10 @@ namespace AppExecFwk {
 #define APP_LOG_TAG "BundleMgrService"
 #endif
 
+#ifndef O_UNCACHE
+#define O_UNCACHE 0x40000000
+#endif
+
 enum class AppLogLevel { DEBUG = 0, INFO, WARN, ERROR, FATAL };
 
 static constexpr OHOS::HiviewDFX::HiLogLabel APP_LABEL = {LOG_CORE, LOG_DOMAIN, APP_LOG_TAG};

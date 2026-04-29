@@ -23,6 +23,7 @@
 #include "bundle_installer_proxy.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "get_largest_items_callback_interface.h"
 #include "ipc/installd_host.h"
 #include "mock_status_receiver.h"
 
@@ -2350,9 +2351,6 @@ HWTEST_F(BmsBundleInstallerIPCTest, HandleGetAllBundleStats_0100, Function | Sma
 {
     InstalldHost host;
     MessageParcel datas;
-    std::u16string descriptor = InstalldHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteInt32(100);
     datas.WriteInt32(0);
     MessageParcel reply;
     bool res = host.HandleGetAllBundleStats(datas, reply);
@@ -2758,5 +2756,31 @@ HWTEST_F(BmsBundleInstallerIPCTest, HandleDeleteDataGroupDirs_0001, Function | S
     InstalldHost installdHost;
     int res = installdHost.HandleDeleteDataGroupDirs(datas, reply);
     EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: HandleGetTopNLargestItemsInAppDataDir_0001
+ * @tc.name: HandleGetTopNLargestItemsInAppDataDir with valid parameters
+ * @tc.desc: 1. test HandleGetTopNLargestItemsInAppDataDir of InstalldHost
+ *           2. verify HandleGetTopNLargestItemsInAppDataDir handles valid parameters
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleGetTopNLargestItemsInAppDataDir_0001, Function | SmallTest | Level0)
+{
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    std::string bundleName = "com.example.test";
+    datas.WriteString(bundleName);
+    int32_t appIndex = 0;
+    datas.WriteInt32(appIndex);
+    int32_t userId = 100;
+    datas.WriteInt32(userId);
+    int32_t timeout = 180;  // 3 minutes timeout
+    datas.WriteInt32(timeout);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    InstalldHost installdHost;
+    int res = installdHost.HandleGetTopNLargestItemsInAppDataDir(datas, reply);
+    EXPECT_EQ(res, true);
 }
 } // OHOS

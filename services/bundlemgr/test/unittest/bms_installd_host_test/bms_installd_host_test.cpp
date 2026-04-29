@@ -985,4 +985,18 @@ HWTEST_F(BmsInstalldHostTest, HandleDeleteCertAndRemoveKey_0100, Function | Smal
     bool res = installdHost.HandleDeleteCertAndRemoveKey(data, reply);
     EXPECT_FALSE(res);
 }
+
+/**
+ * @tc.number: HandleExtractSkillsPackage_0100
+ * @tc.name: test HandleExtractSkillsPackage
+ * @tc.desc: 1.HandleExtractSkillsPackage test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleExtractSkillsPackage_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleExtractSkillsPackage(data, reply);
+    EXPECT_FALSE(res);
+}
 } // OHOS

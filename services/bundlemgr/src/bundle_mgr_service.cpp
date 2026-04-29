@@ -135,6 +135,8 @@ bool BundleMgrService::Init()
     CHECK_INIT_RESULT(InitBundleMgrHost(), "Init bundleMgr fail");
     CHECK_INIT_RESULT(InitBundleInstaller(), "Init bundleInstaller fail");
     InitBundleDataMgr();
+    APP_LOGI_NOFUNC("BundleMgrService InitOobePreloadUninstallMgr");
+    InitOobePreloadUninstallMgr();
     CHECK_INIT_RESULT(InitBundleUserMgr(), "Init bundleUserMgr fail");
     CHECK_INIT_RESULT(InitVerifyManager(), "Init verifyManager fail");
     CHECK_INIT_RESULT(InitExtendResourceManager(), "Init extendResourceManager fail");
@@ -147,6 +149,7 @@ bool BundleMgrService::Init()
     CHECK_INIT_RESULT(InitQuickFixManager(), "Init quickFixManager fail");
     CHECK_INIT_RESULT(InitOverlayManager(), "Init overlayManager fail");
     CHECK_INIT_RESULT(InitBundleResourceMgr(), "Init BundleResourceMgr fail");
+    CHECK_INIT_RESULT(InitSkillManager(), "Init SkillManager fail");
     BundleResourceHelper::BundleSystemStateInit();
     ready_ = true;
     APP_LOGI_NOFUNC("BundleMgrService Init success");
@@ -161,6 +164,15 @@ void BundleMgrService::InitBmsParam()
 void BundleMgrService::InitPreInstallExceptionMgr()
 {
     preInstallExceptionMgr_ = std::make_shared<PreInstallExceptionMgr>();
+}
+
+void BundleMgrService::InitOobePreloadUninstallMgr()
+{
+    oobePreloadUninstallMgr_ = std::make_shared<OobePreloadUninstallMgr>();
+    if (oobePreloadUninstallMgr_ != nullptr) {
+        oobePreloadUninstallMgr_->RecoverPendingBundles(Constants::DEFAULT_USERID);
+        oobePreloadUninstallMgr_->RecoverPendingBundles(Constants::U1);
+    }
 }
 
 bool BundleMgrService::InitBundleMgrHost()
@@ -359,6 +371,18 @@ bool BundleMgrService::InitBundleResourceMgr()
     return true;
 }
 
+bool BundleMgrService::InitSkillManager()
+{
+    if (skillManagerHostImpl_ == nullptr) {
+        skillManagerHostImpl_ = new (std::nothrow) SkillManagerHostImpl();
+        if (skillManagerHostImpl_ == nullptr) {
+            APP_LOGE("create skillManagerHostImpl failed");
+            return false;
+        }
+    }
+    return true;
+}
+
 sptr<BundleInstallerHost> BundleMgrService::GetBundleInstaller() const
 {
     return installer_;
@@ -447,6 +471,11 @@ const std::shared_ptr<PreInstallExceptionMgr> BundleMgrService::GetPreInstallExc
     return preInstallExceptionMgr_;
 }
 
+const std::shared_ptr<OobePreloadUninstallMgr> BundleMgrService::GetOobePreloadUninstallMgr() const
+{
+    return oobePreloadUninstallMgr_;
+}
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 sptr<IDefaultApp> BundleMgrService::GetDefaultAppProxy() const
 {
@@ -486,6 +515,11 @@ sptr<IBundleResource> BundleMgrService::GetBundleResourceProxy() const
     return bundleResourceHostImpl_;
 }
 #endif
+
+sptr<IBundleSkillManager> BundleMgrService::GetSkillManagerProxy() const
+{
+    return skillManagerHostImpl_;
+}
 
 void BundleMgrService::CheckAllUser()
 {

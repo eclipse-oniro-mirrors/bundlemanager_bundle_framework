@@ -2642,7 +2642,7 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetApplicationLabel_0003, Function | Medium
 
 /**
  * @tc.number: HandleGetApplicationLabel_0004
- * @tc.name: test the HandleGetApplicationLabel
+ * @tc.name: test HandleGetApplicationLabel
  * @tc.desc: 1. system running normally
  *           2. test HandleGetApplicationLabel with appIndex for clone app
  */
@@ -2657,6 +2657,158 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetApplicationLabel_0004, Function | Medium
     EXPECT_EQ(res, ERR_OK);
     ErrCode innerRet = reply.ReadInt32();
     EXPECT_EQ(innerRet, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetInstalledBundleList_0100
+ * @tc.name: test HandleGetInstalledBundleList with empty data
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetInstalledBundleList with empty MessageParcel
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetInstalledBundleList_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetInstalledBundleList(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetInstalledBundleList_0200
+ * @tc.name: test HandleGetInstalledBundleList with parameters
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetInstalledBundleList with flags and userId
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetInstalledBundleList_0200, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    uint32_t flags = 0;
+    int32_t userId = 100;
+    data.WriteUint32(flags);
+    data.WriteInt32(userId);
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetInstalledBundleList(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetInstalledBundleList_0300
+ * @tc.name: test HandleGetInstalledBundleList with different flags
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetInstalledBundleList with various flag values
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetInstalledBundleList_0300, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    uint32_t flags = 0x00000001;
+    int32_t userId = 0;
+    data.WriteUint32(flags);
+    data.WriteInt32(userId);
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetInstalledBundleList(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetInstalledBundleList_0400
+ * @tc.name: test HandleGetInstalledBundleList with negative userId
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetInstalledBundleList error handling
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetInstalledBundleList_0400, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    uint32_t flags = 0;
+    int32_t userId = -1;
+    data.WriteUint32(flags);
+    data.WriteInt32(userId);
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetInstalledBundleList(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleSetBundleFirstLaunch_0001
+ * @tc.name: test the HandleSetBundleFirstLaunch
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetBundleFirstLaunch with empty data (empty bundleName)
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleSetBundleFirstLaunch_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleSetBundleFirstLaunch(data, reply);
+    // When data is empty, ReadString returns empty string, bundleName is empty
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleSetBundleFirstLaunch_0002
+ * @tc.name: test the HandleSetBundleFirstLaunch
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetBundleFirstLaunch with valid parameters
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleSetBundleFirstLaunch_0002, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("com.test.bundle");
+    data.WriteInt32(100);  // userId
+    data.WriteInt32(0);    // appIndex
+    data.WriteBool(true);  // isBundleFirstLaunched
+    ErrCode res = bundleMgrHost.HandleSetBundleFirstLaunch(data, reply);
+    // HandleSetBundleFirstLaunch returns ERR_OK after writing reply
+    EXPECT_EQ(res, ERR_OK);
+    // Read the error code from reply
+    ErrCode innerRet = reply.ReadInt32();
+    // SetBundleFirstLaunch in BundleMgrHost base class returns error since bundle doesn't exist
+    EXPECT_NE(innerRet, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleSetBundleFirstLaunch_0003
+ * @tc.name: test the HandleSetBundleFirstLaunch
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetBundleFirstLaunch with empty bundleName explicitly
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleSetBundleFirstLaunch_0003, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("");  // empty bundleName
+    data.WriteInt32(100);  // userId
+    data.WriteInt32(0);    // appIndex
+    data.WriteBool(true);  // isBundleFirstLaunched
+    ErrCode res = bundleMgrHost.HandleSetBundleFirstLaunch(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleSetBundleFirstLaunch_0004
+ * @tc.name: test the HandleSetBundleFirstLaunch
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetBundleFirstLaunch with clone appIndex
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleSetBundleFirstLaunch_0004, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("com.test.bundle");
+    data.WriteInt32(100);  // userId
+    data.WriteInt32(1);    // clone appIndex
+    data.WriteBool(false); // isBundleFirstLaunched
+    ErrCode res = bundleMgrHost.HandleSetBundleFirstLaunch(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    ErrCode innerRet = reply.ReadInt32();
+    EXPECT_NE(innerRet, ERR_OK);
 }
 
 } // AppExecFwk

@@ -37,6 +37,7 @@
 #include "bundle_mgr_ext_host_impl.h"
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service_event_handler.h"
+#include "oobe_preload_uninstall_mgr.h"
 #include "bundle_user_mgr_host_impl.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_host_impl.h"
@@ -54,6 +55,7 @@
 #include "bundle_resource_host_impl.h"
 #endif
 #include "verify_manager_host_impl.h"
+#include "skill_manager_host_impl.h"
 namespace OHOS {
 namespace AppExecFwk {
 class BundleMgrService : public SystemAbility {
@@ -127,6 +129,7 @@ public:
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     sptr<IBundleResource> GetBundleResourceProxy() const;
 #endif
+    sptr<IBundleSkillManager> GetSkillManagerProxy() const;
     /**
      * @brief Check all user.
      */
@@ -152,6 +155,7 @@ public:
     const std::shared_ptr<BmsParam> GetBmsParam() const;
 
     const std::shared_ptr<PreInstallExceptionMgr> GetPreInstallExceptionMgr() const;
+    const std::shared_ptr<OobePreloadUninstallMgr> GetOobePreloadUninstallMgr() const;
 
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     sptr<IOverlayManager> GetOverlayManagerProxy() const;
@@ -170,6 +174,7 @@ private:
 
     void InitBmsParam();
     void InitPreInstallExceptionMgr();
+    void InitOobePreloadUninstallMgr();
     bool InitBundleMgrHost();
     bool InitBundleInstaller();
     void InitBundleDataMgr();
@@ -186,6 +191,7 @@ private:
     bool InitOverlayManager();
     void CreateBmsServiceDir();
     bool InitBundleResourceMgr();
+    bool InitSkillManager();
 
 private:
     bool ready_ = false;
@@ -209,6 +215,7 @@ private:
     sptr<IExtendResourceManager> extendResourceManager_;
     std::shared_ptr<BmsParam> bmsParam_;
     std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr_;
+    std::shared_ptr<OobePreloadUninstallMgr> oobePreloadUninstallMgr_;
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     sptr<DefaultAppHostImpl> defaultAppHostImpl_;
@@ -231,6 +238,8 @@ private:
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     sptr<BundleResourceHostImpl> bundleResourceHostImpl_;
 #endif
+
+    sptr<SkillManagerHostImpl> skillManagerHostImpl_;
 
 #define CHECK_INIT_RESULT(result, errmsg)                                         \
     do {                                                                          \

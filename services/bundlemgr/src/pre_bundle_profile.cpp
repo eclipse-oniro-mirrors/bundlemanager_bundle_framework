@@ -464,6 +464,9 @@ ErrCode PreBundleProfile::TransformTo(
         if (array.find(ALLOW_ENABLE_NOTIFICATION) != jsonObjectEnd) {
             preBundleConfigInfo.existInJsonFile.push_back(ALLOW_ENABLE_NOTIFICATION);
         }
+        if (array.find(ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED) != jsonObjectEnd) {
+            preBundleConfigInfo.existInJsonFile.push_back(ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED);
+        }
         if (parseResult == ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) {
             APP_LOGE("bundlename must exist, and it is empty here");
             continue;

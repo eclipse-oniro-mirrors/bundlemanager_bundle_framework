@@ -30,6 +30,10 @@ struct OverlayMsg {
     OverlayType type = NON_OVERLAY_TYPE;
 };
 
+ErrCode ProcessLibrarySupportDirectory(
+    const std::map<std::string, std::vector<std::string>> &librarySupportDirectoryMap,
+    InnerBundleInfo &innerBundleInfo);
+
 class ModuleProfile {
 public:
     /**

@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <filesystem>
 #include <fstream>
+#include <ftw.h>
 #include <iostream>
 #include <map>
 #include <regex>
@@ -54,9 +55,13 @@
 #include "ffrt.h"
 #include "ipc/critical_manager.h"
 #include "parameters.h"
+#include "provision/provision_verify.h"
 #include "securec.h"
 #include "hnp_api.h"
 #include "policycoreutils.h"
+#include "bundle_extractor.h"
+#include "ipc/skills_package_param.h"
+#include "inner_bundle_clone_common.h"
 #ifdef WITH_SELINUX
 #include <selinux/selinux.h>
 #endif
@@ -93,6 +98,7 @@ static const char CODE_CRYPTO_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15
 constexpr int64_t BUFFER_SIZE = 8192;
 static constexpr int32_t PERMISSION_DENIED = 13;
 static constexpr int32_t RESULT_OK = 0;
+static constexpr int32_t CMDLINE_MAX_BUF_LEN = 4096;
 static constexpr int16_t INSTALLS_UID = 3060;
 static constexpr int16_t MODE_BASE = 07777;
 static constexpr int8_t KEY_ID_STEP = 2;
@@ -101,11 +107,18 @@ constexpr const char* PROC_MOUNTS_PATH = "/proc/mounts";
 constexpr const char* QUOTA_DEVICE_DATA_PATH = "/data";
 constexpr const char* CACHE_DIR = "cache";
 constexpr const char* BUNDLE_BASE_CODE_DIR = "/data/app/el1/bundle";
+constexpr const char* SKILL_BASE_CODE_DIR = "/data/app/el1/skills";
 constexpr const char* AP_PATH = "ap/";
 constexpr const char* AI_SUFFIX = ".ai";
 constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* BUNDLE_BACKUP_KEEP_DIR = "/.backup";
 constexpr const char* ATOMIC_SERVICE_PATH = "+auid-";
+constexpr const char* PROC_CMDLINE_FILE_PATH = "/proc/cmdline";
+constexpr const char* PERMISSION_KEY = "ohos.permission.kernel.SUPPORT_PLUGIN";
+constexpr const char* PLUGIN_ID = "pluginDistributionIDs";
+constexpr const char* PLUGIN_ID_SEPARATOR_OTHER = "|";
+constexpr const char* PLUGIN_ID_SEPARATOR = ",";
+constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 const std::vector<std::string> DRIVER_EXECUTE_DIR {
     "/print_service/cups/serverbin/filter",
     "/print_service/sane/backend",
@@ -164,6 +177,139 @@ static bool EndsWith(const std::string &sourceString, const std::string &targetS
     }
     return false;
 }
+
+// RAII wrapper for DIR* to prevent resource leaks
+class DirGuard {
+public:
+    explicit DirGuard(DIR *dir) : dir_(dir) {}
+    ~DirGuard()
+    {
+        if (dir_ != nullptr) {
+            closedir(dir_);
+        }
+    }
+    DIR* Get() const { return dir_; }
+    DirGuard(const DirGuard&) = delete;
+    DirGuard& operator=(const DirGuard&) = delete;
+private:
+    DIR *dir_;
+};
+
+// Data structure for nftw callback to maintain state
+struct DirSizeData {
+    uint64_t totalSize = 0;
+    bool overflow = false;
+    const std::string *dirPath;
+};
+
+// Thread-local storage for callback data to ensure thread safety
+static thread_local DirSizeData *g_dirSizeData = nullptr;
+
+/**
+ * @brief RAII guard for managing thread-local DirSizeData pointer
+ * Automatically clears the thread-local pointer when going out of scope
+ */
+class DirSizeDataGuard {
+public:
+    explicit DirSizeDataGuard(DirSizeData *data) : data_(data) {}
+    ~DirSizeDataGuard()
+    {
+        g_dirSizeData = nullptr;
+    }
+
+private:
+    DirSizeData *data_;
+};
+
+constexpr int32_t MAX_FTW_DEPTH = 1000;  // Maximum directory traversal depth to prevent stack overflow
+constexpr uint64_t MAX_DIRECTORY_SIZE = UINT64_MAX - 1024ULL * 1024ULL * 1024ULL;  // 1GB less than max
+
+/**
+ * @brief Callback function for nftw to calculate directory size
+ * @param path The current file/directory path
+ * @param sb Stat buffer containing file information
+ * @param typeflag Type of file (FTW_F, FTW_D, etc.)
+ * @param ftwbuf Structure containing walk information including depth
+ * @return Returns 0 to continue, non-zero to stop traversal
+ */
+static int32_t CalculateDirSizeCallback(const char *path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
+{
+    // Access thread-local data
+    DirSizeData *data = g_dirSizeData;
+    if (data == nullptr) {
+        return 1;  // Stop traversal on error
+    }
+
+    // Check depth to prevent stack overflow
+    if (ftwbuf->level > MAX_FTW_DEPTH) {
+        LOG_W(BMS_TAG_INSTALLD, "CalculateDirSizeCallback: directory too deep, level: %{public}d, path: %{public}s",
+            ftwbuf->level, path);
+        return 0;  // Continue processing other files
+    }
+
+    if (typeflag == FTW_F) {
+        // Check for overflow before adding
+        if (data->totalSize > MAX_DIRECTORY_SIZE - sb->st_size) {
+            LOG_W(BMS_TAG_INSTALLD, "CalculateDirSizeCallback: size overflow for %{public}s",
+                data->dirPath->c_str());
+            data->overflow = true;
+            return 1;  // Stop traversal
+        }
+        // Only count regular files
+        data->totalSize += sb->st_size;
+    }
+
+    return 0;  // Continue traversal
+}
+
+/**
+ * @brief Calculate directory size with caching support to avoid redundant traversals
+ * @param dirPath The directory path to calculate size for
+ * @param dirSizeCache Reference to the cache map storing already calculated directory sizes
+ * @return Returns the directory size, or 0 if calculation fails
+ */
+static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
+    std::unordered_map<std::string, uint64_t> &dirSizeCache)
+{
+    // Check cache first
+    auto it = dirSizeCache.find(dirPath);
+    if (it != dirSizeCache.end()) {
+        LOG_D(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: cache hit for %{public}s, size: %{public}" PRIu64,
+            dirPath.c_str(), it->second);
+        return it->second;
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: cache miss for %{public}s, calculating...",
+        dirPath.c_str());
+
+    // Prevent recursive calls in the same thread
+    if (g_dirSizeData != nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: recursive call detected, dirPath=%{public}s",
+            dirPath.c_str());
+        return 0;
+    }
+    // Prepare callback data
+    DirSizeData data = {0, false, &dirPath};
+    // Set thread-local data for callback access
+    g_dirSizeData = &data;
+    // Use RAII guard to ensure thread-local data is cleared when going out of scope
+    DirSizeDataGuard guard(&data);
+    // Use nftw with FTW_PHYSICAL (don't follow symlinks) and FTW_MOUNT (don't cross filesystem boundaries)
+    // The third parameter is the maximum number of open file descriptors
+    int32_t ret = nftw(dirPath.c_str(), CalculateDirSizeCallback, 10, FTW_PHYS | FTW_MOUNT);
+    if (ret != 0 && !data.overflow) {
+        LOG_W(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: nftw failed for %{public}s, errno: %{public}d",
+            dirPath.c_str(), errno);
+        return 0;
+    }
+    uint64_t totalSize = data.totalSize;
+    // Cache the result
+    dirSizeCache[dirPath] = totalSize;
+    LOG_D(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: calculated %{public}s, size: %{public}" PRIu64,
+        dirPath.c_str(), totalSize);
+    return totalSize;
+}
+
 } // namespace
 
 #define FSCRYPT_KEY_DESCRIPTOR_SIZE 8
@@ -691,6 +837,296 @@ bool InstalldOperator::ProcessBundleUnInstallNative(const std::string &userId, c
     return true;
 }
 
+ErrCode InstalldOperator::ExtractSkillsPackage(const SkillsPackageParam &param,
+    std::vector<SkillsPackageInfo> &skillInfoList)
+{
+    const std::string &extractModuleName = param.extractModuleName.empty() ? param.moduleName : param.extractModuleName;
+    LOG_I(BMS_TAG_INSTALLD, "-n %{public}s -m %{public}s -e %{public}s skillCount=%{public}zu start",
+        param.bundleName.c_str(), param.moduleName.c_str(), extractModuleName.c_str(), param.skillNameList.size());
+
+    if (param.bundleName.empty() || param.moduleName.empty() || param.hspPath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid input parameters");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    std::string filePath = "";
+    if (!PathToRealPath(param.hspPath, filePath)) {
+        LOG_W(BMS_TAG_INSTALLD, "not real path: %{public}s", param.hspPath.c_str());
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    // Check if HSP file exists
+    if (access(filePath.c_str(), F_OK) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "HSP file not exist: %{public}s", filePath.c_str());
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+
+    // Create BundleExtractor to read HSP file
+    BundleExtractor extractor(filePath);
+    if (!extractor.Init()) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to initialize extractor for %{public}s", param.hspPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FILES_FAILED;
+    }
+    // Clear result list
+    skillInfoList.clear();
+    // Process each skill
+    for (const auto &skillName : param.skillNameList) {
+        if (!IsFileNameValid(skillName)) {
+            LOG_E(BMS_TAG_INSTALLD, "wrong name %{public}s", skillName.c_str());
+            continue;
+        }
+        // Step 1: Check if SKILL.md exists in HSP
+        std::string skillMdPathInHsp = std::string("skills/") + skillName + "/SKILL.md";
+        if (!extractor.HasEntry(skillMdPathInHsp)) {
+            LOG_E(BMS_TAG_INSTALLD, "SKILL.md not found for skill %{public}s", skillName.c_str());
+            continue;
+        }
+
+        // Step 2: Build target path for skill extraction
+        std::string targetSkillPath = std::string(Constants::BASE_SKILL_DIR) + "/" + param.bundleName +
+            "/" + extractModuleName + "/skills/" + skillName;
+        LOG_D(BMS_TAG_INSTALLD, "target path = %{public}s", targetSkillPath.c_str());
+
+        // Step 3: Extract skill folder from HSP
+        if (!ExtractSkillFromHsp(extractor, skillName, targetSkillPath)) {
+            LOG_E(BMS_TAG_INSTALLD, "failed to extract skill %{public}s", skillName.c_str());
+            continue;
+        }
+
+        // Step 4: Parse SKILL.md and validate name, get description
+        std::string extractedSkillMdPath = targetSkillPath + "/SKILL.md";
+        std::string parsedName;
+        std::string description;
+        if (ParseSkillMd(extractedSkillMdPath, parsedName, description) != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "failed to parse SKILL.md for skill %{public}s", skillName.c_str());
+            // Clean up extracted directory
+            OHOS::ForceRemoveDirectoryBMS(targetSkillPath);
+            continue;
+        }
+
+        // Validate skill name matches
+        if (parsedName != skillName) {
+            LOG_E(BMS_TAG_INSTALLD, "name mismatch for skill %{public}s, expected=%{public}s, parsed=%{public}s",
+                skillName.c_str(), skillName.c_str(), parsedName.c_str());
+            // Clean up extracted directory
+            OHOS::ForceRemoveDirectoryBMS(targetSkillPath);
+            continue;
+        }
+
+        // Success: add to result list
+        SkillsPackageInfo info;
+        info.bundleName = param.bundleName;
+        info.moduleName = param.moduleName;
+        info.skillsName = skillName;
+        info.description = description;
+        skillInfoList.emplace_back(info);
+
+        LOG_I(BMS_TAG_INSTALLD, "successfully extracted skill %{public}s", skillName.c_str());
+    }
+
+    return ERR_OK;
+}
+
+bool InstalldOperator::ExtractSkillFromHsp(
+    const BundleExtractor &extractor,
+    const std::string &skillName,
+    const std::string &targetPath)
+{
+    LOG_D(BMS_TAG_INSTALLD, "skillName=%{public}s, targetPath=%{public}s", skillName.c_str(), targetPath.c_str());
+
+    // Create target directory
+    if (!OHOS::ForceCreateDirectory(targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to create directory %{public}s", targetPath.c_str());
+        return false;
+    }
+
+    // Get all file names in HSP
+    std::vector<std::string> allFiles;
+    if (!extractor.GetZipFileNames(allFiles)) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to get file list from HSP");
+        ForceRemoveDirectory(targetPath);
+        return false;
+    }
+
+    // Extract all files under skillName folder
+    std::string skillPrefix = std::string("skills/") + skillName + "/";
+    int32_t extractedCount = 0;
+
+    for (const auto &fileName : allFiles) {
+        if (fileName.find(skillPrefix) == 0) {
+            // Calculate relative path and target file path
+            std::string relativePath = fileName.substr(skillPrefix.length());
+            std::string targetFilePath = targetPath + "/" + relativePath;
+
+            // Create parent directory if needed
+            size_t lastSlash = relativePath.find_last_of('/');
+            if (lastSlash != std::string::npos) {
+                std::string parentDir = targetPath + "/" + relativePath.substr(0, lastSlash);
+                OHOS::ForceCreateDirectory(parentDir);
+            }
+
+            // Extract file
+            if (extractor.ExtractFile(fileName, targetFilePath)) {
+                extractedCount++;
+            } else {
+                LOG_W(BMS_TAG_INSTALLD, "failed to extract file %{public}s", fileName.c_str());
+            }
+        }
+    }
+
+    if (extractedCount == 0) {
+        LOG_E(BMS_TAG_INSTALLD, "no files extracted for skill %{public}s",
+            skillName.c_str());
+        ForceRemoveDirectory(targetPath);
+        return false;
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "extracted %{public}d files for skill %{public}s", extractedCount, skillName.c_str());
+    return true;
+}
+
+bool InstalldOperator::ValidateSkillName(
+    const std::string &skillName,
+    const std::string &extractedPath)
+{
+    LOG_D(BMS_TAG_INSTALLD, "skillName=%{public}s, extractedPath=%{public}s", skillName.c_str(), extractedPath.c_str());
+
+    // Parse SKILL.md to get the name
+    std::string parsedName;
+    std::string description;
+    ErrCode ret = ParseSkillMd(extractedPath, parsedName, description);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to parse SKILL.md at %{public}s", extractedPath.c_str());
+        return false;
+    }
+
+    // Compare parsed name with expected skill name
+    if (parsedName != skillName) {
+        LOG_E(BMS_TAG_INSTALLD, "name mismatch! expected=%{public}s, parsed=%{public}s",
+            skillName.c_str(), parsedName.c_str());
+        return false;
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "name validation passed for skill %{public}s", skillName.c_str());
+    return true;
+}
+
+ErrCode InstalldOperator::ParseSkillMd(const std::string &skillMdPath,
+    std::string &name, std::string &description)
+{
+    LOG_D(BMS_TAG_INSTALLD, "parsing %{public}s", skillMdPath.c_str());
+
+    // Read SKILL.md frontmatter only. Supported example:
+    // \xEF\xBB\xBF---
+    // # skill metadata
+    // name: "my-skill"
+    // description: 'my skill description'
+    // ...
+    std::ifstream skillMdFile(skillMdPath);
+    if (!skillMdFile.is_open()) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to open file %{public}s", skillMdPath.c_str());
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+
+    std::string line;
+    name.clear();
+    description.clear();
+    auto trimString = [](std::string &value, const char *trimChars) {
+        size_t first = value.find_first_not_of(trimChars);
+        if (first == std::string::npos) {
+            value.clear();
+            return;
+        }
+        size_t last = value.find_last_not_of(trimChars);
+        value = value.substr(first, last - first + 1);
+    };
+    auto stripUtf8Bom = [](std::string &value) {
+        constexpr char UTF8_BOM[] = "\xEF\xBB\xBF";
+        if (value.compare(0, strlen(UTF8_BOM), UTF8_BOM) == 0) {
+            value.erase(0, strlen(UTF8_BOM));
+        }
+    };
+    auto stripQuotes = [](std::string &value) {
+        if (value.size() >= 2) {
+            char first = value.front();
+            char last = value.back();
+            if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
+                value = value.substr(1, value.size() - 2);
+            }
+        }
+    };
+
+    bool frontmatterStarted = false;
+    bool frontmatterEnded = false;
+    bool isFirstLine = true;
+    while (std::getline(skillMdFile, line)) {
+        if (isFirstLine) {
+            stripUtf8Bom(line);
+            isFirstLine = false;
+        }
+        trimString(line, " \t\r\n");
+        if (line.empty()) {
+            continue;
+        }
+
+        if (!frontmatterStarted) {
+            if (line == "---") {
+                frontmatterStarted = true;
+                continue;
+            }
+            LOG_E(BMS_TAG_INSTALLD, "frontmatter not found");
+            return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+        }
+
+        if (line == "---" || line == "...") {
+            frontmatterEnded = true;
+            break;
+        }
+
+        // skip comments
+        if (line[0] == '#') {
+            continue;
+        }
+
+        size_t colonPos = line.find(':');
+        if (colonPos == std::string::npos) {
+            continue;
+        }
+
+        std::string key = line.substr(0, colonPos);
+        std::string value = line.substr(colonPos + 1);
+        trimString(key, " \t");
+        trimString(value, " \t");
+        stripQuotes(value);
+
+        if (key == "name" && name.empty()) {
+            name = value;
+            LOG_D(BMS_TAG_INSTALLD, "found name = %{public}s", name.c_str());
+        } else if (key == "description" && description.empty()) {
+            description = value;
+            LOG_D(BMS_TAG_INSTALLD, "found description = %{public}s", description.c_str());
+        }
+
+        if (!name.empty() && !description.empty()) {
+            break;
+        }
+    }
+
+    skillMdFile.close();
+
+    if (!frontmatterStarted) {
+        LOG_E(BMS_TAG_INSTALLD, "frontmatter start not found");
+        return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+    }
+    if (!frontmatterEnded && (name.empty() || description.empty())) {
+        LOG_W(BMS_TAG_INSTALLD, "frontmatter end not found before EOF");
+    }
+    if (name.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "name not found in SKILL.md");
+        return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+    }
+
+    return ERR_OK;
+}
+
 bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,
     const ExtractParam &param)
 {
@@ -962,7 +1398,8 @@ bool InstalldOperator::IsValidCodePath(const std::string &codePath)
         LOG_E(BMS_TAG_INSTALLD, "code path is empty");
         return false;
     }
-    return IsValidPath(std::string(BUNDLE_BASE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR, codePath);
+    return IsValidPath(std::string(BUNDLE_BASE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR, codePath) ||
+        IsValidPath(std::string(SKILL_BASE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR, codePath);
 }
 
 bool InstalldOperator::DeleteFiles(const std::string &dataPath)
@@ -1642,6 +2079,9 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
     if (!codeSignatureParam.isCompressNativeLibrary) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_UNCOMPRESSED_NATIVE_LIBS;
     }
+    if (codeSignatureParam.isEnterpriseResigned) {
+        codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_ENTERPRISE_RESIGN;
+    }
     if (codeSignatureParam.signatureFileDir.empty()) {
         std::shared_ptr<CodeSignHelper> codeSignHelper = std::make_shared<CodeSignHelper>();
         Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?
@@ -2167,7 +2607,7 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
         close(dev_fd);
         return result;
     }
-    auto fd = open(newfilePath.c_str(), O_RDONLY);
+    auto fd = open(newfilePath.c_str(), O_RDONLY | O_UNCACHE);
     if (fd < 0) {
         LOG_E(BMS_TAG_INSTALLD, "open hap failed errno:%{public}d", errno);
         close(dev_fd);
@@ -2952,7 +3392,7 @@ bool InstalldOperator::WriteCertToFile(const std::string &certFilePath, const st
     }
 
     std::string tmpPath = certFilePath + ".tmp";
-    int fd = open(tmpPath.c_str(), O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    int fd = open(tmpPath.c_str(), O_CREAT | O_TRUNC | O_WRONLY | O_UNCACHE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd < 0) {
         LOG_E(BMS_TAG_INSTALLD, "open tmp cert file failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
         return false;
@@ -3040,8 +3480,19 @@ ErrCode InstalldOperator::SetBinFileLabel(const std::string &binFilePath)
     return ERR_OK;
 }
 
+bool InstalldOperator::CheckElfFile(const std::string &filePath)
+{
+    if (filePath.empty()) {
+        return false;
+    }
+    return BundleUtil::IsExecutableBinaryFile(filePath);
+}
+
 bool InstalldOperator::IsFileNameValid(const std::string &fileName)
 {
+    if (fileName.empty()) {
+        return false;
+    }
     if (fileName.find("../") != std::string::npos
         || fileName.find("/..") != std::string::npos) {
         return false;
@@ -3287,6 +3738,732 @@ bool InstalldOperator::IsValidUuid(const std::string &uuid)
         return false;
     }
     return IsFileNameValid(uuid);
+}
+
+bool InstalldOperator::CheckDeviceMode(char *buf)
+{
+    bool status = false;
+    char *onStr = strstr(buf, "oemmode=rd");
+    char *offStr = strstr(buf, "oemmode=user");
+    char *statusStr = strstr(buf, "oemmode=");
+    if (onStr == nullptr && offStr == nullptr) {
+        LOG_D(BMS_TAG_INSTALLD, "Not rd mode, cmdline = %{private}s", buf);
+    } else if (offStr != nullptr && statusStr != nullptr && offStr != statusStr) {
+        LOG_E(BMS_TAG_INSTALLD, "cmdline attacked, cmdline = %{private}s", buf);
+    } else if (onStr != nullptr && offStr == nullptr) {
+        status = true;
+        LOG_D(BMS_TAG_INSTALLD, "Oemode is rd");
+    }
+    return status;
+}
+
+bool InstalldOperator::CheckEfuseStatus(char *buf)
+{
+    bool status = false;
+    char *onStr = strstr(buf, "efuse_status=1");
+    char *offStr = strstr(buf, "efuse_status=0");
+    char *statusStr = strstr(buf, "efuse_status=");
+    if (onStr == nullptr && offStr == nullptr) {
+        LOG_D(BMS_TAG_INSTALLD, "device is efused, cmdline = %{private}s", buf);
+    } else if (offStr != nullptr && statusStr != nullptr && offStr != statusStr) {
+        LOG_E(BMS_TAG_INSTALLD, "cmdline attacked, cmdline = %{private}s", buf);
+    } else if (onStr != nullptr && offStr == nullptr) {
+        status = true;
+        LOG_D(BMS_TAG_INSTALLD, "device is not efused");
+    }
+    return status;
+}
+
+bool InstalldOperator::IsRdDevice()
+{
+    int32_t fd = open(PROC_CMDLINE_FILE_PATH, O_RDONLY);
+    if (fd < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "open %{public}s failed, %{public}s",
+            PROC_CMDLINE_FILE_PATH, strerror(errno));
+        return false;
+    }
+    std::vector<char> buf(CMDLINE_MAX_BUF_LEN, 0);
+    ssize_t bufLen = read(fd, buf.data(), CMDLINE_MAX_BUF_LEN - 1);
+    if (bufLen < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Read %{public}s failed, %{public}s.",
+            PROC_CMDLINE_FILE_PATH, strerror(errno));
+        close(fd);
+        return false;
+    }
+    close(fd);
+    return CheckDeviceMode(buf.data()) || CheckEfuseStatus(buf.data());
+}
+
+ErrCode InstalldOperator::HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult)
+{
+    if (IsRdDevice()) {
+        Security::Verify::SetRdDevice(true);
+        Security::Verify::SetDevMode(Security::Verify::DevMode::DEV);
+    }
+    return Security::Verify::HapVerify(filePath, hapVerifyResult);
+}
+
+bool InstalldOperator::ParsePluginId(const std::string &appServiceCapabilities,
+    std::vector<std::string> &pluginIds)
+{
+    if (appServiceCapabilities.empty()) {
+        APP_LOGE("appServiceCapabilities is empty");
+        return false;
+    }
+    auto appServiceCapabilityMap = BundleUtil::ParseMapFromJson(appServiceCapabilities);
+    for (auto &item : appServiceCapabilityMap) {
+        if (item.first == PERMISSION_KEY) {
+            std::unordered_map<std::string, std::string> pluginIdMap = BundleUtil::ParseMapFromJson(item.second);
+            auto it = pluginIdMap.find(PLUGIN_ID);
+            if (it == pluginIdMap.end()) {
+                APP_LOGE("pluginDistributionIDs not found in appServiceCapability");
+                return false;
+            }
+            if (it->second.find(PLUGIN_ID_SEPARATOR_OTHER) != std::string::npos) {
+                OHOS::SplitStr(it->second, PLUGIN_ID_SEPARATOR_OTHER, pluginIds);
+            } else {
+                OHOS::SplitStr(it->second, PLUGIN_ID_SEPARATOR, pluginIds);
+            }
+            return true;
+        }
+    }
+    APP_LOGE("support plugin permission not found in appServiceCapability");
+    return false;
+}
+
+bool InstalldOperator::ObtainSignInfoForPlugin(
+    const std::string &filePath, std::string &appIdentifier, std::string &pluginId)
+{
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    ErrCode errCode = HapVerify(filePath, hapVerifyResult);
+    if (errCode != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "HapVerify failed, errCode: %{public}d", errCode);
+        return false;
+    }
+    std::vector<std::string> pluginIds;
+    if (!ParsePluginId(hapVerifyResult.GetProvisionInfo().appServiceCapabilities, pluginIds)) {
+        APP_LOGE("parse plugin id failed");
+        return false;
+    }
+    std::ostringstream oss;
+    for (size_t i = 0; i < pluginIds.size(); ++i) {
+        if (i != 0) {
+            oss << std::string(PLUGIN_ID_SEPARATOR);
+        }
+        oss << pluginIds[i];
+    }
+    pluginId = oss.str();
+    if (hapVerifyResult.GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) {
+        appIdentifier = DEBUG_APP_IDENTIFIER;
+    } else {
+        appIdentifier = hapVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
+    }
+    return true;
+}
+
+// Internal overload with cache parameter for performance optimization
+static bool GetLargestFilesWithCache(const std::string &dirPath,
+    std::vector<std::pair<std::string, uint64_t>> &largestPathsWithSize,
+    std::unordered_map<std::string, uint64_t> &dirSizeCache)
+{
+    LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesWithCache start, dirPath: %{public}s", dirPath.c_str());
+
+    if (dirPath.empty() || dirPath.size() > ServiceConstants::PATH_MAX_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: invalid path");
+        return false;
+    }
+
+    std::string realPath = "";
+    if (!PathToRealPath(dirPath, realPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "path is not real path, dirPath: %{public}s", dirPath.c_str());
+        return false;
+    }
+
+    // Check if path exists and is a directory
+    struct stat statBuf;
+    if (stat(realPath.c_str(), &statBuf) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: stat failed, path: %{public}s, errno: %{public}d",
+            realPath.c_str(), errno);
+        return false;
+    }
+
+    if (!S_ISDIR(statBuf.st_mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: path is not a directory: %{public}s", realPath.c_str());
+        return false;
+    }
+
+    // Store path and size pairs
+    struct ItemSize {
+        std::string path;
+        uint64_t size;
+
+        ItemSize(const std::string &p, uint64_t s) : path(p), size(s) {}
+    };
+    std::vector<ItemSize> itemSizes;
+
+    // Open directory to read direct children
+    DIR *dir = opendir(realPath.c_str());
+    if (dir == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFiles: opendir failed, path: %{public}s, errno: %{public}d",
+            realPath.c_str(), errno);
+        return false;
+    }
+    DirGuard dirGuard(dir);  // RAII wrapper to ensure cleanup
+
+    struct dirent *entry = nullptr;
+    while ((entry = readdir(dirGuard.Get())) != nullptr) {
+        // Skip . and ..
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        std::string itemPath = realPath;
+        if (itemPath.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+            itemPath += ServiceConstants::FILE_SEPARATOR_CHAR;
+        }
+        itemPath += entry->d_name;
+
+        struct stat itemStat;
+        if (lstat(itemPath.c_str(), &itemStat) != 0) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestFiles: lstat failed for %{public}s, errno: %{public}d",
+                itemPath.c_str(), errno);
+            continue;
+        }
+
+        uint64_t itemSize = 0;
+        if (S_ISREG(itemStat.st_mode)) {
+            // Regular file - use its size directly
+            itemSize = itemStat.st_size;
+        } else if (S_ISDIR(itemStat.st_mode)) {
+            // Directory - use cached calculation to avoid redundant traversals
+            itemSize = CalculateDirectorySizeWithCache(itemPath, dirSizeCache);
+        }
+        // Skip other types (symlinks, etc.)
+
+        itemSizes.emplace_back(itemPath, itemSize);
+        LOG_D(BMS_TAG_INSTALLD, "GetLargestFiles: item: %{public}s, size: %{public}" PRIu64,
+            itemPath.c_str(), itemSize);
+    }
+
+    // DirGuard will automatically close dir when going out of scope
+
+    if (itemSizes.empty()) {
+        LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: no items found in directory");
+        largestPathsWithSize.clear();
+        return true;
+    }
+
+    // Sort by size in descending order
+    std::sort(itemSizes.begin(), itemSizes.end(),
+        [](const ItemSize &a, const ItemSize &b) {
+            return a.size > b.size;
+        });
+
+    // Get top 3 largest items and add to result
+    size_t count = std::min(static_cast<size_t>(3), itemSizes.size());
+    largestPathsWithSize.clear();
+    for (size_t i = 0; i < count; ++i) {
+        largestPathsWithSize.emplace_back(itemSizes[i].path, itemSizes[i].size);
+        LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: %{public}zu. path: %{public}s, size: %{public}" PRIu64,
+            i + 1, itemSizes[i].path.c_str(), itemSizes[i].size);
+    }
+
+    LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesWithCache success, found %{public}zu items", largestPathsWithSize.size());
+    return true;
+}
+
+// Public API version - creates local cache for backward compatibility
+bool InstalldOperator::GetLargestFiles(const std::string &dirPath,
+    std::vector<std::pair<std::string, uint64_t>> &largestPathsWithSize)
+{
+    // Create local cache for single call
+    std::unordered_map<std::string, uint64_t> dirSizeCache;
+    dirSizeCache.reserve(100);  // Reserve space for typical directory structure
+    return GetLargestFilesWithCache(dirPath, largestPathsWithSize, dirSizeCache);
+}
+
+// Internal overload with cache parameter for performance optimization
+static bool GetLargestDirsExtendedWithCache(const std::vector<std::string> &dirPaths,
+    std::vector<std::pair<std::string, uint64_t>> &largestDirsWithSize,
+    std::unordered_map<std::string, uint64_t> &dirSizeCache)
+{
+    LOG_D(BMS_TAG_INSTALLD, "GetLargestDirsExtendedWithCache start, dirPaths count: %{public}zu", dirPaths.size());
+
+    if (dirPaths.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestDirsExtendedWithCache: input dirPaths is empty");
+        return false;
+    }
+
+    // Store path and size pairs (support both files and directories)
+    struct PathSize {
+        std::string path;
+        uint64_t size;
+
+        PathSize(const std::string &p, uint64_t s) : path(p), size(s) {}
+    };
+    std::vector<PathSize> pathSizes;
+
+    // Process each path (file or directory)
+    for (const auto &inputPath : dirPaths) {
+        if (inputPath.empty() || inputPath.size() > ServiceConstants::PATH_MAX_SIZE) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestDirs: invalid path, skipping");
+            continue;
+        }
+
+        std::string realPath = "";
+        if (!PathToRealPath(inputPath, realPath)) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestDirs: path is not real path, inputPath: %{public}s",
+                inputPath.c_str());
+            continue;
+        }
+
+        // Check if path exists
+        struct stat statBuf;
+        if (stat(realPath.c_str(), &statBuf) != 0) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestDirs: stat failed for %{public}s, errno: %{public}d",
+                realPath.c_str(), errno);
+            continue;
+        }
+
+        uint64_t itemSize = 0;
+
+        if (S_ISREG(statBuf.st_mode)) {
+            // It's a file, use its size directly
+            itemSize = statBuf.st_size;
+            LOG_D(BMS_TAG_INSTALLD, "GetLargestDirsExtendedWithCache: file: %{public}s, size: %{public}" PRIu64,
+                realPath.c_str(), itemSize);
+        } else if (S_ISDIR(statBuf.st_mode)) {
+            // It's a directory, use cached calculation to avoid redundant traversals
+            itemSize = CalculateDirectorySizeWithCache(realPath, dirSizeCache);
+            LOG_D(BMS_TAG_INSTALLD, "GetLargestDirsExtendedWithCache: directory: %{public}s, size: %{public}" PRIu64,
+                realPath.c_str(), itemSize);
+        } else {
+            // Other types (symlink, device, etc.), skip
+            LOG_W(BMS_TAG_INSTALLD, "unsupported file type for %{public}s", realPath.c_str());
+            continue;
+        }
+
+        pathSizes.emplace_back(realPath, itemSize);
+    }
+
+    if (pathSizes.empty()) {
+        LOG_W(BMS_TAG_INSTALLD, "GetLargestDirsExtendedWithCache: no valid files or directories found");
+        largestDirsWithSize.clear();
+        return true;
+    }
+
+    // Sort by size in descending order
+    std::sort(pathSizes.begin(), pathSizes.end(),
+        [](const PathSize &a, const PathSize &b) {
+            return a.size > b.size;
+        });
+
+    // Get top 3 largest items (files or directories) and add to result
+    size_t count = std::min(static_cast<size_t>(3), pathSizes.size());
+    largestDirsWithSize.clear();
+    for (size_t i = 0; i < count; ++i) {
+        largestDirsWithSize.emplace_back(pathSizes[i].path, pathSizes[i].size);
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "success, found %{public}zu items", largestDirsWithSize.size());
+    return true;
+}
+
+// Public API version - creates local cache for backward compatibility
+bool InstalldOperator::GetLargestDirs(const std::vector<std::string> &dirPaths,
+    std::vector<std::pair<std::string, uint64_t>> &largestDirsWithSize)
+{
+    // Create local cache for single call
+    std::unordered_map<std::string, uint64_t> dirSizeCache;
+    dirSizeCache.reserve(100);  // Reserve space for typical directory structure
+    return GetLargestDirsExtendedWithCache(dirPaths, largestDirsWithSize, dirSizeCache);
+}
+
+bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &dirPaths,
+    const int32_t timeout, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize)
+{
+    // Validate and adjust timeout parameter (input is in seconds)
+    // If <= 0, use 3 seconds. If > 180, use 180 seconds (max 3 minutes).
+    const int32_t adjustedTimeoutSec = (timeout <= 0) ? 3 : ((timeout > 180) ? 180 : timeout);
+    const int32_t MAX_SCAN_TIME_MS = adjustedTimeoutSec * 1000;  // Convert to milliseconds
+
+    LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive start, dirPaths count: %{public}zu, timeout(sec): %{public}d",
+        dirPaths.size(), timeout);
+
+    if (dirPaths.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: input dirPaths is empty");
+        return false;
+    }
+
+    // Security: Set resource limits to prevent DoS attacks
+    constexpr int32_t MAX_DRILL_DOWN_DEPTH = 100;  // Maximum depth for drill-down phase
+
+    auto startTime = std::chrono::steady_clock::now();
+
+    // Pre-allocate result space (estimated maximum: 3,280 items)
+    resultPathsWithSize.clear();
+    resultPathsWithSize.reserve(3280);
+
+    // Create cache for directory size calculations (shared across all levels for performance)
+    std::unordered_map<std::string, uint64_t> dirSizeCache;
+    dirSizeCache.reserve(1000);  // Reserve space for typical directory tree
+
+    // Helper lambda to check timeout
+    auto isTimeout = [&startTime, MAX_SCAN_TIME_MS]() -> bool {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - startTime).count();
+        return elapsed > MAX_SCAN_TIME_MS;
+    };
+
+    // Step 1: Get top 3 largest directories from input paths
+    std::vector<std::pair<std::string, uint64_t>> largestDirs;
+    if (!GetLargestDirsExtendedWithCache(dirPaths, largestDirs, dirSizeCache)) {
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: GetLargestDirsExtendedWithCache failed");
+        return false;
+    }
+
+    if (largestDirs.empty()) {
+        LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: no directories found");
+        return true;
+    }
+
+    // Add initial largest directories to result
+    for (const auto &dirPair : largestDirs) {
+        resultPathsWithSize.emplace_back(dirPair.first, dirPair.second);
+        LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: level 0, added dir: %{public}s, size: %{public}" PRIu64,
+            dirPair.first.c_str(), dirPair.second);
+    }
+
+    // Step 2 & 3: Repeat 6 times - get largest files/dirs from previous level
+    std::vector<std::string> currentPaths;  // Keep paths for iteration
+    for (const auto &dirPair : largestDirs) {
+        currentPaths.push_back(dirPair.first);
+    }
+    constexpr int32_t MAX_LEVELS = 6;
+
+    for (int32_t level = 1; level <= MAX_LEVELS; ++level) {
+        // Check timeout
+        if (isTimeout()) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: timeout at level %{public}d", level);
+            break;
+        }
+
+        // Pre-allocate space to avoid frequent reallocations
+        std::vector<std::pair<std::string, uint64_t>> allLargestItems;
+        allLargestItems.reserve(currentPaths.size() * 3);  // Maximum possible items
+
+        // For each path in current level, get largest items
+        for (const auto &path : currentPaths) {
+            // Check if it's a directory
+            struct stat statBuf;
+            if (stat(path.c_str(), &statBuf) != 0) {
+                LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: stat failed for %{public}s", path.c_str());
+                continue;
+            }
+
+            if (!S_ISDIR(statBuf.st_mode)) {
+                // It's a file, skip it
+                LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: %{public}s is a file, skip", path.c_str());
+                continue;
+            }
+
+            // Get largest files/dirs from this directory (using cache for performance)
+            std::vector<std::pair<std::string, uint64_t>> largestItems;
+            if (!GetLargestFilesWithCache(path, largestItems, dirSizeCache)) {
+                LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: GetLargestFilesWithCache failed for %{public}s",
+                    path.c_str());
+                continue;
+            }
+
+            // Add to result and collect for next level
+            for (const auto &itemPair : largestItems) {
+                resultPathsWithSize.emplace_back(itemPair.first, itemPair.second);
+                allLargestItems.emplace_back(itemPair.first, itemPair.second);
+                LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: level %{public}d, added: %{public}s, size: %{public}"
+                    PRIu64, level, itemPair.first.c_str(), itemPair.second);
+            }
+        }
+
+        // Update current paths for next iteration (only paths, not sizes)
+        currentPaths.clear();
+        for (const auto &itemPair : allLargestItems) {
+            currentPaths.push_back(itemPair.first);
+        }
+
+        if (currentPaths.empty()) {
+            LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: no more directories at level %{public}d", level);
+            break;
+        }
+    }
+
+    // Step 4 & 5: Keep drilling down from the largest item if it's a directory
+    std::string currentPath = currentPaths.empty() ? "" : currentPaths[0];
+    std::string finalFilePath;
+    uint64_t finalFileSize = 0;
+    int32_t drillDownDepth = 0;
+
+    while (!currentPath.empty() && drillDownDepth < MAX_DRILL_DOWN_DEPTH) {
+        // Check timeout
+        if (isTimeout()) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: timeout during drill down at depth %{public}d",
+                drillDownDepth);
+            break;
+        }
+
+        // Check if current path is a directory
+        struct stat statBuf;
+        if (stat(currentPath.c_str(), &statBuf) != 0) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: stat failed for %{public}s", currentPath.c_str());
+            break;
+        }
+
+        if (!S_ISDIR(statBuf.st_mode)) {
+            // It's a file, we're done - record the final file path and size
+            // Check for integer overflow before casting
+            if (statBuf.st_size < 0) {
+                LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: invalid file size for %{public}s",
+                    currentPath.c_str());
+                break;
+            }
+            finalFilePath = currentPath;
+            finalFileSize = static_cast<uint64_t>(statBuf.st_size);
+            LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: reached file: %{public}s, size: %{public}" PRIu64,
+                currentPath.c_str(), finalFileSize);
+            break;
+        }
+
+        // Get largest items from this directory (using cache for performance)
+        std::vector<std::pair<std::string, uint64_t>> largestItems;
+        if (!GetLargestFilesWithCache(currentPath, largestItems, dirSizeCache)) {
+            LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: GetLargestFilesWithCache failed for %{public}s",
+                currentPath.c_str());
+            break;
+        }
+
+        if (largestItems.empty()) {
+            LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: no items found in %{public}s",
+                currentPath.c_str());
+            break;
+        }
+
+        // Get the largest item and continue drilling down
+        currentPath = largestItems[0].first;  // Get first (largest) item
+        drillDownDepth++;
+        LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: drill down to: %{public}s, depth: %{public}d",
+            currentPath.c_str(), drillDownDepth);
+    }
+
+    if (drillDownDepth >= MAX_DRILL_DOWN_DEPTH) {
+        LOG_W(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: reached max drill down depth %{public}d",
+            MAX_DRILL_DOWN_DEPTH);
+    }
+
+    // Only add the final file path to result if found
+    if (!finalFilePath.empty()) {
+        resultPathsWithSize.emplace_back(finalFilePath, finalFileSize);
+        LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: added final file: %{public}s, size: %{public}" PRIu64,
+            finalFilePath.c_str(), finalFileSize);
+    }
+
+    // Sort all results by size in descending order for better user experience
+    if (!resultPathsWithSize.empty()) {
+        std::sort(resultPathsWithSize.begin(), resultPathsWithSize.end(),
+            [](const std::pair<std::string, uint64_t> &a,
+                const std::pair<std::string, uint64_t> &b) {
+                return a.second > b.second;  // Descending order by size
+            });
+        LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: sorted %{public}zu items by size",
+            resultPathsWithSize.size());
+    }
+
+    // Log cache statistics for performance monitoring
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - startTime).count();
+    LOG_I(BMS_TAG_INSTALLD, "success, total items: %{public}zu, cache entries: %{public}zu, time: %{public}lld ms",
+        resultPathsWithSize.size(), dirSizeCache.size(), static_cast<long long>(elapsed));
+
+    return true;
+}
+
+bool InstalldOperator::GetBundleDataDirPaths(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, std::vector<std::string> &dataDirPaths)
+{
+    LOG_D(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: bundleName=%{public}s, appIndex=%{public}d, userId=%{public}d",
+        bundleName.c_str(), appIndex, userId);
+
+    // Validate input parameters
+    if (bundleName.empty() || userId < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: bundleName is empty or invalid user");
+        return false;
+    }
+    // Clear output parameter
+    dataDirPaths.clear();
+
+    // Build bundle data directory path based on appIndex
+    std::string bundleNameDir = bundleName;
+    if (appIndex > 0) {
+        bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
+
+    // Collect all data subdirectories
+    std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
+    elPath.push_back(ServiceConstants::DIR_EL5);
+    for (const auto &el : elPath) {
+        // /data/app/elx/<userId>/base/<bundleName>
+        std::string basePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir;
+        dataDirPaths.push_back(basePath);
+        // /data/app/elx/<userId>/database/<bundleName>
+        std::string dataBasePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::DATABASE + bundleNameDir;
+        dataDirPaths.push_back(dataBasePath);
+    }
+    // /data/app/el2/<userId>/sharefiles/<bundleName>
+    std::string sharefilesPath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) +
+        ServiceConstants::BUNDLE_EL[1] + ServiceConstants::PATH_SEPARATOR + std::to_string(userId) +
+        ServiceConstants::SHAREFILES + bundleNameDir;
+    dataDirPaths.push_back(sharefilesPath);
+    // /data/app/el2/<userId>/log/<bundleName>
+    std::string logPath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) +
+        ServiceConstants::BUNDLE_EL[1] + ServiceConstants::PATH_SEPARATOR + std::to_string(userId) +
+        ServiceConstants::LOG + bundleNameDir;
+    dataDirPaths.push_back(logPath);
+    // /data/app/el1/<userId>/system_optimize/<bundleName>
+    std::string optimizePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) +
+        ServiceConstants::BUNDLE_EL[0] + ServiceConstants::PATH_SEPARATOR + std::to_string(userId) +
+        ServiceConstants::LOG + bundleNameDir;
+    // /data/app/el1/<userId>/system_optimize/<bundleName>
+    std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
+        bundleNameDir + ServiceConstants::ARK_STARTUP_CACHE_DIR;
+    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+        std::to_string(userId));
+    dataDirPaths.push_back(el1ArkStartupCachePath);
+    // /data/app/el1/<userId>/shader_cache/<bundleName>
+    std::string el1ShaderCachePath = ServiceConstants::NEW_SHADER_CACHE_PATH + bundleNameDir;
+    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId));
+    dataDirPaths.emplace_back(el1ShaderCachePath);
+    // service
+    std::string servicePath = std::string("/data/service/el1/") + std::to_string(userId) +
+        std::string("/backup/bundles/") + bundleNameDir;
+    dataDirPaths.emplace_back(servicePath);
+    servicePath = std::string("/data/service/el2/") + std::to_string(userId) +
+        std::string("/share/") + bundleNameDir;
+    dataDirPaths.emplace_back(servicePath);
+    servicePath = std::string("/data/service/el2/") + std::to_string(userId) +
+        std::string("/hmdfs/account/data/") + bundleNameDir;
+    dataDirPaths.emplace_back(servicePath);
+    servicePath = std::string("/data/service/el2/") + std::to_string(userId) +
+        std::string("/hmdfs/cloud/data/") + bundleNameDir;
+    dataDirPaths.emplace_back(servicePath);
+    servicePath = std::string("/data/service/el2/") + std::to_string(userId) +
+        std::string("/backup/bundles/") + bundleNameDir;
+    dataDirPaths.emplace_back(servicePath);
+    LOG_D(BMS_TAG_INSTALLD, "GetBundleDataDirPaths: collected %{public}zu data directory paths",
+        dataDirPaths.size());
+    return true;
+}
+
+std::string InstalldOperator::AnonymizePath(const std::string &path)
+{
+    if (path.empty()) {
+        return path;
+    }
+
+    // Pre-allocate result string with exact same size as input
+    std::string result;
+    result.reserve(path.length());
+
+    const char pathSep = ServiceConstants::PATH_SEPARATOR[0];
+    const char* pathData = path.data();
+    const char* pathEnd = pathData + path.length();
+    const char* segmentStart = pathData;
+
+    while (segmentStart < pathEnd) {
+        // Find the next path separator
+        const char* segmentEnd = static_cast<const char*>(
+            std::memchr(segmentStart, pathSep, static_cast<size_t>(pathEnd - segmentStart)));
+
+        // Calculate segment length
+        size_t segLen = 0;
+        bool isLastSegment = (segmentEnd == nullptr);
+        if (segmentEnd != nullptr) {
+            segLen = static_cast<size_t>(segmentEnd - segmentStart);
+            // Skip empty segments (e.g., consecutive separators like //), but NOT the leading separator at path start
+            if (segLen == 0) {
+                // If this is at the beginning of the path, it's a leading "/", preserve it
+                if (segmentStart == pathData) {
+                    // This is a leading path separator, add it to result and move on
+                    result.push_back(pathSep);
+                }
+                segmentStart = segmentEnd + 1;  // Safe: segmentEnd is not nullptr
+                continue;
+            }
+        } else {
+            // No separator found, process to end
+            segLen = static_cast<size_t>(pathEnd - segmentStart);
+        }
+
+        // Append path separator if not the first segment
+        if (!result.empty() && result.back() != pathSep) {
+            result.push_back(pathSep);
+        }
+
+        // Check if this is the last segment (filename) and has an extension
+        const char* dotPos = nullptr;
+        if (isLastSegment && segLen > 1) {  // Need at least 2 chars for extension (e.g., ".a")
+            // Find the last dot in the segment using standard C++ method
+            // Manual reverse search to avoid memrchr (POSIX-only, not portable)
+            const char* lastDot = nullptr;
+            // Use index-based loop to avoid pointer undefined behavior when decrementing past start
+            for (size_t i = segLen; i > 0; --i) {
+                if (segmentStart[i - 1] == '.') {
+                    lastDot = segmentStart + i - 1;
+                    break;
+                }
+            }
+            // Only consider it as extension if:
+            // 1. Dot exists and is not at the beginning (hidden files like .gitignore)
+            // 2. Dot is not at the end (no extension after dot)
+            if ((lastDot != nullptr) && (lastDot > segmentStart) &&
+                ((lastDot - segmentStart) < static_cast<ptrdiff_t>(segLen) - 1)) {
+                dotPos = lastDot;
+            }
+        }
+
+        // Process segment: anonymize name part, keep extension
+        size_t nameLen = segLen;
+        if (dotPos != nullptr) {
+            nameLen = static_cast<size_t>(dotPos - segmentStart);
+            // Anonymize the name part (before extension)
+            size_t i = 0;
+            const size_t pairCount = nameLen & ~static_cast<size_t>(1);  // Round down to even
+            for (; i < pairCount; i += 2) {
+                result.push_back(segmentStart[i]);      // Even index - keep original
+                result.push_back('*');                  // Odd index - replace with *
+            }
+            if (i < nameLen) {
+                result.push_back(segmentStart[i]);
+            }
+            // Append the extension (including dot) as-is
+            result.append(dotPos, segLen - nameLen);
+        } else {
+            // No extension, anonymize entire segment
+            size_t i = 0;
+            const size_t pairCount = nameLen & ~static_cast<size_t>(1);  // Round down to even
+            for (; i < pairCount; i += 2) {
+                result.push_back(segmentStart[i]);      // Even index - keep original
+                result.push_back('*');                  // Odd index - replace with *
+            }
+            if (i < nameLen) {
+                result.push_back(segmentStart[i]);
+            }
+        }
+
+        // Move to next segment (safe because we checked segmentEnd above)
+        segmentStart = segmentEnd ? segmentEnd + 1 : pathEnd;
+    }
+
+    return result;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

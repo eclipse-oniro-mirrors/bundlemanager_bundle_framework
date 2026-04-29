@@ -266,6 +266,34 @@ HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0008, TestSize.Level
 }
 
 /**
+ * @tc.number: BundleInstallCheckerTest_0054
+ * @tc.name: test GetHideDesktopIconByBundlePath with empty path.
+ * @tc.desc: return false when bundle path is empty.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0054, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    bool hideDesktopIcon = false;
+    bool ret = bundleInstallChecker.GetHideDesktopIconByBundlePath("", hideDesktopIcon);
+    EXPECT_FALSE(ret);
+    EXPECT_FALSE(hideDesktopIcon);
+}
+
+/**
+ * @tc.number: BundleInstallCheckerTest_0055
+ * @tc.name: test GetHideDesktopIconByBundlePath with invalid path.
+ * @tc.desc: return false when ParseHapProfile failed.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0055, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    bool hideDesktopIcon = false;
+    bool ret = bundleInstallChecker.GetHideDesktopIconByBundlePath("/invalid/path/not_exist.hap", hideDesktopIcon);
+    EXPECT_FALSE(ret);
+    EXPECT_FALSE(hideDesktopIcon);
+}
+
+/**
  * @tc.number: BundleInstallCheckerTest_0009
  * @tc.name: test the VaildInstallPermission.
  * @tc.desc: test the VaildInstallPermission.
@@ -1038,14 +1066,18 @@ HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0042, TestSize.Level
     hapVerifyResult.SetProvisionInfo(provisionInfo);
     bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
     EXPECT_EQ(codeSignatureParam.profileBlockLength, 0);
+    EXPECT_FALSE(codeSignatureParam.isEnterpriseResigned);
 
     provisionInfo.profileBlockLength = 100;
     provisionInfo.profileBlock = std::make_unique<unsigned char[]>(provisionInfo.profileBlockLength);
     provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_NORMAL;
+    provisionInfo.isEnterpriseResigned = true;
     hapVerifyResult.SetProvisionInfo(provisionInfo);
     codeSignatureParam.profileBlockLength = 0;
+    codeSignatureParam.isEnterpriseResigned = false;
     bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
     EXPECT_EQ(codeSignatureParam.profileBlockLength, 100);
+    EXPECT_TRUE(codeSignatureParam.isEnterpriseResigned);
 
     provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_MDM;
     hapVerifyResult.SetProvisionInfo(provisionInfo);

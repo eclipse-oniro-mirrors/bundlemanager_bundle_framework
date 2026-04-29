@@ -67,4 +67,5 @@ export interface PreinstalledApplicationInfo {
   readonly moduleName: string;
   readonly iconId: long;
   readonly labelId: long;
+  readonly descriptionId?: long;
 }

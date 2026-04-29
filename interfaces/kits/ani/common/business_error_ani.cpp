@@ -58,14 +58,17 @@ ani_object BusinessErrorAni::WrapError(ani_env *env, const std::string &msg)
     }
 
     ani_ref undefRef;
-    env->GetUndefined(&undefRef);
+    ani_status status = env->GetUndefined(&undefRef);
+    if (status != ANI_OK) {
+        APP_LOGW("GetUndefined failed %{public}d", status);
+    }
 
-    ani_status status = env->FindClass("escompat.Error", &cls);
+    status = env->FindClass("std.core.Error", &cls);
     if (status != ANI_OK) {
         APP_LOGE("FindClass err : %{public}d", status);
         return nullptr;
     }
-    status = env->Class_FindMethod(cls, "<ctor>", "C{std.core.String}C{escompat.ErrorOptions}:", &method);
+    status = env->Class_FindMethod(cls, "<ctor>", "C{std.core.String}C{std.core.ErrorOptions}:", &method);
     if (status != ANI_OK) {
         APP_LOGE("Class_FindMethod err : %{public}d", status);
         return nullptr;
@@ -92,7 +95,7 @@ ani_object BusinessErrorAni::CreateError(ani_env *env, int32_t code, const std::
         APP_LOGE("FindClass err : %{public}d", status);
         return nullptr;
     }
-    status = env->Class_FindMethod(cls, "<ctor>", "iC{escompat.Error}:", &method);
+    status = env->Class_FindMethod(cls, "<ctor>", "iC{std.core.Error}:", &method);
     if (status != ANI_OK) {
         APP_LOGE("Class_FindMethod err : %{public}d", status);
         return nullptr;

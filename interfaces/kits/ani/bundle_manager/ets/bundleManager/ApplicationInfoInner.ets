@@ -148,6 +148,7 @@ export class PreinstalledApplicationInfoInner implements PreinstalledApplication
   readonly moduleName: string = "";
   readonly iconId: long;
   readonly labelId: long;
+  readonly descriptionId?: long;
 
   constructor() { }
   constructor(bundleName: string, moduleName: string, iconId: long, labelId: long) {
@@ -155,5 +156,12 @@ export class PreinstalledApplicationInfoInner implements PreinstalledApplication
     this.moduleName = moduleName;
     this.iconId = iconId;
     this.labelId = labelId;
+  }
+  constructor(bundleName: string, moduleName: string, iconId: long, labelId: long, descriptionId: long) {
+    this.bundleName = bundleName;
+    this.moduleName = moduleName;
+    this.iconId = iconId;
+    this.labelId = labelId;
+    this.descriptionId = descriptionId;
   }
 }

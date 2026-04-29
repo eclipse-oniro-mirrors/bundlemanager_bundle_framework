@@ -32,6 +32,7 @@ constexpr const char* GENERAL_OBJECT = "general.object";
 constexpr const char* EMPTY_STRING = "";
 constexpr const char* FILE_UNDERLINE = "_";
 constexpr const char* BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
+constexpr const char* BASE_SKILL_DIR = "/data/app/el1/skills/public";
 constexpr const char* CACHE_DIR = "cache";
 constexpr const char* UID_SEPARATOR = "#";
 constexpr int8_t START_USERID = 100;
@@ -52,6 +53,7 @@ constexpr int8_t DEFAULT_INSTALLERID = -1;
 constexpr int8_t DEFAULT_APP_INDEX = 0;
 constexpr int16_t MAX_FILE_NAME_LENGTH = 256;
 constexpr int16_t BMS_MAX_PATH_LENGTH = 4096;
+constexpr int16_t MAX_UNINSTALL_PREINSTALLED_APP_NUM = 200;
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;
@@ -90,6 +92,7 @@ constexpr int16_t MAX_CACHE_DIR_SIZE = 774;
 constexpr const char* PERMISSION_INSTALL_ALLOW_DOWNGRADE = "ohos.permission.INSTALL_ALLOW_DOWNGRADE";
 constexpr const char* PERMISSION_U1_ENABLED = "ohos.permission.SUPPORT_INSTALL_ON_U1";
 constexpr const char* PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";
+constexpr const char* PERMISSION_UNINSTALL_BUNDLE = "ohos.permission.UNINSTALL_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_CLONE_BUNDLE = "ohos.permission.UNINSTALL_CLONE_BUNDLE";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO = "ohos.permission.GET_BUNDLE_INFO";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO_PRIVILEGED = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
@@ -114,9 +117,13 @@ constexpr const char* PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS = "ohos.perm
 constexpr const char* PERMISSION_RECOVER_BUNDLE = "ohos.permission.RECOVER_BUNDLE";
 constexpr const char* PERMISSION_CLEAN_APPLICATION_DATA = "ohos.permission.CLEAN_APPLICATION_DATA";
 constexpr const char* PERMISSION_MANAGE_SELF_SKILLS = "ohos.permission.MANAGE_SELF_SKILLS";
+constexpr const char* PERMISSION_MANAGE_SKILL_PRIVILEGE = "ohos.permission.MANAGE_SKILL_PRIVILEGE";
+constexpr const char* PERMISSION_MANAGE_SKILL = "ohos.permission.MANAGE_SKILL";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
     "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED or "
     "(ohos.permission.GET_BUNDLE_INFO_PRIVILEGED and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
+constexpr const char* PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST =
+    "ohos.permission.ENTERPRISE_GET_INSTALLED_BUNDLE_LIST";
 
 enum class AppType {
     SYSTEM_APP = 0,
@@ -265,6 +272,7 @@ inline constexpr const char* DATA_GROUP_IDS = "dataGroupIds";
 inline constexpr const char* VALID_DATA_GROUP_IDS = "validDataGroupIds";
 inline constexpr const char* CUSTOM_PROCESS = "customProcess";
 inline constexpr const char* ISOLATION_PROCESS = "isolationProcess";
+inline constexpr const char* SKIP_ABILITY_STAGE_LIFECYCLE = "skipAbilityStageLifecycle";
 inline constexpr const char* SRC_LANGUAGE_JS = "js";
 inline constexpr const char* PREFER_MULTI_WINDOW_ORIENTATION_DEFAULT = "default";
 }  // namespace Constants

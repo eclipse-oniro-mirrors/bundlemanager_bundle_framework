@@ -176,10 +176,12 @@ group("bundlemanagerfuzztest") {
     "bmsshortcutenableddatastoragerdb_fuzzer:BMSShortcutEnabledDataStorageRdbFuzzTest",
     "bmsuninstallbundleresourcerdb_fuzzer:BMSUninstallBundleResourceRdbFuzzTest",
     "bmsuninstalldatamgr_fuzzer:BMSUninstallDataMgrFuzzTest",
+    "bmsupdateextresourcesdb_fuzzer:BMSUpdateExtResourcesDbFuzzTest",
     "bmsstatusreceiverhost_fuzzer:BMSStatusReceiverHostFuzzTest",
     "bmsverifymanagerclient_fuzzer:BMSVerifyManagerClientFuzzTest",
     "bmsverifymanagerhost_fuzzer:BMSVerifyManagerHostFuzzTest",
     "bmssystemabilityhelper_fuzzer:BMSSystemAbilityHelperFuzzTest",
+    "bmsverifymanagerhostimpl_fuzzer:BMSVerifyManagerHostImplFuzzTest",
   ]
 
   if (bundle_framework_default_app) {

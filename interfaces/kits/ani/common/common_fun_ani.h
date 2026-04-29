@@ -293,6 +293,7 @@ public:
         RETURN_NULL_IF_NULL(arrayObj);
 
         ani_status status = ANI_OK;
+        ani_status deleteStatus = ANI_OK;
         if (length > 0) {
             for (ani_int i = 0; i < length; ++i) {
                 ani_enum_item item = converter(env, static_cast<int32_t>(cArray[i]));
@@ -300,8 +301,11 @@ public:
                     APP_LOGE("convert failed");
                     return nullptr;
                 }
-                status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iC{std.core.Object}:", i, item);
-                env->Reference_Delete(item);
+                status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iY:", i, item);
+                deleteStatus = env->Reference_Delete(item);
+                if (deleteStatus != ANI_OK) {
+                    APP_LOGW_NOFUNC("ConvertAniArrayEnum Reference_Delete failed %{public}d", deleteStatus);
+                }
                 if (status != ANI_OK) {
                     APP_LOGE("Object_CallMethodByName_Void failed %{public}d", status);
                     return nullptr;
@@ -325,12 +329,16 @@ public:
         RETURN_NULL_IF_NULL(arrayObj);
 
         ani_status status = ANI_OK;
+        ani_status deleteStatus = ANI_OK;
         ani_int i = 0;
         for (const auto& iter : nativeArray) {
             ani_object item = converter(env, iter, std::forward<Args>(args)...);
             RETURN_NULL_IF_NULL(item);
-            status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iC{std.core.Object}:", i, item);
-            env->Reference_Delete(item);
+            status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iY:", i, item);
+            deleteStatus = env->Reference_Delete(item);
+            if (deleteStatus != ANI_OK) {
+                APP_LOGW_NOFUNC("ConvertAniArray Reference_Delete failed %{public}d", deleteStatus);
+            }
             if (status != ANI_OK) {
                 APP_LOGE("Object_CallMethodByName_Void failed %{public}d", status);
                 return nullptr;
@@ -353,15 +361,19 @@ public:
             APP_LOGE("Array_GetLength failed %{public}d", status);
             return false;
         }
+        ani_status deleteStatus = ANI_OK;
         for (ani_int i = 0; i < static_cast<ani_int>(length); ++i) {
             ani_ref ref;
-            status = env->Object_CallMethodByName_Ref(aniArray, "$_get", "i:C{std.core.Object}", &ref, i);
+            status = env->Object_CallMethodByName_Ref(aniArray, "$_get", "i:Y", &ref, i);
             if (status != ANI_OK) {
                 APP_LOGE("Object_CallMethodByName_Ref failed %{public}d", status);
                 return false;
             }
             bool result = callback(reinterpret_cast<ani_object>(ref), std::forward<Args>(args)...);
-            env->Reference_Delete(ref);
+            deleteStatus = env->Reference_Delete(ref);
+            if (deleteStatus != ANI_OK) {
+                APP_LOGW_NOFUNC("AniArrayForeach Reference_Delete failed %{public}d", deleteStatus);
+            }
             if (!result) {
                 return false;
             }

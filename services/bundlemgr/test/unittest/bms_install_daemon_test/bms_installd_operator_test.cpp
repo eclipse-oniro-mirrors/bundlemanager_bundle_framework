@@ -231,6 +231,87 @@ HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0007, Function | SmallTes
 }
 
 /**
+ * @tc.number: InstalldOperatorTest_0008
+ * @tc.name: test function of CheckDeviceMode
+ * @tc.desc: 1. calling CheckDeviceMode with different cmdline values
+ */
+HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0008, Function | SmallTest | Level0)
+{
+    char normalMode[] = "console=test";
+    EXPECT_FALSE(InstalldOperator::CheckDeviceMode(normalMode));
+
+    char userMode[] = "oemmode=user";
+    EXPECT_FALSE(InstalldOperator::CheckDeviceMode(userMode));
+
+    char attackedMode[] = "oemmode=rd oemmode=user";
+    EXPECT_FALSE(InstalldOperator::CheckDeviceMode(attackedMode));
+
+    char rdMode[] = "boot=normal oemmode=rd";
+    EXPECT_TRUE(InstalldOperator::CheckDeviceMode(rdMode));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_0009
+ * @tc.name: test function of CheckEfuseStatus
+ * @tc.desc: 1. calling CheckEfuseStatus with different cmdline values
+ */
+HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0009, Function | SmallTest | Level0)
+{
+    char defaultStatus[] = "console=test";
+    EXPECT_FALSE(InstalldOperator::CheckEfuseStatus(defaultStatus));
+
+    char efusedStatus[] = "efuse_status=0";
+    EXPECT_FALSE(InstalldOperator::CheckEfuseStatus(efusedStatus));
+
+    char attackedStatus[] = "efuse_status=1 efuse_status=0";
+    EXPECT_FALSE(InstalldOperator::CheckEfuseStatus(attackedStatus));
+
+    char notEfusedStatus[] = "mode=debug efuse_status=1";
+    EXPECT_TRUE(InstalldOperator::CheckEfuseStatus(notEfusedStatus));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_0010
+ * @tc.name: test function of ParsePluginId
+ * @tc.desc: 1. calling ParsePluginId with invalid parameters
+ */
+HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0010, Function | SmallTest | Level0)
+{
+    std::vector<std::string> pluginIds;
+    EXPECT_FALSE(InstalldOperator::ParsePluginId("", pluginIds));
+
+    const std::string noPermission = R"({"other.permission":"{\"pluginDistributionIDs\":\"plugin1\"}"})";
+    EXPECT_FALSE(InstalldOperator::ParsePluginId(noPermission, pluginIds));
+
+    const std::string noPluginId = R"({"ohos.permission.kernel.SUPPORT_PLUGIN":"{\"otherKey\":\"plugin1\"}"})";
+    EXPECT_FALSE(InstalldOperator::ParsePluginId(noPluginId, pluginIds));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_0011
+ * @tc.name: test function of ParsePluginId
+ * @tc.desc: 1. calling ParsePluginId with different separators
+ */
+HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0011, Function | SmallTest | Level0)
+{
+    std::vector<std::string> pluginIds;
+    const std::string pluginIdsWithComma =
+        R"({"ohos.permission.kernel.SUPPORT_PLUGIN":"{\"pluginDistributionIDs\":\"plugin1, plugin2\"}"})";
+    EXPECT_TRUE(InstalldOperator::ParsePluginId(pluginIdsWithComma, pluginIds));
+    ASSERT_EQ(pluginIds.size(), 2);
+    EXPECT_EQ(pluginIds[0], "plugin1");
+    EXPECT_EQ(pluginIds[1], "plugin2");
+
+    pluginIds.clear();
+    const std::string pluginIdsWithPipe =
+        R"({"ohos.permission.kernel.SUPPORT_PLUGIN":"{\"pluginDistributionIDs\":\"plugin3|plugin4\"}"})";
+    EXPECT_TRUE(InstalldOperator::ParsePluginId(pluginIdsWithPipe, pluginIds));
+    ASSERT_EQ(pluginIds.size(), 2);
+    EXPECT_EQ(pluginIds[0], "plugin3");
+    EXPECT_EQ(pluginIds[1], "plugin4");
+}
+
+/**
  * @tc.number: SetBinFileLabel_001
  * @tc.name: test SetBinFileLabel with empty path
  * @tc.desc: 1. binFilePath is empty

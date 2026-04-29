@@ -551,7 +551,8 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(const std::vector<std:
 }
 
 bool BMSEventHandler::OTAInstallSystemBundleTargetUser(const std::vector<std::string> &filePaths,
-    const std::string &bundleName, Constants::AppType appType, bool removable, const std::vector<int32_t> &userIds)
+    const std::string &bundleName, Constants::AppType appType,
+    bool removable, const std::vector<int32_t> &userIds, bool isPatchDowngrade)
 {
     return true;
 }

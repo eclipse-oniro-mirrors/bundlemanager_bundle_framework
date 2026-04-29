@@ -48,12 +48,14 @@ private:
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
         Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
     void DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
+    ErrCode ProcessBundleShareFiles(const InnerBundleInfo &info, const int32_t userId, uint32_t tokenId);
 
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     int32_t uid_ = 0;
     bool isBundleCrossAppSharedConfig_ = false;
     uint32_t accessTokenId_ = 0;
     std::string appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
+    std::string moduleName_;
 };
 } // AppExecFwk
 } // OHOS

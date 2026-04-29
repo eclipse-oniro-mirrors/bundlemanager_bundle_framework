@@ -44,6 +44,7 @@
 #include "hidump_helper.h"
 #include "install_param.h"
 #include "extension_ability_info.h"
+#include "get_largest_items_callback_interface.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "inner_bundle_info.h"
@@ -52,6 +53,7 @@
 #include "mock_bundle_status.h"
 #include "nlohmann/json.hpp"
 #include "parameter.h"
+#include "pre_install_bundle_info.h"
 #include "perf_profile.h"
 #include "process_cache_callback_host.h"
 #include "scope_guard.h"
@@ -469,6 +471,19 @@ sptr<IRemoteObject> ICleanCacheCallbackTest::AsObject()
 {
     return nullptr;
 }
+
+class MockCallback : public IGetLargestItemsCallback {
+public:
+    void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
+    {
+        errCodeResult = errCode;
+    }
+    sptr<IRemoteObject> AsObject() override
+    {
+        return nullptr;
+    }
+    ErrCode errCodeResult = ERR_OK;
+};
 
 class IBundleInstallerTest : public IBundleInstaller {
     bool Install(const std::string& bundleFilePath, const InstallParam& installParam,
@@ -942,6 +957,7 @@ FormInfo BmsBundleKitServiceTest::MockFormInfo(
     formInfo.funInteractionParams.keepStateDuration = FORM_KEEP_STATE_DURATION;
     formInfo.sceneAnimationParams.abilityName = FORM_ABILITY_NAME;
     formInfo.sceneAnimationParams.disabledDesktopBehaviors = FORM_DISABLED_DESKTOP_BEHAVIORS;
+    formInfo.sceneAnimationParams.triggerTypes = {SceneAnimationTriggerType::SHAKE};
     return formInfo;
 }
 
@@ -1487,6 +1503,7 @@ void BmsBundleKitServiceTest::CheckFormInfoTest(const std::vector<FormInfo> &for
         EXPECT_EQ(formInfo.funInteractionParams.keepStateDuration, FORM_KEEP_STATE_DURATION);
         EXPECT_EQ(formInfo.sceneAnimationParams.abilityName, FORM_ABILITY_NAME);
         EXPECT_EQ(formInfo.sceneAnimationParams.disabledDesktopBehaviors, FORM_DISABLED_DESKTOP_BEHAVIORS);
+        EXPECT_EQ(formInfo.sceneAnimationParams.triggerTypes[0], SceneAnimationTriggerType::SHAKE);
     }
 }
 
@@ -1525,6 +1542,7 @@ void BmsBundleKitServiceTest::CheckFormInfoDemo(const std::vector<FormInfo> &for
         EXPECT_EQ(formInfo.funInteractionParams.keepStateDuration, FORM_KEEP_STATE_DURATION);
         EXPECT_EQ(formInfo.sceneAnimationParams.abilityName, FORM_ABILITY_NAME);
         EXPECT_EQ(formInfo.sceneAnimationParams.disabledDesktopBehaviors, FORM_DISABLED_DESKTOP_BEHAVIORS);
+        EXPECT_EQ(formInfo.sceneAnimationParams.triggerTypes[0], SceneAnimationTriggerType::SHAKE);
     }
 }
 
@@ -2023,6 +2041,39 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllPreinstalledApplicationInfos_0100, Funct
     std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
     ErrCode ret = hostImpl->GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllNewPreinstalledApplicationInfos_0100
+ * @tc.name: test GetAllNewPreinstalledApplicationInfos
+ * @tc.desc: 1.Test the GetAllNewPreinstalledApplicationInfos by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllNewPreinstalledApplicationInfos_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+    ErrCode ret = hostImpl->GetAllNewPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PreInstallBundleInfoDescriptionIdJson_0100
+ * @tc.name: PreInstallBundleInfo descriptionId json round trip
+ * @tc.desc: 1.Test ToJson/FromJson preserves descriptionId
+ */
+HWTEST_F(BmsBundleKitServiceTest, PreInstallBundleInfoDescriptionIdJson_0100, Function | SmallTest | Level1)
+{
+    PreInstallBundleInfo info;
+    info.SetBundleName("com.test.description");
+    info.SetVersionCode(1U);
+    info.AddBundlePath("/data/test.hap");
+    info.SetDescriptionId(16777219U);
+    nlohmann::json j;
+    info.ToJson(j);
+    PreInstallBundleInfo restored;
+    EXPECT_EQ(restored.FromJson(j), ERR_OK);
+    EXPECT_EQ(restored.GetDescriptionId(), 16777219U);
 }
 
 /**
@@ -10124,6 +10175,44 @@ HWTEST_F(BmsBundleKitServiceTest, GetJsonProfilefImpl_0200, Function | SmallTest
 }
 
 /**
+ * @tc.number: GetJsonProfilefImpl_0300
+ * @tc.name: test GetJsonProfile with non-system app calling
+ * @tc.desc: 1. test GetJsonProfile when non-system app calling
+ *           2. should return ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetJsonProfilefImpl_0300, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ProfileType profileType = AppExecFwk::ProfileType::NETWORK_PROFILE;
+    std::string profile = "";
+    auto ret = hostImpl->GetJsonProfile(
+        profileType, BUNDLE_NAME_TEST, MODULE_NAME_TEST, profile, INVALID_UID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetJsonProfilefImpl_0400
+ * @tc.name: test GetJsonProfile with non-system app calling
+ * @tc.desc: 1. test GetJsonProfile when non-system app calling
+ *           2. should return ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetJsonProfilefImpl_0400, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ProfileType profileType = AppExecFwk::ProfileType::PKG_CONTEXT_PROFILE;
+    std::string profile = "";
+    auto ret = hostImpl->GetJsonProfile(
+        profileType, BUNDLE_NAME_TEST, MODULE_NAME_TEST, profile, INVALID_UID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    ResetTestValues();
+}
+
+/**
  * @tc.number: CreateBundleDataDirImpl_0100
  * @tc.name: test CreateBundleDataDir with no permission
  * @tc.desc: 1. test CreateBundleDataDir when no permission
@@ -10654,5 +10743,179 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInodeCount_0700, Function | SmallTest
     EXPECT_FALSE(ret == ERR_OK || ret == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0100
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with null callback
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir with null callback
+ *           2. Should return ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0100, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir(BUNDLE_NAME_TEST, 0, DEFAULT_USERID, nullptr);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0200
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with empty bundle name
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir with empty bundle name
+ *           2. Should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0200, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    sptr<MockCallback> callback = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback, nullptr);
+
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir("", 0, DEFAULT_USERID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0300
+ * @tc.name: test GetTopNLargestItemsInAppDataDir without system app permission
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir without system app permission
+ *           2. Should return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0300, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    sptr<MockCallback> callback = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback, nullptr);
+
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir(BUNDLE_NAME_TEST, 0, DEFAULT_USERID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0400
+ * @tc.name: test GetTopNLargestItemsInAppDataDir without GET_BUNDLE_INFO_PRIVILEGED permission
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir without required permission
+ *           2. Should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0400, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    sptr<MockCallback> callback = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback, nullptr);
+
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir(BUNDLE_NAME_TEST, 0, DEFAULT_USERID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0500
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with dataMgr nullptr
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir when dataMgr is nullptr
+ *           2. Should return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0500, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    sptr<MockCallback> callback = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback, nullptr);
+
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir(BUNDLE_NAME_TEST, 0, DEFAULT_USERID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0600
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with non-existent bundle
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir with non-existent bundle
+ *           2. Should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0600, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(DEFAULT_USERID);
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    sptr<MockCallback> callback = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback, nullptr);
+
+    std::string nonExistentBundle = "nonexistent";
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir(nonExistentBundle, 0, DEFAULT_USERID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ret = hostImpl->GetTopNLargestItemsInAppDataDir(nonExistentBundle, 0, ICON_ID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0700
+ * @tc.name: test GetTopNLargestItemsInAppDataDir frequency limit
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir frequency limit (12 hours)
+ *           2. First call should succeed, second call should return ERR_BUNDLE_MANAGER_OPERATION_FREQUENT
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0700, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(DEFAULT_USERID);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    // Reset the frequency limit timestamp by creating a new hostImpl
+    hostImpl->lastSuccessCallTime_ = std::chrono::steady_clock::time_point{};
+
+    sptr<MockCallback> callback1 = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback1, nullptr);
+
+    // First call should return ERR_OK (async task started)
+    ErrCode ret = hostImpl->GetTopNLargestItemsInAppDataDir(BUNDLE_NAME_TEST, 0, DEFAULT_USERID, callback1);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Second immediate call should return ERR_BUNDLE_MANAGER_OPERATION_FREQUENT
+    sptr<MockCallback> callback2 = new (std::nothrow) MockCallback();
+    ASSERT_NE(callback2, nullptr);
+
+    ret = hostImpl->GetTopNLargestItemsInAppDataDir(BUNDLE_NAME_TEST, 0, DEFAULT_USERID, callback2);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_OPERATION_FREQUENT);
+
+    ResetTestValues();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 }

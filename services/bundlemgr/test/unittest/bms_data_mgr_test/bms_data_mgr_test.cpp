@@ -4732,6 +4732,40 @@ HWTEST_F(BmsDataMgrTest, GetJsonProfile_0001, Function | MediumTest | Level1)
 }
 
 /**
+ * @tc.number: GetJsonProfileByExtractor_0001
+ * @tc.name: GetJsonProfileByExtractor
+ * @tc.desc: empty hapPath, bundle extractor init failed,
+ *           return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR
+ */
+HWTEST_F(BmsDataMgrTest, GetJsonProfileByExtractor_0001, Function | SmallTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hapPath = "";
+    std::string profilePath = "module.json";
+    std::string profile;
+    ErrCode ret = bundleDataMgr.GetJsonProfileByExtractor(hapPath, profilePath, profile);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+    EXPECT_TRUE(profile.empty());
+}
+
+/**
+ * @tc.number: GetJsonProfileByExtractor_0002
+ * @tc.name: GetJsonProfileByExtractor
+ * @tc.desc: valid hapPath but profile not in HAP,
+ *           return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, GetJsonProfileByExtractor_0002, Function | SmallTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hapPath = HAP_FILE_PATH1;
+    std::string profilePath = "nonexistent_profile_path.json";
+    std::string profile;
+    ErrCode ret = bundleDataMgr.GetJsonProfileByExtractor(hapPath, profilePath, profile);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST);
+    EXPECT_TRUE(profile.empty());
+}
+
+/**
  * @tc.number: GenerateNewUserDataGroupInfos_0001
  * @tc.name: GenerateNewUserDataGroupInfos
  * @tc.desc: test GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId)
@@ -7873,9 +7907,7 @@ HWTEST_F(BmsDataMgrTest, GetStorageShortcutInfos_0003, Function | MediumTest | L
  */
 HWTEST_F(BmsDataMgrTest, GetStorageShortcutInfos_0004, Function | MediumTest | Level1)
 {
-    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
-        std::make_shared<ShortcutVisibleDataStorageRdb>();
-    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
+    BundleDataMgr bundleDataMgr;
     std::string bundleName = "com.ohos.hello";
     std::string shortcutId = "id_test1";
     int32_t appIndex = 0;
@@ -7886,17 +7918,16 @@ HWTEST_F(BmsDataMgrTest, GetStorageShortcutInfos_0004, Function | MediumTest | L
     shortcutInfo.label = "$labelString:123456";
     std::vector<ShortcutInfo> shortcutInfos;
     shortcutInfos.push_back(shortcutInfo);
-
-    auto ret = shortcutVisibleDataStorageRdb->AddDynamicShortcutInfos(shortcutInfos, userId);
-    EXPECT_TRUE(ret);
+    bool result = bundleDataMgr.shortcutVisibleStorage_->AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_TRUE(result);
     shortcutInfo.sourceType = 1;
     std::vector<ShortcutInfo> storgeShortcutInfos;
     storgeShortcutInfos.push_back(shortcutInfo);
-    shortcutVisibleDataStorageRdb->GetStorageShortcutInfos(bundleName, appIndex, userId, storgeShortcutInfos);
+    bundleDataMgr.shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, userId, storgeShortcutInfos);
+    bundleDataMgr.RemoveInvalidShortcutInfo(storgeShortcutInfos);
     ASSERT_EQ(storgeShortcutInfos.size(), 1);
     EXPECT_EQ(storgeShortcutInfos[0].sourceType, 2);
-
-    bool result = shortcutVisibleDataStorageRdb->DeleteShortcutVisibleInfo(bundleName, userId, 0);
+    result = bundleDataMgr.shortcutVisibleStorage_->DeleteShortcutVisibleInfo(bundleName, userId, 0);
     EXPECT_TRUE(result);
 }
 
@@ -9158,4 +9189,44 @@ HWTEST_F(BmsDataMgrTest, FirstInstallBundleInfo_OdidResetCount_0500, Function | 
     EXPECT_EQ(info.odidResetCount, 0);  // Default value
 }
 
+/**
+ * @tc.number: SetBundleFirstLaunch_0001
+ * @tc.name: test SetBundleFirstLaunch with bundle not exist
+ * @tc.desc: 1.bundle not exist
+ *           2.return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, SetBundleFirstLaunch_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test.notexist";
+    int32_t userId = Constants::DEFAULT_USERID;
+    int32_t appIndex = 0;
+    bool isBundleFirstLaunched = true;
+
+    bundleDataMgr.AddUserId(userId);
+    ErrCode ret = bundleDataMgr.SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetBundleFirstLaunch_0002
+ * @tc.name: test SetBundleFirstLaunch with invalid userId
+ * @tc.desc: 1.invalid userId
+ *           2.return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, SetBundleFirstLaunch_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    int32_t userId = Constants::INVALID_USERID;
+    int32_t appIndex = 0;
+    bool isBundleFirstLaunched = true;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseBundleInfo_->name = bundleName;
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    ErrCode ret = bundleDataMgr.SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
 } // OHOS

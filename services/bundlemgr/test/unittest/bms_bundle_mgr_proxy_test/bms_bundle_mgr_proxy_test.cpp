@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include "bundle_mgr_proxy.h"
+#include "get_largest_items_callback_interface.h"
 #include "if_system_ability_manager.h"
 #include "iservice_registry.h"
 #include "process_cache_callback_host.h"
@@ -1038,7 +1039,7 @@ HWTEST_F(BmsBundleMgrProxyTest, GetApplicationLabel_0100, Function | MediumTest 
     int32_t appIndex = 0;
     std::string label;
     auto res = bundleMgrProxy.GetApplicationLabel(bundleName, appIndex, label);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -1791,6 +1792,94 @@ HWTEST_F(BmsBundleMgrProxyTest, GetOdidResetCount_0300, Function | MediumTest | 
     int32_t count = 0;
     std::string odid;
     ErrCode ret = bundleMgrProxy.GetOdidResetCount(bundleName, odid, count);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetInstalledBundleList_0100
+ * @tc.name: test GetInstalledBundleList with null remote object
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify GetInstalledBundleList returns parcel error when IPC fails
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetInstalledBundleList_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    uint32_t flags = 0;
+    int32_t userId = 100;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = bundleMgrProxy.GetInstalledBundleList(flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetInstalledBundleList_0200
+ * @tc.name: test GetInstalledBundleList with different flags
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify GetInstalledBundleList with various flag values
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetInstalledBundleList_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    uint32_t flags = 0x00000001;
+    int32_t userId = 0;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = bundleMgrProxy.GetInstalledBundleList(flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetInstalledBundleList_0300
+ * @tc.name: test GetInstalledBundleList with negative userId
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify GetInstalledBundleList error handling
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetInstalledBundleList_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    uint32_t flags = 0;
+    int32_t userId = -1;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = bundleMgrProxy.GetInstalledBundleList(flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0100
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with null remote object
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify GetTopNLargestItemsInAppDataDir returns parcel error when IPC fails
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetTopNLargestItemsInAppDataDir_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+
+    class MockGetLargestItemsCallback : public IGetLargestItemsCallback {
+    public:
+        void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
+        {
+            resultErrCode = errCode;
+            resultData = largestItems;
+        }
+        sptr<IRemoteObject> AsObject() override
+        {
+            return nullptr;
+        }
+        ErrCode resultErrCode = ERR_OK;
+        std::string resultData;
+    };
+
+    sptr<MockGetLargestItemsCallback> callback = new (std::nothrow) MockGetLargestItemsCallback();
+    ASSERT_NE(callback, nullptr);
+
+    std::string bundleName = "com.example.test";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+
+    ErrCode ret = bundleMgrProxy.GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, callback);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 }

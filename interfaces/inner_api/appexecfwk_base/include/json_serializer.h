@@ -176,6 +176,8 @@ void to_json(nlohmann::json &jsonObject, const StartWindowResource &startWindowR
 void from_json(const nlohmann::json &jsonObject, StartWindowResource &startWindowResource);
 void to_json(nlohmann::json &jsonObject, const AssetGroupInfo &assetGroupInfo);
 void from_json(const nlohmann::json &jsonObject, AssetGroupInfo &assetGroupInfo);
+void to_json(nlohmann::json &jsonObject, const AlternateIcon &alternateIcon);
+void from_json(const nlohmann::json &jsonObject, AlternateIcon &alternateIcon);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H

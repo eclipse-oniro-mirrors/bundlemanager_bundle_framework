@@ -3011,6 +3011,26 @@ HWTEST_F(BmsEventHandlerTest, InstallSystemBundleNeedCheckUserForPatch_0100, Fun
 }
 
 /**
+ * @tc.number: InstallSystemBundleNeedCheckUserForPatch_0200
+ * @tc.name: InstallSystemBundleNeedCheckUserForPatch
+ * @tc.desc: test InstallSystemBundleNeedCheckUserForPatch
+ */
+HWTEST_F(BmsEventHandlerTest, InstallSystemBundleNeedCheckUserForPatch_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::vector<std::string> filePaths;
+        filePaths.push_back("");
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        ASSERT_NE(dataMgr, nullptr);
+        bool ret = handler->InstallSystemBundleNeedCheckUserForPatch(filePaths, "", true); // no user
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
  * @tc.number: InnerMultiProcessBundleInstallForPatch_0100
  * @tc.name: InnerMultiProcessBundleInstallForPatch
  * @tc.desc: test InnerMultiProcessBundleInstallForPatch
@@ -3224,6 +3244,160 @@ HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0100, Function | SmallTest |
     std::vector<int32_t> userIds;
     bool ret = handler->HotPatchAppProcessing(bundleName, hasInstallVersionCode, hapVersionCode, userIds);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetBundleNameAndUserIdFromPath_0100
+ * @tc.name: GetBundleNameAndUserIdFromPath
+ * @tc.desc: test GetBundleNameAndUserIdFromPath
+ */
+HWTEST_F(BmsEventHandlerTest, GetBundleNameAndUserIdFromPath_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::string path;
+    std::vector<int32_t> userIds;
+    std::string bundleName;
+    auto ret = handler->GetBundleNameAndUserIdFromPath(path, userIds, bundleName);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(bundleName.empty());
+    bundleName = BUNDLE_NAME;
+    ret = handler->GetBundleNameAndUserIdFromPath(path, userIds, bundleName);
+    EXPECT_TRUE(ret);
+}
+
+/**
+* @tc.number: HotPatchAppProcessing_0200
+ * @tc.name: HotPatchAppProcessing
+ * @tc.desc: test HotPatchAppProcessing with valid bundleName but dataMgr is nullptr
+ */
+HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::string bundleName = "com.example.test";
+    uint32_t hasInstallVersionCode = 100;
+    uint32_t hapVersionCode = 50;
+    std::vector<int32_t> userIds;
+    bool ret = handler->HotPatchAppProcessing(bundleName, hasInstallVersionCode, hapVersionCode, userIds);
+    EXPECT_FALSE(ret);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = dataMgr;
+}
+
+/**
+ * @tc.number: HotPatchAppProcessing_0300
+ * @tc.name: HotPatchAppProcessing
+ * @tc.desc: test HotPatchAppProcessing with patch app downgrade scenario
+ */
+HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // prepare bundle info
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo info;
+    info.bundleUserInfo.userId = Constants::START_USERID;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    innerBundleUserInfos["_100"] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    // prepare patch info
+    InnerPatchInfo innerPatchInfo;
+    PatchInfo patchInfo;
+    patchInfo.appPatchType = AppPatchType::INTERNAL;
+    patchInfo.versionCode = 100;
+    innerPatchInfo.SetPatchInfo(patchInfo);
+    PatchDataMgr::GetInstance().AddInnerPatchInfo(BUNDLE_NAME, innerPatchInfo);
+
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    uint32_t hasInstallVersionCode = 100;
+    uint32_t hapVersionCode = 50;  // OTA version lower than installed version
+    std::vector<int32_t> userIds;
+    bool ret = handler->HotPatchAppProcessing(BUNDLE_NAME, hasInstallVersionCode, hapVersionCode, userIds);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(userIds.empty());
+
+    // cleanup
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+    PatchDataMgr::GetInstance().DeleteInnerPatchInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: HotPatchAppProcessing_0400
+ * @tc.name: HotPatchAppProcessing
+ * @tc.desc: test HotPatchAppProcessing with patch app but not downgrade
+ */
+HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // prepare bundle info
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo info;
+    info.bundleUserInfo.userId = Constants::START_USERID;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    innerBundleUserInfos["_100"] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    // prepare patch info
+    InnerPatchInfo innerPatchInfo;
+    PatchInfo patchInfo;
+    patchInfo.appPatchType = AppPatchType::INTERNAL;
+    patchInfo.versionCode = 100;
+    innerPatchInfo.SetPatchInfo(patchInfo);
+    PatchDataMgr::GetInstance().AddInnerPatchInfo(BUNDLE_NAME, innerPatchInfo);
+
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    uint32_t hasInstallVersionCode = 100;
+    uint32_t hapVersionCode = 150;  // OTA version higher than installed version
+    std::vector<int32_t> userIds;
+    bool ret = handler->HotPatchAppProcessing(BUNDLE_NAME, hasInstallVersionCode, hapVersionCode, userIds);
+    EXPECT_TRUE(ret);
+
+    // cleanup
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+    PatchDataMgr::GetInstance().DeleteInnerPatchInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: HotPatchAppProcessing_0500
+ * @tc.name: HotPatchAppProcessing
+ * @tc.desc: test HotPatchAppProcessing with non-patch app
+ */
+HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0500, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // prepare bundle info
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo info;
+    info.bundleUserInfo.userId = Constants::START_USERID;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    innerBundleUserInfos["_100"] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    // no patch info for this bundle
+
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    uint32_t hasInstallVersionCode = 100;
+    uint32_t hapVersionCode = 50;
+    std::vector<int32_t> userIds;
+    bool ret = handler->HotPatchAppProcessing(BUNDLE_NAME, hasInstallVersionCode, hapVersionCode, userIds);
+    EXPECT_FALSE(ret);
+
+    // cleanup
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
 }
 
 /**

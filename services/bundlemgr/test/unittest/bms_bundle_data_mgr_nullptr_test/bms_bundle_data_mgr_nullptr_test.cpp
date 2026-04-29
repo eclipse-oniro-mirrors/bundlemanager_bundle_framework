@@ -392,9 +392,10 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0005, Function | Mediu
 {
     BaseBundleInstaller installer;
     InnerBundleInfo info;
-    bool isKeepData = false;
+    InstallParam installParam;
+    installParam.isKeepData = false;
     bool async = false;
-    installer.RemoveBundle(info, isKeepData, async);
+    installer.RemoveBundle(info, installParam, async);
     EXPECT_TRUE(info.GetBundleName().empty());
 }
 
@@ -689,7 +690,9 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0024, Function | Mediu
     installer.userId_ = Constants::ALL_USERID;
 
     InnerBundleInfo newInfo;
-    auto ret = installer.RemoveBundleUserData(newInfo, false, false);
+    InstallParam installParam;
+    installParam.isKeepData = false;
+    auto ret = installer.RemoveBundleUserData(newInfo, installParam, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
 

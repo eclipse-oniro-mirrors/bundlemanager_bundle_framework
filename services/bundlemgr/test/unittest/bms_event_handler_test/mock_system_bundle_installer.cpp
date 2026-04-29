@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -214,8 +214,7 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleTargetUser(
     InstallParam &installParam,
     const std::string &bundleName,
     Constants::AppType appType,
-    const std::vector<int32_t> &userIds,
-    const bool hasWhiteList)
+    const std::vector<int32_t> &userIds)
 {
     return OTAInstallSystemBundle(filePaths, installParam, appType);
 }

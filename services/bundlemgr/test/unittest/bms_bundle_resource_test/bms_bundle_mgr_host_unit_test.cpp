@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 
 #include "bundle_mgr_host.h"
+#include "get_largest_items_callback_interface.h"
 
 using namespace testing::ext;
 
@@ -50,6 +51,22 @@ void BmsBundleMgrHostUnitTest::SetUp() {}
 
 void BmsBundleMgrHostUnitTest::TearDown() {}
 
+class MockGetLargestItemsCallback : public IGetLargestItemsCallback {
+public:
+    MockGetLargestItemsCallback() : resultErrCode(ERR_OK) {}
+    ~MockGetLargestItemsCallback() override = default;
+    void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
+    {
+        resultErrCode = errCode;
+        resultData = largestItems;
+    }
+    sptr<IRemoteObject> AsObject() override
+    {
+        return nullptr;
+    }
+    ErrCode resultErrCode;
+    std::string resultData;
+};
 /**
  * @tc.number: OnRemoteRequest_0010
  * @tc.name: test the OnRemoteRequest
@@ -3009,6 +3026,24 @@ HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1640, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: OnRemoteRequest_1641
+ * @tc.name: test the OnRemoteRequest GET_ALL_NEW_PREINSTALLED_APPLICATION_INFOS
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1641, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_NEW_PREINSTALLED_APPLICATION_INFOS);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: OnRemoteRequest_1650
  * @tc.name: test the OnRemoteRequest
  * @tc.desc: 1. system running normally
@@ -4445,6 +4480,34 @@ HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetOdidResetCount_0300, Function | Smal
     data.WriteString(TEST_BUNDLE_NAME);
     ErrCode res = bundleMgrHost.HandleGetOdidResetCount(data, reply);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetTopNLargestItemsInAppDataDir_0100
+ * @tc.name: test GetTopNLargestItemsInAppDataDir via OnRemoteRequest
+ * @tc.desc: 1. test GetTopNLargestItemsInAppDataDir interface through OnRemoteRequest
+ *           2. verify the interface can be called normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetTopNLargestItemsInAppDataDir_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    data.WriteString(TEST_BUNDLE_NAME);
+    int32_t appIndex = 0;
+    data.WriteInt32(appIndex);
+    int32_t userId = 100;
+    data.WriteInt32(userId);
+    sptr<MockGetLargestItemsCallback> callback = new (std::nothrow) MockGetLargestItemsCallback();
+    ASSERT_NE(callback, nullptr);
+    data.WriteRemoteObject(callback->AsObject()); // nullptr
+
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, UNKNOWN_ERROR);
 }
 } // namespace AppExecFwk
 } // namespace OHOS

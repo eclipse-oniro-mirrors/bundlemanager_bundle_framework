@@ -579,6 +579,47 @@ HWTEST_F(BmsHapModuleInfoTest, Marshalling_0500, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: PreinstalledApplicationInfo_Marshalling_0600
+ * @tc.name: test PreinstalledApplicationInfo Marshalling with descriptionId round trip
+ */
+HWTEST_F(BmsHapModuleInfoTest, PreinstalledApplicationInfo_Marshalling_0600, Function | SmallTest | Level0)
+{
+    PreinstalledApplicationInfo orig;
+    orig.bundleName = BUNDLENAME;
+    orig.moduleName = MODULENAME;
+    orig.labelId = LABEL_ID;
+    orig.iconId = ICON_ID;
+    orig.descriptionId = 16777216;
+    Parcel parcel;
+    EXPECT_TRUE(orig.Marshalling(parcel));
+    auto* unm = PreinstalledApplicationInfo::Unmarshalling(parcel);
+    ASSERT_NE(unm, nullptr);
+    EXPECT_EQ(unm->bundleName, orig.bundleName);
+    EXPECT_EQ(unm->moduleName, orig.moduleName);
+    EXPECT_EQ(unm->labelId, orig.labelId);
+    EXPECT_EQ(unm->iconId, orig.iconId);
+    EXPECT_EQ(unm->descriptionId, orig.descriptionId);
+    delete unm;
+}
+
+/**
+ * @tc.number: PreinstalledApplicationInfo_Marshalling_0700
+ * @tc.name: test PreinstalledApplicationInfo Unmarshalling without trailing descriptionId
+ */
+HWTEST_F(BmsHapModuleInfoTest, PreinstalledApplicationInfo_Marshalling_0700, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    parcel.WriteString16(Str8ToStr16(BUNDLENAME));
+    parcel.WriteString16(Str8ToStr16(MODULENAME));
+    parcel.WriteUint32(LABEL_ID);
+    parcel.WriteUint32(ICON_ID);
+    auto* unm = PreinstalledApplicationInfo::Unmarshalling(parcel);
+    ASSERT_NE(unm, nullptr);
+    EXPECT_EQ(unm->descriptionId, 0);
+    delete unm;
+}
+
+/**
  * @tc.number: BmsCodeProtectBundleInfoTest_0100
  * @tc.name: test ReadFromParcel interface in CodeProtectBundleInfo.
  * @tc.desc: 1.construct parcel.
@@ -976,6 +1017,79 @@ HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_Unmarshalling_001, Function | Smal
     EXPECT_EQ(unmarshalledParam->binFilePaths.size(), originalParam.binFilePaths.size());
     EXPECT_EQ(unmarshalledParam->binFilePaths[0], originalParam.binFilePaths[0]);
     delete unmarshalledParam;
+}
+
+/**
+ * @tc.number: LibrarySupportDirectory_Marshalling_001
+ * @tc.name: test Marshalling interface for librarySupportDirectory
+ * @tc.desc: test vector<string> librarySupportDirectory serialization
+ */
+HWTEST_F(BmsHapModuleInfoTest, LibrarySupportDirectory_Marshalling_001, Function | SmallTest | Level0)
+{
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.librarySupportDirectory = {"subA/subB", "subA/subC"};
+    Parcel parcel;
+    bool ret = hapModuleInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: LibrarySupportDirectory_Marshalling_002
+ * @tc.name: test Marshalling interface for empty librarySupportDirectory
+ * @tc.desc: test empty vector<string> librarySupportDirectory serialization
+ */
+HWTEST_F(BmsHapModuleInfoTest, LibrarySupportDirectory_Marshalling_002, Function | SmallTest | Level0)
+{
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.librarySupportDirectory = {};
+    Parcel parcel;
+    bool ret = hapModuleInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: LibrarySupportDirectory_to_json_001
+ * @tc.name: test to_json interface for librarySupportDirectory
+ * @tc.desc: test vector<string> librarySupportDirectory to_json
+ */
+HWTEST_F(BmsHapModuleInfoTest, LibrarySupportDirectory_to_json_001, Function | SmallTest | Level0)
+{
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.librarySupportDirectory = {"subA/subB", "subA/subC"};
+    nlohmann::json jsonObject;
+    to_json(jsonObject, hapModuleInfo);
+    EXPECT_EQ(jsonObject["librarySupportDirectory"].size(), 2);
+}
+
+/**
+ * @tc.number: LibrarySupportDirectory_from_json_001
+ * @tc.name: test from_json interface for librarySupportDirectory
+ * @tc.desc: test vector<string> librarySupportDirectory from_json
+ */
+HWTEST_F(BmsHapModuleInfoTest, LibrarySupportDirectory_from_json_001, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject = {
+        {"librarySupportDirectory", {"subA/subB", "subA/subC"}}
+    };
+    HapModuleInfo hapModuleInfo;
+    from_json(jsonObject, hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.librarySupportDirectory.size(), 2);
+    EXPECT_EQ(hapModuleInfo.librarySupportDirectory[0], "subA/subB");
+}
+
+/**
+ * @tc.number: LibrarySupportDirectory_from_json_002
+ * @tc.name: test from_json interface for empty librarySupportDirectory
+ * @tc.desc: test empty vector<string> librarySupportDirectory from_json
+ */
+HWTEST_F(BmsHapModuleInfoTest, LibrarySupportDirectory_from_json_002, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject = {
+        {"librarySupportDirectory", {}}
+    };
+    HapModuleInfo hapModuleInfo;
+    from_json(jsonObject, hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.librarySupportDirectory.size(), 0);
 }
 }
 }

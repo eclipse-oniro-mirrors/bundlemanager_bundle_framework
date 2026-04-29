@@ -2005,7 +2005,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7200, Function | SmallTest | 
 
     info.baseExtensionInfos_.insert(std::make_pair("1", innerExtensionInfo));
     auto res = driverInstaller->CopyDriverSoFile(info, RESOURCE_ROOT_PATH, false);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**

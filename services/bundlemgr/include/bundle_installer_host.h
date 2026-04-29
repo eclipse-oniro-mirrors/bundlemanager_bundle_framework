@@ -164,6 +164,8 @@ public:
 
     virtual ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias) override;
 
+    virtual ErrCode UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames) override;
+
     virtual ErrCode DeleteReSignCert(int32_t userId) override;
 private:
     /**
@@ -249,6 +251,7 @@ private:
     void HandleInstallCloneApp(MessageParcel &data, MessageParcel &reply);
     void HandleUninstallCloneApp(MessageParcel &data, MessageParcel &reply);
     void HandleInstallExisted(MessageParcel &data, MessageParcel &reply);
+    void HandleUninstallNewPreinstalledApps(MessageParcel &data, MessageParcel &reply);
     void HandleAddEnterpriseResignCert(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleDeleteEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply);

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+* Copyright (c) 2021-2026 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -110,6 +110,32 @@ int32_t BundleUtil::GetUserIdByUid(int32_t uid)
 
 void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, const std::string &configPath)
 {
+}
+
+void BundleUtil::MakeFsConfig(const std::string &bundleName, const std::string &configPath,
+    const std::string labelValue, const std::string labelPath)
+{
+}
+
+std::vector<std::string> BundleUtil::FileTypeNormalize(const std::string &fileType)
+{
+    return std::vector<std::string>();
+}
+
+bool BundleUtil::CheckOrphanNodeUseRateIsSufficient()
+{
+    return true;
+}
+
+ErrCode BundleUtil::GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias)
+{
+    return ERR_OK;
+}
+
+std::string BundleUtil::GetAbilityKey(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName)
+{
+    return "";
 }
 
 void BundleUtil::RemoveFsConfig(const std::string &bundleName, const std::string &configPath)
@@ -302,6 +328,12 @@ std::string BundleUtil::GetNoDisablingConfigPath()
     return "";
 }
 
+
+bool BundleUtil::IsExecutableBinaryFile(const std::string &filePath)
+{
+    return true;
+}
+
 uint32_t BundleUtil::ExtractNumberFromString(nlohmann::json &jsonObject, const std::string &key)
 {
     return 0;
@@ -424,6 +456,32 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, c
 {
 }
 
+void BundleUtil::MakeFsConfig(const std::string &bundleName, const std::string &configPath,
+    const std::string labelValue, const std::string labelPath)
+{
+}
+
+std::vector<std::string> BundleUtil::FileTypeNormalize(const std::string &fileType)
+{
+    return std::vector<std::string>();
+}
+
+bool BundleUtil::CheckOrphanNodeUseRateIsSufficient()
+{
+    return false;
+}
+
+ErrCode BundleUtil::GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias)
+{
+    return ERR_OK;
+}
+
+std::string BundleUtil::GetAbilityKey(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName)
+{
+    return "";
+}
+
 void BundleUtil::RemoveFsConfig(const std::string &bundleName, const std::string &configPath)
 {
 }
@@ -525,7 +583,7 @@ bool BundleUtil::CopyFile(
     return false;
 }
 
-bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &destPath)
+bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &destPath, const bool needFsync)
 {
     return false;
 }
@@ -612,6 +670,12 @@ std::string BundleUtil::ToString(const std::vector<std::string> &vector)
 std::string BundleUtil::GetNoDisablingConfigPath()
 {
     return "";
+}
+
+
+bool BundleUtil::IsExecutableBinaryFile(const std::string &filePath)
+{
+    return false;
 }
 
 uint32_t BundleUtil::ExtractNumberFromString(nlohmann::json &jsonObject, const std::string &key)

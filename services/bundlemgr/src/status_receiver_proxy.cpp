@@ -15,6 +15,7 @@
 
 #include "status_receiver_proxy.h"
 
+#include "appexecfwk_errors.h"
 #include "bundle_mgr_service.h"
 
 namespace OHOS {
@@ -712,6 +713,8 @@ const std::unordered_map<int32_t, struct ReceivedResult> MAP_RECEIVED_RESULTS {
             MSG_ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL}},
     {ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW,
         {IStatusReceiver::ERR_INSTALL_PARSE_FAILED, MSG_ERR_INSTALL_PARSE_FAILED}},
+    {ERR_SKILLS_INSTALL_NOT_ALLOW,
+        {IStatusReceiver::ERR_INSTALL_PARSE_FAILED, MSG_ERR_INSTALL_PARSE_FAILED}},
     {ERR_APPEXECFWK_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON,
         {IStatusReceiver::ERR_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON,
             MSG_ERR_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON}},
@@ -831,7 +834,6 @@ const std::unordered_map<int32_t, struct ReceivedResult> MAP_RECEIVED_RESULTS {
     {ERR_APPEXECFWK_INSTALL_GRANT_PERMISSION_NOT_DEBUG_BUNDLE,
         {IStatusReceiver::ERR_INSTALL_GRANT_PERMISSION_NOT_DEBUG_BUNDLE,
             MSG_ERR_INSTALL_GRANT_PERMISSION_NOT_DEBUG_BUNDLE}},
-    
 };
 }  // namespace
 
@@ -918,9 +920,19 @@ void StatusReceiverProxy::OnFinished(const int32_t resultCode, const std::string
     }
 }
 
+static int32_t ExtractInstalldBusinessErrCode(int32_t resultCode)
+{
+    if (resultCode >= APPEXECFWK_INSTALLD_ERR_OFFSET) {
+        int32_t errnoPart = (resultCode - APPEXECFWK_INSTALLD_ERR_OFFSET) % ERRNO_MAX_SIZE;
+        return resultCode - errnoPart;
+    }
+    return resultCode;
+}
+
 void StatusReceiverProxy::TransformResult(const int32_t resultCode)
 {
-    auto result = MAP_RECEIVED_RESULTS.find(resultCode);
+    int32_t businessCode = ExtractInstalldBusinessErrCode(resultCode);
+    auto result = MAP_RECEIVED_RESULTS.find(businessCode);
     if (result != MAP_RECEIVED_RESULTS.end()) {
         resultCode_ = result->second.clientCode;
         resultMsg_ = result->second.clientMessage;

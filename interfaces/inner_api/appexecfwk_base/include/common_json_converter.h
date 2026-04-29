@@ -1005,6 +1005,12 @@ void ExtensionFromJson(const nlohmann::json &jsonObject, T &extensionInfo)
         extensionInfo.isolationProcess,
         false,
         parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::SKIP_ABILITY_STAGE_LIFECYCLE,
+        extensionInfo.skipAbilityStageLifecycle,
+        false,
+        parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::ARKTS_MODE,
@@ -1055,6 +1061,7 @@ void ExtensionToJson(nlohmann::json &jsonObject, const T &extensionInfo)
         {Constants::VALID_DATA_GROUP_IDS, extensionInfo.validDataGroupIds},
         {Constants::CUSTOM_PROCESS, extensionInfo.customProcess},
         {Constants::ISOLATION_PROCESS, extensionInfo.isolationProcess},
+        {Constants::SKIP_ABILITY_STAGE_LIFECYCLE, extensionInfo.skipAbilityStageLifecycle},
         {Constants::ARKTS_MODE, extensionInfo.arkTSMode}
     };
 }

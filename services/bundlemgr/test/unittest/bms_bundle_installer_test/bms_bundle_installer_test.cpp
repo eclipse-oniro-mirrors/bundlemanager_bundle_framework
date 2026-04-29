@@ -63,6 +63,8 @@
 #include "installd/installd_permission_mgr.h"
 #include "bundle_cache_mgr.h"
 #include "process_cache_callback_host.h"
+#include "ipc/skills_package_param.h"
+#include "skills_installer/skills_package_info.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -2475,13 +2477,14 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0600, Function | SmallTest 
     BaseBundleInstaller installer;
     InnerBundleInfo innerBundleInfo;
     InnerBundleUserInfo userInfo;
-    bool needRemoveData = false;
-    auto ret = installer.RemoveBundleUserData(innerBundleInfo, needRemoveData);
+    InstallParam installParam;
+    installParam.isKeepData = false;
+    auto ret = installer.RemoveBundleUserData(innerBundleInfo, installParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
     innerBundleInfo.innerBundleUserInfos_.emplace("key", userInfo);
     installer.userId_ = Constants::ALL_USERID;
     installer.dataMgr_ = GetBundleDataMgr();
-    ret = installer.RemoveBundleUserData(innerBundleInfo, needRemoveData);
+    ret = installer.RemoveBundleUserData(innerBundleInfo, installParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_RMV_USERINFO_ERROR);
 }
 
@@ -2780,10 +2783,13 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2200, Function | SmallTest 
     BaseBundleInstaller installer;
     InnerBundleInfo info;
     installer.InitDataMgr();
-    ErrCode res = installer.RemoveBundle(info, false);
+    InstallParam installParam;
+    installParam.isKeepData = false;
+    ErrCode res = installer.RemoveBundle(info, installParam);
     EXPECT_EQ(res, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 
-    res = installer.RemoveBundle(info, true);
+    installParam.isKeepData = true;
+    res = installer.RemoveBundle(info, installParam);
     EXPECT_EQ(res, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 }
 
@@ -6146,11 +6152,11 @@ HWTEST_F(BmsBundleInstallerTest, SetDirsApl_0100, Function | SmallTest | Level0)
  
     CreateDirParam para1 =  PrepareCreateDirParam(dirs, BUNDLE_NAME, "", isPreInstallApp, debug, 0);
     auto ret = impl.SetDirsApl(para1, true);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
  
     CreateDirParam para2 =  PrepareCreateDirParam(dirs, "", "", isPreInstallApp, debug, 0);
     ret = impl.SetDirsApl(para2, true);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
  
     dirs.emplace_back(BUNDLE_DATA_DIR);
     CreateDirParam para3 =  PrepareCreateDirParam(dirs, "", "", isPreInstallApp, debug, 0);
@@ -7368,7 +7374,7 @@ HWTEST_F(BmsBundleInstallerTest, GetAllBundleStats_0100, Function | SmallTest | 
     std::vector<int64_t> bundleStats = { 0 };
     std::vector<int32_t> uids;
     uids.push_back(EDM_UID);
-    auto ret = hostImpl.GetAllBundleStats(EDM_UID, bundleStats, uids);
+    auto ret = hostImpl.GetAllBundleStats(bundleStats, uids);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -9824,7 +9830,8 @@ HWTEST_F(BmsBundleInstallerTest, UtdHandler_0400, Function | SmallTest | Level0)
 HWTEST_F(BmsBundleInstallerTest, GetAppInstallPrefix_0100, Function | SmallTest | Level1)
 {
     BundleUtil util;
-    std::string prefix = "/data/service/el1/public/bms/bundle_manager_service/app_install/";
+    std::string prefix = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH;
+    std::string clonePrefix = prefix + "100" + ServiceConstants::GALLERY_CLONE_PATH;
     std::string filePath = prefix + "100/com.test.test/entry.hap";
     EXPECT_EQ(util.GetAppInstallPrefix(filePath, false), "");
 
@@ -9844,6 +9851,24 @@ HWTEST_F(BmsBundleInstallerTest, GetAppInstallPrefix_0100, Function | SmallTest 
 
     filePath = prefix + "100/com.test.test/entry.hap";
     EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "+app_install+com.test.test+100+");
+
+    filePath = clonePrefix + "com.test.clone/entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
+
+    filePath = clonePrefix + "dataclone/com.test.clone/entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "+app_clone+com.test.clone+100+");
+
+    filePath = clonePrefix + "dataclone/entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
+
+    filePath = clonePrefix + "entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
+
+    filePath = clonePrefix + "com.test.clone";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
+
+    filePath = clonePrefix + "/entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
 }
 
 /**
@@ -9867,6 +9892,17 @@ HWTEST_F(BmsBundleInstallerTest, RestoreAppInstallHaps_0100, Function | SmallTes
     util.RestoreHaps("", "", "");
     util.RestoreHaps(prefix + "+app_install+com.test.test+100+123123", "com.test.test", "100");
     EXPECT_TRUE(util.IsExistDir(prefix + "+app_install+com.test.test+100+123123"));
+
+    std::string sourcePath = prefix + "+app_clone+com.test.clone+100+123123" + ServiceConstants::PATH_SEPARATOR;
+    std::string targetPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH +
+        "100" + ServiceConstants::GALLERY_CLONE_PATH + "dataclone/com.test.clone/";
+    OHOS::ForceCreateDirectory(sourcePath);
+    OHOS::ForceCreateDirectory(targetPath);
+    std::ofstream outFile(sourcePath + "entry.hap");
+    outFile << "test";
+    outFile.close();
+    util.RestoreHaps(sourcePath, "com.test.clone", "100");
+    EXPECT_TRUE(util.IsExistFile(targetPath + "entry.hap"));
 }
 
 /*
@@ -12741,6 +12777,66 @@ HWTEST_F(BmsBundleInstallerTest, GetU1Enable_0001, Function | SmallTest | Level0
 }
 
 /**
+ * @tc.number: HasOtaNewInstallUser_0001
+ * @tc.name: test HasOtaNewInstallUser
+ * @tc.desc: 1.directly hit queried user in otaNewInstallUsers_
+ */
+HWTEST_F(BmsBundleInstallerTest, HasOtaNewInstallUser_0001, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+    constexpr int32_t userId = 100;
+    preInstallBundleInfo.AddOtaNewInstallUser(userId);
+    EXPECT_TRUE(preInstallBundleInfo.HasOtaNewInstallUser(userId));
+}
+
+/**
+ * @tc.number: HasOtaNewInstallUser_0002
+ * @tc.name: test HasOtaNewInstallUser
+ * @tc.desc: 1.fallback to U1 when queried user is not U1/default
+ */
+HWTEST_F(BmsBundleInstallerTest, HasOtaNewInstallUser_0002, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.AddOtaNewInstallUser(Constants::U1);
+    EXPECT_TRUE(preInstallBundleInfo.HasOtaNewInstallUser(TEST_U100));
+}
+
+/**
+ * @tc.number: HasOtaNewInstallUser_0003
+ * @tc.name: test HasOtaNewInstallUser
+ * @tc.desc: 1.fallback to default user when queried user is not U1/default
+ */
+HWTEST_F(BmsBundleInstallerTest, HasOtaNewInstallUser_0003, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.AddOtaNewInstallUser(Constants::DEFAULT_USERID);
+    EXPECT_TRUE(preInstallBundleInfo.HasOtaNewInstallUser(TEST_U100));
+}
+
+/**
+ * @tc.number: HasOtaNewInstallUser_0004
+ * @tc.name: test HasOtaNewInstallUser
+ * @tc.desc: 1.return false when U1/default queried and not found
+ */
+HWTEST_F(BmsBundleInstallerTest, HasOtaNewInstallUser_0004, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+    EXPECT_FALSE(preInstallBundleInfo.HasOtaNewInstallUser(Constants::U1));
+    EXPECT_FALSE(preInstallBundleInfo.HasOtaNewInstallUser(Constants::DEFAULT_USERID));
+}
+
+/**
+ * @tc.number: HasOtaNewInstallUser_0005
+ * @tc.name: test HasOtaNewInstallUser
+ * @tc.desc: 1.return false when queried user is not U1/default and no global markers exist
+ */
+HWTEST_F(BmsBundleInstallerTest, HasOtaNewInstallUser_0005, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+    EXPECT_FALSE(preInstallBundleInfo.HasOtaNewInstallUser(TEST_U100));
+}
+
+/**
  * @tc.number: GetConfirmUserId_0001
  * @tc.name: test GetConfirmUserId
  * @tc.desc: 1.GetConfirmUserId, otaInstall_ is false, innerBundleInfo1 is singleton
@@ -13627,6 +13723,271 @@ HWTEST_F(BmsBundleInstallerTest, CheckInstallAllowDowngrade_0400, Function | Sma
 }
 
 /**
+ * @tc.number: CheckInstallAllowDowngrade_0500
+ * @tc.name: test CheckInstallAllowDowngrade with allowPatchDowngrade
+ * @tc.desc: 1.Test system app with allowPatchDowngrade = true
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallAllowDowngrade_0500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.allowPatchDowngrade = true;
+    ErrCode result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    InnerBundleInfo oldBundleInfo;
+    // system app with allowPatchDowngrade = true, should allow downgrade
+    oldBundleInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    oldBundleInfo.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION);
+    oldBundleInfo.SetEntryInstallationFree(true);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckInstallAllowDowngrade_0600
+ * @tc.name: test CheckInstallAllowDowngrade with allowPatchDowngrade
+ * @tc.desc: 1.Test system app with allowPatchDowngrade = false
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallAllowDowngrade_0600, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.allowPatchDowngrade = false;
+    ErrCode result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    InnerBundleInfo oldBundleInfo;
+    // system app with allowPatchDowngrade = false, should not allow downgrade
+    oldBundleInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
+}
+
+/**
+ * @tc.number: CheckInstallAllowDowngrade_0700
+ * @tc.name: test CheckInstallAllowDowngrade with allowPatchDowngrade
+ * @tc.desc: 1.Test pre-installed app (os_integration) with allowPatchDowngrade = true
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallAllowDowngrade_0700, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.allowPatchDowngrade = true;
+    ErrCode result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    InnerBundleInfo oldBundleInfo;
+    // pre-installed app (os_integration) with allowPatchDowngrade = true, should allow downgrade
+    oldBundleInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    oldBundleInfo.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION);
+    oldBundleInfo.SetEntryInstallationFree(true);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckInstallAllowDowngrade_0800
+ * @tc.name: test CheckInstallAllowDowngrade with allowPatchDowngrade
+ * @tc.desc: 1.Test third party app with allowPatchDowngrade = true
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallAllowDowngrade_0800, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.allowPatchDowngrade = true;
+    ErrCode result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    InnerBundleInfo oldBundleInfo;
+    // third party app with allowPatchDowngrade = true, should allow downgrade
+    oldBundleInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
+    oldBundleInfo.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_NONE);
+    oldBundleInfo.SetEntryInstallationFree(true);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckInstallAllowDowngrade_0900
+ * @tc.name: test CheckInstallAllowDowngrade with provision type mismatch
+ * @tc.desc: 1.Test third party app with allowDowngrade and provision type mismatch
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallAllowDowngrade_0900, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.allowPatchDowngrade = false;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "true";
+    ErrCode result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    InnerBundleInfo oldBundleInfo;
+    oldBundleInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
+    oldBundleInfo.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_NONE);
+    oldBundleInfo.SetAppProvisionType(Constants::APP_PROVISION_TYPE_DEBUG);
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.profileBlockLength = 100;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_APP_PROVISION_TYPE_NOT_SAME);
+
+    // provision type match
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    oldBundleInfo.SetAppProvisionType(Constants::APP_PROVISION_TYPE_RELEASE);
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckInstallAllowDowngrade_1000
+ * @tc.name: test CheckInstallAllowDowngrade with entry check
+ * @tc.desc: 1.Test third party app with allowDowngrade and entry check
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallAllowDowngrade_1000, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.allowPatchDowngrade = false;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "true";
+    ErrCode result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    InnerBundleInfo oldBundleInfo;
+    oldBundleInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
+    oldBundleInfo.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_NONE);
+
+    // has entry but installer not contain entry, should fail
+    InnerModuleInfo moduleInfo;
+    moduleInfo.isEntry = true;
+    oldBundleInfo.innerModuleInfos_[BUNDLE_NAME] = moduleInfo;
+    installer.isContainEntry_ = false;
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_NOT_COMPATIBLE);
+
+    // has entry and installer contain entry, should success
+    installer.isContainEntry_ = true;
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_OK);
+
+    // no entry, should success
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    oldBundleInfo.innerModuleInfos_.clear();
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckInstallAllowDowngrade_1100
+ * @tc.name: test CheckInstallAllowDowngrade with allowPatchDowngrade
+ * @tc.desc: 1.Test both allowPatchDowngrade and parameters flag work together
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallAllowDowngrade_1100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    ErrCode result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    InnerBundleInfo oldBundleInfo;
+    oldBundleInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    oldBundleInfo.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION);
+    oldBundleInfo.SetEntryInstallationFree(true);
+
+    // neither allowPatchDowngrade nor parameters flag, should fail
+    installParam.allowPatchDowngrade = false;
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
+
+    // only parameters flag = true, but system app should still fail (before fix)
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "true";
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
+
+    // only allowPatchDowngrade = true, should success
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    installParam.parameters.clear();
+    installParam.allowPatchDowngrade = true;
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_OK);
+
+    // both allowPatchDowngrade = true and parameters flag = true, should success
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "true";
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: InstallParamMarshalling_0100
+ * @tc.name: test InstallParam Marshalling with allowPatchDowngrade
+ * @tc.desc: 1.Test InstallParam Marshalling and Unmarshalling
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallParamMarshalling_0100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.allowPatchDowngrade = true;
+    installParam.isKeepData = true;
+
+    Parcel parcel;
+    bool ret = installParam.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    InstallParam* newParam = InstallParam::Unmarshalling(parcel);
+    EXPECT_NE(newParam, nullptr);
+    if (newParam != nullptr) {
+        EXPECT_EQ(newParam->allowPatchDowngrade, true);
+        EXPECT_EQ(newParam->isKeepData, true);
+        delete newParam;
+    }
+}
+
+/**
+ * @tc.number: InstallParamMarshalling_0200
+ * @tc.name: test InstallParam Marshalling with allowPatchDowngrade = false
+ * @tc.desc: 1.Test InstallParam Marshalling and Unmarshalling with default value
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallParamMarshalling_0200, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    // default value is false
+    EXPECT_EQ(installParam.allowPatchDowngrade, false);
+
+    Parcel parcel;
+    bool ret = installParam.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    InstallParam* newParam = InstallParam::Unmarshalling(parcel);
+    EXPECT_NE(newParam, nullptr);
+    if (newParam != nullptr) {
+        EXPECT_EQ(newParam->allowPatchDowngrade, false);
+        delete newParam;
+    }
+}
+
+/**
+ * @tc.number: InstallParamMarshalling_0300
+ * @tc.name: test InstallParam Marshalling with all fields
+ * @tc.desc: 1.Test InstallParam Marshalling and Unmarshalling with all fields
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallParamMarshalling_0300, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.allowPatchDowngrade = true;
+    installParam.isPatch = true;
+    installParam.isKeepData = true;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.userId = 100;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "true";
+
+    Parcel parcel;
+    bool ret = installParam.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    InstallParam* newParam = InstallParam::Unmarshalling(parcel);
+    EXPECT_NE(newParam, nullptr);
+    if (newParam != nullptr) {
+        EXPECT_EQ(newParam->allowPatchDowngrade, true);
+        EXPECT_EQ(newParam->isPatch, true);
+        EXPECT_EQ(newParam->isKeepData, true);
+        EXPECT_EQ(newParam->installFlag, InstallFlag::REPLACE_EXISTING);
+        EXPECT_EQ(newParam->userId, 100);
+        delete newParam;
+    }
+}
+
+/**
  * @tc.number: CheckInstallDowngradeParam_0100
  * @tc.name: test CheckInstallDowngradeParam
  * @tc.desc: 1.Test CheckInstallDowngradeParam
@@ -14387,7 +14748,7 @@ HWTEST_F(BmsBundleInstallerTest, StopSetFileCon_0100, Function | SmallTest | Lev
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     createDirParam.uid = ZERO_CODE;
     ret = impl.StopSetFileCon(createDirParam, reason);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -14578,15 +14939,15 @@ HWTEST_F(BmsBundleInstallerTest, SetEncryptionPolicy_0200, Function | SmallTest 
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     encryptionParam.bundleName = TEST_ERROR_STRING;
     ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     encryptionParam.bundleName = TEST_EMPTY_STRING;
     encryptionParam.groupId = TEST_ERROR_STRING;
     ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     encryptionParam.bundleName = TEST_ERROR_STRING;
     encryptionParam.groupId = TEST_ERROR_STRING;
     ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -14609,7 +14970,7 @@ HWTEST_F(BmsBundleInstallerTest, DeleteEncryptionKeyId_0200, Function | SmallTes
     encryptionParam.bundleName = TEST_EMPTY_STRING;
     encryptionParam.groupId = TEST_ERROR_STRING;
     ret = impl.DeleteEncryptionKeyId(encryptionParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     encryptionParam.bundleName = TEST_ERROR_STRING;
     encryptionParam.groupId = TEST_ERROR_STRING;
     ret = impl.DeleteEncryptionKeyId(encryptionParam);
@@ -14964,10 +15325,10 @@ HWTEST_F(BmsBundleInstallerTest, RestoreconPath_0100, Function | SmallTest | Lev
     InstalldHostImpl impl;
     std::string path = TEST_EMPTY_STRING;
     ErrCode ret = impl.RestoreconPath(path);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_RESTORECON_PATH_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RESTORECON_PATH_FAILED);
     path = TEST_ERROR_STRING;
     ret = impl.RestoreconPath(path);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_RESTORECON_PATH_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RESTORECON_PATH_FAILED);
 }
 
 /**
@@ -15038,6 +15399,79 @@ HWTEST_F(BmsBundleInstallerTest, DeleteCertAndRemoveKey_0100, Function | SmallTe
     certPaths.emplace_back(TEST_EMPTY_STRING);
     ret = impl.DeleteCertAndRemoveKey(certPaths);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractSkillsPackage_0100
+ * @tc.name: test ExtractSkillsPackage
+ * @tc.desc: test ExtractSkillsPackage of InstalldHostImpl with empty parameters
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractSkillsPackage_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    SkillsPackageParam param;
+    std::vector<SkillsPackageInfo> skillInfoList;
+
+    // Test with empty bundleName
+    param.bundleName = TEST_EMPTY_STRING;
+    param.moduleName = TEST_STRING;
+    param.hspPath = TEST_STRING;
+    param.skillNameList.clear();
+    ErrCode ret = impl.ExtractSkillsPackage(param, skillInfoList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    // Test with empty moduleName
+    param.bundleName = TEST_STRING;
+    param.moduleName = TEST_EMPTY_STRING;
+    param.hspPath = TEST_STRING;
+    param.skillNameList.clear();
+    ret = impl.ExtractSkillsPackage(param, skillInfoList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    // Test with empty hspPath
+    param.bundleName = TEST_STRING;
+    param.moduleName = TEST_STRING;
+    param.hspPath = TEST_EMPTY_STRING;
+    param.skillNameList.clear();
+    ret = impl.ExtractSkillsPackage(param, skillInfoList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractSkillsPackage_0200
+ * @tc.name: test ExtractSkillsPackage
+ * @tc.desc: test ExtractSkillsPackage of InstalldHostImpl with non-existent HSP file
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractSkillsPackage_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    SkillsPackageParam param;
+    param.bundleName = TEST_STRING;
+    param.moduleName = TEST_STRING;
+    param.hspPath = TEST_ERROR_STRING;
+    param.skillNameList.clear();
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = impl.ExtractSkillsPackage(param, skillInfoList);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ExtractSkillsPackage_0300
+ * @tc.name: test ExtractSkillsPackage
+ * @tc.desc: test ExtractSkillsPackage of InstalldHostImpl with skillNameList
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractSkillsPackage_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    SkillsPackageParam param;
+    param.bundleName = TEST_STRING;
+    param.moduleName = TEST_STRING;
+    param.hspPath = TEST_ERROR_STRING;
+    param.skillNameList.clear();
+    param.skillNameList.emplace_back(TEST_STRING);
+    std::vector<SkillsPackageInfo> skillInfoList;
+    ErrCode ret = impl.ExtractSkillsPackage(param, skillInfoList);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -15940,7 +16374,7 @@ HWTEST_F(BmsBundleInstallerTest, GetBinFilePaths_005, Function | SmallTest | Lev
 
     auto binFilePaths = baseBundleInstaller.GetBinFilePaths(info, nativeLibraryPath);
 
-    EXPECT_TRUE(binFilePaths.empty());
+    EXPECT_FALSE(binFilePaths.empty());
 }
 
 /**

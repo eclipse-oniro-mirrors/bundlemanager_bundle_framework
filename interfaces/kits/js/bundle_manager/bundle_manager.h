@@ -278,9 +278,18 @@ struct BundleInfosCallbackInfo : public BaseCallbackInfo {
     std::vector<BundleInfo> bundleInfos;
 };
 
+struct InstalledBundleListCallbackInfo : public BaseCallbackInfo {
+    explicit InstalledBundleListCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+
+    uint32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<BundleInfo> bundleInfos;
+};
+
 struct BundleInfoCallbackInfo : public BaseCallbackInfo {
     explicit BundleInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
     bool isSavedInCache = false;
+    napi_ref cachedRef = nullptr;
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     int32_t uid = 0;
@@ -392,6 +401,7 @@ napi_value GetProfileByExAbility(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfo(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfos(napi_env env, napi_callback_info info);
 napi_value GetBundleInfos(napi_env env, napi_callback_info info);
+napi_value GetInstalledBundleList(napi_env env, napi_callback_info info);
 napi_value GetBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoSync(napi_env env, napi_callback_info info);
@@ -414,6 +424,7 @@ napi_value GetRecoverableApplicationInfo(napi_env env, napi_callback_info info);
 napi_value SetAdditionalInfo(napi_env env, napi_callback_info info);
 napi_value CanOpenLink(napi_env env, napi_callback_info info);
 napi_value GetAllPreinstalledApplicationInfos(napi_env env, napi_callback_info info);
+napi_value GetAllNewPreinstalledApplicationInfos(napi_env env, napi_callback_info info);
 napi_value GetAllBundleInfoByDeveloperId(napi_env env, napi_callback_info info);
 napi_value GetDeveloperIds(napi_env env, napi_callback_info info);
 napi_value SwitchUninstallState(napi_env env, napi_callback_info info);

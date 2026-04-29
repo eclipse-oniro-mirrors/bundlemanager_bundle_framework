@@ -121,6 +121,7 @@ public:
     std::vector<std::string> resDeviceID;
     std::vector<int> grantStatus;
     std::vector<int> grantFlags;
+    std::string feature;
 };
 
 class HapInfoParams final {
@@ -145,6 +146,8 @@ public:
     AccessTokenID tokenID = INVALID_TOKENID;
     bool isAtomicService;
     std::string appProvisionType = "release";
+    /** Whether hap is a skill */
+    bool isSkillHap = false;
 };
 
 /**
@@ -162,6 +165,8 @@ public:
     bool isAtomicService;
     bool dataRefresh = false;
     std::string appProvisionType = "release";
+    /** Whether hap is a skill */
+    bool isSkillHap = false;
 };
 
 class PreAuthorizationInfo final {

@@ -17,6 +17,8 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MGR_HOST_IMPL_H
 
 #include <atomic>
+#include <chrono>
+#include <mutex>
 #include "bundle_cache_mgr.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "bundle_connect_ability_mgr.h"
@@ -24,9 +26,6 @@
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_host.h"
-#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
-#include "distributed_bms_interface.h"
-#endif
 #include "event_report.h"
 #include "inner_bundle_user_info.h"
 
@@ -240,6 +239,15 @@ public:
      * @return Returns ERR_OK if the BundleInfos is successfully obtained; returns error code otherwise.
      */
     virtual ErrCode GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId) override;
+    /**
+     * @brief Obtains BundleInfo of all bundles with only permission check.
+     * @param flags Indicates the flag used to specify information contained in the BundleInfo.
+     * @param bundleInfos Indicates all of the obtained BundleInfo objects.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfos is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetInstalledBundleList(uint32_t flags, int32_t userId,
+        std::vector<BundleInfo> &bundleInfos) override;
     /**
      * @brief Obtains the application UID based on the given bundle name and user ID.
      * @param bundleName Indicates the bundle name of the application.
@@ -510,6 +518,16 @@ public:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     virtual ErrCode GetApplicationLabel(const std::string &bundleName, int32_t appIndex, std::string &label) override;
+    /**
+     * @brief Sets whether the application is first launch.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param userId Indicates the user ID.
+     * @param appIndex Indicates the app index, 0 for normal app, > 0 for clone app.
+     * @param isBundleFirstLaunched Specifies whether the application is first launch.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    virtual ErrCode SetBundleFirstLaunch(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, bool isBundleFirstLaunched) override;
     /**
      * @brief Obtains information about an application bundle contained in an ohos Ability Package (HAP).
      * @param hapFilePath Indicates the absolute file path of the HAP.
@@ -999,6 +1017,9 @@ public:
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
         std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
+    virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback) override;
+
     virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
         std::vector<BundleStorageStats> &bundleStats) override;
 
@@ -1119,6 +1140,8 @@ public:
 
     virtual sptr<IBundleResource> GetBundleResourceProxy() override;
 
+    virtual sptr<IBundleSkillManager> GetSkillManagerProxy() override;
+
     virtual ErrCode GetRecoverableApplicationInfo(
         std::vector<RecoverableApplicationInfo> &recoverableApplicaitons) override;
 
@@ -1151,6 +1174,10 @@ public:
      */
     virtual ErrCode GetAllPreinstalledApplicationInfos(
         std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos) override;
+
+    virtual ErrCode GetAllNewPreinstalledApplicationInfos(
+        std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos) override;
+
     virtual ErrCode GetAllBundleInfoByDeveloperId(const std::string &developerId,
         std::vector<BundleInfo> &bundleInfos, int32_t userId) override;
 
@@ -1188,6 +1215,14 @@ public:
     virtual ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) override;
 
     virtual ErrCode GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo) override;
+
+    /**
+     * @brief Obtains the apiTargetVersion based on a given uid.
+     * @param uid Indicates the uid of the application.
+     * @param apiTargetVersion Indicates the obtained apiTargetVersion value.
+     * @return Returns ERR_OK if successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetApiTargetVersionByUid(const int32_t uid, int32_t &apiTargetVersion) override;
 
     virtual ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
 
@@ -1292,9 +1327,6 @@ private:
     ErrCode MigrateDataParameterCheck(std::vector<std::string> &sourcePaths, std::string &destinationPath);
     ErrCode CheckSandboxPath(std::vector<std::string> &sourcePaths, std::string &destinationPath);
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
-#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
-    const OHOS::sptr<IDistributedBms> GetDistributedBundleMgrService();
-#endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     const std::shared_ptr<BundleConnectAbilityMgr> GetConnectAbilityMgrFromService();
 #endif
@@ -1318,6 +1350,8 @@ private:
         int32_t userId, CleanType cleanType, int32_t appIndex, uint64_t &cleanCacheSize);
     void CleanBundleCacheTaskGetCleanSize(const std::string &bundleName, int32_t userId, CleanType cleanType,
         int32_t appIndex, int32_t callingUid, const std::string &callingBundleName, uint64_t &cleanCacheSize);
+    void GetTopNLargestItemsTask(const std::string &bundleName, int32_t appIndex, int32_t userId,
+        const sptr<IGetLargestItemsCallback> getLargestItemsCallback);
     bool CleanBundleCacheByInodeCount(const std::string &bundleName, int32_t userId,
         int32_t appIndex, const std::vector<std::string> &moduleNames, uint64_t &cleanCacheSize);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
@@ -1362,6 +1396,13 @@ private:
 
     bool IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags) const;
     ErrCode CheckAppDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isEnabled);
+
+    // Check frequency limit for GetTopNLargestItemsInAppDataDir
+    ErrCode CheckGetTopNLargestItemsFrequencyLimit();
+
+    // Frequency limit for GetTopNLargestItemsInAppDataDir
+    std::mutex lastSuccessCallTimeMutex_;
+    std::chrono::steady_clock::time_point lastSuccessCallTime_ = std::chrono::steady_clock::time_point{};
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

@@ -1144,7 +1144,10 @@ ani_object CommonFunAni::ConvertSignatureInfo(ani_env* env, const SignatureInfo&
     if (StringToAniStr(env, signatureInfo.certificate, certificate)) {
         certificateRef = certificate;
     } else {
-        env->GetUndefined(&certificateRef);
+        ani_status status = env->GetUndefined(&certificateRef);
+        if (status != ANI_OK) {
+            APP_LOGW("GetUndefined failed %{public}d", status);
+        }
     }
 
     ani_value args[] = {
@@ -1884,6 +1887,25 @@ ani_object CommonFunAni::ConvertPreinstalledApplicationInfo(
     // moduleName: string
     ani_string moduleName = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, reinstalledApplicationInfo.moduleName, moduleName));
+
+    if (reinstalledApplicationInfo.descriptionId != 0) {
+        ani_value args[] = {
+            { .r = bundleName },
+            { .r = moduleName },
+            { .l = static_cast<ani_long>(reinstalledApplicationInfo.iconId) },
+            { .l = static_cast<ani_long>(reinstalledApplicationInfo.labelId) },
+            { .l = static_cast<ani_long>(reinstalledApplicationInfo.descriptionId) },
+        };
+        static const std::string ctorSigWithDesc = SignatureBuilder()
+            .AddClass(CommonFunAniNS::CLASSNAME_STRING)
+            .AddClass(CommonFunAniNS::CLASSNAME_STRING)
+            .AddLong()
+            .AddLong()
+            .AddLong()
+            .BuildSignatureDescriptor();
+        return CreateNewObjectByClassV2(
+            env, CLASSNAME_PREINSTALLED_APPLICATION_INFO_INNER, ctorSigWithDesc, args);
+    }
 
     ani_value args[] = {
         { .r = bundleName },

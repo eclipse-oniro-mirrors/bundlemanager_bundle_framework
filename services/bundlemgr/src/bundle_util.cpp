@@ -16,12 +16,9 @@
 #include "bundle_util.h"
 
 #include <cinttypes>
-#include <charconv>
 #include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
-#include <libxml/globals.h>
-#include <libxml/xmlstring.h>
 #include <random>
 #include <sstream>
 #include <sys/sendfile.h>
@@ -67,13 +64,9 @@ constexpr const char* ABC_FILE_PATH = "abc_files";
 constexpr const char* PGO_FILE_PATH = "pgo_files";
 #ifdef CONFIG_POLOCY_ENABLE
 const char* NO_DISABLING_CONFIG_PATH = "/etc/ability_runtime/resident_process_in_extreme_memory.json";
-const char* DISPLAY_MANAGER_CONFIG_PATH = "/etc/window/resources/display_manager_config.xml";
-const char* APPLIST_WHITELIST_DIR = "/etc/user_center/";
 #endif
 const char* NO_DISABLING_CONFIG_PATH_DEFAULT =
     "/system/etc/ability_runtime/resident_process_in_extreme_memory.json";
-const char* DISPLAY_MANAGER_CONFIG_PATH_DEFAULT = "/sys_prod/etc/window/resources/display_manager_config.xml";
-const char* APPLIST_WHITELIST_DIR_DEFAULT = "/sys_prod/etc/user_center/";
 const std::string EMPTY_STRING = "";
 constexpr int64_t DISK_REMAINING_SIZE_LIMIT = 1024 * 1024 * 10; // 10M
 constexpr uint32_t RANDOM_NUMBER_LENGTH = 255;
@@ -82,11 +75,30 @@ constexpr uint32_t ID_INVALID = 0;
 constexpr const char* COLON = ":";
 constexpr const char* DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE = "Cover";
 constexpr const char* APP_INSTALL_PREFIX = "+app_install+";
+constexpr const char* APP_CLONE_PREFIX = "+app_clone+";
+constexpr const char* DATA_CLONE_PATH = "dataclone/";
+
+std::string GetRenameInstallPrefixTag(const std::string &filePath)
+{
+    std::string appInstallPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::GALLERY_DOWNLOAD_PATH;
+    if (filePath.find(appInstallPrefix) != 0) {
+        return "";
+    }
+    std::string userPath = filePath.substr(appInstallPrefix.length());
+    auto pos = userPath.find(ServiceConstants::PATH_SEPARATOR);
+    if (pos == std::string::npos || pos == userPath.length() - 1) {
+        return "";
+    }
+    std::string remainPath = userPath.substr(pos + 1);
+    if (remainPath.find(std::string(ServiceConstants::GALLERY_CLONE_PATH).substr(1)) == 0) {
+        return APP_CLONE_PREFIX;
+    }
+    return APP_INSTALL_PREFIX;
+}
 }
 
 std::mutex BundleUtil::g_mutex;
-std::recursive_mutex BundleUtil::configXmlMutex_;
-std::recursive_mutex BundleUtil::whiteListXmlMutex_;
 
 ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &realPath)
 {
@@ -393,7 +405,7 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, const std::string &
     }
 
     realBundleDir += std::string(ServiceConstants::PATH_SEPARATOR) + labelPath;
-    int32_t bundleIdFd = open(realBundleDir.c_str(), O_WRONLY | O_TRUNC);
+    int32_t bundleIdFd = open(realBundleDir.c_str(), O_WRONLY | O_TRUNC | O_UNCACHE);
     if (bundleIdFd < 0) {
         APP_LOGE("open file %{public}s failed, errorNo: %{public}d:%{public}s",
             realBundleDir.c_str(), errno, strerror(errno));
@@ -495,7 +507,7 @@ int32_t BundleUtil::CreateFileDescriptor(const std::string &bundlePath, long lon
         APP_LOGE("the length of the bundlePath exceeds maximum limitation");
         return fd;
     }
-    if ((fd = open(bundlePath.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)) < 0) {
+    if ((fd = open(bundlePath.c_str(), O_CREAT | O_RDWR | O_UNCACHE, S_IRUSR | S_IWUSR)) < 0) {
         APP_LOGE("open bundlePath %{public}s failed errno:%{public}d", bundlePath.c_str(), errno);
         return fd;
     }
@@ -518,7 +530,7 @@ int32_t BundleUtil::CreateFileDescriptorForReadOnly(const std::string &bundlePat
         return fd;
     }
 
-    if ((fd = open(realPath.c_str(), O_RDONLY)) < 0) {
+    if ((fd = open(realPath.c_str(), O_RDONLY | O_UNCACHE)) < 0) {
         APP_LOGE("open bundlePath %{public}s failed errno:%{public}d", realPath.c_str(), errno);
         return fd;
     }
@@ -739,29 +751,29 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
         return false;
     }
 
-    FILE* sourceFp = fopen(sourcePath.c_str(), "r");
-    if (sourceFp == nullptr) {
+    int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY | O_UNCACHE);
+    if (sourceFd < 0) {
         APP_LOGE("sourcePath open failed, errno : %{public}d", errno);
         return CopyFile(sourcePath, destPath);
     }
-    int32_t sourceFd = fileno(sourceFp);
+    fdsan_exchange_owner_tag(sourceFd, 0, LOG_DOMAIN);
     struct stat sourceStat;
     if (fstat(sourceFd, &sourceStat) == -1) {
         APP_LOGE("fstat failed, errno : %{public}d", errno);
-        (void)fclose(sourceFp);
+        fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
         return CopyFile(sourcePath, destPath);
     }
     if (sourceStat.st_size < 0) {
         APP_LOGE("invalid st_size");
-        (void)fclose(sourceFp);
+        fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
         return CopyFile(sourcePath, destPath);
     }
 
     int32_t destFd = open(
-        destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_UNCACHE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (destFd == -1) {
         APP_LOGE("destPath open failed, errno : %{public}d", errno);
-        (void)fclose(sourceFp);
+        fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
         return CopyFile(sourcePath, destPath);
     }
     fdsan_exchange_owner_tag(destFd, 0, LOG_DOMAIN);
@@ -776,12 +788,12 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
     if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
         APP_LOGE("sendfile failed, errno : %{public}d, send count : %{public}zu , file size : %{public}zu",
             errno, transferCount, static_cast<size_t>(sourceStat.st_size));
-        (void)fclose(sourceFp);
+        fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
         fdsan_close_with_tag(destFd, LOG_DOMAIN);
         return CopyFile(sourcePath, destPath);
     }
 
-    (void)fclose(sourceFp);
+    fdsan_close_with_tag(sourceFd, LOG_DOMAIN);
     if (needFsync) {
         (void)fsync(destFd);
     }
@@ -968,6 +980,8 @@ std::string BundleUtil::GetAppInstallPrefix(const std::string &filePath, bool re
 {
     // get ${bundleName} and ${userId} from
     // /data/service/el1/public/bms/bundle_manager_service/app_install/${userId}/${bundleName}/${fileName}.hap
+    // /data/service/el1/public/bms/bundle_manager_service/app_install/${userId}/app_clone/dataclone/
+    // ${bundleName}/${fileName}.hap
     if (!rename) {
         return "";
     }
@@ -976,28 +990,40 @@ std::string BundleUtil::GetAppInstallPrefix(const std::string &filePath, bool re
     if (filePath.find(prefix) != 0) {
         return "";
     }
-    // ${userId}/${bundleName}/${fileName}.hap
     std::string tempStr = filePath.substr(prefix.length());
     auto pos = tempStr.rfind(ServiceConstants::PATH_SEPARATOR);
     if (pos == std::string::npos) {
         return "";
     }
-    // ${userId}/${bundleName}
+    // ${userId}/${bundleName} or ${userId}/app_clone/dataclone/${bundleName}
     tempStr = tempStr.substr(0, pos);
-    pos = tempStr.rfind(ServiceConstants::PATH_SEPARATOR);
+    std::string installPrefix = GetRenameInstallPrefixTag(filePath);
+    if (installPrefix.empty()) {
+        return "";
+    }
+    pos = tempStr.find(ServiceConstants::PATH_SEPARATOR);
     if (pos == std::string::npos) {
         return "";
     }
-    if (pos != tempStr.find(ServiceConstants::PATH_SEPARATOR)) {
+    std::string userId = tempStr.substr(0, pos);
+    if (installPrefix == APP_INSTALL_PREFIX && pos != tempStr.rfind(ServiceConstants::PATH_SEPARATOR)) {
         return "";
     }
-    std::string bundleName = tempStr.substr(pos + 1);
-    std::string userId = tempStr.substr(0, pos);
+    if (installPrefix == APP_CLONE_PREFIX) {
+        // app_clone/dataclone/${bundleName}
+        std::string clonePath = tempStr.substr(pos + 1);
+        // app_clone/dataclone/
+        std::string appClonePath = std::string(ServiceConstants::GALLERY_CLONE_PATH).substr(1) + DATA_CLONE_PATH;
+        if (clonePath.find(appClonePath) != 0 || clonePath.size() <= appClonePath.size()) {
+            return "";
+        }
+    }
+    std::string bundleName = tempStr.substr(tempStr.rfind(ServiceConstants::PATH_SEPARATOR) + 1);
     if (bundleName.empty() || userId.empty()) {
         return "";
     }
-    // +app_install+${bundleName}+${userId}+
-    std::string newPrefix = std::string(APP_INSTALL_PREFIX) + bundleName + ServiceConstants::PLUS_SIGN + userId +
+    // +app_install+${bundleName}+${userId}+ or +app_clone+${bundleName}+${userId}+
+    std::string newPrefix = installPrefix + bundleName + ServiceConstants::PLUS_SIGN + userId +
         ServiceConstants::PLUS_SIGN;
     APP_LOGI("newPrefix is %{public}s", newPrefix.c_str());
     return newPrefix;
@@ -1021,11 +1047,12 @@ void BundleUtil::RestoreAppInstallHaps()
             continue;
         }
         std::string dirName = std::string(entry->d_name);
-        if (dirName.find(APP_INSTALL_PREFIX) != 0) {
+        if (dirName.find(APP_INSTALL_PREFIX) != 0 && dirName.find(APP_CLONE_PREFIX) != 0) {
             continue;
         }
+        std::string restorePrefix = dirName.find(APP_CLONE_PREFIX) == 0 ? APP_CLONE_PREFIX : APP_INSTALL_PREFIX;
         // parse bundleName and userId from +app_install+${bundleName}+${userId}+${fileName}
-        std::string temp = dirName.substr(strlen(APP_INSTALL_PREFIX));
+        std::string temp = dirName.substr(restorePrefix.size());
         auto pos = temp.find(ServiceConstants::PLUS_SIGN);
         if (pos == std::string::npos) {
             continue;
@@ -1052,6 +1079,11 @@ void BundleUtil::RestoreHaps(const std::string &sourcePath, const std::string &b
     }
     std::string destPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH +
         userId + ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR;
+    if (sourcePath.find(APP_CLONE_PREFIX) != std::string::npos) {
+        destPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH +
+            userId + ServiceConstants::GALLERY_CLONE_PATH + DATA_CLONE_PATH + bundleName +
+            ServiceConstants::PATH_SEPARATOR;
+    }
     struct stat buf = {};
     if (stat(destPath.c_str(), &buf) != 0 || !S_ISDIR(buf.st_mode)) {
         APP_LOGE("app install bundlename dir not exist");
@@ -1145,204 +1177,6 @@ std::string BundleUtil::GetNoDisablingConfigPath()
 #else
     return NO_DISABLING_CONFIG_PATH_DEFAULT;
 #endif
-}
-
-
-std::string BundleUtil::GetWhiteListPathByDisplayName(const std::string& displayName)
-{
-    std::string displayNameDefaultPath = std::string(APPLIST_WHITELIST_DIR_DEFAULT) + "applist"
-        + std::string(ServiceConstants::UNDER_LINE) + displayName + std::string(ServiceConstants::XML_FILE_SUFFIX);
-#ifdef CONFIG_POLOCY_ENABLE
-    std::string displayNamePath = std::string(APPLIST_WHITELIST_DIR) + "applist"
-        + std::string(ServiceConstants::UNDER_LINE) + displayName + std::string(ServiceConstants::XML_FILE_SUFFIX);
-    char buf[MAX_PATH_LEN] = { 0 };
-    char *configPath = GetOneCfgFile(displayNamePath.c_str(), buf, MAX_PATH_LEN);
-    if (configPath == nullptr || configPath[0] == '\0') {
-        APP_LOGE("BundleUtil GetOneCfgFile failed");
-        return displayNameDefaultPath;
-    }
-    if (strlen(configPath) > MAX_PATH_LEN) {
-        APP_LOGE("length exceeds");
-        return displayNameDefaultPath;
-    }
-    return configPath;
-#else
-    return displayNameDefaultPath;
-#endif
-}
-
-std::string BundleUtil::GetDisPlayManagerConfigPath()
-{
-#ifdef CONFIG_POLOCY_ENABLE
-    char buf[MAX_PATH_LEN] = { 0 };
-    char *configPath = GetOneCfgFile(DISPLAY_MANAGER_CONFIG_PATH, buf, MAX_PATH_LEN);
-    if (configPath == nullptr || configPath[0] == '\0') {
-        APP_LOGE("BundleUtil GetOneCfgFile failed");
-        return DISPLAY_MANAGER_CONFIG_PATH_DEFAULT;
-    }
-    if (strlen(configPath) > MAX_PATH_LEN) {
-        APP_LOGE("length exceeds");
-        return DISPLAY_MANAGER_CONFIG_PATH_DEFAULT;
-    }
-    return configPath;
-#else
-    return DISPLAY_MANAGER_CONFIG_PATH_DEFAULT;
-#endif
-}
-
-bool BundleUtil::IsValidNode(const xmlNode& currNode)
-{
-    if (currNode.name == nullptr || currNode.type == XML_COMMENT_NODE) {
-        return false;
-    }
-    return true;
-}
-
-uint64_t BundleUtil::ParseStrToUll(const std::string& contentStr)
-{
-    if (contentStr.empty()) {
-        APP_LOGE("Invalid value: %{public}s", contentStr.c_str());
-        return 0;
-    }
-    uint64_t num;
-    auto result = std::from_chars(contentStr.data(), contentStr.data() + contentStr.size(), num);
-    if (result.ec == std::errc::invalid_argument) {
-        APP_LOGE("Invalid value: %{public}s", contentStr.c_str());
-        return 0;
-    } else if (result.ec == std::errc::result_out_of_range) {
-        APP_LOGE("Value out of range: %{public}s", contentStr.c_str());
-        return 0;
-    }
-    return num;
-}
-
-void BundleUtil::ParseDisplaysMap(const xmlNodePtr& currNode, std::unordered_map<std::string, uint64_t> &displaysMap)
-{
-    APP_LOGI("start parse displays config");
-    for (xmlNodePtr displayNode = currNode->xmlChildrenNode; displayNode != nullptr; displayNode = displayNode->next) {
-        if (!IsValidNode(*displayNode) ||
-            xmlStrcmp(displayNode->name, reinterpret_cast<const xmlChar*>("display")) != 0) {
-            continue;
-        }
-        std::string name;
-        uint64_t logicalId;
-        for (xmlNodePtr fileNode = displayNode->xmlChildrenNode; fileNode != nullptr; fileNode = fileNode->next) {
-            if (!IsValidNode(*fileNode)) {
-                APP_LOGE("invalid node!");
-                continue;
-            }
-            std::string nodeName = reinterpret_cast<const char*>(fileNode->name);
-            xmlChar* content = xmlNodeGetContent(fileNode);
-            std::string contentStr;
-            if (content) {
-                contentStr = reinterpret_cast<const char*>(content);
-                xmlFree(content);
-                content = nullptr;
-            }
-            if (nodeName == "logicalId") {
-                logicalId = static_cast<uint64_t>(ParseStrToUll(contentStr));
-            } else if (nodeName == "name") {
-                name = contentStr;
-            }
-        }
-        displaysMap[name] = logicalId;
-    }
-}
-
-bool BundleUtil::GetDisplaysMapFromConfigXml(std::unordered_map<std::string, uint64_t> &displaysMap)
-{
-    auto configFilePath = GetDisPlayManagerConfigPath();
-    xmlDocPtr docPtr = nullptr;
-    {
-        std::lock_guard<std::recursive_mutex> lock(configXmlMutex_);
-        docPtr = xmlReadFile(configFilePath.c_str(), nullptr, XML_PARSE_NOBLANKS);
-    }
-    if (docPtr == nullptr) {
-        APP_LOGE("load xml error!");
-        return false;
-    }
-    xmlNodePtr rootPtr = xmlDocGetRootElement(docPtr);
-    if (rootPtr == nullptr || rootPtr->name == nullptr ||
-        xmlStrcmp(rootPtr->name, reinterpret_cast<const xmlChar*>("Configs"))) {
-        APP_LOGE("get root element failed!");
-        xmlFreeDoc(docPtr);
-        return false;
-    }
-    for (xmlNodePtr curNodePtr = rootPtr->xmlChildrenNode; curNodePtr != nullptr; curNodePtr = curNodePtr->next) {
-        if (!IsValidNode(*curNodePtr)) {
-            APP_LOGE("invalid node!");
-            continue;
-        }
-        if (xmlStrcmp(curNodePtr->name, reinterpret_cast<const xmlChar*>("displays")) == 0) {
-            APP_LOGI("find displays keyword, reading the nested content of XML");
-            ParseDisplaysMap(curNodePtr, displaysMap);
-        }
-    }
-    xmlFreeDoc(docPtr);
-    return true;
-}
-
-bool BundleUtil::PatchReadWhiteListXml(std::unordered_map<uint64_t, std::vector<std::string>> &logicalIdWhiteListMap)
-{
-    std::unordered_map<std::string, uint64_t> displaysMap;
-    if (!GetDisplaysMapFromConfigXml(displaysMap) || displaysMap.empty()) {
-        APP_LOGE("displaysMap is empty!");
-        return false;
-    }
-    bool isWhiteListExist = false;
-    for (auto displayInfo : displaysMap) {
-        std::string displayName = displayInfo.first;
-        auto whiteListFilePath = GetWhiteListPathByDisplayName(displayName);
-        xmlDocPtr docPtr = nullptr;
-        {
-            std::lock_guard<std::recursive_mutex> lock(whiteListXmlMutex_);
-            docPtr = xmlReadFile(whiteListFilePath.c_str(), nullptr, XML_PARSE_NOBLANKS);
-        }
-        if (docPtr == nullptr) {
-            APP_LOGE("load xml error or file not exist!");
-            continue;
-        }
-        uint64_t logicalId = displayInfo.second;
-        std::vector<std::string> bundleNames;
-        xmlNodePtr rootPtr = xmlDocGetRootElement(docPtr);
-        if (rootPtr == nullptr || rootPtr->name == nullptr) {
-            APP_LOGE("get root element failed or xml is empty!");
-            xmlFreeDoc(docPtr);
-            logicalIdWhiteListMap.emplace(logicalId, bundleNames);
-            isWhiteListExist = true;
-            continue;
-        }
-        if (xmlStrcmp(rootPtr->name, reinterpret_cast<const xmlChar*>("AppList"))) {
-            APP_LOGE("xml format error!");
-            xmlFreeDoc(docPtr);
-            continue;
-        }
-        ParseAllowedNodeConfig(rootPtr, bundleNames);
-        logicalIdWhiteListMap.emplace(logicalId, bundleNames);
-        xmlFreeDoc(docPtr);
-        isWhiteListExist = true;
-    }
-    return isWhiteListExist;
-}
-
-void BundleUtil::ParseAllowedNodeConfig(const xmlNodePtr &rootPtr, std::vector<std::string> &bundleNames)
-{
-    for (xmlNodePtr curNodePtr = rootPtr->xmlChildrenNode; curNodePtr != nullptr; curNodePtr = curNodePtr->next) {
-        if (!IsValidNode(*curNodePtr)) {
-            APP_LOGE("invalid node!");
-            continue;
-        }
-        std::string nodeName = reinterpret_cast<const char*>(curNodePtr->name);
-        if (nodeName == "allowed") {
-            xmlChar* attrValue = xmlGetProp(curNodePtr, reinterpret_cast<const xmlChar*>("name"));
-            if (attrValue != nullptr) {
-                std::string bundleName = reinterpret_cast<const char*>(attrValue);
-                bundleNames.emplace_back(bundleName);
-                xmlFree(attrValue);
-                attrValue = nullptr;
-            }
-        }
-    }
 }
 
 uint32_t BundleUtil::ExtractNumberFromString(nlohmann::json &jsonObject, const std::string &key)

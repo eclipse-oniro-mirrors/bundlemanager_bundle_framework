@@ -28,6 +28,8 @@ group("napi_packages") {
       "bundle_monitor:bundlemonitor",
       "bundle_resource:bundle_res_common",
       "bundle_resource:bundleresourcemanager",
+      "skill_manager:skill_manager_common",
+      "skill_manager:skillmanager",
       "bundlemgr:bundle",
       "default_app:defaultappmanager",
       "free_install:freeinstall",

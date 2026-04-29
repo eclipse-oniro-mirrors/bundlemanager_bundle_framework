@@ -287,6 +287,19 @@ ErrCode BundleManagerHelper::InnerGetAllPreinstalledApplicationInfos(
     return CommonFunc::ConvertErrCode(ret);
 }
 
+ErrCode BundleManagerHelper::InnerGetAllNewPreinstalledApplicationInfos(
+    std::vector<PreinstalledApplicationInfo>& preinstalledApplicationInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("IBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAllNewPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    APP_LOGD("GetAllNewPreinstalledApplicationInfos ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 ErrCode BundleManagerHelper::InnerGetAllAppCloneBundleInfo(
     const std::string& bundleName, int32_t bundleFlags, int32_t userId, std::vector<BundleInfo>& bundleInfos)
 {

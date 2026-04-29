@@ -58,6 +58,7 @@ constexpr const char* ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeE
 constexpr const char* ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 constexpr const char* ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 constexpr const char* ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
+constexpr const char* ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED = "allowAppRunWhenDeviceFirstLocked";
 constexpr const char* APL_NORMAL = "normal";
 constexpr const char* SLASH = "/";
 constexpr const char* DOUBLE_SLASH = "//";
@@ -881,6 +882,10 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetSingleton(false);
 
     newInfo.SetRemovable(checkParam.removable);
+    // For system apps, default allowAppRunWhenDeviceFirstLocked to true
+    if (newInfo.IsSystemApp()) {
+        newInfo.SetAllowAppRunWhenDeviceFirstLocked(true);
+    }
     PreBundleConfigInfo preBundleConfigInfo;
     preBundleConfigInfo.bundleName = newInfo.GetBundleName();
     if (!BMSEventHandler::GetPreInstallCapability(preBundleConfigInfo)) {
@@ -902,7 +907,12 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
     newInfo.SetResourcesApply(preBundleConfigInfo.resourcesApply);
-    newInfo.SetAllowAppRunWhenDeviceFirstLocked(preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked);
+    // Only override allowAppRunWhenDeviceFirstLocked if explicitly configured in JSON
+    auto it = std::find(preBundleConfigInfo.existInJsonFile.cbegin(),
+        preBundleConfigInfo.existInJsonFile.cend(), ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED);
+    if (it != preBundleConfigInfo.existInJsonFile.cend()) {
+        newInfo.SetAllowAppRunWhenDeviceFirstLocked(preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked);
+    }
     newInfo.SetAllowEnableNotification(preBundleConfigInfo.allowEnableNotification);
 }
 
@@ -1333,6 +1343,25 @@ void BundleInstallChecker::ParseAppPrivilegeCapability(
     appPrivilegeCapability.allowMultiProcess = true;
     appPrivilegeCapability.allowUsePrivilegeExtension = true;
 #endif
+}
+
+bool BundleInstallChecker::GetHideDesktopIconByBundlePath(const std::string &bundlePath, bool &hideDesktopIcon)
+{
+    if (bundlePath.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "bundlePath is empty");
+        return false;
+    }
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    ErrCode ret = BundleVerifyMgr::ParseHapProfile(bundlePath, hapVerifyResult, true);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "ParseHapProfile failed, bundlePath:%{public}s, ret:%{public}d",
+            bundlePath.c_str(), ret);
+        return false;
+    }
+    AppPrivilegeCapability appPrivilegeCapability;
+    ParseAppPrivilegeCapability(hapVerifyResult.GetProvisionInfo(), appPrivilegeCapability);
+    hideDesktopIcon = appPrivilegeCapability.hideDesktopIcon;
+    return true;
 }
 
 ErrCode BundleInstallChecker::CheckModuleNameForMulitHaps(
@@ -2010,6 +2039,7 @@ void BundleInstallChecker::ProcessCodeSignatureParam(
     CodeSignatureParam &codeSignatureParam)
 {
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyResult.GetProvisionInfo();
+    codeSignatureParam.isEnterpriseResigned = provisionInfo.isEnterpriseResigned;
     if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||

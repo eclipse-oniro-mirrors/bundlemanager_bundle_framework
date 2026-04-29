@@ -20,6 +20,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+enum ActionTimerOp {
+    ACT_TIMER_PAUSE_ALL = 0xbfac0004,
+    ACT_TIMER_RESUME_ALL = 0xbfac0005,
+};
 class XCollieHelper {
 public:
     // set timer
@@ -38,6 +42,21 @@ public:
     // cancel timer
     // id: timer id
     static void CancelTimer(int id);
+
+    // pause timer
+    static void PauseFoundationWatchdog();
+    
+    // resume timer
+    static void ResumeFoundationWatchdog();
+
+    // set timer with flag XCOLLIE_FLAG_RECOVERY
+    // name : timer name
+    // timeout : timeout, unit s
+    // return: the timer id
+    static int32_t SetOTATimer(const std::string &name, unsigned int timeout);
+
+private:
+    static void ControlWatchdogInternal(ActionTimerOp op);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

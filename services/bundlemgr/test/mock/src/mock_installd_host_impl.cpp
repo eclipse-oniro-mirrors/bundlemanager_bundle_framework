@@ -144,8 +144,7 @@ ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bu
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
-    std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+ErrCode InstalldHostImpl::GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
     return ERR_OK;
 }
@@ -438,6 +437,18 @@ ErrCode InstalldHostImpl::DeleteCertAndRemoveKey(const std::vector<std::string> 
 }
 
 ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ExtractSkillsPackage(const SkillsPackageParam &param,
+    std::vector<SkillsPackageInfo> &skillInfoList)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout, std::string &largestItems)
 {
     return ERR_OK;
 }

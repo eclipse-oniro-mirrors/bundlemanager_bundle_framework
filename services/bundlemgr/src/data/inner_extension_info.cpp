@@ -24,6 +24,7 @@ ExtensionAbilityInfo InnerExtensionInfo::ConvertToExtensionInfo(const InnerExten
     extensionAbilityInfo.enabled = innerExtensionInfo.enabled;
     extensionAbilityInfo.needCreateSandbox = innerExtensionInfo.needCreateSandbox;
     extensionAbilityInfo.isolationProcess = innerExtensionInfo.isolationProcess;
+    extensionAbilityInfo.skipAbilityStageLifecycle = innerExtensionInfo.skipAbilityStageLifecycle;
     extensionAbilityInfo.iconId = innerExtensionInfo.iconId;
     extensionAbilityInfo.labelId = innerExtensionInfo.labelId;
     extensionAbilityInfo.descriptionId = innerExtensionInfo.descriptionId;

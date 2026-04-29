@@ -543,45 +543,40 @@ ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputF
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
-    FILE *inputFp = fopen(realPath.c_str(), "r");
-    if (inputFp == nullptr) {
-        LOG_E(BMS_TAG_INSTALLER, "fopen %{public}s failed, errno:%{public}d", realPath.c_str(), errno);
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
-    }
-    int32_t inputFd = fileno(inputFp);
+    int32_t inputFd = open(realPath.c_str(), O_RDONLY | O_UNCACHE);
     if (inputFd < 0) {
         LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed, errno:%{public}d", realPath.c_str(), errno);
-        (void)fclose(inputFp);
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
-
+    fdsan_exchange_owner_tag(inputFd, 0, LOG_DOMAIN);
     struct stat sourceStat;
     if (fstat(inputFd, &sourceStat) == -1) {
         LOG_E(BMS_TAG_INSTALLER, "fstat failed, errno : %{public}d", errno);
-        (void)fclose(inputFp);
+        fdsan_close_with_tag(inputFd, LOG_DOMAIN);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
     if (sourceStat.st_size < 0) {
         LOG_E(BMS_TAG_INSTALLER, "invalid st_size");
-        (void)fclose(inputFp);
+        fdsan_close_with_tag(inputFd, LOG_DOMAIN);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
 
     size_t buffer = 524288; // 0.5M
     size_t transferCount = 0;
     ssize_t singleTransfer = 0;
+    errno = 0;
     while ((singleTransfer = sendfile(outputFd, inputFd, nullptr, buffer)) > 0) {
         transferCount += static_cast<size_t>(singleTransfer);
     }
 
     if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
-        LOG_E(BMS_TAG_INSTALLER, "errno: %{public}d, send count: %{public}zu, file size: %{public}zu",
-            errno, transferCount, static_cast<size_t>(sourceStat.st_size));
-        (void)fclose(inputFp);
+        LOG_E(BMS_TAG_INSTALLER, "errno: %{public}d, singleTransfer: %{public}zd, send count: %{public}zu, "
+            "file size: %{public}zu", errno, singleTransfer, transferCount, static_cast<size_t>(sourceStat.st_size));
+        fdsan_close_with_tag(inputFd, LOG_DOMAIN);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
 
-    (void)fclose(inputFp);
+    fdsan_close_with_tag(inputFd, LOG_DOMAIN);
     fsync(outputFd);
 
     LOG_D(BMS_TAG_INSTALLER, "write file stream to service terminal end");
@@ -1131,6 +1126,33 @@ ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCert(int32_t userId, std::
     }
     LOG_I(BMS_TAG_INSTALLER, "get sign cert size: %{public}zu", certificateAlias.size());
     return ERR_OK;
+}
+
+ErrCode BundleInstallerProxy::UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (bundleNames.size() > Constants::MAX_UNINSTALL_PREINSTALLED_APP_NUM) {
+        LOG_E(BMS_TAG_INSTALLER, "bundleNames size exceeds the maximum limit: %{public}zu", bundleNames.size());
+        return ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
+    }
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "write interface token failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteStringVector(bundleNames)) {
+        LOG_E(BMS_TAG_INSTALLER, "write bundleNames failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = SendInstallRequestWithErrCode(
+        BundleInstallerInterfaceCode::UNINSTALL_NEW_PREINSTALLED_APPS, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "send request failed");
+        return ret;
+    }
+    return reply.ReadInt32();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

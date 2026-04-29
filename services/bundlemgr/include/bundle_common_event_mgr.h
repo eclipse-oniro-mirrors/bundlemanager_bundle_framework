@@ -30,6 +30,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+static constexpr size_t MAX_METADATA_CONFIG_SIZE = 1024;
 enum class NotifyType : uint8_t {
     INSTALL = 1,
     UPDATE,
@@ -80,6 +81,25 @@ struct NotifyBundleEvents {
     bool isRecover = false;
     bool isInstallByBundleName = false;
     std::map<std::string, std::string> metadataConfigInfos;
+    std::vector<std::string> allowListenBundles;
+
+    void SetMetadataConfigInfos(const std::map<std::string, std::string>& configs)
+    {
+        if (configs.size() <= MAX_METADATA_CONFIG_SIZE) {
+            metadataConfigInfos = configs;
+            return;
+        }
+        metadataConfigInfos.clear();
+        size_t count = 0;
+        for (const auto& [key, value] : configs) {
+            if (count >= MAX_METADATA_CONFIG_SIZE) {
+                APP_LOGE("Config count exceeds limit: %zu/%zu", configs.size(), MAX_METADATA_CONFIG_SIZE);
+                return;
+            }
+            metadataConfigInfos[key] = value;
+            ++count;
+        }
+    }
 };
 
 class BundleCommonEventMgr : public std::enable_shared_from_this<BundleCommonEventMgr> {
@@ -108,6 +128,9 @@ public:
     void NotifyShortcutsEnabledChanged(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled);
     void NotifyPluginCommonEvents(const std::string &hostBundleName, const std::string &pluginBundleName,
         const NotifyType &type);
+    void NotifySkillEvents(const std::string &bundleName, int32_t userId,
+        const std::vector<std::string> &addedSkills, const std::vector<std::string> &changedSkills,
+        const std::vector<std::string> &removedSkills, int32_t skillType);
 
     // Async version of NotifySetDisposedRule
     void NotifySetDisposedRuleAsync(const std::string &appId, int32_t userId,
@@ -125,7 +148,13 @@ private:
     std::string GetCommonEventData(const NotifyType &type);
     void SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBundleEvents &installResult);
     bool PublishCommonEvent(const std::string &bundleName, const std::string &action,
-        const int32_t publishUserId, const EventFwk::CommonEventData &commonData);
+        const int32_t publishUserId, const EventFwk::CommonEventData &commonData,
+        const std::vector<std::string> &allowListenBundles);
+    bool PublishCommonEventForEnterprise(const std::string &bundleName, const int32_t publishUserId,
+        const EventFwk::CommonEventData &commonData);
+    // Async version of PublishCommonEventForEnterPrise
+    void PublishCommonEventForEnterpriseAsync(const std::string &bundleName, const int32_t publishUserId,
+        const EventFwk::CommonEventData &commonData);
     bool ProcessBundleChangedEventForOtherUsers(const std::shared_ptr<BundleDataMgr> &dataMgr,
         const NotifyBundleEvents &event, const int32_t publishUserId,
         const EventFwk::CommonEventData &commonData);

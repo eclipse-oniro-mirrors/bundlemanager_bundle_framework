@@ -36,7 +36,8 @@ enum class ModuleType {
     UNKNOWN = 0,
     ENTRY = 1,
     FEATURE = 2,
-    SHARED = 3
+    SHARED = 3,
+    SKILL = 4,
 };
 
 enum class AtomicServiceModuleType {
@@ -194,6 +195,7 @@ struct HapModuleInfo : public Parcelable {
     std::vector<std::string> reqCapabilities;
     std::vector<std::string> deviceTypes;
     std::map<std::string, std::vector<std::string>> requiredDeviceFeatures;
+    std::vector<std::string> librarySupportDirectory;
     std::vector<Dependency> dependencies;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;

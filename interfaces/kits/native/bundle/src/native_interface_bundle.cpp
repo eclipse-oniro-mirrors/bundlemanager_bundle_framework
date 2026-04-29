@@ -25,7 +25,7 @@
 #include "application_info.h"
 #include "bundle_info.h"
 #include "bundle_mgr_proxy_native.h"
-#include "bundle_resource_drawable_utils_native.h"
+#include "drawable_manager.h"
 #include "ipc_skeleton.h"
 #include "securec.h"
 namespace {
@@ -593,25 +593,17 @@ BundleManager_ErrorCode OH_NativeBundle_GetAbilityResourceInfo(
             OH_AbilityResourceInfo_Destroy(*abilityResourceInfo, i + 1);
             return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
         }
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
-        auto nDrawableDescriptor = OHOS::AppExecFwk::BundleResourceDrawableUtilsNative::ConvertToDrawableDescriptor(
-            info.foreground, info.background);
-        if (nDrawableDescriptor == nullptr) {
-            APP_LOGE("failed to ConvertToDrawableDescriptor");
-            continue;
+        auto& drawableMgr = OHOS::AppExecFwk::DrawableManager::GetInstance();
+        ArkUI_DrawableDescriptor *descriptor = drawableMgr.CreateDrawableDescriptor(
+            info.foreground.data(), info.foreground.size(),
+            info.background.data(), info.background.size());
+        if (descriptor != nullptr) {
+            if (OH_NativeBundle_SetAbilityResourceInfo_DrawableIcon(p, descriptor) !=
+                BUNDLE_MANAGER_ERROR_CODE_NO_ERROR) {
+                APP_LOGW("failed to set drawableIcon for ability resource info");
+                drawableMgr.DisposeDrawableDescriptor(descriptor);
+            }
         }
-
-        ArkUI_DrawableDescriptor *descriptor = OH_ArkUI_CreateFromNapiDrawable(nDrawableDescriptor.get());
-        if (descriptor == nullptr) {
-            APP_LOGE("failed to OH_ArkUI_CreateFromNapiDrawable");
-            continue;
-        }
-        if (OH_NativeBundle_SetAbilityResourceInfo_DrawableIcon(p, descriptor) != BUNDLE_MANAGER_ERROR_CODE_NO_ERROR) {
-            APP_LOGW("failed to set drawableIcon for ability resource info");
-            OH_ArkUI_DrawableDescriptor_Dispose(descriptor);
-            descriptor = nullptr;
-        }
-#endif
         ++i;
     }
 

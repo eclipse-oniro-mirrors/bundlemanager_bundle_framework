@@ -1179,5 +1179,23 @@ HWTEST_F(BmsBundleInstallerProxyTest, GetEnterpriseReSignatureCert_0200, Functio
     auto res = bundleInstallerProxy.GetEnterpriseReSignatureCert(userId, certificateAlias);
     EXPECT_EQ(res, ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR);
 }
+
+/**
+ * @tc.number: UninstallNewPreinstalledApps_0100
+ * @tc.name: test the UninstallNewPreinstalledApps
+ * @tc.desc: 1. bundleNames size exceeds the maximum limit
+ *           2. test UninstallNewPreinstalledApps
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, UninstallNewPreinstalledApps_0100, Function | MediumTest | Level1)
+{
+    constexpr size_t bundleNameLimit = 200;
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::vector<std::string> bundleNames(bundleNameLimit + 1, "com.example.preinstalled");
+
+    auto res = bundleInstallerProxy.UninstallNewPreinstalledApps(bundleNames);
+
+    EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR);
+}
 }
 }

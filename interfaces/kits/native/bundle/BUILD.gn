@@ -38,6 +38,8 @@ ohos_shared_library("bundle_ndk") {
   sources = [
     "src/ability_resource_info.cpp",
     "src/bundle_mgr_proxy_native.cpp",
+    "src/delayed_task_runner.cpp",
+    "src/drawable_manager.cpp",
     "src/native_interface_bundle.cpp",
   ]
 
@@ -60,7 +62,6 @@ ohos_shared_library("bundle_ndk") {
 
   external_deps = [
     "ability_base:want",
-    "ace_engine:ace_ndk",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -69,20 +70,63 @@ ohos_shared_library("bundle_ndk") {
 
   if (bundle_framework_bundle_resource) {
     defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
-    sources += [
-      "src/bundle_resource_drawable_utils_native.cpp",
-    ]
-    if (bundle_framework_graphics) {
-      defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
-      external_deps += [
-        "ace_engine:drawable_descriptor",
-        "image_framework:image_native",
-        "resource_management:global_resmgr",
-      ]
-    }
   }
 
   public_external_deps = [ "json:nlohmann_json_static" ]
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
+
+ohos_shared_library("bundle_ndk_drawable") {
+  branch_protector_ret = "pac_ret"
+
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
+  public_configs = [ ":bundle_ndk_config" ]
+  defines = [
+    "APP_LOG_TAG = \"BMS\"",
+    "LOG_DOMAIN = 0xD001120",
+    "BUNDLE_FRAMEWORK_GRAPHICS",
+  ]
+
+  sources = [
+    "src/bundle_drawable_bridge.cpp",
+    "src/bundle_resource_drawable_utils_native.cpp",
+  ]
+
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  use_exceptions = true
+  use_rtti = true
+
+  deps = [
+    "${base_path}:appexecfwk_base",
+  ]
+
+  external_deps = [
+    "ace_engine:ace_ndk",
+    "ace_engine:drawable_descriptor",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "image_framework:image_native",
+    "resource_management:global_resmgr",
+  ]
+
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }

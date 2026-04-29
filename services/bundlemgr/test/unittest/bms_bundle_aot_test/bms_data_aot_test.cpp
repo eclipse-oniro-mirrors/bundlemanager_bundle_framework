@@ -2521,10 +2521,10 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0400, Function | SmallTest | Level1)
 
 /**
  * @tc.number: HandleInstallAOT_0500
- * @tc.name: test HandleInstallAOT returns early when bundle is not in AOT enable list
- * @tc.desc: verify HandleInstallAOT returns early when the bundle is absent from
- *           the AOT compile enable list (config file not present in test environment),
- *           regardless of the ArkTS mode of individual modules
+ * @tc.name: test HandleInstallAOT for non-shared app without bap file
+ * @tc.desc: verify HandleInstallAOT skips compilation for non-shared app modules
+ *           when bap file is not present (dynamic module skipped by dynamic check,
+ *           static module skipped by bap file check)
  */
 HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0500, Function | SmallTest | Level1)
 {
@@ -2532,6 +2532,7 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0500, Function | SmallTest | Level1)
     InnerBundleInfo innerBundleInfo;
     ApplicationInfo applicationInfo;
     applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::APP;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.SetIsNewVersion(true);
     BundleInfo bundleInfo;
@@ -2551,7 +2552,7 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0500, Function | SmallTest | Level1)
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
         bundleName, innerBundleInfo);
     AOTHandler::GetInstance().HandleInstallAOT(bundleName);
-    // AOT flags must remain NOT_COMPILED because the bundle is not in the enable list
+    // static module: no bap file so skipped; dynamic module: skipped by dynamic check
     auto item = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.find(bundleName);
     ASSERT_NE(item, DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.end());
     EXPECT_EQ(item->second.GetAOTCompileStatus("staticModule"), AOTCompileStatus::NOT_COMPILED);
@@ -3142,7 +3143,7 @@ HWTEST_F(BmsAOTMgrTest, StaticAndHybridModuleCnt_0100, Function | SmallTest | Le
     innerBundleInfo.innerModuleInfos_.try_emplace("hybridModule", hybridModule);
 
     auto ret = AOTHandler::GetInstance().BuildAOTArgs(
-        innerBundleInfo, "staticModule", "", false, ServiceConstants::AOT_TRIGGER_INSTALL);
+        innerBundleInfo, "staticModule", ServiceConstants::COMPILE_FULL, false, ServiceConstants::AOT_TRIGGER_INSTALL);
     ASSERT_NE(ret, std::nullopt);
     EXPECT_EQ(ret->staticAndHybridModuleCnt, 2u);
 }
@@ -3174,7 +3175,7 @@ HWTEST_F(BmsAOTMgrTest, StaticAndHybridModuleCnt_0200, Function | SmallTest | Le
     innerBundleInfo.innerModuleInfos_.try_emplace("moduleB", moduleB);
 
     auto ret = AOTHandler::GetInstance().BuildAOTArgs(
-        innerBundleInfo, "moduleA", "", false, ServiceConstants::AOT_TRIGGER_INSTALL);
+        innerBundleInfo, "moduleA", ServiceConstants::COMPILE_FULL, false, ServiceConstants::AOT_TRIGGER_INSTALL);
     ASSERT_NE(ret, std::nullopt);
     EXPECT_EQ(ret->staticAndHybridModuleCnt, 2u);
 }
@@ -3540,5 +3541,306 @@ HWTEST_F(BmsAOTMgrTest, OTACompileInternal_StatusSet_0100, Function | SmallTest 
     AOTHandler::GetInstance().OTACompileInternal();
     std::string status = system::GetParameter("bms.optimizing_apps.status", "");
     EXPECT_EQ(status, "1");
+}
+
+/**
+ * @tc.number: ShouldCompileSharedModule_0100
+ * @tc.name: test ShouldCompileSharedModule with dynamic module
+ * @tc.desc: verify ShouldCompileSharedModule returns false for dynamic ArkTS mode module
+ */
+HWTEST_F(BmsAOTMgrTest, ShouldCompileSharedModule_0100, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "dynamicSharedModule";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    bool result = AOTHandler::GetInstance().ShouldCompileSharedModule(moduleInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: ShouldCompileSharedModule_0200
+ * @tc.name: test ShouldCompileSharedModule with static module
+ * @tc.desc: verify ShouldCompileSharedModule returns true for static ArkTS mode module
+ */
+HWTEST_F(BmsAOTMgrTest, ShouldCompileSharedModule_0200, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "staticSharedModule";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    bool result = AOTHandler::GetInstance().ShouldCompileSharedModule(moduleInfo);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: ShouldCompileSharedModule_0300
+ * @tc.name: test ShouldCompileSharedModule with hybrid module
+ * @tc.desc: verify ShouldCompileSharedModule returns true for hybrid ArkTS mode module
+ */
+HWTEST_F(BmsAOTMgrTest, ShouldCompileSharedModule_0300, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "hybridSharedModule";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_HYBRID;
+    bool result = AOTHandler::GetInstance().ShouldCompileSharedModule(moduleInfo);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: ShouldCompileAppModule_0100
+ * @tc.name: test ShouldCompileAppModule with dynamic module
+ * @tc.desc: verify ShouldCompileAppModule returns false for dynamic ArkTS mode module
+ */
+HWTEST_F(BmsAOTMgrTest, ShouldCompileAppModule_0100, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "dynamicAppModule";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    bool result = AOTHandler::GetInstance().ShouldCompileAppModule(moduleInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: ShouldCompileAppModule_0200
+ * @tc.name: test ShouldCompileAppModule with invalid hap path
+ * @tc.desc: verify ShouldCompileAppModule returns false when BundleExtractor init fails
+ */
+HWTEST_F(BmsAOTMgrTest, ShouldCompileAppModule_0200, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "appModule";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    moduleInfo.hapPath = "/non/existent/path.hap";
+    bool result = AOTHandler::GetInstance().ShouldCompileAppModule(moduleInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: ShouldCompileAppModule_0300
+ * @tc.name: test ShouldCompileAppModule with valid hap but no bap entry
+ * @tc.desc: verify ShouldCompileAppModule returns false when bap file is not in hap
+ */
+HWTEST_F(BmsAOTMgrTest, ShouldCompileAppModule_0300, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "appModule";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    moduleInfo.hapPath = HAP_PATH;
+    bool result = AOTHandler::GetInstance().ShouldCompileAppModule(moduleInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: ShouldCompileAppModule_0400
+ * @tc.name: test ShouldCompileAppModule with hybrid module and no bap
+ * @tc.desc: verify ShouldCompileAppModule returns false for hybrid module without bap file
+ */
+HWTEST_F(BmsAOTMgrTest, ShouldCompileAppModule_0400, Function | SmallTest | Level1)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "hybridModule";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_HYBRID;
+    moduleInfo.hapPath = HAP_PATH;
+    bool result = AOTHandler::GetInstance().ShouldCompileAppModule(moduleInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: HandleInstallAOT_SharedNotInList_0100
+ * @tc.name: test HandleInstallAOT skips shared bundle not in enable list
+ * @tc.desc: verify HandleInstallAOT returns early for shared bundle not in AOT enable list
+ */
+HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_SharedNotInList_0100, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.shared.notinlist";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    auto item = dataMgr->bundleInfos_.find(bundleName);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::NOT_COMPILED);
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: HandleInstallAOT_AppDynamicModuleSkipped_0100
+ * @tc.name: test HandleInstallAOT skips dynamic module via ShouldCompileAppModule
+ * @tc.desc: verify non-shared app with one dynamic module and one static module:
+ *           dynamic module is filtered by ShouldCompileAppModule (dynamic check),
+ *           static module is filtered by ShouldCompileAppModule (no bap file)
+ */
+HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppDynamicModuleSkipped_0100, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.app.mixmodules";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::APP;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    // static module: will reach ShouldCompileAppModule, fail at bap check
+    InnerModuleInfo staticModule;
+    staticModule.moduleName = "staticModule";
+    staticModule.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    staticModule.hapPath = HAP_PATH;
+    innerBundleInfo.innerModuleInfos_.try_emplace("staticModule", staticModule);
+
+    // dynamic module: will reach ShouldCompileAppModule, fail at dynamic check
+    InnerModuleInfo dynamicModule;
+    dynamicModule.moduleName = "dynamicModule";
+    dynamicModule.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace("dynamicModule", dynamicModule);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    auto item = dataMgr->bundleInfos_.find(bundleName);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    // non-shared app skips whitelist, enters module loop via ShouldCompileAppModule
+    // static module: no bap in HAP_PATH → NOT_COMPILED
+    // dynamic module: rejected by dynamic check → NOT_COMPILED
+    EXPECT_EQ(item->second.GetAOTCompileStatus("staticModule"), AOTCompileStatus::NOT_COMPILED);
+    EXPECT_EQ(item->second.GetAOTCompileStatus("dynamicModule"), AOTCompileStatus::NOT_COMPILED);
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: HandleInstallAOT_AppNoBap_0100
+ * @tc.name: test HandleInstallAOT for non-shared app enters module loop
+ * @tc.desc: verify non-shared bundle skips whitelist check and enters module loop
+ *           where ShouldCompileAppModule filters by bap file presence
+ */
+HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppNoBap_0100, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.app.nobap";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::APP;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    moduleInfo.hapPath = HAP_PATH;
+    innerBundleInfo.innerModuleInfos_.try_emplace("entry", moduleInfo);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    // no bap file in HAP_PATH, so module stays NOT_COMPILED
+    auto item = dataMgr->bundleInfos_.find(bundleName);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus("entry"), AOTCompileStatus::NOT_COMPILED);
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: HandleInstallAOT_AppInvalidHapPath_0100
+ * @tc.name: test HandleInstallAOT for non-shared app with invalid hap path
+ * @tc.desc: verify ShouldCompileAppModule returns false when BundleExtractor init fails
+ */
+HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppInvalidHapPath_0100, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.app.invalidhap";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::APP;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    moduleInfo.hapPath = "/non/existent/path.hap";
+    innerBundleInfo.innerModuleInfos_.try_emplace("entry", moduleInfo);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    auto item = dataMgr->bundleInfos_.find(bundleName);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus("entry"), AOTCompileStatus::NOT_COMPILED);
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: HandleInstallAOT_AppHybridMode_0100
+ * @tc.name: test HandleInstallAOT for hybrid app with mixed modules
+ * @tc.desc: verify HandleInstallAOT processes hybrid app correctly:
+ *           app-level mode is hybrid (not filtered), dynamic modules skipped,
+ *           static modules checked for bap file
+ */
+HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppHybridMode_0100, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.app.hybrid";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::APP;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    InnerModuleInfo staticModule;
+    staticModule.moduleName = "staticEntry";
+    staticModule.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    staticModule.hapPath = HAP_PATH;
+    innerBundleInfo.innerModuleInfos_.try_emplace("staticEntry", staticModule);
+
+    InnerModuleInfo hybridModule;
+    hybridModule.moduleName = "hybridFeature";
+    hybridModule.moduleArkTSMode = Constants::ARKTS_MODE_HYBRID;
+    hybridModule.hapPath = HAP_PATH;
+    innerBundleInfo.innerModuleInfos_.try_emplace("hybridFeature", hybridModule);
+
+    InnerModuleInfo dynamicModule;
+    dynamicModule.moduleName = "dynamicFeature";
+    dynamicModule.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    innerBundleInfo.innerModuleInfos_.try_emplace("dynamicFeature", dynamicModule);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    auto item = dataMgr->bundleInfos_.find(bundleName);
+    ASSERT_NE(item, dataMgr->bundleInfos_.end());
+    // static and hybrid: no bap so NOT_COMPILED; dynamic: skipped by dynamic check
+    EXPECT_EQ(item->second.GetAOTCompileStatus("staticEntry"), AOTCompileStatus::NOT_COMPILED);
+    EXPECT_EQ(item->second.GetAOTCompileStatus("hybridFeature"), AOTCompileStatus::NOT_COMPILED);
+    EXPECT_EQ(item->second.GetAOTCompileStatus("dynamicFeature"), AOTCompileStatus::NOT_COMPILED);
+    dataMgr->bundleInfos_.erase(bundleName);
 }
 } // OHOS

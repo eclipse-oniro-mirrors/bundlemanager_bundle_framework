@@ -100,7 +100,8 @@ constexpr const char* BACKGROUND_MODE_MAP_KEY[] = {
     KEY_PICTURE_IN_PICTURE,
     KEY_SCREEN_FETCH,
     KEY_AV_PLAYBACK_AND_RECORD,
-    KEY_SPECIAL_SCENARIO_PROCESSING
+    KEY_SPECIAL_SCENARIO_PROCESSING,
+    KEY_NEARLINK
 };
 const uint32_t BACKGROUND_MODE_MAP_VALUE[] = {
     VALUE_DATA_TRANSFER,
@@ -115,7 +116,8 @@ const uint32_t BACKGROUND_MODE_MAP_VALUE[] = {
     VALUE_PICTURE_IN_PICTURE,
     VALUE_SCREEN_FETCH,
     VALUE_AV_PLAYBACK_AND_RECORD,
-    VALUE_SPECIAL_SCENARIO_PROCESSING
+    VALUE_SPECIAL_SCENARIO_PROCESSING,
+    VALUE_NEARLINK
 };
 
 struct Version {
@@ -126,7 +128,11 @@ struct Version {
 
 struct ApiVersion {
     uint32_t compatible = 0;
+    uint32_t compatibleMinorAPIVersion = 0;
+    uint32_t compatiblePatchAPIVersion = 0;
     uint32_t target = 0;
+    uint32_t targetMinorAPIVersion = 0;
+    uint32_t targetPatchAPIVersion = 0;
     std::string releaseType = "Release";
     std::string compileSdkVersion;
     std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
@@ -417,8 +423,40 @@ void from_json(const nlohmann::json &jsonObject, ApiVersion &apiVersion)
     // these are not required fields.
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_COMPATIBLE_MINOR_API_VERSION,
+        apiVersion.compatibleMinorAPIVersion,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_COMPATIBLE_PATCH_API_VERSION,
+        apiVersion.compatiblePatchAPIVersion,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
         BUNDLE_APP_PROFILE_KEY_TARGET,
         apiVersion.target,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_TARGET_MINOR_API_VERSION,
+        apiVersion.targetMinorAPIVersion,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_TARGET_PATCH_API_VERSION,
+        apiVersion.targetPatchAPIVersion,
         JsonType::NUMBER,
         false,
         g_parseResult,
@@ -2010,7 +2048,11 @@ bool ToApplicationInfo(
     }
 
     applicationInfo.apiCompatibleVersion = configJson.app.apiVersion.compatible;
+    applicationInfo.compatibleMinorVersion = configJson.app.apiVersion.compatibleMinorAPIVersion;
+    applicationInfo.compatiblePatchVersion = configJson.app.apiVersion.compatiblePatchAPIVersion;
     applicationInfo.apiTargetVersion = configJson.app.apiVersion.target;
+    applicationInfo.targetMinorApiVersion = configJson.app.apiVersion.targetMinorAPIVersion;
+    applicationInfo.targetPatchApiVersion = configJson.app.apiVersion.targetPatchAPIVersion;
     applicationInfo.apiReleaseType = configJson.app.apiVersion.releaseType;
     applicationInfo.asanEnabled = configJson.app.asanEnabled;
     applicationInfo.compileSdkVersion = configJson.app.apiVersion.compileSdkVersion;
@@ -2082,7 +2124,11 @@ bool ToBundleInfo(
     bundleInfo.minCompatibleVersionCode = static_cast<uint32_t>(applicationInfo.minCompatibleVersionCode);
 
     bundleInfo.compatibleVersion = static_cast<uint32_t>(applicationInfo.apiCompatibleVersion);
+    bundleInfo.compatibleMinorVersion = applicationInfo.compatibleMinorVersion;
+    bundleInfo.compatiblePatchVersion = applicationInfo.compatiblePatchVersion;
     bundleInfo.targetVersion = static_cast<uint32_t>(applicationInfo.apiTargetVersion);
+    bundleInfo.targetMinorApiVersion = applicationInfo.targetMinorApiVersion;
+    bundleInfo.targetPatchApiVersion = applicationInfo.targetPatchApiVersion;
 
     bundleInfo.isKeepAlive = applicationInfo.keepAlive;
     bundleInfo.singleton = applicationInfo.singleton;

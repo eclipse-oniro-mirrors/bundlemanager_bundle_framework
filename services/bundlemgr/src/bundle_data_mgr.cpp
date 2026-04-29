@@ -55,6 +55,7 @@
 #include "installd_client.h"
 #include "interfaces/hap_verify.h"
 #include "ipc_skeleton.h"
+#include "skills_description_manager.h"
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_config.h"
 #include "locale_info.h"
@@ -172,6 +173,7 @@ const std::string PREFIX_DOLLAR = "$";
 const std::string FIELD_MEDIA = "media";
 const std::string FIELD_STRING = "string";
 #endif
+constexpr int32_t DYNAMIC_SHORTCUT_TYPE = 2;
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -735,7 +737,7 @@ bool BundleDataMgr::AddFirstInstallBundleInfo(const std::string &bundleName, con
     }
 
     if (firstInstallDataMgr_->IsExistFirstInstallBundleInfo(bundleName, userId)
-        || userId == Constants::ALL_USERID) {
+        && userId != Constants::ALL_USERID) {
         APP_LOGW("bundleName %{public}s, user %{public}d has been saved", bundleName.c_str(), userId);
         return true;
     }
@@ -4972,7 +4974,9 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
     GetAllUninstallBundleInfo(uninstallBundleInfos);
     GetAllUnisntallBundleUids(requestUserId, uninstallBundleInfos, uids);
     std::vector<int32_t> uidVec(uids.begin(), uids.end());
-    if (InstalldClient::GetInstance()->GetAllBundleStats(responseUserId, bundleStats, uidVec) != ERR_OK) {
+    // remove invaild uid
+    uidVec.erase(std::remove_if(uidVec.begin(), uidVec.end(), [](int32_t uid) { return uid < 0; }), uidVec.end());
+    if (InstalldClient::GetInstance()->GetAllBundleStats(bundleStats, uidVec) != ERR_OK) {
         APP_LOGW("GetAllBundleStats failed, userId: %{public}d", responseUserId);
         return false;
     }
@@ -5301,6 +5305,67 @@ ErrCode BundleDataMgr::GetLaunchWantForBundle(
     want.SetAction(Constants::ACTION_HOME);
     want.AddEntity(Constants::ENTITY_HOME);
     return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetLaunchWantForBundleSync(
+    const std::string &bundleName, Want &want, int32_t userId) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const InnerBundleInfo *innerBundleInfo = nullptr;
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(
+        bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, userId);
+    if (ret != ERR_OK) {
+        APP_LOGD("GetInnerBundleInfoWithFlagsV9 failed, bundleName:%{public}s", bundleName.c_str());
+        return ret;
+    }
+    if (!innerBundleInfo) {
+        LOG_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by GetLaunchWantForBundle is null.");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    std::string mainAbility = innerBundleInfo->GetMainAbility();
+    if (mainAbility.empty()) {
+        APP_LOGW("no main ability in the bundle %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    want.SetElementName("", bundleName, mainAbility);
+    SetLaunchWantActionAndEntity(innerBundleInfo, want);
+    return ERR_OK;
+}
+
+void BundleDataMgr::SetLaunchWantActionAndEntity(
+    const InnerBundleInfo *innerBundleInfo, Want &want) const
+{
+    auto entryActionMatcher = [](const std::string &action) {
+        return action == Constants::ACTION_HOME || action == Constants::WANT_ACTION_HOME;
+    };
+    
+    auto skillInfos = innerBundleInfo->GetInnerSkillInfos();
+    const std::string &key = innerBundleInfo->GetEntryAbilityKey();
+    auto skillIt = skillInfos.find(key);
+    if (skillIt == skillInfos.end()) {
+        want.SetAction(Constants::ACTION_HOME);
+        want.AddEntity(Constants::ENTITY_HOME);
+        return;
+    }
+    for (const auto &skill : skillIt->second) {
+        auto actionIt = std::find_if(skill.actions.begin(), skill.actions.end(),
+            entryActionMatcher);
+        if (actionIt == skill.actions.end()) {
+            continue;
+        }
+        auto entityIt = std::find(skill.entities.begin(), skill.entities.end(),
+            Constants::ENTITY_HOME);
+        if (entityIt == skill.entities.end()) {
+            continue;
+        }
+        want.SetAction(*actionIt);
+        want.AddEntity(*entityIt);
+        return;
+    }
+    want.SetAction(Constants::ACTION_HOME);
+    want.AddEntity(Constants::ENTITY_HOME);
 }
 
 bool BundleDataMgr::CheckIsSystemAppByUid(const int uid) const
@@ -5740,6 +5805,65 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
     } else {
         bundleStateStorage_->SaveBundleStateStorage(
             bundleName, requestUserId, innerBundleUserInfoPtr->bundleUserInfo);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::SetBundleFirstLaunch(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, bool isBundleFirstLaunched)
+{
+    APP_LOGD("SetBundleFirstLaunch %{public}s, :%{public}d, :%{public}d, :%{public}d",
+        bundleName.c_str(), userId, appIndex, isBundleFirstLaunched);
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGW("Request userId %{public}d is invalid, bundleName:%{public}s", userId, bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo& info = infoItem->second;
+    const InnerBundleUserInfo *innerBundleUserInfoPtr = nullptr;
+    if (!info.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfoPtr)) {
+        APP_LOGW("can not find userId %{public}d in bundle %{public}s", requestUserId, bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (!innerBundleUserInfoPtr) {
+        APP_LOGE("innerBundleUserInfoPtr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    // Check if isBundleFirstLaunched value has changed
+    bool currentValue = false;
+    if (appIndex == 0) {
+        currentValue = innerBundleUserInfoPtr->isBundleFirstLaunched;
+    } else {
+        auto iter = innerBundleUserInfoPtr->cloneInfos.find(std::to_string(appIndex));
+        if (iter == innerBundleUserInfoPtr->cloneInfos.end()) {
+            APP_LOGW("can not find appIndex %{public}d in bundle %{public}s", appIndex, bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
+        }
+        currentValue = iter->second.isBundleFirstLaunched;
+    }
+    if (currentValue == isBundleFirstLaunched) {
+        APP_LOGD("isBundleFirstLaunched value not changed, no need to update");
+        return ERR_OK;
+    }
+    ErrCode ret = ERR_OK;
+    if (appIndex == 0) {
+        ret = info.SetBundleFirstLaunch(isBundleFirstLaunched, requestUserId);
+    } else {
+        ret = info.SetCloneBundleFirstLaunch(isBundleFirstLaunched, appIndex, requestUserId);
+    }
+    if (ret != ERR_OK) {
+        APP_LOGW("SetBundleFirstLaunch failed, err %{public}d", ret);
+        return ret;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(info)) {
+        APP_LOGE("SaveStorageBundleInfo failed for bundle %{public}s", info.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return ERR_OK;
 }
@@ -6421,8 +6545,27 @@ bool BundleDataMgr::GetShortcutInfos(
 
     shortcutVisibleStorage_->GetStorageShortcutInfos(
         bundleName, Constants::MAIN_APP_INDEX, requestUserId, shortcutInfos);
+    RemoveInvalidShortcutInfo(shortcutInfos);
     shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return true;
+}
+
+void BundleDataMgr::RemoveInvalidShortcutInfo(std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    std::unordered_set<std::string> dynamicIds;
+    for (const auto &info : shortcutInfos) {
+        if (info.sourceType == DYNAMIC_SHORTCUT_TYPE) {
+            dynamicIds.emplace(info.id);
+        }
+    }
+    if (dynamicIds.empty()) {
+        return;
+    }
+    shortcutInfos.erase(
+        std::remove_if(shortcutInfos.begin(), shortcutInfos.end(),
+            [&dynamicIds](const ShortcutInfo& info) {
+                return info.sourceType != DYNAMIC_SHORTCUT_TYPE && dynamicIds.find(info.id) != dynamicIds.end();
+            }), shortcutInfos.end());
 }
 
 std::string BundleDataMgr::TryGetRawDataByExtractor(const std::string &hapPath, const std::string &profileName,
@@ -6647,6 +6790,7 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
 
     shortcutVisibleStorage_->GetStorageShortcutInfos(
         bundleName, Constants::MAIN_APP_INDEX, requestUserId, shortcutInfos);
+    RemoveInvalidShortcutInfo(shortcutInfos);
     shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return ERR_OK;
 }
@@ -6682,6 +6826,7 @@ ErrCode BundleDataMgr::GetShortcutInfoByAppIndex(const std::string &bundleName, 
         info.appIndex = appIndex;
     }
     shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, requestUserId, shortcutInfos);
+    RemoveInvalidShortcutInfo(shortcutInfos);
     shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return ERR_OK;
 }
@@ -6759,14 +6904,17 @@ void BundleDataMgr::ProcessShortcutInfos(const InnerBundleInfo &innerBundleInfo,
         APP_LOGW("bundle %{public}s has no entry", bundleName.c_str());
         shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex,
             requestUserId, shortcutInfos, true);
+        RemoveInvalidShortcutInfo(shortcutInfos);
     } else {
         if (moduleName == moduleInfo->moduleName && abilityName == mainAbilityName) {
             shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex,
                 requestUserId, shortcutInfos);
+            RemoveInvalidShortcutInfo(shortcutInfos);
             shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
         } else {
             shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex,
                 requestUserId, shortcutInfos, true);
+            RemoveInvalidShortcutInfo(shortcutInfos);
         }
     }
     
@@ -8289,6 +8437,23 @@ bool BundleDataMgr::FetchInnerBundleInfo(
     return true;
 }
 
+bool BundleDataMgr::IsHideDesktopIconForEvent(const std::string &bundleName) const
+{
+    APP_LOGD("IsHideDesktopIconForEvent %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return false;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW_NOFUNC("IsHideDesktopIconForEvent not found %{public}s", bundleName.c_str());
+        return false;
+    }
+    return infoItem->second.IsHideDesktopIconForEvent();
+}
+
 bool BundleDataMgr::GetInnerBundleInfoUsers(const std::string &bundleName, std::set<int32_t> &userIds)
 {
     InnerBundleInfo info;
@@ -8562,14 +8727,14 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool
         // independent of userId, only associated with bundleName
         std::string lastOdid;
         FirstInstallBundleInfo lastOdidInfo;
-        if (GetFirstInstallBundleInfo(bundleName, Constants::ALL_USERID, lastOdidInfo)) {
-            lastOdid = lastOdidInfo.lastOdid;
-        }
+        GetFirstInstallBundleInfo(bundleName, Constants::ALL_USERID, lastOdidInfo);
+        infoItem->second.GetOdid(lastOdid);
         std::string odid = GenerateOdidNoLock(developerId);
         innerBundleInfo.UpdateOdid(developerId, odid);
         // Increment odid reset count when generating new odid different from last odid
         if (!lastOdid.empty() && !odid.empty() && odid != lastOdid) {
             lastOdidInfo.IncrementOdidResetCount();
+            lastOdidInfo.lastOdid = odid;
             APP_LOGI("odid reset for bundle %{public}s, last odid:%{private}s, new odid:%{private}s, count:%{public}d",
                 bundleName.c_str(), lastOdid.c_str(), odid.c_str(), lastOdidInfo.odidResetCount);
             firstInstallDataMgr_->AddFirstInstallBundleInfo(bundleName, Constants::ALL_USERID, lastOdidInfo);
@@ -9681,6 +9846,41 @@ ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string
     return GetJsonProfileByExtractor(moduleInfo->hapPath, profilePath, profile);
 }
 
+ErrCode BundleDataMgr::GetShareFilesJsonFromHap(const std::string &hapPath, const InnerModuleInfo &moduleInfo,
+    std::string &jsonContent) const
+{
+    APP_LOGD("GetShareFilesJsonFromHap: hapPath=%{private}s, moduleName=%{public}s",
+        hapPath.c_str(), moduleInfo.moduleName.c_str());
+
+    // 1. Check if shareFiles configuration is empty
+    if (moduleInfo.shareFiles.empty()) {
+        jsonContent = "";
+        APP_LOGD("shareFiles config is empty for module: %{public}s", moduleInfo.moduleName.c_str());
+        return ERR_OK;
+    }
+
+    // 2. Use existing GetProfilePath method to get complete file path
+    // Note: GetProfilePath checks isEntry and only processes entry modules
+    std::string profilePath = GetProfilePath(ProfileType::SHARE_FILES_PROFILE, moduleInfo);
+    if (profilePath.empty()) {
+        APP_LOGW("failed to get shareFiles profile path for module: %{public}s",
+            moduleInfo.moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
+    }
+
+    // 3. Use existing GetJsonProfileByExtractor method to extract file content
+    ErrCode ret = GetJsonProfileByExtractor(hapPath, profilePath, jsonContent);
+    if (ret != ERR_OK) {
+        APP_LOGW("failed to extract shareFiles json for module: %{public}s, err=%{public}d",
+            moduleInfo.moduleName.c_str(), ret);
+        return ret;
+    }
+
+    APP_LOGD("successfully extracted shareFiles json for module: %{public}s, %{public}s",
+        moduleInfo.moduleName.c_str(), jsonContent.c_str());
+    return ERR_OK;
+}
+
 ErrCode __attribute__((no_sanitize("cfi"))) BundleDataMgr::GetJsonProfileByExtractor(const std::string &hapPath,
     const std::string &profilePath, std::string &profile) const
 {
@@ -10528,6 +10728,7 @@ void BundleDataMgr::ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &i
             baseSharedBundleInfo.moduleArkTSMode = hapModule.moduleArkTSMode;
             baseSharedBundleInfo.compressNativeLibs = hapModule.compressNativeLibs;
             baseSharedBundleInfo.nativeLibraryFileNames = hapModule.nativeLibraryFileNames;
+            baseSharedBundleInfo.librarySupportDirectory = hapModule.librarySupportDirectory;
             baseSharedBundleInfos.emplace_back(baseSharedBundleInfo);
         }
         return;
@@ -11817,6 +12018,25 @@ ErrCode BundleDataMgr::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &s
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetApiTargetVersionByUid(const int32_t uid, int32_t &apiTargetVersion) const
+{
+    std::string bundleName;
+    int32_t appIndex = 0;
+    ErrCode ret = GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    auto bundleInfoIter = bundleInfos_.find(bundleName);
+    if (bundleInfoIter == bundleInfos_.end()) {
+        APP_LOGE("bundleName %{public}s is not existed in bundleInfos_", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    apiTargetVersion = bundleInfoIter->second.GetBaseApplicationInfo().apiTargetVersion;
+    APP_LOGD("GetApiTargetVersionByUid success, uid: %{public}d, apiTargetVersion: %{public}d",
+        uid, apiTargetVersion);
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::UpdateAppEncryptedStatus(
     const std::string &bundleName, bool isExisted, int32_t appIndex, bool needSaveStorage)
 {
@@ -12239,29 +12459,63 @@ void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
         if (info.second.userInfos.empty()) {
             continue;
         }
-        int32_t userId = -1;
-        if (!OHOS::StrToInt(info.second.userInfos.begin()->first, userId)) {
-            APP_LOGW("strToInt fail");
-            continue;
-        }
-        int32_t bundleId = info.second.userInfos.begin()->second.uid
-            - userId * Constants::BASE_USER_RANGE;
-        if (bundleId < Constants::BASE_APP_UID || bundleId >= MAX_APP_UID) {
-            APP_LOGW("invalid bundleId");
-            continue;
-        }
-        auto item = bundleIdMap_.find(bundleId);
-        if (item == bundleIdMap_.end()) {
-            uninstallBundleIdMap.emplace(bundleId, info.first);
-            BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
-            BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
-            BundleUtil::MakeFsConfig(info.first, ServiceConstants::HMDFS_CONFIG_PATH,
-                info.second.appProvisionType, Constants::APP_PROVISION_TYPE_FILE_NAME);
+
+        for (const auto &userInfoPair : info.second.userInfos) {
+            const std::string &userKey = userInfoPair.first;
+            const UninstallDataUserInfo &userInfo = userInfoPair.second;
+
+            int32_t userId = -1;
+            int32_t appIndex = 0;
+            if (!ParseUserKey(userKey, userId, appIndex)) {
+                continue;
+            }
+
+            int32_t bundleId = userInfo.uid - userId * Constants::BASE_USER_RANGE;
+            if (bundleId < Constants::BASE_APP_UID || bundleId >= MAX_APP_UID) {
+                APP_LOGW("invalid bundleId: %{public}d", bundleId);
+                continue;
+            }
+
+            std::string bundleName;
+            if (appIndex > 0) {
+                bundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(info.first, appIndex);
+            } else {
+                bundleName = info.first;
+            }
+
+            auto item = bundleIdMap_.find(bundleId);
+            if (item == bundleIdMap_.end()) {
+                uninstallBundleIdMap.emplace(bundleId, bundleName);
+                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(info.first, ServiceConstants::HMDFS_CONFIG_PATH,
+                    info.second.appProvisionType, Constants::APP_PROVISION_TYPE_FILE_NAME);
+            }
         }
     }
     for (const auto &item : uninstallBundleIdMap) {
         bundleIdMap_.emplace(item.first, item.second);
     }
+}
+
+bool BundleDataMgr::ParseUserKey(const std::string &userKey, int32_t &userId, int32_t &appIndex) const
+{
+    size_t underscorePos = userKey.find(ServiceConstants::UNDER_LINE);
+    if (underscorePos != std::string::npos) {
+        std::string userIdStr = userKey.substr(0, underscorePos);
+        std::string appIndexStr = userKey.substr(underscorePos + 1);
+        if (!OHOS::StrToInt(userIdStr, userId) ||
+            !OHOS::StrToInt(appIndexStr, appIndex)) {
+            APP_LOGW_NOFUNC("parse userKey fail: %{public}s", userKey.c_str());
+            return false;
+        }
+    } else {
+        if (!OHOS::StrToInt(userKey, userId)) {
+            APP_LOGW_NOFUNC("parse userId fail: %{public}s", userKey.c_str());
+            return false;
+        }
+    }
+    return true;
 }
 
 ErrCode BundleDataMgr::GetAssetAccessGroups(const std::string &bundleName,
@@ -12779,6 +13033,7 @@ ErrCode BundleDataMgr::SetShortcutVisibleForSelf(const std::string &shortcutId, 
         }
     }
     shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, userId, shortcutInfos);
+    RemoveInvalidShortcutInfo(shortcutInfos);
     ShortcutInfo targetShortcutInfo;
     ret = GetTargetShortcutInfo(bundleName, shortcutId, shortcutInfos, targetShortcutInfo);
     if (ret != ERR_OK) {
@@ -12964,6 +13219,7 @@ ErrCode BundleDataMgr::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shor
     }
 
     shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, userId, shortcutInfos);
+    RemoveInvalidShortcutInfo(shortcutInfos);
     shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return ERR_OK;
 }
@@ -13616,6 +13872,24 @@ std::vector<CreateDirParam> BundleDataMgr::GetAllExtensionDirsToUpdateSelinuxApl
     return allExtensionDirsToUpdateSelinuxApl;
 }
 
+ErrCode BundleDataMgr::GetAllIndependentSKills(const int32_t userId, std::vector<std::string> &bundleNames)
+{
+    if (!HasUserId(userId)) {
+        APP_LOGE("userId %{public}d not exist", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        if (item.second.GetApplicationBundleType() != BundleType::SKILL) {
+            continue;
+        }
+        if (item.second.HasInnerBundleUserInfo(userId)) {
+            bundleNames.emplace_back(item.second.GetBundleName());
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::GetCreateDirParamByBundleOption(
     const BundleOptionInfo &optionInfo, CreateDirParam &createDirParam) const
 {
@@ -13778,6 +14052,268 @@ ErrCode BundleDataMgr::CheckBundleExist(const std::string &bundleName, int32_t u
         if (cloneInfo == innerBundleUserInfo.cloneInfos.end()) {
             APP_LOGE_NOFUNC("check bundle invalid appIndex %{public}d", appIndex);
             return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
+        }
+    }
+    return ERR_OK;
+}
+
+std::vector<std::string> BundleDataMgr::GetAllowListenBundleNames(
+    const std::string &bundleName) const
+{
+    std::vector<std::string> bundleNames;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE_NOFUNC("GetAllowListenBundleNames bundle -n %{public}s not exist", bundleName.c_str());
+        return bundleNames;
+    }
+    std::vector<std::string> allowListenBundles = item->second.GetAllowListenBundleChangedEvent();
+    if (allowListenBundles.empty()) {
+        APP_LOGE_NOFUNC("bundle -n %{public}s allowListenBundleChangedEvent is empty", bundleName.c_str());
+        return bundleNames;
+    }
+    for (const auto &info : bundleInfos_) {
+        std::string appIdentidier = info.second.GetAppIdentifier();
+        auto item = std::find(allowListenBundles.begin(), allowListenBundles.end(), appIdentidier);
+        if (item != allowListenBundles.end()) {
+            bundleNames.emplace_back(info.first);
+        }
+        if (bundleNames.size() == allowListenBundles.size()) {
+            break;
+        }
+    }
+    APP_LOGD("allowListenBundles size:%{public}zu", allowListenBundles.size());
+    return bundleNames;
+}
+
+void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
+    const InnerModuleInfo &moduleInfo, const SkillProfile &profile,
+    SkillType skillType, uint32_t flags, SkillInfo &skillInfo)
+{
+    skillInfo.bundleName = info.GetBundleName();
+    skillInfo.moduleName = moduleInfo.moduleName;
+    skillInfo.skillName = profile.name;
+    skillInfo.skillId = 0;
+    skillInfo.skillType = skillType;
+    skillInfo.hapPath = moduleInfo.hapPath;
+    skillInfo.abilityName = profile.abilityName;
+    skillInfo.skillPath = std::string(ServiceConstants::SKILL_FILE_PATH) + ServiceConstants::PATH_SEPARATOR +
+        skillInfo.bundleName + ServiceConstants::PATH_SEPARATOR + skillInfo.moduleName + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::SKILL_DIR + ServiceConstants::PATH_SEPARATOR + skillInfo.skillName;
+
+    if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_SRC_ENTRIES)) ==
+        static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_SRC_ENTRIES)) {
+        skillInfo.srcEntries = profile.srcEntries;
+    }
+    if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_PERMISSIONS)) ==
+        static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_PERMISSIONS)) {
+        skillInfo.permissions = profile.permissions;
+    }
+    if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS)) ==
+        static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS)) {
+        for (const auto &reqPerm : moduleInfo.requestPermissions) {
+            skillInfo.requestPermissions.emplace_back(reqPerm.name);
+        }
+    }
+    if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_DESCRIPTION)) ==
+        static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_DESCRIPTION)) {
+        std::string description;
+        auto ret = DelayedSingleton<SkillsDescriptionManager>::GetInstance()->GetSkillDescription(
+            skillInfo.bundleName, skillInfo.moduleName, skillInfo.skillName, description);
+        if (ret == ERR_OK) {
+            skillInfo.description = description;
+        }
+    }
+}
+
+ErrCode BundleDataMgr::GetSkillInfoForSelf(const std::string &moduleName,
+    const std::string &skillName, int32_t userId, uint32_t flags, SkillInfo &skillInfo)
+{
+    APP_LOGD("get skill info for self, moduleName:%{public}s, skillName:%{public}s, flags:%{public}u",
+        moduleName.c_str(), skillName.c_str(), flags);
+
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    std::string bundleName;
+    int32_t appIndex = 0;
+    ErrCode err = GetBundleNameAndIndex(callingUid, bundleName, appIndex);
+    if (err != ERR_OK) {
+        APP_LOGE("GetBundleNameAndIndex failed, uid:%{public}d, err:%{public}d", callingUid, err);
+        return err;
+    }
+    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID) {
+        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
+            APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+    }
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName:%{public}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &info = item->second;
+
+    auto moduleInfo = info.GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo.has_value()) {
+        APP_LOGE("module not found, moduleName:%{public}s", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    for (const auto &profile : moduleInfo->skillProfiles) {
+        if (profile.name == skillName) {
+            GetSkillInfoWithFlags(info, moduleInfo.value(), profile, SkillType::APP_SKILL, flags, skillInfo);
+            break;
+        }
+    }
+    if (skillInfo.skillName.empty()) {
+        APP_LOGE("skill not found, skillName:%{public}s", skillName.c_str());
+        return ERR_BUNDLE_MANAGER_SKILL_INFO_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetSkillInfosForSelf(uint32_t flags, int32_t userId,
+    std::vector<SkillInfo> &skillInfos)
+{
+    APP_LOGD("get skill infos for self, flags:%{public}u, userId:%{public}d", flags, userId);
+
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    std::string bundleName;
+    int32_t appIndex = 0;
+    ErrCode err = GetBundleNameAndIndex(callingUid, bundleName, appIndex);
+    if (err != ERR_OK) {
+        APP_LOGE("GetBundleNameAndIndex failed, uid:%{public}d, err:%{public}d", callingUid, err);
+        return err;
+    }
+    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID) {
+        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
+            APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+    }
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName:%{public}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &info = item->second;
+    for (const auto &[modName, moduleInfo] : info.GetInnerModuleInfos()) {
+        for (const auto &profile : moduleInfo.skillProfiles) {
+            SkillInfo skillInfo;
+            GetSkillInfoWithFlags(info, moduleInfo, profile, SkillType::APP_SKILL, flags, skillInfo);
+            skillInfos.emplace_back(std::move(skillInfo));
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetSkillInfo(const std::string &bundleName, const std::string &moduleName,
+    const std::string &skillName, uint32_t flags, int32_t userId, SkillInfo &skillInfo)
+{
+    APP_LOGD("get skill info, bundleName:%{public}s, moduleName:%{public}s, skillName:%{public}s, flags:%{public}u",
+        bundleName.c_str(), moduleName.c_str(), skillName.c_str(), flags);
+    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID) {
+        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
+            APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+    }
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName:%{public}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &info = item->second;
+    auto moduleInfo = info.GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo.has_value()) {
+        APP_LOGE("module not found, moduleName:%{public}s", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    for (const auto &profile : moduleInfo->skillProfiles) {
+        if (profile.name == skillName) {
+            GetSkillInfoWithFlags(info, moduleInfo.value(), profile,
+                SkillType::INDEPENDENT_SKILL, flags, skillInfo);
+            break;
+        }
+    }
+    if (skillInfo.skillName.empty()) {
+        APP_LOGE("skill not found, skillName:%{public}s", skillName.c_str());
+        return ERR_BUNDLE_MANAGER_SKILL_INFO_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetSkillInfos(const std::string &bundleName, uint32_t flags,
+    int32_t userId, std::vector<SkillInfo> &skillInfos)
+{
+    APP_LOGD("get skill infos, bundleName:%{public}s, flags:%{public}u, userId:%{public}d",
+        bundleName.c_str(), flags, userId);
+    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID) {
+        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
+            APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+    }
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName:%{public}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &info = item->second;
+    for (const auto &[modName, moduleInfo] : info.GetInnerModuleInfos()) {
+        for (const auto &profile : moduleInfo.skillProfiles) {
+            SkillInfo si;
+            GetSkillInfoWithFlags(info, moduleInfo, profile,
+                SkillType::INDEPENDENT_SKILL, flags, si);
+            skillInfos.emplace_back(std::move(si));
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAllSkillInfos(uint32_t flags, int32_t userId,
+    std::vector<SkillInfo> &skillInfos)
+{
+    APP_LOGD("get all skill infos, flags:%{public}u, userId:%{public}d", flags, userId);
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &[bName, info] : bundleInfos_) {
+        if (info.GetApplicationBundleType() != BundleType::SKILL) {
+            continue;
+        }
+        for (const auto &[modName, moduleInfo] : info.GetInnerModuleInfos()) {
+            for (const auto &profile : moduleInfo.skillProfiles) {
+                SkillInfo si;
+                GetSkillInfoWithFlags(info, moduleInfo, profile,
+                    SkillType::INDEPENDENT_SKILL, flags, si);
+                skillInfos.emplace_back(std::move(si));
+            }
         }
     }
     return ERR_OK;

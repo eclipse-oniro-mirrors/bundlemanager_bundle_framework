@@ -54,6 +54,7 @@
 #include "inner_bundle_clone_info.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
+#include "bundle_skill/skill_info.h"
 #include "ipc/create_dir_param.h"
 #include "uninstall_data_mgr_storage_rdb.h"
 #include "module_info.h"
@@ -440,6 +441,15 @@ public:
     ErrCode GetLaunchWantForBundle(
         const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
+     * @brief Obtains the Want for starting the main ability of an application based on the given bundle name sync.
+     * @param bundleName Indicates the bundle name.
+     * @param want Indicates the obtained launch Want object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    ErrCode GetLaunchWantForBundleSync(
+        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    /**
      * @brief Obtain the HAP module info of a specific ability.
      * @param abilityInfo Indicates the ability.
      * @param userId Indicates the user ID.
@@ -510,6 +520,16 @@ public:
      */
     ErrCode SetApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
         const std::string &caller, int32_t userId, bool &stateChanged);
+    /**
+     * @brief Sets whether the bundle is first launch.
+     * @param bundleName Indicates the bundle name.
+     * @param userId Indicates the user id.
+     * @param appIndex Indicates the app index, 0 for normal app, > 0 for clone app.
+     * @param isBundleFirstLaunched Specifies whether the bundle is first launch.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    ErrCode SetBundleFirstLaunch(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, bool isBundleFirstLaunched);
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability to check.
@@ -939,6 +959,7 @@ public:
         const std::string &bundleName, const ApplicationInfo &appInfo);
     bool FetchInnerBundleInfo(
         const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
+    bool IsHideDesktopIconForEvent(const std::string &bundleName) const;
     bool GetInnerBundleInfoUsers(const std::string &bundleName, std::set<int32_t> &userIds);
     bool IsSystemHsp(const std::string &bundleName);
 
@@ -1078,6 +1099,8 @@ public:
     void DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, int32_t userId) const;
     ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName, const std::string &moduleName,
         std::string &profile, int32_t userId) const;
+    ErrCode GetShareFilesJsonFromHap(const std::string &hapPath, const InnerModuleInfo &moduleInfo,
+        std::string &jsonContent) const;
     ErrCode GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,
         std::string &profile) const;
     bool GetOldAppIds(const std::string &bundleName, std::vector<std::string> &appIds) const;
@@ -1174,6 +1197,14 @@ public:
 
     ErrCode GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo) const;
 
+    /**
+     * @brief Obtains the apiTargetVersion based on a given uid.
+     * @param uid Indicates the uid of the application.
+     * @param apiTargetVersion Indicates the obtained apiTargetVersion value.
+     * @return Returns ERR_OK if successfully obtained; returns error code otherwise.
+     */
+    ErrCode GetApiTargetVersionByUid(const int32_t uid, int32_t &apiTargetVersion) const;
+
     ErrCode GetInnerBundleInfoWithSandboxByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
 
     ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted,
@@ -1267,6 +1298,7 @@ public:
     ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex, int32_t userId,
         const std::vector<std::string> &ids);
     void UpdateShortcutInfoResId(const std::string &bundleName, const int32_t userId);
+    void RemoveInvalidShortcutInfo(std::vector<ShortcutInfo> &shortcutInfos) const;
     ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled);
     ErrCode DeleteShortcutEnabledInfo(const std::string &bundleName);
     ErrCode GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32_t userId, std::unordered_map<std::string,
@@ -1289,6 +1321,7 @@ public:
         std::vector<BundleProfileData> &profileDataList) const;
     ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
         std::vector<JsonProfileInfo> &profileInfos) const;
+    ErrCode GetAllIndependentSKills(const int32_t userId, std::vector<std::string> &bundleNames);
     ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
         const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo);
     bool CheckDeveloperIdSameWithDataGroupIds(const std::unordered_set<std::string> &dataGroupIds,
@@ -1297,6 +1330,18 @@ public:
     ErrCode GetCreateDirParamByBundleOption(const BundleOptionInfo &optionInfo, CreateDirParam &dirParam) const;
     bool ProcessIdleInfo() const;
     ErrCode CheckBundleExist(const std::string &bundleName, int32_t userId, int32_t appIndex) const;
+    bool DeleteRouterInfoForSharedBundle(const InnerBundleInfo &info, const int32_t versionCode);
+    std::vector<std::string> GetAllowListenBundleNames(const std::string &bundleName) const;
+    ErrCode GetSkillInfoForSelf(const std::string &moduleName, const std::string &skillName,
+        int32_t userId, uint32_t flags, SkillInfo &skillInfo);
+    ErrCode GetSkillInfosForSelf(uint32_t flags, int32_t userId,
+        std::vector<SkillInfo> &skillInfos);
+    ErrCode GetSkillInfo(const std::string &bundleName, const std::string &moduleName,
+        const std::string &skillName, uint32_t flags, int32_t userId, SkillInfo &skillInfo);
+    ErrCode GetSkillInfos(const std::string &bundleName, uint32_t flags,
+        int32_t userId, std::vector<SkillInfo> &skillInfos);
+    ErrCode GetAllSkillInfos(uint32_t flags, int32_t userId,
+        std::vector<SkillInfo> &skillInfos);
 private:
     /**
      * @brief Init transferStates.
@@ -1474,6 +1519,7 @@ private:
     ErrCode ProcessBundleMenu(BundleInfo& bundleInfo, int32_t flag, bool clearData) const;
     bool MatchShare(const Want &want, const std::vector<Skill> &skills) const;
     std::vector<Skill> FindSkillsContainShareAction(const std::vector<Skill> &skills) const;
+    void SetLaunchWantActionAndEntity(const InnerBundleInfo *innerBundleInfo, Want &want) const;
     void EmplaceExtensionInfo(const InnerBundleInfo &info, const std::vector<Skill> &skills,
         ExtensionAbilityInfo &extensionInfo, int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &infos,
         std::optional<size_t> matchSkillIndex, std::optional<size_t> matchUriIndex, int32_t appIndex = 0) const;
@@ -1540,12 +1586,15 @@ private:
     bool ProcessUninstallBundle(std::vector<BundleOptionInfo> &bundleOptionInfos) const;
     void ProcessShortcutInfos(const InnerBundleInfo &info, const std::string moduleName, const std::string abilityName,
         const int32_t appIndex, const int32_t requestUserId, std::vector<ShortcutInfo> &shortcutInfos) const;
-    bool DeleteRouterInfoForSharedBundle(const InnerBundleInfo &info, const int32_t versionCode);
     void GetRouterInfoForSharedBundle(const std::string &bundleName, std::vector<RouterItem> &routerInfos) const;
     void MergeRouterItems(const std::vector<RouterItem>& sharedBundleRouterInfos,
         std::vector<RouterItem>& pluginRouterInfos) const;
+    bool ParseUserKey(const std::string &userKey, int32_t &userId, int32_t &appIndex) const;
 
 private:
+    static void GetSkillInfoWithFlags(const InnerBundleInfo &info, const InnerModuleInfo &moduleInfo,
+        const SkillProfile &profile, SkillType skillType, uint32_t flags, SkillInfo &skillInfo);
+
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
     mutable std::mutex stateMutex_;

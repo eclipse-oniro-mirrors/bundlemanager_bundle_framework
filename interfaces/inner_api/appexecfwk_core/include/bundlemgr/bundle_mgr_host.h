@@ -162,6 +162,13 @@ private:
      */
     ErrCode HandleGetBundleInfosWithIntFlagsV9(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the GetInstalledBundleList function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetInstalledBundleList(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the GetBundleNameForUid function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -368,6 +375,13 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleGetApplicationLabel(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the SetBundleFirstLaunch function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleSetBundleFirstLaunch(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the CheckIsSystemAppByUid function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
@@ -764,6 +778,8 @@ private:
 
     ErrCode HandleGetBundleInodeCount(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetTopNLargestItemsInAppDataDir(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetAllBundleCacheStat(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleCleanAllBundleCache(MessageParcel &data, MessageParcel &reply);
@@ -866,6 +882,7 @@ private:
     ErrCode HandleGetJsonProfile(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetBundleResourceProxy(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetSkillManagerProxy(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleSetAdditionalInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetRecoverableApplicationInfo(MessageParcel &data, MessageParcel &reply);
@@ -891,6 +908,8 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleGetAllPreinstalledApplicationInfos(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetAllNewPreinstalledApplicationInfos(MessageParcel &data, MessageParcel &reply);
 
     /**
      * @brief Handles the CanOpenLink function called from a IBundleMgr proxy object.
@@ -930,6 +949,8 @@ private:
     ErrCode HandleGetSignatureInfoByBundleName(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetSignatureInfoByUid(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetApiTargetVersionByUid(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 

@@ -84,6 +84,8 @@ private:
         const InnerBundleInfo &innerBundleInfo, const std::string &appServiceCapabilities);
     bool DeleteUninstallCloneBundleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
     void StopRelable(const InnerBundleInfo &info, int32_t uid);
+    ErrCode ProcessBundleShareFiles(const InnerBundleInfo &info, const std::string &cloneBundleName,
+        const int32_t userId, uint32_t tokenId);
 
     int32_t uid_ = 0;
     uint32_t accessTokenId_ = 0;
@@ -95,6 +97,7 @@ private:
     bool isKeepData_ = false;
     int64_t startTime_ = 0;
     bool existBeforeKeepDataApp_ = false;
+    std::string appDistributionType_;
 };
 } // AppExecFwk
 } // OHOS

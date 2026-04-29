@@ -371,9 +371,10 @@ void AppServiceFwkInstaller::SavePreInstallBundleInfo(ErrCode installResult,
 
     for (const auto &innerBundleInfo : newInfos) {
         auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
-        innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo);
+        innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo, true);
         preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
         preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+        preInstallBundleInfo.SetDescriptionId(applicationInfo.descriptionId);
         preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
         preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
         preInstallBundleInfo.SetBundleType(BundleType::APP_SERVICE_FWK);

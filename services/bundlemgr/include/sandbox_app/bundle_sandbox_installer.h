@@ -58,6 +58,8 @@ private:
         const int32_t &dlpType) const;
     void SandboxAppRollBack(InnerBundleInfo &info, const int32_t &userId);
     bool FetchInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist);
+    ErrCode ProcessBundleShareFiles(const InnerBundleInfo &info, const std::string &sandboxKey,
+        const int32_t userId, uint32_t tokenId);
 
     int32_t userId_ = Constants::INVALID_USERID;
     std::string bundleName_;

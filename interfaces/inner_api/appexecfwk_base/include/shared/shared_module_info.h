@@ -38,6 +38,7 @@ struct SharedModuleInfo : public Parcelable {
     std::string nativeLibraryPath;
     std::string moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     std::vector<std::string> nativeLibraryFileNames;
+    std::vector<std::string> librarySupportDirectory;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

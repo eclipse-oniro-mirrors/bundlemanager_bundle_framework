@@ -4236,24 +4236,9 @@ HWTEST_F(BmsBundleManagerTest, BundleUtil_0023, Function | MediumTest | Level1)
 /**
  * @tc.number: GetApplicationLabel_0001
  * @tc.name: GetApplicationLabel_0001
- * @tc.desc: Test GetApplicationLabel with empty bundleName
- */
-HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0001, Function | MediumTest | Level1)
-{
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string bundleName = "";
-    int32_t appIndex = 0;
-    std::string label;
-    ErrCode ret = hostImpl->GetApplicationLabel(bundleName, appIndex, label);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-}
-
-/**
- * @tc.number: GetApplicationLabel_0002
- * @tc.name: GetApplicationLabel_0002
  * @tc.desc: Test GetApplicationLabel when dataMgr is nullptr
  */
-HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0002, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0001, Function | MediumTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string bundleName = "com.example.test";
@@ -4273,11 +4258,11 @@ HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0002, Function | MediumTest |
 }
 
 /**
- * @tc.number: GetApplicationLabel_0003
- * @tc.name: GetApplicationLabel_0003
+ * @tc.number: GetApplicationLabel_0002
+ * @tc.name: GetApplicationLabel_0002
  * @tc.desc: Test GetApplicationLabel when bundle not installed
  */
-HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0003, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0002, Function | MediumTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string bundleName = "com.example.not.exist";
@@ -4288,11 +4273,11 @@ HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0003, Function | MediumTest |
 }
 
 /**
- * @tc.number: GetApplicationLabel_0004
- * @tc.name: GetApplicationLabel_0004
+ * @tc.number: GetApplicationLabel_0003
+ * @tc.name: GetApplicationLabel_0003
  * @tc.desc: Test GetApplicationLabel when BundleResourceProxy is nullptr
  */
-HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0004, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0003, Function | MediumTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string bundleName = "com.example.test";
@@ -4306,17 +4291,134 @@ HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0004, Function | MediumTest |
 }
 
 /**
- * @tc.number: GetApplicationLabel_0005
- * @tc.name: GetApplicationLabel_0005
+ * @tc.number: GetApplicationLabel_0004
+ * @tc.name: GetApplicationLabel_0004
  * @tc.desc: Test GetApplicationLabel with appIndex for clone app
  */
-HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0005, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleManagerTest, GetApplicationLabel_0004, Function | MediumTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string bundleName = "com.example.test";
     int32_t appIndex = 1;  // clone app index
     std::string label;
     ErrCode ret = hostImpl->GetApplicationLabel(bundleName, appIndex, label);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetInstalledBundleList_0100
+ * @tc.name: test GetInstalledBundleList without permission
+ * @tc.desc: 1. system running normally
+ *           2. test GetInstalledBundleList permission denied
+ */
+HWTEST_F(BmsBundleManagerTest, GetInstalledBundleList_0100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    uint32_t flags = 0;
+    int32_t userId = 100;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = hostImpl->GetInstalledBundleList(flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetInstalledBundleList_0200
+ * @tc.name: test GetInstalledBundleList with empty data mgr
+ * @tc.desc: 1. system running normally
+' *           2. test GetInstalledBundleList when dataMgr is nullptr
+ */
+HWTEST_F(BmsBundleManagerTest, GetInstalledBundleList_0200, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    uint32_t flags = 0;
+    int32_t userId = 100;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = hostImpl->GetInstalledBundleList(flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetInstalledBundleList_0300
+ * @tc.name: test GetInstalledBundleList with negative userId
+ * @tc.desc: 1. system running normally
+ *           2. test GetInstalledBundleList error handling
+ */
+HWTEST_F(BmsBundleManagerTest, GetInstalledBundleList_0400, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    uint32_t flags = 0;
+    int32_t userId = -1;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = hostImpl->GetInstalledBundleList(flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: SetBundleFirstLaunch_0001
+ * @tc.name: test SetBundleFirstLaunch permission denied
+ * @tc.desc: 1.calling uid is not foundation uid
+ *           2.return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleManagerTest, SetBundleFirstLaunch_0001, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::DEFAULT_USERID;
+    int32_t appIndex = 0;
+    bool isBundleFirstLaunched = true;
+
+    // Set uid to non-foundation uid to trigger permission denied
+    setuid(Constants::ROOT_UID);
+    ErrCode ret = hostImpl->SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: SetBundleFirstLaunch_0002
+ * @tc.name: test SetBundleFirstLaunch bundle not exist
+ * @tc.desc: 1.calling uid is foundation uid
+ *           2.bundle not exist
+ *           3.return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleManagerTest, SetBundleFirstLaunch_0002, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto dataMgr = hostImpl->GetDataMgrFromService();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "com.example.not.exist";
+    int32_t userId = Constants::DEFAULT_USERID;
+    int32_t appIndex = 0;
+    bool isBundleFirstLaunched = true;
+
+    dataMgr->AddUserId(userId);
+    // Set uid to foundation uid
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode ret = hostImpl->SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    setuid(Constants::ROOT_UID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetBundleFirstLaunch_0003
+ * @tc.name: test SetBundleFirstLaunch with invalid userId
+ * @tc.desc: 1.calling uid is foundation uid
+ *           2.userId is invalid
+ *           3.return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleManagerTest, SetBundleFirstLaunch_0003, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::INVALID_USERID;
+    int32_t appIndex = 0;
+    bool isBundleFirstLaunched = true;
+
+    // Set uid to foundation uid
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode ret = hostImpl->SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 } // OHOS

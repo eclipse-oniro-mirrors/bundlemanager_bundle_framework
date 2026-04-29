@@ -62,7 +62,10 @@
 #include "parameter.h"
 #include "parameters.h"
 #include "perf_profile.h"
+#include "share_file_helper.h"
 #include "scope_guard.h"
+#include "skills_installer/skills_description_manager.h"
+#include "skills_installer/skills_installer_util.h"
 #include "utd_handler.h"
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 #include "bundle_overlay_data_manager.h"
@@ -79,6 +82,7 @@
 #include "ipc_skeleton.h"
 #include "inner_bundle_clone_common.h"
 #include "inner_patch_info.h"
+#include "sandbox_app/bundle_sandbox_app_helper.h"
 #include "patch_data_mgr.h"
 
 namespace OHOS {
@@ -100,6 +104,64 @@ constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
 constexpr const char* LIBS_TMP = "libs+tmp";
 constexpr const char* PRIVILEGE_ALLOW_HDC_INSTALL = "AllowHdcInstall";
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
+constexpr int32_t APP_SKILL_TYPE = 0;
+
+bool IsSupportedAppSkillBundleType(BundleType bundleType)
+{
+    return bundleType == BundleType::APP || bundleType == BundleType::ATOMIC_SERVICE;
+}
+
+bool IsSupportedAppSkillModuleType(const InnerModuleInfo &moduleInfo)
+{
+    return moduleInfo.distro.moduleType == Profile::MODULE_TYPE_ENTRY ||
+        moduleInfo.distro.moduleType == Profile::MODULE_TYPE_FEATURE ||
+        moduleInfo.distro.moduleType == Profile::MODULE_TYPE_SHARED;
+}
+
+std::string BuildSkillChangedItem(const std::string &moduleName, const std::string &skillName)
+{
+    return moduleName + ServiceConstants::PATH_SEPARATOR + skillName;
+}
+
+void CollectSkillChangedItems(const InnerModuleInfo &moduleInfo, std::vector<std::string> &skillItems)
+{
+    for (const auto &skillProfile : moduleInfo.skillProfiles) {
+        if (skillProfile.name.empty()) {
+            continue;
+        }
+        std::string skillItem = BuildSkillChangedItem(moduleInfo.moduleName, skillProfile.name);
+        if (std::find(skillItems.begin(), skillItems.end(), skillItem) == skillItems.end()) {
+            skillItems.emplace_back(skillItem);
+        }
+    }
+}
+
+bool CollectAppSkillChangedItems(const InnerBundleInfo &info, std::vector<std::string> &skillItems)
+{
+    for (const auto &moduleInfo : info.GetInnerModuleInfos()) {
+        CollectSkillChangedItems(moduleInfo.second, skillItems);
+    }
+    return !skillItems.empty();
+}
+
+void BuildAppSkillChangedLists(
+    const std::vector<std::string> &oldSkills, const std::vector<std::string> &newSkills,
+    std::vector<std::string> &addedSkills, std::vector<std::string> &changedSkills,
+    std::vector<std::string> &removedSkills)
+{
+    for (const auto &newSkill : newSkills) {
+        if (std::find(oldSkills.begin(), oldSkills.end(), newSkill) == oldSkills.end()) {
+            addedSkills.emplace_back(newSkill);
+        } else {
+            changedSkills.emplace_back(newSkill);
+        }
+    }
+    for (const auto &oldSkill : oldSkills) {
+        if (std::find(newSkills.begin(), newSkills.end(), oldSkill) == newSkills.end()) {
+            removedSkills.emplace_back(oldSkill);
+        }
+    }
+}
 
 #ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
@@ -258,15 +320,20 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .bundleName = bundleName_,
             .modulePackage = moduleName_,
             .abilityName = mainAbility_,
+            .appIdentifier = bundleAppIdentifier_,
             .appDistributionType = appDistributionType_,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .metadataConfigInfos = tokenIdMetadataInfos
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
         };
+        installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (installParam.allUser || IsDriverForAllUser(bundleName_) ||
             IsEnterpriseForAllUser(installParam, bundleName_)) {
             AddBundleStatus(installRes);
         } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
+        }
+        if (result == ERR_OK) {
+            (void)NotifyAppSkillStatus(appSkillNotifyBundleName_, oldAppSkillNotifyItems_, newAppSkillNotifyItems_,
+                appSkillNotifyUserId_);
         }
     }
     if (result == ERR_OK) {
@@ -309,17 +376,23 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .userId = userId_,
             .bundleName = bundleName,
+            .appIdentifier = bundleAppIdentifier_,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .metadataConfigInfos = tokenIdMetadataInfos,
-            .isInstallByBundleName = true
+            .isInstallByBundleName = true,
+            .modulePackage = moduleName_,
         };
+        installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
         } else if (IsDriverForAllUser(bundleName) || IsEnterpriseForAllUser(installParam, bundleName)) {
             AddBundleStatus(installRes);
         } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
+        }
+        if (result == ERR_OK) {
+            (void)NotifyAppSkillStatus(appSkillNotifyBundleName_, oldAppSkillNotifyItems_, newAppSkillNotifyItems_,
+                appSkillNotifyUserId_);
         }
     }
 
@@ -357,13 +430,19 @@ ErrCode BaseBundleInstaller::Recover(
             .uid = uid,
             .bundleType = static_cast<int32_t>(bundleType_),
             .bundleName = bundleName,
+            .appIdentifier = bundleAppIdentifier_,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .metadataConfigInfos = tokenIdMetadataInfos,
-            .isRecover = true
+            .isRecover = true,
+            .modulePackage = moduleName_,
         };
+        installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
+        }
+        if (result == ERR_OK) {
+            (void)NotifyAppSkillStatus(appSkillNotifyBundleName_, oldAppSkillNotifyItems_, newAppSkillNotifyItems_,
+                appSkillNotifyUserId_);
         }
     }
 
@@ -441,18 +520,24 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .bundleType = static_cast<int32_t>(bundleType_),
             .bundleName = bundleName,
             .appId = uninstallBundleAppId_,
+            .appIdentifier = appIdentifier_,
             .appDistributionType = appDistributionType_,
             .developerId = developerId,
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .metadataConfigInfos = tokenIdMetadataInfos
+            .allowListenBundles = allowListenBundles_,
         };
+        installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
 
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
         } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
+        }
+        if (result == ERR_OK) {
+            (void)NotifyAppSkillStatus(appSkillNotifyBundleName_, oldAppSkillNotifyItems_, newAppSkillNotifyItems_,
+                appSkillNotifyUserId_);
         }
     }
     NotifyBundleCallback(NotifyType::UNINSTALL_BUNDLE, uid);
@@ -622,7 +707,7 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
         LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", uninstallDir.c_str());
         return errCode;
     }
-    if (versionCode == info.GetVersionCode()) {
+    if (static_cast<uint32_t>(versionCode) == info.GetVersionCode()) {
         info.ResetAOTFlags();
         (void)InstalldClient::GetInstance()->RemoveDir(AOTHandler::BuildSharedArkCachePath(info.GetBundleName()));
     } else {
@@ -713,16 +798,22 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .bundleName = bundleName,
             .modulePackage = modulePackage,
             .appId = uninstallBundleAppId_,
+            .appIdentifier = appIdentifier_,
             .appDistributionType = appDistributionType_,
             .developerId = developerId,
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData,
             .isBundleExist = isBundleExist_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .metadataConfigInfos = tokenIdMetadataInfos
+            .allowListenBundles = allowListenBundles_,
         };
+        installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
+        }
+        if (result == ERR_OK) {
+            (void)NotifyAppSkillStatus(appSkillNotifyBundleName_, oldAppSkillNotifyItems_, newAppSkillNotifyItems_,
+                appSkillNotifyUserId_);
         }
     }
 
@@ -981,9 +1072,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         for (const auto &innerBundleInfo : newInfos) {
             auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
             if (innerBundleInfo.second.HasEntry() || preInstallBundleInfo.GetModuleName().empty()) {
-                innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo);
+                innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo, true);
                 preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
                 preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+                preInstallBundleInfo.SetDescriptionId(applicationInfo.descriptionId);
                 preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
             }
             preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
@@ -1049,6 +1141,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
                 installedModules_[packageName] = true;
             }
         }
+        isKeepTokenId_ = oldInfo.HasKeepTokenIdMetadata();
 
         hasInstalledInUser_ = oldInfo.HasInnerBundleUserInfo(userId_);
         if (!hasInstalledInUser_) {
@@ -1069,12 +1162,12 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             ScopeGuard userGuard([&] {
                 if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
                     Constants::INITIAL_APP_INDEX)) {
-                    RemoveBundleUserData(oldInfo, false);
+                    InstallParam installParam;
+                    RemoveBundleUserData(oldInfo, installParam);
                 }
             });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
-            isKeepTokenId_ = oldInfo.HasKeepTokenIdMetadata();
             if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo, false)
                 && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult,
                 verifyRes_.GetProvisionInfo().appServiceCapabilities, false) != ERR_OK) {
@@ -1165,7 +1258,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     ScopeGuard userGuard([&] {
         if ((!hasInstalledInUser_ || (!isAppExist_)) &&
             !dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_, Constants::INITIAL_APP_INDEX)) {
-            RemoveBundleUserData(oldInfo, false);
+            InstallParam installParam;
+            RemoveBundleUserData(oldInfo, installParam);
         }
     });
     (void)InnerProcessCodePathCreateNewDir(bundleName_, isFeatureNeedUninstall_);
@@ -1559,10 +1653,16 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
     // plugin judge
-    if (!newInfos.empty() &&
-        newInfos.begin()->second.GetApplicationBundleType() == BundleType::APP_PLUGIN) {
-        result = ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW;
-        CHECK_RESULT(result, "plugin install not allow %{public}d");
+    if (!newInfos.empty()) {
+        BundleType type = newInfos.begin()->second.GetApplicationBundleType();
+        if (type == BundleType::APP_PLUGIN) {
+            result = ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW;
+            CHECK_RESULT(result, "plugin install not allow %{public}d");
+        }
+        if (type == BundleType::SKILL) {
+            result = ERR_SKILLS_INSTALL_NOT_ALLOW;
+            CHECK_RESULT(result, "skills install not allow %{public}d");
+        }
     }
     result = CheckShellCanInstallPreApp(newInfos);
     CHECK_RESULT(result, "check shell can install pre app failed %{public}d");
@@ -1684,6 +1784,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     PrintDataStat();
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
+
+#ifdef BMS_ACCESSCONTROL_SANDBOX_MANAGER
+    result = ProcessBundleShareFiles(newInfos, oldInfo);
+    CHECK_RESULT_WITH_ROLLBACK(result, "process shareFiles json failed with result %{public}d", newInfos, oldInfo);
+#endif
 
 #ifdef WEBVIEW_ENABLE
     result = VerifyArkWebInstall();
@@ -1808,6 +1913,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, inBundlePaths,
         versionCode_, AppPatchType::INTERNAL, installParam.isPatch);
     UpdateHasCloudkitConfig();
+    auto pendingMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetOobePreloadUninstallMgr();
+    if (pendingMgr != nullptr) {
+        pendingMgr->RemovePendingBundle(bundleName_, userId_);
+    }
     // check mark install finish
     result = MarkInstallFinish();
     if (result != ERR_OK) {
@@ -1849,6 +1958,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     InnerProcessNewBundleDataDir(installParam.isOTA || otaInstall_, oldInfo, cacheInfo);
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
+    if (installParam.needSendEvent) {
+        PrepareAppSkillStatus(oldInfo, cacheInfo);
+    }
     CheckAddResultMsg(cacheInfo, isContainEntry_);
     PrintDataStat();
     ProcessAOT(installParam);
@@ -1859,6 +1971,10 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
     InnerBundleInfo &oldInfo)
 {
     LOG_D(BMS_TAG_INSTALLER, "start rollback due to install failed");
+
+    // Rollback shareFiles
+    RollbackShareFiles(oldInfo);
+
     if (!isAppExist_) {
         if (!newInfos.empty() && newInfos.begin()->second.IsPreInstallApp() &&
             !BundleUtil::CheckSystemFreeSize(APP_INSTALL_PATH, FIVE_MB)) {
@@ -2058,6 +2174,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     appIdentifier_ = oldInfo.GetAppIdentifier();
     appDistributionType_ = oldInfo.GetAppDistributionType();
     isBundleCrossAppSharedConfig_ = oldInfo.IsBundleCrossAppSharedConfig();
+    if (appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE) {
+        allowListenBundles_ = dataMgr_->GetAllowListenBundleNames(bundleName);
+    }
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
@@ -2146,6 +2265,14 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("remove el1 shader cache dir failed for %{public}s", bundleName.c_str());
     }
 
+#ifdef BMS_ACCESSCONTROL_SANDBOX_MANAGER
+    ErrCode ret = ProcessUninstallShareFiles(oldInfo, userId_);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "process uninstall shareFiles failed for bundle=%{public}s, result=%{public}d",
+            bundleName.c_str(), ret);
+    }
+#endif
+
     if (isMultiUser) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
         if (oldInfo.IsPreInstallApp() && isForcedUninstall) {
@@ -2158,7 +2285,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "rm hnp failed");
         }
-        auto res = RemoveBundleUserData(oldInfo, installParam.isKeepData, !installParam.isRemoveUser);
+        auto res = RemoveBundleUserData(oldInfo, installParam, !installParam.isRemoveUser);
         if (res != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "remove bundle user data failed");
             return res;
@@ -2183,6 +2310,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
             driverInstaller->RemoveDriverSoFile(oldInfo, "", false);
         }
+        if (installParam.needSendEvent) {
+            PrepareAppSkillStatus(oldInfo, InnerBundleInfo());
+        }
         return ERR_OK;
     }
     dataMgr_->DisableBundle(bundleName);
@@ -2204,7 +2334,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
     }
 
-    ErrCode result = RemoveBundle(oldInfo, installParam.isKeepData, !installParam.isRemoveUser);
+    ErrCode result = RemoveBundle(oldInfo, installParam, !installParam.isRemoveUser);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove whole bundle failed");
         return result;
@@ -2369,6 +2499,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
     appDistributionType_ = oldInfo.GetAppDistributionType();
+    appIdentifier_ = oldInfo.GetAppIdentifier();
+    if (appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE) {
+        allowListenBundles_ = dataMgr_->GetAllowListenBundleNames(bundleName);
+    }
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
@@ -2432,6 +2566,17 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     UninstallBundleInfo uninstallBundleInfo;
     GetUninstallBundleInfo(installParam.isKeepData, userId_, oldInfo, uninstallBundleInfo);
 
+#ifdef BMS_ACCESSCONTROL_SANDBOX_MANAGER
+    if (oldInfo.IsEntryModule(modulePackage)) {
+        ErrCode ret = ProcessUninstallShareFiles(oldInfo, userId_);
+        if (ret != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER,
+                "process uninstall shareFiles failed for bundle=%{public}s, module=%{public}s, result=%{public}d",
+                bundleName.c_str(), modulePackage.c_str(), ret);
+        }
+    }
+#endif
+
     bool onlyInstallInUser = oldInfo.GetInnerBundleUserInfos().size() == 1;
     ErrCode result = ERR_OK;
     // if it is the only module in the bundle
@@ -2460,7 +2605,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId_, 0);
         }
         if (onlyInstallInUser) {
-            result = RemoveBundle(oldInfo, installParam.isKeepData);
+            result = RemoveBundle(oldInfo, installParam);
             if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "remove bundle failed");
                 return result;
@@ -2501,7 +2646,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, false);
             return ERR_OK;
         }
-        auto removeRes = RemoveBundleUserData(oldInfo, installParam.isKeepData);
+        auto removeRes = RemoveBundleUserData(oldInfo, installParam);
         if (removeRes != ERR_OK) {
             return removeRes;
         }
@@ -2511,6 +2656,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             LOG_E(BMS_TAG_INSTALLER, "DeleteInnerPatchInfo failed, bundleName: %{public}s", bundleName.c_str());
         }
         BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, true);
+        if (installParam.needSendEvent) {
+            PrepareAppSkillStatus(oldInfo, InnerBundleInfo());
+        }
         return ERR_OK;
     }
     result = ProcessBundleUnInstallNative(oldInfo, oldInfo.GetUsers(), bundleName, modulePackage);
@@ -2522,6 +2670,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_I(BMS_TAG_INSTALLER, "%{public}s is only install at the userId %{public}d", bundleName.c_str(), userId_);
         result = RemoveModuleAndDataDir(oldInfo, modulePackage, userId_, installParam.isKeepData);
         DeleteRouterInfo(oldInfo, modulePackage);
+    }
+    if (result == ERR_OK && installParam.needSendEvent) {
+        InnerBundleInfo newInfo = oldInfo;
+        newInfo.FetchInnerModuleInfos().erase(modulePackage);
+        PrepareAppSkillStatus(oldInfo, newInfo, userId_);
     }
 
     if (result != ERR_OK) {
@@ -2626,6 +2779,9 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             }
 
             versionCode_ = oldInfo.GetVersionCode();
+            bundleAppIdentifier_ = oldInfo.GetAppIdentifier();
+            appDistributionType_ = oldInfo.GetAppDistributionType();
+            moduleName_ = oldInfo.GetEventModuleName();
             if (oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
                 LOG_D(BMS_TAG_INSTALLER, "Appservice (%{public}s) only install in U0", bundleName.c_str());
                 bundleType_ = BundleType::APP_SERVICE_FWK;
@@ -2660,7 +2816,8 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             ScopeGuard userGuard([&] {
                 if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
                     Constants::INITIAL_APP_INDEX)) {
-                    RemoveBundleUserData(oldInfo, false);
+                    InstallParam installParam;
+                    RemoveBundleUserData(oldInfo, installParam);
                 }
             });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
@@ -2726,6 +2883,13 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                 oldInfo.GetBaseApplicationInfo().apiCompatibleVersion,
                 oldInfo.GetBaseApplicationInfo().compileSdkVersion);
             SetUid(uid);
+            if (installParam.needSendEvent) {
+                PrepareAppSkillStatus(InnerBundleInfo(), oldInfo);
+            }
+            auto pendingMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetOobePreloadUninstallMgr();
+            if (pendingMgr != nullptr) {
+                pendingMgr->RemovePendingBundle(bundleName_, userId_);
+            }
             return ERR_OK;
         }
     }
@@ -2761,12 +2925,13 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     return resultCode;
 }
 
-ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData, const bool async)
+ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, const InstallParam &installParam, const bool async)
 {
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::UNINSTALL_SUCCESS, isKeepData)) {
+    if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(),
+        InstallState::UNINSTALL_SUCCESS, installParam.isKeepData)) {
         LOG_E(BMS_TAG_INSTALLER, "delete inner info failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
@@ -2781,15 +2946,26 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
             PrepareBundleDirQuota(info.GetBundleName(), uid, bundleDataDir, 0);
         }
     }
-    ErrCode result = RemoveBundleAndDataDir(info, isKeepData, async);
+    ErrCode result = RemoveBundleAndDataDir(info, installParam.isKeepData, async);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove bundle dir failed");
+    }
+    auto manager = SkillsDescriptionManager::GetInstance();
+    if (manager != nullptr) {
+        result = manager->DeleteSkillDescriptions(info.GetBundleName());
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "delete app skills descriptions failed, bundle=%{public}s, ret=%{public}d",
+                info.GetBundleName().c_str(), result);
+        }
+    }
+    if (installParam.needSendEvent) {
+        PrepareAppSkillStatus(info, InnerBundleInfo());
     }
 
     accessTokenId_ = info.GetAccessTokenId(userId_);
     isKeepTokenId_ = info.HasKeepTokenIdMetadata();
-    if (!isKeepData) {
-        bool keepTokenParam = isKeepTokenId_ && async;
+    if (!installParam.isKeepData) {
+        bool keepTokenParam = isKeepTokenId_ && !installParam.isRemoveUser;
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DeleteAccessTokenId keepTokenParam=%{public}d", keepTokenParam);
         if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_, keepTokenParam) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
@@ -2927,6 +3103,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     ScopeGuard bundleGuard([&] {
         RemoveBundleAndDataDir(info, dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
             Constants::INITIAL_APP_INDEX));
+        RemoveAppSkillsDir(info.GetBundleName());
     });
     std::string modulePath = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + modulePackage_;
     result = ExtractModule(info, modulePath);
@@ -3087,6 +3264,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
     }
 
     ScopeGuard moduleGuard([&] { RemoveModuleDir(modulePath); });
+    ScopeGuard skillGuard([&] { RemoveAppSkillsDir(newInfo.GetBundleName(), newInfo.GetCurModuleName()); });
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "new moduleupdate state failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
@@ -3104,6 +3282,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
     }
     tempInfo_.SetTempBundleInfo(oldInfo);
     moduleGuard.Dismiss();
+    skillGuard.Dismiss();
     return ERR_OK;
 }
 
@@ -3186,6 +3365,10 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         LOG_E(BMS_TAG_INSTALLER, "Install Native failed");
         return result;
     }
+    ScopeGuard skillGuard([&] { RemoveAppSkillsDir(newInfo.GetBundleName(), newInfo.GetCurModuleName(), true); });
+
+    result = FinalizeAppSkills(newInfo);
+    CHECK_RESULT(result, "finalize app skills failed %{public}d");
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "old module update state failed");
@@ -3201,6 +3384,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     }
     tempInfo_.SetTempBundleInfo(oldInfo);
     needDeleteQuickFixInfo_ = true;
+    skillGuard.Dismiss();
     return ERR_OK;
 }
 
@@ -3984,9 +4168,9 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
         .bundleName = bundleName,
         .appId = uninstallBundleInfo.appId,
         .appIdentifier = uninstallBundleInfo.appIdentifier,
-        .metadataConfigInfos = tokenIdMetadataInfos,
-        .keepData = false,
+        .keepData = false
     };
+    installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyUninstalledBundleCleared(installRes);
     return true;
@@ -4030,6 +4214,7 @@ bool BaseBundleInstaller::SaveFirstInstallBundleInfo(const std::string &bundleNa
     InnerBundleInfo innerBundleInfo;
     FirstInstallBundleInfo odidCount;
     if (GetTempBundleInfo(innerBundleInfo)) {
+        dataMgr_->GetFirstInstallBundleInfo(bundleName, Constants::ALL_USERID, odidCount);
         std::string currentOdid;
         innerBundleInfo.GetOdid(currentOdid);
         odidCount.lastOdid = currentOdid;
@@ -4245,7 +4430,197 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     info.AddModuleSrcDir(moduleDir);
     info.AddModuleResPath(moduleDir);
     info.AddModuleHnpsPath(modulePath);
+    result = ProcessAppSkills(info);
+    CHECK_RESULT(result, "fail to process app skills, error is %{public}d");
     return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ProcessAppSkills(InnerBundleInfo &info)
+{
+    auto &innerModuleInfos = info.FetchInnerModuleInfos();
+    auto moduleInfoIter = innerModuleInfos.find(info.GetCurrentModulePackage());
+    if (moduleInfoIter == innerModuleInfos.end()) {
+        LOG_W(BMS_TAG_INSTALLER, "module %{public}s not found when processing skills",
+            info.GetCurrentModulePackage().c_str());
+        return ERR_OK;
+    }
+
+    moduleSkillInfoMap_.erase(info.GetCurrentModulePackage());
+    auto &moduleInfo = moduleInfoIter->second;
+    if (moduleInfo.skillProfiles.empty()) {
+        return ERR_OK;
+    }
+
+    if (!IsSupportedAppSkillBundleType(info.GetApplicationBundleType()) ||
+        !IsSupportedAppSkillModuleType(moduleInfo)) {
+        LOG_W(BMS_TAG_INSTALLER, "skip unsupported app skills, bundleType=%{public}d, moduleType=%{public}s",
+            static_cast<int32_t>(info.GetApplicationBundleType()), moduleInfo.distro.moduleType.c_str());
+        moduleInfo.skillProfiles.clear();
+        return ERR_OK;
+    }
+
+    std::vector<std::string> skillNameList;
+    for (const auto &skillProfile : moduleInfo.skillProfiles) {
+        if (!skillProfile.name.empty() &&
+            skillProfile.name.find(ServiceConstants::RELATIVE_PATH) == std::string::npos) {
+            skillNameList.emplace_back(skillProfile.name);
+        }
+    }
+    if (skillNameList.empty()) {
+        moduleInfo.skillProfiles.clear();
+        return ERR_OK;
+    }
+
+    std::string extractModuleName = moduleInfo.moduleName;
+    if (isModuleUpdate_) {
+        extractModuleName.append(ServiceConstants::TMP_SUFFIX);
+    }
+
+    std::vector<SkillsPackageInfo> validSkillInfoList;
+    ErrCode result = SkillsInstallerUtil::ExtractSkillsPackage(
+        info.GetBundleName(), moduleInfo.moduleName, extractModuleName, modulePath_, skillNameList, validSkillInfoList);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "extract app skills failed, bundle=%{public}s, module=%{public}s, ret=%{public}d",
+            info.GetBundleName().c_str(), moduleInfo.moduleName.c_str(), result);
+        return result;
+    }
+
+    result = SkillsInstallerUtil::RemoveInvalidSkillProfiles(validSkillInfoList, info);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "remove invalid app skills failed, bundle=%{public}s, module=%{public}s, "
+            "ret=%{public}d", info.GetBundleName().c_str(), moduleInfo.moduleName.c_str(), result);
+        return result;
+    }
+
+    if (validSkillInfoList.empty()) {
+        return ERR_OK;
+    }
+
+    moduleSkillInfoMap_[info.GetCurrentModulePackage()] = validSkillInfoList;
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::FinalizeAppSkills(const InnerBundleInfo &info)
+{
+    auto moduleInfoIter = info.GetInnerModuleInfos().find(info.GetCurrentModulePackage());
+    if (moduleInfoIter == info.GetInnerModuleInfos().end()) {
+        return ERR_OK;
+    }
+
+    const std::string &moduleName = moduleInfoIter->second.moduleName;
+    if (!isModuleUpdate_) {
+        return ERR_OK;
+    }
+
+    auto skillInfoIter = moduleSkillInfoMap_.find(info.GetCurrentModulePackage());
+    const bool hasValidSkills = skillInfoIter != moduleSkillInfoMap_.end() && !skillInfoIter->second.empty();
+    if (!hasValidSkills) {
+        RemoveAppSkillsDir(info.GetBundleName(), moduleName, true);
+        RemoveAppSkillsDir(info.GetBundleName(), moduleName);
+        return ERR_OK;
+    }
+
+    std::string tempModuleDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR +
+        info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + moduleName + ServiceConstants::TMP_SUFFIX;
+    std::string realModuleDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR +
+        info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + moduleName;
+    return InstalldClient::GetInstance()->RenameModuleDir(tempModuleDir, realModuleDir);
+}
+
+ErrCode BaseBundleInstaller::CommitAppSkills(const InnerBundleInfo &info)
+{
+    auto manager = SkillsDescriptionManager::GetInstance();
+    if (manager == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "skills description manager is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    auto moduleInfoIter = info.GetInnerModuleInfos().find(info.GetCurrentModulePackage());
+    if (moduleInfoIter == info.GetInnerModuleInfos().end()) {
+        return ERR_OK;
+    }
+
+    const std::string &moduleName = moduleInfoIter->second.moduleName;
+    ErrCode result = manager->DeleteSkillDescriptions(info.GetBundleName(), moduleName);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "delete old app skills description failed, bundle=%{public}s, "
+            "module=%{public}s, ret=%{public}d", info.GetBundleName().c_str(), moduleName.c_str(), result);
+        return result;
+    }
+
+    auto skillInfoIter = moduleSkillInfoMap_.find(info.GetCurrentModulePackage());
+    if (skillInfoIter == moduleSkillInfoMap_.end() || skillInfoIter->second.empty()) {
+        return ERR_OK;
+    }
+
+    result = manager->AddSkillDescriptions(skillInfoIter->second);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "add app skills description failed, bundle=%{public}s, module=%{public}s, "
+            "ret=%{public}d", info.GetBundleName().c_str(), moduleName.c_str(), result);
+    }
+    return result;
+}
+
+void BaseBundleInstaller::PrepareAppSkillStatus(
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, int32_t userId)
+{
+    appSkillNotifyBundleName_ = newInfo.GetBundleName().empty() ? oldInfo.GetBundleName() : newInfo.GetBundleName();
+    oldAppSkillNotifyItems_.clear();
+    newAppSkillNotifyItems_.clear();
+    (void)CollectAppSkillChangedItems(oldInfo, oldAppSkillNotifyItems_);
+    (void)CollectAppSkillChangedItems(newInfo, newAppSkillNotifyItems_);
+    appSkillNotifyUserId_ = userId == Constants::INVALID_USERID ? userId_ : userId;
+}
+
+bool BaseBundleInstaller::NotifyAppSkillStatus(
+    const std::string &bundleName, const std::vector<std::string> &oldSkills,
+    const std::vector<std::string> &newSkills, int32_t userId) const
+{
+    std::vector<std::string> addedSkills;
+    std::vector<std::string> changedSkills;
+    std::vector<std::string> removedSkills;
+    BuildAppSkillChangedLists(oldSkills, newSkills, addedSkills, changedSkills, removedSkills);
+    if (addedSkills.empty() && changedSkills.empty() && removedSkills.empty()) {
+        return false;
+    }
+
+    auto commonEventMgr = DelayedSingleton<BundleCommonEventMgr>::GetInstance();
+    if (commonEventMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "common event manager is nullptr");
+        return false;
+    }
+    int32_t realUserId = userId == Constants::INVALID_USERID ? userId_ : userId;
+    commonEventMgr->NotifySkillEvents(bundleName, realUserId, addedSkills, changedSkills, removedSkills,
+        APP_SKILL_TYPE);
+    return true;
+}
+
+void BaseBundleInstaller::RemoveAppSkillsDir(const std::string &bundleName) const
+{
+    if (bundleName.empty()) {
+        return;
+    }
+    std::string bundleDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
+    if (InstalldClient::GetInstance()->RemoveDir(bundleDir) != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "remove bundle skills dir failed, path=%{public}s", bundleDir.c_str());
+    }
+}
+
+void BaseBundleInstaller::RemoveAppSkillsDir(
+    const std::string &bundleName, const std::string &moduleName, bool isTemp) const
+{
+    if (bundleName.empty() || moduleName.empty()) {
+        return;
+    }
+    std::string realModuleName = moduleName;
+    if (isTemp) {
+        realModuleName.append(ServiceConstants::TMP_SUFFIX);
+    }
+    std::string moduleDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName +
+        ServiceConstants::PATH_SEPARATOR + realModuleName;
+    if (InstalldClient::GetInstance()->RemoveDir(moduleDir) != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "remove module skills dir failed, path=%{public}s", moduleDir.c_str());
+    }
 }
 
 void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, const std::string &targetPath) const
@@ -4280,6 +4655,356 @@ ErrCode BaseBundleInstaller::ExtractResFileDir(const std::string &modulePath) co
     }
     LOG_D(BMS_TAG_INSTALLER, "ExtractResFileDir end");
     return ret;
+}
+
+ErrCode BaseBundleInstaller::ProcessBundleShareFiles(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const InnerBundleInfo &oldInfo)
+{
+    LOG_D(BMS_TAG_INSTALLER, "ProcessBundleShareFiles begin");
+    if (newInfos.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "newInfos is empty");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    // Check if shareFiles processing is needed
+    if (!ShouldProcessShareFiles(isAppExist_, newInfos, oldInfo)) {
+        LOG_D(BMS_TAG_INSTALLER, "No shareFiles configured, skip processing");
+        return ERR_OK;
+    }
+    // If this is an update scenario, save the old shareFile JSON configuration for rollback first
+    if (isAppExist_) {
+        hasOldShareFilesJsonSaved_ = false;
+        oldShareFilesJson_.clear();
+        ErrCode ret = SaveOldShareFilesForRollback(oldInfo);
+        if (ret != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "Failed to save old shareFiles JSON for rollback, ret=%{public}d", ret);
+            // Continue execution, save failure does not affect the update process
+        }
+    }
+    // Iterate through all bundleInfos
+    for (const auto &infoPair : newInfos) {
+        const std::string &hapPath = infoPair.first;
+        const InnerBundleInfo &bundleInfo = infoPair.second;
+        const std::string &bundleName = bundleInfo.GetBundleName();
+
+        LOG_D(BMS_TAG_INSTALLER, "Processing shareFiles for bundle=%{public}s, hapPath=%{public}s",
+            bundleName.c_str(), hapPath.c_str());
+        auto moduleInfos = bundleInfo.GetInnerModuleInfos();
+        for (const auto &modulePair : moduleInfos) {
+            const InnerModuleInfo &moduleInfo = modulePair.second;
+            // Only process entry module
+            if (!moduleInfo.isEntry) {
+                LOG_D(BMS_TAG_INSTALLER, "skip non-entry module: %{public}s", moduleInfo.moduleName.c_str());
+                continue;
+            }
+            ErrCode ret = ProcessModuleShareFiles(hapPath, moduleInfo, bundleName, oldInfo);
+            if (ret != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "Failed to process shareFiles for bundle=%{public}s, ret=%{public}d",
+                    bundleName.c_str(), ret);
+                return ret;
+            }
+        }
+    }
+    LOG_D(BMS_TAG_INSTALLER, "ProcessBundleShareFiles end");
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ProcessModuleShareFiles(const std::string &hapPath,
+    const InnerModuleInfo &moduleInfo, const std::string &bundleName, const InnerBundleInfo &oldInfo)
+{
+    if (dataMgr_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "null dataMgr_");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    // Get shareFiles JSON content
+    std::string shareFilesJson;
+    ErrCode ret = dataMgr_->GetShareFilesJsonFromHap(hapPath, moduleInfo, shareFilesJson);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER,
+            "Failed to get shareFiles json for bundle=%{public}s, module=%{public}s, ret=%{public}d",
+            bundleName.c_str(), moduleInfo.moduleName.c_str(), ret);
+        return ret;
+    }
+    if (isAppExist_) {
+        // Update scenario: iterate through all installed instances
+        return UpdateShareFileInfoForAllInstances(shareFilesJson, bundleName, oldInfo);
+    } else {
+        // New installation scenario: only set for current user
+        int32_t result = ShareFileHelper::SetShareFileInfo(shareFilesJson, bundleName, userId_, accessTokenId_);
+        if (result != 0) {
+            LOG_W(BMS_TAG_INSTALLER,
+                "SetShareFileInfo failed but continuing install, bundle=%{public}s, ret=%{public}d",
+                bundleName.c_str(), result);
+        }
+        hasShareFilesProcessed_ = true;
+        return ERR_OK;
+    }
+}
+
+ErrCode BaseBundleInstaller::UpdateShareFileInfoForAllInstances(
+    const std::string &shareFilesJson,
+    const std::string &bundleName,
+    const InnerBundleInfo &oldInfo)
+{
+    LOG_D(BMS_TAG_INSTALLER, "Update shareFileInfo for all instances of bundle=%{public}s",
+        bundleName.c_str());
+    int32_t failCount = 0;
+    // Iterate through all users (multi-user + main app + clone apps)
+    const auto &userInfos = oldInfo.GetInnerBundleUserInfos();
+    for (const auto &[userIdKey, userInfo] : userInfos) {
+        failCount += UpdateMultiUserInstances(shareFilesJson, bundleName, userInfo);
+    }
+    hasShareFilesProcessed_ = true;
+    if (failCount > 0) {
+        LOG_W(BMS_TAG_INSTALLER,
+            "UpdateShareFileInfo completed with %{public}d failures but continuing update, bundle=%{public}s",
+            failCount, bundleName.c_str());
+    }
+    return ERR_OK;
+}
+
+int32_t BaseBundleInstaller::UpdateMultiUserInstances(
+    const std::string &shareFilesJson,
+    const std::string &bundleName,
+    const InnerBundleUserInfo &userInfo)
+{
+    int32_t failCount = 0;
+    int32_t userId = userInfo.bundleUserInfo.userId;
+
+    // 1. Update main app (appIndex = 0)
+    uint32_t tokenId = userInfo.accessTokenId;
+    int32_t ret = ShareFileHelper::UpdateShareFileInfo(
+        shareFilesJson, bundleName, userId, tokenId);
+    if (ret != 0) {
+        LOG_E(BMS_TAG_INSTALLER,
+            "Failed to update shareFiles for %{public}s, userId=%{public}d, ret=%{public}d",
+            bundleName.c_str(), userId, ret);
+        failCount++;
+    }
+    // 2. Iterate through the clone applications of this user (0 < appIndex <= 1000)
+    for (const auto &[appIndexKey, cloneInfo] : userInfo.cloneInfos) {
+        int32_t appIndex = cloneInfo.appIndex;
+        uint32_t cloneTokenId = cloneInfo.accessTokenId;
+        std::string cloneBundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
+
+        ret = ShareFileHelper::UpdateShareFileInfo(
+            shareFilesJson, cloneBundleName, userId, cloneTokenId);
+        if (ret != 0) {
+            LOG_E(BMS_TAG_INSTALLER,
+                "Failed to update shareFiles for %{public}s, userId=%{public}d, ret=%{public}d",
+                cloneBundleName.c_str(), userId, ret);
+            failCount++;
+        }
+    }
+    return failCount;
+}
+
+bool BaseBundleInstaller::HasEntryShareFiles(const InnerBundleInfo &bundleInfo)
+{
+    auto moduleInfos = bundleInfo.GetInnerModuleInfos();
+    for (const auto &modulePair : moduleInfos) {
+        const InnerModuleInfo &moduleInfo = modulePair.second;
+        if (moduleInfo.isEntry && !moduleInfo.shareFiles.empty()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool BaseBundleInstaller::ShouldProcessShareFiles(bool isAppExist,
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const InnerBundleInfo &oldInfo)
+{
+    // Check if any bundle in the new version has shareFiles configured
+    bool newHasShareFiles = false;
+    for (const auto &infoPair : newInfos) {
+        if (HasEntryShareFiles(infoPair.second)) {
+            newHasShareFiles = true;
+            break;
+        }
+    }
+    // New installation scenario: if the new version has no shareFiles configured, no processing is needed
+    if (!isAppExist) {
+        return newHasShareFiles;
+    }
+    // Update scenario: check if the old version has shareFiles configured
+    bool oldHasShareFiles = HasEntryShareFiles(oldInfo);
+    // If neither old nor new version has shareFiles configured, no processing is needed
+    return newHasShareFiles || oldHasShareFiles;
+}
+
+ErrCode BaseBundleInstaller::SaveOldShareFilesForRollback(const InnerBundleInfo &oldBundleInfo)
+{
+    LOG_D(BMS_TAG_INSTALLER, "SaveOldShareFilesForRollback begin for bundle=%{public}s",
+        oldBundleInfo.GetBundleName().c_str());
+    // Iterate through modules of the installed app
+    auto moduleInfos = oldBundleInfo.GetInnerModuleInfos();
+    for (const auto &modulePair : moduleInfos) {
+        const InnerModuleInfo &moduleInfo = modulePair.second;
+        // Only process entry modules
+        if (!moduleInfo.isEntry) {
+            continue;
+        }
+        // Entry module has no shareFiles configured
+        if (moduleInfo.shareFiles.empty()) {
+            oldShareFilesJson_ = "";
+            hasOldShareFilesJsonSaved_ = true;
+            break;
+        }
+        // Read old JSON content from hapPath
+        // The hap file has not been replaced yet, so old content can be read
+        std::string oldJson;
+        ErrCode ret = dataMgr_->GetShareFilesJsonFromHap(moduleInfo.hapPath, moduleInfo, oldJson);
+        if (ret != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER,
+                "Failed to get shareFiles JSON from hap for module=%{public}s, hapPath=%{public}s, ret=%{public}d",
+                moduleInfo.moduleName.c_str(), moduleInfo.hapPath.c_str(), ret);
+            return ret;
+        }
+        // Save old JSON configuration for rollback
+        oldShareFilesJson_ = oldJson;
+        hasOldShareFilesJsonSaved_ = true;
+        LOG_D(BMS_TAG_INSTALLER,
+            "Saved for rollback, module=%{public}s, hapPath=%{public}s, size=%{public}zu",
+            moduleInfo.moduleName.c_str(), moduleInfo.hapPath.c_str(), oldJson.size());
+        return ERR_OK;
+    }
+    LOG_D(BMS_TAG_INSTALLER, "SaveOldShareFilesForRollback end, no shareFiles config to save");
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ProcessUninstallShareFiles(const InnerBundleInfo &info, int32_t userId)
+{
+    const std::string &bundleName = info.GetBundleName();
+    auto moduleInfos = info.GetInnerModuleInfos();
+    for (const auto &modulePair : moduleInfos) {
+        const InnerModuleInfo &moduleInfo = modulePair.second;
+        if (!moduleInfo.isEntry || moduleInfo.shareFiles.empty()) {
+            continue;
+        }
+        // Clean up shareFiles for the current user's main app
+        // No need to consider clones and sandbox here, as the pre-uninstall process will uninstall clones and sandbox
+        const auto &userInfos = info.GetInnerBundleUserInfos();
+        std::string userKey = bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
+        auto it = userInfos.find(userKey);
+        if (it != userInfos.end()) {
+            const InnerBundleUserInfo &userInfo = it->second;
+            int32_t ret = ShareFileHelper::UnsetShareFileInfo(
+                userInfo.accessTokenId, bundleName, userId);
+            if (ret != 0) {
+                LOG_W(BMS_TAG_INSTALLER,
+                    "UnsetShareFileInfo failed, bundle=%{public}s, userId=%{public}d, ret=%{public}d",
+                    bundleName.c_str(), userId, ret);
+            }
+        } else {
+            LOG_W(BMS_TAG_INSTALLER, "User %{public}d not found in bundle info", userId);
+        }
+        LOG_D(BMS_TAG_INSTALLER,
+            "Successfully unset shareFiles for %{public}s, userId=%{public}d",
+            bundleName.c_str(), userId);
+        return ERR_OK;
+    }
+    // No entry module found
+    LOG_D(BMS_TAG_INSTALLER,
+        "unset shareFiles skip no-entry %{public}s, userId=%{public}d", bundleName.c_str(), userId);
+    return ERR_OK;
+}
+
+void BaseBundleInstaller::RollbackShareFiles(const InnerBundleInfo &oldInfo)
+{
+    if (!hasShareFilesProcessed_) {
+        LOG_D(BMS_TAG_INSTALLER, "shareFiles not processed, skip rollback");
+        return;
+    }
+    int32_t failCount = 0;
+    if (!isAppExist_) {
+        // New installation failed: clean up shareFiles
+        failCount = RollbackShareFilesForNewInstall();
+    } else {
+        // Update failed: restore old configuration
+        failCount = RollbackShareFilesForUpdate(oldInfo);
+    }
+    if (failCount > 0) {
+        LOG_W(BMS_TAG_INSTALLER,
+            "Rollback: completed with %{public}d failures for bundle=%{public}s",
+            failCount, bundleName_.c_str());
+    }
+    // Clear flags and saved old configuration
+    hasOldShareFilesJsonSaved_ = false;
+    hasShareFilesProcessed_ = false;
+    oldShareFilesJson_.clear();
+}
+
+int32_t BaseBundleInstaller::RollbackShareFilesForNewInstall()
+{
+    LOG_I(BMS_TAG_INSTALLER, "Rollback: unset shareFileInfo for new install, bundle=%{public}s, userId=%{public}d",
+        bundleName_.c_str(), userId_);
+    int32_t ret = ShareFileHelper::UnsetShareFileInfo(accessTokenId_, bundleName_, userId_);
+    if (ret != 0) {
+        LOG_W(BMS_TAG_INSTALLER, "Rollback: failed to unset shareFileInfo, ret=%{public}d", ret);
+        return 1;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "Rollback: successfully unset shareFileInfo");
+    return 0;
+}
+
+int32_t BaseBundleInstaller::RollbackShareFilesForUpdate(const InnerBundleInfo &oldInfo)
+{
+    if (!hasOldShareFilesJsonSaved_) {
+        LOG_W(BMS_TAG_INSTALLER,
+            "Rollback: no saved old shareFiles config to restore for bundle=%{public}s",
+            bundleName_.c_str());
+        return 0;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "Rollback: restore old shareFileInfo for bundle=%{public}s",
+        bundleName_.c_str());
+
+    int32_t failCount = 0;
+    // Iterate through all users' main apps and clone apps
+    const auto &userInfos = oldInfo.GetInnerBundleUserInfos();
+    for (const auto &[userIdKey, userInfo] : userInfos) {
+        failCount += RollbackUserInstances(userInfo, oldInfo);
+    }
+    return failCount;
+}
+
+int32_t BaseBundleInstaller::RollbackUserInstances(const InnerBundleUserInfo &userInfo,
+    const InnerBundleInfo &oldInfo)
+{
+    int32_t failCount = 0;
+    int32_t userId = userInfo.bundleUserInfo.userId;
+    // 1. Restore main app (appIndex = 0)
+    uint32_t tokenId = userInfo.accessTokenId;
+    int32_t ret = ShareFileHelper::UpdateShareFileInfo(
+        oldShareFilesJson_, bundleName_, userId, tokenId);
+    if (ret != 0) {
+        LOG_W(BMS_TAG_INSTALLER,
+            "Rollback: failed to restore for %{public}s userId=%{public}d, appIndex=0, ret=%{public}d",
+            bundleName_.c_str(), userId, ret);
+        failCount++;
+    } else {
+        LOG_I(BMS_TAG_INSTALLER,
+            "Rollback: successfully restored for %{public}s userId=%{public}d, appIndex=0",
+            bundleName_.c_str(), userId);
+    }
+    // 2. Restore clone apps (0 < appIndex <= 1000)
+    for (const auto &[appIndexKey, cloneInfo] : userInfo.cloneInfos) {
+        int32_t appIndex = cloneInfo.appIndex;
+        uint32_t cloneTokenId = cloneInfo.accessTokenId;
+        std::string cloneBundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName_, appIndex);
+
+        ret = ShareFileHelper::UpdateShareFileInfo(
+            oldShareFilesJson_, cloneBundleName, userId, cloneTokenId);
+        if (ret != 0) {
+            LOG_W(BMS_TAG_INSTALLER,
+                "Rollback: failed to restore for %{public}s userId=%{public}d, ret=%{public}d",
+                cloneBundleName.c_str(), userId, ret);
+            failCount++;
+        } else {
+            LOG_I(BMS_TAG_INSTALLER,
+                "Rollback: successfully restored for %{public}s userId=%{public}d", cloneBundleName.c_str(), userId);
+        }
+    }
+    return failCount;
 }
 
 ErrCode BaseBundleInstaller::ExtractHnpFileDir(const std::string &cpuAbi,
@@ -4468,11 +5193,14 @@ ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info,
         LOG_E(BMS_TAG_INSTALLER, "remove dir fail %{public}s error %{public}d", info.GetAppCodePath().c_str(), result);
         return result;
     }
+    RemoveAppSkillsDir(info.GetBundleName());
     return result;
 }
 
 ErrCode BaseBundleInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info, const bool async) const
 {
+    // process install exception mgr
+    (void)DelayedSingleton<InstallExceptionMgr>::GetInstance()->HandleBundleExceptionInfo(info.GetBundleName());
     auto result = InstalldClient::GetInstance()->RemoveDir(info.GetAppCodePath(), async);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove bundle code dir %{public}s, error is %{public}d",
@@ -4567,6 +5295,16 @@ ErrCode BaseBundleInstaller::RemoveModuleAndDataDir(
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove module hap, error is %{public}d", result);
         return result;
+    }
+    std::string moduleName = info.GetModuleName(modulePackage);
+    RemoveAppSkillsDir(info.GetBundleName(), moduleName);
+    auto manager = SkillsDescriptionManager::GetInstance();
+    if (manager != nullptr) {
+        result = manager->DeleteSkillDescriptions(info.GetBundleName(), moduleName);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "delete app skills descriptions failed, bundle=%{public}s, "
+                "module=%{public}s, ret=%{public}d", info.GetBundleName().c_str(), moduleName.c_str(), result);
+        }
     }
     LOG_D(BMS_TAG_INSTALLER, "RemoveModuleAndDataDir successfully");
     return ERR_OK;
@@ -4690,6 +5428,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     isInternaltestingBundle_ = bundleInstallChecker_->CheckInternaltestingBundle(hapVerifyRes[0]);
     appIdentifier_ = (hapVerifyRes[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
         DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
+    bundleAppIdentifier_ = hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     SetAppDistributionType(infos);
     UpdateExtensionSandboxInfo(infos, hapVerifyRes);
     return ret;
@@ -5142,12 +5881,7 @@ std::vector<std::string> BaseBundleInstaller::GetBinFilePaths(const InnerBundleI
                 continue;
             }
             binPath = binPath.substr(libsPrefix.length());
-            std::string fullPath = prefix + binPath;
-            if (!BundleUtil::IsExecutableBinaryFile(fullPath)) {
-                LOG_D(BMS_TAG_INSTALLER, "skip non-executable file: %{private}s", fullPath.c_str());
-                continue;
-            }
-            binFilePaths.push_back(fullPath);
+            binFilePaths.push_back(prefix + binPath);
         }
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "binFilePaths size: %{public}zu", binFilePaths.size());
@@ -5163,7 +5897,9 @@ ErrCode BaseBundleInstaller::ProcessBinFiles(
     std::vector<std::string> binFilePaths;
     for (const auto &infoPair : infos) {
         const InnerBundleInfo &info = infoPair.second;
-        std::string nativeLibraryPath = info.GetNativeLibraryPath();
+        std::string cpuAbi;
+        std::string nativeLibraryPath;
+        info.FetchNativeSoAttrs(info.GetCurrentModulePackage(), cpuAbi, nativeLibraryPath);
         auto paths = GetBinFilePaths(info, nativeLibraryPath);
         binFilePaths.insert(binFilePaths.end(), paths.begin(), paths.end());
     }
@@ -5374,7 +6110,17 @@ bool BaseBundleInstaller::InitDataMgr()
 void BaseBundleInstaller::CheckInstallAllowDowngrade(
     const InstallParam &installParam, const InnerBundleInfo &oldBundleInfo, ErrCode &result)
 {
-    if ((result != ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE) || oldBundleInfo.IsSystemApp()) {
+    if (result != ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE) {
+        return;
+    }
+    if (installParam.allowPatchDowngrade) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "-n %{public}s -v %{public}d  allow downgrade",
+            bundleName_.c_str(), versionCode_);
+        isFeatureNeedUninstall_ = true;
+        result = ERR_OK;
+        return;
+    }
+    if (oldBundleInfo.IsSystemApp()) {
         return;
     }
     if ((oldBundleInfo.GetAppDistributionType() != Constants::APP_DISTRIBUTION_TYPE_NONE) &&
@@ -5908,7 +6654,7 @@ bool BaseBundleInstaller::CheckReleaseTypeIsCompatible(
 }
 
 ErrCode BaseBundleInstaller::RemoveBundleUserData(
-    InnerBundleInfo &innerBundleInfo, bool isKeepData, const bool async)
+    InnerBundleInfo &innerBundleInfo, const InstallParam &installParam, const bool async)
 {
     auto bundleName = innerBundleInfo.GetBundleName();
     LOG_D(BMS_TAG_INSTALLER, "remove user(%{public}d) in bundle(%{public}s)", userId_, bundleName.c_str());
@@ -5922,8 +6668,8 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
     // delete accessTokenId
     accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
     isKeepTokenId_ = innerBundleInfo.HasKeepTokenIdMetadata();
-    if (!isKeepData) {
-        bool keepTokenParam = isKeepTokenId_ && async;
+    if (!installParam.isKeepData) {
+        bool keepTokenParam = isKeepTokenId_ && !installParam.isRemoveUser;
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DeleteAccessTokenId keepTokenParam=%{public}d", keepTokenParam);
         if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_, keepTokenParam) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
@@ -5950,7 +6696,7 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
     }
 
     ErrCode result = ERR_OK;
-    if (!isKeepData) {
+    if (!installParam.isKeepData) {
         result = RemoveBundleDataDir(innerBundleInfo, false, async);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "remove user data directory failed");
@@ -5966,7 +6712,7 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
         LOG_E(BMS_TAG_INSTALLER, "fail to remove asan log path, error is %{public}d", result);
     }
 
-    if (!isKeepData) {
+    if (!installParam.isKeepData) {
         result = dataMgr_->DeleteDesktopShortcutInfo(bundleName, userId_, 0);
         if (result != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "fail to delete shortcut info");
@@ -6079,6 +6825,9 @@ void BaseBundleInstaller::ResetInstallProperties()
     uninstallModuleVec_.clear();
     installedModules_.clear();
     state_ = InstallerState::INSTALL_START;
+    hasShareFilesProcessed_ = false;
+    hasOldShareFilesJsonSaved_ = false;
+    oldShareFilesJson_.clear();
     singletonState_ = SingletonState::DEFAULT;
     accessTokenId_ = 0;
     sysEventInfo_.Reset();
@@ -6096,9 +6845,15 @@ void BaseBundleInstaller::ResetInstallProperties()
     isEnterpriseBundle_ = false;
     isInternaltestingBundle_ = false;
     appIdentifier_.clear();
+    bundleAppIdentifier_.clear();
     targetSoPathMap_.clear();
     isAppService_ = false;
     oldApplicationReservedFlag_ = 0;
+    moduleSkillInfoMap_.clear();
+    appSkillNotifyBundleName_.clear();
+    oldAppSkillNotifyItems_.clear();
+    newAppSkillNotifyItems_.clear();
+    appSkillNotifyUserId_ = Constants::INVALID_USERID;
     newExtensionDirs_.clear();
     createExtensionDirs_.clear();
     removeExtensionDirs_.clear();
@@ -6111,6 +6866,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     isBundleCrossAppSharedConfig_ = false;
     isKeepTokenId_ = false;
     appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
+    allowListenBundles_.clear();
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool killProcess)
@@ -6165,10 +6921,14 @@ void BaseBundleInstaller::RestoreHaps(const std::vector<std::string> &bundlePath
         return;
     }
     const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
-        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR;
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId_);
     std::string targetDir = bundlePaths.front().substr(0, bundlePaths.front().find_last_of('/') + 1);
     if (bundlePaths.front().find(APP_INSTALL_SANDBOX_PATH) == 0) {
-        targetDir = newPrefix + targetDir.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
+        targetDir = newPrefix + ServiceConstants::PATH_SEPARATOR +
+            targetDir.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
+    } else if (bundlePaths.front().find(ServiceConstants::APP_CLONE_SANDBOX_PATH) == 0) {
+        targetDir = newPrefix + ServiceConstants::GALLERY_CLONE_PATH +
+            targetDir.substr(std::strlen(ServiceConstants::APP_CLONE_SANDBOX_PATH));
     } else {
         LOG_W(BMS_TAG_INSTALLER, "Invalid bundle path: %{public}s", bundlePaths.front().c_str());
         return;
@@ -6701,10 +7461,9 @@ ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
         return ERR_OK;
     }
     LOG_I(BMS_TAG_INSTALLER, "rename install");
-    int32_t userId = userId_ < Constants::START_USERID ?
-        sysEventInfo_.callingUid / Constants::BASE_USER_RANGE : userId_;
+    int32_t userId = sysEventInfo_.callingUid / Constants::BASE_USER_RANGE;
     const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
-        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR;
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId);
 
     for (const auto &bundlePath : inBundlePaths) {
         if (bundlePath.find("..") != std::string::npos) {
@@ -6712,7 +7471,13 @@ ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
         if (bundlePath.find(APP_INSTALL_SANDBOX_PATH) == 0) {
-            std::string newPath = newPrefix + bundlePath.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
+            std::string newPath = newPrefix + ServiceConstants::PATH_SEPARATOR +
+                bundlePath.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
+            parsedPaths.push_back(newPath);
+            LOG_D(BMS_TAG_INSTALLER, "parsed path: %{public}s", newPath.c_str());
+        } else if (bundlePath.find(ServiceConstants::APP_CLONE_SANDBOX_PATH) == 0) {
+            std::string newPath = newPrefix + ServiceConstants::GALLERY_CLONE_PATH +
+                bundlePath.substr(std::strlen(ServiceConstants::APP_CLONE_SANDBOX_PATH));
             parsedPaths.push_back(newPath);
             LOG_D(BMS_TAG_INSTALLER, "parsed path: %{public}s", newPath.c_str());
         } else {
@@ -7279,6 +8044,10 @@ ErrCode BaseBundleInstaller::DeliveryProfileToCodeSign() const
         LOG_D(BMS_TAG_INSTALLER, "Emulator does not verify signature");
         return ERR_OK;
     }
+    if (provisionInfo.isEnterpriseResigned) {
+        LOG_I(BMS_TAG_INSTALLER, "enterprise resigned, skip delivery profile to code signature");
+        return ERR_OK;
+    }
     if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
@@ -7378,11 +8147,13 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             continue;
         }
         int32_t userId = uerInfo.second.bundleUserInfo.userId;
+        // Only apply isDebugGrant for the current installing user to avoid affecting other users
+        bool userDebugGrant = (userId == userId_) ? isDebugGrant : false;
         Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
         accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
         Security::AccessToken::HapInfoCheckResult checkResult;
         if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, userId, checkResult,
-            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, isDebugGrant) != ERR_OK) {
+            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, userDebugGrant) != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -7927,6 +8698,10 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
             dataMgr_->UpdateShortcutInfoResId(bundleName_, userInfo.second.bundleUserInfo.userId);
         }
         PrintStartWindowIconId(info);
+        if (CommitAppSkills(info) != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "commit app skills failed");
+            return ERR_APPEXECFWK_ADD_BUNDLE_ERROR;
+        }
         return ERR_OK;
     }
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, info, false)) {
@@ -7940,6 +8715,10 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
     PrintStartWindowIconId(info);
+    if (CommitAppSkills(info) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "commit app skills failed");
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
+    }
     return ERR_OK;
 }
 
@@ -8815,9 +9594,7 @@ ErrCode BaseBundleInstaller::RecoverOnDemandInstallBundle(const std::string &bun
     innerInstallParam.removable = true;
     innerInstallParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_PREINSTALLED_APP;
     innerInstallParam.isDataPreloadHap = IsDataPreloadHap(pathVec.empty() ? "" : pathVec.front());
-    if (!innerInstallParam.isDataPreloadHap) {
-        innerInstallParam.copyHapToInstallPath = false;
-    }
+    innerInstallParam.copyHapToInstallPath = false;
     ErrCode result = ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid, true);
     if (result == ERR_OK) {
         OnDemandInstallDataMgr::GetInstance().DeleteOnDemandInstallBundleInfo(bundleName);

@@ -25,6 +25,7 @@ struct InnerExtensionInfo {
     bool enabled = true;
     bool needCreateSandbox = false;
     bool isolationProcess = false;
+    bool skipAbilityStageLifecycle = false;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;

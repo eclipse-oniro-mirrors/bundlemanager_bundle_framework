@@ -234,6 +234,9 @@ std::vector<AccessToken::PermissionStateFull> BundlePermissionMgr::GetPermission
             perState.resDeviceID.emplace_back(innerBundleInfo.GetBaseApplicationInfo().deviceId);
             perState.grantStatus.emplace_back(AccessToken::PermissionState::PERMISSION_DENIED);
             perState.grantFlags.emplace_back(AccessToken::PermissionFlag::PERMISSION_DEFAULT_FLAG);
+            if (!reqPermission.requiredFeature.empty()) {
+                perState.feature = reqPermission.requiredFeature;
+            }
             permStateFullList.emplace_back(perState);
         }
     } else {
@@ -755,6 +758,7 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
     hapInfo.appDistributionType = innerBundleInfo.GetAppDistributionType();
     hapInfo.isAtomicService = innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE;
     hapInfo.appProvisionType = innerBundleInfo.GetAppProvisionType();
+    hapInfo.isSkillHap = innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL;
     return hapInfo;
 }
 
@@ -807,6 +811,7 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
     //refresh new permissions for application
     updateHapInfoParams.dataRefresh = dataRefresh;
     updateHapInfoParams.appProvisionType = innerBundleInfo.GetAppProvisionType();
+    updateHapInfoParams.isSkillHap = innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL;
 
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo,
         appServiceCapabilities, isDebugGrant);

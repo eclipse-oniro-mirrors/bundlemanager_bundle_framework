@@ -280,7 +280,8 @@ ErrCode PluginInstaller::ParseHapPaths(const InstallPluginParam &installPluginPa
     const std::vector<std::string> &inBundlePaths, std::vector<std::string> &parsedPaths)
 {
     parsedPaths.reserve(inBundlePaths.size());
-    if (!inBundlePaths.empty() && inBundlePaths.front().find(APP_INSTALL_SANDBOX_PATH) != 0) {
+    if (!inBundlePaths.empty() && inBundlePaths.front().find(APP_INSTALL_SANDBOX_PATH) != 0 &&
+        inBundlePaths.front().find(ServiceConstants::APP_CLONE_SANDBOX_PATH) != 0) {
         for (auto &bundlePath : inBundlePaths) {
             if (bundlePath.find("..") != std::string::npos) {
                 APP_LOGE("path invalid: %{public}s", bundlePath.c_str());
@@ -292,7 +293,7 @@ ErrCode PluginInstaller::ParseHapPaths(const InstallPluginParam &installPluginPa
     }
     APP_LOGI("rename install");
     const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
-        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR;
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId_);
 
     for (const auto &bundlePath : inBundlePaths) {
         if (bundlePath.find("..") != std::string::npos) {
@@ -300,7 +301,13 @@ ErrCode PluginInstaller::ParseHapPaths(const InstallPluginParam &installPluginPa
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
         if (bundlePath.find(APP_INSTALL_SANDBOX_PATH) == 0) {
-            std::string newPath = newPrefix + bundlePath.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
+            std::string newPath = newPrefix + ServiceConstants::PATH_SEPARATOR +
+                bundlePath.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
+            parsedPaths.push_back(newPath);
+            APP_LOGD("parsed path: %{public}s", newPath.c_str());
+        } else if (bundlePath.find(ServiceConstants::APP_CLONE_SANDBOX_PATH) == 0) {
+            std::string newPath = newPrefix + ServiceConstants::GALLERY_CLONE_PATH +
+                bundlePath.substr(std::strlen(ServiceConstants::APP_CLONE_SANDBOX_PATH));
             parsedPaths.push_back(newPath);
             APP_LOGD("parsed path: %{public}s", newPath.c_str());
         } else {

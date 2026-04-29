@@ -27,12 +27,15 @@
 #include "bundle_extractor.h"
 #include "code_sign_helper.h"
 #include "installd/installd_constants.h"
+#include "interfaces/hap_verify.h"
 #include "ipc/check_encryption_param.h"
 #include "ipc/code_signature_param.h"
 #include "ipc/encryption_param.h"
 #include "ipc/extract_param.h"
 #include "ipc/install_hnp_param.h"
+#include "ipc/skills_package_param.h"
 #include "nocopyable.h"
+#include "skills_installer/skills_package_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -123,6 +126,47 @@ public:
         const ExtractFileType &extractFileType = ExtractFileType::SO);
     static bool ProcessBundleInstallNative(const InstallHnpParam &installHnpParam);
     static bool ProcessBundleUnInstallNative(const std::string &userId, const std::string &bundleName);
+
+    /**
+     * @brief Extract skills package with validation.
+     * @param param Contains bundleName, moduleName, hspPath and skillNameList.
+     * @param skillInfoList Output parameter containing skill extraction results with description.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    static ErrCode ExtractSkillsPackage(const SkillsPackageParam &param,
+        std::vector<SkillsPackageInfo> &skillInfoList);
+
+    /**
+     * @brief Parse SKILL.md to extract name and description.
+     * @param skillMdPath Path to SKILL.md file.
+     * @param name Output parameter for skill name.
+     * @param description Output parameter for skill description.
+     * @return Returns ERR_OK if parsed successfully; returns error code otherwise.
+     */
+    static ErrCode ParseSkillMd(const std::string &skillMdPath,
+        std::string &name, std::string &description);
+
+    /**
+     * @brief Extract a single skill folder from HSP file.
+     * @param extractor Reference to initialized BundleExtractor.
+     * @param skillName Skill name.
+     * @param targetPath Target extraction path.
+     * @return Returns true if extraction successful; returns false otherwise.
+     */
+    static bool ExtractSkillFromHsp(
+        const BundleExtractor &extractor,
+        const std::string &skillName,
+        const std::string &targetPath);
+
+    /**
+     * @brief Validate skill name by parsing SKILL.md.
+     * @param skillName Expected skill name.
+     * @param extractedPath Path to extracted SKILL.md file.
+     * @return Returns true if validation passed; returns false otherwise.
+     */
+    static bool ValidateSkillName(
+        const std::string &skillName,
+        const std::string &extractedPath);
 
     static bool DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
         std::string &prefix);
@@ -332,6 +376,8 @@ public:
 
     static ErrCode SetBinFileLabel(const std::string &binFilePath);
 
+    static bool CheckElfFile(const std::string &filePath);
+
     static std::string Sha256File(const std::string& filePath);
  
     static ErrCode HashSoFile(const std::string& soPath,
@@ -371,6 +417,39 @@ public:
     static bool IsValidPathByBundleDirScene(const BundleDirScene &scene, const std::string &path);
 
     static bool IsValidUuid(const std::string &uuid);
+
+    static bool ObtainSignInfoForPlugin(
+        const std::string &filePath, std::string &appIdentifier, std::string &pluginId);
+
+    /**
+     * @brief Recursively find largest files/directories up to 6 levels, then drill down to largest file.
+     * @param dirPaths Indicates the vector of directory paths to scan.
+     * @param timeout Indicates the maximum scan time in seconds.
+     *                  If <= 0, use 3 seconds. If > 180, use 180 seconds (max 3 minutes).
+     * @param resultPathsWithSize Output parameter containing vector of (path, size) pairs for all found items
+     *                            during 6-level recursion, plus the final largest file path from deep drilling.
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    static bool GetLargestFilesRecursive(const std::vector<std::string> &dirPaths,
+        const int32_t timeout, std::vector<std::pair<std::string, uint64_t>> &resultPathsWithSize);
+
+    /**
+     * @brief Get all bundle data directory paths based on bundleName, appIndex and userId.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param dataDirPaths Output parameter containing vector of data directory paths.
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    static bool GetBundleDataDirPaths(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, std::vector<std::string> &dataDirPaths);
+
+    /**
+     * @brief Anonymize a file path by replacing every other character in directory and file names with '*'.
+     * @param path Indicates the file path to be anonymized.
+     * @return Returns the anonymized path string.
+     */
+    static std::string AnonymizePath(const std::string &path);
 
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
@@ -412,6 +491,31 @@ private:
         const std::string &sourcePaths, std::string &destinationPath, const OwnershipInfo &info);
     static bool ReadCert(const std::string &path, std::vector<unsigned char> &certData);
     static std::optional<struct dqblk> GetQuotaData(int32_t uid);
+    static bool CheckDeviceMode(char *buf);
+    static bool CheckEfuseStatus(char *buf);
+    static bool IsRdDevice();
+    static bool ParsePluginId(const std::string &appServiceCapabilities, std::vector<std::string> &pluginIds);
+    static ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
+
+    /**
+     * @brief Get top 3 largest files or directories in the given path.
+     * @param dirPath Indicates the directory path to scan.
+     * @param largestPathsWithSize Output parameter containing vector of (path, size) pairs for top 3 largest items.
+     * @return Returns true if successfully; returns false otherwise.
+     * @note Internal overload with cache parameter is used by GetLargestFilesRecursive for performance.
+     */
+    static bool GetLargestFiles(const std::string &dirPath,
+        std::vector<std::pair<std::string, uint64_t>> &largestPathsWithSize);
+
+    /**
+     * @brief Get top 3 largest items (files or directories) from the given paths.
+     * @param dirPaths Indicates the vector of file or directory paths to scan.
+     *                Files use their size directly, directories calculate total size.
+     * @param largestDirsWithSize Output parameter containing vector of (path, size) pairs for top 3 largest items.
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    static bool GetLargestDirs(const std::vector<std::string> &dirPaths,
+        std::vector<std::pair<std::string, uint64_t>> &largestDirsWithSize);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

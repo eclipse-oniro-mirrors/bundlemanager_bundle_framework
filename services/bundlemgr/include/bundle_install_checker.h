@@ -222,6 +222,14 @@ public:
     void ParseAppPrivilegeCapability(const Security::Verify::ProvisionInfo &provisionInfo,
         AppPrivilegeCapability &appPrivilegeCapability);
 
+    /**
+     * @brief Parse hideDesktopIcon from package path.
+     * @param bundlePath Indicates package path.
+     * @param hideDesktopIcon Indicates whether desktop icon is hidden.
+     * @return Returns true if parsed successfully; returns false otherwise.
+     */
+    bool GetHideDesktopIconByBundlePath(const std::string &bundlePath, bool &hideDesktopIcon);
+
     void FetchPrivilegeCapabilityFromPreConfig(const std::string &bundleName,
         const std::vector<std::string> &appSignatures, AppPrivilegeCapability &appPrivilegeCapability);
 

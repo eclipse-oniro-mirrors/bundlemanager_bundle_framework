@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -107,12 +107,14 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "faultLog", ExtensionAbilityType::FAULT_LOG },
     { "notificationSubscriber", ExtensionAbilityType::NOTIFICATION_SUBSCRIBER },
     { "crypto", ExtensionAbilityType::CRYPTO },
+    { "assetCache", ExtensionAbilityType::ASSET_CACHE },
     { "awc/webpage", ExtensionAbilityType::AWC_WEBPAGE },
     { "awc/newsfeed", ExtensionAbilityType::AWC_NEWSFEED },
     { "contentEmbed", ExtensionAbilityType::CONTENT_EMBED },
     { "partnerAgent", ExtensionAbilityType::PARTNER_AGENT },
     { "agent", ExtensionAbilityType::AGENT },
     { "agentUI", ExtensionAbilityType::AGENT_UI },
+    { "modularObject", ExtensionAbilityType::MODULAR_OBJECT },
     { "embeddedCashier", ExtensionAbilityType::EMBEDDED_CASHIER }
 };
 
@@ -245,6 +247,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
 
     needCreateSandbox = parcel.ReadBool();
     isolationProcess = parcel.ReadBool();
+    skipAbilityStageLifecycle = parcel.ReadBool();
     int32_t dataGroupIdsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataGroupIdsSize);
     CONTAINER_SECURITY_VERIFY(parcel, dataGroupIdsSize, &dataGroupIds);
@@ -340,6 +343,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, needCreateSandbox);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isolationProcess);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, skipAbilityStageLifecycle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataGroupIds.size());
     for (auto &dataGroupId : dataGroupIds) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));

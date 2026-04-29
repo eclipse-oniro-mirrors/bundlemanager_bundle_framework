@@ -99,6 +99,9 @@ public:
 
     void UninstallAndRecover(const std::string &bundleName, const InstallParam &installParam);
 
+    ErrCode UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames, int32_t userId);
+    ErrCode UninstallForInternal(const std::string &bundleName, const InstallParam &installParam);
+
 private:
     /**
      * @brief Get all exist common userId.

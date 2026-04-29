@@ -60,6 +60,7 @@ enum class BundleType {
     SHARED = 2,
     APP_SERVICE_FWK = 3,
     APP_PLUGIN = 4,
+    SKILL = 5,
 };
 
 enum class CompatiblePolicy {
@@ -177,6 +178,16 @@ struct ApplicationEnvironment : public Parcelable {
     static ApplicationEnvironment *Unmarshalling(Parcel &parcel);
 };
 
+struct AlternateIcon : public Parcelable {
+    std::string name;
+    std::string icon;
+    uint32_t iconId = 0;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static AlternateIcon *Unmarshalling(Parcel &parcel);
+};
+
 struct ApplicationInfo;
 
 struct CompatibleApplicationInfo : public Parcelable {
@@ -230,6 +241,7 @@ struct ApplicationInfo : public Parcelable {
     bool allowArkTsLargeHeap = false;
     bool allowMultiProcess = false;
     bool enabled = false;
+    bool isBundleFirstLaunched = false;
     bool tsanEnabled = false;
     bool gwpAsanEnabled = false;
     bool hasPlugin = false;
@@ -348,6 +360,7 @@ struct ApplicationInfo : public Parcelable {
     // Installation-free
     std::vector<std::string> targetBundleList;
     std::vector<ApplicationEnvironment> appEnvironments;
+    std::vector<AlternateIcon> alternateIcons;
     std::vector<std::string> assetAccessGroups;
     std::map<std::string, std::vector<HnpPackage>> hnpPackages;
     std::map<std::string, std::vector<CustomizeData>> metaData;
@@ -356,6 +369,7 @@ struct ApplicationInfo : public Parcelable {
     AppQuickFix appQuickFix;
     AppPreloadPhase appPreloadPhase = AppPreloadPhase::DEFAULT;
     std::string appSignType = Constants::APP_SIGN_TYPE_NONE;
+    std::vector<std::string> allowListenBundleChangedEvent;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

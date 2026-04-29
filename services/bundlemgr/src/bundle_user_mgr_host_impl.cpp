@@ -20,7 +20,9 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include "securec.h"
+
 #include "aot_handler.h"
+#include "app_log_tag_wrapper.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
 #include "bms_update_selinux_mgr.h"
@@ -29,6 +31,7 @@
 #include "bundle_resource_helper.h"
 #include "bundle_util.h"
 #include "hitrace_meter.h"
+#include "independent_skills_installer.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "new_bundle_data_dir_mgr.h"
@@ -232,6 +235,15 @@ ErrCode BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPr
         installParam.isCreateUser = true;
         installParam.installFlag = InstallFlag::NORMAL;
         installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
+        if (info.GetBundleType() == BundleType::SKILL) {
+            IndependentSkillsInstaller installer;
+            auto ret = installer.InstallBundleByBundleName(info.GetBundleName(), installParam);
+            if (ret != ERR_OK) {
+                APP_LOGE("-n %{public}s -u %{public}d install skills failed", info.GetBundleName().c_str(), userId);
+            }
+            g_installedHapNum++;
+            continue;
+        }
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.GetBundleName(), needReinstall));
         if (userReceiverImpl == nullptr) {
@@ -465,6 +477,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
     }
 
     ClearBundleEvents();
+    ProcessUninstallSkills(userId);
     InnerUninstallBundle(userId, bundleInfos);
     RemoveArkProfile(userId);
     RemoveAsanLogDirectory(userId);
@@ -805,6 +818,46 @@ ErrCode BundleUserMgrHostImpl::CheckCriticalAppAreInstalled(
         }
     }
     return ERR_OK;
+}
+
+bool BundleUserMgrHostImpl::ProcessUninstallSkills(const int32_t userId)
+{
+    LOG_I(BMS_TAG_INSTALLER, "process uninstall skills -u %{public}d", userId);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr is nullptr");
+        return false;
+    }
+    std::vector<std::string> bundleNames;
+    if (dataMgr->GetAllIndependentSKills(userId, bundleNames) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "get skills name -u %{public}d failed", userId);
+        return false;
+    }
+    if (bundleNames.empty()) {
+        return true;
+    }
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    InstallParam installParam;
+    installParam.userId = userId;
+    installParam.SetForceExecuted(true);
+    installParam.concentrateSendEvent = true;
+    installParam.isPreInstallApp = true;
+    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.isRemoveUser = true;
+    // if user is 100, no need to kill process
+    installParam.SetKillProcess(userId != Constants::START_USERID);
+    bool res = true;
+    for (const auto &name : bundleNames) {
+        IndependentSkillsInstaller installer;
+        ErrCode ret = installer.Uninstall(name, installParam);
+        if (ret != ERR_OK) {
+            res = false;
+            LOG_E(BMS_TAG_INSTALLER, "uninstall skills name -n %{public}s -u %{public}d -e %{public}d failed",
+                name.c_str(), userId, ret);
+        }
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+    return res;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

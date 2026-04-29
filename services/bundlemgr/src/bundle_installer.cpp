@@ -19,9 +19,13 @@
 #include <fstream>
 #include <sys/statfs.h>
 #include <sstream>
+#include <unordered_set>
+#include <utility>
 
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
+#include "datetime_ex.h"
+#include "ffrt.h"
 #include "parameter.h"
 #include "parameters.h"
 
@@ -48,9 +52,39 @@ bool CheckSystemInodeSatisfied(const std::string &bundleName)
         LOG_E(BMS_TAG_INSTALLER, "free inodes not satisfied");
         return false;
     }
-    LOG_D(BMS_TAG_INSTALLER, "total inodes: %{public}llu, free inodes: %{public}llu",
+    LOG_D(BMS_TAG_INSTALLER, "total inodes: %{public}" PRIu64 ", free inodes: %{public}" PRIu64,
         stat.f_files, stat.f_ffree);
     return BundleUtil::CheckOrphanNodeUseRateIsSufficient();
+}
+
+std::vector<std::string> DeduplicateBundleNames(const std::vector<std::string> &bundleNames)
+{
+    std::vector<std::string> result;
+    std::unordered_set<std::string> bundleNameSet;
+    for (const auto &bundleName : bundleNames) {
+        if (bundleNameSet.find(bundleName) != bundleNameSet.end()) {
+            continue;
+        }
+        bundleNameSet.emplace(bundleName);
+        result.emplace_back(bundleName);
+    }
+    return result;
+}
+
+int32_t GetUninstallUserIdForOobePreload(const std::shared_ptr<BundleDataMgr> &dataMgr, const std::string &bundleName,
+    int32_t userId)
+{
+    if (dataMgr == nullptr) {
+        return userId;
+    }
+    auto userIds = dataMgr->GetUserIds(bundleName);
+    if (userIds.size() != 1) {
+        return userId;
+    }
+    if (userIds[0] == Constants::DEFAULT_USERID || userIds[0] == Constants::U1) {
+        return userIds[0];
+    }
+    return userId;
 }
 } // namespace
 BundleInstaller::BundleInstaller(const int64_t installerId, const sptr<IStatusReceiver> &statusReceiver)
@@ -366,6 +400,118 @@ void BundleInstaller::UninstallAndRecover(const std::string &bundleName, const I
     if (statusReceiver_ != nullptr) {
         statusReceiver_->OnFinished(resultCode, "");
     }
+}
+
+ErrCode BundleInstaller::UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames, int32_t userId)
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (service == nullptr) {
+        APP_LOGE("service is nullptr");
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    auto dataMgr = service->GetDataMgr();
+    auto pendingMgr = service->GetOobePreloadUninstallMgr();
+    if (dataMgr == nullptr || pendingMgr == nullptr) {
+        APP_LOGE("dataMgr or pendingMgr is nullptr");
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    if (!dataMgr->HasUserId(userId)) {
+        APP_LOGE("userId:%{public}d does not exist", userId);
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
+    }
+    if (bundleNames.empty()) {
+        APP_LOGI("bundleNames is empty");
+        return ERR_OK;
+    }
+    std::vector<std::string> deduplicatedBundleNames = DeduplicateBundleNames(bundleNames);
+    std::vector<std::string> validBundleNames;
+    for (const auto &bundleName : deduplicatedBundleNames) {
+        if (bundleName.empty()) {
+            APP_LOGW("skip empty bundleName");
+            continue;
+        }
+        PreInstallBundleInfo preInstallBundleInfo;
+        preInstallBundleInfo.SetBundleName(bundleName);
+        if (!dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo) ||
+            !preInstallBundleInfo.HasOtaNewInstallUser(userId)) {
+            APP_LOGW("skip invalid bundleName:%{public}s for user:%{public}d",
+                bundleName.c_str(), userId);
+            continue;
+        }
+        validBundleNames.emplace_back(bundleName);
+    }
+    if (validBundleNames.empty()) {
+        APP_LOGI("no valid bundleNames to uninstall");
+        return ERR_OK;
+    }
+
+    std::vector<std::pair<std::string, int32_t>> pendingBundles;
+    for (const auto &bundleName : validBundleNames) {
+        int32_t uninstallUserId = GetUninstallUserIdForOobePreload(dataMgr, bundleName, userId);
+        InstallParam installParam;
+        installParam.userId = uninstallUserId;
+        installParam.isKeepData = true;
+        ErrCode ret = UninstallBundle(bundleName, installParam);
+        if (ret != ERR_OK) {
+            APP_LOGE("first stage uninstall failed, bundleName:%{public}s ret:%{public}d", bundleName.c_str(), ret);
+            continue;
+        }
+        pendingBundles.emplace_back(bundleName, uninstallUserId);
+        if (!pendingMgr->AddPendingBundle(bundleName, uninstallUserId)) {
+            APP_LOGE("AddPendingBundle failed, bundleName:%{public}s", bundleName.c_str());
+            continue;
+        }
+        PreInstallBundleInfo preInstallBundleInfo;
+        preInstallBundleInfo.SetBundleName(bundleName);
+        if (!dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+            APP_LOGE("GetPreInstallBundleInfo failed, bundleName:%{public}s", bundleName.c_str());
+            continue;
+        }
+        preInstallBundleInfo.DeleteOtaNewInstallUser(uninstallUserId);
+        if (!dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+            APP_LOGE("SavePreInstallBundleInfo failed, bundleName:%{public}s", bundleName.c_str());
+            continue;
+        }
+        APP_LOGI("first stage uninstall succeeded, bundleName:%{public}s, userId:%{public}d",
+            bundleName.c_str(), uninstallUserId);
+    }
+
+    auto task = [pendingBundles]() {
+        auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+        if (service == nullptr) {
+            APP_LOGE("service is nullptr");
+            return;
+        }
+        auto pendingMgr = service->GetOobePreloadUninstallMgr();
+        if (pendingMgr == nullptr) {
+            APP_LOGE("pendingMgr is nullptr");
+            return;
+        }
+        auto installer = std::make_shared<BundleInstaller>(GetMicroTickCount(), nullptr);
+        for (const auto &pendingBundle : pendingBundles) {
+            const auto &bundleName = pendingBundle.first;
+            int32_t uninstallUserId = pendingBundle.second;
+            InstallParam installParam;
+            installParam.userId = uninstallUserId;
+            installParam.isKeepData = false;
+            ErrCode ret = installer->UninstallForInternal(bundleName, installParam);
+            if (ret == ERR_OK) {
+                (void)pendingMgr->RemovePendingBundle(bundleName, uninstallUserId);
+                APP_LOGI("second stage uninstall succeeded, bundleName:%{public}s, userId:%{public}d",
+                    bundleName.c_str(), uninstallUserId);
+            } else {
+                APP_LOGE("second stage uninstall failed, bundleName:%{public}s ret:%{public}d",
+                    bundleName.c_str(), ret);
+            }
+        }
+    };
+    ffrt::submit(task);
+    return ERR_OK;
+}
+
+ErrCode BundleInstaller::UninstallForInternal(const std::string &bundleName, const InstallParam &installParam)
+{
+    return UninstallBundle(bundleName, installParam);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -243,7 +243,23 @@ public:
     {
         iconId_ = iconId;
     }
-    
+    /**
+     * @brief Get description id (from ApplicationInfo).
+     * @return Return description id.
+     */
+    uint32_t GetDescriptionId() const
+    {
+        return descriptionId_;
+    }
+    /**
+     * @brief Set description id.
+     * @param descriptionId description id from ApplicationInfo.
+     */
+    void SetDescriptionId(const uint32_t descriptionId)
+    {
+        descriptionId_ = descriptionId;
+    }
+
     bool GetSystemApp() const
     {
         return systemApp_;
@@ -272,6 +288,70 @@ public:
     void SetIsAdditionalApp(bool isAdditionalApp)
     {
         isAdditionalApp_ = isAdditionalApp;
+    }
+
+    /**
+     * @brief Get otaNewInstallUsers_.
+     * @return Return otaNewInstallUsers_.
+     */
+    std::vector<int32_t> GetOtaNewInstallUsers() const
+    {
+        return otaNewInstallUsers_;
+    }
+
+    /**
+     * @brief Add ota new install user.
+     * @note userId == Constants::DEFAULT_USERID (0) is ignored.
+     * @param userId Indicates userId.
+     */
+    void AddOtaNewInstallUser(const int32_t &userId)
+    {
+        bool ret = std::find(otaNewInstallUsers_.begin(), otaNewInstallUsers_.end(), userId) !=
+            otaNewInstallUsers_.end();
+        if (!ret) {
+            otaNewInstallUsers_.emplace_back(userId);
+        }
+    }
+
+    /**
+     * @brief Delete ota new install user.
+     * @param userId Indicates userId.
+     */
+    void DeleteOtaNewInstallUser(const int32_t &userId)
+    {
+        auto iter = std::find(otaNewInstallUsers_.begin(), otaNewInstallUsers_.end(), userId);
+        if (iter != otaNewInstallUsers_.end()) {
+            otaNewInstallUsers_.erase(iter);
+        }
+    }
+
+    /**
+     * @brief Whether has ota new install user.
+     * @param userId Indicates userId.
+     * @return Returns true if userId exists.
+     */
+    bool HasOtaNewInstallUser(const int32_t &userId) const
+    {
+        const auto hasUser = [this](int32_t id) {
+            return std::find(otaNewInstallUsers_.begin(), otaNewInstallUsers_.end(), id) !=
+                otaNewInstallUsers_.end();
+        };
+        if (hasUser(userId)) {
+            return true;
+        }
+        if (userId == Constants::U1 || userId == Constants::DEFAULT_USERID) {
+            return false;
+        }
+        // U1 and default user markers are globally visible to all other users.
+        return hasUser(Constants::U1) || hasUser(Constants::DEFAULT_USERID);
+    }
+
+    /**
+     * @brief Clear ota new install users.
+     */
+    void ClearOtaNewInstallUsers()
+    {
+        otaNewInstallUsers_.clear();
     }
 
     /**
@@ -344,6 +424,7 @@ private:
     uint32_t versionCode_;
     uint32_t labelId_ = 0;
     uint32_t iconId_ = 0;
+    uint32_t descriptionId_ = 0;
     Constants::AppType appType_ = Constants::AppType::SYSTEM_APP;
     std::string bundleName_;
     std::string moduleName_;
@@ -351,6 +432,7 @@ private:
     BundleType bundleType_ = BundleType::APP;
     std::vector<std::string> bundlePaths_;
     std::vector<int32_t> forceUninstalledUsers_;
+    std::vector<int32_t> otaNewInstallUsers_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

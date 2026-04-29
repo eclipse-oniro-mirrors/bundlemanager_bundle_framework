@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -136,6 +136,7 @@ namespace bundleManager {
     PARTNER_AGENT = 36,
     AGENT = 37,
     AGENT_UI = 38,
+    MODULAR_OBJECT = 39,
     UNSPECIFIED = 255
   }
 
@@ -190,7 +191,8 @@ namespace bundleManager {
   }
 
   export enum ProfileType {
-    INTENT_PROFILE = 1
+    INTENT_PROFILE = 1,
+    CLOUD_PROFILE = 8,
   }
 
   export enum AppDistributionType {
@@ -245,6 +247,8 @@ namespace bundleManager {
   native function getAppCloneIdentityNative(uid: int): AppCloneIdentity;
 
   native function getAbilityLabelNative(bundleName: string, moduleName: string, abilityName: string, isSync: boolean): string;
+
+  native function getApplicationLabelNative(bundleName: string, appIndex: int): string;
 
   native function getLaunchWantForBundleNative(bundleName: string, userId: int, isSync: boolean): Want;
 
@@ -323,6 +327,8 @@ namespace bundleManager {
   native function canOpenLink(link: string): boolean;
 
   native function getAllPreinstalledApplicationInfoNative(): Array<PreinstalledApplicationInfo>;
+
+  native function getAllNewPreinstalledApplicationInfoNative(): Array<PreinstalledApplicationInfo>;
 
   native function getAllBundleInfoByDeveloperId(developerId: string): Array<BundleInfo>;
 
@@ -823,6 +829,24 @@ namespace bundleManager {
     },(err: Error): void => {
       callback(err as BusinessError, undefined);
     });
+  }
+
+  function getApplicationLabel(bundleName: string, appIndex: int): Promise<string> {
+    let p = new Promise<string>((
+      resolve: (label: string) => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): string => {
+        return getApplicationLabelNative(bundleName, appIndex);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let label: string = e as string;
+        resolve(label);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
   }
 
   function getLaunchWantForBundle(bundleName: string, userId?: int): Promise<Want> {
@@ -1457,6 +1481,24 @@ namespace bundleManager {
       (applicationInfo: Array<PreinstalledApplicationInfo>) => void, reject: (error: Error) => void) => {
       let execFun = (): Array<PreinstalledApplicationInfo> => {
         return getAllPreinstalledApplicationInfoNative();
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let applicationInfo: Array<PreinstalledApplicationInfo> = e as Array<PreinstalledApplicationInfo>;
+        resolve(applicationInfo);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAllNewPreinstalledApplicationInfo(): Promise<Array<PreinstalledApplicationInfo>> {
+    let p = new Promise<Array<PreinstalledApplicationInfo>>((resolve:
+      (applicationInfo: Array<PreinstalledApplicationInfo>) => void, reject: (error: Error) => void) => {
+      let execFun = (): Array<PreinstalledApplicationInfo> => {
+        return getAllNewPreinstalledApplicationInfoNative();
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: Any) => {

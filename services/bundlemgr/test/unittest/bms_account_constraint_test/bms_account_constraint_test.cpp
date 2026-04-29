@@ -44,6 +44,7 @@ namespace OHOS {
 namespace {
 const int32_t WAIT_TIME = 2;
 constexpr int32_t USER_ID = 100;
+constexpr int32_t DEFAULT_USERID = 0;
 }  // namespace
 
 class BmsAccountConstraintTest : public testing::Test {
@@ -125,6 +126,95 @@ HWTEST_F(BmsAccountConstraintTest, CheckOsAccountConstraintEnabled_0002, Functio
     int32_t uid = 0;
     auto ret = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT);
+}
+
+/**
+ * @tc.number: LoadPreInstallWhiteList_0100
+ * @tc.name: LoadPreInstallWhiteList
+ * @tc.desc: test LoadPreInstallWhiteList
+ */
+HWTEST_F(BmsAccountConstraintTest, LoadPreInstallWhiteList_0100, Function | MediumTest | Level1)
+{
+    std::string testName = "com.test.test";
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<int32_t> userIds;
+    
+    auto installAndRecoverPair1 =
+        std::make_pair(std::vector<std::string>(), std::vector<std::string>{testName});
+    handler->userInstallAndRecoverMap_[100] = installAndRecoverPair1;
+    auto installAndRecoverPair2 = std::make_pair(std::vector<std::string>(), std::vector<std::string>());
+    handler->userInstallAndRecoverMap_[101] = installAndRecoverPair2;
+    auto ret = handler->IsRecoverListEmpty(testName, userIds);
+    EXPECT_FALSE(ret);
+    EXPECT_FALSE(userIds.empty());
+
+    userIds.clear();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(DEFAULT_USERID);
+    dataMgr->multiUserIdsSet_.insert(USER_ID);
+    handler->LoadPreInstallWhiteList();
+    ret = handler->IsRecoverListEmpty(testName, userIds);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(userIds.empty());
+}
+
+
+/**
+ * @tc.number: LoadPreInstallWhiteList_0200
+ * @tc.name: LoadPreInstallWhiteList
+ * @tc.desc: test LoadPreInstallWhiteList
+ */
+HWTEST_F(BmsAccountConstraintTest, LoadPreInstallWhiteList_0200, Function | MediumTest | Level1)
+{
+    std::string testName = "com.test.test";
+    std::vector<int32_t> userIds;
+    auto installAndRecoverPair1 =
+        std::make_pair(std::vector<std::string>(), std::vector<std::string>{testName});
+    bundleMgrService_->handler_->userInstallAndRecoverMap_[100] = installAndRecoverPair1;
+    auto installAndRecoverPair2 = std::make_pair(std::vector<std::string>(), std::vector<std::string>());
+    bundleMgrService_->handler_->userInstallAndRecoverMap_[101] = installAndRecoverPair2;
+    bundleMgrService_->dataMgr_ = nullptr;
+    bundleMgrService_->handler_->LoadPreInstallWhiteList();
+    auto ret = bundleMgrService_->handler_->IsRecoverListEmpty(testName, userIds);
+    EXPECT_FALSE(ret);
+    EXPECT_FALSE(userIds.empty());
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
+    bundleMgrService_->GetDataMgr()->AddUserId(DEFAULT_USERID);
+    bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
+    ASSERT_NE(bundleMgrService_->dataMgr_, nullptr);
+}
+
+/**
+ * @tc.number: HandlePreInstallBundleNamesException_0100
+ * @tc.name: HandlePreInstallBundleNamesException
+ * @tc.desc: test HandlePreInstallBundleNamesException
+ */
+HWTEST_F(BmsAccountConstraintTest, HandlePreInstallBundleNamesException_0100, Function | MediumTest | Level1)
+{
+    std::string testName = "com.test.test";
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    PreInstallBundleInfo info;
+    handler->loadExistData_.emplace(testName, info);
+    auto preInstallExceptionMgr = std::make_shared<PreInstallExceptionMgr>();
+    ASSERT_NE(preInstallExceptionMgr, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->preInstallExceptionMgr_ = preInstallExceptionMgr;
+    auto bmsParam = std::make_shared<BmsParam>();
+    ASSERT_NE(bmsParam, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = bmsParam;
+    preInstallExceptionMgr->exceptionBundleNames_.insert(testName);
+    std::set<std::string> exceptionBundleNames;
+    exceptionBundleNames.emplace(testName);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(USER_ID);
+    handler->LoadPreInstallWhiteList();
+    handler->HandlePreInstallBundleNamesException(preInstallExceptionMgr, exceptionBundleNames);
+    EXPECT_TRUE(preInstallExceptionMgr->exceptionBundleNames_.find(testName) ==
+        preInstallExceptionMgr->exceptionBundleNames_.end());
 }
 
 /**

@@ -21,6 +21,8 @@
 #include "installd/installd_host_impl.h"
 #include "installd/installd_operator.h"
 #include "ipc/installd_proxy.h"
+#include "ipc/skills_package_param.h"
+#include "skills_installer/skills_package_info.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -1689,6 +1691,25 @@ HWTEST_F(BmsInstallDaemonHostImplTest, DeleteCertAndRemoveKey_0100, Function | S
     ASSERT_NE(hostImpl, nullptr);
     std::vector<std::string> certPaths;
     auto ret = hostImpl->DeleteCertAndRemoveKey(certPaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: ExtractSkillsPackage_0100
+ * @tc.name: test ExtractSkillsPackage
+ * @tc.desc: test ExtractSkillsPackage of InstalldHostImpl with empty bundleName
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, ExtractSkillsPackage_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    SkillsPackageParam param;
+    param.bundleName = "";
+    param.moduleName = "testModule";
+    param.hspPath = "/data/test/test.hsp";
+    param.skillNameList.push_back("skill1");
+    std::vector<SkillsPackageInfo> skillInfoList;
+    auto ret = hostImpl->ExtractSkillsPackage(param, skillInfoList);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

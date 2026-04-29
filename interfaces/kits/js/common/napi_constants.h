@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -92,6 +92,7 @@ constexpr const char* INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action, entities, uri, type, or linkFeature) non-empty.";
 constexpr const char* APP_CLONE_IDENTITY_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 constexpr const char* GET_BUNDLE_INFOS = "GetBundleInfos";
+constexpr const char* GET_INSTALLED_BUNDLE_LIST = "GetInstalledBundleList";
 constexpr const char* GET_APPLICATION_INFOS = "GetApplicationInfos";
 constexpr const char* IS_APPLICATION_ENABLED = "IsApplicationEnabled";
 constexpr const char* QUERY_ABILITY_INFOS_SYNC = "QueryAbilityInfosSync";
@@ -159,7 +160,8 @@ constexpr const char* CLEAN_ALL_BUNDLE_CACHE = "cleanAllBundleCache";
 constexpr const char* GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
 constexpr const char* GET_ALL_APP_PROVISION_INFO = "getAllAppProvisionInfo";
 constexpr const char* CAN_OPEN_LINK = "CanOpenLink";
-constexpr const char* GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicationInfos";
+constexpr const char* GET_ALL_PREINSTALLED_APP_INFOS = "getAllPreinstalledApplicationInfo";
+constexpr const char* GET_ALL_NEW_PREINSTALLED_APP_INFOS = "getAllNewPreinstalledApplicationInfo";
 constexpr const char* GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
 constexpr const char* GET_ALL_INSTALL_INFO = "getAllBundleInstallInfo";
 constexpr const char* SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
@@ -193,7 +195,7 @@ constexpr const char* REMOVE_BACKUP_BUNDLE_DATA = "RemoveBackupBundleData";
 constexpr const char* GET_BUNDLE_INSTALL_STATUS = "getBundleInstallStatus";
 constexpr const char* IS_APPLICATION_DISABLE_FORBIDDEN = "isApplicationDisableForbidden";
 
-inline const std::set<int32_t> SUPPORTED_PROFILE_LIST = { 1 };
+inline const std::set<int32_t> SUPPORTED_PROFILE_LIST = { 1, 8 };
 inline const std::set<int32_t> UNINSTALL_COMPONENT_TYPE_LIST = { 1, 2 };
 
 inline std::map<int32_t, std::string> APP_DISTRIBUTION_TYPE_MAP = {
@@ -293,6 +295,7 @@ constexpr const char* INSTALL_PERMISSION =
     "ohos.permission.INSTALL_INTERNALTESTING_BUNDLE or "
     "(ohos.permission.INSTALL_BUNDLE and ohos.permission.INSTALL_ALLOW_DOWNGRADE)";
 constexpr const char* UNINSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.UNINSTALL_BUNDLE";
+constexpr const char* UNINSTALL_BUNDLE_PERMISSION = "ohos.permission.UNINSTALL_BUNDLE";
 constexpr const char* RECOVER_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.RECOVER_BUNDLE";
 constexpr const char* INSTALL_SELF_PERMISSION = "ohos.permission.INSTALL_SELF_BUNDLE";
 constexpr const char* PARAMETERS = "parameters";
@@ -305,9 +308,12 @@ constexpr const char* PARAM_HAPS_FILE_EMPTY_ERROR =
 constexpr const char* CREATE_APP_CLONE = "CreateAppClone";
 constexpr const char* DESTROY_APP_CLONE = "destroyAppClone";
 constexpr const char* INSTALL_PREEXISTING_APP = "installPreexistingApp";
+constexpr const char* UNINSTALL_NEW_PREINSTALLED_APPS = "uninstallNewPreinstalledApps";
 constexpr const char* INSTALL_PLUGIN = "InstallPlugin";
 constexpr const char* UNINSTALL_PLUGIN = "UninstallPlugin";
 constexpr const char* PLUGIN_BUNDLE_NAME = "pluginBundleName";
+constexpr const char* PARAM_BUNDLE_NAMES_SIZE_EXCEEDS_LIMIT =
+ 	"BusinessError 401: Parameter error. bundleNames size exceeds the limit";
 
 // app_control
 constexpr const char* TYPE_WANT = "want";

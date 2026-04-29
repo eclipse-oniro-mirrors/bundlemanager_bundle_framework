@@ -35,7 +35,8 @@ std::mutex g_mutex;
 const std::unordered_set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
-    "shared"
+    "shared",
+    "skill"
 };
 
 const std::unordered_set<std::string> VIRTUAL_MACHINE_SET = {
@@ -56,7 +57,8 @@ constexpr const char* BACKGROUND_MODES_MAP_KEY[] = {
     ProfileReader::KEY_PICTURE_IN_PICTURE,
     ProfileReader::KEY_SCREEN_FETCH,
     ProfileReader::KEY_AV_PLAYBACK_AND_RECORD,
-    ProfileReader::KEY_SPECIAL_SCENARIO_PROCESSING
+    ProfileReader::KEY_SPECIAL_SCENARIO_PROCESSING,
+    ProfileReader::KEY_NEARLINK
 };
 const uint32_t BACKGROUND_MODES_MAP_VALUE[] = {
     ProfileReader::VALUE_DATA_TRANSFER,
@@ -71,7 +73,8 @@ const uint32_t BACKGROUND_MODES_MAP_VALUE[] = {
     ProfileReader::VALUE_PICTURE_IN_PICTURE,
     ProfileReader::VALUE_SCREEN_FETCH,
     ProfileReader::VALUE_AV_PLAYBACK_AND_RECORD,
-    ProfileReader::VALUE_SPECIAL_SCENARIO_PROCESSING
+    ProfileReader::VALUE_SPECIAL_SCENARIO_PROCESSING,
+    ProfileReader::VALUE_NEARLINK
 };
 
 const std::unordered_set<std::string> GRANT_MODE_SET = {
@@ -135,7 +138,8 @@ const std::unordered_map<std::string, BundleType> BUNDLE_TYPE_MAP = {
     {"app", BundleType::APP},
     {"atomicService", BundleType::ATOMIC_SERVICE},
     {"shared", BundleType::SHARED},
-    {"appService", BundleType::APP_SERVICE_FWK}
+    {"appService", BundleType::APP_SERVICE_FWK},
+    {"skill", BundleType::SKILL}
 };
 const size_t MAX_QUERYSCHEMES_LENGTH = 200;
 
@@ -226,9 +230,17 @@ struct Ability {
     std::string arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
 };
 
+struct SkillProfile {
+    std::string name;
+    std::string abilityName;
+    std::vector<std::string> srcEntries;
+    std::vector<std::string> permissions;
+};
+
 struct Extension {
     bool visible = false;
     bool isolationProcess = false;
+    bool skipAbilityStageLifecycle = false;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
@@ -301,6 +313,7 @@ struct App {
     std::string apiReleaseType = APP_API_RELEASETYPE_DEFAULT_VALUE;
     std::pair<bool, bool> removable = std::make_pair<>(false, true);
     std::vector<std::string> targetBundleList;
+    std::vector<AlternateIcon> alternateIcons;
     std::map<std::string, DeviceConfig> deviceConfigs;
     std::string targetBundle;
     std::string bundleType = Profile::BUNDLE_TYPE_APP;
@@ -312,6 +325,7 @@ struct App {
     std::string appPreloadPhase;
     std::vector<std::string> assetAccessGroups;
     std::string startMode = Profile::START_MODE_MAIN_TASK;
+    std::vector<std::string> allowListenBundleChangedEvent;
 };
 
 struct Module {
@@ -334,12 +348,14 @@ struct Module {
     std::string mainElement;
     std::vector<std::string> deviceTypes;
     std::map<std::string, std::vector<std::string>> requiredDeviceFeatures;
+    std::map<std::string, std::vector<std::string>> librarySupportDirectory;
     std::string virtualMachine = MODULE_VIRTUAL_MACHINE_DEFAULT_VALUE;
     std::string pages;
     std::string systemTheme;
     std::vector<Metadata> metadata;
     std::vector<HnpPackage> hnpPackages;
     std::vector<Ability> abilities;
+    std::vector<SkillProfile> skillProfiles;
     std::vector<Extension> extensionAbilities;
     std::vector<RequestPermission> requestPermissions;
     std::vector<DefinePermission> definePermissions;
@@ -465,6 +481,40 @@ void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executabl
         executableBinaryPath.path,
         false,
         g_parseResult);
+}
+
+void from_json(const nlohmann::json &jsonObject, SkillProfile &skillProfile)
+{
+    APP_LOGD("read skillProfile tag from module.json");
+    const auto &jsonObjectEnd = jsonObject.end();
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_NAME,
+        skillProfile.name,
+        true,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_ABILITY_NAME,
+        skillProfile.abilityName,
+        false,
+        g_parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_SRC_ENTRIES,
+        skillProfile.srcEntries,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_PERMISSIONS,
+        skillProfile.permissions,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, Ability &ability)
@@ -923,6 +973,12 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         jsonObjectEnd,
         ABILITY_ISOLATION_PROCESS,
         extension.isolationProcess,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKIP_ABILITY_STAGE_LIFECYCLE,
+        extension.skipAbilityStageLifecycle,
         false,
         g_parseResult);
     GetValueIfFindKey<std::vector<Skill>>(jsonObject,
@@ -1479,6 +1535,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::vector<AlternateIcon>>(jsonObject,
+        jsonObjectEnd,
+        APP_ALTERNATE_ICONS,
+        app.alternateIcons,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::OBJECT);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         START_MODE,
@@ -1503,6 +1567,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.profileable,
         false,
         g_parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        APP_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT,
+        app.allowListenBundleChangedEvent,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1533,6 +1605,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         jsonObjectEnd,
         MODULE_REQUIRED_DEVICE_FEATURES,
         module.requiredDeviceFeatures,
+        false,
+        g_parseResult,
+        JsonType::ARRAY,
+        ArrayType::STRING);
+    GetMapValueIfFindKey<std::map<std::string, std::vector<std::string>>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_LIBRARY_SUPPORT_DIRECTORY,
+        module.librarySupportDirectory,
         false,
         g_parseResult,
         JsonType::ARRAY,
@@ -1641,6 +1721,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         jsonObjectEnd,
         MODULE_ABILITIES,
         module.abilities,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<SkillProfile>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_SKILL_PROFILES,
+        module.skillProfiles,
         JsonType::ARRAY,
         false,
         g_parseResult,
@@ -2146,6 +2234,8 @@ bool ParserAtomicConfig(const nlohmann::json &jsonObject, InnerBundleInfo &inner
             bundleType = BundleType::APP_SERVICE_FWK;
         } else if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_PLUGIN) {
             bundleType = BundleType::APP_PLUGIN;
+        } else if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_SKILL) {
+            bundleType = BundleType::SKILL;
         }
     }
 
@@ -2422,6 +2512,7 @@ bool ToApplicationInfo(
     applicationInfo.hwasanEnabled = app.hwasanEnabled;
     applicationInfo.ubsanEnabled = app.ubsanEnabled;
     applicationInfo.appEnvironments = app.appEnvironments;
+    applicationInfo.alternateIcons = app.alternateIcons;
     if (moduleJson.module.type == Profile::MODULE_TYPE_ENTRY) {
         applicationInfo.assetAccessGroups = app.assetAccessGroups;
     }
@@ -2448,6 +2539,7 @@ bool ToApplicationInfo(
     }
     applicationInfo.cloudFileSyncEnabled = app.cloudFileSyncEnabled;
     applicationInfo.cloudStructuredDataSyncEnabled = app.cloudStructuredDataSyncEnabled;
+    applicationInfo.allowListenBundleChangedEvent = app.allowListenBundleChangedEvent;
     return true;
 }
 
@@ -2656,6 +2748,7 @@ void ToExtensionInfo(
     extensionInfo.appIdentifierAllowList = extension.appIdentifierAllowList;
     extensionInfo.visible = extension.visible;
     extensionInfo.isolationProcess = extension.isolationProcess;
+    extensionInfo.skipAbilityStageLifecycle = extension.skipAbilityStageLifecycle;
     GetMetadata(extensionInfo.metadata, extension.metadata);
     extensionInfo.bundleName = moduleJson.app.bundleName;
     extensionInfo.moduleName = moduleJson.module.name;
@@ -2939,6 +3032,17 @@ bool ToInnerBundleInfo(
         }
     }
 
+    // handle skillProfiles
+    for (const Profile::SkillProfile &skillProfile : moduleJson.module.skillProfiles) {
+        SkillProfile skill;
+        skill.name = skillProfile.name;
+        skill.abilityName = skillProfile.abilityName.empty() ?
+            innerModuleInfo.mainAbility : skillProfile.abilityName;
+        skill.srcEntries = skillProfile.srcEntries;
+        skill.permissions = skillProfile.permissions;
+        innerModuleInfo.skillProfiles.emplace_back(skill);
+    }
+
     // handle extensionAbilities
     for (const Profile::Extension &extension : moduleJson.module.extensionAbilities) {
         InnerExtensionInfo extensionInfo;
@@ -3013,6 +3117,41 @@ bool ToInnerBundleInfo(
     return true;
 }
 }  // namespace
+
+ErrCode ProcessLibrarySupportDirectory(
+    const std::map<std::string, std::vector<std::string>> &librarySupportDirectoryMap,
+    InnerBundleInfo &innerBundleInfo)
+{
+    if (librarySupportDirectoryMap.empty()) {
+        return ERR_OK;
+    }
+    std::string cpuAbi = innerBundleInfo.GetCpuAbi();
+    if (cpuAbi.empty()) {
+        return ERR_OK;
+    }
+    auto libSupportDirIter = librarySupportDirectoryMap.find(cpuAbi);
+    if (libSupportDirIter != librarySupportDirectoryMap.end()) {
+        const auto &dirs = libSupportDirIter->second;
+        if (dirs.size() > Constants::MAX_JSON_ARRAY_LENGTH) {
+            APP_LOGE_NOFUNC("librarySupportDirectory size %{public}zu exceeds max 1024", dirs.size());
+            return ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR;
+        }
+        std::vector<std::string> filteredDirs;
+        for (const auto &dir : dirs) {
+            if (dir.size() > Constants::MAX_JSON_STRING_LENGTH) {
+                APP_LOGW_NOFUNC("skip librarySupportDirectory dir due to length exceeds 4096");
+                continue;
+            }
+            if (dir.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
+                APP_LOGW_NOFUNC("skip librarySupportDirectory %{public}s due to path traversal", dir.c_str());
+                continue;
+            }
+            filteredDirs.emplace_back(dir);
+        }
+        innerBundleInfo.SetModuleLibrarySupportDirectory(filteredDirs);
+    }
+    return ERR_OK;
+}
 
 OverlayMsg ModuleProfile::ObtainOverlayType(const nlohmann::json &jsonObject) const
 {
@@ -3117,6 +3256,12 @@ ErrCode ModuleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_AN_FAILED;
 #endif
         APP_LOGW("Parser ark native file failed");
+    }
+
+    ErrCode ret = ProcessLibrarySupportDirectory(moduleJson.module.librarySupportDirectory, innerBundleInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("ProcessLibrarySupportDirectory failed, ret: %{public}d", ret);
+        return ret;
     }
     return ERR_OK;
 }

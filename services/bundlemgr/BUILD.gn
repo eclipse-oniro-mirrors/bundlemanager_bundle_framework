@@ -27,6 +27,7 @@ config("bundlemgr_common_config") {
     "include/bms_extension",
     "include/bundle_backup",
     "include/bundle_resource",
+    "include/bundle_skill",
     "include/clone",
     "include/common",
     "include/default_app",
@@ -44,6 +45,7 @@ config("bundlemgr_common_config") {
     "include/navigation",
     "include/shared",
     "include/quick_fix/state/include",
+    "include/skills_installer",
     "include/utd",
     "include/verify",
     "include/plugin",
@@ -202,7 +204,6 @@ ohos_source_set("bundle_parser") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
-    "libxml2:libxml2",
   ]
 
   public_external_deps = [
@@ -397,7 +398,10 @@ ohos_shared_library("libbms") {
   }
 
   if (distributed_bundle_framework) {
-    external_deps += [ "distributed_bundle_framework:dbms_fwk" ]
+    external_deps += [
+      "device_manager:devicemanagersdk",
+      "distributed_bundle_framework:dbms_fwk",
+    ]
     defines += [ "DISTRIBUTED_BUNDLE_FRAMEWORK" ]
   }
 
@@ -570,7 +574,7 @@ ohos_shared_library("libbms") {
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 
-  if (webview_enable) {
+  if (webview_enable && bundle_framework_app_fwk_update_enable) {
     external_deps += [ "webview:app_fwk_update_service" ]
     defines += [ "WEBVIEW_ENABLE" ]
   }
@@ -580,6 +584,11 @@ ohos_shared_library("libbms") {
     defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
     configs += [ ":user_auth_config" ]
     sources += user_auth
+  }
+
+  if (bms_accesscontrol_sandbox_manager) {
+    external_deps += [ "sandbox_manager:libsandbox_manager_sdk" ]
+    defines += [ "BMS_ACCESSCONTROL_SANDBOX_MANAGER" ]
   }
 
   subsystem_name = "bundlemanager"
@@ -633,6 +642,7 @@ ohos_shared_library("installs") {
   external_deps = [
     "access_token:el5_filekey_manager_sdk",
     "appspawn:hnpapi",
+    "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
@@ -640,7 +650,6 @@ ohos_shared_library("installs") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
-    "libxml2:libxml2",
     "memmgr:memmgrclient",
     "openssl:libcrypto_shared",
     "safwk:system_ability_fwk",

@@ -60,7 +60,11 @@ constexpr const char* BUNDLE_APP_PROFILE_KEY_CODE = "code";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
 // sub BUNDLE_APP_PROFILE_KEY_API_VERSION
 constexpr const char* BUNDLE_APP_PROFILE_KEY_COMPATIBLE = "compatible";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_COMPATIBLE_MINOR_API_VERSION = "compatibleMinorAPIVersion";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_COMPATIBLE_PATCH_API_VERSION = "compatiblePatchAPIVersion";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_TARGET = "target";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_TARGET_MINOR_API_VERSION = "targetMinorAPIVersion";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_TARGET_PATCH_API_VERSION = "targetPatchAPIVersion";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_RELEASE_TYPE = "releaseType";
 constexpr const char* APP_RELEASE_TYPE_VALUE_RELEASE = "Release";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_COMPILE_SDK_VERSION = "compileSdkVersion";
@@ -294,6 +298,9 @@ constexpr uint32_t VALUE_AV_PLAYBACK_AND_RECORD = 1 << 11;
 // 1 0000 0000 0000 represents special scenario processing service
 constexpr uint32_t VALUE_SPECIAL_SCENARIO_PROCESSING = 1 << 12;
 
+// 10 0000 0000 0000 represents nearlink service
+constexpr uint32_t VALUE_NEARLINK = 1 << 13;
+
 constexpr const char* KEY_DATA_TRANSFER = "dataTransfer";
 constexpr const char* KEY_AUDIO_PLAYBACK = "audioPlayback";
 constexpr const char* KEY_AUDIO_RECORDING = "audioRecording";
@@ -307,6 +314,7 @@ constexpr const char* KEY_PICTURE_IN_PICTURE = "pictureInPicture";
 constexpr const char* KEY_SCREEN_FETCH = "screenFetch";
 constexpr const char* KEY_AV_PLAYBACK_AND_RECORD = "avPlaybackAndRecord";
 constexpr const char* KEY_SPECIAL_SCENARIO_PROCESSING = "specialScenarioProcessing";
+constexpr const char* KEY_NEARLINK = "nearlink";
 }  // namespace ProfileReader
 
 namespace Profile {
@@ -342,8 +350,8 @@ constexpr const char* APP_MIN_API_VERSION = "minAPIVersion";
 constexpr const char* APP_MIN_MINOR_API_VERSION = "minMinorAPIVersion";
 constexpr const char* APP_MIN_PATCH_API_VERSION = "minPatchAPIVersion";
 constexpr const char* APP_TARGET_API_VERSION = "targetAPIVersion";
-constexpr const char* APP_TARGET_MINOR_API_VERSION = "targetMinorApiVersion";
-constexpr const char* APP_TARGET_PATCH_API_VERSION = "targetPatchApiVersion";
+constexpr const char* APP_TARGET_MINOR_API_VERSION = "targetMinorAPIVersion";
+constexpr const char* APP_TARGET_PATCH_API_VERSION = "targetPatchAPIVersion";
 constexpr const char* APP_API_RELEASETYPE = "apiReleaseType";
 constexpr const char* APP_API_RELEASETYPE_DEFAULT_VALUE = "Release";
 constexpr const char* APP_ENTITY_TYPE_DEFAULT_VALUE = "unspecified";
@@ -372,6 +380,8 @@ constexpr const char* APP_CONFIGURATION = "configuration";
 constexpr const char* APP_CLOUD_FILE_SYNC_ENABLED = "cloudFileSyncEnabled";
 constexpr const char* APP_CLOUD_STRUCTURED_DATA_SYNC_ENABLED = "cloudStructuredDataSyncEnabled";
 constexpr const char* APP_ASSET_ACCESS_GROUPS = "assetAccessGroups";
+constexpr const char* APP_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT = "allowListenBundleChangedEvent";
+constexpr const char* APP_ALTERNATE_ICONS = "alternateIcons";
 constexpr const char* APP_PRELOAD_PHASE = "appPreloadPhase";
 constexpr const char* APP_PROFILEABLE = "profileable";
 // multiappmode
@@ -388,6 +398,7 @@ constexpr const char* MODULE_PROCESS = "process";
 constexpr const char* MODULE_MAIN_ELEMENT = "mainElement";
 constexpr const char* MODULE_DEVICE_TYPES = "deviceTypes";
 constexpr const char* MODULE_REQUIRED_DEVICE_FEATURES = "requiredDeviceFeatures";
+constexpr const char* MODULE_LIBRARY_SUPPORT_DIRECTORY = "librarySupportDirectory";
 constexpr const char* MODULE_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
@@ -401,7 +412,13 @@ constexpr const char* MODULE_UI_SYNTAX_DEFAULT_VALUE = "hml";
 constexpr const char* MODULE_PAGES = "pages";
 constexpr const char* MODULE_APP_SYSTEM_THEME = "systemTheme";
 constexpr const char* MODULE_ABILITIES = "abilities";
+constexpr const char* MODULE_SKILL_PROFILES = "skillProfiles";
 constexpr const char* MODULE_EXTENSION_ABILITIES = "extensionAbilities";
+// skill profile fields
+constexpr const char* SKILL_PROFILE_NAME = "name";
+constexpr const char* SKILL_PROFILE_ABILITY_NAME = "abilityName";
+constexpr const char* SKILL_PROFILE_SRC_ENTRIES = "srcEntries";
+constexpr const char* SKILL_PROFILE_PERMISSIONS = "permissions";
 constexpr const char* MODULE_REQUEST_PERMISSIONS = "requestPermissions";
 constexpr const char* MODULE_DEFINE_PERMISSIONS = "definePermissions";
 constexpr const char* MODULE_DEPENDENCIES = "dependencies";
@@ -423,6 +440,7 @@ constexpr const char* MODULE_DEDUPLICATE_HAR = "deduplicateHar";
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
 constexpr const char* MODULE_TYPE_FEATURE = "feature";
 constexpr const char* MODULE_TYPE_SHARED = "shared";
+constexpr const char* MODULE_TYPE_SKILLS = "skill";
 // deviceConfig
 constexpr const char* MIN_API_VERSION = "minAPIVersion";
 constexpr const char* MIN_MINOR_API_VERSION = "minMinorAPIVersion";
@@ -486,6 +504,7 @@ constexpr const char* EXTENSION_ABILITY_READ_PERMISSION = "readPermission";
 constexpr const char* EXTENSION_ABILITY_WRITE_PERMISSION = "writePermission";
 constexpr const char* EXTENSION_PROCESS_MODE = "extensionProcessMode";
 constexpr const char* DATA_GROUP_IDS = "dataGroupIds";
+constexpr const char* SKIP_ABILITY_STAGE_LIFECYCLE = "skipAbilityStageLifecycle";
 // requestPermission
 constexpr const char* REQUESTPERMISSION_NAME = "name";
 constexpr const char* REQUESTPERMISSION_REASON = "reason";
@@ -547,6 +566,7 @@ constexpr const char* BUNDLE_TYPE_ATOMIC_SERVICE = "atomicService";
 constexpr const char* BUNDLE_TYPE_SHARED = "shared";
 constexpr const char* BUNDLE_TYPE_APP_SERVICE_FWK = "appService";
 constexpr const char* BUNDLE_TYPE_PLUGIN = "appPlugin";
+constexpr const char* BUNDLE_TYPE_SKILL = "skill";
 
 // compileSdkType
 constexpr const char* COMPILE_SDK_VERSION = "compileSdkVersion";

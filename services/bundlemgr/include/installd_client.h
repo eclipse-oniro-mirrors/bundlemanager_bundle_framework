@@ -142,8 +142,7 @@ public:
         const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
         std::vector<BundleStorageStats> &bundleStats);
 
-    ErrCode GetAllBundleStats(const int32_t userId,
-        std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids);
+    ErrCode GetAllBundleStats(std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids);
 
     ErrCode MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath);
 
@@ -313,6 +312,27 @@ public:
     ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir);
 
     ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths);
+
+    /**
+     * @brief Extract skills package with validation.
+     * @param param Contains bundleName, moduleName, hspPath and skillNameList.
+     * @param skillInfoList Output parameter containing skill extraction results with description.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    ErrCode ExtractSkillsPackage(const SkillsPackageParam &param,
+        std::vector<SkillsPackageInfo> &skillInfoList);
+
+    /**
+     * @brief Get top N largest items in app data directory.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param timeout Indicates the maximum scan time in seconds.
+     * @param largestItems Output parameter containing JSON string of largest items with path and size.
+     * @return Returns ERR_OK if get largest items successfully; returns error code otherwise.
+     */
+    ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const int32_t timeout, std::string &largestItems);
 
 private:
     sptr<IInstalld> GetInstalldProxy();

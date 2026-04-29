@@ -30,7 +30,10 @@ group("bms_target") {
     "services/bundlemgr:bms_target",
   ]
   if (bundle_framework_graphics) {
-    deps += [ "interfaces/inner_api/bundlemgr_graphics:bundlemgr_graphics" ]
+    deps += [
+      "interfaces/inner_api/bundlemgr_graphics:bundlemgr_graphics",
+      "interfaces/kits/native/bundle:bundle_ndk_drawable",
+    ]
   }
 }
 

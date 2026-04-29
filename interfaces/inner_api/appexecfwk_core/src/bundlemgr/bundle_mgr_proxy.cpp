@@ -763,6 +763,28 @@ ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> 
         BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9, data, bundleInfos);
 }
 
+ErrCode BundleMgrProxy::GetInstalledBundleList(uint32_t flags, int32_t userId, std::vector<BundleInfo> &bundleInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_NOFUNC_I(BMS_TAG_QUERY, "begin to GetInstalledBundleList");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetInstalledBundleList due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(flags)) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetInstalledBundleList due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetInstalledBundleList due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    LOG_NOFUNC_I(BMS_TAG_QUERY, "GetInstalledBundleList end");
+    return GetVectorFromParcelIntelligentWithErrCode<BundleInfo>(
+        BundleMgrInterfaceCode::GET_INSTALLED_BUNDLE_LIST, data, bundleInfos);
+}
+
 int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int userId)
 {
     return GetUidByBundleName(bundleName, userId, 0);
@@ -1665,9 +1687,12 @@ ErrCode BundleMgrProxy::GetApplicationLabel(const std::string &bundleName, int32
     APP_LOGD("begin to GetApplicationLabel of %{public}s, appIndex: %{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("fail to GetApplicationLabel due to bundleName empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGW("appIndex: %{public}d not in valid range", appIndex);
+        return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetApplicationLabel due to write InterfaceToken fail");
@@ -1691,6 +1716,45 @@ ErrCode BundleMgrProxy::GetApplicationLabel(const std::string &bundleName, int32
     }
     label = reply.ReadString();
     return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::SetBundleFirstLaunch(
+    const std::string &bundleName, int32_t userId, int32_t appIndex, bool isBundleFirstLaunched)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to SetBundleFirstLaunch of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to SetBundleFirstLaunch due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to SetBundleFirstLaunch due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to SetBundleFirstLaunch due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to SetBundleFirstLaunch due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to SetBundleFirstLaunch due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isBundleFirstLaunched)) {
+        APP_LOGE("fail to SetBundleFirstLaunch due to write isBundleFirstLaunched fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_BUNDLE_FIRST_LAUNCH, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
 }
 
 bool BundleMgrProxy::GetBundleArchiveInfo(const std::string &hapFilePath, const BundleFlag flag, BundleInfo &bundleInfo)
@@ -1776,7 +1840,7 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoV9(const std::string &hapFilePath, i
         APP_LOGE("fail to GetBundleArchiveInfoV9 due to write flags fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfoWithErrCode<BundleInfo>(
+    return GetParcelInfoIntelligent<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
 }
 
@@ -3476,7 +3540,8 @@ ErrCode BundleMgrProxy::GetSandboxBundleInfo(const std::string &bundleName, int3
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<BundleInfo>(BundleMgrInterfaceCode::GET_SANDBOX_APP_BUNDLE_INFO, data, info);
+    return GetParcelInfoIntelligent<BundleInfo>(
+        BundleMgrInterfaceCode::GET_SANDBOX_APP_BUNDLE_INFO, data, info);
 }
 
 bool BundleMgrProxy::GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
@@ -3588,6 +3653,53 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     }
     APP_LOGI("end %{public}s", bundleName.c_str());
     return true;
+}
+
+ErrCode BundleMgrProxy::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
+{
+    APP_LOGI_NOFUNC("GetTopNLargestItemsInAppDataDir -n %{public}s -u %{public}d -i %{public}d",
+        bundleName.c_str(), userId, appIndex);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+
+    if (bundleName.empty()) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir due to bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (getLargestItemsCallback == nullptr) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir due to params error");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to GetTopNLargestItemsInAppDataDir due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteRemoteObject(getLargestItemsCallback->AsObject())) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir, for write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR, data, reply)) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+
+    return reply.ReadInt32();
 }
 
 ErrCode BundleMgrProxy::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
@@ -4009,7 +4121,7 @@ ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, 
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<HapModuleInfo>(BundleMgrInterfaceCode::GET_SANDBOX_MODULE_INFO, data, info);
+    return GetParcelInfoIntelligent<HapModuleInfo>(BundleMgrInterfaceCode::GET_SANDBOX_MODULE_INFO, data, info);
 }
 
 ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::string &moduleName,
@@ -4258,8 +4370,8 @@ ErrCode BundleMgrProxy::GetAllAppProvisionInfo(const int32_t userId, std::vector
         APP_LOGE("fail to GetAllAppProvisionInfo due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<AppProvisionInfo>(BundleMgrInterfaceCode::GET_ALL_APP_PROVISION_INFO,
-        data, appProvisionInfos);
+    return GetVectorFromParcelIntelligentWithErrCode<AppProvisionInfo>
+        (BundleMgrInterfaceCode::GET_ALL_APP_PROVISION_INFO, data, appProvisionInfos);
 }
 
 ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,
@@ -4883,6 +4995,32 @@ sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
     }
 
     return bundleResourceProxy;
+}
+
+sptr<IBundleSkillManager> BundleMgrProxy::GetSkillManagerProxy()
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write InterfaceToken failed");
+        return nullptr;
+    }
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_SKILL_MANAGER_PROXY, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("reply failed");
+        return nullptr;
+    }
+    sptr<IBundleSkillManager> skillManagerProxy = iface_cast<IBundleSkillManager>(object);
+    if (skillManagerProxy == nullptr) {
+        APP_LOGE("skillManagerProxy is nullptr");
+    }
+
+    return skillManagerProxy;
 }
 
 ErrCode BundleMgrProxy::GetRecoverableApplicationInfo(
@@ -5736,6 +5874,20 @@ ErrCode BundleMgrProxy::GetAllPreinstalledApplicationInfos(
         BundleMgrInterfaceCode::GET_PREINSTALLED_APPLICATION_INFO, data, preinstalledApplicationInfos);
 }
 
+ErrCode BundleMgrProxy::GetAllNewPreinstalledApplicationInfos(
+    std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("Called");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Fail to reset due to WriteInterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<PreinstalledApplicationInfo>(
+        BundleMgrInterfaceCode::GET_ALL_NEW_PREINSTALLED_APPLICATION_INFOS, data, preinstalledApplicationInfos);
+}
+
 ErrCode BundleMgrProxy::SwitchUninstallState(const std::string &bundleName, const bool &state,
     bool isNeedSendNotify)
 {
@@ -5874,8 +6026,7 @@ ErrCode BundleMgrProxy::GetCloneBundleInfo(const std::string &bundleName, int32_
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<BundleInfo>(
-        BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO, data, bundleInfo);
+    return GetParcelInfoIntelligent<BundleInfo>(BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO, data, bundleInfo);
 }
 
 ErrCode BundleMgrProxy::GetCloneBundleInfoExt(const std::string &bundleName, uint32_t flags, int32_t appIndex,
@@ -5905,8 +6056,7 @@ ErrCode BundleMgrProxy::GetCloneBundleInfoExt(const std::string &bundleName, uin
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<BundleInfo>(
-        BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO_EXT, data, bundleInfo);
+    return GetParcelInfoIntelligent<BundleInfo>(BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO_EXT, data, bundleInfo);
 }
 
 ErrCode BundleMgrProxy::GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
@@ -6070,6 +6220,39 @@ ErrCode BundleMgrProxy::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &
     }
     return GetParcelInfoIntelligent<SignatureInfo>(
         BundleMgrInterfaceCode::GET_SIGNATURE_INFO_BY_UID, data, signatureInfo);
+}
+
+ErrCode BundleMgrProxy::GetApiTargetVersionByUid(const int32_t uid, int32_t &apiTargetVersion)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin GetApiTargetVersionByUid, uid: %{public}d", uid);
+    if (uid < 0) {
+        APP_LOGW_NOFUNC("proxy GetApiTargetVersionByUid invalid uid %{public}d", uid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("GetApiTargetVersionByUid write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(uid)) {
+        APP_LOGE_NOFUNC("GetApiTargetVersionByUid write uid fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_API_TARGET_VERSION_BY_UID, data, reply)) {
+        APP_LOGE_NOFUNC("GetApiTargetVersionByUid SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        apiTargetVersion = reply.ReadInt32();
+    }
+
+    APP_LOGD("GetApiTargetVersionByUid ret: %{public}d, apiTargetVersion: %{public}d", ret, apiTargetVersion);
+    return ret;
 }
 
 ErrCode BundleMgrProxy::UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex)
@@ -6777,7 +6960,7 @@ ErrCode BundleMgrProxy::GetPluginHapModuleInfo(const std::string &hostBundleName
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<HapModuleInfo>(
+    return GetParcelInfoIntelligent<HapModuleInfo>(
         BundleMgrInterfaceCode::GET_PLUGIN_HAP_MODULE_INFO, data, hapModuleInfo);
 }
 

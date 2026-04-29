@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,6 +48,7 @@ constexpr const char* IS_ENABLE = "isEnable";
 constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* ICON_ID = "iconId";
 constexpr const char* LABEL_ID = "labelId";
+constexpr const char* DESCRIPTION_ID = "descriptionId";
 constexpr const char* STATE = "state";
 const std::string PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
 constexpr const char* UNSPECIFIED = "UNSPECIFIED";
@@ -1711,7 +1712,7 @@ void GetApplicationLabelComplete(napi_env env, napi_status status, void *data)
     } else {
         APP_LOGE("asyncCallbackInfo errCode: %{public}d", asyncCallbackInfo->err);
         result[0] = BusinessError::CreateCommonError(
-            env, asyncCallbackInfo->err, GET_APPLICATION_LABEL, BUNDLE_PERMISSIONS);
+            env, asyncCallbackInfo->err, GET_APPLICATION_LABEL, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     CommonFunc::NapiReturnDeferred<ApplicationLabelCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
@@ -1738,7 +1739,8 @@ napi_value GetApplicationLabel(napi_env env, napi_callback_info info)
         }
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], asyncCallbackInfo->appIndex)) {
             APP_LOGW("parse appIndex failed, use default value 0");
-            asyncCallbackInfo->appIndex = 0;
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+            return nullptr;
         }
         if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
             napi_valuetype valueType = napi_undefined;
@@ -1750,11 +1752,6 @@ napi_value GetApplicationLabel(napi_env env, napi_callback_info info)
         }
     } else {
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
-    if (asyncCallbackInfo->bundleName.empty()) {
-        APP_LOGW("bundleName is empty");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationLabelCallbackInfo>(
@@ -3507,6 +3504,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::AGENT_UI), &nAgentUI));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AGENT_UI", nAgentUI));
+
+    napi_value nModularObject;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::MODULAR_OBJECT), &nModularObject));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "MODULAR_OBJECT", nModularObject));
 }
 
 void CreateApplicationFlagObject(napi_env env, napi_value value)
@@ -3860,6 +3862,18 @@ static ErrCode InnerGetBundleInfos(int32_t flags,
     return CommonFunc::ConvertErrCode(ret);
 }
 
+static ErrCode InnerGetInstalledBundleList(uint32_t flags,
+    int32_t userId, std::vector<BundleInfo> &bundleInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetInstalledBundleList(flags, userId, bundleInfos);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 void CreateBundleFlagObject(napi_env env, napi_value value)
 {
     napi_value nBundleInfoDefault;
@@ -4040,15 +4054,13 @@ void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
         if (asyncCallbackInfo->isSavedInCache) {
-            std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
-            auto item = cache.find(Query(
-                asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
-                asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
-            if (item == cache.end()) {
+            if (asyncCallbackInfo->cachedRef != nullptr) {
+                NAPI_CALL_RETURN_VOID(env,
+                    napi_get_reference_value(env, asyncCallbackInfo->cachedRef, &result[ARGS_POS_ONE]));
+            } else {
                 APP_LOGE("cannot find result in cache");
                 return;
             }
-            NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[ARGS_POS_ONE]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
             CommonFunc::ConvertBundleInfo(env,
@@ -4082,6 +4094,7 @@ void GetBundleInfoExec(napi_env env, void *data)
                 GET_BUNDLE_INFO, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
             if (item != cache.end()) {
                 asyncCallbackInfo->isSavedInCache = true;
+                asyncCallbackInfo->cachedRef = item->second;
                 APP_LOGD("GetBundleInfo param from cache");
                 return;
             }
@@ -4112,6 +4125,7 @@ void GetBundleInfoForSelfExec(napi_env env, void *data)
             asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
         if (item != cache.end()) {
             asyncCallbackInfo->isSavedInCache = true;
+            asyncCallbackInfo->cachedRef = item->second;
             APP_LOGD("GetBundleInfo param from cache");
             return;
         }
@@ -4245,6 +4259,85 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, GET_BUNDLE_INFOS, GetBundleInfosExec, GetBundleInfosComplete);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetBundleInfos done");
+    return promise;
+}
+
+void GetInstalledBundleListExec(napi_env env, void *data)
+{
+    InstalledBundleListCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstalledBundleListCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetInstalledBundleList(asyncCallbackInfo->flags,
+        asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfos);
+}
+
+void GetInstalledBundleListComplete(napi_env env, napi_status status, void *data)
+{
+    InstalledBundleListCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<InstalledBundleListCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<InstalledBundleListCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        ProcessBundleInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->bundleInfos, asyncCallbackInfo->flags);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_INSTALLED_BUNDLE_LIST, Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
+    }
+    CommonFunc::NapiReturnDeferred<InstalledBundleListCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetInstalledBundleList(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI_GetInstalledBundleList called");
+    NapiArg args(env, info);
+    InstalledBundleListCallbackInfo *asyncCallbackInfo = new (std::nothrow) InstalledBundleListCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<InstalledBundleListCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    if (args.GetMaxArgc() < ARGS_SIZE_ONE) {
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseUint(env, args[i], asyncCallbackInfo->flags)) {
+                APP_LOGE("Flags %{public}d invalid", asyncCallbackInfo->flags);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                break;
+            }
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<InstalledBundleListCallbackInfo>(
+        env, asyncCallbackInfo, GET_INSTALLED_BUNDLE_LIST, GetInstalledBundleListExec, GetInstalledBundleListComplete);
+    callbackPtr.release();
+    APP_LOGD("call NAPI_GetInstalledBundleList done");
     return promise;
 }
 
@@ -4646,6 +4739,11 @@ void CreateProfileTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(
         env, static_cast<int32_t>(ProfileType::INTENT_PROFILE), &nIntentProfile));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "INTENT_PROFILE", nIntentProfile));
+
+    napi_value nCloudProfile;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(
+        env, static_cast<int32_t>(ProfileType::CLOUD_PROFILE), &nCloudProfile));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CLOUD_PROFILE", nCloudProfile));
 }
 
 void GetAppProvisionInfoExec(napi_env env, void *data)
@@ -5285,6 +5383,13 @@ void ConvertPreinstalledApplicationInfo(napi_env env, const PreinstalledApplicat
     napi_value nIconId;
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, preinstalledApplicationInfo.iconId, &nIconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objPreinstalledApplicationInfo, ICON_ID, nIconId));
+    if (preinstalledApplicationInfo.descriptionId != 0) {
+        napi_value nDescriptionId;
+        NAPI_CALL_RETURN_VOID(
+            env, napi_create_int64(env, preinstalledApplicationInfo.descriptionId, &nDescriptionId));
+        NAPI_CALL_RETURN_VOID(
+            env, napi_set_named_property(env, objPreinstalledApplicationInfo, DESCRIPTION_ID, nDescriptionId));
+    }
 }
 
 
@@ -5358,6 +5463,64 @@ napi_value GetAllPreinstalledApplicationInfos(napi_env env, napi_callback_info i
     auto promise = CommonFunc::AsyncCallNativeMethod<PreinstalledApplicationInfosCallbackInfo>(env, asyncCallbackInfo,
         GET_ALL_PREINSTALLED_APP_INFOS, GetAllPreinstalledApplicationInfosExec,
         GetAllPreinstalledApplicationInfosComplete);
+    callbackPtr.release();
+    return promise;
+}
+
+void GetAllNewPreinstalledApplicationInfosComplete(napi_env env, napi_status status, void *data)
+{
+    PreinstalledApplicationInfosCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<PreinstalledApplicationInfosCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("AsyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<PreinstalledApplicationInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        ProcessPreinstalledApplicationInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->preinstalledApplicationInfos);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_ALL_NEW_PREINSTALLED_APP_INFOS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+    }
+    CommonFunc::NapiReturnDeferred<PreinstalledApplicationInfosCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+void GetAllNewPreinstalledApplicationInfosExec(napi_env env, void *data)
+{
+    PreinstalledApplicationInfosCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<PreinstalledApplicationInfosCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("AsyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err =
+        BundleManagerHelper::InnerGetAllNewPreinstalledApplicationInfos(
+            asyncCallbackInfo->preinstalledApplicationInfos);
+}
+
+napi_value GetAllNewPreinstalledApplicationInfos(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("Called");
+    NapiArg args(env, info);
+    PreinstalledApplicationInfosCallbackInfo *asyncCallbackInfo =
+        new (std::nothrow) PreinstalledApplicationInfosCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("AsyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<PreinstalledApplicationInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ZERO)) {
+        APP_LOGE("Param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<PreinstalledApplicationInfosCallbackInfo>(env, asyncCallbackInfo,
+        GET_ALL_NEW_PREINSTALLED_APP_INFOS, GetAllNewPreinstalledApplicationInfosExec,
+        GetAllNewPreinstalledApplicationInfosComplete);
     callbackPtr.release();
     return promise;
 }

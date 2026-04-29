@@ -561,6 +561,44 @@ static ani_string GetAbilityLabelNative(ani_env* env,
 #endif
 }
 
+static ani_string GetApplicationLabelNative(ani_env* env,
+    ani_string aniBundleName, ani_int aniAppIndex)
+{
+#ifdef GLOBAL_RESMGR_ENABLE
+    APP_LOGD("ani GetApplicationLabel called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("GetBundleMgr failed");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    std::string applicationLabel;
+    ErrCode ret = iBundleMgr->GetApplicationLabel(bundleName, aniAppIndex, applicationLabel);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetApplicationLabel failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+            GET_APPLICATION_LABEL, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+    ani_string aniApplicationLabel = nullptr;
+    if (!CommonFunAni::StringToAniStr(env, applicationLabel, aniApplicationLabel)) {
+        APP_LOGE("StringToAniStr failed");
+        return nullptr;
+    }
+    return aniApplicationLabel;
+#else
+    APP_LOGW("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_APPLICATION_LABEL, "");
+    return nullptr;
+#endif
+}
+
 static ani_object GetLaunchWantForBundleNative(ani_env* env,
     ani_string aniBundleName, ani_int aniUserId, ani_boolean aniIsSync)
 {
@@ -1364,6 +1402,22 @@ static ani_object GetAllPreinstalledApplicationInfoNative(ani_env* env)
         APP_LOGE("InnerGetAllPreinstalledApplicationInfos failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(
             env, ret, GET_ALL_PREINSTALLED_APP_INFOS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+
+    return CommonFunAni::ConvertAniArray(
+        env, preinstalledApplicationInfos, CommonFunAni::ConvertPreinstalledApplicationInfo);
+}
+
+static ani_object GetAllNewPreinstalledApplicationInfoNative(ani_env* env)
+{
+    APP_LOGD("ani GetAllNewPreinstalledApplicationInfoNative called");
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+    ErrCode ret = BundleManagerHelper::InnerGetAllNewPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetAllNewPreinstalledApplicationInfos failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(
+            env, ret, GET_ALL_NEW_PREINSTALLED_APP_INFOS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
 
@@ -2395,6 +2449,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getAppCloneIdentityNative", nullptr,
             reinterpret_cast<void*>(GetAppCloneIdentityNative) },
         ani_native_function { "getAbilityLabelNative", nullptr, reinterpret_cast<void*>(GetAbilityLabelNative) },
+        ani_native_function { "getApplicationLabelNative", nullptr, reinterpret_cast<void*>(GetApplicationLabelNative) },
         ani_native_function { "getLaunchWantForBundleNative", nullptr,
             reinterpret_cast<void*>(GetLaunchWantForBundleNative) },
         ani_native_function { "getAppCloneBundleInfoNative", nullptr,
@@ -2435,6 +2490,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "canOpenLink", nullptr, reinterpret_cast<void*>(CanOpenLink) },
         ani_native_function { "getAllPreinstalledApplicationInfoNative", nullptr,
             reinterpret_cast<void*>(GetAllPreinstalledApplicationInfoNative) },
+        ani_native_function { "getAllNewPreinstalledApplicationInfoNative", nullptr,
+            reinterpret_cast<void*>(GetAllNewPreinstalledApplicationInfoNative) },
         ani_native_function { "getAllBundleInfoByDeveloperId", nullptr,
             reinterpret_cast<void*>(GetAllBundleInfoByDeveloperId) },
         ani_native_function { "switchUninstallState", nullptr, reinterpret_cast<void*>(SwitchUninstallState) },
@@ -2520,11 +2577,17 @@ void ANIClearCacheListener::DoClearCache()
         APP_LOGE("env is empty");
     } else {
         for (auto& item : g_aniCache) {
-            env->GlobalReference_Delete(item.second);
+            status = env->GlobalReference_Delete(item.second);
+            if (status != ANI_OK) {
+                APP_LOGW("GlobalReference_Delete fail %{public}d", status);
+            }
         }
     }
     if (needDetach) {
-        g_vm->DetachCurrentThread();
+        status = g_vm->DetachCurrentThread();
+        if (status != ANI_OK) {
+            APP_LOGW("DetachCurrentThread fail %{public}d", status);
+        }
     }
     g_aniCache.clear();
 }

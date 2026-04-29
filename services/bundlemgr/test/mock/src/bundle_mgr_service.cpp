@@ -230,6 +230,11 @@ const std::shared_ptr<PreInstallExceptionMgr> BundleMgrService::GetPreInstallExc
     return nullptr;
 }
 
+const std::shared_ptr<OobePreloadUninstallMgr> BundleMgrService::GetOobePreloadUninstallMgr() const
+{
+    return nullptr;
+}
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 sptr<IDefaultApp> BundleMgrService::GetDefaultAppProxy() const
 {
@@ -300,6 +305,16 @@ bool BundleMgrService::IsBrokerServiceStarted() const
 int32_t BundleMgrService::OnExtension(const std::string& extension, MessageParcel& data, MessageParcel& reply)
 {
     return 0;
+}
+
+sptr<IBundleSkillManager> BundleMgrService::GetSkillManagerProxy() const
+{
+    return nullptr;
+}
+
+bool BundleMgrService::InitSkillManager()
+{
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

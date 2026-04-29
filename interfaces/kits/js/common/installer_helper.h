@@ -53,6 +53,7 @@ public:
     static ErrCode InnerAddExtResource(const std::string& bundleName, const std::vector<std::string>& filePaths);
     static ErrCode InnerRemoveExtResource(const std::string& bundleName, const std::vector<std::string>& moduleNames);
     static ErrCode InnerInstallPreexistingApp(std::string& bundleName, int32_t userId);
+    static ErrCode InnerUninstallNewPreinstalledApps(const std::vector<std::string>& bundleNames);
     static ErrCode InnerInstallPlugin(const std::string& hostBundleName,
         const std::vector<std::string>& pluginFilePaths, const InstallPluginParam& installPluginParam);
     static ErrCode InnerUninstallPlugin(const std::string& hostBundleName, const std::string& pluginBundleName,

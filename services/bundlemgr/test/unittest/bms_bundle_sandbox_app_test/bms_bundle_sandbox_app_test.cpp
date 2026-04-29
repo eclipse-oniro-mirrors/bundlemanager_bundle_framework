@@ -23,7 +23,9 @@
 #include "directory_ex.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
+#include "inner_bundle_info.h"
 #include "mock_status_receiver.h"
+#include "share_file_helper.h"
 #include "system_bundle_installer.h"
 
 using namespace testing::ext;
@@ -60,6 +62,12 @@ const int32_t USERID = 100;
 const int32_t INVALID_USERID = 300;
 const int32_t TEST_UID = 20010039;
 const int32_t WAIT_TIME = 2; // init mocked bms
+const std::string TEST_BUNDLE_NAME = "com.example.testbundle";
+const std::string TEST_MODULE_NAME = "entry";
+const std::string TEST_HAP_PATH = "/data/test/resource/test.hap";
+const std::string TEST_SHARE_FILES_JSON = R"({"shareFiles":[{"path":"/test/path","mode":"read"}]})";
+const int32_t TEST_USER_ID = 100;
+const uint32_t TEST_TOKEN_ID = 123456;
 } // namespace
 
 class BmsSandboxAppTest : public testing::Test {
@@ -2317,5 +2325,398 @@ HWTEST_F(BmsSandboxAppTest, DeleteSandboxAppIndex_0100, Function | SmallTest | L
     dataMgr.sandboxAppIndexMap_.insert(std::pair<std::string, std::set<int32_t>>(BUNDLE_NAME, set));
     bool ret = dataMgr.DeleteSandboxAppIndex(BUNDLE_NAME, INVALID_APP_INDEX);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ProcessBundleShareFiles_0200
+ * @tc.name: BundleSandboxInstaller::ProcessBundleShareFiles with null dataMgr
+ * @tc.desc: Test ProcessBundleShareFiles when dataMgr_ is nullptr (branch 1)
+ */
+HWTEST_F(BmsSandboxAppTest, ProcessBundleShareFiles_0200, Function | SmallTest | Level1)
+{
+    auto sandboxInstaller = std::make_shared<BundleSandboxInstaller>();
+    EXPECT_TRUE(sandboxInstaller != nullptr);
+    sandboxInstaller->dataMgr_ = nullptr;
+
+    InnerBundleInfo info;
+    std::string sandboxKey = "com.test.bundle|sandbox";
+    int32_t userId = TEST_USER_ID;
+    uint32_t tokenId = TEST_TOKEN_ID;
+
+    auto ret = sandboxInstaller->ProcessBundleShareFiles(info, sandboxKey, userId, tokenId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: ProcessBundleShareFiles_0300
+ * @tc.name: BundleSandboxInstaller::ProcessBundleShareFiles with empty moduleInfos
+ * @tc.desc: Test ProcessBundleShareFiles when bundle has no modules (branch 3)
+ */
+HWTEST_F(BmsSandboxAppTest, ProcessBundleShareFiles_0300, Function | SmallTest | Level1)
+{
+    auto sandboxInstaller = std::make_shared<BundleSandboxInstaller>();
+    EXPECT_TRUE(sandboxInstaller != nullptr);
+    SetDataMgr();
+    sandboxInstaller->dataMgr_ = bundleMgrService_->GetDataMgr();
+
+    InnerBundleInfo info;
+    std::string sandboxKey = "com.test.bundle|sandbox";
+    int32_t userId = TEST_USER_ID;
+    uint32_t tokenId = TEST_TOKEN_ID;
+
+    auto ret = sandboxInstaller->ProcessBundleShareFiles(info, sandboxKey, userId, tokenId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: ProcessBundleShareFiles_0400
+ * @tc.name: BundleSandboxInstaller::ProcessBundleShareFiles with non-entry module only
+ * @tc.desc: Test ProcessBundleShareFiles when bundle has only non-entry modules (branch 2.1)
+ */
+HWTEST_F(BmsSandboxAppTest, ProcessBundleShareFiles_0400, Function | SmallTest | Level1)
+{
+    auto sandboxInstaller = std::make_shared<BundleSandboxInstaller>();
+    EXPECT_TRUE(sandboxInstaller != nullptr);
+    SetDataMgr();
+    sandboxInstaller->dataMgr_ = bundleMgrService_->GetDataMgr();
+
+    BundleInfo bundleInfo;
+    bundleInfo.name = TEST_BUNDLE_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = TEST_BUNDLE_NAME;
+
+    InnerBundleInfo info;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "feature";
+    moduleInfo.isEntry = false;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfoMap;
+    innerModuleInfoMap["feature"] = moduleInfo;
+    info.AddInnerModuleInfo(innerModuleInfoMap);
+
+    std::string sandboxKey = "com.test.bundle|sandbox";
+    int32_t userId = TEST_USER_ID;
+    uint32_t tokenId = TEST_TOKEN_ID;
+
+    auto ret = sandboxInstaller->ProcessBundleShareFiles(info, sandboxKey, userId, tokenId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: ProcessBundleShareFiles_0500
+ * @tc.name: BundleSandboxInstaller::ProcessBundleShareFiles with entry module and empty shareFiles
+ * @tc.desc: Test ProcessBundleShareFiles with entry module but empty shareFiles (branch 2.4 success)
+ */
+HWTEST_F(BmsSandboxAppTest, ProcessBundleShareFiles_0500, Function | SmallTest | Level1)
+{
+    auto sandboxInstaller = std::make_shared<BundleSandboxInstaller>();
+    EXPECT_TRUE(sandboxInstaller != nullptr);
+    SetDataMgr();
+    sandboxInstaller->dataMgr_ = bundleMgrService_->GetDataMgr();
+
+    BundleInfo bundleInfo;
+    bundleInfo.name = TEST_BUNDLE_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = TEST_BUNDLE_NAME;
+
+    InnerBundleInfo info;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = TEST_MODULE_NAME;
+    moduleInfo.isEntry = true;
+    moduleInfo.hapPath = TEST_HAP_PATH;
+    moduleInfo.shareFiles.clear();
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfoMap;
+    innerModuleInfoMap[TEST_MODULE_NAME] = moduleInfo;
+    info.AddInnerModuleInfo(innerModuleInfoMap);
+
+    std::string sandboxKey = "com.test.bundle|sandbox";
+    int32_t userId = TEST_USER_ID;
+    uint32_t tokenId = TEST_TOKEN_ID;
+
+    auto ret = sandboxInstaller->ProcessBundleShareFiles(info, sandboxKey, userId, tokenId);
+    // May succeed with empty shareFiles or fail if hap file doesn't exist
+    EXPECT_TRUE(ret == ERR_OK || ret == ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST ||
+               ret == ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
+
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: ProcessBundleShareFiles_0600
+ * @tc.name: BundleSandboxInstaller::ProcessBundleShareFiles with invalid hapPath
+ * @tc.desc: Test ProcessBundleShareFiles when hapPath is invalid (branch 2.2)
+ */
+HWTEST_F(BmsSandboxAppTest, ProcessBundleShareFiles_0600, Function | SmallTest | Level1)
+{
+    auto sandboxInstaller = std::make_shared<BundleSandboxInstaller>();
+    EXPECT_TRUE(sandboxInstaller != nullptr);
+    SetDataMgr();
+    sandboxInstaller->dataMgr_ = bundleMgrService_->GetDataMgr();
+
+    BundleInfo bundleInfo;
+    bundleInfo.name = TEST_BUNDLE_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = TEST_BUNDLE_NAME;
+
+    InnerBundleInfo info;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = TEST_MODULE_NAME;
+    moduleInfo.isEntry = true;
+    moduleInfo.hapPath = "/invalid/path/nonexistent.hap";
+    moduleInfo.shareFiles = "/test/path";
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfoMap;
+    innerModuleInfoMap[TEST_MODULE_NAME] = moduleInfo;
+    info.AddInnerModuleInfo(innerModuleInfoMap);
+
+    std::string sandboxKey = "com.test.bundle|sandbox";
+    int32_t userId = TEST_USER_ID;
+    uint32_t tokenId = TEST_TOKEN_ID;
+
+    auto ret = sandboxInstaller->ProcessBundleShareFiles(info, sandboxKey, userId, tokenId);
+    EXPECT_TRUE(ret == ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST ||
+               ret == ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
+
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: ProcessBundleShareFiles_0700
+ * @tc.name: BundleSandboxInstaller::ProcessBundleShareFiles with multiple modules
+ * @tc.desc: Test ProcessBundleShareFiles with entry and non-entry modules (branch 2.1 skip)
+ */
+HWTEST_F(BmsSandboxAppTest, ProcessBundleShareFiles_0700, Function | SmallTest | Level1)
+{
+    auto sandboxInstaller = std::make_shared<BundleSandboxInstaller>();
+    EXPECT_TRUE(sandboxInstaller != nullptr);
+    SetDataMgr();
+    sandboxInstaller->dataMgr_ = bundleMgrService_->GetDataMgr();
+
+    BundleInfo bundleInfo;
+    bundleInfo.name = TEST_BUNDLE_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = TEST_BUNDLE_NAME;
+
+    InnerBundleInfo info;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    // Add feature module (non-entry)
+    InnerModuleInfo featureModule;
+    featureModule.moduleName = "feature";
+    featureModule.isEntry = false;
+    featureModule.shareFiles = "/feature/path";
+
+    // Add entry module
+    InnerModuleInfo entryModule;
+    entryModule.moduleName = TEST_MODULE_NAME;
+    entryModule.isEntry = true;
+    entryModule.hapPath = TEST_HAP_PATH;
+    entryModule.shareFiles.clear();
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfoMap;
+    innerModuleInfoMap["feature"] = featureModule;
+    innerModuleInfoMap[TEST_MODULE_NAME] = entryModule;
+    info.AddInnerModuleInfo(innerModuleInfoMap);
+
+    std::string sandboxKey = "com.test.bundle|sandbox";
+    int32_t userId = TEST_USER_ID;
+    uint32_t tokenId = TEST_TOKEN_ID;
+
+    auto ret = sandboxInstaller->ProcessBundleShareFiles(info, sandboxKey, userId, tokenId);
+    // Should process only entry module
+    EXPECT_TRUE(ret == ERR_OK || ret == ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST ||
+               ret == ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
+
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: ProcessBundleShareFiles_0800
+ * @tc.name: BundleSandboxInstaller::ProcessBundleShareFiles with empty sandboxKey
+ * @tc.desc: Test ProcessBundleShareFiles with empty sandboxKey
+ */
+HWTEST_F(BmsSandboxAppTest, ProcessBundleShareFiles_0800, Function | SmallTest | Level1)
+{
+    auto sandboxInstaller = std::make_shared<BundleSandboxInstaller>();
+    EXPECT_TRUE(sandboxInstaller != nullptr);
+    SetDataMgr();
+    sandboxInstaller->dataMgr_ = bundleMgrService_->GetDataMgr();
+
+    InnerBundleInfo info;
+    std::string sandboxKey = "";
+    int32_t userId = TEST_USER_ID;
+    uint32_t tokenId = TEST_TOKEN_ID;
+
+    auto ret = sandboxInstaller->ProcessBundleShareFiles(info, sandboxKey, userId, tokenId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: ProcessBundleShareFiles_0900
+ * @tc.name: BundleSandboxInstaller::ProcessBundleShareFiles with edge case userId/tokenId
+ * @tc.desc: Test ProcessBundleShareFiles with extreme userId and tokenId values
+ */
+HWTEST_F(BmsSandboxAppTest, ProcessBundleShareFiles_0900, Function | SmallTest | Level1)
+{
+    auto sandboxInstaller = std::make_shared<BundleSandboxInstaller>();
+    EXPECT_TRUE(sandboxInstaller != nullptr);
+    SetDataMgr();
+    sandboxInstaller->dataMgr_ = bundleMgrService_->GetDataMgr();
+
+    InnerBundleInfo info;
+
+    // Test with minimum values
+    auto ret1 = sandboxInstaller->ProcessBundleShareFiles(info, "com.test.bundle|sandbox", 0, 0);
+    EXPECT_EQ(ret1, ERR_OK);
+
+    // Test with maximum values
+    auto ret2 = sandboxInstaller->ProcessBundleShareFiles(info, "com.test.bundle|sandbox", INT32_MAX, UINT32_MAX);
+    EXPECT_EQ(ret2, ERR_OK);
+
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: ProcessBundleShareFiles_1000
+ * @tc.name: BundleSandboxInstaller::ProcessBundleShareFiles complete success path
+ * @tc.desc: Test ProcessBundleShareFiles with valid entry module (branch 2.4)
+ */
+HWTEST_F(BmsSandboxAppTest, ProcessBundleShareFiles_1000, Function | SmallTest | Level1)
+{
+    auto sandboxInstaller = std::make_shared<BundleSandboxInstaller>();
+    EXPECT_TRUE(sandboxInstaller != nullptr);
+    SetDataMgr();
+    sandboxInstaller->dataMgr_ = bundleMgrService_->GetDataMgr();
+
+    BundleInfo bundleInfo;
+    bundleInfo.name = TEST_BUNDLE_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = TEST_BUNDLE_NAME;
+
+    InnerBundleInfo info;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = TEST_MODULE_NAME;
+    moduleInfo.isEntry = true;
+    moduleInfo.hapPath = "/data/test/resource.hap";
+    moduleInfo.shareFiles = "/test/sharefiles/path";
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfoMap;
+    innerModuleInfoMap[TEST_MODULE_NAME] = moduleInfo;
+    info.AddInnerModuleInfo(innerModuleInfoMap);
+
+    std::string sandboxKey = "com.test.bundle|sandbox";
+    int32_t userId = TEST_USER_ID;
+    uint32_t tokenId = TEST_TOKEN_ID;
+
+    auto ret = sandboxInstaller->ProcessBundleShareFiles(info, sandboxKey, userId, tokenId);
+    // May fail due to non-existent hap file, which is expected in test environment
+    EXPECT_TRUE(ret == ERR_OK || ret == ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST ||
+               ret == ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
+
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: ProcessBundleShareFiles_1100
+ * @tc.name: BundleSandboxInstaller::ProcessBundleShareFiles multiple entry modules
+ * @tc.desc: Test ProcessBundleShareFiles processes first entry module only
+ */
+HWTEST_F(BmsSandboxAppTest, ProcessBundleShareFiles_1100, Function | SmallTest | Level1)
+{
+    auto sandboxInstaller = std::make_shared<BundleSandboxInstaller>();
+    EXPECT_TRUE(sandboxInstaller != nullptr);
+    SetDataMgr();
+    sandboxInstaller->dataMgr_ = bundleMgrService_->GetDataMgr();
+
+    BundleInfo bundleInfo;
+    bundleInfo.name = TEST_BUNDLE_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = TEST_BUNDLE_NAME;
+
+    InnerBundleInfo info;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    // Add first entry module
+    InnerModuleInfo entryModule1;
+    entryModule1.moduleName = "entry1";
+    entryModule1.isEntry = true;
+    entryModule1.hapPath = TEST_HAP_PATH;
+    entryModule1.shareFiles.clear();
+
+    // Add second entry module
+    InnerModuleInfo entryModule2;
+    entryModule2.moduleName = "entry2";
+    entryModule2.isEntry = true;
+    entryModule2.hapPath = "/data/test/entry2.hap";
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfoMap;
+    innerModuleInfoMap["entry1"] = entryModule1;
+    innerModuleInfoMap["entry2"] = entryModule2;
+    info.AddInnerModuleInfo(innerModuleInfoMap);
+
+    std::string sandboxKey = "com.test.bundle|sandbox";
+    int32_t userId = TEST_USER_ID;
+    uint32_t tokenId = TEST_TOKEN_ID;
+
+    auto ret = sandboxInstaller->ProcessBundleShareFiles(info, sandboxKey, userId, tokenId);
+    // Should process first entry module and return
+    EXPECT_TRUE(ret == ERR_OK || ret == ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST ||
+               ret == ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
+
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: ProcessBundleShareFiles_1200
+ * @tc.name: BundleSandboxInstaller::ProcessBundleShareFiles with special sandboxKey format
+ * @tc.desc: Test ProcessBundleShareFiles with various sandboxKey formats
+ */
+HWTEST_F(BmsSandboxAppTest, ProcessBundleShareFiles_1200, Function | SmallTest | Level1)
+{
+    auto sandboxInstaller = std::make_shared<BundleSandboxInstaller>();
+    EXPECT_TRUE(sandboxInstaller != nullptr);
+    SetDataMgr();
+    sandboxInstaller->dataMgr_ = bundleMgrService_->GetDataMgr();
+
+    InnerBundleInfo info;
+
+    // Test with standard sandbox key format
+    auto ret1 = sandboxInstaller->ProcessBundleShareFiles(
+        info, "com.example.app|sandbox", TEST_USER_ID, TEST_TOKEN_ID);
+    EXPECT_EQ(ret1, ERR_OK);
+
+    // Test with sandbox key including version
+    auto ret2 = sandboxInstaller->ProcessBundleShareFiles(
+        info, "com.example.app|sandbox|1.0", TEST_USER_ID, TEST_TOKEN_ID);
+    EXPECT_EQ(ret2, ERR_OK);
+
+    // Test with long sandbox key
+    auto ret3 = sandboxInstaller->ProcessBundleShareFiles(
+        info, "com.very.long.bundle.name.with.many.dots|sandbox|with|multiple|parts",
+        TEST_USER_ID, TEST_TOKEN_ID);
+    EXPECT_EQ(ret3, ERR_OK);
+
+    ClearDataMgr();
 }
 } // OHOS

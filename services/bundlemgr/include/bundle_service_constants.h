@@ -68,6 +68,8 @@ constexpr const char* APP_FILE_SUFFIX = ".app";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
 constexpr const char* CER_SUFFIX = ".cer";
 constexpr const char* XML_FILE_SUFFIX = ".xml";
+constexpr const char* BAP_SUFFIX = ".bap";
+constexpr const char* BAP_DIR = "resources/rawfile/baseline_profile/";
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
 constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
@@ -89,6 +91,7 @@ constexpr const char* FILE_SEPARATOR_PLUS = "+";
 constexpr const char* BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bms/bundle_manager_service";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install";
+constexpr const char* APP_CLONE_SANDBOX_PATH = "/data/bms_app_clone/";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
 constexpr const char* DATA_GROUP_PATH = "/group/";
 constexpr const char* STREAM_INSTALL_PATH = "stream_install";
@@ -304,7 +307,7 @@ constexpr const char* EXT_PROFILE = "ext_profile";
 constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
 constexpr const char* MANIFEST_JSON = "manifest.json";
 constexpr const char* CLOUD_PROFILE_PATH = "resources/base/profile/cloudkit_config.json";
-constexpr const char* META_KEEP_TOKEN_ID_KEY = "ohos.fileshare.supportPreservePersistentPermisson";
+constexpr const char* META_KEEP_TOKEN_ID_KEY = "ohos.fileshare.supportPreservePersistentPermission";
 // for install param
 constexpr const char* BMS_PARA_INSTALL_BUNDLE_NAME = "ohos.bms.param.installBundleName";
 // for install downgrade
@@ -316,6 +319,10 @@ constexpr const char* BMS_PARA_INSTALL_GRANT_PERMISSION = "ohos.bms.param.instal
 
 //plugin file path
 constexpr const char* PLUGIN_FILE_PATH = "+plugins";
+
+//skill path
+constexpr const char* SKILL_FILE_PATH = "/data/app/el1/skills/public";
+constexpr const char* SKILL_DIR = "skills";
 
 // enterprise re sign cert
 constexpr const char* DELETE_CERT_PREFIX = ".deleteCer";

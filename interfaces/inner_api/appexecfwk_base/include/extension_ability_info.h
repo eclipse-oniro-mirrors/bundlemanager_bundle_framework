@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -87,6 +87,7 @@ enum class ExtensionAbilityType {
     PARTNER_AGENT = 36,
     AGENT = 37,
     AGENT_UI = 38,
+    MODULAR_OBJECT = 39,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
@@ -99,6 +100,7 @@ enum class ExtensionAbilityType {
     STATUS_BAR_VIEW = 264,
     LIVEVIEW_LOCKSCREEN = 265,
     UI_SERVICE = 269,
+    ASSET_CACHE = 270,
     SYSDIALOG_USERAUTH = 300,
     SYSDIALOG_COMMON = 301,
     SYSDIALOG_ATOMICSERVICEPANEL = 302,
@@ -126,8 +128,8 @@ enum class ExtensionAbilityType {
     RECENT_PHOTO = 506,
     AWC_WEBPAGE = 507,
     AWC_NEWSFEED = 508,
-    CONTENT_EMBED = 509,
-    EMBEDDED_CASHIER = 510
+    EMBEDDED_CASHIER = 510,
+    CONTENT_EMBED = 511
 };
 
 enum class CompileMode {
@@ -167,6 +169,7 @@ struct ExtensionAbilityInfo : public Parcelable {
 
     // Specifies whether the ability can run in an independent process
     bool isolationProcess = false;
+    bool skipAbilityStageLifecycle = false;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;

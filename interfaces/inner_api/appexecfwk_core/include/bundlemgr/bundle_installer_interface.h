@@ -203,6 +203,11 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode DeleteReSignCert(int32_t userId)
     {
         return ERR_OK;

@@ -189,6 +189,22 @@ bool AccountHelper::CheckOsAccountConstraintEnabled(const int32_t userId, const 
 #endif
 }
 
+bool AccountHelper::IsPrivateSpaceUser(const int32_t userId)
+{
+#ifdef ACCOUNT_ENABLE
+    AccountSA::OsAccountType accountType = AccountSA::OsAccountType::NORMAL;
+    int32_t ret = AccountSA::OsAccountManager::GetOsAccountType(userId, accountType);
+    if (ret != 0) {
+        APP_LOGE("GetOsAccountType failed, userId:%{public}d ret:%{public}d", userId, ret);
+        return false;
+    }
+    return accountType == AccountSA::OsAccountType::PRIVATE;
+#else
+    APP_LOGI("ACCOUNT_ENABLE is false");
+    return false;
+#endif
+}
+
 bool AccountHelper::CheckUserIsolation(
     const int32_t targetUserId, const std::unordered_set<int32_t> &installedUserIds)
 {

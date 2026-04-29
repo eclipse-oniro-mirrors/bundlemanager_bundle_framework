@@ -72,6 +72,13 @@ struct DefinePermission {
     std::string availableType;
 };
 
+struct SkillProfile {
+    std::string name;
+    std::string abilityName;
+    std::vector<std::string> srcEntries;
+    std::vector<std::string> permissions;
+};
+
 struct InnerModuleInfo {
     bool isEntry = false;
     bool installationFree = false;
@@ -147,6 +154,7 @@ struct InnerModuleInfo {
     std::vector<std::string> skillKeys;
     std::vector<std::string> deviceTypes;
     std::map<std::string, std::vector<std::string>> requiredDeviceFeatures;
+    std::vector<std::string> librarySupportDirectory;
     std::vector<std::string> extensionKeys;
     std::vector<std::string> extensionSkillKeys;
     std::vector<std::string> nativeLibraryFileNames;
@@ -158,6 +166,7 @@ struct InnerModuleInfo {
     std::vector<DefinePermission> definePermissions;
     std::vector<RequestPermission> requestPermissions;
     std::vector<Metadata> metadata;
+    std::vector<SkillProfile> skillProfiles;
     std::vector<Dependency> dependencies;
     std::vector<OverlayModuleInfo> overlayModuleInfo;
     std::vector<ProxyData> proxyDatas;
@@ -541,6 +550,8 @@ public:
     ErrCode SetApplicationEnabled(bool enabled, const std::string &caller,
         int32_t userId = Constants::UNSPECIFIED_USERID);
     ErrCode SetCloneApplicationEnabled(bool enabled, int32_t appIndex, const std::string &caller, int32_t userId);
+    ErrCode SetBundleFirstLaunch(bool isBundleFirstLaunched, int32_t userId = Constants::UNSPECIFIED_USERID);
+    ErrCode SetCloneBundleFirstLaunch(bool isBundleFirstLaunched, int32_t appIndex, int32_t userId);
     ErrCode SetCloneAbilityEnabled(const std::string &moduleName, const std::string &abilityName,
         bool isEnabled, int32_t userId, int32_t appIndex);
     /**
@@ -1074,6 +1085,8 @@ public:
 
     std::string GetMainAbility() const;
 
+    std::string GetEntryAbilityKey() const;
+
     void GetMainAbilityInfo(AbilityInfo &abilityInfo) const;
 
     std::string GetModuleDir(std::string modulePackage) const
@@ -1208,6 +1221,13 @@ public:
         }
     }
 
+    void SetModuleLibrarySupportDirectory(const std::vector<std::string> &librarySupportDirectory)
+    {
+        if (innerModuleInfos_.count(currentPackage_) == 1) {
+            innerModuleInfos_.at(currentPackage_).librarySupportDirectory = librarySupportDirectory;
+        }
+    }
+
     void SetModuleNativeLibraryPath(const std::string &nativeLibraryPath)
     {
         if (innerModuleInfos_.count(currentPackage_) == 1) {
@@ -1278,6 +1298,7 @@ public:
     std::optional<std::vector<HnpPackage>> GetInnerModuleInfoHnpInfo(const std::string &moduleName) const;
     std::string GetInnerModuleInfoHnpPath(const std::string &moduleName) const;
     void GetModuleNames(std::vector<std::string> &moduleNames) const;
+    std::string GetEventModuleName() const;
 
     void AddExtendResourceInfos(std::vector<ExtendResourceInfo> extendResourceInfos)
     {
@@ -2212,6 +2233,11 @@ public:
         return baseApplicationInfo_->assetAccessGroups;
     }
 
+    std::vector<std::string> GetAllowListenBundleChangedEvent() const
+    {
+        return baseApplicationInfo_->allowListenBundleChangedEvent;
+    }
+
     std::string GetDeveloperId() const
     {
         return developerId_;
@@ -2422,7 +2448,7 @@ public:
     bool GetBundleInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
         BundleInfo &bundleInfo) const;
     ErrCode VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appIndex);
-    void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const;
+    void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo, bool getDesc = false) const;
     bool IsHwasanEnabled() const;
     bool IsUbsanEnabled() const;
     ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex);
@@ -2587,8 +2613,10 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
 void from_json(const nlohmann::json &jsonObject, Dependency &dependency);
 void from_json(const nlohmann::json &jsonObject, OverlayBundleInfo &overlayBundleInfo);
 void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResourceInfo);
+void from_json(const nlohmann::json &jsonObject, SkillProfile &skillProfile);
 void to_json(nlohmann::json &jsonObject, const ExtendResourceInfo &extendResourceInfo);
 void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info);
+void to_json(nlohmann::json &jsonObject, const SkillProfile &skillProfile);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_INFO_H

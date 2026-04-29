@@ -254,8 +254,6 @@ void ShortcutVisibleDataStorageRdb::GetStorageShortcutInfos(const std::string &b
         }
         ShortcutInfo shortcutInfo;
         from_json(jsonObject, shortcutInfo);
-        shortcutInfos.erase(std::remove_if(shortcutInfos.begin(), shortcutInfos.end(),
-            [&shortcutInfo](const ShortcutInfo &s) { return s.id == shortcutInfo.id; }), shortcutInfos.end());
         result.emplace_back(shortcutInfo);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
     shortcutInfos.insert(shortcutInfos.end(), result.begin(), result.end());

@@ -29,7 +29,8 @@
             "bundle_framework_quick_fix",
             "bundle_framework_form_dimension_2_3",
             "bundle_framework_form_dimension_3_3",
-            "bundle_framework_bss_enable"
+            "bundle_framework_bss_enable",
+            "bundle_framework_app_fwk_update_enable"
         ],
         "hisysevent_config": [
             "//foundation/bundlemanager/bundle_framework/hisysevent.yaml",
@@ -52,6 +53,7 @@
                 "config_policy",
                 "c_utils",
                 "device_info_manager",
+                "device_manager",
                 "device_usage_statistics",
                 "display_manager",
                 "ecological_rule_manager",
@@ -78,6 +80,7 @@
                 "safwk",
                 "resource_management",
                 "samgr",
+                "sandbox_manager",
                 "selinux",
                 "selinux_adapter",
                 "syscap_codec",

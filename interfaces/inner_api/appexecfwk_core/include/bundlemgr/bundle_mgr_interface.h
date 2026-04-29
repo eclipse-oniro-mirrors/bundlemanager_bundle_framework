@@ -35,9 +35,11 @@
 #include "bundle_user_mgr_interface.h"
 #include "clean_cache_callback_interface.h"
 #include "common_event_info.h"
+#include "get_largest_items_callback_interface.h"
 #include "data_group_info.h"
 #include "app_control_interface.h"
 #include "bundle_resource_interface.h"
+#include "bundle_skill/skill_manager_interface.h"
 #include "default_app_interface.h"
 #include "extend_resource_manager_interface.h"
 #include "ibundle_mgr_ext.h"
@@ -351,6 +353,17 @@ public:
      * @return Returns ERR_OK if the BundleInfos is successfully obtained; returns error code otherwise.
      */
     virtual ErrCode GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
+     * @brief Obtains the BundleInfo of all bundles with only permission check.
+     * @param flags Indicates the flag used to specify information contained in the BundleInfo.
+     * @param bundleInfos Indicates all of the obtained BundleInfo objects.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfos is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetInstalledBundleList(uint32_t flags, int32_t userId, std::vector<BundleInfo> &bundleInfos)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -725,6 +738,19 @@ public:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     virtual ErrCode GetApplicationLabel(const std::string &bundleName, int32_t appIndex, std::string &label)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
+     * @brief Sets whether the application is first launch.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param userId Indicates the user ID.
+     * @param appIndex Indicates the app index, 0 for normal app, > 0 for clone app.
+     * @param isBundleFirstLaunched Specifies whether the application is first launch.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    virtual ErrCode SetBundleFirstLaunch(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, bool isBundleFirstLaunched)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -1445,6 +1471,12 @@ public:
         return false;
     }
 
+    virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
         std::vector<BundleStorageStats> &bundleStats)
     {
@@ -1697,6 +1729,11 @@ public:
         return nullptr;
     }
 
+    virtual sptr<IBundleSkillManager> GetSkillManagerProxy()
+    {
+        return nullptr;
+    }
+
     virtual ErrCode GetRecoverableApplicationInfo(std::vector<RecoverableApplicationInfo> &recoverableApplications)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
@@ -1733,6 +1770,17 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
     virtual ErrCode GetAllPreinstalledApplicationInfos(
+        std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    /**
+     * @brief Get OTA new preinstalled application infos for current user.
+     * @param preinstalledApplicationInfos Indicates the obtained PreinstalledApplicationInfo objects.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode GetAllNewPreinstalledApplicationInfos(
         std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
@@ -1851,6 +1899,17 @@ public:
     }
 
     virtual ErrCode GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    /**
+     * @brief Obtains the apiTargetVersion based on a given uid.
+     * @param uid Indicates the uid of the application.
+     * @param apiTargetVersion Indicates the obtained apiTargetVersion value.
+     * @return Returns ERR_OK if successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetApiTargetVersionByUid(const int32_t uid, int32_t &apiTargetVersion)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

@@ -24,6 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 struct CodeSignatureParam : public Parcelable {
     bool isEnterpriseBundle = false;
+    bool isEnterpriseResigned = false;
     bool isPreInstalledBundle = false;
     bool isCompileSdkOpenHarmony = false;
     bool isInternaltestingBundle = false;

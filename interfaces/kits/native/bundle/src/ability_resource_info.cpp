@@ -20,7 +20,7 @@
 
 #include "ability_resource_info.h"
 #include "app_log_wrapper.h"
-#include "native/drawable_descriptor.h"
+#include "drawable_manager.h"
 #include "securec.h"
 
 namespace {
@@ -133,7 +133,7 @@ bool ReleaseResourceInfo(OH_NativeBundle_AbilityResourceInfo* resourceInfo, size
         ReleaseChar(resourceInfo[i].abilityName);
         ReleaseChar(resourceInfo[i].label);
         if (resourceInfo[i].drawableIcon != nullptr) {
-            OH_ArkUI_DrawableDescriptor_Dispose(resourceInfo[i].drawableIcon);
+            OHOS::AppExecFwk::DrawableManager::GetInstance().DisposeDrawableDescriptor(resourceInfo[i].drawableIcon);
             resourceInfo[i].drawableIcon = nullptr;
         }
     }

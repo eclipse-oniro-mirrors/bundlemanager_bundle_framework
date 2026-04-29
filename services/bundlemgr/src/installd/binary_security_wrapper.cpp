@@ -85,7 +85,7 @@ void BinarySecurityWrapper::ScheduleUnload()
     delayedTaskMgr_->ScheduleDelayedTask(unloadTask);
 }
 
-ErrCode BinarySecurityWrapper::ProcessHapBinInstall(
+ErrCode __attribute__((no_sanitize("cfi"))) BinarySecurityWrapper::ProcessHapBinInstall(
     const std::string &bundleName,
     const std::string &appIdentifier, int32_t userId,
     const std::vector<BinFileInfo> &binFileInfos)
