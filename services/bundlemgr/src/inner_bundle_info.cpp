@@ -2867,6 +2867,14 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     }
     appInfo.appIndex = appIndex;
     appInfo.hasPlugin = innerBundleUserInfoPtr->installedPluginSet.empty() ? false : true;
+    // set skillEnabled based on skillProfiles
+    appInfo.skillEnabled = false;
+    for (const auto &modulePair : innerModuleInfos_) {
+        if (!modulePair.second.skillProfiles.empty()) {
+            appInfo.skillEnabled = true;
+            break;
+        }
+    }
     // The label and icon are first used under main ability
     AdaptMainLauncherResourceInfo(appInfo);
 
@@ -2932,6 +2940,14 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
         RemoveDuplicateName(appInfo.permissions);
     }
     appInfo.hasPlugin = innerBundleUserInfoPtr->installedPluginSet.empty() ? false : true;
+    // set skillEnabled based on skillProfiles
+    appInfo.skillEnabled = false;
+    for (const auto &modulePair : innerModuleInfos_) {
+        if (!modulePair.second.skillProfiles.empty()) {
+            appInfo.skillEnabled = true;
+            break;
+        }
+    }
     // The label and icon are first used under main ability
     AdaptMainLauncherResourceInfo(appInfo);
 

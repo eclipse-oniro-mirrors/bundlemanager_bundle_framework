@@ -256,6 +256,7 @@ struct ApplicationInfo : public Parcelable {
     bool hwasanEnabled = false;
     bool ubsanEnabled = false;
     bool installedForAllUser = false;
+    bool skillEnabled = false;
 
     // forceRotate only for broker
     bool isForceRotate = false;
