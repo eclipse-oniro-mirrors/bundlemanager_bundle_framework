@@ -54,6 +54,7 @@
 #include "inner_bundle_clone_info.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
+#include "bundle_skill/skill_info.h"
 #include "ipc/create_dir_param.h"
 #include "uninstall_data_mgr_storage_rdb.h"
 #include "module_info.h"
@@ -438,6 +439,15 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
      */
     ErrCode GetLaunchWantForBundle(
+        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    /**
+     * @brief Obtains the Want for starting the main ability of an application based on the given bundle name sync.
+     * @param bundleName Indicates the bundle name.
+     * @param want Indicates the obtained launch Want object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    ErrCode GetLaunchWantForBundleSync(
         const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Obtain the HAP module info of a specific ability.
@@ -1128,6 +1138,8 @@ public:
 
     void UpdateIsPreInstallApp(const std::string &bundleName, bool isPreInstallApp);
 
+    int32_t GetResponseUserId(const std::string &bundleName, const int32_t userId) const;
+
     /**
      * @brief Check whether the link can be opened.
      * @param link Indicates the link to be opened.
@@ -1322,6 +1334,16 @@ public:
     ErrCode CheckBundleExist(const std::string &bundleName, int32_t userId, int32_t appIndex) const;
     bool DeleteRouterInfoForSharedBundle(const InnerBundleInfo &info, const int32_t versionCode);
     std::vector<std::string> GetAllowListenBundleNames(const std::string &bundleName) const;
+    ErrCode GetSkillInfoForSelf(const std::string &moduleName, const std::string &skillName,
+        int32_t userId, uint32_t flags, SkillInfo &skillInfo);
+    ErrCode GetSkillInfosForSelf(uint32_t flags, int32_t userId,
+        std::vector<SkillInfo> &skillInfos);
+    ErrCode GetSkillInfo(const std::string &bundleName, const std::string &moduleName,
+        const std::string &skillName, uint32_t flags, int32_t userId, SkillInfo &skillInfo);
+    ErrCode GetSkillInfos(const std::string &bundleName, uint32_t flags,
+        int32_t userId, std::vector<SkillInfo> &skillInfos);
+    ErrCode GetAllSkillInfos(uint32_t flags, int32_t userId,
+        std::vector<SkillInfo> &skillInfos);
 private:
     /**
      * @brief Init transferStates.
@@ -1572,6 +1594,9 @@ private:
     bool ParseUserKey(const std::string &userKey, int32_t &userId, int32_t &appIndex) const;
 
 private:
+    static void GetSkillInfoWithFlags(const InnerBundleInfo &info, const InnerModuleInfo &moduleInfo,
+        const SkillProfile &profile, SkillType skillType, uint32_t flags, SkillInfo &skillInfo);
+
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
     mutable std::mutex stateMutex_;

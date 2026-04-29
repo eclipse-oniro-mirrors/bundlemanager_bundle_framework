@@ -16,6 +16,7 @@
 #include "skills_description_rdb.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "scope_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -64,7 +65,6 @@ ErrCode SkillsDescriptionRdb::AddSkillDescriptions(const std::vector<SkillsPacka
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
-    std::vector<NativeRdb::ValuesBucket> valuesBucketList;
     for (const auto &skillInfo : skillInfoList) {
         if (skillInfo.bundleName.empty() || skillInfo.moduleName.empty() || skillInfo.skillsName.empty()) {
             APP_LOGE("AddSkillDescriptions failed, bundleName or moduleName or skillsName is empty");
@@ -76,22 +76,14 @@ ErrCode SkillsDescriptionRdb::AddSkillDescriptions(const std::vector<SkillsPacka
         valuesBucket.PutString(MODULE_NAME, skillInfo.moduleName);
         valuesBucket.PutString(SKILL_NAME, skillInfo.skillsName);
         valuesBucket.PutString(DESCRIPTION, skillInfo.description);
-        valuesBucketList.push_back(valuesBucket);
-    }
-
-    if (valuesBucketList.empty()) {
-        APP_LOGE("AddSkillDescriptions failed, no valid skillInfo to insert");
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
-    }
-
-    int64_t insertNum = 0;
-    if (!rdbDataManager_->BatchInsert(insertNum, valuesBucketList)) {
-        APP_LOGE("AddSkillDescriptions failed, BatchInsertData returned false");
-        return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
-    }
-    if (valuesBucketList.size() != static_cast<uint64_t>(insertNum)) {
-        APP_LOGE("BatchInsert size not expected");
-        return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
+        NativeRdb::AbsRdbPredicates absRdbPredicates(SKILLS_DESCRIPTION_TABLE_NAME);
+        absRdbPredicates.EqualTo(BUNDLE_NAME, skillInfo.bundleName);
+        absRdbPredicates.EqualTo(MODULE_NAME, skillInfo.moduleName);
+        absRdbPredicates.EqualTo(SKILL_NAME, skillInfo.skillsName);
+        if (!rdbDataManager_->UpdateOrInsertData(valuesBucket, absRdbPredicates)) {
+            APP_LOGE("AddSkillDescriptions failed, UpdateOrInsertData returned false");
+            return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
+        }
     }
 
     return ERR_OK;
@@ -145,6 +137,44 @@ ErrCode SkillsDescriptionRdb::DeleteSkillDescriptions(const std::string &bundleN
     if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
         APP_LOGE("DeleteSkillDescriptions failed, DeleteData returned false");
         return ERR_APPEXECFWK_DB_DELETE_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode SkillsDescriptionRdb::GetSkillDescription(const std::string &bundleName,
+    const std::string &moduleName, const std::string &skillName, std::string &description)
+{
+    NativeRdb::AbsRdbPredicates absRdbPredicates(SKILLS_DESCRIPTION_TABLE_NAME);
+    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
+    absRdbPredicates.EqualTo(MODULE_NAME, moduleName);
+    absRdbPredicates.EqualTo(SKILL_NAME, skillName);
+
+    auto resultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (resultSet == nullptr) {
+        APP_LOGE("GetSkillDescription failed, resultSet is null");
+        return ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
+    }
+    ScopeGuard guard([resultSet] { resultSet->Close(); });
+
+    int32_t rowCount = 0;
+    int ret = resultSet->GetRowCount(rowCount);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGD("GetRowCount failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    if (rowCount == 0) {
+        APP_LOGD("GetSkillDescription size 0");
+        return ERR_OK;
+    }
+    ret = resultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    ret = resultSet->GetString(INDEX_DESCRIPTION, description);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GetString description failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
     return ERR_OK;
 }

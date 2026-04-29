@@ -126,6 +126,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::SCAN_DIR):
             result = this->HandleScanDir(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR):
+            result = this->HandleGetTopNLargestItemsInAppDataDir(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILE):
             result = this->HandleMoveFile(data, reply);
             break;
@@ -817,6 +820,39 @@ bool InstalldHost::HandleScanDir(MessageParcel &data, MessageParcel &reply)
         LOG_E(BMS_TAG_INSTALLD, "fail to Scan from reply");
         return false;
     }
+
+    return true;
+}
+
+bool InstalldHost::HandleGetTopNLargestItemsInAppDataDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    int32_t timeout = data.ReadInt32();
+
+    LOG_D(BMS_TAG_INSTALLD, "get top N -n %{public}s, -a %{public}d, -u %{public}d, -t %{public}d",
+        bundleName.c_str(), appIndex, userId, timeout);
+
+    std::string largestItems;
+    ErrCode result = GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, timeout, largestItems);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+
+    // Use WriteRawData to handle large JSON strings (bypass IPC size limit)
+    size_t dataSize = largestItems.size();
+    if (!reply.WriteUint64(dataSize)) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to write largestItems data size");
+        return false;
+    }
+    if (dataSize > 0) {
+        if (!reply.WriteRawData(reinterpret_cast<const uint8_t *>(largestItems.c_str()), dataSize)) {
+            LOG_E(BMS_TAG_INSTALLD, "failed to write largestItems raw data, size: %{public}zu", dataSize);
+            return false;
+        }
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "HandleGetTopNLargestItemsInAppDataDir: returned JSON string, size: %{public}zu",
+        largestItems.size());
 
     return true;
 }

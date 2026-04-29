@@ -778,6 +778,8 @@ private:
 
     ErrCode HandleGetBundleInodeCount(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetTopNLargestItemsInAppDataDir(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetAllBundleCacheStat(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleCleanAllBundleCache(MessageParcel &data, MessageParcel &reply);
@@ -880,6 +882,7 @@ private:
     ErrCode HandleGetJsonProfile(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetBundleResourceProxy(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetSkillManagerProxy(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleSetAdditionalInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetRecoverableApplicationInfo(MessageParcel &data, MessageParcel &reply);

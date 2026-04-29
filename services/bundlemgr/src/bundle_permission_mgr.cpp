@@ -758,6 +758,7 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
     hapInfo.appDistributionType = innerBundleInfo.GetAppDistributionType();
     hapInfo.isAtomicService = innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE;
     hapInfo.appProvisionType = innerBundleInfo.GetAppProvisionType();
+    hapInfo.isSkillHap = innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL;
     return hapInfo;
 }
 
@@ -810,6 +811,7 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
     //refresh new permissions for application
     updateHapInfoParams.dataRefresh = dataRefresh;
     updateHapInfoParams.appProvisionType = innerBundleInfo.GetAppProvisionType();
+    updateHapInfoParams.isSkillHap = innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL;
 
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo,
         appServiceCapabilities, isDebugGrant);

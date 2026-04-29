@@ -132,6 +132,14 @@ constexpr const char* DEVICE_TYPE_VALUE[] = {
     "2in1"
 };
 
+constexpr const char* TRIGGER_TYPE_KEY[] = {
+    "shake"
+};
+
+const SceneAnimationTriggerType TRIGGER_TYPE_VALUE[] = {
+    SceneAnimationTriggerType::SHAKE,
+};
+
 struct Window {
     int32_t designWidth = 720;
     bool autoDesignWidth = false;
@@ -160,6 +168,7 @@ struct FormFunInteractionParams {
 struct FormSceneAnimationParams {
     std::string abilityName;
     std::vector<std::string> disabledDesktopBehaviors;
+    std::vector<std::string> triggerTypes;
 };
 
 struct ExtensionFormProfileInfo {
@@ -307,6 +316,14 @@ void from_json(const nlohmann::json &jsonObject, FormSceneAnimationParams &scene
         jsonObjectEnd,
         ExtensionFormProfileReader::DISABLED_DESKTOP_BEHAVIORS,
         sceneAnimationParams.disabledDesktopBehaviors,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::TRIGGER_TYPES,
+        sceneAnimationParams.triggerTypes,
         JsonType::ARRAY,
         false,
         g_parseResult,
@@ -748,6 +765,34 @@ bool GetConditionUpdate(const ExtensionFormProfileInfo &form, ExtensionFormInfo 
     return true;
 }
 
+bool GetTriggerTypes(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+{
+    std::set<SceneAnimationTriggerType> triggerTypeSet {};
+    size_t len = sizeof(TRIGGER_TYPE_KEY) / sizeof(TRIGGER_TYPE_KEY[0]);
+    size_t valueLen = sizeof(TRIGGER_TYPE_VALUE) / sizeof(TRIGGER_TYPE_VALUE[0]);
+    if (len != valueLen) {
+        APP_LOGE("trigger type len invalid");
+        return false;
+    }
+    for (const auto &triggerType: form.sceneAnimationParams.triggerTypes) {
+        size_t i = 0;
+        for (i = 0; i < len; i++) {
+            if (TRIGGER_TYPE_KEY[i] == triggerType) {
+                break;
+            }
+        }
+        if (i == len) {
+            APP_LOGW("trigger type invalid form %{public}s", form.name.c_str());
+            continue;
+        }
+        triggerTypeSet.emplace(TRIGGER_TYPE_VALUE[i]);
+    }
+    for (const auto &triggerType: triggerTypeSet) {
+        info.sceneAnimationParams.triggerTypes.emplace_back(triggerType);
+    }
+    return true;
+}
+
 void TransformToFormInfoExt(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
     info.name = form.name;
@@ -845,6 +890,9 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
         return false;
     }
     if (!GetSupportPerformanceClasses(form, info)) {
+        return false;
+    }
+    if (!GetTriggerTypes(form, info)) {
         return false;
     }
     info.enableBlurBackground = form.enableBlurBackground;

@@ -2991,6 +2991,9 @@ void BMSEventHandler::InnerProcessRebootSkillsInstall(const std::list<std::strin
         for (const auto userId : dataMgr->GetUserIds(bundleName)) {
             userIds.insert(userId);
         }
+        if (userIds.empty()) {
+            userIds = dataMgr->GetAllUser();
+        }
         auto ret = OTAInstallSystemSkills({scanPath}, userIds);
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "OTA Install skills(%{public}s) by path(%{public}s) ret %{public}d",
             bundleName.c_str(), scanPath.c_str(), ret);

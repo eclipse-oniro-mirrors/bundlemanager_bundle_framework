@@ -35,9 +35,11 @@
 #include "bundle_user_mgr_interface.h"
 #include "clean_cache_callback_interface.h"
 #include "common_event_info.h"
+#include "get_largest_items_callback_interface.h"
 #include "data_group_info.h"
 #include "app_control_interface.h"
 #include "bundle_resource_interface.h"
+#include "bundle_skill/skill_manager_interface.h"
 #include "default_app_interface.h"
 #include "extend_resource_manager_interface.h"
 #include "ibundle_mgr_ext.h"
@@ -1469,6 +1471,12 @@ public:
         return false;
     }
 
+    virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
         std::vector<BundleStorageStats> &bundleStats)
     {
@@ -1717,6 +1725,11 @@ public:
     }
 
     virtual sptr<IBundleResource> GetBundleResourceProxy()
+    {
+        return nullptr;
+    }
+
+    virtual sptr<IBundleSkillManager> GetSkillManagerProxy()
     {
         return nullptr;
     }

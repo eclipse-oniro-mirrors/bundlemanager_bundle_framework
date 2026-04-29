@@ -3036,7 +3036,8 @@ bool ToInnerBundleInfo(
     for (const Profile::SkillProfile &skillProfile : moduleJson.module.skillProfiles) {
         SkillProfile skill;
         skill.name = skillProfile.name;
-        skill.abilityName = skillProfile.abilityName;
+        skill.abilityName = skillProfile.abilityName.empty() ?
+            innerModuleInfo.mainAbility : skillProfile.abilityName;
         skill.srcEntries = skillProfile.srcEntries;
         skill.permissions = skillProfile.permissions;
         innerModuleInfo.skillProfiles.emplace_back(skill);

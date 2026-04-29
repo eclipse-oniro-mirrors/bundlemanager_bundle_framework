@@ -256,6 +256,8 @@ enum class BundleMgrInterfaceCode : uint32_t {
     SET_BUNDLE_FIRST_LAUNCH = 230,
     GET_ALL_NEW_PREINSTALLED_APPLICATION_INFOS = 231,
     GET_API_TARGET_VERSION_BY_UID = 232,
+    GET_SKILL_MANAGER_PROXY = 233,
+    GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR = 234,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -342,6 +344,11 @@ enum class CleanCacheCallbackInterfaceCode : uint8_t {
     ON_CLEAN_CACHE_CALLBACK = 0,
 };
 
+/* SAID: 401-234 Interface No.234 subservice also provides the following interfaces */
+enum class GetLargestItemsCallbackInterfaceCode : uint8_t {
+    ON_GET_LARGEST_ITEMS_CALLBACK = 0,
+};
+
 /* SAID: 401-27 Interface No.26 subservice also provides the following interfaces */
 enum class ProcessCacheCallbackInterfaceCode : uint8_t {
     GET_ALL_BUNDLE_CACHE = 0,
@@ -410,6 +417,15 @@ enum class BundleResourceInterfaceCode : uint8_t {
     GET_EXTENSION_ABILITY_RESOURCE_INFO = 7,
     GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO = 8,
     GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST = 9,
+};
+
+/* SAID: 401-233 Interface No.233 subservice also provides the following interfaces */
+enum class SkillManagerInterfaceCode : uint8_t {
+    GET_SKILL_INFO_FOR_SELF = 0,
+    GET_SKILL_INFOS_FOR_SELF = 1,
+    GET_SKILL_INFO = 2,
+    GET_SKILL_INFOS = 3,
+    GET_ALL_SKILL_INFOS = 4,
 };
 
 /* SAID: 401-127 Interface No.127 subservice also provides the following interfaces */

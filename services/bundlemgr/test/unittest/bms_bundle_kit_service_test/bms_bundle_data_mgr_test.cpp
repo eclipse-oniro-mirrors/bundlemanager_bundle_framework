@@ -777,6 +777,7 @@ FormInfo BmsBundleDataMgrTest::MockFormInfo(
     formInfo.funInteractionParams.keepStateDuration = FORM_KEEP_STATE_DURATION;
     formInfo.sceneAnimationParams.abilityName = FORM_ABILITY_NAME;
     formInfo.sceneAnimationParams.disabledDesktopBehaviors = FORM_DISABLED_DESKTOP_BEHAVIORS;
+    formInfo.sceneAnimationParams.triggerTypes = {SceneAnimationTriggerType::SHAKE};
     return formInfo;
 }
 

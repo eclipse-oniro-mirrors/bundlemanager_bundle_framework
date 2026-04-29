@@ -898,6 +898,7 @@ FormInfo BmsBundleKitServiceTest::MockFormInfo(
     formInfo.funInteractionParams.keepStateDuration = FORM_KEEP_STATE_DURATION;
     formInfo.sceneAnimationParams.abilityName = FORM_ABILITY_NAME;
     formInfo.sceneAnimationParams.disabledDesktopBehaviors = FORM_DISABLED_DESKTOP_BEHAVIORS;
+    formInfo.sceneAnimationParams.triggerTypes = {SceneAnimationTriggerType::SHAKE};
     return formInfo;
 }
 
@@ -1490,6 +1491,7 @@ void BmsBundleKitServiceTest::CheckFormInfoTest(const std::vector<FormInfo> &for
         EXPECT_EQ(formInfo.funInteractionParams.keepStateDuration, FORM_KEEP_STATE_DURATION);
         EXPECT_EQ(formInfo.sceneAnimationParams.abilityName, FORM_ABILITY_NAME);
         EXPECT_EQ(formInfo.sceneAnimationParams.disabledDesktopBehaviors, FORM_DISABLED_DESKTOP_BEHAVIORS);
+        EXPECT_EQ(formInfo.sceneAnimationParams.triggerTypes[0], SceneAnimationTriggerType::SHAKE);
     }
 }
 
@@ -1528,6 +1530,7 @@ void BmsBundleKitServiceTest::CheckFormInfoDemo(const std::vector<FormInfo> &for
         EXPECT_EQ(formInfo.funInteractionParams.keepStateDuration, FORM_KEEP_STATE_DURATION);
         EXPECT_EQ(formInfo.sceneAnimationParams.abilityName, FORM_ABILITY_NAME);
         EXPECT_EQ(formInfo.sceneAnimationParams.disabledDesktopBehaviors, FORM_DISABLED_DESKTOP_BEHAVIORS);
+        EXPECT_EQ(formInfo.sceneAnimationParams.triggerTypes[0], SceneAnimationTriggerType::SHAKE);
     }
 }
 
@@ -3339,6 +3342,99 @@ HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0600, Function | SmallT
     EXPECT_NE(ERR_OK, testRet);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetLaunchWantForBundleSync_0100
+ * @tc.name: test can get the launch want of a bundle
+ * @tc.desc: 1.system run normally
+ *           2.get launch want successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundleSync_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    ErrCode testRet = GetBundleDataMgr()->GetLaunchWantForBundleSync(BUNDLE_NAME_TEST, want);
+    EXPECT_EQ(ERR_OK, testRet);
+    EXPECT_EQ(want.GetAction(), Constants::ACTION_HOME);
+    EXPECT_TRUE(want.HasEntity(Constants::ENTITY_HOME));
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetLaunchWantForBundleSync_0200
+ * @tc.name: test can not get the launch want of a bundle which is not exist
+ * @tc.desc: 1.system run normally
+ *           2.get launch want failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundleSync_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    ErrCode testRet = GetBundleDataMgr()->GetLaunchWantForBundleSync(BUNDLE_NAME_DEMO, want);
+    EXPECT_NE(ERR_OK, testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetLaunchWantForBundleSync_0300
+ * @tc.name: test can not get the launch want of a bundle which its mainability is not exist
+ * @tc.desc: 1.system run normally
+ *           2.get launch want failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundleSync_0300, Function | SmallTest | Level1)
+{
+    std::string bundleName = BUNDLE_NAME_DEMO;
+    std::string moduleName = MODULE_NAME_DEMO;
+    std::string abilityName = ABILITY_NAME_DEMO;
+    InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
+    std::string keyName = bundleName + "." + moduleName + "." + abilityName;
+    InnerAbilityInfo innerAbilityInfo = MockInnerAbilityInfo(bundleName, moduleName, abilityName);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
+    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
+    Skill skill;
+    std::vector<Skill> skills;
+    skills.emplace_back(skill);
+    innerBundleInfo.InsertSkillInfo(keyName, skills);
+    SaveToDatabase(bundleName, innerBundleInfo, true, false);
+
+    Want want;
+    ErrCode testRet = GetBundleDataMgr()->GetLaunchWantForBundleSync(BUNDLE_NAME_DEMO, want);
+    EXPECT_NE(ERR_OK, testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_DEMO);
+}
+
+/**
+ * @tc.number: GetLaunchWantForBundleSync_0400
+ * @tc.name: test can not get the launch want of empty name
+ * @tc.desc: 1.system run normally
+ *           2.get launch want failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundleSync_0400, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, ABILITY_NAME_DEMO);
+    Want want;
+    ErrCode testRet = GetBundleDataMgr()->GetLaunchWantForBundleSync(EMPTY_STRING, want);
+    EXPECT_NE(ERR_OK, testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_DEMO);
+}
+
+/**
+ * @tc.number: GetLaunchWantForBundleSync_0500
+ * @tc.name: test can not get the launch want when no bundle installed
+ * @tc.desc: 1.system run normally
+ *           2.get launch want failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundleSync_0500, Function | SmallTest | Level1)
+{
+    Want want;
+    ErrCode testRet = GetBundleDataMgr()->GetLaunchWantForBundleSync(BUNDLE_NAME_TEST, want);
+    EXPECT_NE(ERR_OK, testRet);
 }
 
 /**

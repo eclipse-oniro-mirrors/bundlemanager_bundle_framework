@@ -196,6 +196,18 @@ public:
         const int32_t userId, const int32_t appIndex);
 
     /**
+     * @brief Get top N largest items in application data directory.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param timeout Indicates the maximum scan time in seconds.
+     * @param largestItems Output parameter containing JSON string of largest items with path and size.
+     * @return Returns ERR_OK if get successfully; returns error code otherwise.
+     */
+    ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const int32_t timeout, std::string &largestItems) override;
+
+    /**
      * @brief Get all cache file path.
      * @param dir Indicates the data dir.
      * @param cachesPath Indicates the cache file path.

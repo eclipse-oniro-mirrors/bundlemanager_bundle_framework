@@ -1831,6 +1831,9 @@ ErrCode BundleMgrHostImpl::GetLaunchWantForBundle(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
+    if (isSync) {
+        return dataMgr->GetLaunchWantForBundleSync(bundleName, want, userId);
+    }
     return dataMgr->GetLaunchWantForBundle(bundleName, want, userId);
 }
 
@@ -4117,6 +4120,102 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
     return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex, statFlag);
 }
 
+ErrCode BundleMgrHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
+{
+    LOG_I(BMS_TAG_DEFAULT, "begin to get top N largest items, -n: %{public}s, -a: %{public}d, -u: %{public}d",
+        bundleName.c_str(), appIndex, userId);
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        LOG_E(BMS_TAG_DEFAULT, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (getLargestItemsCallback == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "getLargestItemsCallback is nullptr");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    ErrCode result = dataMgr->CheckBundleExist(bundleName, userId, appIndex);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "check bundle exist failed, bundleName: %{public}s, userId: %{public}d, "
+            "appIndex: %{public}d", bundleName.c_str(), userId, appIndex);
+        return result;
+    }
+    int32_t responseUserId = dataMgr->GetResponseUserId(bundleName, userId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        LOG_E(BMS_TAG_DEFAULT, "get userId failed, -n: %{public}s, -u: %{public}d, -a: %{public}d",
+            bundleName.c_str(), userId, appIndex);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    // Check frequency limit: 12 hours (production) or 5 minutes (debuggable)
+    ErrCode ret = CheckGetTopNLargestItemsFrequencyLimit();
+    if (ret != ERR_OK) {
+        return ret;
+    }
+
+    // Execute async task
+    GetTopNLargestItemsTask(bundleName, appIndex, responseUserId, getLargestItemsCallback);
+    return ERR_OK;
+}
+
+void BundleMgrHostImpl::GetTopNLargestItemsTask(const std::string &bundleName, int32_t appIndex, int32_t userId,
+    const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
+{
+    LOG_I(BMS_TAG_DEFAULT, "GetTopNLargestItemsTask started, -n: %{public}s, -a: %{public}d, -u: %{public}d",
+        bundleName.c_str(), appIndex, userId);
+
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto getLargestItemsFunc = [bundleName, appIndex, userId, getLargestItemsCallback, traceId]() {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
+        LOG_I(BMS_TAG_DEFAULT, "async task getLargestItemsFunc started, -n: %{public}s, "
+            "-a: %{public}d, -u: %{public}d", bundleName.c_str(), appIndex, userId);
+        if (getLargestItemsCallback == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "async task getLargestItemsFunc nullptr error, -n: %{public}s, "
+                "-a: %{public}d, -u: %{public}d", bundleName.c_str(), appIndex, userId);
+            return;
+        }
+        auto installdClient = DelayedSingleton<InstalldClient>::GetInstance();
+        if (installdClient == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "installdClient is nullptr");
+            getLargestItemsCallback->OnGetLargestItemsFinished(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, "");
+            return;
+        }
+        auto startTime = std::chrono::steady_clock::now();
+        std::string largestItems;
+        // Use fixed timeout value of 180 seconds for installd layer
+        constexpr int32_t FIXED_TIMEOUT = 180;
+        ErrCode errCode = installdClient->GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId,
+            FIXED_TIMEOUT, largestItems);
+
+        auto endTime = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+
+        if (errCode != ERR_OK) {
+            LOG_E(BMS_TAG_DEFAULT, "async task getLargestItemsFunc failed, -n: %{public}s, "
+                "-u: %{public}d, -a: %{public}d, -e: %{public}d, cost: %{public}lld ms",
+                bundleName.c_str(), userId, appIndex, errCode, static_cast<long long>(duration));
+        } else {
+            LOG_I(BMS_TAG_DEFAULT, "async task getLargestItemsFunc succeed, -n: %{public}s, "
+                "-u: %{public}d, -a: %{public}d, cost: %{public}lld ms",
+                bundleName.c_str(), userId, appIndex, static_cast<long long>(duration));
+        }
+
+        getLargestItemsCallback->OnGetLargestItemsFinished(errCode, largestItems);
+    };
+    ffrt::submit(getLargestItemsFunc);
+}
+
 ErrCode BundleMgrHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
     std::vector<BundleStorageStats> &bundleStats)
 {
@@ -5433,6 +5532,11 @@ sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
 #else
     return nullptr;
 #endif
+}
+
+sptr<IBundleSkillManager> BundleMgrHostImpl::GetSkillManagerProxy()
+{
+    return DelayedSingleton<BundleMgrService>::GetInstance()->GetSkillManagerProxy();
 }
 
 bool BundleMgrHostImpl::GetPreferableBundleInfoFromHapPaths(const std::vector<std::string> &hapPaths,
@@ -7452,6 +7556,49 @@ ErrCode BundleMgrHostImpl::CheckAppDisableForbidden(
         APP_LOGE_NOFUNC("bundle: %{public}s is forbidden to be disabled.", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::CheckGetTopNLargestItemsFrequencyLimit()
+{
+    std::lock_guard<std::mutex> lock(lastSuccessCallTimeMutex_);
+    auto now = std::chrono::steady_clock::now();
+
+    // Read const.debuggable parameter to determine interval
+    // Debuggable mode (root/developer mode): 5 minutes
+    // Production mode: 12 hours
+    const int32_t ROOT_MODE = 1;
+    const int32_t USER_MODE = 0;
+    const char* IS_DEBUGGABLE_PARAM = "const.debuggable";
+    int32_t mode = GetIntParameter(IS_DEBUGGABLE_PARAM, USER_MODE);
+
+    std::chrono::milliseconds MIN_INTERVAL;
+    if (mode == ROOT_MODE) {
+        MIN_INTERVAL = std::chrono::minutes(5);  // 5 minutes in debuggable mode
+        LOG_D(BMS_TAG_DEFAULT, "Debuggable mode detected, using 1 minute frequency limit");
+    } else {
+        MIN_INTERVAL = std::chrono::hours(12);  // 12 hours in production mode
+    }
+
+    if (lastSuccessCallTime_ != std::chrono::steady_clock::time_point{}) {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSuccessCallTime_);
+        if (elapsed < MIN_INTERVAL) {
+            auto remaining = std::chrono::milliseconds(MIN_INTERVAL - elapsed);
+            // Format remaining time appropriately based on interval type
+            if (mode == ROOT_MODE) {
+                auto remainingSec = std::chrono::duration_cast<std::chrono::seconds>(remaining);
+                LOG_W(BMS_TAG_DEFAULT, "GetTopNLargestItemsInAppDataDir called too frequently, "
+                    "remaining time: %{public}lld seconds", static_cast<long long>(remainingSec.count()));
+            } else {
+                auto remainingHours = std::chrono::duration_cast<std::chrono::hours>(remaining);
+                LOG_W(BMS_TAG_DEFAULT, "GetTopNLargestItemsInAppDataDir called too frequently, "
+                    "remaining time: %{public}lld hours", static_cast<long long>(remainingHours.count()));
+            }
+            return ERR_BUNDLE_MANAGER_OPERATION_FREQUENT;
+        }
+    }
+    // Update last success call time
+    lastSuccessCallTime_ = now;
     return ERR_OK;
 }
 }  // namespace AppExecFwk

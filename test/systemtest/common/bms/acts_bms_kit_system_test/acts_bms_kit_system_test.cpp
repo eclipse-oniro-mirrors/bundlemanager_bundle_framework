@@ -37,6 +37,8 @@
 #include "common_tool.h"
 #include "extension_ability_info.h"
 #include "form_info.h"
+#include "get_largest_items_callback_host.h"
+#include "get_largest_items_callback_interface.h"
 #include "permission_define.h"
 #include "iservice_registry.h"
 #include "launcher_ability_resource_info.h"
@@ -229,6 +231,46 @@ int32_t ProcessCacheCallbackImpl::GetDelRet()
         return future.get();
     }
     return -1;
+};
+
+class GetLargestItemsCallbackImpl : public GetLargestItemsCallbackHost {
+public:
+    GetLargestItemsCallbackImpl() : result_(std::make_shared<std::pair<int32_t, std::string>>()) {}
+    ~GetLargestItemsCallbackImpl() override = default;
+
+    void OnGetLargestItemsFinished(ErrCode errCode, const std::string &largestItems) override
+    {
+        if (result_ != nullptr) {
+            result_->first = errCode;
+            result_->second = largestItems;
+            promise_.set_value(true);
+        }
+        APP_LOGI("OnGetLargestItemsFinished errCode: %{public}d, items size: %{public}zu",
+            errCode, largestItems.size());
+    }
+
+    int32_t GetResultCode()
+    {
+        auto future = promise_.get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return ERR_TIMED_OUT;
+        }
+        return result_->first;
+    }
+
+    std::string GetLargestItems()
+    {
+        if (result_ == nullptr) {
+            return "";
+        }
+        return result_->second;
+    }
+
+private:
+    std::shared_ptr<std::pair<int32_t, std::string>> result_;
+    std::promise<bool> promise_;
+    DISALLOW_COPY_AND_MOVE(GetLargestItemsCallbackImpl);
 };
 
 class TestGetAllBundleCacheCallBack : public ProcessCacheCallbackHost {
@@ -11611,6 +11653,180 @@ HWTEST_F(ActsBmsKitSystemTest, IsApplicationDisableForbidden_0001, Function | Me
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
     std::cout << "END IsApplicationDisableForbidden_0001" << std::endl;
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0100
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with empty bundle name
+ * @tc.desc: 1. call GetTopNLargestItemsInAppDataDir with empty bundle name
+ *           2. verify function returns error
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetTopNLargestItemsInAppDataDir_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START GetTopNLargestItemsInAppDataDir_0100" << std::endl;
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    sptr<GetLargestItemsCallbackImpl> callback = new (std::nothrow) GetLargestItemsCallbackImpl();
+    ASSERT_NE(callback, nullptr);
+
+    ErrCode ret = bundleMgrProxy->GetTopNLargestItemsInAppDataDir("", 0, USERID, callback);
+    EXPECT_NE(ret, ERR_OK);
+
+    std::cout << "END GetTopNLargestItemsInAppDataDir_0100" << std::endl;
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0200
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with non-existent bundle
+ * @tc.desc: 1. call GetTopNLargestItemsInAppDataDir with non-existent bundle
+ *           2. verify callback returns error
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetTopNLargestItemsInAppDataDir_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START GetTopNLargestItemsInAppDataDir_0200" << std::endl;
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    sptr<GetLargestItemsCallbackImpl> callback = new (std::nothrow) GetLargestItemsCallbackImpl();
+    ASSERT_NE(callback, nullptr);
+
+    std::string nonExistentBundle = "com.example.nonexistent";
+    ErrCode ret = bundleMgrProxy->GetTopNLargestItemsInAppDataDir(nonExistentBundle, 0, USERID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    std::cout << "END GetTopNLargestItemsInAppDataDir_0200" << std::endl;
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0300
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with null callback
+ * @tc.desc: 1. call GetTopNLargestItemsInAppDataDir with null callback
+ *           2. verify function returns error
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetTopNLargestItemsInAppDataDir_0300, Function | MediumTest | Level1)
+{
+    std::cout << "START GetTopNLargestItemsInAppDataDir_0300" << std::endl;
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    ErrCode ret = bundleMgrProxy->GetTopNLargestItemsInAppDataDir(BASE_BUNDLE_NAME, 0, USERID, nullptr);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+
+    std::cout << "END GetTopNLargestItemsInAppDataDir_0300" << std::endl;
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0400
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with clone app (appIndex > 0)
+ * @tc.desc: 1. install a hap
+ *           2. call GetTopNLargestItemsInAppDataDir with appIndex = 1
+ *           3. verify callback is invoked with success result
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetTopNLargestItemsInAppDataDir_0400, Function | MediumTest | Level1)
+{
+    std::cout << "START GetTopNLargestItemsInAppDataDir_0400" << std::endl;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::vector<std::string> resvec;
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    sptr<GetLargestItemsCallbackImpl> callback = new (std::nothrow) GetLargestItemsCallbackImpl();
+    ASSERT_NE(callback, nullptr);
+
+    // Test with appIndex = 1 (clone app)
+    ErrCode ret = bundleMgrProxy->GetTopNLargestItemsInAppDataDir(appName, 1, USERID, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetTopNLargestItemsInAppDataDir_0400" << std::endl;
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0500
+ * @tc.name: test GetTopNLargestItemsInAppDataDir with invalid userId
+ * @tc.desc: 1. call GetTopNLargestItemsInAppDataDir with invalid userId
+ *           2. verify function returns error
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetTopNLargestItemsInAppDataDir_0500, Function | MediumTest | Level1)
+{
+    std::cout << "START GetTopNLargestItemsInAppDataDir_0500" << std::endl;
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    sptr<GetLargestItemsCallbackImpl> callback = new (std::nothrow) GetLargestItemsCallbackImpl();
+    ASSERT_NE(callback, nullptr);
+
+    // Test with invalid userId (negative)
+    ErrCode ret = bundleMgrProxy->GetTopNLargestItemsInAppDataDir(BASE_BUNDLE_NAME, 0, 23000, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    std::cout << "END GetTopNLargestItemsInAppDataDir_0500" << std::endl;
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0600
+ * @tc.name: test GetTopNLargestItemsInAppDataDir frequency limit
+ * @tc.desc: 1. install a hap
+ *           2. call GetTopNLargestItemsInAppDataDir twice quickly
+ *           3. verify second call returns frequency limit error
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetTopNLargestItemsInAppDataDir_0600, Function | MediumTest | Level1)
+{
+    std::cout << "START GetTopNLargestItemsInAppDataDir_0600" << std::endl;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::vector<std::string> resvec;
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    // First call
+    sptr<GetLargestItemsCallbackImpl> callback1 = new (std::nothrow) GetLargestItemsCallbackImpl();
+    ASSERT_NE(callback1, nullptr);
+
+    ErrCode ret1 = bundleMgrProxy->GetTopNLargestItemsInAppDataDir(appName, 0, USERID, callback1);
+    EXPECT_EQ(ret1, ERR_OK);
+
+    int32_t result1 = callback1->GetResultCode();
+    EXPECT_EQ(result1, ERR_OK);
+
+    std::string items = callback1->GetLargestItems();
+    EXPECT_NE(items, "");
+
+    // Second call immediately (should hit frequency limit - 12 hours)
+    sptr<GetLargestItemsCallbackImpl> callback2 = new (std::nothrow) GetLargestItemsCallbackImpl();
+    ASSERT_NE(callback2, nullptr);
+
+    ErrCode ret2 = bundleMgrProxy->GetTopNLargestItemsInAppDataDir(appName, 0, USERID, callback2);
+    // Note: This may succeed if the first call hasn't completed yet
+    // or return ERR_BUNDLE_MANAGER_OPERATION_FREQUENT if frequency limit is enforced
+    EXPECT_EQ(ret2, ERR_BUNDLE_MANAGER_OPERATION_FREQUENT);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetTopNLargestItemsInAppDataDir_0600" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

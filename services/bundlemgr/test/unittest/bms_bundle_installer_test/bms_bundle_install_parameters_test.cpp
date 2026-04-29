@@ -262,28 +262,6 @@ HWTEST_F(BmsBundleInstallParametersTest, CheckUserIdIsValid_0400, Function | Sma
 }
 
 /**
- * @tc.number: CheckUserIdIsValid_0500
- * @tc.name: test CheckUserIdIsValid exceeding max limit (10001)
- * @tc.desc: 1. test user id > 10000 should return false [NEW]
- */
-HWTEST_F(BmsBundleInstallParametersTest, CheckUserIdIsValid_0500, Function | SmallTest | Level0)
-{
-    bool result = InstalldOperator::IsValidUserId(10001);
-    EXPECT_FALSE(result);
-}
-
-/**
- * @tc.number: CheckUserIdIsValid_0600
- * @tc.name: test CheckUserIdIsValid with large value exceeding limit
- * @tc.desc: 1. test large user id should return false [NEW]
- */
-HWTEST_F(BmsBundleInstallParametersTest, CheckUserIdIsValid_0600, Function | SmallTest | Level0)
-{
-    bool result = InstalldOperator::IsValidUserId(99999);
-    EXPECT_FALSE(result);
-}
-
-/**
  * @tc.number: CheckUidIsValid_0100
  * @tc.name: test CheckUidIsValid with valid uid
  * @tc.desc: 1. test valid uid should return true

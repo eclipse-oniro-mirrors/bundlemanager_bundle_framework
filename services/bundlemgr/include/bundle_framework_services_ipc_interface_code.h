@@ -103,6 +103,7 @@ enum class InstalldInterfaceCode : uint32_t {
     GET_BUNDLE_FILE_COUNT = 75,
     PROCESS_BIN_FILES = 76,
     EXTRACT_SKILLS_PACKAGE = 77,
+    GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR = 78,
 };
 
 } // namespace AppExecFwk

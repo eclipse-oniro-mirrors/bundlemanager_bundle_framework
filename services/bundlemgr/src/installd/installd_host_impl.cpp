@@ -96,11 +96,11 @@ constexpr int32_t APP_DATA_SIZE_INDEX = 0;
 constexpr int32_t BUNDLE_DATA_SIZE_INDEX = 1;
 constexpr uint64_t MAX_EXTENSION_DIR_COUNT = 100;
 constexpr uint64_t VECTOR_SIZE_MAX = 200;
-constexpr uint64_t MAX_BIN_FILES_COUNT = 100;
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1024;
 constexpr int32_t INSTALLS_UID = 3060;
 constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t TEN_GB = ONE_GB * 10;
+constexpr size_t MAX_BIN_FILES_COUNT = 100;
 constexpr size_t MAX_SIGN_DATA_SIZE = 1024 * 1024;
 enum class DirType : uint8_t {
     DIR_EL1,
@@ -1409,21 +1409,82 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
     return InstalldOperator::GetDiskUsageFromPath(cachePaths);
 }
 
+ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout, std::string &largestItems)
+{
+    auto startTime = std::chrono::steady_clock::now();
+    LOG_I(BMS_TAG_INSTALLD, "-n %{public}s, -a %{public}d, -u %{public}d, -t %{public}d get top N",
+        bundleName.c_str(), appIndex, userId, timeout);
+
+    // Validate input parameters
+    if (!InstalldOperator::IsFileNameValid(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: bundleName is invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (userId < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: invalid userId=%{public}d", userId);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    // Collect all data subdirectories to scan using InstalldOperator::GetBundleDataDirPaths
+    std::vector<std::string> dataDirPaths;
+    if (!InstalldOperator::GetBundleDataDirPaths(bundleName, appIndex, userId, dataDirPaths)) {
+        LOG_E(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: GetBundleDataDirPaths failed");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: collected %{public}zu data directory paths",
+        dataDirPaths.size());
+
+    // Call GetLargestFilesRecursive to find largest items
+    std::vector<std::pair<std::string, uint64_t>> resultPathsWithSize;
+    if (!InstalldOperator::GetLargestFilesRecursive(dataDirPaths, timeout, resultPathsWithSize)) {
+        LOG_E(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: GetLargestFilesRecursive failed");
+        return ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED;
+    }
+
+    // Anonymize all paths in the result for privacy protection
+    for (auto &pathWithSize : resultPathsWithSize) {
+        pathWithSize.first = InstalldOperator::AnonymizePath(pathWithSize.first);
+    }
+
+    // Convert result to JSON string
+    nlohmann::json resultJson;
+    nlohmann::json itemsArray = nlohmann::json::array();
+
+    for (const auto &pathWithSize : resultPathsWithSize) {
+        nlohmann::json item;
+        item["path"] = pathWithSize.first;
+        item["size"] = pathWithSize.second;
+        itemsArray.push_back(item);
+    }
+
+    resultJson["items"] = itemsArray;
+    largestItems = resultJson.dump();
+
+    auto endTime = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    LOG_I(BMS_TAG_INSTALLD, "GetTopNLargestItemsInAppDataDir: success, bundleName=%{public}s, "
+        "appIndex=%{public}d, userId=%{public}d, found %{public}zu items, cost: %{public}lld ms",
+        bundleName.c_str(), appIndex, userId, resultPathsWithSize.size(),
+        static_cast<long long>(duration));
+
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids, const int32_t appIndex,
     const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     LOG_D(BMS_TAG_INSTALLD,
-        "bundleName = %{public}s, userId = %{public}d, uids size = %{public}zu, appIndex = %{public}d",
-        bundleName.c_str(), userId, uids.size(), appIndex);
-    LOG_D(BMS_TAG_INSTALLD,
-        "statFlag = %{public}d", statFlag);
+        "bundleName = %{public}s, userId = %{public}d, uids size = %{public}zu, appIndex = %{public}d, "
+        "statFlag = %{public}d", bundleName.c_str(), userId, uids.size(), appIndex, statFlag);
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (!InstalldOperator::IsValidBundleName(bundleName) ||
-        !InstalldOperator::IsValidUserId(userId) ||
+    if (!InstalldOperator::IsValidBundleName(bundleName) || !InstalldOperator::IsValidUserId(userId) ||
         !InstalldOperator::IsValidAppIndex(appIndex)) {
         LOG_E(BMS_TAG_INSTALLD, "param -n %{public}s -u %{public}d -appIndex %{public}d",
             bundleName.c_str(), userId, appIndex);
@@ -3187,7 +3248,7 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
         return ERR_OK;
     }
     if (verifyBinParam.binFilePaths.size() > MAX_BIN_FILES_COUNT) {
-        LOG_E(BMS_TAG_INSTALLD, "binFilePaths size %{public}zu exceeds max limit %{public}llu",
+        LOG_E(BMS_TAG_INSTALLD, "binFilePaths size %{public}zu exceeds max limit %{public}zu",
             verifyBinParam.binFilePaths.size(), MAX_BIN_FILES_COUNT);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }

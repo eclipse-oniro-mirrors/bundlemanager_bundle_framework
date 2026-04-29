@@ -115,6 +115,9 @@ constexpr ErrCode ERROR_PLUGIN_ID_CHECK_ERROR = 17700090;
 constexpr ErrCode ERROR_PLUGIN_SAME_BUNDLE_NAME = 17700091;
 constexpr ErrCode ERROR_PLUGIN_NOT_FOUND = 17700092;
 
+//skill errCode
+constexpr ErrCode ERROR_SKILL_NOT_EXIST = 17700093;
+
 // bundle service exception
 constexpr ErrCode ERROR_BUNDLE_SERVICE_EXCEPTION = 17700101;
 

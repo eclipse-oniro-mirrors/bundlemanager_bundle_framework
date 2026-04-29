@@ -9229,4 +9229,198 @@ HWTEST_F(BmsDataMgrTest, SetBundleFirstLaunch_0002, Function | MediumTest | Leve
     ErrCode ret = bundleDataMgr.SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
+
+/**
+ * @tc.number: GetResponseUserId_0001
+ * @tc.name: test GetResponseUserId with invalid userId
+ * @tc.desc: 1.invalid userId
+ *           2.return INVALID_USERID
+ */
+HWTEST_F(BmsDataMgrTest, GetResponseUserId_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    int32_t userId = Constants::INVALID_USERID;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseBundleInfo_->name = bundleName;
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    int32_t resultUserId = bundleDataMgr.GetResponseUserId(bundleName, userId);
+    EXPECT_EQ(resultUserId, Constants::INVALID_USERID);
+}
+
+/**
+ * @tc.number: GetResponseUserId_0002
+ * @tc.name: test GetResponseUserId with bundle not exist
+ * @tc.desc: 1.bundle not exist
+ *           2.return INVALID_USERID
+ */
+HWTEST_F(BmsDataMgrTest, GetResponseUserId_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test.notexist";
+    int32_t userId = Constants::DEFAULT_USERID;
+    bundleDataMgr.AddUserId(userId);
+
+    int32_t resultUserId = bundleDataMgr.GetResponseUserId(bundleName, userId);
+    EXPECT_EQ(resultUserId, Constants::INVALID_USERID);
+}
+
+/**
+ * @tc.number: GetResponseUserId_0003
+ * @tc.name: test GetResponseUserId with ANY_USERID
+ * @tc.desc: 1.userId is ANY_USERID
+ *           2.return first user's ID
+ */
+HWTEST_F(BmsDataMgrTest, GetResponseUserId_0003, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    int32_t userId = Constants::ANY_USERID;
+    int32_t expectedUserId = 100;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseBundleInfo_->name = bundleName;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = expectedUserId;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    int32_t resultUserId = bundleDataMgr.GetResponseUserId(bundleName, userId);
+    EXPECT_EQ(resultUserId, expectedUserId);
+}
+
+/**
+ * @tc.number: GetResponseUserId_0004
+ * @tc.name: test GetResponseUserId with valid userId
+ * @tc.desc: 1.userId exists in bundle
+ *           2.return the same userId
+ */
+HWTEST_F(BmsDataMgrTest, GetResponseUserId_0004, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    int32_t userId = 100;
+    bundleDataMgr.AddUserId(userId);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->name = bundleName;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    int32_t resultUserId = bundleDataMgr.GetResponseUserId(bundleName, userId);
+    EXPECT_EQ(resultUserId, userId);
+}
+
+/**
+ * @tc.number: GetResponseUserId_0005
+ * @tc.name: test GetResponseUserId with userId not exist but has preInstall user
+ * @tc.desc: 1.userId not exist and userId >= START_USERID
+ *           2.bundle has user with userId < START_USERID
+ *           3.return first userId < START_USERID
+ */
+HWTEST_F(BmsDataMgrTest, GetResponseUserId_0005, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    int32_t requestUserId = 100;
+    int32_t preInstallUserId = 99;
+    bundleDataMgr.AddUserId(requestUserId);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->name = bundleName;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = preInstallUserId;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    int32_t resultUserId = bundleDataMgr.GetResponseUserId(bundleName, requestUserId);
+    EXPECT_EQ(resultUserId, preInstallUserId);
+}
+
+/**
+ * @tc.number: GetResponseUserId_0006
+ * @tc.name: test GetResponseUserId with userId less than START_USERID
+ * @tc.desc: 1.userId < START_USERID and userId not exist
+ *           2.return INVALID_USERID
+ */
+HWTEST_F(BmsDataMgrTest, GetResponseUserId_0006, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    int32_t userId = 50;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->name = bundleName;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = 100;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    int32_t resultUserId = bundleDataMgr.GetResponseUserId(bundleName, userId);
+    EXPECT_EQ(resultUserId, Constants::INVALID_USERID);
+}
+
+/**
+ * @tc.number: GetResponseUserId_0007
+ * @tc.name: test GetResponseUserId with empty user info
+ * @tc.desc: 1.bundle has no user info
+ *           2.return INVALID_USERID
+ */
+HWTEST_F(BmsDataMgrTest, GetResponseUserId_0007, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    int32_t userId = Constants::DEFAULT_USERID;
+    bundleDataMgr.AddUserId(userId);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->name = bundleName;
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    int32_t resultUserId = bundleDataMgr.GetResponseUserId(bundleName, userId);
+    EXPECT_EQ(resultUserId, Constants::INVALID_USERID);
+}
+
+/**
+ * @tc.number: GetResponseUserId_0008
+ * @tc.name: test GetResponseUserId with userId not exist and no preInstall user
+ * @tc.desc: 1.userId not exist and userId >= START_USERID
+ *           2.bundle has no user with userId < START_USERID
+ *           3.return INVALID_USERID
+ */
+HWTEST_F(BmsDataMgrTest, GetResponseUserId_0008, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    int32_t requestUserId = 200;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->name = bundleName;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = 100;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    int32_t resultUserId = bundleDataMgr.GetResponseUserId(bundleName, requestUserId);
+    EXPECT_EQ(resultUserId, Constants::INVALID_USERID);
+}
 } // OHOS

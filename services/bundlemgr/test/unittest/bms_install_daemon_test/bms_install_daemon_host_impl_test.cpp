@@ -1753,4 +1753,25 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8400, Function | Sma
     auto ret = hostImpl->GetBundleInodeCount(uid, inodeCount);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: GetExtensionSandboxTypeList_0100
+ * @tc.name: test GetExtensionSandboxTypeList normal path
+ * @tc.desc: 1. verify GetExtensionConfigPath returns path without ..
+ *           2. calling GetExtensionSandboxTypeList should not hit path traversal check
+ *           3. in test environment permission check returns false
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, GetExtensionSandboxTypeList_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    // Verify that the default config path does not contain path traversal
+    std::string configPath = hostImpl->GetExtensionConfigPath();
+    EXPECT_EQ(configPath.find(".."), std::string::npos);
+
+    std::vector<std::string> typeList;
+    auto ret = hostImpl->GetExtensionSandboxTypeList(typeList);
+    // In current test environment, VerifyCallingPermission returns false
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
 } // OHOS

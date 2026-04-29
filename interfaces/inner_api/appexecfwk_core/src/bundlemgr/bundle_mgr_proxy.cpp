@@ -3655,6 +3655,53 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     return true;
 }
 
+ErrCode BundleMgrProxy::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
+{
+    APP_LOGI_NOFUNC("GetTopNLargestItemsInAppDataDir -n %{public}s -u %{public}d -i %{public}d",
+        bundleName.c_str(), userId, appIndex);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+
+    if (bundleName.empty()) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir due to bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (getLargestItemsCallback == nullptr) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir due to params error");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to GetTopNLargestItemsInAppDataDir due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteRemoteObject(getLargestItemsCallback->AsObject())) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir, for write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR, data, reply)) {
+        APP_LOGE("fail to GetTopNLargestItemsInAppDataDir from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
     std::vector<BundleStorageStats> &bundleStats)
 {
@@ -4948,6 +4995,32 @@ sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
     }
 
     return bundleResourceProxy;
+}
+
+sptr<IBundleSkillManager> BundleMgrProxy::GetSkillManagerProxy()
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write InterfaceToken failed");
+        return nullptr;
+    }
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_SKILL_MANAGER_PROXY, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("reply failed");
+        return nullptr;
+    }
+    sptr<IBundleSkillManager> skillManagerProxy = iface_cast<IBundleSkillManager>(object);
+    if (skillManagerProxy == nullptr) {
+        APP_LOGE("skillManagerProxy is nullptr");
+    }
+
+    return skillManagerProxy;
 }
 
 ErrCode BundleMgrProxy::GetRecoverableApplicationInfo(

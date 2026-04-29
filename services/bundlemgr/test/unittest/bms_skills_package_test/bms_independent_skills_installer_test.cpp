@@ -1792,4 +1792,339 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_GetInstal
     EXPECT_TRUE(eventInfo.filePath.empty());
     EXPECT_TRUE(eventInfo.hashValue.empty());
 }
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ExtractSkills_0001
+ * Function: ExtractSkills
+ * @tc.name: test ExtractSkills with empty skill profiles
+ * @tc.desc: 1. system running normally
+ *           2. test ExtractSkills returns error when skillProfiles is empty
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSkills_0001,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+    moduleInfo.skillProfiles.clear(); // Empty skill profiles
+
+    std::string bundlePath = TEST_HSP_PATH;
+    bool isModuleExist = false;
+
+    ErrCode ret = installer_->ExtractSkills(newInfo, moduleInfo, bundlePath, isModuleExist);
+    EXPECT_EQ(ret, ERR_SKILLS_HAS_NO_SKILLS_AGENT);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ExtractSkills_0002
+ * Function: ExtractSkills
+ * @tc.name: test ExtractSkills filters invalid skill names with "../"
+ * @tc.desc: 1. system running normally
+ *           2. test ExtractSkills filters out skill names containing "../"
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSkills_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+
+    // Add skill profiles with invalid paths containing "../"
+    SkillProfile invalidSkill1;
+    invalidSkill1.name = "../invalidSkill";
+    SkillProfile invalidSkill2;
+    invalidSkill2.name = "skill/../../../attack";
+    moduleInfo.skillProfiles.push_back(invalidSkill1);
+    moduleInfo.skillProfiles.push_back(invalidSkill2);
+
+    std::string bundlePath = TEST_HSP_PATH;
+    bool isModuleExist = false;
+
+    ErrCode ret = installer_->ExtractSkills(newInfo, moduleInfo, bundlePath, isModuleExist);
+    // Should return error since all skill names are filtered out
+    EXPECT_EQ(ret, ERR_SKILLS_HAS_NO_SKILLS_AGENT);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ExtractSkills_0003
+ * Function: ExtractSkills
+ * @tc.name: test ExtractSkills with mixed valid and invalid skill names
+ * @tc.desc: 1. system running normally
+ *           2. test ExtractSkills filters invalid names but processes valid ones
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSkills_0003,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+
+    // Add mixed skill profiles
+    SkillProfile validSkill1;
+    validSkill1.name = SKILL_NAME;
+    SkillProfile invalidSkill;
+    invalidSkill.name = "../invalidSkill";
+    SkillProfile validSkill2;
+    validSkill2.name = SKILL_NAME_TWO;
+
+    moduleInfo.skillProfiles.push_back(validSkill1);
+    moduleInfo.skillProfiles.push_back(invalidSkill);
+    moduleInfo.skillProfiles.push_back(validSkill2);
+
+    std::string bundlePath = TEST_HSP_PATH;
+    bool isModuleExist = false;
+
+    // Since the HSP file doesn't actually exist, ExtractSkillsPackage will fail
+    // but we verify the filtering logic by checking that valid skills are processed
+    ErrCode ret = installer_->ExtractSkills(newInfo, moduleInfo, bundlePath, isModuleExist);
+    // Should fail due to non-existent HSP file, not due to empty skill list
+    EXPECT_NE(ret, ERR_SKILLS_HAS_NO_SKILLS_AGENT);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ExtractSkills_0004
+ * Function: ExtractSkills
+ * @tc.name: test ExtractSkills with valid skill profiles
+ * @tc.desc: 1. system running normally
+ *           2. test ExtractSkills with valid skill profile names
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSkills_0004,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+
+    // Add valid skill profiles
+    SkillProfile skill1;
+    skill1.name = SKILL_NAME;
+    SkillProfile skill2;
+    skill2.name = SKILL_NAME_TWO;
+    moduleInfo.skillProfiles.push_back(skill1);
+    moduleInfo.skillProfiles.push_back(skill2);
+
+    std::string bundlePath = TEST_HSP_PATH;
+    bool isModuleExist = false;
+
+    ErrCode ret = installer_->ExtractSkills(newInfo, moduleInfo, bundlePath, isModuleExist);
+    // Since the HSP file doesn't exist, ExtractSkillsPackage will fail
+    // But it should NOT be ERR_SKILLS_HAS_NO_SKILLS_AGENT
+    EXPECT_NE(ret, ERR_SKILLS_HAS_NO_SKILLS_AGENT);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ExtractSkills_0005
+ * Function: ExtractSkills
+ * @tc.name: test ExtractSkills when module already exists (isModuleExist=true)
+ * @tc.desc: 1. system running normally
+ *           2. test ExtractSkills appends "+temp" to moduleName when isModuleExist is true
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSkills_0005,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+
+    SkillProfile skill;
+    skill.name = SKILL_NAME;
+    moduleInfo.skillProfiles.push_back(skill);
+
+    std::string bundlePath = TEST_HSP_PATH;
+    bool isModuleExist = true; // Module already exists
+
+    ErrCode ret = installer_->ExtractSkills(newInfo, moduleInfo, bundlePath, isModuleExist);
+    // Should process with temp module name (+temp suffix)
+    // Will fail due to non-existent HSP, but not due to empty skill list
+    EXPECT_NE(ret, ERR_SKILLS_HAS_NO_SKILLS_AGENT);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ExtractSkills_0006
+ * Function: ExtractSkills
+ * @tc.name: test ExtractSkills with empty bundle name
+ * @tc.desc: 1. system running normally
+ *           2. test ExtractSkills behavior with empty bundleName
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSkills_0006,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = ""; // Empty bundle name
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+
+    SkillProfile skill;
+    skill.name = SKILL_NAME;
+    moduleInfo.skillProfiles.push_back(skill);
+
+    std::string bundlePath = TEST_HSP_PATH;
+    bool isModuleExist = false;
+
+    ErrCode ret = installer_->ExtractSkills(newInfo, moduleInfo, bundlePath, isModuleExist);
+    // Should fail when calling ExtractSkillsPackage with empty bundle name
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ExtractSkills_0007
+ * Function: ExtractSkills
+ * @tc.name: test ExtractSkills with single valid skill
+ * @tc.desc: 1. system running normally
+ *           2. test ExtractSkills handles single skill correctly
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSkills_0007,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+
+    // Add single skill profile
+    SkillProfile skill;
+    skill.name = SKILL_NAME;
+    moduleInfo.skillProfiles.push_back(skill);
+
+    std::string bundlePath = TEST_HSP_PATH;
+    bool isModuleExist = false;
+
+    ErrCode ret = installer_->ExtractSkills(newInfo, moduleInfo, bundlePath, isModuleExist);
+    // Should attempt to extract, fail due to non-existent file
+    // but not due to empty skill list
+    EXPECT_NE(ret, ERR_SKILLS_HAS_NO_SKILLS_AGENT);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ExtractSkills_0008
+ * Function: ExtractSkills
+ * @tc.name: test ExtractSkills with all skill names containing "../"
+ * @tc.desc: 1. system running normally
+ *           2. test ExtractSkills returns error when all skill names are invalid
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSkills_0008,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+
+    // Add only invalid skill profiles
+    SkillProfile skill1;
+    skill1.name = "../skill1";
+    SkillProfile skill2;
+    skill2.name = "path/../../skill2";
+    SkillProfile skill3;
+    skill3.name = "./../skill3";
+
+    moduleInfo.skillProfiles.push_back(skill1);
+    moduleInfo.skillProfiles.push_back(skill2);
+    moduleInfo.skillProfiles.push_back(skill3);
+
+    std::string bundlePath = TEST_HSP_PATH;
+    bool isModuleExist = false;
+
+    ErrCode ret = installer_->ExtractSkills(newInfo, moduleInfo, bundlePath, isModuleExist);
+    // All skills filtered out, should return ERR_SKILLS_HAS_NO_SKILLS_AGENT
+    EXPECT_EQ(ret, ERR_SKILLS_HAS_NO_SKILLS_AGENT);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ExtractSkills_0009
+ * Function: ExtractSkills
+ * @tc.name: test ExtractSkills with complex valid skill names
+ * @tc.desc: 1. system running normally
+ *           2. test ExtractSkills handles complex but valid skill names
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSkills_0009,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+
+    // Add complex but valid skill names
+    SkillProfile skill1;
+    skill1.name = "mainSkill/subSkill";
+    SkillProfile skill2;
+    skill2.name = "feature.v2.skill";
+    SkillProfile skill3;
+    skill3.name = "common_utils-helper";
+
+    moduleInfo.skillProfiles.push_back(skill1);
+    moduleInfo.skillProfiles.push_back(skill2);
+    moduleInfo.skillProfiles.push_back(skill3);
+
+    std::string bundlePath = TEST_HSP_PATH;
+    bool isModuleExist = false;
+
+    ErrCode ret = installer_->ExtractSkills(newInfo, moduleInfo, bundlePath, isModuleExist);
+    // Should process these valid names, fail due to non-existent HSP
+    EXPECT_NE(ret, ERR_SKILLS_HAS_NO_SKILLS_AGENT);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ExtractSkills_0010
+ * Function: ExtractSkills
+ * @tc.name: test ExtractSkills with module update scenario
+ * @tc.desc: 1. system running normally
+ *           2. test ExtractSkills with isModuleExist=true and existing module info
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSkills_0010,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME_TWO;
+
+    SkillProfile skill;
+    skill.name = SKILL_NAME_TWO;
+    moduleInfo.skillProfiles.push_back(skill);
+
+    std::string bundlePath = TEST_HSP_PATH2;
+    bool isModuleExist = true;
+
+    ErrCode ret = installer_->ExtractSkills(newInfo, moduleInfo, bundlePath, isModuleExist);
+    // Should handle module update scenario
+    // Will fail due to non-existent file, but not due to empty skill list
+    EXPECT_NE(ret, ERR_SKILLS_HAS_NO_SKILLS_AGENT);
+}
 } // namespace OHOS

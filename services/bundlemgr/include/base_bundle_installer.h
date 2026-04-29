@@ -33,6 +33,7 @@
 #include "installer_bundle_tmp_info.h"
 #include "quick_fix/appqf_info.h"
 #include "shared_bundle_installer.h"
+#include "skills_installer/skills_package_info.h"
 
 #ifdef APP_DOMAIN_VERIFY_ENABLED
 #include "app_domain_verify_mgr_client.h"
@@ -747,6 +748,16 @@ private:
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
     ErrCode ExtractResFileDir(const std::string &modulePath) const;
+    ErrCode ProcessAppSkills(InnerBundleInfo &info);
+    ErrCode FinalizeAppSkills(const InnerBundleInfo &info);
+    ErrCode CommitAppSkills(const InnerBundleInfo &info);
+    void PrepareAppSkillStatus(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo,
+        int32_t userId = Constants::INVALID_USERID);
+    bool NotifyAppSkillStatus(const std::string &bundleName, const std::vector<std::string> &oldSkills,
+        const std::vector<std::string> &newSkills, int32_t userId = Constants::INVALID_USERID) const;
+    void RemoveAppSkillsDir(const std::string &bundleName) const;
+    void RemoveAppSkillsDir(const std::string &bundleName, const std::string &moduleName,
+        bool isTemp = false) const;
     /**
      * @brief The process of shareFiles configuration during bundle installation/update.
      * @param newInfos Indicates the parsed bundle infos (map of hapPath to InnerBundleInfo).
@@ -1096,6 +1107,11 @@ private:
     // indicates whether the application has been restored to the preinstall
     bool isPreBundleRecovered_ = false;
     std::vector<std::string> allowListenBundles_;
+    std::unordered_map<std::string, std::vector<SkillsPackageInfo>> moduleSkillInfoMap_;
+    std::string appSkillNotifyBundleName_;
+    std::vector<std::string> oldAppSkillNotifyItems_;
+    std::vector<std::string> newAppSkillNotifyItems_;
+    int32_t appSkillNotifyUserId_ = Constants::INVALID_USERID;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

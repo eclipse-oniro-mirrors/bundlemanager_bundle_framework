@@ -72,6 +72,7 @@ constexpr const char* STANDBY = "standby";
 constexpr const char* STANDBY_IS_SUPPORTED = "isSupported";
 constexpr const char* STANDBY_IS_ADAPTED = "isAdapted";
 constexpr const char* STANDBY_IS_PRIVACY_SENSITIVE = "isPrivacySensitive";
+constexpr const char* TRIGGER_TYPES = "triggerTypes";
 }
 
 class ExtensionFormProfile {

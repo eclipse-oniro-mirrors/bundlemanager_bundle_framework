@@ -91,6 +91,7 @@ const char* JSON_KEY_STANDBY = "standby";
 const char* JSON_KEY_STANDBY_IS_SUPPORTED = "isSupported";
 const char* JSON_KEY_STANDBY_IS_ADAPTED = "isAdapted";
 const char* JSON_KEY_STANDBY_IS_PRIVACY_SENSITIVE = "isPrivacySensitive";
+const char* JSON_KEY_TRIGGER_TYPES = "triggerTypes";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -138,6 +139,9 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     funInteractionParams.keepStateDuration = formInfo.funInteractionParams.keepStateDuration;
     sceneAnimationParams.abilityName = formInfo.sceneAnimationParams.abilityName;
     sceneAnimationParams.disabledDesktopBehaviors = formInfo.sceneAnimationParams.disabledDesktopBehaviors;
+    for (const auto &triggerType : formInfo.sceneAnimationParams.triggerTypes) {
+        sceneAnimationParams.triggerTypes.emplace_back(triggerType);
+    }
     SetInfoByFormExt(formInfo);
 }
 
@@ -317,6 +321,12 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     funInteractionParams.keepStateDuration = parcel.ReadInt32();
     sceneAnimationParams.abilityName = Str16ToStr8(parcel.ReadString16());
     sceneAnimationParams.disabledDesktopBehaviors = Str16ToStr8(parcel.ReadString16());
+    int32_t triggerTypesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, triggerTypesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, triggerTypesSize, &sceneAnimationParams.triggerTypes);
+    for (int32_t i = 0; i < triggerTypesSize; i++) {
+        sceneAnimationParams.triggerTypes.emplace_back(static_cast<SceneAnimationTriggerType>(parcel.ReadInt32()));
+    }
     resizable = parcel.ReadBool();
     isTemplateForm = parcel.ReadBool();
     groupId = Str16ToStr8(parcel.ReadString16());
@@ -437,6 +447,12 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, funInteractionParams.keepStateDuration);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.abilityName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.disabledDesktopBehaviors));
+    const auto triggerTypesSize = static_cast<int32_t>(sceneAnimationParams.triggerTypes.size());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, triggerTypesSize);
+    for (auto i = 0; i < triggerTypesSize; i++) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel,
+            static_cast<int32_t>(sceneAnimationParams.triggerTypes[i]));
+    }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, resizable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isTemplateForm);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(groupId));
@@ -488,6 +504,7 @@ void to_json(nlohmann::json &jsonObject, const FormSceneAnimationParams &sceneAn
 {
     jsonObject[JSON_KEY_ABILITY_NAME] = sceneAnimationParams.abilityName;
     jsonObject[JSON_KEY_DISABLED_DESKTOP_BEHAVIORS] = sceneAnimationParams.disabledDesktopBehaviors;
+    jsonObject[JSON_KEY_TRIGGER_TYPES] = sceneAnimationParams.triggerTypes;
 }
 
 void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
@@ -670,6 +687,14 @@ void from_json(const nlohmann::json &jsonObject, FormSceneAnimationParams &scene
         sceneAnimationParams.disabledDesktopBehaviors,
         false,
         parseResult);
+    GetValueIfFindKey<std::vector<SceneAnimationTriggerType>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_TRIGGER_TYPES,
+        sceneAnimationParams.triggerTypes,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::NUMBER);
     if (parseResult != ERR_OK) {
         APP_LOGE("read sceneAnimationParams jsonObject error: %{public}d", parseResult);
     }

@@ -322,6 +322,18 @@ public:
     ErrCode ExtractSkillsPackage(const SkillsPackageParam &param,
         std::vector<SkillsPackageInfo> &skillInfoList);
 
+    /**
+     * @brief Get top N largest items in app data directory.
+     * @param bundleName Indicates the bundle name.
+     * @param appIndex Indicates the app index.
+     * @param userId Indicates the user ID.
+     * @param timeout Indicates the maximum scan time in seconds.
+     * @param largestItems Output parameter containing JSON string of largest items with path and size.
+     * @return Returns ERR_OK if get largest items successfully; returns error code otherwise.
+     */
+    ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const int32_t timeout, std::string &largestItems);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

@@ -33,6 +33,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 
+#if defined(__GNUC__) && __GNUC__ >= 4
+    #define BUNDLE_HIDDEN __attribute__((visibility("hidden")))
+#else
+    #define BUNDLE_HIDDEN
+#endif
 class BundleMgrProxy : public IRemoteProxy<IBundleMgr> {
 public:
     explicit BundleMgrProxy(const sptr<IRemoteObject> &impl);
@@ -1045,6 +1050,9 @@ public:
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
         std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
+    virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback) override;
+
     virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
         std::vector<BundleStorageStats> &bundleStats) override;
 
@@ -1186,6 +1194,8 @@ public:
         const std::string &moduleName, std::string &profile, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
     virtual sptr<IBundleResource> GetBundleResourceProxy() override;
+
+    virtual sptr<IBundleSkillManager> GetSkillManagerProxy() override;
 
     virtual ErrCode GetRecoverableApplicationInfo(
         std::vector<RecoverableApplicationInfo> &recoverableApplications) override;
@@ -1496,7 +1506,7 @@ private:
     ErrCode InnerGetBigString(MessageParcel &reply, std::string &result);
 
     ErrCode GetMediaDataFromAshMem(MessageParcel &reply, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len);
-    static inline BrokerDelegator<BundleMgrProxy> delegator_;
+    BUNDLE_HIDDEN static inline BrokerDelegator<BundleMgrProxy> delegator_;
 
     template<typename T>
     ErrCode WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const;

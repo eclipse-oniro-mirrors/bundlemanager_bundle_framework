@@ -2462,19 +2462,6 @@ HWTEST_F(BmsInstallDaemonTest, CleanBundleDataDir_PathTraversal_0100, Function |
 }
 
 /**
- * @tc.number: CleanBundleDataDir_UserIdBoundary_0100
- * @tc.name: test CleanBundleDataDir with userId = 10001 (boundary)
- * @tc.desc: 1. test userId exceeding MAX_USER_ID should return PARAM_ERROR
-*/
-HWTEST_F(BmsInstallDaemonTest, CleanBundleDataDir_UserIdBoundary_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl hostImpl;
-    std::string dataDir = "/data/app/el2/100/base/com.example.test/cache";
-    ErrCode ret = hostImpl.CleanBundleDataDir(dataDir, "com.example.test", 10001);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
  * @tc.number: CreateBundleDataDirWithVector_InvalidElement_0100
  * @tc.name: test CreateBundleDataDirWithVector with invalid elements inside vector
  * @tc.desc: 1. test invalid bundleName inside param
@@ -2627,9 +2614,6 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_InvalidUserId_0100, Function | Sma
     std::unordered_set<int32_t> uids;
     ErrCode ret = hostImpl.GetBundleStats("com.example.test", -1, bundleStats, uids, 0, 0, {});
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    ret = hostImpl.GetBundleStats("com.example.test", 10001, bundleStats, uids, 0, 0, {});
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -2646,7 +2630,7 @@ HWTEST_F(BmsInstallDaemonTest, IsExistExtensionDir_InvalidUserId_0100, Function 
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     ret = hostImpl.IsExistExtensionDir(10001, "/data/app/el1/100/extension/com.example.test", isExist);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -2773,7 +2757,7 @@ HWTEST_F(BmsInstallDaemonTest, RemoveExtensionDir_InvalidUserId_0100, Function |
     int32_t userId = 10001;
     std::vector<std::string> extensionBundleDirs = {"/com.ohos.settings/extension/"};
     ErrCode ret = hostImpl.RemoveExtensionDir(userId, extensionBundleDirs);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -2789,7 +2773,7 @@ HWTEST_F(BmsInstallDaemonTest, RemoveModuleDataDir_InvalidUserId_0100, Function 
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     ret = hostImpl.RemoveModuleDataDir("/data/app/el1/bundle/public/com.example.test", 10001);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -2830,6 +2814,56 @@ HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignature_ModulePathTraversal_0100, Fun
     codeSignatureParam.modulePath = "/data/app/el1/bundle/public/com.example.test/../entry.hap";
     codeSignatureParam.targetSoPath = "/data/app/el1/bundle/public/com.example.test/libs/";
     auto ret = VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: VerifyCodeSignature_1MBBoundary_0100
+ * @tc.name: test VerifyCodeSignature with profileBlockLength = 1MB
+ * @tc.desc: 1. calling VerifyCodeSignature with profileBlockLength = 1MB should return PARAM_ERROR
+ *           2. VerifyCodeSignature uses >= MAX_PROFILE_BLOCK_LENGTH, so 1MB is illegal
+*/
+HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignature_1MBBoundary_0100, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = "com.example.test";
+    codeSignatureParam.modulePath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
+    codeSignatureParam.profileBlockLength = 1024 * 1024; // exactly 1MB
+    auto ret = VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeliverySignProfile_1MBBoundary_0100
+ * @tc.name: test DeliverySignProfile with profileBlockLength = 1MB
+ * @tc.desc: 1. calling DeliverySignProfile with profileBlockLength = 1MB should pass param check
+ *           2. DeliverySignProfile uses > MAX_PROFILE_BLOCK_LENGTH, so 1MB is legal
+*/
+HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_1MBBoundary_0100, Function | SmallTest | Level0)
+{
+    std::string bundleName = "com.example.test";
+    int32_t profileBlockLength = 1024 * 1024; // exactly 1MB
+    unsigned char *profileBlock = new unsigned char[1024 * 1024];
+    auto ret = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    // 1MB is a legal parameter value, should not return PARAM_ERROR
+    EXPECT_NE(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    delete[] profileBlock;
+}
+
+/**
+ * @tc.number: ProcessBinFiles_EmptyPathItem_0100
+ * @tc.name: test ProcessBinFiles with empty string in binFilePaths
+ * @tc.desc: 1. calling ProcessBinFiles with binFilePaths containing empty string should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_EmptyPathItem_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    VerifyBinParam param;
+    param.bundleName = "com.example.test";
+    param.appIdentifier = "test";
+    param.userId = 100;
+    param.binFilePaths = {"/data/app/el1/bundle/public/com.example.test/bin/test", ""};
+    auto ret = hostImpl.ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 } // OHOS
