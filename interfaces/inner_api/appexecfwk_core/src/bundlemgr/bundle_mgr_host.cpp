@@ -401,6 +401,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_BUNDLE_STATS):
             errCode = this->HandleBatchGetBundleStats(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR):
+            errCode = this->HandleGetTopNLargestItemsInAppDataDir(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_STATS):
             errCode = this->HandleGetAllBundleStats(data, reply);
             break;
@@ -3555,6 +3558,27 @@ ErrCode BundleMgrHost::HandleBatchGetBundleStats(MessageParcel &data, MessagePar
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ret;
+}
+
+ErrCode BundleMgrHost::HandleGetTopNLargestItemsInAppDataDir(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("read IGetLargestItemsCallback failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    sptr<IGetLargestItemsCallback> getLargestItemsCallback = iface_cast<IGetLargestItemsCallback>(object);
+
+    ErrCode ret = GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, getLargestItemsCallback);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleMgrHost::HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply)

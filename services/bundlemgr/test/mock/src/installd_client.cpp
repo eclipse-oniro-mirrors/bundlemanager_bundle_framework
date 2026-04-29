@@ -698,6 +698,17 @@ ErrCode InstalldClient::ExtractSkillsPackage(const SkillsPackageParam &param,
     return CallService(&IInstalld::ExtractSkillsPackage, param, skillInfoList);
 }
 
+ErrCode InstalldClient::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const int32_t timeout, std::string &largestItems)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::GetTopNLargestItemsInAppDataDir, bundleName, appIndex, userId, timeout,
+        largestItems);
+}
+
 void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject>& remoteObject) {}
 
 void InstalldClient::OnLoadSystemAbilityFail() {}

@@ -1050,6 +1050,9 @@ public:
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
         std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
+    virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback) override;
+
     virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
         std::vector<BundleStorageStats> &bundleStats) override;
 

@@ -17,6 +17,8 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MGR_HOST_IMPL_H
 
 #include <atomic>
+#include <chrono>
+#include <mutex>
 #include "bundle_cache_mgr.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "bundle_connect_ability_mgr.h"
@@ -1015,6 +1017,9 @@ public:
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
         std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
+    virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback) override;
+
     virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
         std::vector<BundleStorageStats> &bundleStats) override;
 
@@ -1345,6 +1350,8 @@ private:
         int32_t userId, CleanType cleanType, int32_t appIndex, uint64_t &cleanCacheSize);
     void CleanBundleCacheTaskGetCleanSize(const std::string &bundleName, int32_t userId, CleanType cleanType,
         int32_t appIndex, int32_t callingUid, const std::string &callingBundleName, uint64_t &cleanCacheSize);
+    void GetTopNLargestItemsTask(const std::string &bundleName, int32_t appIndex, int32_t userId,
+        const sptr<IGetLargestItemsCallback> getLargestItemsCallback);
     bool CleanBundleCacheByInodeCount(const std::string &bundleName, int32_t userId,
         int32_t appIndex, const std::vector<std::string> &moduleNames, uint64_t &cleanCacheSize);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
@@ -1389,6 +1396,13 @@ private:
 
     bool IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags) const;
     ErrCode CheckAppDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isEnabled);
+
+    // Check frequency limit for GetTopNLargestItemsInAppDataDir
+    ErrCode CheckGetTopNLargestItemsFrequencyLimit();
+
+    // Frequency limit for GetTopNLargestItemsInAppDataDir
+    std::mutex lastSuccessCallTimeMutex_;
+    std::chrono::steady_clock::time_point lastSuccessCallTime_ = std::chrono::steady_clock::time_point{};
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

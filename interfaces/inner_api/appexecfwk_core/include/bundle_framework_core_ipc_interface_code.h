@@ -257,6 +257,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_ALL_NEW_PREINSTALLED_APPLICATION_INFOS = 231,
     GET_API_TARGET_VERSION_BY_UID = 232,
     GET_SKILL_MANAGER_PROXY = 233,
+    GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR = 234,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -341,6 +342,11 @@ enum class BundleStreamInstallerInterfaceCode : uint8_t {
 /* SAID: 401-26 Interface No.26 subservice also provides the following interfaces */
 enum class CleanCacheCallbackInterfaceCode : uint8_t {
     ON_CLEAN_CACHE_CALLBACK = 0,
+};
+
+/* SAID: 401-234 Interface No.234 subservice also provides the following interfaces */
+enum class GetLargestItemsCallbackInterfaceCode : uint8_t {
+    ON_GET_LARGEST_ITEMS_CALLBACK = 0,
 };
 
 /* SAID: 401-27 Interface No.26 subservice also provides the following interfaces */
