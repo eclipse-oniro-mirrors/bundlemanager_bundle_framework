@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -62,6 +62,7 @@ enum class BMSEventType : uint8_t {
     BUNDLE_DYNAMIC_SHORTCUTINFO,
     DESKTOP_SHORTCUT,
     APP_STATUS_CHANGE,
+    HIGH_RISK_EVENT,
 };
 
 enum class BundleEventType : uint8_t {
@@ -124,6 +125,21 @@ enum class DB_OPERATION_TYPE : uint8_t {
 enum class DefaultAppActionType : uint8_t {
     SET = 1,
     RESET = 2,
+};
+
+enum class HighRiskActionType : uint8_t {
+    RESOURCE_SWITCH_EXCEPTION = 1,
+    TRIGGER_FALLBACK,
+    CACHE_TIMEOUT,
+};
+
+enum class HighRiskOperationType: uint8_t {
+    THEME_SWITCH_EXCEPTION = 1,
+    LANGUAGE_SWITCH_EXCEPTION,
+    DB_FALLBACK_CREATED,
+    USER_DATA_PARSE_FAILED,
+    GET_ALL_BUNDLE_CACHE_STAT_TIMEOUT,
+    CLEAN_ALL_BUNDLE_CACHE_TIMEOUT,
 };
 
 struct EventInfo {
@@ -473,6 +489,7 @@ public:
 
     static void SendAppDisableForbiddenEvent(const std::string &bundleName, int32_t userId, int32_t appIndex,
         bool forbidden, ErrCode errCode, int32_t callingUid);
+    static void SendHighRiskEvent(const EventInfo& eventInfo);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

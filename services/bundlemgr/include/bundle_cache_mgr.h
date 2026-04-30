@@ -22,6 +22,7 @@
 #include "account_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_data_mgr.h"
+#include "event_report.h"
 #include "inner_bundle_clone_common.h"
 #include "install_param.h"
 #include "installd_client.h"
@@ -35,6 +36,8 @@ class BundleCacheMgr {
 public:
     static std::vector<std::string> GetBundleCachePath(const std::string &bundleName, const int32_t userId,
         const int32_t appIndex, const std::vector<std::string> &moduleNameList);
+    static void ReportCacheTimeOutEvent(HighRiskOperationType operation,
+        int32_t userId, int64_t startTime, int64_t endTime);
     /**
      * @brief get cache size of all bundle.
      * @param validBundles indicates the tuple of <bundleName, moduleNames, appCloneIndexes>

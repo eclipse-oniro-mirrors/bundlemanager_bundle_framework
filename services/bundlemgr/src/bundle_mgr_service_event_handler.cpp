@@ -32,6 +32,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
 #include "bundle_scanner.h"
+#include "event_report.h"
 #include "on_demand_install_data_mgr.h"
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
@@ -467,6 +468,15 @@ void BMSEventHandler::BundleRebootStartEvent()
     needInstallUserIds_.clear();
 }
 
+void BMSEventHandler::ReportInfosLossedEvent(HighRiskOperationType operation, int32_t userId)
+{
+    EventInfo eventInfo;
+    eventInfo.actionType = static_cast<int32_t>(HighRiskActionType::TRIGGER_FALLBACK);
+    eventInfo.operationType = static_cast<int32_t>(operation);
+    eventInfo.userId = userId;
+    EventReport::SendHighRiskEvent(eventInfo);
+}
+
 ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "GuardAgainstInstallInfosLossedStrategy start");
@@ -478,6 +488,8 @@ ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
         return ResultCode::NO_INSTALLED_DATA;
     }
 
+    ReportInfosLossedEvent(HighRiskOperationType::USER_DATA_PARSE_FAILED, Constants::INVALID_USERID);
+    
     // When data exist, but parse all userinfo fails, reinstall all app.
     // For example: the AT database is lost or others.
     if (scanResultCode == ScanResultCode::SCAN_HAS_DATA_PARSE_FAILED) {
