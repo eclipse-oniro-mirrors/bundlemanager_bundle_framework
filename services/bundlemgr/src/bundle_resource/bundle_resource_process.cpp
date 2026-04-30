@@ -45,8 +45,9 @@ bool BundleResourceProcess::GetBundleResourceInfo(const InnerBundleInfo &innerBu
         APP_LOGE("bundleName is empty");
         return false;
     }
-    if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-        APP_LOGD("bundleName:%{public}s is shared", innerBundleInfo.GetBundleName().c_str());
+    auto bundleType = innerBundleInfo.GetApplicationBundleType();
+    if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
+        APP_LOGD("bundleName:%{public}s is shared or skill", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
     resourceInfo = ConvertToBundleResourceInfo(innerBundleInfo);
@@ -80,10 +81,10 @@ bool BundleResourceProcess::GetAllResourceInfo(
             APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
             continue;
         }
-        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED ||
-            ((innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK)
-            && innerBundleInfo.IsHsp())) {
-            APP_LOGD("bundleName:%{public}s is shared or app service", bundleName.c_str());
+        auto bundleType = innerBundleInfo.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL ||
+            ((bundleType == BundleType::APP_SERVICE_FWK) && innerBundleInfo.IsHsp())) {
+            APP_LOGD("bundleName:%{public}s is shared or skill or app service", bundleName.c_str());
             continue;
         }
         std::vector<ResourceInfo> resourceInfos;
@@ -119,10 +120,10 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
         return false;
     }
-    if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED ||
-        ((innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK)
-        && innerBundleInfo.IsHsp())) {
-        APP_LOGW("bundleName:%{public}s is shared or app service", bundleName.c_str());
+    auto bundleType = innerBundleInfo.GetApplicationBundleType();
+    if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL ||
+        ((bundleType == BundleType::APP_SERVICE_FWK) && innerBundleInfo.IsHsp())) {
+        APP_LOGW("bundleName:%{public}s is shared or skill or app service", bundleName.c_str());
         return false;
     }
 
@@ -443,8 +444,9 @@ bool BundleResourceProcess::CheckIsNeedProcessAbilityResource(const InnerBundleI
         APP_LOGE("bundleName is empty");
         return false;
     }
-    if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-        APP_LOGD("bundleName:%{public}s is shared", innerBundleInfo.GetBundleName().c_str());
+    auto bundleType = innerBundleInfo.GetApplicationBundleType();
+    if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
+        APP_LOGD("bundleName:%{public}s is shared or skill", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
     if (innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon) {
@@ -536,8 +538,9 @@ bool BundleResourceProcess::GetAbilityResourceInfos(
         APP_LOGE("bundleName is empty");
         return false;
     }
-    if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-        APP_LOGW("bundleName:%{public}s is shared bundle, no ability", innerBundleInfo.GetBundleName().c_str());
+    auto bundleType = innerBundleInfo.GetApplicationBundleType();
+    if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
+        APP_LOGW("bundleName:%{public}s is shared or skill bundle, no ability", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
     std::map<std::string, InnerAbilityInfo> innerAbilityInfos = innerBundleInfo.GetInnerAbilityInfos();
