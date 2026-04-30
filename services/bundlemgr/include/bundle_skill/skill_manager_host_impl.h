@@ -27,10 +27,9 @@ public:
     virtual ~SkillManagerHostImpl() = default;
 
     virtual ErrCode GetSkillInfoForSelf(const std::string &moduleName, const std::string &skillName,
-        int32_t userId, uint32_t flags, SkillInfo &skillInfo) override;
+        uint32_t flags, SkillInfo &skillInfo) override;
 
-    virtual ErrCode GetSkillInfosForSelf(uint32_t flags, int32_t userId,
-        std::vector<SkillInfo> &skillInfos) override;
+    virtual ErrCode GetSkillInfosForSelf(uint32_t flags, std::vector<SkillInfo> &skillInfos) override;
 
     virtual ErrCode GetSkillInfo(const std::string &bundleName, const std::string &moduleName,
         const std::string &skillName, uint32_t flags, int32_t userId, SkillInfo &skillInfo) override;

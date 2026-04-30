@@ -66,7 +66,7 @@ sptr<IBundleSkillManager> SkillManagerHelper::GetSkillManager()
 }
 
 ErrCode SkillManagerHelper::InnerGetSkillInfoForSelf(const std::string &moduleName,
-    const std::string &skillName, int32_t userId, uint32_t flags, SkillInfo &skillInfo)
+    const std::string &skillName, uint32_t flags, SkillInfo &skillInfo)
 {
     APP_LOGD("start");
     auto skillManagerProxy = SkillManagerHelper::GetSkillManager();
@@ -74,14 +74,14 @@ ErrCode SkillManagerHelper::InnerGetSkillInfoForSelf(const std::string &moduleNa
         APP_LOGE("skillManagerProxy is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = skillManagerProxy->GetSkillInfoForSelf(moduleName, skillName, userId, flags, skillInfo);
+    ErrCode ret = skillManagerProxy->GetSkillInfoForSelf(moduleName, skillName, flags, skillInfo);
     if (ret != ERR_OK) {
         APP_LOGE("failed, moduleName is %{public}s, errCode: %{public}d", moduleName.c_str(), ret);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
 
-ErrCode SkillManagerHelper::InnerGetSkillInfosForSelf(uint32_t flags, int32_t userId,
+ErrCode SkillManagerHelper::InnerGetSkillInfosForSelf(uint32_t flags,
     std::vector<SkillInfo> &skillInfos)
 {
     APP_LOGD("start");
@@ -90,7 +90,7 @@ ErrCode SkillManagerHelper::InnerGetSkillInfosForSelf(uint32_t flags, int32_t us
         APP_LOGE("skillManagerProxy is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = skillManagerProxy->GetSkillInfosForSelf(flags, userId, skillInfos);
+    ErrCode ret = skillManagerProxy->GetSkillInfosForSelf(flags, skillInfos);
     if (ret != ERR_OK) {
         APP_LOGE("failed, errCode: %{public}d", ret);
     }

@@ -17,10 +17,10 @@ export interface SkillInfo {
     readonly bundleName: string;
     readonly moduleName: string;
     readonly skillName: string;
-    readonly skillId: int;
     readonly skillType: SkillType;
     readonly hapPath: string;
     readonly skillPath: string;
+    readonly versionCode: long;
     readonly abilityName: string;
     readonly description: string;
     readonly srcEntries: Array<string>;

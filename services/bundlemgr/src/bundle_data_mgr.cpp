@@ -14104,18 +14104,19 @@ std::vector<std::string> BundleDataMgr::GetAllowListenBundleNames(
 
 void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
     const InnerModuleInfo &moduleInfo, const SkillProfile &profile,
-    SkillType skillType, uint32_t flags, SkillInfo &skillInfo)
+    uint32_t flags, SkillInfo &skillInfo)
 {
     skillInfo.bundleName = info.GetBundleName();
     skillInfo.moduleName = moduleInfo.moduleName;
     skillInfo.skillName = profile.name;
-    skillInfo.skillId = 0;
-    skillInfo.skillType = skillType;
+    skillInfo.skillType = (info.GetApplicationBundleType() == BundleType::SKILL) ?
+        SkillType::INDEPENDENT_SKILL : SkillType::APP_SKILL;
     skillInfo.hapPath = moduleInfo.hapPath;
     skillInfo.abilityName = profile.abilityName;
     skillInfo.skillPath = std::string(ServiceConstants::SKILL_FILE_PATH) + ServiceConstants::PATH_SEPARATOR +
         skillInfo.bundleName + ServiceConstants::PATH_SEPARATOR + skillInfo.moduleName + ServiceConstants::PATH_SEPARATOR +
         ServiceConstants::SKILL_DIR + ServiceConstants::PATH_SEPARATOR + skillInfo.skillName;
+    skillInfo.versionCode = info.GetVersionCode();
 
     if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_SRC_ENTRIES)) ==
         static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_SRC_ENTRIES)) {
@@ -14156,14 +14157,6 @@ ErrCode BundleDataMgr::GetSkillInfoForSelf(const std::string &moduleName,
         APP_LOGE("GetBundleNameAndIndex failed, uid:%{public}d, err:%{public}d", callingUid, err);
         return err;
     }
-    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID) {
-        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
-            APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
-            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-        }
-        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
-    }
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
@@ -14183,7 +14176,7 @@ ErrCode BundleDataMgr::GetSkillInfoForSelf(const std::string &moduleName,
     }
     for (const auto &profile : moduleInfo->skillProfiles) {
         if (profile.name == skillName) {
-            GetSkillInfoWithFlags(info, moduleInfo.value(), profile, SkillType::APP_SKILL, flags, skillInfo);
+            GetSkillInfoWithFlags(info, moduleInfo.value(), profile, flags, skillInfo);
             break;
         }
     }
@@ -14207,14 +14200,6 @@ ErrCode BundleDataMgr::GetSkillInfosForSelf(uint32_t flags, int32_t userId,
         APP_LOGE("GetBundleNameAndIndex failed, uid:%{public}d, err:%{public}d", callingUid, err);
         return err;
     }
-    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID) {
-        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
-            APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
-            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-        }
-        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
-    }
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
@@ -14226,10 +14211,10 @@ ErrCode BundleDataMgr::GetSkillInfosForSelf(uint32_t flags, int32_t userId,
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &info = item->second;
-    for (const auto &[modName, moduleInfo] : info.GetInnerModuleInfos()) {
+    for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
         for (const auto &profile : moduleInfo.skillProfiles) {
             SkillInfo skillInfo;
-            GetSkillInfoWithFlags(info, moduleInfo, profile, SkillType::APP_SKILL, flags, skillInfo);
+            GetSkillInfoWithFlags(info, moduleInfo, profile, flags, skillInfo);
             skillInfos.emplace_back(std::move(skillInfo));
         }
     }
@@ -14260,6 +14245,10 @@ ErrCode BundleDataMgr::GetSkillInfo(const std::string &bundleName, const std::st
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &info = item->second;
+    if (!info.HasInnerBundleUserInfo(requestUserId)) {
+        APP_LOGE("bundle %{public}s is not installed for user %{public}d", bundleName.c_str(), requestUserId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
     auto moduleInfo = info.GetInnerModuleInfoByModuleName(moduleName);
     if (!moduleInfo.has_value()) {
         APP_LOGE("module not found, moduleName:%{public}s", moduleName.c_str());
@@ -14267,8 +14256,7 @@ ErrCode BundleDataMgr::GetSkillInfo(const std::string &bundleName, const std::st
     }
     for (const auto &profile : moduleInfo->skillProfiles) {
         if (profile.name == skillName) {
-            GetSkillInfoWithFlags(info, moduleInfo.value(), profile,
-                SkillType::INDEPENDENT_SKILL, flags, skillInfo);
+            GetSkillInfoWithFlags(info, moduleInfo.value(), profile, flags, skillInfo);
             break;
         }
     }
@@ -14303,12 +14291,15 @@ ErrCode BundleDataMgr::GetSkillInfos(const std::string &bundleName, uint32_t fla
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &info = item->second;
-    for (const auto &[modName, moduleInfo] : info.GetInnerModuleInfos()) {
+    if (!info.HasInnerBundleUserInfo(requestUserId)) {
+        APP_LOGE("bundle %{public}s is not installed for user %{public}d", bundleName.c_str(), requestUserId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
         for (const auto &profile : moduleInfo.skillProfiles) {
-            SkillInfo si;
-            GetSkillInfoWithFlags(info, moduleInfo, profile,
-                SkillType::INDEPENDENT_SKILL, flags, si);
-            skillInfos.emplace_back(std::move(si));
+            SkillInfo skillInfo;
+            GetSkillInfoWithFlags(info, moduleInfo, profile, flags, skillInfo);
+            skillInfos.emplace_back(std::move(skillInfo));
         }
     }
     return ERR_OK;
@@ -14318,17 +14309,20 @@ ErrCode BundleDataMgr::GetAllSkillInfos(uint32_t flags, int32_t userId,
     std::vector<SkillInfo> &skillInfos)
 {
     APP_LOGD("get all skill infos, flags:%{public}u, userId:%{public}d", flags, userId);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    for (const auto &[bName, info] : bundleInfos_) {
-        if (info.GetApplicationBundleType() != BundleType::SKILL) {
+    for (const auto &[bundleName, info] : bundleInfos_) {
+        if (!info.HasInnerBundleUserInfo(requestUserId)) {
             continue;
         }
-        for (const auto &[modName, moduleInfo] : info.GetInnerModuleInfos()) {
+        for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
             for (const auto &profile : moduleInfo.skillProfiles) {
-                SkillInfo si;
-                GetSkillInfoWithFlags(info, moduleInfo, profile,
-                    SkillType::INDEPENDENT_SKILL, flags, si);
-                skillInfos.emplace_back(std::move(si));
+                SkillInfo skillInfo;
+                GetSkillInfoWithFlags(info, moduleInfo, profile, flags, skillInfo);
+                skillInfos.emplace_back(std::move(skillInfo));
             }
         }
     }

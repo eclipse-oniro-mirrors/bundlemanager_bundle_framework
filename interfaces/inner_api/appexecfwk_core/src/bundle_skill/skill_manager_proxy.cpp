@@ -27,14 +27,10 @@ BundleSkillManagerProxy::BundleSkillManagerProxy(const sptr<IRemoteObject>& obje
 {}
 
 ErrCode BundleSkillManagerProxy::GetSkillInfoForSelf(const std::string &moduleName,
-    const std::string &skillName, int32_t userId, uint32_t flags, SkillInfo &skillInfo)
+    const std::string &skillName, uint32_t flags, SkillInfo &skillInfo)
 {
     APP_LOGD("start, moduleName:%{public}s, skillName:%{public}s, flags:%{public}u",
         moduleName.c_str(), skillName.c_str(), flags);
-    if (moduleName.empty() || skillName.empty()) {
-        APP_LOGE("moduleName or skillName is empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to write InterfaceToken");
@@ -46,10 +42,6 @@ ErrCode BundleSkillManagerProxy::GetSkillInfoForSelf(const std::string &moduleNa
     }
     if (!data.WriteString(skillName)) {
         APP_LOGE("fail to write skillName");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to write userId");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteUint32(flags)) {
@@ -93,7 +85,7 @@ bool BundleSkillManagerProxy::SendRequest(SkillManagerInterfaceCode code,
     return true;
 }
 
-ErrCode BundleSkillManagerProxy::GetSkillInfosForSelf(uint32_t flags, int32_t userId,
+ErrCode BundleSkillManagerProxy::GetSkillInfosForSelf(uint32_t flags,
     std::vector<SkillInfo> &skillInfos)
 {
     APP_LOGD("start, flags:%{public}u", flags);
@@ -104,10 +96,6 @@ ErrCode BundleSkillManagerProxy::GetSkillInfosForSelf(uint32_t flags, int32_t us
     }
     if (!data.WriteUint32(flags)) {
         APP_LOGE("fail to write flags");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to write userId");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
@@ -138,10 +126,6 @@ ErrCode BundleSkillManagerProxy::GetSkillInfo(const std::string &bundleName,
 {
     APP_LOGD("start, bundleName:%{public}s, moduleName:%{public}s, flags:%{public}u",
         bundleName.c_str(), moduleName.c_str(), flags);
-    if (bundleName.empty() || moduleName.empty() || skillName.empty()) {
-        APP_LOGE("bundleName or moduleName or skillName is empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to write InterfaceToken");
@@ -190,10 +174,6 @@ ErrCode BundleSkillManagerProxy::GetSkillInfos(const std::string &bundleName, ui
     int32_t userId, std::vector<SkillInfo> &skillInfos)
 {
     APP_LOGD("start, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
-    if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to write InterfaceToken");

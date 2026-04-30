@@ -1595,7 +1595,7 @@ private:
 
 private:
     static void GetSkillInfoWithFlags(const InnerBundleInfo &info, const InnerModuleInfo &moduleInfo,
-        const SkillProfile &profile, SkillType skillType, uint32_t flags, SkillInfo &skillInfo);
+        const SkillProfile &profile, uint32_t flags, SkillInfo &skillInfo);
 
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
