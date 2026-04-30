@@ -23,6 +23,7 @@
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
 #include "extension_ability_info.h"
+#include "get_largest_items_callback_interface.h"
 #include "hap_module_info.h"
 #include "want.h"
 
@@ -122,6 +123,16 @@ public:
     ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs);
     ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback);
     ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback);
+    /**
+     * @brief Get top N largest items in app data directory.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param appIndex Indicates the application index.
+     * @param userId Indicates the user ID.
+     * @param getLargestItemsCallback Callback for returning the largest items result.
+     * @return Returns ERR_OK if successfully; returns error code otherwise.
+     */
+    ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback);
 
 private:
     static std::shared_ptr<BundleMgrClientImpl> impl_;
