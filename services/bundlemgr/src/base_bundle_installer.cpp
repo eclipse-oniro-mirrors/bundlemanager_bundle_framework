@@ -97,6 +97,7 @@ constexpr const char* PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
 constexpr const char* BMS_SERVICE_PATH = "/data/service";
 constexpr const char* APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install/";
+constexpr const char* APP_INSTALL_ABSOLUTE_PATH = "/data/service/el1/public/";
 constexpr const char* BACKUP_BUNDLES = "/backup/bundles/";
 const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
@@ -7480,6 +7481,9 @@ ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
                 bundlePath.substr(std::strlen(ServiceConstants::APP_CLONE_SANDBOX_PATH));
             parsedPaths.push_back(newPath);
             LOG_D(BMS_TAG_INSTALLER, "parsed path: %{public}s", newPath.c_str());
+        } else if (bundlePath.find(APP_INSTALL_ABSOLUTE_PATH) == 0) {
+            parsedPaths.push_back(bundlePath);
+            LOG_D(BMS_TAG_INSTALLER, "absolute path: %{public}s", bundlePath.c_str());
         } else {
             LOG_E(BMS_TAG_INSTALLER, "path invalid: %{public}s", bundlePath.c_str());
             return ERR_APPEXECFWK_INSTALL_RENAME_INSTALL_FILE_PATH_NOT_START_WITH_APP_INSTALL_SANDBOX;
