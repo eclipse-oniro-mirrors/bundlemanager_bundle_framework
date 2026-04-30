@@ -518,6 +518,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     deviceId = Str16ToStr8(parcel.ReadString16());
     distributedNotificationEnabled = parcel.ReadBool();
     installedForAllUser = parcel.ReadBool();
+    skillEnabled = parcel.ReadBool();
     isForceRotate = parcel.ReadBool();
     profileable = parcel.ReadBool();
     allowEnableNotification = parcel.ReadBool();
@@ -777,6 +778,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceId));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, distributedNotificationEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, installedForAllUser);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, skillEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isForceRotate);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, profileable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowEnableNotification);
