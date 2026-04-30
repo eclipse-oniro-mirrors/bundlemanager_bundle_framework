@@ -279,6 +279,9 @@ const int32_t APP_INDEX = 1;
 const std::string CALLER_NAME_UT = "ut";
 const int32_t MAX_WAITING_TIME = 600;
 constexpr uint16_t UUID_LENGTH_MAX = 512;
+constexpr const char* IS_BMS_EXTENSION_UNINSTALLED = "isBmsExtensionUninstalled";
+constexpr const char* ASSET_ACCESS_GROUPS = "assetAccessGroups";
+constexpr const char* DEVELOPERID = "developerId";
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -9709,5 +9712,35 @@ HWTEST_F(BmsBundleKitServiceTest, GetTestRunner_0100, Function | SmallTest | Lev
     ErrCode ret = hostImpl->GetTestRunner(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, testRunner);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     MockUninstallBundle(BUNDLE_NAME_DEMO);
+}
+
+/**
+ * @tc.number: SetNotifyWant_0100
+ * @tc.name: Test SetNotifyWant
+ * @tc.desc: 1.Test the SetNotifyWant by commonEvent
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetNotifyWant_0100, Function | SmallTest | Level1)
+{
+    installRes_.type = NotifyType::UNINSTALL_BUNDLE;
+    Want want;
+    commonEventMgr_->SetNotifyWant(want, installRes_);
+    EXPECT_FALSE(want.GetBoolParam(IS_BMS_EXTENSION_UNINSTALLED, true));
+}
+
+/**
+ * @tc.number: SetNotifyWant_0200
+ * @tc.name: Test SetNotifyWant
+ * @tc.desc: 1.Test the SetNotifyWant by commonEvent
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetNotifyWant_0200, Function | SmallTest | Level1)
+{
+    installRes_.type = NotifyType::UNINSTALL_BUNDLE;
+    installRes_.assetAccessGroups = "assetAccessGroups";
+    installRes_.developerId = "123456789";
+    Want want;
+    commonEventMgr_->SetNotifyWant(want, installRes_);
+    EXPECT_FALSE(want.GetBoolParam(IS_BMS_EXTENSION_UNINSTALLED, true));
+    EXPECT_EQ(want.GetStringParam(ASSET_ACCESS_GROUPS), installRes_.assetAccessGroups);
+    EXPECT_EQ(want.GetStringParam(DEVELOPERID), installRes_.developerId);
 }
 }
