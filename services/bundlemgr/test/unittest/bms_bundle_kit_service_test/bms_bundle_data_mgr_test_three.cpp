@@ -2528,6 +2528,32 @@ HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostHandleDeleteDesktopShortcutInfo_000
 }
 
 /**
+ * @tc.number: TriggerFallbackEvent_0001
+ * @tc.name: TriggerFallbackEvent_0001
+ * @tc.desc: test TriggerFallbackEvent_0001
+ */
+HWTEST_F(BmsBundleDataMgrTest3, TriggerFallbackEvent_0001, Function | MediumTest | Level1)
+{
+    EXPECT_NO_THROW(EventReport::SendTriggerFallbackEvent(
+        HighRiskOperationType::PATCH_INSTALL_MISSING_HAP, "com.test.bundle", 100, std::vector<std::string>{}));
+    EXPECT_NO_THROW(EventReport::SendTriggerFallbackEvent(
+        HighRiskOperationType::CREATE_USER_ALREADY_EXIST, "", 101, std::vector<std::string>{}));
+}
+
+/**
+ * @tc.number: ScanInstallTimeoutEvent_0001
+ * @tc.name: ScanInstallTimeoutEvent_0001
+ * @tc.desc: test ScanInstallTimeoutEvent_0001
+ */
+HWTEST_F(BmsBundleDataMgrTest3, ScanInstallTimeoutEvent_0001, Function | MediumTest | Level1)
+{
+    EXPECT_NO_THROW(EventReport::SendScanTimeoutEvent(
+        HighRiskOperationType::BOOT_SCAN_TIMEOUT, 0, 10000));
+    EXPECT_NO_THROW(EventReport::SendScanTimeoutEvent(
+        HighRiskOperationType::OTA_SCAN_TIMEOUT, 10000, 20000));
+}
+
+/**
  * @tc.number: DesktopShortcutEvent_001
  * @tc.name: DesktopShortcutEvent_001
  * @tc.desc: test DesktopShortcutEvent_001

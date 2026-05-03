@@ -776,6 +776,8 @@ private:
     // Used to notify bundle scan status
     bool needNotifyBundleScanStatus_ = false;
 
+    int64_t scanStartTime_ = 0;
+
     bool hasLoadAllPreInstallBundleInfosFromDb_ = false;
     // Used to mark module update status depend on system parameter
     ModuleUpdateStatus moduleUpdateStatus_ = ModuleUpdateStatus::DEFAULT;

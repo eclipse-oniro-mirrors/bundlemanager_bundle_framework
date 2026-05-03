@@ -316,6 +316,29 @@ void EventReport::SendHighRiskEvent(const EventInfo& eventInfo)
     EventReport::SendSystemEvent(BMSEventType::HIGH_RISK_EVENT, eventInfo);
 }
 
+void EventReport::SendTriggerFallbackEvent(HighRiskOperationType operation, const std::string &bundleName,
+    int32_t userId, const std::vector<std::string> &path)
+{
+    EventInfo eventInfo;
+    eventInfo.actionType = static_cast<int32_t>(HighRiskActionType::TRIGGER_FALLBACK);
+    eventInfo.operationType = static_cast<int32_t>(operation);
+    eventInfo.bundleName = bundleName;
+    eventInfo.userId = userId;
+    eventInfo.filePath = path;
+    EventReport::SendSystemEvent(BMSEventType::HIGH_RISK_EVENT, eventInfo);
+}
+
+void EventReport::SendScanTimeoutEvent(HighRiskOperationType operation, int64_t startTime,
+    int64_t endTime)
+{
+    EventInfo eventInfo;
+    eventInfo.actionType = static_cast<int32_t>(HighRiskActionType::SCAN_TIMEOUT);
+    eventInfo.operationType = static_cast<int32_t>(operation);
+    eventInfo.startTime = startTime;
+    eventInfo.endTime = endTime;
+    EventReport::SendSystemEvent(BMSEventType::HIGH_RISK_EVENT, eventInfo);
+}
+
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
 {
 #ifdef HISYSEVENT_ENABLE
