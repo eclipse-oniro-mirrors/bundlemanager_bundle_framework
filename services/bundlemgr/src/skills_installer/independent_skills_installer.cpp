@@ -1256,6 +1256,13 @@ ErrCode IndependentSkillsInstaller::ProcessUninstall(const std::string &bundleNa
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
     MarkPreInstallState(bundleName, true);
+    result = SkillsDescriptionManager::GetInstance()->DeleteSkillDescriptions(bundleName);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "delete skill desc -n %{public}s failed %{public}d", bundleName.c_str(), result);
+    }
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed", bundleName.c_str());
+    }
     std::string bundleDir =
         std::string(BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
     LOG_I(BMS_TAG_INSTALLER, "start to remove bundle dir: %{public}s", bundleDir.c_str());
