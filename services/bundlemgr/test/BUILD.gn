@@ -130,6 +130,7 @@ group("unittest") {
       "unittest/bms_skills_description_manager_test:unittest",
       "unittest/bms_skills_installer_util_test:unittest",
       "unittest/bms_skills_package_test:unittest",
+      "unittest/bms_skill_manager_test:unittest",
       "unittest/bms_space_isolation_test:unittest",
       "unittest/bms_syscap_tool_test:unittest",
       "unittest/bms_update_selinux_mgr_test:unittest",
