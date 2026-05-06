@@ -168,6 +168,8 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
     CheckPathAttribute(baseBundleDataDir, bundleInfo, isExist);
     if (!isExist) {
         APP_LOGI_NOFUNC("path: %{public}s need CreateBundleDataDir", baseBundleDataDir.c_str());
+        EventReport::SendTriggerFallbackEvent(HighRiskOperationType::USER_UNLOCK_DATA_DIR_RECOVERY,
+            bundleInfo.name, userId, std::vector<std::string>{baseBundleDataDir});
         CreateDirParam createDirParam;
         createDirParam.userId = userId;
         createDirParam.bundleName = bundleInfo.name;

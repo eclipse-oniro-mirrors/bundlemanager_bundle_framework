@@ -209,6 +209,8 @@ ErrCode BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPr
 
     if (dataMgr->HasUserId(userId)) {
         APP_LOGE("Has create user %{public}d", userId);
+        EventReport::SendTriggerFallbackEvent(HighRiskOperationType::CREATE_USER_ALREADY_EXIST,
+            Constants::EMPTY_STRING, userId, std::vector<std::string>{});
     }
 
     dataMgr->AddUserId(userId);

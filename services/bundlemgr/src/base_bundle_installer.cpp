@@ -1764,6 +1764,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!InitTempBundleFromCache(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INIT_INSTALL_TEMP_BUNDLE_ERROR;
     }
+    sysEventInfo_.oldAppProvisionType = oldInfo.GetAppProvisionType();
     if (!(installParam.isOTA || otaInstall_) && !newInfos.empty()) {
         result = bundleInstallChecker_->CalculateInstallInodes(newInfos, !isAppExist_);
         CHECK_RESULT(result, "check inode requirements failed %{public}d");
@@ -2983,6 +2984,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &i
     auto hnpPackages = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName()).value_or(std::vector<HnpPackage>{});
     if (!hnpPackages.empty()) {
         LOG_I(BMS_TAG_INSTALLER, "hnp install: %{public}s, %{public}d", info.GetCurModuleName().c_str(), userId);
+        sysEventInfo_.hasHnp = true;
         std::string moduleHnpsPath = info.GetInnerModuleInfoHnpPath(info.GetCurModuleName());
         InstallHnpParam installHnpParam;
         installHnpParam.userId = std::to_string(userId);
@@ -3142,6 +3144,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
+    sysEventInfo_.newAppProvisionType = newInfo.GetAppProvisionType();
     modulePackage_ = newInfo.GetCurrentModulePackage();
     if (modulePackage_.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "get current package failed");
@@ -6114,6 +6117,7 @@ void BaseBundleInstaller::CheckInstallAllowDowngrade(
     if (result != ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE) {
         return;
     }
+    sysEventInfo_.isDowngrade = true;
     if (installParam.allowPatchDowngrade) {
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "-n %{public}s -v %{public}d  allow downgrade",
             bundleName_.c_str(), versionCode_);

@@ -148,6 +148,7 @@ constexpr const char* OTA_SYSTEM_HSP_TASK = "OTA_SYSTEM_HSP_TASK";
 constexpr const char* OTA_SHARED_HSP_TASK = "OTA_SHARED_HSP_TASK";
 constexpr const char* OTA_PREINSTALL_BUNDLE_TASK = "OTA_PREINSTALL_BUNDLE_TASK";
 constexpr const char* OTA_PATCH_BUNDLE_TASK = "OTA_PATCH_BUNDLE_TASK";
+constexpr int64_t SCAN_TIMEOUT_MS = 5 * 60 * 1000;
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> onDemandInstallList_;
@@ -252,6 +253,7 @@ void BMSEventHandler::BeforeBmsStart()
         LOG_W(BMS_TAG_DEFAULT, "BundlePermissionMgr::Init failed");
     }
 
+    scanStartTime_ = BundleUtil::GetCurrentTimeMs();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_START);
     if (SetParameter(BUNDLE_SCAN_PARAM, BUNDLE_SCAN_START) != 0) {
         LOG_E(BMS_TAG_DEFAULT, "set bms.scanning_apps.status 0 failed");
@@ -346,6 +348,12 @@ void BMSEventHandler::AfterBmsStart()
     }
     ClearCache();
     if (needNotifyBundleScanStatus_) {
+        int64_t endTime = BundleUtil::GetCurrentTimeMs();
+        if (endTime - scanStartTime_ > SCAN_TIMEOUT_MS) {
+            EventReport::SendScanTimeoutEvent(
+                IsSystemUpgrade()? HighRiskOperationType::OTA_SCAN_TIMEOUT: HighRiskOperationType::BOOT_SCAN_TIMEOUT,
+                scanStartTime_, endTime);
+        }
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
@@ -4104,6 +4112,17 @@ void BMSEventHandler::HandlePreInstallException(bool needDeleteRecord)
         return;
     }
 
+    std::vector<std::string> tmpPath;
+    tmpPath.reserve(exceptionPaths.size() + exceptionBundleNames.size() + exceptionAppServicePaths.size() +
+        exceptionAppServiceBundleNames.size() + exceptionSharedPaths.size());
+    tmpPath.insert(tmpPath.end(), exceptionPaths.begin(), exceptionPaths.end());
+    tmpPath.insert(tmpPath.end(), exceptionBundleNames.begin(), exceptionBundleNames.end());
+    tmpPath.insert(tmpPath.end(), exceptionAppServicePaths.begin(), exceptionAppServicePaths.end());
+    tmpPath.insert(tmpPath.end(), exceptionAppServiceBundleNames.begin(), exceptionAppServiceBundleNames.end());
+    tmpPath.insert(tmpPath.end(), exceptionSharedPaths.begin(), exceptionSharedPaths.end());
+    EventReport::SendTriggerFallbackEvent(HighRiskOperationType::PRE_INSTALL_EXCEPTION, Constants::EMPTY_STRING,
+        Constants::UNSPECIFIED_USERID, tmpPath);
+
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "handle exception %{public}zu %{public}zu %{public}zu %{public}zu %{public}zu",
         exceptionPaths.size(), exceptionBundleNames.size(), exceptionAppServicePaths.size(),
         exceptionAppServiceBundleNames.size(), exceptionSharedPaths.size());
@@ -5082,6 +5101,9 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: hapVersionCode is less than old hap versionCode",
                 bundleName.c_str());
             continue;
+        } else if (hapVersionCode <= hasInstalledInfo.versionCode) {
+            EventReport::SendTriggerFallbackEvent(HighRiskOperationType::PATCH_INSTALL_MISSING_HAP, bundleName,
+                Constants::ALL_USERID, std::vector<std::string>{});
         }
         if (infos.begin()->second.GetOverlayType() == OverlayType::OVERLAY_EXTERNAL_BUNDLE) {
             needInstallOverlayMap[bundleName].emplace_back(scanPathIter);
@@ -5644,6 +5666,8 @@ void BMSEventHandler::ProcessAppTmpPath()
     if (!BundleUtil::IsExistDirNoLog(ServiceConstants::BMS_APP_TEMP_PATH)) {
         return;
     }
+    EventReport::SendTriggerFallbackEvent(HighRiskOperationType::PROCESS_APP_GALLERY_TMP_PATH, Constants::EMPTY_STRING,
+        Constants::ALL_USERID, std::vector<std::string>{});
     LOG_I(BMS_TAG_DEFAULT, "process app_temp start");
     InstallParam installParam;
     installParam.SetKillProcess(false);
