@@ -355,6 +355,30 @@ static ani_object GetAllBundleInfoNative(ani_env* env, ani_int aniBundleFlags, a
     return CommonFunAni::ConvertAniArray(env, bundleInfos, CommonFunAni::ConvertBundleInfo, aniBundleFlags);
 }
 
+static ani_object GetInstalledBundleListNative(ani_env* env, ani_int aniBundleFlags)
+{
+    APP_LOGD("ani GetInstalledBundleList called");
+    ani_int aniUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Get bundle mgr failed");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = iBundleMgr->GetInstalledBundleList(aniBundleFlags, aniUserId, bundleInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetInstalledBundleList failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), GET_INSTALLED_BUNDLE_LIST,
+            Constants::PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST);
+        return nullptr;
+    }
+    APP_LOGD("GetInstalledBundleList ret: %{public}d, bundleInfos size: %{public}zu", ret, bundleInfos.size());
+
+    return CommonFunAni::ConvertAniArray(env, bundleInfos, CommonFunAni::ConvertBundleInfo, aniBundleFlags);
+}
+
 static ani_object GetAllApplicationInfoNative(ani_env* env, ani_int aniApplicationFlags, ani_int aniUserId)
 {
     APP_LOGD("ani GetAllApplicationInfo called");
@@ -2442,6 +2466,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getBundleInfoNative", nullptr, reinterpret_cast<void*>(GetBundleInfoNative) },
         ani_native_function { "getApplicationInfoNative", nullptr, reinterpret_cast<void*>(GetApplicationInfoNative) },
         ani_native_function { "getAllBundleInfoNative", nullptr, reinterpret_cast<void*>(GetAllBundleInfoNative) },
+        ani_native_function { "getInstalledBundleListNative", nullptr,
+            reinterpret_cast<void*>(GetInstalledBundleListNative) },
         ani_native_function { "getAllApplicationInfoNative", nullptr,
             reinterpret_cast<void*>(GetAllApplicationInfoNative) },
         ani_native_function { "queryAbilityInfoSyncNative", nullptr,
