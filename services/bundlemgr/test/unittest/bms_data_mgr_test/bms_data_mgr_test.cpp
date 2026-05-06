@@ -28,8 +28,11 @@
 #include "bundle_backup_service.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
+#include "bundle_mgr_client.h"
+#include "bundle_mgr_client_impl.h"
 #include "bundle_mgr_service.h"
 #include "first_install_data_mgr/first_install_bundle_info.h"
+#include "get_largest_items_callback_host.h"
 #include "int_wrapper.h"
 #include "json_constants.h"
 #include "json_serializer.h"
@@ -9422,5 +9425,41 @@ HWTEST_F(BmsDataMgrTest, GetResponseUserId_0008, Function | MediumTest | Level1)
 
     int32_t resultUserId = bundleDataMgr.GetResponseUserId(bundleName, requestUserId);
     EXPECT_EQ(resultUserId, Constants::INVALID_USERID);
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0001
+ * @tc.name: test BundleMgrClient::GetTopNLargestItemsInAppDataDir with null callback
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir with null callback
+ *           2. verify the function returns error when callback is null
+ */
+HWTEST_F(BmsDataMgrTest, GetTopNLargestItemsInAppDataDir_0001, Function | SmallTest | Level1)
+{
+    BundleMgrClient client;
+    client.impl_ = nullptr;
+    std::string bundleName = BUNDLE_NAME;
+    int32_t appIndex = 0;
+    int32_t userId = USERID;
+
+    ErrCode ret = client.GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, nullptr);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetTopNLargestItemsInAppDataDir_0002
+ * @tc.name: test BundleMgrClient::GetTopNLargestItemsInAppDataDir with empty bundle name
+ * @tc.desc: 1. Test GetTopNLargestItemsInAppDataDir with empty bundle name
+ *           2. verify the function returns error for empty bundle name
+ */
+HWTEST_F(BmsDataMgrTest, GetTopNLargestItemsInAppDataDir_0002, Function | SmallTest | Level1)
+{
+    BundleMgrClient client;
+    client.impl_ = std::make_shared<BundleMgrClientImpl>();
+    std::string bundleName = BUNDLE_NAME;
+    int32_t appIndex = 0;
+    int32_t userId = USERID;
+
+    ErrCode ret = client.GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, nullptr);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 } // OHOS
