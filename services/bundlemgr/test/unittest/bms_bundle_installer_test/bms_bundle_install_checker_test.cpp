@@ -26,6 +26,8 @@
 #include "bundle_install_checker.h"
 #include "bundle_verify_mgr.h"
 #include "bundle_util.h"
+#include "bms_extension_data_mgr.h"
+#include "bundle_mgr_ext_register.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
 #include "parameters.h"
@@ -3208,5 +3210,126 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckMultipleHspConsistency_0008, Function
     infos.insert(pair<string, InnerBundleInfo>("path3", innerBundleInfo3));
     auto ret = installChecker.CheckMultipleHspConsistency(infos);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckCriticalAppAreInstalled_0200
+ * @tc.name: test CheckCriticalAppAreInstalled
+ * @tc.desc: 1. userId less than START_USERID, return ERR_OK
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckCriticalAppAreInstalled_0200, Function | SmallTest | Level0)
+{
+    ASSERT_NE(bundleUserMgrHostImpl_, nullptr);
+    std::set<PreInstallBundleInfo> preInfos;
+    auto res = bundleUserMgrHostImpl_->CheckCriticalAppAreInstalled(0, preInfos);
+    EXPECT_EQ(res, ERR_OK);
+    res = bundleUserMgrHostImpl_->CheckCriticalAppAreInstalled(99, preInfos);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckCriticalAppAreInstalled_0400
+ * @tc.name: test CheckCriticalAppAreInstalled
+ * @tc.desc: 1. extension returns ERR_OK with empty list, return ERR_OK
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckCriticalAppAreInstalled_0400, Function | SmallTest | Level0)
+{
+    ASSERT_NE(bundleUserMgrHostImpl_, nullptr);
+    class EmptyListMockBundleMgrExt : public BundleMgrExt {
+    public:
+        bool CheckApiInfo(const BundleInfo &bundleInfo) override { return true; }
+        ErrCode GetCriticalAppList(int32_t userId, std::vector<std::string> &bundleNames) override
+        {
+            return ERR_OK;
+        }
+    };
+    BmsExtensionBundleMgr bmsExtensionBundleMgr;
+    bmsExtensionBundleMgr.extensionName = "test_critical_app_empty_list";
+    bmsExtensionBundleMgr.libPath = "/data/test/";
+    int32_t handleTest = 1;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr = bmsExtensionBundleMgr;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("test_critical_app_empty_list",
+        []() -> std::shared_ptr<BundleMgrExt> {
+            return std::make_shared<EmptyListMockBundleMgrExt>();
+        });
+    std::set<PreInstallBundleInfo> preInfos;
+    auto res = bundleUserMgrHostImpl_->CheckCriticalAppAreInstalled(USERID, preInfos);
+    EXPECT_EQ(res, ERR_OK);
+    BmsExtensionBundleMgr non;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr = non;
+    BmsExtensionDataMgr::handler_ = nullptr;
+}
+
+/**
+ * @tc.number: CheckCriticalAppAreInstalled_0500
+ * @tc.name: test CheckCriticalAppAreInstalled
+ * @tc.desc: 1. extension returns list but not in preInfos, return ERR_OK
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckCriticalAppAreInstalled_0500, Function | SmallTest | Level0)
+{
+    ASSERT_NE(bundleUserMgrHostImpl_, nullptr);
+    class CriticalListMockBundleMgrExt : public BundleMgrExt {
+    public:
+        bool CheckApiInfo(const BundleInfo &bundleInfo) override { return true; }
+        ErrCode GetCriticalAppList(int32_t userId, std::vector<std::string> &bundleNames) override
+        {
+            bundleNames.push_back("com.test.critical.app");
+            return ERR_OK;
+        }
+    };
+    BmsExtensionBundleMgr bmsExtensionBundleMgr;
+    bmsExtensionBundleMgr.extensionName = "test_critical_app_list";
+    bmsExtensionBundleMgr.libPath = "/data/test/";
+    int32_t handleTest = 1;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr = bmsExtensionBundleMgr;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("test_critical_app_list",
+        []() -> std::shared_ptr<BundleMgrExt> {
+            return std::make_shared<CriticalListMockBundleMgrExt>();
+        });
+    std::set<PreInstallBundleInfo> preInfos;
+    PreInstallBundleInfo info;
+    info.SetBundleName("com.test.non.critical");
+    preInfos.insert(info);
+    auto res = bundleUserMgrHostImpl_->CheckCriticalAppAreInstalled(USERID, preInfos);
+    EXPECT_EQ(res, ERR_OK);
+    BmsExtensionBundleMgr non;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr = non;
+    BmsExtensionDataMgr::handler_ = nullptr;
+}
+
+/**
+ * @tc.number: CheckCriticalAppAreInstalled_0600
+ * @tc.name: test CheckCriticalAppAreInstalled
+ * @tc.desc: 1. extension returns DEFAULT_ERR, fall back to legacy list
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckCriticalAppAreInstalled_0600, Function | SmallTest | Level0)
+{
+    ASSERT_NE(bundleUserMgrHostImpl_, nullptr);
+    class DefaultErrMockBundleMgrExt : public BundleMgrExt {
+    public:
+        bool CheckApiInfo(const BundleInfo &bundleInfo) override { return true; }
+        ErrCode GetCriticalAppList(int32_t userId, std::vector<std::string> &bundleNames) override
+        {
+            return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+        }
+    };
+    BmsExtensionBundleMgr bmsExtensionBundleMgr;
+    bmsExtensionBundleMgr.extensionName = "test_critical_app_default_err";
+    bmsExtensionBundleMgr.libPath = "/data/test/";
+    int32_t handleTest = 1;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr = bmsExtensionBundleMgr;
+    BmsExtensionDataMgr::handler_ = &handleTest;
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt("test_critical_app_default_err",
+        []() -> std::shared_ptr<BundleMgrExt> {
+            return std::make_shared<DefaultErrMockBundleMgrExt>();
+        });
+    std::set<PreInstallBundleInfo> preInfos;
+    auto res = bundleUserMgrHostImpl_->CheckCriticalAppAreInstalled(USERID, preInfos);
+    EXPECT_EQ(res, ERR_OK);
+    BmsExtensionBundleMgr non;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr = non;
+    BmsExtensionDataMgr::handler_ = nullptr;
 }
 } // OHOS

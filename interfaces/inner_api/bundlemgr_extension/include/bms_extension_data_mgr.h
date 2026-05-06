@@ -60,6 +60,7 @@ public:
     ErrCode GetBundleNameByUid(int32_t uid, std::string &bundleName);
     ErrCode VerifyActivationLock(bool &res);
     ErrCode GetBackupUninstallList(int32_t userId, std::set<std::string> &uninstallBundles);
+    ErrCode GetCriticalAppList(int32_t userId, std::vector<std::string> &bundleNames);
     ErrCode ClearBackupUninstallFile(int32_t userId);
     ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
         int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
