@@ -482,7 +482,7 @@ bool UpdateAppDataMgr::CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_
     std::string parentDir = "/data/service/el2/%/hmdfs/cloud/data/";
     parentDir = parentDir.replace(parentDir.find("%"), 1, std::to_string(userId));
     if (!BundleUtil::IsExistDir(parentDir)) {
-        APP_LOGE("parent dir(%{public}s) missing: cloud", parentDir.c_str());
+        APP_LOGE("parent dir(%{public}s) missing: cloud errno:%{public}d", parentDir.c_str(), errno);
         return false;
     }
     std::string bundleCloudDir = parentDir + bundleInfo.name;
