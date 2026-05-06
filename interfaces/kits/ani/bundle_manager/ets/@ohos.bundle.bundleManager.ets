@@ -238,6 +238,8 @@ namespace bundleManager {
 
   native function getAllBundleInfoNative(bundleFlags: int, userId: int): Array<BundleInfo>;
 
+  native function getInstalledBundleListNative(bundleFlags: int): Array<BundleInfo>;
+
   native function getAllApplicationInfoNative(appFlags: int, userId: int): Array<ApplicationInfo>;
 
   native function isApplicationEnabledNative(bundleName: string, appIndex: int, isSync: boolean): boolean;
@@ -594,6 +596,24 @@ namespace bundleManager {
     }, (err: Error): void => {
       callback(err as BusinessError, undefined);
     });
+  }
+
+  function getInstalledBundleList(bundleFlags: int): Promise<Array<BundleInfo>> {
+    let p = new Promise<Array<BundleInfo>>((resolve: (bundleInfos: Array<BundleInfo>)
+      => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): Array<BundleInfo> => {
+        return getInstalledBundleListNative(bundleFlags);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let resultBundleInfos: Array<BundleInfo> = e as Array<BundleInfo>;
+        resolve(resultBundleInfos);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
   }
 
   function getAllApplicationInfo(appFlags: int, userId?: int): Promise<Array<ApplicationInfo>> {
