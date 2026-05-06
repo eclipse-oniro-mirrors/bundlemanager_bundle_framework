@@ -10918,4 +10918,31 @@ HWTEST_F(BmsBundleKitServiceTest, GetTopNLargestItemsInAppDataDir_0700, Function
     ResetTestValues();
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
+
+/**
+ * @tc.number: CheckCallingUid_0100
+ * @tc.name: Test CheckCallingUid
+ * @tc.desc: 1.Test the CheckCallingUid by BundleMgrHostImpl with normal call
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckCallingUid_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode ret = hostImpl->CheckCallingUid();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CheckCallingUid_0200
+ * @tc.name: Test CheckCallingUid
+ * @tc.desc: 1.Test the CheckCallingUid by BundleMgrHostImpl with normal call
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckCallingUid_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode ret = hostImpl->CheckCallingUid();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
 }

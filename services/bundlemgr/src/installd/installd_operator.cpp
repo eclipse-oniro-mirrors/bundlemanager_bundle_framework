@@ -4381,7 +4381,6 @@ std::string InstalldOperator::AnonymizePath(const std::string &path)
 
         // Calculate segment length
         size_t segLen = 0;
-        bool isLastSegment = (segmentEnd == nullptr);
         if (segmentEnd != nullptr) {
             segLen = static_cast<size_t>(segmentEnd - segmentStart);
             // Skip empty segments (e.g., consecutive separators like //), but NOT the leading separator at path start
@@ -4404,54 +4403,11 @@ std::string InstalldOperator::AnonymizePath(const std::string &path)
             result.push_back(pathSep);
         }
 
-        // Check if this is the last segment (filename) and has an extension
-        const char* dotPos = nullptr;
-        if (isLastSegment && segLen > 1) {  // Need at least 2 chars for extension (e.g., ".a")
-            // Find the last dot in the segment using standard C++ method
-            // Manual reverse search to avoid memrchr (POSIX-only, not portable)
-            const char* lastDot = nullptr;
-            // Use index-based loop to avoid pointer undefined behavior when decrementing past start
-            for (size_t i = segLen; i > 0; --i) {
-                if (segmentStart[i - 1] == '.') {
-                    lastDot = segmentStart + i - 1;
-                    break;
-                }
-            }
-            // Only consider it as extension if:
-            // 1. Dot exists and is not at the beginning (hidden files like .gitignore)
-            // 2. Dot is not at the end (no extension after dot)
-            if ((lastDot != nullptr) && (lastDot > segmentStart) &&
-                ((lastDot - segmentStart) < static_cast<ptrdiff_t>(segLen) - 1)) {
-                dotPos = lastDot;
-            }
-        }
-
-        // Process segment: anonymize name part, keep extension
-        size_t nameLen = segLen;
-        if (dotPos != nullptr) {
-            nameLen = static_cast<size_t>(dotPos - segmentStart);
-            // Anonymize the name part (before extension)
-            size_t i = 0;
-            const size_t pairCount = nameLen & ~static_cast<size_t>(1);  // Round down to even
-            for (; i < pairCount; i += 2) {
-                result.push_back(segmentStart[i]);      // Even index - keep original
-                result.push_back('*');                  // Odd index - replace with *
-            }
-            if (i < nameLen) {
-                result.push_back(segmentStart[i]);
-            }
-            // Append the extension (including dot) as-is
-            result.append(dotPos, segLen - nameLen);
-        } else {
-            // No extension, anonymize entire segment
-            size_t i = 0;
-            const size_t pairCount = nameLen & ~static_cast<size_t>(1);  // Round down to even
-            for (; i < pairCount; i += 2) {
-                result.push_back(segmentStart[i]);      // Even index - keep original
-                result.push_back('*');                  // Odd index - replace with *
-            }
-            if (i < nameLen) {
-                result.push_back(segmentStart[i]);
+        // Anonymize the entire segment (including file extension if any)
+        for (size_t i = 0; i < segLen; i += 2) {
+            result.push_back(segmentStart[i]);      // Even index - keep original
+            if (i + 1 < segLen) {
+                result.push_back('*');              // Next odd index exists, replace with *
             }
         }
 

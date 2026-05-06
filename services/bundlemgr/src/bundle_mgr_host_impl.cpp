@@ -7586,6 +7586,11 @@ ErrCode BundleMgrHostImpl::CheckGetTopNLargestItemsFrequencyLimit()
         LOG_D(BMS_TAG_DEFAULT, "Debuggable mode detected, using 1 minute frequency limit");
     } else {
         MIN_INTERVAL = std::chrono::hours(12);  // 12 hours in production mode
+        // check permission
+        ErrCode result = CheckCallingUid();
+        if (result != ERR_OK) {
+            return result;
+        }
     }
 
     if (lastSuccessCallTime_ != std::chrono::steady_clock::time_point{}) {
@@ -7607,6 +7612,21 @@ ErrCode BundleMgrHostImpl::CheckGetTopNLargestItemsFrequencyLimit()
     }
     // Update last success call time
     lastSuccessCallTime_ = now;
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::CheckCallingUid()
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != 0) {
+        LOG_E(BMS_TAG_DEFAULT, "verify callingName failed calling: %{public}d", callingUid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk
