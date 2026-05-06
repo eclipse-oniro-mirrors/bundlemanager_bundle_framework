@@ -884,8 +884,6 @@ private:
         const std::string &bundleName, int32_t userId) const;
     ArkStartupCache CreateArkStartupCacheParameter(const std::string &bundleName,
         int32_t userId, BundleType bundleType, int32_t uid);
-    ErrCode ProcessArkStartupCache(const ArkStartupCache &createArk,
-        int32_t moduleNum, int32_t userId) const;
     ErrCode CreateArkStartupCache(const ArkStartupCache &createArk) const;
     ErrCode DeleteArkStartupCache(const std::string &cacheDir, const std::string &bundleName, int32_t userId) const;
     bool VerifyActivationLock() const;
