@@ -1400,6 +1400,8 @@ private:
     // Check frequency limit for GetTopNLargestItemsInAppDataDir
     ErrCode CheckGetTopNLargestItemsFrequencyLimit();
 
+    ErrCode CheckCallingUid();
+
     // Frequency limit for GetTopNLargestItemsInAppDataDir
     std::mutex lastSuccessCallTimeMutex_;
     std::chrono::steady_clock::time_point lastSuccessCallTime_ = std::chrono::steady_clock::time_point{};

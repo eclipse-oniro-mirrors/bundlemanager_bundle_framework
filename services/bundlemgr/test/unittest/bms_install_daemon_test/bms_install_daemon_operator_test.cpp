@@ -3373,8 +3373,9 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18600, Function | Sm
     InstalldOperator installdOperator;
     std::string filename = "/abc/document.txt";
     std::string result = installdOperator.AnonymizePath(filename);
-    // "document.txt" -> "d*c*u*en.txt" (name part anonymized, extension kept)
-    EXPECT_EQ(result, "/a*c/d*c*m*n*.txt");
+    // "abc" -> "a*c" (keep even indices: 0,2)
+    // "document.txt" -> "d*c*m*n*.*x*" (keep even indices: 0,2,4,6,8,10)
+    EXPECT_EQ(result, "/a*c/d*c*m*n*.*x*");
 }
 
 /**
@@ -3402,11 +3403,11 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18800, Function | Sm
     InstalldOperator installdOperator;
     std::string filename = "document.txt";
     std::string result = installdOperator.AnonymizePath(filename);
-    // "document.txt" -> "d*c*u*en.txt" (name part anonymized, extension kept)
+    // "document.txt" -> "d*c*m*n*.*x*" (entire string anonymized including extension)
     EXPECT_FALSE(result.empty());
     EXPECT_NE(result, filename);
-    // Verify extension is preserved
-    EXPECT_TRUE(result.find(".txt") != std::string::npos);
+    // Verify the result has correct anonymization pattern
+    EXPECT_EQ(result, "d*c*m*n*.*x*");
 }
 
 /**
@@ -3422,8 +3423,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_18900, Function | Sm
     std::string result = installdOperator.AnonymizePath(fullPath);
     EXPECT_FALSE(result.empty());
     EXPECT_NE(result, fullPath);
-    // Verify extension is preserved in last segment
-    EXPECT_TRUE(result.find(".png") != std::string::npos);
+    // Verify the entire path is anonymized correctly (including extension)
+    EXPECT_EQ(result, "/d*t*/s*o*a*e/e*2/b*s*/h*p*/e*t*y/c*c*e/i*a*e*p*g");
 }
 
 /**
@@ -3444,7 +3445,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19000, Function | Sm
  * @tc.number: InstalldOperatorTest_19100
  * @tc.name: test AnonymizePath with multiple extensions
  * @tc.desc: 1. calling AnonymizePath with filename like file.tar.gz
- *           2. verify only last extension is preserved
+ *           2. verify entire filename including all extensions is anonymized
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19100, Function | SmallTest | Level0)
 {
@@ -3453,8 +3454,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19100, Function | Sm
     std::string result = installdOperator.AnonymizePath(multiExtPath);
     EXPECT_FALSE(result.empty());
     EXPECT_NE(result, multiExtPath);
-    // Verify .gz extension is preserved (last extension)
-    EXPECT_TRUE(result.find(".gz") != std::string::npos);
+    // Verify the entire filename including all extensions is anonymized
+    EXPECT_EQ(result, "/d*t*/a*p/a*c*i*e*t*r*g*");
 }
 
 /**
@@ -3485,32 +3486,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19300, Function | Sm
     InstalldOperator installdOperator;
     std::string shortPath = "/a/b/c.txt";
     std::string result = installdOperator.AnonymizePath(shortPath);
-    EXPECT_EQ(result, shortPath);
-}
-
-/**
- * @tc.number: InstalldOperatorTest_19400
- * @tc.name: test AnonymizePath with common file extensions
- * @tc.desc: 1. calling AnonymizePath with various extensions
- *           2. verify extensions are preserved
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_19400, Function | SmallTest | Level0)
-{
-    InstalldOperator installdOperator;
-    std::vector<std::string> testPaths = {
-        "/data/file.txt",
-        "/data/image.png",
-        "/data/document.pdf",
-        "/data/video.mp4",
-        "/data/archive.zip"
-    };
-    std::vector<std::string> extensions = {".txt", ".png", ".pdf", ".mp4", ".zip"};
-
-    for (size_t i = 0; i < testPaths.size(); ++i) {
-        std::string result = installdOperator.AnonymizePath(testPaths[i]);
-        EXPECT_FALSE(result.empty());
-        EXPECT_TRUE(result.find(extensions[i]) != std::string::npos);
-    }
+    EXPECT_EQ(result, "/a/b/c*t*t");
 }
 
 /**
