@@ -2201,11 +2201,11 @@ void BMSEventHandler::LoadOtaNewInstallWhitelist()
 
     multiUserInstallThirdPreloadApp_ = OHOS::system::GetBoolParameter(OTA_NEW_INSTALL_MULTIUSER_PARAM, true);
 
-    if (!OHOS::system::GetBoolParameter(OTA_NEW_INSTALL_ENABLE_PARAM, false)) {
-        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "OTA_NEW_INSTALL_ENABLE_PARAM is false");
+    if (OHOS::system::GetBoolParameter(OTA_NEW_INSTALL_ENABLE_PARAM, false)) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA_NEW_INSTALL_ENABLE_PARAM is true");
+        otaNewInstallEnable_ = true;
         return;
     }
-    otaNewInstallEnable_ = true;
 
     nlohmann::json jsonBuf;
     if (!BundleParser::ReadFileIntoJson(OTA_NEW_INSTALL_WHITELIST_PATH, jsonBuf) ||
@@ -2234,8 +2234,8 @@ bool BMSEventHandler::NeedProcessOtaNewPreloadInstall(const std::string &bundleN
         LOG_NOFUNC_W(BMS_TAG_DEFAULT, "bundleName is empty");
         return false;
     }
-    if (!otaNewInstallEnable_) {
-        return false;
+    if (otaNewInstallEnable_) {
+        return true;
     }
     bool bypassByHideDesktopIcon = false;
     PreBundleConfigInfo preBundleConfigInfo;
@@ -2436,9 +2436,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         AddParseInfosToMap(bundleName, infos);
         auto mapIter = loadExistData_.find(bundleName);
         if (mapIter == loadExistData_.end()) {
-            const bool isNewPreloadInMultiUser = (scanPathIter.find(ServiceConstants::PRELOAD_APP_DIR) == 0 &&
-                dataMgr->GetAllUser().size() > USER_ID_SIZE);
-            if (isNewPreloadInMultiUser && !needOtaNewInstall) {
+            if (dataMgr->GetAllUser().size() > USER_ID_SIZE && !needOtaNewInstall) {
                 LOG_NOFUNC_I(BMS_TAG_DEFAULT, "ota skip new preload app: %{public}s", scanPathIter.c_str());
                 continue;
             }
