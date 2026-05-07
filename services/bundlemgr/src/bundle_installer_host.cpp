@@ -1514,7 +1514,7 @@ ErrCode BundleInstallerHost::DeleteReSignCert(int32_t userId)
             LOG_W(BMS_TAG_INSTALLER, "DeleteCertAndRemoveKey failed userId:%{public}d", userId);
         }
     }
-    if (InstalldClient::GetInstance()->RemoveDir(baseDir)) {
+    if (InstalldClient::GetInstance()->RemoveDir(baseDir, BundleDirScene::REMOVE_ENTERPRISE_CERT_DIR)) {
         LOG_W(BMS_TAG_INSTALLER, "remove basedir failed errno:%{public}d", errno);
         return ERR_APPEXECFWK_ENTERPRISE_CERT_DELETE_CERT_ERROR;
     }

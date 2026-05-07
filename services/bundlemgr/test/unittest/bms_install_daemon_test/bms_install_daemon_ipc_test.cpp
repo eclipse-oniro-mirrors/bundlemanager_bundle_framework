@@ -270,7 +270,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_0700, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->RemoveDir(TEST_STRING);
+    auto ret = proxy->RemoveDir(TEST_STRING, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, TEST_BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -397,7 +397,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1400, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->CopyFile(TEST_STRING, TEST_STRING);
+    auto ret = proxy->CopyFile(TEST_STRING, TEST_STRING, BundleDirScene::COPY_PGO_FILE);
     EXPECT_EQ(ret, ERR_OK);
 }
 

@@ -232,7 +232,8 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
     MergeBundleInfos();
 
     newBundleInfo_.ResetAOTFlags();
-    (void)InstalldClient::GetInstance()->RemoveDir(AOTHandler::BuildSharedArkCachePath(bundleName_));
+    (void)InstalldClient::GetInstance()->RemoveDir(
+        AOTHandler::BuildSharedArkCachePath(bundleName_), BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR, bundleName_);
 
     UpdateRouterInfoForSharedBundle(newBundleInfo_);
     result = SavePreInstallInfo(installParam);
@@ -260,7 +261,7 @@ void InnerSharedBundleInstaller::RollBack()
 {
     // delete created directories
     for (auto iter = createdDirs_.crbegin(); iter != createdDirs_.crend(); ++iter) {
-        ErrCode err = InstalldClient::GetInstance()->RemoveDir(*iter);
+        ErrCode err = InstalldClient::GetInstance()->RemoveDir(*iter, BundleDirScene::REMOVE_MODULE_DIR, bundleName_);
         if (err != ERR_OK) {
             APP_LOGE("clean dir of %{public}s failed: %{public}s", bundleName_.c_str(), iter->c_str());
         }
@@ -675,7 +676,8 @@ ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::stri
     std::string tempHspPath = tempHspDir + ServiceConstants::PATH_SEPARATOR + moduleName +
         ServiceConstants::HSP_FILE_SUFFIX;
     if (!signatureFileDir_.empty()) {
-        result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, signatureFileDir_);
+        result = InstalldClient::GetInstance()->CopyFile(
+            bundlePath, tempHspPath, BundleDirScene::COPY_SHARED_HSP, signatureFileDir_);
     } else {
         result = InstalldClient::GetInstance()->MoveHapToCodeDir(bundlePath, tempHspPath);
         CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
@@ -709,7 +711,7 @@ ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::stri
     CHECK_RESULT(result, "move hsp to install dir failed %{public}d");
 
     // 4. remove temp dir
-    result = InstalldClient::GetInstance()->RemoveDir(tempHspDir);
+    result = InstalldClient::GetInstance()->RemoveDir(tempHspDir, BundleDirScene::REMOVE_MODULE_DIR, bundleName_);
     if (result != ERR_OK) {
         APP_LOGW("remove temp hsp dir %{public}s failed, error is %{public}d", tempHspDir.c_str(), result);
     }
@@ -745,7 +747,7 @@ ErrCode InnerSharedBundleInstaller::MoveSoToRealPath(const std::string &moduleNa
     // 2. remove so temp dir
     std::string deleteTempDir = versionDir + ServiceConstants::PATH_SEPARATOR + moduleName
         + ServiceConstants::TMP_SUFFIX;
-    result = InstalldClient::GetInstance()->RemoveDir(deleteTempDir);
+    result = InstalldClient::GetInstance()->RemoveDir(deleteTempDir, BundleDirScene::REMOVE_MODULE_DIR, bundleName_);
     if (result != ERR_OK) {
         APP_LOGW("remove hsp temp so dir %{public}s failed, error is %{public}d", deleteTempDir.c_str(), result);
     }

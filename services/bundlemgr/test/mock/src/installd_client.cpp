@@ -151,14 +151,15 @@ ErrCode InstalldClient::RemoveModuleDataDir(const std::string &ModuleName, const
     return CallService(&IInstalld::RemoveModuleDataDir, ModuleName, userid);
 }
 
-ErrCode InstalldClient::RemoveDir(const std::string &dir, bool async)
+ErrCode InstalldClient::RemoveDir(
+    const std::string &dir, BundleDirScene scene, const std::string &bundleName, bool async)
 {
     if (dir.empty()) {
         APP_LOGE("dir removed is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::RemoveDir, dir, async);
+    return CallService(&IInstalld::RemoveDir, dir, scene, bundleName, async);
 }
 
 ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir, const std::string &bundleName, int32_t userId)
@@ -364,7 +365,7 @@ ErrCode InstalldClient::RenameFile(const std::string &oldPath, const std::string
     return CallService(&IInstalld::RenameFile, oldPath, newPath);
 }
 
-ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath,
+ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
     const std::string &signatureFilePath)
 {
     if (oldPath.empty() || newPath.empty()) {
@@ -372,7 +373,7 @@ ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::CopyFile, oldPath, newPath, signatureFilePath);
+    return CallService(&IInstalld::CopyFile, oldPath, newPath, scene, signatureFilePath);
 }
 
 ErrCode InstalldClient::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,

@@ -319,9 +319,10 @@ private:
     /**
      * @brief Remove the current installing module directory.
      * @param info Indicates the InnerBundleInfo object of a bundle under installing.
+     * @param bundleName Indicates the bundleName of the application.
      * @return Returns ERR_OK if the module directory removed successfully; returns error code otherwise.
      */
-    ErrCode RemoveModuleDir(const std::string &modulePath) const;
+    ErrCode RemoveModuleDir(const std::string &modulePath, const std::string &bundleName) const;
     /**
      * @brief Extract files of the current installing module package.
      * @param info Indicates the InnerBundleInfo object of a bundle under installing.
@@ -728,7 +729,7 @@ private:
     ErrCode CheckMDMUpdateBundleForSelf(const InstallParam &installParam, InnerBundleInfo &oldInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, bool isAppExist);
     void ExtractResourceFiles(const InnerBundleInfo &info, const std::string &targetPath) const;
-    void RemoveTempSoDir(const std::string &tempSoDir);
+    void RemoveTempSoDir(const std::string &tempSoDir, const std::string &bundleName);
     bool CheckAppIdentifier(const std::string &oldAppIdentifier, const std::string &newAppIdentifier,
         const std::string &oldAppId, const std::string &newAppId);
     ErrCode InstallEntryMoudleFirst(std::unordered_map<std::string, InnerBundleInfo> &newInfos,

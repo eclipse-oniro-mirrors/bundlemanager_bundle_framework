@@ -267,8 +267,9 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0009, Function
 {
     PluginInstaller installer;
     std::string pluginDir;
-    installer.RemoveEmptyDirs(pluginDir);
-    installer.RemoveDir(pluginDir);
+    std::string hostBundleName;
+    installer.RemoveEmptyDirs(pluginDir, hostBundleName);
+    installer.RemoveDir(pluginDir, hostBundleName);
     EXPECT_EQ(pluginDir.empty(), true);
 }
 
@@ -283,9 +284,9 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0011, Function
     std::string hostBundleName;
     std::string pluginDir;
     installer.isPluginExist_ = false;
-    installer.RemoveOldInstallDir();
+    installer.RemoveOldInstallDir(hostBundleName);
     installer.isPluginExist_ = true;
-    installer.RemoveOldInstallDir();
+    installer.RemoveOldInstallDir(hostBundleName);
     auto ret = installer.CreatePluginDir(hostBundleName, pluginDir);
     EXPECT_EQ(ret, ERR_OK);
 }

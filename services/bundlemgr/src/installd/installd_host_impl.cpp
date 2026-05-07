@@ -1234,15 +1234,19 @@ ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, cons
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RemoveDir(const std::string &dir, bool async)
+ErrCode InstalldHostImpl::RemoveDir(const std::string &dir, BundleDirScene scene, const std::string &bundleName,
+    bool async)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldHostImpl::RemoveDir:%{public}s", dir.c_str());
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (dir.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function RemoveDir with invalid param");
+    if (dir.empty() || !InstalldOperator::IsValidPathByRemoveDirScene(dir, bundleName, scene)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function RemoveDir with invalid param, dir:%{private}s, bundleName:%{public}s, "
+            "scene:%{public}d",
+            dir.c_str(), bundleName.c_str(), static_cast<int32_t>(scene));
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::DeleteDirFlexible(dir, async)) {
@@ -1911,12 +1915,19 @@ ErrCode InstalldHostImpl::RenameFile(const std::string &oldPath, const std::stri
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath,
+ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
     const std::string &signatureFilePath)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidPathByCopyFileScene(oldPath, newPath, scene)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function CopyFile with invalid param, oldPath:%{private}s, newPath:%{private}s, "
+            "scene:%{public}d",
+            oldPath.c_str(), newPath.c_str(), static_cast<int32_t>(scene));
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::CopyFileFast(oldPath, newPath)) {
         LOG_E(BMS_TAG_INSTALLD, "Copy file %{private}s to %{private}s failed errno:%{public}d",

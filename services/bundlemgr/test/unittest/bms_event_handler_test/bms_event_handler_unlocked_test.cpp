@@ -281,7 +281,8 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0700, Function
     bool isExist = false;
     (void)InstalldClient::GetInstance()->IsExistDir(bundleLogDir100, isExist);
     EXPECT_FALSE(isExist);
-    (void)InstalldClient::GetInstance()->RemoveDir(bundleLogDir100);
+    (void)InstalldClient::GetInstance()->RemoveDir(
+        bundleLogDir100, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleInfo.name);
     dataMgr->bundleInfos_.clear();
 
     // test userId != 1 and CheckU1EnableProcess succeed
@@ -297,7 +298,8 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0700, Function
     isExist = false;
     (void)InstalldClient::GetInstance()->IsExistDir(bundleLogDir100, isExist);
     EXPECT_FALSE(isExist);
-    (void)InstalldClient::GetInstance()->RemoveDir(bundleLogDir100);
+    (void)InstalldClient::GetInstance()->RemoveDir(
+        bundleLogDir100, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleInfo.name);
     dataMgr->bundleInfos_.clear();
 
     // test userId == 1 and CheckU1EnableProcess succeed
@@ -316,7 +318,8 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0700, Function
     isExist = false;
     (void)InstalldClient::GetInstance()->IsExistDir(bundleLogDir1, isExist);
     EXPECT_FALSE(isExist);
-    (void)InstalldClient::GetInstance()->RemoveDir(bundleLogDir1);
+    (void)InstalldClient::GetInstance()->RemoveDir(
+        bundleLogDir1, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleInfo.name);
     dataMgr->bundleInfos_.clear();
 
     // test userId == 1 and CheckU1EnableProcess failed
@@ -329,7 +332,8 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0700, Function
     isExist = false;
     (void)InstalldClient::GetInstance()->IsExistDir(bundleLogDir1, isExist);
     EXPECT_FALSE(isExist);
-    (void)InstalldClient::GetInstance()->RemoveDir(bundleLogDir1);
+    (void)InstalldClient::GetInstance()->RemoveDir(
+        bundleLogDir1, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleInfo.name);
     dataMgr->bundleInfos_.clear();
 }
 

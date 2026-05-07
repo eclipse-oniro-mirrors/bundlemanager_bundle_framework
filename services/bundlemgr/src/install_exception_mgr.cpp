@@ -121,7 +121,8 @@ ErrCode InstallExceptionMgr::InnerProcessCreateNewDir(const std::string &bundleN
 {
     std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
-    ErrCode result = InstalldClient::GetInstance()->RemoveDir(newPath);
+    ErrCode result =
+        InstalldClient::GetInstance()->RemoveDir(newPath, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleName);
     if (result == ERR_OK) {
         (void)DeleteBundleExceptionInfo(bundleName);
     } else {
@@ -151,7 +152,7 @@ ErrCode InstallExceptionMgr::InnerProcessRealToOldPath(const std::string &bundle
     // 2.delete +new-
     std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
-    result = InstalldClient::GetInstance()->RemoveDir(newPath);
+    result = InstalldClient::GetInstance()->RemoveDir(newPath, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleName);
     if (result != ERR_OK) {
         LOG_NOFUNC_W(BMS_TAG_INSTALLER, "exception mgr delete -n %{public}s new path failed", bundleName.c_str());
     }
@@ -167,7 +168,7 @@ ErrCode InstallExceptionMgr::InnerProcessNewToRealPath(const std::string &bundle
         // for bundle already uninstalled, need to delete +new- dir
         std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
             std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
-        (void)InstalldClient::GetInstance()->RemoveDir(newPath);
+        (void)InstalldClient::GetInstance()->RemoveDir(newPath, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleName);
     }
     /**
      * rename +old- to real, or delete +old-
@@ -192,7 +193,7 @@ ErrCode InstallExceptionMgr::InnerProcessNewToRealPath(const std::string &bundle
         }
         std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
             std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
-        result = InstalldClient::GetInstance()->RemoveDir(newPath);
+        result = InstalldClient::GetInstance()->RemoveDir(newPath, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleName);
         if (result != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "exception mgr remove dir failed, -e %{public}d errno %{public}d",
                 result, errno);
@@ -213,7 +214,7 @@ ErrCode InstallExceptionMgr::InnerProcessDeleteOldPath(const std::string &bundle
     ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, tempPath,
         bundleName, BundleDirScene::BUNDLE_CODE_DIR);
     if (result == ERR_OK) {
-        result = InstalldClient::GetInstance()->RemoveDir(tempPath);
+        result = InstalldClient::GetInstance()->RemoveDir(tempPath, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleName);
     } else {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "exception mgr rename temp dir failed -e %{public}d", result);
     }

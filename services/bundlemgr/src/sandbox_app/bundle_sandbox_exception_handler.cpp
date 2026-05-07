@@ -62,7 +62,7 @@ void BundleMgrCommonEventSubscriber::RemoveSandboxDataDir(int32_t userId,
 
     for (const auto &dir : toDeleteSandboxDir.at(userId)) {
         APP_LOGD("the dir %{public}s needs to be deleted", dir.c_str());
-        auto result = InstalldClient::GetInstance()->RemoveDir(dir);
+        auto result = InstalldClient::GetInstance()->RemoveDir(dir, BundleDirScene::REMOVE_SANDBOX_DATA_DIR);
         if (result != ERR_OK) {
             APP_LOGE("fail to remove data dir: %{public}s, error is %{public}d", dir.c_str(), result);
         }
@@ -187,7 +187,7 @@ void BundleSandboxExceptionHandler::RemoveDataDir()
             bool isDirDeleteSuccessfully = true;
             for (const auto &dir : it->second) {
                 APP_LOGD("start to remove data dir %{public}s", dir.c_str());
-                auto result = InstalldClient::GetInstance()->RemoveDir(dir);
+                auto result = InstalldClient::GetInstance()->RemoveDir(dir, BundleDirScene::REMOVE_SANDBOX_DATA_DIR);
                 if (result != ERR_OK) {
                     APP_LOGE("fail to remove data dir: %{public}s, error is %{public}d", dir.c_str(), result);
                     isDirDeleteSuccessfully = false;

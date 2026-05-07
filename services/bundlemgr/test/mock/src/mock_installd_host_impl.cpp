@@ -89,7 +89,8 @@ ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, cons
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RemoveDir(const std::string &dir, bool async)
+ErrCode InstalldHostImpl::RemoveDir(
+    const std::string &dir, BundleDirScene scene, const std::string &bundleName, bool async)
 {
     return ERR_OK;
 }
@@ -199,7 +200,7 @@ ErrCode InstalldHostImpl::RenameFile(const std::string &oldPath, const std::stri
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath,
+ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
     const std::string &signatureFilePath)
 {
     return ERR_OK;

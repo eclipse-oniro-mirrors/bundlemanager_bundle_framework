@@ -669,7 +669,8 @@ ErrCode BaseBundleInstaller::UninstallHspBundle(std::string &uninstallDir, const
         LOG_E(BMS_TAG_INSTALLER, "uninstall start failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
-    if ((errCode = InstalldClient::GetInstance()->RemoveDir(uninstallDir)) != ERR_OK) {
+    if ((errCode = InstalldClient::GetInstance()->RemoveDir(
+        uninstallDir, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleName)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", uninstallDir.c_str());
         return errCode;
     }
@@ -677,7 +678,8 @@ ErrCode BaseBundleInstaller::UninstallHspBundle(std::string &uninstallDir, const
         LOG_E(BMS_TAG_INSTALLER, "update uninstall success failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
-    (void)InstalldClient::GetInstance()->RemoveDir(AOTHandler::BuildSharedArkCachePath(bundleName));
+    (void)InstalldClient::GetInstance()->RemoveDir(
+        AOTHandler::BuildSharedArkCachePath(bundleName), BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR, bundleName);
     // delete router map for hsp
     if (!dataMgr_->DeleteRouterInfo(bundleName)) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete router map failed", bundleName.c_str());
@@ -704,17 +706,20 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
         LOG_E(BMS_TAG_INSTALLER, "uninstall start failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
-    if ((errCode = InstalldClient::GetInstance()->RemoveDir(uninstallDir)) != ERR_OK) {
+    if ((errCode = InstalldClient::GetInstance()->RemoveDir(
+        uninstallDir, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, info.GetBundleName())) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", uninstallDir.c_str());
         return errCode;
     }
     if (static_cast<uint32_t>(versionCode) == info.GetVersionCode()) {
         info.ResetAOTFlags();
-        (void)InstalldClient::GetInstance()->RemoveDir(AOTHandler::BuildSharedArkCachePath(info.GetBundleName()));
+        (void)InstalldClient::GetInstance()->RemoveDir(AOTHandler::BuildSharedArkCachePath(info.GetBundleName()),
+            BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR, info.GetBundleName());
     } else {
         std::string versionAnDir = AOTHandler::BuildSharedArkCachePath(
             info.GetBundleName(), static_cast<uint32_t>(versionCode));
-        (void)InstalldClient::GetInstance()->RemoveDir(versionAnDir);
+        (void)InstalldClient::GetInstance()->RemoveDir(
+            versionAnDir, BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR, info.GetBundleName());
     }
     if (!dataMgr_->RemoveHspModuleByVersionCode(versionCode, info)) {
         LOG_E(BMS_TAG_INSTALLER, "remove hsp module by versionCode failed");
@@ -1119,7 +1124,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     GetExtensionDirsChange(newInfos, oldInfo);
 
     if (isAppExist_) {
-        (void)InstalldClient::GetInstance()->RemoveDir(ServiceConstants::HAP_ARK_CACHE_PATH + oldInfo.GetBundleName());
+        (void)InstalldClient::GetInstance()->RemoveDir(ServiceConstants::HAP_ARK_CACHE_PATH + oldInfo.GetBundleName(),
+            BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR, oldInfo.GetBundleName());
         SetAtomicServiceModuleUpgrade(oldInfo);
         if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
             LOG_E(BMS_TAG_INSTALLER, "old bundle info is shared package");
@@ -2049,13 +2055,13 @@ void BaseBundleInstaller::RollBack(const InnerBundleInfo &info, InnerBundleInfo 
     if (installedModules_[modulePackage]) {
         std::string createModulePath = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR +
             modulePackage + ServiceConstants::TMP_SUFFIX;
-        RemoveModuleDir(createModulePath);
+        RemoveModuleDir(createModulePath, info.GetBundleName());
         oldInfo.SetCurrentModulePackage(modulePackage);
         RollBackModuleInfo(bundleName_, oldInfo);
         // remove driver file of installed module
         driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(modulePackage), true);
     } else {
-        RemoveModuleDir(info.GetModuleDir(modulePackage));
+        RemoveModuleDir(info.GetModuleDir(modulePackage), info.GetBundleName());
         // remove driver file
         driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(modulePackage), false);
         // remove module info
@@ -3006,7 +3012,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &i
             return ret;
         }
         if (removeDir) {
-            if ((InstalldClient::GetInstance()->RemoveDir(moduleHnpsPath)) != ERR_OK) {
+            if ((InstalldClient::GetInstance()->RemoveDir(
+                moduleHnpsPath, BundleDirScene::REMOVE_BUNDLE_HNP_DIR, info.GetBundleName())) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", moduleHnpsPath.c_str());
             }
         }
@@ -3024,7 +3031,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &i
         }
     }
     std::string moduleHnpsPath = info.GetInnerModuleInfoHnpPath(info.GetCurModuleName());
-    if ((InstalldClient::GetInstance()->RemoveDir(moduleHnpsPath)) != ERR_OK) {
+    if ((InstalldClient::GetInstance()->RemoveDir(
+        moduleHnpsPath, BundleDirScene::REMOVE_BUNDLE_HNP_DIR, info.GetBundleName())) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", moduleHnpsPath.c_str());
     }
     return ERR_OK;
@@ -3267,7 +3275,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         return result;
     }
 
-    ScopeGuard moduleGuard([&] { RemoveModuleDir(modulePath); });
+    ScopeGuard moduleGuard([&] { RemoveModuleDir(modulePath, newInfo.GetBundleName()); });
     ScopeGuard skillGuard([&] { RemoveAppSkillsDir(newInfo.GetBundleName(), newInfo.GetCurModuleName()); });
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "new moduleupdate state failed");
@@ -3654,7 +3662,9 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
     if (iter != appQfInfo.hqfInfos.end()) {
         std::string oldSoPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
             bundleName_ + ServiceConstants::TMP_SUFFIX + ServiceConstants::LIBS;
-        ScopeGuard guardRemoveOldSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
+        ScopeGuard guardRemoveOldSoPath([oldSoPath, this] {
+            InstalldClient::GetInstance()->RemoveDir(oldSoPath, BundleDirScene::REMOVE_BMS_BUNDLE_LIB_DIR, bundleName_);
+        });
 
         InnerBundleInfo innerBundleInfo;
         if (!GetTempBundleInfo(innerBundleInfo)) {
@@ -3683,7 +3693,10 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
         const std::string tempDiffPath = std::string(ServiceConstants::HAP_COPY_PATH) +
             ServiceConstants::PATH_SEPARATOR +
             bundleName_ + ServiceConstants::TMP_SUFFIX;
-        ScopeGuard removeDiffPath([tempDiffPath] { InstalldClient::GetInstance()->RemoveDir(tempDiffPath); });
+        ScopeGuard removeDiffPath([tempDiffPath, this] {
+            InstalldClient::GetInstance()->RemoveDir(
+                tempDiffPath, BundleDirScene::REMOVE_BMS_BUNDLE_TEMP_DIR, bundleName_);
+        });
         ErrCode ret = InstalldClient::GetInstance()->ExtractDiffFiles(iter->hqfFilePath, tempDiffPath, cpuAbi);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "error: ExtractDiffFiles failed errcode :%{public}d", ret);
@@ -3801,7 +3814,10 @@ ErrCode BaseBundleInstaller::CreateBundleAndDataDir(InnerBundleInfo &info) const
         LOG_E(BMS_TAG_INSTALLER, "fail to create bundle code dir, error is %{public}d", result);
         return result;
     }
-    ScopeGuard codePathGuard([&] { InstalldClient::GetInstance()->RemoveDir(info.GetAppCodePath()); });
+    ScopeGuard codePathGuard([&] {
+        InstalldClient::GetInstance()->RemoveDir(
+            info.GetAppCodePath(), BundleDirScene::REMOVE_BUNDLE_CODE_DIR, info.GetBundleName());
+    });
     result = CreateBundleDataDir(info);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to create bundle data dir, error is %{public}d", result);
@@ -4272,7 +4288,8 @@ void BaseBundleInstaller::DeleteEncryptionKeyId(const std::string &bundleName, b
     LOG_D(BMS_TAG_INSTALLER, "delete el5 dir -n %{public}s", bundleName.c_str());
     std::vector<std::string> dirs = GenerateScreenLockProtectionDir(bundleName);
     for (const std::string &dir : dirs) {
-        if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
+        if (InstalldClient::GetInstance()->RemoveDir(dir, BundleDirScene::REMOVE_SCREEN_LOCK_DATA_DIR, bundleName) !=
+            ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "remove Screen Lock Protection dir %{public}s failed", dir.c_str());
         }
     }
@@ -4290,7 +4307,8 @@ void BaseBundleInstaller::DeleteScreenLockProtectionDir(const std::string bundle
 {
     std::vector<std::string> dirs = GenerateScreenLockProtectionDir(bundleName);
     for (const std::string &dir : dirs) {
-        auto result = InstalldClient::GetInstance()->RemoveDir(dir);
+        auto result =
+            InstalldClient::GetInstance()->RemoveDir(dir, BundleDirScene::REMOVE_SCREEN_LOCK_DATA_DIR, bundleName);
         if (result != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "remove Screen Lock Protection dir %{public}s failed", dir.c_str());
         }
@@ -4338,7 +4356,8 @@ ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int
 {
     std::string arkProfilePath = AOTHandler::BuildArkProfilePath(userId, bundleName);
     LOG_D(BMS_TAG_INSTALLER, "DeleteArkProfile %{public}s", arkProfilePath.c_str());
-    return InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
+    return InstalldClient::GetInstance()->RemoveDir(
+        arkProfilePath, BundleDirScene::REMOVE_AOT_ARK_PROFILE_DIR, bundleName);
 }
 
 bool BaseBundleInstaller::RemoveDataPreloadHapFiles(const std::string &bundleName) const
@@ -4364,7 +4383,7 @@ bool BaseBundleInstaller::RemoveDataPreloadHapFiles(const std::string &bundleNam
     if (IsDataPreloadHap(preinstalledAppPath)) {
         std::filesystem::path apFilePath(preinstalledAppPath);
         std::string delDir = apFilePath.parent_path().string();
-        if (InstalldClient::GetInstance()->RemoveDir(delDir) != ERR_OK) {
+        if (InstalldClient::GetInstance()->RemoveDir(delDir, BundleDirScene::REMOVE_PRELOAD_APP_DIR) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "removeDir failed :%{public}s", delDir.c_str());
         }
         if (!dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
@@ -4383,7 +4402,8 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     // need remove modulePath, make sure the directory is empty
-    if (InstalldClient::GetInstance()->RemoveDir(modulePath) != ERR_OK) {
+    if (InstalldClient::GetInstance()->RemoveDir(modulePath, BundleDirScene::REMOVE_MODULE_DIR, info.GetBundleName()) !=
+        ERR_OK) {
         APP_LOGW("remove dir %{public}s failed", modulePath.c_str());
     }
     auto result = InnerProcessNativeLibs(info, modulePath);
@@ -4611,7 +4631,8 @@ void BaseBundleInstaller::RemoveAppSkillsDir(const std::string &bundleName) cons
         return;
     }
     std::string bundleDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
-    if (InstalldClient::GetInstance()->RemoveDir(bundleDir) != ERR_OK) {
+    if (InstalldClient::GetInstance()->RemoveDir(bundleDir, BundleDirScene::REMOVE_SKILL_BUNDLE_DIR, bundleName) !=
+        ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "remove bundle skills dir failed, path=%{public}s", bundleDir.c_str());
     }
 }
@@ -4628,7 +4649,8 @@ void BaseBundleInstaller::RemoveAppSkillsDir(
     }
     std::string moduleDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName +
         ServiceConstants::PATH_SEPARATOR + realModuleName;
-    if (InstalldClient::GetInstance()->RemoveDir(moduleDir) != ERR_OK) {
+    if (InstalldClient::GetInstance()->RemoveDir(moduleDir, BundleDirScene::REMOVE_SKILL_MODULE_DIR, bundleName) !=\
+        ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "remove module skills dir failed, path=%{public}s", moduleDir.c_str());
     }
 }
@@ -5149,7 +5171,7 @@ ErrCode BaseBundleInstaller::CopyPgoFile(
 {
     std::string targetPath =
         AOTHandler::BuildArkProfilePath(userId, bundleName, moduleName + ServiceConstants::AP_SUFFIX);
-    if (InstalldClient::GetInstance()->CopyFile(pgoPath, targetPath) != ERR_OK) {
+    if (InstalldClient::GetInstance()->CopyFile(pgoPath, targetPath, BundleDirScene::COPY_PGO_FILE) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "copy file from %{public}s to %{public}s failed", pgoPath.c_str(), targetPath.c_str());
         return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
     }
@@ -5182,7 +5204,8 @@ ErrCode BaseBundleInstaller::DeleteOldArkNativeFile(const InnerBundleInfo &oldIn
 {
     std::string targetPath;
     targetPath.append(ServiceConstants::HAP_ARK_CACHE_PATH).append(oldInfo.GetBundleName());
-    auto result = InstalldClient::GetInstance()->RemoveDir(targetPath);
+    auto result = InstalldClient::GetInstance()->RemoveDir(
+        targetPath, BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR, oldInfo.GetBundleName());
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove arkNativeFilePath %{public}s, error is %{public}d",
             targetPath.c_str(), result);
@@ -5216,7 +5239,8 @@ ErrCode BaseBundleInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info, co
 {
     // process install exception mgr
     (void)DelayedSingleton<InstallExceptionMgr>::GetInstance()->HandleBundleExceptionInfo(info.GetBundleName());
-    auto result = InstalldClient::GetInstance()->RemoveDir(info.GetAppCodePath(), async);
+    auto result = InstalldClient::GetInstance()->RemoveDir(
+        info.GetAppCodePath(), BundleDirScene::REMOVE_BUNDLE_CODE_DIR, info.GetBundleName(), async);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove bundle code dir %{public}s, error is %{public}d",
             info.GetAppCodePath().c_str(), result);
@@ -5274,7 +5298,8 @@ void BaseBundleInstaller::RemoveEmptyDirs(const std::unordered_map<std::string, 
         InstalldClient::GetInstance()->IsDirEmpty(moduleDir, isDirEmpty);
         if (isDirEmpty) {
             LOG_D(BMS_TAG_INSTALLER, "remove empty dir : %{public}s", moduleDir.c_str());
-            InstalldClient::GetInstance()->RemoveDir(moduleDir);
+            InstalldClient::GetInstance()->RemoveDir(
+                moduleDir, BundleDirScene::REMOVE_MODULE_DIR, info.GetBundleName());
         }
     }
 }
@@ -5299,14 +5324,14 @@ ErrCode BaseBundleInstaller::RemoveModuleAndDataDir(
 {
     LOG_D(BMS_TAG_INSTALLER, "RemoveModuleAndDataDir with package name %{public}s", modulePackage.c_str());
     auto moduleDir = info.GetModuleDir(modulePackage);
-    auto result = RemoveModuleDir(moduleDir);
+    auto result = RemoveModuleDir(moduleDir, info.GetBundleName());
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove module dir, error is %{public}d", result);
         return result;
     }
 
     // remove hap
-    result = RemoveModuleDir(GetHapPath(info, info.GetModuleName(modulePackage)));
+    result = RemoveModuleDir(GetHapPath(info, info.GetModuleName(modulePackage)), info.GetBundleName());
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove module hap, error is %{public}d", result);
         return result;
@@ -5325,10 +5350,10 @@ ErrCode BaseBundleInstaller::RemoveModuleAndDataDir(
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::RemoveModuleDir(const std::string &modulePath) const
+ErrCode BaseBundleInstaller::RemoveModuleDir(const std::string &modulePath, const std::string &bundleName) const
 {
     LOG_D(BMS_TAG_INSTALLER, "module dir %{public}s to be removed", modulePath.c_str());
-    return InstalldClient::GetInstance()->RemoveDir(modulePath);
+    return InstalldClient::GetInstance()->RemoveDir(modulePath, BundleDirScene::REMOVE_MODULE_DIR, bundleName);
 }
 
 ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info, const std::string &modulePath,
@@ -6800,7 +6825,7 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
         if ((signatureFileMap_.find(hapPathRecord.first) != signatureFileMap_.end()) &&
             (!signatureFileMap_.at(hapPathRecord.first).empty())) {
             result = InstalldClient::GetInstance()->CopyFile(hapPathRecord.first, hapPathRecord.second,
-                signatureFileMap_.at(hapPathRecord.first));
+                BundleDirScene::COPY_HAP_TO_INSTALL_PATH, signatureFileMap_.at(hapPathRecord.first));
             CHECK_RESULT(result, "Copy hap to install path failed or code signature hap failed %{public}d");
         } else {
             result = InstalldClient::GetInstance()->MoveHapToCodeDir(hapPathRecord.first, hapPathRecord.second);
@@ -7209,7 +7234,8 @@ ErrCode BaseBundleInstaller::CleanAsanDirectory(InnerBundleInfo &info) const
     const std::string bundleName = info.GetBundleName();
     const std::string asanLogDir = std::string(ServiceConstants::BUNDLE_ASAN_LOG_DIR) + ServiceConstants::PATH_SEPARATOR
         + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR + bundleName;
-    ErrCode errCode =  InstalldClient::GetInstance()->RemoveDir(asanLogDir);
+    ErrCode errCode =
+        InstalldClient::GetInstance()->RemoveDir(asanLogDir, BundleDirScene::REMOVE_ASAN_LOG_DIR);
     if (errCode != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "clean asan log path failed");
         return errCode;
@@ -7403,7 +7429,8 @@ void BaseBundleInstaller::ProcessOldNativeLibraryPath(const std::unordered_map<s
     }
     std::string oldLibPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_ +
         ServiceConstants::PATH_SEPARATOR + ServiceConstants::LIBS;
-    if (InstalldClient::GetInstance()->RemoveDir(oldLibPath) != ERR_OK) {
+    if (InstalldClient::GetInstance()->RemoveDir(oldLibPath, BundleDirScene::REMOVE_BUNDLE_LIB_DIR, bundleName_) !=
+        ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "bundleNmae: %{public}s remove old libs dir failed", bundleName_.c_str());
     }
 }
@@ -7443,7 +7470,8 @@ void BaseBundleInstaller::RemoveOldHapIfOTA(const InstallParam &installParam,
             continue;
         }
         LOG_NOFUNC_W(BMS_TAG_INSTALLER, "remove old hap %{public}s", oldHapPath.c_str());
-        if (InstalldClient::GetInstance()->RemoveDir(oldHapPath) != ERR_OK) {
+        if (InstalldClient::GetInstance()->RemoveDir(
+            oldHapPath, BundleDirScene::REMOVE_MODULE_DIR, oldInfo.GetBundleName()) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "remove old hap failed, errno: %{public}d", errno);
         }
     }
@@ -7868,7 +7896,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
         std::string tempSoDir;
         tempSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
             .append(bundleCodePathName).append(ServiceConstants::PATH_SEPARATOR).append(LIBS_TMP);
-        InstalldClient::GetInstance()->RemoveDir(tempSoDir);
+        InstalldClient::GetInstance()->RemoveDir(tempSoDir, BundleDirScene::REMOVE_BUNDLE_LIB_DIR, bundleName);
     }
     for (const auto &info : infos) {
         if (info.second.IsLibIsolated(info.second.GetCurModuleName()) ||
@@ -7905,7 +7933,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
                 LOG_E(BMS_TAG_INSTALLER, "move file to real path failed %{public}d", result);
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
             }
-            RemoveTempSoDir(tempSoDir);
+            RemoveTempSoDir(tempSoDir, bundleName);
             if (!installedModules_[info.second.GetCurrentModulePackage()]) {
                 RemoveTempPathOnlyUsedForSo(info.second);
             }
@@ -8013,7 +8041,7 @@ ErrCode BaseBundleInstaller::CheckBundleInBmsExtension(const std::string &bundle
     return ERR_OK;
 }
 
-void BaseBundleInstaller::RemoveTempSoDir(const std::string &tempSoDir)
+void BaseBundleInstaller::RemoveTempSoDir(const std::string &tempSoDir, const std::string &bundleName)
 {
     LOG_D(BMS_TAG_INSTALLER, "tempSoDir is %{public}s", tempSoDir.c_str());
     auto firstPos = tempSoDir.find(ServiceConstants::TMP_SUFFIX);
@@ -8028,12 +8056,12 @@ void BaseBundleInstaller::RemoveTempSoDir(const std::string &tempSoDir)
     }
     auto thirdPos = tempSoDir.find(ServiceConstants::PATH_SEPARATOR, secondPos + 1);
     if (thirdPos == std::string::npos) {
-        InstalldClient::GetInstance()->RemoveDir(tempSoDir);
+        InstalldClient::GetInstance()->RemoveDir(tempSoDir, BundleDirScene::REMOVE_MODULE_DIR, bundleName);
         return;
     }
     std::string subTempSoDir = tempSoDir.substr(0, thirdPos);
     LOG_D(BMS_TAG_INSTALLER, "subTempSoDir %{public}s", subTempSoDir.c_str());
-    InstalldClient::GetInstance()->RemoveDir(subTempSoDir);
+    InstalldClient::GetInstance()->RemoveDir(subTempSoDir, BundleDirScene::REMOVE_MODULE_DIR, bundleName);
 }
 
 ErrCode BaseBundleInstaller::InstallEntryMoudleFirst(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
@@ -8098,7 +8126,8 @@ void BaseBundleInstaller::DeleteOldNativeLibraryPath() const
 {
     std::string oldLibPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_ +
         ServiceConstants::PATH_SEPARATOR + ServiceConstants::LIBS;
-    if (InstalldClient::GetInstance()->RemoveDir(oldLibPath) != ERR_OK) {
+    if (InstalldClient::GetInstance()->RemoveDir(oldLibPath, BundleDirScene::REMOVE_BUNDLE_LIB_DIR, bundleName_) !=
+        ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "bundleNmae: %{public}s remove old libs dir failed", bundleName_.c_str());
     }
 }
@@ -8118,7 +8147,8 @@ void BaseBundleInstaller::RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &inn
     if (InstalldClient::GetInstance()->IsDirEmpty(tempDir, isDirEmpty) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "IsDirEmpty failed");
     }
-    if (isDirEmpty && (InstalldClient::GetInstance()->RemoveDir(tempDir) != ERR_OK)) {
+    if (isDirEmpty && (InstalldClient::GetInstance()->RemoveDir(
+        tempDir, BundleDirScene::REMOVE_MODULE_DIR, innerBundleInfo.GetBundleName())) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "remove tmp so path:%{public}s failed", tempDir.c_str());
     }
     LOG_D(BMS_TAG_INSTALLER, "end");
@@ -8385,7 +8415,8 @@ ErrCode BaseBundleInstaller::DeleteArkStartupCache(const std::string &cacheDir,
     std::string el1ArkStartupCachePath = cacheDir + bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
     el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
         std::to_string(userId));
-    return InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath);
+    return InstalldClient::GetInstance()->RemoveDir(
+        el1ArkStartupCachePath, BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR, bundleName);
 }
 
 void BaseBundleInstaller::SetVerifyPermissionResult(const Security::AccessToken::HapInfoCheckResult &checkResult)
@@ -8493,7 +8524,8 @@ ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) co
     std::string shaderCachePath;
     shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
     LOG_D(BMS_TAG_INSTALLER, "DeleteShaderCache %{public}s", shaderCachePath.c_str());
-    return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
+    return InstalldClient::GetInstance()->RemoveDir(
+        shaderCachePath, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR, bundleName);
 }
 
 void BaseBundleInstaller::DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName,
@@ -8507,7 +8539,8 @@ void BaseBundleInstaller::DeleteUseLessSharefilesForDefaultUser(const std::strin
             std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
                 ServiceConstants::PATH_SEPARATOR + std::to_string(user);
             std::string shareFilesDataDir = dataDir + ServiceConstants::SHAREFILES + bundleName;
-            InstalldClient::GetInstance()->RemoveDir(shareFilesDataDir);
+            InstalldClient::GetInstance()->RemoveDir(
+                shareFilesDataDir, BundleDirScene::REMOVE_SHARE_FILE_DIR, bundleName);
         }
     }
     return;
@@ -8607,7 +8640,8 @@ ErrCode BaseBundleInstaller::DeleteCloudShader(const std::string &bundleName) co
     std::string newShaderCloudPath;
     newShaderCloudPath.append(ServiceConstants::NEW_CLOUD_SHADER_PATH).append(bundleName);
     LOG_D(BMS_TAG_INSTALLER, "DeleteCloudShader %{public}s", newShaderCloudPath.c_str());
-    return InstalldClient::GetInstance()->RemoveDir(newShaderCloudPath, true);
+    return InstalldClient::GetInstance()->RemoveDir(
+        newShaderCloudPath, BundleDirScene::REMOVE_CLOUD_SHADER_CACHE_DIR, bundleName, true);
 }
 
 ErrCode BaseBundleInstaller::DeleteEl1ShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
@@ -9338,7 +9372,8 @@ void BaseBundleInstaller::RemovePluginOnlyInCurrentUser(const InnerBundleInfo &i
                 pluginName.c_str(), hostBundleName.c_str());
             continue;
         }
-        if ((InstalldClient::GetInstance()->RemoveDir(it->second.codePath)) != ERR_OK) {
+        if ((InstalldClient::GetInstance()->RemoveDir(
+            it->second.codePath, BundleDirScene::REMOVE_BUNDLE_PLUGIN_DIR, hostBundleName)) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", it->second.codePath.c_str());
         }
     }
@@ -9436,7 +9471,7 @@ ErrCode BaseBundleInstaller::ProcessDynamicIconFileWhenUpdate(
         std::string fileName = ServiceConstants::PATH_SEPARATOR +extendResource.second.moduleName +
             ServiceConstants::HSP_FILE_SUFFIX;
         result = InstalldClient::GetInstance()->CopyFile(oldExtendResourcePath + fileName,
-            newExtendResourcePath + fileName);
+            newExtendResourcePath + fileName, BundleDirScene::COPY_EXTEND_RESOURCE_FILE);
         if (result != ERR_OK) {
             APP_LOGE("-n %{public}s copy ext_resource failed", oldInfo.GetBundleName().c_str());
             return result;
@@ -9563,11 +9598,12 @@ void BaseBundleInstaller::ProcessOldCodePath(
         bundleName, BundleDirScene::BUNDLE_CODE_DIR);
     if (result == ERR_OK) {
         // delete +temp- code path
-        result = InstalldClient::GetInstance()->RemoveDir(tempPath);
+        result = InstalldClient::GetInstance()->RemoveDir(tempPath, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleName);
     } else {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "rename bundle %{public}s old to temp path error is %{public}d",
             bundleName.c_str(), result);
-        result = InstalldClient::GetInstance()->RemoveDir(oldAppCodePath);
+        result = InstalldClient::GetInstance()->RemoveDir(
+            oldAppCodePath, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleName);
     }
     if (result == ERR_OK) {
         result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);
@@ -9662,7 +9698,7 @@ bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
         bool isExtProfileExist = false;
         InstalldClient::GetInstance()->IsExistDir(extProfileDir, isExtProfileExist);
         if (isExtProfileExist) {
-            if (RemoveModuleDir(targetPath) != ERR_OK) {
+            if (RemoveModuleDir(targetPath, bundleName_) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "fail to delete ext profile file, error is %{public}d", errno);
                 return false;
             }
@@ -9676,7 +9712,8 @@ bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
         LOG_E(BMS_TAG_INSTALLER, "fail to create ext profile dir, error is %{public}d", result);
         return false;
     }
-    if (InstalldClient::GetInstance()->CopyFile(iter->second, targetPath) != ERR_OK) {
+    if (InstalldClient::GetInstance()->CopyFile(iter->second, targetPath,
+        BundleDirScene::COPY_EXTEND_PROFILE_FILE) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "copy file from %{public}s to %{public}s failed", iter->second.c_str(),
             targetPath.c_str());
         return false;

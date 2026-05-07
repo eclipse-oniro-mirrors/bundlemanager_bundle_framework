@@ -169,7 +169,8 @@ void DriverInstaller::RemoveDriverSoFile(const InnerBundleInfo &info, const std:
             APP_LOGD("Remove driver so file path is %{public}s", destinedDir.c_str());
             if (!destinedDir.empty()) {
                 std::string systemServiceDir = ServiceConstants::SYSTEM_SERVICE_DIR;
-                InstalldClient::GetInstance()->RemoveDir(systemServiceDir + destinedDir);
+                InstalldClient::GetInstance()->RemoveDir(
+                    systemServiceDir + destinedDir, BundleDirScene::REMOVE_SYSTEM_SERVICE_DIR);
             }
         }
     }

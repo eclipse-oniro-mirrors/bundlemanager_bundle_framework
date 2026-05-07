@@ -89,7 +89,12 @@ void BundleExceptionHandler::InnerCheckSystemHspPath(const InnerBundleInfo &info
 bool BundleExceptionHandler::RemoveBundleAndDataDir(const std::string &bundleDir,
     const std::string &bundleOrModuleDir, int32_t userId) const
 {
-    ErrCode result = InstalldClient::GetInstance()->RemoveDir(bundleDir);
+    std::string bundleName = bundleOrModuleDir;
+    auto hapsPos = bundleOrModuleDir.find(ServiceConstants::HAPS);
+    if (hapsPos != std::string::npos) {
+        bundleName = bundleOrModuleDir.substr(0, hapsPos);
+    }
+    ErrCode result = InstalldClient::GetInstance()->RemoveDir(bundleDir, BundleDirScene::REMOVE_MODULE_DIR, bundleName);
     if (result != ERR_OK) {
         APP_LOGE("fail to remove bundle dir %{public}s, error is %{public}d", bundleDir.c_str(), result);
         return false;
@@ -150,7 +155,8 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
         DeleteBundleInfoFromStorage(info);
         isBundleValid = false;
     } else if (mark.status == InstallExceptionStatus::UPDATING_EXISTED_START) {
-        if (InstalldClient::GetInstance()->RemoveDir(moduleDir + ServiceConstants::TMP_SUFFIX) == ERR_OK) {
+        if (InstalldClient::GetInstance()->RemoveDir(moduleDir + ServiceConstants::TMP_SUFFIX,
+            BundleDirScene::REMOVE_MODULE_DIR, info.GetBundleName()) == ERR_OK) {
             info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         }
     } else if (mark.status == InstallExceptionStatus::UPDATING_NEW_START &&

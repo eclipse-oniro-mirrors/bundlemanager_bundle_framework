@@ -3819,7 +3819,7 @@ HWTEST_F(BmsDataMgrTest, RemoveAppInstallDir_0001, Function | MediumTest | Level
     std::string path = std::string(ServiceConstants::HAP_COPY_PATH) +
     ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId);
     bundleDataMgr.RemoveAppInstallDir(userId);
-    EXPECT_NE(InstalldClient::GetInstance()->RemoveDir(path), ERR_OK);
+    EXPECT_NE(InstalldClient::GetInstance()->RemoveDir(path, BundleDirScene::REMOVE_GALLERY_DOWNLOAD_DIR), ERR_OK);
 }
 
 /**

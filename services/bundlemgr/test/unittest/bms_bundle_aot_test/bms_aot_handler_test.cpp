@@ -180,7 +180,7 @@ HWTEST_F(BmsAOTHandlerTest, DelDeprecatedArkPaths_0100, Function | SmallTest | L
 HWTEST_F(BmsAOTHandlerTest, CreateArkProfilePaths_0100, Function | SmallTest | Level1)
 {
     std::string path = AOTHandler::BuildArkProfilePath(USER_ID, BUNDLE_NAME);
-    (void)InstalldClient::GetInstance()->RemoveDir(path);
+    (void)InstalldClient::GetInstance()->RemoveDir(path, BundleDirScene::REMOVE_AOT_ARK_PROFILE_DIR, BUNDLE_NAME);
     bool isExist = true;
     (void)InstalldClient::GetInstance()->IsExistDir(path, isExist);
     EXPECT_FALSE(isExist);

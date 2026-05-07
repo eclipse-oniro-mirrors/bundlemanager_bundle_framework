@@ -624,8 +624,8 @@ ErrCode PluginInstaller::ProcessPluginInstall(const InnerBundleInfo &hostBundleI
     CHECK_RESULT(result, "save plugin info to storage failed %{public}d");
 
     UpdateRouterInfoForPlugin(hostBundleInfo.GetBundleName(), pluginInfo);
-    RemoveEmptyDirs(pluginDir);
-    RemoveOldInstallDir();
+    RemoveEmptyDirs(pluginDir, hostBundleInfo.GetBundleName());
+    RemoveOldInstallDir(hostBundleInfo.GetBundleName());
     deleteDirGuard.Dismiss();
     dataRollBackGuard.Dismiss();
     APP_LOGD("install plugin bundle successfully: %{public}s", bundleName_.c_str());
@@ -765,7 +765,8 @@ ErrCode PluginInstaller::RemovePluginDir(const InnerBundleInfo &hostBundleInfo)
 {
     std::string pluginDir = hostBundleInfo.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + PLUGINS;
     std::string pluginBundleDir = pluginDir + ServiceConstants::PATH_SEPARATOR + bundleNameWithTime_;
-    ErrCode err = InstalldClient::GetInstance()->RemoveDir(pluginBundleDir);
+    ErrCode err = InstalldClient::GetInstance()->RemoveDir(
+        pluginBundleDir, BundleDirScene::REMOVE_BUNDLE_PLUGIN_DIR, hostBundleInfo.GetBundleName());
     if (err != ERR_OK) {
         APP_LOGW("remove dir of %{public}s failed: %{public}s", bundleName_.c_str(), pluginBundleDir.c_str());
         return err;
@@ -782,7 +783,8 @@ ErrCode PluginInstaller::SaveHspToInstallDir(const std::string &bundlePath,
     std::string hspPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + moduleName +
         ServiceConstants::HSP_FILE_SUFFIX;
     if (!signatureFileDir_.empty()) {
-        result = InstalldClient::GetInstance()->CopyFile(bundlePath, hspPath, signatureFileDir_);
+        result = InstalldClient::GetInstance()->CopyFile(
+            bundlePath, hspPath, BundleDirScene::COPY_PLUGIN_HSP, signatureFileDir_);
         CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
     } else {
         result = InstalldClient::GetInstance()->MoveHapToCodeDir(bundlePath, hspPath);
@@ -809,7 +811,7 @@ ErrCode PluginInstaller::SaveHspToInstallDir(const std::string &bundlePath,
     return ERR_OK;
 }
 
-void PluginInstaller::RemoveEmptyDirs(const std::string &pluginDir) const
+void PluginInstaller::RemoveEmptyDirs(const std::string &pluginDir, const std::string &hostBundleName) const
 {
     for (auto &item : parsedBundles_) {
         std::string moduleDir = pluginDir + ServiceConstants::PATH_SEPARATOR + bundleNameWithTime_
@@ -818,14 +820,15 @@ void PluginInstaller::RemoveEmptyDirs(const std::string &pluginDir) const
         InstalldClient::GetInstance()->IsDirEmpty(moduleDir, isEmpty);
         if (isEmpty) {
             APP_LOGD("remove empty dir : %{public}s", moduleDir.c_str());
-            RemoveDir(moduleDir);
+            RemoveDir(moduleDir, hostBundleName);
         }
     }
 }
 
-void PluginInstaller::RemoveDir(const std::string &dir) const
+void PluginInstaller::RemoveDir(const std::string &dir, const std::string &hostBundleName) const
 {
-    auto result = InstalldClient::GetInstance()->RemoveDir(dir);
+    auto result =
+        InstalldClient::GetInstance()->RemoveDir(dir, BundleDirScene::REMOVE_BUNDLE_PLUGIN_DIR, hostBundleName);
     if (result != ERR_OK) {
         APP_LOGW("remove dir %{public}s failed, error is %{public}d", dir.c_str(), result);
     }
@@ -862,9 +865,11 @@ ErrCode PluginInstaller::ProcessPluginUninstall(const InnerBundleInfo &hostBundl
     std::string deleteDir = pluginBundleDir + REMOVE_TMP_SUFFIX;
     if (!BundleUtil::RenameFile(pluginBundleDir, deleteDir)) {
         APP_LOGW("rename failed, %{public}s -> %{public}s", pluginBundleDir.c_str(), deleteDir.c_str());
-        result = InstalldClient::GetInstance()->RemoveDir(pluginBundleDir);
+        result = InstalldClient::GetInstance()->RemoveDir(
+            pluginBundleDir, BundleDirScene::REMOVE_BUNDLE_PLUGIN_DIR, hostBundleName);
     } else {
-        result = InstalldClient::GetInstance()->RemoveDir(deleteDir);
+        result = InstalldClient::GetInstance()->RemoveDir(
+            deleteDir, BundleDirScene::REMOVE_BUNDLE_PLUGIN_DIR, hostBundleName);
     }
     if (result != ERR_OK) {
         APP_LOGW("bundleName:%{public}s remove plugin:%{public}s dir failed",
@@ -876,12 +881,12 @@ ErrCode PluginInstaller::ProcessPluginUninstall(const InnerBundleInfo &hostBundl
     return ERR_OK;
 }
 
-void PluginInstaller::RemoveOldInstallDir()
+void PluginInstaller::RemoveOldInstallDir(const std::string &hostBundleName)
 {
     if (!isPluginExist_) {
         return;
     }
-    RemoveDir(oldPluginInfo_.codePath);
+    RemoveDir(oldPluginInfo_.codePath, hostBundleName);
     APP_LOGI("remove old install dir:%{public}s", oldPluginInfo_.codePath.c_str());
 }
 

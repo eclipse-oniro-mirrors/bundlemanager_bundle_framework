@@ -190,7 +190,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0700, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->RemoveDir(TEST_STRING);
+    auto ret = hostImpl->RemoveDir(TEST_STRING, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, TEST_BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -319,7 +319,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1400, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->CopyFile(TEST_STRING, TEST_STRING);
+    auto ret = hostImpl->CopyFile(TEST_STRING, TEST_STRING, BundleDirScene::COPY_PGO_FILE);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -658,7 +658,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3400, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->RemoveDir("");
+    auto ret = hostImpl->RemoveDir("", BundleDirScene::REMOVE_BUNDLE_CODE_DIR, TEST_BUNDLE_NAME);
     EXPECT_NE(ret, ERR_OK);
 }
 

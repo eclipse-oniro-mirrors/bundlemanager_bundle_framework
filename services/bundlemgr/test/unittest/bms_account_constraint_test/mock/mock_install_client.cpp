@@ -127,7 +127,8 @@ ErrCode InstalldClient::RemoveModuleDataDir(const std::string &ModuleName, const
     return 0;
 }
 
-ErrCode InstalldClient::RemoveDir(const std::string &dir, bool async)
+ErrCode InstalldClient::RemoveDir(
+    const std::string &dir, BundleDirScene scene, const std::string &bundleName, bool async)
 {
     if (dir.empty()) {
         return -1;
@@ -254,7 +255,7 @@ ErrCode InstalldClient::RenameFile(const std::string &oldPath, const std::string
     return 0;
 }
 
-ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath,
+ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
     const std::string &signatureFilePath)
 {
     return 0;

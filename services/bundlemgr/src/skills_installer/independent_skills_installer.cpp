@@ -335,7 +335,8 @@ void IndependentSkillsInstaller::RemoveModuleDir(
         std::string(BASE_SKILL_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
         bundleName + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
     LOG_I(BMS_TAG_INSTALLER, "start to remove module dir: %{public}s", moduleDir.c_str());
-    if (InstalldClient::GetInstance()->RemoveDir(moduleDir) != ERR_OK) {
+    if (InstalldClient::GetInstance()->RemoveDir(moduleDir, BundleDirScene::REMOVE_SKILL_MODULE_DIR, bundleName) !=
+        ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "remove module dir %{public}s failed", moduleDir.c_str());
     }
 }
@@ -352,7 +353,8 @@ void IndependentSkillsInstaller::RemoveSkillDir(
         bundleName + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName +
         AppExecFwk::ServiceConstants::PATH_SEPARATOR + skillsName;
     LOG_I(BMS_TAG_INSTALLER, "start to remove skill dir: %{public}s", moduleDir.c_str());
-    if (InstalldClient::GetInstance()->RemoveDir(moduleDir) != ERR_OK) {
+    if (InstalldClient::GetInstance()->RemoveDir(moduleDir, BundleDirScene::REMOVE_SKILL_MODULE_DIR, bundleName) !=
+        ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "remove module dir %{public}s failed", moduleDir.c_str());
     }
 }
@@ -753,7 +755,7 @@ ErrCode IndependentSkillsInstaller::ExtractModule(
     if (copyHapToInstallPath) {
         std::string tempHspPath = moduleDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
             tempModuleName + ServiceConstants::HSP_FILE_SUFFIX;
-        result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath);
+        result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, BundleDirScene::COPY_SKILL_HSP);
         std::string realHspPath = moduleDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
             moduleName + ServiceConstants::HSP_FILE_SUFFIX;
         newInfo.SetModuleHapPath(realHspPath);
@@ -1053,7 +1055,8 @@ void IndependentSkillsInstaller::RollBack()
     RemoveInfo(bundleName_);
     // delete code
     std::string bundleDir = std::string(BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_;
-    ErrCode result = InstalldClient::GetInstance()->RemoveDir(bundleDir);
+    ErrCode result =
+        InstalldClient::GetInstance()->RemoveDir(bundleDir, BundleDirScene::REMOVE_SKILL_BUNDLE_DIR, bundleName_);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove bundle dir %{public}s failed", bundleDir.c_str());
     }
@@ -1267,7 +1270,8 @@ ErrCode IndependentSkillsInstaller::ProcessUninstall(const std::string &bundleNa
     std::string bundleDir =
         std::string(BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
     LOG_I(BMS_TAG_INSTALLER, "start to remove bundle dir: %{public}s", bundleDir.c_str());
-    if (InstalldClient::GetInstance()->RemoveDir(bundleDir) != ERR_OK) {
+    if (InstalldClient::GetInstance()->RemoveDir(bundleDir, BundleDirScene::REMOVE_SKILL_BUNDLE_DIR, bundleName) !=
+        ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "remove bundle dir %{public}s failed", bundleDir.c_str());
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }

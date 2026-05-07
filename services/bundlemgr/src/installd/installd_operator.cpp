@@ -89,14 +89,23 @@ constexpr const char* PREFIX_TARGET_PATH = "/print_service/";
 constexpr const char* HQF_DIR_PREFIX = "patch_";
 constexpr const char* HQF_PATCH_PATH = "/patch/";
 constexpr const char* VERIFY_FILE_PATH = "/abcs/";
+constexpr const char* VERIFY_FILE_SUFFIX = ".abc";
 constexpr const char* APP_EL1_PATH = "/data/app/el1/";
 constexpr const char* APP_EL2_PATH = "/data/app/el2/";
+constexpr const char* APP_EL3_PATH = "/data/app/el3/";
+constexpr const char* APP_EL4_PATH = "/data/app/el4/";
+constexpr const char* BASE_DIR = "/base";
+constexpr const char* DATABASE_DIR = "/database";
 constexpr const char* ARK_PROFILE_PATH = "aot_compiler/ark_profile";
 constexpr const char* SYSTEM_OPTIMIZE_DIR = "/system_optimize/";
 constexpr const char* SERVICE_EL2_PATH = "/data/service/el2/";
 constexpr const char* HMDFS_CLOUD_DATA_PATH = "/hmdfs/cloud/data/";
 constexpr const char* PGO_DIR_PATH = "/data/local/pgo/";
 constexpr const char* BASE_SKILL_DIR = "/data/app/el1/skills/public";
+constexpr const char* PGO_FILE_PATH = "pgo_files";
+constexpr const char* LIBS_TMP_DIR = "libs+tmp";
+constexpr const char* DEPRECATED_ARK_CACHE_PATH = "/data/local/ark-cache";
+constexpr const char* DEPRECATED_ARK_PROFILE_PATH = "/data/local/ark-profile";
 #if defined(CODE_ENCRYPTION_ENABLE)
 static const char LIB_CODE_CRYPTO_SO_PATH[] = "system/lib/libcode_crypto_metadata_process_utils.z.so";
 static const char LIB64_CODE_CRYPTO_SO_PATH[] = "system/lib64/libcode_crypto_metadata_process_utils.z.so";
@@ -4743,6 +4752,310 @@ bool InstalldOperator::IsValidPathByMoveFileScene(
     }
     return IsValidSourcePathByMoveFileScene(oldPath, scene, bundleName) &&
            IsValidTargetPathByMoveFileScene(newPath, scene, bundleName);
+}
+
+bool InstalldOperator::IsValidSourcePathByCopyVerifyFile(const std::string &sourcePath)
+{
+    if (!IsFileNameValid(sourcePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+
+    if (!EndsWith(sourcePath, VERIFY_FILE_SUFFIX)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path not verify file format");
+        return false;
+    }
+
+    if (StartsWith(sourcePath, APP_EL1_PATH)) {
+        return StartsWith(sourcePath, Constants::BUNDLE_CODE_DIR) || IsContainsPathPart(sourcePath, BASE_DIR) ||
+               IsContainsPathPart(sourcePath, DATABASE_DIR);
+    } else if (StartsWith(sourcePath, APP_EL2_PATH) || StartsWith(sourcePath, APP_EL3_PATH) ||
+        StartsWith(sourcePath, APP_EL4_PATH)) {
+        return IsContainsPathPart(sourcePath, BASE_DIR) || IsContainsPathPart(sourcePath, DATABASE_DIR);
+    } else {
+        return false;
+    }
+}
+
+bool InstalldOperator::IsValidSourcePathByCopyFileScene(const std::string &sourcePath, const BundleDirScene &scene)
+{
+    if (!IsFileNameValid(sourcePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+
+    switch (scene) {
+        case BundleDirScene::COPY_PGO_FILE:
+            return StartsWith(sourcePath, ServiceConstants::HAP_COPY_PATH) &&
+                   IsContainsPathPart(sourcePath, PGO_FILE_PATH) &&
+                   EndsWith(sourcePath, ServiceConstants::PGO_FILE_SUFFIX);
+        case BundleDirScene::COPY_HAP_TO_INSTALL_PATH:
+            return StartsWith(sourcePath, ServiceConstants::HAP_COPY_PATH) &&
+                   (EndsWith(sourcePath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+                       EndsWith(sourcePath, ServiceConstants::HSP_FILE_SUFFIX));
+        case BundleDirScene::COPY_EXTEND_RESOURCE_FILE:
+            return StartsWith(sourcePath, Constants::BUNDLE_CODE_DIR) &&
+                   IsContainsPathPart(sourcePath, ServiceConstants::EXT_RESOURCE_FILE_PATH) &&
+                   EndsWith(sourcePath, ServiceConstants::HSP_FILE_SUFFIX);
+        case BundleDirScene::COPY_EXTEND_PROFILE_FILE:
+            return StartsWith(sourcePath, ServiceConstants::HAP_COPY_PATH) &&
+                   IsContainsPathPart(sourcePath, ServiceConstants::EXT_PROFILE);
+        case BundleDirScene::COPY_HAP_TO_TEMP_PATH:
+            return (StartsWith(sourcePath, APP_EL2_PATH) && IsContainsPathPart(sourcePath, ServiceConstants::BASE)) ||
+                   (StartsWith(sourcePath, ServiceConstants::HAP_COPY_PATH) &&
+                       IsContainsPathPart(sourcePath, ServiceConstants::GALLERY_DOWNLOAD_PATH));
+        case BundleDirScene::COPY_AP_FILE:
+            return StartsWith(sourcePath, APP_EL1_PATH) && IsContainsPathPart(sourcePath, ARK_PROFILE_PATH) &&
+                   EndsWith(sourcePath, ServiceConstants::AP_SUFFIX);
+        case BundleDirScene::COPY_SERVICE_HSP:
+        case BundleDirScene::COPY_SKILL_HSP:
+            return EndsWith(sourcePath, ServiceConstants::HSP_FILE_SUFFIX);
+        case BundleDirScene::COPY_PLUGIN_HSP:
+        case BundleDirScene::COPY_SHARED_HSP:
+            return StartsWith(sourcePath, ServiceConstants::HAP_COPY_PATH) &&
+                   IsContainsPathPart(sourcePath, ServiceConstants::SECURITY_STREAM_INSTALL_PATH) &&
+                   EndsWith(sourcePath, ServiceConstants::HSP_FILE_SUFFIX);
+        case BundleDirScene::COPY_HQF_FILE:
+            return StartsWith(sourcePath, ServiceConstants::HAP_COPY_PATH) &&
+                   IsContainsPathPart(sourcePath, ServiceConstants::SECURITY_QUICK_FIX_PATH) &&
+                   EndsWith(sourcePath, ServiceConstants::QUICK_FIX_FILE_SUFFIX);
+        case BundleDirScene::COPY_ABC_FILE:
+            return IsValidSourcePathByCopyVerifyFile(sourcePath);
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidTargetPathByCopyFileScene(const std::string &targetPath, const BundleDirScene &scene)
+{
+    if (!IsFileNameValid(targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    switch (scene) {
+        case BundleDirScene::COPY_PGO_FILE:
+            return StartsWith(targetPath, APP_EL1_PATH) && IsContainsPathPart(targetPath, ARK_PROFILE_PATH) &&
+                   EndsWith(targetPath, ServiceConstants::PGO_FILE_SUFFIX);
+        case BundleDirScene::COPY_HAP_TO_INSTALL_PATH:
+            return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) &&
+                   (EndsWith(targetPath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+                       EndsWith(targetPath, ServiceConstants::HSP_FILE_SUFFIX));
+        case BundleDirScene::COPY_EXTEND_RESOURCE_FILE:
+            return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) &&
+                   IsContainsPathPart(targetPath, ServiceConstants::EXT_RESOURCE_FILE_PATH) &&
+                   EndsWith(targetPath, ServiceConstants::HSP_FILE_SUFFIX);
+        case BundleDirScene::COPY_EXTEND_PROFILE_FILE:
+            return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) &&
+                   IsContainsPathPart(targetPath, ServiceConstants::EXT_PROFILE) &&
+                   IsContainsPathPart(targetPath, ServiceConstants::MANIFEST_JSON);
+        case BundleDirScene::COPY_HAP_TO_TEMP_PATH:
+            return StartsWith(targetPath, ServiceConstants::HAP_COPY_PATH);
+        case BundleDirScene::COPY_AP_FILE:
+            return StartsWith(targetPath, PGO_DIR_PATH) && EndsWith(targetPath, ServiceConstants::AP_SUFFIX);
+        case BundleDirScene::COPY_SERVICE_HSP:
+        case BundleDirScene::COPY_SHARED_HSP:
+            return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) &&
+                   EndsWith(targetPath, ServiceConstants::HSP_FILE_SUFFIX);
+        case BundleDirScene::COPY_PLUGIN_HSP:
+            return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) &&
+                   IsContainsPathPart(targetPath, ServiceConstants::PLUGIN_FILE_PATH) &&
+                   EndsWith(targetPath, ServiceConstants::HSP_FILE_SUFFIX);
+        case BundleDirScene::COPY_HQF_FILE:
+            return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) &&
+                   (IsContainsPathPart(targetPath, ServiceConstants::PATCH_PATH) ||
+                       IsContainsPathPart(targetPath, ServiceConstants::HOT_RELOAD_PATH) ||
+                       IsContainsPathPart(targetPath, HQF_PATCH_PATH)) &&
+                   EndsWith(targetPath, ServiceConstants::QUICK_FIX_FILE_SUFFIX);
+        case BundleDirScene::COPY_SKILL_HSP:
+            return StartsWith(targetPath, BASE_SKILL_DIR) && EndsWith(targetPath, ServiceConstants::HSP_FILE_SUFFIX);
+        case BundleDirScene::COPY_ABC_FILE:
+            return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) &&
+                   IsContainsPathPart(targetPath, VERIFY_FILE_PATH) && EndsWith(targetPath, VERIFY_FILE_SUFFIX);
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidPathByCopyFileScene(
+    const std::string &oldPath, const std::string &newPath, const BundleDirScene &scene)
+{
+    if (!IsFileNameValid(oldPath) || !IsFileNameValid(newPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    bool isValidOldPath = IsValidSourcePathByCopyFileScene(oldPath, scene);
+    if (!isValidOldPath) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid oldPath for scene %{public}d", static_cast<int>(scene));
+        return false;
+    }
+    bool isValidNewPath = IsValidTargetPathByCopyFileScene(newPath, scene);
+    if (!isValidNewPath) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid newPath for scene %{public}d", static_cast<int>(scene));
+        return false;
+    }
+    return true;
+}
+
+bool InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+    const std::string &dir, const std::string &bundleName, const BundleDirScene &scene)
+{
+    if (!IsContainsBundleName(dir, bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path not contain bundleName %{public}s", bundleName.c_str());
+        return false;
+    }
+    switch (scene) {
+        case BundleDirScene::REMOVE_BUNDLE_CODE_DIR:
+        case BundleDirScene::REMOVE_MODULE_DIR:
+            return StartsWith(dir, Constants::BUNDLE_CODE_DIR);
+        case BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR:
+            return StartsWith(dir, ServiceConstants::SHARED_HSP_ARK_CACHE_PATH);
+        case BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR:
+            return StartsWith(dir, ServiceConstants::HAP_ARK_CACHE_PATH);
+        case BundleDirScene::REMOVE_BUNDLE_HNP_DIR:
+            return StartsWith(dir, Constants::BUNDLE_CODE_DIR) &&
+                   IsContainsPathPart(dir, ServiceConstants::HNPS_FILE_PATH);
+        case BundleDirScene::REMOVE_BMS_BUNDLE_LIB_DIR:
+            return StartsWith(dir, ServiceConstants::HAP_COPY_PATH) && IsContainsPathPart(dir, ServiceConstants::LIBS);
+        case BundleDirScene::REMOVE_BMS_BUNDLE_TEMP_DIR:
+            return StartsWith(dir, ServiceConstants::HAP_COPY_PATH) &&
+                   IsContainsPathPart(dir, ServiceConstants::TMP_SUFFIX);
+        case BundleDirScene::REMOVE_SCREEN_LOCK_DATA_DIR:
+            return StartsWith(dir, ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) &&
+                   (IsContainsPathPart(dir, ServiceConstants::BASE) ||
+                       IsContainsPathPart(dir, ServiceConstants::DATABASE));
+        case BundleDirScene::REMOVE_AOT_ARK_PROFILE_DIR:
+            return StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, ARK_PROFILE_PATH);
+        case BundleDirScene::REMOVE_BUNDLE_LIB_DIR:
+            return StartsWith(dir, Constants::BUNDLE_CODE_DIR) &&
+                   (IsContainsPathPart(dir, ServiceConstants::LIBS) || IsContainsPathPart(dir, LIBS_TMP_DIR));
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+    const std::string &dir, const std::string &bundleName, const BundleDirScene &scene)
+{
+    if (!IsContainsBundleName(dir, bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path not contain bundleName %{public}s", bundleName.c_str());
+        return false;
+    }
+    switch (scene) {
+        case BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR:
+            return StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, SYSTEM_OPTIMIZE_DIR) &&
+                   IsContainsPathPart(dir, ServiceConstants::ARK_STARTUP_CACHE_DIR);
+        case BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR:
+            return StartsWith(dir, ServiceConstants::SHADER_CACHE_PATH);
+        case BundleDirScene::REMOVE_SHARE_FILE_DIR:
+            return StartsWith(dir, APP_EL2_PATH) && IsContainsPathPart(dir, ServiceConstants::SHAREFILES);
+        case BundleDirScene::REMOVE_CLOUD_SHADER_CACHE_DIR:
+            return StartsWith(dir, ServiceConstants::NEW_CLOUD_SHADER_PATH);
+        case BundleDirScene::REMOVE_BUNDLE_PLUGIN_DIR:
+            return StartsWith(dir, Constants::BUNDLE_CODE_DIR) &&
+                   IsContainsPathPart(dir, ServiceConstants::PLUGIN_FILE_PATH);
+        case BundleDirScene::REMOVE_ARK_AP_FILE:
+            return StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, ARK_PROFILE_PATH) &&
+                   EndsWith(dir, ServiceConstants::PGO_FILE_SUFFIX);
+        case BundleDirScene::REMOVE_EXTEND_RESOURCE_FILE:
+            return StartsWith(dir, Constants::BUNDLE_CODE_DIR) &&
+                   IsContainsPathPart(dir, ServiceConstants::EXT_RESOURCE_FILE_PATH);
+        case BundleDirScene::REMOVE_QUICK_FIX_DIR:
+            return StartsWith(dir, Constants::BUNDLE_CODE_DIR) &&
+                   (IsContainsPathPart(dir, ServiceConstants::PATCH_PATH) ||
+                       IsContainsPathPart(dir, ServiceConstants::HOT_RELOAD_PATH) ||
+                       IsContainsPathPart(dir, HQF_PATCH_PATH));
+        case BundleDirScene::REMOVE_SKILL_MODULE_DIR:
+        case BundleDirScene::REMOVE_SKILL_BUNDLE_DIR:
+            return StartsWith(dir, BASE_SKILL_DIR);
+        case BundleDirScene::REMOVE_VERIFY_FILE:
+            return StartsWith(dir, Constants::BUNDLE_CODE_DIR) && IsContainsPathPart(dir, VERIFY_FILE_PATH);
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(const std::string& dir, const BundleDirScene& scene)
+{
+    switch (scene) {
+        case BundleDirScene::REMOVE_PRELOAD_APP_DIR:
+            return StartsWith(dir, ServiceConstants::DATA_PRELOAD_APP);
+        case BundleDirScene::REMOVE_ASAN_LOG_DIR:
+            return StartsWith(dir, ServiceConstants::BUNDLE_ASAN_LOG_DIR);
+        case BundleDirScene::REMOVE_GALLERY_DOWNLOAD_DIR:
+            return StartsWith(dir, ServiceConstants::HAP_COPY_PATH) &&
+                   IsContainsPathPart(dir, ServiceConstants::GALLERY_DOWNLOAD_PATH);
+        case BundleDirScene::REMOVE_ENTERPRISE_CERT_DIR:
+            return StartsWith(dir, ServiceConstants::HAP_COPY_PATH) &&
+                   IsContainsPathPart(dir, ServiceConstants::ENTERPRISE_CERT_PATH);
+        case BundleDirScene::REMOVE_SYSTEM_OPTIMIZE_DIR:
+            return StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, SYSTEM_OPTIMIZE_DIR);
+        case BundleDirScene::REMOVE_LOCAL_ARK_CACHE_DIR:
+            return StartsWith(dir, DEPRECATED_ARK_CACHE_PATH);
+        case BundleDirScene::REMOVE_LOCAL_ARK_PROFILE_DIR:
+            return StartsWith(dir, DEPRECATED_ARK_PROFILE_PATH);
+        case BundleDirScene::REMOVE_SYSTEM_SERVICE_DIR:
+            return StartsWith(dir, ServiceConstants::SYSTEM_SERVICE_DIR);
+        case BundleDirScene::REMOVE_QUICK_FIX_FILE:
+            return StartsWith(dir, Constants::BUNDLE_CODE_DIR);
+        case BundleDirScene::REMOVE_SECURITY_QUICK_FIX_DIR:
+            return StartsWith(dir, ServiceConstants::HAP_COPY_PATH) &&
+                   IsContainsPathPart(dir, ServiceConstants::SECURITY_QUICK_FIX_PATH);
+        case BundleDirScene::REMOVE_SANDBOX_DATA_DIR:
+            return (StartsWith(dir, APP_EL1_PATH) || StartsWith(dir, APP_EL2_PATH) || StartsWith(dir, APP_EL3_PATH) ||
+                       StartsWith(dir, APP_EL4_PATH)) &&
+                   (IsContainsPathPart(dir, ServiceConstants::BASE) ||
+                       IsContainsPathPart(dir, ServiceConstants::DATABASE));
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidPathByRemoveDirScene(
+    const std::string &dir, const std::string &bundleName, const BundleDirScene &scene)
+{
+    if (!IsFileNameValid(dir)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    switch (scene) {
+        case BundleDirScene::REMOVE_BUNDLE_CODE_DIR:
+        case BundleDirScene::REMOVE_MODULE_DIR:
+        case BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR:
+        case BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR:
+        case BundleDirScene::REMOVE_BUNDLE_HNP_DIR:
+        case BundleDirScene::REMOVE_BMS_BUNDLE_LIB_DIR:
+        case BundleDirScene::REMOVE_BMS_BUNDLE_TEMP_DIR:
+        case BundleDirScene::REMOVE_SCREEN_LOCK_DATA_DIR:
+        case BundleDirScene::REMOVE_AOT_ARK_PROFILE_DIR:
+        case BundleDirScene::REMOVE_BUNDLE_LIB_DIR:
+            return IsValidPathByRemoveDirSceneNeedBundleNamePartOne(dir, bundleName, scene);
+        case BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR:
+        case BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR:
+        case BundleDirScene::REMOVE_SHARE_FILE_DIR:
+        case BundleDirScene::REMOVE_CLOUD_SHADER_CACHE_DIR:
+        case BundleDirScene::REMOVE_BUNDLE_PLUGIN_DIR:
+        case BundleDirScene::REMOVE_ARK_AP_FILE:
+        case BundleDirScene::REMOVE_EXTEND_RESOURCE_FILE:
+        case BundleDirScene::REMOVE_QUICK_FIX_DIR:
+        case BundleDirScene::REMOVE_SKILL_MODULE_DIR:
+        case BundleDirScene::REMOVE_SKILL_BUNDLE_DIR:
+        case BundleDirScene::REMOVE_VERIFY_FILE:
+            return IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(dir, bundleName, scene);
+        case BundleDirScene::REMOVE_PRELOAD_APP_DIR:
+        case BundleDirScene::REMOVE_ASAN_LOG_DIR:
+        case BundleDirScene::REMOVE_GALLERY_DOWNLOAD_DIR:
+        case BundleDirScene::REMOVE_ENTERPRISE_CERT_DIR:
+        case BundleDirScene::REMOVE_SYSTEM_OPTIMIZE_DIR:
+        case BundleDirScene::REMOVE_LOCAL_ARK_CACHE_DIR:
+        case BundleDirScene::REMOVE_LOCAL_ARK_PROFILE_DIR:
+        case BundleDirScene::REMOVE_SYSTEM_SERVICE_DIR:
+        case BundleDirScene::REMOVE_QUICK_FIX_FILE:
+        case BundleDirScene::REMOVE_SECURITY_QUICK_FIX_DIR:
+        case BundleDirScene::REMOVE_SANDBOX_DATA_DIR:
+            return IsValidPathByRemoveDirSceneNoBundleName(dir, scene);
+        default:
+            return false;
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

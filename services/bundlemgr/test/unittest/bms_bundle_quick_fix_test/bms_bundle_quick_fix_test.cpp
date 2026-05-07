@@ -1700,7 +1700,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0054, Function | SmallTest
         newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
         InnerAppQuickFix oldInnerAppQuickFix;
         ErrCode ret = deployer->ToDeployEndStatus(newInnerAppQuickFix, oldInnerAppQuickFix);
-        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED);
         DeleteFiles(sourcePath);
     }
 

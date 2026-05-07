@@ -145,7 +145,8 @@ ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName, bool is
     std::string bundleDir =
         std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName;
     APP_LOGI("start to remove bundle dir: %{public}s", bundleDir.c_str());
-    if (InstalldClient::GetInstance()->RemoveDir(bundleDir) != ERR_OK) {
+    if (InstalldClient::GetInstance()->RemoveDir(bundleDir, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleName) !=
+        ERR_OK) {
         APP_LOGW("remove bundle dir %{public}s failed", bundleDir.c_str());
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
@@ -250,7 +251,7 @@ void AppServiceFwkInstaller::RemoveModuleDataDir(
         bundleName + AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX +
         std::to_string(oldInfo.GetVersionCode()) + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
     APP_LOGI("start to remove module dir: %{public}s", moduleDir.c_str());
-    if (InstalldClient::GetInstance()->RemoveDir(moduleDir) != ERR_OK) {
+    if (InstalldClient::GetInstance()->RemoveDir(moduleDir, BundleDirScene::REMOVE_MODULE_DIR, bundleName) != ERR_OK) {
         APP_LOGW("remove module dir %{public}s failed", moduleDir.c_str());
     }
 }
@@ -609,7 +610,7 @@ ErrCode AppServiceFwkInstaller::ExtractModule(
     if (copyHapToInstallPath) {
         std::string realHspPath = moduleDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
             moduleName + ServiceConstants::HSP_FILE_SUFFIX;
-        result = InstalldClient::GetInstance()->CopyFile(bundlePath, realHspPath);
+        result = InstalldClient::GetInstance()->CopyFile(bundlePath, realHspPath, BundleDirScene::COPY_SERVICE_HSP);
         newInfo.SetModuleHapPath(realHspPath);
         CHECK_RESULT(result, "move hsp to install dir failed %{public}d");
 
@@ -793,7 +794,7 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
     // 2. remove so temp dir
     std::string deleteTempDir = versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR
         + moduleName + AppExecFwk::ServiceConstants::TMP_SUFFIX;
-    result = InstalldClient::GetInstance()->RemoveDir(deleteTempDir);
+    result = InstalldClient::GetInstance()->RemoveDir(deleteTempDir, BundleDirScene::REMOVE_MODULE_DIR, bundleName_);
     if (result != ERR_OK) {
         APP_LOGW("Remove temp dir %{public}s failed %{public}d",
             deleteTempDir.c_str(), result);
@@ -1057,7 +1058,7 @@ ErrCode AppServiceFwkInstaller::RemoveLowerVersionSoDir(uint32_t versionCode)
     std::string versionDir = bundleDir
         + AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
     APP_LOGI_NOFUNC("RemoveLowerVersionSoDir %{public}s", versionDir.c_str());
-    return InstalldClient::GetInstance()->RemoveDir(versionDir);
+    return InstalldClient::GetInstance()->RemoveDir(versionDir, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, bundleName_);
 }
 
 ErrCode AppServiceFwkInstaller::VerifyCodeSignatureForNativeFiles(const std::string &bundlePath,

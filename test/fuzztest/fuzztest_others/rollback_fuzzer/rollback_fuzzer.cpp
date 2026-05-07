@@ -51,7 +51,7 @@ namespace {
         }
         std::vector<std::string> filePaths;
         filePaths.push_back(FILE_PATH);
-        impl.RollBack(filePaths);
+        impl.RollBack(filePaths, BUNDLE_NAME);
         return true;
     }
 }

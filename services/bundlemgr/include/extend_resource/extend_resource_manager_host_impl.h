@@ -62,7 +62,7 @@ private:
     ErrCode CopyToTempDir(const std::string &bundleName,
         const std::vector<std::string> &oldFilePaths, std::vector<std::string> &newFilePaths);
     bool GetInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
-    void RollBack(const std::vector<std::string> &filePaths);
+    void RollBack(const std::vector<std::string> &filePaths, const std::string &bundleName);
     ErrCode MkdirIfNotExist(const std::string &bundleName, BundleDirScene scene, const std::string &dir);
     ErrCode ParseExtendResourceFile(
         const std::string &bundleName,

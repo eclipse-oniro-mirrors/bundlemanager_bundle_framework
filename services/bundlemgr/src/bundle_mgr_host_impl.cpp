@@ -1744,7 +1744,8 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     }
     std::string hapName = hapFilePath.substr(hapFilePath.find_last_of("//") + 1);
     std::string tempHapFile = tempHapPath + ServiceConstants::PATH_SEPARATOR + hapName;
-    if (InstalldClient::GetInstance()->CopyFile(hapRealPath, tempHapFile) != ERR_OK) {
+    if (InstalldClient::GetInstance()->CopyFile(hapRealPath, tempHapFile,
+        BundleDirScene::COPY_HAP_TO_TEMP_PATH) != ERR_OK) {
         APP_LOGE("GetBundleArchiveInfo copy hap file failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
