@@ -570,6 +570,8 @@ void BundleCommonEventMgr::NotifySkillEvents(
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     publishInfo.SetSubscriberPermissions({ Constants::PERMISSION_MANAGE_SKILL_PRIVILEGE });
+    publishInfo.SetBundleName(bundleName);
+    publishInfo.SetValidationRule(EventFwk::ValidationRule::OR);
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
         APP_LOGE("Publish skill common event failed");

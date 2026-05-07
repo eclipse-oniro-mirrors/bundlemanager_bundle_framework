@@ -18,6 +18,7 @@
 
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 #include <sys/stat.h>
 #include "nocopyable.h"
@@ -1109,6 +1110,7 @@ private:
     bool isPreBundleRecovered_ = false;
     std::vector<std::string> allowListenBundles_;
     std::unordered_map<std::string, std::vector<SkillsPackageInfo>> moduleSkillInfoMap_;
+    std::unordered_set<std::string> appSkillProcessedModulePackages_;
     std::string appSkillNotifyBundleName_;
     std::vector<std::string> oldAppSkillNotifyItems_;
     std::vector<std::string> newAppSkillNotifyItems_;
