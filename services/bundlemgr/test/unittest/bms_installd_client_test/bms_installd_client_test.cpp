@@ -581,7 +581,9 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CleanBundleDataDir_0100, T
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CleanBundleDataDir_0100 start";
     std::string bundleDir = EMPTY_STRING;
-    ErrCode result = installClient_->CleanBundleDataDir(bundleDir);
+    std::string bundleName = "com.example.test";
+    int32_t userId = 100;
+    ErrCode result = installClient_->CleanBundleDataDir(bundleDir, bundleName, userId);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CleanBundleDataDir_0100 end";
 }
@@ -595,8 +597,11 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CleanBundleDataDir_0200, T
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CleanBundleDataDir_0200 start";
     std::string bundleDir = BUNDLE_DIR;
-    ErrCode result = installClient_->CleanBundleDataDir(bundleDir);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CleanBundleDataDir, bundleDir));
+    std::string bundleName = "com.example.test";
+    int32_t userId = 100;
+    ErrCode result = installClient_->CleanBundleDataDir(bundleDir, bundleName, userId);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CleanBundleDataDir,
+        bundleDir, bundleName, userId));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CleanBundleDataDir_0200 end";
 }
 
@@ -2023,7 +2028,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetArkStartupCacheApl_0100
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0200 start";
     std::string dir = EMPTY_STRING;
-    ErrCode result = installClient_->SetArkStartupCacheApl(dir);
+    ErrCode result = installClient_->SetArkStartupCacheApl(EMPTY_STRING, dir);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0200 end";
 }
@@ -2063,6 +2068,42 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyDir_0100, TestSize.Lev
     std::string destDir = "/data/app/el1/bundle/public/com.example.destination/";
     ErrCode result = installClient_->CopyDir(srcDir, destDir);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_SetArkStartupCacheApl_0200
+ * @tc.name: SetArkStartupCacheApl
+ * @tc.desc: Test client-side validation for empty bundleName.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetArkStartupCacheApl_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetArkStartupCacheApl_0200 start";
+    std::string bundleName = EMPTY_STRING;
+    std::string dir = "/data/app/el1/100/system_optimize/com.example.test";
+    ErrCode result = installClient_->SetArkStartupCacheApl(bundleName, dir);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetArkStartupCacheApl_0200 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CleanBundleDataDir_0300
+ * @tc.name: CleanBundleDataDir
+ * @tc.desc: Test client-side validation for empty bundleName and negative userId.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CleanBundleDataDir_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CleanBundleDataDir_0300 start";
+    std::string bundleDir = "/data/app/el2/100/base/com.example.test/cache";
+    std::string bundleName = EMPTY_STRING;
+    int32_t userId = 100;
+    ErrCode result = installClient_->CleanBundleDataDir(bundleDir, bundleName, userId);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    bundleName = "com.example.test";
+    userId = -1;
+    result = installClient_->CleanBundleDataDir(bundleDir, bundleName, userId);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CleanBundleDataDir_0300 end";
 }
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -2271,7 +2271,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
         bool succeed = true;
         if (!caches.empty()) {
             for (const auto& cache : caches) {
-                ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
+                ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache, bundleName, userId);
                 if (ret != ERR_OK) {
                     APP_LOGE("CleanBundleDataDir failed, path: %{private}s", cache.c_str());
                     succeed = false;

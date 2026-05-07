@@ -588,8 +588,10 @@ bool InstalldHost::HandleGetBundleInodeCount(MessageParcel &data, MessageParcel 
 bool InstalldHost::HandleCleanBundleDataDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string bundleDir = Str16ToStr8(data.ReadString16());
-    ErrCode result = CleanBundleDataDir(bundleDir);
-    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    ErrCode result = CleanBundleDataDir(bundleDir, bundleName, userId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 
@@ -791,9 +793,10 @@ bool InstalldHost::HandleStopSetFileCon(MessageParcel &data, MessageParcel &repl
 
 bool InstalldHost::HandleSetArkStartupCacheApl(MessageParcel &data, MessageParcel &reply)
 {
+    std::string bundleName = Str16ToStr8(data.ReadString16());
     std::string dataDir = Str16ToStr8(data.ReadString16());
-    ErrCode result = SetArkStartupCacheApl(dataDir);
-    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    ErrCode result = SetArkStartupCacheApl(bundleName, dataDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 

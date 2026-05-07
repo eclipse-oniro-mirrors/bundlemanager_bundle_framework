@@ -199,7 +199,7 @@ ErrCode BundleCacheMgr::CleanBundleCloneCache(const std::string &bundleName, int
     std::vector<std::string> cachePaths = GetBundleCachePath(bundleName, userId, appCloneIndex, moduleNames);
     int32_t result = ERR_OK;
     for (const auto& cache : cachePaths) {
-        int32_t ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
+        int32_t ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache, bundleName, userId);
         if (ret != ERR_OK) {
             result = ret;
             APP_LOGW("CleanBundleDataDir failed, path: %{private}s", cache.c_str());

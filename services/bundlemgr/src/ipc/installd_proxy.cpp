@@ -16,6 +16,7 @@
 #include "ipc/installd_proxy.h"
 
 #include "app_log_tag_wrapper.h"
+#include "bundle_service_constants.h"
 #include "parcel_macro.h"
 #include "string_ex.h"
 
@@ -345,11 +346,14 @@ ErrCode InstalldProxy::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
     return ERR_OK;
 }
 
-ErrCode InstalldProxy::CleanBundleDataDir(const std::string &bundleDir)
+ErrCode InstalldProxy::CleanBundleDataDir(const std::string &bundleDir,
+    const std::string &bundleName, int32_t userId)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleDir));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC, WAIT_TIME);
@@ -555,10 +559,11 @@ ErrCode InstalldProxy::StopSetFileCon(const CreateDirParam &createDirParam, int3
     return TransactInstalldCmd(InstalldInterfaceCode::STOP_SET_FILE_CON, data, reply, option);
 }
 
-ErrCode InstalldProxy::SetArkStartupCacheApl(const std::string &dir)
+ErrCode InstalldProxy::SetArkStartupCacheApl(const std::string &bundleName, const std::string &dir)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
 
     MessageParcel reply;
@@ -1022,7 +1027,8 @@ ErrCode InstalldProxy::VerifyCodeSignatureForHap(const CodeSignatureParam &codeS
 ErrCode InstalldProxy::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
     const unsigned char *profileBlock)
 {
-    if (profileBlockLength == 0 || profileBlockLength > Constants::MAX_PARCEL_CAPACITY || profileBlock == nullptr) {
+    if (profileBlockLength <= 0 || profileBlockLength > ServiceConstants::MAX_PROFILE_BLOCK_LENGTH
+        || profileBlock == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "invalid params");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }

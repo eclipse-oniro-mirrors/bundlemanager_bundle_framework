@@ -561,6 +561,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2700, Function | Sma
     auto ret = InstalldOperator::ExtractFiles(extractParam);
     EXPECT_FALSE(ret);
 
+    extractParam.bundleName = "com.example.test";
     extractParam.srcPath = HAP_FILE_PATH;
     extractParam.targetPath = TEST_PATH;
     extractParam.cpuAbi = TEST_CPU_ABI;
@@ -773,6 +774,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4100, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4200, Function | SmallTest | Level0)
 {
     ExtractParam extractParam;
+    extractParam.bundleName = "com.example.test";
     extractParam.srcPath = "/system/etc/graphic/bootpic.zip";
 #ifdef USE_ARM64
     EXPECT_NO_THROW(InstalldOperator::ExtractFiles(extractParam));
@@ -3663,5 +3665,58 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_20200, Function | Sm
     bool ret = installdOperator.GetLargestFilesRecursive(dirPaths, 1, results);
     auto end = std::chrono::steady_clock::now();
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: MatchPathTemplate_0100
+ * @tc.name: test MatchPathTemplate with simple prefix
+ * @tc.desc: 1. test pattern without % performs simple prefix match
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, MatchPathTemplate_0100, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::MatchPathTemplate("/data/app/el1/100/test", "/data/app/el1/"));
+    EXPECT_FALSE(InstalldOperator::MatchPathTemplate("/data/app/el2/100/test", "/data/app/el1/"));
+    EXPECT_TRUE(InstalldOperator::MatchPathTemplate("/data/app/el1/", "/data/app/el1/"));
+}
+
+/**
+ * @tc.number: MatchPathTemplate_0200
+ * @tc.name: test MatchPathTemplate with % wildcard
+ * @tc.desc: 1. test % matches dynamic userId segment
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, MatchPathTemplate_0200, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::MatchPathTemplate(
+        "/data/app/el1/100/system_optimize/com.example", "/data/app/el1/%/system_optimize/"));
+    EXPECT_TRUE(InstalldOperator::MatchPathTemplate(
+        "/data/app/el1/9999/system_optimize/com.example", "/data/app/el1/%/system_optimize/"));
+    EXPECT_FALSE(InstalldOperator::MatchPathTemplate(
+        "/data/app/el2/100/system_optimize/com.example", "/data/app/el1/%/system_optimize/"));
+    EXPECT_FALSE(InstalldOperator::MatchPathTemplate(
+        "/data/app/el1/100/other/com.example", "/data/app/el1/%/system_optimize/"));
+}
+
+/**
+ * @tc.number: MatchPathTemplate_0300
+ * @tc.name: test MatchPathTemplate with path traversal in pattern
+ * @tc.desc: 1. test pattern segment containing .. returns false
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, MatchPathTemplate_0300, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::MatchPathTemplate(
+        "/data/app/el1/100/test", "/data/app/el1/%/system_optimize/../"));
+}
+
+/**
+ * @tc.number: MatchPathTemplate_0400
+ * @tc.name: test MatchPathTemplate with multiple % wildcards
+ * @tc.desc: 1. test multiple % segments match correctly
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, MatchPathTemplate_0400, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::MatchPathTemplate(
+        "/data/app/el1/100/base/com.example/cache", "/data/app/el1/%/base/%/cache"));
+    EXPECT_FALSE(InstalldOperator::MatchPathTemplate(
+        "/data/app/el1/100/base/com.example/other", "/data/app/el1/%/base/%/cache"));
 }
 } // OHOS

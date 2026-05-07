@@ -109,6 +109,7 @@ constexpr int64_t BUFFER_SIZE = 8192;
 static constexpr int32_t PERMISSION_DENIED = 13;
 static constexpr int32_t RESULT_OK = 0;
 static constexpr int32_t CMDLINE_MAX_BUF_LEN = 4096;
+static constexpr int32_t MAX_APP_IDENTIFIER_LENGTH = 256;
 static constexpr int16_t INSTALLS_UID = 3060;
 static constexpr int16_t MODE_BASE = 07777;
 static constexpr int8_t KEY_ID_STEP = 2;
@@ -153,7 +154,13 @@ static const std::map<BundleDirScene, std::vector<std::string>> ALLOWED_PATH_PRE
     {BundleDirScene::EXTRACT_HNP_FILES, {"/data/app/el1/bundle/public/"}},
     {BundleDirScene::SET_FILE_CON_FORCE, {"/data/app/", "/data/service/"}},
     {BundleDirScene::EXTRACT_DRIVER_SO_FILES, {"/data/app/el1/bundle/public/"}},
-
+    {BundleDirScene::SET_ARK_STARTUP_CACHE_APL, {"/data/app/el1/%/system_optimize/"}},
+    {BundleDirScene::PEND_SIGN_AOT, {"/data/app/el1/public/aot_compiler/ark_cache/",
+        "/data/service/el1/public/for-all-app/"}},
+    {BundleDirScene::EXTRACT_FILES, {"/data/app/el1/", "/data/service/el1/public/"}},
+    {BundleDirScene::VERIFY_CODE_SIGNATURE, {"/data/app/el1/bundle/"}},
+    {BundleDirScene::REMOVE_EXTENSION_DIR, {"/data/app/el1/"}},
+    {BundleDirScene::CLEAN_BUNDLE_DATA_DIR, {"/data/app/", "/data/local/shader_cache/"}},
 };
 
 static const std::set<std::string> ALLOWED_APL = {
@@ -175,17 +182,6 @@ static std::string HandleScanResult(
 static bool StartsWith(const std::string &sourceString, const std::string &targetPrefix)
 {
     return sourceString.find(targetPrefix) == 0;
-}
-
-static bool EndsWith(const std::string &sourceString, const std::string &targetSuffix)
-{
-    if (sourceString.length() < targetSuffix.length()) {
-        return false;
-    }
-    if (sourceString.rfind(targetSuffix) == (sourceString.length() - targetSuffix.length())) {
-        return true;
-    }
-    return false;
 }
 
 // RAII wrapper for DIR* to prevent resource leaks
@@ -717,7 +713,7 @@ bool InstalldOperator::IsNativeFile(
 
     bool checkSuffix = false;
     for (const auto &suffix : suffixes) {
-        if (EndsWith(entryName, suffix)) {
+        if (InstalldOperator::EndsWith(entryName, suffix)) {
             checkSuffix = true;
             break;
         }
@@ -760,7 +756,7 @@ bool InstalldOperator::IsDiffFiles(const std::string &entryName,
         LOG_D(BMS_TAG_INSTALLD, "entryName not start with %{public}s", prefix.c_str());
         return false;
     }
-    if (!EndsWith(entryName, DIFF_SUFFIX)) {
+    if (!InstalldOperator::EndsWith(entryName, DIFF_SUFFIX)) {
         LOG_D(BMS_TAG_INSTALLD, "file name not diff format");
         return false;
     }
@@ -3722,6 +3718,77 @@ bool InstalldOperator::IsValidApl(const std::string &apl)
     return ALLOWED_APL.find(apl) != ALLOWED_APL.end();
 }
 
+bool InstalldOperator::IsValidAppIdentifier(const std::string &appIdentifier)
+{
+    if (appIdentifier.empty()) {
+        return true;
+    }
+    if (appIdentifier.length() > MAX_APP_IDENTIFIER_LENGTH) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "appIdentifier too long: %{public}zu", appIdentifier.length());
+        return false;
+    }
+    for (const auto &c : appIdentifier) {
+        if (!isalnum(static_cast<unsigned char>(c)) && (c != '-') && (c != '_') && (c != '.')) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid appIdentifier format: %{public}s", appIdentifier.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
+bool InstalldOperator::MatchPathTemplate(const std::string &path, const std::string &pattern)
+{
+    if (pattern.find('%') == std::string::npos) {
+        return path.find(pattern) == 0;
+    }
+    
+    std::vector<std::string> segments;
+    std::stringstream ss(pattern);
+    std::string segment;
+    while (std::getline(ss, segment, '%')) {
+        segments.push_back(segment);
+    }
+    
+    if (segments.empty()) {
+        return false;
+    }
+    
+    for (const auto &seg : segments) {
+        if (!seg.empty() && seg.find("..") != std::string::npos) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid pattern segment contains ..");
+            return false;
+        }
+    }
+
+    const std::string &prefixSegment = segments[0];
+    if (prefixSegment.empty() && segments.size() > 1) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid pattern: empty prefix segment");
+        return false;
+    }
+    if (!prefixSegment.empty() && path.find(prefixSegment) != 0) {
+        LOG_NOFUNC_D(BMS_TAG_INSTALLD, "path not start with prefix %{public}s", prefixSegment.c_str());
+        return false;
+    }
+
+    size_t searchPos = prefixSegment.length();
+    for (size_t i = 1; i < segments.size(); ++i) {
+        const std::string &subSegment = segments[i];
+        if (subSegment.empty()) {
+            continue;
+        }
+        
+        size_t foundPos = path.find(subSegment, searchPos);
+        if (foundPos == std::string::npos) {
+            LOG_NOFUNC_D(BMS_TAG_INSTALLD, "path not contain segment %{public}s after position %{public}zu",
+                subSegment.c_str(), searchPos);
+            return false;
+        }
+        searchPos = foundPos + subSegment.length();
+    }
+    
+    return true;
+}
+
 bool InstalldOperator::IsValidPathByBundleDirScene(const BundleDirScene &scene, const std::string &path)
 {
     if (!IsFileNameValid(path)) {
@@ -3734,7 +3801,7 @@ bool InstalldOperator::IsValidPathByBundleDirScene(const BundleDirScene &scene, 
         return false;
     }
     for (const auto &pre : iter->second) {
-        if (path.find(pre) == 0) {
+        if (MatchPathTemplate(path, pre)) {
             return true;
         }
     }
@@ -4426,6 +4493,18 @@ std::string InstalldOperator::AnonymizePath(const std::string &path)
     }
 
     return result;
+}
+
+
+bool InstalldOperator::EndsWith(const std::string &sourceString, const std::string &targetSuffix)
+{
+    if (sourceString.length() < targetSuffix.length()) {
+        return false;
+    }
+    if (sourceString.rfind(targetSuffix) == (sourceString.length() - targetSuffix.length())) {
+        return true;
+    }
+    return false;
 }
 
 bool InstalldOperator::IsContainsPathPart(const std::string &path, const std::string &pathPart)

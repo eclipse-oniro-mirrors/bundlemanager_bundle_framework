@@ -164,7 +164,7 @@ ErrCode InstalldClient::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
     return ERR_OK;
 }
 
-ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
+ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir, const std::string &bundleName, int32_t userId)
 {
     return 0;
 }
@@ -226,7 +226,8 @@ ErrCode InstalldClient::SetDirsApl(const CreateDirParam &createDirParam, bool is
 
     return 0;
 }
-ErrCode InstalldClient::SetArkStartupCacheApl(const std::string &dir)
+
+ErrCode InstalldClient::SetArkStartupCacheApl(const std::string &bundleName, const std::string &dir)
 {
     return 0;
 }

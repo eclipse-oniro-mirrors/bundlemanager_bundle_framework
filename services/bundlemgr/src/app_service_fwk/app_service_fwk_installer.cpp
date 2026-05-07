@@ -626,6 +626,7 @@ ErrCode AppServiceFwkInstaller::VerifyCodeSignatureForHsp(
 {
     APP_LOGI("begin to verify code sign for hsp");
     CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = bundleName_;
     codeSignatureParam.modulePath = realHspPath;
     codeSignatureParam.targetSoPath = realSoPath;
     codeSignatureParam.cpuAbi = cpuAbi_;
@@ -1064,6 +1065,7 @@ ErrCode AppServiceFwkInstaller::VerifyCodeSignatureForNativeFiles(const std::str
 {
     APP_LOGD("begin to verify code signature for hsp native files");
     CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = bundleName_;
     codeSignatureParam.modulePath = bundlePath;
     codeSignatureParam.cpuAbi = cpuAbi;
     codeSignatureParam.targetSoPath = targetSoPath;

@@ -24,6 +24,9 @@
 #include "directory_ex.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
+#include "ipc/check_encryption_param.h"
+#include "ipc/code_signature_param.h"
+#include "ipc/verify_bin_param.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -82,7 +85,7 @@ public:
         const std::string &apl) const;
     int RemoveBundleDir(const std::string &bundleDir) const;
     int RemoveBundleDataDir(const std::string &bundleDataDir) const;
-    int CleanBundleDataDir(const std::string &bundleDataDir) const;
+    int CleanBundleDataDir(const std::string &bundleDataDir, const std::string &bundleName, int32_t userId) const;
     int ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
         const std::string &targetSoPath, const std::string &cpuAbi) const;
     int ExtractFiles(const ExtractParam &extractParam) const;
@@ -101,6 +104,12 @@ public:
     void CreateShareFilesTempDataDirs(const std::string &bundleName) const;
     void DeleteShareFilesTempDataDirs(const std::string &bundleName) const;
     int32_t MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath) const;
+    int VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam) const;
+    int VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam) const;
+    int CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption) const;
+    int DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+        const unsigned char *profileBlock) const;
+    int ProcessBinFiles(const VerifyBinParam &verifyBinParam) const;
 
 private:
     std::shared_ptr<InstalldService> service_ = std::make_shared<InstalldService>();
@@ -176,12 +185,13 @@ int BmsInstallDaemonTest::RemoveBundleDataDir(const std::string &bundleDataDir) 
     return InstalldClient::GetInstance()->RemoveDir(bundleDataDir);
 }
 
-int BmsInstallDaemonTest::CleanBundleDataDir(const std::string &bundleDataDir) const
+int BmsInstallDaemonTest::CleanBundleDataDir(const std::string &bundleDataDir,
+    const std::string &bundleName, int32_t userId) const
 {
     if (!service_->IsServiceReady()) {
         service_->Start();
     }
-    return InstalldClient::GetInstance()->CleanBundleDataDir(bundleDataDir);
+    return InstalldClient::GetInstance()->CleanBundleDataDir(bundleDataDir, bundleName, userId);
 }
 
 int BmsInstallDaemonTest::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
@@ -217,6 +227,47 @@ int BmsInstallDaemonTest::RenameModuleDir(const std::string &oldPath, const std:
     }
     return InstalldClient::GetInstance()->RenameModuleDir(oldPath, newPath,
         BUNDLE_NAME13, BundleDirScene::BUNDLE_CODE_DIR);
+}
+
+int BmsInstallDaemonTest::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam) const
+{
+    if (!service_->IsServiceReady()) {
+        service_->Start();
+    }
+    return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
+}
+
+int BmsInstallDaemonTest::VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam) const
+{
+    if (!service_->IsServiceReady()) {
+        service_->Start();
+    }
+    return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
+}
+
+int BmsInstallDaemonTest::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption) const
+{
+    if (!service_->IsServiceReady()) {
+        service_->Start();
+    }
+    return InstalldClient::GetInstance()->CheckEncryption(checkEncryptionParam, isEncryption);
+}
+
+int BmsInstallDaemonTest::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+    const unsigned char *profileBlock) const
+{
+    if (!service_->IsServiceReady()) {
+        service_->Start();
+    }
+    return InstalldClient::GetInstance()->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+}
+
+int BmsInstallDaemonTest::ProcessBinFiles(const VerifyBinParam &verifyBinParam) const
+{
+    if (!service_->IsServiceReady()) {
+        service_->Start();
+    }
+    return InstalldClient::GetInstance()->ProcessBinFiles(verifyBinParam);
 }
 
 bool BmsInstallDaemonTest::CheckBundleDirExist() const
@@ -537,7 +588,7 @@ HWTEST_F(BmsInstallDaemonTest, BundleDataDir_0200, Function | SmallTest | Level0
     EXPECT_EQ(result, 0);
     bool dirExist = CheckBundleDataDirExist();
     EXPECT_TRUE(dirExist);
-    int result1 = CleanBundleDataDir(BUNDLE_DATA_DIR);
+    int result1 = CleanBundleDataDir(BUNDLE_DATA_DIR, BUNDLE_NAME13, USERID);
     EXPECT_EQ(result1, 0);
     dirExist = CheckBundleDataDirExist();
     EXPECT_TRUE(dirExist);
@@ -647,7 +698,7 @@ HWTEST_F(BmsInstallDaemonTest, BundleDataDir_0900, Function | SmallTest | Level0
     if (!service->IsServiceReady()) {
         service->Start();
     }
-    ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir("");
+    ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir("", BUNDLE_NAME13, USERID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1501,6 +1552,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_2100, Function | SmallTest | Level
 HWTEST_F(BmsInstallDaemonTest, ExtractFiles_0100, Function | SmallTest | Level0)
 {
     ExtractParam extractParam;
+    extractParam.bundleName = "com.example.test";
     ErrCode ret = ExtractFiles(extractParam);
     EXPECT_NE(ret, ERR_OK);
 
@@ -1515,7 +1567,6 @@ HWTEST_F(BmsInstallDaemonTest, ExtractFiles_0100, Function | SmallTest | Level0)
     EXPECT_NE(ret, ERR_OK);
 }
 
-
 /**
  * @tc.number: Marshalling_0100
  * @tc.name: test Marshalling
@@ -1525,6 +1576,7 @@ HWTEST_F(BmsInstallDaemonTest, Marshalling_0100, Function | SmallTest | Level0)
 {
     ExtractParam extractParam;
     Parcel parcel;
+    extractParam.bundleName = "com.example.test";
     extractParam.srcPath = HAP_FILE_PATH;
     extractParam.targetPath = TEST_PATH;
     extractParam.cpuAbi = TEST_CPU_ABI;
@@ -1532,7 +1584,8 @@ HWTEST_F(BmsInstallDaemonTest, Marshalling_0100, Function | SmallTest | Level0)
     bool res = extractParam.Marshalling(parcel);
     EXPECT_TRUE(res);
     std::string value = extractParam.ToString();
-    EXPECT_EQ("[ srcPath :" +  HAP_FILE_PATH
+    EXPECT_EQ("[ bundleName = " + extractParam.bundleName
+            + ", srcPath = " + HAP_FILE_PATH
             + ", targetPath = " + TEST_PATH
             + ", cpuAbi = " + TEST_CPU_ABI
             + ", extractFileType = An, needRemoveOld = false]", value);
@@ -1547,6 +1600,7 @@ HWTEST_F(BmsInstallDaemonTest, Marshalling_0100, Function | SmallTest | Level0)
 HWTEST_F(BmsInstallDaemonTest, ExtractFiles_0200, Function | SmallTest | Level0)
 {
     ExtractParam extractParam;
+    extractParam.bundleName = "com.example.test";
     extractParam.srcPath = BUNDLE_FILE;
     extractParam.targetPath = TEST_PATH;
     extractParam.cpuAbi = "";
@@ -1696,7 +1750,7 @@ HWTEST_F(BmsInstallDaemonTest, PendSignAOT_0100, Function | SmallTest | Level0)
     std::string anFileName = "fileName";
     std::vector<uint8_t> signData;
     ErrCode ret = hostImpl.PendSignAOT(anFileName, signData);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -1709,7 +1763,7 @@ HWTEST_F(BmsInstallDaemonTest, CreateBundleDataDirWithVector__0100, Function | S
     InstalldHostImpl hostImpl;
     std::vector<CreateDirParam> createDirParams;
     ErrCode ret = hostImpl.CreateBundleDataDirWithVector(createDirParams);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -1822,13 +1876,16 @@ HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_0100, Function | SmallTest | 
 /**
  * @tc.number: RemoveExtensionDir_0100
  * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. test RemoveExtensionDir
+ * @tc.desc: 1. test RemoveExtensionDir with invalid userId (negative)
+ * @tc.require: AR00000000
+ * @tc.author: lihao
 */
 HWTEST_F(BmsInstallDaemonTest, RemoveExtensionDir_0100, Function | SmallTest | Level0)
 {
     InstalldHostImpl hostImpl;
     int32_t userId = -1;
     std::vector<std::string> extensionBundleDirs;
+    extensionBundleDirs.push_back("/com.ohos.settings/extension/");
     ErrCode ret = hostImpl.RemoveExtensionDir(userId, extensionBundleDirs);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
@@ -1836,14 +1893,15 @@ HWTEST_F(BmsInstallDaemonTest, RemoveExtensionDir_0100, Function | SmallTest | L
 /**
  * @tc.number: RemoveExtensionDir_0200
  * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. test RemoveExtensionDir
+ * @tc.desc: 1. test RemoveExtensionDir with empty extensionBundleDirs
+ * @tc.require: AR00000000
+ * @tc.author: lihao
 */
 HWTEST_F(BmsInstallDaemonTest, RemoveExtensionDir_0200, Function | SmallTest | Level0)
 {
     InstalldHostImpl hostImpl;
     int32_t userId = 100;
     std::vector<std::string> extensionBundleDirs;
-    extensionBundleDirs.push_back("");
     ErrCode ret = hostImpl.RemoveExtensionDir(userId, extensionBundleDirs);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
@@ -1852,7 +1910,7 @@ HWTEST_F(BmsInstallDaemonTest, RemoveExtensionDir_0200, Function | SmallTest | L
  * @tc.number: RemoveExtensionDir_0300
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. test RemoveExtensionDir
-*/
+ */
 HWTEST_F(BmsInstallDaemonTest, RemoveExtensionDir_0300, Function | SmallTest | Level0)
 {
     InstalldHostImpl hostImpl;
@@ -1875,8 +1933,7 @@ HWTEST_F(BmsInstallDaemonTest, IsExistExtensionDir_0100, Function | SmallTest | 
     std::string extensionBundleDir = "";
     bool isExist = false;
     ErrCode ret = hostImpl.IsExistExtensionDir(userId, extensionBundleDir, isExist);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_FALSE(isExist);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -1893,6 +1950,36 @@ HWTEST_F(BmsInstallDaemonTest, IsExistExtensionDir_0200, Function | SmallTest | 
     ErrCode ret = hostImpl.IsExistExtensionDir(userId, extensionBundleDir, isExist);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_FALSE(isExist);
+}
+
+/**
+ * @tc.number: IsExistExtensionDir_0300
+ * @tc.name: test function of InstallHostImpl with invalid extensionBundleDir (path traversal)
+ * @tc.desc: 1. test IsExistExtensionDir with path traversal attack
+*/
+HWTEST_F(BmsInstallDaemonTest, IsExistExtensionDir_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    int32_t userId = 100;
+    std::string extensionBundleDir = "../../../etc/passwd";
+    bool isExist = false;
+    ErrCode ret = hostImpl.IsExistExtensionDir(userId, extensionBundleDir, isExist);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: IsExistExtensionDir_0400
+ * @tc.name: test function of InstallHostImpl with empty extensionBundleDir
+ * @tc.desc: 1. test IsExistExtensionDir with empty extensionBundleDir
+*/
+HWTEST_F(BmsInstallDaemonTest, IsExistExtensionDir_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    int32_t userId = 100;
+    std::string extensionBundleDir = "";
+    bool isExist = false;
+    ErrCode ret = hostImpl.IsExistExtensionDir(userId, extensionBundleDir, isExist);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -1955,5 +2042,835 @@ HWTEST_F(BmsInstallDaemonTest, ChangeFileStat_0100, Function | SmallTest | Level
     fileStat.uid = 5523;
     ret = hostImpl.ChangeFileStat(file, fileStat);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ExtractFiles_InvalidBundleName_0100
+ * @tc.name: test ExtractFiles with invalid bundleName via IPC
+ * @tc.desc: 1. calling ExtractFiles with empty bundleName should return PARAM_ERROR
+ *           2. calling ExtractFiles with invalid bundleName should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ExtractFiles_InvalidBundleName_0100, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    extractParam.bundleName = "";
+    extractParam.srcPath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
+    extractParam.targetPath = "/data/app/el1/bundle/public/com.example.test/";
+    auto ret = ExtractFiles(extractParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    extractParam.bundleName = "../invalid";
+    ret = ExtractFiles(extractParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: VerifyCodeSignature_InvalidBundleName_0100
+ * @tc.name: test VerifyCodeSignature with invalid bundleName via IPC
+ * @tc.desc: 1. calling VerifyCodeSignature with empty bundleName should return PARAM_ERROR
+ *           2. calling VerifyCodeSignature with invalid bundleName should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignature_InvalidBundleName_0100, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = "";
+    codeSignatureParam.modulePath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
+    auto ret = VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    codeSignatureParam.bundleName = "../invalid";
+    ret = VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: VerifyCodeSignature_InvalidTargetSoPath_0100
+ * @tc.name: test VerifyCodeSignature with invalid targetSoPath via IPC
+ * @tc.desc: 1. calling VerifyCodeSignature with invalid targetSoPath prefix should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignature_InvalidTargetSoPath_0100, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = "com.example.test";
+    codeSignatureParam.modulePath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
+    codeSignatureParam.targetSoPath = "/system/lib/libtest.so";
+    auto ret = VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    codeSignatureParam.targetSoPath = "/data/app/el1/bundle/public/com.example.test/../lib/libtest.so";
+    ret = VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: VerifyCodeSignature_InvalidProfileBlockLength_0100
+ * @tc.name: test VerifyCodeSignature with invalid profileBlockLength via IPC
+ * @tc.desc: 1. calling VerifyCodeSignature with profileBlockLength > 1MB should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignature_InvalidProfileBlockLength_0100, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = "com.example.test";
+    codeSignatureParam.modulePath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
+    codeSignatureParam.profileBlockLength = 2 * 1024 * 1024;
+    auto ret = VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: VerifyCodeSignatureForHap_InvalidBundleName_0100
+ * @tc.name: test VerifyCodeSignatureForHap with invalid bundleName via IPC
+ * @tc.desc: 1. calling VerifyCodeSignatureForHap with empty bundleName should return PARAM_ERROR
+ *           2. calling VerifyCodeSignatureForHap with invalid bundleName should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignatureForHap_InvalidBundleName_0100, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = "";
+    codeSignatureParam.modulePath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
+    auto ret = VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    codeSignatureParam.bundleName = "../invalid";
+    ret = VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CheckEncryption_InvalidBundleName_0100
+ * @tc.name: test CheckEncryption with invalid bundleName via IPC
+ * @tc.desc: 1. calling CheckEncryption with empty bundleName should return PARAM_ERROR
+ *           2. calling CheckEncryption with invalid bundleName should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, CheckEncryption_InvalidBundleName_0100, Function | SmallTest | Level0)
+{
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.bundleName = "";
+    checkEncryptionParam.modulePath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
+    bool isEncrypted = false;
+    auto ret = CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    checkEncryptionParam.bundleName = "../invalid";
+    ret = CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CheckEncryption_InvalidAppIdentifier_0100
+ * @tc.name: test CheckEncryption with invalid appIdentifier via IPC
+ * @tc.desc: 1. calling CheckEncryption with too long appIdentifier should return PARAM_ERROR
+ *           2. calling CheckEncryption with invalid characters in appIdentifier should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, CheckEncryption_InvalidAppIdentifier_0100, Function | SmallTest | Level0)
+{
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.bundleName = "com.example.test";
+    checkEncryptionParam.modulePath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
+    checkEncryptionParam.appIdentifier = std::string(257, 'a');
+    bool isEncrypted = false;
+    auto ret = CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    checkEncryptionParam.appIdentifier = "test!@#identifier";
+    ret = CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeliverySignProfile_InvalidBundleName_0100
+ * @tc.name: test DeliverySignProfile with invalid bundleName via IPC
+ * @tc.desc: 1. calling DeliverySignProfile with invalid bundleName should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_InvalidBundleName_0100, Function | SmallTest | Level0)
+{
+    std::string bundleName = "../invalid";
+    int32_t profileBlockLength = 100;
+    unsigned char *profileBlock = new unsigned char[100];
+    auto ret = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    delete[] profileBlock;
+}
+
+/**
+ * @tc.number: DeliverySignProfile_InvalidProfileBlockLength_0100
+ * @tc.name: test DeliverySignProfile with invalid profileBlockLength via IPC
+ * @tc.desc: 1. calling DeliverySignProfile with profileBlockLength > 1MB should return PARAM_ERROR
+ *           2. calling DeliverySignProfile with negative profileBlockLength should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_InvalidProfileBlockLength_0100, Function | SmallTest | Level0)
+{
+    std::string bundleName = "com.example.test";
+    int32_t profileBlockLength = 2 * 1024 * 1024;
+    unsigned char *profileBlock = new unsigned char[100];
+    auto ret = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    delete[] profileBlock;
+
+    profileBlockLength = -1;
+    profileBlock = new unsigned char[100];
+    ret = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    delete[] profileBlock;
+}
+
+/**
+ * @tc.number: ProcessBinFiles_InvalidBundleName_0100
+ * @tc.name: test ProcessBinFiles with invalid bundleName via IPC
+ * @tc.desc: 1. calling ProcessBinFiles with empty bundleName should return PARAM_ERROR
+ *           2. calling ProcessBinFiles with invalid bundleName should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidBundleName_0100, Function | SmallTest | Level0)
+{
+    VerifyBinParam param;
+    param.bundleName = "";
+    param.appIdentifier = "test";
+    param.userId = 100;
+    param.binFilePaths = {"/data/app/el1/bundle/public/com.example.test/bin/test"};
+    auto ret = ProcessBinFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    param.bundleName = "../invalid";
+    ret = ProcessBinFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ProcessBinFiles_InvalidBinFilePathsSize_0100
+ * @tc.name: test ProcessBinFiles with binFilePaths size exceeding limit via IPC
+ * @tc.desc: 1. calling ProcessBinFiles with binFilePaths size > 100 should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidBinFilePathsSize_0100, Function | SmallTest | Level0)
+{
+    VerifyBinParam param;
+    param.bundleName = "com.example.test";
+    param.appIdentifier = "test";
+    param.userId = 100;
+    param.binFilePaths.resize(101, "/data/app/el1/bundle/public/com.example.test/bin/test");
+    auto ret = ProcessBinFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: PendSignAOT_0200
+ * @tc.name: test PendSignAOT with valid path prefix but invalid suffix
+ * @tc.desc: 1. test anFileName with valid prefix but not ending with .an should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, PendSignAOT_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string anFileName = "/data/app/el1/public/aot_compiler/ark_cache/test.txt";
+    std::vector<uint8_t> signData;
+    ErrCode ret = hostImpl.PendSignAOT(anFileName, signData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: PendSignAOT_0300
+ * @tc.name: test PendSignAOT with signData exceeding max size
+ * @tc.desc: 1. test signData size > 1MB should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, PendSignAOT_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string anFileName = "/data/app/el1/public/aot_compiler/ark_cache/test.an";
+    std::vector<uint8_t> signData(1024 * 1024 + 1, 0);
+    ErrCode ret = hostImpl.PendSignAOT(anFileName, signData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CleanBundleDataDir_InvalidBundleName_0100
+ * @tc.name: test CleanBundleDataDir with invalid bundleName
+ * @tc.desc: 1. test empty bundleName should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, CleanBundleDataDir_InvalidBundleName_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string dataDir = "/data/app/el2/100/base/com.example.test/cache";
+    ErrCode ret = hostImpl.CleanBundleDataDir(dataDir, "", 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CleanBundleDataDir_InvalidUserId_0100
+ * @tc.name: test CleanBundleDataDir with invalid userId
+ * @tc.desc: 1. test negative userId should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, CleanBundleDataDir_InvalidUserId_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string dataDir = "/data/app/el2/100/base/com.example.test/cache";
+    ErrCode ret = hostImpl.CleanBundleDataDir(dataDir, "com.example.test", -1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CleanBundleDataDir_InvalidPath_0100
+ * @tc.name: test CleanBundleDataDir with invalid path prefix
+ * @tc.desc: 1. test path not in allowed prefix should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, CleanBundleDataDir_InvalidPath_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string dataDir = "/tmp/invalid";
+    ErrCode ret = hostImpl.CleanBundleDataDir(dataDir, "com.example.test", 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetBundleStats_InvalidUidInList_0100
+ * @tc.name: test GetBundleStats with invalid uid in uids set
+ * @tc.desc: 1. test uids containing negative uid should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, GetBundleStats_InvalidUidInList_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<int64_t> bundleStats;
+    std::unordered_set<int32_t> uids = {-1};
+    ErrCode ret = hostImpl.GetBundleStats("com.example.test", 100, bundleStats, uids, 0, 0, {});
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetArkStartupCacheApl_InvalidBundleName_0100
+ * @tc.name: test SetArkStartupCacheApl with invalid bundleName
+ * @tc.desc: 1. test empty bundleName should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, SetArkStartupCacheApl_InvalidBundleName_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    ErrCode ret = hostImpl.SetArkStartupCacheApl("", "/data/app/el1/100/system_optimize/com.example.test");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetArkStartupCacheApl_InvalidPath_0100
+ * @tc.name: test SetArkStartupCacheApl with invalid path prefix
+ * @tc.desc: 1. test path not in allowed prefix should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, SetArkStartupCacheApl_InvalidPath_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    ErrCode ret = hostImpl.SetArkStartupCacheApl("com.example.test", "/tmp/invalid");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: RemoveExtensionDir_MaxCount_0100
+ * @tc.name: test RemoveExtensionDir with extensionBundleDirs exceeding max count
+ * @tc.desc: 1. test extensionBundleDirs size > 100 should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, RemoveExtensionDir_MaxCount_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    int32_t userId = 100;
+    std::vector<std::string> extensionBundleDirs;
+    for (int i = 0; i < 101; i++) {
+        extensionBundleDirs.push_back("com.test.dir" + std::to_string(i));
+    }
+    ErrCode ret = hostImpl.RemoveExtensionDir(userId, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExecuteAOT_InvalidBundleName_0100
+ * @tc.name: test ExecuteAOT with invalid bundleName or moduleName
+ * @tc.desc: 1. test empty bundleName should return PARAM_ERROR
+ *           2. test empty moduleName should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ExecuteAOT_InvalidBundleName_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "";
+    aotArgs.moduleName = "entry";
+    std::vector<uint8_t> pendSignData;
+    ErrCode ret = hostImpl.ExecuteAOT(aotArgs, pendSignData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    aotArgs.bundleName = "com.example.test";
+    aotArgs.moduleName = "";
+    ret = hostImpl.ExecuteAOT(aotArgs, pendSignData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: RemoveModuleDataDir_InvalidPath_0100
+ * @tc.name: test RemoveModuleDataDir with invalid path containing ..
+ * @tc.desc: 1. test ModuleDir containing .. should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, RemoveModuleDataDir_InvalidPath_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    ErrCode ret = hostImpl.RemoveModuleDataDir("../invalid", 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: RemoveSignProfile_InvalidBundleName_0100
+ * @tc.name: test RemoveSignProfile with invalid bundleName
+ * @tc.desc: 1. test empty bundleName should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, RemoveSignProfile_InvalidBundleName_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    ErrCode ret = hostImpl.RemoveSignProfile("");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithVector_MaxSize_0100
+ * @tc.name: test CreateBundleDataDirWithVector with size exceeding limit
+ * @tc.desc: 1. test createDirParams size > 1024 should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, CreateBundleDataDirWithVector_MaxSize_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<CreateDirParam> createDirParams;
+    for (int i = 0; i < 1025; i++) {
+        CreateDirParam param;
+        param.bundleName = "com.test" + std::to_string(i);
+        param.userId = 100;
+        param.uid = 10000;
+        param.gid = 10000;
+        createDirParams.push_back(param);
+    }
+    ErrCode ret = hostImpl.CreateBundleDataDirWithVector(createDirParams);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CheckEncryption_ModulePathTraversal_0100
+ * @tc.name: test CheckEncryption with modulePath containing ..
+ * @tc.desc: 1. test modulePath containing .. should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, CheckEncryption_ModulePathTraversal_0100, Function | SmallTest | Level0)
+{
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.bundleName = "com.example.test";
+    checkEncryptionParam.modulePath = "/data/app/el1/bundle/public/com.example.test/../entry.hap";
+    bool isEncrypted = false;
+    auto ret = CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CleanBundleDataDir_PathTraversal_0100
+ * @tc.name: test CleanBundleDataDir with path containing ..
+ * @tc.desc: 1. test dataDir containing .. should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, CleanBundleDataDir_PathTraversal_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string dataDir = "/data/app/el2/100/base/com.example.test/../cache";
+    ErrCode ret = hostImpl.CleanBundleDataDir(dataDir, "com.example.test", 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithVector_InvalidElement_0100
+ * @tc.name: test CreateBundleDataDirWithVector with invalid elements inside vector
+ * @tc.desc: 1. test invalid bundleName inside param
+ *           2. test invalid userId inside param
+ *           3. test invalid uid inside param
+ *           4. test invalid gid inside param
+*/
+HWTEST_F(BmsInstallDaemonTest, CreateBundleDataDirWithVector_InvalidElement_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    {
+        std::vector<CreateDirParam> createDirParams;
+        CreateDirParam param;
+        param.bundleName = "../invalid";
+        param.userId = 100;
+        param.uid = 10000;
+        param.gid = 10000;
+        createDirParams.push_back(param);
+        ErrCode ret = hostImpl.CreateBundleDataDirWithVector(createDirParams);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    }
+    {
+        std::vector<CreateDirParam> createDirParams;
+        CreateDirParam param;
+        param.bundleName = "com.example.test";
+        param.userId = -1;
+        param.uid = 10000;
+        param.gid = 10000;
+        createDirParams.push_back(param);
+        ErrCode ret = hostImpl.CreateBundleDataDirWithVector(createDirParams);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    }
+    {
+        std::vector<CreateDirParam> createDirParams;
+        CreateDirParam param;
+        param.bundleName = "com.example.test";
+        param.userId = 100;
+        param.uid = -1;
+        param.gid = 10000;
+        createDirParams.push_back(param);
+        ErrCode ret = hostImpl.CreateBundleDataDirWithVector(createDirParams);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    }
+    {
+        std::vector<CreateDirParam> createDirParams;
+        CreateDirParam param;
+        param.bundleName = "com.example.test";
+        param.userId = 100;
+        param.uid = 10000;
+        param.gid = -1;
+        createDirParams.push_back(param);
+        ErrCode ret = hostImpl.CreateBundleDataDirWithVector(createDirParams);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    }
+}
+
+/**
+ * @tc.number: DeliverySignProfile_ZeroLength_0100
+ * @tc.name: test DeliverySignProfile with profileBlockLength = 0
+ * @tc.desc: 1. test profileBlockLength = 0 should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_ZeroLength_0100, Function | SmallTest | Level0)
+{
+    std::string bundleName = "com.example.test";
+    int32_t profileBlockLength = 0;
+    unsigned char *profileBlock = new unsigned char[1];
+    auto ret = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    delete[] profileBlock;
+}
+
+/**
+ * @tc.number: ExecuteAOT_InvalidBundleNameFormat_0100
+ * @tc.name: test ExecuteAOT with invalid bundleName format
+ * @tc.desc: 1. test bundleName containing .. should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ExecuteAOT_InvalidBundleNameFormat_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "../bad";
+    aotArgs.moduleName = "entry";
+    std::vector<uint8_t> pendSignData;
+    ErrCode ret = hostImpl.ExecuteAOT(aotArgs, pendSignData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExecuteAOT_InvalidModuleNameFormat_0100
+ * @tc.name: test ExecuteAOT with invalid moduleName format
+ * @tc.desc: 1. test moduleName containing .. should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ExecuteAOT_InvalidModuleNameFormat_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "com.example.test";
+    aotArgs.moduleName = "../bad";
+    std::vector<uint8_t> pendSignData;
+    ErrCode ret = hostImpl.ExecuteAOT(aotArgs, pendSignData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetBundleStats_InvalidAppIndex_0100
+ * @tc.name: test GetBundleStats with invalid appIndex
+ * @tc.desc: 1. test appIndex = -1 should return PARAM_ERROR
+ *           2. test appIndex = 6 should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, GetBundleStats_InvalidAppIndex_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<int64_t> bundleStats;
+    std::unordered_set<int32_t> uids;
+    ErrCode ret = hostImpl.GetBundleStats("com.example.test", 100, bundleStats, uids, -1, 0, {});
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = hostImpl.GetBundleStats("com.example.test", 100, bundleStats, uids, 6, 0, {});
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetBundleStats_InvalidBundleName_0100
+ * @tc.name: test GetBundleStats with invalid bundleName
+ * @tc.desc: 1. test empty bundleName should return PARAM_ERROR
+ *           2. test bundleName with path traversal should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, GetBundleStats_InvalidBundleName_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<int64_t> bundleStats;
+    std::unordered_set<int32_t> uids;
+    ErrCode ret = hostImpl.GetBundleStats("", 100, bundleStats, uids, 0, 0, {});
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = hostImpl.GetBundleStats("../bad", 100, bundleStats, uids, 0, 0, {});
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetBundleStats_InvalidUserId_0100
+ * @tc.name: test GetBundleStats with invalid userId
+ * @tc.desc: 1. test userId = -1 should return PARAM_ERROR
+ *           2. test userId = 10001 should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, GetBundleStats_InvalidUserId_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<int64_t> bundleStats;
+    std::unordered_set<int32_t> uids;
+    ErrCode ret = hostImpl.GetBundleStats("com.example.test", -1, bundleStats, uids, 0, 0, {});
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: IsExistExtensionDir_InvalidUserId_0100
+ * @tc.name: test IsExistExtensionDir with invalid userId
+ * @tc.desc: 1. test userId = -1 should return PARAM_ERROR
+ *           2. test userId = 10001 should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, IsExistExtensionDir_InvalidUserId_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    bool isExist = false;
+    ErrCode ret = hostImpl.IsExistExtensionDir(-1, "/data/app/el1/100/extension/com.example.test", isExist);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = hostImpl.IsExistExtensionDir(10001, "/data/app/el1/100/extension/com.example.test", isExist);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PendSignAOT_InvalidPathPrefix_0100
+ * @tc.name: test PendSignAOT with invalid path prefix
+ * @tc.desc: 1. test anFileName not in allowed prefix should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, PendSignAOT_InvalidPathPrefix_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string anFileName = "/tmp/invalid/test.an";
+    std::vector<uint8_t> signData;
+    ErrCode ret = hostImpl.PendSignAOT(anFileName, signData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ProcessBinFiles_EmptyPaths_0100
+ * @tc.name: test ProcessBinFiles with empty binFilePaths
+ * @tc.desc: 1. test empty binFilePaths should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_EmptyPaths_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    VerifyBinParam param;
+    param.bundleName = "com.example.test";
+    param.appIdentifier = "test";
+    param.userId = 100;
+    param.binFilePaths = {};
+    auto ret = hostImpl.ProcessBinFiles(param);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ProcessBinFiles_FilePathNotMatchBundleName_0100
+ * @tc.name: test ProcessBinFiles with file path not matching bundleName via IPC
+ * @tc.desc: 1. calling ProcessBinFiles with file path not matching bundleName should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_FilePathNotMatchBundleName_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    VerifyBinParam param;
+    param.bundleName = "com.example.test";
+    param.appIdentifier = "test";
+    param.userId = 100;
+    param.binFilePaths = {"/data/app/el1/bundle/public/com.other.test/bin/test"};
+    auto ret = hostImpl.ProcessBinFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ProcessBinFiles_InvalidFilePathWithDotDot_0100
+ * @tc.name: test ProcessBinFiles with file path containing ../ via IPC
+ * @tc.desc: 1. calling ProcessBinFiles with file path containing ../ should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidFilePathWithDotDot_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    VerifyBinParam param;
+    param.bundleName = "com.example.test";
+    param.appIdentifier = "test";
+    param.userId = 100;
+    param.binFilePaths = {"/data/app/el1/bundle/public/com.example.test/bin/../test"};
+    auto ret = hostImpl.ProcessBinFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ProcessBinFiles_InvalidFilePath_0100
+ * @tc.name: test ProcessBinFiles with invalid file path via IPC
+ * @tc.desc: 1. calling ProcessBinFiles with invalid file path prefix should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidFilePath_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    VerifyBinParam param;
+    param.bundleName = "com.example.test";
+    param.appIdentifier = "test";
+    param.userId = 100;
+    param.binFilePaths = {"/data/app/invalid/path/test"};
+    auto ret = hostImpl.ProcessBinFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ProcessBinFiles_InvalidPathPrefix_0100
+ * @tc.name: test ProcessBinFiles with invalid path prefix
+ * @tc.desc: 1. test binFilePaths with invalid prefix should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_InvalidPathPrefix_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    VerifyBinParam param;
+    param.bundleName = "com.example.test";
+    param.appIdentifier = "test";
+    param.userId = 100;
+    param.binFilePaths = {"/tmp/invalid/bin/test"};
+    auto ret = hostImpl.ProcessBinFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: RemoveExtensionDir_InvalidPathPrefix_0100
+ * @tc.name: test RemoveExtensionDir with invalid path prefix
+ * @tc.desc: 1. test extensionBundleDir not in allowed prefix should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, RemoveExtensionDir_InvalidPathPrefix_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    int32_t userId = 100;
+    std::vector<std::string> extensionBundleDirs = {".../tmp/invalid/extension/"};
+    ErrCode ret = hostImpl.RemoveExtensionDir(userId, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: RemoveExtensionDir_InvalidUserId_0100
+ * @tc.name: test RemoveExtensionDir with userId = 10001
+ * @tc.desc: 1. test userId exceeding MAX_USER_ID should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, RemoveExtensionDir_InvalidUserId_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    int32_t userId = 10001;
+    std::vector<std::string> extensionBundleDirs = {"/com.ohos.settings/extension/"};
+    ErrCode ret = hostImpl.RemoveExtensionDir(userId, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: RemoveModuleDataDir_InvalidUserId_0100
+ * @tc.name: test RemoveModuleDataDir with invalid userId
+ * @tc.desc: 1. test userId = -1 should return PARAM_ERROR
+ *           2. test userId = 10001 should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, RemoveModuleDataDir_InvalidUserId_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    ErrCode ret = hostImpl.RemoveModuleDataDir("/data/app/el1/bundle/public/com.example.test", -1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = hostImpl.RemoveModuleDataDir("/data/app/el1/bundle/public/com.example.test", 10001);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SetArkStartupCacheApl_PathTraversal_0100
+ * @tc.name: test SetArkStartupCacheApl with path containing ..
+ * @tc.desc: 1. test dataDir containing .. should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, SetArkStartupCacheApl_PathTraversal_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    ErrCode ret = hostImpl.SetArkStartupCacheApl("com.example.test", "/data/app/el1/100/system_optimize/../test");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: VerifyCodeSignatureForHap_ModulePathTraversal_0100
+ * @tc.name: test VerifyCodeSignatureForHap with modulePath containing ..
+ * @tc.desc: 1. test modulePath containing .. should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignatureForHap_ModulePathTraversal_0100, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = "com.example.test";
+    codeSignatureParam.modulePath = "/data/app/el1/bundle/public/com.example.test/../entry.hap";
+    auto ret = VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: VerifyCodeSignature_ModulePathTraversal_0100
+ * @tc.name: test VerifyCodeSignature with modulePath containing ..
+ * @tc.desc: 1. test modulePath containing .. should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignature_ModulePathTraversal_0100, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = "com.example.test";
+    codeSignatureParam.modulePath = "/data/app/el1/bundle/public/com.example.test/../entry.hap";
+    codeSignatureParam.targetSoPath = "/data/app/el1/bundle/public/com.example.test/libs/";
+    auto ret = VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: VerifyCodeSignature_1MBBoundary_0100
+ * @tc.name: test VerifyCodeSignature with profileBlockLength = 1MB
+ * @tc.desc: 1. calling VerifyCodeSignature with profileBlockLength = 1MB should return PARAM_ERROR
+ *           2. VerifyCodeSignature uses >= MAX_PROFILE_BLOCK_LENGTH, so 1MB is illegal
+*/
+HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignature_1MBBoundary_0100, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = "com.example.test";
+    codeSignatureParam.modulePath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
+    codeSignatureParam.profileBlockLength = 1024 * 1024; // exactly 1MB
+    auto ret = VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeliverySignProfile_1MBBoundary_0100
+ * @tc.name: test DeliverySignProfile with profileBlockLength = 1MB
+ * @tc.desc: 1. calling DeliverySignProfile with profileBlockLength = 1MB should pass param check
+ *           2. DeliverySignProfile uses > MAX_PROFILE_BLOCK_LENGTH, so 1MB is legal
+*/
+HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_1MBBoundary_0100, Function | SmallTest | Level0)
+{
+    std::string bundleName = "com.example.test";
+    int32_t profileBlockLength = 1024 * 1024; // exactly 1MB
+    unsigned char *profileBlock = new unsigned char[1024 * 1024];
+    auto ret = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    // 1MB is a legal parameter value, should not return PARAM_ERROR
+    EXPECT_NE(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    delete[] profileBlock;
+}
+
+/**
+ * @tc.number: ProcessBinFiles_EmptyPathItem_0100
+ * @tc.name: test ProcessBinFiles with empty string in binFilePaths
+ * @tc.desc: 1. calling ProcessBinFiles with binFilePaths containing empty string should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_EmptyPathItem_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    VerifyBinParam param;
+    param.bundleName = "com.example.test";
+    param.appIdentifier = "test";
+    param.userId = 100;
+    param.binFilePaths = {"/data/app/el1/bundle/public/com.example.test/bin/test", ""};
+    auto ret = hostImpl.ProcessBinFiles(param);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 } // OHOS

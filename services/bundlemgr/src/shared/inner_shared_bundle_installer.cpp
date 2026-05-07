@@ -821,6 +821,7 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForNativeFiles(const std:
     APP_LOGD("begin to verify code signature for hsp native files");
     bool isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
     CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = bundleName_;
     codeSignatureParam.modulePath = bundlePath;
     codeSignatureParam.cpuAbi = cpuAbi;
     codeSignatureParam.targetSoPath = targetSoPath;
@@ -840,6 +841,7 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForHsp(const std::string 
 {
     APP_LOGD("begin to verify code signature for hsp");
     CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = bundleName_;
     codeSignatureParam.modulePath = tempHspPath;
     codeSignatureParam.cpuAbi = cpuAbi_;
     codeSignatureParam.targetSoPath = tempSoPath_;

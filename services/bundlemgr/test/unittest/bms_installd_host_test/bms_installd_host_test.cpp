@@ -854,6 +854,8 @@ HWTEST_F(BmsInstalldHostTest, HandleSetArkStartupCacheApl_0100, Function | Small
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
+    data.WriteString16(Str8ToStr16("com.example.test"));
+    data.WriteString16(Str8ToStr16("/data/app/el1/100/system_optimize/com.example/ark_startup_cache/"));
     bool res = installdHost.HandleSetArkStartupCacheApl(data, reply);
     EXPECT_TRUE(res);
 }

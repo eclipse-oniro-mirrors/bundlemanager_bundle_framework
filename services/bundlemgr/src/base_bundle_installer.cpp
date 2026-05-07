@@ -3605,6 +3605,7 @@ bool BaseBundleInstaller::CheckHapLibsWithPatchLibs(
 bool BaseBundleInstaller::ExtractSoFiles(const std::string &soPath, const std::string &cpuAbi) const
 {
     ExtractParam extractParam;
+    extractParam.bundleName = bundleName_;
     extractParam.extractFileType = ExtractFileType::SO;
     extractParam.srcPath = modulePath_;
     extractParam.targetPath = soPath;
@@ -4642,6 +4643,7 @@ void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, cons
     }
     LOG_D(BMS_TAG_INSTALLER, "apiTargetVersion is %{public}d, extract resource files", apiTargetVersion);
     ExtractParam extractParam;
+    extractParam.bundleName = bundleName_;
     extractParam.srcPath = modulePath_;
     extractParam.targetPath = targetPath + ServiceConstants::PATH_SEPARATOR;
     extractParam.extractFileType = ExtractFileType::RESOURCE;
@@ -4653,6 +4655,7 @@ ErrCode BaseBundleInstaller::ExtractResFileDir(const std::string &modulePath) co
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractResFileDir begin");
     ExtractParam extractParam;
+    extractParam.bundleName = bundleName_;
     extractParam.srcPath = modulePath_;
     extractParam.targetPath = modulePath + ServiceConstants::PATH_SEPARATOR + ServiceConstants::RES_FILE_PATH;
     LOG_D(BMS_TAG_INSTALLER, "ExtractResFileDir targetPath: %{public}s", extractParam.targetPath.c_str());
@@ -5021,6 +5024,7 @@ ErrCode BaseBundleInstaller::ExtractHnpFileDir(const std::string &cpuAbi,
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractHnpFileDir begin");
     ExtractParam extractParam;
+    extractParam.bundleName = bundleName_;
     extractParam.srcPath = modulePath_;
     extractParam.targetPath = modulePath + ServiceConstants::PATH_SEPARATOR + ServiceConstants::HNPS_FILE_PATH;
     if (ServiceConstants::ABI_MAP.find(cpuAbi) == ServiceConstants::ABI_MAP.end()) {
@@ -5065,6 +5069,7 @@ ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const s
     LOG_D(BMS_TAG_INSTALLER, "Begin extract an modulePath: %{public}s targetPath: %{public}s cpuAbi: %{public}s",
         modulePath.c_str(), targetPath.c_str(), cpuAbi.c_str());
     ExtractParam extractParam;
+    extractParam.bundleName = info.GetBundleName();
     extractParam.srcPath = modulePath_;
     extractParam.targetPath = targetPath;
     extractParam.cpuAbi = cpuAbi;
@@ -5160,6 +5165,7 @@ ErrCode BaseBundleInstaller::ExtractArkProfileFile(
     LOG_D(BMS_TAG_INSTALLER, "Begin to extract ap file, modulePath : %{public}s, targetPath : %{public}s",
         modulePath.c_str(), targetPath.c_str());
     ExtractParam extractParam;
+    extractParam.bundleName = bundleName;
     extractParam.srcPath = modulePath;
     extractParam.targetPath = targetPath;
     extractParam.cpuAbi = Constants::EMPTY_STRING;
@@ -7287,6 +7293,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &
     LOG_D(BMS_TAG_INSTALLER, "begin to verify code signature for native files");
     const std::string compileSdkType = info.GetBaseApplicationInfo().compileSdkType;
     CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = bundleName_;
     codeSignatureParam.modulePath = modulePath_;
     codeSignatureParam.cpuAbi = cpuAbi;
     codeSignatureParam.targetSoPath = targetSoPath;
@@ -7321,6 +7328,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     }
     auto targetSoPath = targetSoPathMap_.find(moduleName);
     CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = info.GetBundleName();
     if (targetSoPath != targetSoPathMap_.end()) {
         codeSignatureParam.targetSoPath = targetSoPath->second;
     }
@@ -7342,6 +7350,7 @@ ErrCode BaseBundleInstaller::CheckSoEncryption(InnerBundleInfo &info, const std:
 {
     LOG_D(BMS_TAG_INSTALLER, "begin to check so encryption");
     CheckEncryptionParam param;
+    param.bundleName = bundleName_;
     param.modulePath = modulePath_;
     param.cpuAbi = cpuAbi;
     param.targetSoPath = targetSoPath;
@@ -7635,6 +7644,7 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
             hapPath = hapPathRecords_.at(info.first);
         }
         CheckEncryptionParam param;
+        param.bundleName = info.second.GetBundleName();
         param.modulePath = hapPath;
         int uid = info.second.GetUid(userId_);
         param.bundleId = uid - userId_ * Constants::BASE_USER_RANGE;
@@ -8360,7 +8370,13 @@ ErrCode BaseBundleInstaller::CreateArkStartupCache(const ArkStartupCache &create
             createArk.bundleName.c_str(), createArk.cacheDir.c_str(), errno);
         return result;
     }
-    return InstalldClient::GetInstance()->SetArkStartupCacheApl(createArk.cacheDir);
+    ErrCode ret = InstalldClient::GetInstance()->SetArkStartupCacheApl(createArk.bundleName, createArk.cacheDir);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "-n: %{public}s, SetArkStartupCacheApl failed, error:%{public}d",
+            createArk.bundleName.c_str(), ret);
+        InstalldClient::GetInstance()->RemoveDir(createArk.cacheDir);
+    }
+    return ret;
 }
 
 ErrCode BaseBundleInstaller::DeleteArkStartupCache(const std::string &cacheDir,

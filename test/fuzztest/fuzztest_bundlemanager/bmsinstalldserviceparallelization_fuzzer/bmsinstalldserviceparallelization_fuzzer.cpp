@@ -72,6 +72,7 @@ sptr<IRemoteObject> GetMockRemoteObject()
 // Helper functions to fill structs with fuzzed data
 void FillExtractParam(FuzzedDataProvider &provider, ExtractParam &extractParam)
 {
+    extractParam.bundleName = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     extractParam.srcPath = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     extractParam.targetPath = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     extractParam.cpuAbi = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);

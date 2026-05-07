@@ -36,6 +36,12 @@ enum class BundleDirScene : int32_t {
     EXTRACT_HNP_FILES = 1,
     SET_FILE_CON_FORCE = 2,
     EXTRACT_DRIVER_SO_FILES = 3,
+    SET_ARK_STARTUP_CACHE_APL = 4,
+    PEND_SIGN_AOT = 5,
+    EXTRACT_FILES = 6,
+    VERIFY_CODE_SIGNATURE = 7,
+    REMOVE_EXTENSION_DIR = 8,
+    CLEAN_BUNDLE_DATA_DIR = 9,
 
     // CreateBundleDir scenes
     BUNDLE_CODE_DIR = 101,

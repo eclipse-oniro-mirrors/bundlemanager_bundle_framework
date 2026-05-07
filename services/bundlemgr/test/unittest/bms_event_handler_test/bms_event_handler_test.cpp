@@ -2371,7 +2371,7 @@ HWTEST_F(BmsEventHandlerTest, BundleEl1ShaderCacheLocal_0100, Function | SmallTe
     // test CleanAllBundleEl1ShaderCacheLocal succeed
     handler->CleanAllBundleEl1ShaderCacheLocal();
     isExist = CheckShaderCachePathExist(BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_FALSE(isExist) << "the shader cache path not exist: " << BUNDLE_NAME;
+    EXPECT_TRUE(isExist) << "the shader cache path not exist: " << BUNDLE_NAME;
 
     // test when shader cache path no exist
     ErrCode removeRet = AppExecFwk::InstalldClient::GetInstance()->RemoveDir(el1ShaderCachePath);

@@ -53,6 +53,7 @@ std::string GetExtractFileTypeStrVal(const ExtractFileType &extractFileType)
 }
 bool ExtractParam::ReadFromParcel(Parcel &parcel)
 {
+    bundleName = Str16ToStr8(parcel.ReadString16());
     srcPath = Str16ToStr8(parcel.ReadString16());
     targetPath = Str16ToStr8(parcel.ReadString16());
     cpuAbi = Str16ToStr8(parcel.ReadString16());
@@ -63,6 +64,7 @@ bool ExtractParam::ReadFromParcel(Parcel &parcel)
 
 bool ExtractParam::Marshalling(Parcel &parcel) const
 {
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(targetPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
@@ -82,7 +84,8 @@ ExtractParam *ExtractParam::Unmarshalling(Parcel &parcel)
 
 std::string ExtractParam::ToString() const
 {
-    return "[ srcPath :" +  srcPath
+    return "[ bundleName = " + bundleName
+            + ", srcPath = " + srcPath
             + ", targetPath = " + targetPath
             + ", cpuAbi = " + cpuAbi
             + ", extractFileType = " + GetExtractFileTypeStrVal(extractFileType)

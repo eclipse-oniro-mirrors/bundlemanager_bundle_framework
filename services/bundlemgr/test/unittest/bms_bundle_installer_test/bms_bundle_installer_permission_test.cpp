@@ -1197,7 +1197,7 @@ HWTEST_F(BmsBundleInstallerPermissionTest, CreateArkStartupCache_0030, Function 
 HWTEST_F(BmsBundleInstallerPermissionTest, SetArkStartupCacheApl_0100, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    auto ret = impl.SetArkStartupCacheApl("");
+    auto ret = impl.SetArkStartupCacheApl("", "");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

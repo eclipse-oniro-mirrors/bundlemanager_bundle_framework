@@ -1813,7 +1813,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleStats_0300, Function | SmallTest | Le
     ASSERT_NE(dataMgr, nullptr);
     std::string bundleName = "com.example.CheckAppIndex_1000_1";
     std::vector<int64_t> bundleStats;
-    int32_t appIndex = 1;
+    int32_t appIndex = 0;
     hostImpl->isBrokerServiceExisted_ = true;
  
     // test bundlename not in bundleinfos or uninstallbundleinfos

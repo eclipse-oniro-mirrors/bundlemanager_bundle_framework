@@ -192,14 +192,22 @@ ErrCode InstalldClient::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
     return CallService(&IInstalld::GetBundleInodeCount, uid, inodeCount);
 }
 
-ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
+ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir,
+    const std::string &bundleName, int32_t userId)
 {
     if (bundleDir.empty()) {
         APP_LOGE("bundle dir is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-
-    return CallService(&IInstalld::CleanBundleDataDir, bundleDir);
+    if (bundleName.empty()) {
+        APP_LOGE("bundle name is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (userId < 0) {
+        APP_LOGE("userId is invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::CleanBundleDataDir, bundleDir, bundleName, userId);
 }
 
 ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex,
@@ -294,14 +302,14 @@ ErrCode InstalldClient::StopSetFileCon(const CreateDirParam &createDirParam, int
     return CallService(&IInstalld::StopSetFileCon, createDirParam, reason);
 }
 
-ErrCode InstalldClient::SetArkStartupCacheApl(const std::string &dir)
+ErrCode InstalldClient::SetArkStartupCacheApl(const std::string &bundleName, const std::string &dir)
 {
-    if (dir.empty()) {
+    if (bundleName.empty() || dir.empty()) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::SetArkStartupCacheApl, dir);
+    return CallService(&IInstalld::SetArkStartupCacheApl, bundleName, dir);
 }
 
 ErrCode InstalldClient::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)

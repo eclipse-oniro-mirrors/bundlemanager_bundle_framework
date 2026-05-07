@@ -142,7 +142,8 @@ public:
      * @param bundleDir Indicates the data directory path that to be cleaned.
      * @return Returns ERR_OK if the data directory cleaned successfully; returns error code otherwise.
      */
-    virtual ErrCode CleanBundleDataDir(const std::string &bundlePath) override;
+    virtual ErrCode CleanBundleDataDir(const std::string &bundlePath,
+        const std::string &bundleName, int32_t userId) override;
     /**
      * @brief Clean a bundle data directory through a proxy object.
      * @param bundleName Indicates the bundleName data directory path that to be cleaned.
@@ -196,7 +197,7 @@ public:
      * @param dir Indicates the data dir.
      * @return Returns ERR_OK if set apl successfully; returns error code otherwise.
      */
-    virtual ErrCode SetArkStartupCacheApl(const std::string &dir) override;
+    virtual ErrCode SetArkStartupCacheApl(const std::string &bundleName, const std::string &dir) override;
 
     /**
      * @brief Get all cache file path.

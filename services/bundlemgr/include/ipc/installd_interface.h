@@ -212,7 +212,7 @@ public:
      * @param bundleDir Indicates the data directory path that to be cleaned.
      * @return Returns ERR_OK if the data directory cleaned successfully; returns error code otherwise.
      */
-    virtual ErrCode CleanBundleDataDir(const std::string &bundleDir)
+    virtual ErrCode CleanBundleDataDir(const std::string &bundleDir, const std::string &bundleName, int32_t userId)
     {
         return ERR_OK;
     }
@@ -294,7 +294,7 @@ public:
      * @param dir Indicates the data dir.
      * @return Returns ERR_OK if set apl successfully; returns error code otherwise.
      */
-    virtual ErrCode SetArkStartupCacheApl(const std::string &dir)
+    virtual ErrCode SetArkStartupCacheApl(const std::string &bundleName, const std::string &dir)
     {
         return ERR_OK;
     }

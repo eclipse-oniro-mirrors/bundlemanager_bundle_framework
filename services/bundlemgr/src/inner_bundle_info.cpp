@@ -5031,6 +5031,7 @@ void InnerBundleInfo::HandleOTACodeEncryption(std::vector<std::string> &withoutK
         withKeyBundles.emplace_back(GetBundleName());
     }
     CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.bundleName = GetBundleName();
     checkEncryptionParam.bundleId = innerBundleUserInfos_.begin()->second.uid -
         innerBundleUserInfos_.begin()->second.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
     checkEncryptionParam.appIdentifier = GetAppIdentifier();

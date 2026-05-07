@@ -105,7 +105,7 @@ ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &p
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
+ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir, const std::string &bundleName, int32_t userId)
 {
     return ERR_OK;
 }
@@ -172,7 +172,7 @@ ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool 
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::SetArkStartupCacheApl(const std::string &dir)
+ErrCode InstalldHostImpl::SetArkStartupCacheApl(const std::string &bundleName, const std::string &dir)
 {
     return ERR_OK;
 }

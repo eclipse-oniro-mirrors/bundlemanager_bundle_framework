@@ -742,6 +742,7 @@ ErrCode QuickFixDeployer::ExtractQuickFixSoFile(
         }
         std::string soPath = hqfSoPath + ServiceConstants::PATH_SEPARATOR + libraryPath;
         ExtractParam extractParam;
+        extractParam.bundleName = bundleInfo.name;
         extractParam.extractFileType = ExtractFileType::SO;
         extractParam.srcPath = hqf.hqfFilePath;
         extractParam.targetPath = soPath;
@@ -824,6 +825,7 @@ bool QuickFixDeployer::ExtractSoFiles(
     tmpSoPath = (tmpSoPath.back() == ServiceConstants::PATH_SEPARATOR[0]) ? (tmpSoPath + moduleName) :
         (tmpSoPath + ServiceConstants::PATH_SEPARATOR + moduleName);
     ExtractParam extractParam;
+    extractParam.bundleName = bundleInfo.name;
     extractParam.extractFileType = ExtractFileType::SO;
     extractParam.srcPath = iter->hapPath;
     extractParam.targetPath = tmpSoPath;
@@ -1024,6 +1026,7 @@ ErrCode QuickFixDeployer::ExtractQuickFixResFile(const AppQuickFix &appQuickFix,
             + ServiceConstants::PATH_SEPARATOR + hqf.moduleName + ServiceConstants::PATH_SEPARATOR
             + ServiceConstants::RES_FILE_PATH;
         ExtractParam extractParam;
+        extractParam.bundleName = appQuickFix.bundleName;
         extractParam.extractFileType = ExtractFileType::RES_FILE;
         extractParam.srcPath = hqf.hqfFilePath;
         extractParam.targetPath = targetPath;

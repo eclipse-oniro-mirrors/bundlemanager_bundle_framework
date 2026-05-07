@@ -285,7 +285,9 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_0800, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->CleanBundleDataDir(TEST_STRING);
+    std::string bundleName = "com.example.test";
+    int32_t userId = 100;
+    auto ret = proxy->CleanBundleDataDir(TEST_STRING, bundleName, userId);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -1383,7 +1385,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7100, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
  
-    auto ret = proxy->SetArkStartupCacheApl(TEST_STRING);
+    auto ret = proxy->SetArkStartupCacheApl(TEST_STRING, TEST_STRING);
     EXPECT_EQ(ret, ERR_OK);
 }
  
@@ -1397,7 +1399,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7200, Function | SmallTest |
     sptr<InstalldProxy> proxy = new (std::nothrow) InstalldProxy(nullptr);
     ASSERT_NE(proxy, nullptr);
  
-    auto ret = proxy->SetArkStartupCacheApl(TEST_STRING);
+    auto ret = proxy->SetArkStartupCacheApl(TEST_STRING, TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 
@@ -1544,5 +1546,59 @@ HWTEST_F(BmsInstallDaemonIpcTest, ProcessBinFilesTest_001, Function | SmallTest 
     verifyBinParam.binFilePaths = {"/data/app/el1/bundle/public/com.ohos.test/bin/test"};
     auto ret = proxy->ProcessBinFiles(verifyBinParam);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckEncryptionParam_Marshalling_0100
+ * @tc.name: test CheckEncryptionParam Marshalling and Unmarshalling with bundleName
+ * @tc.desc: 1. test bundleName is correctly preserved after round-trip
+ *           2. test appIdentifier is correctly preserved after round-trip
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, CheckEncryptionParam_Marshalling_0100, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    CheckEncryptionParam param;
+    param.bundleName = "com.example.test";
+    param.modulePath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
+    param.appIdentifier = "abc-123_def.X";
+    bool res = param.Marshalling(parcel);
+    EXPECT_TRUE(res);
+
+    CheckEncryptionParam *unmarshalled = CheckEncryptionParam::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalled, nullptr);
+    EXPECT_EQ(unmarshalled->bundleName, param.bundleName);
+    EXPECT_EQ(unmarshalled->modulePath, param.modulePath);
+    EXPECT_EQ(unmarshalled->appIdentifier, param.appIdentifier);
+    delete unmarshalled;
+}
+
+/**
+ * @tc.number: CodeSignatureParam_Marshalling_0100
+ * @tc.name: test CodeSignatureParam Marshalling and Unmarshalling with bundleName
+ * @tc.desc: 1. test bundleName is correctly preserved after round-trip
+ *           2. test empty bundleName round-trip
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, CodeSignatureParam_Marshalling_0100, Function | SmallTest | Level0)
+{
+    Parcel parcel;
+    CodeSignatureParam param;
+    param.bundleName = "com.example.test";
+    param.modulePath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
+    param.targetSoPath = "/data/app/el1/bundle/public/com.example.test/libs/";
+    param.profileBlockLength = 100;
+    param.profileBlock = std::shared_ptr<unsigned char>(
+        new unsigned char[100],
+        std::default_delete<unsigned char[]>()
+    );
+    bool res = param.Marshalling(parcel);
+    EXPECT_TRUE(res);
+
+    CodeSignatureParam *unmarshalled = CodeSignatureParam::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalled, nullptr);
+    EXPECT_EQ(unmarshalled->bundleName, param.bundleName);
+    EXPECT_EQ(unmarshalled->modulePath, param.modulePath);
+    EXPECT_EQ(unmarshalled->targetSoPath, param.targetSoPath);
+    EXPECT_EQ(unmarshalled->profileBlockLength, param.profileBlockLength);
+    delete unmarshalled;
 }
 } // OHOS

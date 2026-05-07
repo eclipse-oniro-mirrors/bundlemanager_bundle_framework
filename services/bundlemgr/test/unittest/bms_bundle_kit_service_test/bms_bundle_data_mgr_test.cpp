@@ -4943,12 +4943,12 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | SmallTest | Level
     EXPECT_EQ(res, true);
     // test getbundlestat for main app, which has no userinfo in UninstallBundleInfo
     res = dataMgr->GetBundleStats(bundleName, Constants::INVALID_USERID, bundleStats, 0);
-    EXPECT_EQ(res, true);
+    EXPECT_EQ(res, false);
     // test getbundlestat for clone app, which has userinfo in UninstallBundleInfo
     res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats, 1);
     EXPECT_EQ(res, true);
     res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats, 2);
-    EXPECT_EQ(res, true);
+    EXPECT_EQ(res, false);
 
     // test add bundleinfo
     InnerBundleInfo innerBundleInfo;
@@ -4988,7 +4988,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | SmallTest | Level
     EXPECT_EQ(res, true);
 
     res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats, 2);
-    EXPECT_EQ(res, true);
+    EXPECT_EQ(res, false);
 
     dataMgr->bundleInfos_.erase(bundleName);
     dataMgr->RemoveUninstalledBundleinfos(USERID);

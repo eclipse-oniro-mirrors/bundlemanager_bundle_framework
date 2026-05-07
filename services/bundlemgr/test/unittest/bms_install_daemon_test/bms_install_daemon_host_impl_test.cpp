@@ -205,7 +205,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0800, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->CleanBundleDataDir(TEST_STRING);
+    auto ret = hostImpl->CleanBundleDataDir(TEST_STRING, "com.example.test", 100);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -500,6 +500,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2500, Function | Sma
     ret = installdProxy->ExtractFiles(extractParam);
     EXPECT_NE(ret, ERR_OK);
 
+    extractParam.bundleName = "com.example.test";
     extractParam.targetPath = TEST_PATH;
     extractParam.cpuAbi = TEST_CPU_ABI;
     extractParam.extractFileType = ExtractFileType::AN;
@@ -553,6 +554,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2900, Function | Sma
     EXPECT_NE(installdProxy, nullptr);
 
     ExtractParam extractParam;
+    extractParam.bundleName = "com.example.test";
     extractParam.srcPath = "";
     extractParam.targetPath = "";
     ErrCode ret = installdProxy->ExtractFiles(extractParam);
@@ -671,7 +673,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3500, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->CleanBundleDataDir("");
+    auto ret = hostImpl->CleanBundleDataDir("", "com.example.test", 100);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -827,6 +829,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4400, Function | Sma
 {
     InstalldHostImpl impl;
     ExtractParam extractParam;
+    extractParam.bundleName = "com.example.test";
     auto ret = impl.ExtractFiles(extractParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
@@ -1284,8 +1287,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7200, Function | Sma
 {
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
-    ErrCode res = hostImpl->DeliverySignProfile("", 0, nullptr);
+    std::string bundleName = "com.example.test";
+    int32_t profileBlockLength = 1;
+    unsigned char *profileBlock = new unsigned char[1];
+    ErrCode res = hostImpl->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+    delete[] profileBlock;
 }
 
 /**
@@ -1392,7 +1399,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7800, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
  
-    auto ret = hostImpl->SetArkStartupCacheApl(TEST_STRING);
+    auto ret = hostImpl->SetArkStartupCacheApl(TEST_STRING, TEST_STRING);
 #ifdef WITH_SELINUX
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 #else
@@ -1750,6 +1757,27 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8400, Function | Sma
     int32_t uid = 100;
     uint64_t inodeCount = 0;
     auto ret = hostImpl->GetBundleInodeCount(uid, inodeCount);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetExtensionSandboxTypeList_0100
+ * @tc.name: test GetExtensionSandboxTypeList normal path
+ * @tc.desc: 1. verify GetExtensionConfigPath returns path without ..
+ *           2. calling GetExtensionSandboxTypeList should not hit path traversal check
+ *           3. in test environment permission check returns false
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, GetExtensionSandboxTypeList_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    // Verify that the default config path does not contain path traversal
+    std::string configPath = hostImpl->GetExtensionConfigPath();
+    EXPECT_EQ(configPath.find(".."), std::string::npos);
+
+    std::vector<std::string> typeList;
+    auto ret = hostImpl->GetExtensionSandboxTypeList(typeList);
+    // In current test environment, VerifyCallingPermission returns false
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

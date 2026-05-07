@@ -168,6 +168,7 @@ constexpr const char* FILE = "file";
 constexpr const char* FILE_OPEN = "FileOpen";
 // max number of haps under one direction
 constexpr uint8_t MAX_HAP_NUMBER = 128;
+constexpr int32_t MAX_PROFILE_BLOCK_LENGTH = 1 * 1024 * 1024;
 constexpr const char* DATA_ABILITY_URI_PREFIX = "dataability://";
 // appFeature
 constexpr const char* HOS_SYSTEM_APP = "hos_system_app";

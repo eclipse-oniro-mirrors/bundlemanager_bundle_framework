@@ -300,6 +300,8 @@ public:
     static bool GetAtomicServiceBundleDataDir(const std::string &bundleName,
         const int32_t userId, std::vector<std::string> &allPathNames);
 
+    static bool EndsWith(const std::string &sourceString, const std::string &targetSuffix);
+
 #if defined(CODE_SIGNATURE_ENABLE)
     static bool PrepareEntryMap(const CodeSignatureParam &codeSignatureParam,
         const std::vector<std::string> &soEntryFiles, Security::CodeSign::EntryMap &entryMap);
@@ -409,6 +411,8 @@ public:
 
     static bool IsValidPathByBundleDirScene(const BundleDirScene &scene, const std::string &path);
 
+    static bool IsValidAppIdentifier(const std::string &appIdentifier);
+
     static bool IsValidUuid(const std::string &uuid);
 
     static bool ObtainSignInfoForPlugin(
@@ -468,6 +472,7 @@ private:
     static bool IsPathNeedChown(const std::string &path, int32_t mode, bool isPathExist);
     static bool SetKeyIdPolicy(const EncryptionParam &encryptionParam, const std::string &keyId);
     static bool GenerateKeyId(const EncryptionParam &encryptionParam, std::string &keyId);
+    static bool MatchPathTemplate(const std::string &path, const std::string &pattern);
 #if defined(CODE_ENCRYPTION_ENABLE)
     static std::mutex encryptionMutex_;
     static void *encryptionHandle_;

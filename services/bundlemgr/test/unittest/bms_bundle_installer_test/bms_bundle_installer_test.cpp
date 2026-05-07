@@ -87,6 +87,7 @@ const std::string INVALID_BUNDLE = "nonfile.hap";
 const std::string WRONG_BUNDLE_NAME = "wrong_bundle_name.ha";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
+const std::string ARK_STARTUP_CACHE_EL1_DIR = "/data/app/el1/100/system_optimize/com.example/ark_startup_cache/";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string BUNDLE_BACKUP_TEST = "backup.hap";
@@ -3360,6 +3361,7 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0900, Function | SmallTest | L
     auto ret = impl.ExtractFiles(extractParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
+    extractParam.bundleName = "com.example.test";
     extractParam.srcPath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
     extractParam.targetPath = "/data/app/el1/bundle/public/com.example.test/";
     extractParam.cpuAbi = "arm64";
@@ -3434,7 +3436,7 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1300, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1400, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    ErrCode ret = impl.CleanBundleDataDir("");
+    ErrCode ret = impl.CleanBundleDataDir("", "com.example.test", 100);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -5579,6 +5581,7 @@ HWTEST_F(BmsBundleInstallerTest, BmsBundleInstallerTest_0020, TestSize.Level1)
     info.baseApplicationInfo_->nativeLibraryPath = "";
 
     BaseBundleInstaller installer;
+    installer.bundleName_ = "com.example.test";
     installer.modulePackage_ = MODULE_NAME_TEST;
     installer.modulePath_ = "";
     std::string modulePath = "";
@@ -5603,11 +5606,12 @@ HWTEST_F(BmsBundleInstallerTest, BmsBundleInstallerTest_0020, TestSize.Level1)
 HWTEST_F(BmsBundleInstallerTest, BmsBundleInstallerTest_0030, TestSize.Level1)
 {
     BaseBundleInstaller installer;
-    auto ret = installer.ExtractSoFiles("/data/test", "libs/arm");
+    installer.bundleName_ = "com.example.test";
+    auto ret = installer.ExtractSoFiles("/data/app/el1/bundle/public/com.example.test", "libs/arm");
     EXPECT_FALSE(ret);
 
     installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    ret = installer.ExtractSoFiles("/data/test", "libs/arm");
+    ret = installer.ExtractSoFiles("/data/app/el1/bundle/public/com.example.test", "libs/arm");
     EXPECT_TRUE(ret);
 }
 
@@ -5944,10 +5948,12 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModule_0010, Function | SmallTest | Leve
     info.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
     info.baseApplicationInfo_->cpuAbi = TEST_CPU_ABI;
     info.baseApplicationInfo_->nativeLibraryPath = "";
+    info.baseApplicationInfo_->bundleName = "com.example.test";
 
     BaseBundleInstaller installer;
+    installer.bundleName_ = "com.example.test";
     installer.modulePackage_ = MODULE_NAME_TEST;
-    std::string modulePath = "/data/test/bms_bundle_installer";
+    std::string modulePath = "/data/app/el1/bundle/public/com.example.test";
     installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
     ErrCode ret = installer.InnerProcessNativeLibs(info, modulePath);
     EXPECT_EQ(ret, ERR_OK);
@@ -7361,7 +7367,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDirWithVector_0100, Function | 
     InstalldHostImpl hostImpl;
     std::vector<CreateDirParam> createDirParams;
     auto ret = hostImpl.CreateBundleDataDirWithVector(createDirParams);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     CreateDirParam createDirParam;
     createDirParams.push_back(createDirParam);
@@ -13010,10 +13016,13 @@ HWTEST_F(BmsBundleInstallerTest, RemoveSystemOptimizeDir_0100, Function | Medium
 HWTEST_F(BmsBundleInstallerTest, SetArkStartupCacheApl_0100, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    auto ret = impl.SetArkStartupCacheApl("");
+    auto ret = impl.SetArkStartupCacheApl("", "");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.SetArkStartupCacheApl(BUNDLE_DATA_DIR);
+    ret = impl.SetArkStartupCacheApl("", BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.SetArkStartupCacheApl(BUNDLE_NAME, ARK_STARTUP_CACHE_EL1_DIR);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
 }
 
@@ -14849,6 +14858,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckEncryption_0100, Function | SmallTest | Le
 {
     InstalldHostImpl impl;
     CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.bundleName = "com.example.test";
     checkEncryptionParam.modulePath = TEST_ERROR_STRING;
     checkEncryptionParam.targetSoPath = TEST_ERROR_STRING;
     bool isEncrypted = false;
@@ -14865,6 +14875,7 @@ HWTEST_F(BmsBundleInstallerTest, VerifyCodeSignatureForHap_0100, Function | Smal
 {
     InstalldHostImpl impl;
     CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.bundleName = "com.example.test";
     ErrCode ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     codeSignatureParam.modulePath = TEST_ERROR_STRING;
@@ -15056,7 +15067,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateExtensionDataDir_0200, Function | SmallTe
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     createDirParam.extensionDirs.emplace_back(TEST_ERROR_STRING);
     createDirParam.apl = "normal";
-    createDirParam.userId = 10001;
+    createDirParam.userId = 9999;
     ret = impl.CreateExtensionDataDir(createDirParam);
     EXPECT_EQ(ret, ERR_OK);
     createDirParam.createDirFlag == CreateDirFlag::CREATE_DIR_UNLOCKED;
