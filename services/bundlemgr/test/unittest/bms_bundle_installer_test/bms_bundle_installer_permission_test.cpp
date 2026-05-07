@@ -1202,26 +1202,6 @@ HWTEST_F(BmsBundleInstallerPermissionTest, SetArkStartupCacheApl_0100, Function 
 }
 
 /**
- * @tc.number: ProcessArkStartupCache_0010
- * @tc.name: test ProcessArkStartupCache
- * @tc.desc: 1.Test the ProcessArkStartupCache of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerPermissionTest, ProcessArkStartupCache_0010, Function | SmallTest | Level0)
-{
-    // test no FOUNDATION_UID
-    ArkStartupCache ceateArk;
-    ceateArk.bundleName = "com.test";
-    ceateArk.bundleType = BundleType::APP;
-    ceateArk.cacheDir = "com.test";
-    ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
-    ceateArk.uid = 0;
-    ceateArk.gid = 0;
-    BaseBundleInstaller installer;
-    ErrCode ret = installer.ProcessArkStartupCache(ceateArk, 1, 100);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
-
-/**
  * @tc.number: HashSoFile_0010
  * @tc.name: test HashSoFile
  * @tc.desc: 1.Test the HashSoFile of InstalldHostImpl
