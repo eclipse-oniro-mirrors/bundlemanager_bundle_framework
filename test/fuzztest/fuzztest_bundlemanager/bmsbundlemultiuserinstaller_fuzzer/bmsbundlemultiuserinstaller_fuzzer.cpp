@@ -31,7 +31,7 @@ namespace OHOS {
 const std::string SYS_BUNDLE_NAME = "ohos.global.systemres";
 constexpr int32_t INVALID_USER_ID = -1;
 constexpr int32_t USER_ID = 100;
-constexpr int32_t WAIT_TIME = 5;
+constexpr int32_t WAIT_TIME = 10;
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
