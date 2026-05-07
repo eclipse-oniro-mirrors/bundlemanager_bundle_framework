@@ -1617,11 +1617,13 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         g_parseResult,
         JsonType::ARRAY,
         ArrayType::STRING);
+    // skills no need to check deliveryWithInstall
+    bool needCheckDeliveryWithInstall = module.type != Profile::MODULE_TYPE_SKILLS;
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_DELIVERY_WITH_INSTALL,
         module.deliveryWithInstall,
-        true,
+        needCheckDeliveryWithInstall,
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
