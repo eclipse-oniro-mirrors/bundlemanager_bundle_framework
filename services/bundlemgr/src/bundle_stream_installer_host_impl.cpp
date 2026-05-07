@@ -637,10 +637,6 @@ bool BundleStreamInstallerHostImpl::InstallApp(const std::vector<std::string> &p
         receiver->OnFinished(ERR_APPEXECFWK_INSTALL_MORE_THAN_ONE_APP, "");
         return false;
     }
-    if (!isCallByShell) {
-        receiver->OnFinished(ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID, "");
-        return false;
-    }
 
     auto bundleInstallChecker = std::make_unique<BundleInstallChecker>();
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
