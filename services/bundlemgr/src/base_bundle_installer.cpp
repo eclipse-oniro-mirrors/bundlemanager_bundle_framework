@@ -8400,13 +8400,7 @@ ErrCode BaseBundleInstaller::CreateArkStartupCache(const ArkStartupCache &create
             createArk.bundleName.c_str(), createArk.cacheDir.c_str(), errno);
         return result;
     }
-    ErrCode ret = InstalldClient::GetInstance()->SetArkStartupCacheApl(createArk.bundleName, createArk.cacheDir);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "-n: %{public}s, SetArkStartupCacheApl failed, error:%{public}d",
-            createArk.bundleName.c_str(), ret);
-        InstalldClient::GetInstance()->RemoveDir(createArk.cacheDir);
-    }
-    return ret;
+    return InstalldClient::GetInstance()->SetArkStartupCacheApl(createArk.bundleName, createArk.cacheDir);
 }
 
 ErrCode BaseBundleInstaller::DeleteArkStartupCache(const std::string &cacheDir,
