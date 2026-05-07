@@ -623,8 +623,7 @@ HWTEST_F(bundle_stream_installer_host_impl_test, test_InstallApp_0100, Function 
     }
     std::vector<std::string> pathVec;
     pathVec.push_back("");
-    bool onlyShared = false;
-    EXPECT_TRUE(bundleStreamInstaller_->InstallApp(pathVec));
+    EXPECT_FALSE(bundleStreamInstaller_->InstallApp(pathVec));
 }
 }
 }
