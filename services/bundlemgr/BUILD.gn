@@ -234,6 +234,7 @@ group("bms_target") {
     ":installs.cfg",
     ":libbms",
     ":libbms_exception_wrapper",
+    "spm_module_parser:spm_module_parser",
   ]
 }
 

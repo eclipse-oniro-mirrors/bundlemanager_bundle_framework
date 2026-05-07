@@ -228,6 +228,15 @@
                     "visibility": [
                       "bundle_tool"
                     ]
+                  },
+                  {
+                    "header": {
+                      "header_base": "//foundation/bundlemanager/bundle_framework/services/bundlemgr/spm_module_parser/include",
+                      "header_files": [
+                        "spm_module_parser.h"
+                      ]
+                    },
+                    "name": "//foundation/bundlemanager/bundle_framework/services/bundlemgr/spm_module_parser:spm_module_parser"
                   }
             ],
             "test": [
