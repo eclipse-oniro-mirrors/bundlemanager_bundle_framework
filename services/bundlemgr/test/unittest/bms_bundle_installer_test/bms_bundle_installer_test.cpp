@@ -16603,4 +16603,83 @@ HWTEST_F(BmsBundleInstallerTest, CheckIsDebugGrant_0050, TestSize.Level1)
     bool result = installer.CheckIsDebugGrant(installParam, appProvisionType);
     EXPECT_FALSE(result);
 }
+
+/**
+ * @tc.number: CreateBundleDir_0100
+ * @tc.name: test CreateBundleDir
+ * @tc.desc: test CreateBundleDir of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateBundleDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    auto ret = impl.CreateBundleDir(TEST_EMPTY_STRING, BundleDirScene::BUNDLE_CODE_DIR, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = impl.CreateBundleDir(BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    std::string bundleDir = BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = impl.CreateBundleDir(BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, bundleDir);
+    EXPECT_EQ(ret, ERR_OK);
+    OHOS::ForceRemoveDirectory(bundleDir);
+}
+
+/**
+ * @tc.number: RenameModuleDir_0100
+ * @tc.name: test RenameModuleDir
+ * @tc.desc: test RenameModuleDir of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, RenameModuleDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    auto ret = impl.RenameModuleDir(TEST_STRING, TEST_STRING, TEST_EMPTY_STRING, BundleDirScene::BUNDLE_CODE_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = impl.RenameModuleDir(TEST_STRING, TEST_STRING, BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    std::string oldPath =
+        BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + ServiceConstants::BUNDLE_NEW_CODE_DIR + TEST_STRING;
+    std::string newPath =
+        BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + ServiceConstants::BUNDLE_OLD_CODE_DIR + TEST_STRING;
+    ret = impl.RenameModuleDir(oldPath, newPath, BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
+}
+
+/**
+ * @tc.number: MoveFile_0200
+ * @tc.name: test MoveFile
+ * @tc.desc: test MoveFile of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, MoveFile_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    auto ret = impl.MoveFile(TEST_STRING, TEST_STRING, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, TEST_EMPTY_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = impl.MoveFile(TEST_EMPTY_STRING, TEST_EMPTY_STRING, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    std::string oldPath = BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + ServiceConstants::BUNDLE_NEW_CODE_DIR +
+                          TEST_STRING + ServiceConstants::PATH_SEPARATOR + TEST_STRING +
+                          ServiceConstants::INSTALL_FILE_SUFFIX;
+    std::string newPath = BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + ServiceConstants::BUNDLE_OLD_CODE_DIR +
+                          TEST_STRING + ServiceConstants::PATH_SEPARATOR + TEST_STRING +
+                          ServiceConstants::INSTALL_FILE_SUFFIX;
+    ret = impl.MoveFile(oldPath, newPath, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: Mkdir_0100
+ * @tc.name: test Mkdir
+ * @tc.desc: test Mkdir of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, Mkdir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    auto ret = impl.Mkdir(TEST_STRING, ZERO_CODE, ZERO_CODE, ZERO_CODE, createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    std::string dir = std::string(ServiceConstants::BUNDLE_ASAN_LOG_DIR) + ServiceConstants::PATH_SEPARATOR +
+                      TEST_STRING + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    createDirParam.bundleDirScene = BundleDirScene::ASAN_LOG_DIR;
+    createDirParam.bundleName = TEST_BUNDLE_NAME;
+    ret = impl.Mkdir(dir, ZERO_CODE, ZERO_CODE, ZERO_CODE, createDirParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
