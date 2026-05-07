@@ -9743,4 +9743,39 @@ HWTEST_F(BmsBundleKitServiceTest, SetNotifyWant_0200, Function | SmallTest | Lev
     EXPECT_EQ(want.GetStringParam(ASSET_ACCESS_GROUPS), installRes_.assetAccessGroups);
     EXPECT_EQ(want.GetStringParam(DEVELOPERID), installRes_.developerId);
 }
+
+/**
+ * @tc.number: GetSkillManagerProxy_0100
+ * @tc.name: test can not get skill manager proxy
+ * @tc.desc: 1.test GetSkillManagerProxy
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSkillManagerProxy_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    sptr<IBundleSkillManager> skillManagerProxy = bundleMgrProxy->GetSkillManagerProxy();
+    EXPECT_NE(skillManagerProxy, nullptr);
+}
+
+/**
+ * @tc.number: GetApiTargetVersionByUid_0100
+ * @tc.name: test can not get api target version by uid
+ * @tc.desc: 1.test GetApiTargetVersionByUid
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApiTargetVersionByUid_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+
+    int32_t uid = 1000;
+    int32_t apiTargetVersion = 0;
+    auto ret = bundleMgrProxy->GetApiTargetVersionByUid(uid, apiTargetVersion);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
 }
