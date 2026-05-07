@@ -13139,40 +13139,6 @@ HWTEST_F(BmsBundleInstallerTest, CheckAddResultMsg_0010, Function | SmallTest | 
 }
 
 /**
- * @tc.number: ProcessArkStartupCache_0010
- * @tc.name: test ProcessArkStartupCache
- * @tc.desc: 1.Test the ProcessArkStartupCache of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, ProcessArkStartupCache_0010, Function | SmallTest | Level0)
-{
-    std::string testBudnleName = "com.example.ProcessArkStartupCache";
-    std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
-        testBudnleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
-    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
-        std::to_string(100));
-    ArkStartupCache ceateArk;
-    ceateArk.bundleName = testBudnleName;
-    ceateArk.bundleType = BundleType::APP;
-    ceateArk.cacheDir = el1ArkStartupCachePath;
-    ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
-    ceateArk.uid = 0;
-    ceateArk.gid = 0;
-    WriteToConfigFile(testBudnleName);
-
-    // test bundlename in white list
-    BaseBundleInstaller installer3;
-    ErrCode ret = installer3.ProcessArkStartupCache(ceateArk, 1, 100);
-    EXPECT_EQ(ret, ERR_OK);
-
-    ret = installer3.DeleteArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, testBudnleName, 101);
-    EXPECT_EQ(ret, ERR_OK);
-
-    ret = installer3.ProcessArkStartupCache(ceateArk, 0, 100);
-    EXPECT_EQ(ret, ERR_OK);
-    setuid(Constants::ROOT_UID);
-}
-
-/**
  * @tc.number: CheckArkTSMode_0100
  * @tc.name: test CheckArkTSMode
  * @tc.desc: 1.Test CheckArkTSMode the BaseBundleInstaller

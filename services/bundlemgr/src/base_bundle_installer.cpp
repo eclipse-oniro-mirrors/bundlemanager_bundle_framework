@@ -1878,21 +1878,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         tempInfo_.SetTempBundleInfo(cacheInfo);
     }
 #endif
-    // process ark startup cache
-    std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
-        bundleName_ + ServiceConstants::ARK_STARTUP_CACHE_DIR;
-    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
-        std::to_string(userId_));
-    ArkStartupCache ceateArk;
-    ceateArk.bundleName = bundleName_;
-    ceateArk.bundleType = oldInfo.GetApplicationBundleType();
-    ceateArk.cacheDir = el1ArkStartupCachePath;
-    ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
     InnerBundleUserInfo newInnerBundleUserInfo;
     cacheInfo.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo);
-    ceateArk.uid = newInnerBundleUserInfo.uid;
-    ceateArk.gid = newInnerBundleUserInfo.uid;
-    ProcessArkStartupCache(ceateArk, cacheInfo.GetModuleSize(), userId_);
     UpdateEncryptedStatus(oldInfo);
     GetInstallEventInfo(cacheInfo, sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
@@ -1936,9 +1923,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (result == ERR_OK) {
         InnerBundleUserInfo newInnerBundleUserInfo;
         cacheInfo.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo);
-        ArkStartupCache ceateArk = CreateArkStartupCacheParameter(bundleName_, userId_,
+        ArkStartupCache createArk = CreateArkStartupCacheParameter(bundleName_, userId_,
             oldInfo.GetApplicationBundleType(), newInnerBundleUserInfo.uid);
-        ProcessArkStartupCache(ceateArk, cacheInfo.GetModuleSize(), userId_);
+        CreateArkStartupCache(createArk);
     }
     ProcessUpdateShortcut();
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_,
@@ -8316,23 +8303,14 @@ ArkStartupCache BaseBundleInstaller::CreateArkStartupCacheParameter(const std::s
         bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
     el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
         std::to_string(userId));
-    ArkStartupCache ceateArk;
-    ceateArk.bundleName = bundleName;
-    ceateArk.bundleType = bundleType;
-    ceateArk.cacheDir = el1ArkStartupCachePath;
-    ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
-    ceateArk.uid = uid;
-    ceateArk.gid = uid;
-    return ceateArk;
-}
-
-ErrCode BaseBundleInstaller::ProcessArkStartupCache(const ArkStartupCache &createArk,
-    int32_t moduleNum, int32_t userId) const
-{
-    if (moduleNum != 1) {
-        return DeleteArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, createArk.bundleName, userId);
-    }
-    return CreateArkStartupCache(createArk);
+    ArkStartupCache createArk;
+    createArk.bundleName = bundleName;
+    createArk.bundleType = bundleType;
+    createArk.cacheDir = el1ArkStartupCachePath;
+    createArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
+    createArk.uid = uid;
+    createArk.gid = uid;
+    return createArk;
 }
 
 ErrCode BaseBundleInstaller::CreateArkStartupCache(const ArkStartupCache &createArk) const
