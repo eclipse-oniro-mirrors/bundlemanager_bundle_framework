@@ -77,10 +77,10 @@ ani_object ConvertSkillInfo(ani_env* env, const SkillInfo& skillInfo)
         { .r = bundleName },
         { .r = moduleName },
         { .r = skillName },
-        { .i = skillInfo.skillId },
         { .r = skillTypeObj },
         { .r = hapPath },
         { .r = skillPath },
+        { .l = static_cast<ani_long>(skillInfo.versionCode) },
         { .r = abilityName },
         { .r = description },
         { .r = srcEntriesArray },
@@ -92,10 +92,10 @@ ani_object ConvertSkillInfo(ani_env* env, const SkillInfo& skillInfo)
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // bundleName: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // moduleName: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // skillName: string
-        .AddInt()                                     // skillId: int
         .AddClass(CLASSNAME_SKILL_TYPE)               // skillType: SkillType
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // hapPath: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // skillPath: string
+        .AddLong()                                    // versionCode: long
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // abilityName: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // description: string
         .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)    // srcEntries: Array<string>
@@ -112,48 +112,46 @@ ani_object ConvertSkillInfos(ani_env* env, const std::vector<SkillInfo>& skillIn
 }
 
 static ani_object GetSkillInfoForSelfNative(ani_env* env,
-    ani_string aniModuleName, ani_string aniSkillName, ani_int aniFlags, ani_int aniUserId)
+    ani_string aniModuleName, ani_string aniSkillName, ani_int aniFlags)
 {
     APP_LOGD("ani GetSkillInfoForSelfNative called");
     std::string moduleName;
-    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName) || moduleName.empty()) {
+    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName)) {
         APP_LOGE("moduleName parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
         return nullptr;
     }
     std::string skillName;
-    if (!CommonFunAni::ParseString(env, aniSkillName, skillName) || skillName.empty()) {
+    if (!CommonFunAni::ParseString(env, aniSkillName, skillName)) {
         APP_LOGE("skillName parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, "skillName", TYPE_STRING);
         return nullptr;
     }
 
     uint32_t flags = static_cast<uint32_t>(aniFlags);
-    int32_t userId = static_cast<int32_t>(aniUserId);
 
     SkillInfo skillInfo;
-    ErrCode err = SkillManagerHelper::InnerGetSkillInfoForSelf(moduleName, skillName, userId, flags, skillInfo);
+    ErrCode err = SkillManagerHelper::InnerGetSkillInfoForSelf(moduleName, skillName, flags, skillInfo);
     if (err != ERR_OK) {
         APP_LOGE("GetSkillInfoForSelfNative failed, err: %{public}d", err);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(err), GET_SKILL_INFO_FOR_SELF,
-            Constants::PERMISSION_GET_BUNDLE_RESOURCES);
+            "");
         return nullptr;
     }
     return ConvertSkillInfo(env, skillInfo);
 }
 
-static ani_object GetSkillInfosForSelfNative(ani_env* env, ani_int aniFlags, ani_int aniUserId)
+static ani_object GetSkillInfosForSelfNative(ani_env* env, ani_int aniFlags)
 {
     APP_LOGD("ani GetSkillInfosForSelfNative called");
     uint32_t flags = static_cast<uint32_t>(aniFlags);
-    int32_t userId = static_cast<int32_t>(aniUserId);
 
     std::vector<SkillInfo> skillInfos;
-    ErrCode err = SkillManagerHelper::InnerGetSkillInfosForSelf(flags, userId, skillInfos);
+    ErrCode err = SkillManagerHelper::InnerGetSkillInfosForSelf(flags, skillInfos);
     if (err != ERR_OK) {
         APP_LOGE("GetSkillInfosForSelfNative failed, err: %{public}d", err);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(err), GET_SKILL_INFOS_FOR_SELF,
-            Constants::PERMISSION_GET_BUNDLE_RESOURCES);
+            "");
         return nullptr;
     }
     return ConvertSkillInfos(env, skillInfos);
@@ -164,19 +162,19 @@ static ani_object GetSkillInfoNative(ani_env* env, ani_string aniBundleName, ani
 {
     APP_LOGD("ani GetSkillInfoNative called");
     std::string bundleName;
-    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName) || bundleName.empty()) {
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
         APP_LOGE("bundleName parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
     std::string moduleName;
-    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName) || moduleName.empty()) {
+    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName)) {
         APP_LOGE("moduleName parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
         return nullptr;
     }
     std::string skillName;
-    if (!CommonFunAni::ParseString(env, aniSkillName, skillName) || skillName.empty()) {
+    if (!CommonFunAni::ParseString(env, aniSkillName, skillName)) {
         APP_LOGE("skillName parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, "skillName", TYPE_STRING);
         return nullptr;
@@ -190,7 +188,7 @@ static ani_object GetSkillInfoNative(ani_env* env, ani_string aniBundleName, ani
     if (err != ERR_OK) {
         APP_LOGE("GetSkillInfoNative failed, err: %{public}d", err);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(err), GET_SKILL_INFO,
-            Constants::PERMISSION_GET_BUNDLE_RESOURCES);
+            Constants::PERMISSION_MANAGE_SKILL_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
         return nullptr;
     }
     return ConvertSkillInfo(env, skillInfo);
@@ -200,7 +198,7 @@ static ani_object GetSkillInfosNative(ani_env* env, ani_string aniBundleName, an
 {
     APP_LOGD("ani GetSkillInfosNative called");
     std::string bundleName;
-    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName) || bundleName.empty()) {
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
         APP_LOGE("bundleName parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
@@ -214,7 +212,7 @@ static ani_object GetSkillInfosNative(ani_env* env, ani_string aniBundleName, an
     if (err != ERR_OK) {
         APP_LOGE("GetSkillInfosNative failed, err: %{public}d", err);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(err), GET_SKILL_INFOS,
-            Constants::PERMISSION_GET_BUNDLE_RESOURCES);
+            Constants::PERMISSION_MANAGE_SKILL_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
         return nullptr;
     }
     return ConvertSkillInfos(env, skillInfos);
@@ -231,7 +229,7 @@ static ani_object GetAllSkillInfosNative(ani_env* env, ani_int aniFlags, ani_int
     if (err != ERR_OK) {
         APP_LOGE("GetAllSkillInfosNative failed, err: %{public}d", err);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(err), GET_ALL_SKILL_INFOS,
-            Constants::PERMISSION_GET_BUNDLE_RESOURCES);
+            Constants::PERMISSION_MANAGE_SKILL_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
         return nullptr;
     }
     return ConvertSkillInfos(env, skillInfos);

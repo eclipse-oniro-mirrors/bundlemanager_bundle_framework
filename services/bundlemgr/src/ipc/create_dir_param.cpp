@@ -47,6 +47,7 @@ bool CreateDirParam::ReadFromParcel(Parcel &parcel)
     hasInputMethodExtension = parcel.ReadBool();
     remainingNum = parcel.ReadUint32();
     stopReason = Str16ToStr8(parcel.ReadString16());
+    bundleDirScene = static_cast<BundleDirScene>(parcel.ReadInt32());
     return true;
 }
 
@@ -74,6 +75,7 @@ bool CreateDirParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasInputMethodExtension);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, remainingNum);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(stopReason));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(bundleDirScene));
     return true;
 }
 

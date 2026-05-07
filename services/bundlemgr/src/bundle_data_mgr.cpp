@@ -963,8 +963,9 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
     if (!bundleName.empty() && !abilityName.empty()) {
         bool ret = ExplicitQueryAbilityInfo(want, flags, requestUserId, abilityInfo, appIndex);
         if (!ret) {
-            LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility no match -n %{public}s -a %{public}s -u %{public}d"
-                " -i %{public}d", bundleName.c_str(), abilityName.c_str(), userId, appIndex);
+            LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility no match -n %{public}s -m %{public}s -a %{public}s"
+                " -u %{public}d -i %{public}d", bundleName.c_str(), element.GetModuleName().c_str(),
+                abilityName.c_str(), userId, appIndex);
             return false;
         }
         return true;
@@ -1045,8 +1046,9 @@ bool BundleDataMgr::QueryAbilityInfos(
         }
         // get cloneApp's abilityInfos
         GetCloneAbilityInfos(abilityInfos, element, flags, userId);
-        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility size:%{public}zu -n %{public}s -a %{public}s -u %{public}d",
-            abilityInfos.size(), bundleName.c_str(), abilityName.c_str(), userId);
+        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility size:%{public}zu -n %{public}s -m %{public}s -a %{public}s"
+            " -u %{public}d", abilityInfos.size(), bundleName.c_str(), element.GetModuleName().c_str(),
+            abilityName.c_str(), userId);
         return !abilityInfos.empty();
     }
     // implicit query
@@ -1086,8 +1088,9 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
         }
         // get cloneApp's abilityInfos
         GetCloneAbilityInfosV9(abilityInfos, element, flags, userId);
-        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility V9 size:%{public}zu -n %{public}s -a %{public}s -u %{public}d",
-            abilityInfos.size(), bundleName.c_str(), abilityName.c_str(), userId);
+        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility V9 size:%{public}zu -n %{public}s -m %{public}s -a %{public}s"
+            " -u %{public}d", abilityInfos.size(), bundleName.c_str(), element.GetModuleName().c_str(),
+            abilityName.c_str(), userId);
         if (abilityInfos.empty()) {
             return ret;
         }
@@ -3953,6 +3956,9 @@ bool BundleDataMgr::GetBundleList(std::vector<std::string> &bundleNames,
     bool find = false;
     for (const auto &infoItem : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = infoItem.second;
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL) {
+            continue;
+        }
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         if (CheckInnerBundleInfoWithFlags(
             innerBundleInfo, flags, responseUserId) != ERR_OK) {
@@ -4020,8 +4026,9 @@ bool BundleDataMgr::GetBundleInfos(
     bool find = false;
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
-        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-            LOG_D(BMS_TAG_QUERY, "app %{public}s is cross-app shared bundle, ignore",
+        auto bundleType = innerBundleInfo.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
+            LOG_D(BMS_TAG_QUERY, "app %{public}s is cross-app shared bundle or skill bundle, ignore",
                 innerBundleInfo.GetBundleName().c_str());
             continue;
         }
@@ -4189,8 +4196,10 @@ bool BundleDataMgr::GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bu
             APP_LOGD("app %{public}s is disabled", info.GetBundleName().c_str());
             continue;
         }
-        if (info.GetApplicationBundleType() == BundleType::SHARED) {
-            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", info.GetBundleName().c_str());
+        auto bundleType = info.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or skill bundle, ignore",
+                info.GetBundleName().c_str());
             continue;
         }
         BundleInfo bundleInfo;
@@ -4223,8 +4232,9 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0;
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
-        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-            LOG_D(BMS_TAG_QUERY, "app %{public}s is cross-app shared bundle, ignore",
+        auto bundleType = innerBundleInfo.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
+            LOG_D(BMS_TAG_QUERY, "app %{public}s is cross-app shared bundle or skill bundle, ignore",
                 innerBundleInfo.GetBundleName().c_str());
             continue;
         }
@@ -4292,8 +4302,10 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
             APP_LOGD("app %{public}s is disabled", info.GetBundleName().c_str());
             continue;
         }
-        if (info.GetApplicationBundleType() == BundleType::SHARED) {
-            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", info.GetBundleName().c_str());
+        auto bundleType = info.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or skill bundle, ignore",
+                info.GetBundleName().c_str());
             continue;
         }
         if (((static_cast<uint32_t>(flags) &
@@ -4559,7 +4571,7 @@ std::vector<int32_t> BundleDataMgr::GetNoRunningBundleCloneIndexes(const sptr<IA
     for (const auto &appIndex : cloneAppIndexes) {
         bool running = SystemAbilityHelper::IsAppRunning(appMgrProxy, bundleName, appIndex, userId);
         if (running) {
-            APP_LOGW("No del cache for %{public}s[%{public}d] in user[%{public}d]: is running",
+            APP_LOGW_NOFUNC("No del cache -n %{public}s -i %{public}d -u %{public}d is running",
                 bundleName.c_str(), appIndex, userId);
             continue;
         }
@@ -7124,9 +7136,11 @@ void BundleDataMgr::CreateAppInstallDir(int32_t userId)
 {
     std::string path = std::string(ServiceConstants::HAP_COPY_PATH) +
         ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::SERVICE_BMS_GALLERY_DOWNLOAD_DIR;
     ErrCode ret = InstalldClient::GetInstance()->Mkdir(path,
         S_IRWXU | S_IRWXG | S_IXOTH | S_ISGID,
-        Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID);
+        Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID, createDirParam);
     if (ret != ERR_OK) {
         APP_LOGE("create app install %{public}d failed", userId);
         return;
@@ -7135,7 +7149,7 @@ void BundleDataMgr::CreateAppInstallDir(int32_t userId)
     std::string appClonePath = path + ServiceConstants::GALLERY_CLONE_PATH;
     ret = InstalldClient::GetInstance()->Mkdir(appClonePath,
         S_IRWXU | S_IRWXG | S_IXOTH | S_ISGID,
-        Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID);
+        Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID, createDirParam);
     if (ret != ERR_OK) {
         APP_LOGE("create app clone %{public}d failed", userId);
     }
@@ -7216,8 +7230,9 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
         if (ExplicitQueryExtensionInfo(want, flags, requestUserId, info, appIndex)) {
             extensionInfos.emplace_back(info);
         }
-        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryExtension size:%{public}zu -n %{public}s -e %{public}s -u %{public}d"
-            " -i %{public}d", extensionInfos.size(), bundleName.c_str(), extensionName.c_str(), userId, appIndex);
+        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryExtension size:%{public}zu -n %{public}s -m %{public}s -e %{public}s"
+            " -u %{public}d -i %{public}d", extensionInfos.size(), bundleName.c_str(), element.GetModuleName().c_str(),
+            extensionName.c_str(), userId, appIndex);
         return !extensionInfos.empty();
     }
 
@@ -8797,7 +8812,8 @@ void BundleDataMgr::GetBundleNameList(const int32_t userId, std::vector<std::str
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     for (const auto& [bundleName, infoItem] : bundleInfos_) {
-        if (infoItem.GetApplicationBundleType() == BundleType::SHARED) {
+        auto bundleType = infoItem.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL) {
                 continue;
         } else {
             int32_t responseUserId = infoItem.GetResponseUserId(userId);
@@ -9248,8 +9264,9 @@ std::vector<std::string> BundleDataMgr::GetBundleNamesForNewUser() const
     std::vector<std::string> bundleNames;
     for (const auto &item : bundleInfos_) {
         if (item.second.GetApplicationBundleType() == BundleType::SHARED ||
-            item.second.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
-            APP_LOGD("app %{public}s is cross-app shared bundle or appService, ignore",
+            item.second.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK ||
+            item.second.GetApplicationBundleType() == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or appService or skill bundle, ignore",
                 item.second.GetBundleName().c_str());
             continue;
         }
@@ -9599,8 +9616,9 @@ ErrCode BundleDataMgr::GetAllAppInstallExtendedInfo(std::vector<AppInstallExtend
             APP_LOGD("app %{public}s is disabled", bundleName.c_str());
             continue;
         }
-        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-            APP_LOGD("app %{public}s is cross-app shared bundle", bundleName.c_str());
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED ||
+            innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or skill bundle", bundleName.c_str());
             continue;
         }
         if (innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
@@ -10889,10 +10907,14 @@ void BundleDataMgr::InnerCreateEl5Dir(const CreateDirParam &el5Param)
     dirs.emplace_back(parentDir + ServiceConstants::DATABASE + bundleNameDir);
     for (const std::string &dir : dirs) {
         uint32_t mode = S_IRWXU;
+        CreateDirParam createDirParam;
+        createDirParam.bundleName = el5Param.bundleName;
+        createDirParam.bundleDirScene = BundleDirScene::SCREEN_LOCK_FILE_BASE_DIR;
         if (dir.find(ServiceConstants::DATABASE) != std::string::npos) {
             mode = S_IRWXU | S_IRWXG;
+            createDirParam.bundleDirScene = BundleDirScene::SCREEN_LOCK_FILE_DATA_BASE_DIR;
         }
-        if (InstalldClient::GetInstance()->Mkdir(dir, mode, el5Param.uid, el5Param.uid) != ERR_OK) {
+        if (InstalldClient::GetInstance()->Mkdir(dir, mode, el5Param.uid, el5Param.uid, createDirParam) != ERR_OK) {
             LOG_NOFUNC_W(BMS_TAG_INSTALLER, "create el5 dir %{public}s failed", dir.c_str());
         }
         ErrCode result = InstalldClient::GetInstance()->SetDirApl(
@@ -11198,8 +11220,9 @@ ErrCode BundleDataMgr::GetAllBundleInfoByDeveloperId(const std::string &develope
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
         if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED ||
-            innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
-            APP_LOGD("app %{public}s is cross-app shared bundle or appService, ignore",
+            innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK ||
+            innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or appService or skill bundle, ignore",
                 innerBundleInfo.GetBundleName().c_str());
             continue;
         }
@@ -11251,8 +11274,9 @@ ErrCode BundleDataMgr::GetDeveloperIds(const std::string &appDistributionType,
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
         if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED ||
-            innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
-            APP_LOGD("app %{public}s is cross-app shared bundle or appService, ignore",
+            innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK ||
+            innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or appService or skill bundle, ignore",
                 innerBundleInfo.GetBundleName().c_str());
             continue;
         }
@@ -11951,7 +11975,8 @@ ErrCode BundleDataMgr::GetAllBundleNames(uint32_t flags, int32_t userId, std::ve
     bool ofAnyUserFlag = (flags & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0;
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &[bundleName, innerInfo] : bundleInfos_) {
-        if (innerInfo.GetApplicationBundleType() == BundleType::SHARED) {
+        if (innerInfo.GetApplicationBundleType() == BundleType::SHARED ||
+            innerInfo.GetApplicationBundleType() == BundleType::SKILL) {
             LOG_D(BMS_TAG_QUERY, "%{public}s is not app or atomic, ignore", bundleName.c_str());
             continue;
         }
@@ -13698,8 +13723,9 @@ void BundleDataMgr::GetProfileDataList(ProfileType profileType, int32_t requestU
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &info = item.second;
         std::string bundleName = info.GetBundleName();
-        if (info.GetApplicationBundleType() == BundleType::SHARED) {
-            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", bundleName.c_str());
+        if (info.GetApplicationBundleType() == BundleType::SHARED ||
+            info.GetApplicationBundleType() == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or skill bundle, ignore", bundleName.c_str());
             continue;
         }
         int32_t responseUserId = info.GetResponseUserId(requestUserId);
@@ -14104,18 +14130,19 @@ std::vector<std::string> BundleDataMgr::GetAllowListenBundleNames(
 
 void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
     const InnerModuleInfo &moduleInfo, const SkillProfile &profile,
-    SkillType skillType, uint32_t flags, SkillInfo &skillInfo)
+    uint32_t flags, SkillInfo &skillInfo)
 {
     skillInfo.bundleName = info.GetBundleName();
     skillInfo.moduleName = moduleInfo.moduleName;
     skillInfo.skillName = profile.name;
-    skillInfo.skillId = 0;
-    skillInfo.skillType = skillType;
+    skillInfo.skillType = (info.GetApplicationBundleType() == BundleType::SKILL) ?
+        SkillType::INDEPENDENT_SKILL : SkillType::APP_SKILL;
     skillInfo.hapPath = moduleInfo.hapPath;
     skillInfo.abilityName = profile.abilityName;
     skillInfo.skillPath = std::string(ServiceConstants::SKILL_FILE_PATH) + ServiceConstants::PATH_SEPARATOR +
         skillInfo.bundleName + ServiceConstants::PATH_SEPARATOR + skillInfo.moduleName + ServiceConstants::PATH_SEPARATOR +
         ServiceConstants::SKILL_DIR + ServiceConstants::PATH_SEPARATOR + skillInfo.skillName;
+    skillInfo.versionCode = info.GetVersionCode();
 
     if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_SRC_ENTRIES)) ==
         static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_SRC_ENTRIES)) {
@@ -14156,14 +14183,6 @@ ErrCode BundleDataMgr::GetSkillInfoForSelf(const std::string &moduleName,
         APP_LOGE("GetBundleNameAndIndex failed, uid:%{public}d, err:%{public}d", callingUid, err);
         return err;
     }
-    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID) {
-        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
-            APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
-            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-        }
-        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
-    }
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
@@ -14183,7 +14202,7 @@ ErrCode BundleDataMgr::GetSkillInfoForSelf(const std::string &moduleName,
     }
     for (const auto &profile : moduleInfo->skillProfiles) {
         if (profile.name == skillName) {
-            GetSkillInfoWithFlags(info, moduleInfo.value(), profile, SkillType::APP_SKILL, flags, skillInfo);
+            GetSkillInfoWithFlags(info, moduleInfo.value(), profile, flags, skillInfo);
             break;
         }
     }
@@ -14207,14 +14226,6 @@ ErrCode BundleDataMgr::GetSkillInfosForSelf(uint32_t flags, int32_t userId,
         APP_LOGE("GetBundleNameAndIndex failed, uid:%{public}d, err:%{public}d", callingUid, err);
         return err;
     }
-    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID) {
-        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
-            APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
-            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-        }
-        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
-    }
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
@@ -14226,10 +14237,10 @@ ErrCode BundleDataMgr::GetSkillInfosForSelf(uint32_t flags, int32_t userId,
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &info = item->second;
-    for (const auto &[modName, moduleInfo] : info.GetInnerModuleInfos()) {
+    for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
         for (const auto &profile : moduleInfo.skillProfiles) {
             SkillInfo skillInfo;
-            GetSkillInfoWithFlags(info, moduleInfo, profile, SkillType::APP_SKILL, flags, skillInfo);
+            GetSkillInfoWithFlags(info, moduleInfo, profile, flags, skillInfo);
             skillInfos.emplace_back(std::move(skillInfo));
         }
     }
@@ -14260,6 +14271,10 @@ ErrCode BundleDataMgr::GetSkillInfo(const std::string &bundleName, const std::st
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &info = item->second;
+    if (!info.HasInnerBundleUserInfo(requestUserId)) {
+        APP_LOGE("bundle %{public}s is not installed for user %{public}d", bundleName.c_str(), requestUserId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
     auto moduleInfo = info.GetInnerModuleInfoByModuleName(moduleName);
     if (!moduleInfo.has_value()) {
         APP_LOGE("module not found, moduleName:%{public}s", moduleName.c_str());
@@ -14267,8 +14282,7 @@ ErrCode BundleDataMgr::GetSkillInfo(const std::string &bundleName, const std::st
     }
     for (const auto &profile : moduleInfo->skillProfiles) {
         if (profile.name == skillName) {
-            GetSkillInfoWithFlags(info, moduleInfo.value(), profile,
-                SkillType::INDEPENDENT_SKILL, flags, skillInfo);
+            GetSkillInfoWithFlags(info, moduleInfo.value(), profile, flags, skillInfo);
             break;
         }
     }
@@ -14303,12 +14317,15 @@ ErrCode BundleDataMgr::GetSkillInfos(const std::string &bundleName, uint32_t fla
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &info = item->second;
-    for (const auto &[modName, moduleInfo] : info.GetInnerModuleInfos()) {
+    if (!info.HasInnerBundleUserInfo(requestUserId)) {
+        APP_LOGE("bundle %{public}s is not installed for user %{public}d", bundleName.c_str(), requestUserId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
         for (const auto &profile : moduleInfo.skillProfiles) {
-            SkillInfo si;
-            GetSkillInfoWithFlags(info, moduleInfo, profile,
-                SkillType::INDEPENDENT_SKILL, flags, si);
-            skillInfos.emplace_back(std::move(si));
+            SkillInfo skillInfo;
+            GetSkillInfoWithFlags(info, moduleInfo, profile, flags, skillInfo);
+            skillInfos.emplace_back(std::move(skillInfo));
         }
     }
     return ERR_OK;
@@ -14318,17 +14335,20 @@ ErrCode BundleDataMgr::GetAllSkillInfos(uint32_t flags, int32_t userId,
     std::vector<SkillInfo> &skillInfos)
 {
     APP_LOGD("get all skill infos, flags:%{public}u, userId:%{public}d", flags, userId);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    for (const auto &[bName, info] : bundleInfos_) {
-        if (info.GetApplicationBundleType() != BundleType::SKILL) {
+    for (const auto &[bundleName, info] : bundleInfos_) {
+        if (!info.HasInnerBundleUserInfo(requestUserId)) {
             continue;
         }
-        for (const auto &[modName, moduleInfo] : info.GetInnerModuleInfos()) {
+        for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
             for (const auto &profile : moduleInfo.skillProfiles) {
-                SkillInfo si;
-                GetSkillInfoWithFlags(info, moduleInfo, profile,
-                    SkillType::INDEPENDENT_SKILL, flags, si);
-                skillInfos.emplace_back(std::move(si));
+                SkillInfo skillInfo;
+                GetSkillInfoWithFlags(info, moduleInfo, profile, flags, skillInfo);
+                skillInfos.emplace_back(std::move(skillInfo));
             }
         }
     }

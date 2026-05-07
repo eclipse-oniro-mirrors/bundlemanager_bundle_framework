@@ -1514,7 +1514,24 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
 #endif
 }
 
-bool CheckDriverNameAndType(const InnerBundleInfo &bundleInfo)
+bool CheckDriverNameAndValue(std::string name, std::string value)
+{
+    const std::vector<std::string> DRIVER_PROPERTIES = {
+        "cupsFilter", "cupsBackend", "cupsPpd", "saneConfig", "saneBackend"
+    };
+    if (std::find(DRIVER_PROPERTIES.cbegin(), DRIVER_PROPERTIES.cend(), name) == DRIVER_PROPERTIES.cend()) {
+        return true;
+    }
+
+    const std::string CUPS_DIR = "/print_service/cups/";
+    if (value.find("..") != std::string::npos || value.size() < CUPS_DIR.size() ||
+        value.compare(0, CUPS_DIR.size(), CUPS_DIR) != 0) {
+        return false;
+    }
+    return true;
+}
+
+bool CheckDriverAttribute(const InnerBundleInfo &bundleInfo)
 {
     for (const auto &extensionInfo: bundleInfo.GetInnerExtensionInfos()) {
         bool isDriverExtensionAbilityType = (extensionInfo.second.type == ExtensionAbilityType::DRIVER);
@@ -1523,7 +1540,7 @@ bool CheckDriverNameAndType(const InnerBundleInfo &bundleInfo)
         }
 
         for (const auto &meta : extensionInfo.second.metadata) {
-            if (meta.name == "saneConfig" || meta.name == "saneBackend") {
+            if (!CheckDriverNameAndValue(meta.name, meta.value)) {
                 LOG_E(BMS_TAG_INSTALLER, "Bundle %{public}s is not allowed", bundleInfo.GetBundleName().c_str());
                 return false;
             }
@@ -1552,7 +1569,7 @@ bool BundleInstallChecker::CheckSaneDriverIsolation(const Security::Verify::HapV
     }
     for (const auto &newInfo : newInfos) {
         const InnerBundleInfo &bundleInfo = newInfo.second;
-        if (!CheckDriverNameAndType(bundleInfo)) {
+        if (!CheckDriverAttribute(bundleInfo)) {
             return false;
         }
     }

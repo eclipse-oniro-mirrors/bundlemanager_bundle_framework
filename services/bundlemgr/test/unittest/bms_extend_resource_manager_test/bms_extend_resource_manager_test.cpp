@@ -343,10 +343,10 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_0800, Function | SmallTes
 HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_0900, Function | SmallTest | Level1)
 {
     ExtendResourceManagerHostImpl impl;
-    auto ret = impl.MkdirIfNotExist(DIR_PATH_ONE);
+    auto ret = impl.MkdirIfNotExist(BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, DIR_PATH_ONE);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 
-    ret = impl.MkdirIfNotExist(DIR_PATH_TWO);
+    ret = impl.MkdirIfNotExist(BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, DIR_PATH_TWO);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 
     std::vector<std::string> moduleNames;

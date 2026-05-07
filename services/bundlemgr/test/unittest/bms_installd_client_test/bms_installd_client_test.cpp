@@ -100,7 +100,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDir_0100, Test
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDir_0100 start";
     std::string bundleDir = EMPTY_STRING;
-    ErrCode result = installClient_->CreateBundleDir(bundleDir);
+    ErrCode result = installClient_->CreateBundleDir(BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, bundleDir);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDir_0100 end";
 }
@@ -114,8 +114,9 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDir_0200, Test
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDir_0200 start";
     std::string bundleDir = BUNDLE_DIR;
-    ErrCode result = installClient_->CreateBundleDir(bundleDir);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CreateBundleDir, bundleDir));
+    ErrCode result = installClient_->CreateBundleDir(BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, bundleDir);
+    EXPECT_EQ(result, installClient_->CallService(
+        &IInstalld::CreateBundleDir, BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, bundleDir));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDir_0200 end";
 }
 
@@ -319,7 +320,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RenameModuleDir_0100, Test
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RenameModuleDir_0100 start";
     std::string oldPath = EMPTY_STRING;
     std::string newPath = NEW_PATH;
-    ErrCode result = installClient_->RenameModuleDir(oldPath, newPath);
+    std::string bundleName = BUNDLE_NAME;
+    ErrCode result = installClient_->RenameModuleDir(oldPath, newPath, bundleName, BundleDirScene::BUNDLE_CODE_DIR);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RenameModuleDir_0100 end";
 }
@@ -334,7 +336,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RenameModuleDir_0200, Test
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RenameModuleDir_0200 start";
     std::string oldPath = OLD_PATH;
     std::string newPath = EMPTY_STRING;
-    ErrCode result = installClient_->RenameModuleDir(oldPath, newPath);
+    std::string bundleName = BUNDLE_NAME;
+    ErrCode result = installClient_->RenameModuleDir(oldPath, newPath, bundleName, BundleDirScene::BUNDLE_CODE_DIR);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RenameModuleDir_0200 end";
 }
@@ -349,8 +352,10 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RenameModuleDir_0300, Test
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RenameModuleDir_0300 start";
     std::string oldPath = OLD_PATH;
     std::string newPath = NEW_PATH;
-    ErrCode result = installClient_->RenameModuleDir(oldPath, newPath);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::RenameModuleDir, oldPath, newPath));
+    std::string bundleName = BUNDLE_NAME;
+    ErrCode result = installClient_->RenameModuleDir(oldPath, newPath, bundleName, BundleDirScene::BUNDLE_CODE_DIR);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::RenameModuleDir, oldPath, newPath,
+        bundleName, BundleDirScene::BUNDLE_CODE_DIR));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RenameModuleDir_0300 end";
 }
 
@@ -839,7 +844,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MoveFile_0100, TestSize.Le
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveFile_0100 start";
     std::string oldPath = EMPTY_STRING;
     std::string newPath = NEW_PATH;
-    ErrCode result = installClient_->MoveFile(oldPath, newPath);
+    std::string bundleName = BUNDLE_NAME;
+    ErrCode result = installClient_->MoveFile(oldPath, newPath, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, bundleName);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveFile_0100 end";
 }
@@ -854,7 +860,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MoveFile_0200, TestSize.Le
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveFile_0200 start";
     std::string oldPath = OLD_PATH;
     std::string newPath = EMPTY_STRING;
-    ErrCode result = installClient_->MoveFile(oldPath, newPath);
+    std::string bundleName = BUNDLE_NAME;
+    ErrCode result = installClient_->MoveFile(oldPath, newPath, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, bundleName);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveFile_0200 end";
 }
@@ -869,8 +876,10 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MoveFile_0300, TestSize.Le
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveFile_0300 start";
     std::string oldPath = OLD_PATH;
     std::string newPath = NEW_PATH;
-    ErrCode result = installClient_->MoveFile(oldPath, newPath);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::MoveFile, oldPath, newPath));
+    std::string bundleName = BUNDLE_NAME;
+    ErrCode result = installClient_->MoveFile(oldPath, newPath, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, bundleName);
+    EXPECT_EQ(result, installClient_->CallService(
+                          &IInstalld::MoveFile, oldPath, newPath, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, bundleName));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveFile_0300 end";
 }
 
@@ -931,7 +940,9 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_Mkdir_0100, TestSize.Level
     int32_t mode = 1;
     int32_t uid = UID;
     int32_t gid = GID;
-    ErrCode result = installClient_->Mkdir(dir, mode, uid, gid);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_SYSTEM_OPTIMIZE_DIR;
+    ErrCode result = installClient_->Mkdir(dir, mode, uid, gid, createDirParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_Mkdir_0100 end";
 }
@@ -948,8 +959,10 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_Mkdir_0200, TestSize.Level
     int32_t mode = 1;
     int32_t uid = UID;
     int32_t gid = GID;
-    ErrCode result = installClient_->Mkdir(dir, mode, uid, gid);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::Mkdir, dir, mode, uid, gid));
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_SYSTEM_OPTIMIZE_DIR;
+    ErrCode result = installClient_->Mkdir(dir, mode, uid, gid, createDirParam);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::Mkdir, dir, mode, uid, gid, createDirParam));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_Mkdir_0200 end";
 }
 

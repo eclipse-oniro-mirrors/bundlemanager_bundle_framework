@@ -29,6 +29,7 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 namespace {
 std::string TEST_STRING = "test.string";
+const std::string TEST_BUNDLE_NAME = "com.example.test";
 const std::string TEST_CPU_ABI = "arm64";
 const std::string HAP_FILE_PATH =
     "/data/app/el1/bundle/public/com.example.test/entry.hap";
@@ -93,7 +94,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_, Function | SmallTe
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->CreateBundleDir(TEST_STRING);
+    auto ret = hostImpl->CreateBundleDir(TEST_BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, TEST_PATH);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -123,7 +124,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0300, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->RenameModuleDir(TEST_STRING, TEST_STRING);
+    auto ret = hostImpl->RenameModuleDir(TEST_STRING, TEST_STRING, TEST_BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -288,7 +289,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1300, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->MoveFile(TEST_STRING, TEST_STRING);
+    auto ret = hostImpl->MoveFile(TEST_STRING, TEST_STRING, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, TEST_BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -333,7 +334,9 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1500, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->Mkdir(TEST_STRING, 0, 0, 0);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_SYSTEM_OPTIMIZE_DIR;
+    auto ret = hostImpl->Mkdir(TEST_STRING, 0, 0, 0, createDirParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -516,7 +519,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2700, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->CreateBundleDir("");
+    auto ret = hostImpl->CreateBundleDir(TEST_BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, "");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -578,11 +581,11 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3000, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->RenameModuleDir("", TEST_STRING);
+    auto ret = hostImpl->RenameModuleDir("", TEST_STRING, TEST_BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR);
     EXPECT_NE(ret, ERR_OK);
-    ret = hostImpl->RenameModuleDir(TEST_STRING, "");
+    ret = hostImpl->RenameModuleDir(TEST_STRING, "", TEST_BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR);
     EXPECT_NE(ret, ERR_OK);
-    ret = hostImpl->RenameModuleDir("", "");
+    ret = hostImpl->RenameModuleDir("", "", TEST_BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -597,7 +600,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3100, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->RenameModuleDir(OVER_MAX_PATH_SIZE, TEST_STRING);
+    auto ret =
+        hostImpl->RenameModuleDir(OVER_MAX_PATH_SIZE, TEST_STRING, TEST_BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -734,7 +738,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3900, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->MoveFile("", "");
+    auto ret = hostImpl->MoveFile("", "", BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, TEST_BUNDLE_NAME);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -749,7 +753,9 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4000, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->Mkdir("", 0, 0, 0);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_SYSTEM_OPTIMIZE_DIR;
+    auto ret = hostImpl->Mkdir("", 0, 0, 0, createDirParam);
     EXPECT_NE(ret, ERR_OK);
 }
 

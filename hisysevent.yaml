@@ -31,6 +31,7 @@ BUNDLE_INSTALL_EXCEPTION:
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
   IS_PATCH: {type: BOOL, desc: is patched}
+  HAS_HNP: {type: BOOL, desc: has hnp}
   ODID: {type: STRING, desc: odid}
 
 BUNDLE_UNINSTALL_EXCEPTION:
@@ -62,6 +63,10 @@ BUNDLE_UPDATE_EXCEPTION:
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
   IS_PATCH: {type: BOOL, desc: is patched}
+  IS_DOWNGRADE: {type: BOOL, desc: is downgrade}
+  OLD_APP_PROVISION_TYPE: {type: STRING, desc: old app provision type}
+  NEW_APP_PROVISION_TYPE: {type: STRING, desc: new app provision type}
+  HAS_HNP: {type: BOOL, desc: has hnp}
   ODID: {type: STRING, desc: odid}
 
 PRE_BUNDLE_RECOVER_EXCEPTION:
@@ -138,6 +143,7 @@ BUNDLE_INSTALL:
   IS_PATCH: {type: BOOL, desc: is patched}
   START_TIME: {type: INT64, desc: bundle installation start time}
   END_TIME: {type: INT64, desc: bundle installation end time}
+  HAS_HNP: {type: BOOL, desc: has hnp}
   ODID: {type: STRING, desc: odid}
   APPLICATION_INFO_SIZE: {type: INT32, desc: total number of installed applications}
 
@@ -183,6 +189,10 @@ BUNDLE_UPDATE:
   UID: {type: INT32, desc: uid}
   IS_ABC_COMPRESSED: {type: BOOL, desc: isAbcCompressed}
   IS_PATCH: {type: BOOL, desc: is patched}
+  IS_DOWNGRADE: {type: BOOL, desc: is downgrade}
+  OLD_APP_PROVISION_TYPE: {type: STRING, desc: old app provision type}
+  NEW_APP_PROVISION_TYPE: {type: STRING, desc: new app provision type}
+  HAS_HNP: {type: BOOL, desc: has hnp}
   START_TIME: {type: INT64, desc: bundle update start time}
   END_TIME: {type: INT64, desc: bundle update end time}
   ODID: {type: STRING, desc: odid}

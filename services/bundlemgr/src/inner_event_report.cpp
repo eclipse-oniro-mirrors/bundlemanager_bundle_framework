@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -52,6 +52,7 @@ constexpr const char* QUERY_BUNDLE_INFO = "QUERY_BUNDLE_INFO";
 constexpr const char* BUNDLE_DYNAMIC_SHORTCUTINFO = "BUNDLE_DYNAMIC_SHORTCUTINFO";
 constexpr const char* DESKTOP_SHORTCUT = "DESKTOP_SHORTCUT";
 constexpr const char* APP_STATUS_CHANGE = "APP_STATUS_CHANGE";
+constexpr const char* HIGH_RISK_EVENT = "HIGH_RISK_EVENT";
 
 // event params
 const char* EVENT_PARAM_PNAMEID = "PNAMEID";
@@ -91,6 +92,10 @@ const char* EVENT_PARAM_ACTION_TYPE = "ACTION_TYPE";
 const char* EVENT_PARAM_RULE = "ACTION_RULE";
 const char* EVENT_PARAM_APP_INDEX = "APP_INDEX";
 const char* EVENT_PARAM_IS_PATCH = "IS_PATCH";
+const char* EVENT_PARAM_IS_DOWNGRADE = "IS_DOWNGRADE";
+const char* EVENT_PARAM_HAS_HNP = "HAS_HNP";
+const char* EVENT_PARAM_OLD_APP_PROVISION_TYPE = "OLD_APP_PROVISION_TYPE";
+const char* EVENT_PARAM_NEW_APP_PROVISION_TYPE = "NEW_APP_PROVISION_TYPE";
 const char* EVENT_PARAM_WANT = "WANT";
 const char* EVENT_PARAM_UTD = "UTD";
 const char* EVENT_SHORTCUT_ID = "SHORTCUT_ID";
@@ -357,6 +362,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
             [](const EventInfo& eventInfo) {
                 InnerSendAppDisableForbiddenEvent(eventInfo);
             } },
+        { BMSEventType::HIGH_RISK_EVENT,
+            [](const EventInfo& eventInfo) {
+                InnerSendHighRiskEvent(eventInfo);
+            } },
     };
 
 void InnerEventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
@@ -387,6 +396,7 @@ void InnerEventReport::InnerSendBundleInstallExceptionEvent(const EventInfo& eve
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
         EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
+        EVENT_PARAM_HAS_HNP, eventInfo.hasHnp,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
         EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted,
@@ -431,6 +441,10 @@ void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& even
         EVENT_PARAM_INSTALL_TYPE, std::to_string(eventInfo.callingUid),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
         EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
+        EVENT_PARAM_IS_DOWNGRADE, eventInfo.isDowngrade,
+        EVENT_PARAM_HAS_HNP, eventInfo.hasHnp,
+        EVENT_PARAM_OLD_APP_PROVISION_TYPE, eventInfo.oldAppProvisionType,
+        EVENT_PARAM_NEW_APP_PROVISION_TYPE, eventInfo.newAppProvisionType,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
         EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted,
@@ -530,6 +544,7 @@ void InnerEventReport::InnerSendBundleInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_SCENE, GetInstallScene(eventInfo),
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
         EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
+        EVENT_PARAM_HAS_HNP, eventInfo.hasHnp,
         EVENT_PARAM_MIN_API_VERSION, eventInfo.minAPIVersion,
         EVENT_PARAM_TARGET_API_VERSION, eventInfo.targetAPIVersion,
         EVENT_PARAM_COMPILE_SDK_VERSION, eventInfo.compileSdkVersion,
@@ -584,6 +599,10 @@ void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
         EVENT_PARAM_HIDE_DESKTOP_ICON, eventInfo.hideDesktopIcon,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
         EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
+        EVENT_PARAM_IS_DOWNGRADE, eventInfo.isDowngrade,
+        EVENT_PARAM_HAS_HNP, eventInfo.hasHnp,
+        EVENT_PARAM_OLD_APP_PROVISION_TYPE, eventInfo.oldAppProvisionType,
+        EVENT_PARAM_NEW_APP_PROVISION_TYPE, eventInfo.newAppProvisionType,
         EVENT_PARAM_MIN_API_VERSION, eventInfo.minAPIVersion,
         EVENT_PARAM_TARGET_API_VERSION, eventInfo.targetAPIVersion,
         EVENT_PARAM_COMPILE_SDK_VERSION, eventInfo.compileSdkVersion,
@@ -880,6 +899,22 @@ void InnerEventReport::InnerSendAppDisableForbiddenEvent(const EventInfo& eventI
         EVENT_PARAM_DISABLE_FORBIDDEN, eventInfo.disableForbidden,
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid);
+}
+
+void InnerEventReport::InnerSendHighRiskEvent(const EventInfo& eventInfo)
+{
+    InnerSystemEventWrite(
+        HIGH_RISK_EVENT,
+        HiSysEventType::STATISTIC,
+        EVENT_PARAM_ACTION_TYPE, eventInfo.actionType,
+        EVENT_PARAM_OPERATION_TYPE, eventInfo.operationType,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_VERSION, eventInfo.versionCode,
+        EVENT_PARAM_FILE_PATH, eventInfo.filePath,
+        EVENT_PARAM_START_TIME, eventInfo.startTime,
+        EVENT_PARAM_END_TIME, eventInfo.endTime);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

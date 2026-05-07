@@ -172,8 +172,8 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
             info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         }
     } else if (mark.status == InstallExceptionStatus::UPDATING_FINISH) {
-        if (InstalldClient::GetInstance()->RenameModuleDir(moduleDir + ServiceConstants::TMP_SUFFIX, moduleDir) !=
-            ERR_OK) {
+        if (InstalldClient::GetInstance()->RenameModuleDir(moduleDir + ServiceConstants::TMP_SUFFIX, moduleDir,
+            info.GetBundleName(), BundleDirScene::BUNDLE_CODE_DIR) != ERR_OK) {
             APP_LOGI_NOFUNC("%{public}s rename module failed, may not exist", info.GetBundleName().c_str());
         }
     }

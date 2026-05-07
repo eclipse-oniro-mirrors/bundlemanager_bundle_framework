@@ -349,8 +349,9 @@ void IndependentSkillsInstaller::RemoveSkillDir(
     }
     std::string moduleDir =
         std::string(BASE_SKILL_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
-        bundleName + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
-    LOG_I(BMS_TAG_INSTALLER, "start to remove module dir: %{public}s", moduleDir.c_str());
+        bundleName + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName +
+        AppExecFwk::ServiceConstants::PATH_SEPARATOR + skillsName;
+    LOG_I(BMS_TAG_INSTALLER, "start to remove skill dir: %{public}s", moduleDir.c_str());
     if (InstalldClient::GetInstance()->RemoveDir(moduleDir) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "remove module dir %{public}s failed", moduleDir.c_str());
     }
@@ -576,7 +577,7 @@ ErrCode IndependentSkillsInstaller::MkdirIfNotExist(const std::string &dir)
     CHECK_SKILLS_RESULT(result, "Check if dir exist failed %{public}d");
 
     if (!isDirExist) {
-        result = InstalldClient::GetInstance()->CreateBundleDir(dir);
+        result = InstalldClient::GetInstance()->CreateBundleDir(bundleName_, BundleDirScene::BASE_SKILL_DIR, dir);
         CHECK_SKILLS_RESULT(result, "Create dir failed %{public}d");
     }
     return result;
@@ -765,7 +766,8 @@ ErrCode IndependentSkillsInstaller::ExtractModule(
     std::string realModuleDir = bundleDir + ServiceConstants::PATH_SEPARATOR + moduleName;
     // rename +temp
     if (isModuleExist) {
-        result = InstalldClient::GetInstance()->RenameModuleDir(moduleDir, realModuleDir);
+        result = InstalldClient::GetInstance()->RenameModuleDir(moduleDir, realModuleDir,
+            bundleName_, BundleDirScene::BASE_SKILL_DIR);
         CHECK_SKILLS_RESULT(result, "rename +temp path failed %{public}d");
     }
     // save killName and description
@@ -1255,6 +1257,13 @@ ErrCode IndependentSkillsInstaller::ProcessUninstall(const std::string &bundleNa
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
     MarkPreInstallState(bundleName, true);
+    result = SkillsDescriptionManager::GetInstance()->DeleteSkillDescriptions(bundleName);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "delete skill desc -n %{public}s failed %{public}d", bundleName.c_str(), result);
+    }
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed", bundleName.c_str());
+    }
     std::string bundleDir =
         std::string(BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
     LOG_I(BMS_TAG_INSTALLER, "start to remove bundle dir: %{public}s", bundleDir.c_str());

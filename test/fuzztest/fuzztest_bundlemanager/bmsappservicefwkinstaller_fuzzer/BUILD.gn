@@ -66,6 +66,7 @@ ohos_fuzztest("BMSAppServiceFwkInstallerFuzzTest") {
     "appspawn:hnpapi",
     "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",
+    "common_event_service:cesfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",

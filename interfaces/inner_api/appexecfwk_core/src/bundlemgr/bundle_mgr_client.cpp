@@ -257,5 +257,15 @@ ErrCode BundleMgrClient::UnregisterPluginEventCallback(const sptr<IBundleEventCa
     }
     return impl_->UnregisterPluginEventCallback(pluginEventCallback);
 }
+
+ErrCode BundleMgrClient::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return impl_->GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, getLargestItemsCallback);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

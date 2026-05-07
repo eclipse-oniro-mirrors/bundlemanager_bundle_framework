@@ -39,7 +39,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     impl.CopyFilesToTempDir(bundleName, userId, abcPaths);
     std::string dir = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     std::vector<std::string> paths = GenerateStringArray(fdp);
-    impl.MkdirIfNotExist(dir);
+    impl.MkdirIfNotExist(bundleName, dir);
     impl.RemoveTempFiles(bundleName);
     impl.RemoveTempFiles(paths);
     std::string path = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);

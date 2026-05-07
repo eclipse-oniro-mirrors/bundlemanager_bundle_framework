@@ -376,10 +376,10 @@ HWTEST_F(BmsPluginInstallerTest, MkdirIfNotExist_0001, Function | SmallTest | Le
 {
     PluginInstaller installer;
     std::string newDir = "/data/test/newDir";
-    ErrCode ret = installer.MkdirIfNotExist(newDir);
-    EXPECT_EQ(ret, ERR_OK);
-    ret = installer.MkdirIfNotExist(newDir);
-    EXPECT_EQ(ret, ERR_OK);
+    ErrCode ret = installer.MkdirIfNotExist(BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, newDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = installer.MkdirIfNotExist(BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, newDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -516,8 +516,8 @@ HWTEST_F(BmsPluginInstallerTest, ProcessNativeLibrary_0001, Function | SmallTest
     PluginInstaller installer;
     InnerBundleInfo innerBundleInfo;
     std::string moduleDir = "/data/test/plugin_module";
-    ErrCode ret = installer.MkdirIfNotExist(moduleDir);
-    EXPECT_EQ(ret, ERR_OK);
+    ErrCode ret = installer.MkdirIfNotExist(BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, moduleDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     std::string pluginBundleDir = "/data/test";
     InnerModuleInfo innerModuleInfo;
@@ -539,8 +539,8 @@ HWTEST_F(BmsPluginInstallerTest, ProcessNativeLibrary_0002, Function | SmallTest
     PluginInstaller installer;
     InnerBundleInfo innerBundleInfo;
     std::string moduleDir = "/data/test/plugin_module";
-    ErrCode ret = installer.MkdirIfNotExist(moduleDir);
-    EXPECT_EQ(ret, ERR_OK);
+    ErrCode ret = installer.MkdirIfNotExist(BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, moduleDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     std::string pluginBundleDir = "/data/test";
     InnerModuleInfo innerModuleInfo;

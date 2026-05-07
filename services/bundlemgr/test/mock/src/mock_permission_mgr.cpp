@@ -298,5 +298,10 @@ bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
 {
     return true;
 }
+
+bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
+{
+    return true;
+}
 }
 }

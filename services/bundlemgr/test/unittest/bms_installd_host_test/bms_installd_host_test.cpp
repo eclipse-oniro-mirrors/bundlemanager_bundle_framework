@@ -435,7 +435,7 @@ HWTEST_F(BmsInstalldHostTest, HandleMkdir_0100, Function | SmallTest | Level1)
     MessageParcel data;
     MessageParcel reply;
     bool res = installdHost.HandleMkdir(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**

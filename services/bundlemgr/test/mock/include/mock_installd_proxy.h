@@ -27,8 +27,8 @@ public:
     virtual ~MockInstalldProxy() override;
     virtual ErrCode IsExistFile(const std::string &path, bool &isExist) override;
     virtual ErrCode IsExistDir(const std::string &dir, bool &isExist) override;
-    virtual ErrCode Mkdir(
-        const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid) override;
+    virtual ErrCode Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
+        const CreateDirParam &createDirParam) override;
     virtual ErrCode PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData) override;
 };
 } // AppExecFwk

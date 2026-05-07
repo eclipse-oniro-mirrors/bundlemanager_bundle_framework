@@ -31,14 +31,15 @@ constexpr int16_t LOAD_SA_TIMEOUT_MS = 4 * 1000;
 #endif
 } // namespace
 
-ErrCode InstalldClient::CreateBundleDir(const std::string &bundleDir)
+ErrCode InstalldClient::CreateBundleDir(
+    const std::string &bundleName, BundleDirScene scene, const std::string &bundleDir)
 {
-    if (bundleDir.empty()) {
-        APP_LOGE("bundle dir is empty");
+    if (bundleName.empty() || bundleDir.empty()) {
+        APP_LOGE("bundleName or bundleDir is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::CreateBundleDir, bundleDir);
+    return CallService(&IInstalld::CreateBundleDir, bundleName, scene, bundleDir);
 }
 
 ErrCode InstalldClient::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
@@ -104,14 +105,15 @@ ErrCode InstalldClient::DeleteUninstallTmpDirs(const std::vector<std::string> &d
     return CallService(&IInstalld::DeleteUninstallTmpDirs, dirs);
 }
 
-ErrCode InstalldClient::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldClient::RenameModuleDir(
+    const std::string &oldPath, const std::string &newPath, const std::string &bundleName, BundleDirScene scene)
 {
-    if (oldPath.empty() || newPath.empty()) {
-        APP_LOGE("rename path is empty");
+    if (oldPath.empty() || newPath.empty() || bundleName.empty()) {
+        APP_LOGE("rename path or bundleName is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::RenameModuleDir, oldPath, newPath);
+    return CallService(&IInstalld::RenameModuleDir, oldPath, newPath, bundleName, scene);
 }
 
 ErrCode InstalldClient::CreateBundleDataDir(const CreateDirParam &createDirParam)
@@ -401,14 +403,15 @@ ErrCode InstalldClient::ScanDir(
     return CallService(&IInstalld::ScanDir, dir, scanMode, resultMode, paths);
 }
 
-ErrCode InstalldClient::MoveFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldClient::MoveFile(
+    const std::string &oldPath, const std::string &newPath, BundleDirScene scene, const std::string &bundleName)
 {
-    if (oldPath.empty() || newPath.empty()) {
+    if (oldPath.empty() || newPath.empty() || bundleName.empty()) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::MoveFile, oldPath, newPath);
+    return CallService(&IInstalld::MoveFile, oldPath, newPath, scene, bundleName);
 }
 
 ErrCode InstalldClient::RenameFile(const std::string &oldPath, const std::string &newPath)
@@ -432,15 +435,15 @@ ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &
     return CallService(&IInstalld::CopyFile, oldPath, newPath, signatureFilePath);
 }
 
-ErrCode InstalldClient::Mkdir(
-    const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
+ErrCode InstalldClient::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
+    const CreateDirParam &createDirParam)
 {
     if (dir.empty()) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::Mkdir, dir, mode, uid, gid);
+    return CallService(&IInstalld::Mkdir, dir, mode, uid, gid, createDirParam);
 }
 
 ErrCode InstalldClient::GetFileStat(const std::string &file, FileStat &fileStat)

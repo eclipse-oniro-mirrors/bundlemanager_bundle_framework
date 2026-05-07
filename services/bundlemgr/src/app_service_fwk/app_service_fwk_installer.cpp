@@ -583,19 +583,19 @@ ErrCode AppServiceFwkInstaller::ExtractModule(
     std::string bundleDir =
         std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
         AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
-    result = MkdirIfNotExist(bundleDir);
+    result = MkdirIfNotExist(BundleDirScene::BUNDLE_CODE_DIR, bundleDir);
     CHECK_RESULT(result, "Check bundle dir failed %{public}d");
 
     newInfo.SetAppCodePath(bundleDir);
     uint32_t versionCode = newInfo.GetVersionCode();
     std::string versionDir = bundleDir
         + AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
-    result = MkdirIfNotExist(versionDir);
+    result = MkdirIfNotExist(BundleDirScene::MODULE_DIR, versionDir);
     CHECK_RESULT(result, "Check version dir failed %{public}d");
 
     auto &moduleName = newInfo.GetInnerModuleInfos().begin()->second.moduleName;
     std::string moduleDir = versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
-    result = MkdirIfNotExist(moduleDir);
+    result = MkdirIfNotExist(BundleDirScene::MODULE_DIR, moduleDir);
     CHECK_RESULT(result, "Check module dir failed %{public}d");
 
     result = ProcessNativeLibrary(bundlePath, moduleDir, moduleName, versionDir, newInfo, copyHapToInstallPath);
@@ -647,19 +647,19 @@ ErrCode AppServiceFwkInstaller::ExtractModule(InnerBundleInfo &oldInfo,
     std::string bundleDir =
         std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
         AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
-    result = MkdirIfNotExist(bundleDir);
+    result = MkdirIfNotExist(BundleDirScene::BUNDLE_CODE_DIR, bundleDir);
     CHECK_RESULT(result, "Check bundle dir failed %{public}d");
 
     oldInfo.SetAppCodePath(bundleDir);
     uint32_t versionCode = newInfo.GetVersionCode();
     std::string versionDir = bundleDir
         + AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
-    result = MkdirIfNotExist(versionDir);
+    result = MkdirIfNotExist(BundleDirScene::MODULE_DIR, versionDir);
     CHECK_RESULT(result, "Check version dir failed %{public}d");
 
     auto &moduleName = newInfo.GetInnerModuleInfos().begin()->second.moduleName;
     std::string moduleDir = versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
-    result = MkdirIfNotExist(moduleDir);
+    result = MkdirIfNotExist(BundleDirScene::MODULE_DIR, moduleDir);
     CHECK_RESULT(result, "Check module dir failed %{public}d");
 
     result = ProcessNativeLibrary(bundlePath, moduleDir, moduleName, versionDir, newInfo);
@@ -672,14 +672,14 @@ ErrCode AppServiceFwkInstaller::ExtractModule(InnerBundleInfo &oldInfo,
     return ERR_OK;
 }
 
-ErrCode AppServiceFwkInstaller::MkdirIfNotExist(const std::string &dir)
+ErrCode AppServiceFwkInstaller::MkdirIfNotExist(BundleDirScene scene, const std::string &dir)
 {
     bool isDirExist = false;
     ErrCode result = InstalldClient::GetInstance()->IsExistDir(dir, isDirExist);
     CHECK_RESULT(result, "Check if dir exist failed %{public}d");
 
     if (!isDirExist) {
-        result = InstalldClient::GetInstance()->CreateBundleDir(dir);
+        result = InstalldClient::GetInstance()->CreateBundleDir(bundleName_, scene, dir);
         CHECK_RESULT(result, "Create dir failed %{public}d");
     }
     return result;
@@ -765,7 +765,7 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
     // 1. move so files to real installation dir
     std::string realSoPath = versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR
         + nativeLibraryPath + AppExecFwk::ServiceConstants::PATH_SEPARATOR;
-    ErrCode result = MkdirIfNotExist(realSoPath);
+    ErrCode result = MkdirIfNotExist(BundleDirScene::SO_DIR, realSoPath);
     CHECK_RESULT(result, "Check module dir failed %{public}d");
     std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath);
     if (tempNativeLibraryPath.empty()) {

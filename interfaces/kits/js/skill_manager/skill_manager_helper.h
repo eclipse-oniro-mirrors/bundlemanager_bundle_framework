@@ -26,10 +26,9 @@ class SkillManagerHelper {
 public:
     static sptr<IBundleSkillManager> GetSkillManager();
     static ErrCode InnerGetSkillInfoForSelf(const std::string &moduleName, const std::string &skillName,
-        int32_t userId, uint32_t flags, SkillInfo &skillInfo);
+        uint32_t flags, SkillInfo &skillInfo);
 
-    static ErrCode InnerGetSkillInfosForSelf(uint32_t flags, int32_t userId,
-        std::vector<SkillInfo> &skillInfos);
+    static ErrCode InnerGetSkillInfosForSelf(uint32_t flags, std::vector<SkillInfo> &skillInfos);
 
     static ErrCode InnerGetSkillInfo(const std::string &bundleName, const std::string &moduleName,
         const std::string &skillName, uint32_t flags, int32_t userId, SkillInfo &skillInfo);

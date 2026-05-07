@@ -67,8 +67,10 @@ bool BundleStateStorage::HasBundleUserInfoJsonDb()
     bool isDirExist = BundleUtil::IsExistDir(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH);
     if (!isDirExist) {
         mode_t mode = S_IRWXU | S_IXGRP | S_IXOTH;
+        CreateDirParam createDirParam;
+        createDirParam.bundleDirScene = BundleDirScene::SERVICE_BMS_DIR;
         ErrCode result = InstalldClient::GetInstance()->Mkdir(
-            ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH, mode, getuid(), getgid());
+            ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH, mode, getuid(), getgid(), createDirParam);
         if (result != ERR_OK) {
             APP_LOGE("fail create dir err %{public}d", result);
             return false;

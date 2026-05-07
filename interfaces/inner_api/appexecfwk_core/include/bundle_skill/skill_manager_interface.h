@@ -27,12 +27,12 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.SkillManager");
 
     virtual ErrCode GetSkillInfoForSelf(const std::string &moduleName, const std::string &skillName,
-        int32_t userId, uint32_t flags, SkillInfo &skillInfo)
+        uint32_t flags, SkillInfo &skillInfo)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode GetSkillInfosForSelf(uint32_t flags, int32_t userId,
+    virtual ErrCode GetSkillInfosForSelf(uint32_t flags,
         std::vector<SkillInfo> &skillInfos)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;

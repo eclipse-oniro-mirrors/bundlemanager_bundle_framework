@@ -1104,6 +1104,7 @@ HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_0300, Function | SmallTest 
     hapVerifyResult.provisionInfo = provisionInfo;
 
     data.name = "cupsFilter";
+    data.value = "/print_service/cups/";
     std::vector<Metadata> metadata = { data };
     abilityInfo.metadata = metadata;
     baseExtensionInfos["testKey"] = abilityInfo;
@@ -1138,6 +1139,7 @@ HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_0400, Function | SmallTest 
     hapVerifyResult.provisionInfo = provisionInfo;
 
     data.name = "saneConfig";
+    data.value = "/print_service/sane/";
     std::vector<Metadata> metadata = { data };
     abilityInfo.metadata = metadata;
     abilityInfo.type = ExtensionAbilityType::DRIVER;
@@ -1173,6 +1175,7 @@ HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_0500, Function | SmallTest 
     hapVerifyResult.provisionInfo = provisionInfo;
     
     data.name = "saneBackend";
+    data.value = "/print_service/sane/";
     std::vector<Metadata> metadata = { data };
     abilityInfo.metadata = metadata;
     abilityInfo.type = ExtensionAbilityType::DRIVER;
@@ -1186,6 +1189,221 @@ HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_0500, Function | SmallTest 
     provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
     hapVerifyResult.provisionInfo = provisionInfo;
     result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: CheckDriverIsolation_0600
+ * @tc.name: CheckDriverIsolation with not sane driver properties
+ * @tc.desc: Test CheckDriverIsolation when driver properties is not sane
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_0600, Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "true");
+    Metadata data;
+    InnerExtensionInfo abilityInfo;
+    std::map<std::string, InnerExtensionInfo> baseExtensionInfos;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.provisionInfo = provisionInfo;
+
+    data.name = "cupsFilter";
+    data.value = "/print_service/cups/";
+    std::vector<Metadata> metadata = { data };
+    abilityInfo.metadata = metadata;
+    abilityInfo.type = ExtensionAbilityType::DRIVER;
+    baseExtensionInfos["testKey"] = abilityInfo;
+
+    newInfos["path"] = InnerBundleInfo();
+    newInfos.begin()->second.baseExtensionInfos_ = baseExtensionInfos;
+    bool result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: CheckDriverIsolation_0700
+ * @tc.name: CheckDriverIsolation with not sane driver properties
+ * @tc.desc: Test CheckDriverIsolation when driver properties is not sane
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_0700, Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "true");
+    Metadata data;
+    InnerExtensionInfo abilityInfo;
+    std::map<std::string, InnerExtensionInfo> baseExtensionInfos;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.provisionInfo = provisionInfo;
+
+    data.name = "cupsPpd";
+    data.value = "../InvalidPath";
+    std::vector<Metadata> metadata = { data };
+    abilityInfo.metadata = metadata;
+    abilityInfo.type = ExtensionAbilityType::DRIVER;
+    baseExtensionInfos["testKey"] = abilityInfo;
+
+    newInfos["path"] = InnerBundleInfo();
+    newInfos.begin()->second.baseExtensionInfos_ = baseExtensionInfos;
+    bool result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckDriverIsolation_0800
+ * @tc.name: CheckDriverIsolation with not sane driver properties
+ * @tc.desc: Test CheckDriverIsolation when driver properties is not sane
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_0800, Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "true");
+    Metadata data;
+    InnerExtensionInfo abilityInfo;
+    std::map<std::string, InnerExtensionInfo> baseExtensionInfos;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.provisionInfo = provisionInfo;
+
+    data.name = "cupsPpd";
+    data.value = "/print_service/cups/../InvalidPath";
+    std::vector<Metadata> metadata = { data };
+    abilityInfo.metadata = metadata;
+    abilityInfo.type = ExtensionAbilityType::DRIVER;
+    baseExtensionInfos["testKey"] = abilityInfo;
+
+    newInfos["path"] = InnerBundleInfo();
+    newInfos.begin()->second.baseExtensionInfos_ = baseExtensionInfos;
+    bool result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckDriverIsolation_0900
+ * @tc.name: CheckDriverIsolation with not sane driver properties
+ * @tc.desc: Test CheckDriverIsolation when driver properties is not sane
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_0900, Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "true");
+    Metadata data;
+    InnerExtensionInfo abilityInfo;
+    std::map<std::string, InnerExtensionInfo> baseExtensionInfos;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.provisionInfo = provisionInfo;
+
+    data.name = "cupsPpd";
+    data.value = "/print_service/sane/../InvalidPath";
+    std::vector<Metadata> metadata = { data };
+    abilityInfo.metadata = metadata;
+    abilityInfo.type = ExtensionAbilityType::DRIVER;
+    baseExtensionInfos["testKey"] = abilityInfo;
+
+    newInfos["path"] = InnerBundleInfo();
+    newInfos.begin()->second.baseExtensionInfos_ = baseExtensionInfos;
+    bool result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckDriverIsolation_1000
+ * @tc.name: CheckDriverIsolation with not sane driver properties
+ * @tc.desc: Test CheckDriverIsolation when driver properties is null
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_1000, Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "true");
+    Metadata data;
+    InnerExtensionInfo abilityInfo;
+    std::map<std::string, InnerExtensionInfo> baseExtensionInfos;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.provisionInfo = provisionInfo;
+
+    data.name = "cupsPpd";
+    std::vector<Metadata> metadata = { data };
+    abilityInfo.metadata = metadata;
+    abilityInfo.type = ExtensionAbilityType::DRIVER;
+    baseExtensionInfos["testKey"] = abilityInfo;
+
+    newInfos["path"] = InnerBundleInfo();
+    newInfos.begin()->second.baseExtensionInfos_ = baseExtensionInfos;
+    bool result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckDriverIsolation_1100
+ * @tc.name: CheckDriverIsolation with not sane driver properties
+ * @tc.desc: Test CheckDriverIsolation when driver properties is null
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_1100, Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "true");
+    Metadata data;
+    InnerExtensionInfo abilityInfo;
+    std::map<std::string, InnerExtensionInfo> baseExtensionInfos;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.provisionInfo = provisionInfo;
+
+    data.name = "cupsPpd";
+    data.value = "";
+    std::vector<Metadata> metadata = { data };
+    abilityInfo.metadata = metadata;
+    abilityInfo.type = ExtensionAbilityType::DRIVER;
+    baseExtensionInfos["testKey"] = abilityInfo;
+
+    newInfos["path"] = InnerBundleInfo();
+    newInfos.begin()->second.baseExtensionInfos_ = baseExtensionInfos;
+    bool result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckDriverIsolation_1200
+ * @tc.name: CheckDriverIsolation with not cups and sane driver properties
+ * @tc.desc: Test CheckDriverIsolation when driver properties is not cups and sane
+ */
+HWTEST_F(BmsSpaceIsolationTest, CheckDriverIsolation_1200, Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "true");
+    Metadata data;
+    InnerExtensionInfo abilityInfo;
+    std::map<std::string, InnerExtensionInfo> baseExtensionInfos;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.provisionInfo = provisionInfo;
+
+    data.name = "wrongName";
+    data.value = "/print_service/cups/";
+    abilityInfo.type = ExtensionAbilityType::DRIVER;
+    std::vector<Metadata> metadata = { data };
+    abilityInfo.metadata = metadata;
+    baseExtensionInfos["testKey"] = abilityInfo;
+    newInfos["path"] = InnerBundleInfo();
+    newInfos.begin()->second.baseExtensionInfos_ = baseExtensionInfos;
+    bool result = BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, USER_ID_100, newInfos);
     EXPECT_TRUE(result);
 }
 }

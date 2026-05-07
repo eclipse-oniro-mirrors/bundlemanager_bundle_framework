@@ -209,6 +209,8 @@ ErrCode BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPr
 
     if (dataMgr->HasUserId(userId)) {
         APP_LOGE("Has create user %{public}d", userId);
+        EventReport::SendTriggerFallbackEvent(HighRiskOperationType::CREATE_USER_ALREADY_EXIST,
+            Constants::EMPTY_STRING, userId, std::vector<std::string>{});
     }
 
     dataMgr->AddUserId(userId);
@@ -757,7 +759,10 @@ ErrCode BundleUserMgrHostImpl::CreateArkStartupCacheDir(int32_t userId)
         std::to_string(userId));
     APP_LOGI("create system optimize directory %{public}s when create user: %{public}d",
         el1ArkStartupCachePath.c_str(), userId);
-    return InstalldClient::GetInstance()->Mkdir(el1ArkStartupCachePath, ServiceConstants::SYSTEM_OPTIMIZE_MODE, 0, 0);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_SYSTEM_OPTIMIZE_DIR;
+    return InstalldClient::GetInstance()->Mkdir(
+        el1ArkStartupCachePath, ServiceConstants::SYSTEM_OPTIMIZE_MODE, 0, 0, createDirParam);
 }
  
 ErrCode BundleUserMgrHostImpl::RemoveSystemOptimizeDir(int32_t userId)

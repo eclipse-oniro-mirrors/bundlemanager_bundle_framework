@@ -818,6 +818,23 @@ ErrCode BundleMgrClientImpl::UnregisterPluginEventCallback(const sptr<IBundleEve
     return ERR_OK;
 }
 
+ErrCode BundleMgrClientImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
+{
+    APP_LOGD("GetTopNLargestItemsInAppDataDir begin");
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE("connect fail");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return bundleMgr_->GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, getLargestItemsCallback);
+}
+
 void PluginEventCallback::OnReceiveEvent(const EventFwk::CommonEventData eventData)
 {
     APP_LOGD("OnReceiveEvent");

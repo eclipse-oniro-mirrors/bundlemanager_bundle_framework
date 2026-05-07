@@ -64,9 +64,6 @@ ErrCode SkillsInstallerUtil::RemoveInvalidSkillProfiles(
     InnerBundleInfo &innerBundleInfo)
 {
     LOG_I(BMS_TAG_INSTALLER, "skillInfoList size=%{public}zu", skillInfoList.size());
-    if (skillInfoList.empty()) {
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
-    }
     // Build a map of moduleName -> set of valid skill names
     std::map<std::string, std::set<std::string>> validSkillsMap;
     for (const auto &skillInfo : skillInfoList) {
@@ -81,13 +78,15 @@ ErrCode SkillsInstallerUtil::RemoveInvalidSkillProfiles(
         const std::string &moduleName = modulePair.first;
         InnerModuleInfo &moduleInfo = modulePair.second;
 
-        // Skip if this module has no valid skills to check
-        if (validSkillsMap.find(moduleName) == validSkillsMap.end()) {
-            LOG_D(BMS_TAG_INSTALLER, "no valid skills for module %{public}s", moduleName.c_str());
+        // Remove all skillProfiles if this module has no valid skills.
+        auto validSkillsIter = validSkillsMap.find(moduleName);
+        if (validSkillsIter == validSkillsMap.end()) {
+            LOG_D(BMS_TAG_INSTALLER, "module %{public}s has no valid skills", moduleName.c_str());
+            moduleInfo.skillProfiles.clear();
             continue;
         }
 
-        const std::set<std::string> &validSkillNames = validSkillsMap[moduleName];
+        const std::set<std::string> &validSkillNames = validSkillsIter->second;
 
         // Check if this module has skillProfiles
         if (moduleInfo.skillProfiles.empty()) {

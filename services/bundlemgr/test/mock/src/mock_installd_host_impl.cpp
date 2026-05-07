@@ -29,7 +29,8 @@ InstalldHostImpl::~InstalldHostImpl()
     APP_LOGI("installd service instance is destroyed");
 }
 
-ErrCode InstalldHostImpl::CreateBundleDir(const std::string &bundleDir)
+ErrCode InstalldHostImpl::CreateBundleDir(
+    const std::string &bundleName, BundleDirScene scene, const std::string &bundleDir)
 {
     return ERR_OK;
 }
@@ -56,7 +57,8 @@ ErrCode InstalldHostImpl::ProcessBundleUnInstallNative(const std::string &userId
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldHostImpl::RenameModuleDir(
+    const std::string &oldPath, const std::string &newPath, const std::string &bundleName, BundleDirScene scene)
 {
     return ERR_OK;
 }
@@ -186,7 +188,8 @@ ErrCode InstalldHostImpl::ScanDir(
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldHostImpl::MoveFile(
+    const std::string &oldPath, const std::string &newPath, BundleDirScene scene, const std::string &bundleName)
 {
     return ERR_OK;
 }
@@ -202,8 +205,8 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::Mkdir(
-    const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
+ErrCode InstalldHostImpl::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
+    const CreateDirParam &createDirParam)
 {
     return ERR_OK;
 }

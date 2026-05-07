@@ -122,7 +122,8 @@ InstalldHostImpl::~InstalldHostImpl()
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service destroyed");
 }
 
-ErrCode InstalldHostImpl::CreateBundleDir(const std::string &bundleDir)
+ErrCode InstalldHostImpl::CreateBundleDir(
+    const std::string &bundleName, BundleDirScene scene, const std::string &bundleDir)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
@@ -132,6 +133,16 @@ ErrCode InstalldHostImpl::CreateBundleDir(const std::string &bundleDir)
         LOG_E(BMS_TAG_INSTALLD, "Calling the function CreateBundleDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+
+    if (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidPathByCreateBundleDirScene(scene, bundleName, bundleDir)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function CreateBundleDir with invalid param, bundleName:%{public}s, bundleDir:%{private}s, "
+            "scene:%{public}d",
+            bundleName.c_str(), bundleDir.c_str(), static_cast<int32_t>(scene));
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
     if (InstalldOperator::IsExistDir(bundleDir)) {
         LOG_W(BMS_TAG_INSTALLD, "bundleDir %{public}s is exist", bundleDir.c_str());
         if (!OHOS::ForceRemoveDirectoryBMS(bundleDir)) {
@@ -328,7 +339,8 @@ ErrCode InstalldHostImpl::DeleteUninstallTmpDirs(const std::vector<std::string> 
     return ret;
 }
 
-ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldHostImpl::RenameModuleDir(
+    const std::string &oldPath, const std::string &newPath, const std::string &bundleName, BundleDirScene scene)
 {
     LOG_D(BMS_TAG_INSTALLD, "rename %{public}s to %{public}s", oldPath.c_str(), newPath.c_str());
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
@@ -339,6 +351,16 @@ ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std:
         LOG_E(BMS_TAG_INSTALLD, "Calling the function RenameModuleDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+
+    if (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidPathByRenameModuleDir(oldPath, newPath, bundleName, scene)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function RenameModuleDir with invalid param, bundleName:%{public}s, oldPath:%{private}s, "
+            "newPath:%{private}s, scene:%{public}d",
+            bundleName.c_str(), oldPath.c_str(), newPath.c_str(), static_cast<int32_t>(scene));
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
     if (!InstalldOperator::RenameDir(oldPath, newPath)) {
         LOG_D(BMS_TAG_INSTALLD, "rename module dir %{public}s to %{public}s failed errno:%{public}d",
             oldPath.c_str(), newPath.c_str(), errno);
@@ -654,8 +676,8 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                 std::to_string(createDirParam.userId));
             if (access(el1ShaderCachePath.c_str(), F_OK) == 0) {
                 el1ShaderCachePath = el1ShaderCachePath + createDirParam.bundleName;
-                if (!InstalldOperator::MkOwnerDir(el1ShaderCachePath, ServiceConstants::NEW_SHADRE_CACHE_MODE,
-                    createDirParam.uid, ServiceConstants::NEW_SHADRE_CACHE_GID)) {
+                if (!InstalldOperator::MkOwnerDir(el1ShaderCachePath, ServiceConstants::NEW_SHADER_CACHE_MODE,
+                    createDirParam.uid, ServiceConstants::NEW_SHADER_CACHE_GID)) {
                         LOG_W(BMS_TAG_INSTALLER, "fail to Mkdir el1ShaderCachePath, errno: %{public}d", errno);
                 }
             }
@@ -667,8 +689,8 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                 1, std::to_string(userId));
             systemOptimizeShaderCachePath = systemOptimizeShaderCachePath +
                 createDirParam.bundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
-            InstalldOperator::MkOwnerDir(systemOptimizeShaderCachePath, ServiceConstants::NEW_SHADRE_CACHE_MODE,
-                createDirParam.uid, ServiceConstants::NEW_SHADRE_CACHE_GID);
+            InstalldOperator::MkOwnerDir(systemOptimizeShaderCachePath, ServiceConstants::NEW_SHADER_CACHE_MODE,
+                createDirParam.uid, ServiceConstants::NEW_SHADER_CACHE_GID);
             SetArkStartupCacheApl(createDirParam.bundleName, systemOptimizeShaderCachePath);
         }
         if (el == ServiceConstants::BUNDLE_EL[1]) {
@@ -1499,6 +1521,7 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     bundleStats = {0, 0, 0, 0, 0};
     std::vector<std::string> bundlePath;
     bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
+    bundlePath.push_back(std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
     int64_t appDataSize = 0;
     int64_t bundleDataSize = 0;
     int64_t bundleCacheSize = 0;
@@ -1524,6 +1547,8 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     bundleStats[1] = bundleDataSize;
     // index 4 : cache size
     bundleStats[4] = bundleCacheSize;
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "GetBundleStats %{public}s %{public}" PRId64 "%{public}" PRId64 "%{public}" PRId64,
+        bundleName.c_str(), appDataSize, bundleDataSize, bundleCacheSize);
     return ERR_OK;
 }
 
@@ -1556,6 +1581,8 @@ ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bu
         std::vector<std::string> bundlePath;
         bundlePath.push_back(
             std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + stats.bundleName);
+        bundlePath.push_back(
+            std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR + stats.bundleName);
         int64_t appDataSize = 0;
         int64_t bundleDataSize = 0;
         appDataSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
@@ -1845,12 +1872,23 @@ ErrCode InstalldHostImpl::ScanDir(
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldHostImpl::MoveFile(
+    const std::string &oldPath, const std::string &newPath, BundleDirScene scene, const std::string &bundleName)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+
+    if (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidPathByMoveFileScene(oldPath, newPath, scene, bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function MoveFile with invalid param, bundleName:%{public}s, oldPath:%{private}s, "
+            "newPath:%{private}s, scene:%{public}d",
+            bundleName.c_str(), oldPath.c_str(), newPath.c_str(), scene);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
     if (!InstalldOperator::MoveFile(oldPath, newPath)) {
         LOG_E(BMS_TAG_INSTALLD, "Move file %{public}s to %{public}s failed errno:%{public}d",
             oldPath.c_str(), newPath.c_str(), errno);
@@ -1907,8 +1945,8 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::Mkdir(
-    const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
+ErrCode InstalldHostImpl::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
+    const CreateDirParam &createDirParam)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "Mkdir %{public}s failed for permission denied", dir.c_str());
@@ -1917,6 +1955,14 @@ ErrCode InstalldHostImpl::Mkdir(
     LOG_D(BMS_TAG_INSTALLD, "Mkdir start %{public}s", dir.c_str());
     if (dir.empty()) {
         LOG_E(BMS_TAG_INSTALLD, "Mkdir %{public}s failed for invalid param", dir.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (!InstalldOperator::IsValidPathByMkDirScene(createDirParam.bundleDirScene, createDirParam.bundleName, dir)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function Mkdir with invalid param, scene:%{public}d, bundleName:%{public}s, "
+            "dir:%{private}s",
+            createDirParam.bundleDirScene, createDirParam.bundleName.c_str(), dir.c_str());
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 

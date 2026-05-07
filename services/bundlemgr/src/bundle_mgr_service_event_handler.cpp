@@ -32,6 +32,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
 #include "bundle_scanner.h"
+#include "event_report.h"
 #include "on_demand_install_data_mgr.h"
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
@@ -147,6 +148,7 @@ constexpr const char* OTA_SYSTEM_HSP_TASK = "OTA_SYSTEM_HSP_TASK";
 constexpr const char* OTA_SHARED_HSP_TASK = "OTA_SHARED_HSP_TASK";
 constexpr const char* OTA_PREINSTALL_BUNDLE_TASK = "OTA_PREINSTALL_BUNDLE_TASK";
 constexpr const char* OTA_PATCH_BUNDLE_TASK = "OTA_PATCH_BUNDLE_TASK";
+constexpr int64_t SCAN_TIMEOUT_MS = 5 * 60 * 1000;
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> onDemandInstallList_;
@@ -186,7 +188,8 @@ void MoveTempPath(const std::vector<std::string> &fromPaths,
         auto toPath = tempDir + ServiceConstants::PATH_SEPARATOR + MODULE_PREFIX
             + std::to_string(hapIndex) + ServiceConstants::INSTALL_FILE_SUFFIX;
         hapIndex++;
-        if (InstalldClient::GetInstance()->MoveFile(path, toPath) != ERR_OK) {
+        if (InstalldClient::GetInstance()->MoveFile(path, toPath, BundleDirScene::MOVE_HAP_TO_TEMP_DIR, bundleName) !=
+            ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "move from %{public}s to %{public}s failed", path.c_str(), toPath.c_str());
             continue;
         }
@@ -251,6 +254,7 @@ void BMSEventHandler::BeforeBmsStart()
         LOG_W(BMS_TAG_DEFAULT, "BundlePermissionMgr::Init failed");
     }
 
+    scanStartTime_ = BundleUtil::GetCurrentTimeMs();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_START);
     if (SetParameter(BUNDLE_SCAN_PARAM, BUNDLE_SCAN_START) != 0) {
         LOG_E(BMS_TAG_DEFAULT, "set bms.scanning_apps.status 0 failed");
@@ -345,6 +349,12 @@ void BMSEventHandler::AfterBmsStart()
     }
     ClearCache();
     if (needNotifyBundleScanStatus_) {
+        int64_t endTime = BundleUtil::GetCurrentTimeMs();
+        if (endTime - scanStartTime_ > SCAN_TIMEOUT_MS) {
+            EventReport::SendScanTimeoutEvent(
+                IsSystemUpgrade()? HighRiskOperationType::OTA_SCAN_TIMEOUT: HighRiskOperationType::BOOT_SCAN_TIMEOUT,
+                scanStartTime_, endTime);
+        }
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
@@ -467,6 +477,15 @@ void BMSEventHandler::BundleRebootStartEvent()
     needInstallUserIds_.clear();
 }
 
+void BMSEventHandler::ReportInfosLossedEvent(HighRiskOperationType operation, int32_t userId)
+{
+    EventInfo eventInfo;
+    eventInfo.actionType = static_cast<int32_t>(HighRiskActionType::TRIGGER_FALLBACK);
+    eventInfo.operationType = static_cast<int32_t>(operation);
+    eventInfo.userId = userId;
+    EventReport::SendHighRiskEvent(eventInfo);
+}
+
 ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "GuardAgainstInstallInfosLossedStrategy start");
@@ -478,6 +497,8 @@ ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
         return ResultCode::NO_INSTALLED_DATA;
     }
 
+    ReportInfosLossedEvent(HighRiskOperationType::USER_DATA_PARSE_FAILED, Constants::INVALID_USERID);
+    
     // When data exist, but parse all userinfo fails, reinstall all app.
     // For example: the AT database is lost or others.
     if (scanResultCode == ScanResultCode::SCAN_HAS_DATA_PARSE_FAILED) {
@@ -1662,7 +1683,11 @@ void BMSEventHandler::InnerProcessCheckShaderCacheDir()
         }
         std::string shaderCachePath;
         shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleInfo.name);
-        ErrCode res = InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, bundleInfo.uid, bundleInfo.gid);
+        CreateDirParam createDirParam;
+        createDirParam.bundleName = bundleInfo.name;
+        createDirParam.bundleDirScene = BundleDirScene::SHADER_CACHE_DIR;
+        ErrCode res = InstalldClient::GetInstance()->Mkdir(
+            shaderCachePath, S_IRWXU, bundleInfo.uid, bundleInfo.gid, createDirParam);
         if (res != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "create shader cache failed: %{public}s ", shaderCachePath.c_str());
         }
@@ -1690,9 +1715,12 @@ void BMSEventHandler::CheckBundleCloneEl1ShaderCacheLocal(const std::string &bun
     if (result == ERR_OK && isExist) {
         return;
     }
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = bundleName;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_SHADER_CACHE_DIR;
     result = InstalldClient::GetInstance()->Mkdir(el1ShaderCachePath,
-        ServiceConstants::NEW_SHADRE_CACHE_MODE,
-        uid, ServiceConstants::NEW_SHADRE_CACHE_GID);
+        ServiceConstants::NEW_SHADER_CACHE_MODE,
+        uid, ServiceConstants::NEW_SHADER_CACHE_GID, createDirParam);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "create new shadercache failed: %{public}s ", el1ShaderCachePath.c_str());
     }
@@ -1866,7 +1894,10 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
     }
     if (!cloudExist) {
         constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
-        result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_PATH, mode, info.uid, info.gid);
+        CreateDirParam createDirParam;
+        createDirParam.bundleDirScene = BundleDirScene::CLOUD_SHADER_DIR;
+        result = InstalldClient::GetInstance()->Mkdir(
+            ServiceConstants::CLOUD_SHADER_PATH, mode, info.uid, info.gid, createDirParam);
         if (result != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "Mkdir CLOUD_SHADER_PATH failed, error is %{public}d", result);
             return;
@@ -1881,8 +1912,10 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
 void BMSEventHandler::InnerProcessCheckCloudShaderCommonDir(const int32_t uid, const int32_t gid)
 {
     constexpr int32_t commonMode = (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::CLOUD_SHADER_COMMON_DIR;
     ErrCode result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_COMMON_PATH,
-        commonMode, uid, gid);
+        commonMode, uid, gid, createDirParam);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "Mkdir CLOUD_SHADER_COMMON_PATH failed, error is %{public}d", result);
         return;
@@ -4092,6 +4125,17 @@ void BMSEventHandler::HandlePreInstallException(bool needDeleteRecord)
         return;
     }
 
+    std::vector<std::string> tmpPath;
+    tmpPath.reserve(exceptionPaths.size() + exceptionBundleNames.size() + exceptionAppServicePaths.size() +
+        exceptionAppServiceBundleNames.size() + exceptionSharedPaths.size());
+    tmpPath.insert(tmpPath.end(), exceptionPaths.begin(), exceptionPaths.end());
+    tmpPath.insert(tmpPath.end(), exceptionBundleNames.begin(), exceptionBundleNames.end());
+    tmpPath.insert(tmpPath.end(), exceptionAppServicePaths.begin(), exceptionAppServicePaths.end());
+    tmpPath.insert(tmpPath.end(), exceptionAppServiceBundleNames.begin(), exceptionAppServiceBundleNames.end());
+    tmpPath.insert(tmpPath.end(), exceptionSharedPaths.begin(), exceptionSharedPaths.end());
+    EventReport::SendTriggerFallbackEvent(HighRiskOperationType::PRE_INSTALL_EXCEPTION, Constants::EMPTY_STRING,
+        Constants::UNSPECIFIED_USERID, tmpPath);
+
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "handle exception %{public}zu %{public}zu %{public}zu %{public}zu %{public}zu",
         exceptionPaths.size(), exceptionBundleNames.size(), exceptionAppServicePaths.size(),
         exceptionAppServiceBundleNames.size(), exceptionSharedPaths.size());
@@ -5070,6 +5114,9 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: hapVersionCode is less than old hap versionCode",
                 bundleName.c_str());
             continue;
+        } else if (hapVersionCode <= hasInstalledInfo.versionCode) {
+            EventReport::SendTriggerFallbackEvent(HighRiskOperationType::PATCH_INSTALL_MISSING_HAP, bundleName,
+                Constants::ALL_USERID, std::vector<std::string>{});
         }
         if (infos.begin()->second.GetOverlayType() == OverlayType::OVERLAY_EXTERNAL_BUNDLE) {
             needInstallOverlayMap[bundleName].emplace_back(scanPathIter);
@@ -5632,6 +5679,8 @@ void BMSEventHandler::ProcessAppTmpPath()
     if (!BundleUtil::IsExistDirNoLog(ServiceConstants::BMS_APP_TEMP_PATH)) {
         return;
     }
+    EventReport::SendTriggerFallbackEvent(HighRiskOperationType::PROCESS_APP_GALLERY_TMP_PATH, Constants::EMPTY_STRING,
+        Constants::ALL_USERID, std::vector<std::string>{});
     LOG_I(BMS_TAG_DEFAULT, "process app_temp start");
     InstallParam installParam;
     installParam.SetKillProcess(false);
@@ -5966,9 +6015,12 @@ ErrCode BMSEventHandler::CheckSystemOptimizeBundleShaderCache(const std::string 
         1, std::to_string(userId));
     systemOptimizeShaderCache = systemOptimizeShaderCache +
         cloneBundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = bundleName;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_SYSTEM_OPTIMIZE_SHADER_CACHE_DIR;
     ErrCode ret = InstalldClient::GetInstance()->Mkdir(systemOptimizeShaderCache,
-        ServiceConstants::NEW_SHADRE_CACHE_MODE,
-        uid, ServiceConstants::NEW_SHADRE_CACHE_GID);
+        ServiceConstants::NEW_SHADER_CACHE_MODE,
+        uid, ServiceConstants::NEW_SHADER_CACHE_GID, createDirParam);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "Mkdir %{public}s failed, error is %{public}d",
             systemOptimizeShaderCache.c_str(), errno);
@@ -6079,7 +6131,10 @@ bool BMSEventHandler::ProcessCheckSystemOptimizeDir()
         el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
             std::to_string(userId));
         LOG_I(BMS_TAG_DEFAULT, "create system optimize dir for -u: %{public}d", userId);
-        InstalldClient::GetInstance()->Mkdir(el1ArkStartupCachePath, ServiceConstants::SYSTEM_OPTIMIZE_MODE, 0, 0);
+        CreateDirParam createDirParam;
+        createDirParam.bundleDirScene = BundleDirScene::EL1_SYSTEM_OPTIMIZE_DIR;
+        InstalldClient::GetInstance()->Mkdir(
+            el1ArkStartupCachePath, ServiceConstants::SYSTEM_OPTIMIZE_MODE, 0, 0, createDirParam);
     }
     return true;
 }

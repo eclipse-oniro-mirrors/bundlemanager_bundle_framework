@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -62,6 +62,7 @@ enum class BMSEventType : uint8_t {
     BUNDLE_DYNAMIC_SHORTCUTINFO,
     DESKTOP_SHORTCUT,
     APP_STATUS_CHANGE,
+    HIGH_RISK_EVENT,
 };
 
 enum class BundleEventType : uint8_t {
@@ -126,6 +127,29 @@ enum class DefaultAppActionType : uint8_t {
     RESET = 2,
 };
 
+enum class HighRiskActionType : uint8_t {
+    SCAN_TIMEOUT = 1,
+    TRIGGER_FALLBACK = 2,
+    RESOURCE_SWITCH_EXCEPTION = 3,
+    CACHE_TIMEOUT = 4,
+};
+
+enum class HighRiskOperationType: uint8_t {
+    BOOT_SCAN_TIMEOUT = 1,
+    OTA_SCAN_TIMEOUT = 2,
+    CREATE_USER_ALREADY_EXIST = 3,
+    PRE_INSTALL_EXCEPTION = 4,
+    USER_UNLOCK_DATA_DIR_RECOVERY = 5,
+    PROCESS_APP_GALLERY_TMP_PATH = 6,
+    PATCH_INSTALL_MISSING_HAP = 7,
+    THEME_SWITCH_EXCEPTION = 8,
+    LANGUAGE_SWITCH_EXCEPTION = 9,
+    DB_FALLBACK_CREATED = 10,
+    USER_DATA_PARSE_FAILED = 11,
+    GET_ALL_BUNDLE_CACHE_STAT_TIMEOUT = 12,
+    CLEAN_ALL_BUNDLE_CACHE_TIMEOUT = 13,
+};
+
 struct EventInfo {
     bool hideDesktopIcon = false;
 
@@ -148,6 +172,10 @@ struct EventInfo {
     bool compileResult = false;
 
     bool isPatch = false;
+
+    bool isDowngrade = false;
+
+    bool hasHnp = false;
 
     // abc compressed
     bool isAbcCompressed = false;
@@ -203,6 +231,8 @@ struct EventInfo {
     // only for install
     std::string fingerprint;
     std::string appDistributionType;
+    std::string oldAppProvisionType;
+    std::string newAppProvisionType;
     std::string compileMode;
     std::string failureReason;
     std::string processName;
@@ -267,6 +297,10 @@ struct EventInfo {
         fingerprint.clear();
         hideDesktopIcon = false;
         appDistributionType.clear();
+        isDowngrade = false;
+        hasHnp = false;
+        oldAppProvisionType.clear();
+        newAppProvisionType.clear();
         applyQuickFixFrequency = 0;
         totalBundleNames.clear();
         successCnt = 0;
@@ -473,6 +507,12 @@ public:
 
     static void SendAppDisableForbiddenEvent(const std::string &bundleName, int32_t userId, int32_t appIndex,
         bool forbidden, ErrCode errCode, int32_t callingUid);
+    static void SendHighRiskEvent(const EventInfo& eventInfo);
+
+    static void SendTriggerFallbackEvent(HighRiskOperationType operation, const std::string &bundleName,
+        int32_t userId, const std::vector<std::string> &path);
+
+    static void SendScanTimeoutEvent(HighRiskOperationType operation, int64_t startTime, int64_t endTime);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

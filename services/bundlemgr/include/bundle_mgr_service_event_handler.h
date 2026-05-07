@@ -145,6 +145,8 @@ public:
 
     static bool CheckOtaFlag(OTAFlag flag, bool &result);
 
+    static void ReportInfosLossedEvent(HighRiskOperationType operation, int32_t userId);
+
     static bool UpdateOtaFlag(OTAFlag flag);
 
     static bool SaveBmsSystemTimeForShortcut();
@@ -773,6 +775,8 @@ private:
     bool needRebootOta_ = false;
     // Used to notify bundle scan status
     bool needNotifyBundleScanStatus_ = false;
+
+    int64_t scanStartTime_ = 0;
 
     bool hasLoadAllPreInstallBundleInfosFromDb_ = false;
     // Used to mark module update status depend on system parameter

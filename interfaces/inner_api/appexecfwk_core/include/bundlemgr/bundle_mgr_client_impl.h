@@ -27,6 +27,7 @@
 #include "bundle_pack_info.h"
 #include "bundle_mgr_interface.h"
 #include "extension_ability_info.h"
+#include "get_largest_items_callback_interface.h"
 #include "hap_module_info.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
@@ -77,6 +78,8 @@ public:
     ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs);
     ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback);
     ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback);
+    ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback);
     void OnPluginEventCallback(const EventFwk::CommonEventData eventData);
 
 private:

@@ -319,9 +319,12 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
 
 bool InstalldHost::HandleCreateBundleDir(MessageParcel &data, MessageParcel &reply)
 {
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t scene = data.ReadInt32();
     std::string bundleDir = Str16ToStr8(data.ReadString16());
-    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "CreateBundleDir %{public}s", bundleDir.c_str());
-    ErrCode result = CreateBundleDir(bundleDir);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "CreateBundleDir bundleName=%{public}s scene=%{public}d dir=%{public}s",
+        bundleName.c_str(), scene, bundleDir.c_str());
+    ErrCode result = CreateBundleDir(bundleName, static_cast<BundleDirScene>(scene), bundleDir);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -460,7 +463,9 @@ bool InstalldHost::HandleRenameModuleDir(MessageParcel &data, MessageParcel &rep
 {
     std::string oldPath = Str16ToStr8(data.ReadString16());
     std::string newPath = Str16ToStr8(data.ReadString16());
-    ErrCode result = RenameModuleDir(oldPath, newPath);
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t scene = data.ReadInt32();
+    ErrCode result = RenameModuleDir(oldPath, newPath, bundleName, static_cast<BundleDirScene>(scene));
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -861,7 +866,9 @@ bool InstalldHost::HandleMoveFile(MessageParcel &data, MessageParcel &reply)
 {
     std::string oldPath = Str16ToStr8(data.ReadString16());
     std::string newPath = Str16ToStr8(data.ReadString16());
-    ErrCode result = MoveFile(oldPath, newPath);
+    BundleDirScene scene = static_cast<BundleDirScene>(data.ReadInt32());
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    ErrCode result = MoveFile(oldPath, newPath, scene, bundleName);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -892,7 +899,12 @@ bool InstalldHost::HandleMkdir(MessageParcel &data, MessageParcel &reply)
     int32_t mode = data.ReadInt32();
     int32_t uid = data.ReadInt32();
     int32_t gid = data.ReadInt32();
-    ErrCode result = Mkdir(dir, mode, uid, gid);
+    std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+    ErrCode result = Mkdir(dir, mode, uid, gid, *info);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

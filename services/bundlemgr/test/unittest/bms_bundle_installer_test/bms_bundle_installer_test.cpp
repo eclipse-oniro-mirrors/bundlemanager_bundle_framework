@@ -362,7 +362,7 @@ public:
     bool CheckShaderCachePathExist(const std::string &bundleName,
         const int32_t appIndex, const int32_t &userId) const;
     bool WriteToConfigFile(const std::string& bundleName) const;
-    ErrCode MkdirIfNotExist(const std::string &dir) const;
+    ErrCode MkdirIfNotExist(const std::string &bundleName, BundleDirScene scene, const std::string &dir) const;
     void GetExistedEntries(const std::string &filename,
         std::set<std::string> &existingEntries,
         std::vector<std::string> &allLines) const;
@@ -812,7 +812,8 @@ const std::string filename = ServiceConstants::APP_STARTUP_CACHE_CONG;
     return true;
 }
 
-ErrCode BmsBundleInstallerTest::MkdirIfNotExist(const std::string &dir) const
+ErrCode BmsBundleInstallerTest::MkdirIfNotExist(
+    const std::string &bundleName, BundleDirScene scene, const std::string &dir) const
 {
     bool isDirExist = false;
     ErrCode result = InstalldClient::GetInstance()->IsExistDir(dir, isDirExist);
@@ -820,7 +821,7 @@ ErrCode BmsBundleInstallerTest::MkdirIfNotExist(const std::string &dir) const
         LOG_I(BMS_TAG_INSTALLD, "%{public}s already existed", dir.c_str());
         return ERR_OK;
     }
-    return InstalldClient::GetInstance()->CreateBundleDir(dir);
+    return InstalldClient::GetInstance()->CreateBundleDir(bundleName, scene, dir);
 }
 
 CreateDirParam BmsBundleInstallerTest::PrepareCreateDirParam(
@@ -3197,7 +3198,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_7100, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0100, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    auto ret = impl.CreateBundleDir("");
+    auto ret = impl.CreateBundleDir(BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR, "");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -3230,20 +3231,20 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0200, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0300, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    auto ret = impl.RenameModuleDir("", "");
+    auto ret = impl.RenameModuleDir("", "", BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.RenameModuleDir("", TEST_STRING);
+    ret = impl.RenameModuleDir("", TEST_STRING, BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.RenameModuleDir(TEST_STRING, " ");
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
+    ret = impl.RenameModuleDir(TEST_STRING, " ", BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.RenameModuleDir("wrong", "wrong");
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
+    ret = impl.RenameModuleDir("wrong", "wrong", BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.RenameModuleDir(TEST_STRING, TEST_STRING);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
+    ret = impl.RenameModuleDir(TEST_STRING, TEST_STRING, BUNDLE_NAME, BundleDirScene::BUNDLE_CODE_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -3341,7 +3342,9 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0700, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0800, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    auto ret = impl.Mkdir("", ZERO_CODE, ZERO_CODE, ZERO_CODE);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_SYSTEM_OPTIMIZE_DIR;
+    auto ret = impl.Mkdir("", ZERO_CODE, ZERO_CODE, ZERO_CODE, createDirParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -3543,7 +3546,10 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_2100, Function | SmallTest | L
 
     std::string bundleName = "com.test.InstalldHostImpl_2100";
     std::string shaderCachePath = ServiceConstants::SHADER_CACHE_PATH + bundleName;
-    ret = InstalldClient::GetInstance()->CreateBundleDir(shaderCachePath);
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = bundleName;
+    createDirParam.bundleDirScene = BundleDirScene::SHADER_CACHE_DIR;
+    ret = InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, ZERO_CODE, ZERO_CODE, createDirParam);
     EXPECT_EQ(ret, ERR_OK);
     dirs.emplace_back(shaderCachePath);
 
@@ -5520,7 +5526,7 @@ HWTEST_F(BmsBundleInstallerTest, BmsBundleInstallerTest_0010, TestSize.Level1)
     modulePath = "/data/test/bms_bundle_installer";
     installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
     ret = installer.InnerProcessNativeLibs(info, modulePath);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -5550,7 +5556,7 @@ HWTEST_F(BmsBundleInstallerTest, InnerProcessNativeLibs_0100, TestSize.Level1)
     std::string modulePath = "/data/test/bms_bundle_installer";
     installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
     ErrCode ret = installer.InnerProcessNativeLibs(info, modulePath);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -5973,7 +5979,7 @@ HWTEST_F(BmsBundleInstallerTest, RenameModuleDir_0010, Function | SmallTest | Le
     InnerBundleInfo info;
     info.currentPackage_ = BUNDLE_NAME_TEST;
     ErrCode res = installer.RenameModuleDir(info);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -7943,7 +7949,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModule_0100, Function | SmallTest | Leve
     appServiceFwkInstaller.UpdateDeveloperId(infos, hapVerifyRes);
 
     ErrCode ret = appServiceFwkInstaller.ExtractModule(newInfo, bundlePath);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -7958,7 +7964,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModule_0200, Function | SmallTest | Leve
     InnerBundleInfo newInfo;
     std::string bundlePath;
     auto ret = appServiceFwkInstaller.ExtractModule(oldInfo, newInfo, bundlePath);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -8908,7 +8914,7 @@ HWTEST_F(BmsBundleInstallerTest, FinalProcessHapAndSoForBundleUpdate_0010, Funct
     infos[MODULE_NAME] = innerBundleInfoWithSO;
 
     ret = installer.FinalProcessHapAndSoForBundleUpdate(infos, false, true);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -8940,7 +8946,7 @@ HWTEST_F(BmsBundleInstallerTest, FinalProcessHapAndSoForBundleUpdate_0020, Funct
     std::string libsModuleDir = std::string(Constants::BUNDLE_CODE_DIR) +
         ServiceConstants::PATH_SEPARATOR + BUNDLE_NAME + "/libs";
     std::string renameDir = libsModuleDir + ServiceConstants::TMP_SUFFIX;
-    ret = MkdirIfNotExist(renameDir);
+    ret = MkdirIfNotExist(BUNDLE_NAME, BundleDirScene::SO_DIR, renameDir);
     EXPECT_EQ(ret, ERR_OK);
 
     ret = installer.FinalProcessHapAndSoForBundleUpdate(infos, false, true);
@@ -10726,13 +10732,15 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9300, Function | MediumTest
    ErrCode ret = installer.ProcessBundleCodePath(newInfos, oldInfo, BUNDLE_NAME_FOR_TEST, true, true);
    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
 
-   ret = InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_CODE_PATH_DIR_REAL);
+   ret = InstalldClient::GetInstance()->CreateBundleDir(
+       BUNDLE_NAME_FOR_TEST, BundleDirScene::BUNDLE_CODE_DIR, BUNDLE_CODE_PATH_DIR_REAL);
    EXPECT_EQ(ret, ERR_OK);
 
    ret = installer.ProcessBundleCodePath(newInfos, oldInfo, BUNDLE_NAME_FOR_TEST, true, true);
    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
 
-   ret = InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_CODE_PATH_DIR_NEW);
+   ret = InstalldClient::GetInstance()->CreateBundleDir(
+       BUNDLE_NAME_FOR_TEST, BundleDirScene::BUNDLE_CODE_DIR, BUNDLE_CODE_PATH_DIR_NEW);
    EXPECT_EQ(ret, ERR_OK);
 
    ret = installer.ProcessBundleCodePath(newInfos, oldInfo, BUNDLE_NAME_FOR_TEST, true, true);
@@ -10759,7 +10767,8 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9300, Function | MediumTest
 */
 HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9400, Function | MediumTest | Level1)
 {
-   ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_CODE_PATH_DIR_OLD);
+   ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(
+       BUNDLE_NAME_FOR_TEST, BundleDirScene::BUNDLE_CODE_DIR, BUNDLE_CODE_PATH_DIR_OLD);
    EXPECT_EQ(ret, ERR_OK);
 
    BaseBundleInstaller installer;
@@ -10781,7 +10790,8 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9400, Function | MediumTest
 */
 HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9500, Function | MediumTest | Level1)
 {
-   ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_CODE_PATH_DIR_OLD);
+   ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(
+       BUNDLE_NAME_FOR_TEST, BundleDirScene::BUNDLE_CODE_DIR, BUNDLE_CODE_PATH_DIR_OLD);
    EXPECT_EQ(ret, ERR_OK);
 
    BaseBundleInstaller installer;
@@ -10843,6 +10853,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9600, Function | MediumTest
 HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0010, Function | MediumTest | Level1)
 {
     InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST;
     BaseBundleInstaller installer;
     // extendResourceInfo not exist
     ErrCode ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, "", "");
@@ -10875,6 +10886,7 @@ HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0010, Function
 HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0020, Function | MediumTest | Level1)
 {
     InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST;
     ExtendResourceInfo extendResourceInfo;
     extendResourceInfo.moduleName = MODULE_NAME_EXT;
     oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
@@ -10904,6 +10916,7 @@ HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0020, Function
 HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0030, Function | MediumTest | Level1)
 {
     InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST;
     ExtendResourceInfo extendResourceInfo;
     extendResourceInfo.moduleName = MODULE_NAME_EXT;
     oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
@@ -10941,6 +10954,7 @@ HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0040, Function
 {
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST;
     BaseBundleInstaller installer;
     ExtendResourceInfo extendResourceInfo;
     extendResourceInfo.moduleName = MODULE_NAME_EXT;
@@ -11153,11 +11167,11 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0007, Function | MediumTest | L
 {
     PluginInstaller installer;
     std::string dir;
-    auto ret = installer.MkdirIfNotExist(dir);
+    auto ret = installer.MkdirIfNotExist(BUNDLE_NAME, BundleDirScene::PLUGIN_DIR, dir);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    dir = "data/test/bms_insatller_test";
-    auto ret2 = installer.MkdirIfNotExist(dir);
+    dir = BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + ServiceConstants::PLUGIN_FILE_PATH;
+    auto ret2 = installer.MkdirIfNotExist(BUNDLE_NAME, BundleDirScene::PLUGIN_DIR, dir);
     EXPECT_EQ(ret2, ERR_OK);
 }
 
@@ -11702,7 +11716,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0041, Function | MediumTest | L
     std::string hostBundleName;
     std::string pluginDir;
     auto ret = installer.CreatePluginDir(hostBundleName, pluginDir);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -11815,7 +11829,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0047, Function | MediumTest | L
     std::string bundlePath;
     InnerBundleInfo newInfo;
     std::string pluginDir;
-    auto ret = installer.ExtractPluginBundles(bundlePath, newInfo, pluginDir);
+    auto ret = installer.ExtractPluginBundles(bundlePath, newInfo, pluginDir, BUNDLE_NAME);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -12106,7 +12120,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0064, Function | MediumTest | L
     installer.parsedBundles_.emplace("bundleName", info);
     InnerBundleInfo hostBundleInfo;
     auto ret = installer.ProcessPluginInstall(hostBundleInfo);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -12963,7 +12977,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCache_0030, Function | SmallTes
     // test bundlename in white list
     BaseBundleInstaller installer3;
     ErrCode ret = installer3.CreateArkStartupCache(ceateArk);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     ret = installer3.DeleteArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, "com.test2", 101);
     EXPECT_EQ(ret, ERR_OK);
@@ -14770,8 +14784,8 @@ HWTEST_F(BmsBundleInstallerTest, MoveFile_0100, Function | SmallTest | Level0)
     InstalldHostImpl impl;
     std::string oldPath = TEST_EMPTY_STRING;
     std::string newPath = TEST_EMPTY_STRING;
-    auto ret = impl.MoveFile(oldPath, newPath);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+    auto ret = impl.MoveFile(oldPath, newPath, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**

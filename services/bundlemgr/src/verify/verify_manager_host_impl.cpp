@@ -223,7 +223,7 @@ bool VerifyManagerHostImpl::CopyFilesToTempDir(
     const std::vector<std::string> &abcPaths)
 {
     std::string tempRootDir = GetTempRootDir(bundleName);
-    ErrCode result = MkdirIfNotExist(tempRootDir);
+    ErrCode result = MkdirIfNotExist(bundleName, tempRootDir);
     if (result != ERR_OK) {
         APP_LOGE("mkdir tempRootDir %{public}s faild %{public}d", tempRootDir.c_str(), result);
         return false;
@@ -244,7 +244,7 @@ bool VerifyManagerHostImpl::CopyFilesToTempDir(
             return false;
         }
 
-        result = MkdirIfNotExist(fileDir);
+        result = MkdirIfNotExist(bundleName, fileDir);
         if (result != ERR_OK) {
             APP_LOGE("mkdir fileDir %{public}s faild %{public}d", fileDir.c_str(), result);
             return false;
@@ -426,7 +426,7 @@ bool VerifyManagerHostImpl::GetFileDir(const std::string &sourcePath, std::strin
     return !fileDir.empty();
 }
 
-ErrCode VerifyManagerHostImpl::MkdirIfNotExist(const std::string &dir)
+ErrCode VerifyManagerHostImpl::MkdirIfNotExist(const std::string &bundleName, const std::string &dir)
 {
     bool isDirExist = false;
     ErrCode result = InstalldClient::GetInstance()->IsExistDir(dir, isDirExist);
@@ -436,7 +436,7 @@ ErrCode VerifyManagerHostImpl::MkdirIfNotExist(const std::string &dir)
     }
 
     if (!isDirExist) {
-        result = InstalldClient::GetInstance()->CreateBundleDir(dir);
+        result = InstalldClient::GetInstance()->CreateBundleDir(bundleName, BundleDirScene::VERIFY_DIR, dir);
         if (result != ERR_OK) {
             APP_LOGE("Create dir failed %{public}d", result);
             return result;
@@ -463,14 +463,15 @@ bool VerifyManagerHostImpl::MoveAbc(
             return false;
         }
 
-        result = MkdirIfNotExist(fileDir);
+        result = MkdirIfNotExist(bundleName, fileDir);
         if (result != ERR_OK) {
             APP_LOGE("mkdir fileDir %{public}s faild %{public}d", fileDir.c_str(), result);
             Rollback(hasMovePaths);
             return false;
         }
 
-        result = InstalldClient::GetInstance()->MoveFile(tempPath, targetPath);
+        result = InstalldClient::GetInstance()->MoveFile(
+            tempPath, targetPath, BundleDirScene::MOVE_ABC_FILE, bundleName);
         if (result != ERR_OK) {
             APP_LOGE("move file to real path failed %{public}d", result);
             Rollback(hasMovePaths);

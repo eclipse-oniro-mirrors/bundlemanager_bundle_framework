@@ -30,10 +30,13 @@ public:
     virtual ~InstalldHostImpl();
     /**
      * @brief Create a bundle code directory.
+     * @param bundleName Indicates the bundle name for path validation.
+     * @param scene Indicates the scene code for path validation.
      * @param bundleDir Indicates the bundle code directory path that to be created.
      * @return Returns ERR_OK if the bundle directory created successfully; returns error code otherwise.
      */
-    virtual ErrCode CreateBundleDir(const std::string &bundleDir) override;
+    virtual ErrCode CreateBundleDir(
+        const std::string &bundleName, BundleDirScene scene, const std::string &bundleDir) override;
     /**
      * @brief Extract the files of a HAP module to the code directory.
      * @param srcModulePath Indicates the HAP file path.
@@ -75,9 +78,12 @@ public:
      * @brief Rename the module directory from temporaily path to the real path.
      * @param oldPath Indicates the old path name.
      * @param newPath Indicates the new path name.
+     * @param bundleName Indicates the bundle name for path validation.
+     * @param scene Indicates the scene code for path validation.
      * @return Returns ERR_OK if the module directory renamed successfully; returns error code otherwise.
      */
-    virtual ErrCode RenameModuleDir(const std::string &oldPath, const std::string &newPath) override;
+    virtual ErrCode RenameModuleDir(const std::string &oldPath, const std::string &newPath,
+        const std::string &bundleName, BundleDirScene scene) override;
     /**
      * @brief Create a bundle data directory.
      * @param createDirParam Indicates param to be set to the directory.
@@ -218,15 +224,16 @@ public:
     virtual ErrCode ScanDir(
         const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths) override;
 
-    virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath) override;
+    virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
+        const std::string &bundleName) override;
 
     virtual ErrCode RenameFile(const std::string &oldPath, const std::string &newPath) override;
 
     virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath,
         const std::string &signatureFilePath = "") override;
 
-    virtual ErrCode Mkdir(
-        const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid) override;
+    virtual ErrCode Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
+        const CreateDirParam &createDirParam) override;
 
     virtual ErrCode GetFileStat(const std::string &file, FileStat &fileStat) override;
 

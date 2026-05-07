@@ -2528,6 +2528,32 @@ HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostHandleDeleteDesktopShortcutInfo_000
 }
 
 /**
+ * @tc.number: TriggerFallbackEvent_0001
+ * @tc.name: TriggerFallbackEvent_0001
+ * @tc.desc: test TriggerFallbackEvent_0001
+ */
+HWTEST_F(BmsBundleDataMgrTest3, TriggerFallbackEvent_0001, Function | MediumTest | Level1)
+{
+    EXPECT_NO_THROW(EventReport::SendTriggerFallbackEvent(
+        HighRiskOperationType::PATCH_INSTALL_MISSING_HAP, "com.test.bundle", 100, std::vector<std::string>{}));
+    EXPECT_NO_THROW(EventReport::SendTriggerFallbackEvent(
+        HighRiskOperationType::CREATE_USER_ALREADY_EXIST, "", 101, std::vector<std::string>{}));
+}
+
+/**
+ * @tc.number: ScanInstallTimeoutEvent_0001
+ * @tc.name: ScanInstallTimeoutEvent_0001
+ * @tc.desc: test ScanInstallTimeoutEvent_0001
+ */
+HWTEST_F(BmsBundleDataMgrTest3, ScanInstallTimeoutEvent_0001, Function | MediumTest | Level1)
+{
+    EXPECT_NO_THROW(EventReport::SendScanTimeoutEvent(
+        HighRiskOperationType::BOOT_SCAN_TIMEOUT, 0, 10000));
+    EXPECT_NO_THROW(EventReport::SendScanTimeoutEvent(
+        HighRiskOperationType::OTA_SCAN_TIMEOUT, 10000, 20000));
+}
+
+/**
  * @tc.number: DesktopShortcutEvent_001
  * @tc.name: DesktopShortcutEvent_001
  * @tc.desc: test DesktopShortcutEvent_001
@@ -4486,5 +4512,31 @@ HWTEST_F(BmsBundleDataMgrTest3, GetApiTargetVersionByUid_0003, Function | Medium
     int32_t apiTargetVersion = 0;
     ErrCode ret = localBundleDataMgr->GetApiTargetVersionByUid(-1, apiTargetVersion);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: GetAllBundleDirs_0003
+ * @tc.name: GetAllBundleDirs
+ * @tc.desc: test GetAllBundleDirs filters skill bundle
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetAllBundleDirs_0003, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+    if (bundleDataMgr != nullptr) {
+        bundleDataMgr->AddUserId(100);
+        InnerBundleInfo innerBundleInfo;
+        innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::SKILL;
+        innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME_TEST + "_100", innerBundleUserInfo);
+        bundleDataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+        std::vector<BundleDir> bundleDirs;
+        auto ret = bundleDataMgr->GetAllBundleDirs(100, bundleDirs);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(bundleDirs.size(), 0);
+    }
 }
 } // OHOS
