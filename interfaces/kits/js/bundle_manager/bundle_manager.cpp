@@ -4289,7 +4289,7 @@ void GetInstalledBundleListComplete(napi_env env, napi_status status, void *data
         ProcessBundleInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->bundleInfos, asyncCallbackInfo->flags);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_INSTALLED_BUNDLE_LIST, Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
+            GET_INSTALLED_BUNDLE_LIST, Constants::PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST);
     }
     CommonFunc::NapiReturnDeferred<InstalledBundleListCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }

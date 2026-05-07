@@ -377,11 +377,11 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .userId = userId_,
             .bundleName = bundleName,
+            .modulePackage = moduleName_,
             .appIdentifier = bundleAppIdentifier_,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .isInstallByBundleName = true,
-            .modulePackage = moduleName_,
         };
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (installParam.concentrateSendEvent) {
@@ -431,11 +431,11 @@ ErrCode BaseBundleInstaller::Recover(
             .uid = uid,
             .bundleType = static_cast<int32_t>(bundleType_),
             .bundleName = bundleName,
+            .modulePackage = moduleName_,
             .appIdentifier = bundleAppIdentifier_,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .isRecover = true,
-            .modulePackage = moduleName_,
         };
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (NotifyBundleStatus(installRes) != ERR_OK) {
