@@ -850,13 +850,14 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0010, Function | SmallTest | Level0
     el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1,
         std::to_string(USERID));
     ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
-    ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->RemoveDir(el1ShaderCachePath);
-    EXPECT_EQ(ret, ERR_OK);
+    ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->RemoveDir(
+        el1ShaderCachePath, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     std::string bundleShaderCachePath = el1ShaderCachePath + BUNDLE_NAME;
     std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
     bool result = InstallSystemBundle(bundleFile);
     result = CheckShaderCachePathExist(BUNDLE_NAME, 0, USERID);
-    EXPECT_FALSE(result) << "the shader cache pathexist: " << bundleShaderCachePath;
+    EXPECT_TRUE(result) << "the shader cache pathexist: " << bundleShaderCachePath;
     ClearBundleInfo();
 }
 
@@ -2699,6 +2700,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1800, Function | SmallTest 
 {
     BaseBundleInstaller installer;
     InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
     oldInfo.baseApplicationInfo_->arkNativeFilePath = "/an/x86/x86.so";
     ErrCode ret = installer.DeleteOldArkNativeFile(oldInfo);
     EXPECT_EQ(ret, ERR_OK);
@@ -3422,7 +3424,7 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1200, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1300, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    ErrCode ret = impl.RemoveDir("");
+    ErrCode ret = impl.RemoveDir("", BundleDirScene::REMOVE_BUNDLE_CODE_DIR, BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -3480,8 +3482,8 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1700, Function | SmallTest | L
 {
     InstalldHostImpl impl;
     std::vector<std::string> paths;
-    ErrCode ret = impl.CopyFile("", "");
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    ErrCode ret = impl.CopyFile("", "", BundleDirScene::COPY_PGO_FILE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -8140,17 +8142,18 @@ HWTEST_F(BmsBundleInstallerTest, RemoveTempSoDir_0100, Function | SmallTest | Le
 {
     BaseBundleInstaller installer;
     std::string tempSoDir;
-    installer.RemoveTempSoDir(tempSoDir);
+    std::string bundleName;
+    installer.RemoveTempSoDir(tempSoDir, bundleName);
 
     tempSoDir += ServiceConstants::TMP_SUFFIX;
-    installer.RemoveTempSoDir(tempSoDir);
+    installer.RemoveTempSoDir(tempSoDir, bundleName);
 
     tempSoDir += ServiceConstants::PATH_SEPARATOR;
-    installer.RemoveTempSoDir(tempSoDir);
+    installer.RemoveTempSoDir(tempSoDir, bundleName);
 
     tempSoDir += " ";
     tempSoDir += ServiceConstants::PATH_SEPARATOR;
-    installer.RemoveTempSoDir(tempSoDir);
+    installer.RemoveTempSoDir(tempSoDir, bundleName);
     EXPECT_FALSE(tempSoDir.empty());
 }
 
@@ -11885,7 +11888,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0051, Function | MediumTest | L
     PluginInstaller installer;
     InnerBundleInfo newInfo;
     auto ret = installer.RemovePluginDir(newInfo);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -11930,8 +11933,9 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0054, Function | MediumTest | L
 {
     PluginInstaller installer;
     std::string pluginDir;
-    installer.RemoveEmptyDirs(pluginDir);
-    installer.RemoveDir(pluginDir);
+    std::string hostBundleName;
+    installer.RemoveEmptyDirs(pluginDir, hostBundleName);
+    installer.RemoveDir(pluginDir, hostBundleName);
     EXPECT_EQ(pluginDir.empty(), true);
 }
 
@@ -11980,9 +11984,9 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0057, Function | MediumTest | L
 {
     PluginInstaller installer;
     installer.isPluginExist_ = true;
-    installer.RemoveOldInstallDir();
-
     std::string hostBundleName;
+    installer.RemoveOldInstallDir(hostBundleName);
+
     installer.UninstallRollBack(hostBundleName);
 
     NotifyType type = NotifyType::START_INSTALL;
@@ -12134,7 +12138,8 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0065, Function | MediumTest | L
     EXPECT_NE(ret, ERR_OK);
     std::string hspPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + moduleName +
         ServiceConstants::HSP_FILE_SUFFIX;
-    installer.RemoveDir(hspPath);
+    std::string hostBundleName;
+    installer.RemoveDir(hspPath, hostBundleName);
 }
 
 /**
@@ -12148,8 +12153,9 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0066, Function | MediumTest | L
     InnerBundleInfo info;
     installer.parsedBundles_.emplace("bundlePath", info);
     std::string pluginDir;
-    installer.RemoveEmptyDirs(pluginDir);
-    installer.RemoveDir(pluginDir);
+    std::string hostBundleName;
+    installer.RemoveEmptyDirs(pluginDir, hostBundleName);
+    installer.RemoveDir(pluginDir, hostBundleName);
     EXPECT_EQ(pluginDir.empty(), true);
 }
 
@@ -12899,7 +12905,7 @@ HWTEST_F(BmsBundleInstallerTest, DeleteArkStartupCache_0010, Function | SmallTes
 {
     // test no FOUNDATION_UID
     std::string cacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
-    std::string bundleName = "test1";
+    std::string bundleName = BUNDLE_NAME;
     BaseBundleInstaller installer;
     ErrCode ret = installer.DeleteArkStartupCache(cacheDir, bundleName, 100);
     EXPECT_EQ(ret, ERR_OK);

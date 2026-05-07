@@ -90,9 +90,12 @@ public:
     /**
      * @brief Remove a directory.
      * @param dir Indicates the directory path that to be removed.
+     * @param scene Indicates the scene code for path validation.
+     * @param bundleName Indicates the bundle name for path validation.
      * @return Returns ERR_OK if the  directory removed successfully; returns error code otherwise.
      */
-    ErrCode RemoveDir(const std::string &dir, bool async = false);
+    ErrCode RemoveDir(const std::string &dir, BundleDirScene scene, const std::string &bundleName = "",
+        bool async = false);
     /**
      * @brief Get disk usage for dir.
      * @param dir Indicates the directory.
@@ -199,7 +202,7 @@ public:
 
     ErrCode RenameFile(const std::string &oldPath, const std::string &newPath);
 
-    ErrCode CopyFile(const std::string &oldPath, const std::string &newPath,
+    ErrCode CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
         const std::string &signatureFilePath = "");
 
     ErrCode Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,

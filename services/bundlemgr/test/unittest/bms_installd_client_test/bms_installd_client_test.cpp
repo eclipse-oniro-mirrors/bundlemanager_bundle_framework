@@ -52,7 +52,8 @@ const std::string DIFF_FILE_PATH = "diffFilePath";
 const std::string NEW_SO_PATH = "newSoPath";
 const std::string SOURCE_DIR = "sourceDir";
 const std::string DESTINATION_DIR = "destinationDir";
-const std::string TMP_DIR = "/data/app/el1/bundle/public/bms-test/";
+const std::string TMP_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/";
+const std::string TEST_BUNDLE_NAME = "com.example.l3jsdemo";
 const int32_t USERID = 100;
 const int32_t UID = 1000;
 const int32_t GID = 1000;
@@ -553,7 +554,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveDir_0100, TestSize.L
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveDir_0100 start";
     std::string dir = EMPTY_STRING;
-    ErrCode result = installClient_->RemoveDir(dir);
+    ErrCode result = installClient_->RemoveDir(dir, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, TEST_BUNDLE_NAME);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveDir_0100 end";
 }
@@ -567,8 +568,9 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveDir_0200, TestSize.L
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveDir_0200 start";
     std::string dir = DIR;
-    ErrCode result = installClient_->RemoveDir(dir);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::RemoveDir, dir, false));
+    ErrCode result = installClient_->RemoveDir(dir, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, TEST_BUNDLE_NAME);
+    EXPECT_EQ(result, installClient_->CallService(
+        &IInstalld::RemoveDir, dir, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, TEST_BUNDLE_NAME, false));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveDir_0200 end";
 }
 
@@ -888,7 +890,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0100, TestSize.Le
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0100 start";
     std::string oldPath = EMPTY_STRING;
     std::string newPath = NEW_PATH;
-    ErrCode result = installClient_->CopyFile(oldPath, newPath);
+    ErrCode result = installClient_->CopyFile(oldPath, newPath, BundleDirScene::COPY_PGO_FILE);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0100 end";
 }
@@ -903,7 +905,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0200, TestSize.Le
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0200 start";
     std::string oldPath = OLD_PATH;
     std::string newPath = EMPTY_STRING;
-    ErrCode result = installClient_->CopyFile(oldPath, newPath);
+    ErrCode result = installClient_->CopyFile(oldPath, newPath, BundleDirScene::COPY_PGO_FILE);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0200 end";
 }
@@ -918,8 +920,9 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0300, TestSize.Le
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0300 start";
     std::string oldPath = OLD_PATH;
     std::string newPath = NEW_PATH;
-    ErrCode result = installClient_->CopyFile(oldPath, newPath);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyFile, oldPath, newPath, ""));
+    ErrCode result = installClient_->CopyFile(oldPath, newPath, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_EQ(
+        result, installClient_->CallService(&IInstalld::CopyFile, oldPath, newPath, BundleDirScene::COPY_PGO_FILE, ""));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0300 end";
 }
 
@@ -1860,7 +1863,7 @@ HWTEST_F(BmsInstalldClientTest, ClearDir_0100, TestSize.Level0)
     uid_t uid = getuid();
     setuid(Constants::FOUNDATION_UID);
 
-    (void)InstalldClient::GetInstance()->RemoveDir(TMP_DIR);
+    (void)InstalldClient::GetInstance()->RemoveDir(TMP_DIR, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, TEST_BUNDLE_NAME);
     // create dir
     int32_t ret = mkdir(TMP_DIR.c_str(), 0777);
     EXPECT_EQ(ret, 0);
@@ -1888,7 +1891,7 @@ HWTEST_F(BmsInstalldClientTest, ClearDir_0100, TestSize.Level0)
     bool isDirExist = stat(TMP_DIR.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
     EXPECT_TRUE(isDirExist);
 
-    (void)InstalldClient::GetInstance()->RemoveDir(TMP_DIR);
+    (void)InstalldClient::GetInstance()->RemoveDir(TMP_DIR, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, TEST_BUNDLE_NAME);
     setuid(uid);
 }
 

@@ -177,13 +177,13 @@ ErrCode ExtendResourceManagerHostImpl::ProcessAddExtResource(
     std::vector<ExtendResourceInfo> extendResourceInfos;
     if (ParseExtendResourceFile(bundleName, newFilePaths, extendResourceInfos) != ERR_OK) {
         APP_LOGE("parse %{public}s extendResource failed", bundleName.c_str());
-        RollBack(newFilePaths);
+        RollBack(newFilePaths, bundleName);
         return ERR_EXT_RESOURCE_MANAGER_PARSE_FILE_FAILED;
     }
 
     if (!InnerSaveExtendResourceInfo(bundleName, newFilePaths, extendResourceInfos)) {
         APP_LOGE("save %{public}s extendResource failed", bundleName.c_str());
-        RollBack(newFilePaths);
+        RollBack(newFilePaths, bundleName);
         return ERR_EXT_RESOURCE_MANAGER_PARSE_FILE_FAILED;
     }
     return ERR_OK;
@@ -266,7 +266,7 @@ ErrCode ExtendResourceManagerHostImpl::CopyToTempDir(const std::string &bundleNa
         ErrCode ret = MkdirIfNotExist(bundleName, BundleDirScene::EXTEND_RESOURCE_DIR, tempFile);
         if (ret != ERR_OK) {
             APP_LOGE("mkdir fileDir %{public}s failed %{public}d", tempFile.c_str(), ret);
-            RollBack(newFilePaths);
+            RollBack(newFilePaths, bundleName);
             return ret;
         }
         tempFile.append(GetFileName(oldFile));
@@ -274,7 +274,7 @@ ErrCode ExtendResourceManagerHostImpl::CopyToTempDir(const std::string &bundleNa
             oldFile, tempFile, BundleDirScene::MOVE_EXTEND_RESOURCE_FILE_TO_TEMP_DIR, bundleName);
         if (ret != ERR_OK) {
             APP_LOGE("MoveFile file %{public}s failed %{public}d", tempFile.c_str(), ret);
-            RollBack(newFilePaths);
+            RollBack(newFilePaths, bundleName);
             return ret;
         }
         newFilePaths.emplace_back(tempFile);
@@ -315,10 +315,11 @@ bool ExtendResourceManagerHostImpl::RemoveExtResourcesDb(const std::string &bund
     return dataMgr->RemoveExtResources(bundleName, moduleNames);
 }
 
-void ExtendResourceManagerHostImpl::RollBack(const std::vector<std::string> &filePaths)
+void ExtendResourceManagerHostImpl::RollBack(const std::vector<std::string> &filePaths, const std::string &bundleName)
 {
     for (const auto &filePath : filePaths) {
-        ErrCode result = InstalldClient::GetInstance()->RemoveDir(filePath);
+        ErrCode result =
+            InstalldClient::GetInstance()->RemoveDir(filePath, BundleDirScene::REMOVE_EXTEND_RESOURCE_FILE, bundleName);
         if (result != ERR_OK) {
             APP_LOGE("Remove failed %{public}s", filePath.c_str());
         }
@@ -361,7 +362,8 @@ void ExtendResourceManagerHostImpl::InnerRemoveExtendResources(
     std::vector<ExtendResourceInfo> &extResourceInfos)
 {
     for (const auto &extResourceInfo : extResourceInfos) {
-        ErrCode result = InstalldClient::GetInstance()->RemoveDir(extResourceInfo.filePath);
+        ErrCode result = InstalldClient::GetInstance()->RemoveDir(
+            extResourceInfo.filePath, BundleDirScene::REMOVE_EXTEND_RESOURCE_FILE, bundleName);
         if (result != ERR_OK) {
             APP_LOGE("Remove failed %{public}s", extResourceInfo.filePath.c_str());
         }

@@ -165,7 +165,8 @@ int BmsInstallDaemonTest::RemoveBundleDir(const std::string &bundleDir) const
     if (!service_->IsServiceReady()) {
         service_->Start();
     }
-    return InstalldClient::GetInstance()->RemoveDir(bundleDir);
+    return InstalldClient::GetInstance()->RemoveDir(
+        bundleDir, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, BUNDLE_NAME13);
 }
 
 int BmsInstallDaemonTest::RemoveBundleDataDir(const std::string &bundleDataDir) const
@@ -173,7 +174,8 @@ int BmsInstallDaemonTest::RemoveBundleDataDir(const std::string &bundleDataDir) 
     if (!service_->IsServiceReady()) {
         service_->Start();
     }
-    return InstalldClient::GetInstance()->RemoveDir(bundleDataDir);
+    return InstalldClient::GetInstance()->RemoveDir(
+        bundleDataDir, BundleDirScene::REMOVE_SANDBOX_DATA_DIR, BUNDLE_NAME13);
 }
 
 int BmsInstallDaemonTest::CleanBundleDataDir(const std::string &bundleDataDir) const
@@ -774,9 +776,9 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0500, Function | SmallTest | Level
     if (!service->IsServiceReady()) {
         service->Start();
     }
-    ErrCode ret = InstalldClient::GetInstance()->CopyFile("", BUNDLE_DATA_DIR);
+    ErrCode ret = InstalldClient::GetInstance()->CopyFile("", BUNDLE_DATA_DIR, BundleDirScene::COPY_PGO_FILE);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->CopyFile(BUNDLE_DATA_DIR, "");
+    ret = InstalldClient::GetInstance()->CopyFile(BUNDLE_DATA_DIR, "", BundleDirScene::COPY_PGO_FILE);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

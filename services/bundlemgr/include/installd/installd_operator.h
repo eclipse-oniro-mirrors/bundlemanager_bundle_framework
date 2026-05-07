@@ -455,6 +455,10 @@ public:
 
     static bool IsValidPathByMoveFileScene(const std::string &oldPath, const std::string &newPath,
         const BundleDirScene &scene, const std::string &bundleName);
+    static bool IsValidPathByCopyFileScene(
+        const std::string &oldPath, const std::string &newPath, const BundleDirScene &scene);
+    static bool IsValidPathByRemoveDirScene(const std::string &dir, const std::string &bundleName,
+        const BundleDirScene &scene);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
@@ -529,6 +533,14 @@ private:
         const std::string &sourcePath, const BundleDirScene &scene, const std::string &bundleName);
     static bool IsValidTargetPathByMoveFileScene(
         const std::string &targetPath, const BundleDirScene &scene, const std::string &bundleName);
+    static bool IsValidSourcePathByCopyVerifyFile(const std::string &sourcePath);
+    static bool IsValidSourcePathByCopyFileScene(const std::string &sourcePath, const BundleDirScene &scene);
+    static bool IsValidTargetPathByCopyFileScene(const std::string &targetPath, const BundleDirScene &scene);
+    static bool IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        const std::string &dir, const std::string &bundleName, const BundleDirScene &scene);
+    static bool IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        const std::string &dir, const std::string &bundleName, const BundleDirScene &scene);
+    static bool IsValidPathByRemoveDirSceneNoBundleName(const std::string &dir, const BundleDirScene &scene);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

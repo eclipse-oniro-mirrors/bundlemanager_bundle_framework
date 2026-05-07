@@ -529,7 +529,7 @@ void BundleUserMgrHostImpl::RemoveAsanLogDirectory(int32_t userId)
     std::string asanLogDir = std::string(ServiceConstants::BUNDLE_ASAN_LOG_DIR) + ServiceConstants::PATH_SEPARATOR
         + std::to_string(userId);
     APP_LOGI("remove asan log directory %{public}s when remove user", asanLogDir.c_str());
-    InstalldClient::GetInstance()->RemoveDir(asanLogDir);
+    InstalldClient::GetInstance()->RemoveDir(asanLogDir, BundleDirScene::REMOVE_ASAN_LOG_DIR);
 }
 
 ErrCode BundleUserMgrHostImpl::CheckInitialUser()
@@ -772,7 +772,7 @@ ErrCode BundleUserMgrHostImpl::RemoveSystemOptimizeDir(int32_t userId)
         std::to_string(userId));
     APP_LOGI("remove system optimize directory %{public}s when remove user: %{public}d",
         el1ArkStartupCachePath.c_str(), userId);
-    return InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath);
+    return InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath, BundleDirScene::REMOVE_SYSTEM_OPTIMIZE_DIR);
 }
 
 bool BundleUserMgrHostImpl::DeleteReSignCert(int32_t userId)

@@ -174,7 +174,8 @@ ErrCode QuickFixDeleter::InnerDeletePatchDir(const AppqfInfo &appqfInfo, const s
     }
 
     LOG_D(BMS_TAG_DEFAULT, "patch path is %{public}s", patchPath.c_str());
-    if (InstalldClient::GetInstance()->RemoveDir(patchPath) != ERR_OK) {
+    if (InstalldClient::GetInstance()->RemoveDir(patchPath, BundleDirScene::REMOVE_QUICK_FIX_DIR, bundleName) !=
+        ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "RemoveDir patch path or hot reload path failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_REMOVE_PATCH_PATH_FAILED;
     }

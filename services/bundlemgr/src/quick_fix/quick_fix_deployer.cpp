@@ -59,7 +59,8 @@ ErrCode QuickFixDeployer::DeployQuickFix()
     ScopeGuard guardRemovePath([realFilePaths] {
         for (const auto &path: realFilePaths) {
             std::string tempPath = path.substr(0, path.rfind(ServiceConstants::PATH_SEPARATOR));
-            if (InstalldClient::GetInstance()->RemoveDir(tempPath) != ERR_OK) {
+            if (InstalldClient::GetInstance()->RemoveDir(tempPath, BundleDirScene::REMOVE_SECURITY_QUICK_FIX_DIR) !=
+                ERR_OK) {
                 LOG_E(BMS_TAG_DEFAULT, "RemovePatchFile failed path: %{private}s", tempPath.c_str());
             }
         }
@@ -67,9 +68,8 @@ ErrCode QuickFixDeployer::DeployQuickFix()
     // parse check multi hqf files, update status DEPLOY_START
     InnerAppQuickFix newInnerAppQuickFix;
     InnerAppQuickFix oldInnerAppQuickFix;
-    if ((ret = ToDeployStartStatus(realFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix)) != ERR_OK) {
-        return ret;
-    }
+    ret = ToDeployStartStatus(realFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
+    CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
     // extract diff files, apply diff patch and copy hqf, update status DEPLOY_END
     ret = ToDeployEndStatus(newInnerAppQuickFix, oldInnerAppQuickFix);
     if (ret != ERR_OK) {
@@ -91,7 +91,8 @@ ErrCode QuickFixDeployer::DeployQuickFix()
         } else {
             oldPath += ServiceConstants::PATCH_PATH + std::to_string(appQuick.deployingAppqfInfo.versionCode);
         }
-        if (InstalldClient::GetInstance()->RemoveDir(oldPath) != ERR_OK) {
+        if (InstalldClient::GetInstance()->RemoveDir(
+            oldPath, BundleDirScene::REMOVE_QUICK_FIX_DIR, appQuick.bundleName) != ERR_OK) {
             LOG_E(BMS_TAG_DEFAULT, "delete %{private}s failed", oldPath.c_str());
         }
     }
@@ -240,8 +241,9 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     // create patch path
     AppQuickFix newQuickFix = newInnerAppQuickFix.GetAppQuickFix();
     std::string newPatchPath;
-    ScopeGuard guardRemovePatchPath([&newPatchPath] {
-        InstalldClient::GetInstance()->RemoveDir(newPatchPath);
+    ScopeGuard guardRemovePatchPath([&newPatchPath, &newQuickFix] {
+        InstalldClient::GetInstance()->RemoveDir(
+            newPatchPath, BundleDirScene::REMOVE_QUICK_FIX_DIR, newQuickFix.bundleName);
     });
     ErrCode ret = ERR_OK;
     if (newQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) {
@@ -276,9 +278,7 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     }
     // save and update status DEPLOY_END
     ret = SaveAppQuickFix(newInnerAppQuickFix);
-    if (ret != ERR_OK) {
-        return ret;
-    }
+    CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
     ToDeployQuickFixResult(newQuickFix);
     ret = SaveToInnerBundleInfo(newInnerAppQuickFix);
     if (ret != ERR_OK) {
@@ -610,7 +610,8 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
         std::string realPath = path + info.moduleName + ServiceConstants::QUICK_FIX_FILE_SUFFIX;
-        ErrCode ret = InstalldClient::GetInstance()->CopyFile(info.hqfFilePath, realPath);
+        ErrCode ret =
+            InstalldClient::GetInstance()->CopyFile(info.hqfFilePath, realPath, BundleDirScene::COPY_HQF_FILE);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_DEFAULT, "error CopyFile failed, errcode: %{public}d", ret);
             return ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED;
@@ -848,7 +849,10 @@ ErrCode QuickFixDeployer::ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, 
     // extract diff so, diff so path
     std::string diffFilePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
         appQuickFix.bundleName + ServiceConstants::TMP_SUFFIX;
-    ScopeGuard guardRemoveDiffPath([diffFilePath] { InstalldClient::GetInstance()->RemoveDir(diffFilePath); });
+    ScopeGuard guardRemoveDiffPath([diffFilePath, &appQuickFix] {
+        InstalldClient::GetInstance()->RemoveDir(
+            diffFilePath, BundleDirScene::REMOVE_BMS_BUNDLE_TEMP_DIR, appQuickFix.bundleName);
+    });
     // extract diff so to targetPath
     auto ret = InstalldClient::GetInstance()->ExtractDiffFiles(hqf.hqfFilePath, diffFilePath, cpuAbi);
     if (ret != ERR_OK) {

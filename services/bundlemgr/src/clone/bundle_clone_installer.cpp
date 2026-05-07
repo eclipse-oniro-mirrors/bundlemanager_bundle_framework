@@ -590,7 +590,8 @@ void BundleCloneInstaller::RemoveEl5Dir(InnerBundleUserInfo &userInfo,
     dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
         std::to_string(userId) + ServiceConstants::DATABASE + key);
     for (const std::string &dir : dirs) {
-        if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
+        if (InstalldClient::GetInstance()->RemoveDir(
+            dir, BundleDirScene::REMOVE_SCREEN_LOCK_DATA_DIR, userInfo.bundleName) != ERR_OK) {
             APP_LOGW("remove el5 dir %{public}s failed", dir.c_str());
         }
     }

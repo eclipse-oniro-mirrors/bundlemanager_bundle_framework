@@ -266,11 +266,14 @@ ErrCode InstalldProxy::RemoveModuleDataDir(const std::string &ModuleName, const 
     return TransactInstalldCmd(InstalldInterfaceCode::REMOVE_MODULE_DATA_DIR, data, reply, option);
 }
 
-ErrCode InstalldProxy::RemoveDir(const std::string &dir, bool async)
+ErrCode InstalldProxy::RemoveDir(const std::string &dir, BundleDirScene scene, const std::string &bundleName,
+    bool async)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(scene));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
     INSTALLD_PARCEL_WRITE(data, Bool, async);
 
     MessageParcel reply;
@@ -676,13 +679,14 @@ ErrCode InstalldProxy::RenameFile(const std::string &oldPath, const std::string 
     return TransactInstalldCmd(InstalldInterfaceCode::RENAME_FILE, data, reply, option);
 }
 
-ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &newPath,
+ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
     const std::string &signatureFilePath)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(oldPath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(newPath));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(scene));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(signatureFilePath));
 
     MessageParcel reply;

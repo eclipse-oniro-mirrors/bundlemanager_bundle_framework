@@ -170,9 +170,12 @@ public:
     /**
      * @brief Remove a directory.
      * @param dir Indicates the directory path that to be removed.
+     * @param scene Indicates the scene code for path validation.
+     * @param bundleName Indicates the bundle name for path validation.
      * @return Returns ERR_OK if the  directory removed successfully; returns error code otherwise.
      */
-    virtual ErrCode RemoveDir(const std::string &dir, bool async = false)
+    virtual ErrCode RemoveDir(const std::string &dir, BundleDirScene scene, const std::string &bundleName = "",
+        bool async = false)
     {
         return ERR_OK;
     }
@@ -350,9 +353,10 @@ public:
      * @brief Copy file from oldPath to newPath.
      * @param oldPath Indicates oldPath.
      * @param newPath Indicates newPath.
+     * @param scene Indicates the scene code for path validation.
      * @return Returns ERR_OK if copy file successfully; returns error code otherwise.
      */
-    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath,
+    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath, BundleDirScene scene,
         const std::string &signatureFilePath)
     {
         return ERR_OK;

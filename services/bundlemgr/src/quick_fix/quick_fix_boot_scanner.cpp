@@ -273,7 +273,7 @@ void QuickFixBootScanner::RemoveInvalidDir() const
     // remove invalid dir under install dir
     if (!invalidQuickFixDir_.empty()) {
         for_each(invalidQuickFixDir_.begin(), invalidQuickFixDir_.end(), [](const auto &dir) {
-            InstalldClient::GetInstance()->RemoveDir(dir);
+            InstalldClient::GetInstance()->RemoveDir(dir, BundleDirScene::REMOVE_QUICK_FIX_FILE);
         });
     }
     // remove invalid temp install dir

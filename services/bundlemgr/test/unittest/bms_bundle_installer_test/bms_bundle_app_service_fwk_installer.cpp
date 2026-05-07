@@ -1072,6 +1072,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, RemoveLowerVersionSoDir_0010, Func
     EXPECT_EQ(res, ERR_OK);
 
     appServiceFwkInstaller.versionUpgrade_ = true;
+    appServiceFwkInstaller.bundleName_ = BUNDLE_NAME;
     res = appServiceFwkInstaller.RemoveLowerVersionSoDir(VERSION_LOW);
     EXPECT_EQ(res, ERR_OK);
 }

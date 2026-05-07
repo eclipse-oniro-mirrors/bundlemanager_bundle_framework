@@ -28,7 +28,8 @@ namespace OHOS {
     {
         BaseBundleInstaller basebundleinstall;
         std::string modulePath = std::string(data, size);
-        auto ret1 = basebundleinstall.RemoveModuleDir(modulePath);
+        std::string bundleName = std::string(data, size);
+        auto ret1 = basebundleinstall.RemoveModuleDir(modulePath, bundleName);
         return true;
     }
 }

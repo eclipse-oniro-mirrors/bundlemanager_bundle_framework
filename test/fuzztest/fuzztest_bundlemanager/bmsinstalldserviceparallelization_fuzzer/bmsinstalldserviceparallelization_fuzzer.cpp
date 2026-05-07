@@ -254,7 +254,8 @@ extern "C" int FuzzIInstalldService(FuzzedDataProvider &provider)
         }
         case IpcCode::REMOVE_DIR: {
             std::string dir = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-            OHOS::p_installdService->hostImpl_->RemoveDir(dir);
+            auto scene = static_cast<BundleDirScene>(provider.ConsumeIntegral<int32_t>());
+            OHOS::p_installdService->hostImpl_->RemoveDir(dir, scene);
             break;
         }
         default: {

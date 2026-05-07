@@ -524,7 +524,8 @@ void UpdateAppDataMgr::CreateShareFilesSubDataDirs(const std::vector<BundleInfo>
         if (userId != Constants::DEFAULT_USERID && bundleInfo.singleton) {
             APP_LOGD("Bundle: %{public}s in DEFAULT_USERID, do not create sharefiles for other user",
                 bundleInfo.name.c_str());
-            InstalldClient::GetInstance()->RemoveDir(sharefilesDataDir);
+            InstalldClient::GetInstance()->RemoveDir(
+                sharefilesDataDir, BundleDirScene::REMOVE_SHARE_FILE_DIR, bundleInfo.name);
             continue;
         }
         

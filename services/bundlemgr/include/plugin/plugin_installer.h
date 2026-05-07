@@ -95,8 +95,8 @@ private:
     ErrCode CheckSupportPluginPermission(const std::string &hostBundleName);
     ErrCode SaveHspToInstallDir(const std::string &bundlePath, const std::string &pluginBundleDir,
         const std::string &moduleName, InnerBundleInfo &newInfo);
-    void RemoveEmptyDirs(const std::string &pluginDir) const;
-    void RemoveDir(const std::string &dir) const;
+    void RemoveEmptyDirs(const std::string &pluginDir, const std::string &hostBundleName) const;
+    void RemoveDir(const std::string &dir, const std::string &hostBundleName) const;
     bool CheckAppIdentifier() const;
     bool CheckVersionCodeForUpdate() const;
     ErrCode ProcessPluginUninstall(const InnerBundleInfo &hostBundleInfo);
@@ -113,7 +113,7 @@ private:
     ErrCode VerifyCodeSignatureForHsp(const std::string &hspPath, const std::string &appIdentifier,
         bool isEnterpriseBundle, bool isCompileSdkOpenHarmony) const;
     bool ParsePluginId(const std::string &appServiceCapabilities, std::vector<std::string> &pluginIds);
-    void RemoveOldInstallDir();
+    void RemoveOldInstallDir(const std::string &hostBundleName);
     void UninstallRollBack(const std::string &hostBundleName);
     bool InitDataMgr();
     ErrCode ParseHapPaths(const InstallPluginParam &installPluginParam,

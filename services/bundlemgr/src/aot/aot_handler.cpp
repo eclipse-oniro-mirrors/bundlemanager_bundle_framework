@@ -421,10 +421,10 @@ void AOTHandler::DeleteArkAp(const BundleInfo &bundleInfo, const int32_t userId)
         runtimeAp.append(PGO_RT_AP_PREFIX).append(moduleName)
             .append(ServiceConstants::PGO_FILE_SUFFIX);
         APP_LOGD("begin rm runtimeAp: %{public}s", runtimeAp.c_str());
-        (void)InstalldClient::GetInstance()->RemoveDir(runtimeAp);
+        (void)InstalldClient::GetInstance()->RemoveDir(runtimeAp, BundleDirScene::REMOVE_ARK_AP_FILE, bundleInfo.name);
         mergedAp.append(PGO_MERGED_AP_PREFIX).append(moduleName).append(ServiceConstants::PGO_FILE_SUFFIX);
         APP_LOGD("begin rm mergedAp: %{public}s", mergedAp.c_str());
-        (void)InstalldClient::GetInstance()->RemoveDir(mergedAp);
+        (void)InstalldClient::GetInstance()->RemoveDir(mergedAp, BundleDirScene::REMOVE_ARK_AP_FILE, bundleInfo.name);
     }
 }
 
@@ -450,9 +450,11 @@ void AOTHandler::HandleResetBundleAOT(const std::string &bundleName, bool isAllB
     }
     dataMgr->ResetAOTFlags(bundleName);
     if (bundleType == BundleType::SHARED) {
-        (void)InstalldClient::GetInstance()->RemoveDir(BuildSharedArkCachePath(bundleName));
+        (void)InstalldClient::GetInstance()->RemoveDir(
+            BuildSharedArkCachePath(bundleName), BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR, bundleName);
     } else {
-        (void)InstalldClient::GetInstance()->RemoveDir(ServiceConstants::HAP_ARK_CACHE_PATH + bundleName);
+        (void)InstalldClient::GetInstance()->RemoveDir(
+            ServiceConstants::HAP_ARK_CACHE_PATH + bundleName, BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR, bundleName);
     }
 }
 
@@ -590,7 +592,7 @@ void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInf
         }
         std::string destAp = COPY_AP_DEST_PATH  + bundleName + "_" + moduleName + ServiceConstants::AP_SUFFIX;
         result.append(sourceAp);
-        errCode = InstalldClient::GetInstance()->CopyFile(sourceAp, destAp);
+        errCode = InstalldClient::GetInstance()->CopyFile(sourceAp, destAp, BundleDirScene::COPY_AP_FILE);
         if (errCode != ERR_OK) {
             APP_LOGE("Copy ap dir %{public}s failed err %{public}d", sourceAp.c_str(), errCode);
             result.append(" copy ap failed");
@@ -1049,8 +1051,10 @@ void AOTHandler::HandleArkPathsChange() const
 
 void AOTHandler::DelDeprecatedArkPaths() const
 {
-    (void)InstalldClient::GetInstance()->RemoveDir(DEPRECATED_ARK_CACHE_PATH);
-    (void)InstalldClient::GetInstance()->RemoveDir(DEPRECATED_ARK_PROFILE_PATH);
+    (void)InstalldClient::GetInstance()->RemoveDir(
+        DEPRECATED_ARK_CACHE_PATH, BundleDirScene::REMOVE_LOCAL_ARK_CACHE_DIR);
+    (void)InstalldClient::GetInstance()->RemoveDir(
+        DEPRECATED_ARK_PROFILE_PATH, BundleDirScene::REMOVE_LOCAL_ARK_PROFILE_DIR);
 }
 
 void AOTHandler::CreateArkProfilePaths() const

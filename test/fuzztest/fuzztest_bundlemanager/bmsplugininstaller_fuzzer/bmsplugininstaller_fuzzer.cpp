@@ -116,12 +116,12 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     installer.PluginRollBack(hostBundleName);
     installer.RemovePluginDir(hostBundleInfo);
     installer.SaveHspToInstallDir(bundlePath, moduleDir, moduleName, newInfo);
-    installer.RemoveEmptyDirs(moduleDir);
-    installer.RemoveDir(moduleDir);
+    installer.RemoveEmptyDirs(moduleDir, hostBundleName);
+    installer.RemoveDir(moduleDir, hostBundleName);
     installer.ProcessPluginUninstall(hostBundleInfo);
-    installer.RemoveOldInstallDir();
+    installer.RemoveOldInstallDir(hostBundleName);
     installer.isPluginExist_ = true;
-    installer.RemoveOldInstallDir();
+    installer.RemoveOldInstallDir(hostBundleName);
     installer.UninstallRollBack(hostBundleName);
     installer.GetModuleNames();
     NotifyType type = static_cast<NotifyType>(fdp.ConsumeIntegralInRange<uint8_t>(0, ORIENTATION_MAX));

@@ -250,7 +250,7 @@ bool VerifyManagerHostImpl::CopyFilesToTempDir(
             return false;
         }
 
-        result = InstalldClient::GetInstance()->CopyFile(realPath, tempCopyPath, "");
+        result = InstalldClient::GetInstance()->CopyFile(realPath, tempCopyPath, BundleDirScene::COPY_ABC_FILE, "");
         if (result != ERR_OK) {
             APP_LOGE("CopyFile tempDir %{public}s faild %{public}d", realPath.c_str(), result);
             return false;
@@ -389,7 +389,7 @@ void VerifyManagerHostImpl::RemoveTempFiles(const std::string &bundleName)
 {
     APP_LOGI("RemoveTempFiles");
     auto tempRootDir = GetTempRootDir(bundleName);
-    InstalldClient::GetInstance()->RemoveDir(tempRootDir);
+    InstalldClient::GetInstance()->RemoveDir(tempRootDir, BundleDirScene::REMOVE_VERIFY_FILE, bundleName);
 }
 
 void VerifyManagerHostImpl::RemoveTempFiles(const std::vector<std::string> &paths)
@@ -566,7 +566,8 @@ ErrCode VerifyManagerHostImpl::DeleteAbc(const std::string &path, int32_t &funcR
         funcResult = ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
         return ERR_OK;
     }
-    result = InstalldClient::GetInstance()->RemoveDir(realPath);
+    result = InstalldClient::GetInstance()->RemoveDir(
+        realPath, BundleDirScene::REMOVE_VERIFY_FILE, innerBundleInfo.GetBundleName());
     if (result != ERR_OK) {
         APP_LOGE("DeleteAbc failed due to remove path %{public}s failed %{public}d",
             realPath.c_str(), result);

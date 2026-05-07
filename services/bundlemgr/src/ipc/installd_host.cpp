@@ -527,8 +527,10 @@ bool InstalldHost::HandleRemoveModuleDataDir(MessageParcel &data, MessageParcel 
 bool InstalldHost::HandleRemoveDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string removedDir = Str16ToStr8(data.ReadString16());
+    int32_t scene = data.ReadInt32();
+    std::string bundleName = Str16ToStr8(data.ReadString16());
     bool async = data.ReadBool();
-    ErrCode result = RemoveDir(removedDir, async);
+    ErrCode result = RemoveDir(removedDir, static_cast<BundleDirScene>(scene), bundleName, async);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -883,9 +885,10 @@ bool InstalldHost::HandleCopyFile(MessageParcel &data, MessageParcel &reply)
 {
     std::string oldPath = Str16ToStr8(data.ReadString16());
     std::string newPath = Str16ToStr8(data.ReadString16());
+    int32_t scene = data.ReadInt32();
     std::string signatureFilePath = Str16ToStr8(data.ReadString16());
 
-    ErrCode result = CopyFile(oldPath, newPath, signatureFilePath);
+    ErrCode result = CopyFile(oldPath, newPath, static_cast<BundleDirScene>(scene), signatureFilePath);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

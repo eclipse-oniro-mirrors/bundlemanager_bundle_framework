@@ -2374,8 +2374,9 @@ HWTEST_F(BmsEventHandlerTest, BundleEl1ShaderCacheLocal_0100, Function | SmallTe
     EXPECT_FALSE(isExist) << "the shader cache path not exist: " << BUNDLE_NAME;
 
     // test when shader cache path no exist
-    ErrCode removeRet = AppExecFwk::InstalldClient::GetInstance()->RemoveDir(el1ShaderCachePath);
-    EXPECT_EQ(removeRet, ERR_OK);
+    ErrCode removeRet = AppExecFwk::InstalldClient::GetInstance()->RemoveDir(
+        el1ShaderCachePath, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, BUNDLE_NAME);
+    EXPECT_EQ(removeRet, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     handler->CheckAllBundleEl1ShaderCacheLocal();
     isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
     EXPECT_FALSE(isExist) << "the shader cache path exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
@@ -2438,7 +2439,7 @@ HWTEST_F(BmsEventHandlerTest, CleanAllBundleEl1ArkStartupCacheLocal_0100, Functi
     EXPECT_TRUE(res);
 
     setuid(Constants::FOUNDATION_UID);
-    (void)InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath);
+    (void)InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath, BundleDirScene::REMOVE_SYSTEM_OPTIMIZE_DIR);
     dataMgr->bundleInfos_.clear();
     setuid(Constants::ROOT_UID);
 }
@@ -2493,7 +2494,7 @@ HWTEST_F(BmsEventHandlerTest, ProcessCheckSystemOptimizeDir_0100, Function | Sma
     res = handler->ProcessCheckSystemOptimizeDir();
     EXPECT_TRUE(res);
 
-    (void)InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath);
+    (void)InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath, BundleDirScene::REMOVE_SYSTEM_OPTIMIZE_DIR);
     dataMgr->bundleInfos_.clear();
     setuid(Constants::ROOT_UID);
 }
@@ -2609,7 +2610,8 @@ HWTEST_F(BmsEventHandlerTest, InnerProcessCheckAppLogDir_0100, Function | SmallT
     handler->InnerProcessCheckAppLogDir();
     (void)InstalldClient::GetInstance()->IsExistDir(bundleLogDir1, isExist);
     EXPECT_FALSE(isExist);
-    (void)InstalldClient::GetInstance()->RemoveDir(bundleLogDir1);
+    (void)InstalldClient::GetInstance()->RemoveDir(
+        bundleLogDir1, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, BUNDLE_NAME_FOR_TEST_U1ENABLE);
     dataMgr->bundleInfos_.clear();
 }
 
