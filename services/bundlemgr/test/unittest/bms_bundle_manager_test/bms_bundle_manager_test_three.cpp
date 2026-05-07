@@ -2730,4 +2730,19 @@ HWTEST_F(BmsBundleManagerTest3, CreateNewBundleEl5Dir_0001, Function | MediumTes
     auto testRet = hostImpl->CreateNewBundleDir(userId);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: OnAddSystemAbility_0001
+ * Function: OnAddSystemAbility
+ * @tc.name: test OnAddSystemAbility with ABILITY_MANAGER_SERVICE_ID triggers RegisterConfigurationObserver
+ * @tc.desc: 1. call OnAddSystemAbility with ABILITY_MANAGER_SERVICE_ID
+ *           2. verify RegisterConfigurationObserver is called without crash
+ */
+HWTEST_F(BmsBundleManagerTest3, OnAddSystemAbility_0001, Function | SmallTest | Level1)
+{
+    int32_t abilityManagerServiceId  = 501;
+    std::string deviceId;
+    EXPECT_NO_THROW(
+        DelayedSingleton<BundleMgrService>::GetInstance()->OnAddSystemAbility(abilityManagerServiceId, deviceId));
+}
 } // OHOS

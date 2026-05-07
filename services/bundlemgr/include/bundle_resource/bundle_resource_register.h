@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_REGISTER_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_REGISTER_H
 
+#include <mutex>
 #include <string>
 
 namespace OHOS {
@@ -25,6 +26,10 @@ public:
     static void RegisterConfigurationObserver();
 
     static void RegisterCommonEventSubscriber();
+
+private:
+    static std::mutex registerMutex_;
+    static bool isRegistered_;
 };
 } // AppExecFwk
 } // OHOS
