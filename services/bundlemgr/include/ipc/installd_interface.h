@@ -46,10 +46,12 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.Installd");
     /**
      * @brief Create a bundle code directory.
+     * @param bundleName Indicates the bundle name for path validation.
+     * @param scene Indicates the scene code for path validation.
      * @param bundleDir Indicates the bundle code directory path that to be created.
      * @return Returns ERR_OK if the bundle directory created successfully; returns error code otherwise.
      */
-    virtual ErrCode CreateBundleDir(const std::string &bundleDir)
+    virtual ErrCode CreateBundleDir(const std::string &bundleName, BundleDirScene scene, const std::string &bundleDir)
     {
         return ERR_OK;
     }
@@ -121,9 +123,12 @@ public:
      * @brief Rename the module directory from temporaily path to the real path.
      * @param oldPath Indicates the old path name.
      * @param newPath Indicates the new path name.
+     * @param bundleName Indicates the bundle name for path validation.
+     * @param scene Indicates the scene code for path validation.
      * @return Returns ERR_OK if the module directory renamed successfully; returns error code otherwise.
      */
-    virtual ErrCode RenameModuleDir(const std::string &oldDir, const std::string &newDir)
+    virtual ErrCode RenameModuleDir(const std::string &oldDir, const std::string &newDir, const std::string &bundleName,
+        BundleDirScene scene)
     {
         return ERR_OK;
     }
@@ -326,9 +331,12 @@ public:
      * @brief Move file from oldPath to newPath.
      * @param oldPath Indicates oldPath.
      * @param newPath Indicates newPath.
+     * @param scene Indicates the scene code for path validation.
+     * @param bundleName Indicates the bundle name for path validation.
      * @return Returns ERR_OK if move file successfully; returns error code otherwise.
      */
-    virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath)
+    virtual ErrCode MoveFile(
+        const std::string &oldPath, const std::string &newPath, BundleDirScene scene, const std::string &bundleName)
     {
         return ERR_OK;
     }
@@ -356,10 +364,11 @@ public:
      * @param mode Indicates dir mode.
      * @param uid Indicates dir uid.
      * @param gid Indicates dir gid.
+     * @param createDirParam Indicates param to be set to the directory.
      * @return Returns ERR_OK if create directory successfully; returns error code otherwise.
      */
-    virtual ErrCode Mkdir(
-        const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
+    virtual ErrCode Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
+        const CreateDirParam &createDirParam)
     {
         return ERR_OK;
     }

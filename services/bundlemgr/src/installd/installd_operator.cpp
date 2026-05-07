@@ -87,6 +87,16 @@ constexpr const char* PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 constexpr const char* PREFIX_LIBS_PATH = "/libs/";
 constexpr const char* PREFIX_TARGET_PATH = "/print_service/";
 constexpr const char* HQF_DIR_PREFIX = "patch_";
+constexpr const char* HQF_PATCH_PATH = "/patch/";
+constexpr const char* VERIFY_FILE_PATH = "/abcs/";
+constexpr const char* APP_EL1_PATH = "/data/app/el1/";
+constexpr const char* APP_EL2_PATH = "/data/app/el2/";
+constexpr const char* ARK_PROFILE_PATH = "aot_compiler/ark_profile";
+constexpr const char* SYSTEM_OPTIMIZE_DIR = "/system_optimize/";
+constexpr const char* SERVICE_EL2_PATH = "/data/service/el2/";
+constexpr const char* HMDFS_CLOUD_DATA_PATH = "/hmdfs/cloud/data/";
+constexpr const char* PGO_DIR_PATH = "/data/local/pgo/";
+constexpr const char* BASE_SKILL_DIR = "/data/app/el1/skills/public";
 #if defined(CODE_ENCRYPTION_ENABLE)
 static const char LIB_CODE_CRYPTO_SO_PATH[] = "system/lib/libcode_crypto_metadata_process_utils.z.so";
 static const char LIB64_CODE_CRYPTO_SO_PATH[] = "system/lib64/libcode_crypto_metadata_process_utils.z.so";
@@ -4416,6 +4426,244 @@ std::string InstalldOperator::AnonymizePath(const std::string &path)
     }
 
     return result;
+}
+
+bool InstalldOperator::IsContainsPathPart(const std::string &path, const std::string &pathPart)
+{
+    if (!IsFileNameValid(path) || !IsFileNameValid(pathPart)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path or pathPart, exist ../ or \\..");
+        return false;
+    }
+    return path.find(pathPart) != std::string::npos;
+}
+
+bool InstalldOperator::IsContainsBundleName(const std::string &path, const std::string &bundleName)
+{
+    if (!IsFileNameValid(path)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    if (!IsValidBundleName(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid bundleName %{public}s", bundleName.c_str());
+        return false;
+    }
+    return path.find(bundleName) != std::string::npos;
+}
+
+bool InstalldOperator::IsValidPathByCreateBundleDirScene(
+    const BundleDirScene &scene, const std::string &bundleName, const std::string &path)
+{
+    if (!IsFileNameValid(path)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+
+    switch (scene) {
+        case BundleDirScene::BUNDLE_CODE_DIR:
+        case BundleDirScene::MODULE_DIR:
+        case BundleDirScene::SO_DIR:
+            return StartsWith(path, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(path, bundleName);
+        case BundleDirScene::EXTEND_RESOURCE_DIR:
+            return StartsWith(path, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(path, bundleName) &&
+                   IsContainsPathPart(path, ServiceConstants::EXT_RESOURCE_FILE_PATH);
+        case BundleDirScene::EXTEND_PROFILE_DIR:
+            return StartsWith(path, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(path, bundleName) &&
+                   IsContainsPathPart(path, ServiceConstants::EXT_PROFILE);
+        case BundleDirScene::PLUGIN_DIR:
+            return StartsWith(path, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(path, bundleName) &&
+                   IsContainsPathPart(path, ServiceConstants::PLUGIN_FILE_PATH);
+        case BundleDirScene::QUICKFIX_PATCH_DIR:
+            return StartsWith(path, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(path, bundleName) &&
+                   (IsContainsPathPart(path, ServiceConstants::PATCH_PATH) ||
+                    IsContainsPathPart(path, ServiceConstants::HOT_RELOAD_PATH) ||
+                    IsContainsPathPart(path, HQF_PATCH_PATH));
+        case BundleDirScene::VERIFY_DIR:
+            return StartsWith(path, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(path, bundleName) &&
+                   IsContainsPathPart(path, VERIFY_FILE_PATH);
+        case BundleDirScene::BASE_SKILL_DIR:
+            return StartsWith(path, BASE_SKILL_DIR) && IsContainsBundleName(path, bundleName);
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
+    const BundleDirScene &scene, const std::string &bundleName, const std::string &path)
+{
+    switch (scene) {
+        case BundleDirScene::EL1_ARK_PROFILE_DIR:
+            return StartsWith(path, APP_EL1_PATH) && IsContainsPathPart(path, ARK_PROFILE_PATH) &&
+                   IsContainsBundleName(path, bundleName);
+        case BundleDirScene::ASAN_LOG_DIR:
+            return StartsWith(path, ServiceConstants::BUNDLE_ASAN_LOG_DIR) && IsContainsBundleName(path, bundleName);
+        case BundleDirScene::EL1_ARK_STARTUP_CACHE_DIR:
+            return StartsWith(path, APP_EL1_PATH) && IsContainsPathPart(path, SYSTEM_OPTIMIZE_DIR) &&
+                   IsContainsBundleName(path, bundleName) &&
+                   IsContainsPathPart(path, ServiceConstants::ARK_STARTUP_CACHE_DIR);
+        case BundleDirScene::SHADER_CACHE_DIR:
+            return StartsWith(path, ServiceConstants::SHADER_CACHE_PATH) && IsContainsBundleName(path, bundleName);
+        case BundleDirScene::SCREEN_LOCK_FILE_BASE_DIR:
+            return StartsWith(path, ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) &&
+                   IsContainsPathPart(path, ServiceConstants::BASE) && IsContainsBundleName(path, bundleName);
+        case BundleDirScene::SCREEN_LOCK_FILE_DATA_BASE_DIR:
+            return StartsWith(path, ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) &&
+                   IsContainsPathPart(path, ServiceConstants::DATABASE) && IsContainsBundleName(path, bundleName);
+        case BundleDirScene::EL1_SHADER_CACHE_DIR:
+            return StartsWith(path, APP_EL1_PATH) && IsContainsPathPart(path, ServiceConstants::SHADER_CACHE_SUBDIR) &&
+                   IsContainsBundleName(path, bundleName);
+        case BundleDirScene::EL1_SYSTEM_OPTIMIZE_SHADER_CACHE_DIR:
+            return StartsWith(path, APP_EL1_PATH) && IsContainsPathPart(path, SYSTEM_OPTIMIZE_DIR) &&
+                   IsContainsBundleName(path, bundleName) &&
+                   IsContainsPathPart(path, ServiceConstants::SHADER_CACHE_SUBDIR);
+        case BundleDirScene::BACK_UP_DIR:
+            return (StartsWith(path, APP_EL1_PATH) || StartsWith(path, APP_EL2_PATH)) &&
+                   IsContainsPathPart(path, ServiceConstants::BASE) && IsContainsBundleName(path, bundleName) &&
+                   IsContainsPathPart(path, BUNDLE_BACKUP_KEEP_DIR);
+        case BundleDirScene::APP_EL2_LOG_DIR:
+            return StartsWith(path, APP_EL2_PATH) && IsContainsPathPart(path, ServiceConstants::LOG) &&
+                   IsContainsBundleName(path, bundleName);
+        case BundleDirScene::SERVICE_HMDFS_CLOUD_DATA_DIR:
+            return StartsWith(path, SERVICE_EL2_PATH) && IsContainsPathPart(path, HMDFS_CLOUD_DATA_PATH) &&
+                   IsContainsBundleName(path, bundleName);
+        case BundleDirScene::EL2_SHARE_FILES_DIR:
+            return StartsWith(path, APP_EL2_PATH) && IsContainsPathPart(path, ServiceConstants::SHAREFILES) &&
+                   IsContainsBundleName(path, bundleName);
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidPathByMkDirSceneNoBundleName(const BundleDirScene &scene, const std::string &path)
+{
+    switch (scene) {
+        case BundleDirScene::CLOUD_SHADER_DIR:
+            return StartsWith(path, ServiceConstants::CLOUD_SHADER_PATH);
+        case BundleDirScene::CLOUD_SHADER_COMMON_DIR:
+            return StartsWith(path, ServiceConstants::CLOUD_SHADER_COMMON_PATH);
+        case BundleDirScene::SERVICE_BMS_GALLERY_DOWNLOAD_DIR:
+            return StartsWith(
+                path, std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH);
+        case BundleDirScene::SERVICE_BMS_ENTERPRISE_CERT_DIR:
+            return StartsWith(
+                path, std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH);
+        case BundleDirScene::EL1_SYSTEM_OPTIMIZE_DIR:
+            return StartsWith(path, APP_EL1_PATH) && IsContainsPathPart(path, SYSTEM_OPTIMIZE_DIR);
+        case BundleDirScene::SERVICE_BMS_DIR:
+            return StartsWith(path, ServiceConstants::HAP_COPY_PATH);
+        case BundleDirScene::SERVICE_BMS_SECURITY_STREAM_INSTALL_DIR:
+            return StartsWith(path, std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+                                        ServiceConstants::SECURITY_STREAM_INSTALL_PATH);
+        case BundleDirScene::SCREEN_LOCK_FILE_DATA_GROUP_DIR:
+            return StartsWith(path, ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) &&
+                   IsContainsPathPart(path, ServiceConstants::DATA_GROUP_PATH);
+        case BundleDirScene::PGO_DIR:
+            return StartsWith(path, PGO_DIR_PATH);
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidPathByMkDirScene(
+    const BundleDirScene &scene, const std::string &bundleName, const std::string &path)
+{
+    if (!IsFileNameValid(path)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    return IsValidPathByMkDirSceneNeedBundleName(scene, bundleName, path) ||
+           IsValidPathByMkDirSceneNoBundleName(scene, path);
+}
+
+bool InstalldOperator::IsValidPathByRenameModuleDir(
+    const std::string &oldPath, const std::string &newPath, const std::string &bundleName, BundleDirScene scene)
+{
+    if (!IsFileNameValid(oldPath) || !IsFileNameValid(newPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+
+    switch (scene) {
+        case BundleDirScene::BUNDLE_CODE_DIR:
+            return StartsWith(oldPath, Constants::BUNDLE_CODE_DIR) && StartsWith(newPath, Constants::BUNDLE_CODE_DIR) &&
+                   IsContainsBundleName(oldPath, bundleName) && IsContainsBundleName(newPath, bundleName);
+        case BundleDirScene::BASE_SKILL_DIR:
+            return StartsWith(oldPath, BASE_SKILL_DIR) && StartsWith(newPath, BASE_SKILL_DIR) &&
+                   IsContainsBundleName(oldPath, bundleName) && IsContainsBundleName(newPath, bundleName);
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidSourcePathByMoveFileScene(
+    const std::string &sourcePath, const BundleDirScene &scene, const std::string &bundleName)
+{
+    switch (scene) {
+        case BundleDirScene::MOVE_HAP_TO_INSTALL_DIR:
+        case BundleDirScene::MOVE_HAP_TO_TEMP_DIR:
+            return StartsWith(sourcePath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(sourcePath, bundleName) &&
+                   (EndsWith(sourcePath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+                       EndsWith(sourcePath, ServiceConstants::HSP_FILE_SUFFIX));
+        case BundleDirScene::MOVE_DRIVER_FILE:
+            return StartsWith(sourcePath, ServiceConstants::SYSTEM_SERVICE_DIR) &&
+                   IsContainsBundleName(sourcePath, bundleName);
+        case BundleDirScene::MOVE_EXTEND_RESOURCE_FILE:
+            return StartsWith(sourcePath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(sourcePath, bundleName) &&
+                   IsContainsPathPart(sourcePath, ServiceConstants::EXT_RESOURCE_FILE_PATH) &&
+                   EndsWith(sourcePath, ServiceConstants::HSP_FILE_SUFFIX);
+        case BundleDirScene::MOVE_EXTEND_RESOURCE_FILE_TO_TEMP_DIR:
+            return StartsWith(sourcePath, ServiceConstants::HAP_COPY_PATH) &&
+                   EndsWith(sourcePath, ServiceConstants::HSP_FILE_SUFFIX);
+        case BundleDirScene::MOVE_HSP_TO_INSTALL_DIR:
+            return StartsWith(sourcePath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(sourcePath, bundleName) &&
+                   EndsWith(sourcePath, ServiceConstants::HSP_FILE_SUFFIX);
+        case BundleDirScene::MOVE_ABC_FILE:
+            return StartsWith(sourcePath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(sourcePath, bundleName) &&
+                   IsContainsPathPart(sourcePath, VERIFY_FILE_PATH);
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidTargetPathByMoveFileScene(
+    const std::string &targetPath, const BundleDirScene &scene, const std::string &bundleName)
+{
+    switch (scene) {
+        case BundleDirScene::MOVE_HAP_TO_INSTALL_DIR:
+            return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(targetPath, bundleName) &&
+                   (EndsWith(targetPath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+                       EndsWith(targetPath, ServiceConstants::HSP_FILE_SUFFIX));
+        case BundleDirScene::MOVE_HAP_TO_TEMP_DIR:
+            return StartsWith(targetPath, ServiceConstants::HAP_COPY_PATH) &&
+                   IsContainsBundleName(targetPath, bundleName) &&
+                   EndsWith(targetPath, ServiceConstants::INSTALL_FILE_SUFFIX);
+        case BundleDirScene::MOVE_DRIVER_FILE:
+            return StartsWith(targetPath, ServiceConstants::SYSTEM_SERVICE_DIR) &&
+                   IsContainsBundleName(targetPath, bundleName);
+        case BundleDirScene::MOVE_EXTEND_RESOURCE_FILE:
+        case BundleDirScene::MOVE_EXTEND_RESOURCE_FILE_TO_TEMP_DIR:
+            return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(targetPath, bundleName) &&
+                   IsContainsPathPart(targetPath, ServiceConstants::EXT_RESOURCE_FILE_PATH) &&
+                   EndsWith(targetPath, ServiceConstants::HSP_FILE_SUFFIX);
+        case BundleDirScene::MOVE_HSP_TO_INSTALL_DIR:
+            return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(targetPath, bundleName) &&
+                   EndsWith(targetPath, ServiceConstants::HSP_FILE_SUFFIX);
+        case BundleDirScene::MOVE_ABC_FILE:
+            return StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(targetPath, bundleName) &&
+                   IsContainsPathPart(targetPath, VERIFY_FILE_PATH);
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidPathByMoveFileScene(
+    const std::string &oldPath, const std::string &newPath, const BundleDirScene &scene, const std::string &bundleName)
+{
+    if (!IsFileNameValid(oldPath) || !IsFileNameValid(newPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    return IsValidSourcePathByMoveFileScene(oldPath, scene, bundleName) &&
+           IsValidTargetPathByMoveFileScene(newPath, scene, bundleName);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -31,6 +31,8 @@ ohos_fuzztest("RemoveExtResourcesDbFuzzTest") {
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
   ]
 
+  include_dirs += [ "${test_path}/fuzztest" ]
+
   sources +=
       [ "${services_path}/bundlemgr/src/installd/installd_permission_mgr.cpp" ]
 
@@ -65,6 +67,7 @@ ohos_fuzztest("RemoveExtResourcesDbFuzzTest") {
     "appspawn:hnpapi",
     "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",
+    "common_event_service:cesfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",

@@ -342,16 +342,19 @@ bool BundleMgrService::InitOverlayManager()
 
 void BundleMgrService::CreateBmsServiceDir()
 {
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::SERVICE_BMS_DIR;
     auto ret = InstalldClient::GetInstance()->Mkdir(
         ServiceConstants::HAP_COPY_PATH, S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH,
-        Constants::FOUNDATION_UID, ServiceConstants::BMS_GID);
+        Constants::FOUNDATION_UID, ServiceConstants::BMS_GID, createDirParam);
     if (ret != ERR_OK) {
         APP_LOGE("create dir failed, ret %{public}d", ret);
     }
+    createDirParam.bundleDirScene = BundleDirScene::SERVICE_BMS_GALLERY_DOWNLOAD_DIR;
     ret = InstalldClient::GetInstance()->Mkdir(
         std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH,
         S_IRWXU | S_IRWXG | S_IXOTH,
-        Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID);
+        Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID, createDirParam);
     if (ret != ERR_OK) {
         APP_LOGE("create app_install failed, ret %{public}d", ret);
     }

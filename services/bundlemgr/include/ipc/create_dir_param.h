@@ -19,6 +19,7 @@
 #include <string>
 
 #include "bundle_dir.h"
+#include "installd/installd_constants.h"
 #include "message_parcel.h"
 
 namespace OHOS {
@@ -51,6 +52,7 @@ struct CreateDirParam : public Parcelable {
     int32_t dlpType = 0;
     uint32_t remainingNum = 0;
     std::string stopReason;
+    BundleDirScene bundleDirScene = BundleDirScene::EL1_ARK_PROFILE_DIR;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

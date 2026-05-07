@@ -434,8 +434,11 @@ void UpdateAppDataMgr::CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t 
             continue;
         }
         APP_LOGI("bundle %{public}s not exist backup dir", bundleInfo.name.c_str());
+        CreateDirParam createDirParam;
+        createDirParam.bundleName = bundleInfo.name;
+        createDirParam.bundleDirScene = BundleDirScene::BACK_UP_DIR;
         result = InstalldClient::GetInstance()->Mkdir(dir, S_IRWXU | S_IRWXG | S_ISGID,
-            bundleInfo.uid, ServiceConstants::BACKU_HOME_GID);
+            bundleInfo.uid, ServiceConstants::BACKU_HOME_GID, createDirParam);
         if (result != ERR_OK) {
             APP_LOGW("bundle %{public}s create backup dir for user %{public}d failed",
                 bundleInfo.name.c_str(), userId);
@@ -461,8 +464,11 @@ bool UpdateAppDataMgr::CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t 
         APP_LOGD("path: %{public}s is exist", bundleLogDir.c_str());
         return false;
     }
-    if (InstalldClient::GetInstance()->Mkdir(
-        bundleLogDir, S_IRWXU | S_IRWXG | S_ISGID, bundleInfo.uid, ServiceConstants::LOG_DIR_GID) != ERR_OK) {
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = bundleInfo.name;
+    createDirParam.bundleDirScene = BundleDirScene::APP_EL2_LOG_DIR;
+    if (InstalldClient::GetInstance()->Mkdir(bundleLogDir, S_IRWXU | S_IRWXG | S_ISGID, bundleInfo.uid,
+        ServiceConstants::LOG_DIR_GID, createDirParam) != ERR_OK) {
         APP_LOGE("CreateBundleLogDir failed");
         return false;
     }
@@ -497,8 +503,11 @@ bool UpdateAppDataMgr::CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_
         APP_LOGD("path: %{private}s is exist", bundleCloudDir.c_str());
         return false;
     }
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = bundleInfo.name;
+    createDirParam.bundleDirScene = BundleDirScene::SERVICE_HMDFS_CLOUD_DATA_DIR;
     if (InstalldClient::GetInstance()->Mkdir(bundleCloudDir, S_IRWXU | S_IRWXG | S_ISGID,
-        bundleInfo.uid, ServiceConstants::DFS_GID) != ERR_OK) {
+        bundleInfo.uid, ServiceConstants::DFS_GID, createDirParam) != ERR_OK) {
         APP_LOGW("CreateCloudDir failed for bundle %{private}s errno:%{public}d",
             bundleInfo.name.c_str(), errno);
     }
@@ -525,8 +534,11 @@ void UpdateAppDataMgr::CreateShareFilesSubDataDirs(const std::vector<BundleInfo>
                 sharefilesDataDir.c_str());
             continue;
         }
+        CreateDirParam createDirParam;
+        createDirParam.bundleName = bundleInfo.name;
+        createDirParam.bundleDirScene = BundleDirScene::EL2_SHARE_FILES_DIR;
         if (InstalldClient::GetInstance()->Mkdir(sharefilesDataDir,
-            S_IRWXU, bundleInfo.uid, bundleInfo.gid) != ERR_OK) {
+            S_IRWXU, bundleInfo.uid, bundleInfo.gid, createDirParam) != ERR_OK) {
             APP_LOGW("MkOwnerDir %{public}s failed: %{public}d",
                 sharefilesDataDir.c_str(), errno);
             continue;
@@ -534,7 +546,7 @@ void UpdateAppDataMgr::CreateShareFilesSubDataDirs(const std::vector<BundleInfo>
         for (const auto &dir : BUNDLE_DATA_DIR) {
             std::string childBundleDataDir = sharefilesDataDir + dir;
             if (InstalldClient::GetInstance()->Mkdir(childBundleDataDir,
-                S_IRWXU, bundleInfo.uid, bundleInfo.gid) != ERR_OK) {
+                S_IRWXU, bundleInfo.uid, bundleInfo.gid, createDirParam) != ERR_OK) {
                 APP_LOGW("MkOwnerDir [%{public}s] failed: %{public}d",
                     childBundleDataDir.c_str(), errno);
             }

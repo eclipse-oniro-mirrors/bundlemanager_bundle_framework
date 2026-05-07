@@ -264,13 +264,13 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
     return result;
 }
 
-ErrCode PluginInstaller::MkdirIfNotExist(const std::string &dir)
+ErrCode PluginInstaller::MkdirIfNotExist(const std::string &bundleName, BundleDirScene scene, const std::string &dir)
 {
     bool isDirExist = false;
     ErrCode result = InstalldClient::GetInstance()->IsExistDir(dir, isDirExist);
     CHECK_RESULT(result, "check if dir exist failed %{public}d");
     if (!isDirExist) {
-        result = InstalldClient::GetInstance()->CreateBundleDir(dir);
+        result = InstalldClient::GetInstance()->CreateBundleDir(bundleName, scene, dir);
         CHECK_RESULT(result, "create dir failed %{public}d");
     }
     return result;
@@ -611,7 +611,7 @@ ErrCode PluginInstaller::ProcessPluginInstall(const InnerBundleInfo &hostBundleI
     }
     ScopeGuard deleteDirGuard([&] { RemovePluginDir(hostBundleInfo);});
     for (auto &item : parsedBundles_) {
-        result = ExtractPluginBundles(item.first, item.second, pluginDir);
+        result = ExtractPluginBundles(item.first, item.second, pluginDir, hostBundleInfo.GetBundleName());
         CHECK_RESULT(result, "extract plugin bundles failed %{public}d");
     }
 
@@ -634,11 +634,11 @@ ErrCode PluginInstaller::CreatePluginDir(const std::string &hostBundleName, std:
 {
     ErrCode result = ERR_OK;
     std::string bundleDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + hostBundleName;
-    result = MkdirIfNotExist(bundleDir);
+    result = MkdirIfNotExist(hostBundleName, BundleDirScene::BUNDLE_CODE_DIR, bundleDir);
     CHECK_RESULT(result, "check bundle dir failed %{public}d");
 
     pluginDir = bundleDir + ServiceConstants::PATH_SEPARATOR + PLUGINS;
-    result = MkdirIfNotExist(pluginDir);
+    result = MkdirIfNotExist(hostBundleName, BundleDirScene::PLUGIN_DIR, pluginDir);
     CHECK_RESULT(result, "check plugin dir failed %{public}d");
 
     return result;
@@ -670,17 +670,17 @@ bool PluginInstaller::CheckVersionCodeForUpdate() const
 }
 
 ErrCode PluginInstaller::ExtractPluginBundles(const std::string &bundlePath, InnerBundleInfo &newInfo,
-    const std::string &pluginDir)
+    const std::string &pluginDir, const std::string &hostBundleName)
 {
     ErrCode result = ERR_OK;
     std::string pluginBundleDir = pluginDir + ServiceConstants::PATH_SEPARATOR + bundleNameWithTime_;  // pass pluginDir
-    result = MkdirIfNotExist(pluginBundleDir);
+    result = MkdirIfNotExist(hostBundleName, BundleDirScene::PLUGIN_DIR, pluginBundleDir);
     CHECK_RESULT(result, "check plugin bundle dir failed %{public}d");
     newInfo.SetAppCodePath(pluginBundleDir);
 
     auto &moduleName = newInfo.GetInnerModuleInfos().begin()->second.moduleName;
     std::string moduleDir = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + moduleName;
-    result = MkdirIfNotExist(moduleDir);
+    result = MkdirIfNotExist(hostBundleName, BundleDirScene::PLUGIN_DIR, moduleDir);
     CHECK_RESULT(result, "check module dir failed %{public}d");
 
     result = ProcessNativeLibrary(bundlePath, moduleDir, moduleName, pluginBundleDir, newInfo);

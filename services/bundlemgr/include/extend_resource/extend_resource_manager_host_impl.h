@@ -18,6 +18,7 @@
 
 #include "extend_resource_manager_host.h"
 #include "inner_bundle_info.h"
+#include "installd/installd_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -62,7 +63,7 @@ private:
         const std::vector<std::string> &oldFilePaths, std::vector<std::string> &newFilePaths);
     bool GetInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
     void RollBack(const std::vector<std::string> &filePaths);
-    ErrCode MkdirIfNotExist(const std::string &dir);
+    ErrCode MkdirIfNotExist(const std::string &bundleName, BundleDirScene scene, const std::string &dir);
     ErrCode ParseExtendResourceFile(
         const std::string &bundleName,
         const std::vector<std::string> &filePaths,

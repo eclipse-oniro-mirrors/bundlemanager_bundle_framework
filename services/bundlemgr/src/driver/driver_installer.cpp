@@ -239,7 +239,7 @@ void DriverInstaller::RenameDriverFile(const InnerBundleInfo &info) const
 
             std::string systemServiceDir = ServiceConstants::SYSTEM_SERVICE_DIR;
             InstalldClient::GetInstance()->MoveFile(systemServiceDir + tempDestinedDir,
-                systemServiceDir + realDestinedDir);
+                systemServiceDir + realDestinedDir, BundleDirScene::MOVE_DRIVER_FILE, info.GetBundleName());
         }
     }
     APP_LOGD("end");

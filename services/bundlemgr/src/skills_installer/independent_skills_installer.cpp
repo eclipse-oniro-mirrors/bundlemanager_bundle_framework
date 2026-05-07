@@ -577,7 +577,7 @@ ErrCode IndependentSkillsInstaller::MkdirIfNotExist(const std::string &dir)
     CHECK_SKILLS_RESULT(result, "Check if dir exist failed %{public}d");
 
     if (!isDirExist) {
-        result = InstalldClient::GetInstance()->CreateBundleDir(dir);
+        result = InstalldClient::GetInstance()->CreateBundleDir(bundleName_, BundleDirScene::BASE_SKILL_DIR, dir);
         CHECK_SKILLS_RESULT(result, "Create dir failed %{public}d");
     }
     return result;
@@ -766,7 +766,8 @@ ErrCode IndependentSkillsInstaller::ExtractModule(
     std::string realModuleDir = bundleDir + ServiceConstants::PATH_SEPARATOR + moduleName;
     // rename +temp
     if (isModuleExist) {
-        result = InstalldClient::GetInstance()->RenameModuleDir(moduleDir, realModuleDir);
+        result = InstalldClient::GetInstance()->RenameModuleDir(moduleDir, realModuleDir,
+            bundleName_, BundleDirScene::BASE_SKILL_DIR);
         CHECK_SKILLS_RESULT(result, "rename +temp path failed %{public}d");
     }
     // save killName and description

@@ -141,7 +141,7 @@ int BmsInstallDaemonTest::CreateBundleDir(const std::string &bundleDir) const
     if (!service_->IsServiceReady()) {
         service_->Start();
     }
-    return InstalldClient::GetInstance()->CreateBundleDir(bundleDir);
+    return InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_NAME13, BundleDirScene::BUNDLE_CODE_DIR, bundleDir);
 }
 
 int BmsInstallDaemonTest::CreateBundleDataDir(const std::string &bundleDataDir,
@@ -215,7 +215,8 @@ int BmsInstallDaemonTest::RenameModuleDir(const std::string &oldPath, const std:
     if (!service_->IsServiceReady()) {
         service_->Start();
     }
-    return InstalldClient::GetInstance()->RenameModuleDir(oldPath, newPath);
+    return InstalldClient::GetInstance()->RenameModuleDir(oldPath, newPath,
+        BUNDLE_NAME13, BundleDirScene::BUNDLE_CODE_DIR);
 }
 
 bool BmsInstallDaemonTest::CheckBundleDirExist() const
@@ -442,7 +443,8 @@ HWTEST_F(BmsInstallDaemonTest, Communication_0200, Function | SmallTest | Level0
     bool ready = installdService->IsServiceReady();
     EXPECT_EQ(false, ready);
     InstalldClient::GetInstance()->ResetInstalldProxy();
-    int result = InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_CODE_DIR);
+    int result = InstalldClient::GetInstance()->CreateBundleDir(
+        BUNDLE_NAME13, BundleDirScene::BUNDLE_CODE_DIR, BUNDLE_CODE_DIR);
     EXPECT_EQ(result, 0);
 }
 
@@ -454,7 +456,7 @@ HWTEST_F(BmsInstallDaemonTest, Communication_0200, Function | SmallTest | Level0
 */
 HWTEST_F(BmsInstallDaemonTest, Communication_0300, Function | SmallTest | Level0)
 {
-    int result = CreateBundleDir(BUNDLE_DATA_DIR);
+    int result = CreateBundleDir(BUNDLE_CODE_DIR_CODE);
     EXPECT_EQ(result, 0);
 }
 
@@ -499,8 +501,8 @@ HWTEST_F(BmsInstallDaemonTest, BundleDir_0200, Function | SmallTest | Level0)
 HWTEST_F(BmsInstallDaemonTest, BundleDir_0300, Function | SmallTest | Level0)
 {
     int result1 = CreateBundleDir(SYSTEM_DIR);
-    EXPECT_GE(result1, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
-    EXPECT_LT(result1, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED + ERRNO_MAX_SIZE);
+    EXPECT_GE(result1, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_LT(result1, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR + ERRNO_MAX_SIZE);
     bool dirExist = CheckBundleDirExist();
     EXPECT_FALSE(dirExist);
 }
@@ -732,14 +734,16 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0400, Function | SmallTest | Level
     if (!service->IsServiceReady()) {
         service->Start();
     }
-    ErrCode ret = InstalldClient::GetInstance()->MoveFile("", BUNDLE_DATA_DIR);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->MoveFile(BUNDLE_DATA_DIR, "");
+    ErrCode ret = InstalldClient::GetInstance()->MoveFile(
+        "", BUNDLE_DATA_DIR, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, BUNDLE_NAME13);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     ret = InstalldClient::GetInstance()->MoveFile(
-        BUNDLE_DATA_DIR, BUNDLE_DATA_DIR);
-    EXPECT_GE(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
-    EXPECT_LT(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED + ERRNO_MAX_SIZE);
+        BUNDLE_DATA_DIR, "", BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, BUNDLE_NAME13);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = InstalldClient::GetInstance()->MoveFile(
+        BUNDLE_DATA_DIR, BUNDLE_DATA_DIR, BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, BUNDLE_NAME13);
+    EXPECT_GE(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_LT(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR + ERRNO_MAX_SIZE);
 }
 
 /**
@@ -787,9 +791,13 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0600, Function | SmallTest | Level
     if (!service->IsServiceReady()) {
         service->Start();
     }
-    ErrCode ret = InstalldClient::GetInstance()->Mkdir("", 0, 0, 0);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_SYSTEM_OPTIMIZE_DIR;
+    ErrCode ret = InstalldClient::GetInstance()->Mkdir("", 0, 0, 0, createDirParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->Mkdir(BUNDLE_DATA_DIR, 0, 0, 0);
+    std::string systemOptimizeDir = std::string(ServiceConstants::SYSTEM_OPTIMIZE_PATH);
+    systemOptimizeDir = systemOptimizeDir.replace(systemOptimizeDir.find("%"), 1, std::to_string(USERID));
+    ret = InstalldClient::GetInstance()->Mkdir(systemOptimizeDir, 0, 0, 0, createDirParam);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -1630,8 +1638,7 @@ HWTEST_F(BmsInstallDaemonTest, MigrateData_0002, Function | SmallTest | Level0)
     ret = MigrateData(sourcePaths, destinationPath);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
 
-    auto result = CreateBundleDir(BUNDLE_DATA_DIR);
-    EXPECT_EQ(result, 0);
+    EXPECT_TRUE(OHOS::ForceCreateDirectory(BUNDLE_DATA_DIR));
     destinationPath = BUNDLE_DATA_DIR;
     std::vector<std::string> sourcePaths_2;
     sourcePaths_2.push_back("/system/bin");

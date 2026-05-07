@@ -98,9 +98,11 @@ void El5FilekeyCallback::ProcessGroupEl5Dir(const Security::AccessToken::AppKeyI
         return;
     }
     // create el5 group dir
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::SCREEN_LOCK_FILE_DATA_GROUP_DIR;
     std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + info.groupID;
     auto mdkirRes = InstalldClient::GetInstance()->Mkdir(dir,
-        ServiceConstants::DATA_GROUP_DIR_MODE, info.uid, info.uid);
+        ServiceConstants::DATA_GROUP_DIR_MODE, info.uid, info.uid, createDirParam);
     if (mdkirRes != ERR_OK) {
         APP_LOGW("el5 group dir %{private}s userId %{public}d create failed",
             info.groupID.c_str(), userId);
@@ -131,7 +133,10 @@ void El5FilekeyCallback::CheckEl5Dir(const Security::AccessToken::AppKeyInfo &in
     }
 
     int32_t mode = S_IRWXU;
-    if (InstalldClient::GetInstance()->Mkdir(baseDir, mode, info.uid, info.uid) != ERR_OK) {
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = info.bundleName;
+    createDirParam.bundleDirScene = BundleDirScene::SCREEN_LOCK_FILE_BASE_DIR;
+    if (InstalldClient::GetInstance()->Mkdir(baseDir, mode, info.uid, info.uid, createDirParam) != ERR_OK) {
         APP_LOGW("create Screen Lock Protection dir %{public}s failed", baseDir.c_str());
     }
     result = InstalldClient::GetInstance()->SetDirApl(
@@ -144,7 +149,8 @@ void El5FilekeyCallback::CheckEl5Dir(const Security::AccessToken::AppKeyInfo &in
     std::string databaseDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
         ServiceConstants::PATH_SEPARATOR + std::to_string(info.userId) + ServiceConstants::DATABASE + info.bundleName;
     mode = S_IRWXU | S_IRWXG;
-    if (InstalldClient::GetInstance()->Mkdir(databaseDir, mode, info.uid, info.uid) != ERR_OK) {
+    createDirParam.bundleDirScene = BundleDirScene::SCREEN_LOCK_FILE_DATA_BASE_DIR;
+    if (InstalldClient::GetInstance()->Mkdir(databaseDir, mode, info.uid, info.uid, createDirParam) != ERR_OK) {
         APP_LOGW("create Screen Lock Protection dir %{public}s failed", databaseDir.c_str());
     }
     result = InstalldClient::GetInstance()->SetDirApl(

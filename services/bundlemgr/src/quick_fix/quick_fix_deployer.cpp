@@ -357,7 +357,8 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         patchPath = basePath + ServiceConstants::PATCH_PATH +
             std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
     }
-    if (InstalldClient::GetInstance()->CreateBundleDir(patchPath) != ERR_OK) {
+    if (InstalldClient::GetInstance()->CreateBundleDir(
+        appQuickFix.bundleName, BundleDirScene::QUICKFIX_PATCH_DIR, patchPath) != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "error: creat patch path failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED;
     }
@@ -380,7 +381,8 @@ ErrCode QuickFixDeployer::ProcessHotReloadDeployEnd(const AppQuickFix &appQuickF
     patchPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + appQuickFix.bundleName +
         ServiceConstants::PATH_SEPARATOR + ServiceConstants::HOT_RELOAD_PATH +
         std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
-    ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(patchPath);
+    ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(
+        appQuickFix.bundleName, BundleDirScene::QUICKFIX_PATCH_DIR, patchPath);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "error: creat hotreload path failed, errcode %{public}d", ret);
         return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED;

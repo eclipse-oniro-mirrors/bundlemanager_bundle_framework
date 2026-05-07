@@ -198,7 +198,7 @@ bool ExtendResourceManagerHostImpl::InnerSaveExtendResourceInfo(
     std::vector<ExtendResourceInfo> newExtendResourceInfos;
     for (uint32_t i = 0; i < filePaths.size(); ++i) {
         ret = InstalldClient::GetInstance()->MoveFile(
-            filePaths[i], extendResourceInfos[i].filePath);
+            filePaths[i], extendResourceInfos[i].filePath, BundleDirScene::MOVE_EXTEND_RESOURCE_FILE, bundleName);
         if (ret != ERR_OK) {
             APP_LOGW("MoveFile %{public}s file failed %{public}d",
                 extendResourceInfos[i].moduleName.c_str(), ret);
@@ -239,7 +239,8 @@ ErrCode ExtendResourceManagerHostImpl::ParseExtendResourceFile(
     return ERR_OK;
 }
 
-ErrCode ExtendResourceManagerHostImpl::MkdirIfNotExist(const std::string &dir)
+ErrCode ExtendResourceManagerHostImpl::MkdirIfNotExist(
+    const std::string &bundleName, BundleDirScene scene, const std::string &dir)
 {
     bool isDirExist = false;
     ErrCode result = InstalldClient::GetInstance()->IsExistDir(dir, isDirExist);
@@ -248,7 +249,7 @@ ErrCode ExtendResourceManagerHostImpl::MkdirIfNotExist(const std::string &dir)
         return result;
     }
     if (!isDirExist) {
-        result = InstalldClient::GetInstance()->CreateBundleDir(dir);
+        result = InstalldClient::GetInstance()->CreateBundleDir(bundleName, scene, dir);
         if (result != ERR_OK) {
             APP_LOGE("Create dir failed %{public}d", result);
             return result;
@@ -262,14 +263,15 @@ ErrCode ExtendResourceManagerHostImpl::CopyToTempDir(const std::string &bundleNa
 {
     for (const auto &oldFile : oldFilePaths) {
         std::string tempFile = BuildResourcePath(bundleName);
-        ErrCode ret = MkdirIfNotExist(tempFile);
+        ErrCode ret = MkdirIfNotExist(bundleName, BundleDirScene::EXTEND_RESOURCE_DIR, tempFile);
         if (ret != ERR_OK) {
             APP_LOGE("mkdir fileDir %{public}s failed %{public}d", tempFile.c_str(), ret);
             RollBack(newFilePaths);
             return ret;
         }
         tempFile.append(GetFileName(oldFile));
-        ret = InstalldClient::GetInstance()->MoveFile(oldFile, tempFile);
+        ret = InstalldClient::GetInstance()->MoveFile(
+            oldFile, tempFile, BundleDirScene::MOVE_EXTEND_RESOURCE_FILE_TO_TEMP_DIR, bundleName);
         if (ret != ERR_OK) {
             APP_LOGE("MoveFile file %{public}s failed %{public}d", tempFile.c_str(), ret);
             RollBack(newFilePaths);

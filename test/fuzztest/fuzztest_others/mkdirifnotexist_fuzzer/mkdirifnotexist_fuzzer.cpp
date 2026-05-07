@@ -12,11 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "bms_fuzztest_util.h"
+#include <fuzzer/FuzzedDataProvider.h>
 #define private public
 #include "extend_resource_manager_host_impl.h"
 #include "mkdirifnotexist_fuzzer.h"
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 
 namespace OHOS {
 namespace {
@@ -25,11 +28,16 @@ namespace {
     bool fuzzelMkDirIfNotExistCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        auto ret = impl.MkdirIfNotExist(DIR_PATH);
+        FuzzedDataProvider fdp(data, size);
+        std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        auto scene = static_cast<BundleDirScene>(fdp.ConsumeIntegral<int32_t>());
+        auto ret = impl.MkdirIfNotExist(bundleName, scene, DIR_PATH);
         if (ret != ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR) {
             return false;
         }
-        ret = impl.MkdirIfNotExist(std::string(reinterpret_cast<const char*>(data), size));
+        std::string dir = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        scene = static_cast<BundleDirScene>(fdp.ConsumeIntegral<int32_t>());
+        ret = impl.MkdirIfNotExist(bundleName, scene, dir);
         if (ret != ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR) {
             return false;
         }

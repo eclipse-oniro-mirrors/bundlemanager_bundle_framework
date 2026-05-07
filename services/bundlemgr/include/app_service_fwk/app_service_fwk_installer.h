@@ -25,6 +25,7 @@
 #include "event_report.h"
 #include "inner_bundle_info.h"
 #include "install_param.h"
+#include "installd/installd_constants.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -64,7 +65,7 @@ private:
     ErrCode ExtractModule(
         InnerBundleInfo &newInfo, const std::string &bundlePath, bool copyHapToInstallPath = false);
     ErrCode ExtractModule(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo, const std::string &bundlePath);
-    ErrCode MkdirIfNotExist(const std::string &dir);
+    ErrCode MkdirIfNotExist(BundleDirScene scene, const std::string &dir);
     ErrCode ProcessNativeLibrary(
         const std::string &bundlePath,
         const std::string &moduleDir,

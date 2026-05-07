@@ -141,7 +141,8 @@ ErrCode InstallExceptionMgr::InnerProcessRealToOldPath(const std::string &bundle
         std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
     std::string realPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         bundleName;
-    ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, realPath);
+    ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, realPath,
+        bundleName, BundleDirScene::BUNDLE_CODE_DIR);
     if (result == ERR_OK) {
         (void)DeleteBundleExceptionInfo(bundleName);
     } else {
@@ -182,7 +183,8 @@ ErrCode InstallExceptionMgr::InnerProcessNewToRealPath(const std::string &bundle
             bundleName;
         std::string oldPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
-        result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, realPath);
+        result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, realPath,
+            bundleName, BundleDirScene::BUNDLE_CODE_DIR);
         if (result == ERR_OK) {
             (void)DeleteBundleExceptionInfo(bundleName);
         } else {
@@ -208,7 +210,8 @@ ErrCode InstallExceptionMgr::InnerProcessDeleteOldPath(const std::string &bundle
     std::string tempPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_TEMP_CODE_DIR) + bundleName;
     // rename first
-    ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, tempPath);
+    ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, tempPath,
+        bundleName, BundleDirScene::BUNDLE_CODE_DIR);
     if (result == ERR_OK) {
         result = InstalldClient::GetInstance()->RemoveDir(tempPath);
     } else {

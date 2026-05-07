@@ -12,11 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "bms_fuzztest_util.h"
+#include <fuzzer/FuzzedDataProvider.h>
 #define private public
 #include "extend_resource_manager_host_impl.h"
 #include "checkfileparam_fuzzer.h"
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 
 namespace OHOS {
 namespace {
@@ -27,7 +30,11 @@ namespace {
     bool fuzzelCheckFileParamCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        impl.MkdirIfNotExist(std::string(reinterpret_cast<const char*>(data), size));
+        FuzzedDataProvider fdp(data, size);
+        std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        std::string dir = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        auto scene = static_cast<BundleDirScene>(fdp.ConsumeIntegral<int32_t>());
+        impl.MkdirIfNotExist(bundleName, scene, dir);
         auto ret = impl.CheckFileParam(INVALID_PATH);
         if (ret == ERR_OK) {
             return true;
@@ -38,7 +45,11 @@ namespace {
     bool fuzzelCheckFileParamCaseTwo(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        impl.MkdirIfNotExist(std::string(reinterpret_cast<const char*>(data), size));
+        FuzzedDataProvider fdp(data, size);
+        std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        std::string dir = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        auto scene = static_cast<BundleDirScene>(fdp.ConsumeIntegral<int32_t>());
+        impl.MkdirIfNotExist(bundleName, scene, dir);
         auto ret = impl.CheckFileParam(INVALID_SUFFIX);
         if (ret == ERR_OK) {
             return true;
@@ -49,7 +60,11 @@ namespace {
     bool fuzzelCheckFileParamCaseThree(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        impl.MkdirIfNotExist(std::string(reinterpret_cast<const char*>(data), size));
+        FuzzedDataProvider fdp(data, size);
+        std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        std::string dir = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        auto scene = static_cast<BundleDirScene>(fdp.ConsumeIntegral<int32_t>());
+        impl.MkdirIfNotExist(bundleName, scene, dir);
         auto ret = impl.CheckFileParam(INVALID_PREFIX);
         if (ret == ERR_OK) {
             return true;

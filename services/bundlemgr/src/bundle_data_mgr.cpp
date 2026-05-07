@@ -7136,9 +7136,11 @@ void BundleDataMgr::CreateAppInstallDir(int32_t userId)
 {
     std::string path = std::string(ServiceConstants::HAP_COPY_PATH) +
         ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::SERVICE_BMS_GALLERY_DOWNLOAD_DIR;
     ErrCode ret = InstalldClient::GetInstance()->Mkdir(path,
         S_IRWXU | S_IRWXG | S_IXOTH | S_ISGID,
-        Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID);
+        Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID, createDirParam);
     if (ret != ERR_OK) {
         APP_LOGE("create app install %{public}d failed", userId);
         return;
@@ -7147,7 +7149,7 @@ void BundleDataMgr::CreateAppInstallDir(int32_t userId)
     std::string appClonePath = path + ServiceConstants::GALLERY_CLONE_PATH;
     ret = InstalldClient::GetInstance()->Mkdir(appClonePath,
         S_IRWXU | S_IRWXG | S_IXOTH | S_ISGID,
-        Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID);
+        Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID, createDirParam);
     if (ret != ERR_OK) {
         APP_LOGE("create app clone %{public}d failed", userId);
     }
@@ -10905,10 +10907,14 @@ void BundleDataMgr::InnerCreateEl5Dir(const CreateDirParam &el5Param)
     dirs.emplace_back(parentDir + ServiceConstants::DATABASE + bundleNameDir);
     for (const std::string &dir : dirs) {
         uint32_t mode = S_IRWXU;
+        CreateDirParam createDirParam;
+        createDirParam.bundleName = el5Param.bundleName;
+        createDirParam.bundleDirScene = BundleDirScene::SCREEN_LOCK_FILE_BASE_DIR;
         if (dir.find(ServiceConstants::DATABASE) != std::string::npos) {
             mode = S_IRWXU | S_IRWXG;
+            createDirParam.bundleDirScene = BundleDirScene::SCREEN_LOCK_FILE_DATA_BASE_DIR;
         }
-        if (InstalldClient::GetInstance()->Mkdir(dir, mode, el5Param.uid, el5Param.uid) != ERR_OK) {
+        if (InstalldClient::GetInstance()->Mkdir(dir, mode, el5Param.uid, el5Param.uid, createDirParam) != ERR_OK) {
             LOG_NOFUNC_W(BMS_TAG_INSTALLER, "create el5 dir %{public}s failed", dir.c_str());
         }
         ErrCode result = InstalldClient::GetInstance()->SetDirApl(

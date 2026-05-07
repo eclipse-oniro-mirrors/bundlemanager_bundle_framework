@@ -90,9 +90,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::string realSoPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     appServiceFwkInstaller.VerifyCodeSignatureForHsp(realHspPath, realSoPath);
     std::string dir = "data/test";
-    appServiceFwkInstaller.MkdirIfNotExist(dir);
+    auto scene = static_cast<BundleDirScene>(fdp.ConsumeIntegral<int32_t>());
+    appServiceFwkInstaller.MkdirIfNotExist(scene, dir);
     dir = "data/test/test";
-    appServiceFwkInstaller.MkdirIfNotExist(dir);
+    scene = static_cast<BundleDirScene>(fdp.ConsumeIntegral<int32_t>());
+    appServiceFwkInstaller.MkdirIfNotExist(scene, dir);
 
     std::string bundlePath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     std::string moduleDir = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);

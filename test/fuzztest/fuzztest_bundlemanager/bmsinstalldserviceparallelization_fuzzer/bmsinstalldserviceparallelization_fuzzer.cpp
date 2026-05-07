@@ -163,8 +163,10 @@ extern "C" int FuzzIInstalldService(FuzzedDataProvider &provider)
             break;
         }
         case IpcCode::CREATE_BUNDLE_DIR: {
+            std::string bundleName = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+            auto scene = static_cast<BundleDirScene>(provider.ConsumeIntegral<int32_t>());
             std::string bundleDir = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-            OHOS::p_installdService->hostImpl_->CreateBundleDir(bundleDir);
+            OHOS::p_installdService->hostImpl_->CreateBundleDir(bundleName, scene, bundleDir);
             break;
         }
         case IpcCode::EXTRACT_MODULE_FILES: {
@@ -223,7 +225,9 @@ extern "C" int FuzzIInstalldService(FuzzedDataProvider &provider)
         case IpcCode::RENAME_MODULE_DIR: {
             std::string oldPath = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
             std::string newPath = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-            OHOS::p_installdService->hostImpl_->RenameModuleDir(oldPath, newPath);
+            std::string bundleName = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+            auto scene = static_cast<BundleDirScene>(provider.ConsumeIntegral<int32_t>());
+            OHOS::p_installdService->hostImpl_->RenameModuleDir(oldPath, newPath, bundleName, scene);
             break;
         }
         case IpcCode::CREATE_BUNDLE_DATA_DIR: {

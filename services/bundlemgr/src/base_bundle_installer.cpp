@@ -3814,7 +3814,8 @@ ErrCode BaseBundleInstaller::CreateBundleCodeDir(InnerBundleInfo &info) const
 {
     auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_;
     LOG_D(BMS_TAG_INSTALLER, "create bundle dir %{public}s", appCodePath.c_str());
-    ErrCode result = InstalldClient::GetInstance()->CreateBundleDir(appCodePath);
+    ErrCode result =
+        InstalldClient::GetInstance()->CreateBundleDir(bundleName_, BundleDirScene::BUNDLE_CODE_DIR, appCodePath);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to create bundle dir, error is %{public}d", result);
         return result;
@@ -4326,7 +4327,10 @@ ErrCode BaseBundleInstaller::CreateArkProfile(
     std::string arkProfilePath = AOTHandler::BuildArkProfilePath(userId, bundleName);
     LOG_D(BMS_TAG_INSTALLER, "CreateArkProfile %{public}s", arkProfilePath.c_str());
     int32_t mode = (uid == gid) ? S_IRWXU : (S_IRWXU | S_IRGRP | S_IXGRP);
-    return InstalldClient::GetInstance()->Mkdir(arkProfilePath, mode, uid, gid);
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = bundleName;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_ARK_PROFILE_DIR;
+    return InstalldClient::GetInstance()->Mkdir(arkProfilePath, mode, uid, gid, createDirParam);
 }
 
 ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int32_t userId) const
@@ -4528,7 +4532,8 @@ ErrCode BaseBundleInstaller::FinalizeAppSkills(const InnerBundleInfo &info)
         info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + moduleName + ServiceConstants::TMP_SUFFIX;
     std::string realModuleDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR +
         info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + moduleName;
-    return InstalldClient::GetInstance()->RenameModuleDir(tempModuleDir, realModuleDir);
+    return InstalldClient::GetInstance()->RenameModuleDir(
+        tempModuleDir, realModuleDir, info.GetBundleName(), BundleDirScene::BASE_SKILL_DIR);
 }
 
 ErrCode BaseBundleInstaller::CommitAppSkills(const InnerBundleInfo &info)
@@ -5337,7 +5342,8 @@ ErrCode BaseBundleInstaller::RenameModuleDir(const InnerBundleInfo &info) const
 {
     auto moduleDir = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + info.GetCurrentModulePackage();
     LOG_D(BMS_TAG_INSTALLER, "rename module to %{public}s", moduleDir.c_str());
-    auto result = InstalldClient::GetInstance()->RenameModuleDir(moduleDir + ServiceConstants::TMP_SUFFIX, moduleDir);
+    auto result = InstalldClient::GetInstance()->RenameModuleDir(
+        moduleDir + ServiceConstants::TMP_SUFFIX, moduleDir, info.GetBundleName(), BundleDirScene::BUNDLE_CODE_DIR);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "rename module dir failed, error is %{public}d", result);
         return result;
@@ -7172,13 +7178,14 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
         BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
             Constants::APP_PROVISION_TYPE_FILE_NAME);
         mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+        CreateDirParam createDirParam;
+        createDirParam.bundleName = bundleName;
+        createDirParam.bundleDirScene = BundleDirScene::ASAN_LOG_DIR;
         if ((errCode = InstalldClient::GetInstance()->Mkdir(asanLogDir, mode,
-            newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid)) != ERR_OK) {
+            newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid, createDirParam)) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "create asan log directory failed");
             return errCode;
         }
-    }
-    if (asanEnabled) {
         info.SetAsanLogPath(LOG);
     }
     // clean asan directory
@@ -7259,7 +7266,8 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         result = CheckSoEncryption(info, cpuAbi, targetSoPath);
         CHECK_RESULT(result, "fail to CheckSoEncryption, error is %{public}d");
     } else {
-        auto result = InstalldClient::GetInstance()->CreateBundleDir(modulePath);
+        auto result = InstalldClient::GetInstance()->CreateBundleDir(
+            info.GetBundleName(), BundleDirScene::MODULE_DIR, modulePath);
         CHECK_RESULT(result, "fail to create temp bundle dir, error is %{public}d");
         std::vector<std::string> fileNames;
         result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(modulePath_, cpuAbi, fileNames);
@@ -7722,7 +7730,8 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
         LOG_D(BMS_TAG_INSTALLER, "move hsp or hsp file from path %{public}s to path %{public}s",
             hapPathRecords_.at(info.first).c_str(), realInstallationPath.c_str());
         // 1. move hap or hsp to real installation dir
-        auto result = InstalldClient::GetInstance()->MoveFile(hapPathRecords_.at(info.first), realInstallationPath);
+        auto result = InstalldClient::GetInstance()->MoveFile(hapPathRecords_.at(info.first), realInstallationPath,
+            BundleDirScene::MOVE_HAP_TO_INSTALL_DIR, info.second.GetBundleName());
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "move file to real path failed %{public}d", result);
             return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
@@ -7808,7 +7817,8 @@ ErrCode BaseBundleInstaller::FinalProcessHapAndSoForBundleUpdate(
             std::string libsModuleDir = std::string(Constants::BUNDLE_CODE_DIR) +
                 ServiceConstants::PATH_SEPARATOR + bundleName + MODULE_DIR_IS_LIBS;
             std::string renameDir = libsModuleDir + ServiceConstants::TMP_SUFFIX;
-            result = InstalldClient::GetInstance()->RenameModuleDir(renameDir, libsModuleDir);
+            result = InstalldClient::GetInstance()->RenameModuleDir(renameDir, libsModuleDir,
+                bundleName, BundleDirScene::BUNDLE_CODE_DIR);
             if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "rename libs module dir failed, error is %{public}d", result);
                 return result;
@@ -7816,9 +7826,10 @@ ErrCode BaseBundleInstaller::FinalProcessHapAndSoForBundleUpdate(
         }
         if (!nativeLibraryPath.empty()) {
             std::string realSoDir = GetRealSoPath(bundleName, nativeLibraryPath, false);
-            InstalldClient::GetInstance()->CreateBundleDir(realSoDir);
+            InstalldClient::GetInstance()->CreateBundleDir(bundleName, BundleDirScene::SO_DIR, realSoDir);
             std::string tempSoDir = GetRealSoPath(bundleName, nativeLibraryPath, true);
-            result = InstalldClient::GetInstance()->RenameModuleDir(tempSoDir, realSoDir);
+            result = InstalldClient::GetInstance()->RenameModuleDir(tempSoDir, realSoDir,
+                bundleName, BundleDirScene::BUNDLE_CODE_DIR);
             if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "-n %{public}s rename module dir failed, error is %{public}d",
                     bundleName.c_str(), result);
@@ -7877,7 +7888,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
             isDirExisted = BundleUtil::IsExistDirNoLog(realSoDir);
             if (!isDirExisted) {
                 LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s not existed", realSoDir.c_str());
-                InstalldClient::GetInstance()->CreateBundleDir(realSoDir);
+                InstalldClient::GetInstance()->CreateBundleDir(bundleName, BundleDirScene::SO_DIR, realSoDir);
             }
             auto result = InstalldClient::GetInstance()->MoveFiles(tempSoDir, realSoDir);
             if (result != ERR_OK) {
@@ -8339,8 +8350,11 @@ ErrCode BaseBundleInstaller::CreateArkStartupCache(const ArkStartupCache &create
         return ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST;
     }
 
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = createArk.bundleName;
+    createDirParam.bundleDirScene = BundleDirScene::EL1_ARK_STARTUP_CACHE_DIR;
     ErrCode result = InstalldClient::GetInstance()->Mkdir(createArk.cacheDir,
-        createArk.mode, createArk.uid, createArk.gid);
+        createArk.mode, createArk.uid, createArk.gid, createDirParam);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "-n: %{public}s, Mkdir %{public}s failed, error:%{public}d",
             createArk.bundleName.c_str(), createArk.cacheDir.c_str(), errno);
@@ -8452,7 +8466,10 @@ ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, in
     std::string shaderCachePath;
     shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
     LOG_D(BMS_TAG_INSTALLER, "CreateShaderCache %{public}s", shaderCachePath.c_str());
-    return InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, uid, gid);
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = bundleName;
+    createDirParam.bundleDirScene = BundleDirScene::SHADER_CACHE_DIR;
+    return InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, uid, gid, createDirParam);
 }
 
 ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) const
@@ -8548,7 +8565,10 @@ void BaseBundleInstaller::CreateCloudShader(const std::string &bundleName, int32
     }
 
     constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
-    ErrCode result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_PATH, mode, uid, gid);
+    CreateDirParam createDirParam;
+    createDirParam.bundleDirScene = BundleDirScene::CLOUD_SHADER_DIR;
+    ErrCode result =
+        InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_PATH, mode, uid, gid, createDirParam);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "Mkdir %{public}s failed, error is %{public}d",
             ServiceConstants::CLOUD_SHADER_PATH, result);
@@ -8556,7 +8576,9 @@ void BaseBundleInstaller::CreateCloudShader(const std::string &bundleName, int32
     }
 
     constexpr int32_t commonMode = (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_COMMON_PATH, commonMode, uid, gid);
+    createDirParam.bundleDirScene = BundleDirScene::CLOUD_SHADER_COMMON_DIR;
+    result = InstalldClient::GetInstance()->Mkdir(
+        ServiceConstants::CLOUD_SHADER_COMMON_PATH, commonMode, uid, gid, createDirParam);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "Mkdir %{public}s failed, error is %{public}d",
             ServiceConstants::CLOUD_SHADER_COMMON_PATH, result);
@@ -9388,7 +9410,8 @@ ErrCode BaseBundleInstaller::ProcessDynamicIconFileWhenUpdate(
     }
     std::string newExtendResourcePath = newPath + ServiceConstants::PATH_SEPARATOR +
         ServiceConstants::EXT_RESOURCE_FILE_PATH;
-    auto result = InstalldClient::GetInstance()->CreateBundleDir(newExtendResourcePath);
+    auto result = InstalldClient::GetInstance()->CreateBundleDir(
+        oldInfo.GetBundleName(), BundleDirScene::EXTEND_RESOURCE_DIR, newExtendResourcePath);
     if (result != ERR_OK) {
         APP_LOGE("-n %{public}s create ext_resource failed", oldInfo.GetBundleName().c_str());
         return result;
@@ -9466,7 +9489,8 @@ ErrCode BaseBundleInstaller::InnerProcessCodePathRealToOld(
         bundleName;
     std::string oldAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
-    result = InstalldClient::GetInstance()->RenameModuleDir(realAppCodePath, oldAppCodePath);
+    result = InstalldClient::GetInstance()->RenameModuleDir(realAppCodePath, oldAppCodePath,
+        bundleName, BundleDirScene::BUNDLE_CODE_DIR);
     if (result != ERR_OK) {
         if (!BundleUtil::IsExistDir(realAppCodePath) && errno == ENOENT) {
             LOG_NOFUNC_W(BMS_TAG_INSTALLER, "realAppCodePath(%{public}s) is not exist", realAppCodePath.c_str());
@@ -9493,7 +9517,8 @@ ErrCode BaseBundleInstaller::InnerProcessCodePathNewToReal(
         std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
     std::string realAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         bundleName;
-    result = InstalldClient::GetInstance()->RenameModuleDir(newAppCodePath, realAppCodePath);
+    result = InstalldClient::GetInstance()->RenameModuleDir(newAppCodePath, realAppCodePath,
+        bundleName, BundleDirScene::BUNDLE_CODE_DIR);
     CHECK_RESULT(result, "rename +new to real path failed, error is %{public}d");
     return ERR_OK;
 }
@@ -9518,7 +9543,8 @@ void BaseBundleInstaller::ProcessOldCodePath(
         std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
     std::string tempPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_TEMP_CODE_DIR) + bundleName;
-    result = InstalldClient::GetInstance()->RenameModuleDir(oldAppCodePath, tempPath);
+    result = InstalldClient::GetInstance()->RenameModuleDir(oldAppCodePath, tempPath,
+        bundleName, BundleDirScene::BUNDLE_CODE_DIR);
     if (result == ERR_OK) {
         // delete +temp- code path
         result = InstalldClient::GetInstance()->RemoveDir(tempPath);
@@ -9628,7 +9654,8 @@ bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
         return true;
     }
     LOG_I(BMS_TAG_INSTALLER, "create ext profile dir %{public}s", extProfileDir.c_str());
-    ErrCode result = InstalldClient::GetInstance()->CreateBundleDir(extProfileDir);
+    ErrCode result =
+        InstalldClient::GetInstance()->CreateBundleDir(bundleName_, BundleDirScene::EXTEND_PROFILE_DIR, extProfileDir);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to create ext profile dir, error is %{public}d", result);
         return false;

@@ -162,7 +162,7 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0300, Function | SmallTes
     abcPaths.push_back(FILE_PATH);
     impl.Rollback(abcPaths);
 
-    auto ret = impl.MkdirIfNotExist(FILE_PATH);
+    auto ret = impl.MkdirIfNotExist(BUNDLE_NAME, FILE_PATH);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 
     std::vector<std::string> abcNames;

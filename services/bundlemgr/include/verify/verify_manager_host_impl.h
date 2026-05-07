@@ -53,7 +53,7 @@ private:
         const std::string &rootDir, const std::vector<std::string> &names);
     bool CheckFileParam(const std::vector<std::string> &abcPaths);
     void Rollback(const std::string &rootDir, const std::vector<std::string> &names);
-    ErrCode MkdirIfNotExist(const std::string &dir);
+    ErrCode MkdirIfNotExist(const std::string &bundleName, const std::string &dir);
     std::mutex &GetBundleMutex(const std::string &bundleName);
     std::string GetRealPath(const std::string &bundleName,
         int32_t userId, const std::string &relativePath);

@@ -2270,8 +2270,7 @@ HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0300, Function | Sm
         std::to_string(Constants::START_USERID));
     ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
     setuid(Constants::FOUNDATION_UID);
-    ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->CreateBundleDir(el1ShaderCachePath);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(OHOS::ForceCreateDirectory(el1ShaderCachePath));
 
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
@@ -2361,8 +2360,7 @@ HWTEST_F(BmsEventHandlerTest, BundleEl1ShaderCacheLocal_0100, Function | SmallTe
         std::to_string(Constants::START_USERID));
     setuid(Constants::FOUNDATION_UID);
     ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
-    ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->CreateBundleDir(el1ShaderCachePath);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(OHOS::ForceCreateDirectory(el1ShaderCachePath));
 
     setuid(Constants::FOUNDATION_UID);
     // test CheckAllBundleEl1ShaderCacheLocal succeed
@@ -2427,8 +2425,7 @@ HWTEST_F(BmsEventHandlerTest, CleanAllBundleEl1ArkStartupCacheLocal_0100, Functi
         std::to_string(Constants::START_USERID));
     setuid(Constants::FOUNDATION_UID);
     ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
-    ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->CreateBundleDir(el1ArkStartupCachePath);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(OHOS::ForceCreateDirectory(el1ArkStartupCachePath));
 
     setuid(Constants::FOUNDATION_UID);
     // test CleanAllBundleEl1ShaderCacheLocal succeed
@@ -2484,8 +2481,7 @@ HWTEST_F(BmsEventHandlerTest, ProcessCheckSystemOptimizeDir_0100, Function | Sma
         std::to_string(TEST_U100));
     setuid(Constants::FOUNDATION_UID);
     ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
-    ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->CreateBundleDir(el1ArkStartupCachePath);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(OHOS::ForceCreateDirectory(el1ArkStartupCachePath));
 
     // test IsExistDir failed
     setuid(Constants::ROOT_UID);
