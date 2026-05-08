@@ -71,9 +71,9 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
         .uid = uid_,
         .appIndex = 0,
         .bundleName = bundleName,
+        .modulePackage = moduleName_,
         .appDistributionType = appDistributionType_,
         .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-        .modulePackage = moduleName_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);

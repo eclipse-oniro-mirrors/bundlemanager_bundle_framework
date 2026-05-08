@@ -71,8 +71,8 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
         .bundleName = bundleName,
         .appId = appId_,
         .appIdentifier = appIdentifier_,
-        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
         .appDistributionType = appDistributionType_,
+        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -124,11 +124,11 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
         .bundleName = bundleName,
         .appId = appId_,
         .appIdentifier = appIdentifier_,
+        .appDistributionType = appDistributionType_,
         .developerId = GetDeveloperId(bundleName),
         .assetAccessGroups = GetAssetAccessGroups(bundleName),
         .keepData = isKeepData_,
         .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-        .appDistributionType = appDistributionType_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
