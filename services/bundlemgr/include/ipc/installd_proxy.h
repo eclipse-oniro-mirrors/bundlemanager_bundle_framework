@@ -128,11 +128,13 @@ public:
     /**
      * @brief Get disk usage for dir.
      * @param path Indicates the directory vector.
+     * @param bundleName Indicates the bundle name for path validation.
+     * @param scene Indicates the scene code for path validation.
      * @param statSize Indicates size of path.
      * @return Returns true if successfully; returns false otherwise.
      */
-    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
-        int64_t timeoutMs = -1) override;
+    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
+        BundleDirScene scene, int64_t &statSize, int64_t timeoutMs = -1) override;
     /**
      * @brief Get bundle inode count for UID.
      * @param uid The user ID of the application.
@@ -157,7 +159,8 @@ public:
     virtual ErrCode CleanBundleDataDirByName(const std::string &bundleName, const int userid,
         const int appIndex = 0, const bool isAtomicService = false) override;
 
-    virtual ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent) override;
+    virtual ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent,
+        const std::string &bundleName, BundleDirScene scene) override;
     /**
      * @brief Get bundle Stats.
      * @param bundleName Indicates the bundle name.
@@ -236,9 +239,9 @@ public:
     virtual ErrCode Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
         const CreateDirParam &createDirParam) override;
 
-    virtual ErrCode GetFileStat(const std::string &file, FileStat &fileStat) override;
+    virtual ErrCode GetFileStat(const std::string &file, BundleDirScene scene, FileStat &fileStat) override;
 
-    virtual ErrCode ChangeFileStat(const std::string &file, FileStat &fileStat) override;
+    virtual ErrCode ChangeFileStat(const std::string &file, FileStat &fileStat, BundleDirScene scene) override;
 
     virtual ErrCode ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
         const std::string &cpuAbi) override;
@@ -256,7 +259,8 @@ public:
 
     virtual ErrCode ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec) override;
 
-    virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir) override;
+    virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir,
+        const std::string &bundleName, BundleDirScene scene) override;
 
     virtual ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames) override;
@@ -266,7 +270,8 @@ public:
     virtual ErrCode CheckEncryption(const CheckEncryptionParam &checkEncryptionParam,
         bool &isEncryption) override;
 
-    virtual ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir) override;
+    virtual ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir,
+        const std::string &bundleName, BundleDirScene scene) override;
 
     virtual ErrCode ExtractDriverSoFiles(const std::string &srcPath,
         const std::unordered_multimap<std::string, std::string> &dirMap) override;
@@ -308,9 +313,10 @@ public:
 
     virtual ErrCode LoadInstalls() override;
 
-    virtual ErrCode ClearDir(const std::string &dir) override;
+    virtual ErrCode ClearDir(const std::string &dir, BundleDirScene scene) override;
 
-    virtual ErrCode RestoreconPath(const std::string &path) override;
+    virtual ErrCode RestoreconPath(const std::string &path, const std::string &bundleName,
+        BundleDirScene scene) override;
 
     virtual ErrCode ProcessBinFiles(const VerifyBinParam &verifyBinParam) override;
 
@@ -324,9 +330,12 @@ public:
      * @brief Copy directory Recursively from source dir to destination dir.
      * @param sourceDir Indicates the source dir.
      * @param destinationDir Indicates the destination dir.
+     * @param bundleName Indicates the bundle name for path validation.
+     * @param scene Indicates the scene code for path validation.
      * @return Returns ERR_OK if copy directory successfully; returns error code otherwise.
      */
-    virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir) override;
+    virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir,
+        const std::string &bundleName, BundleDirScene scene) override;
 
     /**
      * @brief Extract skills package with validation.

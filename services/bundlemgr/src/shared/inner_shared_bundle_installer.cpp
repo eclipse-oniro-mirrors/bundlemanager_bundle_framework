@@ -738,7 +738,8 @@ ErrCode InnerSharedBundleInstaller::MoveSoToRealPath(const std::string &moduleNa
         return ERR_OK;
     }
     APP_LOGD("move so files from path %{public}s to path %{public}s", tempSoPath.c_str(), realSoPath.c_str());
-    result = InstalldClient::GetInstance()->MoveFiles(tempSoPath, realSoPath);
+    result = InstalldClient::GetInstance()->MoveFiles(
+        tempSoPath, realSoPath, bundleName_, BundleDirScene::MOVE_SO_TO_REAL_PATH);
     if (result != ERR_OK) {
         APP_LOGE("move file to real path failed %{public}d", result);
         return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;

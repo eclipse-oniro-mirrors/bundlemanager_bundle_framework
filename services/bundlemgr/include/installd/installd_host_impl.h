@@ -126,12 +126,14 @@ public:
     /**
      * @brief Get disk usage for dir.
      * @param path Indicates the directory vector.
-     * @param statSize Indicates size of path.
+     * @param bundleName Indicates the bundle name for path validation.
+     * @param scene Indicates the scene code for path validation.
      * @param timeoutMs Indicates the timeout time.
+     * @param statSize Indicates size of path.
      * @return Returns true if successfully; returns false otherwise.
      */
-    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
-        int64_t timeoutMs = -1) override;
+    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
+        BundleDirScene scene, int64_t &statSize, int64_t timeoutMs = -1) override;
     /**
      * @brief Get bundle inode count for UID.
      * @param uid The user ID of the application).
@@ -147,7 +149,8 @@ public:
     virtual ErrCode CleanBundleDataDir(const std::string &bundleDir,
         const std::string &bundleName, int32_t userId) override;
 
-    virtual ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent) override;
+    virtual ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent,
+        const std::string &bundleName, BundleDirScene scene) override;
     /**
      * @brief Clean a bundle data directory.
      * @param bundleName Indicates the bundleName data directory path that to be cleaned.
@@ -238,9 +241,9 @@ public:
     virtual ErrCode Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
         const CreateDirParam &createDirParam) override;
 
-    virtual ErrCode GetFileStat(const std::string &file, FileStat &fileStat) override;
+    virtual ErrCode GetFileStat(const std::string &file, BundleDirScene scene, FileStat &fileStat) override;
 
-    virtual ErrCode ChangeFileStat(const std::string &file, FileStat &fileStat) override;
+    virtual ErrCode ChangeFileStat(const std::string &file, FileStat &fileStat, BundleDirScene scene) override;
 
     virtual ErrCode ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
         const std::string &cpuAbi) override;
@@ -258,7 +261,8 @@ public:
 
     virtual ErrCode ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec) override;
 
-    virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir) override;
+    virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir,
+        const std::string &bundleName, BundleDirScene scene) override;
 
     virtual ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames) override;
@@ -267,7 +271,8 @@ public:
 
     virtual ErrCode CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption) override;
 
-    virtual ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir) override;
+    virtual ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir,
+        const std::string &bundleName, BundleDirScene scene) override;
 
     virtual ErrCode ExtractDriverSoFiles(const std::string &srcPath,
         const std::unordered_multimap<std::string, std::string> &dirMap) override;
@@ -311,9 +316,10 @@ public:
 
     virtual ErrCode DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId) override;
 
-    virtual ErrCode ClearDir(const std::string &dir) override;
+    virtual ErrCode ClearDir(const std::string &dir, BundleDirScene scene) override;
 
-    virtual ErrCode RestoreconPath(const std::string &path) override;
+    virtual ErrCode RestoreconPath(const std::string &path, const std::string &bundleName,
+        BundleDirScene scene) override;
 
     virtual ErrCode ProcessBinFiles(const VerifyBinParam &verifyBinParam) override;
 
@@ -322,7 +328,8 @@ public:
         std::vector<std::string> &soName, std::vector<std::string> &soHash) override;
     virtual ErrCode HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash) override;
 
-    virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir) override;
+    virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir,
+        const std::string &bundleName, BundleDirScene scene) override;
 
     virtual ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths) override;
 

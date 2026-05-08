@@ -192,11 +192,13 @@ public:
     /**
      * @brief Get disk usage for dir.
      * @param path Indicates the directory vector.\
+     * @param bundleName Indicates the bundle name for path validation.
+     * @param scene Indicates the scene code for path validation.
      * @param statSize Indicates size of path.
      * @return Returns true if successfully; returns false otherwise.
      */
-    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
-        int64_t timeoutMs = -1)
+    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
+        BundleDirScene scene, int64_t &statSize, int64_t timeoutMs = -1)
     {
         return ERR_OK;
     }
@@ -232,7 +234,8 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
+    virtual ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent,
+        const std::string &bundleName, BundleDirScene scene)
     {
         return ERR_OK;
     }
@@ -380,15 +383,16 @@ public:
     /**
      * @brief Get file stat.
      * @param file Indicates file.
+     * @param scene Indicates the scene code for path validation.
      * @param fileStat Indicates fileStat.
      * @return Returns ERR_OK if get file stat successfully; returns error code otherwise.
      */
-    virtual ErrCode GetFileStat(const std::string &file, FileStat &fileStat)
+    virtual ErrCode GetFileStat(const std::string &file, BundleDirScene scene, FileStat &fileStat)
     {
         return ERR_OK;
     }
 
-    virtual ErrCode ChangeFileStat(const std::string &file, FileStat &fileStat)
+    virtual ErrCode ChangeFileStat(const std::string &file, FileStat &fileStat, BundleDirScene scene)
     {
         return ERR_OK;
     }
@@ -430,7 +434,8 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir)
+    virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir,
+        const std::string &bundleName, BundleDirScene scene)
     {
         return ERR_OK;
     }
@@ -451,7 +456,8 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir)
+    virtual ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir, const std::string &bundleName,
+        BundleDirScene scene)
     {
         return ERR_OK;
     }
@@ -560,12 +566,12 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode ClearDir(const std::string &dir)
+    virtual ErrCode ClearDir(const std::string &dir, BundleDirScene scene)
     {
         return ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
     }
 
-    virtual ErrCode RestoreconPath(const std::string &path)
+    virtual ErrCode RestoreconPath(const std::string &path, const std::string &bundleName, BundleDirScene scene)
     {
         return ERR_OK;
     }
@@ -580,7 +586,8 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+    virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir,
+        const std::string &bundleName, BundleDirScene scene)
     {
         return ERR_OK;
     }

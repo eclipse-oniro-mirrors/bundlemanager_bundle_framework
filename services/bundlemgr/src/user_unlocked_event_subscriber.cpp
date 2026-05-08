@@ -139,7 +139,7 @@ void UpdateAppDataMgr::CheckPathAttribute(const std::string &path, const BundleI
         return;
     }
     FileStat fileStat;
-    if (InstalldClient::GetInstance()->GetFileStat(path, fileStat) != ERR_OK) {
+    if (InstalldClient::GetInstance()->GetFileStat(path, BundleDirScene::GET_DATA_BASE_FILE_STAT, fileStat) != ERR_OK) {
         APP_LOGE("GetFileStat path(%{public}s) failed", path.c_str());
         return;
     }

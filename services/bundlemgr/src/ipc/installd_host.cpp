@@ -558,9 +558,12 @@ bool InstalldHost::HandleGetDiskUsageFromPath(MessageParcel &data, MessageParcel
         READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, data, path);
         cachePaths.emplace_back(path);
     }
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t scene = data.ReadInt32();
     int64_t timeoutMs = data.ReadInt64();
     int64_t statSize = 0;
-    ErrCode result = GetDiskUsageFromPath(cachePaths, statSize, timeoutMs);
+    ErrCode result =
+        GetDiskUsageFromPath(cachePaths, bundleName, static_cast<BundleDirScene>(scene), statSize, timeoutMs);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64(statSize)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetDiskUsageFromPath write failed");
@@ -623,7 +626,9 @@ bool InstalldHost::HandleCleanBundleDirs(MessageParcel &data, MessageParcel &rep
     }
     
     bool keepParent = data.ReadBool();
-    ErrCode result = CleanBundleDirs(dirs, keepParent);
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t scene = data.ReadInt32();
+    ErrCode result = CleanBundleDirs(dirs, keepParent, bundleName, static_cast<BundleDirScene>(scene));
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -915,8 +920,9 @@ bool InstalldHost::HandleMkdir(MessageParcel &data, MessageParcel &reply)
 bool InstalldHost::HandleGetFileStat(MessageParcel &data, MessageParcel &reply)
 {
     std::string file = Str16ToStr8(data.ReadString16());
+    int32_t scene = data.ReadInt32();
     FileStat fileStat;
-    ErrCode result = GetFileStat(file, fileStat);
+    ErrCode result = GetFileStat(file, static_cast<BundleDirScene>(scene), fileStat);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteParcelable(&fileStat)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to GetFileStat from reply");
@@ -934,8 +940,9 @@ bool InstalldHost::HandleChangeFileStat(MessageParcel &data, MessageParcel &repl
         LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
         return false;
     }
+    int32_t scene = data.ReadInt32();
 
-    ErrCode result = ChangeFileStat(file, *info);
+    ErrCode result = ChangeFileStat(file, *info, static_cast<BundleDirScene>(scene));
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1031,8 +1038,10 @@ bool InstalldHost::HandCopyFiles(MessageParcel &data, MessageParcel &reply)
 {
     std::string sourceDir = Str16ToStr8(data.ReadString16());
     std::string destinationDir = Str16ToStr8(data.ReadString16());
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t scene = data.ReadInt32();
 
-    ErrCode result = CopyFiles(sourceDir, destinationDir);
+    ErrCode result = CopyFiles(sourceDir, destinationDir, bundleName, static_cast<BundleDirScene>(scene));
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1086,8 +1095,10 @@ bool InstalldHost::HandMoveFiles(MessageParcel &data, MessageParcel &reply)
 {
     std::string srcDir = Str16ToStr8(data.ReadString16());
     std::string desDir = Str16ToStr8(data.ReadString16());
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t scene = data.ReadInt32();
 
-    ErrCode result = MoveFiles(srcDir, desDir);
+    ErrCode result = MoveFiles(srcDir, desDir, bundleName, static_cast<BundleDirScene>(scene));
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1377,7 +1388,8 @@ bool InstalldHost::HandleLoadInstalls(MessageParcel &data, MessageParcel &reply)
 bool InstalldHost::HandleClearDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string dir = data.ReadString();
-    ErrCode result = ClearDir(dir);
+    int32_t scene = data.ReadInt32();
+    ErrCode result = ClearDir(dir, static_cast<BundleDirScene>(scene));
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1425,7 +1437,9 @@ bool InstalldHost::HandleHashFiles(MessageParcel &data, MessageParcel &reply)
 bool InstalldHost::HandleRestoreconPath(MessageParcel &data, MessageParcel &reply)
 {
     std::string path = data.ReadString();
-    ErrCode result = RestoreconPath(path);
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t scene = data.ReadInt32();
+    ErrCode result = RestoreconPath(path, bundleName, static_cast<BundleDirScene>(scene));
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1455,8 +1469,10 @@ bool InstalldHost::HandleCopyDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string srcDir = data.ReadString();
     std::string destDir = data.ReadString();
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t scene = data.ReadInt32();
 
-    ErrCode result = CopyDir(srcDir, destDir);
+    ErrCode result = CopyDir(srcDir, destDir, bundleName, static_cast<BundleDirScene>(scene));
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

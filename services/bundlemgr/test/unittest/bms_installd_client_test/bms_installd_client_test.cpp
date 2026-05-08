@@ -979,7 +979,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetFileStat_0100, TestSize
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetFileStat_0100 start";
     std::string file = EMPTY_STRING;
     FileStat fileStat;
-    ErrCode result = installClient_->GetFileStat(file, fileStat);
+    ErrCode result = installClient_->GetFileStat(file, BundleDirScene::GET_BMS_FILE_STAT, fileStat);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetFileStat_0100 end";
 }
@@ -994,8 +994,9 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetFileStat_0200, TestSize
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetFileStat_0200 start";
     std::string file = FILE;
     FileStat fileStat;
-    ErrCode result = installClient_->GetFileStat(file, fileStat);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::GetFileStat, file, fileStat));
+    ErrCode result = installClient_->GetFileStat(file, BundleDirScene::GET_BMS_FILE_STAT, fileStat);
+    EXPECT_EQ(result,
+        installClient_->CallService(&IInstalld::GetFileStat, file, BundleDirScene::GET_BMS_FILE_STAT, fileStat));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetFileStat_0200 end";
 }
 
@@ -1182,8 +1183,10 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFiles_0100, TestSize.L
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFiles_0100 start";
     std::string sourceDir = SOURCE_DIR;
     std::string destinationDir = DESTINATION_DIR;
-    ErrCode result = installClient_->CopyFiles(sourceDir, destinationDir);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyFiles, sourceDir, destinationDir));
+    ErrCode result =
+        installClient_->CopyFiles(sourceDir, destinationDir, BUNDLE_NAME, BundleDirScene::COPY_QUICK_FIX_FILES);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyFiles, sourceDir, destinationDir, BUNDLE_NAME,
+        BundleDirScene::COPY_QUICK_FIX_FILES));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFiles_0100 end";
 }
 
@@ -1303,7 +1306,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsageFromPath_0100,
     std::vector<std::string> path;
     int64_t statSize = 0;
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->GetDiskUsageFromPath(path, statSize);
+    ErrCode result =
+        installClient_->GetDiskUsageFromPath(path, BUNDLE_NAME, BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE, statSize);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1318,7 +1322,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsageFromPath_0200,
     int64_t statSize = 0;
     path.emplace_back("disk.path");
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->GetDiskUsageFromPath(path, statSize);
+    ErrCode result =
+        installClient_->GetDiskUsageFromPath(path, BUNDLE_NAME, BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE, statSize);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 
@@ -1829,7 +1834,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldDeathRecipientTest_MoveFiles_0100, Te
     ASSERT_NE(installClient_, nullptr);
     std::string srcDir;
     std::string desDir;
-    auto result = installClient_->MoveFiles(srcDir, desDir);
+    auto result = installClient_->MoveFiles(srcDir, desDir, BUNDLE_NAME, BundleDirScene::MOVE_SO_TO_REAL_PATH);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1886,12 +1891,12 @@ HWTEST_F(BmsInstalldClientTest, ClearDir_0100, TestSize.Level0)
     ret = stat(tmpFile.c_str(), &st);
     EXPECT_EQ(ret, 0);
     // clear dir
-    ErrCode clearRet = InstalldClient::GetInstance()->ClearDir(TMP_DIR);
-    EXPECT_EQ(clearRet, 0);
+    ErrCode clearRet = InstalldClient::GetInstance()->ClearDir(TMP_DIR, BundleDirScene::CLEAR_ARK_PROFILE_DIR);
+    EXPECT_EQ(clearRet, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     // expect file not exist
     ret = stat(tmpFile.c_str(), &st);
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
     // expect dir exist
     bool isDirExist = stat(TMP_DIR.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
     EXPECT_TRUE(isDirExist);
@@ -1907,7 +1912,7 @@ HWTEST_F(BmsInstalldClientTest, ClearDir_0100, TestSize.Level0)
  */
 HWTEST_F(BmsInstalldClientTest, ClearDir_0200, TestSize.Level0)
 {
-    ErrCode ret = InstalldClient::GetInstance()->ClearDir(TMP_DIR);
+    ErrCode ret = InstalldClient::GetInstance()->ClearDir(TMP_DIR, BundleDirScene::CLEAR_ARK_PROFILE_DIR);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -1922,7 +1927,7 @@ HWTEST_F(BmsInstalldClientTest, ClearDir_0300, TestSize.Level0)
     setuid(Constants::FOUNDATION_UID);
 
     std::string emptyDir;
-    ErrCode ret = InstalldClient::GetInstance()->ClearDir(emptyDir);
+    ErrCode ret = InstalldClient::GetInstance()->ClearDir(emptyDir, BundleDirScene::CLEAR_ARK_PROFILE_DIR);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     setuid(uid);
@@ -1939,8 +1944,8 @@ HWTEST_F(BmsInstalldClientTest, ClearDir_0400, TestSize.Level0)
     setuid(Constants::FOUNDATION_UID);
 
     std::string notExistDir = "/bms/not/exist/dir";
-    ErrCode ret = InstalldClient::GetInstance()->ClearDir(notExistDir);
-    EXPECT_EQ(ret, ERR_OK);
+    ErrCode ret = InstalldClient::GetInstance()->ClearDir(notExistDir, BundleDirScene::CLEAR_ARK_PROFILE_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     setuid(uid);
 }
@@ -1969,8 +1974,8 @@ HWTEST_F(BmsInstalldClientTest, ClearDir_0500, TestSize.Level0)
     int32_t ret = stat(tmpFile.c_str(), &st);
     EXPECT_EQ(ret, 0);
     // clear dir
-    ErrCode clearRet = InstalldClient::GetInstance()->ClearDir(tmpFile);
-    EXPECT_EQ(clearRet, ERR_OK);
+    ErrCode clearRet = InstalldClient::GetInstance()->ClearDir(tmpFile, BundleDirScene::CLEAR_ARK_PROFILE_DIR);
+    EXPECT_EQ(clearRet, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     (void)std::remove(tmpFile.c_str());
     setuid(uid);
@@ -2045,7 +2050,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RestoreconPath_0100, TestS
 {
     const std::string arkWebName = OHOS::system::GetParameter("persist.arkwebcore.package_name", "");
     const std::string arkWebLibPath = "/data/app/el1/bundle/public/" + arkWebName + "/libs/arm64/";
-    ErrCode result = installClient_->RestoreconPath(arkWebLibPath);
+    ErrCode result =
+        installClient_->RestoreconPath(arkWebLibPath, arkWebName, BundleDirScene::RESTORECON_ARK_WEB_LIB_PATH);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 
@@ -2069,7 +2075,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyDir_0100, TestSize.Lev
 {
     std::string srcDir = "/data/app/el1/bundle/public/com.example.source/";
     std::string destDir = "/data/app/el1/bundle/public/com.example.destination/";
-    ErrCode result = installClient_->CopyDir(srcDir, destDir);
+    ErrCode result = installClient_->CopyDir(srcDir, destDir, BUNDLE_NAME, BundleDirScene::COPY_PLUGIN_DIR);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 

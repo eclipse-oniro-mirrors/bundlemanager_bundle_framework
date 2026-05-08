@@ -136,6 +136,40 @@ enum class BundleDirScene : int32_t {
 
     REMOVE_SKILL_BUNDLE_DIR = 531,
     REMOVE_VERIFY_FILE = 532,
+
+    // ChangeFileStat scenes
+    CHANGE_BMS_FILE_STAT = 601,
+    // MoveHapToCodeDir scenes
+    MOVE_HAP_TO_CODE_DIR = 701,
+    // CopyDir scenes
+    COPY_PLUGIN_DIR = 801,
+    // GetDiskUsageFromPath scenes
+    GET_BUNDLE_CACHE_DISK_USAGE = 901,
+    // GetBundleCachePath scenes
+    GET_BUNDLE_CACHE_PATH = 1001,
+    // ScanDir scenes
+    SCAN_DIR = 1101,
+    // GetFileStat scenes
+    GET_BMS_FILE_STAT = 1201,
+    GET_USER_DATA_FILE_STAT = 1202,
+    GET_DATA_BASE_FILE_STAT = 1203,
+    // ClearDir scenes
+    CLEAR_ARK_PROFILE_DIR = 1301,
+    CLEAR_ARK_CACHE_DIR = 1302,
+    // RestoreconPath scenes
+    RESTORECON_ARK_WEB_LIB_PATH = 1401,
+    // CopyFiles scenes
+    COPY_QUICK_FIX_FILES = 1501,
+    // MoveFiles scenes
+    MOVE_SO_TO_REAL_PATH = 1601,
+    // ObtainQuickFixFileDir scenes
+    OBTAIN_QUICK_FIX_FILE_DIR = 1701,
+    // HashSoFile scenes
+    HASH_SO_FILE = 1801,
+    // CleanBundleDirs scenes
+    CLEAN_SHADER_CACHE_DIR = 1901,
+    CLEAN_ARK_STARTUP_CACHE_DIR = 1902,
+    CLEAN_EL1_CACHE_DIR = 1903,
 };
 
 const std::unordered_map<int32_t, int32_t> CODE_SIGNATURE_ERR_MAP = {

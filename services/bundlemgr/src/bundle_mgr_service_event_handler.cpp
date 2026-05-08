@@ -583,7 +583,8 @@ bool BMSEventHandler::AnalyzeUserData(
     std::string userDataBundlePath = userDataDir + userDataBundleName;
     LOG_D(BMS_TAG_DEFAULT, "Analyze user data path(%{public}s)", userDataBundlePath.c_str());
     FileStat fileStat;
-    if (InstalldClient::GetInstance()->GetFileStat(userDataBundlePath, fileStat) != ERR_OK) {
+    if (InstalldClient::GetInstance()->GetFileStat(
+        userDataBundlePath, BundleDirScene::GET_USER_DATA_FILE_STAT, fileStat) != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "GetFileStat path(%{public}s) failed", userDataBundlePath.c_str());
         return false;
     }

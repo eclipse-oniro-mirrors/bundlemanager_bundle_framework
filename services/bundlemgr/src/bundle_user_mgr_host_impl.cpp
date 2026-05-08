@@ -521,7 +521,7 @@ void BundleUserMgrHostImpl::RemoveArkProfile(int32_t userId)
 {
     std::string arkProfilePath = AOTHandler::BuildArkProfilePath(userId);
     APP_LOGI("DeleteArkProfile %{public}s when remove user", arkProfilePath.c_str());
-    InstalldClient::GetInstance()->ClearDir(arkProfilePath);
+    InstalldClient::GetInstance()->ClearDir(arkProfilePath, BundleDirScene::CLEAR_ARK_PROFILE_DIR);
 }
 
 void BundleUserMgrHostImpl::RemoveAsanLogDirectory(int32_t userId)

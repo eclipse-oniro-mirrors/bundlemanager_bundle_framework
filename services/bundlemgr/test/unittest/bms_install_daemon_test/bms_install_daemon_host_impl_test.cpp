@@ -352,7 +352,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1600, Function | Sma
     ASSERT_NE(hostImpl, nullptr);
 
     FileStat fileStat;
-    auto ret = hostImpl->GetFileStat(TEST_STRING, fileStat);
+    auto ret = hostImpl->GetFileStat(TEST_STRING, BundleDirScene::GET_BMS_FILE_STAT, fileStat);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -446,7 +446,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2200, Function | Sma
     ASSERT_NE(hostImpl, nullptr);
 
     std::vector<std::string> vec;
-    auto ret = hostImpl->CopyFiles(TEST_STRING, TEST_STRING);
+    auto ret = hostImpl->CopyFiles(TEST_STRING, TEST_STRING, TEST_BUNDLE_NAME, BundleDirScene::COPY_QUICK_FIX_FILES);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -461,7 +461,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2300, Function | Sma
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
 
-    auto ret = installdProxy->CopyFiles(TEST_STRING, TEST_STRING);
+    auto ret =
+        installdProxy->CopyFiles(TEST_STRING, TEST_STRING, TEST_BUNDLE_NAME, BundleDirScene::COPY_QUICK_FIX_FILES);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 
@@ -909,7 +910,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4900, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
     std::vector<std::string> fileNames;
-    auto ret = hostImpl->MoveFiles(TEST_STRING, TEST_STRING);
+    auto ret = hostImpl->MoveFiles(TEST_STRING, TEST_STRING, TEST_BUNDLE_NAME, BundleDirScene::MOVE_SO_TO_REAL_PATH);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -1347,7 +1348,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7500, Function | Sma
 
     std::vector<std::string> path;
     int64_t statSize = 0;
-    ErrCode res = installdProxy->GetDiskUsageFromPath(path, statSize);
+    ErrCode res = installdProxy->GetDiskUsageFromPath(
+        path, TEST_BUNDLE_NAME, BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE, statSize);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 
@@ -1365,7 +1367,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7600, Function | Sma
     std::vector<std::string> path;
     path.emplace_back("com.acts.example");
     int64_t statSize = 0;
-    ErrCode res = installdProxy->GetDiskUsageFromPath(path, statSize);
+    ErrCode res = installdProxy->GetDiskUsageFromPath(
+        path, TEST_BUNDLE_NAME, BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE, statSize);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 
@@ -1437,7 +1440,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8000, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
     std::vector<std::string> dirs;
-    auto ret = hostImpl->CleanBundleDirs(dirs, true);
+    auto ret = hostImpl->CleanBundleDirs(dirs, true, TEST_BUNDLE_NAME, BundleDirScene::CLEAN_SHADER_CACHE_DIR);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -1662,7 +1665,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, ClearDir_0100, Function | SmallTest | Lev
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
     std::string dir = TEST_STRING;
-    auto ret = hostImpl->ClearDir(dir);
+    auto ret = hostImpl->ClearDir(dir, BundleDirScene::CLEAR_ARK_PROFILE_DIR);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -1676,7 +1679,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, RestoreconPath_0100, Function | SmallTest
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
     std::string path = TEST_STRING;
-    auto ret = hostImpl->RestoreconPath(path);
+    auto ret = hostImpl->RestoreconPath(path, TEST_BUNDLE_NAME, BundleDirScene::RESTORECON_ARK_WEB_LIB_PATH);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

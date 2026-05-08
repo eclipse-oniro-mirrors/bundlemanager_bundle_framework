@@ -430,7 +430,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1600, Function | SmallTest |
     EXPECT_NE(proxy, nullptr);
 
     FileStat fileStat;
-    auto ret = proxy->GetFileStat(TEST_STRING, fileStat);
+    auto ret = proxy->GetFileStat(TEST_STRING, BundleDirScene::GET_BMS_FILE_STAT, fileStat);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -445,7 +445,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1650, Function | SmallTest |
     EXPECT_NE(proxy, nullptr);
 
     FileStat fileStat;
-    auto ret = proxy->ChangeFileStat(TEST_STRING, fileStat);
+    auto ret = proxy->ChangeFileStat(TEST_STRING, fileStat, BundleDirScene::CHANGE_BMS_FILE_STAT);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -539,7 +539,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_2200, Function | SmallTest |
     EXPECT_NE(proxy, nullptr);
 
     std::vector<std::string> vec;
-    auto ret = proxy->CopyFiles(TEST_STRING, TEST_STRING);
+    auto ret = proxy->CopyFiles(TEST_STRING, TEST_STRING, TEST_BUNDLE_NAME, BundleDirScene::COPY_QUICK_FIX_FILES);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -554,7 +554,8 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_2300, Function | SmallTest |
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
 
-    auto ret = installdProxy->CopyFiles(TEST_STRING, TEST_STRING);
+    auto ret =
+        installdProxy->CopyFiles(TEST_STRING, TEST_STRING, TEST_BUNDLE_NAME, BundleDirScene::COPY_QUICK_FIX_FILES);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 
@@ -797,7 +798,8 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3500, Function | SmallTest |
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
 
-    auto ret = installdProxy->MoveFiles(TEST_STRING, TEST_STRING);
+    auto ret =
+        installdProxy->MoveFiles(TEST_STRING, TEST_STRING, TEST_BUNDLE_NAME, BundleDirScene::MOVE_SO_TO_REAL_PATH);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 
@@ -1153,7 +1155,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_5700, Function | SmallTest |
     auto proxy = GetInstallProxy();
     ASSERT_NE(proxy, nullptr);
 
-    auto ret = proxy->MoveFiles(TEST_STRING, TEST_STRING);
+    auto ret = proxy->MoveFiles(TEST_STRING, TEST_STRING, TEST_BUNDLE_NAME, BundleDirScene::MOVE_SO_TO_REAL_PATH);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -1416,7 +1418,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7300, Function | SmallTest |
 
     std::vector<std::string> dirs;
     dirs.push_back(TEST_STRING);
-    auto ret = proxy->CleanBundleDirs(dirs, true);
+    auto ret = proxy->CleanBundleDirs(dirs, true, TEST_BUNDLE_NAME, BundleDirScene::CLEAN_SHADER_CACHE_DIR);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -1430,7 +1432,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7400, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->CopyDir("", "");
+    auto ret = proxy->CopyDir("", "", "", BundleDirScene::COPY_PLUGIN_DIR);
     EXPECT_EQ(ret, ERR_OK);
 }
 

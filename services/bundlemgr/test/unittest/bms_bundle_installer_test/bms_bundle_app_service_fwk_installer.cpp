@@ -2062,15 +2062,18 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveFiles_0001, Function | SmallTe
 {
     std::string srcDir = EMPTY_STRING;
     std::string desDir = EMPTY_STRING;
-    auto ret1 = InstalldClient::GetInstance()->MoveFiles(srcDir, desDir);
+    auto ret1 = InstalldClient::GetInstance()->MoveFiles(
+        srcDir, desDir, BUNDLE_NAME_TEST, BundleDirScene::MOVE_SO_TO_REAL_PATH);
     EXPECT_NE(ret1, ERR_OK);
 
     srcDir = "testSrcDir";
-    auto ret2 = InstalldClient::GetInstance()->MoveFiles(srcDir, desDir);
+    auto ret2 = InstalldClient::GetInstance()->MoveFiles(
+        srcDir, desDir, BUNDLE_NAME_TEST, BundleDirScene::MOVE_SO_TO_REAL_PATH);
     EXPECT_NE(ret2, ERR_OK);
 
     desDir = "testDesDir";
-    EXPECT_NO_THROW(InstalldClient::GetInstance()->MoveFiles(srcDir, desDir));
+    EXPECT_NO_THROW(InstalldClient::GetInstance()->MoveFiles(
+        srcDir, desDir, BUNDLE_NAME_TEST, BundleDirScene::MOVE_SO_TO_REAL_PATH));
 }
 
 /**

@@ -467,7 +467,7 @@ void AOTHandler::HandleResetAllAOT() const
 void AOTHandler::ResetAllSysCompAOT() const
 {
     APP_LOGI_NOFUNC("ResetAllSysCompAOT begin");
-    (void)InstalldClient::GetInstance()->ClearDir(SYS_COMP_ARK_CACHE_PATH);
+    (void)InstalldClient::GetInstance()->ClearDir(SYS_COMP_ARK_CACHE_PATH, BundleDirScene::CLEAR_ARK_CACHE_DIR);
     APP_LOGI_NOFUNC("ResetAllSysCompAOT end");
 }
 
@@ -480,8 +480,10 @@ void AOTHandler::ResetAllBundleAOT() const
         return;
     }
     dataMgr->ResetAllBundleAOTFlags();
-    (void)InstalldClient::GetInstance()->ClearDir(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH);
-    (void)InstalldClient::GetInstance()->ClearDir(ServiceConstants::HAP_ARK_CACHE_PATH);
+    (void)InstalldClient::GetInstance()->ClearDir(
+        ServiceConstants::SHARED_HSP_ARK_CACHE_PATH, BundleDirScene::CLEAR_ARK_CACHE_DIR);
+    (void)InstalldClient::GetInstance()->ClearDir(
+        ServiceConstants::HAP_ARK_CACHE_PATH, BundleDirScene::CLEAR_ARK_CACHE_DIR);
     APP_LOGI_NOFUNC("ResetAllBundleAOT end");
 }
 
