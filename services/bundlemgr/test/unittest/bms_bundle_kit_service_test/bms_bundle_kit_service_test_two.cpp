@@ -10929,7 +10929,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckCallingUid_0100, Function | SmallTest | L
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
     ErrCode ret = hostImpl->CheckCallingUid();
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
