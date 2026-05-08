@@ -12,8 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define private public
-#define protected public
 
 #include <cstdio>
 #include <dirent.h>
@@ -33,7 +31,9 @@
 #include "bundle_extractor.h"
 #include "directory_ex.h"
 #include "file_ex.h"
+#define private public
 #include "installd/installd_operator.h"
+#undef private
 #include "parameters.h"
 
 using namespace testing::ext;
@@ -49,12 +49,19 @@ const std::string VERIFY_FILE_PATH = "/abcs/";
 const std::string BASE_SKILL_DIR = "/data/app/el1/skills/public";
 const std::string APP_EL1_PATH = "/data/app/el1";
 const std::string APP_EL2_PATH = "/data/app/el2";
+const std::string APP_EL3_PATH = "/data/app/el3";
+const std::string APP_EL4_PATH = "/data/app/el4";
 const std::string ARK_PROFILE_PATH = "/aot_compiler/ark_profile/";
 const std::string SERVICE_EL2_PATH = "/data/service/el2/";
 const std::string SYSTEM_OPTIMIZE_DIR = "/system_optimize/";
 const std::string BUNDLE_BACKUP_KEEP_DIR = "/.backup";
 const std::string HMDFS_CLOUD_DATA_PATH = "/hmdfs/cloud/data/";
 const std::string PGO_DIR_PATH = "/data/local/pgo/";
+const std::string LIBS_TMP_DIR = "libs+tmp";
+const std::string DEPRECATED_ARK_CACHE_PATH = "/data/local/ark-cache";
+const std::string DEPRECATED_ARK_PROFILE_PATH = "/data/local/ark-profile";
+const std::string PGO_FILE_PATH = "pgo_files";
+const std::string VERIFY_FILE_SUFFIX = ".abc";
 }; // namespace
 class BmsInstalldOperatorTest : public testing::Test {
 public:
@@ -1178,5 +1185,1224 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByMoveFileScene_0300, Function | Sm
 
     ret = InstalldOperator::IsValidPathByMoveFileScene(oldPath, newPath, BundleDirScene::SET_DIR_APL, TEST_BUNDLE_NAME);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByCopyFileScene_0100
+ * @tc.name: test IsValidPathByCopyFileScene
+ * @tc.desc: test IsValidPathByCopyFileScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByCopyFileScene_0100, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::IsValidPathByCopyFileScene(
+        ServiceConstants::RELATIVE_PATH, ServiceConstants::RELATIVE_PATH, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByCopyFileScene(
+        ServiceConstants::RELATIVE_PATH, TEST_BUNDLE_PATCH, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByCopyFileScene(
+        TEST_BUNDLE_PATCH, ServiceConstants::RELATIVE_PATH, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByCopyFileScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_PATCH, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_FALSE(ret);
+
+    std::string oldPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+                          PGO_FILE_PATH + ServiceConstants::PATH_SEPARATOR + TEST_STRING +
+                          ServiceConstants::PGO_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidPathByCopyFileScene(oldPath, TEST_BUNDLE_PATCH, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_FALSE(ret);
+
+    std::string newPath =
+        std::string(APP_EL1_PATH) + ARK_PROFILE_PATH + TEST_STRING + ServiceConstants::PGO_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidPathByCopyFileScene(oldPath, newPath, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirScene_0100
+ * @tc.name: test IsValidPathByRemoveDirScene
+ * @tc.desc: test IsValidPathByRemoveDirScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirScene_0100, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        ServiceConstants::RELATIVE_PATH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_CODE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_CODE_DIR);
+    EXPECT_TRUE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_MODULE_DIR);
+    EXPECT_TRUE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_HNP_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BMS_BUNDLE_LIB_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BMS_BUNDLE_TEMP_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SCREEN_LOCK_DATA_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_AOT_ARK_PROFILE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_LIB_DIR);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirScene_0200
+ * @tc.name: test IsValidPathByRemoveDirScene
+ * @tc.desc: test IsValidPathByRemoveDirScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirScene_0200, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARE_FILE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_CLOUD_SHADER_CACHE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_PLUGIN_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ARK_AP_FILE);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_EXTEND_RESOURCE_FILE);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_QUICK_FIX_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SKILL_MODULE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SKILL_BUNDLE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_VERIFY_FILE);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirScene_0300
+ * @tc.name: test IsValidPathByRemoveDirScene
+ * @tc.desc: test IsValidPathByRemoveDirScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirScene_0300, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_PRELOAD_APP_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ASAN_LOG_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_GALLERY_DOWNLOAD_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ENTERPRISE_CERT_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SYSTEM_OPTIMIZE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_ARK_CACHE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_ARK_PROFILE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SYSTEM_SERVICE_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_QUICK_FIX_FILE);
+    EXPECT_TRUE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SECURITY_QUICK_FIX_DIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SANDBOX_DATA_DIR);
+    EXPECT_FALSE(ret);
+    ret =
+        InstalldOperator::IsValidPathByRemoveDirScene(TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::SET_DIR_APL);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsContainsPathPart_0100
+ * @tc.name: test IsContainsPathPart
+ * @tc.desc: test IsContainsPathPart of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsContainsPathPart_0100, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::IsContainsPathPart(ServiceConstants::RELATIVE_PATH, TEST_STRING);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsContainsPathPart(ServiceConstants::RELATIVE_PATH, ServiceConstants::RELATIVE_PATH);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsContainsPathPart(TEST_BUNDLE_PATCH, ServiceConstants::RELATIVE_PATH);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsContainsPathPart(TEST_BUNDLE_PATCH, TEST_STRING);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsContainsPathPart(TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsContainsBundleName_0100
+ * @tc.name: test IsContainsBundleName
+ * @tc.desc: test IsContainsBundleName of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsContainsBundleName_0100, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::IsContainsBundleName(ServiceConstants::RELATIVE_PATH, TEST_BUNDLE_NAME);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsContainsBundleName(TEST_BUNDLE_PATCH, TEST_STRING);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsContainsBundleName(TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidSourcePathByCopyVerifyFile_0100
+ * @tc.name: test IsValidSourcePathByCopyVerifyFile
+ * @tc.desc: test IsValidSourcePathByCopyVerifyFile of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidSourcePathByCopyVerifyFile_0100, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::IsValidSourcePathByCopyVerifyFile(ServiceConstants::RELATIVE_PATH);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidSourcePathByCopyVerifyFile(TEST_STRING);
+    EXPECT_FALSE(ret);
+    std::string sourcePath = TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyVerifyFile(sourcePath);
+    EXPECT_FALSE(ret);
+    sourcePath = TEST_BUNDLE_PATCH + TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyVerifyFile(sourcePath);
+    EXPECT_TRUE(ret);
+    sourcePath = std::string(APP_EL1_PATH) + ServiceConstants::BASE + TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyVerifyFile(sourcePath);
+    EXPECT_TRUE(ret);
+    sourcePath = std::string(APP_EL1_PATH) + ServiceConstants::DATABASE + TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyVerifyFile(sourcePath);
+    EXPECT_TRUE(ret);
+    sourcePath = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyVerifyFile(sourcePath);
+    EXPECT_FALSE(ret);
+    sourcePath = std::string(APP_EL2_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyVerifyFile(sourcePath);
+    EXPECT_FALSE(ret);
+    sourcePath = std::string(APP_EL2_PATH) + ServiceConstants::BASE + TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyVerifyFile(sourcePath);
+    EXPECT_TRUE(ret);
+    sourcePath = std::string(APP_EL2_PATH) + ServiceConstants::DATABASE + TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyVerifyFile(sourcePath);
+    EXPECT_TRUE(ret);
+    sourcePath = std::string(APP_EL3_PATH) + ServiceConstants::DATABASE + TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyVerifyFile(sourcePath);
+    EXPECT_TRUE(ret);
+    sourcePath = std::string(APP_EL4_PATH) + ServiceConstants::DATABASE + TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyVerifyFile(sourcePath);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidSourcePathByCopyFileScene_0100
+ * @tc.name: test IsValidSourcePathByCopyFileScene
+ * @tc.desc: test IsValidSourcePathByCopyFileScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidSourcePathByCopyFileScene_0100, Function | SmallTest | Level0)
+{
+    std::string sourcePath = std::string(ServiceConstants::RELATIVE_PATH);
+    auto ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath = TEST_BUNDLE_PATCH + PGO_FILE_PATH + ServiceConstants::PATH_SEPARATOR + TEST_STRING +
+                 ServiceConstants::PGO_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING +
+                 ServiceConstants::PGO_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + PGO_FILE_PATH + TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath =
+        std::string(ServiceConstants::HAP_COPY_PATH) + PGO_FILE_PATH + TEST_STRING + ServiceConstants::PGO_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidSourcePathByCopyFileScene_0200
+ * @tc.name: test IsValidSourcePathByCopyFileScene
+ * @tc.desc: test IsValidSourcePathByCopyFileScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidSourcePathByCopyFileScene_0200, Function | SmallTest | Level0)
+{
+    std::string sourcePath = TEST_BUNDLE_PATCH + TEST_STRING + ServiceConstants::INSTALL_FILE_SUFFIX;
+    auto ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_HAP_TO_INSTALL_PATH);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_HAP_TO_INSTALL_PATH);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING +
+                 ServiceConstants::INSTALL_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_HAP_TO_INSTALL_PATH);
+    EXPECT_TRUE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING +
+                 ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_HAP_TO_INSTALL_PATH);
+    EXPECT_TRUE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+                 ServiceConstants::EXT_RESOURCE_FILE_PATH + ServiceConstants::PATH_SEPARATOR + TEST_STRING +
+                 ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_EXTEND_RESOURCE_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath = TEST_BUNDLE_PATCH + TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_EXTEND_RESOURCE_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath =
+        TEST_BUNDLE_PATCH + ServiceConstants::EXT_RESOURCE_FILE_PATH + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_EXTEND_RESOURCE_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath = TEST_BUNDLE_PATCH + ServiceConstants::EXT_RESOURCE_FILE_PATH + ServiceConstants::PATH_SEPARATOR +
+                 TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_EXTEND_RESOURCE_FILE);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidSourcePathByCopyFileScene_0300
+ * @tc.name: test IsValidSourcePathByCopyFileScene
+ * @tc.desc: test IsValidSourcePathByCopyFileScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidSourcePathByCopyFileScene_0300, Function | SmallTest | Level0)
+{
+    std::string sourcePath = TEST_BUNDLE_PATCH + ServiceConstants::EXT_PROFILE;
+    auto ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_EXTEND_PROFILE_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_EXTEND_PROFILE_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+                 ServiceConstants::EXT_PROFILE + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_EXTEND_PROFILE_FILE);
+    EXPECT_TRUE(ret);
+
+    sourcePath = std::string(APP_EL2_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_HAP_TO_TEMP_PATH);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_HAP_TO_TEMP_PATH);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(APP_EL2_PATH) + ServiceConstants::BASE + TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_HAP_TO_TEMP_PATH);
+    EXPECT_TRUE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH + TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_HAP_TO_TEMP_PATH);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidSourcePathByCopyFileScene_0400
+ * @tc.name: test IsValidSourcePathByCopyFileScene
+ * @tc.desc: test IsValidSourcePathByCopyFileScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidSourcePathByCopyFileScene_0400, Function | SmallTest | Level0)
+{
+    std::string sourcePath =
+        std::string(ServiceConstants::HAP_COPY_PATH) + ARK_PROFILE_PATH + TEST_STRING + ServiceConstants::AP_SUFFIX;
+    auto ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_AP_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath =
+        std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING + ServiceConstants::AP_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_AP_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(APP_EL1_PATH) + ARK_PROFILE_PATH + TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_AP_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(APP_EL1_PATH) + ARK_PROFILE_PATH + TEST_STRING + ServiceConstants::AP_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_AP_FILE);
+    EXPECT_TRUE(ret);
+
+    sourcePath = TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_SERVICE_HSP);
+    EXPECT_FALSE(ret);
+
+    sourcePath = TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_SERVICE_HSP);
+    EXPECT_TRUE(ret);
+
+    sourcePath = TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_SKILL_HSP);
+    EXPECT_FALSE(ret);
+
+    sourcePath = TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_SKILL_HSP);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidSourcePathByCopyFileScene_0500
+ * @tc.name: test IsValidSourcePathByCopyFileScene
+ * @tc.desc: test IsValidSourcePathByCopyFileScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidSourcePathByCopyFileScene_0500, Function | SmallTest | Level0)
+{
+    std::string sourcePath = TEST_BUNDLE_PATCH + ServiceConstants::SECURITY_STREAM_INSTALL_PATH +
+                             ServiceConstants::PATH_SEPARATOR + TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    auto ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_PLUGIN_HSP);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING +
+                 ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_PLUGIN_HSP);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+                 ServiceConstants::SECURITY_STREAM_INSTALL_PATH + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_PLUGIN_HSP);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+                 ServiceConstants::SECURITY_STREAM_INSTALL_PATH + ServiceConstants::PATH_SEPARATOR + TEST_STRING +
+                 ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_PLUGIN_HSP);
+    EXPECT_TRUE(ret);
+
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_SHARED_HSP);
+    EXPECT_TRUE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+                 ServiceConstants::SECURITY_QUICK_FIX_PATH + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_HQF_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+                 ServiceConstants::SECURITY_QUICK_FIX_PATH + ServiceConstants::PATH_SEPARATOR + TEST_STRING +
+                 ServiceConstants::QUICK_FIX_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_HQF_FILE);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidSourcePathByCopyFileScene_0600
+ * @tc.name: test IsValidSourcePathByCopyFileScene
+ * @tc.desc: test IsValidSourcePathByCopyFileScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidSourcePathByCopyFileScene_0600, Function | SmallTest | Level0)
+{
+    std::string sourcePath = TEST_STRING;
+    auto ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_ABC_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath = TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_ABC_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_ABC_FILE);
+    EXPECT_FALSE(ret);
+
+    sourcePath = TEST_BUNDLE_PATCH + VERIFY_FILE_PATH + TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::COPY_ABC_FILE);
+    EXPECT_TRUE(ret);
+
+    ret = InstalldOperator::IsValidSourcePathByCopyFileScene(sourcePath, BundleDirScene::SET_DIR_APL);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsValidTargetPathByCopyFileScene_0100
+ * @tc.name: test IsValidTargetPathByCopyFileScene
+ * @tc.desc: test IsValidTargetPathByCopyFileScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidTargetPathByCopyFileScene_0100, Function | SmallTest | Level0)
+{
+    std::string targetPath = std::string(ServiceConstants::RELATIVE_PATH);
+    auto ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = std::string(ServiceConstants::HAP_COPY_PATH) + ARK_PROFILE_PATH + TEST_STRING +
+                             ServiceConstants::PGO_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath =
+        std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING + ServiceConstants::PGO_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = std::string(APP_EL1_PATH) + ARK_PROFILE_PATH + TEST_STRING;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = std::string(APP_EL1_PATH) + ARK_PROFILE_PATH + TEST_STRING + ServiceConstants::PGO_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_PGO_FILE);
+    EXPECT_TRUE(ret);
+
+    targetPath = ServiceConstants::HAP_COPY_PATH;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_HAP_TO_TEMP_PATH);
+    EXPECT_TRUE(ret);
+
+    targetPath = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_HAP_TO_TEMP_PATH);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsValidTargetPathByCopyFileScene_0200
+ * @tc.name: test IsValidTargetPathByCopyFileScene
+ * @tc.desc: test IsValidTargetPathByCopyFileScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidTargetPathByCopyFileScene_0200, Function | SmallTest | Level0)
+{
+    std::string targetPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+                             TEST_STRING + ServiceConstants::INSTALL_FILE_SUFFIX;
+    auto ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_HAP_TO_INSTALL_PATH);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + TEST_STRING;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_HAP_TO_INSTALL_PATH);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + TEST_STRING + ServiceConstants::INSTALL_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_HAP_TO_INSTALL_PATH);
+    EXPECT_TRUE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_HAP_TO_INSTALL_PATH);
+    EXPECT_TRUE(ret);
+
+    targetPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::EXT_RESOURCE_FILE_PATH +
+                 ServiceConstants::PATH_SEPARATOR + TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_EXTEND_RESOURCE_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_EXTEND_RESOURCE_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + ServiceConstants::EXT_RESOURCE_FILE_PATH + ServiceConstants::PATH_SEPARATOR +
+                 TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_EXTEND_RESOURCE_FILE);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidTargetPathByCopyFileScene_0300
+ * @tc.name: test IsValidTargetPathByCopyFileScene
+ * @tc.desc: test IsValidTargetPathByCopyFileScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidTargetPathByCopyFileScene_0300, Function | SmallTest | Level0)
+{
+    std::string targetPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::EXT_PROFILE +
+                             ServiceConstants::PATH_SEPARATOR + ServiceConstants::MANIFEST_JSON;
+    auto ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_EXTEND_PROFILE_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + TEST_STRING + ServiceConstants::PATH_SEPARATOR + ServiceConstants::MANIFEST_JSON;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_EXTEND_PROFILE_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + ServiceConstants::EXT_PROFILE + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_EXTEND_PROFILE_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + ServiceConstants::EXT_PROFILE + ServiceConstants::PATH_SEPARATOR +
+                 ServiceConstants::MANIFEST_JSON;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_EXTEND_PROFILE_FILE);
+    EXPECT_TRUE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + TEST_STRING + ServiceConstants::AP_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_AP_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = PGO_DIR_PATH + TEST_STRING;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_AP_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = PGO_DIR_PATH + TEST_STRING + ServiceConstants::AP_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_AP_FILE);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidTargetPathByCopyFileScene_0400
+ * @tc.name: test IsValidTargetPathByCopyFileScene
+ * @tc.desc: test IsValidTargetPathByCopyFileScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidTargetPathByCopyFileScene_0400, Function | SmallTest | Level0)
+{
+    std::string targetPath = TEST_BUNDLE_PATCH + TEST_STRING;
+    auto ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_SERVICE_HSP);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_SERVICE_HSP);
+    EXPECT_TRUE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + TEST_STRING;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_SHARED_HSP);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_SHARED_HSP);
+    EXPECT_TRUE(ret);
+
+    targetPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PLUGIN_FILE_PATH +
+                 ServiceConstants::PATH_SEPARATOR + TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_PLUGIN_HSP);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_PLUGIN_HSP);
+    EXPECT_FALSE(ret);
+
+    targetPath =
+        TEST_BUNDLE_PATCH + ServiceConstants::PLUGIN_FILE_PATH + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_PLUGIN_HSP);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + ServiceConstants::PLUGIN_FILE_PATH + ServiceConstants::PATH_SEPARATOR +
+                 TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_PLUGIN_HSP);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidTargetPathByCopyFileScene_0500
+ * @tc.name: test IsValidTargetPathByCopyFileScene
+ * @tc.desc: test IsValidTargetPathByCopyFileScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidTargetPathByCopyFileScene_0500, Function | SmallTest | Level0)
+{
+    std::string targetPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATCH_PATH + TEST_STRING +
+                             ServiceConstants::QUICK_FIX_FILE_SUFFIX;
+    auto ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_HQF_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + TEST_STRING + ServiceConstants::QUICK_FIX_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_HQF_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + ServiceConstants::PATCH_PATH + TEST_STRING;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_HQF_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath =
+        TEST_BUNDLE_PATCH + ServiceConstants::PATCH_PATH + TEST_STRING + ServiceConstants::QUICK_FIX_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_HQF_FILE);
+    EXPECT_TRUE(ret);
+
+    targetPath =
+        TEST_BUNDLE_PATCH + ServiceConstants::HOT_RELOAD_PATH + TEST_STRING + ServiceConstants::QUICK_FIX_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_HQF_FILE);
+    EXPECT_TRUE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + "patch" + ServiceConstants::PATH_SEPARATOR + TEST_STRING +
+                 ServiceConstants::QUICK_FIX_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_HQF_FILE);
+    EXPECT_TRUE(ret);
+
+    targetPath = BASE_SKILL_DIR + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_SKILL_HSP);
+    EXPECT_FALSE(ret);
+
+    targetPath = BASE_SKILL_DIR + ServiceConstants::PATH_SEPARATOR + TEST_STRING + ServiceConstants::HSP_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_SKILL_HSP);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidTargetPathByCopyFileScene_0600
+ * @tc.name: test IsValidTargetPathByCopyFileScene
+ * @tc.desc: test IsValidTargetPathByCopyFileScene of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidTargetPathByCopyFileScene_0600, Function | SmallTest | Level0)
+{
+    std::string targetPath =
+        std::string(ServiceConstants::HAP_COPY_PATH) + VERIFY_FILE_PATH + TEST_STRING + VERIFY_FILE_SUFFIX;
+    auto ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_ABC_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_ABC_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + VERIFY_FILE_PATH + TEST_STRING;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_ABC_FILE);
+    EXPECT_FALSE(ret);
+
+    targetPath = TEST_BUNDLE_PATCH + VERIFY_FILE_PATH + TEST_STRING + VERIFY_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::COPY_ABC_FILE);
+    EXPECT_TRUE(ret);
+
+    ret = InstalldOperator::IsValidTargetPathByCopyFileScene(targetPath, BundleDirScene::SET_DIR_APL);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNeedBundleNamePartOne_0100
+ * @tc.name: test IsValidPathByRemoveDirSceneNeedBundleNamePartOne
+ * @tc.desc: test IsValidPathByRemoveDirSceneNeedBundleNamePartOne of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartOne_0100, Function | SmallTest | Level0)
+{
+    std::string dir = ServiceConstants::RELATIVE_PATH;
+    auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_CODE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_CODE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = TEST_BUNDLE_PATCH;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_CODE_DIR);
+    EXPECT_TRUE(ret);
+
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_MODULE_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = TEST_BUNDLE_PATCH + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_STRING, BundleDirScene::REMOVE_BUNDLE_CODE_DIR);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNeedBundleNamePartOne_0200
+ * @tc.name: test IsValidPathByRemoveDirSceneNeedBundleNamePartOne
+ * @tc.desc: test IsValidPathByRemoveDirSceneNeedBundleNamePartOne of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartOne_0200, Function | SmallTest | Level0)
+{
+    std::string dir = std::string(ServiceConstants::HAP_ARK_CACHE_PATH) + TEST_BUNDLE_NAME;
+    auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH) + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = std::string(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH) + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::HAP_ARK_CACHE_PATH) + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = TEST_BUNDLE_PATCH + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_HNP_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = TEST_BUNDLE_PATCH + ServiceConstants::HNPS_FILE_PATH;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_HNP_DIR);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNeedBundleNamePartOne_0300
+ * @tc.name: test IsValidPathByRemoveDirSceneNeedBundleNamePartOne
+ * @tc.desc: test IsValidPathByRemoveDirSceneNeedBundleNamePartOne of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartOne_0300, Function | SmallTest | Level0)
+{
+    std::string dir = TEST_BUNDLE_PATCH + ServiceConstants::LIBS;
+    auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BMS_BUNDLE_LIB_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME +
+          ServiceConstants::PATH_SEPARATOR + ServiceConstants::LIBS;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BMS_BUNDLE_LIB_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = TEST_BUNDLE_PATCH;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BMS_BUNDLE_TEMP_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME +
+          ServiceConstants::TMP_SUFFIX;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BMS_BUNDLE_TEMP_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING +
+          ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SCREEN_LOCK_DATA_DIR);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNeedBundleNamePartOne_0400
+ * @tc.name: test IsValidPathByRemoveDirSceneNeedBundleNamePartOne
+ * @tc.desc: test IsValidPathByRemoveDirSceneNeedBundleNamePartOne of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartOne_0400, Function | SmallTest | Level0)
+{
+    std::string dir =
+        std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::BASE + TEST_BUNDLE_NAME;
+    auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SCREEN_LOCK_DATA_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::DATABASE + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SCREEN_LOCK_DATA_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_AOT_ARK_PROFILE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(APP_EL1_PATH) + ARK_PROFILE_PATH + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_AOT_ARK_PROFILE_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = TEST_BUNDLE_PATCH + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_LIB_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = TEST_BUNDLE_PATCH + ServiceConstants::LIBS;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_LIB_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = TEST_BUNDLE_PATCH + LIBS_TMP_DIR;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_LIB_DIR);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0100
+ * @tc.name: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo
+ * @tc.desc: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0100, Function | SmallTest | Level0)
+{
+    std::string dir = ServiceConstants::RELATIVE_PATH;
+    auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(APP_EL1_PATH) + SYSTEM_OPTIMIZE_DIR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(APP_EL1_PATH) + SYSTEM_OPTIMIZE_DIR + ServiceConstants::ARK_STARTUP_CACHE_DIR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0200
+ * @tc.name: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo
+ * @tc.desc: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0200, Function | SmallTest | Level0)
+{
+    std::string dir = std::string(ServiceConstants::SHADER_CACHE_PATH) + TEST_STRING;
+    auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::SHADER_CACHE_PATH) + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARE_FILE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(APP_EL2_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARE_FILE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(APP_EL2_PATH) + ServiceConstants::SHAREFILES + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARE_FILE_DIR);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0300
+ * @tc.name: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo
+ * @tc.desc: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0300, Function | SmallTest | Level0)
+{
+    std::string dir = std::string(ServiceConstants::SHADER_CACHE_PATH) + TEST_BUNDLE_NAME;
+    auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_CLOUD_SHADER_CACHE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::NEW_CLOUD_SHADER_PATH) + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_CLOUD_SHADER_CACHE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::NEW_CLOUD_SHADER_PATH) + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_CLOUD_SHADER_CACHE_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PLUGIN_FILE_PATH +
+          ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_PLUGIN_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = TEST_BUNDLE_PATCH + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_PLUGIN_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = TEST_BUNDLE_PATCH + ServiceConstants::PLUGIN_FILE_PATH;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_BUNDLE_PLUGIN_DIR);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0400
+ * @tc.name: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo
+ * @tc.desc: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0400, Function | SmallTest | Level0)
+{
+    std::string dir = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ARK_AP_FILE);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(APP_EL1_PATH) + ARK_PROFILE_PATH + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ARK_AP_FILE);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(APP_EL1_PATH) + ARK_PROFILE_PATH + TEST_BUNDLE_NAME + ServiceConstants::PGO_FILE_SUFFIX;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ARK_AP_FILE);
+    EXPECT_TRUE(ret);
+
+    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::EXT_RESOURCE_FILE_PATH +
+          ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_EXTEND_RESOURCE_FILE);
+    EXPECT_FALSE(ret);
+
+    dir = TEST_BUNDLE_PATCH + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_EXTEND_RESOURCE_FILE);
+    EXPECT_FALSE(ret);
+
+    dir = TEST_BUNDLE_PATCH + ServiceConstants::EXT_RESOURCE_FILE_PATH;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_EXTEND_RESOURCE_FILE);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0500
+ * @tc.name: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo
+ * @tc.desc: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0500, Function | SmallTest | Level0)
+{
+    std::string dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATCH_PATH + TEST_BUNDLE_NAME;
+    auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_QUICK_FIX_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = TEST_BUNDLE_PATCH + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_QUICK_FIX_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = TEST_BUNDLE_PATCH + ServiceConstants::PATCH_PATH + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_QUICK_FIX_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = TEST_BUNDLE_PATCH + ServiceConstants::HOT_RELOAD_PATH + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_QUICK_FIX_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = TEST_BUNDLE_PATCH + HQF_PATCH_PATH + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_QUICK_FIX_DIR);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0600
+ * @tc.name: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo
+ * @tc.desc: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0600, Function | SmallTest | Level0)
+{
+    std::string dir = TEST_BUNDLE_PATCH + TEST_STRING;
+    auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SKILL_MODULE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = BASE_SKILL_DIR + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SKILL_MODULE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = BASE_SKILL_DIR + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SKILL_MODULE_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = BASE_SKILL_DIR + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SKILL_BUNDLE_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = TEST_BUNDLE_PATCH + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_VERIFY_FILE);
+    EXPECT_FALSE(ret);
+
+    dir = TEST_BUNDLE_PATCH + VERIFY_FILE_PATH;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_VERIFY_FILE);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNoBundleName_0100
+ * @tc.name: test IsValidPathByRemoveDirSceneNoBundleName
+ * @tc.desc: test IsValidPathByRemoveDirSceneNoBundleName of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNoBundleName_0100, Function | SmallTest | Level0)
+{
+    std::string dir = ServiceConstants::RELATIVE_PATH;
+    auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_PRELOAD_APP_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = TEST_BUNDLE_PATCH;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_PRELOAD_APP_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::DATA_PRELOAD_APP) + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_PRELOAD_APP_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = TEST_BUNDLE_PATCH;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_ASAN_LOG_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::BUNDLE_ASAN_LOG_DIR) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_ASAN_LOG_DIR);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNoBundleName_0200
+ * @tc.name: test IsValidPathByRemoveDirSceneNoBundleName
+ * @tc.desc: test IsValidPathByRemoveDirSceneNoBundleName of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNoBundleName_0200, Function | SmallTest | Level0)
+{
+    std::string dir = TEST_BUNDLE_PATCH + ServiceConstants::GALLERY_DOWNLOAD_PATH;
+    auto ret =
+        InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_GALLERY_DOWNLOAD_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_GALLERY_DOWNLOAD_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_GALLERY_DOWNLOAD_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = TEST_BUNDLE_PATCH + ServiceConstants::ENTERPRISE_CERT_PATH;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_ENTERPRISE_CERT_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_ENTERPRISE_CERT_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_ENTERPRISE_CERT_DIR);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNoBundleName_0300
+ * @tc.name: test IsValidPathByRemoveDirSceneNoBundleName
+ * @tc.desc: test IsValidPathByRemoveDirSceneNoBundleName of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNoBundleName_0300, Function | SmallTest | Level0)
+{
+    std::string dir = SYSTEM_OPTIMIZE_DIR + TEST_STRING;
+    auto ret =
+        InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SYSTEM_OPTIMIZE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SYSTEM_OPTIMIZE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(APP_EL1_PATH) + SYSTEM_OPTIMIZE_DIR + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SYSTEM_OPTIMIZE_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = TEST_BUNDLE_PATCH;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_LOCAL_ARK_CACHE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = DEPRECATED_ARK_CACHE_PATH + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_LOCAL_ARK_CACHE_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = DEPRECATED_ARK_PROFILE_PATH + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_LOCAL_ARK_PROFILE_DIR);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNoBundleName_0400
+ * @tc.name: test IsValidPathByRemoveDirSceneNoBundleName
+ * @tc.desc: test IsValidPathByRemoveDirSceneNoBundleName of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNoBundleName_0400, Function | SmallTest | Level0)
+{
+    std::string dir = TEST_BUNDLE_PATCH;
+    auto ret =
+        InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SYSTEM_SERVICE_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::SYSTEM_SERVICE_DIR) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SYSTEM_SERVICE_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = TEST_BUNDLE_PATCH;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_QUICK_FIX_FILE);
+    EXPECT_TRUE(ret);
+
+    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::SECURITY_QUICK_FIX_PATH;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SECURITY_QUICK_FIX_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = TEST_BUNDLE_PATCH + ServiceConstants::SECURITY_QUICK_FIX_PATH;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SECURITY_QUICK_FIX_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = TEST_BUNDLE_PATCH + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::SET_DIR_APL);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNoBundleName_0500
+ * @tc.name: test IsValidPathByRemoveDirSceneNoBundleName
+ * @tc.desc: test IsValidPathByRemoveDirSceneNoBundleName of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNoBundleName_0500, Function | SmallTest | Level0)
+{
+    std::string dir = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+    auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SANDBOX_DATA_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(APP_EL1_PATH) + ServiceConstants::BASE + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SANDBOX_DATA_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = std::string(APP_EL2_PATH) + ServiceConstants::DATABASE + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SANDBOX_DATA_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = std::string(APP_EL3_PATH) + ServiceConstants::BASE + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SANDBOX_DATA_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = std::string(APP_EL4_PATH) + ServiceConstants::DATABASE + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SANDBOX_DATA_DIR);
+    EXPECT_TRUE(ret);
 }
 } // OHOS

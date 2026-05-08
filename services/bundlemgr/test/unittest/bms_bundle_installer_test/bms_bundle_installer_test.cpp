@@ -16665,4 +16665,29 @@ HWTEST_F(BmsBundleInstallerTest, Mkdir_0100, Function | SmallTest | Level0)
     ret = impl.Mkdir(dir, ZERO_CODE, ZERO_CODE, ZERO_CODE, createDirParam);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: RemoveDir_0100
+ * @tc.name: test RemoveDir
+ * @tc.desc: test RemoveDir of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, RemoveDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    auto ret = impl.RemoveDir(ServiceConstants::RELATIVE_PATH, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: RemoveDir_0200
+ * @tc.name: test RemoveDir
+ * @tc.desc: test RemoveDir of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, RemoveDir_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string dir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + BUNDLE_NAME;
+    auto ret = impl.RemoveDir(dir, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
