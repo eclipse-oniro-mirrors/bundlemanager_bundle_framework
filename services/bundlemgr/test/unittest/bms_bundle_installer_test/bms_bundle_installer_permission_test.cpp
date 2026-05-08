@@ -523,7 +523,7 @@ HWTEST_F(BmsBundleInstallerPermissionTest, GetFileStat_0100, Function | SmallTes
     InstalldHostImpl installdHostImpl;
     std::string file = "test.file";
     FileStat fileStat;
-    ErrCode ret = installdHostImpl.GetFileStat(file, fileStat);
+    ErrCode ret = installdHostImpl.GetFileStat(file, BundleDirScene::GET_BMS_FILE_STAT, fileStat);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -537,7 +537,7 @@ HWTEST_F(BmsBundleInstallerPermissionTest, ChangeFileStat_0100, Function | Small
     InstalldHostImpl installdHostImpl;
     std::string file = "test.file";
     FileStat fileStat;
-    ErrCode ret = installdHostImpl.ChangeFileStat(file, fileStat);
+    ErrCode ret = installdHostImpl.ChangeFileStat(file, fileStat, BundleDirScene::CHANGE_BMS_FILE_STAT);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -632,7 +632,10 @@ HWTEST_F(BmsBundleInstallerPermissionTest, ApplyDiffPatch_0100, Function | Small
     int32_t uid = -1;
     ErrCode ret = installdHostImpl.ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    diffFilePath = "test.diff.file.path";
+    oldSoPath = ServiceConstants::HAP_COPY_PATH;
+    diffFilePath = ServiceConstants::HAP_COPY_PATH;
+    newSoPath =
+        std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + ServiceConstants::HOT_RELOAD_PATH;
     ret = installdHostImpl.ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
@@ -661,7 +664,8 @@ HWTEST_F(BmsBundleInstallerPermissionTest, GetDiskUsageFromPath_0100, Function |
     InstalldHostImpl installdHostImpl;
     std::vector<std::string> path;
     int64_t statSize = 0;
-    ErrCode ret = installdHostImpl.GetDiskUsageFromPath(path, statSize);
+    ErrCode ret =
+        installdHostImpl.GetDiskUsageFromPath(path, BUNDLE_NAME, BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE, statSize);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -774,7 +778,7 @@ HWTEST_F(BmsBundleInstallerPermissionTest, CopyFiles_0100, Function | SmallTest 
     InstalldHostImpl hostImpl;
     std::string sourceDir = "test.source.dir";
     std::string destinationDir = "test.destination.dir";
-    ErrCode ret = hostImpl.CopyFiles(sourceDir, destinationDir);
+    ErrCode ret = hostImpl.CopyFiles(sourceDir, destinationDir, BUNDLE_NAME, BundleDirScene::COPY_QUICK_FIX_FILES);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -802,7 +806,7 @@ HWTEST_F(BmsBundleInstallerPermissionTest, MoveFiles_0100, Function | SmallTest 
     InstalldHostImpl hostImpl;
     std::string srcDir = "test.src.dir";
     std::string desDir = "test.des.dir";
-    ErrCode ret = hostImpl.MoveFiles(srcDir, desDir);
+    ErrCode ret = hostImpl.MoveFiles(srcDir, desDir, BUNDLE_NAME, BundleDirScene::MOVE_SO_TO_REAL_PATH);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -1287,7 +1291,7 @@ HWTEST_F(BmsBundleInstallerPermissionTest, CopyDir_0100, Function | SmallTest | 
     InstalldHostImpl hostImpl;
     std::string sourceDir = "test.source.dir";
     std::string destinationDir = "test.destination.dir";
-    ErrCode ret = hostImpl.CopyDir(sourceDir, destinationDir);
+    ErrCode ret = hostImpl.CopyDir(sourceDir, destinationDir, BUNDLE_NAME, BundleDirScene::COPY_PLUGIN_DIR);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

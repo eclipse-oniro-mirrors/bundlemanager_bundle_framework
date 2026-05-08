@@ -106,7 +106,8 @@ void BundleCacheMgr::GetBundleCacheSize(const std::vector<std::tuple<std::string
             int64_t cacheSize = 0;
             
             // Transfer remaining time to GetDiskUsageFromPath
-            ErrCode ret = InstalldClient::GetInstance()->GetDiskUsageFromPath(cachePaths, cacheSize, remainingTime);
+            ErrCode ret = InstalldClient::GetInstance()->GetDiskUsageFromPath(
+                cachePaths, bundleName, BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE, cacheSize, remainingTime);
             if (ret != ERR_OK) {
                 APP_LOGW("failed for %{public}s", bundleName.c_str());
                 continue;
@@ -124,7 +125,8 @@ void BundleCacheMgr::GetBundleCacheSizeByAppIndex(const std::string &bundleName,
 {
     std::vector<std::string> cachePaths = GetBundleCachePath(bundleName, userId, appIndex, moduleNames);
     int64_t cacheSize = 0;
-    ErrCode ret = InstalldClient::GetInstance()->GetDiskUsageFromPath(cachePaths, cacheSize);
+    ErrCode ret = InstalldClient::GetInstance()->GetDiskUsageFromPath(
+        cachePaths, bundleName, BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE, cacheSize);
     if (ret != ERR_OK) {
         APP_LOGW_NOFUNC("BundleCache failed for %{public}s", bundleName.c_str());
         return;

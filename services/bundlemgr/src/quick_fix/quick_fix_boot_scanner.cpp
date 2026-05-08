@@ -193,7 +193,8 @@ bool QuickFixBootScanner::ReprocessQuickFix(const std::string &quickFixPath, con
         LOG_E(BMS_TAG_DEFAULT, "create dir failed");
         return false;
     }
-    if (InstalldClient::GetInstance()->CopyFiles(quickFixPath, destinationDir) != ERR_OK) {
+    if (InstalldClient::GetInstance()->CopyFiles(
+        quickFixPath, destinationDir, bundleName, BundleDirScene::COPY_QUICK_FIX_FILES) != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "RestoreQuickFix failed due to copy quick fix files failed");
         return false;
     }

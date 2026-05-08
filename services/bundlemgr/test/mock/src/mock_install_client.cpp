@@ -149,8 +149,8 @@ int64_t InstalldClient::GetDiskUsage(const std::string &dir, bool isRealPath)
     return 0;
 }
 
-ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
-    int64_t timeoutMs)
+ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
+    BundleDirScene scene, int64_t &statSize, int64_t timeoutMs)
 {
     return 0;
 }
@@ -170,7 +170,8 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir, const s
     return 0;
 }
 
-ErrCode InstalldClient::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
+ErrCode InstalldClient::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent,
+    const std::string &bundleName, BundleDirScene scene)
 {
     return 0;
 }
@@ -283,13 +284,13 @@ ErrCode InstalldClient::Mkdir(const std::string &dir, const int32_t mode, const 
     return 0;
 }
 
-ErrCode InstalldClient::GetFileStat(const std::string &file, FileStat &fileStat)
+ErrCode InstalldClient::GetFileStat(const std::string &file, BundleDirScene scene, FileStat &fileStat)
 {
     fileStat.isDir = g_isDir;
     return g_errCode;
 }
 
-ErrCode InstalldClient::ChangeFileStat(const std::string &file, FileStat &fileStat)
+ErrCode InstalldClient::ChangeFileStat(const std::string &file, FileStat &fileStat, BundleDirScene scene)
 {
     return 0;
 }
@@ -338,7 +339,8 @@ ErrCode InstalldClient::ObtainQuickFixFileDir(const std::string &dir, std::vecto
     return 0;
 }
 
-ErrCode InstalldClient::CopyFiles(const std::string &sourceDir, const std::string &destinationDir)
+ErrCode InstalldClient::CopyFiles(const std::string &sourceDir, const std::string &destinationDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
     return 0;
 }
@@ -359,7 +361,8 @@ ErrCode InstalldClient::CheckEncryption(const CheckEncryptionParam &checkEncrypt
     return ERR_OK;
 }
 
-ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &desDir)
+ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &desDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
     return ERR_OK;
 }
@@ -466,7 +469,7 @@ ErrCode InstalldClient::DeleteDataGroupDirs(const std::vector<std::string> &uuid
     return ERR_OK;
 }
 
-ErrCode InstalldClient::ClearDir(const std::string &dir)
+ErrCode InstalldClient::ClearDir(const std::string &dir, BundleDirScene scene)
 {
     return ERR_OK;
 }
@@ -482,7 +485,7 @@ ErrCode InstalldClient::HashFiles(const std::vector<std::string> &files, std::ve
     return ERR_OK;
 }
 
-ErrCode InstalldClient::RestoreconPath(const std::string &path)
+ErrCode InstalldClient::RestoreconPath(const std::string &path, const std::string &bundleName, BundleDirScene scene)
 {
     return ERR_OK;
 }
@@ -492,7 +495,8 @@ ErrCode InstalldClient::ResetBmsDBSecurity()
     return ERR_OK;
 }
 
-ErrCode InstalldClient::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+ErrCode InstalldClient::CopyDir(const std::string &sourceDir, const std::string &destinationDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
     return ERR_OK;
 }

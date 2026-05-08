@@ -1239,7 +1239,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1600, Fun
     newInfo.innerModuleInfos_.emplace(TEST_MODULE_NAME, innerModuleInfo);
     auto ret = installer.ProcessNativeLibrary(
         HAP_FILE_PATH1, TEST_MODULE_NAME, TEST_MODULE_NAME, versionDir, newInfo);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**

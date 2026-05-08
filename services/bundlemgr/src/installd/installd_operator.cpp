@@ -106,6 +106,7 @@ constexpr const char* PGO_FILE_PATH = "pgo_files";
 constexpr const char* LIBS_TMP_DIR = "libs+tmp";
 constexpr const char* DEPRECATED_ARK_CACHE_PATH = "/data/local/ark-cache";
 constexpr const char* DEPRECATED_ARK_PROFILE_PATH = "/data/local/ark-profile";
+constexpr const char* FRAMEWORK_ARK_CACHE_PATH = "framework_ark_cache/";
 #if defined(CODE_ENCRYPTION_ENABLE)
 static const char LIB_CODE_CRYPTO_SO_PATH[] = "system/lib/libcode_crypto_metadata_process_utils.z.so";
 static const char LIB64_CODE_CRYPTO_SO_PATH[] = "system/lib64/libcode_crypto_metadata_process_utils.z.so";
@@ -170,6 +171,12 @@ static const std::map<BundleDirScene, std::vector<std::string>> ALLOWED_PATH_PRE
     {BundleDirScene::VERIFY_CODE_SIGNATURE, {"/data/app/el1/bundle/"}},
     {BundleDirScene::REMOVE_EXTENSION_DIR, {"/data/app/el1/"}},
     {BundleDirScene::CLEAN_BUNDLE_DATA_DIR, {"/data/app/", "/data/local/shader_cache/"}},
+    {BundleDirScene::CHANGE_BMS_FILE_STAT, { "/data/service/el1/public/bms/bundle_manager_service/app_install/" }},
+    {BundleDirScene::GET_BUNDLE_CACHE_PATH,
+        { "/data/app/el1/", "/data/app/el2/", "/data/app/el3/", "/data/app/el4/" }},
+    {BundleDirScene::SCAN_DIR, { "/data/app/el1/" }},
+    {BundleDirScene::OBTAIN_QUICK_FIX_FILE_DIR, { "/data/app/el1/bundle/public" }},
+    {BundleDirScene::HASH_SO_FILE, { "/data/app/el1/bundle/public" }},
 };
 
 static const std::set<std::string> ALLOWED_APL = {
@@ -5055,6 +5062,324 @@ bool InstalldOperator::IsValidPathByRemoveDirScene(
             return IsValidPathByRemoveDirSceneNoBundleName(dir, scene);
         default:
             return false;
+    }
+}
+
+bool InstalldOperator::IsValidPathByMoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    if (!IsFileNameValid(originPath) || !IsFileNameValid(targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+
+    bool isValidOriginPath = StartsWith(originPath, ServiceConstants::HAP_COPY_PATH) &&
+        (EndsWith(originPath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+            EndsWith(originPath, ServiceConstants::HSP_FILE_SUFFIX));
+    bool isValidTargetPath = StartsWith(targetPath, Constants::BUNDLE_CODE_DIR) &&
+        (EndsWith(targetPath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+            EndsWith(targetPath, ServiceConstants::HSP_FILE_SUFFIX));
+
+    return isValidOriginPath && isValidTargetPath;
+}
+
+bool InstalldOperator::IsValidPathByExtractDiffFiles(const std::string &filePath, const std::string &targetPath)
+{
+    if (!IsFileNameValid(filePath) || !IsFileNameValid(targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+
+    std::string prefix = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::SECURITY_QUICK_FIX_PATH;
+    bool isValidfilePath = (StartsWith(filePath, prefix) || StartsWith(filePath, Constants::BUNDLE_CODE_DIR)) &&
+        EndsWith(filePath, ServiceConstants::QUICK_FIX_FILE_SUFFIX);
+    bool isValidTargetPath = StartsWith(targetPath, ServiceConstants::HAP_COPY_PATH);
+
+    return isValidfilePath && isValidTargetPath;
+}
+
+bool InstalldOperator::IsValidPathByApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
+    const std::string &newSoPath)
+{
+    if (!IsFileNameValid(oldSoPath) || !IsFileNameValid(diffFilePath) || !IsFileNameValid(newSoPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    bool isValidOldSoPath = StartsWith(oldSoPath, ServiceConstants::HAP_COPY_PATH);
+    bool isValidDiffFilePath = StartsWith(diffFilePath, ServiceConstants::HAP_COPY_PATH);
+    bool isValidNewSoPath = StartsWith(newSoPath, Constants::BUNDLE_CODE_DIR) &&
+        (IsContainsPathPart(newSoPath, ServiceConstants::PATCH_PATH) ||
+        IsContainsPathPart(newSoPath, ServiceConstants::HOT_RELOAD_PATH) ||
+        IsContainsPathPart(newSoPath, HQF_PATCH_PATH));
+
+    return isValidOldSoPath && isValidDiffFilePath && isValidNewSoPath;
+}
+
+bool InstalldOperator::IsValidPathByExtractEncryptedSoFiles(
+    const std::string &hapPath, const std::string &realSoFilesPath, const std::string &tmpSoPath)
+{
+    if (!IsFileNameValid(hapPath) || !IsFileNameValid(tmpSoPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+
+    if (!realSoFilesPath.empty() && !IsFileNameValid(realSoFilesPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid realSoFilesPath exist ../ or \\..");
+        return false;
+    }
+
+    bool isValidHapPath = StartsWith(hapPath, Constants::BUNDLE_CODE_DIR) &&
+        (EndsWith(hapPath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+        EndsWith(hapPath, ServiceConstants::HSP_FILE_SUFFIX));
+    bool isValidRealSoFilesPath = true;
+    if (!realSoFilesPath.empty()) {
+        isValidRealSoFilesPath = StartsWith(realSoFilesPath, Constants::BUNDLE_CODE_DIR);
+    }
+    bool isValidTmpSoPath = StartsWith(tmpSoPath, ServiceConstants::HAP_COPY_PATH);
+    return isValidHapPath && isValidRealSoFilesPath && isValidTmpSoPath;
+}
+
+bool InstalldOperator::IsValidPathByExtractModuleFiles(
+    const std::string &srcModulePath, const std::string &targetPath, const std::string &targetSoPath)
+{
+    if (!IsFileNameValid(srcModulePath) || !IsFileNameValid(targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+
+    if (!targetSoPath.empty() && !IsFileNameValid(targetSoPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid targetSoPath exist ../ or \\..");
+        return false;
+    }
+    bool isValidsrcModulePath = EndsWith(srcModulePath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+        EndsWith(srcModulePath, ServiceConstants::HSP_FILE_SUFFIX);
+    bool isValidtargetPath = StartsWith(targetPath, Constants::BUNDLE_CODE_DIR);
+    bool isValidtargetSoPath = true;
+    if (!targetSoPath.empty()) {
+        isValidtargetSoPath = StartsWith(targetSoPath, Constants::BUNDLE_CODE_DIR);
+    }
+    return isValidsrcModulePath && isValidtargetPath && isValidtargetSoPath;
+}
+
+bool InstalldOperator::IsValidCertPath(const std::string& certPath)
+{
+    if (!IsFileNameValid(certPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    return StartsWith(certPath,
+        std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH) &&
+        EndsWith(certPath, ServiceConstants::CER_SUFFIX);
+}
+
+bool InstalldOperator::IsValidPathByCopyDirScene(const std::string &sourceDir, const std::string &destinationDir,
+    const std::string &bundleName, const BundleDirScene &scene)
+{
+    if (!IsFileNameValid(sourceDir) || !IsFileNameValid(destinationDir)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    if (scene == BundleDirScene::COPY_PLUGIN_DIR) {
+        bool isValidSourceDir = StartsWith(sourceDir, Constants::BUNDLE_CODE_DIR) &&
+                                IsContainsBundleName(sourceDir, bundleName) &&
+                                IsContainsPathPart(sourceDir, ServiceConstants::PLUGIN_FILE_PATH);
+        bool isValidDestinationDir = StartsWith(destinationDir, Constants::BUNDLE_CODE_DIR) &&
+                                     IsContainsBundleName(destinationDir, bundleName) &&
+                                     IsContainsPathPart(destinationDir, ServiceConstants::PLUGIN_FILE_PATH);
+        return isValidSourceDir && isValidDestinationDir;
+    }
+    return false;
+}
+
+bool InstalldOperator::IsValidPathByClearDirScene(const std::string &dir, const BundleDirScene &scene)
+{
+    if (!IsFileNameValid(dir)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    switch (scene) {
+        case BundleDirScene::CLEAR_ARK_PROFILE_DIR:
+            return StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, ARK_PROFILE_PATH);
+        case BundleDirScene::CLEAR_ARK_CACHE_DIR:
+            return StartsWith(dir, std::string(ServiceConstants::FOR_ALL_APP_DIR) + FRAMEWORK_ARK_CACHE_PATH) ||
+                   StartsWith(dir, ServiceConstants::SHARED_HSP_ARK_CACHE_PATH) ||
+                   StartsWith(dir, ServiceConstants::HAP_ARK_CACHE_PATH);
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidPathByGetNativeLibraryFileNames(const std::string& filePath)
+{
+    if (!IsFileNameValid(filePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+
+    return EndsWith(filePath, ServiceConstants::INSTALL_FILE_SUFFIX) ||
+           EndsWith(filePath, ServiceConstants::HSP_FILE_SUFFIX);
+}
+
+bool InstalldOperator::IsValidPathByRestoreconPathScene(const std::string &bundleName, const std::string &path,
+    const BundleDirScene &scene)
+{
+    if (!IsFileNameValid(path)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    if (scene == BundleDirScene::RESTORECON_ARK_WEB_LIB_PATH) {
+        return StartsWith(path, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(path, bundleName) &&
+               IsContainsPathPart(path, ServiceConstants::LIBS);
+    }
+    return false;
+}
+
+bool InstalldOperator::IsValidPathByCopyFilesScene(const std::string &sourceDir, const std::string &destinationDir,
+    const std::string &bundleName, const BundleDirScene &scene)
+{
+    if (!IsFileNameValid(sourceDir) || !IsFileNameValid(destinationDir)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    if (scene == BundleDirScene::COPY_QUICK_FIX_FILES) {
+        bool isValidSourceDir =
+            StartsWith(sourceDir, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(sourceDir, bundleName);
+        bool isValidDestinationDir = StartsWith(destinationDir, ServiceConstants::HAP_COPY_PATH) &&
+                                     IsContainsBundleName(destinationDir, bundleName) &&
+                                     IsContainsPathPart(destinationDir, ServiceConstants::SECURITY_QUICK_FIX_PATH);
+        return isValidSourceDir && isValidDestinationDir;
+    }
+    return false;
+}
+
+bool InstalldOperator::IsValidPathByMoveFilesScene(const std::string &srcDir, const std::string &desDir,
+    const std::string &bundleName, const BundleDirScene &scene)
+{
+    if (!IsFileNameValid(srcDir) || !IsFileNameValid(desDir)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    if (scene == BundleDirScene::MOVE_SO_TO_REAL_PATH) {
+        bool isValidSrcDir = StartsWith(srcDir, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(srcDir, bundleName);
+        bool isValidDesDir = StartsWith(desDir, Constants::BUNDLE_CODE_DIR) && IsContainsBundleName(desDir, bundleName);
+        return isValidSrcDir && isValidDesDir;
+    }
+    return false;
+}
+
+bool InstalldOperator::IsValidPathByGetDiskUsageFromPathScene(
+    const std::string &path, const std::string &bundleName, const BundleDirScene &scene)
+{
+    if (!IsFileNameValid(path)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    if (scene == BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE) {
+        return StartsWith(path, ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) && IsContainsBundleName(path, bundleName) &&
+               IsContainsPathPart(path, Constants::CACHE_DIR);
+    }
+    return false;
+}
+
+bool InstalldOperator::IsValidPathByGetFileStatScene(const std::string &file, const BundleDirScene &scene)
+{
+    if (!IsFileNameValid(file)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    switch (scene) {
+        case BundleDirScene::GET_BMS_FILE_STAT:
+            return StartsWith(file, ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH);
+        case BundleDirScene::GET_USER_DATA_FILE_STAT:
+            return StartsWith(file, APP_EL1_PATH) && IsContainsPathPart(file, ServiceConstants::BASE);
+        case BundleDirScene::GET_DATA_BASE_FILE_STAT:
+            return StartsWith(file, ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) &&
+                   IsContainsPathPart(file, ServiceConstants::DATABASE);
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidPathByHashFiles(const std::string &file)
+{
+    if (!IsFileNameValid(file)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    return EndsWith(file, ServiceConstants::INSTALL_FILE_SUFFIX) || EndsWith(file, ServiceConstants::HSP_FILE_SUFFIX);
+}
+
+bool InstalldOperator::IsValidPathByMigrateData(const std::vector<std::string> &sourcePaths,
+    const std::string &destinationPath, bool &isInvalidsourcePath)
+{
+    for (const auto& sourcePath : sourcePaths) {
+        if (!IsFileNameValid(sourcePath)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid sourcePath exist ../ or \\..");
+            isInvalidsourcePath = true;
+            return false;
+        }
+        if (BundleUtil::IsSandBoxPath(sourcePath)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid sourcePath exist sandbox path");
+            isInvalidsourcePath = true;
+            return false;
+        }
+    }
+    if (!IsFileNameValid(destinationPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid destinationPath exist ../ or \\..");
+        isInvalidsourcePath = false;
+        return false;
+    }
+    if (BundleUtil::IsSandBoxPath(destinationPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid destinationPath exist sandbox path");
+        isInvalidsourcePath = false;
+        return false;
+    }
+    return true;
+}
+
+bool InstalldOperator::IsValidPathByCleanBundleDirsScene(const std::string &dir,
+    const std::string &bundleName, const BundleDirScene &scene)
+{
+    if (!IsFileNameValid(dir)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+
+    if (!IsContainsBundleName(dir, bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path not contain bundleName %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    switch (scene) {
+        case BundleDirScene::CLEAN_SHADER_CACHE_DIR:
+            return (StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, ServiceConstants::SHADER_CACHE_SUBDIR)) ||
+                   StartsWith(dir, ServiceConstants::SHADER_CACHE_PATH);
+        case BundleDirScene::CLEAN_ARK_STARTUP_CACHE_DIR:
+            return StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, SYSTEM_OPTIMIZE_DIR) &&
+                   IsContainsPathPart(dir, ServiceConstants::ARK_STARTUP_CACHE_DIR);
+        case BundleDirScene::CLEAN_EL1_CACHE_DIR:
+            return StartsWith(dir, APP_EL1_PATH) && (IsContainsPathPart(dir, SYSTEM_OPTIMIZE_DIR) ||
+                                                    IsContainsPathPart(dir, ServiceConstants::SHADER_CACHE_SUBDIR));
+        default:
+            return false;
+    }
+}
+
+bool InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(const std::string &dir)
+{
+    if (!IsFileNameValid(dir)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+
+    if (StartsWith(dir, APP_EL1_PATH)) {
+        return StartsWith(dir, Constants::BUNDLE_CODE_DIR) ||
+               StartsWith(dir, ServiceConstants::NEW_CLOUD_SHADER_PATH) ||
+               IsContainsPathPart(dir, BASE_DIR) || IsContainsPathPart(dir, DATABASE_DIR);
+    } else if (StartsWith(dir, APP_EL2_PATH) || StartsWith(dir, APP_EL3_PATH) || StartsWith(dir, APP_EL4_PATH)) {
+        return IsContainsPathPart(dir, BASE_DIR) || IsContainsPathPart(dir, DATABASE_DIR);
+    } else {
+        return false;
     }
 }
 }  // namespace AppExecFwk

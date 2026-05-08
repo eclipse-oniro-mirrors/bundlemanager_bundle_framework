@@ -463,6 +463,34 @@ public:
         const std::string &oldPath, const std::string &newPath, const BundleDirScene &scene);
     static bool IsValidPathByRemoveDirScene(const std::string &dir, const std::string &bundleName,
         const BundleDirScene &scene);
+    static bool IsValidPathByMoveHapToCodeDir(const std::string &originPath, const std::string &targetPath);
+    static bool IsValidPathByExtractDiffFiles(const std::string &filePath, const std::string &targetPath);
+    static bool IsValidPathByApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
+        const std::string &newSoPath);
+    static bool IsValidPathByExtractEncryptedSoFiles(
+        const std::string &hapPath, const std::string &realSoFilesPath, const std::string &tmpSoPath);
+    static bool IsValidPathByExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
+        const std::string &targetSoPath);
+    static bool IsValidCertPath(const std::string &certPath);
+    static bool IsValidPathByCopyDirScene(const std::string &sourceDir, const std::string &destinationDir,
+        const std::string &bundleName, const BundleDirScene &scene);
+    static bool IsValidPathByClearDirScene(const std::string &dir, const BundleDirScene &scene);
+    static bool IsValidPathByGetNativeLibraryFileNames(const std::string &filePath);
+    static bool IsValidPathByRestoreconPathScene(const std::string &bundleName, const std::string &path,
+        const BundleDirScene &scene);
+    static bool IsValidPathByCopyFilesScene(const std::string &sourceDir, const std::string &destinationDir,
+        const std::string &bundleName, const BundleDirScene &scene);
+    static bool IsValidPathByMoveFilesScene(const std::string &srcDir, const std::string &desDir,
+        const std::string &bundleName, const BundleDirScene &scene);
+    static bool IsValidPathByGetDiskUsageFromPathScene(
+        const std::string &path, const std::string &bundleName, const BundleDirScene &scene);
+    static bool IsValidPathByGetFileStatScene(const std::string &file, const BundleDirScene &scene);
+    static bool IsValidPathByHashFiles(const std::string &file);
+    static bool IsValidPathByMigrateData(
+        const std::vector<std::string> &sourcePaths, const std::string &destinationPath, bool &isInvalidsourcePath);
+    static bool IsValidPathByCleanBundleDirsScene(const std::string &dir, const std::string &bundleName,
+        const BundleDirScene &scene);
+    static bool IsValidPathByDeleteUninstallTmpDirs(const std::string &dir);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);

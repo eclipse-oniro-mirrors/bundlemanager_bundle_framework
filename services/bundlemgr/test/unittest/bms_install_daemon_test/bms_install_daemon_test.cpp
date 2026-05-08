@@ -866,10 +866,11 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0700, Function | SmallTest | Level
         service->Start();
     }
     FileStat fileStat;
-    ErrCode ret = InstalldClient::GetInstance()->GetFileStat("", fileStat);
+    ErrCode ret = InstalldClient::GetInstance()->GetFileStat("", BundleDirScene::GET_BMS_FILE_STAT, fileStat);
     EXPECT_GE(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     EXPECT_LT(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR + ERRNO_MAX_SIZE);
-    ret = InstalldClient::GetInstance()->GetFileStat("data/test/wrongpath", fileStat);
+    ret =
+        InstalldClient::GetInstance()->GetFileStat("data/test/wrongpath", BundleDirScene::GET_BMS_FILE_STAT, fileStat);
     EXPECT_GE(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     EXPECT_LT(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR + ERRNO_MAX_SIZE);
 }
@@ -894,7 +895,7 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0800, Function | SmallTest | Level
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     ret = InstalldClient::GetInstance()->ExtractDiffFiles(
         BUNDLE_DATA_DIR, TEST_STRING, TEST_STRING);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -917,7 +918,7 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0900, Function | SmallTest | Level
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     ret = InstalldClient::GetInstance()->ApplyDiffPatch(
         TEST_STRING, TEST_STRING, TEST_STRING, 0);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -1793,7 +1794,8 @@ HWTEST_F(BmsInstallDaemonTest, GetDiskUsageFromPath_0100, Function | SmallTest |
     std::vector<std::string> path;
     path.emplace_back("dir/path/");
     int64_t statSize = 0;
-    ErrCode ret = hostImpl.GetDiskUsageFromPath(path, statSize);
+    ErrCode ret =
+        hostImpl.GetDiskUsageFromPath(path, BUNDLE_NAME13, BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE, statSize);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -2013,36 +2015,36 @@ HWTEST_F(BmsInstallDaemonTest, ChangeFileStat_0100, Function | SmallTest | Level
     InstalldHostImpl hostImpl;
     std::string file = "/invalid/file/path";
     FileStat fileStat;
-    ErrCode ret = hostImpl.ChangeFileStat(file, fileStat);
+    ErrCode ret = hostImpl.ChangeFileStat(file, fileStat, BundleDirScene::CHANGE_BMS_FILE_STAT);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     file = "/data/service/el1/public/bms/bundle_manager_service/app_install/100";
     fileStat.mode = -1;
-    ret = hostImpl.ChangeFileStat(file, fileStat);
+    ret = hostImpl.ChangeFileStat(file, fileStat, BundleDirScene::CHANGE_BMS_FILE_STAT);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     fileStat.mode = 02771;
     fileStat.uid = -1;
-    ret = hostImpl.ChangeFileStat(file, fileStat);
+    ret = hostImpl.ChangeFileStat(file, fileStat, BundleDirScene::CHANGE_BMS_FILE_STAT);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     fileStat.uid = 5523;
     fileStat.gid = -1;
-    ret = hostImpl.ChangeFileStat(file, fileStat);
+    ret = hostImpl.ChangeFileStat(file, fileStat, BundleDirScene::CHANGE_BMS_FILE_STAT);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     fileStat.gid = 2002;
-    ret = hostImpl.ChangeFileStat(file, fileStat);
+    ret = hostImpl.ChangeFileStat(file, fileStat, BundleDirScene::CHANGE_BMS_FILE_STAT);
     EXPECT_EQ(ret, ERR_OK);
 
     fileStat.mode = 02777;
     fileStat.uid = 0;
-    ret = hostImpl.ChangeFileStat(file, fileStat);
+    ret = hostImpl.ChangeFileStat(file, fileStat, BundleDirScene::CHANGE_BMS_FILE_STAT);
     EXPECT_EQ(ret, ERR_OK);
 
     fileStat.mode = 02771;
     fileStat.uid = 5523;
-    ret = hostImpl.ChangeFileStat(file, fileStat);
+    ret = hostImpl.ChangeFileStat(file, fileStat, BundleDirScene::CHANGE_BMS_FILE_STAT);
     EXPECT_EQ(ret, ERR_OK);
 }
 

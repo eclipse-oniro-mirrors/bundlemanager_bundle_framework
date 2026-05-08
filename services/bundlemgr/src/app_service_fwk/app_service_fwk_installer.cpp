@@ -785,7 +785,8 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
         APP_LOGI("temp so dir not exist");
         return ERR_OK;
     }
-    result = InstalldClient::GetInstance()->MoveFiles(tempSoPath, realSoPath);
+    result = InstalldClient::GetInstance()->MoveFiles(
+        tempSoPath, realSoPath, bundleName_, BundleDirScene::MOVE_SO_TO_REAL_PATH);
     if (result != ERR_OK) {
         APP_LOGE("Move to real path failed %{public}d", result);
         return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;

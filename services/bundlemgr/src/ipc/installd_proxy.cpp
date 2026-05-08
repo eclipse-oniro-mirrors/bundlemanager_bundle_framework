@@ -294,8 +294,8 @@ int64_t InstalldProxy::GetDiskUsage(const std::string &dir, bool isRealPath)
     return TransactInstalldCmd(InstalldInterfaceCode::GET_DISK_USAGE, data, reply, option);
 }
 
-ErrCode InstalldProxy::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
-    int64_t timeoutMs)
+ErrCode InstalldProxy::GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
+    BundleDirScene scene, int64_t &statSize, int64_t timeoutMs)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -314,6 +314,8 @@ ErrCode InstalldProxy::GetDiskUsageFromPath(const std::vector<std::string> &path
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(scene));
     INSTALLD_PARCEL_WRITE(data, Int64, timeoutMs);
 
     MessageParcel reply;
@@ -377,7 +379,8 @@ ErrCode InstalldProxy::CleanBundleDataDirByName(const std::string &bundleName, c
     return TransactInstalldCmd(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR_BY_NAME, data, reply, option);
 }
 
-ErrCode InstalldProxy::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
+ErrCode InstalldProxy::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent,
+    const std::string &bundleName, BundleDirScene scene)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -388,6 +391,8 @@ ErrCode InstalldProxy::CleanBundleDirs(const std::vector<std::string> &dirs, boo
         INSTALLD_PARCEL_WRITE(data, String, dir);
     }
     INSTALLD_PARCEL_WRITE(data, Bool, keepParent);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(scene));
     MessageParcel reply;
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::CLEAN_BUNDLE_DIRS, data, reply, option);
@@ -718,12 +723,12 @@ ErrCode InstalldProxy::Mkdir(const std::string &dir, const int32_t mode, const i
     return TransactInstalldCmd(InstalldInterfaceCode::MKDIR, data, reply, option);
 }
 
-ErrCode InstalldProxy::GetFileStat(const std::string &file, FileStat &fileStat)
+ErrCode InstalldProxy::GetFileStat(const std::string &file, BundleDirScene scene, FileStat &fileStat)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(file));
-
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(scene));
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_FILE_STAT, data, reply, option);
@@ -742,7 +747,7 @@ ErrCode InstalldProxy::GetFileStat(const std::string &file, FileStat &fileStat)
     return ERR_OK;
 }
 
-ErrCode InstalldProxy::ChangeFileStat(const std::string &file, FileStat &fileStat)
+ErrCode InstalldProxy::ChangeFileStat(const std::string &file, FileStat &fileStat, BundleDirScene scene)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -751,6 +756,7 @@ ErrCode InstalldProxy::ChangeFileStat(const std::string &file, FileStat &fileSta
         LOG_E(BMS_TAG_INSTALLD, "WriteParcelable fileStat failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(scene));
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -873,12 +879,15 @@ ErrCode InstalldProxy::ObtainQuickFixFileDir(const std::string &dir, std::vector
     return ERR_OK;
 }
 
-ErrCode InstalldProxy::CopyFiles(const std::string &sourceDir, const std::string &destinationDir)
+ErrCode InstalldProxy::CopyFiles(const std::string &sourceDir, const std::string &destinationDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(sourceDir));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(destinationDir));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(scene));
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -950,12 +959,15 @@ ErrCode InstalldProxy::CheckEncryption(const CheckEncryptionParam &checkEncrypti
     return ERR_OK;
 }
 
-ErrCode InstalldProxy::MoveFiles(const std::string &srcDir, const std::string &desDir)
+ErrCode InstalldProxy::MoveFiles(const std::string &srcDir, const std::string &desDir, const std::string &bundleName,
+    BundleDirScene scene)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(srcDir));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(desDir));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(scene));
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -1333,11 +1345,12 @@ ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessagePa
     return reply.ReadInt32();
 }
 
-ErrCode InstalldProxy::ClearDir(const std::string &dir)
+ErrCode InstalldProxy::ClearDir(const std::string &dir, BundleDirScene scene)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String, dir);
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(scene));
 
     MessageParcel reply;
     MessageOption option;
@@ -1387,11 +1400,13 @@ ErrCode InstalldProxy::HashFiles(const std::vector<std::string> &files, std::vec
     return ret;
 }
 
-ErrCode InstalldProxy::RestoreconPath(const std::string &path)
+ErrCode InstalldProxy::RestoreconPath(const std::string &path, const std::string &bundleName, BundleDirScene scene)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String, path);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(scene));
 
     MessageParcel reply;
     MessageOption option;
@@ -1418,12 +1433,15 @@ ErrCode InstalldProxy::ResetBmsDBSecurity()
     return TransactInstalldCmd(InstalldInterfaceCode::RESTORE_CON_BMSDB, data, reply, option);
 }
 
-ErrCode InstalldProxy::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+ErrCode InstalldProxy::CopyDir(const std::string &sourceDir, const std::string &destinationDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String, sourceDir);
     INSTALLD_PARCEL_WRITE(data, String, destinationDir);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(scene));
 
     MessageParcel reply;
     MessageOption option;

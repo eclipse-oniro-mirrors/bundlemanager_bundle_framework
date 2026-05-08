@@ -1028,6 +1028,7 @@ private:
         const std::string &oldPath, const std::string &newPath);
     void ProcessUpdateShortcut();
     void NotifyBundleCallback(const NotifyType &type, int32_t uid);
+    void ChangeFileStatByParsedPaths(const std::vector<std::string> &parsedPaths);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

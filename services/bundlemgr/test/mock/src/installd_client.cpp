@@ -182,14 +182,15 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir, const s
     return CallService(&IInstalld::CleanBundleDataDir, bundleDir, bundleName, userId);
 }
 
-ErrCode InstalldClient::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
+ErrCode InstalldClient::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent,
+    const std::string &bundleName, BundleDirScene scene)
 {
     if (dirs.empty()) {
         APP_LOGE("dirs is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::CleanBundleDirs, dirs, keepParent);
+    return CallService(&IInstalld::CleanBundleDirs, dirs, keepParent, bundleName, scene);
 }
 
 
@@ -387,24 +388,24 @@ ErrCode InstalldClient::Mkdir(const std::string &dir, const int32_t mode, const 
     return CallService(&IInstalld::Mkdir, dir, mode, uid, gid, createDirParam);
 }
 
-ErrCode InstalldClient::GetFileStat(const std::string &file, FileStat &fileStat)
+ErrCode InstalldClient::GetFileStat(const std::string &file, BundleDirScene scene, FileStat &fileStat)
 {
     if (file.empty()) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::GetFileStat, file, fileStat);
+    return CallService(&IInstalld::GetFileStat, file, scene, fileStat);
 }
 
-ErrCode InstalldClient::ChangeFileStat(const std::string &file, FileStat &fileStat)
+ErrCode InstalldClient::ChangeFileStat(const std::string &file, FileStat &fileStat, BundleDirScene scene)
 {
     if (file.empty()) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::ChangeFileStat, file, fileStat);
+    return CallService(&IInstalld::ChangeFileStat, file, fileStat, scene);
 }
 
 ErrCode InstalldClient::ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
@@ -450,9 +451,10 @@ ErrCode InstalldClient::ObtainQuickFixFileDir(const std::string &dir, std::vecto
     return CallService(&IInstalld::ObtainQuickFixFileDir, dir, dirVec);
 }
 
-ErrCode InstalldClient::CopyFiles(const std::string &sourceDir, const std::string &destinationDir)
+ErrCode InstalldClient::CopyFiles(const std::string &sourceDir, const std::string &destinationDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
-    return CallService(&IInstalld::CopyFiles, sourceDir, destinationDir);
+    return CallService(&IInstalld::CopyFiles, sourceDir, destinationDir, bundleName, scene);
 }
 
 ErrCode InstalldClient::GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
@@ -477,12 +479,13 @@ ErrCode InstalldClient::CheckEncryption(const CheckEncryptionParam &checkEncrypt
     return CallService(&IInstalld::CheckEncryption, checkEncryptionParam, isEncryption);
 }
 
-ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &desDir)
+ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &desDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
     if (srcDir.empty() || desDir.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::MoveFiles, srcDir, desDir);
+    return CallService(&IInstalld::MoveFiles, srcDir, desDir, bundleName, scene);
 }
 
 ErrCode InstalldClient::ExtractDriverSoFiles(const std::string &srcPath,
@@ -616,14 +619,14 @@ ErrCode InstalldClient::MigrateData(const std::vector<std::string> &sourcePaths,
     return CallService(&IInstalld::MigrateData, sourcePaths, destinationPath);
 }
 
-ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
-    int64_t timeoutMs)
+ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
+    BundleDirScene scene, int64_t &statSize, int64_t timeoutMs)
 {
     if (path.empty()) {
         APP_LOGE("path is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::GetDiskUsageFromPath, path, statSize, timeoutMs);
+    return CallService(&IInstalld::GetDiskUsageFromPath, path, bundleName, scene, statSize, timeoutMs);
 }
 
 ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
@@ -659,9 +662,9 @@ ErrCode InstalldClient::LoadInstalls()
     return CallService(&IInstalld::LoadInstalls);
 }
 
-ErrCode InstalldClient::ClearDir(const std::string &dir)
+ErrCode InstalldClient::ClearDir(const std::string &dir, BundleDirScene scene)
 {
-    return CallService(&IInstalld::ClearDir, dir);
+    return CallService(&IInstalld::ClearDir, dir, scene);
 }
 
 ErrCode InstalldClient::HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
@@ -675,9 +678,9 @@ ErrCode InstalldClient::HashFiles(const std::vector<std::string> &files, std::ve
     return CallService(&IInstalld::HashFiles, files, filesHash);
 }
 
-ErrCode InstalldClient::RestoreconPath(const std::string &path)
+ErrCode InstalldClient::RestoreconPath(const std::string &path, const std::string &bundleName, BundleDirScene scene)
 {
-    return CallService(&IInstalld::RestoreconPath, path);
+    return CallService(&IInstalld::RestoreconPath, path, bundleName, scene);
 }
 
 ErrCode InstalldClient::ResetBmsDBSecurity()
@@ -685,9 +688,10 @@ ErrCode InstalldClient::ResetBmsDBSecurity()
     return CallService(&IInstalld::ResetBmsDBSecurity);
 }
 
-ErrCode InstalldClient::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+ErrCode InstalldClient::CopyDir(const std::string &sourceDir, const std::string &destinationDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
-    return CallService(&IInstalld::CopyDir, sourceDir, destinationDir);
+    return CallService(&IInstalld::CopyDir, sourceDir, destinationDir, bundleName, scene);
 }
 
 ErrCode InstalldClient::ProcessBinFiles(const VerifyBinParam &verifyBinParam)

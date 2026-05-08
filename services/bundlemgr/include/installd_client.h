@@ -106,11 +106,14 @@ public:
     /**
      * @brief Get disk usage for dir.
      * @param path Indicates the directory vector.
+     * @param bundleName Indicates the bundle name for path validation.
+     * @param scene Indicates the scene code for path validation.
      * @param statSize Indicates size of path.
      * @param timeoutMs Indicates the timeout time.
      * @return Returns true if successfully; returns false otherwise.
      */
-    ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize, int64_t timeoutMs = -1);
+    ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
+        BundleDirScene scene, int64_t &statSize, int64_t timeoutMs = -1);
     /**
      * @brief Get bundle inode count for UID.
      * @param uid The user ID of the application).
@@ -208,9 +211,9 @@ public:
     ErrCode Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid,
         const CreateDirParam &createDirParam);
 
-    ErrCode GetFileStat(const std::string &file, FileStat &fileStat);
+    ErrCode GetFileStat(const std::string &file, BundleDirScene scene, FileStat &fileStat);
 
-    ErrCode ChangeFileStat(const std::string &file, FileStat &fileStat);
+    ErrCode ChangeFileStat(const std::string &file, FileStat &fileStat, BundleDirScene scene);
 
     ErrCode ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
         const std::string &cpuAbi);
@@ -228,7 +231,8 @@ public:
 
     ErrCode ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec);
 
-    ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir);
+    ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir, const std::string &bundleName,
+        BundleDirScene scene);
 
     ErrCode ExtractFiles(const ExtractParam &extractParam);
 
@@ -255,7 +259,8 @@ public:
 
     ErrCode CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 
-    ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir);
+    ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir, const std::string &bundleName,
+        BundleDirScene scene);
 
     ErrCode ExtractDriverSoFiles(const std::string &srcPath,
         const std::unordered_multimap<std::string, std::string> &dirMap);
@@ -298,9 +303,9 @@ public:
 
     ErrCode LoadInstalls();
 
-    ErrCode ClearDir(const std::string &dir);
+    ErrCode ClearDir(const std::string &dir, BundleDirScene scene);
 
-    ErrCode RestoreconPath(const std::string &path);
+    ErrCode RestoreconPath(const std::string &path, const std::string &bundleName, BundleDirScene scene);
 
     ErrCode ProcessBinFiles(const VerifyBinParam &verifyBinParam);
 
@@ -314,11 +319,15 @@ public:
     /**
      * @brief Clean a bundle data directory.
      * @param dirs Indicates the directory path that to be cleaned.
+     * @param bundleName Indicates the bundle name for path validation.
+     * @param scene Indicates the scene code for path validation.
      * @return Returns ERR_OK if the bundle dirs cleaned successfully; returns error code otherwise.
      */
-    ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent);
+    ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent,
+        const std::string &bundleName, BundleDirScene scene);
 
-    ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir);
+    ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir, const std::string &bundleName,
+        BundleDirScene scene);
 
     ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths);
 

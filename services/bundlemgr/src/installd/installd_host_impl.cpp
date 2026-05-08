@@ -170,6 +170,15 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
         LOG_E(BMS_TAG_INSTALLD, "Calling the function ExtractModuleFiles with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+
+    if (!InstalldOperator::IsValidPathByExtractModuleFiles(srcModulePath, targetPath, targetSoPath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function ExtractModuleFiles with invalid param, srcModulePath: %{private}s, targetPath: "
+            "%{private}s, targetSoPath: %{private}s",
+            srcModulePath.c_str(), targetPath.c_str(), targetSoPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
     if (!InstalldOperator::MkRecursiveDir(targetPath, true)) {
         LOG_E(BMS_TAG_INSTALLD, "create target dir %{public}s failed, errno:%{public}d", targetPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
@@ -332,6 +341,12 @@ ErrCode InstalldHostImpl::DeleteUninstallTmpDirs(const std::vector<std::string> 
     }
     ErrCode ret = ERR_OK;
     for (const std::string &dir : dirs) {
+        if (!InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(dir)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid tmp dir path, dir: %{private}s", dir.c_str());
+            ret = ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+            continue;
+        }
+
         if (!InstalldOperator::DeleteUninstallTmpDir(dir)) {
             ret = ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
@@ -1265,14 +1280,22 @@ int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
     return InstalldOperator::GetDiskUsage(dir, isRealPath);
 }
 
-ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
-    int64_t timeoutMs)
+ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
+    BundleDirScene scene, int64_t &statSize, int64_t timeoutMs)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    statSize = InstalldOperator::GetDiskUsageFromPath(path, timeoutMs);
+
+    std::vector<std::string> validPath;
+    for (auto& item : path) {
+        if (InstalldOperator::IsValidPathByGetDiskUsageFromPathScene(item, bundleName, scene)) {
+            validPath.emplace_back(item);
+        }
+    }
+
+    statSize = InstalldOperator::GetDiskUsageFromPath(validPath, timeoutMs);
     return ERR_OK;
 }
 
@@ -1281,6 +1304,11 @@ ErrCode InstalldHostImpl::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE_NOFUNC("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (uid < 0) {
+        APP_LOGE_NOFUNC("Calling the function GetBundleInodeCount with invalid uid, uid: %{public}d", uid);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
     inodeCount = static_cast<uint64_t>(InstalldOperator::GetBundleInodeCount(uid));
@@ -1851,8 +1879,9 @@ ErrCode InstalldHostImpl::GetBundleCachePath(const std::string &dir, std::vector
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (dir.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function GetBundleCachePath with invalid param");
+    if (dir.empty() || !InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::GET_BUNDLE_CACHE_PATH, dir)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function GetBundleCachePath with invalid param, dir: %{private}s",
+            dir.c_str());
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     InstalldOperator::TraverseCacheDirectory(dir, cachePath);
@@ -1867,8 +1896,8 @@ ErrCode InstalldHostImpl::ScanDir(
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (dir.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function Scan with invalid param");
+    if (dir.empty() || !InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::SCAN_DIR, dir)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function ScanDir with invalid param, dir: %{private}s", dir.c_str());
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
@@ -1987,11 +2016,18 @@ ErrCode InstalldHostImpl::Mkdir(const std::string &dir, const int32_t mode, cons
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetFileStat(const std::string &file, FileStat &fileStat)
+ErrCode InstalldHostImpl::GetFileStat(const std::string &file, BundleDirScene scene, FileStat &fileStat)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (!InstalldOperator::IsValidPathByGetFileStatScene(file, scene)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function GetFileStat with invalid param, file: %{private}s, scene: %{public}d", file.c_str(),
+            static_cast<int32_t>(scene));
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
     LOG_D(BMS_TAG_INSTALLD, "GetFileStat start %{public}s", file.c_str());
@@ -2009,11 +2045,18 @@ ErrCode InstalldHostImpl::GetFileStat(const std::string &file, FileStat &fileSta
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ChangeFileStat(const std::string &file, FileStat &fileStat)
+ErrCode InstalldHostImpl::ChangeFileStat(const std::string &file, FileStat &fileStat, BundleDirScene scene)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (!InstalldOperator::IsValidPathByBundleDirScene(scene, file)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function ChangeFileStat with invalid param, file: %{private}s, scene: %{public}d",
+            file.c_str(), static_cast<int32_t>(scene));
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
     LOG_I(BMS_TAG_INSTALLD, "path: %{public}s, mode: %{public}d, uid: %{public}d, gid: %{public}d",
@@ -2060,6 +2103,14 @@ ErrCode InstalldHostImpl::ExtractDiffFiles(const std::string &filePath, const st
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+
+    if (!InstalldOperator::IsValidPathByExtractDiffFiles(filePath, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function ExtractDiffFiles with invalid param, filePath: %{private}s, targetPath: %{private}s",
+            filePath.c_str(), targetPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
     if (!InstalldOperator::ExtractDiffFiles(filePath, targetPath, cpuAbi)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to ExtractDiffFiles errno:%{public}d", errno);
         return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
@@ -2077,6 +2128,13 @@ ErrCode InstalldHostImpl::ApplyDiffPatch(const std::string &oldSoPath, const std
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if  (!InstalldOperator::IsValidPathByApplyDiffPatch(oldSoPath, diffFilePath, newSoPath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function ApplyDiffPatch with invalid param, oldSoPath: %{private}s, diffFilePath: "
+            "%{private}s, newSoPath: %{private}s",
+            oldSoPath.c_str(), diffFilePath.c_str(), newSoPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, uid)) {
         LOG_E(BMS_TAG_INSTALLD, "fail to ApplyDiffPatch errno:%{public}d", errno);
@@ -2131,15 +2189,30 @@ ErrCode InstalldHostImpl::ObtainQuickFixFileDir(const std::string &dir, std::vec
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+    if (!InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::OBTAIN_QUICK_FIX_FILE_DIR, dir)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function ObtainQuickFixFileDir with invalid param, dir: %{private}s",
+            dir.c_str());
+        return ERR_OK;
+    }
     InstalldOperator::ObtainQuickFixFileDir(dir, dirVec);
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CopyFiles(const std::string &sourceDir, const std::string &destinationDir)
+ErrCode InstalldHostImpl::CopyFiles(const std::string &sourceDir, const std::string &destinationDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidPathByCopyFilesScene(sourceDir, destinationDir, bundleName, scene)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function CopyFiles with invalid param, sourceDir: %{private}s, destinationDir: %{private}s, "
+            "bundleName: %{public}s, scene: %{public}d",
+            sourceDir.c_str(), destinationDir.c_str(), bundleName.c_str(), static_cast<int32_t>(scene));
+        return ERR_OK;
     }
 
     InstalldOperator::CopyFiles(sourceDir, destinationDir);
@@ -2153,8 +2226,10 @@ ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath,
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (filePath.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function ExtractDiffFiles with invalid param");
+    if (filePath.empty() || !InstalldOperator::IsValidPathByGetNativeLibraryFileNames(filePath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function GetNativeLibraryFileNames with invalid param, filePath: %{private}s",
+            filePath.c_str());
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     InstalldOperator::GetNativeLibraryFileNames(filePath, cpuAbi, fileNames);
@@ -2234,7 +2309,8 @@ ErrCode InstalldHostImpl::CheckEncryption(const CheckEncryptionParam &checkEncry
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::MoveFiles(const std::string &srcDir, const std::string &desDir)
+ErrCode InstalldHostImpl::MoveFiles(const std::string &srcDir, const std::string &desDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
@@ -2245,6 +2321,16 @@ ErrCode InstalldHostImpl::MoveFiles(const std::string &srcDir, const std::string
         LOG_E(BMS_TAG_INSTALLD, "Calling the function MoveFiles with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+
+    if (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidPathByMoveFilesScene(srcDir, desDir, bundleName, scene)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function MoveFiles with invalid param, srcDir: %{private}s, desDir: %{private}s, bundleName: "
+            "%{public}s, scene: %{public}d",
+            srcDir.c_str(), desDir.c_str(), bundleName.c_str(), static_cast<int32_t>(scene));
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
     if (!InstalldOperator::MoveFiles(srcDir, desDir)) {
         LOG_E(BMS_TAG_INSTALLD, "move files failed errno:%{public}d", errno);
         return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
@@ -2295,9 +2381,11 @@ ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, co
         return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
     }
 
-    if (!CheckPathValid(hapPath, Constants::BUNDLE_CODE_DIR) ||
-        !CheckPathValid(realSoFilesPath, Constants::BUNDLE_CODE_DIR) ||
-        !CheckPathValid(tmpSoPath, ServiceConstants::HAP_COPY_PATH)) {
+    if (!InstalldOperator::IsValidPathByExtractEncryptedSoFiles(hapPath, realSoFilesPath, tmpSoPath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function ExtractEncryptedSoFiles with invalid param, hapPath: %{private}s, realSoFilesPath: "
+            "%{private}s, tmpSoPath: %{private}s",
+            hapPath.c_str(), realSoFilesPath.c_str(), tmpSoPath.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
     }
     if (realSoFilesPath.empty()) {
@@ -2476,6 +2564,11 @@ ErrCode InstalldHostImpl::AddCertAndEnableKey(const std::string &certPath, const
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::IsValidCertPath(certPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function AddCertAndEnableKey with invalid param, certPath: %{private}s",
+            certPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::WriteCertToFile(certPath, certContent)) {
         LOG_E(BMS_TAG_INSTALLD, "write cert to file failed");
@@ -3008,6 +3101,18 @@ ErrCode InstalldHostImpl::MigrateData(const std::vector<std::string> &sourcePath
     if (destinationPath.empty() || checkPath(destinationPath)) {
         return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
     }
+    bool isInvalidsourcePath = false;
+    if (!InstalldOperator::IsValidPathByMigrateData(sourcePaths, destinationPath, isInvalidsourcePath)) {
+        if (isInvalidsourcePath) {
+            LOG_E(BMS_TAG_INSTALLD, "Calling the function MigrateData with invalid sourcePaths");
+            return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+        } else {
+            LOG_E(BMS_TAG_INSTALLD,
+                "Calling the function MigrateData with invalid destinationPath, destinationPath: %{private}s",
+                destinationPath.c_str());
+            return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+        }
+    }
     return InstalldOperator::MigrateData(sourcePaths, destinationPath);
 }
 
@@ -3017,6 +3122,15 @@ ErrCode InstalldHostImpl::MoveHapToCodeDir(const std::string &originPath, const 
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+
+    if (!InstalldOperator::IsValidPathByMoveHapToCodeDir(originPath, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function MoveHapToCodeDir with invalid param, originPath: %{private}s, targetPath: "
+            "%{private}s",
+            originPath.c_str(), targetPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
     if (!InstalldOperator::MoveFile(originPath, targetPath)) {
         LOG_E(BMS_TAG_INSTALLD, "move file %{public}s to %{public}s failed errno:%{public}d",
             originPath.c_str(), targetPath.c_str(), errno);
@@ -3228,14 +3342,15 @@ ErrCode InstalldHostImpl::DeleteEl5DataGroupDirs(const std::vector<std::string> 
     return result;
 }
 
-ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
+ErrCode InstalldHostImpl::ClearDir(const std::string &dir, BundleDirScene scene)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (dir.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "empty dir");
+    if (dir.empty() || !InstalldOperator::IsValidPathByClearDirScene(dir, scene)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function ClearDir with invalid param, dir: %{private}s, scene: %{public}d",
+            dir.c_str(), static_cast<int32_t>(scene));
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::ClearDir(dir)) {
@@ -3252,7 +3367,13 @@ ErrCode InstalldHostImpl::HashSoFile(const std::string& soPath, uint32_t catchSo
         LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    
+
+    if (!InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::HASH_SO_FILE, soPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function HashSoFile with invalid param, soPath: %{private}s",
+            soPath.c_str());
+        return ERR_APPEXECFWK_NO_SO_EXISTED;
+    }
+
     return InstalldOperator::HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
 }
 
@@ -3269,6 +3390,12 @@ ErrCode InstalldHostImpl::HashFiles(const std::vector<std::string> &files, std::
     }
 
     for (const auto& file : files) {
+        if (!InstalldOperator::IsValidPathByHashFiles(file)) {
+            LOG_E(
+                BMS_TAG_INSTALLD, "Calling the function HashFiles with invalid param, file: %{private}s", file.c_str());
+            filesHash.push_back("");
+            continue;
+        }
         std::string hash = InstalldOperator::Sha256File(file);
         filesHash.push_back(hash);
     }
@@ -3276,11 +3403,20 @@ ErrCode InstalldHostImpl::HashFiles(const std::vector<std::string> &files, std::
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RestoreconPath(const std::string &path)
+ErrCode InstalldHostImpl::RestoreconPath(const std::string &path, const std::string &bundleName, BundleDirScene scene)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidPathByRestoreconPathScene(bundleName, path, scene)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function RestoreconPath with invalid param, bundleName: %{private}s, path: %{private}s, "
+            "scene: %{public}d",
+            bundleName.c_str(), path.c_str(), static_cast<int32_t>(scene));
+        return ERR_APPEXECFWK_INSTALLD_RESTORECON_PATH_FAILED;
     }
 
     if (!InstalldOperator::RestoreconPath(path)) {
@@ -3434,21 +3570,27 @@ ErrCode InstalldHostImpl::ResetSecurityByPath(const FileStat &fileStat, const st
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
+ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent,
+    const std::string &bundleName, BundleDirScene scene)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (dirs.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function with invalid param");
+    if (dirs.empty() || !InstalldOperator::IsValidBundleName(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function CleanBundleDirs with invalid param, dirs is empty or invalid bundleName, "
+            "bundleName: %{public}s",
+            bundleName.c_str());
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
     ErrCode ret = ERR_OK;
     for (const std::string &dir : dirs) {
-        if (dir.empty()) {
-            LOG_W(BMS_TAG_INSTALLD, "failed for param invalid");
+        if (dir.empty() || !InstalldOperator::IsValidPathByCleanBundleDirsScene(dir, bundleName, scene)) {
+            LOG_W(BMS_TAG_INSTALLD,
+                "failed for param invalid, dir: %{private}s, bundleName: %{public}s, scene: %{public}d", dir.c_str(),
+                bundleName.c_str(), static_cast<int32_t>(scene));
             continue;
         }
 
@@ -3466,7 +3608,8 @@ ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, 
     return ret;
 }
 
-ErrCode InstalldHostImpl::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+ErrCode InstalldHostImpl::CopyDir(const std::string &sourceDir, const std::string &destinationDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "permission denied");
@@ -3476,6 +3619,15 @@ ErrCode InstalldHostImpl::CopyDir(const std::string &sourceDir, const std::strin
         LOG_E(BMS_TAG_INSTALLD, "empty sourceDir or destinationDir");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+    if (!InstalldOperator::IsValidBundleName(bundleName) ||
+        !InstalldOperator::IsValidPathByCopyDirScene(sourceDir, destinationDir, bundleName, scene)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "Calling the function CopyDir with invalid param, sourceDir: %{private}s, destinationDir: %{private}s, "
+            "bundleName: %{public}s, scene: %{public}d",
+            sourceDir.c_str(), destinationDir.c_str(), bundleName.c_str(), static_cast<int32_t>(scene));
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
     if (!InstalldOperator::CopyDir(sourceDir, destinationDir)) {
         LOG_E(BMS_TAG_INSTALLD, "CopyDir failed");
         return ERR_APPEXECFWK_INSTALLD_COPY_DIR_FAILED;
@@ -3497,6 +3649,11 @@ ErrCode InstalldHostImpl::DeleteCertAndRemoveKey(const std::vector<std::string> 
 
     ErrCode ret = ERR_OK;
     for (const std::string &path : certPaths) {
+        if (!InstalldOperator::IsValidCertPath(path)) {
+            LOG_E(BMS_TAG_INSTALLD, "invalid certPath, certPath: %{private}s", path.c_str());
+            ret = ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+            continue;
+        }
         ErrCode result = InstalldOperator::DeleteCertAndRemoveKey(path);
         if (result != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLD, "del cert failed %{public}s", path.c_str());

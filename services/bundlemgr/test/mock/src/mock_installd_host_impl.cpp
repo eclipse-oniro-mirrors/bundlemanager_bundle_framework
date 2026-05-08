@@ -100,8 +100,8 @@ int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
     return 0;
 }
 
-ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
-    int64_t timeoutMs)
+ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, const std::string &bundleName,
+    BundleDirScene scene, int64_t &statSize, int64_t timeoutMs)
 {
     return ERR_OK;
 }
@@ -111,7 +111,8 @@ ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir, const s
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
+ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent,
+    const std::string &bundleName, BundleDirScene scene)
 {
     return ERR_OK;
 }
@@ -212,12 +213,12 @@ ErrCode InstalldHostImpl::Mkdir(const std::string &dir, const int32_t mode, cons
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetFileStat(const std::string &file, FileStat &fileStat)
+ErrCode InstalldHostImpl::GetFileStat(const std::string &file, BundleDirScene scene, FileStat &fileStat)
 {
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ChangeFileStat(const std::string &file, FileStat &fileStat)
+ErrCode InstalldHostImpl::ChangeFileStat(const std::string &file, FileStat &fileStat, BundleDirScene scene)
 {
     return ERR_OK;
 }
@@ -259,7 +260,8 @@ ErrCode InstalldHostImpl::ObtainQuickFixFileDir(const std::string &dir, std::vec
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CopyFiles(const std::string &sourceDir, const std::string &destinationDir)
+ErrCode InstalldHostImpl::CopyFiles(const std::string &sourceDir, const std::string &destinationDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
     return ERR_OK;
 }
@@ -305,7 +307,8 @@ ErrCode InstalldHostImpl::CheckEncryption(const CheckEncryptionParam &checkEncry
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::MoveFiles(const std::string &srcDir, const std::string &desDir)
+ErrCode InstalldHostImpl::MoveFiles(const std::string &srcDir, const std::string &desDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
     return ERR_OK;
 }
@@ -404,7 +407,7 @@ ErrCode InstalldHostImpl::DeleteDataGroupDirs(const std::vector<std::string> &uu
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
+ErrCode InstalldHostImpl::ClearDir(const std::string &dir, BundleDirScene scene)
 {
     return ERR_OK;
 }
@@ -420,7 +423,7 @@ ErrCode InstalldHostImpl::HashFiles(const std::vector<std::string> &files, std::
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RestoreconPath(const std::string &path)
+ErrCode InstalldHostImpl::RestoreconPath(const std::string &path, const std::string &bundleName, BundleDirScene scene)
 {
     return ERR_OK;
 }
@@ -430,7 +433,8 @@ ErrCode InstalldHostImpl::ResetBmsDBSecurity()
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+ErrCode InstalldHostImpl::CopyDir(const std::string &sourceDir, const std::string &destinationDir,
+    const std::string &bundleName, BundleDirScene scene)
 {
     return ERR_OK;
 }

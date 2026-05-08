@@ -1452,7 +1452,8 @@ void BaseBundleInstaller::RestoreconForArkweb()
     }
     const std::string arkWebLibPath = std::string(APP_INSTALL_PATH) + "/public/" + bundleName_ + "/libs/arm64/";
     LOG_I(BMS_TAG_INSTALLER, "RestoreconPath, arkWebLibPath: %{public}s", arkWebLibPath.c_str());
-    ErrCode result = InstalldClient::GetInstance()->RestoreconPath(arkWebLibPath);
+    ErrCode result = InstalldClient::GetInstance()->RestoreconPath(
+        arkWebLibPath, bundleName_, BundleDirScene::RESTORECON_ARK_WEB_LIB_PATH);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "Failed to restorecon arkweb dir, error code: %{public}d", result);
     }
@@ -7525,26 +7526,34 @@ ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
             return ERR_APPEXECFWK_INSTALL_RENAME_INSTALL_FILE_PATH_NOT_START_WITH_APP_INSTALL_SANDBOX;
         }
     }
-    if (!parsedPaths.empty()) {
-        std::filesystem::path hapPath(parsedPaths.front());
-        std::string bundleNameDir = hapPath.parent_path().string();
-        FileStat fileStat;
-        ErrCode res = InstalldClient::GetInstance()->GetFileStat(bundleNameDir, fileStat);
-        int32_t sharedMode = S_IRWXU | S_IRWXG | S_ISGID;
-        if (res == ERR_OK && ((static_cast<uint32_t>(fileStat.mode) & ServiceConstants::MODE_BASE) != sharedMode
-            || fileStat.gid != ServiceConstants::APP_INSTALL_GID)) {
-            LOG_W(BMS_TAG_INSTALLER, "shared dir mode is not correct %{public}d for %{public}s",
-                fileStat.mode, bundleNameDir.c_str());
-            fileStat.gid = ServiceConstants::APP_INSTALL_GID;
-            fileStat.mode = sharedMode;
-            InstalldClient::GetInstance()->ChangeFileStat(bundleNameDir, fileStat);
-            fileStat.mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
-            for (const auto &path : parsedPaths) {
-                InstalldClient::GetInstance()->ChangeFileStat(path, fileStat);
-            }
+    ChangeFileStatByParsedPaths(parsedPaths);
+    return ERR_OK;
+}
+
+void BaseBundleInstaller::ChangeFileStatByParsedPaths(const std::vector<std::string> &parsedPaths)
+{
+    if (parsedPaths.empty()) {
+        return;
+    }
+    std::filesystem::path hapPath(parsedPaths.front());
+    std::string bundleNameDir = hapPath.parent_path().string();
+    FileStat fileStat;
+    ErrCode res =
+        InstalldClient::GetInstance()->GetFileStat(bundleNameDir, BundleDirScene::GET_BMS_FILE_STAT, fileStat);
+    int32_t sharedMode = S_IRWXU | S_IRWXG | S_ISGID;
+    if (res == ERR_OK && ((static_cast<uint32_t>(fileStat.mode) & ServiceConstants::MODE_BASE) != sharedMode
+        || fileStat.gid != ServiceConstants::APP_INSTALL_GID)) {
+        LOG_W(BMS_TAG_INSTALLER, "shared dir mode is not correct %{public}d for %{public}s",
+            fileStat.mode, bundleNameDir.c_str());
+        fileStat.gid = ServiceConstants::APP_INSTALL_GID;
+        fileStat.mode = sharedMode;
+        InstalldClient::GetInstance()->ChangeFileStat(
+            bundleNameDir, fileStat, BundleDirScene::CHANGE_BMS_FILE_STAT);
+        fileStat.mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+        for (const auto &path : parsedPaths) {
+            InstalldClient::GetInstance()->ChangeFileStat(path, fileStat, BundleDirScene::CHANGE_BMS_FILE_STAT);
         }
     }
-    return ERR_OK;
 }
 
 ErrCode BaseBundleInstaller::RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const
@@ -7915,7 +7924,8 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
                 LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s not existed", realSoDir.c_str());
                 InstalldClient::GetInstance()->CreateBundleDir(bundleName, BundleDirScene::SO_DIR, realSoDir);
             }
-            auto result = InstalldClient::GetInstance()->MoveFiles(tempSoDir, realSoDir);
+            auto result = InstalldClient::GetInstance()->MoveFiles(
+                tempSoDir, realSoDir, bundleName, BundleDirScene::MOVE_SO_TO_REAL_PATH);
             if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "move file to real path failed %{public}d", result);
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
@@ -8546,7 +8556,8 @@ ErrCode BaseBundleInstaller::CleanShaderCache(const InnerBundleInfo &oldInfo,
         dirs.emplace_back(systemOptimizeShaderCache);
     }
 
-    ErrCode result = InstalldClient::GetInstance()->CleanBundleDirs(dirs, true);
+    ErrCode result =
+        InstalldClient::GetInstance()->CleanBundleDirs(dirs, true, bundleName, BundleDirScene::CLEAN_SHADER_CACHE_DIR);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "clean bundle shader cache dirs failed, error:%{public}d", result);
         return result;
@@ -8570,7 +8581,8 @@ ErrCode BaseBundleInstaller::CleanArkStartupCache(const std::string &bundleName)
     if (dirs.empty()) {
         return ERR_OK;
     }
-    ErrCode result = InstalldClient::GetInstance()->CleanBundleDirs(dirs, true);
+    ErrCode result = InstalldClient::GetInstance()->CleanBundleDirs(
+        dirs, true, bundleName, BundleDirScene::CLEAN_ARK_STARTUP_CACHE_DIR);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "clean bundle shader cache dirs failed, error:%{public}d", result);
         return result;
@@ -8641,7 +8653,8 @@ ErrCode BaseBundleInstaller::DeleteEl1ShaderAndArkStartupCache(const InnerBundle
         dirs.emplace_back(systemOptimizeShaderCache);
     }
 
-    ErrCode result = InstalldClient::GetInstance()->CleanBundleDirs(dirs, false);
+    ErrCode result =
+        InstalldClient::GetInstance()->CleanBundleDirs(dirs, false, bundleName, BundleDirScene::CLEAN_EL1_CACHE_DIR);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "delete el1 bundle shader cache dirs failed, error:%{public}d", result);
         return result;
@@ -9473,7 +9486,8 @@ ErrCode BaseBundleInstaller::ProcessPluginFilesWhenUpdate(
     }
     std::string newPluginPath = newPath + ServiceConstants::PATH_SEPARATOR +
         ServiceConstants::PLUGIN_FILE_PATH;
-    auto result = InstalldClient::GetInstance()->CopyDir(oldPluginPath, newPluginPath);
+    auto result = InstalldClient::GetInstance()->CopyDir(
+        oldPluginPath, newPluginPath, oldInfo.GetBundleName(), BundleDirScene::COPY_PLUGIN_DIR);
     if (result != ERR_OK) {
         APP_LOGE("-n %{public}s copy plugin file failed", oldInfo.GetBundleName().c_str());
         return result;
