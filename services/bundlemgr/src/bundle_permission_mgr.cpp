@@ -857,7 +857,7 @@ std::string BundlePermissionMgr::GetCheckResultMsg(const Security::AccessToken::
 
 bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
 {
-    // check if from shell call, specified user must be same with current active user
+    // check if from shell call, specified user must be foreground user
     int32_t mode = GetIntParameter(IS_ROOT_MODE_PARAM, USER_MODE);
     if (mode == ROOT_MODE) {
         return true;
@@ -865,15 +865,12 @@ bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
     if (!BundlePermissionMgr::IsShellTokenType()) {
         return true;
     }
-    auto curUser = AccountHelper::GetUserIdByCallerType();
-    if (curUser == Constants::INVALID_USERID) {
-        LOG_E(BMS_TAG_DEFAULT, "get current user fail");
-        return false;
+    if (userId == Constants::DEFAULT_USERID || userId == Constants::U1 ||
+        userId == Constants::UNSPECIFIED_USERID) {
+        return true;
     }
-    if (userId != curUser && userId != Constants::DEFAULT_USERID && userId != Constants::U1 &&
-        userId != Constants::UNSPECIFIED_USERID) {
-        LOG_E(BMS_TAG_DEFAULT, "specified user %{public}d is not same with current user %{public}d",
-            userId, curUser);
+    if (!AccountHelper::IsUserForeground(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "specified user %{public}d is not foreground user", userId);
         return false;
     }
     return true;

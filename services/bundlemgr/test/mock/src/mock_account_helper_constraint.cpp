@@ -33,6 +33,12 @@ namespace AppExecFwk {
 namespace {
     constexpr int32_t RETRY_TIMES = 20;
     constexpr int32_t RETRY_INTERVAL = 50; // 50ms
+    bool g_isUserForeground = false;
+}
+
+void SetIsUserForeground(bool value)
+{
+    g_isUserForeground = value;
 }
 
 int32_t AccountHelper::IsOsAccountExists(const int32_t id, bool &isOsAccountExists)
@@ -158,6 +164,11 @@ int32_t AccountHelper::GetUserIdByDisplayIdWithRetry(const uint64_t displayId)
     } else {
         return Constants::INVALID_USERID;
     }
+}
+
+bool AccountHelper::IsUserForeground(int32_t userId)
+{
+    return g_isUserForeground;
 }
 
 bool AccountHelper::CheckOsAccountConstraintEnabled(const int32_t userId, const std::string &constraint)

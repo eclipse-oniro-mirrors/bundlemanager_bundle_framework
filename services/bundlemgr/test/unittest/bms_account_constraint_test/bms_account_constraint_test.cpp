@@ -19,6 +19,7 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
+#include "account_helper.h"
 #include "app_provision_info_manager.h"
 #include "base_bundle_installer.h"
 #include "bundle_cache_mgr.h"
@@ -26,6 +27,7 @@
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
+#include "bundle_permission_mgr.h"
 #include "bundle_sandbox_installer.h"
 #include "data_group_info.h"
 #include "hmp_bundle_installer.h"
@@ -45,8 +47,18 @@ namespace {
 const int32_t WAIT_TIME = 2;
 constexpr int32_t USER_ID = 100;
 constexpr int32_t DEFAULT_USERID = 0;
+constexpr int32_t TEST_FOREGROUND_USER_ID = 100;
+constexpr int32_t TEST_BACKGROUND_USER_ID = 200;
 }  // namespace
+}  // namespace OHOS
 
+namespace OHOS {
+namespace AppExecFwk {
+void SetIsUserForeground(bool value);
+}  // namespace AppExecFwk
+}  // namespace OHOS
+
+namespace OHOS {
 class BmsAccountConstraintTest : public testing::Test {
 public:
     BmsAccountConstraintTest();
@@ -307,5 +319,66 @@ HWTEST_F(BmsAccountConstraintTest, CheckOsAccountConstraintEnabled_0004, Functio
     int32_t uid = 0;
     auto ret = installer.ProcessRecover(bundleName, installParam, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT);
+}
+
+/**
+ * @tc.number: IsUserForeground_0001
+ * @tc.name: test IsUserForeground returns true when set to true
+ * @tc.desc: 1. Set IsUserForeground to true
+ *           2. Verify IsUserForeground returns true for a valid userId
+ */
+HWTEST_F(BmsAccountConstraintTest, IsUserForeground_0001, Function | SmallTest | Level1)
+{
+    SetIsUserForeground(true);
+    EXPECT_TRUE(AccountHelper::IsUserForeground(TEST_FOREGROUND_USER_ID));
+    SetIsUserForeground(false);
+}
+
+/**
+ * @tc.number: IsUserForeground_0002
+ * @tc.name: test IsUserForeground returns false when set to false
+ * @tc.desc: 1. Set IsUserForeground to false
+ *           2. Verify IsUserForeground returns false for any userId
+ */
+HWTEST_F(BmsAccountConstraintTest, IsUserForeground_0002, Function | SmallTest | Level1)
+{
+    SetIsUserForeground(false);
+    EXPECT_FALSE(AccountHelper::IsUserForeground(TEST_BACKGROUND_USER_ID));
+}
+
+/**
+ * @tc.number: CheckUserFromShell_IsForeground_0001
+ * @tc.name: test CheckUserFromShell allows DEFAULT_USERID
+ * @tc.desc: 1. Set IsUserForeground to false
+ *           2. Verify CheckUserFromShell still returns true for DEFAULT_USERID (special constant bypass)
+ */
+HWTEST_F(BmsAccountConstraintTest, CheckUserFromShell_IsForeground_0001, Function | SmallTest | Level1)
+{
+    SetIsUserForeground(false);
+    EXPECT_TRUE(BundlePermissionMgr::CheckUserFromShell(Constants::DEFAULT_USERID));
+}
+
+/**
+ * @tc.number: CheckUserFromShell_IsForeground_0002
+ * @tc.name: test CheckUserFromShell allows U1
+ * @tc.desc: 1. Set IsUserForeground to false
+ *           2. Verify CheckUserFromShell still returns true for U1 (special constant bypass)
+ */
+HWTEST_F(BmsAccountConstraintTest, CheckUserFromShell_IsForeground_0002, Function | SmallTest | Level1)
+{
+    SetIsUserForeground(false);
+    EXPECT_TRUE(BundlePermissionMgr::CheckUserFromShell(Constants::U1));
+}
+
+/**
+ * @tc.number: CheckUserFromShell_IsForeground_0003
+ * @tc.name: test CheckUserFromShell allows UNSPECIFIED_USERID
+ * @tc.desc: 1. Set IsUserForeground to false
+ *           2. Verify CheckUserFromShell still returns true for UNSPECIFIED_USERID (special constant bypass)
+ */
+HWTEST_F(BmsAccountConstraintTest, CheckUserFromShell_IsForeground_0003, Function | SmallTest | Level1)
+{
+    SetIsUserForeground(false);
+    EXPECT_TRUE(BundlePermissionMgr::CheckUserFromShell(Constants::UNSPECIFIED_USERID));
 }
 } // OHOS
