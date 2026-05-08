@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -439,6 +439,7 @@ enum class ExtendResourceManagerInterfaceCode : uint8_t {
     CREATE_FD = 6,
     GET_ALL_DYNAMIC_ICON_INFO = 7,
     GET_DYNAMIC_ICON_INFO = 8,
+    SET_ALTERNATE_ICON = 9,
 };
 
 } // namespace AppExecFwk

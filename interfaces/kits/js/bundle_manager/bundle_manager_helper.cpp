@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -271,6 +271,18 @@ ErrCode BundleManagerHelper::InnerGetAllAppProvisionInfo(const int32_t userId,
     }
     ErrCode ret = iBundleMgr->GetAllAppProvisionInfo(userId, appProvisionInfos);
     APP_LOGD("GetAllAppProvisionInfo ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerSetAlternateIcon(const std::string& alternateIconName)
+{
+    auto extResourceManager = CommonFunc::GetExtendResourceManager();
+    if (extResourceManager == nullptr) {
+        APP_LOGE("extResourceManager is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = extResourceManager->SetAlternateIcon(alternateIconName);
+    APP_LOGD("SetAlternateIcon ErrCode : %{public}d", ret);
     return CommonFunc::ConvertErrCode(ret);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -68,6 +68,8 @@ int ExtendResourceManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& dat
             return HandleGetAllDynamicIconInfo(data, reply);
         case static_cast<uint32_t>(ExtendResourceManagerInterfaceCode::GET_DYNAMIC_ICON_INFO):
             return HandleGetDynamicIconInfo(data, reply);
+        case static_cast<uint32_t>(ExtendResourceManagerInterfaceCode::SET_ALTERNATE_ICON):
+            return HandleSetAlternateIcon(data, reply);
         default:
             APP_LOGW("ExtendResourceManagerHost receive unknown code %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -233,6 +235,18 @@ ErrCode ExtendResourceManagerHost::HandleGetDynamicIconInfo(MessageParcel& data,
     }
     if (ret == ERR_OK) {
         return WriteParcelableVector<DynamicIconInfo>(dynamicIconInfos, reply);
+    }
+    return ERR_OK;
+}
+
+ErrCode ExtendResourceManagerHost::HandleSetAlternateIcon(MessageParcel& data, MessageParcel& reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string alternateIconName = data.ReadString();
+    ErrCode ret = SetAlternateIcon(alternateIconName);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

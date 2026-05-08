@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,6 +31,7 @@
 #include "want.h"
 
 #include "ability_info.h"
+#include "alternate_icon_info.h"
 #include "aot/aot_args.h"
 #include "application_info.h"
 #include "app_install_extended_info.h"
@@ -848,6 +849,11 @@ public:
     bool UpateCurDynamicIconModule(
         const std::string &bundleName, const std::string &moduleName,
         const int32_t userId = Constants::UNSPECIFIED_USERID, const int32_t appIndex = Constants::DEFAULT_APP_INDEX);
+    void UpdateCurAlternateIcon(const std::string &bundleName, const std::string &alternateIconName,
+        const int32_t userId);
+    ErrCode GetAlternateIconInfoByName(const std::string &bundleName, const std::string &alternateIconName,
+        ExtendResourceInfo &extendResourceInfo);
+    bool IsDynamicIconModuleExist(const std::string &bundleName);
     void CreateAppInstallDir(int32_t userId);
     void RemoveAppInstallDir(int32_t userId);
     bool IsObtainAbilityInfo(const Want &want, int32_t userId, AbilityInfo &abilityInfo);
@@ -1288,6 +1294,8 @@ public:
         const std::string &bundleName, bool isHsp = false);
     ErrCode GetDynamicIconInfo(const std::string &bundleName, std::vector<DynamicIconInfo> &dynamicIconInfos);
     void ProcessDynamicIconForOta();
+    ErrCode GetAlternateIconInfoWhenUpdate(const std::string &bundleName,
+        std::vector<AlternateIconInfo> &alternateIconInfos);
     ErrCode GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos);
     std::string GetCurDynamicIconModule(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible);

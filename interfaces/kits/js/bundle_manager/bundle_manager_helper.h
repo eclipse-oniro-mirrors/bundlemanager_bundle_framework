@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,6 +46,7 @@ public:
     static ErrCode InnerGetAppProvisionInfo(
         const std::string& bundleName, int32_t userId, AppProvisionInfo& appProvisionInfo);
     static ErrCode InnerGetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo>& appProvisionInfos);
+    static ErrCode InnerSetAlternateIcon(const std::string& alternateIconName);
     static ErrCode InnerGetAllAppInstallExtendedInfo(std::vector<AppInstallExtendedInfo>& appInstallExtendedInfos);
     static ErrCode InnerGetAllPreinstalledApplicationInfos(
         std::vector<PreinstalledApplicationInfo>& preinstalledApplicationInfos);

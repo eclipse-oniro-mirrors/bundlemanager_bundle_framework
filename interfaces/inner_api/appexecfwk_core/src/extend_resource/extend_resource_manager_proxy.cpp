@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -439,6 +439,29 @@ ErrCode ExtendResourceManagerProxy::GetDynamicIconInfo(const std::string &bundle
     }
     return GetParcelableInfosWithErrCode<DynamicIconInfo>(
         ExtendResourceManagerInterfaceCode::GET_DYNAMIC_ICON_INFO, data, dynamicInfos);
+}
+
+ErrCode ExtendResourceManagerProxy::SetAlternateIcon(const std::string &alternateIconName)
+{
+    APP_LOGD("begin to SetAlternateIcon");
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to SetAlternateIcon due to WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(alternateIconName)) {
+        APP_LOGE("fail to SetAlternateIcon due to write alternateIconName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendRequest(ExtendResourceManagerInterfaceCode::SET_ALTERNATE_ICON, data, reply)) {
+        APP_LOGE("fail to SetAlternateIcon from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return reply.ReadInt32();
 }
 
 bool ExtendResourceManagerProxy::SendRequest(

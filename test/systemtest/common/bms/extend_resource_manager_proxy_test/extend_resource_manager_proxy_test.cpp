@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1366,6 +1366,21 @@ HWTEST_F(ExtendResourceManagerProxyTest, GetDynamicIconInfo_0004, Function | Sma
     std::string uninstallMsg;
     UninstallBundle(BUNDLE_NAME_DEMO, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success");
+}
+
+/**
+ * @tc.number: SetAlternateIcon_0100
+ * @tc.name: test the SetAlternateIcon
+ * @tc.desc: 1. system running normally
+ *           2. test SetAlternateIcon
+ */
+HWTEST_F(ExtendResourceManagerProxyTest, SetAlternateIcon_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    ExtendResourceManagerProxy extendResource(object);
+
+    ErrCode res = extendResource.SetAlternateIcon(BUNDLE_NAME);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 } // AppExecFwk
 } // OHOS

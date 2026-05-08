@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,6 +37,7 @@ constexpr const char* IS_AGING_UNINSTALL = "isAgingUninstall";
 constexpr const char* APP_ID = "appId";
 constexpr const char* IS_MODULE_UPDATE = "isModuleUpdate";
 constexpr const char* IS_ENABLE_DYNAMIC_ICON = "isEnableDynamicIcon";
+constexpr const char* DYNAMIC_ICON_TYPE = "dynamicIconType";
 constexpr const char* BUNDLE_RESOURCES_CHANGED = "usual.event.BUNDLE_RESOURCES_CHANGED";
 constexpr const char* APP_IDENTIFIER = "appIdentifier";
 constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
@@ -436,10 +437,11 @@ void BundleCommonEventMgr::NotifyDeleteDisposedRule(const std::string &appId, in
 }
 
 void BundleCommonEventMgr::NotifyDynamicIconEvent(
-    const std::string &bundleName, bool isEnableDynamicIcon, int32_t userId, int32_t appIndex)
+    const std::string &bundleName, bool isEnableDynamicIcon, int32_t userId, int32_t appIndex,
+    const DynamicIconType type)
 {
-    APP_LOGI("NotifyDynamicIconEvent bundleName: %{public}s, %{public}d",
-        bundleName.c_str(), isEnableDynamicIcon);
+    APP_LOGI("NotifyDynamicIconEvent bundleName: %{public}s, %{public}d, %{public}d, %{public}d, %{public}d",
+        bundleName.c_str(), isEnableDynamicIcon, userId, appIndex, static_cast<int32_t>(type));
     OHOS::AAFwk::Want want;
     want.SetAction(DYNAMIC_ICON_CHANGED);
     ElementName element;
@@ -450,6 +452,7 @@ void BundleCommonEventMgr::NotifyDynamicIconEvent(
         want.SetParam(Constants::USER_ID, userId);
         want.SetParam(Constants::APP_INDEX, appIndex);
     }
+    want.SetParam(DYNAMIC_ICON_TYPE, static_cast<int32_t>(type));
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     std::string identity = IPCSkeleton::ResetCallingIdentity();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,7 @@ constexpr const char* INNER_BUNDLE_USER_INFO_IS_BUNDLE_FIRST_LAUNCH = "isBundleF
 constexpr const char* INNER_BUNDLE_USER_INFO_CLONE_INFOS = "cloneInfos";
 constexpr const char* INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET = "installedPluginSet";
 constexpr const char* INNER_BUNDLE_USER_INFO_CUR_DYNAMIC_ICON_MODULE = "curDynamicIconModule";
+constexpr const char* INNER_BUNDLE_USER_INFO_CUR_ALTERNATE_ICON_NAME = "curAlternateIconName";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleUserInfo)
@@ -53,6 +54,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleU
         {INNER_BUNDLE_USER_INFO_CLONE_INFOS, innerBundleUserInfo.cloneInfos},
         {INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET, innerBundleUserInfo.installedPluginSet},
         {INNER_BUNDLE_USER_INFO_CUR_DYNAMIC_ICON_MODULE, innerBundleUserInfo.curDynamicIconModule},
+        {INNER_BUNDLE_USER_INFO_CUR_ALTERNATE_ICON_NAME, innerBundleUserInfo.curAlternateIconName},
     };
 }
 
@@ -92,6 +94,8 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
         innerBundleUserInfo.installedPluginSet, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_CUR_DYNAMIC_ICON_MODULE,
         innerBundleUserInfo.curDynamicIconModule, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_CUR_ALTERNATE_ICON_NAME,
+        innerBundleUserInfo.curAlternateIconName, false, parseResult);
 }
 } // namespace AppExecFwk
 } // namespace OHOS

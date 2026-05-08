@@ -326,6 +326,8 @@ namespace bundleManager {
 
   native function getAllAppProvisionInfoNative(userId: int): Array<AppProvisionInfo>;
 
+  native function setAlternateIconNative(alternateIconName: string): void;
+
   native function canOpenLink(link: string): boolean;
 
   native function getAllPreinstalledApplicationInfoNative(): Array<PreinstalledApplicationInfo>;
@@ -1434,6 +1436,22 @@ namespace bundleManager {
       p1.then((e: Any) => {
         let appProvisionInfo: Array<AppProvisionInfo> = e as Array<AppProvisionInfo>;
         resolve(appProvisionInfo);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function setAlternateIcon(alternateIconName: string): Promise<void> {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): void => {
+        return setAlternateIconNative(alternateIconName);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });

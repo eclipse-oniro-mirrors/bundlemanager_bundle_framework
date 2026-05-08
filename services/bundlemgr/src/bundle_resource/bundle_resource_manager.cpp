@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -576,6 +576,61 @@ bool BundleResourceManager::AddResourceInfoByBundleNameWhenInstall(
     return ret;
 }
 
+bool BundleResourceManager::ParseAndAddAlternateIconResource(const std::string &bundleName,
+    const AlternateIconInfo &alternateIconInfo, const IconResourceType type)
+{
+    ResourceInfo info;
+    info.bundleName_ = bundleName;
+    info.iconId_ = alternateIconInfo.iconId;
+    info.appIndex_ = Constants::DEFAULT_APP_INDEX;
+    BundleResourceParser bundleResourceParser;
+    if (!bundleResourceParser.ParseIconResourceByPath(alternateIconInfo.filePath, alternateIconInfo.iconId, info)) {
+        APP_LOGE("ParseIconResourceByPath failed, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+    if (info.icon_.empty()) {
+        APP_LOGE("icon empty %{public}s", bundleName.c_str());
+        return false;
+    }
+    if (!AddDynamicIconResource(bundleName, alternateIconInfo.userId, Constants::DEFAULT_APP_INDEX, info, type)) {
+        APP_LOGE("UpdateBundleIcon failed, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool BundleResourceManager::UpdateAlternateResourceInfo(const std::string &bundleName)
+{
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    std::vector<AlternateIconInfo> alternateIconInfos;
+    if (dataMgr->GetAlternateIconInfoWhenUpdate(bundleName, alternateIconInfos) != ERR_OK) {
+        APP_LOGE("get alternate icon failed -n %{public}s", bundleName.c_str());
+        return false;
+    }
+    if (alternateIconInfos.empty()) {
+        return true;
+    }
+    for (const auto &alternateIconInfo : alternateIconInfos) {
+        if (alternateIconInfo.alternateIconName.empty()) {
+            if (!DeleteDynamicIconResource(bundleName, alternateIconInfo.userId, Constants::DEFAULT_APP_INDEX,
+                IconResourceType::ALTERNATE_ICON)) {
+                APP_LOGE("delete alternate icon failed -n %{public}s -u %{public}d",
+                    bundleName.c_str(), alternateIconInfo.userId);
+            }
+        } else {
+            if (!ParseAndAddAlternateIconResource(bundleName, alternateIconInfo, IconResourceType::ALTERNATE_ICON)) {
+                APP_LOGE("add alternate icon failed -n %{public}s -u %{public}d",
+                    bundleName.c_str(), alternateIconInfo.userId);
+            }
+        }
+    }
+    return true;
+}
+
 std::set<int32_t> BundleResourceManager::GetUserIdsForAddResource(const int32_t userId)
 {
     std::set<int32_t> userIds;
@@ -788,8 +843,11 @@ bool BundleResourceManager::DeleteBundleResourceInfo(
 }
 
 bool BundleResourceManager::AddDynamicIconResource(
-    const std::string &bundleName, const int32_t userId, const int32_t appIndex, ResourceInfo &resourceInfo)
+    const std::string &bundleName, const int32_t userId, const int32_t appIndex, ResourceInfo &resourceInfo,
+    const IconResourceType type)
 {
+    APP_LOGD("add dynamic icon -n %{public}s -u %{public}d -a %{public}d -t %{public}d",
+        bundleName.c_str(), userId, appIndex, static_cast<int32_t>(type));
     // only need to process bundleResourceIconRdb
     resourceInfo.bundleName_ = bundleName;
     resourceInfo.appIndex_ = appIndex;
@@ -802,7 +860,7 @@ bool BundleResourceManager::AddDynamicIconResource(
         }
         std::set<int32_t> userIds = GetUserIdsForAddResource(userId);
         for (const auto user : userIds) {
-            if (!bundleResourceIconRdb_->AddResourceIconInfo(user, IconResourceType::DYNAMIC_ICON, resourceInfo)) {
+            if (!bundleResourceIconRdb_->AddResourceIconInfo(user, type, resourceInfo)) {
                 LOG_NOFUNC_E(BMS_TAG_INSTALLD, "add dynamic icon failed -n %{public}s -u %{public}d -a %{public}d",
                     bundleName.c_str(), user, appIndex);
                 return false;
@@ -823,7 +881,7 @@ bool BundleResourceManager::AddDynamicIconResource(
         resourceInfo.appIndex_ = 0;
         for (const int32_t tempUserId : tempUserIds) {
             ret &= bundleResourceIconRdb_->AddResourceIconInfo(tempUserId,
-                IconResourceType::DYNAMIC_ICON, resourceInfo);
+                type, resourceInfo);
         }
         auto appIndexes = dataMgr->GetCloneAppIndexes(bundleName, user);
         // process icon with badge
@@ -836,7 +894,7 @@ bool BundleResourceManager::AddDynamicIconResource(
                     bundleName.c_str(), user, index);
             }
             for (const int32_t tempUserId : tempUserIds) {
-                ret &= bundleResourceIconRdb_->AddResourceIconInfo(tempUserId, IconResourceType::DYNAMIC_ICON,
+                ret &= bundleResourceIconRdb_->AddResourceIconInfo(tempUserId, type,
                     newResourceInfo);
             }
         }
@@ -854,13 +912,13 @@ bool BundleResourceManager::AddDynamicIconResource(
 }
 
 bool BundleResourceManager::DeleteDynamicIconResource(
-    const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+    const std::string &bundleName, const int32_t userId, const int32_t appIndex, const IconResourceType type)
 {
     if (userId != Constants::UNSPECIFIED_USERID) {
         std::set<int32_t> userIds = GetUserIdsForAddResource(userId);
         for (const auto user : userIds) {
             if (!bundleResourceIconRdb_->DeleteResourceIconInfo(bundleName, user, appIndex,
-                IconResourceType::DYNAMIC_ICON)) {
+                type)) {
                 LOG_NOFUNC_E(BMS_TAG_INSTALLD, "delete dynamic icon failed -n %{public}s -u %{public}d -a %{public}d",
                     bundleName.c_str(), user, appIndex);
                 return false;
@@ -869,7 +927,7 @@ bool BundleResourceManager::DeleteDynamicIconResource(
         return true;
     }
     // if userId is -2, need delete all userId and appIndex dynamic icon
-    if (!bundleResourceIconRdb_->DeleteResourceIconInfos(bundleName, IconResourceType::DYNAMIC_ICON)) {
+    if (!bundleResourceIconRdb_->DeleteResourceIconInfos(bundleName, type)) {
         APP_LOGE("delete all user dynamic icon failed -n %{public}s -u %{public}d -a %{public}d",
             bundleName.c_str(), userId, appIndex);
         return false;
@@ -1360,7 +1418,8 @@ bool BundleResourceManager::InnerProcessDynamicIconWhenOta(const std::string &bu
             continue;
         }
         // add bundle resource icon rdb
-        if (!AddDynamicIconResource(bundleName, dynamicIcon.userId, dynamicIcon.appIndex, resourceInfo)) {
+        if (!AddDynamicIconResource(bundleName, dynamicIcon.userId, dynamicIcon.appIndex, resourceInfo,
+            IconResourceType::DYNAMIC_ICON)) {
             APP_LOGE("add dynamic icon failed -n %{public}s", bundleName.c_str());
         }
     }

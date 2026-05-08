@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,11 @@ namespace {
     {
         ExtendResourceManagerHostImpl impl;
         ExtendResourceInfo extendResourceInfo;
-        if (!impl.ParseBundleResource(std::string(reinterpret_cast<const char*>(data), size), extendResourceInfo)) {
+        int32_t userId = Constants::UNSPECIFIED_USERID;
+        int32_t appIndex = Constants::DEFAULT_APP_INDEX;
+        IconResourceType type = IconResourceType::DYNAMIC_ICON;
+        if (!impl.ParseBundleResource(std::string(reinterpret_cast<const char*>(data), size), extendResourceInfo,
+            userId, appIndex, type)) {
             return false;
         }
         return true;

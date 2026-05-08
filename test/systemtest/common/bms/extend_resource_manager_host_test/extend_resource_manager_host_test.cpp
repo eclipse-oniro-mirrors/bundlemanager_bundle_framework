@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,6 +31,7 @@ const uint32_t GET_DYNAMIC_ICON = 5;
 const uint32_t CREATE_FD = 6;
 const uint32_t GET_ALL_DYNAMIC_ICON_INFO = 7;
 const uint32_t GET_DYNAMIC_ICON_INFO = 8;
+const uint32_t SET_ALTERNATE_ICON = 9;
 const uint32_t OTHER_CODE = 100;
 const uint32_t ERROR_CODE = 305;
 }
@@ -119,6 +120,25 @@ HWTEST_F(ExtendResourceManagerHostTest, OnRemoteRequest_0100, Function | MediumT
     code = OTHER_CODE;
     res = extendResource.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, ERROR_CODE);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0200
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(ExtendResourceManagerHostTest, OnRemoteRequest_0200, Function | MediumTest | Level1)
+{
+    ExtendResourceManagerHost extendResource;
+    uint32_t code = SET_ALTERNATE_ICON;
+    MessageParcel data;
+    std::u16string descriptor = ExtendResourceManagerHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = extendResource.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -253,6 +273,21 @@ HWTEST_F(ExtendResourceManagerHostTest, HandleGetAllDynamicIconInfo_0100, Functi
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = extendResource.HandleGetAllDynamicIconInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleSetAlternateIcon_0100
+ * @tc.name: test the HandleSetAlternateIcon
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetAlternateIcon
+ */
+HWTEST_F(ExtendResourceManagerHostTest, HandleSetAlternateIcon_0100, Function | MediumTest | Level1)
+{
+    ExtendResourceManagerHost extendResource;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = extendResource.HandleSetAlternateIcon(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
 } // AppExecFwk

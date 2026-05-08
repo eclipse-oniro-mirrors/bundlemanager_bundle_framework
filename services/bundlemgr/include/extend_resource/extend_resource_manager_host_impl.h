@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,9 +16,11 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICE_BUNDLEMGR_INCLUDE_EXTEND_RESOURCE_MANAGER_HOST_IMPL_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICE_BUNDLEMGR_INCLUDE_EXTEND_RESOURCE_MANAGER_HOST_IMPL_H
 
+#include "bundle_common_event_mgr.h"
 #include "extend_resource_manager_host.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_constants.h"
+#include "resource_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -52,6 +54,7 @@ public:
     ErrCode GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicInfos) override;
 
     ErrCode GetDynamicIconInfo(const std::string &bundleName, std::vector<DynamicIconInfo> &dynamicInfos) override;
+    ErrCode SetAlternateIcon(const std::string &alternateIconName) override;
 
 private:
     ErrCode BeforeAddExtResource(
@@ -86,18 +89,28 @@ private:
         const int32_t userId = Constants::UNSPECIFIED_USERID, const int32_t appIndex = Constants::DEFAULT_APP_INDEX);
     bool ParseBundleResource(
         const std::string &bundleName, const ExtendResourceInfo &extendResourceInfo,
-        const int32_t userId = Constants::UNSPECIFIED_USERID, const int32_t appIndex = Constants::DEFAULT_APP_INDEX);
-    void SendBroadcast(const std::string &bundleName, bool isEnableDynamicIcon,
+        const int32_t userId = Constants::UNSPECIFIED_USERID, const int32_t appIndex = Constants::DEFAULT_APP_INDEX,
+        const IconResourceType type = IconResourceType::UNKNOWN);
+    void SendBroadcast(const std::string &bundleName, bool isEnableDynamicIcon, const DynamicIconType type,
         const int32_t userId = Constants::UNSPECIFIED_USERID, const int32_t appIndex = Constants::DEFAULT_APP_INDEX);
     void SaveCurDynamicIcon(const std::string &bundleName, const std::string &moduleName,
         const int32_t userId = Constants::UNSPECIFIED_USERID, const int32_t appIndex = Constants::DEFAULT_APP_INDEX);
+    bool IsDynamicIconModuleExist(const std::string &bundleName);
+    ErrCode GetAlternateIconInfo(const std::string &bundleName, const std::string &alternateIconName,
+        ExtendResourceInfo &extendResourceInfo);
+    void SaveCurAlternateIcon(const std::string &bundleName, const std::string &alternateIconName,
+        const int32_t userId);
     bool ResetBundleResourceIcon(const std::string &bundleName,
-        const int32_t userId = Constants::UNSPECIFIED_USERID, const int32_t appIndex = Constants::DEFAULT_APP_INDEX);
+        const int32_t userId = Constants::UNSPECIFIED_USERID, const int32_t appIndex = Constants::DEFAULT_APP_INDEX,
+        const IconResourceType type = IconResourceType::UNKNOWN);
     ErrCode CheckParamInvalid(const InnerBundleInfo &bundleInfo,
         const int32_t userId, const int32_t appIndex);
     bool IsNeedUpdateBundleResourceInfo(const std::string &bundleName, const int32_t userId);
     bool CheckAcrossUserPermission(const int32_t userId);
     bool CheckWhetherDynamicIconNeedProcess(const std::string &bundleName, const int32_t userId);
+    ErrCode DisableAlternateIcon(const std::string &bundleName, const int32_t userId);
+    ErrCode EnableAlternateIcon(const std::string &alternateIconName, const std::string &bundleName,
+        const int32_t userId);
 
     std::atomic<uint32_t> id_ = 0;
 };

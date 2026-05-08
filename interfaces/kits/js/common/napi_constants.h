@@ -66,6 +66,7 @@ constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* APP_INDEX = "appIndex";
+constexpr const char* ALTERNATE_ICON_NAME = "alternateIconName";
 constexpr const char* PARAM_TYPE_CHECK_ERROR = "param type check error";
 
 // bundle_manager
@@ -189,6 +190,7 @@ constexpr const char* GET_ALL_DYNAMIC_ICON = "GetAllDynamicIconInfo";
 constexpr const char* GET_SANDBOX_DATA_DIR_SYNC = "GetSandboxDataDirSync";
 constexpr const char* GET_ABILITY_INFOS = "GetAbilityInfos";
 constexpr const char* GET_DYNAMIC_ICON_INFO = "GetDynamicIconInfo";
+constexpr const char* SET_ALTERNATE_ICON = "SetAlternateIcon";
 constexpr const char* GET_PLUGIN_BUNDLE_PATH_FOR_SELF = "GetPluginBundlePathForSelf";
 constexpr const char* RECOVER_BACKUP_BUNDLE_DATA = "RecoverBackupBundleData";
 constexpr const char* REMOVE_BACKUP_BUNDLE_DATA = "RemoveBackupBundleData";

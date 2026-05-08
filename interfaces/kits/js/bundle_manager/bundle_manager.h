@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -198,6 +198,11 @@ struct DynamicIconInfoCallbackInfo : public BaseCallbackInfo {
     int32_t userId = Constants::UNSPECIFIED_USERID;
     std::string bundleName;
     std::vector<DynamicIconInfo> dynamicIconInfos;
+};
+
+struct AlternateIconCallbackInfo : public BaseCallbackInfo {
+    explicit AlternateIconCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::string alternateIconName;
 };
 
 struct GetProfileCallbackInfo : public BaseCallbackInfo {
@@ -444,6 +449,7 @@ napi_value SetAbilityFileTypesForSelf(napi_env env, napi_callback_info info);
 napi_value RecoverBackupBundleData(napi_env env, napi_callback_info info);
 napi_value RemoveBackupBundleData(napi_env env, napi_callback_info info);
 napi_value IsApplicationDisableForbidden(napi_env env, napi_callback_info info);
+napi_value SetAlternateIcon(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);

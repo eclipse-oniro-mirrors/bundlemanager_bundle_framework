@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -66,11 +66,12 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     impl.CheckParamInvalid(innerBundleInfo, userId, appIndex);
     std::string moduleName;
     impl.GetDynamicIcon(bundleName, userId, appIndex, moduleName);
-    impl.ResetBundleResourceIcon(bundleName, userId, appIndex);
+    IconResourceType resourceType = IconResourceType::DYNAMIC_ICON;
+    impl.ResetBundleResourceIcon(bundleName, userId, appIndex, resourceType);
     impl.DisableDynamicIcon(bundleName, userId, appIndex);
     ExtendResourceInfo extendResourceInfo;
     GenerateExtendResourceInfo(fdp, extendResourceInfo);
-    impl.ParseBundleResource(bundleName, extendResourceInfo, userId, appIndex);
+    impl.ParseBundleResource(bundleName, extendResourceInfo, userId, appIndex, resourceType);
     moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     impl.EnableDynamicIcon(bundleName, moduleName, userId, appIndex);
 

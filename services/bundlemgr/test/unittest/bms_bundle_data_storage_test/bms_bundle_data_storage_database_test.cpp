@@ -1412,6 +1412,7 @@ protected:
                 "maxChildProcess": 0,
                 "installSource": "unknown",
                 "configuration":"",
+                "curAlternateIconModuleName":"",
                 "cloudFileSyncEnabled": false,
                 "cloudStructuredDataSyncEnabled": false,
                 "applicationFlags":1,

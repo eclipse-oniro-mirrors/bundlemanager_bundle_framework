@@ -3092,6 +3092,7 @@ bool ToInnerBundleInfo(
             applicationInfo.label = applicationInfo.bundleName;
         }
     }
+    applicationInfo.curAlternateIconModuleName = moduleJson.module.name;
     innerBundleInfo.SetCurrentModulePackage(moduleJson.module.name);
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);

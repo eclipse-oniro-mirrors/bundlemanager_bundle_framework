@@ -1052,6 +1052,22 @@ static void EnableDynamicIconNative(
     }
 }
 
+static void SetAlternateIconNative(ani_env* env, ani_string aniAlternateIconName)
+{
+    APP_LOGD("ani SetAlternateIconNative called");
+    std::string alternateIconName;
+    if (!CommonFunAni::ParseString(env, aniAlternateIconName, alternateIconName)) {
+        APP_LOGE("alternateIconName invalid");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, ALTERNATE_ICON_NAME, TYPE_STRING);
+        return;
+    }
+    ErrCode ret = BundleManagerHelper::InnerSetAlternateIcon(alternateIconName);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetAlternateIconNative failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, ret, SET_ALTERNATE_ICON, "");
+    }
+}
+
 static ani_object GetBundleArchiveInfoNative(
     ani_env* env, ani_string aniHapFilePath, ani_int aniBundleFlags, ani_boolean aniIsSync)
 {
@@ -2497,6 +2513,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "queryAbilityInfoWithWantsNative", nullptr,
             reinterpret_cast<void*>(QueryAbilityInfoWithWantsNative) },
         ani_native_function { "enableDynamicIconNative", nullptr, reinterpret_cast<void*>(EnableDynamicIconNative) },
+        ani_native_function { "setAlternateIconNative", nullptr, reinterpret_cast<void*>(SetAlternateIconNative) },
         ani_native_function { "getBundleArchiveInfoNative", nullptr,
             reinterpret_cast<void*>(GetBundleArchiveInfoNative) },
         ani_native_function { "getLaunchWant", nullptr, reinterpret_cast<void*>(GetLaunchWant) },

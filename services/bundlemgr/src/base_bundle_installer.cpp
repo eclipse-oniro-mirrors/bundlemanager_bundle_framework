@@ -1938,6 +1938,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_,
         (isAppExist_ && hasInstalledInUser_) ? ADD_RESOURCE_TYPE::UPDATE_BUNDLE : ADD_RESOURCE_TYPE::INSTALL_BUNDLE,
         !isAppExist_);
+    if (isAppExist_) {
+        BundleResourceHelper::UpdateAlternateResourceInfoByBundleName(bundleName_);
+    }
     if (!ProcessExtProfile(installParam)) {
         LOG_W(BMS_TAG_INSTALLER, "ProcessExtProfile failed");
     }
