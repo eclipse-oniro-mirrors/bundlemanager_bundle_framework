@@ -40,11 +40,12 @@ void PostTask(const InnerEvent::Callback &callback)
     g_handler->PostTask(callback);
 }
 
-struct tm *GetCurrentSystemTime(void)
+struct tm GetCurrentSystemTime(void)
 {
     auto tt = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    struct tm *time = localtime(&tt);
-    return time;
+    struct tm timeInfo = {};
+    localtime_r(&tt, &timeInfo);
+    return timeInfo;
 }
 
 bool StartsWith(const std::string &str, const std::string &searchFor)

@@ -52,9 +52,7 @@ ZipReader::EntryInfo::EntryInfo(const std::string &fileNameInZip, const unz_file
 
     // Construct the last modified time. The timezone info is not present in
     // zip files, so we construct the time as local time.
-    if (GetCurrentSystemTime() != nullptr) {
-        lastModified_ = *GetCurrentSystemTime();
-    }
+    lastModified_ = GetCurrentSystemTime();
 }
 
 ZipReader::ZipReader()
@@ -245,7 +243,8 @@ bool ZipReader::ExtractEntry(WriterDelegate *delegate, const unzFile &zipFile, u
 
     unzCloseCurrentFile(zipFile);
     // closeFile
-    delegate->SetTimeModified(GetCurrentSystemTime());
+    struct tm timeModified = GetCurrentSystemTime();
+    delegate->SetTimeModified(&timeModified);
 
     return entirefileextracted;
 }
