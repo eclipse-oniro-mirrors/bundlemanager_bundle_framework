@@ -151,6 +151,7 @@ const int32_t ABILITY_DEFAULT_FORM_WIDTH = 900;
 const int32_t ABILITY_PRIORITY = 10;
 const int32_t ABILITY_APP_INDEX = 2;
 const int32_t ABILITY_UID = 1000;
+const int32_t BUNDLE_UID = 2000;
 const AbilityType ABILITY_TYPE = AbilityType::PAGE;
 const ExtensionAbilityType ABILITY_EXTENSION_ABILITY_TYPE = ExtensionAbilityType::SERVICE;
 const DisplayOrientation ABILITY_ORIENTATION = DisplayOrientation::PORTRAIT;
@@ -962,6 +963,99 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
     "userId_":0,
     "uninstallState":true
 })"_json;
+
+InnerBundleInfo CreateBundleInfoForBundleInfoV9Test(const std::string &bundleName,
+    const std::string &modulePackage, const std::string &moduleName, int32_t userId, int32_t uid)
+{
+    InnerBundleInfo info;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    BundleInfo sourceBundleInfo;
+    sourceBundleInfo.name = bundleName;
+    info.SetBaseBundleInfo(sourceBundleInfo);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleUserInfo.uid = uid;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.modulePackage = modulePackage;
+    innerModuleInfo.moduleName = moduleName;
+    innerModuleInfo.name = moduleName;
+    info.InsertInnerModuleInfo(modulePackage, innerModuleInfo);
+    return info;
+}
+
+void AddAbilityAndExtensionForBundleInfoV9Test(InnerBundleInfo &info, const std::string &bundleName,
+    const std::string &moduleName, const std::string &abilityName, const std::string &extensionName)
+{
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.bundleName = bundleName;
+    innerAbilityInfo.moduleName = moduleName;
+    innerAbilityInfo.name = abilityName;
+    info.InsertAbilitiesInfo(bundleName + "." + moduleName + "." + innerAbilityInfo.name, innerAbilityInfo);
+
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.bundleName = bundleName;
+    innerExtensionInfo.moduleName = moduleName;
+    innerExtensionInfo.name = extensionName;
+    info.InsertExtensionInfo(bundleName + "." + moduleName + "." + innerExtensionInfo.name, innerExtensionInfo);
+}
+
+InnerBundleInfo CreateInnerBundleInfoForBundleInfoV9Test(int32_t userId)
+{
+    InnerBundleInfo info;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    BundleInfo sourceBundleInfo;
+    sourceBundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(sourceBundleInfo);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleUserInfo.uid = BUNDLE_UID;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    InnerModuleInfo entryModuleInfo;
+    entryModuleInfo.modulePackage = "entry.pkg";
+    entryModuleInfo.moduleName = "entry";
+    entryModuleInfo.name = "entry";
+    entryModuleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
+    info.InsertInnerModuleInfo(entryModuleInfo.modulePackage, entryModuleInfo);
+
+    InnerModuleInfo featureModuleInfo;
+    featureModuleInfo.modulePackage = "feature.pkg";
+    featureModuleInfo.moduleName = "feature";
+    featureModuleInfo.name = "feature";
+    featureModuleInfo.distro.moduleType = Profile::MODULE_TYPE_FEATURE;
+    info.InsertInnerModuleInfo(featureModuleInfo.modulePackage, featureModuleInfo);
+
+    InnerAbilityInfo entryAbilityInfo;
+    entryAbilityInfo.bundleName = BUNDLE_NAME;
+    entryAbilityInfo.moduleName = entryModuleInfo.moduleName;
+    entryAbilityInfo.name = ".EntryAbility";
+    info.InsertAbilitiesInfo(BUNDLE_NAME + "." + entryModuleInfo.moduleName + "." + entryAbilityInfo.name,
+        entryAbilityInfo);
+
+    InnerAbilityInfo featureAbilityInfo;
+    featureAbilityInfo.bundleName = BUNDLE_NAME;
+    featureAbilityInfo.moduleName = featureModuleInfo.moduleName;
+    featureAbilityInfo.name = ".FeatureAbility";
+    info.InsertAbilitiesInfo(BUNDLE_NAME + "." + featureModuleInfo.moduleName + "." + featureAbilityInfo.name,
+        featureAbilityInfo);
+    return info;
+}
 }  // namespace
 
 class BmsBundleDataStorageDatabaseTest : public testing::Test {
@@ -6233,6 +6327,71 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15500, Function | Sma
     std::string eventModuleName = info.GetEventModuleName();
     std::string expectModuleName = MODULE_NAME + ServiceConstants::MODULE_NAME_SEPARATOR + MODULE_NAME_TEST;
     EXPECT_EQ(eventModuleName, expectModuleName);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_15600
+ * @tc.name: Test GetBundleInfoV9
+ * @tc.desc: Test GetBundleInfoV9 only fills hap module info requested by flags
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15600, Function | SmallTest | Level1)
+{
+    const std::string bundleName = "com.example.bundleinfo";
+    const std::string modulePackage = "entry";
+    const std::string moduleName = "entry";
+    const int32_t userId = 100;
+
+    InnerBundleInfo info = CreateBundleInfoForBundleInfoV9Test(bundleName, modulePackage, moduleName, userId,
+        20010001);
+    auto &innerModuleInfo = info.innerModuleInfos_[modulePackage];
+    innerModuleInfo.metadata.emplace_back("moduleMeta", "moduleValue", "moduleResource");
+    innerModuleInfo.preloads.emplace_back("warmup");
+    ProxyData proxyData;
+    proxyData.uri = "datashareproxy://bundleinfo";
+    innerModuleInfo.proxyDatas.emplace_back(proxyData);
+    AddAbilityAndExtensionForBundleInfoV9Test(info, bundleName, moduleName, ".MainAbility", "MainExtension");
+
+    BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE);
+    ErrCode ret = info.GetBundleInfoV9(flags, bundleInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfo.hapModuleInfos.size(), 1);
+    EXPECT_TRUE(bundleInfo.hapModuleInfos[0].abilityInfos.empty());
+    EXPECT_TRUE(bundleInfo.hapModuleInfos[0].extensionInfos.empty());
+    EXPECT_TRUE(bundleInfo.hapModuleInfos[0].metadata.empty());
+    EXPECT_EQ(bundleInfo.hapModuleInfos[0].preloads.size(), 1);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[0].proxyDatas.size(), 1);
+
+    BundleInfo bundleInfoWithMetadata;
+    flags |= static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
+    ret = info.GetBundleInfoV9(flags, bundleInfoWithMetadata, userId);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfoWithMetadata.hapModuleInfos.size(), 1);
+    EXPECT_TRUE(bundleInfoWithMetadata.hapModuleInfos[0].abilityInfos.empty());
+    EXPECT_TRUE(bundleInfoWithMetadata.hapModuleInfos[0].extensionInfos.empty());
+    EXPECT_EQ(bundleInfoWithMetadata.hapModuleInfos[0].metadata.size(), 1);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_15700
+ * @tc.name: Test GetBundleInfoV9
+ * @tc.desc: Test GetBundleInfoV9 only returns entry module and its abilities with entry module flag
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15700, Function | SmallTest | Level1)
+{
+    const int32_t userId = 100;
+    InnerBundleInfo info = CreateInnerBundleInfoForBundleInfoV9Test(userId);
+
+    BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ENTRY_MODULE) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
+    ErrCode ret = info.GetBundleInfoV9(flags, bundleInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfo.hapModuleInfos.size(), 1);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[0].moduleName, "entry");
+    EXPECT_EQ(bundleInfo.hapModuleInfos[0].moduleType, ModuleType::ENTRY);
+    ASSERT_EQ(bundleInfo.hapModuleInfos[0].abilityInfos.size(), 1);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[0].abilityInfos[0].name, ".EntryAbility");
 }
 
 /**

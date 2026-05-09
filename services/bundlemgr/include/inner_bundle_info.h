@@ -257,7 +257,8 @@ public:
      * @return Returns the HapModuleInfo object if find it; returns null otherwise.
      */
     std::optional<HapModuleInfo> FindHapModuleInfo(
-        const std::string &modulePackage, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
+        const std::string &modulePackage, int32_t userId = Constants::UNSPECIFIED_USERID,
+        int32_t appIndex = 0, bool withAbilityAndExtension = true) const;
     /**
      * @brief Get module hashValue.
      * @param modulePackage Indicates the module package.

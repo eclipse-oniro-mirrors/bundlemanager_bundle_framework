@@ -2439,7 +2439,7 @@ void BundleDataMgr::ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &clon
 }
 
 void BundleDataMgr::GetCloneBundleInfos(const InnerBundleInfo& info, int32_t flags, int32_t userId,
-    BundleInfo &bundleInfo, std::vector<BundleInfo> &bundleInfos) const
+    std::vector<BundleInfo> &bundleInfos) const
 {
     // get clone bundle info
     const InnerBundleUserInfo *bundleUserInfoPtr = nullptr;
@@ -2451,6 +2451,7 @@ void BundleDataMgr::GetCloneBundleInfos(const InnerBundleInfo& info, int32_t fla
     if (bundleUserInfoPtr->cloneInfos.empty()) {
         return;
     }
+    bundleInfos.reserve(bundleInfos.size() + bundleUserInfoPtr->cloneInfos.size());
     LOG_D(BMS_TAG_QUERY, "app %{public}s start get bundle clone info",
         info.GetBundleName().c_str());
     for (const auto &item : bundleUserInfoPtr->cloneInfos) {
@@ -3376,13 +3377,14 @@ ErrCode BundleDataMgr::GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo &ass
 void BundleDataMgr::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
     std::vector<BundleInfo> &bundleInfos, int32_t userId) const
 {
+    bundleInfos.reserve(bundleInfos.size() + bundleNames.size());
     for (const auto &bundleName : bundleNames) {
         BundleInfo bundleInfo;
         ErrCode ret = GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
         if (ret != ERR_OK) {
             continue;
         }
-        bundleInfos.push_back(bundleInfo);
+        bundleInfos.emplace_back(std::move(bundleInfo));
     }
 }
 
@@ -3443,7 +3445,7 @@ ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, 
         }
     }
     for (auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
-        std::string menuProfile = hapModuleInfo.fileContextMenu;
+        const std::string &menuProfile = hapModuleInfo.fileContextMenu;
         auto pos = menuProfile.find(PROFILE_PREFIX);
         if (pos == std::string::npos) {
             APP_LOGD("invalid menu profile");
@@ -3454,7 +3456,7 @@ ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, 
 
         std::string menuProfileContent;
         GetJsonProfileByExtractor(hapModuleInfo.hapPath, menuFilePath, menuProfileContent);
-        hapModuleInfo.fileContextMenu = menuProfileContent;
+        hapModuleInfo.fileContextMenu = std::move(menuProfileContent);
     }
     return ERR_OK;
 }
@@ -3476,7 +3478,7 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag,
         return;
     }
     for (auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
-        std::string routerPath = hapModuleInfo.routerMap;
+        const std::string &routerPath = hapModuleInfo.routerMap;
         auto pos = routerPath.find(PROFILE_PREFIX);
         if (pos == std::string::npos) {
             APP_LOGD("invalid router map profile");
@@ -3520,7 +3522,9 @@ void BundleDataMgr::GetRouterInfoForPlugin(const std::string &hostBundleName,
                 pluginInfo.versionCode, tempInfos) || tempInfos.empty()) {
                 continue;
             }
-            routerInfos.insert(routerInfos.end(), tempInfos.begin(), tempInfos.end());
+            routerInfos.insert(routerInfos.end(),
+                std::make_move_iterator(tempInfos.begin()),
+                std::make_move_iterator(tempInfos.end()));
             tempInfos.clear();
         }
     }
@@ -3537,10 +3541,11 @@ void BundleDataMgr::GetRouterInfoForSharedBundle(const std::string &bundleName,
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
     std::vector<Dependency> dependencies = innerBundleInfo.GetDependencies();
+    baseSharedBundleInfos.reserve(dependencies.size());
     for (const auto &item : dependencies) {
         BaseSharedBundleInfo baseSharedBundleInfo;
         if (GetBaseSharedBundleInfo(item, baseSharedBundleInfo)) {
-            baseSharedBundleInfos.emplace_back(baseSharedBundleInfo);
+            baseSharedBundleInfos.emplace_back(std::move(baseSharedBundleInfo));
         }
     }
 
@@ -3550,7 +3555,9 @@ void BundleDataMgr::GetRouterInfoForSharedBundle(const std::string &bundleName,
             info.versionCode, tempInfos) || tempInfos.empty()) {
             continue;
         }
-        routerInfos.insert(routerInfos.end(), tempInfos.begin(), tempInfos.end());
+        routerInfos.insert(routerInfos.end(),
+            std::make_move_iterator(tempInfos.begin()),
+            std::make_move_iterator(tempInfos.end()));
         tempInfos.clear();
     }
 }
@@ -3560,7 +3567,8 @@ void BundleDataMgr::MergeRouterItems(
     std::vector<RouterItem>& pluginRouterInfos) const
 {
     std::unordered_map<std::string, RouterItem> routerMap;
-    
+    routerMap.reserve(pluginRouterInfos.size() + sharedBundleRouterInfos.size());
+
     for (const auto& item : pluginRouterInfos) {
         routerMap[item.name] = item;
     }
@@ -3571,8 +3579,8 @@ void BundleDataMgr::MergeRouterItems(
     
     pluginRouterInfos.clear();
     pluginRouterInfos.reserve(routerMap.size());
-    for (const auto& pair : routerMap) {
-        pluginRouterInfos.push_back(pair.second);
+    for (auto &pair : routerMap) {
+        pluginRouterInfos.emplace_back(std::move(pair.second));
     }
 }
 
@@ -3700,7 +3708,7 @@ void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
 void BundleDataMgr::FindRouterHapPath(const InnerBundleInfo &innerBundleInfo,
     std::map<std::string, std::pair<std::string, std::string>> &hapPathMap)
 {
-    auto moduleMap = innerBundleInfo.GetInnerModuleInfos();
+    const auto &moduleMap = innerBundleInfo.GetInnerModuleInfos();
     for (auto it = moduleMap.begin(); it != moduleMap.end(); it++) {
         std::string routerPath = it->second.routerMap;
         auto pos = routerPath.find(PROFILE_PREFIX);
@@ -4104,11 +4112,11 @@ bool BundleDataMgr::GetBundleInfos(
             continue;
         }
 
-        bundleInfos.emplace_back(bundleInfo);
+        bundleInfos.emplace_back(std::move(bundleInfo));
         find = true;
         // add clone bundle info
         // flags convert
-        GetCloneBundleInfos(innerBundleInfo, flags, responseUserId, bundleInfo, bundleInfos);
+        GetCloneBundleInfos(innerBundleInfo, flags, responseUserId, bundleInfos);
     }
 
     LOG_D(BMS_TAG_QUERY, "get bundleInfos result(%{public}d) in user(%{public}d)", find, userId);
@@ -4265,10 +4273,10 @@ bool BundleDataMgr::GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bu
         }
         BundleInfo bundleInfo;
         info.GetBundleInfo(flags, bundleInfo, Constants::ALL_USERID);
-        bundleInfos.emplace_back(bundleInfo);
+        bundleInfos.emplace_back(std::move(bundleInfo));
         find = true;
         // add clone bundle info
-        GetCloneBundleInfos(info, flags, Constants::ALL_USERID, bundleInfo, bundleInfos);
+        GetCloneBundleInfos(info, flags, Constants::ALL_USERID, bundleInfos);
     }
 
     APP_LOGD("get all bundleInfos result(%{public}d)", find);
@@ -4289,6 +4297,7 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    bundleInfos.reserve(bundleInfos.size() + bundleInfos_.size());
     bool ofAnyUserFlag =
         (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0;
     for (const auto &item : bundleInfos_) {
@@ -4335,12 +4344,12 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         ProcessBundleMenu(bundleInfo, flags, true);
         ProcessBundleRouterMap(bundleInfo, flags, userId);
         PostProcessAnyUserFlags(flags, responseUserId, requestUserId, bundleInfo, innerBundleInfo);
-        bundleInfos.emplace_back(bundleInfo);
+        bundleInfos.emplace_back(std::move(bundleInfo));
         if (!ofAnyUserFlag && ((static_cast<uint32_t>(flags) &
             static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE)) !=
             static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE))) {
             // add clone bundle info
-            GetCloneBundleInfos(innerBundleInfo, flags, responseUserId, bundleInfo, bundleInfos);
+            GetCloneBundleInfos(innerBundleInfo, flags, responseUserId, bundleInfos);
         }
     }
     if (bundleInfos.empty()) {
@@ -4356,7 +4365,7 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         APP_LOGW("bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-
+    bundleInfos.reserve(bundleInfos.size() + bundleInfos_.size());
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &info = item.second;
         if (info.IsDisabled()) {
@@ -4373,8 +4382,7 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
             static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY)) ==
             static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY)) &&
             (info.IsHideDesktopIcon())) {
-            APP_LOGD("getAllBundleInfosV9 bundleName %{public}s is hide desktopIcon",
-                info.GetBundleName().c_str());
+            APP_LOGD("getAllBundleInfosV9 bundleName %{public}s is hide desktopIcon", info.GetBundleName().c_str());
             continue;
         }
         uint32_t cloudFlag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT);
@@ -4390,12 +4398,12 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         ProcessCertificate(bundleInfo, info.GetBundleName(), flags);
         auto ret = ProcessBundleMenu(bundleInfo, flags, true);
         if (ret == ERR_OK) {
-            bundleInfos.emplace_back(bundleInfo);
+            bundleInfos.emplace_back(std::move(bundleInfo));
             if (((static_cast<uint32_t>(flags) &
                 static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE)) !=
                 static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE))) {
                 // add clone bundle info
-                GetCloneBundleInfos(info, flags, Constants::ALL_USERID, bundleInfo, bundleInfos);
+                GetCloneBundleInfos(info, flags, Constants::ALL_USERID, bundleInfos);
             }
         }
     }

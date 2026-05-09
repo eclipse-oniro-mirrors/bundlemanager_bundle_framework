@@ -8104,6 +8104,85 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfosV9Impl_0200, Function | SmallTes
 }
 
 /**
+ * @tc.number: GetBundleInfosV9Impl_0300
+ * @tc.name: test GetBundleInfosV9 with hap module metadata flags
+ * @tc.desc: 1. test GetBundleInfosV9 trims ability info without ability flag
+ *           2. test metadata is preserved only when metadata flag is present
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfosV9Impl_0300, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([&] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto bundleIt = dataMgr->bundleInfos_.find(BUNDLE_NAME_TEST);
+    ASSERT_NE(bundleIt, dataMgr->bundleInfos_.end());
+    auto moduleIt = bundleIt->second.innerModuleInfos_.find(MODULE_NAME_TEST);
+    ASSERT_NE(moduleIt, bundleIt->second.innerModuleInfos_.end());
+    moduleIt->second.metadata.emplace_back(META_DATA_NAME, META_DATA_VALUE, META_DATA_EXTRA);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    std::vector<BundleInfo> bundleInfos;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE);
+    auto ret = hostImpl->GetBundleInfosV9(flags, bundleInfos, ALL_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), BUNDLE_NAMES_SIZE_ONE);
+    ASSERT_EQ(bundleInfos[0].hapModuleInfos.size(), MODULE_NAMES_SIZE_ONE);
+    EXPECT_TRUE(bundleInfos[0].hapModuleInfos[0].abilityInfos.empty());
+    EXPECT_TRUE(bundleInfos[0].hapModuleInfos[0].metadata.empty());
+
+    bundleInfos.clear();
+    flags |= static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
+    ret = hostImpl->GetBundleInfosV9(flags, bundleInfos, ALL_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfos.size(), BUNDLE_NAMES_SIZE_ONE);
+    ASSERT_EQ(bundleInfos[0].hapModuleInfos.size(), MODULE_NAMES_SIZE_ONE);
+    EXPECT_TRUE(bundleInfos[0].hapModuleInfos[0].abilityInfos.empty());
+    ASSERT_EQ(bundleInfos[0].hapModuleInfos[0].metadata.size(), META_DATA_SIZE_ONE);
+    EXPECT_EQ(bundleInfos[0].hapModuleInfos[0].metadata[0].name, META_DATA_NAME);
+}
+
+/**
+ * @tc.number: GetBundleInfosV9Impl_0400
+ * @tc.name: test GetBundleInfosV9 with multiple bundles
+ * @tc.desc: 1. test GetBundleInfosV9 with multiple installed bundles
+ *           2. verify all bundles are returned correctly
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfosV9Impl_0400, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard1([&] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    
+    MockInstallBundle(BUNDLE_NAME_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard2([&] { MockUninstallBundle(BUNDLE_NAME_TEST1); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    std::vector<BundleInfo> bundleInfos;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE);
+    auto ret = hostImpl->GetBundleInfosV9(flags, bundleInfos, ALL_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GE(bundleInfos.size(), BUNDLE_NAMES_SIZE_ONE);
+    
+    bool foundTestBundle = false;
+    bool foundTest1Bundle = false;
+    for (const auto& bundleInfo : bundleInfos) {
+        if (bundleInfo.name == BUNDLE_NAME_TEST) {
+            foundTestBundle = true;
+        }
+        if (bundleInfo.name == BUNDLE_NAME_TEST1) {
+            foundTest1Bundle = true;
+        }
+    }
+    EXPECT_TRUE(foundTestBundle);
+    EXPECT_TRUE(foundTest1Bundle);
+}
+
+/**
  * @tc.number: GetBundleNameForUidImpl_0100
  * @tc.name: test GetBundleNameForUid with non-system app
  * @tc.desc: 1. test GetBundleNameForUid when non-system app

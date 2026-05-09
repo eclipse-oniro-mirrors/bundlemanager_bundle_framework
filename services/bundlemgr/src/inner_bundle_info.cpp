@@ -1758,7 +1758,7 @@ void InnerBundleInfo::BuildDefaultUserInfo()
 }
 
 std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
-    const std::string &modulePackage, int32_t userId, int32_t appIndex) const
+    const std::string &modulePackage, int32_t userId, int32_t appIndex, bool withAbilityAndExtension) const
 {
     auto it = innerModuleInfos_.find(modulePackage);
     if (it == innerModuleInfos_.end()) {
@@ -1822,31 +1822,36 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     } else {
         hapInfo.moduleType = ModuleType::UNKNOWN;
     }
-    std::string key;
-    key.append(".").append(modulePackage).append(".");
-    hapInfo.extensionInfos.reserve(baseExtensionInfos_.size());
-    for (const auto &extension : baseExtensionInfos_) {
-        if ((extension.second.moduleName == hapInfo.moduleName) && (extension.first.find(key) != std::string::npos)) {
-            hapInfo.extensionInfos.emplace_back(InnerExtensionInfo::ConvertToExtensionInfo(extension.second));
+
+    if (withAbilityAndExtension) {
+        std::string key;
+        key.append(".").append(modulePackage).append(".");
+        hapInfo.extensionInfos.reserve(baseExtensionInfos_.size());
+        for (const auto &extension : baseExtensionInfos_) {
+            if ((extension.second.moduleName == hapInfo.moduleName) &&
+                (extension.first.find(key) != std::string::npos)) {
+                hapInfo.extensionInfos.emplace_back(InnerExtensionInfo::ConvertToExtensionInfo(extension.second));
+            }
+        }
+
+        ApplicationInfo appInfo;
+        GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
+            ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
+            userId, appInfo, appIndex);
+        hapInfo.abilityInfos.reserve(baseAbilityInfos_.size());
+        for (auto &ability : baseAbilityInfos_) {
+            if (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY) {
+                continue;
+            }
+            if ((ability.first.find(key) != std::string::npos) && (ability.second.moduleName == hapInfo.moduleName)) {
+                AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(ability.second);
+                AppendDynamicSkillsToAbilityIfExist(abilityInfo);
+                abilityInfo.applicationInfo = appInfo;
+                hapInfo.abilityInfos.emplace_back(std::move(abilityInfo));
+            }
         }
     }
     hapInfo.metadata = it->second.metadata;
-    ApplicationInfo appInfo;
-    GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
-        ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
-        userId, appInfo, appIndex);
-    hapInfo.abilityInfos.reserve(baseAbilityInfos_.size());
-    for (auto &ability : baseAbilityInfos_) {
-        if (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY) {
-            continue;
-        }
-        if ((ability.first.find(key) != std::string::npos) && (ability.second.moduleName == hapInfo.moduleName)) {
-            AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(ability.second);
-            AppendDynamicSkillsToAbilityIfExist(abilityInfo);
-            abilityInfo.applicationInfo = appInfo;
-            hapInfo.abilityInfos.emplace_back(std::move(abilityInfo));
-        }
-    }
     hapInfo.dependencies = it->second.dependencies;
     hapInfo.compileMode = ConvertCompileMode(it->second.compileMode);
     for (const auto &hqf : hqfInfos_) {
@@ -1855,11 +1860,13 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
             break;
         }
     }
+    hapInfo.preloads.reserve(it->second.preloads.size());
     for (const auto &item : it->second.preloads) {
         PreloadItem preload(item);
         hapInfo.preloads.emplace_back(std::move(preload));
     }
     hapInfo.resizeable = it->second.resizeable;
+    hapInfo.proxyDatas.reserve(it->second.proxyDatas.size());
     for (const auto &item : it->second.proxyDatas) {
         ProxyData proxyData(item);
         hapInfo.proxyDatas.emplace_back(std::move(proxyData));
@@ -2826,7 +2833,13 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         return;
     }
 
-    appInfo.moduleInfos.reserve(innerModuleInfos_.size());
+    auto moduleSize = innerModuleInfos_.size();
+    appInfo.moduleInfos.reserve(appInfo.moduleInfos.size() + moduleSize);
+    appInfo.moduleSourceDirs.reserve(appInfo.moduleSourceDirs.size() + moduleSize);
+    bool withPermission = ((static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_PERMISSION) ==
+        GET_APPLICATION_INFO_WITH_PERMISSION);
+    bool withMetadata = ((static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_METADATA) ==
+        GET_APPLICATION_INFO_WITH_METADATA);
     for (const auto &info : innerModuleInfos_) {
         bool deCompress = info.second.hapPath.empty();
         ModuleInfo moduleInfo;
@@ -2843,13 +2856,12 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         if (deCompress && info.second.isEntry) {
             appInfo.entryDir = info.second.modulePath;
         }
-        if ((static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_PERMISSION) ==
-            GET_APPLICATION_INFO_WITH_PERMISSION) {
+        if (withPermission) {
             for (const auto &item : info.second.requestPermissions) {
                 appInfo.permissions.emplace_back(item.name);
             }
         }
-        if ((static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_METADATA) == GET_APPLICATION_INFO_WITH_METADATA) {
+        if (withMetadata) {
             bool isModuleJson = info.second.isModuleJson;
             if (!isModuleJson && info.second.metaData.customizeData.size() > 0) {
                 appInfo.metaData[info.second.moduleName] = info.second.metaData.customizeData;
@@ -2902,6 +2914,15 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
 
+    auto moduleSize = innerModuleInfos_.size();
+    appInfo.moduleInfos.reserve(appInfo.moduleInfos.size() + moduleSize);
+    appInfo.moduleSourceDirs.reserve(appInfo.moduleSourceDirs.size() + moduleSize);
+    bool withPermission = ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) ==
+        static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION));
+    bool withMetadata = ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) ==
+        static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA));
     for (const auto &info : innerModuleInfos_) {
         bool deCompress = info.second.hapPath.empty();
         ModuleInfo moduleInfo;
@@ -2918,16 +2939,12 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
         if (deCompress && info.second.isEntry) {
             appInfo.entryDir = info.second.modulePath;
         }
-        if ((static_cast<uint32_t>(flags) &
-            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) ==
-            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) {
+        if (withPermission) {
             for (const auto &item : info.second.requestPermissions) {
-                appInfo.permissions.push_back(item.name);
+                appInfo.permissions.emplace_back(item.name);
             }
         }
-        if ((static_cast<uint32_t>(flags) &
-            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) ==
-            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) {
+        if (withMetadata) {
             bool isModuleJson = info.second.isModuleJson;
             if (!isModuleJson && info.second.metaData.customizeData.size() > 0) {
                 appInfo.metaData[info.second.moduleName] = info.second.metaData.customizeData;
@@ -3029,6 +3046,15 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
 
     GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
         bundleInfo.applicationInfo, appIndex);
+    auto moduleSize = innerModuleInfos_.size();
+    bundleInfo.reqPermissions.reserve(bundleInfo.reqPermissions.size() + moduleSize);
+    bundleInfo.defPermissions.reserve(bundleInfo.defPermissions.size() + moduleSize);
+    bundleInfo.hapModuleNames.reserve(bundleInfo.hapModuleNames.size() + moduleSize);
+    bundleInfo.hapModuleInfos.reserve(bundleInfo.hapModuleInfos.size() + moduleSize);
+    bundleInfo.moduleNames.reserve(bundleInfo.moduleNames.size() + moduleSize);
+    bundleInfo.moduleDirs.reserve(bundleInfo.moduleDirs.size() + moduleSize);
+    bundleInfo.modulePublicDirs.reserve(bundleInfo.modulePublicDirs.size() + moduleSize);
+    bundleInfo.moduleResPaths.reserve(bundleInfo.moduleResPaths.size() + moduleSize);
     for (const auto &info : innerModuleInfos_) {
         if ((static_cast<uint32_t>(flags) &
             (GET_BUNDLE_WITH_REQUESTED_PERMISSION | GET_BUNDLE_WITH_REQUESTED_PERMISSION_NO_DETAILED)) != 0) {
@@ -3093,6 +3119,12 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
     bundleInfo.overlayType = overlayType_;
     bundleInfo.isNewVersion = isNewVersion_;
 
+    auto moduleSize = innerModuleInfos_.size();
+    bundleInfo.hapModuleNames.reserve(bundleInfo.hapModuleNames.size() + moduleSize);
+    bundleInfo.moduleNames.reserve(bundleInfo.moduleNames.size() + moduleSize);
+    bundleInfo.moduleDirs.reserve(bundleInfo.moduleDirs.size() + moduleSize);
+    bundleInfo.modulePublicDirs.reserve(bundleInfo.modulePublicDirs.size() + moduleSize);
+    bundleInfo.moduleResPaths.reserve(bundleInfo.moduleResPaths.size() + moduleSize);
     for (const auto &info : innerModuleInfos_) {
         bundleInfo.hapModuleNames.emplace_back(info.second.modulePackage);
         bundleInfo.moduleNames.emplace_back(info.second.moduleName);
@@ -3232,9 +3264,12 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(
         bundleInfo.hapModuleInfos.clear();
         return;
     }
-    bundleInfo.hapModuleInfos.reserve(innerModuleInfos_.size());
+    bool hasMetadataFlag = ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) ==
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA));
+    bundleInfo.hapModuleInfos.reserve(bundleInfo.hapModuleInfos.size() + innerModuleInfos_.size());
     for (const auto &info : innerModuleInfos_) {
-        auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId, appIndex);
+        auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId, appIndex, false);
         if (hapmoduleinfo) {
             auto it = innerModuleInfos_.find(info.second.modulePackage);
             if (it == innerModuleInfos_.end()) {
@@ -3248,8 +3283,7 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(
             if (hapmoduleinfo->hapPath.empty()) {
                 hapmoduleinfo->moduleSourceDir = info.second.modulePath;
             }
-            if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
-                != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
+            if (!hasMetadataFlag) {
                 hapmoduleinfo->metadata.clear();
             }
 
@@ -3268,6 +3302,15 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY)) {
         return;
     }
+    bool withDisable = ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE)) ==
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE));
+    bool withMetadata = ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) ==
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA));
+    bool withSkill = ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL)) ==
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL));
     APP_LOGD("Get bundleInfo with abilities");
     hapModuleInfo.abilityInfos.reserve(baseAbilityInfos_.size());
     for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
@@ -3277,20 +3320,17 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         }
         AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
         bool isEnabled = IsAbilityEnabled(abilityInfo, userId, appIndex);
-        if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
-            && !isEnabled) {
+        if (!withDisable && !isEnabled) {
             continue;
         }
         abilityInfo.enabled = isEnabled;
         abilityInfo.appIndex = appIndex;
 
-        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
-            != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
+        if (!withMetadata) {
             abilityInfo.metaData.customizeData.clear();
             abilityInfo.metadata.clear();
         }
-        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL))
-            != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL)) {
+        if (!withSkill) {
             abilityInfo.skills.clear();
         } else {
             AppendDynamicSkillsToAbilityIfExist(abilityInfo);
@@ -3309,6 +3349,12 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(
         != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY)) {
         return;
     }
+    bool withMetadata = ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) ==
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA));
+    bool withSkill = ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL)) ==
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL));
     APP_LOGD("Get bundleInfo with extensionAbilities");
     hapModuleInfo.extensionInfos.reserve(baseExtensionInfos_.size());
     for (const auto &extensionInfo : baseExtensionInfos_) {
@@ -3318,12 +3364,10 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(
         ExtensionAbilityInfo info = InnerExtensionInfo::ConvertToExtensionInfo(extensionInfo.second);
         info.appIndex = appIndex;
 
-        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
-            != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
+        if (!withMetadata) {
             info.metadata.clear();
         }
-        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL))
-            != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL)) {
+        if (!withSkill) {
             info.skills.clear();
         }
         hapModuleInfo.extensionInfos.emplace_back(std::move(info));

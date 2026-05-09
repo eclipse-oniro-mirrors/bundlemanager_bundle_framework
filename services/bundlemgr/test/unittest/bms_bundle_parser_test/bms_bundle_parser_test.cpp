@@ -1901,6 +1901,72 @@ const nlohmann::json MODULE_JSON_16 = R"(
         ]
     }
 })"_json;
+
+InnerBundleInfo CreateInnerBundleInfoForTest(const std::string &bundleName,
+    const std::string &modulePackage, const std::string &moduleName, int32_t userId, int32_t uid)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleUserInfo.uid = uid;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.modulePackage = modulePackage;
+    innerModuleInfo.moduleName = moduleName;
+    innerModuleInfo.name = moduleName;
+    innerBundleInfo.InsertInnerModuleInfo(modulePackage, innerModuleInfo);
+    return innerBundleInfo;
+}
+
+InnerBundleInfo CreateCopyInfoForTest(const std::string &bundleName, const std::string &modulePackage,
+    const std::string &moduleName, int32_t userId)
+{
+    InnerBundleInfo innerBundleInfo = CreateInnerBundleInfoForTest(
+        bundleName, modulePackage, moduleName, userId, 20010000);
+    auto &innerModuleInfo = innerBundleInfo.innerModuleInfos_[modulePackage];
+    innerModuleInfo.resizeable = true;
+    innerModuleInfo.metadata.emplace_back("moduleMeta", "moduleValue", "moduleResource");
+    Dependency dependency;
+    dependency.bundleName = "com.example.shared";
+    dependency.moduleName = "sharedEntry";
+    dependency.versionCode = 1;
+    innerModuleInfo.dependencies.emplace_back(dependency);
+    innerModuleInfo.preloads.emplace_back("warmup");
+    ProxyData proxyData;
+    proxyData.uri = "datashareproxy://copytest";
+    proxyData.requiredReadPermission = "read.permission";
+    proxyData.requiredWritePermission = "write.permission";
+    proxyData.metadata.name = "proxyMeta";
+    proxyData.metadata.value = "proxyValue";
+    innerModuleInfo.proxyDatas.emplace_back(proxyData);
+
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.bundleName = bundleName;
+    innerAbilityInfo.moduleName = moduleName;
+    innerAbilityInfo.name = ".MainAbility";
+    innerBundleInfo.InsertAbilitiesInfo(bundleName + "." + moduleName + "." + innerAbilityInfo.name,
+        innerAbilityInfo);
+
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.bundleName = bundleName;
+    innerExtensionInfo.moduleName = moduleName;
+    innerExtensionInfo.name = "MainExtension";
+    innerBundleInfo.InsertExtensionInfo(bundleName + "." + moduleName + "." + innerExtensionInfo.name,
+        innerExtensionInfo);
+    return innerBundleInfo;
+}
 }  // namespace
 
 class BmsBundleParserTest : public testing::Test {
@@ -4912,6 +4978,184 @@ HWTEST_F(BmsBundleParserTest, ParseCompressExtractNativeLibs_0500, Function | Me
     auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
     EXPECT_NE(hapModule, std::nullopt);
     EXPECT_EQ(hapModule->compressNativeLibs, true);
+}
+
+/**
+ * @tc.number: FindHapModuleInfo_0100
+ * @tc.name: FindHapModuleInfo
+ * @tc.desc: test FindHapModuleInfo skips ability and extension copy when isCopyInfo is false
+ */
+HWTEST_F(BmsBundleParserTest, FindHapModuleInfo_0100, Function | SmallTest | Level1)
+{
+    const std::string bundleName = "com.example.copytest";
+    const std::string modulePackage = "entry";
+    const std::string moduleName = "entry";
+    const int32_t userId = 100;
+    InnerBundleInfo innerBundleInfo = CreateCopyInfoForTest(bundleName, modulePackage, moduleName, userId);
+
+    auto copiedHapModule = innerBundleInfo.FindHapModuleInfo(modulePackage, userId, 0, true);
+    ASSERT_NE(copiedHapModule, std::nullopt);
+    EXPECT_EQ(copiedHapModule->abilityInfos.size(), ONE);
+    EXPECT_EQ(copiedHapModule->extensionInfos.size(), ONE);
+
+    auto trimmedHapModule = innerBundleInfo.FindHapModuleInfo(modulePackage, userId, 0, false);
+    ASSERT_NE(trimmedHapModule, std::nullopt);
+    EXPECT_TRUE(trimmedHapModule->abilityInfos.empty());
+    EXPECT_TRUE(trimmedHapModule->extensionInfos.empty());
+    EXPECT_EQ(trimmedHapModule->metadata.size(), ONE);
+    EXPECT_EQ(trimmedHapModule->dependencies.size(), ONE);
+    EXPECT_EQ(trimmedHapModule->preloads.size(), ONE);
+    EXPECT_EQ(trimmedHapModule->proxyDatas.size(), ONE);
+    EXPECT_TRUE(trimmedHapModule->resizeable);
+}
+
+/**
+ * @tc.number: FindHapModuleInfo_0200
+ * @tc.name: FindHapModuleInfo
+ * @tc.desc: test FindHapModuleInfo returns nullopt when module package does not exist
+ */
+HWTEST_F(BmsBundleParserTest, FindHapModuleInfo_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("missing.module");
+    EXPECT_EQ(hapModule, std::nullopt);
+}
+
+/**
+ * @tc.number: FindHapModuleInfo_0300
+ * @tc.name: FindHapModuleInfo
+ * @tc.desc: test FindHapModuleInfo copies only matched ability and extension info, and filters app detail ability
+ */
+HWTEST_F(BmsBundleParserTest, FindHapModuleInfo_0300, Function | SmallTest | Level1)
+{
+    const std::string bundleName = "com.example.filtertest";
+    const std::string modulePackage = "entry";
+    const std::string moduleName = "entry";
+    const int32_t userId = 100;
+    InnerBundleInfo innerBundleInfo = CreateInnerBundleInfoForTest(
+        bundleName, modulePackage, moduleName, userId, 20010002);
+
+    InnerAbilityInfo matchedAbilityInfo;
+    matchedAbilityInfo.bundleName = bundleName;
+    matchedAbilityInfo.moduleName = moduleName;
+    matchedAbilityInfo.name = ".MainAbility";
+    innerBundleInfo.InsertAbilitiesInfo(bundleName + "." + moduleName + "." + matchedAbilityInfo.name,
+        matchedAbilityInfo);
+
+    InnerAbilityInfo appDetailAbilityInfo;
+    appDetailAbilityInfo.bundleName = bundleName;
+    appDetailAbilityInfo.moduleName = moduleName;
+    appDetailAbilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
+    innerBundleInfo.InsertAbilitiesInfo(bundleName + "." + moduleName + "." + appDetailAbilityInfo.name,
+        appDetailAbilityInfo);
+
+    InnerAbilityInfo otherModuleAbilityInfo;
+    otherModuleAbilityInfo.bundleName = bundleName;
+    otherModuleAbilityInfo.moduleName = "feature";
+    otherModuleAbilityInfo.name = ".FeatureAbility";
+    innerBundleInfo.InsertAbilitiesInfo(bundleName + ".feature." + otherModuleAbilityInfo.name,
+        otherModuleAbilityInfo);
+
+    InnerExtensionInfo matchedExtensionInfo;
+    matchedExtensionInfo.bundleName = bundleName;
+    matchedExtensionInfo.moduleName = moduleName;
+    matchedExtensionInfo.name = "MainExtension";
+    innerBundleInfo.InsertExtensionInfo(bundleName + "." + moduleName + "." + matchedExtensionInfo.name,
+        matchedExtensionInfo);
+
+    InnerExtensionInfo otherModuleExtensionInfo;
+    otherModuleExtensionInfo.bundleName = bundleName;
+    otherModuleExtensionInfo.moduleName = "feature";
+    otherModuleExtensionInfo.name = "FeatureExtension";
+    innerBundleInfo.InsertExtensionInfo(bundleName + ".feature." + otherModuleExtensionInfo.name,
+        otherModuleExtensionInfo);
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo(modulePackage, userId, 0, true);
+    ASSERT_NE(hapModule, std::nullopt);
+    ASSERT_EQ(hapModule->abilityInfos.size(), ONE);
+    EXPECT_EQ(hapModule->abilityInfos[0].name, matchedAbilityInfo.name);
+    ASSERT_EQ(hapModule->extensionInfos.size(), ONE);
+    EXPECT_EQ(hapModule->extensionInfos[0].name, matchedExtensionInfo.name);
+}
+
+/**
+ * @tc.number: FindHapModuleInfo_0400
+ * @tc.name: FindHapModuleInfo
+ * @tc.desc: test FindHapModuleInfo maps module fields and falls back to base bundle version code
+ */
+HWTEST_F(BmsBundleParserTest, FindHapModuleInfo_0400, Function | SmallTest | Level1)
+{
+    const std::string bundleName = "com.example.fieldtest";
+    const std::string modulePackage = "feature.pkg";
+    const std::string moduleName = "feature";
+    const int32_t supportedModes = 1;
+    const uint8_t firstBoolFlag = 1;
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.supportedModes = supportedModes;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.versionCode = 66;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = moduleName;
+    innerModuleInfo.modulePackage = modulePackage;
+    innerModuleInfo.moduleName = moduleName;
+    innerModuleInfo.description = "feature desc";
+    innerModuleInfo.srcPath = "pages/index";
+    innerModuleInfo.process = "feature_process";
+    innerModuleInfo.moduleResPath = "/data/app/el1/bundle/res";
+    innerModuleInfo.distro.moduleType = Profile::MODULE_TYPE_FEATURE;
+    innerModuleInfo.compileMode = Profile::COMPILE_MODE_ES_MODULE;
+    innerModuleInfo.boolSet = firstBoolFlag;
+    innerBundleInfo.InsertInnerModuleInfo(modulePackage, innerModuleInfo);
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo(modulePackage);
+    ASSERT_NE(hapModule, std::nullopt);
+    EXPECT_EQ(hapModule->bundleName, bundleName);
+    EXPECT_EQ(hapModule->package, modulePackage);
+    EXPECT_EQ(hapModule->moduleName, moduleName);
+    EXPECT_EQ(hapModule->versionCode, bundleInfo.versionCode);
+    EXPECT_EQ(hapModule->moduleType, ModuleType::FEATURE);
+    EXPECT_EQ(hapModule->compileMode, CompileMode::ES_MODULE);
+    EXPECT_EQ(hapModule->supportedModes, supportedModes);
+    EXPECT_TRUE(hapModule->hasIntent);
+}
+
+/**
+ * @tc.number: FindHapModuleInfo_0500
+ * @tc.name: FindHapModuleInfo
+ * @tc.desc: test FindHapModuleInfo keeps module version code and maps unknown module type to UNKNOWN
+ */
+HWTEST_F(BmsBundleParserTest, FindHapModuleInfo_0500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "com.example.unknowntype";
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    BundleInfo bundleInfo;
+    bundleInfo.name = applicationInfo.bundleName;
+    bundleInfo.versionCode = 66;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.modulePackage = "unknown.pkg";
+    innerModuleInfo.moduleName = "unknownModule";
+    innerModuleInfo.name = "unknownModule";
+    innerModuleInfo.versionCode = 88;
+    innerModuleInfo.distro.moduleType = "unexpectedType";
+    innerBundleInfo.InsertInnerModuleInfo(innerModuleInfo.modulePackage, innerModuleInfo);
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo(innerModuleInfo.modulePackage);
+    ASSERT_NE(hapModule, std::nullopt);
+    EXPECT_EQ(hapModule->versionCode, innerModuleInfo.versionCode);
+    EXPECT_EQ(hapModule->moduleType, ModuleType::UNKNOWN);
 }
 
 /**
