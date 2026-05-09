@@ -14255,6 +14255,26 @@ std::vector<std::string> BundleDataMgr::GetAllowListenBundleNames(
     return bundleNames;
 }
 
+ErrCode BundleDataMgr::FindSkillInfoFromAllBundles(const std::string &skillName, uint32_t flags,
+    int32_t requestUserId, SkillInfo &skillInfo)
+{
+    for (const auto &[bundleName, info] : bundleInfos_) {
+        if (!info.HasInnerBundleUserInfo(requestUserId)) {
+            continue;
+        }
+        for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
+            for (const auto &profile : moduleInfo.skillProfiles) {
+                if (profile.name == skillName) {
+                    GetSkillInfoWithFlags(info, moduleInfo, profile, flags, skillInfo);
+                    return ERR_OK;
+                }
+            }
+        }
+    }
+    APP_LOGE("skill not found in all bundles, skillName:%{public}s", skillName.c_str());
+    return ERR_BUNDLE_MANAGER_SKILL_INFO_NOT_EXIST;
+}
+
 void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
     const InnerModuleInfo &moduleInfo, const SkillProfile &profile,
     uint32_t flags, SkillInfo &skillInfo)
@@ -14392,6 +14412,9 @@ ErrCode BundleDataMgr::GetSkillInfo(const std::string &bundleName, const std::st
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    if (bundleName.empty() && moduleName.empty()) {
+        return FindSkillInfoFromAllBundles(skillName, flags, requestUserId, skillInfo);
+    }
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("bundleName:%{public}s not found", bundleName.c_str());

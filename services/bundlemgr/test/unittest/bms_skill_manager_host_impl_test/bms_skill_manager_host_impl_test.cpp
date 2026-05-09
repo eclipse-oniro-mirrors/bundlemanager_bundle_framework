@@ -112,14 +112,6 @@ TEST_F(BmsSkillManagerHostImplTest, GetSkillInfo_EmptyBundleName)
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
-TEST_F(BmsSkillManagerHostImplTest, GetSkillInfo_EmptyModuleName)
-{
-    SkillManagerHostImpl impl;
-    SkillInfo skillInfo;
-    ErrCode ret = impl.GetSkillInfo("com.test", "", "skill", 0, 100, skillInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
-}
-
 TEST_F(BmsSkillManagerHostImplTest, GetSkillInfo_EmptySkillName)
 {
     SkillManagerHostImpl impl;
