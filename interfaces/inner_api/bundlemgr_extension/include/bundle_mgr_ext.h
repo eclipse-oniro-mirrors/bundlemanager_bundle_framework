@@ -103,6 +103,10 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
+    virtual ErrCode GetCriticalAppList(int32_t userId, std::vector<std::string> &bundleNames)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
     virtual ErrCode ClearBackupUninstallFile(int32_t userId)
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;

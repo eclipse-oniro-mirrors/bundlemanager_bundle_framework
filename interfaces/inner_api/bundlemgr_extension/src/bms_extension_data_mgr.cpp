@@ -351,6 +351,22 @@ ErrCode BmsExtensionDataMgr::GetBackupUninstallList(int32_t userId, std::set<std
     return bundleMgrExtPtr->GetBackupUninstallList(userId, uninstallBundles);
 }
 
+ErrCode BmsExtensionDataMgr::GetCriticalAppList(int32_t userId, std::vector<std::string> &bundleNames)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    APP_LOGI_NOFUNC("EXT GetCriticalAppList -u %{public}d", userId);
+    return bundleMgrExtPtr->GetCriticalAppList(userId, bundleNames);
+}
+
 ErrCode BmsExtensionDataMgr::ClearBackupUninstallFile(int32_t userId)
 {
     if (Init() != ERR_OK || handler_ == nullptr) {

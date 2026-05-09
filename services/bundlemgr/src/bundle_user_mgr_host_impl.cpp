@@ -796,14 +796,21 @@ ErrCode BundleUserMgrHostImpl::CheckCriticalAppAreInstalled(
         APP_LOGE("DataMgr is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
+
+    BmsExtensionDataMgr bmsExtensionDataMgr;
     std::vector<std::string> checkList;
+    ErrCode res = bmsExtensionDataMgr.GetCriticalAppList(userId, checkList);
+    if (res != ERR_OK) {
+        APP_LOGW_NOFUNC("GetCriticalAppList failed %{public}d, use legacy critical app list", res);
 #ifdef WINDOW_ENABLE
-    if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
-        checkList.push_back(Constants::SCENE_BOARD_BUNDLE_NAME);
-    } else {
-        checkList.push_back(ServiceConstants::LAUNCHER_BUNDLE_NAME);
-    }
+        if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
+            checkList.push_back(Constants::SCENE_BOARD_BUNDLE_NAME);
+        } else {
+            checkList.push_back(ServiceConstants::LAUNCHER_BUNDLE_NAME);
+        }
 #endif
+    }
+
     for (const auto &bundleName : checkList) {
         bool foundInPreInfos = std::any_of(preInfos.begin(), preInfos.end(),
             [&](const PreInstallBundleInfo &info) { return info.GetBundleName() == bundleName; });
@@ -812,7 +819,7 @@ ErrCode BundleUserMgrHostImpl::CheckCriticalAppAreInstalled(
             continue;
         }
         bool installed = false;
-        ErrCode res = dataMgr->IsBundleInstalled(bundleName, userId, Constants::MAIN_APP_INDEX, installed);
+        res = dataMgr->IsBundleInstalled(bundleName, userId, Constants::MAIN_APP_INDEX, installed);
         if (res != ERR_OK) {
             APP_LOGE_NOFUNC("IsBundleInstalled failed %{public}d", res);
             return res;
