@@ -2577,6 +2577,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0116, Function | SmallTest
         }
     )"_json;
     bool ans = callback.OnApplicationThemeChanged(theme.dump());
+    EXPECT_NO_THROW(BundleResourceRegister::RegisterConfigurationObserver());
     EXPECT_TRUE(ans);
 }
 

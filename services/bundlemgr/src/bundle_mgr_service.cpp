@@ -44,6 +44,7 @@ namespace AppExecFwk {
 namespace {
 constexpr int32_t BUNDLE_BROKER_SERVICE_ABILITY_ID = 0x00010500;
 constexpr int16_t EL5_FILEKEY_SERVICE_ABILITY_ID = 8250;
+constexpr int16_t ABILITY_MANAGER_SERVICE_ID = 501;
 constexpr const char* FUN_BMS_START = "BundleMgrService::Start";
 constexpr unsigned int BMS_START_TIME_OUT_SECONDS = 270;
 const std::string EXTENSION_BACKUP = "backup";
@@ -94,6 +95,7 @@ void BundleMgrService::OnStart()
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
     AddSystemAbilityListener(BUNDLE_BROKER_SERVICE_ABILITY_ID);
     AddSystemAbilityListener(EL5_FILEKEY_SERVICE_ABILITY_ID);
+    AddSystemAbilityListener(ABILITY_MANAGER_SERVICE_ID);
     APP_LOGI_NOFUNC("BundleMgrService OnStart end");
 }
 
@@ -611,6 +613,9 @@ void BundleMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
     if (EL5_FILEKEY_SERVICE_ABILITY_ID == systemAbilityId) {
         int32_t reg = Security::AccessToken::El5FilekeyManagerKit::RegisterCallback(sptr(new El5FilekeyCallback()));
         APP_LOGI("Register El5FilekeyCallback result: %{public}d", reg);
+    }
+    if (ABILITY_MANAGER_SERVICE_ID == systemAbilityId) {
+        BundleResourceHelper::RegisterConfigurationObserver();
     }
 }
 

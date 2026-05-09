@@ -26,9 +26,18 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+
+std::mutex BundleResourceRegister::registerMutex_;
+bool BundleResourceRegister::isRegistered_ = false;
+
 void BundleResourceRegister::RegisterConfigurationObserver()
 {
 #ifdef ABILITY_RUNTIME_ENABLE
+    std::lock_guard<std::mutex> lock(registerMutex_);
+    if (isRegistered_) {
+        APP_LOGI_NOFUNC("already registered, skip");
+        return;
+    }
     APP_LOGI("start");
     sptr<IConfigurationObserver> observer(new (std::nothrow) BundleResourceObserver());
     if (observer == nullptr) {
@@ -40,7 +49,9 @@ void BundleResourceRegister::RegisterConfigurationObserver()
         APP_LOGE("fail to create appMgrClient");
         return;
     }
-    appMgrClient->RegisterConfigurationObserver(observer);
+    if (appMgrClient->RegisterConfigurationObserver(observer) == AppMgrResultCode::RESULT_OK) {
+        isRegistered_ = true;
+    }
     APP_LOGI("end");
 #else
     APP_LOGI("ability runtime not support");
