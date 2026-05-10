@@ -1288,6 +1288,7 @@ public:
     virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;
     virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos) override;
+    virtual ErrCode GetAlternateIcons(std::vector<AlternateIconInfo> &alternateIcons) override;
     virtual ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId, PluginBundleInfo &pluginBundleInfo) override;
     virtual ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName,

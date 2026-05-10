@@ -7566,4 +7566,24 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0600, Function | SmallTes
     EXPECT_TRUE(bundleNames.empty());
     dataMgr->bundleInfos_.clear();
 }
+
+/**
+ * @tc.number: BundleMgrHostImplGetAlternateIcons_0001
+ * @tc.name: BundleMgrHostImplGetAlternateIcons
+ * @tc.desc: test GetAlternateIcons(std::vector<AlternateIconInfo> &alternateIcons)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplGetAlternateIcons_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::vector<AlternateIconInfo> alternateIcons;
+
+    auto ret = localBundleMgrHostImpl->GetAlternateIcons(alternateIcons);
+    EXPECT_NE(ret, ERR_OK);
+
+    ClearDataMgr();
+    ret = localBundleMgrHostImpl->GetAlternateIcons(alternateIcons);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    EXPECT_NE(ret, ERR_OK);
+}
 } // OHOS

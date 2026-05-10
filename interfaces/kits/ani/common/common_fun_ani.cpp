@@ -44,6 +44,7 @@ constexpr const char* CLASSNAME_SIGNATURE_INFO = "bundleManager.BundleInfo.Signa
 constexpr const char* CLASSNAME_SIGNATURE_INFO_INNER = "bundleManager.BundleInfoInner.SignatureInfoInner";
 constexpr const char* CLASSNAME_APP_CLONE_IDENTITY_INNER = "bundleManager.BundleInfoInner.AppCloneIdentityInner";
 constexpr const char* CLASSNAME_DYNAMIC_ICON_INFO_INNER = "bundleManager.BundleInfoInner.DynamicIconInfoInner";
+constexpr const char* CLASSNAME_ALTERNATE_ICON_INFO_INNER = "bundleManager.BundleInfoInner.AlternateIconInfoInner";
 constexpr const char* CLASSNAME_PERMISSION_DEF_INNER = "bundleManager.PermissionDefInner.PermissionDefInner";
 constexpr const char* CLASSNAME_SHARED_BUNDLE_INFO_INNER = "bundleManager.SharedBundleInfoInner.SharedBundleInfoInner";
 constexpr const char* CLASSNAME_SHARED_MODULE_INFO_INNER = "bundleManager.SharedBundleInfoInner.SharedModuleInfoInner";
@@ -2639,6 +2640,27 @@ ani_object CommonFunAni::ConvertDynamicIconInfo(ani_env* env, const DynamicIconI
         .AddInt()                                   // appIndex: int
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_DYNAMIC_ICON_INFO_INNER, ctorSig, args);
+}
+
+ani_object CommonFunAni::ConvertAlternateIconInfo(ani_env* env, const AlternateIconInfo& alternateIconInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    // iconName: string
+    ani_string iconName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, alternateIconInfo.alternateIconName, iconName));
+
+    ani_value args[] = {
+        { .r = iconName },
+        { .l = static_cast<ani_long>(alternateIconInfo.iconId) },
+        { .z = BoolToAniBoolean(alternateIconInfo.enabled) },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // iconName: string
+        .AddLong()                                  // iconId: long
+        .AddBoolean()                               // enabled: boolean
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_ALTERNATE_ICON_INFO_INNER, ctorSig, args);
 }
 
 bool CommonFunAni::ParseBundleOptions(ani_env* env, ani_object object, int32_t& appIndex, int32_t& userId)

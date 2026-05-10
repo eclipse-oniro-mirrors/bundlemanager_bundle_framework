@@ -7060,6 +7060,18 @@ ErrCode BundleMgrProxy::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &sho
         BundleMgrInterfaceCode::GET_ALL_SHORTCUT_INFO_FOR_SELF, data, shortcutInfos);
 }
 
+ErrCode BundleMgrProxy::GetAlternateIcons(std::vector<AlternateIconInfo> &alternateIcons)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("GetAlternateIcons write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<AlternateIconInfo>(
+        BundleMgrInterfaceCode::GET_ALTERNATE_ICONS, data, alternateIcons);
+}
+
 ErrCode BundleMgrProxy::AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

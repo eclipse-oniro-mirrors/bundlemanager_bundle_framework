@@ -69,6 +69,12 @@ export interface DynamicIconInfo {
   readonly appIndex: int;
 }
 
+export interface AlternateIconInfo {
+  readonly iconName: string;
+  readonly iconId: long;
+  readonly enabled: boolean;
+}
+
 export interface BundleOptions {
   userId?: int;
   appIndex?: int;

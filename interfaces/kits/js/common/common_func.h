@@ -239,6 +239,9 @@ static void ConvertDynamicIconInfo(napi_env env, const DynamicIconInfo &dynamicI
 static void ConvertDynamicIconInfos(napi_env env, const std::vector<DynamicIconInfo> &dynamicIconInfos,
     napi_value value);
 
+static void ConvertAlternateIconInfos(napi_env env, const std::vector<AlternateIconInfo> &alternateIcons,
+    napi_value value);
+
 static void GetBundleNameAndIndexByName(const std::string& keyName, std::string& bundleName, int32_t& appIndex);
 
 static std::string GetCloneBundleIdKey(const std::string& bundleName, const int32_t appIndex);

@@ -1304,6 +1304,7 @@ public:
         const int32_t patchVersion);
     void FilterShortcutJson(nlohmann::json &jsonResult);
     ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos);
+    ErrCode GetAlternateIcons(std::vector<AlternateIconInfo> &alternateIcons);
     ErrCode AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId);
     ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex, int32_t userId,
         const std::vector<std::string> &ids);

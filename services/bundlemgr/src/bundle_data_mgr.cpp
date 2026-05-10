@@ -13312,6 +13312,45 @@ ErrCode BundleDataMgr::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shor
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetAlternateIcons(std::vector<AlternateIconInfo> &alternateIcons)
+{
+    APP_LOGD("GetAlternateIcons begin");
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    int32_t appIndex = 0;
+    std::string bundleName;
+    auto ret = GetBundleNameAndIndex(uid, bundleName, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("GetAlternateIcons get bundle name failed");
+        return ERR_EXT_RESOURCE_MANAGER_GET_ALTERNATE_ICONS_FAILED;
+    }
+    if (appIndex != Constants::INITIAL_APP_INDEX) {
+        APP_LOGE_NOFUNC("GetAlternateIcons clone app is not supported");
+        return ERR_EXT_RESOURCE_MANAGER_GET_ALTERNATE_ICONS_FAILED;
+    }
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto iter = bundleInfos_.find(bundleName);
+        if (iter == bundleInfos_.end()) {
+            APP_LOGE_NOFUNC("GetAlternateIcons %{public}s not exist", bundleName.c_str());
+            return ERR_EXT_RESOURCE_MANAGER_GET_ALTERNATE_ICONS_FAILED;
+        }
+        int32_t userId = uid / Constants::BASE_USER_RANGE;
+        std::string curAlternateIconName = iter->second.GetCurAlternateIcon(userId);
+        auto appInfo = iter->second.GetBaseApplicationInfo();
+        for (const auto &icon : appInfo.alternateIcons) {
+            AlternateIconInfo info;
+            info.alternateIconName = icon.name;
+            info.iconId = icon.iconId;
+            if (icon.name == curAlternateIconName) {
+                info.enabled = true;
+            }
+            alternateIcons.push_back(info);
+        }
+    }
+    APP_LOGD("GetAlternateIcons end size:%{public}zu", alternateIcons.size());
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::CheckShortcutIdsUnique(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const std::vector<ShortcutInfo> &shortcutInfos, std::vector<std::string> &ids) const
 {

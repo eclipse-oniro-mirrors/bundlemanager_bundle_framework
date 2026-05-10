@@ -88,6 +88,7 @@ constexpr const char* MULTI_APP_MODE = "multiAppMode";
 constexpr const char* ORIENTATION_ID = "orientationId";
 constexpr const char* USER_ID = "userId";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
+constexpr const char* ICON_NAME = "iconName";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -158,6 +159,7 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED, ERROR_ENABLE_DYNAMIC_ICON },
     { ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED_DUE_TO_EXISTING_CUSTOM_THEMES,
         ERROR_ENABLE_DYNAMIC_ICON_DUE_TO_EXISTING_CUSTOM_THEMES },
+    { ERR_EXT_RESOURCE_MANAGER_GET_ALTERNATE_ICONS_FAILED, ERROR_GET_ALTERNATE_ICONS },
     { ERR_APPEXECFWK_SET_ABILITY_FILE_TYPES_FOR_SELF, ERROR_SET_ABILITY_FILE_TYPES_FOR_SELF },
     { ERR_BUNDLE_MANAGER_INVALID_SCHEME, ERROR_INVALID_LINK },
     { ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES, ERROR_SCHEME_NOT_IN_QUERYSCHEMES },
@@ -3099,6 +3101,27 @@ void CommonFunc::ConvertDynamicIconInfos(napi_env env, const std::vector<Dynamic
         napi_value objInfo = nullptr;
         napi_create_object(env, &objInfo);
         ConvertDynamicIconInfo(env, dynamicIconInfos[index], objInfo);
+        napi_set_element(env, value, index, objInfo);
+    }
+}
+
+void CommonFunc::ConvertAlternateIconInfos(napi_env env, const std::vector<AlternateIconInfo> &alternateIcons,
+    napi_value value)
+{
+    AutoHandleScope scopeGuard(env);
+    for (size_t index = 0; index < alternateIcons.size(); ++index) {
+        napi_value objInfo = nullptr;
+        napi_create_object(env, &objInfo);
+        napi_value nIconName;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, alternateIcons[index].alternateIconName.c_str(),
+            NAPI_AUTO_LENGTH, &nIconName));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, ICON_NAME, nIconName));
+        napi_value nIconId;
+        NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, alternateIcons[index].iconId, &nIconId));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, ICON_ID, nIconId));
+        napi_value nEnabled;
+        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, alternateIcons[index].enabled, &nEnabled));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, ENABLED, nEnabled));
         napi_set_element(env, value, index, objInfo);
     }
 }

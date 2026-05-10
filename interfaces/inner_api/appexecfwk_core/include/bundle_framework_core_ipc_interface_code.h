@@ -258,6 +258,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_API_TARGET_VERSION_BY_UID = 232,
     GET_SKILL_MANAGER_PROXY = 233,
     GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR = 234,
+    GET_ALTERNATE_ICONS = 235,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

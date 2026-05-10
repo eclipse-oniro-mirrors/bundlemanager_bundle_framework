@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_INTERFACE_H
 
 #include "ability_info.h"
+#include "alternate_icon_info.h"
 #include "appexecfwk_errors.h"
 #include "application_info.h"
 #include "app_install_extended_info.h"
@@ -2023,6 +2024,11 @@ public:
     }
 
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetAlternateIcons(std::vector<AlternateIconInfo> &alternateIcons)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

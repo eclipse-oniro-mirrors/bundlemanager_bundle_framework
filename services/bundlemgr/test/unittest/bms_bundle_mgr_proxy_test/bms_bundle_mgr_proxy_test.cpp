@@ -1882,5 +1882,20 @@ HWTEST_F(BmsBundleMgrProxyTest, GetTopNLargestItemsInAppDataDir_0100, Function |
     ErrCode ret = bundleMgrProxy.GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, callback);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
+
+/**
+ * @tc.number: GetAlternateIcons_0100
+ * @tc.name: test the GetAlternateIcons
+ * @tc.desc: 1. system running normally
+ *           2. test GetAlternateIcons
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAlternateIcons_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<AlternateIconInfo> alternateIcons;
+    auto ret = bundleMgrProxy.GetAlternateIcons(alternateIcons);
+    EXPECT_NE(ret, ERR_OK);
+}
 }
 }

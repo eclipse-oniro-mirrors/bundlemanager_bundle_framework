@@ -195,6 +195,7 @@ constexpr const char* ERR_MSG_ERROR_ALTERNATE_ICON_SET_ERROR = "Failed to set th
 constexpr const char* ERR_MSG_INVALID_ALTERNATE_ICON_NAME =
     "The alternateIconName must match the name field under alternateIcons in the app.json5 file.";
 constexpr const char* ERR_MSG_ERROR_NO_ALTERNATE_ICON_ENABLED = "No alternate icon is enabled.";
+constexpr const char* ERROR_MSG_GET_ALTERNATE_ICONS_FAILED = "Failed to obtain alternate icon.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -300,7 +301,8 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_SKILL_NOT_EXIST, ERROR_MSG_SKILL_NOT_EXIST},
     { ERROR_INVALID_ALTERNATE_ICON_NAME, ERR_MSG_INVALID_ALTERNATE_ICON_NAME},
     { ERROR_NO_ALTERNATE_ICON_ENABLED, ERR_MSG_ERROR_NO_ALTERNATE_ICON_ENABLED},
-    { ERROR_SET_ALTERNATE_ICON, ERR_MSG_ERROR_ALTERNATE_ICON_SET_ERROR}
+    { ERROR_SET_ALTERNATE_ICON, ERR_MSG_ERROR_ALTERNATE_ICON_SET_ERROR},
+    { ERROR_GET_ALTERNATE_ICONS, ERROR_MSG_GET_ALTERNATE_ICONS_FAILED}
 };
 
 static std::unordered_map<int32_t, const char*> ERR_NEW_MSG_MAP = {
