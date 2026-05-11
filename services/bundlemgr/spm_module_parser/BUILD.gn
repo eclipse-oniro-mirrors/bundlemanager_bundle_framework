@@ -13,6 +13,12 @@
 
 import("//build/ohos.gni")
 
+config("bms_spm_module_parser_config") {
+  include_dirs = [
+    "include"
+  ]
+}
+
 ohos_shared_library("spm_module_parser") {
   branch_protector_ret = "pac_ret"
 
@@ -32,6 +38,8 @@ ohos_shared_library("spm_module_parser") {
   sources = [
     "src/spm_module_parser.cpp",
   ]
+
+  public_configs = [ ":bms_spm_module_parser_config" ]
 
   external_deps = [
     "json:nlohmann_json_static",
