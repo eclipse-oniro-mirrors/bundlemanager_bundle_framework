@@ -100,7 +100,8 @@
                 "bounds_checking_function",
                 "webview",
                 "user_auth_framework",
-                "thermal_manager"
+                "thermal_manager",
+                "icu"
             ],
             "third_party": [
                 "jsoncpp"
