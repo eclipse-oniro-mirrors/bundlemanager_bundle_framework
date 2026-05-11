@@ -399,7 +399,9 @@ sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const I
         LOG_E(BMS_TAG_INSTALLER, "CreateStreamInstaller failed");
         return streamInstaller;
     }
-    streamInstaller->SetInstallerId(streamInstallerId);
+    if (streamInstallerId > 0) {
+        streamInstaller->SetInstallerId(streamInstallerId);
+    }
     LOG_D(BMS_TAG_INSTALLER, "create stream installer successfully");
     return streamInstaller;
 }
@@ -836,6 +838,10 @@ ErrCode BundleInstallerProxy::AddEnterpriseResignCert(
     }
     if (!data.WriteString16(Str8ToStr16(certAlias))) {
         LOG_E(BMS_TAG_INSTALLER, "write certAlias fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (certContent.size() > UINT32_MAX - 1) {
+        LOG_E(BMS_TAG_INSTALLER, "uint32 max limit");
         return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteUint32(certContent.size() + 1)) {
