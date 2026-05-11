@@ -32,7 +32,7 @@ export default namespace zlib {
   const MAX_BITS: int = 16;
   const ERROR_PARAM_CHECK_ERROR: int = 401;
   const PARAM_CHECK_FAILED: string = 'The parameter check failed';
-  function createBusinessError(code: int, message: string) {
+  function createBusinessError(code: int, message: string): BusinessError {
     let err = new BusinessError();
     err.code = code;
     err.name = 'Error';
@@ -1029,8 +1029,8 @@ export default namespace zlib {
     zipCleaner.zipClean();
   }
 
-  let destroyRegister = new FinalizationRegistry<ZipCleaner>(callback);
-  let unregisterToken = new object();
+  let destroyRegister: FinalizationRegistry<ZipCleaner> = new FinalizationRegistry<ZipCleaner>(callback);
+  let unregisterToken: object = new object();
 
   export class ZipInternal implements Zip {
     @JSONStringifyIgnore

@@ -45,7 +45,7 @@ namespace bundleManager {
   const PARAM_BUNDLENAME_TYPE_ERROR: string = "BusinessError 401: Parameter error. The type of bundleName must be string.";
   const PARAM_TYPE_CHECK_ERROR: string = "param type check error";
 
-  function createBusinessError(code: int, message: string) {
+  function createBusinessError(code: int, message: string): BusinessError {
     let err = new BusinessError();
     err.code = code;
     err.name = 'Error';
@@ -1270,7 +1270,7 @@ namespace bundleManager {
   }
 
   function getProfileByAbility(moduleName: string,
-    abilityName: string, metadataName: string, callback: AsyncCallback<Array<string>>) {
+    abilityName: string, metadataName: string, callback: AsyncCallback<Array<string>>): void {
     let execFun = (): Array<string> => {
       return getProfileByAbilityNative(moduleName, abilityName, metadataName, AbilityProfileType.ABILITY_PROFILE, false);
     };

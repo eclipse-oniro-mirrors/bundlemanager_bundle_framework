@@ -31,7 +31,7 @@ export default namespace overlay {
   const PARAM_TARGET_MODULENAME_EMPTY_ERROR: string = "BusinessError 401: Parameter error. The type of targetModuleName must be string.";
   const PARAM_TARGET_BUNDLENAME_EMPTY_ERROR: string = "BusinessError 401: Parameter error. The type of targetBundleName must be string.";
 
-  function createBusinessError(code: int, message: string) {
+  function createBusinessError(code: int, message: string): BusinessError {
     let err = new BusinessError();
     err.code = code;
     err.name = 'Error';
