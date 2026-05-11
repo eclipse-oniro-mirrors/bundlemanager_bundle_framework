@@ -45,6 +45,8 @@ public:
     static bool IsPrivateSpaceUser(const int32_t userId);
 
     static bool CheckUserIsolation(const int32_t targetUserId, const std::unordered_set<int32_t> &installedUserIds);
+
+    static bool IsUserForeground(int32_t userId);
 private:
     static std::set<int32_t> GetEnterpriseUserIds();
 };
