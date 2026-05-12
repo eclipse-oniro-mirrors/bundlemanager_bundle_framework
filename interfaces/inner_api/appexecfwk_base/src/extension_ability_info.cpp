@@ -93,6 +93,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "vpn", ExtensionAbilityType::VPN },
     { "autoFill/smart", ExtensionAbilityType::AUTO_FILL_SMART },
     { "liveViewLockScreen", ExtensionAbilityType::LIVEVIEW_LOCKSCREEN },
+    { "liveViewCard", ExtensionAbilityType::LIVEVIEW_CARD },
     { "photoEditor", ExtensionAbilityType::PHOTO_EDITOR },
     { "callerInfoQuery", ExtensionAbilityType::CALLER_INFO_QUERY },
     { "sysPicker/photoEditor", ExtensionAbilityType::SYSPICKER_PHOTOEDITOR },
