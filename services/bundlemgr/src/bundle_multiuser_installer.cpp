@@ -152,6 +152,10 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         APP_LOGE("check space isolation failed");
         return ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
     }
+    if (info.GetApplicationBundleType() == BundleType::SKILL) {
+        APP_LOGE("skill is not allow to install by BundleMultiUserInstaller");
+        return ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+    }
 
     // uid
     InnerBundleUserInfo newUserInfo;

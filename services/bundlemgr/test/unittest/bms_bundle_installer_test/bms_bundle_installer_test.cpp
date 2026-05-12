@@ -2778,6 +2778,80 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2100, Function | SmallTest 
 }
 
 /**
+ * @tc.number: ProcessBundleUninstall_0001
+ * @tc.name: test ProcessBundleUninstall
+ * @tc.desc: 1.Test ProcessBundleUninstall
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessBundleUninstall_0001, Function | SmallTest | Level0)
+{
+    InnerBundleInfo bundleInfo;
+    bundleInfo.SetApplicationBundleType(BundleType::SKILL);
+    bundleInfo.baseApplicationInfo_->bundleName = "test_skill";
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    installer.dataMgr_->AddUserId(100);
+    installer.dataMgr_->bundleInfos_["test_skill"] = bundleInfo;
+
+    InstallParam installParam;
+    installParam.userId = 100;
+    int32_t uid = 0;
+    ErrCode ret = installer.ProcessBundleUninstall("test_skill", installParam, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR);
+
+    ret = ERR_OK;
+    ret = installer.ProcessBundleUninstall("test_skill", "test_skill", installParam, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: ProcessBundleUninstall_0002
+ * @tc.name: test ProcessBundleUninstall
+ * @tc.desc: 1.Test ProcessBundleUninstall
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessBundleUninstall_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo bundleInfo;
+    bundleInfo.SetApplicationBundleType(BundleType::APP);
+    bundleInfo.baseApplicationInfo_->bundleName = "test_skill";
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    installer.dataMgr_->AddUserId(100);
+    installer.dataMgr_->bundleInfos_["test_skill"] = bundleInfo;
+
+    InstallParam installParam;
+    installParam.userId = 100;
+    int32_t uid = 0;
+    ErrCode ret = installer.ProcessBundleUninstall("test_skill", installParam, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_INSTALL_HAP);
+
+    ret = ERR_OK;
+    ret = installer.ProcessBundleUninstall("test_skill", "test_skill", installParam, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_INSTALL_HAP);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: ProcessBundleUninstall_0003
+ * @tc.name: test ProcessBundleUninstall
+ * @tc.desc: 1.Test ProcessBundleUninstall
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessBundleUninstall_0003, Function | SmallTest | Level0)
+{
+    InnerBundleInfo bundleInfo;
+    bundleInfo.SetApplicationBundleType(BundleType::SKILL);
+    bundleInfo.baseApplicationInfo_->bundleName = "test_skill";
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    installer.dataMgr_->AddUserId(100);
+    installer.dataMgr_->bundleInfos_["test_skill"] = bundleInfo;
+
+    ErrCode ret = installer.ProcessBundleInstall("test_skill", 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED);
+    ResetDataMgr();
+}
+
+/**
  * @tc.number: baseBundleInstaller_2200
  * @tc.name: test RemoveBundle
  * @tc.desc: 1.Test the RemoveBundle
