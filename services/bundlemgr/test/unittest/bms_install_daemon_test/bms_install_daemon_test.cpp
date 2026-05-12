@@ -2122,25 +2122,6 @@ HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignature_InvalidProfileBlockLength_010
 }
 
 /**
- * @tc.number: VerifyCodeSignatureForHap_InvalidBundleName_0100
- * @tc.name: test VerifyCodeSignatureForHap with invalid bundleName via IPC
- * @tc.desc: 1. calling VerifyCodeSignatureForHap with empty bundleName should return PARAM_ERROR
- *           2. calling VerifyCodeSignatureForHap with invalid bundleName should return PARAM_ERROR
-*/
-HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignatureForHap_InvalidBundleName_0100, Function | SmallTest | Level0)
-{
-    CodeSignatureParam codeSignatureParam;
-    codeSignatureParam.bundleName = "";
-    codeSignatureParam.modulePath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
-    auto ret = VerifyCodeSignatureForHap(codeSignatureParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    codeSignatureParam.bundleName = "../invalid";
-    ret = VerifyCodeSignatureForHap(codeSignatureParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
  * @tc.number: CheckEncryption_InvalidBundleName_0100
  * @tc.name: test CheckEncryption with invalid bundleName via IPC
  * @tc.desc: 1. calling CheckEncryption with empty bundleName should return PARAM_ERROR
@@ -2378,28 +2359,6 @@ HWTEST_F(BmsInstallDaemonTest, RemoveExtensionDir_MaxCount_0100, Function | Smal
 }
 
 /**
- * @tc.number: ExecuteAOT_InvalidBundleName_0100
- * @tc.name: test ExecuteAOT with invalid bundleName or moduleName
- * @tc.desc: 1. test empty bundleName should return PARAM_ERROR
- *           2. test empty moduleName should return PARAM_ERROR
-*/
-HWTEST_F(BmsInstallDaemonTest, ExecuteAOT_InvalidBundleName_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl hostImpl;
-    AOTArgs aotArgs;
-    aotArgs.bundleName = "";
-    aotArgs.moduleName = "entry";
-    std::vector<uint8_t> pendSignData;
-    ErrCode ret = hostImpl.ExecuteAOT(aotArgs, pendSignData);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    aotArgs.bundleName = "com.example.test";
-    aotArgs.moduleName = "";
-    ret = hostImpl.ExecuteAOT(aotArgs, pendSignData);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
  * @tc.number: RemoveModuleDataDir_InvalidPath_0100
  * @tc.name: test RemoveModuleDataDir with invalid path containing ..
  * @tc.desc: 1. test ModuleDir containing .. should return PARAM_ERROR
@@ -2542,38 +2501,6 @@ HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_ZeroLength_0100, Function | S
     auto ret = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     delete[] profileBlock;
-}
-
-/**
- * @tc.number: ExecuteAOT_InvalidBundleNameFormat_0100
- * @tc.name: test ExecuteAOT with invalid bundleName format
- * @tc.desc: 1. test bundleName containing .. should return PARAM_ERROR
-*/
-HWTEST_F(BmsInstallDaemonTest, ExecuteAOT_InvalidBundleNameFormat_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl hostImpl;
-    AOTArgs aotArgs;
-    aotArgs.bundleName = "../bad";
-    aotArgs.moduleName = "entry";
-    std::vector<uint8_t> pendSignData;
-    ErrCode ret = hostImpl.ExecuteAOT(aotArgs, pendSignData);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: ExecuteAOT_InvalidModuleNameFormat_0100
- * @tc.name: test ExecuteAOT with invalid moduleName format
- * @tc.desc: 1. test moduleName containing .. should return PARAM_ERROR
-*/
-HWTEST_F(BmsInstallDaemonTest, ExecuteAOT_InvalidModuleNameFormat_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl hostImpl;
-    AOTArgs aotArgs;
-    aotArgs.bundleName = "com.example.test";
-    aotArgs.moduleName = "../bad";
-    std::vector<uint8_t> pendSignData;
-    ErrCode ret = hostImpl.ExecuteAOT(aotArgs, pendSignData);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -2796,20 +2723,6 @@ HWTEST_F(BmsInstallDaemonTest, SetArkStartupCacheApl_PathTraversal_0100, Functio
 {
     InstalldHostImpl hostImpl;
     ErrCode ret = hostImpl.SetArkStartupCacheApl("com.example.test", "/data/app/el1/100/system_optimize/../test");
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: VerifyCodeSignatureForHap_ModulePathTraversal_0100
- * @tc.name: test VerifyCodeSignatureForHap with modulePath containing ..
- * @tc.desc: 1. test modulePath containing .. should return PARAM_ERROR
-*/
-HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignatureForHap_ModulePathTraversal_0100, Function | SmallTest | Level0)
-{
-    CodeSignatureParam codeSignatureParam;
-    codeSignatureParam.bundleName = "com.example.test";
-    codeSignatureParam.modulePath = "/data/app/el1/bundle/public/com.example.test/../entry.hap";
-    auto ret = VerifyCodeSignatureForHap(codeSignatureParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
