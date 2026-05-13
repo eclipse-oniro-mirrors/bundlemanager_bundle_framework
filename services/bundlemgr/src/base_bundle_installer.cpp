@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <fcntl.h>
 #include <fstream>
+#include <set>
 #include <sys/stat.h>
 #include <sys/statfs.h>
 #include <sstream>
@@ -4465,6 +4466,7 @@ ErrCode BaseBundleInstaller::ProcessAppSkills(InnerBundleInfo &info)
         return ERR_OK;
     }
 
+    appSkillProcessedModulePackages_.emplace(info.GetCurrentModulePackage());
     moduleSkillInfoMap_.erase(info.GetCurrentModulePackage());
     auto &moduleInfo = moduleInfoIter->second;
     if (moduleInfo.skillProfiles.empty()) {
@@ -4481,20 +4483,20 @@ ErrCode BaseBundleInstaller::ProcessAppSkills(InnerBundleInfo &info)
 
     std::vector<std::string> skillNameList;
     for (const auto &skillProfile : moduleInfo.skillProfiles) {
-        if (!skillProfile.name.empty() &&
-            skillProfile.name.find(ServiceConstants::RELATIVE_PATH) == std::string::npos) {
-            skillNameList.emplace_back(skillProfile.name);
+        if (skillProfile.name.empty() ||
+            skillProfile.name.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
+            LOG_E(BMS_TAG_INSTALLER, "invalid app skill profile, bundle=%{public}s, module=%{public}s, "
+                "skill=%{public}s", info.GetBundleName().c_str(), moduleInfo.moduleName.c_str(),
+                skillProfile.name.c_str());
+            return ERR_SKILLS_INVALID_APP_SKILL;
         }
+        skillNameList.emplace_back(skillProfile.name);
     }
-    if (skillNameList.empty()) {
-        moduleInfo.skillProfiles.clear();
-        return ERR_OK;
-    }
-
     std::string extractModuleName = moduleInfo.moduleName;
     if (isModuleUpdate_) {
         extractModuleName.append(ServiceConstants::TMP_SUFFIX);
     }
+    ScopeGuard skillGuard([&] { RemoveAppSkillsDir(info.GetBundleName(), moduleInfo.moduleName, isModuleUpdate_); });
 
     std::vector<SkillsPackageInfo> validSkillInfoList;
     ErrCode result = SkillsInstallerUtil::ExtractSkillsPackage(
@@ -4505,18 +4507,23 @@ ErrCode BaseBundleInstaller::ProcessAppSkills(InnerBundleInfo &info)
         return result;
     }
 
-    result = SkillsInstallerUtil::RemoveInvalidSkillProfiles(validSkillInfoList, info);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "remove invalid app skills failed, bundle=%{public}s, module=%{public}s, "
-            "ret=%{public}d", info.GetBundleName().c_str(), moduleInfo.moduleName.c_str(), result);
-        return result;
+    std::set<std::string> validSkillNames;
+    for (const auto &skillInfo : validSkillInfoList) {
+        if (skillInfo.moduleName == moduleInfo.moduleName) {
+            validSkillNames.insert(skillInfo.skillsName);
+        }
     }
-
-    if (validSkillInfoList.empty()) {
-        return ERR_OK;
+    for (const auto &skillProfile : moduleInfo.skillProfiles) {
+        if (validSkillNames.find(skillProfile.name) == validSkillNames.end()) {
+            LOG_E(BMS_TAG_INSTALLER, "invalid app skill package, bundle=%{public}s, module=%{public}s, "
+                "skill=%{public}s", info.GetBundleName().c_str(), moduleInfo.moduleName.c_str(),
+                skillProfile.name.c_str());
+            return ERR_SKILLS_INVALID_APP_SKILL;
+        }
     }
 
     moduleSkillInfoMap_[info.GetCurrentModulePackage()] = validSkillInfoList;
+    skillGuard.Dismiss();
     return ERR_OK;
 }
 
@@ -4556,30 +4563,37 @@ ErrCode BaseBundleInstaller::CommitAppSkills(const InnerBundleInfo &info)
         return ERR_APPEXECFWK_NULL_PTR;
     }
 
-    auto moduleInfoIter = info.GetInnerModuleInfos().find(info.GetCurrentModulePackage());
-    if (moduleInfoIter == info.GetInnerModuleInfos().end()) {
+    if (appSkillProcessedModulePackages_.empty()) {
         return ERR_OK;
     }
 
-    const std::string &moduleName = moduleInfoIter->second.moduleName;
-    ErrCode result = manager->DeleteSkillDescriptions(info.GetBundleName(), moduleName);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "delete old app skills description failed, bundle=%{public}s, "
-            "module=%{public}s, ret=%{public}d", info.GetBundleName().c_str(), moduleName.c_str(), result);
-        return result;
-    }
+    for (const auto &modulePackage : appSkillProcessedModulePackages_) {
+        auto moduleInfoIter = info.GetInnerModuleInfos().find(modulePackage);
+        if (moduleInfoIter == info.GetInnerModuleInfos().end()) {
+            continue;
+        }
 
-    auto skillInfoIter = moduleSkillInfoMap_.find(info.GetCurrentModulePackage());
-    if (skillInfoIter == moduleSkillInfoMap_.end() || skillInfoIter->second.empty()) {
-        return ERR_OK;
-    }
+        const std::string &moduleName = moduleInfoIter->second.moduleName;
+        ErrCode result = manager->DeleteSkillDescriptions(info.GetBundleName(), moduleName);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "delete old app skills description failed, bundle=%{public}s, "
+                "module=%{public}s, ret=%{public}d", info.GetBundleName().c_str(), moduleName.c_str(), result);
+            return result;
+        }
 
-    result = manager->AddSkillDescriptions(skillInfoIter->second);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "add app skills description failed, bundle=%{public}s, module=%{public}s, "
-            "ret=%{public}d", info.GetBundleName().c_str(), moduleName.c_str(), result);
+        auto skillInfoIter = moduleSkillInfoMap_.find(modulePackage);
+        if (skillInfoIter == moduleSkillInfoMap_.end() || skillInfoIter->second.empty()) {
+            continue;
+        }
+
+        result = manager->AddSkillDescriptions(skillInfoIter->second);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "add app skills description failed, bundle=%{public}s, module=%{public}s, "
+                "ret=%{public}d", info.GetBundleName().c_str(), moduleName.c_str(), result);
+            return result;
+        }
     }
-    return result;
+    return ERR_OK;
 }
 
 void BaseBundleInstaller::PrepareAppSkillStatus(
@@ -6883,6 +6897,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     isAppService_ = false;
     oldApplicationReservedFlag_ = 0;
     moduleSkillInfoMap_.clear();
+    appSkillProcessedModulePackages_.clear();
     appSkillNotifyBundleName_.clear();
     oldAppSkillNotifyItems_.clear();
     newAppSkillNotifyItems_.clear();
