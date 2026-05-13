@@ -324,12 +324,12 @@ ErrCode IndependentSkillsInstaller::CheckAndParseFiles(
     return result;
 }
 
-void IndependentSkillsInstaller::RemoveModuleDir(
+bool IndependentSkillsInstaller::RemoveModuleDir(
     const std::string &bundleName, const std::string &moduleName)
 {
     if (bundleName.empty() || moduleName.empty()) {
         LOG_W(BMS_TAG_INSTALLER, "bundle or module is empty, no need to process");
-        return;
+        return false;
     }
     std::string moduleDir =
         std::string(BASE_SKILL_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
@@ -338,15 +338,17 @@ void IndependentSkillsInstaller::RemoveModuleDir(
     if (InstalldClient::GetInstance()->RemoveDir(moduleDir, BundleDirScene::REMOVE_SKILL_MODULE_DIR, bundleName) !=
         ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "remove module dir %{public}s failed", moduleDir.c_str());
+        return false;
     }
+    return true;
 }
 
-void IndependentSkillsInstaller::RemoveSkillDir(
+bool IndependentSkillsInstaller::RemoveSkillDir(
     const std::string &bundleName, const std::string &moduleName, const std::string &skillsName)
 {
     if (bundleName.empty() || moduleName.empty() || skillsName.empty()) {
         LOG_W(BMS_TAG_INSTALLER, "bundle or module or skillsName is empty, no need to process");
-        return;
+        return false;
     }
     std::string moduleDir =
         std::string(BASE_SKILL_DIR) + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
@@ -356,16 +358,18 @@ void IndependentSkillsInstaller::RemoveSkillDir(
     if (InstalldClient::GetInstance()->RemoveDir(moduleDir, BundleDirScene::REMOVE_SKILL_MODULE_DIR, bundleName) !=
         ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "remove module dir %{public}s failed", moduleDir.c_str());
+        return false;
     }
+    return true;
 }
 
-void IndependentSkillsInstaller::UpdateDeveloperId(
+bool IndependentSkillsInstaller::UpdateDeveloperId(
     std::unordered_map<std::string, InnerBundleInfo> &infos,
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
 {
     if (hapVerifyRes.size() < infos.size() || infos.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "hapVerifyRes size less than infos size or infos is empty");
-        return;
+        return false;
     }
 
     std::string developerId = hapVerifyRes[0].GetProvisionInfo().bundleInfo.developerId;
@@ -376,6 +380,7 @@ void IndependentSkillsInstaller::UpdateDeveloperId(
     for (auto &item : infos) {
         item.second.UpdateDeveloperId(developerId);
     }
+    return true;
 }
 
 ErrCode IndependentSkillsInstaller::CheckFileType(const std::vector<std::string> &bundlePaths)
@@ -427,11 +432,11 @@ ErrCode IndependentSkillsInstaller::CheckAppLabelInfo(
     return ERR_OK;
 }
 
-void IndependentSkillsInstaller::SavePreInstallBundleInfo(
+bool IndependentSkillsInstaller::SavePreInstallBundleInfo(
     const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InstallParam &installParam)
 {
     if (newInfos.empty()) {
-        return;
+        return false;
     }
     PreInstallBundleInfo preInstallBundleInfo;
     preInstallBundleInfo.SetBundleName(bundleName_);
@@ -461,7 +466,9 @@ void IndependentSkillsInstaller::SavePreInstallBundleInfo(
     }
     if (!dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "SavePreInstallBundleInfo for bundleName_ failed");
+        return false;
     }
+    return true;
 }
 
 void IndependentSkillsInstaller::AddAppProvisionInfo(
@@ -875,15 +882,17 @@ bool IndependentSkillsInstaller::FetchInnerBundleInfo(InnerBundleInfo &info, boo
     return true;
 }
 
-void IndependentSkillsInstaller::RemoveInfo(const std::string &bundleName)
+bool IndependentSkillsInstaller::RemoveInfo(const std::string &bundleName)
 {
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "DataMgr is nullptr");
-        return;
+        return false;
     }
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "Delete inner info failed");
+        return false;
     }
+    return true;
 }
 
 bool IndependentSkillsInstaller::CheckNeedInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos,

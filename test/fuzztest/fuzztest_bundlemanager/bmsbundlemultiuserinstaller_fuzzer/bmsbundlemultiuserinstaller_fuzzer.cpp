@@ -32,6 +32,7 @@ const std::string SYS_BUNDLE_NAME = "ohos.global.systemres";
 constexpr int32_t INVALID_USER_ID = -1;
 constexpr int32_t USER_ID = 100;
 constexpr int32_t WAIT_TIME = 10;
+static bool g_bmsServiceFlag = false;
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
@@ -40,7 +41,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     if (bundleMgrService == nullptr) {
         return false;
     }
-    if (!bundleMgrService->IsServiceReady()) {
+    if (g_bmsServiceFlag && !bundleMgrService->IsServiceReady()) {
+        return true;
+    }
+    if (!g_bmsServiceFlag && !bundleMgrService->IsServiceReady()) {
+        g_bmsServiceFlag = true;
         bundleMgrService->OnStart();
         bundleMgrService->GetDataMgr()->AddUserId(USER_ID);
         std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));

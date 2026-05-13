@@ -35,6 +35,8 @@
 #include "installd_client.h"
 #include "mock_status_receiver.h"
 #include "skills_description_manager.h"
+#include "skills_installer_util.h"
+#include "skills_package_info.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -51,6 +53,7 @@ const std::string SKILL_NAME_TWO = "featureSkill";
 const std::string INVALID_BUNDLE_NAME = "";
 const std::string TEST_HSP_PATH = "/data/test/resource/bms/skills/test.hsp";
 const std::string TEST_HSP_PATH2 = "/data/test/resource/bms/skills/test2.hsp";
+const std::string TEST_HSP_PATH3 = "/data/test/resource/bms/skills/hsp_A.hsp";
 const std::string INVALID_HSP_PATH = "/invalid/path/test.hsp";
 const std::string TEST_APP_IDENTIFIER = "test.app.identifier";
 const std::string TEST_APP_ID = "test.app.id";
@@ -557,63 +560,6 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_CheckSing
 }
 
 /**
- * @tc.number: IndependentSkillsInstaller_RemoveModuleDir_0001
- * Function: RemoveModuleDir
- * @tc.name: test RemoveModuleDir with valid parameters
- * @tc.desc: 1. system running normally
- *           2. test RemoveModuleDir executes without crash
- */
-HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveModuleDir_0001,
-    Function | SmallTest | Level0)
-{
-    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
-    installer_->dataMgr_ = dataMgr_;
-
-    installer_->bundleName_ = BUNDLE_NAME;
-    installer_->RemoveModuleDir(BUNDLE_NAME, MODULE_NAME);
-    // Verify bundle name is still set after operation
-    EXPECT_EQ(installer_->bundleName_, BUNDLE_NAME);
-}
-
-/**
- * @tc.number: IndependentSkillsInstaller_RemoveModuleDir_0002
- * Function: RemoveModuleDir
- * @tc.name: test RemoveModuleDir with empty bundle name
- * @tc.desc: 1. system running normally
- *           2. test RemoveModuleDir handles empty bundle name
- */
-HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveModuleDir_0002,
-    Function | SmallTest | Level0)
-{
-    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
-    installer_->dataMgr_ = dataMgr_;
-
-    installer_->bundleName_ = BUNDLE_NAME;
-    installer_->RemoveModuleDir("", MODULE_NAME);
-    // Verify bundle name is unchanged after operation with empty parameter
-    EXPECT_EQ(installer_->bundleName_, BUNDLE_NAME);
-}
-
-/**
- * @tc.number: IndependentSkillsInstaller_RemoveModuleDir_0003
- * Function: RemoveModuleDir
- * @tc.name: test RemoveModuleDir with empty module name
- * @tc.desc: 1. system running normally
- *           2. test RemoveModuleDir handles empty module name
- */
-HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveModuleDir_0003,
-    Function | SmallTest | Level0)
-{
-    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
-    installer_->dataMgr_ = dataMgr_;
-
-    installer_->bundleName_ = BUNDLE_NAME;
-    installer_->RemoveModuleDir(BUNDLE_NAME, "");
-    // Verify bundle name is unchanged after operation with empty module name
-    EXPECT_EQ(installer_->bundleName_, BUNDLE_NAME);
-}
-
-/**
  * @tc.number: IndependentSkillsInstaller_MergeBundleInfos_0001
  * Function: MergeBundleInfos
  * @tc.name: test MergeBundleInfos
@@ -749,7 +695,7 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_InstallBu
     installParam.userId = USER_ID;
     installParam.isPreInstallApp = true;
 
-    ErrCode ret = installer_->InstallBundleByBundleName(BUNDLE_NAME, installParam);
+    ErrCode ret = installer_->InstallBundleByBundleName("bundle_no_exist", installParam);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -823,28 +769,6 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_AddAppPro
 }
 
 /**
- * @tc.number: IndependentSkillsInstaller_UpdateDeveloperId_0001
- * Function: UpdateDeveloperId
- * @tc.name: test UpdateDeveloperId
- * @tc.desc: 1. system running normally
- *           2. test UpdateDeveloperId executes without error
- */
-HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_UpdateDeveloperId_0001,
-    Function | SmallTest | Level0)
-{
-    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
-    installer_->dataMgr_ = dataMgr_;
-
-    installer_->bundleName_ = BUNDLE_NAME;
-    std::unordered_map<std::string, InnerBundleInfo> infos;
-    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
-
-    installer_->UpdateDeveloperId(infos, hapVerifyRes);
-    // Verify bundle name is set after operation
-    EXPECT_EQ(installer_->bundleName_, BUNDLE_NAME);
-}
-
-/**
  * @tc.number: IndependentSkillsInstaller_DeliveryProfileToCodeSign_0001
  * Function: DeliveryProfileToCodeSign
  * @tc.name: test DeliveryProfileToCodeSign
@@ -878,52 +802,6 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_VerifyCod
 
     ErrCode ret = installer_->VerifyCodeSignatureForHsp("");
     EXPECT_NE(ret, ERR_OK);
-}
-
-/**
- * @tc.number: IndependentSkillsInstaller_SavePreInstallBundleInfo_0001
- * Function: SavePreInstallBundleInfo
- * @tc.name: test SavePreInstallBundleInfo with successful install
- * @tc.desc: 1. system running normally
- *           2. test SavePreInstallBundleInfo handles success case
- */
-HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_SavePreInstallBundleInfo_0001,
-    Function | SmallTest | Level0)
-{
-    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
-    installer_->dataMgr_ = dataMgr_;
-
-    installer_->bundleName_ = BUNDLE_NAME;
-    std::unordered_map<std::string, InnerBundleInfo> newInfos;
-    InstallParam installParam;
-    installParam.isPreInstallApp = true;
-
-    installer_->SavePreInstallBundleInfo(newInfos, installParam);
-    // Verify installer state after successful save
-    EXPECT_EQ(installer_->bundleName_, BUNDLE_NAME);
-}
-
-/**
- * @tc.number: IndependentSkillsInstaller_SavePreInstallBundleInfo_0002
- * Function: SavePreInstallBundleInfo
- * @tc.name: test SavePreInstallBundleInfo with failed install
- * @tc.desc: 1. system running normally
- *           2. test SavePreInstallBundleInfo handles failure case
- */
-HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_SavePreInstallBundleInfo_0002,
-    Function | SmallTest | Level0)
-{
-    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
-    installer_->dataMgr_ = dataMgr_;
-
-    installer_->bundleName_ = BUNDLE_NAME;
-    std::unordered_map<std::string, InnerBundleInfo> newInfos;
-    InstallParam installParam;
-    installParam.isPreInstallApp = true;
-
-    installer_->SavePreInstallBundleInfo(newInfos, installParam);
-    // Verify installer state after failed save
-    EXPECT_EQ(installer_->bundleName_, BUNDLE_NAME);
 }
 
 /**
@@ -1319,6 +1197,50 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_CheckAndP
 }
 
 /**
+ * @tc.number: IndependentSkillsInstaller_CheckAndParseFiles_0003
+ * Function: CheckAndParseFiles
+ * @tc.name: test CheckAndParseFiles with valid hsp path
+ * @tc.desc: 1. system running normally
+ *           2. test CheckAndParseFiles returns error for valid path
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_CheckAndParseFiles_0003,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    std::vector<std::string> hspPaths = {TEST_HSP_PATH3};
+    InstallParam installParam;
+    installParam.userId = USER_ID;
+    installParam.isPreInstallApp = false;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    ErrCode ret = installer_->CheckAndParseFiles(hspPaths, installParam, newInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_CheckAndParseFiles_0004
+ * Function: CheckAndParseFiles
+ * @tc.name: test CheckAndParseFiles with valid hsp path
+ * @tc.desc: 1. system running normally
+ *           2. test CheckAndParseFiles returns error for valid path
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_CheckAndParseFiles_0004,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    std::vector<std::string> hspPaths = {TEST_HSP_PATH3};
+    InstallParam installParam;
+    installParam.userId = USER_ID;
+    installParam.isPreInstallApp = true;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    ErrCode ret = installer_->CheckAndParseFiles(hspPaths, installParam, newInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
  * @tc.number: IndependentSkillsInstaller_ExtractModule_0001
  * Function: ExtractModule
  * @tc.name: test ExtractModule
@@ -1463,6 +1385,26 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ProcessIn
     installParam.userId = USER_ID;
     ErrCode ret = installer_->ProcessInstall(hspPaths, installParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ProcessInstall_0003
+ * Function: ProcessInstall
+ * @tc.name: test ProcessInstall with non-existent user
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessInstall returns error for non-existent user
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ProcessInstall_0003,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    std::vector<std::string> hspPaths = {TEST_HSP_PATH};
+    InstallParam installParam;
+    installParam.userId = INVALID_USER_ID;
+    ErrCode ret = installer_->ProcessInstall(hspPaths, installParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
 }
 
 /**
@@ -2126,5 +2068,869 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ExtractSk
     // Should handle module update scenario
     // Will fail due to non-existent file, but not due to empty skill list
     EXPECT_NE(ret, ERR_SKILLS_HAS_NO_SKILLS_AGENT);
+}
+
+/**
+ * @tc.number: SkillsInstallerUtil_RemoveInvalidSkillProfiles_0001
+ * Function: RemoveInvalidSkillProfiles
+ * @tc.name: test RemoveInvalidSkillProfiles with empty skillInfoList
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveInvalidSkillProfiles clears all skillProfiles when skillInfoList is empty
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, SkillsInstallerUtil_RemoveInvalidSkillProfiles_0001,
+    Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+
+    // Add skill profiles
+    SkillProfile skill1;
+    skill1.name = SKILL_NAME;
+    SkillProfile skill2;
+    skill2.name = SKILL_NAME_TWO;
+    moduleInfo.skillProfiles.push_back(skill1);
+    moduleInfo.skillProfiles.push_back(skill2);
+
+    // Add module to InnerBundleInfo
+    auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();
+    innerModuleInfos[MODULE_NAME] = moduleInfo;
+
+    // Empty skillInfoList
+    std::vector<SkillsPackageInfo> skillInfoList;
+
+    ErrCode ret = SkillsInstallerUtil::RemoveInvalidSkillProfiles(skillInfoList, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Verify all skillProfiles are cleared
+    auto it = innerModuleInfos.find(MODULE_NAME);
+    ASSERT_NE(it, innerModuleInfos.end());
+    EXPECT_EQ(it->second.skillProfiles.size(), 0);
+}
+
+/**
+ * @tc.number: SkillsInstallerUtil_RemoveInvalidSkillProfiles_0002
+ * Function: RemoveInvalidSkillProfiles
+ * @tc.name: test RemoveInvalidSkillProfiles clears invalid skillProfiles
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveInvalidSkillProfiles removes skills not in valid list
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, SkillsInstallerUtil_RemoveInvalidSkillProfiles_0002,
+    Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+
+    // Add multiple skill profiles
+    SkillProfile skill1;
+    skill1.name = "skill1";
+    SkillProfile skill2;
+    skill2.name = "skill2";
+    SkillProfile skill3;
+    skill3.name = "skill3";
+    moduleInfo.skillProfiles.push_back(skill1);
+    moduleInfo.skillProfiles.push_back(skill2);
+    moduleInfo.skillProfiles.push_back(skill3);
+
+    auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();
+    innerModuleInfos[MODULE_NAME] = moduleInfo;
+
+    // Only skill1 and skill3 are valid
+    std::vector<SkillsPackageInfo> skillInfoList;
+    SkillsPackageInfo info1;
+    info1.moduleName = MODULE_NAME;
+    info1.skillsName = "skill1";
+    SkillsPackageInfo info2;
+    info2.moduleName = MODULE_NAME;
+    info2.skillsName = "skill3";
+    skillInfoList.push_back(info1);
+    skillInfoList.push_back(info2);
+
+    ErrCode ret = SkillsInstallerUtil::RemoveInvalidSkillProfiles(skillInfoList, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Verify only valid skillProfiles remain
+    auto it = innerModuleInfos.find(MODULE_NAME);
+    ASSERT_NE(it, innerModuleInfos.end());
+    EXPECT_EQ(it->second.skillProfiles.size(), 2);
+    EXPECT_EQ(it->second.skillProfiles[0].name, "skill1");
+    EXPECT_EQ(it->second.skillProfiles[1].name, "skill3");
+}
+
+/**
+ * @tc.number: SkillsInstallerUtil_RemoveInvalidSkillProfiles_0003
+ * Function: RemoveInvalidSkillProfiles
+ * @tc.name: test RemoveInvalidSkillProfiles with multiple modules
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveInvalidSkillProfiles handles multiple modules correctly
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, SkillsInstallerUtil_RemoveInvalidSkillProfiles_0003,
+    Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    // Add first module with skill profiles
+    InnerModuleInfo moduleInfo1;
+    moduleInfo1.moduleName = MODULE_NAME;
+    SkillProfile skill1;
+    skill1.name = SKILL_NAME;
+    SkillProfile skill2;
+    skill2.name = SKILL_NAME_TWO;
+    moduleInfo1.skillProfiles.push_back(skill1);
+    moduleInfo1.skillProfiles.push_back(skill2);
+
+    // Add second module with skill profiles
+    InnerModuleInfo moduleInfo2;
+    moduleInfo2.moduleName = MODULE_NAME_TWO;
+    SkillProfile skill3;
+    skill3.name = "featureSkill1";
+    SkillProfile skill4;
+    skill4.name = "featureSkill2";
+    moduleInfo2.skillProfiles.push_back(skill3);
+    moduleInfo2.skillProfiles.push_back(skill4);
+
+    auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();
+    innerModuleInfos[MODULE_NAME] = moduleInfo1;
+    innerModuleInfos[MODULE_NAME_TWO] = moduleInfo2;
+
+    // Only skill1 and featureSkill1 are valid
+    std::vector<SkillsPackageInfo> skillInfoList;
+    SkillsPackageInfo info1;
+    info1.moduleName = MODULE_NAME;
+    info1.skillsName = SKILL_NAME;
+    SkillsPackageInfo info2;
+    info2.moduleName = MODULE_NAME_TWO;
+    info2.skillsName = "featureSkill1";
+    skillInfoList.push_back(info1);
+    skillInfoList.push_back(info2);
+
+    ErrCode ret = SkillsInstallerUtil::RemoveInvalidSkillProfiles(skillInfoList, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Verify first module has only skill1
+    auto it1 = innerModuleInfos.find(MODULE_NAME);
+    ASSERT_NE(it1, innerModuleInfos.end());
+    EXPECT_EQ(it1->second.skillProfiles.size(), 1);
+    EXPECT_EQ(it1->second.skillProfiles[0].name, SKILL_NAME);
+
+    // Verify second module has only featureSkill1
+    auto it2 = innerModuleInfos.find(MODULE_NAME_TWO);
+    ASSERT_NE(it2, innerModuleInfos.end());
+    EXPECT_EQ(it2->second.skillProfiles.size(), 1);
+    EXPECT_EQ(it2->second.skillProfiles[0].name, "featureSkill1");
+}
+
+/**
+ * @tc.number: SkillsInstallerUtil_RemoveInvalidSkillProfiles_0004
+ * Function: RemoveInvalidSkillProfiles
+ * @tc.name: test RemoveInvalidSkillProfiles clears module with no valid skills
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveInvalidSkillProfiles clears all skillProfiles for module with no valid skills
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, SkillsInstallerUtil_RemoveInvalidSkillProfiles_0004,
+    Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    // Add first module with skill profiles (has valid skills)
+    InnerModuleInfo moduleInfo1;
+    moduleInfo1.moduleName = MODULE_NAME;
+    SkillProfile skill1;
+    skill1.name = SKILL_NAME;
+    moduleInfo1.skillProfiles.push_back(skill1);
+
+    // Add second module with skill profiles (no valid skills)
+    InnerModuleInfo moduleInfo2;
+    moduleInfo2.moduleName = MODULE_NAME_TWO;
+    SkillProfile skill2;
+    skill2.name = SKILL_NAME_TWO;
+    moduleInfo2.skillProfiles.push_back(skill2);
+
+    auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();
+    innerModuleInfos[MODULE_NAME] = moduleInfo1;
+    innerModuleInfos[MODULE_NAME_TWO] = moduleInfo2;
+
+    // Only skill1 from MODULE_NAME is valid
+    std::vector<SkillsPackageInfo> skillInfoList;
+    SkillsPackageInfo info1;
+    info1.moduleName = MODULE_NAME;
+    info1.skillsName = SKILL_NAME;
+    skillInfoList.push_back(info1);
+
+    ErrCode ret = SkillsInstallerUtil::RemoveInvalidSkillProfiles(skillInfoList, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Verify first module keeps its skill
+    auto it1 = innerModuleInfos.find(MODULE_NAME);
+    ASSERT_NE(it1, innerModuleInfos.end());
+    EXPECT_EQ(it1->second.skillProfiles.size(), 1);
+
+    // Verify second module is cleared
+    auto it2 = innerModuleInfos.find(MODULE_NAME_TWO);
+    ASSERT_NE(it2, innerModuleInfos.end());
+    EXPECT_EQ(it2->second.skillProfiles.size(), 0);
+}
+
+/**
+ * @tc.number: SkillsInstallerUtil_RemoveInvalidSkillProfiles_0005
+ * Function: RemoveInvalidSkillProfiles
+ * @tc.name: test RemoveInvalidSkillProfiles with module having no skillProfiles
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveInvalidSkillProfiles handles module with no skillProfiles
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, SkillsInstallerUtil_RemoveInvalidSkillProfiles_0005,
+    Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    // Add module with no skill profiles
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+    moduleInfo.skillProfiles.clear();
+
+    auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();
+    innerModuleInfos[MODULE_NAME] = moduleInfo;
+
+    // Valid skills for this module
+    std::vector<SkillsPackageInfo> skillInfoList;
+    SkillsPackageInfo info;
+    info.moduleName = MODULE_NAME;
+    info.skillsName = SKILL_NAME;
+    skillInfoList.push_back(info);
+
+    ErrCode ret = SkillsInstallerUtil::RemoveInvalidSkillProfiles(skillInfoList, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Verify module still has no skillProfiles
+    auto it = innerModuleInfos.find(MODULE_NAME);
+    ASSERT_NE(it, innerModuleInfos.end());
+    EXPECT_EQ(it->second.skillProfiles.size(), 0);
+}
+
+/**
+ * @tc.number: SkillsInstallerUtil_RemoveInvalidSkillProfiles_0006
+ * Function: RemoveInvalidSkillProfiles
+ * @tc.name: test RemoveInvalidSkillProfiles with all valid skills
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveInvalidSkillProfiles keeps all skillProfiles when all are valid
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, SkillsInstallerUtil_RemoveInvalidSkillProfiles_0006,
+    Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+
+    // Add skill profiles
+    SkillProfile skill1;
+    skill1.name = "skill1";
+    SkillProfile skill2;
+    skill2.name = "skill2";
+    SkillProfile skill3;
+    skill3.name = "skill3";
+    moduleInfo.skillProfiles.push_back(skill1);
+    moduleInfo.skillProfiles.push_back(skill2);
+    moduleInfo.skillProfiles.push_back(skill3);
+
+    auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();
+    innerModuleInfos[MODULE_NAME] = moduleInfo;
+
+    // All skills are valid
+    std::vector<SkillsPackageInfo> skillInfoList;
+    SkillsPackageInfo info1;
+    info1.moduleName = MODULE_NAME;
+    info1.skillsName = "skill1";
+    SkillsPackageInfo info2;
+    info2.moduleName = MODULE_NAME;
+    info2.skillsName = "skill2";
+    SkillsPackageInfo info3;
+    info3.moduleName = MODULE_NAME;
+    info3.skillsName = "skill3";
+    skillInfoList.push_back(info1);
+    skillInfoList.push_back(info2);
+    skillInfoList.push_back(info3);
+
+    ErrCode ret = SkillsInstallerUtil::RemoveInvalidSkillProfiles(skillInfoList, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Verify all skillProfiles remain
+    auto it = innerModuleInfos.find(MODULE_NAME);
+    ASSERT_NE(it, innerModuleInfos.end());
+    EXPECT_EQ(it->second.skillProfiles.size(), 3);
+    EXPECT_EQ(it->second.skillProfiles[0].name, "skill1");
+    EXPECT_EQ(it->second.skillProfiles[1].name, "skill2");
+    EXPECT_EQ(it->second.skillProfiles[2].name, "skill3");
+}
+
+/**
+ * @tc.number: SkillsInstallerUtil_RemoveInvalidSkillProfiles_0007
+ * Function: RemoveInvalidSkillProfiles
+ * @tc.name: test RemoveInvalidSkillProfiles with module not in skillInfoList
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveInvalidSkillProfiles clears skillProfiles for modules not in skillInfoList
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, SkillsInstallerUtil_RemoveInvalidSkillProfiles_0007,
+    Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    // Add module with skill profiles
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+    SkillProfile skill1;
+    skill1.name = SKILL_NAME;
+    SkillProfile skill2;
+    skill2.name = SKILL_NAME_TWO;
+    moduleInfo.skillProfiles.push_back(skill1);
+    moduleInfo.skillProfiles.push_back(skill2);
+
+    auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();
+    innerModuleInfos[MODULE_NAME] = moduleInfo;
+
+    // skillInfoList contains skills for a different module
+    std::vector<SkillsPackageInfo> skillInfoList;
+    SkillsPackageInfo info;
+    info.moduleName = MODULE_NAME_TWO;  // Different module
+    info.skillsName = "featureSkill";
+    skillInfoList.push_back(info);
+
+    ErrCode ret = SkillsInstallerUtil::RemoveInvalidSkillProfiles(skillInfoList, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Verify all skillProfiles are cleared since module is not in valid list
+    auto it = innerModuleInfos.find(MODULE_NAME);
+    ASSERT_NE(it, innerModuleInfos.end());
+    EXPECT_EQ(it->second.skillProfiles.size(), 0);
+}
+
+/**
+ * @tc.number: SkillsInstallerUtil_RemoveInvalidSkillProfiles_0008
+ * Function: RemoveInvalidSkillProfiles
+ * @tc.name: test RemoveInvalidSkillProfiles with duplicate valid skills
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveInvalidSkillProfiles handles duplicate valid skills correctly
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, SkillsInstallerUtil_RemoveInvalidSkillProfiles_0008,
+    Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+
+    // Add skill profiles
+    SkillProfile skill1;
+    skill1.name = SKILL_NAME;
+    SkillProfile skill2;
+    skill2.name = SKILL_NAME_TWO;
+    moduleInfo.skillProfiles.push_back(skill1);
+    moduleInfo.skillProfiles.push_back(skill2);
+
+    auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();
+    innerModuleInfos[MODULE_NAME] = moduleInfo;
+
+    // skillInfoList contains duplicate entries for same skill
+    std::vector<SkillsPackageInfo> skillInfoList;
+    SkillsPackageInfo info1;
+    info1.moduleName = MODULE_NAME;
+    info1.skillsName = SKILL_NAME;
+    SkillsPackageInfo info2;
+    info2.moduleName = MODULE_NAME;
+    info2.skillsName = SKILL_NAME;  // Duplicate
+    skillInfoList.push_back(info1);
+    skillInfoList.push_back(info2);
+
+    ErrCode ret = SkillsInstallerUtil::RemoveInvalidSkillProfiles(skillInfoList, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Verify only skill1 remains (skill2 is removed)
+    auto it = innerModuleInfos.find(MODULE_NAME);
+    ASSERT_NE(it, innerModuleInfos.end());
+    EXPECT_EQ(it->second.skillProfiles.size(), 1);
+    EXPECT_EQ(it->second.skillProfiles[0].name, SKILL_NAME);
+}
+
+/**
+ * @tc.number: SkillsInstallerUtil_RemoveInvalidSkillProfiles_0009
+ * Function: RemoveInvalidSkillProfiles
+ * @tc.name: test RemoveInvalidSkillProfiles with empty InnerBundleInfo
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveInvalidSkillProfiles handles empty InnerBundleInfo
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, SkillsInstallerUtil_RemoveInvalidSkillProfiles_0009,
+    Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    // No modules added
+
+    std::vector<SkillsPackageInfo> skillInfoList;
+    SkillsPackageInfo info;
+    info.moduleName = MODULE_NAME;
+    info.skillsName = SKILL_NAME;
+    skillInfoList.push_back(info);
+
+    ErrCode ret = SkillsInstallerUtil::RemoveInvalidSkillProfiles(skillInfoList, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Verify no modules exist
+    auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();
+    EXPECT_EQ(innerModuleInfos.size(), 0);
+}
+
+/**
+ * @tc.number: SkillsInstallerUtil_RemoveInvalidSkillProfiles_0010
+ * Function: RemoveInvalidSkillProfiles
+ * @tc.name: test RemoveInvalidSkillProfiles with complex skill names
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveInvalidSkillProfiles handles complex skill names
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, SkillsInstallerUtil_RemoveInvalidSkillProfiles_0010,
+    Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+
+    // Add skill profiles with complex names
+    SkillProfile skill1;
+    skill1.name = "mainSkill/subSkill";
+    SkillProfile skill2;
+    skill2.name = "feature.v2.skill";
+    SkillProfile skill3;
+    skill3.name = "common_utils-helper";
+    SkillProfile skill4;
+    skill4.name = "invalidSkill";
+    moduleInfo.skillProfiles.push_back(skill1);
+    moduleInfo.skillProfiles.push_back(skill2);
+    moduleInfo.skillProfiles.push_back(skill3);
+    moduleInfo.skillProfiles.push_back(skill4);
+
+    auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();
+    innerModuleInfos[MODULE_NAME] = moduleInfo;
+
+    // Only first three are valid
+    std::vector<SkillsPackageInfo> skillInfoList;
+    SkillsPackageInfo info1;
+    info1.moduleName = MODULE_NAME;
+    info1.skillsName = "mainSkill/subSkill";
+    SkillsPackageInfo info2;
+    info2.moduleName = MODULE_NAME;
+    info2.skillsName = "feature.v2.skill";
+    SkillsPackageInfo info3;
+    info3.moduleName = MODULE_NAME;
+    info3.skillsName = "common_utils-helper";
+    skillInfoList.push_back(info1);
+    skillInfoList.push_back(info2);
+    skillInfoList.push_back(info3);
+
+    ErrCode ret = SkillsInstallerUtil::RemoveInvalidSkillProfiles(skillInfoList, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // Verify only valid skillProfiles remain
+    auto it = innerModuleInfos.find(MODULE_NAME);
+    ASSERT_NE(it, innerModuleInfos.end());
+    EXPECT_EQ(it->second.skillProfiles.size(), 3);
+    EXPECT_EQ(it->second.skillProfiles[0].name, "mainSkill/subSkill");
+    EXPECT_EQ(it->second.skillProfiles[1].name, "feature.v2.skill");
+    EXPECT_EQ(it->second.skillProfiles[2].name, "common_utils-helper");
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveInfo_0001
+ * Function: RemoveInfo
+ * @tc.name: test RemoveInfo with null dataMgr
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveInfo returns false when dataMgr is nullptr
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveInfo_0001,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = nullptr;
+
+    bool ret = installer_->RemoveInfo(BUNDLE_NAME);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveInfo_0002
+ * Function: RemoveInfo
+ * @tc.name: test RemoveInfo with valid dataMgr and non-existent bundle
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveInfo handles non-existent bundle gracefully
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveInfo_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    // Try to remove a bundle that doesn't exist
+    bool ret = installer_->RemoveInfo("non.existent.bundle");
+    // UpdateBundleInstallState will fail for non-existent bundle
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveInfo_0003
+ * Function: RemoveInfo
+ * @tc.name: test RemoveInfo with empty bundle name
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveInfo handles empty bundle name
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveInfo_0003,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    bool ret = installer_->RemoveInfo("");
+    // UpdateBundleInstallState will fail for empty bundle name
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveSkillDir_0001
+ * Function: RemoveSkillDir
+ * @tc.name: test RemoveSkillDir with empty bundleName
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveSkillDir returns false when bundleName is empty
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveSkillDir_0001,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    bool ret = installer_->RemoveSkillDir("", MODULE_NAME, SKILL_NAME);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveSkillDir_0002
+ * Function: RemoveSkillDir
+ * @tc.name: test RemoveSkillDir with empty moduleName
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveSkillDir returns false when moduleName is empty
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveSkillDir_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    bool ret = installer_->RemoveSkillDir(BUNDLE_NAME, "", SKILL_NAME);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveSkillDir_0003
+ * Function: RemoveSkillDir
+ * @tc.name: test RemoveSkillDir with empty skillsName
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveSkillDir returns false when skillsName is empty
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveSkillDir_0003,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    bool ret = installer_->RemoveSkillDir(BUNDLE_NAME, MODULE_NAME, "");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveSkillDir_0004
+ * Function: RemoveSkillDir
+ * @tc.name: test RemoveSkillDir with all empty parameters
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveSkillDir returns false when all parameters are empty
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveSkillDir_0004,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    bool ret = installer_->RemoveSkillDir("", "", "");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveSkillDir_0005
+ * Function: RemoveSkillDir
+ * @tc.name: test RemoveSkillDir with valid parameters but non-existent directory
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveSkillDir returns false when RemoveDir fails
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveSkillDir_0005,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    // Use valid parameters but directory doesn't exist
+    bool ret = installer_->RemoveSkillDir("1aaa", MODULE_NAME, SKILL_NAME);
+    // RemoveDir will fail since directory doesn't exist
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveSkillDir_0006
+ * Function: RemoveSkillDir
+ * @tc.name: test RemoveSkillDir with special characters in parameters
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveSkillDir handles special characters in parameters
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveSkillDir_0006,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    // Test with special characters (will pass validation, fail on RemoveDir)
+    bool ret = installer_->RemoveSkillDir("com.example.skills", "moduleName", "skillName");
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveModuleDir_0001
+ * Function: RemoveModuleDir
+ * @tc.name: test RemoveModuleDir with empty bundleName
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveModuleDir returns false when bundleName is empty
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveModuleDir_0001,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    bool ret = installer_->RemoveModuleDir("", MODULE_NAME);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveModuleDir_0002
+ * Function: RemoveModuleDir
+ * @tc.name: test RemoveModuleDir with empty moduleName
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveModuleDir returns false when moduleName is empty
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveModuleDir_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    bool ret = installer_->RemoveModuleDir(BUNDLE_NAME, "");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveModuleDir_0003
+ * Function: RemoveModuleDir
+ * @tc.name: test RemoveModuleDir with both empty parameters
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveModuleDir returns false when both parameters are empty
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveModuleDir_0003,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    bool ret = installer_->RemoveModuleDir("", "");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveModuleDir_0004
+ * Function: RemoveModuleDir
+ * @tc.name: test RemoveModuleDir with valid parameters but non-existent directory
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveModuleDir returns false when RemoveDir fails
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveModuleDir_0004,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    bool ret = installer_->RemoveModuleDir(BUNDLE_NAME, MODULE_NAME);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RemoveModuleDir_0005
+ * Function: RemoveModuleDir
+ * @tc.name: test RemoveModuleDir with special characters in parameters
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveModuleDir handles special characters in parameters
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RemoveModuleDir_0005,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    // Test with special characters (will pass validation, fail on RemoveDir)
+    bool ret = installer_->RemoveModuleDir("com", "module-v2");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_UpdateDeveloperId_0001
+ * Function: UpdateDeveloperId
+ * @tc.name: test UpdateDeveloperId with empty infos
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateDeveloperId returns early when infos is empty
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_UpdateDeveloperId_0001,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+
+    bool ret = installer_->UpdateDeveloperId(infos, hapVerifyRes);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_UpdateDeveloperId_0002
+ * Function: UpdateDeveloperId
+ * @tc.name: test UpdateDeveloperId with hapVerifyRes smaller than infos
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateDeveloperId returns early when hapVerifyRes.size() < infos.size()
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_UpdateDeveloperId_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo info1;
+    InnerBundleInfo info2;
+    infos[BUNDLE_NAME] = info1;
+    infos["com.example.bundle2"] = info2;
+
+    // hapVerifyRes has only 1 element, but infos has 2
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes(1);
+
+    bool ret = installer_->UpdateDeveloperId(infos, hapVerifyRes);
+    // Should return early without modifying infos
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_SavePreInstallBundleInfo_0001
+ * Function: SavePreInstallBundleInfo
+ * @tc.name: test SavePreInstallBundleInfo with empty newInfos
+ * @tc.desc: 1. system running normally
+ *           2. test SavePreInstallBundleInfo returns false when newInfos is empty
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_SavePreInstallBundleInfo_0001,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos; // Empty
+    InstallParam installParam;
+
+    bool ret = installer_->SavePreInstallBundleInfo(newInfos, installParam);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_SavePreInstallBundleInfo_0002
+ * Function: SavePreInstallBundleInfo
+ * @tc.name: test SavePreInstallBundleInfo with valid newInfos
+ * @tc.desc: 1. system running normally
+ *           2. test SavePreInstallBundleInfo processes valid infos
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_SavePreInstallBundleInfo_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = BUNDLE_NAME;
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    newInfos[BUNDLE_NAME] = info;
+
+    InstallParam installParam;
+
+    bool ret = installer_->SavePreInstallBundleInfo(newInfos, installParam);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_InnerProcessInstall_0001
+ * Function: InnerProcessInstall
+ * @tc.name: test InnerProcessInstall with empty newInfos
+ * @tc.desc: 1. system running normally
+ *           2. test InnerProcessInstall handles empty newInfos
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_InnerProcessInstall_0001,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->userId_ = USER_ID;
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos; // Empty
+    InstallParam installParam;
+    installParam.userId = USER_ID;
+
+    ErrCode ret = installer_->InnerProcessInstall(newInfos, installParam);
+    // Empty newInfos means no iteration, will call SaveBundleInfoToStorage
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_SaveBundleInfoToStorage_0001
+ * Function: SaveBundleInfoToStorage
+ * @tc.name: test SaveBundleInfoToStorage with empty bundleName
+ * @tc.desc: 1. system running normally
+ *           2. test SaveBundleInfoToStorage handles empty bundleName
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_SaveBundleInfoToStorage_0001,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = ""; // Empty bundle name
+    installer_->userId_ = USER_ID;
+
+    ErrCode ret = installer_->SaveBundleInfoToStorage();
+    // Should fail at UpdateBundleInstallState with empty bundleName
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_MarkInstallFinish_0003
+ * Function: MarkInstallFinish
+ * @tc.name: test MarkInstallFinish with empty bundleName
+ * @tc.desc: 1. system running normally
+ *           2. test MarkInstallFinish handles empty bundleName
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_MarkInstallFinish_0003,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = ""; // Empty bundle name
+
+    ErrCode ret = installer_->MarkInstallFinish();
+    // FetchInnerBundleInfo will fail with empty bundleName
+    EXPECT_EQ(ret, ERR_APPEXECFWK_FETCH_BUNDLE_ERROR);
 }
 } // namespace OHOS

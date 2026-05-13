@@ -50,7 +50,7 @@ private:
     ErrCode BeforeInstall(
         const std::vector<std::string> &hspPaths, const InstallParam &installParam);
     ErrCode CheckUserId(const int32_t userId);
-    void RemoveModuleDir(const std::string &bundleName, const std::string &moduleName);
+    bool RemoveModuleDir(const std::string &bundleName, const std::string &moduleName);
     ErrCode ProcessInstall(
         const std::vector<std::string> &hspPaths, const InstallParam &installParam);
     ErrCode CopyHspToSecurityDir(std::vector<std::string> &bundlePaths);
@@ -79,8 +79,8 @@ private:
         const InstallParam &installParam) const;
     void RollBack();
     void RollBack(const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const ErrCode result);
-    void RemoveInfo(const std::string &bundleName);
-    void SavePreInstallBundleInfo(
+    bool RemoveInfo(const std::string &bundleName);
+    bool SavePreInstallBundleInfo(
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InstallParam &installParam);
     ErrCode UpdateSkillsPackage(InnerBundleInfo &oldInfo,
         std::unordered_map<std::string, InnerBundleInfo> &newInfos,
@@ -100,7 +100,7 @@ private:
     ErrCode ProcessModuleUpdate(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo,
         const std::string &hspPath, const InstallParam &installParam);
     ErrCode DeliveryProfileToCodeSign(std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const;
-    void UpdateDeveloperId(std::unordered_map<std::string, InnerBundleInfo> &infos,
+    bool UpdateDeveloperId(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     ErrCode VerifyCodeSignatureForHsp(const std::string &realHspPath) const;
     ErrCode MarkInstallFinish();
@@ -109,7 +109,7 @@ private:
     ErrCode BeforeUninstall(const std::string &bundleName, const int32_t userId);
     ErrCode ProcessUninstall(const std::string &bundleName, const InstallParam &installParam);
     void InnerProcessNeedDeleteSkillPackage(const InnerBundleInfo &currentBundleInfo);
-    void RemoveSkillDir(const std::string &bundleName, const std::string &moduleName, const std::string &skillsName);
+    bool RemoveSkillDir(const std::string &bundleName, const std::string &moduleName, const std::string &skillsName);
 
     bool versionUpgrade_ = false;
     bool moduleUpdate_ = false;
