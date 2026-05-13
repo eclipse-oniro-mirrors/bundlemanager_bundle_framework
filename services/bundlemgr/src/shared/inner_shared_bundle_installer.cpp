@@ -73,7 +73,8 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
         APP_LOGD("hap syscap check failed %{public}d", result);
     }
     // verify signature info for all haps
-    result = bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyResults_);
+    result = bundleInstallChecker_->CheckMultipleHapsSignInfo(
+        bundlePaths, hapVerifyResults_);
     CHECK_RESULT(result, "hap files check signature info failed %{public}d");
 
     // parse bundle infos

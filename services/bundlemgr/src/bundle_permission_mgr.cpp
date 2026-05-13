@@ -194,9 +194,10 @@ AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(const Inn
     return hapPolicy;
 }
 
-int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessToken::AccessTokenID tokenId, bool isTokenReserved)
+int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessToken::AccessTokenID tokenId,
+    const std::string &bundleName, AccessToken::ReservedType type)
 {
-    return AccessToken::AccessTokenKit::DeleteToken(tokenId, isTokenReserved);
+    return AccessToken::AccessTokenKit::DeleteIdentity(tokenId, bundleName, type);
 }
 
 int32_t BundlePermissionMgr::ClearUserGrantedPermissionState(const AccessToken::AccessTokenID tokenId)
@@ -762,85 +763,96 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
     return hapInfo;
 }
 
-int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
-    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
-    const bool isDebugGrant)
+    const std::string &appServiceCapabilities,
+    const bool isDebugGrant, int32_t &sessionId)
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "InitHapToken -n %{public}s -t: %{public}s -g: %{public}d",
         innerBundleInfo.GetBundleName().c_str(), innerBundleInfo.GetAppProvisionType().c_str(), isDebugGrant);
-    AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, dlpType);
-    AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo,
-        appServiceCapabilities, isDebugGrant);
-#ifdef X86_EMULATOR_MODE
-    std::string appId = innerBundleInfo.GetAppId();
-    if (appId == (innerBundleInfo.GetBundleName() + "_")) {
-        LOG_I(BMS_TAG_DEFAULT, "UnSignatureHap checkIgnore");
-        hapPolicy.checkIgnore = AccessToken::HapPolicyCheckIgnore::ACL_IGNORE_CHECK;
+
+    Security::AccessToken::Identity identity;
+    int32_t ret = PrepareHapIdentity(innerBundleInfo, userId, dlpType, isDebugGrant,
+        appServiceCapabilities, sessionId, identity);
+    if (ret == Security::AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL ||
+        ret == Security::AccessToken::AccessTokenError::ERR_READ_PARCEL_FAILED ||
+        ret == Security::AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED) {
+        // try again for transient errors
+        ret = PrepareHapIdentity(innerBundleInfo, userId, dlpType, isDebugGrant,
+            appServiceCapabilities, sessionId, identity);
     }
-#endif
-    auto ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx, checkResult);
-    if (AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL == ret ||
-        AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED == ret ||
-        AccessToken::AccessTokenError::ERR_READ_PARCEL_FAILED == ret) {
-        // try again
-        ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx, checkResult);
+    if (ret == ERR_OK) {
+        tokenIdeEx.tokenIDEx = identity.tokenId;
+        if (identity.uid != Constants::INVALID_UID) {
+            InnerBundleUserInfo curUserInfo;
+            bool hasUserInfo = innerBundleInfo.GetInnerBundleUserInfo(userId, curUserInfo);
+            if (hasUserInfo) {
+                curUserInfo.uid = identity.uid;
+                curUserInfo.gids.clear();
+                curUserInfo.gids.emplace_back(identity.uid);
+                innerBundleInfo.AddInnerBundleUserInfo(curUserInfo);
+            } else {
+                InnerBundleUserInfo newUserInfo;
+                newUserInfo.bundleName = innerBundleInfo.GetBundleName();
+                newUserInfo.bundleUserInfo.userId = userId;
+                newUserInfo.uid = identity.uid;
+                newUserInfo.gids.emplace_back(identity.uid);
+                innerBundleInfo.AddInnerBundleUserInfo(newUserInfo);
+            }
+            int32_t bundleId = identity.uid - userId * Constants::BASE_USER_RANGE;
+            BundleUtil::MakeFsConfig(innerBundleInfo.GetBundleName(), bundleId,
+                ServiceConstants::HMDFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(innerBundleInfo.GetBundleName(), bundleId,
+                ServiceConstants::SHAREFS_CONFIG_PATH);
+        }
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "InitHapToken -n %{public}s -t %{public}u",
+            innerBundleInfo.GetBundleName().c_str(), tokenIdeEx.tokenIdExStruct.tokenID);
+        return ERR_OK;
     }
-    if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_E(BMS_TAG_DEFAULT, "InitHapToken failed, bundleName:%{public}s errCode:%{public}d",
-            innerBundleInfo.GetBundleName().c_str(), ret);
-        return ret;
-    }
-    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "InitHapToken -n %{public}s -t %{public}u", innerBundleInfo.GetBundleName().c_str(),
-        tokenIdeEx.tokenIdExStruct.tokenID);
-    return ERR_OK;
+    LOG_E(BMS_TAG_DEFAULT, "InitHapToken failed, bundleName:%{public}s errCode:%{public}d",
+        innerBundleInfo.GetBundleName().c_str(), ret);
+    return ret;
 }
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
-    const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
-    const std::string &appServiceCapabilities, bool dataRefresh, const bool isDebugGrant)
+    InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
+    const std::string &appServiceCapabilities, bool dataRefresh, const bool isDebugGrant, int32_t sessionId)
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "start UpdateHapToken -n %{public}s -t: %{public}s -g: %{public}d",
         innerBundleInfo.GetBundleName().c_str(), innerBundleInfo.GetAppProvisionType().c_str(), isDebugGrant);
-    AccessToken::UpdateHapInfoParams updateHapInfoParams;
-    updateHapInfoParams.appIDDesc = innerBundleInfo.GetAppId();
-    updateHapInfoParams.apiVersion = innerBundleInfo.GetBaseApplicationInfo().apiTargetVersion;
-    updateHapInfoParams.isSystemApp = innerBundleInfo.IsSystemApp();
-    updateHapInfoParams.appDistributionType = innerBundleInfo.GetAppDistributionType();
-    updateHapInfoParams.isAtomicService = innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE;
-    //refresh new permissions for application
-    updateHapInfoParams.dataRefresh = dataRefresh;
-    updateHapInfoParams.appProvisionType = innerBundleInfo.GetAppProvisionType();
-    updateHapInfoParams.isSkillHap = innerBundleInfo.GetApplicationBundleType() == BundleType::SKILL;
 
-    AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo,
-        appServiceCapabilities, isDebugGrant);
-#ifdef X86_EMULATOR_MODE
-    std::string appId = innerBundleInfo.GetAppId();
-    if (appId == (innerBundleInfo.GetBundleName() + "_")) {
-        LOG_I(BMS_TAG_DEFAULT, "UnSignatureHap checkIgnore");
-        hapPolicy.checkIgnore = AccessToken::HapPolicyCheckIgnore::ACL_IGNORE_CHECK;
+    int32_t ret = UpdateHapPolicy(sessionId, tokenIdeEx.tokenIdExStruct.tokenID,
+        innerBundleInfo, isDebugGrant, appServiceCapabilities);
+    if (ret == ERR_OK) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "UpdateHapToken success");
+        return ERR_OK;
     }
-#endif
-    auto ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx, updateHapInfoParams, hapPolicy, checkResult);
-    if (AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL == ret ||
-        AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED == ret) {
-        // try again
-        ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx, updateHapInfoParams, hapPolicy, checkResult);
+    if (ret == Security::AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL ||
+        ret == Security::AccessToken::AccessTokenError::ERR_READ_PARCEL_FAILED ||
+        ret == Security::AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED) {
+        // try again for transient errors
+        ret = UpdateHapPolicy(sessionId, tokenIdeEx.tokenIdExStruct.tokenID,
+            innerBundleInfo, isDebugGrant, appServiceCapabilities);
+        if (ret == ERR_OK) {
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "UpdateHapToken success after retry");
+            return ERR_OK;
+        }
     }
-    if (AccessToken::AccessTokenError::ERR_TOKENID_NOT_EXIST == ret) {
-        AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, 0);
-        hapInfo.isRestore = true;
-        hapInfo.tokenID = tokenIdeEx.tokenIdExStruct.tokenID;
-        ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx, checkResult);
+    if (ret == Security::AccessToken::AccessTokenError::ERR_TOKENID_NOT_EXIST) {
+        // token was deleted, try to re-init
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "token not exist, fallback to InitHapToken");
+        return InitHapToken(innerBundleInfo, userId, 0, tokenIdeEx,
+            appServiceCapabilities, isDebugGrant, sessionId);
     }
-    if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "UpdateHapToken failed, bundleName:%{public}s errCode:%{public}d",
-            innerBundleInfo.GetBundleName().c_str(), ret);
-        return ret;
-    }
-    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "end UpdateHapToken");
-    return ERR_OK;
+    LOG_NOFUNC_E(BMS_TAG_DEFAULT, "UpdateHapToken failed, bundleName:%{public}s errCode:%{public}d",
+        innerBundleInfo.GetBundleName().c_str(), ret);
+    return ret;
+}
+
+int32_t BundlePermissionMgr::CheckHapPermissionInfo(int32_t sessionId,
+    Security::AccessToken::InstallTypeEnum type, Security::AccessToken::HapInfoCheckResult &checkResult)
+{
+    return Security::AccessToken::AccessTokenKit::CheckHapPermissionInfo(sessionId, type, checkResult);
 }
 
 std::string BundlePermissionMgr::GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult)
@@ -875,5 +887,138 @@ bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
     }
     return true;
 }
+
+Security::AccessToken::BundlePolicy BundlePermissionMgr::CreateBundlePolicy(
+    const InnerBundleInfo &innerBundleInfo, const bool isDebugGrant, int32_t dlpType)
+{
+    Security::AccessToken::BundlePolicy policy;
+    policy.isDebugGrant = isDebugGrant;
+    policy.dlpType = static_cast<Security::AccessToken::DlpType>(dlpType);
+
+    // Populate preAuthorizationInfo from default permissions
+    DefaultPermission permission;
+    if (GetDefaultPermission(innerBundleInfo.GetBundleName(), permission)) {
+#ifdef USE_PRE_BUNDLE_PROFILE
+        if (!MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint()) &&
+            !MatchSignature(permission, innerBundleInfo.GetAppId()) &&
+            !MatchSignature(permission, innerBundleInfo.GetAppIdentifier()) &&
+            !MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
+            LOG_W(BMS_TAG_DEFAULT, "bundleName:%{public}s MatchSignature failed",
+                innerBundleInfo.GetBundleName().c_str());
+            return policy;
+        }
+#endif
+        // Merge GetAllRequestPermissions with aggregated permissions, dedup first
+        std::unordered_set<std::string> mergedPermNames;
+        std::vector<RequestPermission> allPerms;
+        auto collectPerms = [&](const std::vector<RequestPermission> &perms) {
+            for (const auto &perm : perms) {
+                if (mergedPermNames.insert(perm.name).second) {
+                    allPerms.emplace_back(perm);
+                }
+            }
+        };
+        collectPerms(innerBundleInfo.GetAllRequestPermissions());
+        collectPerms(innerBundleInfo.GetAggregatedRequestPermissions());
+
+        for (const auto &perm : allPerms) {
+            bool userCancellable = false;
+            if (!CheckPermissionInDefaultPermissions(permission, perm.name, userCancellable)) {
+                continue;
+            }
+            Security::AccessToken::PreAuthorizationInfo preAuthInfo;
+            preAuthInfo.permissionName = perm.name;
+            preAuthInfo.userCancelable = userCancellable;
+            policy.preAuthorizationInfo.emplace_back(preAuthInfo);
+        }
+    }
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "CreateBundlePolicy preAuthInfo size:%{public}zu",
+        policy.preAuthorizationInfo.size());
+    return policy;
+}
+
+Security::AccessToken::HapBaseInfo BundlePermissionMgr::CreateHapBaseInfo(
+    const InnerBundleInfo &innerBundleInfo, const int32_t userId)
+{
+    Security::AccessToken::HapBaseInfo hapBaseInfo;
+    hapBaseInfo.userID = userId;
+    hapBaseInfo.bundleName = innerBundleInfo.GetBundleName();
+    hapBaseInfo.instIndex = innerBundleInfo.GetAppIndex();
+    return hapBaseInfo;
+}
+
+int32_t BundlePermissionMgr::PrepareHapIdentity(
+    const InnerBundleInfo &innerBundleInfo,
+    int32_t userId,
+    int32_t dlpType,
+    bool isDebugGrant,
+    const std::string &appServiceCapabilities,
+    int32_t &sessionId,
+    Security::AccessToken::Identity &identity)
+{
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "PrepareHapIdentity -n %{public}s -u %{public}d -s %{public}d",
+        innerBundleInfo.GetBundleName().c_str(), userId, sessionId);
+
+    Security::AccessToken::HapBaseInfo hapBaseInfo = CreateHapBaseInfo(innerBundleInfo, userId);
+    Security::AccessToken::BundlePolicy bundlePolicy = CreateBundlePolicy(innerBundleInfo, isDebugGrant, dlpType);
+
+    int32_t ret = AccessToken::AccessTokenKit::PrepareHapIdentity(sessionId, hapBaseInfo, bundlePolicy, identity);
+    if (ret == Security::AccessToken::AccessTokenKitRet::RET_SUCCESS && identity.tokenId != 0) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "PrepareHapIdentity success, uid=%{public}d, tokenId=%{public}llu",
+            identity.uid, static_cast<unsigned long long>(identity.tokenId));
+        return ERR_OK;
+    }
+    LOG_E(BMS_TAG_DEFAULT, "PrepareHapIdentity failed, bundleName:%{public}s ret:%{public}d tokenId:%{public}llu",
+        innerBundleInfo.GetBundleName().c_str(), ret,
+        static_cast<unsigned long long>(identity.tokenId));
+    return (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) ? ret :
+        Security::AccessToken::AccessTokenError::ERR_TOKENID_NOT_EXIST;
+}
+
+int32_t BundlePermissionMgr::UpdateHapPolicy(
+    int32_t sessionId,
+    int32_t tokenId,
+    const InnerBundleInfo &innerBundleInfo,
+    bool isDebugGrant,
+    const std::string &appServiceCapabilities)
+{
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "UpdateHapPolicy -n %{public}s -s %{public}d -t %{public}x",
+        innerBundleInfo.GetBundleName().c_str(), sessionId, tokenId);
+
+    Security::AccessToken::BundlePolicy bundlePolicy = CreateBundlePolicy(innerBundleInfo, isDebugGrant, 0);
+
+    int32_t ret = Security::AccessToken::AccessTokenKit::UpdateHapPolicy(sessionId, tokenId, bundlePolicy);
+    if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        LOG_E(BMS_TAG_DEFAULT, "UpdateHapPolicy failed, bundleName:%{public}s errCode:%{public}d",
+            innerBundleInfo.GetBundleName().c_str(), ret);
+        return ret;
+    }
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "UpdateHapPolicy success");
+    return ERR_OK;
+}
+
+int32_t BundlePermissionMgr::FinishHapInstall(
+    int32_t sessionId,
+    bool isSuccess,
+    const std::map<std::string, std::string> &modulePathMap)
+{
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "FinishHapInstall sessionId:%{public}d success:%{public}d",
+        sessionId, isSuccess);
+
+    int32_t ret = Security::AccessToken::AccessTokenKit::FinishInstall(sessionId, isSuccess, modulePathMap);
+    if (ret == Security::AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL ||
+        ret == Security::AccessToken::AccessTokenError::ERR_READ_PARCEL_FAILED ||
+        ret == Security::AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED) {
+        // try again for transient errors
+        ret = Security::AccessToken::AccessTokenKit::FinishInstall(sessionId, isSuccess, modulePathMap);
+    }
+    if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        LOG_E(BMS_TAG_DEFAULT, "FinishHapInstall failed, sessionId:%{public}d errCode:%{public}d",
+            sessionId, ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

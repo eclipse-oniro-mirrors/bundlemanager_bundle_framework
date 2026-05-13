@@ -1401,6 +1401,26 @@ public:
     {
         return baseBundleInfo_->isPreInstallApp;
     }
+    void SetBundleCheckBySpm(bool checked)
+    {
+        checkBySpm_ = checked;
+    }
+    bool IsBundleCheckBySpm() const
+    {
+        return checkBySpm_;
+    }
+    void SetAggregatedRequestPermissions(const std::vector<RequestPermission> &permissions)
+    {
+        aggregatedRequestPermissions_ = permissions;
+    }
+    void ClearAggregatedRequestPermissions()
+    {
+        aggregatedRequestPermissions_.clear();
+    }
+    const std::vector<RequestPermission> &GetAggregatedRequestPermissions() const
+    {
+        return aggregatedRequestPermissions_;
+    }
     /**
      * @brief Get whether the bundle is a system app.
      * @return Return whether the bundle is a system app.
@@ -2580,6 +2600,9 @@ private:
 
     // pluginBundleName -> pluginBundleInfo
     std::unordered_map<std::string, PluginBundleInfo> pluginBundleInfos_;
+    bool checkBySpm_ = false;  // migrated via access_token migration
+    // aggregated request permissions from all haps during install, not persisted
+    std::vector<RequestPermission> aggregatedRequestPermissions_;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

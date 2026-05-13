@@ -5992,11 +5992,9 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest 
     dataMgr->bundleInfos_.clear();
     bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::INSTALL_START);
     bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME_TEST, info);
-    ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
     
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
-    EXPECT_EQ(ret3, ERR_OK);
 
     BaseBundleInstaller installer;
     installer.InitDataMgr();
@@ -9660,8 +9658,6 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0410, Function | SmallTest | L
     ScopeGuard callingBundleInfoGuard([&] { dataMgr->bundleInfos_.erase("com.example.caller"); });
 
     // Map UID to calling bundle name
-    dataMgr->bundleIdMap_[11111] = "com.example.caller";
-    ScopeGuard bundleIdGuard([&] { dataMgr->bundleIdMap_.erase(11111); });
 
     BaseBundleInstaller installer;
     installer.userId_ = USERID;

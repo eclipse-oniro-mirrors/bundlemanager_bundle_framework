@@ -106,7 +106,7 @@ void BundleSandboxExceptionHandler::RemoveTokenIdAndKeepSandboxDir(const std::st
             continue;
         }
         // delete accessToken id from ATM
-        if (BundlePermissionMgr::DeleteAccessTokenId(sandboxInfo.accessTokenId) !=
+        if (BundlePermissionMgr::DeleteAccessTokenId(sandboxInfo.accessTokenId, sandboxInfo.bundleName) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             APP_LOGE("delete accessToken failed");
         }

@@ -366,7 +366,8 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
     }
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
-    result = bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyResults);
+    result = bundleInstallChecker_->CheckMultipleHapsSignInfo(
+        bundlePaths, hapVerifyResults);
     if (result != ERR_OK) {
         APP_LOGE("check multi hap signature info failed %{public}d", result);
         return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;

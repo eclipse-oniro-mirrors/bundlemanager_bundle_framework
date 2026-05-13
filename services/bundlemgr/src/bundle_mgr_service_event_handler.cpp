@@ -406,6 +406,8 @@ bool BMSEventHandler::LoadInstallInfosFromDb()
 
 void BMSEventHandler::BundleBootStartEvent()
 {
+    Security::AccessToken::AccessTokenKit::FinishMigration();
+    UpdateOtaFlag(OTAFlag::PROCESS_ACCESS_TOKEN_MIGRATION);
     EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
     OnBundleBootStart(Constants::DEFAULT_USERID);
     InstalldClient::GetInstance()->ResetBmsDBSecurity();
@@ -4811,21 +4813,33 @@ void BMSEventHandler::RemoveUnreservedSandbox() const
 void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath)
 {
     LOG_D(BMS_TAG_DEFAULT, "AddStockAppProvisionInfoByOTA bundleName: %{public}s", bundleName.c_str());
-    // parse profile info
-    Security::Verify::HapVerifyResult hapVerifyResult;
-    auto ret = BundleVerifyMgr::ParseHapProfile(filePath, hapVerifyResult, true);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "BundleVerifyMgr::HapVerify failed, bundleName: %{public}s, errCode: %{public}d",
-            bundleName.c_str(), ret);
+    std::vector<Security::AccessToken::TrustedBundleInfo> trustedBundleInfo;
+    int32_t atRet = Security::AccessToken::AccessTokenKit::GetHapSignInfo(
+        bundleName, trustedBundleInfo);
+    if (atRet != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS || trustedBundleInfo.empty()) {
+        LOG_E(BMS_TAG_DEFAULT,
+            "GetHapSignInfo failed, bundleName: %{public}s, ret: %{public}d",
+            bundleName.c_str(), atRet);
+        return;
+    }
+
+    Security::Verify::ProvisionInfo provisionInfo;
+    ErrCode parseRet = BundleInstallChecker::ParseProfileDataToProvisionInfo(
+        trustedBundleInfo[0].profileData, provisionInfo);
+    if (parseRet != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT,
+            "ParseProfileDataToProvisionInfo failed, bundleName: %{public}s",
+            bundleName.c_str());
         return;
     }
 
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
         std::make_unique<BundleInstallChecker>();
-    AppProvisionInfo appProvisionInfo = bundleInstallChecker->ConvertToAppProvisionInfo(
-        hapVerifyResult.GetProvisionInfo());
-    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, appProvisionInfo)) {
-        LOG_E(BMS_TAG_DEFAULT, "AddAppProvisionInfo failed, bundleName:%{public}s", bundleName.c_str());
+    AppProvisionInfo appProvisionInfo = bundleInstallChecker->ConvertToAppProvisionInfo(provisionInfo);
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
+        bundleName, appProvisionInfo)) {
+        LOG_E(BMS_TAG_DEFAULT, "AddAppProvisionInfo failed, bundleName:%{public}s",
+            bundleName.c_str());
     }
 }
 
@@ -5984,7 +5998,7 @@ void BMSEventHandler::ProcessUpdatePermissions()
             accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
             if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId, checkResult,
-                appProvisionInfo.appServiceCapabilities, true) != ERR_OK) {
+                appProvisionInfo.appServiceCapabilities, true, false, 0) != ERR_OK) {
                 LOG_W(BMS_TAG_DEFAULT, "UpdateHapToken failed %{public}s", bundleName.c_str());
                 updatePermissionsFlag = false;
             }
