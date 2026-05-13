@@ -443,6 +443,11 @@
         src="res" />
     </preparer>
   </target>
+  <target name="BmsIndependentSkillsInstallerTest">
+    <preparer>
+      <option name="push" value="bundle_hsp/hsp_A.hsp -> /data/test/resource/bms/skills/" src="res" />
+    </preparer>
+  </target>
   <target name="BmsBundleResourceHelperTest">
     <preparer>
       <option name="push" value="test_bundle/bmsAccessTokentest1.hap -> /data/test/resource/bms/accesstoken_bundle/"
