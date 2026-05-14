@@ -83,12 +83,6 @@ std::shared_ptr<BundleMgrService> BundleMgrClientImplTest::bundleMgrService_ =
     DelayedSingleton<BundleMgrService>::GetInstance();
 
 void BundleMgrClientImplTest::SetUpTestCase()
-{}
-
-void BundleMgrClientImplTest::TearDownTestCase()
-{}
-
-void BundleMgrClientImplTest::SetUp()
 {
     if (!bundleMgrService_->IsServiceReady()) {
         bundleMgrService_->OnStart();
@@ -96,9 +90,17 @@ void BundleMgrClientImplTest::SetUp()
     }
 }
 
-void BundleMgrClientImplTest::TearDown()
+void BundleMgrClientImplTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+}
+
+void BundleMgrClientImplTest::SetUp()
+{
+}
+
+void BundleMgrClientImplTest::TearDown()
+{
 }
 
 /**
