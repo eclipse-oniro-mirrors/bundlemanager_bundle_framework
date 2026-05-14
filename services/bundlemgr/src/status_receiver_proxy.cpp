@@ -922,15 +922,6 @@ void StatusReceiverProxy::OnFinished(const int32_t resultCode, const std::string
     }
 }
 
-static int32_t ExtractInstalldBusinessErrCode(int32_t resultCode)
-{
-    if (resultCode >= APPEXECFWK_INSTALLD_ERR_OFFSET) {
-        int32_t errnoPart = (resultCode - APPEXECFWK_INSTALLD_ERR_OFFSET) % ERRNO_MAX_SIZE;
-        return resultCode - errnoPart;
-    }
-    return resultCode;
-}
-
 void StatusReceiverProxy::TransformResult(const int32_t resultCode)
 {
     int32_t businessCode = ExtractInstalldBusinessErrCode(resultCode);

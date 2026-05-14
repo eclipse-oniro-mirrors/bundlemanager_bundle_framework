@@ -710,6 +710,15 @@ enum {
     ERR_APPEXECFWK_INSTALLD_CHMOD_FAILED                = APPEXECFWK_INSTALLD_ERR_OFFSET + 27 * ERRNO_MAX_SIZE,  // = 10032408
 };
 
+inline ErrCode ExtractInstalldBusinessErrCode(ErrCode resultCode)
+{
+    if (resultCode >= APPEXECFWK_INSTALLD_ERR_OFFSET) {
+        ErrCode errnoPart = (resultCode - APPEXECFWK_INSTALLD_ERR_OFFSET) % ERRNO_MAX_SIZE;
+        return resultCode - errnoPart;
+    }
+    return resultCode;
+}
+
 }  // namespace OHOS
 
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_APPEXECFWK_ERRORS_H

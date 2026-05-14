@@ -1005,7 +1005,8 @@ ErrCode AOTHandler::HandleCompileModules(const std::vector<std::string> &moduleN
     std::for_each(moduleNames.cbegin(), moduleNames.cend(),
         [this, &info, &compileMode, &ret, &compileResult](const auto &moduleName) {
         ErrCode errCode = HandleCompileWithSingleModule(info, moduleName, compileMode);
-        switch (errCode) {
+        ErrCode businessErrCode = ExtractInstalldBusinessErrCode(errCode);
+        switch (businessErrCode) {
             case ERR_OK:
                 break;
             case ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED:
@@ -1030,7 +1031,7 @@ ErrCode AOTHandler::HandleCompileModules(const std::vector<std::string> &moduleN
                 compileResult += "  " + moduleName + ":other-fail";
                 break;
         }
-        if (errCode != ERR_OK) {
+        if (businessErrCode != ERR_OK) {
             ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
         }
     });
