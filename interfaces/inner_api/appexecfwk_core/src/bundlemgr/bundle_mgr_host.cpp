@@ -2327,7 +2327,8 @@ ErrCode BundleMgrHost::HandleSetApplicationEnabled(MessageParcel &data, MessageP
     }
     bool isEnable = data.ReadBool();
     int32_t userId = data.ReadInt32();
-    ErrCode ret = SetApplicationEnabled(bundleName, isEnable, userId);
+    bool killProcess = data.ReadBool();
+    ErrCode ret = SetApplicationEnabled(bundleName, isEnable, userId, killProcess);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -2346,7 +2347,8 @@ ErrCode BundleMgrHost::HandleSetCloneApplicationEnabled(MessageParcel &data, Mes
     int32_t appIndex = data.ReadInt32();
     bool isEnable = data.ReadBool();
     int32_t userId = data.ReadInt32();
-    ErrCode ret = SetCloneApplicationEnabled(bundleName, appIndex, isEnable, userId);
+    bool killProcess = data.ReadBool();
+    ErrCode ret = SetCloneApplicationEnabled(bundleName, appIndex, isEnable, userId, killProcess);
     if (!reply.WriteInt32(ret)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

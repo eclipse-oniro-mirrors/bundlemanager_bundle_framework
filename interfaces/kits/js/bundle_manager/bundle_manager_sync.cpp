@@ -115,13 +115,16 @@ napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI SetApplicationEnabledSync called");
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     std::string bundleName;
+    int32_t appIndex = 0;
     bool isEnable = false;
+    bool killProcess = false;
+
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
         APP_LOGE("parse bundleName failed");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
@@ -132,18 +135,33 @@ napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
         return nullptr;
     }
-    if (!CommonFunc::ParseBool(env, args[ARGS_POS_ONE], isEnable)) {
-        APP_LOGE("parse isEnable failed");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
-        return nullptr;
+
+    size_t argc = args.GetMaxArgc();
+    if (argc == ARGS_SIZE_TWO) {
+        if (!CommonFunc::ParseBool(env, args[ARGS_POS_ONE], isEnable)) {
+            APP_LOGE("parse isEnable failed");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
+            return nullptr;
+        }
+    } else {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], appIndex)) {
+            APP_LOGE("parse appIndex failed");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+            return nullptr;
+        }
+        if (!CommonFunc::ParseBool(env, args[ARGS_POS_TWO], isEnable)) {
+            APP_LOGE("parse isEnable failed");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
+            return nullptr;
+        }
+        if (argc == ARGS_SIZE_FOUR) {
+            if (!CommonFunc::ParseBool(env, args[ARGS_POS_THREE], killProcess)) {
+                APP_LOGE("parse killProcess failed");
+            }
+        }
     }
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
-        return nullptr;
-    }
-    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetApplicationEnabled(bundleName, isEnable));
+
+    ErrCode ret = BundleManagerHelper::InnerSetApplicationEnabled(bundleName, isEnable, appIndex, killProcess);
     if (ret != NO_ERROR) {
         APP_LOGE("SetApplicationEnabledSync failed, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateErrorForSetAppEnabled(

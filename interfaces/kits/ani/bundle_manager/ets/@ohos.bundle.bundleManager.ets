@@ -266,7 +266,7 @@ namespace bundleManager {
 
   native function setAbilityEnabledNative(info: AbilityInfo, isEnabled: boolean, appIndex: int, isSync: boolean): void;
 
-  native function setApplicationEnabledNative(bundleName: string, isEnabled: boolean, appIndex: int, isSync: boolean): void;
+  native function setApplicationEnabledNative(bundleName: string, isEnabled: boolean, appIndex: int, killProcess: boolean, isSync: boolean): void;
 
   native function getDynamicIconNative(bundleName: string): string;
 
@@ -410,7 +410,11 @@ namespace bundleManager {
   }
 
   function setApplicationEnabledSync(bundleName: string, isEnabled: boolean): void {
-    return setApplicationEnabledNative(bundleName, isEnabled, 0, true);
+    return setApplicationEnabledNative(bundleName, isEnabled, 0, false, true);
+  }
+
+  function setApplicationEnabledSync(bundleName: string, appIndex: int, isEnabled: boolean, killProcess?: boolean): void {
+    return setApplicationEnabledNative(bundleName, isEnabled, appIndex, killProcess ?? false, true);
   }
 
   function queryExtensionAbilityInfoSync(want: Want, extensionAbilityType: ExtensionAbilityType,
@@ -1124,7 +1128,23 @@ namespace bundleManager {
   function setApplicationEnabled(bundleName: string, appIndex: int, isEnabled: boolean): Promise<void> {
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
-        return setApplicationEnabledNative(bundleName, isEnabled, appIndex, false);
+        return setApplicationEnabledNative(bundleName, isEnabled, appIndex, false, false);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(Promise.resolve());
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function setApplicationEnabled(bundleName: string, appIndex: int, isEnabled: boolean, killProcess?: boolean): Promise<void> {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): void => {
+        return setApplicationEnabledNative(bundleName, isEnabled, appIndex, killProcess ?? false, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
@@ -1140,7 +1160,7 @@ namespace bundleManager {
   function setApplicationEnabled(bundleName: string, isEnabled: boolean): Promise<void> {
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
-        return setApplicationEnabledNative(bundleName, isEnabled, 0, false);
+        return setApplicationEnabledNative(bundleName, isEnabled, 0, false, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
@@ -1155,7 +1175,7 @@ namespace bundleManager {
 
   function setApplicationEnabled(bundleName: string, isEnabled: boolean, callback: AsyncCallback<void>): void {
     let execFun = (): void => {
-      return setApplicationEnabledNative(bundleName, isEnabled, 0, false);
+      return setApplicationEnabledNative(bundleName, isEnabled, 0, false, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {

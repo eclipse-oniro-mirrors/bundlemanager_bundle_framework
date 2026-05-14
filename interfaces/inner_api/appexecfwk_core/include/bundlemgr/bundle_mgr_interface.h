@@ -1046,7 +1046,7 @@ public:
      * @return Returns result of the operation.
      */
     virtual ErrCode SetApplicationEnabled(const std::string &bundleName, bool isEnable,
-        int32_t userId = Constants::UNSPECIFIED_USERID)
+        int32_t userId = Constants::UNSPECIFIED_USERID, bool killProcess = false)
     {
         return ERR_OK;
     }
@@ -1060,7 +1060,7 @@ public:
      * @return Returns result of the operation.
      */
     virtual ErrCode SetCloneApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
-        int32_t userId = Constants::UNSPECIFIED_USERID)
+        int32_t userId = Constants::UNSPECIFIED_USERID, bool killProcess = false)
     {
         return ERR_OK;
     }

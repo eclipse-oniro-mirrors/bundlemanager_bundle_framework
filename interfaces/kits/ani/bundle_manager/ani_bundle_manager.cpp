@@ -879,11 +879,12 @@ static void SetAbilityEnabledNative(ani_env* env,
     }
 }
 
-static void SetApplicationEnabledNative(ani_env* env,
-    ani_string aniBundleName, ani_boolean aniIsEnable, ani_int aniAppIndex, ani_boolean aniIsSync)
+static void SetApplicationEnabledNative(ani_env* env, ani_string aniBundleName, ani_boolean aniIsEnable,
+    ani_int aniAppIndex, ani_boolean aniKillProcess, ani_boolean aniIsSync)
 {
     APP_LOGD("ani SetApplicationEnabled called");
     bool isEnable = CommonFunAni::AniBooleanToBool(aniIsEnable);
+    bool killProcess = CommonFunAni::AniBooleanToBool(aniKillProcess);
     std::string bundleName;
     if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
         APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
@@ -895,8 +896,8 @@ static void SetApplicationEnabledNative(ani_env* env,
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
         return;
     }
-    ErrCode ret = BundleManagerHelper::InnerSetApplicationEnabled(bundleName, isEnable, aniAppIndex);
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
+    ErrCode ret = BundleManagerHelper::InnerSetApplicationEnabled(bundleName, isEnable, aniAppIndex, killProcess);
     if (ret != ERR_OK) {
         APP_LOGE("SetApplicationEnabled failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowErrorForSetAppEnabled(

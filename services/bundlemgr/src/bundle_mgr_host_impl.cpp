@@ -19,6 +19,7 @@
 #include "account_helper.h"
 #include "app_disable_forbidden/app_disable_forbidden_mgr.h"
 #include "app_log_tag_wrapper.h"
+#include "app_mgr_client.h"
 #include "exception_util.h"
 #include "app_mgr_interface.h"
 #include "aot/aot_handler.h"
@@ -103,6 +104,7 @@ const size_t MAX_QUERY_EVENT_REPORT_ONCE = 100;
 const int64_t ONE_DAY =  86400;
 const std::string APP_DATA_PREFIX = "/data/app/el1/bundle/public/";
 const std::string STORAGE_PREFIX = "/data/storage/el1/bundle/";
+const std::string KILL_PROCESS_FAILED_MSG = "kill process fail";
 const std::unordered_map<std::string, int32_t> QUERY_FUNC_MAP = {
     {"GetNameForUid", 1},
     {"GetBundleNameForUid", 2},
@@ -2910,12 +2912,32 @@ ErrCode BundleMgrHostImpl::IsCloneApplicationEnabled(const std::string &bundleNa
     return dataMgr->IsApplicationEnabled(bundleName, appIndex, isEnable);
 }
 
-ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
+
+ErrCode BundleMgrHostImpl::HandleKillProcess(const std::string &bundleName, int32_t userId, int32_t appIndex,
+    bool isEnable, bool killProcess)
+{
+    if (killProcess && !isEnable) {
+        auto appMgrClient = DelayedSingleton<AppMgrClient>::GetInstance();
+        if (appMgrClient == nullptr) {
+            APP_LOGE("AppMgrClient is nullptr, kill app process failed");
+            return ERR_APPEXECFWK_NULL_PTR;
+        }
+        APP_LOGD("kill process, -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
+        if (appMgrClient->KillApplicationWithUserId(bundleName, userId, appIndex) != ERR_OK) {
+            APP_LOGE("kill app process failed");
+            return ERR_APPEXECFWK_KILL_PROCESS_FAILED;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId,
+    bool killProcess)
 {
     BUNDLE_MANAGER_HITRACE_CHAIN_NAME("SetApplicationEnabled", HITRACE_FLAG_INCLUDE_ASYNC);
     std::string caller = GetCallerName();
-    APP_LOGW_NOFUNC("SetApplicationEnabled %{public}s %{public}d %{public}d caller:%{public}s",
-        bundleName.c_str(), isEnable, userId, caller.c_str());
+    APP_LOGW_NOFUNC("SetApplicationEnabled %{public}s %{public}d %{public}d caller:%{public}s kill:%{public}d",
+        bundleName.c_str(), isEnable, userId, caller.c_str(), killProcess);
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
@@ -2954,6 +2976,13 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0, caller);
         return ret;
     }
+    if (HandleKillProcess(bundleName, userId, 0, isEnable, killProcess) != ERR_OK) {
+        APP_LOGE("kill process fail, -n %{public}s -u %{public}d -e %{public}d -k %{public}d",
+            bundleName.c_str(), userId, isEnable, killProcess);
+        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0,
+            caller + "_" + KILL_PROCESS_FAILED_MSG);
+    }
+
     EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, 0, caller);
 
     // If state did not change, return directly
@@ -2989,12 +3018,13 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
 }
 
 ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
-    const std::string &bundleName, int32_t appIndex, bool isEnable, int32_t userId)
+    const std::string &bundleName, int32_t appIndex, bool isEnable, int32_t userId, bool killProcess)
 {
     BUNDLE_MANAGER_HITRACE_CHAIN_NAME("SetCloneApplicationEnabled", HITRACE_FLAG_INCLUDE_ASYNC);
     std::string caller = GetCallerName();
-    APP_LOGW_NOFUNC("SetCloneApplicationEnabled param %{public}s %{public}d %{public}d %{public}d caller:%{public}s",
-        bundleName.c_str(), appIndex, isEnable, userId, caller.c_str());
+    APP_LOGW_NOFUNC(
+        "SetCloneApplicationEnabled param %{public}s %{public}d %{public}d %{public}d caller:%{public}s k:%{public}d",
+        bundleName.c_str(), appIndex, isEnable, userId, caller.c_str(), killProcess);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -3025,6 +3055,13 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
         APP_LOGE("Set application(%{public}s) enabled value fail", bundleName.c_str());
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller);
         return ret;
+    }
+
+    if (HandleKillProcess(bundleName, userId, appIndex, isEnable, killProcess) != ERR_OK) {
+        APP_LOGE("kill process fail, -n %{public}s -u %{public}d -i %{public}d -e %{public}d -k %{public}d",
+            bundleName.c_str(), userId, appIndex, isEnable, killProcess);
+        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex,
+            caller + "_" + KILL_PROCESS_FAILED_MSG);
     }
 
     EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, appIndex, caller);

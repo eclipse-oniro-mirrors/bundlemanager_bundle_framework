@@ -9203,7 +9203,7 @@ HWTEST_F(BmsBundleKitServiceTest, SetApplicationEnabledImpl_0100, Function | Sma
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     bool isEnabled = false;
-    auto ret = hostImpl->SetApplicationEnabled(BUNDLE_NAME_TEST, isEnabled, DEFAULT_USERID);
+    auto ret = hostImpl->SetApplicationEnabled(BUNDLE_NAME_TEST, isEnabled, DEFAULT_USERID, false);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     ResetTestValues();
 }
@@ -9219,7 +9219,7 @@ HWTEST_F(BmsBundleKitServiceTest, SetApplicationEnabledImpl_0200, Function | Sma
     DataMgrGuard guard;
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     bool isEnabled = false;
-    auto ret = hostImpl->SetApplicationEnabled(BUNDLE_NAME_TEST, isEnabled, DEFAULT_USERID);
+    auto ret = hostImpl->SetApplicationEnabled(BUNDLE_NAME_TEST, isEnabled, DEFAULT_USERID, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_NOT_READY);
 }
 
@@ -9236,7 +9236,7 @@ HWTEST_F(BmsBundleKitServiceTest, SetCloneApplicationEnabledImpl_0100, Function 
     bool isEnabled = false;
     int32_t appIndex = 1;
     auto ret = hostImpl->SetCloneApplicationEnabled(
-        BUNDLE_NAME_TEST, appIndex, isEnabled, Constants::UNSPECIFIED_USERID);
+        BUNDLE_NAME_TEST, appIndex, isEnabled, Constants::UNSPECIFIED_USERID, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_NOT_READY);
 }
 

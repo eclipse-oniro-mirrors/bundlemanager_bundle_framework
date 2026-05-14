@@ -1862,7 +1862,7 @@ void SetApplicationEnabledExec(napi_env env, void *data)
         return;
     }
     asyncCallbackInfo->err = BundleManagerHelper::InnerSetApplicationEnabled(asyncCallbackInfo->bundleName,
-        asyncCallbackInfo->isEnable, asyncCallbackInfo->appIndex);
+        asyncCallbackInfo->isEnable, asyncCallbackInfo->appIndex, asyncCallbackInfo->killProcess);
 }
 
 void SetApplicationEnabledComplete(napi_env env, napi_status status, void *data)
@@ -1948,6 +1948,10 @@ bool HandleSetApplicationEnabledArg(
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
             return false;
         }
+    } else if (index == ARGS_POS_THREE) {
+        if (!CommonFunc::ParseBool(env, arg, asyncCallbackInfo->killProcess)) {
+            APP_LOGE("parse killProcess failed");
+        }
     } else {
         APP_LOGE("param check error");
         BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
@@ -1966,7 +1970,7 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::unique_ptr<ApplicationEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
         APP_LOGE("Napi func init failed");
         return nullptr;
     }

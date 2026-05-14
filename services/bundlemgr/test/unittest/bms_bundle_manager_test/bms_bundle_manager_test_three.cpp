@@ -2137,7 +2137,7 @@ HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_4700, Function | MediumTest | 
     int userId = USERID;
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
-    ErrCode retCode = hostImpl->SetCloneApplicationEnabled(bundleName, appIndex, isEnable, userId);
+    ErrCode retCode = hostImpl->SetCloneApplicationEnabled(bundleName, appIndex, isEnable, userId, false);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 

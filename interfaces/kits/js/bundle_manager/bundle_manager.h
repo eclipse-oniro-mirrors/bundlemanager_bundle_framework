@@ -162,6 +162,7 @@ struct ApplicationLabelCallbackInfo : public BaseCallbackInfo {
 struct ApplicationEnableCallbackInfo : public BaseCallbackInfo {
     explicit ApplicationEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     bool isEnable = false;
+    bool killProcess = false;
     int32_t appIndex = 0;
     std::string bundleName;
 };

@@ -2544,7 +2544,8 @@ ErrCode BundleMgrProxy::IsCloneApplicationEnabled(const std::string &bundleName,
     return NO_ERROR;
 }
 
-ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
+ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId,
+    bool killProcess)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to SetApplicationEnabled of %{public}s", bundleName.c_str());
@@ -2570,6 +2571,10 @@ ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, boo
         APP_LOGE("fail to SetApplicationEnabled due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    if (!data.WriteBool(killProcess)) {
+        APP_LOGE("fail to SetApplicationEnabled due to write killProcess fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::SET_APPLICATION_ENABLED, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
@@ -2578,7 +2583,7 @@ ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, boo
 }
 
 ErrCode BundleMgrProxy::SetCloneApplicationEnabled(
-    const std::string &bundleName, int32_t appIndex, bool isEnable, int32_t userId)
+    const std::string &bundleName, int32_t appIndex, bool isEnable, int32_t userId, bool killProcess)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to SetCloneApplicationEnabled of %{public}s", bundleName.c_str());
@@ -2606,6 +2611,10 @@ ErrCode BundleMgrProxy::SetCloneApplicationEnabled(
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to SetCloneApplicationEnabled due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(killProcess)) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to write killProcess fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;

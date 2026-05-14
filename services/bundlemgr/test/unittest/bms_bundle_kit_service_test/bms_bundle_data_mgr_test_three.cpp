@@ -4502,6 +4502,20 @@ HWTEST_F(BmsBundleDataMgrTest3, GetApiTargetVersionByUid_0002, Function | Medium
 }
 
 /**
+ * @tc.number: HandleKillProcess_0001
+ * @tc.name: HandleKillProcess_0001
+ * @tc.desc: test HandleKillProcess
+ */
+HWTEST_F(BmsBundleDataMgrTest3, HandleKillProcess_0001, Function | MediumTest | Level1)
+{
+    bundleMgrHostImpl_->HandleKillProcess(BUNDLE_TEST1, 100, 0, 0, 0);
+    bundleMgrHostImpl_->HandleKillProcess(BUNDLE_TEST1, 100, 0, 0, 1);
+    bundleMgrHostImpl_->HandleKillProcess(BUNDLE_TEST1, 100, 0, 1, 0);
+    auto ret = bundleMgrHostImpl_->HandleKillProcess(BUNDLE_TEST1, 100, 0, 1, 1);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: GetApiTargetVersionByUid_0003
  * @tc.name: GetApiTargetVersionByUid_0003
  * @tc.desc: test GetApiTargetVersionByUid with negative uid, expect ERR_BUNDLE_MANAGER_INVALID_UID

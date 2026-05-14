@@ -4779,7 +4779,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0800, Function | Small
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ErrCode testRet = hostImpl->SetApplicationEnabled("", true, Constants::UNSPECIFIED_USERID);
+    ErrCode testRet = hostImpl->SetApplicationEnabled("", true, Constants::UNSPECIFIED_USERID, false);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     bool isEnable = false;
     ErrCode ret = hostImpl->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
@@ -4815,7 +4815,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_1000, Function | Small
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
-    ErrCode testRet = hostImpl->SetApplicationEnabled(BUNDLE_NAME_TEST, true, Constants::DEFAULT_USERID);
+    ErrCode testRet = hostImpl->SetApplicationEnabled(BUNDLE_NAME_TEST, true, Constants::DEFAULT_USERID, false);
     EXPECT_EQ(testRet, ERR_OK);
     bool isEnable = false;
     ErrCode ret = hostImpl->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
