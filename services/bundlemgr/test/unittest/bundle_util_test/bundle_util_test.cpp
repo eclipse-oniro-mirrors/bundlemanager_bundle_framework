@@ -30,6 +30,9 @@
 #endif
 #include "file_ex.h"
 #include "elf.h"
+#define private public
+#include "histogram_util.h"
+#undef private
 #include "xml_util.h"
 
 using namespace testing::ext;
@@ -633,5 +636,24 @@ HWTEST_F(BundleUtilTest, IsExecutableBinaryFile_008, TestSize.Level2)
     file.write(reinterpret_cast<char*>(&ehdr), sizeof(ehdr));
     file.close();
     EXPECT_TRUE(BundleUtil::IsExecutableBinaryFile(TEST_FILE_PATH));
+}
+
+/**
+ * @tc.number: HistogramUtilTest_0010
+ * @tc.name: test HistogramUtil::ConvertErrorCodeToHistogramEnumeration
+ * @tc.desc: 1. test common error code
+ *           2. test error code need to be converted
+ */
+HWTEST_F(BundleUtilTest, HistogramUtilTest_0010, TestSize.Level2)
+{
+    int32_t errorCode = static_cast<int32_t>(CommonErrorType::OPERATION_FAILED);
+    HistogramUtil::ConvertErrorCodeToHistogramEnumeration(errorCode);
+    EXPECT_EQ(errorCode, static_cast<int32_t>(CommonErrorType::OPERATION_FAILED));
+    errorCode = 801;
+    HistogramUtil::ConvertErrorCodeToHistogramEnumeration(errorCode);
+    EXPECT_EQ(errorCode, static_cast<int32_t>(CommonErrorType::UNSUPPORTED_FEATURE_ERRCODE));
+    errorCode = -1;
+    HistogramUtil::ConvertErrorCodeToHistogramEnumeration(errorCode);
+    EXPECT_EQ(errorCode, static_cast<int32_t>(CommonErrorType::OPERATION_FAILED));
 }
 } // OHOS

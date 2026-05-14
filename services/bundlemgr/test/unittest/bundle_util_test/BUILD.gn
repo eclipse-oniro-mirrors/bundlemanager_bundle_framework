@@ -38,6 +38,7 @@ ohos_unittest("BundleUtilTest") {
   deps = [ 
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
+    "${kits_path}/js/common:bundle_napi_common",
   ]
 
   external_deps = [

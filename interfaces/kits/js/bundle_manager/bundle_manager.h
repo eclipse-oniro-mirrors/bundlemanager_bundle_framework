@@ -126,6 +126,7 @@ struct GetAllBundleCacheCallbackInfo : public BaseCallbackInfo {
 
     uint64_t cacheSize = 0;
     OHOS::sptr<ProcessCacheCallbackHost> cacheCallback;
+    int64_t startTime = 0;
 };
 
 struct CleanAllBundleCacheCallbackInfo : public BaseCallbackInfo {
@@ -306,6 +307,8 @@ struct BundleInfoCallbackInfo : public BaseCallbackInfo {
     int32_t uid = 0;
     std::string bundleName;
     BundleInfo bundleInfo;
+    int64_t startTime = 0;
+    bool isForSelf = false;
 };
 
 struct BatchBundleInfoCallbackInfo : public BaseCallbackInfo {

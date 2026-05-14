@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@
 #include "business_error.h"
 #include "cleancache_callback.h"
 #include "common_func.h"
+#include "histogram_util.h"
 #include "if_system_ability_manager.h"
 #include "installer_callback.h"
 #include "ipc_skeleton.h"
@@ -72,6 +73,7 @@ constexpr int32_t UNDEFINED_ERROR = -1;
 constexpr int32_t UNSUPPORTED_FEATURE_ERRCODE = 801;
 const char* UNSUPPORTED_FEATURE_MESSAGE = "unsupported BundleManagerService feature";
 #endif
+constexpr int32_t HISTOGRAM_BOUNDARY = 4;
 enum class InstallErrorCode : uint8_t {
     SUCCESS = 0,
     STATUS_INSTALL_FAILURE = 1,
@@ -1520,13 +1522,16 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
                 reinterpret_cast<AsyncAbilityInfoCallbackInfo *>(data);
             std::unique_ptr<AsyncAbilityInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_value result[2] = { 0 };
+            int32_t errCode = 0;
             if (asyncCallbackInfo->err) {
+                errCode = asyncCallbackInfo->err;
                 NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->err),
                     &result[0]));
                 NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, "type mismatch",
                     NAPI_AUTO_LENGTH, &result[1]));
             } else {
                 if (asyncCallbackInfo->ret) {
+                    errCode = 0;
                     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
                     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
                     // get from cache first
@@ -1542,11 +1547,14 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
                         HandleAbilityInfoCache(env, query, asyncCallbackInfo, result[1]);
                     }
                 } else {
+                    errCode = 1;
                     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[0]));
                     NAPI_CALL_RETURN_VOID(env,
                         napi_create_string_utf8(env, "QueryAbilityInfos failed", NAPI_AUTO_LENGTH, &result[1]));
                 }
             }
+            HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.queryAbilityByWant",
+                errCode, HISTOGRAM_BOUNDARY);
             if (asyncCallbackInfo->deferred) {
                 if (asyncCallbackInfo->ret) {
                     NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
@@ -1643,21 +1651,27 @@ void GetBundleInfosComplete(napi_env env, napi_status status, void *data)
     }
     std::unique_ptr<AsyncBundleInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[ARGS_SIZE_TWO] = { 0 };
+    int32_t errCode = 0;
     if (asyncCallbackInfo->err != NO_ERROR) {
+        errCode = asyncCallbackInfo->err;
         NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->err),
             &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(),
             NAPI_AUTO_LENGTH, &result[ARGS_POS_ONE]));
     } else {
         if (asyncCallbackInfo->ret) {
+            errCode = 0;
             NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[ARGS_POS_ZERO]));
             NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
             ProcessBundleInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->bundleInfos);
         } else {
+            errCode = 1;
             NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 1, &result[ARGS_POS_ZERO]));
             NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[ARGS_POS_ONE]));
         }
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getAllBundleInfo",
+        errCode, HISTOGRAM_BOUNDARY);
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->ret) {
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
@@ -1755,21 +1769,27 @@ void GetPermissionDefComplete(napi_env env, napi_status status, void *data)
     }
     std::unique_ptr<AsyncPermissionDefCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[ARGS_SIZE_TWO] = {0};
+    int32_t errCode = 0;
     if (asyncCallbackInfo->err) {
+        errCode = asyncCallbackInfo->err;
         NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->err),
             &result[PARAM0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(),
             NAPI_AUTO_LENGTH, &result[PARAM1]));
     } else {
         if (asyncCallbackInfo->ret) {
+            errCode = CODE_SUCCESS;
             NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, CODE_SUCCESS, &result[PARAM0]));
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM1]));
             CommonFunc::ConvertPermissionDef(env, result[PARAM1], asyncCallbackInfo->permissionDef);
         } else {
+            errCode = OPERATION_FAILED;
             NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, OPERATION_FAILED, &result[PARAM0]));
             NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[PARAM1]));
         }
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getPermissionDef",
+        errCode, HISTOGRAM_BOUNDARY);
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->ret) {
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[PARAM1]));
@@ -2802,22 +2822,28 @@ napi_value ClearBundleCache(napi_env env, napi_callback_info info)
             std::unique_ptr<AsyncHandleBundleContext> callbackPtr {asyncCallbackInfo};
             napi_value result[1] = { 0 };
             // set error code
+            int32_t errCode = 0;
             if (asyncCallbackInfo->err) {
+                errCode = asyncCallbackInfo->err;
                 NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->err, &result[0]));
             } else {
                 if (!asyncCallbackInfo->ret) {
+                    errCode = OPERATION_FAILED;
                     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, OPERATION_FAILED, &result[0]));
                 } else {
                     if (asyncCallbackInfo->cleanCacheCallback) {
                         if (!asyncCallbackInfo->cleanCacheCallback->GetErr()) {
                             NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[0]));
                         } else {
+                            errCode = asyncCallbackInfo->cleanCacheCallback->GetErr();
                             NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
                                 asyncCallbackInfo->cleanCacheCallback->GetErr(), &result[0]));
                         }
                     }
                 }
             }
+            HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.cleanBundleCacheFiles",
+                errCode, HISTOGRAM_BOUNDARY);
             // implement callback or promise
             if (asyncCallbackInfo->deferred) {
                 if (!asyncCallbackInfo->ret) {
@@ -3382,20 +3408,26 @@ void GetAllApplicationInfoComplete(napi_env env, napi_status status, void* data)
     }
     std::unique_ptr<AsyncApplicationInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[ARGS_SIZE_TWO] = { 0 };
+    int32_t errCode = 0;
     if (asyncCallbackInfo->err != NO_ERROR) {
+        errCode = asyncCallbackInfo->err;
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
         NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(),
             NAPI_AUTO_LENGTH, &result[1]));
     } else {
         if (asyncCallbackInfo->ret) {
-        result[0] = BusinessError::CreateError(env, 0, "");
+            errCode = 0;
+            result[0] = BusinessError::CreateError(env, 0, "");
             NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
             ProcessApplicationInfos(env, result[1], asyncCallbackInfo->appInfos);
         } else {
-        result[0] = BusinessError::CreateError(env, 1, "");
+            errCode = 1;
+            result[0] = BusinessError::CreateError(env, 1, "");
             NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
         }
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getAllApplicationInfo",
+        errCode, HISTOGRAM_BOUNDARY);
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->ret != NO_ERROR) {
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
@@ -3500,20 +3532,26 @@ void GetApplicationInfoComplete(napi_env env, napi_status status, void *data)
     }
     std::unique_ptr<AsyncApplicationInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[ARGS_SIZE_TWO] = { 0 };
+    int32_t errCode = 0;
     if (asyncCallbackInfo->err != NO_ERROR) {
+        errCode = asyncCallbackInfo->err;
         result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "");
         NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(),
             NAPI_AUTO_LENGTH, &result[1]));
     } else {
         if (asyncCallbackInfo->ret) {
+            errCode = 0;
             result[0] = BusinessError::CreateError(env, 0, "");
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
             ConvertApplicationInfo(env, result[1], asyncCallbackInfo->appInfo);
         } else {
+            errCode = 1;
             result[0] = BusinessError::CreateError(env, 1, "");
             NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
         }
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getApplicationInfo",
+        errCode, HISTOGRAM_BOUNDARY);
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->ret) {
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
@@ -3631,6 +3669,8 @@ void GetAbilityIconComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, NO_ERROR, &result[0]));
         result[1] = Media::PixelMapNapi::CreatePixelMap(env, asyncCallbackInfo->pixelMap);
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getAbilityIcon",
+        asyncCallbackInfo->err, HISTOGRAM_BOUNDARY);
     CommonFunc::NapiReturnDeferred<AbilityIconCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
     APP_LOGD("NAPI end");
 }
@@ -3713,6 +3753,8 @@ void GetAbilityIconComplete(napi_env env, napi_status status, void *data)
         return;
     }
     std::unique_ptr<AbilityIconCallbackInfo> callbackPtr {asyncCallbackInfo};
+    HistogramUtil::ReportHistogramEnumeration(
+        "AbilityKit.bundle.getAbilityIcon", UNSUPPORTED_FEATURE_ERRCODE, HISTOGRAM_BOUNDARY);
     APP_LOGE("unsupported BundleManagerService feature");
     asyncCallbackInfo->err = UNSUPPORTED_FEATURE_ERRCODE;
     napi_value result[ARGS_SIZE_TWO] = {0};
@@ -3788,6 +3830,8 @@ void GetBundleArchiveInfoComplete(napi_env env, napi_status status, void *data)
         napi_create_object(env, &result[1]);
         ConvertBundleInfo(env, result[1], asyncCallbackInfo->bundleInfo);
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getBundleArchiveInfo",
+        asyncCallbackInfo->err, HISTOGRAM_BOUNDARY);
     CommonFunc::NapiReturnDeferred<GetBundleArchiveInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
     APP_LOGD("NAPI end");
 }
@@ -3884,6 +3928,8 @@ void GetLaunchWantForBundleComplete(napi_env env, napi_status status, void *data
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
         CommonFunc::ConvertWantInfo(env, result[1], asyncCallbackInfo->want);
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getLaunchWantForBundle",
+        asyncCallbackInfo->err, HISTOGRAM_BOUNDARY);
     CommonFunc::NapiReturnDeferred<LaunchWantCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
     APP_LOGD("NAPI end");
 }
@@ -3966,6 +4012,8 @@ void IsAbilityEnabledComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateError(env, NO_ERROR, "");
         NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->isEnable, &result[1]));
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.isAbilityEnabled",
+        asyncCallbackInfo->err, HISTOGRAM_BOUNDARY);
     CommonFunc::NapiReturnDeferred<AbilityEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
     APP_LOGD("NAPI end");
 }
@@ -4048,6 +4096,8 @@ void IsApplicationEnabledComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateError(env, NO_ERROR, "");
         NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->isEnable, &result[1]));
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.isApplicationEnabled",
+        asyncCallbackInfo->err, HISTOGRAM_BOUNDARY);
     CommonFunc::NapiReturnDeferred<ApplicationEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
     APP_LOGD("NAPI end");
 }
@@ -4113,21 +4163,27 @@ void GetBundleInfoForSelfExec(napi_env env, napi_status status, void* data)
         return;
     }
     napi_value result[2] = { 0 };
+    int32_t errCode = 0;
     if (asyncCallbackInfo->err != 0) {
+        errCode = asyncCallbackInfo->err;
         NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->err),
             &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(),
             NAPI_AUTO_LENGTH, &result[1]));
     } else {
+        errCode = 0;
         if (asyncCallbackInfo->ret) {
             NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
             ConvertBundleInfo(env, result[1], asyncCallbackInfo->bundleInfo);
         } else {
+            errCode = 1;
             NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 1, &result[0]));
             NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
         }
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getBundleInfo",
+        errCode, HISTOGRAM_BOUNDARY);
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->ret) {
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
@@ -4211,17 +4267,23 @@ void GetBundleNameByUidComplete(napi_env env, napi_status status, void *data)
     }
     napi_value result[ARGS_SIZE_TWO] = { 0 };
     // set error code
+    int32_t errCode = 0;
     if (asyncCallbackInfo->err) {
+        errCode = asyncCallbackInfo->err;
         NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->err, &result[PARAM0]));
     } else {
         if (!asyncCallbackInfo->ret) {
+            errCode = OPERATION_FAILED;
             NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, OPERATION_FAILED, &result[PARAM0]));
         } else {
+            errCode = CODE_SUCCESS;
             NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, CODE_SUCCESS, &result[PARAM0]));
             NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->bundleName.c_str(),
                 NAPI_AUTO_LENGTH, &result[PARAM1]));
         }
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getNameForUid",
+        errCode, HISTOGRAM_BOUNDARY);
     // implement callback or promise
     if (asyncCallbackInfo->deferred) {
         if (!asyncCallbackInfo->ret) {
@@ -4314,20 +4376,26 @@ void StartGetAbilityInfoCompletedCB(napi_env env, napi_status status, void *data
     }
     std::unique_ptr<AsyncAbilityInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[2] = {0};
+    int32_t errCode = 0;
     if (asyncCallbackInfo->err) {
+        errCode = asyncCallbackInfo->err;
         NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, asyncCallbackInfo->err, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(),
             NAPI_AUTO_LENGTH, &result[1]));
     } else {
         if (asyncCallbackInfo->ret) {
+            errCode = 0;
             NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
             ConvertAbilityInfo(env, result[1], asyncCallbackInfo->abilityInfo);
         } else {
+            errCode = 1;
             NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 1, &result[0]));
             NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
         }
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getAbilityInfo",
+        errCode, HISTOGRAM_BOUNDARY);
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->ret) {
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
@@ -4456,6 +4524,8 @@ void GetAbilityLabelPromiseComplete(napi_env env, napi_status status, void *data
         return;
     }
     std::unique_ptr<AsyncAbilityLabelCallbackInfo> callbackPtr {asyncCallbackInfo};
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getAbilityLabel", asyncCallbackInfo->err,
+        HISTOGRAM_BOUNDARY);
     napi_value result = nullptr;
     if (asyncCallbackInfo->err == NAPI_ERR_NO_ERROR) {
         NAPI_CALL_RETURN_VOID(
@@ -4496,6 +4566,8 @@ void GetAbilityLabelAsyncComplete(napi_env env, napi_status status, void *data)
         return;
     }
     std::unique_ptr<AsyncAbilityLabelCallbackInfo> callbackPtr {asyncCallbackInfo};
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getAbilityLabel", asyncCallbackInfo->err,
+        HISTOGRAM_BOUNDARY);
     napi_value callback = nullptr;
     napi_value result[ARGS_SIZE_TWO] = {nullptr};
     napi_value callResult = nullptr;
@@ -4657,6 +4729,8 @@ void SetApplicationEnabledComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->errCode) {
         NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[0]));
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.setApplicationEnabled",
+        asyncCallbackInfo->errCode, HISTOGRAM_BOUNDARY);
     if (asyncCallbackInfo->callback) {
         napi_value callback = nullptr;
         napi_value placeHolder = nullptr;
@@ -4758,17 +4832,21 @@ void SetAbilityEnabledComplete(napi_env env, napi_status status, void *data)
     }
     std::unique_ptr<EnabledInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[ARGS_SIZE_TWO] = { 0 };
+    int32_t errCode = 0;
     if (asyncCallbackInfo->errCode != ERR_OK) {
+        errCode = asyncCallbackInfo->errCode;
         NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
     } else if (!asyncCallbackInfo->result) {
+        errCode = OPERATION_FAILED;
         NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, OPERATION_FAILED, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
     } else {
         NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[1]));
     }
-
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.setAbilityEnabled",
+        errCode, HISTOGRAM_BOUNDARY);
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->errCode == ERR_OK) {
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
@@ -5123,6 +5201,8 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
                         env, m_classBundleInstaller, 0, nullptr, &result[PARAM1]));
 
                     result[PARAM0] = GetCallbackErrorValue(env, CODE_SUCCESS);
+                    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getBundleInstaller",
+                        CODE_SUCCESS, HISTOGRAM_BOUNDARY);
                     NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(
                         env, asyncCallbackInfo->callback, &callback));
                     NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
@@ -5130,6 +5210,8 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
                 } else {
                     napi_value placeHolder = nullptr;
                     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[PARAM0]));
+                    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getBundleInstaller",
+                        1, HISTOGRAM_BOUNDARY);
                     NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
                     NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
                         sizeof(result) / sizeof(result[0]), result, &placeHolder));
@@ -5167,11 +5249,15 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
                 napi_value result;
                 napi_value m_classBundleInstaller = nullptr;
                 if (VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) && VerifySystemApi()) {
+                    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getBundleInstaller",
+                        CODE_SUCCESS, HISTOGRAM_BOUNDARY);
                     napi_get_reference_value(env, g_classBundleInstaller, &m_classBundleInstaller);
                     napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &result);
                     napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred, result);
                 } else {
                     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result));
+                    HistogramUtil::ReportHistogramEnumeration("AbilityKit.bundle.getBundleInstaller",
+                        1, HISTOGRAM_BOUNDARY);
                     NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result));
                 }
             },
@@ -5249,6 +5335,7 @@ napi_value Install(napi_env env, napi_callback_info info)
                 napi_value callback = 0;
                 napi_value undefined = 0;
                 napi_value callResult = 0;
+                int32_t errCode = 0;
                 if (!asyncCallbackInfo->errCode) {
                     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM1]));
                     ConvertInstallResult(asyncCallbackInfo->installResult);
@@ -5263,7 +5350,9 @@ napi_value Install(napi_env env, napi_callback_info info)
                     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "status", nResultCode));
                     result[PARAM0] = GetCallbackErrorValue(
                         env, (asyncCallbackInfo->installResult.resultCode == 0) ? CODE_SUCCESS : CODE_FAILED);
+                    errCode = (asyncCallbackInfo->installResult.resultCode == 0) ? CODE_SUCCESS : CODE_FAILED;
                 } else {
+                    errCode = CODE_FAILED;
                     napi_value nResultMsg;
                     std::string msg = "error param type.";
                     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH,
@@ -5271,6 +5360,8 @@ napi_value Install(napi_env env, napi_callback_info info)
                     result[PARAM0] = GetCallbackErrorValue(env, CODE_FAILED);
                     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "message", nResultMsg));
                 }
+                HistogramUtil::ReportHistogramEnumeration(
+                    "AbilityKit.BundleInstaller.install", errCode, HISTOGRAM_BOUNDARY);
                 NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
                 NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
@@ -5422,6 +5513,7 @@ napi_value Recover(napi_env env, napi_callback_info info)
                 napi_value callback = 0;
                 napi_value undefined = 0;
                 napi_value callResult = 0;
+                int32_t errCode = 0;
                 if (!asyncCallbackInfo->errCode) {
                     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM1]));
                     ConvertInstallResult(asyncCallbackInfo->installResult);
@@ -5436,7 +5528,9 @@ napi_value Recover(napi_env env, napi_callback_info info)
                     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "status", nResultCode));
                     result[PARAM0] = GetCallbackErrorValue(
                         env, (asyncCallbackInfo->installResult.resultCode == 0) ? CODE_SUCCESS : CODE_FAILED);
+                    errCode = (asyncCallbackInfo->installResult.resultCode == 0) ? CODE_SUCCESS : CODE_FAILED;
                 } else {
+                    errCode = CODE_FAILED;
                     napi_value nResultMsg;
                     std::string msg = "error param type.";
                     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH,
@@ -5444,6 +5538,8 @@ napi_value Recover(napi_env env, napi_callback_info info)
                     result[PARAM0] = GetCallbackErrorValue(env, CODE_FAILED);
                     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "message", nResultMsg));
                 }
+                HistogramUtil::ReportHistogramEnumeration(
+                    "AbilityKit.BundleInstaller.recover", errCode, HISTOGRAM_BOUNDARY);
                 NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
                 NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
@@ -5598,6 +5694,7 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
                 napi_value callback = 0;
                 napi_value undefined = 0;
                 napi_value callResult = 0;
+                int32_t errCode = 0;
                 if (!asyncCallbackInfo->errCode) {
                     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM1]));
                     ConvertInstallResult(asyncCallbackInfo->installResult);
@@ -5612,7 +5709,9 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
                     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "status", nResultCode));
                     result[PARAM0] = GetCallbackErrorValue(
                         env, (asyncCallbackInfo->installResult.resultCode == 0) ? CODE_SUCCESS : CODE_FAILED);
+                    errCode = (asyncCallbackInfo->installResult.resultCode == 0) ? CODE_SUCCESS : CODE_FAILED;
                 } else {
+                    errCode = CODE_FAILED;
                     napi_value nResultMsg;
                     std::string msg = "error param type.";
                     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH,
@@ -5620,6 +5719,8 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
                     result[PARAM0] = GetCallbackErrorValue(env, CODE_FAILED);
                     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "message", nResultMsg));
                 }
+                HistogramUtil::ReportHistogramEnumeration(
+                    "AbilityKit.BundleInstaller.uninstall", errCode, HISTOGRAM_BOUNDARY);
                 NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
                 NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
                 NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,

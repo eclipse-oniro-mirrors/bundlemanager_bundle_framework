@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_status_callback.h"
 #include "common_func.h"
+#include "histogram_util.h"
 #include "js_launcher_mgr.h"
 #include "js_launcher.h"
 #include "launcher_service.h"
@@ -41,6 +42,7 @@ constexpr int32_t OPERATION_TYPE_MIAMATCH = 2;
 constexpr int32_t INDEX_ONE = 1;
 constexpr int32_t INDEX_TWO = 2;
 constexpr int32_t INDEX_THREE = 3;
+constexpr int32_t HISTOGRAM_BOUNDARY = 4;
 }
 
 struct AsyncHandleBundleContext {
@@ -573,14 +575,18 @@ static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
             }
             napi_value result[2] = { 0 };
             // wrap result
+            int32_t errCode = 0;
             if (asyncCallbackInfo->err) {
+                errCode = asyncCallbackInfo->err;
                 napi_create_uint32(env, asyncCallbackInfo->err, &result[0]);
                 napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(), NAPI_AUTO_LENGTH, &result[1]);
             } else {
                 if (asyncCallbackInfo->ret) {
+                    errCode = OPERATION_SUCESS;
                     napi_create_uint32(env, OPERATION_SUCESS, &result[0]);
                     napi_create_string_utf8(env, "register success", NAPI_AUTO_LENGTH, &result[1]);
                 } else {
+                    errCode = OPERATION_FAILED;
                     napi_create_uint32(env, OPERATION_FAILED, &result[0]);
                     napi_create_string_utf8(env, "register failed", NAPI_AUTO_LENGTH, &result[1]);
                 }
@@ -599,6 +605,8 @@ static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
                 napi_call_function(env, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
                 napi_delete_reference(env, asyncCallbackInfo->callbackRef);
             }
+            OHOS::AppExecFwk::HistogramUtil::ReportHistogramEnumeration(
+                "AbilityKit.innerBundleManager.on", errCode, HISTOGRAM_BOUNDARY);
             napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
             delete asyncCallbackInfo;
             asyncCallbackInfo = nullptr;
@@ -632,10 +640,13 @@ static void LauncherServiceOffComplete(napi_env env, napi_status status, void* d
         asyncCallbackInfo->ret = InnerJSLauncherServiceOff();
     }
     napi_value result[INDEX_TWO] = { 0 };
+    int32_t errCode = 0;
     if (asyncCallbackInfo->ret) {
+        errCode = 0;
         napi_create_uint32(env, 0, &result[0]);
         napi_create_string_utf8(env, "unregister success", NAPI_AUTO_LENGTH, &result[INDEX_ONE]);
     } else {
+        errCode = INDEX_ONE;
         napi_create_uint32(env, INDEX_ONE, &result[0]);
         napi_create_string_utf8(env, "unregister failed", NAPI_AUTO_LENGTH, &result[INDEX_ONE]);
     }
@@ -652,6 +663,8 @@ static void LauncherServiceOffComplete(napi_env env, napi_status status, void* d
         napi_call_function(env, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
         napi_delete_reference(env, asyncCallbackInfo->callbackRef);
     }
+    OHOS::AppExecFwk::HistogramUtil::ReportHistogramEnumeration(
+        "AbilityKit.innerBundleManager.off", errCode, HISTOGRAM_BOUNDARY);
     napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
     delete asyncCallbackInfo;
     asyncCallbackInfo = nullptr;
@@ -763,6 +776,9 @@ void JsGetAllLauncherAbilityInfoComplete(napi_env env, napi_status status, void 
         napi_get_undefined(env, &result[ARGS_POS_ONE]);
     }
     CommonFunc::NapiReturnDeferred<JsGetAllLauncherAbilityCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+    OHOS::AppExecFwk::HistogramUtil::ReportHistogramEnumeration(
+        "AbilityKit.innerBundleManager.getAllLauncherAbilityInfos",
+        asyncCallbackInfo->err, HISTOGRAM_BOUNDARY);
 }
 
 napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info info)
@@ -882,14 +898,18 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
             AsyncHandleBundleContext* asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext*>(data);
             napi_value result[INDEX_TWO] = { 0 };
             // wrap result
+            int32_t errCode = 0;
             if (asyncCallbackInfo->err) {
+                errCode = asyncCallbackInfo->err;
                 napi_create_int32(env, asyncCallbackInfo->err, &result[0]);
                 napi_get_undefined(env, &result[INDEX_ONE]);
             } else if (asyncCallbackInfo->ret) {
+                errCode = OPERATION_SUCESS;
                 napi_create_uint32(env, OPERATION_SUCESS, &result[0]);
                 napi_create_array(env, &result[INDEX_ONE]);
                 ParseLauncherAbilityInfo(env, result[INDEX_ONE], asyncCallbackInfo->launcherAbilityInfos);
             } else {
+                errCode = OPERATION_FAILED;
                 napi_create_uint32(env, OPERATION_FAILED, &result[0]);
                 napi_get_undefined(env, &result[INDEX_ONE]);
             }
@@ -908,6 +928,8 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
                 napi_call_function(env, undefined, callback, sizeof(result) / sizeof(result[0]), result, &callResult);
                 napi_delete_reference(env, asyncCallbackInfo->callbackRef);
             }
+            OHOS::AppExecFwk::HistogramUtil::ReportHistogramEnumeration(
+                "AbilityKit.innerBundleManager.getLauncherAbilityInfos", errCode, HISTOGRAM_BOUNDARY);
             napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
             delete asyncCallbackInfo;
             asyncCallbackInfo = nullptr;
@@ -986,15 +1008,19 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
             AsyncHandleBundleContext *asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext*>(data);
             napi_value result[INDEX_TWO] = { 0 };
             // wrap result
+            int32_t errCode = 0;
             if (asyncCallbackInfo->err) {
+                errCode = asyncCallbackInfo->err;
                 napi_create_int32(env, asyncCallbackInfo->err, &result[0]);
                 napi_get_undefined(env, &result[INDEX_ONE]);
             } else {
                 if (asyncCallbackInfo->ret) {
+                    errCode = OPERATION_SUCESS;
                     napi_create_uint32(env, OPERATION_SUCESS, &result[0]);
                     napi_create_array(env, &result[INDEX_ONE]);
                     ParseShortcutInfo(env, result[INDEX_ONE], asyncCallbackInfo->shortcutInfos);
                 } else {
+                    errCode = OPERATION_FAILED;
                     napi_create_uint32(env, OPERATION_FAILED, &result[0]);
                     napi_get_undefined(env, &result[INDEX_ONE]);
                 }
@@ -1014,6 +1040,8 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
                 napi_call_function(env, undefined, callback, sizeof(result) / sizeof(result[0]), result, &callResult);
                 napi_delete_reference(env, asyncCallbackInfo->callbackRef);
             }
+            OHOS::AppExecFwk::HistogramUtil::ReportHistogramEnumeration(
+                "AbilityKit.innerBundleManager.getShortcutInfos", errCode, HISTOGRAM_BOUNDARY);
             napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
             delete asyncCallbackInfo;
             asyncCallbackInfo = nullptr;

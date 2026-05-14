@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_status_callback.h"
+#include "histogram_util.h"
 
 #include "napi/native_common.h"
 
@@ -123,6 +124,7 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
             napi_call_function(
                 asyncCallbackInfo->env_, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
+            OHOS::AppExecFwk::HistogramUtil::ReportHistogramBoolean("AbilityKit.BundleStatusCallback.add", true);
             napi_close_handle_scope(asyncCallbackInfo->env_, scope);
             if (work != nullptr) {
                 delete work;
@@ -190,6 +192,7 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
             napi_call_function(
                 asyncCallbackInfo->env_, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
+            OHOS::AppExecFwk::HistogramUtil::ReportHistogramBoolean("AbilityKit.BundleStatusCallback.update", true);
             napi_close_handle_scope(asyncCallbackInfo->env_, scope);
             if (work != nullptr) {
                 delete work;
@@ -262,6 +265,7 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
             napi_call_function(
                 asyncCallbackInfo->env_, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
+            OHOS::AppExecFwk::HistogramUtil::ReportHistogramBoolean("AbilityKit.BundleStatusCallback.remove", true);
             napi_close_handle_scope(asyncCallbackInfo->env_, scope);
             if (work != nullptr) {
                 delete work;
