@@ -143,6 +143,7 @@ enum class ExtensionProcessMode {
     TYPE = 1,
     BUNDLE = 2,
     RUN_WITH_MAIN_PROCESS = 3,
+    CALLER_INSTANCE = 4,
 };
 
 struct SkillUriForAbilityAndExtension {
