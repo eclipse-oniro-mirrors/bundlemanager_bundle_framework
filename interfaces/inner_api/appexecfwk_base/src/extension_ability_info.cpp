@@ -136,7 +136,7 @@ const std::unordered_map<std::string, ExtensionProcessMode> EXTENSION_PROCESS_MO
     { "type", ExtensionProcessMode::TYPE },
     { "bundle", ExtensionProcessMode::BUNDLE },
     { "runWithMainProcess", ExtensionProcessMode::RUN_WITH_MAIN_PROCESS },
-    { "caller_instance", ExtensionProcessMode::CALLER_INSTANCE }
+    { "callerInstance", ExtensionProcessMode::CALLER_INSTANCE }
 };
 
 bool ReadSkillInfoFromParcel(Parcel &parcel, std::vector<SkillUriForAbilityAndExtension> &skillUri)
