@@ -567,6 +567,7 @@ ErrCode IndependentSkillsInstaller::VerifyCodeSignatureForHsp(
     LOG_I(BMS_TAG_INSTALLER, "begin to verify code sign for hsp");
     CodeSignatureParam codeSignatureParam;
     codeSignatureParam.modulePath = realHspPath;
+    codeSignatureParam.bundleName = bundleName_;
     codeSignatureParam.targetSoPath = "";
     codeSignatureParam.cpuAbi = "";
     codeSignatureParam.appIdentifier = (verifyRes_.GetProvisionInfo().type ==

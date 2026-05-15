@@ -922,6 +922,7 @@ void QuickFixDeployer::PrepareCodeSignatureParam(const AppQuickFix &appQuickFix,
             appQuickFix.bundleName + ServiceConstants::PATH_SEPARATOR + libraryPath;
         codeSignatureParam.targetSoPath = soPath;
     }
+    codeSignatureParam.bundleName = appQuickFix.bundleName;
     codeSignatureParam.cpuAbi = cpuAbi;
     codeSignatureParam.modulePath = hqf.hqfFilePath;
     codeSignatureParam.isEnterpriseBundle =

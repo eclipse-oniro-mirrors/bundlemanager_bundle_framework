@@ -2882,4 +2882,29 @@ HWTEST_F(BmsBundleInstallParametersTest, CreateBundleDataDir_0900, Function | Sm
     ErrCode result = impl.CreateBundleDataDir(param);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
+
+/**
+ * @tc.number: IsValidAppIdentifier_0100
+ * @tc.name: test IsValidAppIdentifier with valid and boundary cases
+ * @tc.desc: 1. test valid appIdentifier should return true; 2. test empty string is allowed; 3. test 256-char boundary
+*/
+HWTEST_F(BmsBundleInstallParametersTest, IsValidAppIdentifier_0100, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::IsValidAppIdentifier("abc-123_def.X"));
+    EXPECT_TRUE(InstalldOperator::IsValidAppIdentifier(""));
+    EXPECT_TRUE(InstalldOperator::IsValidAppIdentifier(std::string(256, 'a')));
+}
+
+/**
+ * @tc.number: IsValidAppIdentifier_0200
+ * @tc.name: test IsValidAppIdentifier with invalid cases
+ * @tc.desc: 1. test over-length; 2. test invalid characters
+*/
+HWTEST_F(BmsBundleInstallParametersTest, IsValidAppIdentifier_0200, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsValidAppIdentifier(std::string(257, 'a')));
+    EXPECT_FALSE(InstalldOperator::IsValidAppIdentifier("test!@#identifier"));
+    EXPECT_FALSE(InstalldOperator::IsValidAppIdentifier("test space"));
+    EXPECT_FALSE(InstalldOperator::IsValidAppIdentifier("test/Slash"));
+}
 } // namespace OHOS

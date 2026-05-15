@@ -3719,4 +3719,17 @@ HWTEST_F(BmsInstallDaemonOperatorTest, MatchPathTemplate_0400, Function | SmallT
     EXPECT_FALSE(InstalldOperator::MatchPathTemplate(
         "/data/app/el1/100/base/com.example/other", "/data/app/el1/%/base/%/cache"));
 }
+
+/**
+ * @tc.number: MatchPathTemplate_0500
+ * @tc.name: test MatchPathTemplate with empty pattern and empty path
+ * @tc.desc: 1. test empty pattern matches any path; 2. test empty path against non-empty prefix pattern returns false
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, MatchPathTemplate_0500, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::MatchPathTemplate("/data/app/test", ""));
+    EXPECT_TRUE(InstalldOperator::MatchPathTemplate("", ""));
+    EXPECT_FALSE(InstalldOperator::MatchPathTemplate("", "/data/app"));
+    EXPECT_TRUE(InstalldOperator::MatchPathTemplate("/data/app", "/data/app"));
+}
 } // OHOS
