@@ -2790,4 +2790,49 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_EmptyPathItem_0100, Function | Sm
     auto ret = hostImpl.ProcessBinFiles(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
+
+/**
+ * @tc.number: ExtractFiles_InvalidTargetPath_0100
+ * @tc.name: test ExtractFiles with invalid targetPath prefix
+ * @tc.desc: 1. calling ExtractFiles with targetPath not in allowed prefix should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ExtractFiles_InvalidTargetPath_0100, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    extractParam.bundleName = "com.example.test";
+    extractParam.srcPath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
+    extractParam.targetPath = "/tmp/invalid";
+    auto ret = ExtractFiles(extractParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractFiles_EmptySrcPath_0100
+ * @tc.name: test ExtractFiles with empty srcPath
+ * @tc.desc: 1. calling ExtractFiles with empty srcPath should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, ExtractFiles_EmptySrcPath_0100, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    extractParam.bundleName = "com.example.test";
+    extractParam.srcPath = "";
+    extractParam.targetPath = "/data/app/el1/bundle/public/com.example.test/";
+    auto ret = ExtractFiles(extractParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: IsExistExtensionDir_PathTraversal_0100
+ * @tc.name: test IsExistExtensionDir with path traversal
+ * @tc.desc: 1. test extensionBundleDir containing .. should return PARAM_ERROR
+*/
+HWTEST_F(BmsInstallDaemonTest, IsExistExtensionDir_PathTraversal_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    int32_t userId = 100;
+    std::string extensionBundleDir = "../../../etc/passwd";
+    bool isExist = false;
+    ErrCode ret = hostImpl.IsExistExtensionDir(userId, extensionBundleDir, isExist);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
 } // OHOS
