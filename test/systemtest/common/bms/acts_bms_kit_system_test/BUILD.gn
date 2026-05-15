@@ -65,7 +65,6 @@ ohos_systemtest("ActsBmsKitSystemTest") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "access_token:libtokenid_sdk",
-    "cJSON:cjson",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "googletest:gtest_main",

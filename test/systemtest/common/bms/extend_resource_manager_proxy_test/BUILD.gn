@@ -46,7 +46,6 @@ ohos_systemtest("ExtendResourceManagerProxyTest") {
     "access_token:libtoken_setproc",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
-    "cJSON:cjson",
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
