@@ -2181,6 +2181,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
     }
+    if (oldInfo.GetApplicationBundleType() == BundleType::SKILL) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall bundle %{public}s is skill type", bundleName.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
+    }
     UninstallBundleInfo uninstallBundleInfo;
     GetUninstallBundleInfo(installParam.isKeepData, userId_, oldInfo, uninstallBundleInfo);
 
@@ -2507,6 +2511,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
+    }
+    if (oldInfo.GetApplicationBundleType() == BundleType::SKILL) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall bundle %{public}s is skill type", bundleName.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
 
     InnerBundleUserInfo curInnerBundleUserInfo;
