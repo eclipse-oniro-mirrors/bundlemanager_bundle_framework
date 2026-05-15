@@ -18,6 +18,9 @@
 #define private public
 #include "bundle_stream_installer_host_impl.h"
 #include "mock_ipc_skeleton.h"
+#include "mock_status_receiver.h"
+#include <fstream>
+#include <filesystem>
 #undef private
 using namespace OHOS;
 using namespace testing::ext;
@@ -624,6 +627,38 @@ HWTEST_F(bundle_stream_installer_host_impl_test, test_InstallApp_0100, Function 
     std::vector<std::string> pathVec;
     pathVec.push_back("");
     EXPECT_FALSE(bundleStreamInstaller_->InstallApp(pathVec));
+}
+
+/**
+ * @tc.number: test_InstallApp_0200
+ * @tc.name: test InstallApp with invalid app file
+ * @tc.desc: 1. create temp dir with invalid .app file
+ *           2. call InstallApp
+ *           3. verify receiver returns ERR_APPEXECFWK_INSTALL_DECOMPRESS_APP_FAILED
+ */
+HWTEST_F(bundle_stream_installer_host_impl_test, test_InstallApp_0200, Function | SmallTest | Level0)
+{
+    bundleStreamInstaller_ = std::make_shared<BundleStreamInstallerHostImpl>(0, 0);
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(receiver, nullptr);
+    bundleStreamInstaller_->receiver_ = receiver;
+
+    std::string tempDir = "/data/tmp/stream_install_test_0200/";
+    std::string appFile = tempDir + "test.app";
+    std::filesystem::create_directories(tempDir);
+    std::ofstream ofs(appFile);
+    ofs << "invalid data";
+    ofs.close();
+
+    bundleStreamInstaller_->installParam_.isCallByShell = true;
+    bundleStreamInstaller_->installParam_.sharedBundleDirPaths.clear();
+
+    std::vector<std::string> pathVec;
+    pathVec.emplace_back(tempDir);
+    EXPECT_FALSE(bundleStreamInstaller_->InstallApp(pathVec));
+    EXPECT_EQ(receiver->GetResultCode(), ERR_APPEXECFWK_INSTALL_DECOMPRESS_APP_FAILED);
+
+    std::filesystem::remove_all(tempDir);
 }
 }
 }
