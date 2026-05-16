@@ -77,8 +77,8 @@ private:
         const std::string &bundleName,
         const Security::Verify::ProvisionInfo &provisionInfo,
         const InstallParam &installParam) const;
-    void RollBack();
-    void RollBack(const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const ErrCode result);
+    bool RollBack();
+    bool RollBack(const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const ErrCode result);
     bool RemoveInfo(const std::string &bundleName);
     bool SavePreInstallBundleInfo(
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InstallParam &installParam);
