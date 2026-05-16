@@ -123,6 +123,12 @@ group("unittest") {
       "unittest/bms_rdb_data_manager_test:unittest",
       "unittest/bms_service_bundle_scan_test:unittest",
       "unittest/bms_service_startup_test:unittest",
+      "unittest/bms_skill_info_test:unittest",
+      "unittest/bms_skill_manager_host_impl_test:unittest",
+      "unittest/bms_skill_manager_host_test:unittest",
+      "unittest/bms_skill_manager_proxy_test:unittest",
+      "unittest/bms_skills_description_manager_test:unittest",
+      "unittest/bms_skills_installer_util_test:unittest",
       "unittest/bms_skills_package_test:unittest",
       "unittest/bms_space_isolation_test:unittest",
       "unittest/bms_syscap_tool_test:unittest",
@@ -131,6 +137,10 @@ group("unittest") {
       "unittest/bundle_install_checker_test:unittest",
       "unittest/bms_bundle_resource_icon_test:unittest",
       "unittest/bms_status_receiver_proxy_test:unittest",
+      "unittest/bms_rpc_id_result_test:unittest",
+      "unittest/bms_default_app_host_test:unittest",
+      "unittest/bms_default_app_proxy_test:unittest",
+      "unittest/bms_driver_installer_test:unittest",
     ]
     if (is_emulator) {
       deps += [ "unittest/bms_service_startup_emulator_test:unittest" ]

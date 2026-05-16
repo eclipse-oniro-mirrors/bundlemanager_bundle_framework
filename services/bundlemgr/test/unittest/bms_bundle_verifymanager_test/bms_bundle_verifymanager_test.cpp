@@ -22,6 +22,7 @@
 
 #include "bundle_mgr_service.h"
 #include "verify_manager_host_impl.h"
+#include "verify_manager_client.h"
 #include "verify_util.h"
 
 using namespace testing::ext;
@@ -424,4 +425,37 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1500, Function | SmallTes
     auto &mtx = impl.GetBundleMutex(BUNDLE_NAME);
     EXPECT_EQ(&mtx, &impl.bundleMutexMap_[BUNDLE_NAME]);
 }
+
 } // OHOS
+
+// === VerifyManagerClient tests ===
+
+class BmsVerifyManagerClientTest : public testing::Test {
+public:
+    static void SetUpTestCase() {}
+    static void TearDownTestCase() {}
+    void SetUp() override {}
+    void TearDown() override {}
+};
+
+HWTEST_F(BmsVerifyManagerClientTest, GetInstance_ReturnsSingleton, Function | SmallTest | Level0)
+{
+    auto &instance1 = VerifyManagerClient::GetInstance();
+    auto &instance2 = VerifyManagerClient::GetInstance();
+    EXPECT_EQ(&instance1, &instance2);
+}
+
+HWTEST_F(BmsVerifyManagerClientTest, Verify_EmptyPaths, Function | SmallTest | Level0)
+{
+    auto &client = VerifyManagerClient::GetInstance();
+    std::vector<std::string> emptyPaths;
+    ErrCode ret = client.Verify(emptyPaths);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+}
+
+HWTEST_F(BmsVerifyManagerClientTest, DeleteAbc_EmptyPath, Function | SmallTest | Level0)
+{
+    auto &client = VerifyManagerClient::GetInstance();
+    ErrCode ret = client.DeleteAbc("");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR);
+}
