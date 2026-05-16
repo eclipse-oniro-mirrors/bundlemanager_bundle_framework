@@ -788,6 +788,187 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryP
 }
 
 /**
+ * @tc.number: IndependentSkillsInstaller_DeliveryProfileToCodeSign_0002
+ * Function: DeliveryProfileToCodeSign
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1. system running normally
+ *           2. test DeliveryProfileToCodeSign executes without error
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryProfileToCodeSign_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.profileBlockLength = 0;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+
+    ErrCode ret = installer_->DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_DeliveryProfileToCodeSign_0003
+ * Function: DeliveryProfileToCodeSign
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1. system running normally
+ *           2. test DeliveryProfileToCodeSign executes without error
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryProfileToCodeSign_0003,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.profileBlockLength = 0;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_NORMAL;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+
+    ErrCode ret = installer_->DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_DeliveryProfileToCodeSign_0004
+ * Function: DeliveryProfileToCodeSign
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1. system running normally
+ *           2. test DeliveryProfileToCodeSign executes without error
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryProfileToCodeSign_0004,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.profileBlockLength = 0;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_MDM;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+
+    ErrCode ret = installer_->DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_DeliveryProfileToCodeSign_0005
+ * Function: DeliveryProfileToCodeSign
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1. system running normally
+ *           2. test DeliveryProfileToCodeSign executes without error
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryProfileToCodeSign_0005,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.profileBlockLength = 0;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+
+    ErrCode ret = installer_->DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_DeliveryProfileToCodeSign_0006
+ * Function: DeliveryProfileToCodeSign
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1. system running normally
+ *           2. test DeliveryProfileToCodeSign executes without error
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryProfileToCodeSign_0006,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.profileBlockLength = 10;
+    provisionInfo.profileBlock = nullptr;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+
+    ErrCode ret = installer_->DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_DeliveryProfileToCodeSign_0007
+ * Function: DeliveryProfileToCodeSign
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1. system running normally
+ *           2. test DeliveryProfileToCodeSign executes without error
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryProfileToCodeSign_0007,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.profileBlockLength = 10;
+    auto tempProfilePtr = std::make_unique<unsigned char[]>(provisionInfo.profileBlockLength);
+    provisionInfo.profileBlock = std::move(tempProfilePtr);
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+
+    ErrCode ret = installer_->DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_DeliveryProfileToCodeSign_0008
+ * Function: DeliveryProfileToCodeSign
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1. system running normally
+ *           2. test DeliveryProfileToCodeSign executes without error
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryProfileToCodeSign_0008,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType == Security::Verify::AppDistType::NONE_TYPE;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+
+    ErrCode ret = installer_->DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: IndependentSkillsInstaller_VerifyCodeSignatureForHsp_0001
  * Function: VerifyCodeSignatureForHsp
  * @tc.name: test VerifyCodeSignatureForHsp with empty path
@@ -1445,6 +1626,81 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ProcessIn
     ErrCode ret = installer_->ProcessInstallBundleByBundleName(BUNDLE_NAME, installParam);
     // Will fail due to missing bundle, but should not crash
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ProcessInstallBundleByBundleName_0003
+ * Function: ProcessInstallBundleByBundleName
+ * @tc.name: test ProcessInstallBundleByBundleName with valid bundle name
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessInstallBundleByBundleName executes without crash
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ProcessInstallBundleByBundleName_0003,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    InnerBundleInfo bundleInfo;
+    installer_->dataMgr_->bundleInfos_["testbundleName"] = bundleInfo;
+
+    InstallParam installParam;
+    installParam.userId = INVALID_USER_ID;
+    installParam.isPreInstallApp = true;
+    ErrCode ret = installer_->ProcessInstallBundleByBundleName("testbundleName", installParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+
+    installParam.userId = USER_ID;
+    ret = installer_->ProcessInstallBundleByBundleName("testbundleName", installParam);
+    EXPECT_EQ(ret, ERR_SKILLS_INSTALL_TYPE_FAILED);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ProcessInstallBundleByBundleName_0004
+ * Function: ProcessInstallBundleByBundleName
+ * @tc.name: test ProcessInstallBundleByBundleName with valid bundle name
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessInstallBundleByBundleName executes without crash
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ProcessInstallBundleByBundleName_0004,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    InnerBundleInfo bundleInfo;
+    bundleInfo.SetApplicationBundleType(BundleType::SKILL);
+    installer_->dataMgr_->bundleInfos_["testbundleName"] = bundleInfo;
+
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.userId = USER_ID;
+    ErrCode ret = installer_->ProcessInstallBundleByBundleName("testbundleName", installParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ProcessInstallBundleByBundleName_0005
+ * Function: ProcessInstallBundleByBundleName
+ * @tc.name: test ProcessInstallBundleByBundleName with valid bundle name
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessInstallBundleByBundleName executes without crash
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ProcessInstallBundleByBundleName_0005,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    InnerBundleInfo bundleInfo;
+    bundleInfo.SetApplicationBundleType(BundleType::SKILL);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    bundleInfo.AddInnerBundleUserInfo(userInfo);
+    installer_->dataMgr_->bundleInfos_["testbundleName"] = bundleInfo;
+
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.userId = USER_ID;
+    ErrCode ret = installer_->ProcessInstallBundleByBundleName("testbundleName", installParam);
+    EXPECT_EQ(ret, ERR_SKILLS_INSTALL_USER_ALREADY_EXIST);
 }
 
 /**
@@ -2916,21 +3172,137 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_SaveBundl
 }
 
 /**
- * @tc.number: IndependentSkillsInstaller_MarkInstallFinish_0003
+ * @tc.number: IndependentSkillsInstaller_MarkInstallFinish_0002
  * Function: MarkInstallFinish
- * @tc.name: test MarkInstallFinish with empty bundleName
+ * @tc.name: test MarkInstallFinish with nullptr
  * @tc.desc: 1. system running normally
  *           2. test MarkInstallFinish handles empty bundleName
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_MarkInstallFinish_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = nullptr;
+    ErrCode ret = installer_->MarkInstallFinish();
+    // FetchInnerBundleInfo will fail with nullptr
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_MarkInstallFinish_0003
+ * Function: MarkInstallFinish
+ * @tc.name: test MarkInstallFinish with exist bundleName
+ * @tc.desc: 1. system running normally
+ *           2. test MarkInstallFinish handles exist bundleName
  */
 HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_MarkInstallFinish_0003,
     Function | SmallTest | Level0)
 {
     auto installer_ = std::make_shared<IndependentSkillsInstaller>();
     installer_->dataMgr_ = dataMgr_;
-    installer_->bundleName_ = ""; // Empty bundle name
+    installer_->bundleName_ = "bundle_exist";
+    InnerBundleInfo bundleInfo;
+    installer_->dataMgr_->bundleInfos_["bundle_exist"] = bundleInfo;
 
     ErrCode ret = installer_->MarkInstallFinish();
     // FetchInnerBundleInfo will fail with empty bundleName
-    EXPECT_EQ(ret, ERR_APPEXECFWK_FETCH_BUNDLE_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RollBack_0001
+ * Function: RollBack
+ * @tc.name: test RollBack with exist bundleName
+ * @tc.desc: 1. system running normally
+ *           2. test RollBack handles exist bundleName
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RollBack_0001,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    installer_->bundleName_ = "";
+    bool ret = installer_->RollBack();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RollBack_0002
+ * Function: RollBack
+ * @tc.name: test RollBack with exist bundleName
+ * @tc.desc: 1. system running normally
+ *           2. test RollBack handles exist bundleName
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RollBack_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    InnerBundleInfo bundleInfo;
+    bundleInfo.SetIsPreInstallApp(true);
+    installer_->newInnerBundleInfo_ = bundleInfo;
+    installer_->bundleName_ = "com.ohos.bundlename";
+    bool ret = installer_->RollBack();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RollBack_0003
+ * Function: RollBack
+ * @tc.name: test RollBack with exist bundleName
+ * @tc.desc: 1. system running normally
+ *           2. test RollBack handles exist bundleName
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RollBack_0003,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    bool ret = installer_->RollBack(newInfos, ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE);
+    EXPECT_TRUE(ret);
+
+    ret = installer_->RollBack(newInfos, ERR_SKILLS_INSTALL_TYPE_NOT_SAME);
+    EXPECT_TRUE(ret);
+
+    ret = installer_->RollBack(newInfos, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    EXPECT_TRUE(ret);
+
+    ret = installer_->RollBack(newInfos, ERR_SKILLS_MODULE_NAME_NOT_SAME);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RollBack_0004
+ * Function: RollBack
+ * @tc.name: test RollBack with exist bundleName
+ * @tc.desc: 1. system running normally
+ *           2. test RollBack handles exist bundleName
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RollBack_0004,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = nullptr;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    bool ret = installer_->RollBack(newInfos, ERR_APPEXECFWK_INSTALL_FAILED_NO_PROFILE_BLOCK_FAIL);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_RollBack_0005
+ * Function: RollBack
+ * @tc.name: test RollBack with exist bundleName
+ * @tc.desc: 1. system running normally
+ *           2. test RollBack handles exist bundleName
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RollBack_0005,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo bundleInfo;
+    newInfos["bundle"] = bundleInfo;
+    bool ret = installer_->RollBack(newInfos, ERR_APPEXECFWK_INSTALL_FAILED_NO_PROFILE_BLOCK_FAIL);
+    EXPECT_FALSE(ret);
 }
 } // namespace OHOS

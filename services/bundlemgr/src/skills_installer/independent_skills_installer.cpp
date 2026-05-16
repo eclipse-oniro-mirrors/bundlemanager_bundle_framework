@@ -1054,13 +1054,14 @@ void IndependentSkillsInstaller::GetInstallEventInfo(EventInfo &eventInfo)
     }
 }
 
-void IndependentSkillsInstaller::RollBack()
+bool IndependentSkillsInstaller::RollBack()
 {
     LOG_I(BMS_TAG_INSTALLER, "RollBack: %{public}s", bundleName_.c_str());
     if (newInnerBundleInfo_.IsPreInstallApp() && !BundleUtil::CheckSystemFreeSize(BASE_SKILL_DIR, FIVE_MB)) {
         LOG_W(BMS_TAG_INSTALLER, "pre bundle: %{public}s no rollback due to no space", bundleName_.c_str());
-        return;
+        return false;
     }
+    bool rollBackResult = true;
     // RemoveCache
     RemoveInfo(bundleName_);
     // delete code
@@ -1069,15 +1070,18 @@ void IndependentSkillsInstaller::RollBack()
         InstalldClient::GetInstance()->RemoveDir(bundleDir, BundleDirScene::REMOVE_SKILL_BUNDLE_DIR, bundleName_);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove bundle dir %{public}s failed", bundleDir.c_str());
+        rollBackResult = false;
     }
     result = SkillsDescriptionManager::GetInstance()->DeleteSkillDescriptions(bundleName_);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "delete skill descriptions %{public}s -u %{public}d failed",
             bundleName_.c_str(), userId_);
+        rollBackResult = false;
     }
+    return rollBackResult;
 }
 
-void IndependentSkillsInstaller::RollBack(
+bool IndependentSkillsInstaller::RollBack(
     const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     const ErrCode result)
 {
@@ -1085,7 +1089,7 @@ void IndependentSkillsInstaller::RollBack(
         (result == ERR_SKILLS_INSTALL_TYPE_NOT_SAME) ||
         (result == ERR_APPEXECFWK_INSTALL_PARAM_ERROR) ||
         (result == ERR_SKILLS_MODULE_NAME_NOT_SAME)) {
-        return;
+        return true;
     }
     auto oldmoduleInfos = oldInnerBundleInfo_.GetInnerModuleInfos();
     // delete new path
@@ -1100,10 +1104,13 @@ void IndependentSkillsInstaller::RollBack(
     if (dataMgr_ != nullptr) {
         if (!dataMgr_->UpdateInnerBundleInfo(oldInnerBundleInfo_, false)) {
             LOG_E(BMS_TAG_INSTALLER, "Rollback failed -n %{public}s", bundleName_.c_str());
-        } else {
-            LOG_I(BMS_TAG_INSTALLER, "Rollback succeed -n %{public}s", bundleName_.c_str());
+            return false;
         }
+        LOG_I(BMS_TAG_INSTALLER, "Rollback succeed -n %{public}s", bundleName_.c_str());
+        return true;
     }
+    LOG_E(BMS_TAG_INSTALLER, "Rollback failed -n %{public}s, dataMgr is nullptr", bundleName_.c_str());
+    return false;
 }
 
 ErrCode IndependentSkillsInstaller::ProcessInstallBundleByBundleName(
