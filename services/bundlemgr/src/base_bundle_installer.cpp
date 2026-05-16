@@ -5269,14 +5269,14 @@ ErrCode BaseBundleInstaller::RemoveBundleDataDir(
         InstalldClient::GetInstance()->RemoveBundleDataDir(info.GetBundleName(), userId_,
             info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE, async);
     InstallParam installParam;
-    if (result == ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED) {
+    if (result >= APPEXECFWK_INSTALLD_ERR_OFFSET) {
         LOG_W(BMS_TAG_INSTALLER, "RemoveBundleDataDir failed %{public}d", result);
         SendBundleSystemEvent(
             info.GetBundleName(),
             BundleEventType::UNINSTALL,
             installParam,
             sysEventInfo_.preBundleScene,
-            ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED);
+            result);
     }
 
     if (forException) {
@@ -5285,7 +5285,7 @@ ErrCode BaseBundleInstaller::RemoveBundleDataDir(
         auto extensionDirs = info.GetAllExtensionDirs();
         result = InstalldClient::GetInstance()->RemoveExtensionDir(userId_, extensionDirs);
     }
-    if (result == ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED) {
+    if (result >= APPEXECFWK_INSTALLD_ERR_OFFSET) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove bundle extension dir, error is %{public}d", result);
         SendBundleSystemEvent(
             info.GetBundleName(),
