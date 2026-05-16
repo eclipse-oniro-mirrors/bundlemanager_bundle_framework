@@ -852,4 +852,451 @@ HWTEST_F(BmsPluginInstallerTest, ProcessPluginUninstall_0001, Function | SmallTe
     EXPECT_EQ(ret, ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR);
 }
 
+/**
+ * @tc.number: JoinPluginId_0001
+ * @tc.name: test JoinPluginId with empty, single, and multiple pluginIds
+*/
+HWTEST_F(BmsPluginInstallerTest, JoinPluginId_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    // empty pluginIds_ branch
+    EXPECT_EQ(installer.JoinPluginId(), Constants::EMPTY_STRING);
+
+    // single id branch
+    installer.pluginIds_.emplace_back("11111111");
+    EXPECT_EQ(installer.JoinPluginId(), "11111111");
+
+    // multiple ids branch (covers loop with separator)
+    installer.pluginIds_.emplace_back("22222222");
+    std::string result = installer.JoinPluginId();
+    EXPECT_EQ(result, "11111111,22222222");
+}
+
+/**
+ * @tc.number: GetModuleNames_0001
+ * @tc.name: test GetModuleNames with empty parsedBundles
+*/
+HWTEST_F(BmsPluginInstallerTest, GetModuleNames_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    // empty parsedBundles_ branch
+    EXPECT_EQ(installer.GetModuleNames(), Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: GetModuleNames_0002
+ * @tc.name: test GetModuleNames with non-empty parsedBundles
+*/
+HWTEST_F(BmsPluginInstallerTest, GetModuleNames_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InnerBundleInfo info;
+    info.SetCurrentModulePackage("test_module");
+    installer.parsedBundles_.emplace("/path/to/plugin.hsp", info);
+    std::string result = installer.GetModuleNames();
+    EXPECT_FALSE(result.empty());
+}
+
+/**
+ * @tc.number: RemoveOldInstallDir_0001
+ * @tc.name: test RemoveOldInstallDir with isPluginExist_ false and true
+*/
+HWTEST_F(BmsPluginInstallerTest, RemoveOldInstallDir_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    // isPluginExist_ = false branch → return early
+    installer.isPluginExist_ = false;
+    EXPECT_NO_THROW(installer.RemoveOldInstallDir(HOST_BUNDLE_NAME));
+
+    // isPluginExist_ = true branch → call RemoveDir
+    installer.isPluginExist_ = true;
+    installer.oldPluginInfo_.codePath = "/data/test/old_plugin_dir";
+    EXPECT_NO_THROW(installer.RemoveOldInstallDir(HOST_BUNDLE_NAME));
+}
+
+/**
+ * @tc.number: UninstallRollBack_0001
+ * @tc.name: test UninstallRollBack
+*/
+HWTEST_F(BmsPluginInstallerTest, UninstallRollBack_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.bundleName_ = "test.plugin";
+    installer.userId_ = USER_ID;
+    installer.oldPluginInfo_.codePath = "/data/test/plugin";
+    EXPECT_NO_THROW(installer.UninstallRollBack(HOST_BUNDLE_NAME));
+}
+
+/**
+ * @tc.number: PluginRollBack_0001
+ * @tc.name: test PluginRollBack with isPluginExist_ false
+*/
+HWTEST_F(BmsPluginInstallerTest, PluginRollBack_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.bundleName_ = "test.plugin";
+    installer.userId_ = USER_ID;
+    // !isPluginExist_ branch → RemovePluginInfo
+    installer.isPluginExist_ = false;
+    EXPECT_NO_THROW(installer.PluginRollBack(HOST_BUNDLE_NAME));
+}
+
+/**
+ * @tc.number: PluginRollBack_0002
+ * @tc.name: test PluginRollBack with isPluginExist_ true
+*/
+HWTEST_F(BmsPluginInstallerTest, PluginRollBack_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.bundleName_ = "test.plugin";
+    installer.userId_ = USER_ID;
+    // isPluginExist_ branch → UpdatePluginBundleInfo + RemovePluginFromUserInfo
+    installer.isPluginExist_ = true;
+    installer.oldPluginInfo_.codePath = "/data/test/plugin";
+    EXPECT_NO_THROW(installer.PluginRollBack(HOST_BUNDLE_NAME));
+}
+
+/**
+ * @tc.number: RemoveDir_0001
+ * @tc.name: test RemoveDir
+*/
+HWTEST_F(BmsPluginInstallerTest, RemoveDir_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    std::string dir = "/data/test/nonexist_plugin_dir";
+    EXPECT_NO_THROW(installer.RemoveDir(dir, HOST_BUNDLE_NAME));
+}
+
+/**
+ * @tc.number: RemoveEmptyDirs_0001
+ * @tc.name: test RemoveEmptyDirs
+*/
+HWTEST_F(BmsPluginInstallerTest, RemoveEmptyDirs_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.bundleNameWithTime_ = "test.bundle.time";
+    InnerBundleInfo info;
+    installer.parsedBundles_.emplace("test_module", info);
+    std::string pluginDir = "/data/test/plugins";
+    EXPECT_NO_THROW(installer.RemoveEmptyDirs(pluginDir, HOST_BUNDLE_NAME));
+}
+
+/**
+ * @tc.number: NotifyPluginEvents_0001
+ * @tc.name: test NotifyPluginEvents with INSTALL type
+*/
+HWTEST_F(BmsPluginInstallerTest, NotifyPluginEvents_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.bundleName_ = "test.plugin";
+    EXPECT_NO_THROW(installer.NotifyPluginEvents(NotifyType::INSTALL, 1000));
+}
+
+/**
+ * @tc.number: NotifyPluginEvents_0002
+ * @tc.name: test NotifyPluginEvents with UPDATE type
+*/
+HWTEST_F(BmsPluginInstallerTest, NotifyPluginEvents_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.bundleName_ = "test.plugin";
+    EXPECT_NO_THROW(installer.NotifyPluginEvents(NotifyType::UPDATE, 1000));
+}
+
+/**
+ * @tc.number: NotifyPluginEvents_0003
+ * @tc.name: test NotifyPluginEvents with UNINSTALL type
+*/
+HWTEST_F(BmsPluginInstallerTest, NotifyPluginEvents_0003, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.bundleName_ = "test.plugin";
+    EXPECT_NO_THROW(installer.NotifyPluginEvents(NotifyType::UNINSTALL_BUNDLE, 1000));
+}
+
+/**
+ * @tc.number: SendPluginCommonEvent_0001
+ * @tc.name: test SendPluginCommonEvent with INSTALL type
+*/
+HWTEST_F(BmsPluginInstallerTest, SendPluginCommonEvent_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    EXPECT_NO_THROW(installer.SendPluginCommonEvent(HOST_BUNDLE_NAME, "test.plugin", NotifyType::INSTALL));
+}
+
+/**
+ * @tc.number: SendPluginCommonEvent_0002
+ * @tc.name: test SendPluginCommonEvent with UNINSTALL type
+*/
+HWTEST_F(BmsPluginInstallerTest, SendPluginCommonEvent_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    EXPECT_NO_THROW(installer.SendPluginCommonEvent(HOST_BUNDLE_NAME, "test.plugin", NotifyType::UNINSTALL_BUNDLE));
+}
+
+/**
+ * @tc.number: UpdateRouterInfoForPlugin_0001
+ * @tc.name: test UpdateRouterInfoForPlugin with isPluginExist_ false
+*/
+HWTEST_F(BmsPluginInstallerTest, UpdateRouterInfoForPlugin_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InnerBundleInfo pluginInfo;
+    // !isPluginExist_ branch → InsertRouterInfo only
+    installer.isPluginExist_ = false;
+    EXPECT_NO_THROW(installer.UpdateRouterInfoForPlugin(HOST_BUNDLE_NAME, pluginInfo));
+}
+
+/**
+ * @tc.number: UpdateRouterInfoForPlugin_0002
+ * @tc.name: test UpdateRouterInfoForPlugin with isPluginExist_ true
+*/
+HWTEST_F(BmsPluginInstallerTest, UpdateRouterInfoForPlugin_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InnerBundleInfo pluginInfo;
+    // isPluginExist_ branch → DeleteRouterInfo + InsertRouterInfo
+    installer.isPluginExist_ = true;
+    installer.oldPluginInfo_.codePath = "/data/test/plugin";
+    EXPECT_NO_THROW(installer.UpdateRouterInfoForPlugin(HOST_BUNDLE_NAME, pluginInfo));
+}
+
+/**
+ * @tc.number: DeleteRouterInfoForPlugin_0001
+ * @tc.name: test DeleteRouterInfoForPlugin
+*/
+HWTEST_F(BmsPluginInstallerTest, DeleteRouterInfoForPlugin_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.oldPluginInfo_.codePath = "/data/test/plugin";
+    EXPECT_NO_THROW(installer.DeleteRouterInfoForPlugin(HOST_BUNDLE_NAME));
+}
+
+/**
+ * @tc.number: MergePluginBundleInfo_0001
+ * @tc.name: test MergePluginBundleInfo with single bundle
+*/
+HWTEST_F(BmsPluginInstallerTest, MergePluginBundleInfo_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.bundleName_ = "test.plugin";
+    installer.userId_ = USER_ID;
+    InnerBundleInfo info1;
+    info1.baseApplicationInfo_->bundleName = "test.plugin";
+    installer.parsedBundles_.emplace("/path/to/plugin1.hsp", info1);
+    InnerBundleInfo result;
+    installer.MergePluginBundleInfo(result);
+    EXPECT_EQ(result.GetBundleName(), "test.plugin");
+}
+
+/**
+ * @tc.number: MergePluginBundleInfo_0002
+ * @tc.name: test MergePluginBundleInfo with multiple bundles
+*/
+HWTEST_F(BmsPluginInstallerTest, MergePluginBundleInfo_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.bundleName_ = "test.plugin";
+    installer.userId_ = USER_ID;
+    InnerBundleInfo info1;
+    info1.baseApplicationInfo_->bundleName = "test.plugin";
+    InnerBundleInfo info2;
+    info2.baseApplicationInfo_->bundleName = "test.plugin";
+    installer.parsedBundles_.emplace("/path/to/plugin1.hsp", info1);
+    installer.parsedBundles_.emplace("/path/to/plugin2.hsp", info2);
+    InnerBundleInfo result;
+    installer.MergePluginBundleInfo(result);
+    EXPECT_EQ(result.GetBundleName(), "test.plugin");
+}
+
+/**
+ * @tc.number: ObtainHspFileAndSignatureFilePath_0002
+ * @tc.name: test ObtainHspFileAndSignatureFilePath with multi-file including sig
+*/
+HWTEST_F(BmsPluginInstallerTest, ObtainHspFileAndSignatureFilePath_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    // Multi-file: hsp + sig → covers numberOfHsp/numberOfSignatureFile counting
+    std::vector<std::string> inBundlePath = {PLUGIN_PATH1, "/data/test/plugin.sig"};
+    std::vector<std::string> bundlePaths;
+    std::string sigFilePath;
+    ErrCode ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePath, bundlePaths, sigFilePath);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundlePaths.size(), 1);
+    EXPECT_EQ(sigFilePath, "/data/test/plugin.sig");
+}
+
+/**
+ * @tc.number: ObtainHspFileAndSignatureFilePath_0003
+ * @tc.name: test ObtainHspFileAndSignatureFilePath with single non-hsp file
+*/
+HWTEST_F(BmsPluginInstallerTest, ObtainHspFileAndSignatureFilePath_0003, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    // Single file not ending with .hsp → covers invalid file branch
+    std::vector<std::string> inBundlePath = {"/data/test/plugin.txt"};
+    std::vector<std::string> bundlePaths;
+    std::string sigFilePath;
+    ErrCode ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePath, bundlePaths, sigFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: ObtainHspFileAndSignatureFilePath_0004
+ * @tc.name: test ObtainHspFileAndSignatureFilePath with multi-file including invalid suffix
+*/
+HWTEST_F(BmsPluginInstallerTest, ObtainHspFileAndSignatureFilePath_0004, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    // Multi-file with invalid suffix → covers invalid file in shared bundle dir
+    std::vector<std::string> inBundlePath = {PLUGIN_PATH1, "/data/test/plugin.txt"};
+    std::vector<std::string> bundlePaths;
+    std::string sigFilePath;
+    ErrCode ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePath, bundlePaths, sigFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: UninstallPlugin_0004
+ * @tc.name: test UninstallPlugin with negative userId
+*/
+HWTEST_F(BmsPluginInstallerTest, UninstallPlugin_0004, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InstallPluginParam pluginParam;
+    // userId < DEFAULT_USERID branch
+    pluginParam.userId = -1;
+    ErrCode ret = installer.UninstallPlugin(HOST_BUNDLE_NAME, PLUGIN_NAME, pluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallPlugin_0006
+ * @tc.name: test InstallPlugin with host not installed for user
+*/
+HWTEST_F(BmsPluginInstallerTest, InstallPlugin_0006, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // Add NEW_USER_ID so HasUserId passes, but host not installed for this user
+    dataMgr->AddUserId(NEW_USER_ID);
+
+    PluginInstaller installer;
+    InstallPluginParam pluginParam;
+    pluginParam.userId = NEW_USER_ID;
+    std::vector<std::string> pluginFilePaths = {PLUGIN_PATH1};
+    // HasInnerBundleUserInfo returns false → ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND
+    ErrCode ret = installer.InstallPlugin(HOST_BUNDLE_NAME, pluginFilePaths, pluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+}
+
+/**
+ * @tc.number: UninstallPlugin_0005
+ * @tc.name: test UninstallPlugin with host not installed for user
+*/
+HWTEST_F(BmsPluginInstallerTest, UninstallPlugin_0005, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(NEW_USER_ID);
+
+    PluginInstaller installer;
+    InstallPluginParam pluginParam;
+    pluginParam.userId = NEW_USER_ID;
+    // HasInnerBundleUserInfo returns false
+    ErrCode ret = installer.UninstallPlugin(HOST_BUNDLE_NAME, PLUGIN_NAME, pluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+}
+
+/**
+ * @tc.number: RemovePluginDir_0001
+ * @tc.name: test RemovePluginDir
+*/
+HWTEST_F(BmsPluginInstallerTest, RemovePluginDir_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InnerBundleInfo hostInfo;
+    hostInfo.baseApplicationInfo_->bundleName = HOST_BUNDLE_NAME;
+    installer.bundleNameWithTime_ = "test.time";
+    EXPECT_NO_THROW(installer.RemovePluginDir(hostInfo));
+}
+
+/**
+ * @tc.number: CheckVersionCodeForUpdate_0002
+ * @tc.name: test CheckVersionCodeForUpdate with higher or equal version
+*/
+HWTEST_F(BmsPluginInstallerTest, CheckVersionCodeForUpdate_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InnerBundleInfo pluginInfo;
+    installer.parsedBundles_.emplace("test", pluginInfo);
+
+    // old version = 0, new version >= 0 → true (default versionCode is 0)
+    installer.oldPluginInfo_.versionCode = 0;
+    bool ret = installer.CheckVersionCodeForUpdate();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstallPlugin_0008
+ * @tc.name: test InstallPlugin with plugin not exist file path
+*/
+HWTEST_F(BmsPluginInstallerTest, InstallPlugin_0008, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InstallPluginParam pluginParam;
+    pluginParam.userId = USER_ID;
+    std::vector<std::string> pluginFilePaths = {PLUGIN_PATH3};
+    ErrCode ret = installer.InstallPlugin(HOST_BUNDLE_NAME, pluginFilePaths, pluginParam);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CopyHspToSecurityDir_0002
+ * @tc.name: test CopyHspToSecurityDir with empty paths
+*/
+HWTEST_F(BmsPluginInstallerTest, CopyHspToSecurityDir_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InstallPluginParam pluginParam;
+    pluginParam.userId = USER_ID;
+    std::vector<std::string> bundlePaths;
+    // Empty paths → loop doesn't execute, returns ERR_OK
+    ErrCode ret = installer.CopyHspToSecurityDir(bundlePaths, pluginParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ParseHapPaths_0006
+ * @tc.name: test ParseHapPaths with APP_INSTALL_SANDBOX_PATH prefix
+*/
+HWTEST_F(BmsPluginInstallerTest, ParseHapPaths_0006, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.userId_ = USER_ID;
+    InstallPluginParam pluginParam;
+    std::string path = "/data/bms_app_install/test.hsp";
+    std::vector<std::string> inBundlePath = {path};
+    std::vector<std::string> parsedPath;
+    ErrCode ret = installer.ParseHapPaths(pluginParam, inBundlePath, parsedPath);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(parsedPath.size(), 1);
+    EXPECT_EQ(parsedPath[0], std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(USER_ID) +
+        ServiceConstants::PATH_SEPARATOR + "test.hsp");
+}
+
+/**
+ * @tc.number: ProcessPluginInstall_0002
+ * @tc.name: test ProcessPluginInstall with empty parsedBundles
+*/
+HWTEST_F(BmsPluginInstallerTest, ProcessPluginInstall_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InnerBundleInfo info;
+    // parsedBundles_ is empty → returns ERR_OK immediately
+    ErrCode ret = installer.ProcessPluginInstall(info);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
 } // OHOS

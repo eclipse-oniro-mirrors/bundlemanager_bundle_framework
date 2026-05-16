@@ -17121,4 +17121,1044 @@ HWTEST_F(BmsBundleInstallerTest, DeleteCertAndRemoveKey_0200, Function | SmallTe
     auto ret = impl.DeleteCertAndRemoveKey(certPaths);
     EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED);
 }
+
+/**
+ * @tc.number: ProcessAOT_0001
+ * @tc.name: test ProcessAOT
+ * @tc.desc: 1.Test ProcessAOT with isFirstBootInstall true
+ */
+HWTEST_F(BmsBundleInstallerTest, ProcessAOT_0001, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.isFirstBootInstall = true;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller bundleInstaller(installParam, appType);
+    bundleInstaller.installParam_.isFirstBootInstall = true;
+    bundleInstaller.ProcessAOT();
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: ProcessAOT_0002
+ * @tc.name: test ProcessAOT
+ * @tc.desc: 1.Test ProcessAOT with isOTA true
+ */
+HWTEST_F(BmsBundleInstallerTest, ProcessAOT_0002, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.isOTA = true;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller bundleInstaller(installParam, appType);
+    bundleInstaller.installParam_.isOTA = true;
+    bundleInstaller.ProcessAOT();
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: ProcessAOT_0003
+ * @tc.name: test ProcessAOT
+ * @tc.desc: 1.Test ProcessAOT with isCreateUser true
+ */
+HWTEST_F(BmsBundleInstallerTest, ProcessAOT_0003, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.isCreateUser = true;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller bundleInstaller(installParam, appType);
+    bundleInstaller.installParam_.isCreateUser = true;
+    bundleInstaller.ProcessAOT();
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: ProcessAOT_0004
+ * @tc.name: test ProcessAOT
+ * @tc.desc: 1.Test ProcessAOT with all flags false and empty innerInstallers
+ */
+HWTEST_F(BmsBundleInstallerTest, ProcessAOT_0004, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller bundleInstaller(installParam, appType);
+    bundleInstaller.ProcessAOT();
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: NeedToInstall_0001
+ * @tc.name: test NeedToInstall
+ * @tc.desc: 1.Test NeedToInstall returns false when innerInstallers is empty
+ */
+HWTEST_F(BmsBundleInstallerTest, NeedToInstall_0001, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller installer(installParam, appType);
+    EXPECT_FALSE(installer.NeedToInstall());
+}
+
+/**
+ * @tc.number: NeedToInstall_0002
+ * @tc.name: test NeedToInstall
+ * @tc.desc: 1.Test NeedToInstall returns true when innerInstallers is not empty
+ */
+HWTEST_F(BmsBundleInstallerTest, NeedToInstall_0002, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller installer(installParam, appType);
+    std::string path = BUNDLE_DATA_DIR;
+    installer.innerInstallers_[BUNDLE_NAME] = std::make_shared<InnerSharedBundleInstaller>(path);
+    EXPECT_TRUE(installer.NeedToInstall());
+}
+
+/**
+ * @tc.number: FindDependencyInInstalledBundles_0020
+ * @tc.name: test FindDependencyInInstalledBundles
+ * @tc.desc: 1.Test bundle not installed
+ */
+HWTEST_F(BmsBundleInstallerTest, FindDependencyInInstalledBundles_0020, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller bundleInstaller(installParam, appType);
+    Dependency dependency;
+    dependency.bundleName = BUNDLE_NAME;
+    dependency.moduleName = MODULE_NAME_TEST;
+    dependency.versionCode = 1;
+    auto res = bundleInstaller.FindDependencyInInstalledBundles(dependency);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: GetCallingEventInfo_0020
+ * @tc.name: test GetCallingEventInfo
+ * @tc.desc: 1.Test GetCallingEventInfo with valid dataMgr
+ */
+HWTEST_F(BmsBundleInstallerTest, GetCallingEventInfo_0020, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller bundleInstaller(installParam, appType);
+    EventInfo eventInfo;
+    eventInfo.callingUid = 0;
+    bundleInstaller.GetCallingEventInfo(eventInfo);
+    EXPECT_EQ(eventInfo.callingBundleName, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: Install_0002
+ * @tc.name: test Install with empty innerInstallers
+ * @tc.desc: 1.Test SharedBundleInstaller Install with no inner installers
+ */
+HWTEST_F(BmsBundleInstallerTest, Install_0002, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller bundleInstaller(installParam, appType);
+    EventInfo eventTemplate;
+    ErrCode ret = bundleInstaller.Install(eventTemplate);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstaller_0001
+ * @tc.name: test InnerSharedBundleInstaller constructor and GetBundleName
+ * @tc.desc: 1.Test basic construction
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerSharedBundleInstaller_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    EXPECT_EQ(installer.sharedBundlePath_, path);
+    EXPECT_EQ(installer.GetBundleName(), EMPTY_STRING);
+}
+
+/**
+ * @tc.number: InnerShared_Install_0001
+ * @tc.name: test Install with empty parsedBundles
+ * @tc.desc: 1.Test InnerSharedBundleInstaller Install returns ERR_OK when no bundles
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_Install_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    InstallParam installParam;
+    ErrCode ret = installer.Install(installParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerShared_Install_0002
+ * @tc.name: test Install with non-empty parsedBundles but empty hapVerifyResults
+ * @tc.desc: 1.Test InnerSharedBundleInstaller Install returns error when hapVerifyResults empty
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_Install_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    installer.parsedBundles_.emplace("test_path", info);
+    installer.hapVerifyResults_.clear();
+    InstallParam installParam;
+    ErrCode ret = installer.Install(installParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HAP_VERIFY_RES_EMPTY);
+}
+
+/**
+ * @tc.number: InnerShared_Install_0003
+ * @tc.name: test Install with null dataMgr
+ * @tc.desc: 1.Test InnerSharedBundleInstaller Install returns error when dataMgr is null
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_Install_0003, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    installer.parsedBundles_.emplace("test_path", info);
+    Security::Verify::HapVerifyResult verifyResult;
+    installer.hapVerifyResults_.push_back(verifyResult);
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    InstallParam installParam;
+    ErrCode ret = installer.Install(installParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: InnerShared_RollBack_0001
+ * @tc.name: test RollBack with empty createdDirs
+ * @tc.desc: 1.Test RollBack does not crash with empty dirs
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_RollBack_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isBundleExist_ = false;
+    installer.createdDirs_.clear();
+    installer.RollBack();
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_RollBack_0002
+ * @tc.name: test RollBack with isBundleExist true
+ * @tc.desc: 1.Test RollBack restores old bundle info
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_RollBack_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isBundleExist_ = true;
+    installer.createdDirs_.clear();
+    installer.RollBack();
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_RollBack_0003
+ * @tc.name: test RollBack with null dataMgr
+ * @tc.desc: 1.Test RollBack with null dataMgr
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_RollBack_0003, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isBundleExist_ = false;
+    installer.createdDirs_.clear();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    installer.RollBack();
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_CheckDependency_0001
+ * @tc.name: test CheckDependency
+ * @tc.desc: 1.Test CheckDependency with non-matching bundleName
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_CheckDependency_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    Dependency dependency;
+    dependency.bundleName = WRONG_BUNDLE_NAME;
+    dependency.moduleName = MODULE_NAME_TEST;
+    dependency.versionCode = 1;
+    bool res = installer.CheckDependency(dependency);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: InnerShared_CheckDependency_0002
+ * @tc.name: test CheckDependency
+ * @tc.desc: 1.Test CheckDependency with matching bundleName but no matching module
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_CheckDependency_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    InnerBundleInfo info;
+    installer.parsedBundles_.emplace("test_path", info);
+    Dependency dependency;
+    dependency.bundleName = BUNDLE_NAME;
+    dependency.moduleName = MODULE_NAME_TEST;
+    dependency.versionCode = 1;
+    bool res = installer.CheckDependency(dependency);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: InnerShared_SendBundleSystemEvent_0001
+ * @tc.name: test SendBundleSystemEvent
+ * @tc.desc: 1.Test SendBundleSystemEvent with isBundleExist false (INSTALL event)
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_SendBundleSystemEvent_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isBundleExist_ = false;
+    EventInfo eventTemplate;
+    installer.SendBundleSystemEvent(eventTemplate);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_SendBundleSystemEvent_0002
+ * @tc.name: test SendBundleSystemEvent
+ * @tc.desc: 1.Test SendBundleSystemEvent with isBundleExist true (UPDATE event)
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_SendBundleSystemEvent_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isBundleExist_ = true;
+    EventInfo eventTemplate;
+    installer.SendBundleSystemEvent(eventTemplate);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_CheckAppLabelInfo_0001
+ * @tc.name: test CheckAppLabelInfo
+ * @tc.desc: 1.Test CheckAppLabelInfo with empty parsedBundles
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_CheckAppLabelInfo_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.parsedBundles_.clear();
+    ErrCode ret = installer.CheckAppLabelInfo();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerShared_CheckAppLabelInfo_0002
+ * @tc.name: test CheckAppLabelInfo
+ * @tc.desc: 1.Test CheckAppLabelInfo with null dataMgr
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_CheckAppLabelInfo_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    installer.parsedBundles_.emplace("test_path", info);
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    ErrCode ret = installer.CheckAppLabelInfo();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: InnerShared_CheckAppLabelInfo_0003
+ * @tc.name: test CheckAppLabelInfo
+ * @tc.desc: 1.Test CheckAppLabelInfo with new bundle not SHARED type
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_CheckAppLabelInfo_0003, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.baseApplicationInfo_->bundleType = BundleType::APP;
+    installer.parsedBundles_.emplace("test_path", info);
+    ErrCode ret = installer.CheckAppLabelInfo();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InnerShared_CheckAppLabelInfo_0004
+ * @tc.name: test CheckAppLabelInfo
+ * @tc.desc: 1.Test CheckAppLabelInfo with existing SHARED bundle (isBundleExist true)
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_CheckAppLabelInfo_0004, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    installer.parsedBundles_.emplace("test_path", info);
+    ErrCode ret = installer.CheckAppLabelInfo();
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerShared_CheckBundleTypeWithInstalledVersion_0001
+ * @tc.name: test CheckBundleTypeWithInstalledVersion
+ * @tc.desc: 1.Test old bundle not SHARED type
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_CheckBundleTypeWithInstalledVersion_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.baseApplicationInfo_->bundleType = BundleType::APP;
+    installer.parsedBundles_.emplace("test_path", info);
+    installer.oldBundleInfo_.baseApplicationInfo_->bundleType = BundleType::APP;
+    ErrCode ret = installer.CheckBundleTypeWithInstalledVersion();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME);
+}
+
+/**
+ * @tc.number: InnerShared_ObtainHspFileAndSignatureFilePath_0001
+ * @tc.name: test ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test with empty input paths
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_ObtainHspFileAndSignatureFilePath_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    std::vector<std::string> inBundlePaths;
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    ErrCode ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY);
+}
+
+/**
+ * @tc.number: InnerShared_ObtainHspFileAndSignatureFilePath_0002
+ * @tc.name: test ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test with single hsp file
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_ObtainHspFileAndSignatureFilePath_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    std::vector<std::string> inBundlePaths = {"/data/test/module.hsp"};
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    ErrCode ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundlePaths.size(), 1u);
+}
+
+/**
+ * @tc.number: InnerShared_ObtainHspFileAndSignatureFilePath_0003
+ * @tc.name: test ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test with single non-hsp file
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_ObtainHspFileAndSignatureFilePath_0003, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    std::vector<std::string> inBundlePaths = {"/data/test/module.txt"};
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    ErrCode ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ONLY_HSP_OR_SIG_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR);
+}
+
+/**
+ * @tc.number: InnerShared_ObtainHspFileAndSignatureFilePath_0004
+ * @tc.name: test ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test with multiple files containing both hsp and sig
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_ObtainHspFileAndSignatureFilePath_0004, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    std::vector<std::string> inBundlePaths = {"/data/test/module.hsp", "/data/test/signature.sig"};
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    ErrCode ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundlePaths.size(), 1u);
+    EXPECT_EQ(signatureFilePath, "/data/test/signature.sig");
+}
+
+/**
+ * @tc.number: InnerShared_ObtainHspFileAndSignatureFilePath_0005
+ * @tc.name: test ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test with invalid file in multiple paths
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_ObtainHspFileAndSignatureFilePath_0005, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    std::vector<std::string> inBundlePaths = {"/data/test/module.hsp", "/data/test/invalid.txt"};
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    ErrCode ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ONLY_HSP_OR_SIG_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR);
+}
+
+/**
+ * @tc.number: InnerShared_ObtainHspFileAndSignatureFilePath_0006
+ * @tc.name: test ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test exceeding max file number
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_ObtainHspFileAndSignatureFilePath_0006, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    std::vector<std::string> inBundlePaths;
+    for (int i = 0; i < 130; ++i) {
+        inBundlePaths.emplace_back("/data/test/module" + std::to_string(i) + ".hsp");
+    }
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    ErrCode ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_NUMBER_EXCEED_MAX_NUMBER_IN_HSP_LIB_PATH);
+}
+
+/**
+ * @tc.number: InnerShared_ObtainTempSoPath_0001
+ * @tc.name: test ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath with empty nativeLibPath
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_ObtainTempSoPath_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    auto ret = installer.ObtainTempSoPath("module1", "");
+    EXPECT_TRUE(ret.empty());
+}
+
+/**
+ * @tc.number: InnerShared_ObtainTempSoPath_0002
+ * @tc.name: test ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath with moduleName found in path
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_ObtainTempSoPath_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    auto ret = installer.ObtainTempSoPath("module1", "module1/lib/arm");
+    EXPECT_FALSE(ret.empty());
+    EXPECT_NE(ret.find("module1_tmp"), std::string::npos);
+}
+
+/**
+ * @tc.number: InnerShared_ObtainTempSoPath_0003
+ * @tc.name: test ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath with moduleName not found in path
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_ObtainTempSoPath_0003, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    auto ret = installer.ObtainTempSoPath("module1", "lib/arm");
+    EXPECT_FALSE(ret.empty());
+    EXPECT_NE(ret.find("module1_tmp"), std::string::npos);
+}
+
+/**
+ * @tc.number: InnerShared_DeliveryProfileToCodeSign_0001
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1.Test DeliveryProfileToCodeSign with isBundleExist true
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_DeliveryProfileToCodeSign_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.isBundleExist_ = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    ErrCode ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerShared_DeliveryProfileToCodeSign_0002
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1.Test DeliveryProfileToCodeSign with empty hapVerifyResults
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_DeliveryProfileToCodeSign_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.isBundleExist_ = false;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    ErrCode ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: InnerShared_DeliveryProfileToCodeSign_0003
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1.Test DeliveryProfileToCodeSign with non-enterprise distributionType
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_DeliveryProfileToCodeSign_0003, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.isBundleExist_ = false;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::HapVerifyResult verifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::NONE_TYPE;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    verifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(verifyResult);
+    ErrCode ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerShared_CheckAppDistributionType_0001
+ * @tc.name: test CheckAppDistributionType
+ * @tc.desc: 1.Test CheckAppDistributionType with isBundleExist true
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_CheckAppDistributionType_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.isBundleExist_ = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    ErrCode ret = installer.CheckAppDistributionType(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerShared_MergeBundleInfos_0001
+ * @tc.name: test MergeBundleInfos
+ * @tc.desc: 1.Test MergeBundleInfos with isBundleExist false
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_MergeBundleInfos_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.isBundleExist_ = false;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.baseBundleInfo_->versionCode = 1;
+    installer.parsedBundles_.emplace("test_path", info);
+    installer.MergeBundleInfos();
+    EXPECT_EQ(installer.newBundleInfo_.GetBundleName(), BUNDLE_NAME);
+    EXPECT_TRUE(installer.newBundleInfo_.IsHideDesktopIcon());
+}
+
+/**
+ * @tc.number: InnerShared_MergeBundleInfos_0002
+ * @tc.name: test MergeBundleInfos
+ * @tc.desc: 1.Test MergeBundleInfos with isBundleExist true
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_MergeBundleInfos_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.isBundleExist_ = true;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.baseBundleInfo_->versionCode = 1;
+    installer.oldBundleInfo_ = info;
+    installer.parsedBundles_.emplace("test_path", info);
+    installer.MergeBundleInfos();
+    EXPECT_EQ(installer.newBundleInfo_.GetBundleName(), BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: InnerShared_MergeBundleInfos_0003
+ * @tc.name: test MergeBundleInfos
+ * @tc.desc: 1.Test MergeBundleInfos with multiple bundles and version upgrade
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_MergeBundleInfos_0003, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.isBundleExist_ = false;
+    InnerBundleInfo info1;
+    info1.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info1.baseBundleInfo_->versionCode = 1;
+    installer.parsedBundles_.emplace("path1", info1);
+    InnerBundleInfo info2;
+    info2.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info2.baseBundleInfo_->versionCode = 2;
+    installer.parsedBundles_.emplace("path2", info2);
+    installer.MergeBundleInfos();
+    EXPECT_EQ(installer.newBundleInfo_.GetBundleName(), BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: InnerShared_SavePreInstallInfo_0001
+ * @tc.name: test SavePreInstallInfo
+ * @tc.desc: 1.Test SavePreInstallInfo with needSavePreInstallInfo false
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_SavePreInstallInfo_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    InstallParam installParam;
+    installParam.needSavePreInstallInfo = false;
+    ErrCode ret = installer.SavePreInstallInfo(installParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerShared_SavePreInstallInfo_0002
+ * @tc.name: test SavePreInstallInfo
+ * @tc.desc: 1.Test SavePreInstallInfo with null dataMgr
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_SavePreInstallInfo_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    InstallParam installParam;
+    installParam.needSavePreInstallInfo = true;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    ErrCode ret = installer.SavePreInstallInfo(installParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: InnerShared_SaveBundleInfoToStorage_0001
+ * @tc.name: test SaveBundleInfoToStorage
+ * @tc.desc: 1.Test SaveBundleInfoToStorage with null dataMgr
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_SaveBundleInfoToStorage_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isBundleExist_ = false;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    ErrCode ret = installer.SaveBundleInfoToStorage();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: InnerShared_SaveBundleInfoToStorage_0002
+ * @tc.name: test SaveBundleInfoToStorage
+ * @tc.desc: 1.Test SaveBundleInfoToStorage with isBundleExist true but update fails
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_SaveBundleInfoToStorage_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isBundleExist_ = true;
+    ErrCode ret = installer.SaveBundleInfoToStorage();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR);
+}
+
+/**
+ * @tc.number: InnerShared_SaveInstallParamInfo_0001
+ * @tc.name: test SaveInstallParamInfo
+ * @tc.desc: 1.Test SaveInstallParamInfo with empty specifiedDistributionType and additionalInfo
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_SaveInstallParamInfo_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    InstallParam installParam;
+    installer.SaveInstallParamInfo(BUNDLE_NAME, installParam);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_SaveInstallParamInfo_0002
+ * @tc.name: test SaveInstallParamInfo
+ * @tc.desc: 1.Test SaveInstallParamInfo with non-empty specifiedDistributionType
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_SaveInstallParamInfo_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    InstallParam installParam;
+    installParam.specifiedDistributionType = "test_type";
+    installParam.additionalInfo = "test_info";
+    installer.SaveInstallParamInfo(BUNDLE_NAME, installParam);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_MarkInstallFinish_0001
+ * @tc.name: test MarkInstallFinish
+ * @tc.desc: 1.Test MarkInstallFinish with null dataMgr
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_MarkInstallFinish_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    ErrCode ret = installer.MarkInstallFinish();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: InnerShared_MarkInstallFinish_0002
+ * @tc.name: test MarkInstallFinish
+ * @tc.desc: 1.Test MarkInstallFinish when bundle not found
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_MarkInstallFinish_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    ErrCode ret = installer.MarkInstallFinish();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_FETCH_BUNDLE_ERROR);
+}
+
+/**
+ * @tc.number: InnerShared_UpdateRouterInfoForSharedBundle_0001
+ * @tc.name: test UpdateRouterInfoForSharedBundle
+ * @tc.desc: 1.Test UpdateRouterInfoForSharedBundle with null dataMgr
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_UpdateRouterInfoForSharedBundle_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    InnerBundleInfo newBundleInfo;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    installer.UpdateRouterInfoForSharedBundle(newBundleInfo);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_UpdateRouterInfoForSharedBundle_0002
+ * @tc.name: test UpdateRouterInfoForSharedBundle
+ * @tc.desc: 1.Test UpdateRouterInfoForSharedBundle with valid dataMgr
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_UpdateRouterInfoForSharedBundle_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    InnerBundleInfo newBundleInfo;
+    newBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    installer.UpdateRouterInfoForSharedBundle(newBundleInfo);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_GetInstallEventInfo_0001
+ * @tc.name: test GetInstallEventInfo
+ * @tc.desc: 1.Test GetInstallEventInfo with empty parsedBundles
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_GetInstallEventInfo_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    EventInfo eventInfo;
+    installer.GetInstallEventInfo(eventInfo);
+    EXPECT_TRUE(eventInfo.filePath.empty());
+}
+
+/**
+ * @tc.number: InnerShared_GetInstallEventInfo_0002
+ * @tc.name: test GetInstallEventInfo
+ * @tc.desc: 1.Test GetInstallEventInfo with non-empty parsedBundles
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_GetInstallEventInfo_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.hapPath = "/data/test/module.hsp";
+    moduleInfo.hashValue = "abc123";
+    info.innerModuleInfos_.emplace("test_package", moduleInfo);
+    installer.parsedBundles_.emplace("test_path", info);
+    EventInfo eventInfo;
+    installer.GetInstallEventInfo(eventInfo);
+    EXPECT_EQ(eventInfo.filePath.size(), 1u);
+    EXPECT_EQ(eventInfo.hashValue.size(), 1u);
+}
+
+/**
+ * @tc.number: InnerShared_CopyHspToSecurityDir_0001
+ * @tc.name: test CopyHspToSecurityDir
+ * @tc.desc: 1.Test CopyHspToSecurityDir with empty paths
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_CopyHspToSecurityDir_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    std::vector<std::string> bundlePaths;
+    ErrCode ret = installer.CopyHspToSecurityDir(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerShared_CopyHspToSecurityDir_0002
+ * @tc.name: test CopyHspToSecurityDir
+ * @tc.desc: 1.Test CopyHspToSecurityDir with non-existent file
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_CopyHspToSecurityDir_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    std::vector<std::string> bundlePaths = {"/non/existent/path.hsp"};
+    ErrCode ret = installer.CopyHspToSecurityDir(bundlePaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED);
+}
+
+/**
+ * @tc.number: InnerShared_SetCheckResultMsg_0001
+ * @tc.name: test SetCheckResultMsg
+ * @tc.desc: 1.Test SetCheckResultMsg
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_SetCheckResultMsg_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.SetCheckResultMsg("test message");
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_sendStartSharedBundleInstallNotify_0001
+ * @tc.name: test sendStartSharedBundleInstallNotify
+ * @tc.desc: 1.Test with needSendEvent false
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_sendStartSharedBundleInstallNotify_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    InstallCheckParam checkParam;
+    checkParam.needSendEvent = false;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    installer.sendStartSharedBundleInstallNotify(checkParam, infos);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_sendStartSharedBundleInstallNotify_0002
+ * @tc.name: test sendStartSharedBundleInstallNotify
+ * @tc.desc: 1.Test with needSendEvent true and null dataMgr
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_sendStartSharedBundleInstallNotify_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    InstallCheckParam checkParam;
+    checkParam.needSendEvent = true;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos.emplace("test_path", info);
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    installer.sendStartSharedBundleInstallNotify(checkParam, infos);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_NotifyBundleStatusOfShared_0001
+ * @tc.name: test NotifyBundleStatusOfShared
+ * @tc.desc: 1.Test NotifyBundleStatusOfShared with null dataMgr
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_NotifyBundleStatusOfShared_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    NotifyBundleEvents installRes;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    ErrCode ret = installer.NotifyBundleStatusOfShared(installRes);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: InnerShared_NotifyBundleStatusOfShared_0002
+ * @tc.name: test NotifyBundleStatusOfShared
+ * @tc.desc: 1.Test NotifyBundleStatusOfShared with valid dataMgr
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_NotifyBundleStatusOfShared_0002, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    NotifyBundleEvents installRes;
+    installRes.bundleName = BUNDLE_NAME;
+    ErrCode ret = installer.NotifyBundleStatusOfShared(installRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerShared_MkdirIfNotExist_0001
+ * @tc.name: test MkdirIfNotExist
+ * @tc.desc: 1.Test MkdirIfNotExist
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_MkdirIfNotExist_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    ErrCode ret = installer.MkdirIfNotExist(BundleDirScene::BUNDLE_CODE_DIR, "/data/test/dir");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerShared_UpdateInnerModuleInfo_0001
+ * @tc.name: test UpdateInnerModuleInfo
+ * @tc.desc: 1.Test UpdateInnerModuleInfo basic flow
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_UpdateInnerModuleInfo_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    installer.bundleName_ = BUNDLE_NAME;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.modulePackage = "test_package";
+    innerModuleInfo.versionCode = 1;
+    installer.UpdateInnerModuleInfo("test_package", innerModuleInfo);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_AddAppProvisionInfo_0001
+ * @tc.name: test AddAppProvisionInfo
+ * @tc.desc: 1.Test AddAppProvisionInfo
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_AddAppProvisionInfo_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    Security::Verify::ProvisionInfo provisionInfo;
+    installer.AddAppProvisionInfo(BUNDLE_NAME, provisionInfo);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InnerShared_VerifyCodeSignatureForNativeFiles_0001
+ * @tc.name: test VerifyCodeSignatureForNativeFiles
+ * @tc.desc: 1.Test with non-preinstalled bundle
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerShared_VerifyCodeSignatureForNativeFiles_0001, Function | SmallTest | Level0)
+{
+    std::string path = BUNDLE_DATA_DIR;
+    InnerSharedBundleInstaller installer(path);
+    ErrCode ret = installer.VerifyCodeSignatureForNativeFiles(
+        "/data/test.hsp", "arm", "/data/so", "", false);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

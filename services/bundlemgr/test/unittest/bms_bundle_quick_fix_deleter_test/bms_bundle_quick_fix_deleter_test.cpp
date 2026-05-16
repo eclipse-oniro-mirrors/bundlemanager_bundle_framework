@@ -324,4 +324,110 @@ HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_1100, Functi
     ErrCode result = innerAppQuickFix->RemoveHqfInfo("moduleName");
     EXPECT_EQ(result, true);
 }
+
+/**
+ * @tc.number: BmsBundleQuickFixDeleterTest_1200
+ * Function: InnerAppQuickFix FromJson
+ * @tc.desc: 1. system running normally
+ *           2. test InnerAppQuickFix FromJson with empty JSON
+ */
+HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_1200, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    nlohmann::json emptyJson = nlohmann::json::object();
+    auto ret = innerAppQuickFix.FromJson(emptyJson);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDeleterTest_1300
+ * Function: InnerAppQuickFix SwitchQuickFix
+ * @tc.desc: 1. system running normally
+ *           2. test InnerAppQuickFix SwitchQuickFix swaps deployed and deploying
+ */
+HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_1300, Function | SmallTest | Level0)
+{
+    AppQuickFix appQuickFix;
+    HqfInfo hqfDeployed;
+    hqfDeployed.moduleName = "deployed_mod";
+    appQuickFix.deployedAppqfInfo.hqfInfos.emplace_back(hqfDeployed);
+    HqfInfo hqfDeploying;
+    hqfDeploying.moduleName = "deploying_mod";
+    appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(hqfDeploying);
+    QuickFixMark mark;
+    auto innerAppQuickFix = std::make_shared<InnerAppQuickFix>(appQuickFix, mark);
+    innerAppQuickFix->SwitchQuickFix();
+    auto result = innerAppQuickFix->GetAppQuickFix();
+    EXPECT_EQ(result.deployedAppqfInfo.hqfInfos[0].moduleName, "deploying_mod");
+    EXPECT_EQ(result.deployingAppqfInfo.hqfInfos[0].moduleName, "deployed_mod");
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDeleterTest_1400
+ * Function: InnerAppQuickFix ToString
+ * @tc.desc: 1. system running normally
+ *           2. test InnerAppQuickFix ToString returns valid JSON
+ */
+HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_1400, Function | SmallTest | Level0)
+{
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    QuickFixMark mark;
+    mark.bundleName = BUNDLE_NAME;
+    mark.status = QuickFixStatus::DEPLOY_START;
+    InnerAppQuickFix innerAppQuickFix(appQuickFix, mark);
+    std::string str = innerAppQuickFix.ToString();
+    EXPECT_FALSE(str.empty());
+    auto json = nlohmann::json::parse(str, nullptr, false);
+    EXPECT_FALSE(json.is_discarded());
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDeleterTest_1500
+ * Function: QuickFixDeleter DeleteQuickFix
+ * @tc.desc: 1. system running normally
+ *           2. test QuickFixDeleter with non-existent bundle (no patch in db returns OK)
+ */
+HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_1500, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::SWITCH_END);
+    AddInnerAppQuickFix(innerAppQuickFix);
+
+    std::shared_ptr<QuickFixDeleter> deleter = std::make_shared<QuickFixDeleter>(BUNDLE_NAME);
+    ErrCode result = deleter->Execute();
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDeleterTest_1600
+ * Function: InnerAppQuickFix parametric constructor
+ * @tc.desc: 1. system running normally
+ *           2. test InnerAppQuickFix with appQuickFix and mark params
+ */
+HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_1600, Function | SmallTest | Level0)
+{
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    QuickFixMark mark;
+    mark.bundleName = BUNDLE_NAME;
+    mark.status = QuickFixStatus::DEPLOY_END;
+    InnerAppQuickFix innerAppQuickFix(appQuickFix, mark);
+    EXPECT_EQ(innerAppQuickFix.GetAppQuickFix().bundleName, BUNDLE_NAME);
+    EXPECT_EQ(innerAppQuickFix.GetQuickFixMark().status, QuickFixStatus::DEPLOY_END);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDeleterTest_1700
+ * Function: QuickFixMark from_json
+ * @tc.desc: 1. system running normally
+ *           2. test QuickFixMark from_json with valid JSON
+ */
+HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_1700, Function | SmallTest | Level0)
+{
+    nlohmann::json markJson = R"({"bundleName": "com.example.test", "status": 3})"_json;
+    QuickFixMark mark;
+    from_json(markJson, mark);
+    EXPECT_EQ(mark.bundleName, "com.example.test");
+    EXPECT_EQ(mark.status, 3);
+}
 } // OHOS

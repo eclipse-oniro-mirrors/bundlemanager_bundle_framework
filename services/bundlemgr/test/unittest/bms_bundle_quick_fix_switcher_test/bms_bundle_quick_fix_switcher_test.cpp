@@ -650,4 +650,81 @@ HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_1900, Func
     ErrCode result = quickFixSwitcher->Execute();
     EXPECT_EQ(result, ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE);
 }
+
+/**
+ * @tc.number: BmsBundleQuickFixSwitcherTest_2000
+ * Function: QuickFixSwitcher Execute
+ * @tc.desc: 1. disable with non-existent bundle
+ *           2. switch failed
+ */
+HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_2000, Function | SmallTest | Level0)
+{
+    std::shared_ptr<QuickFixSwitcher> quickFixSwitcher = std::make_shared<QuickFixSwitcher>(BUNDLE_NAME, false);
+    ErrCode result = quickFixSwitcher->Execute();
+    EXPECT_EQ(result, ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixSwitcherTest_2100
+ * Function: QuickFixSwitcher with existing bundle and no patch info for disable
+ * @tc.desc: 1. install bundle with no quick fix info
+ *           2. disable quick fix should fail with NO_PATCH_INFO
+ */
+HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_2100, Function | SmallTest | Level0)
+{
+    auto ret = InstallBundle(BUNDLE_PATH);
+    EXPECT_EQ(ret, ERR_OK) << "Install bundle failed";
+
+    // No patch in db and bundle has no deployedAppqfInfo - disable via direct switcher
+    std::shared_ptr<QuickFixSwitcher> quickFixSwitcher = std::make_shared<QuickFixSwitcher>(BUNDLE_NAME, false);
+    ret = quickFixSwitcher->Execute();
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_INFO_IN_BUNDLE_INFO);
+
+    ret = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle failed";
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixSwitcherTest_2200
+ * Function: QuickFixSwitcher enable with bundle that has invalid status in db
+ * @tc.desc: 1. set invalid status in db
+ *           2. enable should fail with INVALID_PATCH_STATUS
+ */
+HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_2200, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::SWITCH_DISABLE_START);
+    AddInnerAppQuickFix(innerAppQuickFix);
+
+    auto quickFixHost = DelayedSingleton<BundleMgrService>::GetInstance()->GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixHost, nullptr) << "the quickFixHost is nullptr";
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+    ErrCode result = quickFixHost->SwitchQuickFix(BUNDLE_NAME, true, callback);
+    EXPECT_EQ(result, ERR_OK);
+    CheckResult(callback, BUNDLE_NAME, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS);
+
+    DeleteInnerAppQuickFix(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixSwitcherTest_2300
+ * Function: QuickFixSwitcher disable with DEPLOY_START status in db
+ * @tc.desc: 1. set DEPLOY_START status in db
+ *           2. disable should fail with INVALID_PATCH_STATUS
+ */
+HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_2300, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::DEPLOY_START);
+    AddInnerAppQuickFix(innerAppQuickFix);
+
+    auto quickFixHost = DelayedSingleton<BundleMgrService>::GetInstance()->GetQuickFixManagerProxy();
+    EXPECT_NE(quickFixHost, nullptr) << "the quickFixHost is nullptr";
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+    ErrCode result = quickFixHost->SwitchQuickFix(BUNDLE_NAME, false, callback);
+    EXPECT_EQ(result, ERR_OK);
+    CheckResult(callback, BUNDLE_NAME, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS);
+
+    DeleteInnerAppQuickFix(BUNDLE_NAME);
+}
 } // OHOS
