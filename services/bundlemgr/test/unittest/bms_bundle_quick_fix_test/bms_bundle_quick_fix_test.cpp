@@ -5700,4 +5700,808 @@ HWTEST_F(BmsBundleQuickFixTest, ToDeployStartStatus_0004, TestSize.Level1)
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
     }
 }
+/**
+ * @tc.number: InnerAppQuickFix_FromJson_0100
+ * Function: FromJson
+ * @tc.name: test InnerAppQuickFix FromJson with empty JSON
+ * @tc.desc: FromJson with empty object should return ERR_OK
+ */
+HWTEST_F(BmsBundleQuickFixTest, InnerAppQuickFix_FromJson_0100, Function | SmallTest | Level0)
+{
+    InnerAppQuickFix innerAppQuickFix;
+    nlohmann::json emptyJson = nlohmann::json::object();
+    auto ret = innerAppQuickFix.FromJson(emptyJson);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerAppQuickFix_ToString_0100
+ * Function: ToString
+ * @tc.name: test InnerAppQuickFix ToString
+ * @tc.desc: ToString should return valid JSON string
+ */
+HWTEST_F(BmsBundleQuickFixTest, InnerAppQuickFix_ToString_0100, Function | SmallTest | Level0)
+{
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    QuickFixMark mark;
+    mark.bundleName = BUNDLE_NAME;
+    mark.status = QuickFixStatus::DEPLOY_START;
+    InnerAppQuickFix innerAppQuickFix(appQuickFix, mark);
+    std::string str = innerAppQuickFix.ToString();
+    EXPECT_FALSE(str.empty());
+    auto json = nlohmann::json::parse(str, nullptr, false);
+    EXPECT_FALSE(json.is_discarded());
+}
+
+/**
+ * @tc.number: InnerAppQuickFix_SwitchQuickFix_0100
+ * Function: SwitchQuickFix
+ * @tc.name: test InnerAppQuickFix SwitchQuickFix
+ * @tc.desc: SwitchQuickFix should swap deployed and deploying
+ */
+HWTEST_F(BmsBundleQuickFixTest, InnerAppQuickFix_SwitchQuickFix_0100, Function | SmallTest | Level0)
+{
+    AppQuickFix appQuickFix;
+    HqfInfo hqfDeployed;
+    hqfDeployed.moduleName = "deployed_module";
+    appQuickFix.deployedAppqfInfo.hqfInfos.emplace_back(hqfDeployed);
+    HqfInfo hqfDeploying;
+    hqfDeploying.moduleName = "deploying_module";
+    appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(hqfDeploying);
+    appQuickFix.bundleName = BUNDLE_NAME;
+    InnerAppQuickFix innerAppQuickFix;
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    innerAppQuickFix.SwitchQuickFix();
+    auto result = innerAppQuickFix.GetAppQuickFix();
+    EXPECT_EQ(result.deployedAppqfInfo.hqfInfos[0].moduleName, "deploying_module");
+    EXPECT_EQ(result.deployingAppqfInfo.hqfInfos[0].moduleName, "deployed_module");
+}
+
+/**
+ * @tc.number: InnerAppQuickFix_GetQuickFixMark_0100
+ * Function: GetQuickFixMark
+ * @tc.name: test InnerAppQuickFix parameterized constructor
+ * @tc.desc: Parameterized constructor should set appQuickFix and mark
+ */
+HWTEST_F(BmsBundleQuickFixTest, InnerAppQuickFix_GetQuickFixMark_0100, Function | SmallTest | Level0)
+{
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    QuickFixMark mark;
+    mark.bundleName = BUNDLE_NAME;
+    mark.status = QuickFixStatus::DEPLOY_END;
+    InnerAppQuickFix innerAppQuickFix(appQuickFix, mark);
+    EXPECT_EQ(innerAppQuickFix.GetAppQuickFix().bundleName, BUNDLE_NAME);
+    EXPECT_EQ(innerAppQuickFix.GetQuickFixMark().status, QuickFixStatus::DEPLOY_END);
+}
+
+/**
+ * @tc.number: QuickFixMark_FromJson_0100
+ * Function: from_json for QuickFixMark
+ * @tc.name: test QuickFixMark from_json with valid JSON
+ * @tc.desc: from_json should parse bundleName and status correctly
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixMark_FromJson_0100, Function | SmallTest | Level0)
+{
+    nlohmann::json markJson = R"({
+        "bundleName": "com.example.test",
+        "status": 3
+    })"_json;
+    QuickFixMark mark;
+    from_json(markJson, mark);
+    EXPECT_EQ(mark.bundleName, "com.example.test");
+    EXPECT_EQ(mark.status, 3);
+}
+
+/**
+ * @tc.number: PatchParser_HasResourceFile_0100
+ * Function: HasResourceFile
+ * @tc.name: test PatchParser HasResourceFile with empty string
+ * @tc.desc: Empty string should return false
+ */
+HWTEST_F(BmsBundleQuickFixTest, PatchParser_HasResourceFile_0100, Function | SmallTest | Level0)
+{
+    PatchParser patchParser;
+    bool ret = patchParser.HasResourceFile("");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: PatchParser_ParsePatchInfo_0100
+ * Function: ParsePatchInfo
+ * @tc.name: test PatchParser ParsePatchInfo with empty string
+ * @tc.desc: Empty path should return ERR_APPEXECFWK_PARSE_NO_PROFILE
+ */
+HWTEST_F(BmsBundleQuickFixTest, PatchParser_ParsePatchInfo_0100, Function | SmallTest | Level0)
+{
+    PatchParser patchParser;
+    AppQuickFix appQuickFix;
+    ErrCode ret = patchParser.ParsePatchInfo("", appQuickFix);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_NO_PROFILE);
+}
+
+/**
+ * @tc.number: PatchParser_ParsePatchInfo_0200
+ * Function: ParsePatchInfo
+ * @tc.name: test PatchParser ParsePatchInfo with empty vector
+ * @tc.desc: Empty vector should return ERR_APPEXECFWK_PARSE_NO_PROFILE
+ */
+HWTEST_F(BmsBundleQuickFixTest, PatchParser_ParsePatchInfo_0200, Function | SmallTest | Level0)
+{
+    PatchParser patchParser;
+    std::vector<std::string> filePaths;
+    std::unordered_map<std::string, AppQuickFix> appQuickFixes;
+    ErrCode ret = patchParser.ParsePatchInfo(filePaths, appQuickFixes);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_NO_PROFILE);
+}
+
+/**
+ * @tc.number: PatchProfile_TransformTo_0100
+ * Function: TransformTo
+ * @tc.name: test PatchProfile TransformTo with discarded JSON
+ * @tc.desc: Discarded JSON should return ERR_APPEXECFWK_PARSE_BAD_PROFILE
+ */
+HWTEST_F(BmsBundleQuickFixTest, PatchProfile_TransformTo_0100, Function | SmallTest | Level0)
+{
+    PatchProfile patchProfile;
+    PatchExtractor patchExtractor(HQF_FILE_PATH1);
+    AppQuickFix appQuickFix;
+    std::ostringstream badStream;
+    badStream << "not a valid json {{{";
+    ErrCode ret = patchProfile.TransformTo(badStream, patchExtractor, appQuickFix);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_BAD_PROFILE);
+}
+
+/**
+ * @tc.number: QuickFixChecker_CheckAppQuickFixInfos_0100
+ * Function: CheckAppQuickFixInfos
+ * @tc.name: test CheckAppQuickFixInfos with different bundleName
+ * @tc.desc: Different bundleName should return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_SAME
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_CheckAppQuickFixInfos_0100, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    std::unordered_map<std::string, AppQuickFix> infos;
+    AppQuickFix info1;
+    info1.bundleName = "com.example.test1";
+    info1.versionCode = 1;
+    info1.deployingAppqfInfo.versionCode = 1;
+    info1.deployingAppqfInfo.type = QuickFixType::PATCH;
+    HqfInfo hqf1;
+    hqf1.moduleName = "module1";
+    info1.deployingAppqfInfo.hqfInfos.emplace_back(hqf1);
+    infos.emplace("path1", info1);
+
+    AppQuickFix info2;
+    info2.bundleName = "com.example.test2";
+    info2.versionCode = 1;
+    info2.deployingAppqfInfo.versionCode = 1;
+    info2.deployingAppqfInfo.type = QuickFixType::PATCH;
+    HqfInfo hqf2;
+    hqf2.moduleName = "module2";
+    info2.deployingAppqfInfo.hqfInfos.emplace_back(hqf2);
+    infos.emplace("path2", info2);
+
+    ErrCode ret = checker.CheckAppQuickFixInfos(infos);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_SAME);
+}
+
+/**
+ * @tc.number: QuickFixChecker_CheckAppQuickFixInfos_0200
+ * Function: CheckAppQuickFixInfos
+ * @tc.name: test CheckAppQuickFixInfos with duplicate moduleName
+ * @tc.desc: Duplicate moduleName should return ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_SAME
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_CheckAppQuickFixInfos_0200, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    std::unordered_map<std::string, AppQuickFix> infos;
+    AppQuickFix info1;
+    info1.bundleName = BUNDLE_NAME;
+    info1.versionCode = 1;
+    info1.deployingAppqfInfo.versionCode = 1;
+    info1.deployingAppqfInfo.type = QuickFixType::PATCH;
+    HqfInfo hqf1;
+    hqf1.moduleName = "same_module";
+    info1.deployingAppqfInfo.hqfInfos.emplace_back(hqf1);
+    infos.emplace("path1", info1);
+
+    AppQuickFix info2;
+    info2.bundleName = BUNDLE_NAME;
+    info2.versionCode = 1;
+    info2.deployingAppqfInfo.versionCode = 1;
+    info2.deployingAppqfInfo.type = QuickFixType::PATCH;
+    HqfInfo hqf2;
+    hqf2.moduleName = "same_module";
+    info2.deployingAppqfInfo.hqfInfos.emplace_back(hqf2);
+    infos.emplace("path2", info2);
+
+    ErrCode ret = checker.CheckAppQuickFixInfos(infos);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_SAME);
+}
+
+/**
+ * @tc.number: QuickFixChecker_CheckAppQuickFixInfos_0300
+ * Function: CheckAppQuickFixInfos
+ * @tc.name: test CheckAppQuickFixInfos with empty hqfInfos
+ * @tc.desc: Empty hqfInfos should return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_CheckAppQuickFixInfos_0300, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    std::unordered_map<std::string, AppQuickFix> infos;
+    AppQuickFix info1;
+    info1.bundleName = BUNDLE_NAME;
+    info1.versionCode = 1;
+    info1.deployingAppqfInfo.versionCode = 1;
+    info1.deployingAppqfInfo.type = QuickFixType::PATCH;
+    HqfInfo hqf1;
+    hqf1.moduleName = "module1";
+    info1.deployingAppqfInfo.hqfInfos.emplace_back(hqf1);
+    infos.emplace("path1", info1);
+
+    AppQuickFix info2;
+    info2.bundleName = BUNDLE_NAME;
+    info2.versionCode = 1;
+    info2.deployingAppqfInfo.versionCode = 1;
+    info2.deployingAppqfInfo.type = QuickFixType::PATCH;
+    // hqfInfos is empty
+    infos.emplace("path2", info2);
+
+    ErrCode ret = checker.CheckAppQuickFixInfos(infos);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
+}
+
+/**
+ * @tc.number: QuickFixChecker_CheckAppQuickFixInfos_0400
+ * Function: CheckAppQuickFixInfos
+ * @tc.name: test CheckAppQuickFixInfos with different versionCode
+ * @tc.desc: Different versionCode should return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_NOT_SAME
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_CheckAppQuickFixInfos_0400, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    std::unordered_map<std::string, AppQuickFix> infos;
+    AppQuickFix info1;
+    info1.bundleName = BUNDLE_NAME;
+    info1.versionCode = 1;
+    info1.deployingAppqfInfo.versionCode = 1;
+    info1.deployingAppqfInfo.type = QuickFixType::PATCH;
+    HqfInfo hqf1;
+    hqf1.moduleName = "module1";
+    info1.deployingAppqfInfo.hqfInfos.emplace_back(hqf1);
+    infos.emplace("path1", info1);
+
+    AppQuickFix info2;
+    info2.bundleName = BUNDLE_NAME;
+    info2.versionCode = 2;
+    info2.deployingAppqfInfo.versionCode = 1;
+    info2.deployingAppqfInfo.type = QuickFixType::PATCH;
+    HqfInfo hqf2;
+    hqf2.moduleName = "module2";
+    info2.deployingAppqfInfo.hqfInfos.emplace_back(hqf2);
+    infos.emplace("path2", info2);
+
+    ErrCode ret = checker.CheckAppQuickFixInfos(infos);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_NOT_SAME);
+}
+
+/**
+ * @tc.number: QuickFixChecker_CheckAppQuickFixInfos_0500
+ * Function: CheckAppQuickFixInfos
+ * @tc.name: test CheckAppQuickFixInfos with different patchVersionCode
+ * @tc.desc: Different patchVersionCode should return ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_CheckAppQuickFixInfos_0500, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    std::unordered_map<std::string, AppQuickFix> infos;
+    AppQuickFix info1;
+    info1.bundleName = BUNDLE_NAME;
+    info1.versionCode = 1;
+    info1.deployingAppqfInfo.versionCode = 1;
+    info1.deployingAppqfInfo.type = QuickFixType::PATCH;
+    HqfInfo hqf1;
+    hqf1.moduleName = "module1";
+    info1.deployingAppqfInfo.hqfInfos.emplace_back(hqf1);
+    infos.emplace("path1", info1);
+
+    AppQuickFix info2;
+    info2.bundleName = BUNDLE_NAME;
+    info2.versionCode = 1;
+    info2.deployingAppqfInfo.versionCode = 2;
+    info2.deployingAppqfInfo.type = QuickFixType::PATCH;
+    HqfInfo hqf2;
+    hqf2.moduleName = "module2";
+    info2.deployingAppqfInfo.hqfInfos.emplace_back(hqf2);
+    infos.emplace("path2", info2);
+
+    ErrCode ret = checker.CheckAppQuickFixInfos(infos);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME);
+}
+
+/**
+ * @tc.number: QuickFixChecker_CheckAppQuickFixInfos_0600
+ * Function: CheckAppQuickFixInfos
+ * @tc.name: test CheckAppQuickFixInfos with different type
+ * @tc.desc: Different type should return ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_TYPE_NOT_SAME
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_CheckAppQuickFixInfos_0600, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    std::unordered_map<std::string, AppQuickFix> infos;
+    AppQuickFix info1;
+    info1.bundleName = BUNDLE_NAME;
+    info1.versionCode = 1;
+    info1.deployingAppqfInfo.versionCode = 1;
+    info1.deployingAppqfInfo.type = QuickFixType::PATCH;
+    HqfInfo hqf1;
+    hqf1.moduleName = "module1";
+    info1.deployingAppqfInfo.hqfInfos.emplace_back(hqf1);
+    infos.emplace("path1", info1);
+
+    AppQuickFix info2;
+    info2.bundleName = BUNDLE_NAME;
+    info2.versionCode = 1;
+    info2.deployingAppqfInfo.versionCode = 1;
+    info2.deployingAppqfInfo.type = QuickFixType::HOT_RELOAD;
+    HqfInfo hqf2;
+    hqf2.moduleName = "module2";
+    info2.deployingAppqfInfo.hqfInfos.emplace_back(hqf2);
+    infos.emplace("path2", info2);
+
+    ErrCode ret = checker.CheckAppQuickFixInfos(infos);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: QuickFixChecker_CheckModuleNameExist_0100
+ * Function: CheckModuleNameExist
+ * @tc.name: test CheckModuleNameExist with empty hqfInfos
+ * @tc.desc: Empty hqfInfos should return ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_CheckModuleNameExist_0100, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    BundleInfo bundleInfo;
+    bundleInfo.moduleNames = {"module1"};
+    std::unordered_map<std::string, AppQuickFix> infos;
+    AppQuickFix info1;
+    // empty hqfInfos
+    infos.emplace("path1", info1);
+    ErrCode ret = checker.CheckModuleNameExist(bundleInfo, infos);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST);
+}
+
+/**
+ * @tc.number: QuickFixChecker_CheckModuleNameExist_0200
+ * Function: CheckModuleNameExist
+ * @tc.name: test CheckModuleNameExist with moduleName not in bundle
+ * @tc.desc: ModuleName not found should return ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_CheckModuleNameExist_0200, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    BundleInfo bundleInfo;
+    bundleInfo.moduleNames = {"module1"};
+    std::unordered_map<std::string, AppQuickFix> infos;
+    AppQuickFix info1;
+    HqfInfo hqf;
+    hqf.moduleName = "not_exist_module";
+    info1.deployingAppqfInfo.hqfInfos.emplace_back(hqf);
+    infos.emplace("path1", info1);
+    ErrCode ret = checker.CheckModuleNameExist(bundleInfo, infos);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST);
+}
+
+/**
+ * @tc.number: QuickFixChecker_GetAppProvisionType_0100
+ * Function: GetAppProvisionType
+ * @tc.name: test GetAppProvisionType with release type
+ * @tc.desc: Non-debug type should return APP_PROVISION_TYPE_RELEASE
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_GetAppProvisionType_0100, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    std::string ret = checker.GetAppProvisionType(Security::Verify::ProvisionType::RELEASE);
+    EXPECT_EQ(ret, Constants::APP_PROVISION_TYPE_RELEASE);
+}
+
+/**
+ * @tc.number: QuickFixChecker_GetAppProvisionType_0200
+ * Function: GetAppProvisionType
+ * @tc.name: test GetAppProvisionType with debug type
+ * @tc.desc: Debug type should return APP_PROVISION_TYPE_DEBUG
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_GetAppProvisionType_0200, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    std::string ret = checker.GetAppProvisionType(Security::Verify::ProvisionType::DEBUG);
+    EXPECT_EQ(ret, Constants::APP_PROVISION_TYPE_DEBUG);
+}
+
+/**
+ * @tc.number: QuickFixChecker_CheckMultiNativeSo_0100
+ * Function: CheckMultiNativeSo
+ * @tc.name: test CheckMultiNativeSo with different nativeLibraryPath
+ * @tc.desc: Different nativeLibraryPath should return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_CheckMultiNativeSo_0100, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    std::unordered_map<std::string, AppQuickFix> infos;
+    AppQuickFix info1;
+    info1.deployingAppqfInfo.nativeLibraryPath = "libs/arms";
+    info1.deployingAppqfInfo.cpuAbi = "arms";
+    HqfInfo hqf1;
+    hqf1.moduleName = "module1";
+    info1.deployingAppqfInfo.hqfInfos.emplace_back(hqf1);
+    infos.emplace("path1", info1);
+
+    AppQuickFix info2;
+    info2.deployingAppqfInfo.nativeLibraryPath = "libs/x86";
+    info2.deployingAppqfInfo.cpuAbi = "x86";
+    HqfInfo hqf2;
+    hqf2.moduleName = "module2";
+    info2.deployingAppqfInfo.hqfInfos.emplace_back(hqf2);
+    infos.emplace("path2", info2);
+
+    ErrCode ret = checker.CheckMultiNativeSo(infos);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE);
+}
+
+/**
+ * @tc.number: QuickFixChecker_CheckMultiNativeSo_0200
+ * Function: CheckMultiNativeSo
+ * @tc.name: test CheckMultiNativeSo with single entry
+ * @tc.desc: Single entry should return ERR_OK
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_CheckMultiNativeSo_0200, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    std::unordered_map<std::string, AppQuickFix> infos;
+    AppQuickFix info1;
+    info1.deployingAppqfInfo.nativeLibraryPath = "libs/arms";
+    HqfInfo hqf1;
+    hqf1.moduleName = "module1";
+    info1.deployingAppqfInfo.hqfInfos.emplace_back(hqf1);
+    infos.emplace("path1", info1);
+
+    ErrCode ret = checker.CheckMultiNativeSo(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_IsFileNameValid_0100
+ * Function: IsFileNameValid
+ * @tc.name: test IsFileNameValid with invalid characters
+ * @tc.desc: File name with .. should return false
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_IsFileNameValid_0100, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl hostImpl;
+    EXPECT_FALSE(hostImpl.IsFileNameValid("..hello.hqf"));
+    EXPECT_FALSE(hostImpl.IsFileNameValid("hello/world.hqf"));
+    EXPECT_FALSE(hostImpl.IsFileNameValid("hello\\world.hqf"));
+    EXPECT_FALSE(hostImpl.IsFileNameValid("hello%world.hqf"));
+    EXPECT_TRUE(hostImpl.IsFileNameValid("hello.hqf"));
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_CopyHqfToSecurityDir_0100
+ * Function: CopyHqfToSecurityDir
+ * @tc.name: test CopyHqfToSecurityDir with relative path
+ * @tc.desc: Relative path should return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_CopyHqfToSecurityDir_0100, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl hostImpl;
+    std::vector<std::string> bundleFilePaths = {"../relative/path.hqf"};
+    std::vector<std::string> securityFilePaths;
+    ErrCode ret = hostImpl.CopyHqfToSecurityDir(bundleFilePaths, securityFilePaths);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_CopyHqfToSecurityDir_0200
+ * Function: CopyHqfToSecurityDir
+ * @tc.name: test CopyHqfToSecurityDir with wrong prefix
+ * @tc.desc: Wrong prefix should return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_CopyHqfToSecurityDir_0200, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl hostImpl;
+    std::vector<std::string> bundleFilePaths = {"/wrong/prefix/path.hqf"};
+    std::vector<std::string> securityFilePaths;
+    ErrCode ret = hostImpl.CopyHqfToSecurityDir(bundleFilePaths, securityFilePaths);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
+}
+
+/**
+ * @tc.number: QuickFixDeployer_HasNativeSoInBundle_0100
+ * Function: HasNativeSoInBundle
+ * @tc.name: test HasNativeSoInBundle with no native library
+ * @tc.desc: No native library should return false
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_HasNativeSoInBundle_0100, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix;
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath.clear();
+        EXPECT_FALSE(deployer_->HasNativeSoInBundle(appQuickFix));
+    }
+}
+
+/**
+ * @tc.number: QuickFixDeployer_HasNativeSoInBundle_0200
+ * Function: HasNativeSoInBundle
+ * @tc.name: test HasNativeSoInBundle with native library in hqfInfo
+ * @tc.desc: Native library in hqfInfo should return true
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_HasNativeSoInBundle_0200, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix;
+        HqfInfo hqf;
+        hqf.nativeLibraryPath = "libs/arms";
+        appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(hqf);
+        EXPECT_TRUE(deployer_->HasNativeSoInBundle(appQuickFix));
+    }
+}
+
+/**
+ * @tc.number: QuickFixDeployer_CheckPatchVersionCode_0100
+ * Function: CheckPatchVersionCode
+ * @tc.name: test CheckPatchVersionCode with old version code
+ * @tc.desc: New version code not greater than old should return error
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_CheckPatchVersionCode_0100, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix newFix;
+        newFix.deployingAppqfInfo.versionCode = 1;
+        AppQuickFix oldFix;
+        oldFix.deployedAppqfInfo.versionCode = 2;
+        oldFix.deployingAppqfInfo.versionCode = 2;
+        ErrCode ret = deployer_->CheckPatchVersionCode(newFix, oldFix);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR);
+    }
+}
+
+/**
+ * @tc.number: QuickFixDeployer_ToInnerAppQuickFix_0100
+ * Function: ToInnerAppQuickFix
+ * @tc.name: test ToInnerAppQuickFix with empty infos
+ * @tc.desc: Empty infos should return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_ToInnerAppQuickFix_0100, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        std::unordered_map<std::string, AppQuickFix> infos;
+        InnerAppQuickFix oldInner;
+        InnerAppQuickFix newInner;
+        ErrCode ret = deployer_->ToInnerAppQuickFix(infos, oldInner, newInner);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
+    }
+}
+
+/**
+ * @tc.number: PatchParser_HasResourceFile_0200
+ * Function: HasResourceFile
+ * @tc.name: test PatchParser HasResourceFile with empty vector
+ * @tc.desc: Empty vector should iterate zero times and return false
+ */
+HWTEST_F(BmsBundleQuickFixTest, PatchParser_HasResourceFile_0200, Function | SmallTest | Level0)
+{
+    PatchParser patchParser;
+    std::vector<std::string> emptyVec;
+    bool ret = patchParser.HasResourceFile(emptyVec);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: QuickFixChecker_CheckCommonWithInstalledBundle_0100
+ * Function: CheckCommonWithInstalledBundle
+ * @tc.name: test CheckCommonWithInstalledBundle with different bundleName
+ * @tc.desc: Different bundleName should return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_CheckCommonWithInstalledBundle_0100, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = "com.example.test";
+    appQuickFix.versionCode = 1;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.other";
+    bundleInfo.versionCode = 1;
+    ErrCode ret = checker.CheckPatchWithInstalledBundle(appQuickFix, bundleInfo,
+        Security::Verify::ProvisionInfo());
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
+}
+
+/**
+ * @tc.number: QuickFixChecker_CheckHotReloadWithInstalledBundle_0100
+ * Function: CheckHotReloadWithInstalledBundle
+ * @tc.name: test CheckHotReloadWithInstalledBundle with non-debug bundle
+ * @tc.desc: Non-debug bundle should return ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixChecker_CheckHotReloadWithInstalledBundle_0100, Function | SmallTest | Level0)
+{
+    QuickFixChecker checker;
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    appQuickFix.versionCode = 1;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.versionCode = 1;
+    bundleInfo.applicationInfo.debug = false;
+    bundleInfo.applicationInfo.appProvisionType = Constants::APP_PROVISION_TYPE_RELEASE;
+    ErrCode ret = checker.CheckHotReloadWithInstalledBundle(appQuickFix, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_NOT_SUPPORT_RELEASE_BUNDLE);
+}
+
+/**
+ * @tc.number: QuickFixDeployer_ProcessBundleFilePaths_0100
+ * Function: ProcessBundleFilePaths
+ * @tc.name: test ProcessBundleFilePaths with relative path
+ * @tc.desc: Relative path should return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_ProcessBundleFilePaths_0100, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        std::vector<std::string> paths = {"../relative/path.hqf"};
+        std::vector<std::string> realPaths;
+        ErrCode ret = deployer_->ProcessBundleFilePaths(paths, realPaths);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    }
+}
+
+/**
+ * @tc.number: QuickFixDeployer_ProcessBundleFilePaths_0200
+ * Function: ProcessBundleFilePaths
+ * @tc.name: test ProcessBundleFilePaths with wrong prefix
+ * @tc.desc: Wrong prefix should return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_ProcessBundleFilePaths_0200, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        std::vector<std::string> paths = {"/wrong/prefix/path.hqf"};
+        std::vector<std::string> realPaths;
+        ErrCode ret = deployer_->ProcessBundleFilePaths(paths, realPaths);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    }
+}
+
+/**
+ * @tc.number: QuickFixDeployer_GetDeployQuickFixResult_0100
+ * Function: GetDeployQuickFixResult
+ * @tc.name: test GetDeployQuickFixResult
+ * @tc.desc: Default result should have empty bundleName
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_GetDeployQuickFixResult_0100, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        auto result = deployer_->GetDeployQuickFixResult();
+        EXPECT_TRUE(result.bundleName.empty());
+    }
+}
+
+/**
+ * @tc.number: QuickFixDeployer_MoveHqfFiles_0100
+ * Function: MoveHqfFiles
+ * @tc.name: test MoveHqfFiles with empty target path
+ * @tc.desc: Empty target path should return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_MoveHqfFiles_0100, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        InnerAppQuickFix innerAppQuickFix;
+        ErrCode ret = deployer_->MoveHqfFiles(innerAppQuickFix, "");
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    }
+}
+
+/**
+ * @tc.number: QuickFixDeployer_SaveToInnerBundleInfo_0100
+ * Function: SaveToInnerBundleInfo
+ * @tc.name: test SaveToInnerBundleInfo with non-existent bundle
+ * @tc.desc: Non-existent bundle should return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_SaveToInnerBundleInfo_0100, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        InnerAppQuickFix innerAppQuickFix;
+        AppQuickFix appQuickFix;
+        appQuickFix.bundleName = "non.existent.bundle";
+        innerAppQuickFix.SetAppQuickFix(appQuickFix);
+        ErrCode ret = deployer_->SaveToInnerBundleInfo(innerAppQuickFix);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO);
+    }
+}
+
+/**
+ * @tc.number: QuickFixDeployer_DeployQuickFix_0100
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix with empty patch paths
+ * @tc.desc: Empty patch paths should return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_DeployQuickFix_0100, Function | SmallTest | Level0)
+{
+    auto deployer = std::make_shared<QuickFixDeployer>(std::vector<std::string>());
+    ErrCode ret = deployer->Execute();
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: PatchProfile_TransformTo_0200
+ * Function: TransformTo
+ * @tc.name: test PatchProfile TransformTo with missing required fields
+ * @tc.desc: Missing required fields should return parse error
+ */
+HWTEST_F(BmsBundleQuickFixTest, PatchProfile_TransformTo_0200, Function | SmallTest | Level0)
+{
+    PatchProfile patchProfile;
+    PatchExtractor patchExtractor(HQF_FILE_PATH1);
+    AppQuickFix appQuickFix;
+    std::ostringstream partialStream;
+    partialStream << R"({"app":{},"module":{}})";
+    ErrCode ret = patchProfile.TransformTo(partialStream, patchExtractor, appQuickFix);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QuickFixDeployer_CheckHqfResourceIsValid_0100
+ * Function: CheckHqfResourceIsValid
+ * @tc.name: test CheckHqfResourceIsValid with debug bundle
+ * @tc.desc: Debug bundle should return ERR_OK directly
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_CheckHqfResourceIsValid_0100, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix;
+        BundleInfo bundleInfo;
+        bundleInfo.applicationInfo.debug = true;
+        bundleInfo.applicationInfo.appProvisionType = Constants::APP_PROVISION_TYPE_DEBUG;
+        std::vector<std::string> paths = {"/data/test/test.hqf"};
+        ErrCode ret = deployer_->CheckHqfResourceIsValid(paths, bundleInfo);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: QuickFixDeployer_CheckReplaceMode_0100
+ * Function: CheckReplaceMode
+ * @tc.name: test CheckReplaceMode with isReplace false
+ * @tc.desc: isReplace false should return ERR_OK directly
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_CheckReplaceMode_0100, Function | SmallTest | Level0)
+{
+    auto deployer = std::make_shared<QuickFixDeployer>(
+        std::vector<std::string>(), false, "", false);
+    AppQuickFix appQuickFix;
+    BundleInfo bundleInfo;
+    ErrCode ret = deployer->CheckReplaceMode(appQuickFix, bundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

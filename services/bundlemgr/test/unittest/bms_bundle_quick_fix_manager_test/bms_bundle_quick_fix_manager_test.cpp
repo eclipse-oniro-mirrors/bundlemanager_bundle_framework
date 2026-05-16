@@ -353,4 +353,129 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0900, Function |
     }
     APP_LOGI("end of BmsBundleQuickFixManager_0900.");
 }
+
+/**
+ * @tc.number: BmsBundleQuickFixManager_1000
+ * @tc.name: test UpdateQuickFixStatus with DELETE_START from DEFAULT_STATUS
+ * @tc.desc: DELETE_START can be transferred from DEFAULT_STATUS
+ */
+HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_1000, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of BmsBundleQuickFixManager_1000.");
+    auto dataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerAppQuickFix innerAppQuickFix;
+        AppQuickFix appQuickFix;
+        appQuickFix.bundleName = BUNDLE_NAME;
+        innerAppQuickFix.SetAppQuickFix(appQuickFix);
+        QuickFixMark mark;
+        mark.status = QuickFixStatus::DEFAULT_STATUS;
+        mark.bundleName = BUNDLE_NAME;
+        innerAppQuickFix.SetQuickFixMark(mark);
+        bool ret = dataMgr->UpdateQuickFixStatus(QuickFixStatus::DELETE_START, innerAppQuickFix);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->DeleteInnerAppQuickFix(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
+    }
+    APP_LOGI("end of BmsBundleQuickFixManager_1000.");
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixManager_1100
+ * @tc.name: test UpdateQuickFixStatus with DELETE_START from DELETE_END
+ * @tc.desc: DELETE_START can be transferred from DELETE_END
+ */
+HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_1100, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of BmsBundleQuickFixManager_1100.");
+    auto dataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerAppQuickFix innerAppQuickFix;
+        AppQuickFix appQuickFix;
+        appQuickFix.bundleName = BUNDLE_NAME;
+        innerAppQuickFix.SetAppQuickFix(appQuickFix);
+        QuickFixMark mark;
+        mark.status = QuickFixStatus::DELETE_END;
+        mark.bundleName = BUNDLE_NAME;
+        innerAppQuickFix.SetQuickFixMark(mark);
+        bool ret = dataMgr->UpdateQuickFixStatus(QuickFixStatus::DELETE_START, innerAppQuickFix);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->DeleteInnerAppQuickFix(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
+    }
+    APP_LOGI("end of BmsBundleQuickFixManager_1100.");
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixManager_1200
+ * @tc.name: test IsNextStatusExisted
+ * @tc.desc: Verify various status transitions
+ */
+HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_1200, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of BmsBundleQuickFixManager_1200.");
+    auto dataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        EXPECT_TRUE(dataMgr->IsNextStatusExisted(
+            QuickFixStatus::DEPLOY_START, QuickFixStatus::DEPLOY_END));
+        EXPECT_TRUE(dataMgr->IsNextStatusExisted(
+            QuickFixStatus::DEPLOY_START, QuickFixStatus::DELETE_START));
+        EXPECT_TRUE(dataMgr->IsNextStatusExisted(
+            QuickFixStatus::DEPLOY_END, QuickFixStatus::SWITCH_ENABLE_START));
+        EXPECT_TRUE(dataMgr->IsNextStatusExisted(
+            QuickFixStatus::DEPLOY_END, QuickFixStatus::SWITCH_DISABLE_START));
+        EXPECT_TRUE(dataMgr->IsNextStatusExisted(
+            QuickFixStatus::DEPLOY_END, QuickFixStatus::DELETE_START));
+        EXPECT_TRUE(dataMgr->IsNextStatusExisted(
+            QuickFixStatus::SWITCH_ENABLE_START, QuickFixStatus::SWITCH_END));
+        EXPECT_TRUE(dataMgr->IsNextStatusExisted(
+            QuickFixStatus::SWITCH_DISABLE_START, QuickFixStatus::SWITCH_END));
+        EXPECT_TRUE(dataMgr->IsNextStatusExisted(
+            QuickFixStatus::DELETE_START, QuickFixStatus::DELETE_END));
+        // Invalid transitions
+        EXPECT_FALSE(dataMgr->IsNextStatusExisted(
+            QuickFixStatus::DEPLOY_END, QuickFixStatus::DEPLOY_START));
+        EXPECT_FALSE(dataMgr->IsNextStatusExisted(
+            QuickFixStatus::SWITCH_END, QuickFixStatus::DEPLOY_END));
+    }
+    APP_LOGI("end of BmsBundleQuickFixManager_1200.");
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixManager_1300
+ * @tc.name: test QueryInnerAppQuickFix with non-existent bundle
+ * @tc.desc: Query non-existent bundle should return false
+ */
+HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_1300, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of BmsBundleQuickFixManager_1300.");
+    auto dataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerAppQuickFix innerAppQuickFix;
+        bool ret = dataMgr->QueryInnerAppQuickFix("non.existent.bundle", innerAppQuickFix);
+        EXPECT_FALSE(ret);
+    }
+    APP_LOGI("end of BmsBundleQuickFixManager_1300.");
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixManager_1400
+ * @tc.name: test DeleteInnerAppQuickFix
+ * @tc.desc: test DeleteInnerAppQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_1400, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of BmsBundleQuickFixManager_1400.");
+    auto dataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        bool ret = dataMgr->DeleteInnerAppQuickFix("non.existent.bundle");
+        EXPECT_TRUE(ret);
+    }
+    APP_LOGI("end of BmsBundleQuickFixManager_1400.");
+}
 }

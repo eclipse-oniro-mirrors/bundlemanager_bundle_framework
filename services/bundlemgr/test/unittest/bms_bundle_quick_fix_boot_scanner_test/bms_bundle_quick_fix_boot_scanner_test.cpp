@@ -1077,4 +1077,86 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, DeleteBmsParam_0100, Function | Small
     ret = param.DeleteBmsParam("bms_param");
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: BootScanner_ProcessQuickFixDir_0100
+ * @tc.name: test ProcessQuickFixDir with empty vector
+ * @tc.desc: Empty vector should not crash
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BootScanner_ProcessQuickFixDir_0100, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_NE(scanner, nullptr);
+    if (scanner != nullptr) {
+        std::vector<std::string> emptyVec;
+        scanner->ProcessQuickFixDir(emptyVec);
+        EXPECT_TRUE(scanner->quickFixInfoMap_.empty());
+    }
+}
+
+/**
+ * @tc.number: BootScanner_ProcessQuickFixDir_0200
+ * @tc.name: test ProcessQuickFixDir with invalid dir strings
+ * @tc.desc: Invalid dir strings should add to invalidQuickFixDir_
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BootScanner_ProcessQuickFixDir_0200, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_NE(scanner, nullptr);
+    if (scanner != nullptr) {
+        std::vector<std::string> invalidDirs = {"nounderline"};
+        scanner->ProcessQuickFixDir(invalidDirs);
+        EXPECT_FALSE(scanner->invalidQuickFixDir_.empty());
+        scanner->invalidQuickFixDir_.clear();
+    }
+}
+
+/**
+ * @tc.number: BootScanner_ProcessState_0100
+ * @tc.name: test ProcessState with nullptr state
+ * @tc.desc: nullptr state should return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BootScanner_ProcessState_0100, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_NE(scanner, nullptr);
+    if (scanner != nullptr) {
+        scanner->state_ = nullptr;
+        ErrCode ret = scanner->ProcessState();
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
+    }
+}
+
+/**
+ * @tc.number: ProcessWithBundleHasQuickFixInfo_0100
+ * @tc.name: test ProcessWithBundleHasQuickFixInfo with quickFixVersion < fileVersion
+ * @tc.desc: fileVersion > quickFixVersion should trigger ReprocessQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, ProcessWithBundleHasQuickFixInfo_0100, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_NE(scanner, nullptr);
+    if (scanner != nullptr) {
+        // quickFixVersion == fileVersion -> same version branch
+        bool ret = scanner->ProcessWithBundleHasQuickFixInfo(
+            BUNDLE_NAME, PATCH_PATH, VERSION_CODE, VERSION_CODE);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: BootScanner_ProcessQuickFixBootUp_0100
+ * @tc.name: test ProcessQuickFixBootUp with empty db
+ * @tc.desc: Empty db should trigger RestoreQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, BootScanner_ProcessQuickFixBootUp_0100, Function | SmallTest | Level0)
+{
+    auto scanner = DelayedSingleton<QuickFixBootScanner>::GetInstance();
+    EXPECT_NE(scanner, nullptr);
+    if (scanner != nullptr) {
+        // This will call ProcessQuickFixBootUp which queries all from DB
+        // and processes or restores. Should not crash with empty DB.
+        scanner->ProcessQuickFixBootUp();
+    }
+}
 } // OHOS

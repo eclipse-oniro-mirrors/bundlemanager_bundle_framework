@@ -1096,4 +1096,158 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixDataMgrTest_0021, Functio
     auto result = dataMgr.DeleteInnerAppQuickFix(BUNDLE_NAME);
     EXPECT_FALSE(result);
 }
+
+/**
+ * @tc.number: BmsBundleQuickFixDataMgrTest_0022
+ * @tc.name: test IsNextStatusExisted
+ * @tc.desc: IsNextStatusExisted with valid transition returns true
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixDataMgrTest_0022, Function | SmallTest | Level0)
+{
+    QuickFixDataMgr dataMgr;
+    EXPECT_TRUE(dataMgr.IsNextStatusExisted(QuickFixStatus::DEPLOY_START, QuickFixStatus::DEPLOY_END));
+    EXPECT_TRUE(dataMgr.IsNextStatusExisted(QuickFixStatus::DEPLOY_END, QuickFixStatus::SWITCH_ENABLE_START));
+    EXPECT_TRUE(dataMgr.IsNextStatusExisted(QuickFixStatus::DELETE_START, QuickFixStatus::DELETE_END));
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDataMgrTest_0023
+ * @tc.name: test IsNextStatusExisted invalid transition
+ * @tc.desc: IsNextStatusExisted with invalid transition returns false
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixDataMgrTest_0023, Function | SmallTest | Level0)
+{
+    QuickFixDataMgr dataMgr;
+    EXPECT_FALSE(dataMgr.IsNextStatusExisted(QuickFixStatus::DEPLOY_END, QuickFixStatus::DEPLOY_START));
+    EXPECT_FALSE(dataMgr.IsNextStatusExisted(QuickFixStatus::SWITCH_END, QuickFixStatus::SWITCH_ENABLE_START));
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDataMgrTest_0024
+ * @tc.name: test UpdateQuickFixStatus with DELETE_START and DEFAULT_STATUS
+ * @tc.desc: DELETE_START can transfer from DEFAULT_STATUS
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixDataMgrTest_0024, Function | SmallTest | Level0)
+{
+    QuickFixDataMgr dataMgr;
+    InnerAppQuickFix innerAppQuickFix;
+    QuickFixMark mark;
+    mark.status = QuickFixStatus::DEFAULT_STATUS;
+    mark.bundleName = BUNDLE_NAME;
+    innerAppQuickFix.SetQuickFixMark(mark);
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    auto ret = dataMgr.UpdateQuickFixStatus(QuickFixStatus::DELETE_START, innerAppQuickFix);
+    EXPECT_TRUE(ret);
+    ret = dataMgr.DeleteInnerAppQuickFix(BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDataMgrTest_0025
+ * @tc.name: test UpdateQuickFixStatus with DELETE_START and DELETE_END
+ * @tc.desc: DELETE_START can transfer from DELETE_END
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixDataMgrTest_0025, Function | SmallTest | Level0)
+{
+    QuickFixDataMgr dataMgr;
+    InnerAppQuickFix innerAppQuickFix;
+    QuickFixMark mark;
+    mark.status = QuickFixStatus::DELETE_END;
+    mark.bundleName = BUNDLE_NAME;
+    innerAppQuickFix.SetQuickFixMark(mark);
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    auto ret = dataMgr.UpdateQuickFixStatus(QuickFixStatus::DELETE_START, innerAppQuickFix);
+    EXPECT_TRUE(ret);
+    ret = dataMgr.DeleteInnerAppQuickFix(BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDataMgrTest_0026
+ * @tc.name: test UpdateQuickFixStatus valid transition
+ * @tc.desc: DEPLOY_START to DEPLOY_END transition
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixDataMgrTest_0026, Function | SmallTest | Level0)
+{
+    QuickFixDataMgr dataMgr;
+    InnerAppQuickFix innerAppQuickFix;
+    QuickFixMark mark;
+    mark.status = QuickFixStatus::DEPLOY_START;
+    mark.bundleName = BUNDLE_NAME;
+    innerAppQuickFix.SetQuickFixMark(mark);
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    // First save the initial state
+    dataMgr.SaveInnerAppQuickFix(innerAppQuickFix);
+    auto ret = dataMgr.UpdateQuickFixStatus(QuickFixStatus::DEPLOY_END, innerAppQuickFix);
+    EXPECT_TRUE(ret);
+    ret = dataMgr.DeleteInnerAppQuickFix(BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDataMgrTest_0027
+ * @tc.name: test UpdateQuickFixStatus invalid transition
+ * @tc.desc: SWITCH_END to DEPLOY_START should return false
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixDataMgrTest_0027, Function | SmallTest | Level0)
+{
+    QuickFixDataMgr dataMgr;
+    InnerAppQuickFix innerAppQuickFix;
+    QuickFixMark mark;
+    mark.status = QuickFixStatus::SWITCH_END;
+    mark.bundleName = BUNDLE_NAME;
+    innerAppQuickFix.SetQuickFixMark(mark);
+    auto ret = dataMgr.UpdateQuickFixStatus(QuickFixStatus::DEPLOY_START, innerAppQuickFix);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_IsFileNameValid_0100
+ * @tc.name: test IsFileNameValid with various invalid characters
+ * @tc.desc: Invalid characters should return false
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, QuickFixManagerHostImpl_IsFileNameValid_0100, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl hostImpl;
+    EXPECT_FALSE(hostImpl.IsFileNameValid("..test.hqf"));
+    EXPECT_FALSE(hostImpl.IsFileNameValid("test/file.hqf"));
+    EXPECT_FALSE(hostImpl.IsFileNameValid("test\\file.hqf"));
+    EXPECT_FALSE(hostImpl.IsFileNameValid("test%file.hqf"));
+    EXPECT_TRUE(hostImpl.IsFileNameValid("test.hqf"));
+    EXPECT_TRUE(hostImpl.IsFileNameValid("valid_name.hqf"));
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_CopyHqfToSecurityDir_0100
+ * @tc.name: test CopyHqfToSecurityDir with relative path
+ * @tc.desc: Relative path should return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, QuickFixManagerHostImpl_CopyHqfToSecurityDir_0100, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl hostImpl;
+    std::vector<std::string> paths = {"../relative/path.hqf"};
+    std::vector<std::string> securityPaths;
+    auto ret = hostImpl.CopyHqfToSecurityDir(paths, securityPaths);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_CopyHqfToSecurityDir_0200
+ * @tc.name: test CopyHqfToSecurityDir with wrong prefix
+ * @tc.desc: Wrong prefix should return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, QuickFixManagerHostImpl_CopyHqfToSecurityDir_0200, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl hostImpl;
+    std::vector<std::string> paths = {"/wrong/prefix/path.hqf"};
+    std::vector<std::string> securityPaths;
+    auto ret = hostImpl.CopyHqfToSecurityDir(paths, securityPaths);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
+}
 } // OHOS
