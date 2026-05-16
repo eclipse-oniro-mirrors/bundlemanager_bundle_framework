@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
+#include "histogram_util.h"
 
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
@@ -33,6 +34,7 @@ constexpr int32_t INDEX_ONE = 1;
 constexpr int32_t INDEX_TWO = 2;
 constexpr int32_t INDEX_THREE = 3;
 constexpr int32_t NAPI_RETURN_ONE = 1;
+constexpr int32_t HISTOGRAM_BOUNDARY = 4;
 }
 static napi_value JsLauncherCommon(napi_env env, size_t argc, napi_value *argv)
 {
@@ -77,6 +79,8 @@ static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
     void *data = nullptr;
     napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
+    OHOS::AppExecFwk::HistogramUtil::ReportHistogramEnumeration(
+        "AbilityKit.innerBundleManager.on", UNSUPPORTED_FEATURE_ERRCODE, HISTOGRAM_BOUNDARY);
     return JsLauncherCommon(env, argc, argv);
 }
 
@@ -88,6 +92,8 @@ static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
     void *data = nullptr;
     napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
+    OHOS::AppExecFwk::HistogramUtil::ReportHistogramEnumeration(
+        "AbilityKit.innerBundleManager.off", UNSUPPORTED_FEATURE_ERRCODE, HISTOGRAM_BOUNDARY);
     return JsLauncherCommon(env, argc, argv);
 }
 
@@ -99,6 +105,8 @@ static napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info 
     void *data = nullptr;
     napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
+    OHOS::AppExecFwk::HistogramUtil::ReportHistogramEnumeration(
+        "AbilityKit.innerBundleManager.getAllLauncherAbilityInfos", UNSUPPORTED_FEATURE_ERRCODE, HISTOGRAM_BOUNDARY);
     return JsLauncherCommon(env, argc, argv);
 }
 
@@ -110,6 +118,8 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
     void *data = nullptr;
     napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
+    OHOS::AppExecFwk::HistogramUtil::ReportHistogramEnumeration(
+        "AbilityKit.innerBundleManager.getLauncherAbilityInfos", UNSUPPORTED_FEATURE_ERRCODE, HISTOGRAM_BOUNDARY);
     return JsLauncherCommon(env, argc, argv);
 }
 
@@ -122,6 +132,8 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
 
     napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
 
+    OHOS::AppExecFwk::HistogramUtil::ReportHistogramEnumeration(
+        "AbilityKit.innerBundleManager.getShortcutInfos", UNSUPPORTED_FEATURE_ERRCODE, HISTOGRAM_BOUNDARY);
     return JsLauncherCommon(env, argc, argv);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 #include "bundle_constants.h"
 #include "bundle_mgr_host.h"
 #include "bundle_mgr_interface.h"
+#include "histogram_util.h"
 #include "if_system_ability_manager.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
@@ -46,6 +47,7 @@ constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* COMPLETE = "complete";
 constexpr const char* FAIL = "fail";
 constexpr const char* SUCCESS = "success";
+constexpr int32_t HISTOGRAM_BOUNDARY = 4;
 }
 
 CheckPackageHasInstalledOptions::~CheckPackageHasInstalledOptions()
@@ -204,6 +206,7 @@ static void HasInstalledAsyncComplete(napi_env env, napi_status status, void *da
     }
     napi_value callback = nullptr;
     napi_value placeHolder = nullptr;
+    int32_t errCode = asyncCallbackInfo->errCode;
     if (!asyncCallbackInfo->isString) {
         if (asyncCallbackInfo->failRef) {
             napi_value result[ARGS_SIZE_TWO] = { 0 };
@@ -212,20 +215,29 @@ static void HasInstalledAsyncComplete(napi_env env, napi_status status, void *da
             NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, INVALID_NUMBER, &result[PARAM1]));
             NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->failRef, &callback));
             napi_call_function(env, nullptr, callback, ARGS_SIZE_TWO, result, &placeHolder);
+            errCode = INVALID_PARAM;
+            HistogramUtil::ReportHistogramBoolean(
+                "AbilityKit.package.CheckPackageHasInstalledOptions.fail", true);
         }
     } else {
+        errCode = 0;
         if (asyncCallbackInfo->successRef) {
             napi_value result[ARGS_SIZE_ONE] = { 0 };
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM0]));
             ConvertCheckPackageHasInstalledResponse(env, result[PARAM0], asyncCallbackInfo->response);
             NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->successRef, &callback));
             napi_call_function(env, nullptr, callback, ARGS_SIZE_ONE, result, &placeHolder);
+            HistogramUtil::ReportHistogramBoolean(
+                "AbilityKit.package.CheckPackageHasInstalledOptions.success", true);
         }
     }
     if (asyncCallbackInfo->completeRef) {
         NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->completeRef, &callback));
         napi_call_function(env, nullptr, callback, 0, nullptr, &placeHolder);
+        HistogramUtil::ReportHistogramBoolean(
+            "AbilityKit.package.CheckPackageHasInstalledOptions.complete", true);
     }
+    HistogramUtil::ReportHistogramEnumeration("AbilityKit.Package.hasInstalled", errCode, HISTOGRAM_BOUNDARY);
     APP_LOGD("NAPI_HasInstalled, main event thread complete end");
 }
 

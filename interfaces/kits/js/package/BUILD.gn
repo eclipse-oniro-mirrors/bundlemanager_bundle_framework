@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -26,6 +26,8 @@ ohos_shared_library("package") {
     ubsan = true
   }
 
+  include_dirs = [ "${kits_path}/js/common" ]
+
   defines = [
     "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
@@ -50,6 +52,7 @@ ohos_shared_library("package") {
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
+    "${kits_path}/js/common:bundle_napi_common",
   ]
 
   external_deps = [

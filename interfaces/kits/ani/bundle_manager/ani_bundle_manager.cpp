@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <chrono>
 #include <cmath>
 #include <cstring>
 #include <iostream>
@@ -39,6 +40,7 @@
 #include "common_fun_ani.h"
 #include "common_func.h"
 #include "enum_util.h"
+#include "histogram_util.h"
 #include "ipc_skeleton.h"
 #include "napi_constants.h"
 #include "process_cache_callback_host.h"
@@ -59,6 +61,8 @@ static std::string g_aniOwnBundleName;
 static std::mutex g_aniOwnBundleNameMutex;
 constexpr int32_t EMPTY_VALUE = -500;
 constexpr const char* EMPTY_STRING = "ani empty string";
+constexpr const char* HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF_SYNC = "AbilityKit.bundleManager.getBundleInfoForSelfSync";
+constexpr const char* HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF = "AbilityKit.bundleManager.getBundleInfoForSelf";
 } // namespace
 
 static void CheckToCache(
@@ -184,6 +188,9 @@ static bool ParseAniWantList(ani_env* env, ani_object aniWants, std::vector<OHOS
 static ani_object GetBundleInfoForSelfNative(ani_env* env, ani_int aniBundleFlags, ani_boolean aniIsSync)
 {
     APP_LOGD("ani GetBundleInfoForSelf called");
+    auto startTime = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("GetBundleMgr failed");
@@ -198,13 +205,17 @@ static ani_object GetBundleInfoForSelfNative(ani_env* env, ani_int aniBundleFlag
         std::shared_lock<std::shared_mutex> lock(g_aniCacheMutex);
         auto item = g_aniCache.find(query);
         if (item != g_aniCache.end()) {
+            auto endTime = std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::steady_clock::now().time_since_epoch()).count();
+            HistogramUtil::ReportHistogramTimes(
+                isSync ? HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF_SYNC : HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF,
+                static_cast<int32_t>(endTime - startTime));
             return reinterpret_cast<ani_object>(item->second);
         }
     }
 
     BundleInfo bundleInfo;
     ErrCode ret = iBundleMgr->GetBundleInfoForSelf(aniBundleFlags, bundleInfo);
-    bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleInfoForSelf failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
@@ -218,6 +229,11 @@ static ani_object GetBundleInfoForSelfNative(ani_env* env, ani_int aniBundleFlag
         CheckToCache(env, bundleInfo.uid, uid, query, objectBundleInfo);
     }
 
+    auto endTime = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    HistogramUtil::ReportHistogramTimes(
+        isSync ? HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF_SYNC : HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF,
+        static_cast<int32_t>(endTime - startTime));
     return objectBundleInfo;
 }
 
@@ -1296,6 +1312,8 @@ static void CleanBundleCacheFilesNative(ani_env* env, ani_string aniBundleName, 
 static ani_long GetAllBundleCacheSizeNative(ani_env* env)
 {
     APP_LOGD("ani GetAllBundleCacheSizeNative called");
+    auto startTime = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
     sptr<ProcessCacheCallbackHost> cacheCallback = new (std::nothrow) ProcessCacheCallbackHost();
     if (cacheCallback == nullptr) {
         APP_LOGE("cacheCallback is null");
@@ -1327,6 +1345,10 @@ static ani_long GetAllBundleCacheSizeNative(ani_env* env)
         cacheSize = uint64_t(INT64_MAX);
     }
 
+    auto endTime = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    HistogramUtil::ReportHistogramTimes("AbilityKit.bundleManager.getAllBundleCacheSize",
+        static_cast<int32_t>(endTime - startTime));
     return static_cast<ani_long>(cacheSize);
 }
 
