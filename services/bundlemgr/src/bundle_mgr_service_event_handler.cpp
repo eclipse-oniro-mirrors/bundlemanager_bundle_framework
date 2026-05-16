@@ -2484,11 +2484,6 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 }
                 if (!targetUserIds.empty()) {
                     otaNewInstallTargetUsersForNew[bundleName] = targetUserIds;
-                } else {
-                    needOtaNewInstall = false;
-                    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "skip ota new install for %{public}s due to no non-private users",
-                        bundleName.c_str());
-                        continue;
                 }
             }
             std::vector<std::string> filePaths { scanPathIter };
