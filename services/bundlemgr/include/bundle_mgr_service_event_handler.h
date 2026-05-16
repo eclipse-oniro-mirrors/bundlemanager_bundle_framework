@@ -29,6 +29,7 @@
 #include "common_event_support.h"
 #include "pre_install_bundle_info.h"
 #include "pre_install_exception_mgr.h"
+#include "hap_token_info.h"
 #include "pre_scan_info.h"
 #include "nlohmann/json.hpp"
 
@@ -596,6 +597,24 @@ private:
     void InnerProcessCheckRecoverableApplicationInfo();
     void ProcessCheckInstallSource();
     void InnerProcessCheckInstallSource();
+    void ProcessAccessTokenMigration();
+    bool InnerProcessAccessTokenMigration();
+    bool CollectAndPreMigrateUids(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::vector<int32_t> &uidList);
+    void BuildMigrationData(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const std::vector<std::string> &bundleNames,
+        const std::unordered_map<std::string, InnerBundleInfo> &sandboxMap,
+        const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
+        std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+        std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> &oldTokenIdExList);
+    void ExecuteMigrationWithRetry(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+        std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> &oldTokenIdExList,
+        std::vector<bool> &successFlags);
+    void MarkMigratedBundles(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const std::vector<std::string> &bundleNames,
+        const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+        const std::vector<bool> &successFlags);
     std::string ConvertApplicationFlagToInstallSource(int32_t flag);
 
     bool InnerProcessUninstallForExistPreBundle(const BundleInfo &installedInfo);

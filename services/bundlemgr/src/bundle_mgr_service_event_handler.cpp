@@ -18,6 +18,7 @@
 #include <sstream>
 #include <sys/stat.h>
 
+#include "access_token_error.h"
 #include "account_helper.h"
 #include "aot/aot_handler.h"
 #include "app_log_tag_wrapper.h"
@@ -445,6 +446,7 @@ void BMSEventHandler::BundleRebootStartEvent()
     }
 #endif
     if (IsSystemUpgrade()) {
+        ProcessAccessTokenMigration();
         EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
         OnBundleRebootStart();
         HandlePreInstallException(false);
@@ -2023,6 +2025,399 @@ void BMSEventHandler::InnerProcessCheckInstallSource()
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "update installSorce UpdateInnerBundleInfo fail -n %{public}s",
                 preInstallBundleInfo.GetBundleName().c_str());
         }
+    }
+}
+
+void BMSEventHandler::ProcessAccessTokenMigration()
+{
+    bool hasMigrated = false;
+    CheckOtaFlag(OTAFlag::PROCESS_ACCESS_TOKEN_MIGRATION, hasMigrated);
+    if (hasMigrated) {
+        LOG_I(BMS_TAG_DEFAULT, "Not need to migrate access_token due to has migrated");
+        Security::AccessToken::AccessTokenKit::FinishMigration();
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "Need to migrate access_token");
+    bool allMigrated = InnerProcessAccessTokenMigration();
+    if (allMigrated) {
+        UpdateOtaFlag(OTAFlag::PROCESS_ACCESS_TOKEN_MIGRATION);
+    }
+}
+
+bool BMSEventHandler::InnerProcessAccessTokenMigration()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return false;
+    }
+
+    std::vector<int32_t> uidList;
+    auto bundleNames = dataMgr->GetAllBundleName();
+    auto sandboxHelper = dataMgr->GetSandboxAppHelper();
+    auto sandboxMap = (sandboxHelper != nullptr) ? sandboxHelper->GetSandboxAppInfoMap()
+        : std::unordered_map<std::string, InnerBundleInfo>();
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
+
+    // Step 1: Collect UIDs and PreMigrateUIDList
+    if (!CollectAndPreMigrateUids(dataMgr, uidList)) {
+        return true;
+    }
+
+    // Step 2: Build MigratedInfo and collect old tokens
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenIdExList;
+    BuildMigrationData(dataMgr, bundleNames, sandboxMap, uninstallBundleInfos,
+        migratedList, oldTokenIdExList);
+
+    // Step 3: Execute batch migration with retry (includes token update and event report)
+    std::vector<bool> successFlags(migratedList.size(), false);
+    ExecuteMigrationWithRetry(dataMgr, migratedList, oldTokenIdExList, successFlags);
+
+    // Step 4: Mark checkBySpm on successfully migrated bundles
+    MarkMigratedBundles(dataMgr, bundleNames, migratedList, successFlags);
+
+    Security::AccessToken::AccessTokenKit::FinishMigration();
+    LOG_I(BMS_TAG_DEFAULT, "Access token migration completed");
+    return true;
+}
+
+bool BMSEventHandler::CollectAndPreMigrateUids(
+    const std::shared_ptr<BundleDataMgr> &dataMgr, std::vector<int32_t> &uidList)
+{
+    auto bundleNames = dataMgr->GetAllBundleName();
+    for (const auto &bundleName : bundleNames) {
+        InnerBundleInfo innerBundleInfo;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+            continue;
+        }
+        for (const auto &[key, userInfo] : innerBundleInfo.GetInnerBundleUserInfos()) {
+            if (userInfo.uid > 0) {
+                uidList.emplace_back(userInfo.uid);
+            }
+            for (const auto &[ck, ci] : userInfo.cloneInfos) {
+                if (ci.uid > 0) {
+                    uidList.emplace_back(ci.uid);
+                }
+            }
+        }
+    }
+    auto sandboxHelper = dataMgr->GetSandboxAppHelper();
+    auto sandboxMap = (sandboxHelper != nullptr) ? sandboxHelper->GetSandboxAppInfoMap()
+        : std::unordered_map<std::string, InnerBundleInfo>();
+    for (const auto &[key, info] : sandboxMap) {
+        for (const auto &[uk, ui] : info.GetInnerBundleUserInfos()) {
+            if (ui.uid > 0) {
+                uidList.emplace_back(ui.uid);
+            }
+        }
+    }
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    if (dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos)) {
+        for (const auto &[bn, ui] : uninstallBundleInfos) {
+            for (const auto &[uidStr, dui] : ui.userInfos) {
+                int32_t userId = 0;
+                if (!OHOS::StrToInt(uidStr, userId) || userId == -3) {
+                    continue;
+                }
+                if (dui.uid > 0) {
+                    uidList.emplace_back(dui.uid);
+                }
+            }
+        }
+    }
+    if (uidList.empty()) {
+        LOG_I(BMS_TAG_DEFAULT, "No UIDs to migrate");
+        Security::AccessToken::AccessTokenKit::FinishMigration();
+        return false;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "PreMigrateUIDList count=%{public}zu", uidList.size());
+    int32_t preMigrateRet = Security::AccessToken::AccessTokenKit::PreMigrateUIDList(uidList);
+    if (preMigrateRet == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED) {
+        LOG_I(BMS_TAG_DEFAULT, "PreMigrateUIDList: migration already completed");
+        return false;
+    }
+    if (preMigrateRet != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        LOG_W(BMS_TAG_DEFAULT, "PreMigrateUIDList failed, err=%{public}d, continue migration",
+            preMigrateRet);
+    }
+    return true;
+}
+
+void BMSEventHandler::BuildMigrationData(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const std::vector<std::string> &bundleNames,
+    const std::unordered_map<std::string, InnerBundleInfo> &sandboxMap,
+    const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
+    std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> &oldTokenIdExList)
+{
+    std::map<std::string, Security::AccessToken::MigratedInfo> migratedMap;
+    std::map<std::string, std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenMap;
+    for (const auto &bundleName : bundleNames) {
+        InnerBundleInfo info;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+            continue;
+        }
+        auto &m = migratedMap[bundleName];
+        m.bundleName = bundleName;
+        m.pathList.hapPaths = info.GetAllHapPaths();
+        m.pathList.isPreInstalled = info.IsPreInstallApp();
+        m.pathList.userId = Constants::UNSPECIFIED_USERID;
+        auto &oldTokens = oldTokenMap[bundleName];
+        for (const auto &[k, ui] : info.GetInnerBundleUserInfos()) {
+            int32_t userId = ui.bundleUserInfo.userId;
+            m.uidList.emplace_back(ui.uid);
+            m.hapBaseInfoList.emplace_back(
+                Security::AccessToken::HapBaseInfo{userId, bundleName, 0});
+            m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
+            oldTokens.emplace_back(Security::AccessToken::AccessTokenIDEx{ui.accessTokenIdEx});
+            for (const auto &[ck, ci] : ui.cloneInfos) {
+                int32_t appIndex = 0;
+                OHOS::StrToInt(ck, appIndex);
+                m.uidList.emplace_back(ci.uid);
+                m.hapBaseInfoList.emplace_back(
+                    Security::AccessToken::HapBaseInfo{userId, bundleName, appIndex});
+                m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
+                oldTokens.emplace_back(Security::AccessToken::AccessTokenIDEx{ci.accessTokenIdEx});
+            }
+        }
+    }
+    for (const auto &[key, info] : sandboxMap) {
+        std::string bn = info.GetBundleName();
+        auto &m = migratedMap[bn];
+        if (m.bundleName.empty()) {
+            m.bundleName = bn;
+            m.pathList.hapPaths = info.GetAllHapPaths();
+            m.pathList.isPreInstalled = info.IsPreInstallApp();
+            m.pathList.userId = Constants::UNSPECIFIED_USERID;
+        }
+        auto &oldTokens = oldTokenMap[bn];
+        for (const auto &[uk, ui] : info.GetInnerBundleUserInfos()) {
+            int32_t userId = ui.bundleUserInfo.userId;
+            m.uidList.emplace_back(ui.uid);
+            m.hapBaseInfoList.emplace_back(
+                Security::AccessToken::HapBaseInfo{userId, bn, 0});
+            m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
+            oldTokens.emplace_back(Security::AccessToken::AccessTokenIDEx{ui.accessTokenIdEx});
+        }
+    }
+    for (const auto &[bn, ui] : uninstallBundleInfos) {
+        Security::AccessToken::MigratedInfo m;
+        m.bundleName = bn;
+        std::vector<Security::AccessToken::AccessTokenIDEx> oldTokens;
+        for (const auto &[uidStr, dui] : ui.userInfos) {
+            int32_t userId = 0;
+            if (!OHOS::StrToInt(uidStr, userId) || userId == -3) {
+                continue;
+            }
+            m.uidList.emplace_back(dui.uid);
+            m.hapBaseInfoList.emplace_back(
+                Security::AccessToken::HapBaseInfo{userId, bn, 0});
+            m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::RESERVED_DATA);
+            oldTokens.emplace_back(Security::AccessToken::AccessTokenIDEx{dui.accessTokenIdEx});
+        }
+        if (!m.uidList.empty()) {
+            oldTokenMap[bn] = std::move(oldTokens);
+            migratedMap[bn] = std::move(m);
+        }
+    }
+    for (auto &[bn, m] : migratedMap) {
+        if (m.uidList.empty()) {
+            continue;
+        }
+        auto it = oldTokenMap.find(bn);
+        if (it != oldTokenMap.end()) {
+            oldTokenIdExList.emplace_back(std::move(it->second));
+        } else {
+            oldTokenIdExList.emplace_back(m.uidList.size(),
+                Security::AccessToken::AccessTokenIDEx{});
+        }
+        migratedList.emplace_back(std::move(m));
+    }
+}
+
+void BMSEventHandler::ExecuteMigrationWithRetry(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> &oldTokenIdExList,
+    std::vector<bool> &successFlags)
+{
+    constexpr size_t BATCH_SIZE = 50;
+    constexpr int32_t MAX_RETRY_ROUNDS = 3;
+    successFlags.assign(migratedList.size(), false);
+    size_t remaining = migratedList.size();
+
+    struct TokenUpdateInfo {
+        std::string bundleName;
+        int32_t userId = 0;
+        int32_t appIndex = 0;
+        Security::AccessToken::AccessTokenIDEx tokenIdEx;
+    };
+    std::vector<TokenUpdateInfo> tokenUpdateList;
+    std::vector<Security::AccessToken::HapBaseInfo> uidDuplicatedHapList;
+    std::vector<int32_t> uidDuplicatedUidList;
+
+    for (int32_t round = 0; round < MAX_RETRY_ROUNDS && remaining > 0; ++round) {
+        if (round > 0) {
+            LOG_I(BMS_TAG_DEFAULT, "Migration retry round %{public}d, %{public}zu items remaining",
+                round, remaining);
+        }
+        std::vector<size_t> pendingIdx;
+        for (size_t i = 0; i < migratedList.size(); ++i) {
+            if (!successFlags[i]) {
+                pendingIdx.emplace_back(i);
+            }
+        }
+        for (size_t i = 0; i < pendingIdx.size(); i += BATCH_SIZE) {
+            size_t batchEnd = std::min(i + BATCH_SIZE, pendingIdx.size());
+            std::vector<Security::AccessToken::MigratedInfo> batch;
+            batch.reserve(batchEnd - i);
+            for (size_t j = i; j < batchEnd; ++j) {
+                batch.emplace_back(migratedList[pendingIdx[j]]);
+            }
+            std::vector<Security::AccessToken::BundleMigrateResult> results;
+            LOG_I(BMS_TAG_DEFAULT, "MigrateInstalledBundles batch %{public}zu items, round %{public}d",
+                batch.size(), round);
+            int32_t ret = Security::AccessToken::AccessTokenKit::MigrateInstalledBundles(
+                batch, results);
+            if (ret == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED) {
+                LOG_I(BMS_TAG_DEFAULT, "Migration already completed");
+                remaining = 0;
+                break;
+            }
+            if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+                LOG_E(BMS_TAG_DEFAULT, "MigrateInstalledBundles batch failed, err=%{public}d", ret);
+                continue;
+            }
+            for (size_t j = 0; j < results.size(); ++j) {
+                size_t origIdx = pendingIdx[i + j];
+                auto &result = results[j];
+                if (result.errcode == 0) {
+                    auto &item = migratedList[origIdx];
+                    for (size_t k = 0; k < result.tokenIdList.size() &&
+                        k < item.hapBaseInfoList.size() &&
+                        k < oldTokenIdExList[origIdx].size(); ++k) {
+                        auto &oldIdEx = oldTokenIdExList[origIdx][k];
+                        if (oldIdEx.tokenIdExStruct.tokenID != 0 &&
+                            oldIdEx.tokenIdExStruct.tokenID !=
+                            result.tokenIdList[k].tokenIdExStruct.tokenID) {
+                            tokenUpdateList.emplace_back(TokenUpdateInfo{
+                                item.hapBaseInfoList[k].bundleName,
+                                item.hapBaseInfoList[k].userID,
+                                item.hapBaseInfoList[k].instIndex,
+                                result.tokenIdList[k]});
+                        }
+                    }
+                    if (!successFlags[origIdx]) {
+                        successFlags[origIdx] = true;
+                        --remaining;
+                    }
+                } else if (result.errcode ==
+                    Security::AccessToken::AccessTokenError::ERR_MIGRATION_UID_DUPLICATED) {
+                    LOG_W(BMS_TAG_DEFAULT,
+                        "Migration uid duplicated: bundle=%{public}s",
+                        migratedList[origIdx].bundleName.c_str());
+                    auto &item = migratedList[origIdx];
+                    for (size_t k = 0; k < item.hapBaseInfoList.size(); ++k) {
+                        uidDuplicatedHapList.emplace_back(item.hapBaseInfoList[k]);
+                        if (k < item.uidList.size()) {
+                            uidDuplicatedUidList.emplace_back(item.uidList[k]);
+                        }
+                    }
+                    if (!successFlags[origIdx]) {
+                        successFlags[origIdx] = true;
+                        --remaining;
+                    }
+                } else {
+                    LOG_W(BMS_TAG_DEFAULT,
+                        "Migration failed: bundle=%{public}s err=%{public}d",
+                        migratedList[origIdx].bundleName.c_str(), result.errcode);
+                }
+            }
+        }
+        if (remaining == 0) {
+            break;
+        }
+    }
+
+    if (remaining > 0) {
+        LOG_W(BMS_TAG_DEFAULT,
+            "Migration incomplete: %{public}zu/%{public}zu items failed after %{public}d rounds",
+            remaining, migratedList.size(), MAX_RETRY_ROUNDS);
+    } else {
+        LOG_I(BMS_TAG_DEFAULT, "All %{public}zu migration items completed", migratedList.size());
+    }
+
+    // Report uid duplicated events via QUERY_BUNDLE_INFO
+    if (!uidDuplicatedHapList.empty()) {
+        EventInfo eventInfo;
+        for (size_t i = 0; i < uidDuplicatedHapList.size(); ++i) {
+            eventInfo.bundleNameList.emplace_back(uidDuplicatedHapList[i].bundleName);
+            eventInfo.userIdList.emplace_back(uidDuplicatedHapList[i].userID);
+            eventInfo.appIndexList.emplace_back(uidDuplicatedHapList[i].instIndex);
+        }
+        eventInfo.uidList = uidDuplicatedUidList;
+        eventInfo.errCode = ERR_APPEXECFWK_ACCESS_TOKEN_MIGRATION_UID_DUPLICATED;
+        EventReport::SendSystemEvent(BMSEventType::QUERY_BUNDLE_INFO, eventInfo);
+    }
+
+    // Update accessToken for bundles whose token changed during migration
+    if (!tokenUpdateList.empty()) {
+        LOG_I(BMS_TAG_DEFAULT, "Updating accessToken for %{public}zu entries",
+            tokenUpdateList.size());
+        for (const auto &update : tokenUpdateList) {
+            InnerBundleInfo info;
+            if (!dataMgr->FetchInnerBundleInfo(update.bundleName, info)) {
+                continue;
+            }
+            InnerBundleUserInfo userInfo;
+            if (!info.GetInnerBundleUserInfo(update.userId, userInfo)) {
+                continue;
+            }
+            uint32_t newTokenId = update.tokenIdEx.tokenIdExStruct.tokenID;
+            uint64_t newTokenIdEx = update.tokenIdEx.tokenIDEx;
+            if (update.appIndex == 0) {
+                userInfo.accessTokenId = newTokenId;
+                userInfo.accessTokenIdEx = newTokenIdEx;
+                info.AddInnerBundleUserInfo(userInfo);
+            } else {
+                auto it = userInfo.cloneInfos.find(std::to_string(update.appIndex));
+                if (it != userInfo.cloneInfos.end()) {
+                    it->second.accessTokenId = newTokenId;
+                    it->second.accessTokenIdEx = newTokenIdEx;
+                }
+            }
+            dataMgr->UpdateInnerBundleInfo(info);
+            LOG_I(BMS_TAG_DEFAULT,
+                "Updated token: bundle=%{public}s userId=%{public}d appIndex=%{public}d tokenId=%{public}u",
+                update.bundleName.c_str(), update.userId, update.appIndex, newTokenId);
+        }
+    }
+}
+
+void BMSEventHandler::MarkMigratedBundles(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const std::vector<std::string> &bundleNames,
+    const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
+    const std::vector<bool> &successFlags)
+{
+    std::set<std::string> successBundleNames;
+    for (size_t i = 0; i < migratedList.size(); ++i) {
+        if (successFlags[i]) {
+            successBundleNames.emplace(migratedList[i].bundleName);
+        }
+    }
+    for (const auto &bundleName : bundleNames) {
+        if (successBundleNames.find(bundleName) == successBundleNames.end()) {
+            continue;
+        }
+        InnerBundleInfo info;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+            continue;
+        }
+        info.SetBundleCheckBySpm(true);
+        dataMgr->UpdateInnerBundleInfo(info);
     }
 }
 

@@ -399,6 +399,7 @@ enum StopReason {
     UPDATE,
     DELETE,
 };
+
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS
