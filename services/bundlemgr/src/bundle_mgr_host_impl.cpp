@@ -2975,6 +2975,7 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
 
     NotifyBundleEvents installRes = {
         .type = NotifyType::APPLICATION_ENABLE,
+        .changeType = isEnable ? ChangeType::SET_APPLICATION_ENABLE : ChangeType::SET_APPLICATION_DISABLE,
         .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
         .uid = innerBundleUserInfo.uid,
@@ -3049,6 +3050,7 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
 
     NotifyBundleEvents installRes = {
         .type = NotifyType::APPLICATION_ENABLE,
+        .changeType = isEnable ? ChangeType::SET_APPLICATION_ENABLE : ChangeType::SET_APPLICATION_DISABLE,
         .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
         .uid = innerBundleUserInfo.uid,
