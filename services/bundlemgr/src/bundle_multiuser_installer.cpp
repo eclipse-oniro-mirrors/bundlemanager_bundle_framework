@@ -15,6 +15,8 @@
 
 #include "bundle_multiuser_installer.h"
 
+#include <algorithm>
+
 #include "ability_manager_helper.h"
 #include "account_helper.h"
 #include "bms_extension_data_mgr.h"
@@ -35,6 +37,25 @@
 namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
+namespace {
+constexpr int32_t APP_SKILL_TYPE = 0;
+
+void CollectAppSkillChangedItems(const InnerBundleInfo &info, std::vector<std::string> &skillItems)
+{
+    for (const auto &moduleInfo : info.GetInnerModuleInfos()) {
+        for (const auto &skillProfile : moduleInfo.second.skillProfiles) {
+            if (skillProfile.name.empty()) {
+                continue;
+            }
+            std::string skillItem = moduleInfo.second.moduleName + ServiceConstants::PATH_SEPARATOR +
+                skillProfile.name;
+            if (std::find(skillItems.begin(), skillItems.end(), skillItem) == skillItems.end()) {
+                skillItems.emplace_back(skillItem);
+            }
+        }
+    }
+}
+} // namespace
 
 BundleMultiUserInstaller::BundleMultiUserInstaller()
 {
@@ -77,6 +98,16 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
+    if (result == ERR_OK && needNotifyAppSkill_) {
+        InnerBundleInfo info;
+        std::vector<std::string> addedSkills;
+        std::vector<std::string> emptySkills;
+        if (dataMgr_->FetchInnerBundleInfo(bundleName, info)) {
+            CollectAppSkillChangedItems(info, addedSkills);
+            commonEventMgr->NotifySkillEvents(bundleName, userId, addedSkills, emptySkills, emptySkills,
+                APP_SKILL_TYPE);
+        }
+    }
 
     ResetInstallProperties();
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
@@ -242,6 +273,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleInstallBundle(userId, bundleName);
 #endif
+    needNotifyAppSkill_ = true;
     APP_LOGI("InstallExisted %{public}s succesfully", bundleName.c_str());
     return ERR_OK;
 }
@@ -342,6 +374,7 @@ void BundleMultiUserInstaller::ResetInstallProperties()
     uid_ = 0;
     accessTokenId_ = 0;
     isBundleCrossAppSharedConfig_ = false;
+    needNotifyAppSkill_ = false;
     appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
     moduleName_.clear();
 }

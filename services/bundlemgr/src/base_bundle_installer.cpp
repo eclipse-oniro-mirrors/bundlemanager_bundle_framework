@@ -1959,7 +1959,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     if (installParam.needSendEvent) {
-        PrepareAppSkillStatus(oldInfo, cacheInfo);
+        if (isAppExist_ && !hasInstalledInUser_) {
+            PrepareAppSkillStatus(InnerBundleInfo(), cacheInfo);
+        } else {
+            PrepareAppSkillStatus(oldInfo, cacheInfo);
+        }
     }
     CheckAddResultMsg(cacheInfo, isContainEntry_);
     PrintDataStat();

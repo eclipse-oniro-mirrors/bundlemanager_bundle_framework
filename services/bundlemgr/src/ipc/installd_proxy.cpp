@@ -16,8 +16,10 @@
 #include "ipc/installd_proxy.h"
 
 #include "app_log_tag_wrapper.h"
+#include "ashmem.h"
 #include "bundle_service_constants.h"
 #include "parcel_macro.h"
+#include "securec.h"
 #include "string_ex.h"
 
 namespace OHOS {
@@ -27,6 +29,125 @@ constexpr int16_t WAIT_TIME = 3000;
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 constexpr int16_t MAX_VEC_SIZE = 1000;
 constexpr int16_t MAX_STRING_SIZE = 1024;
+constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // allow max 1GB data size
+constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc raw data size 120MB
+
+bool GetData(void *&buffer, size_t size, const void *data)
+{
+    if (data == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "GetData failed due to null data");
+        return false;
+    }
+    if (size == 0 || size > Constants::MAX_PARCEL_CAPACITY) {
+        LOG_E(BMS_TAG_INSTALLD, "GetData failed due to invalid size");
+        return false;
+    }
+    buffer = malloc(size);
+    if (buffer == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "GetData failed due to malloc buffer failed");
+        return false;
+    }
+    if (memcpy_s(buffer, size, data, size) != EOK) {
+        free(buffer);
+        LOG_E(BMS_TAG_INSTALLD, "GetData failed due to memcpy_s failed");
+        return false;
+    }
+    return true;
+}
+
+ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, size_t dataSize, void *&data)
+{
+    sptr<Ashmem> ashMem = reply.ReadAshmem();
+    if (ashMem == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "Ashmem is nullptr");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!ashMem->MapReadOnlyAshmem()) {
+        LOG_E(BMS_TAG_INSTALLD, "MapReadOnlyAshmem failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t ashMemSize = ashMem->GetAshmemSize();
+    if (ashMemSize <= 0 || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY_OF_ASHMEM) ||
+        static_cast<size_t>(ashMemSize) != dataSize) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid ashmem size");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t offset = 0;
+    const void *ashDataPtr = ashMem->ReadFromAshmem(ashMemSize, offset);
+    if (ashDataPtr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "ashDataPtr is nullptr");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (dataSize == 0 || dataSize > MAX_PARCEL_CAPACITY_OF_ASHMEM) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid data size %{public}zu", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    data = malloc(dataSize);
+    if (data == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "malloc data failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (memcpy_s(data, dataSize, ashDataPtr, dataSize) != EOK) {
+        free(data);
+        LOG_E(BMS_TAG_INSTALLD, "memcpy_s failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+template <typename T>
+ErrCode InnerGetVectorFromParcelIntelligent(MessageParcel &reply, std::vector<T> &parcelableInfos)
+{
+    int32_t rawDataSize = reply.ReadInt32();
+    if (rawDataSize < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid data size %{public}d", rawDataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    size_t dataSize = static_cast<size_t>(rawDataSize);
+    if (dataSize == 0) {
+        LOG_D(BMS_TAG_INSTALLD, "parcel no data");
+        parcelableInfos.clear();
+        return ERR_OK;
+    }
+    if (dataSize > MAX_PARCEL_CAPACITY_OF_ASHMEM) {
+        LOG_E(BMS_TAG_INSTALLD, "data size too large %{public}zu", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    void *buffer = nullptr;
+    if (dataSize > MAX_IPC_REWDATA_SIZE) {
+        if (GetParcelInfoFromAshMem(reply, dataSize, buffer) != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "read ashmem failed, size %{public}zu", dataSize);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    } else if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
+        LOG_E(BMS_TAG_INSTALLD, "read raw data failed, size %{public}zu", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel tempParcel;
+    if (!tempParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        LOG_E(BMS_TAG_INSTALLD, "ParseFrom failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    int32_t size = tempParcel.ReadInt32();
+    if (size < 0 || size > MAX_VEC_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid vector size %{public}d", size);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    parcelableInfos.clear();
+    CONTAINER_SECURITY_VERIFY(tempParcel, size, &parcelableInfos);
+    for (int32_t i = 0; i < size; ++i) {
+        std::unique_ptr<T> info(tempParcel.ReadParcelable<T>());
+        if (info == nullptr) {
+            LOG_E(BMS_TAG_INSTALLD, "Read Parcelable infos failed, index %{public}d", i);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        parcelableInfos.emplace_back(*info);
+    }
+    return ERR_OK;
+}
 }
 
 InstalldProxy::InstalldProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IInstalld>(object)
@@ -1462,23 +1583,7 @@ ErrCode InstalldProxy::ExtractSkillsPackage(const SkillsPackageParam &param,
         LOG_E(BMS_TAG_INSTALLD, "ExtractSkillsPackage TransactInstalldCmd failed");
         return ret;
     }
-    // Read vector size
-    int32_t size = reply.ReadInt32();
-    if (size < 0) {
-        LOG_E(BMS_TAG_INSTALLD, "ExtractSkillsPackage: invalid size");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    skillInfoList.clear();
-    for (int32_t i = 0; i < size; ++i) {
-        auto *info = reply.ReadParcelable<SkillsPackageInfo>();
-        if (info == nullptr) {
-            LOG_E(BMS_TAG_INSTALLD, "ExtractSkillsPackage: failed to read item %{public}d", i);
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-        skillInfoList.emplace_back(*info);
-        delete info;
-    }
-    return ERR_OK;
+    return InnerGetVectorFromParcelIntelligent<SkillsPackageInfo>(reply, skillInfoList);
 }
 
 ErrCode InstalldProxy::DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)

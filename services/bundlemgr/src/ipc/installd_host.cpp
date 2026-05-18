@@ -15,7 +15,10 @@
 
 #include "ipc/installd_host.h"
 
+#include <atomic>
+
 #include "app_log_tag_wrapper.h"
+#include "ashmem.h"
 #include "bundle_constants.h"
 #include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
@@ -35,6 +38,71 @@ constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 constexpr int16_t MAX_BUNDLE_SA_UID_SIZE = 10;
 constexpr int16_t BUNDLE_UID_SIZE = 1;
 constexpr uint16_t MAX_VEC_SIZE = 1024;
+constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // allow max 1GB data size
+constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc raw data size 120MB
+const std::string INSTALLD_ASHMEM_NAME = "installdAshmemName";
+std::atomic<int32_t> g_installdAshmemNum = 0;
+
+ErrCode WriteParcelIntoAshmem(MessageParcel &tempParcel, MessageParcel &reply)
+{
+    size_t dataSize = tempParcel.GetDataSize();
+    sptr<Ashmem> ashmem = Ashmem::CreateAshmem(
+        (INSTALLD_ASHMEM_NAME + std::to_string(g_installdAshmemNum++)).c_str(), dataSize);
+    if (ashmem == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "Create shared memory failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!ashmem->MapReadAndWriteAshmem()) {
+        LOG_E(BMS_TAG_INSTALLD, "Map shared memory fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t offset = 0;
+    if (!ashmem->WriteToAshmem(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize, offset)) {
+        LOG_E(BMS_TAG_INSTALLD, "Write parcel info to shared memory fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteAshmem(ashmem)) {
+        LOG_E(BMS_TAG_INSTALLD, "Write ashmem to MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+template <typename T>
+ErrCode WriteVectorToParcelIntelligent(const std::vector<T> &parcelableVector, MessageParcel &reply)
+{
+    if (parcelableVector.size() > MAX_VEC_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD, "Parcelable vector size too large");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel tempParcel;
+    (void)tempParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY_OF_ASHMEM);
+    if (!tempParcel.WriteInt32(static_cast<int32_t>(parcelableVector.size()))) {
+        LOG_E(BMS_TAG_INSTALLD, "Write Parcelable vector size failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (const auto &parcelable : parcelableVector) {
+        if (!tempParcel.WriteParcelable(&parcelable)) {
+            LOG_E(BMS_TAG_INSTALLD, "Write Parcelable vector failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    size_t dataSize = tempParcel.GetDataSize();
+    if (!reply.WriteInt32(static_cast<int32_t>(dataSize))) {
+        LOG_E(BMS_TAG_INSTALLD, "Write Parcelable vector data size failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (dataSize > MAX_IPC_REWDATA_SIZE) {
+        LOG_I(BMS_TAG_INSTALLD, "Parcelable vector data is too large, use ashmem");
+        return WriteParcelIntoAshmem(tempParcel, reply);
+    }
+    if (!reply.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
+        LOG_E(BMS_TAG_INSTALLD, "Write Parcelable vector raw data failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
 }
 
 InstalldHost::InstalldHost()
@@ -1489,20 +1557,10 @@ bool InstalldHost::HandleExtractSkillsPackage(MessageParcel &data, MessageParcel
     std::vector<SkillsPackageInfo> skillInfoList;
     ErrCode result = ExtractSkillsPackage(*param, skillInfoList);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-
-    // Write vector size
-    if (!reply.WriteInt32(static_cast<int32_t>(skillInfoList.size()))) {
-        LOG_E(BMS_TAG_INSTALLD, "HandleExtractSkillsPackage: failed to write size");
-        return false;
+    if (result != ERR_OK) {
+        return true;
     }
-    // Write each element
-    for (const auto &info : skillInfoList) {
-        if (!reply.WriteParcelable(&info)) {
-            LOG_E(BMS_TAG_INSTALLD, "HandleExtractSkillsPackage: failed to write item");
-            return false;
-        }
-    }
-    return true;
+    return WriteVectorToParcelIntelligent<SkillsPackageInfo>(skillInfoList, reply) == ERR_OK;
 }
 
 bool InstalldHost::HandleDeleteCertAndRemoveKey(MessageParcel &data, MessageParcel &reply)
