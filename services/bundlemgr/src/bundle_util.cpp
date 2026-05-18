@@ -59,6 +59,7 @@ constexpr const char* PROC_FILE_PATH = "/sys/fs/hmfs/userdata/orphan_nodes_info"
 constexpr double MAX_INSTALL_NEED_FDUSED_RATE = 0.8;
 constexpr int8_t ORPHAN_DATA_SIZE = 2;
 constexpr int32_t ONE_M = 1024 * 1024;
+constexpr int64_t BLOCK_SIZE = 512;
 
 constexpr const char* ABC_FILE_PATH = "abc_files";
 constexpr const char* PGO_FILE_PATH = "pgo_files";
@@ -906,7 +907,7 @@ int64_t BundleUtil::GetFileSize(const std::string &filePath)
         APP_LOGE("call stat error:%{public}d", errno);
         return 0;
     }
-    return fileInfo.st_size;
+    return fileInfo.st_blocks * BLOCK_SIZE;
 }
 
 std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,
