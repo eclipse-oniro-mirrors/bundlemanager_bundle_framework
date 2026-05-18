@@ -2458,7 +2458,9 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         AddParseInfosToMap(bundleName, infos);
         auto mapIter = loadExistData_.find(bundleName);
         if (mapIter == loadExistData_.end()) {
-            if (dataMgr->GetAllUser().size() > USER_ID_SIZE && !needOtaNewInstall) {
+            if (dataMgr->GetAllUser().size() > USER_ID_SIZE
+                && scanPathIter.find(ServiceConstants::PRELOAD_APP_DIR) == 0
+                && !needOtaNewInstall) {
                 LOG_NOFUNC_I(BMS_TAG_DEFAULT, "ota skip new preload app: %{public}s", scanPathIter.c_str());
                 continue;
             }
@@ -2544,7 +2546,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             }
         }
         if (!hasBundleInstalled && scanPathIter.find(ServiceConstants::PRELOAD_APP_DIR) == 0 &&
-            dataMgr->GetAllUser().size() > USER_ID_SIZE && !needOtaNewInstall) {
+            dataMgr->GetAllUser().size() > USER_ID_SIZE) {
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "app(%{public}s) is new preload app and do not need OTA install",
                 bundleName.c_str());
             continue;
