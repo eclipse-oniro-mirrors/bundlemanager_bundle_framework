@@ -503,7 +503,7 @@ void GetAllBundleCacheSizeExec(napi_env env, void *data)
         return;
     }
 
-    asyncCallbackInfo->startTime = std::chrono::duration_cast<std::chrono::microseconds>(
+    asyncCallbackInfo->startTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count();
     asyncCallbackInfo->cacheCallback = new (std::nothrow) ProcessCacheCallbackHost();
     if (asyncCallbackInfo->cacheCallback == nullptr) {
@@ -553,7 +553,7 @@ void GetAllBundleCacheSizeComplete(napi_env env, napi_status status, void *data)
             env, asyncCallbackInfo->err, GET_ALL_BUNDLE_CACHE_SIZE, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     CommonFunc::NapiReturnDeferred<GetAllBundleCacheCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
-    auto endTime = std::chrono::duration_cast<std::chrono::microseconds>(
+    auto endTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count();
     HistogramUtil::ReportHistogramTimes("AbilityKit.bundleManager.getAllBundleCacheSize",
         static_cast<int32_t>(endTime - asyncCallbackInfo->startTime));
@@ -4141,7 +4141,7 @@ void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
     }
     CommonFunc::NapiReturnDeferred<BundleInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
     if (asyncCallbackInfo->isForSelf) {
-        auto endTime = std::chrono::duration_cast<std::chrono::microseconds>(
+        auto endTime = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now().time_since_epoch()).count();
         HistogramUtil::ReportHistogramTimes("AbilityKit.bundleManager.getBundleInfoForSelf",
             static_cast<int32_t>(endTime - asyncCallbackInfo->startTime));
@@ -4179,7 +4179,7 @@ void GetBundleInfoForSelfExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->startTime = std::chrono::duration_cast<std::chrono::microseconds>(
+    asyncCallbackInfo->startTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count();
     if (asyncCallbackInfo->err != NO_ERROR) {
         return;
@@ -5140,7 +5140,7 @@ napi_value GetAdditionalInfo(napi_env env, napi_callback_info info)
 napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("GetBundleInfoForSelfSync called");
-    auto startTime = std::chrono::duration_cast<std::chrono::microseconds>(
+    auto startTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count();
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
@@ -5170,7 +5170,7 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
             APP_LOGD("GetBundleInfo param from cache");
             NAPI_CALL(env,
                 napi_get_reference_value(env, item->second, &nBundleInfo));
-            auto endTime = std::chrono::duration_cast<std::chrono::microseconds>(
+            auto endTime = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now().time_since_epoch()).count();
             HistogramUtil::ReportHistogramTimes("AbilityKit.bundleManager.getBundleInfoForSelfSync",
                 static_cast<int32_t>(endTime - startTime));
@@ -5192,7 +5192,7 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
         Query query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
         CheckToCache(env, bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
     }
-    auto endTime = std::chrono::duration_cast<std::chrono::microseconds>(
+    auto endTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count();
     HistogramUtil::ReportHistogramTimes("AbilityKit.bundleManager.getBundleInfoForSelfSync",
         static_cast<int32_t>(endTime - startTime));
