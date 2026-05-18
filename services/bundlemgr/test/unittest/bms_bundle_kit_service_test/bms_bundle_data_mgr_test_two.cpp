@@ -583,15 +583,15 @@ void BmsBundleDataMgrTest2::MockInstallBundle(
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
     moduleInfo.entryAbilityKey = keyName;
     InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
-    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
     skill.entities = {ENTITY};
     std::vector<Skill> skills;
     skills.emplace_back(skill);
-    innerBundleInfo.InsertSkillInfo(keyName, skills);
+    innerAbilityInfo.skills = skills;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
+    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     SaveToDatabase(bundleName, innerBundleInfo, userDataClearable, isSystemApp);
 }
 
@@ -601,19 +601,19 @@ void BmsBundleDataMgrTest2::MockInstallExtension(const std::string &bundleName,
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + extensionName;
     std::string keyName02 = bundleName + "." + moduleName + "." + extensionName + "02";
-    InnerExtensionInfo innerExtensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
-    InnerExtensionInfo innerExtensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertExtensionInfo(keyName, innerExtensionInfo);
-    innerBundleInfo.InsertExtensionInfo(keyName02, innerExtensionInfo02);
-    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
     skill.entities = {ENTITY};
     std::vector<Skill> skills;
     skills.emplace_back(skill);
-    innerBundleInfo.InsertExtensionSkillInfo(keyName, skills);
-    innerBundleInfo.InsertExtensionSkillInfo(keyName02, skills);
+    InnerExtensionInfo innerExtensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
+    innerExtensionInfo.skills = skills;
+    InnerExtensionInfo innerExtensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
+    innerExtensionInfo02.skills = skills;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertExtensionInfo(keyName, innerExtensionInfo);
+    innerBundleInfo.InsertExtensionInfo(keyName02, innerExtensionInfo02);
+    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     SaveToDatabase(bundleName, innerBundleInfo, false, false);
 }
 
@@ -694,14 +694,14 @@ void BmsBundleDataMgrTest2::MockInstallBundle(
         InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
         std::string keyName = bundleName + "." + moduleName + "." + abilityName;
         InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
-        innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
-        innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
         Skill skill;
         skill.actions = {ACTION};
         skill.entities = {ENTITY};
         std::vector<Skill> skills;
         skills.emplace_back(skill);
-        innerBundleInfo.InsertSkillInfo(keyName, skills);
+        innerAbilityInfo.skills = skills;
+        innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
+        innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     }
     SaveToDatabase(bundleName, innerBundleInfo, userDataClearable, isSystemApp);
 }
@@ -2328,29 +2328,6 @@ HWTEST_F(BmsBundleDataMgrTest2, RemoveModuleInfo_0300, Function | SmallTest | Le
 }
 
 /**
- * @tc.number: RemoveModuleInfo_0400
- * @tc.name: test InnerBundleInfo
- * @tc.desc: 1. call RemoveModuleInfo, return false
- */
-HWTEST_F(BmsBundleDataMgrTest2, RemoveModuleInfo_0400, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    InnerModuleInfo moduleInfo;
-    moduleInfo.modulePackage = PACKAGE_NAME;
-    moduleInfo.name = MODULE_NAME1;
-    moduleInfo.skillKeys.push_back("keys");;
-    info.innerModuleInfos_.try_emplace(PACKAGE_NAME, moduleInfo);
-
-    std::vector<Skill> skills;
-    std::string key = "key";
-    info.skillInfos_.try_emplace(key, skills);
-    info.RemoveModuleInfo(PACKAGE_NAME);
-
-    auto skillItem = info.skillInfos_.find("keys");
-    EXPECT_EQ(skillItem, info.skillInfos_.end());
-}
-
-/**
  * @tc.number: RemoveModuleInfo_0500
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1. call RemoveModuleInfo, return false
@@ -2371,29 +2348,6 @@ HWTEST_F(BmsBundleDataMgrTest2, RemoveModuleInfo_0500, Function | SmallTest | Le
 
     auto extensionItem = info.baseExtensionInfos_.find("keys");
     EXPECT_EQ(extensionItem, info.baseExtensionInfos_.end());
-}
-
-/**
- * @tc.number: RemoveModuleInfo_0600
- * @tc.name: test InnerBundleInfo
- * @tc.desc: 1. call RemoveModuleInfo, return false
- */
-HWTEST_F(BmsBundleDataMgrTest2, RemoveModuleInfo_0600, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    InnerModuleInfo moduleInfo;
-    moduleInfo.modulePackage = PACKAGE_NAME;
-    moduleInfo.name = MODULE_NAME1;
-    moduleInfo.extensionSkillKeys.push_back("keys");;
-    info.innerModuleInfos_.try_emplace(PACKAGE_NAME, moduleInfo);
-
-    std::vector<Skill> skills;
-    std::string key = "key";
-    info.extensionSkillInfos_.try_emplace(key, skills);
-    info.RemoveModuleInfo(PACKAGE_NAME);
-
-    auto extensionSkillItem = info.extensionSkillInfos_.find("keys");
-    EXPECT_EQ(extensionSkillItem, info.extensionSkillInfos_.end());
 }
 
 /**

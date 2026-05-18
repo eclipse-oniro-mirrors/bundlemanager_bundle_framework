@@ -190,7 +190,8 @@ void BmsBundleDefaultAppMgrTest::AddInnerBundleInfo(const std::string bundleName
     std::vector skills{ skill };
     std::string key;
     key.append(bundleName).append(".").append(abilityInfo.package).append(".").append(ABILITY_NAME);
-    innerBundleInfo.InsertSkillInfo(key, skills);
+    innerAbilityInfo.skills = skills;
+    innerBundleInfo.InsertAbilitiesInfo(key, innerAbilityInfo);
 
     auto dataMgr = bundleMgrService_->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);

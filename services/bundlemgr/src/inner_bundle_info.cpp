@@ -437,7 +437,6 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->commonEvents_ = info.commonEvents_;
     this->shortcutInfos_ = info.shortcutInfos_;
     this->baseAbilityInfos_ = info.baseAbilityInfos_;
-    this->skillInfos_ = info.skillInfos_;
     this->dynamicSkills_ = info.dynamicSkills_;
     this->innerBundleUserInfos_ = info.innerBundleUserInfos_;
     this->bundlePackInfo_ = std::make_shared<BundlePackInfo>();
@@ -446,7 +445,6 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     }
     this->isNewVersion_ = info.isNewVersion_;
     this->baseExtensionInfos_= info.baseExtensionInfos_;
-    this->extensionSkillInfos_ = info.extensionSkillInfos_;
     this->extendResourceInfos_ = info.extendResourceInfos_;
     this->curDynamicIconModule_ = info.curDynamicIconModule_;
     this->baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
@@ -629,7 +627,6 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BASE_ABILITY_INFO] = baseAbilityInfos_;
     jsonObject[INNER_MODULE_INFO] = innerModuleInfos_;
     jsonObject[INNER_SHARED_MODULE_INFO] = innerSharedModuleInfos_;
-    jsonObject[SKILL_INFOS] = skillInfos_;
     jsonObject[DYNAMIC_SKILLS] = dynamicSkills_;
     jsonObject[USER_ID] = userId_;
     jsonObject[APP_FEATURE] = appFeature_;
@@ -640,7 +637,6 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[INNER_BUNDLE_USER_INFOS] = innerBundleUserInfos_;
     jsonObject[BUNDLE_IS_NEW_VERSION] = isNewVersion_;
     jsonObject[BUNDLE_BASE_EXTENSION_INFOS] = baseExtensionInfos_;
-    jsonObject[BUNDLE_EXTENSION_SKILL_INFOS] = extensionSkillInfos_;
     jsonObject[BUNDLE_EXTEND_RESOURCES] = extendResourceInfos_;
     jsonObject[CUR_DYNAMIC_ICON_MODULE] = curDynamicIconModule_;
     jsonObject[BUNDLE_PACK_INFO] = *bundlePackInfo_;
@@ -1512,6 +1508,21 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             true,
             parseResult,
             ArrayType::NOT_ARRAY);
+        std::map<std::string, std::vector<Skill>> oldSkillInfos;
+        GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
+            jsonObjectEnd,
+            SKILL_INFOS,
+            oldSkillInfos,
+            JsonType::OBJECT,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        for (auto &[key, skills] : oldSkillInfos) {
+            auto it = baseAbilityInfos_.find(key);
+            if (it != baseAbilityInfos_.end() && it->second.skills.empty()) {
+                it->second.skills = std::move(skills);
+            }
+        }
         GetValueIfFindKey<std::map<std::string, InnerModuleInfo>>(jsonObject,
             jsonObjectEnd,
             INNER_MODULE_INFO,
@@ -1526,14 +1537,6 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             innerSharedModuleInfos_,
             JsonType::OBJECT,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
-            jsonObjectEnd,
-            SKILL_INFOS,
-            skillInfos_,
-            JsonType::OBJECT,
-            true,
             parseResult,
             ArrayType::NOT_ARRAY);
         GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
@@ -1619,14 +1622,21 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             false,
             parseResult,
             ArrayType::NOT_ARRAY);
+        std::map<std::string, std::vector<Skill>> oldExtensionSkillInfos;
         GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
             jsonObjectEnd,
             BUNDLE_EXTENSION_SKILL_INFOS,
-            extensionSkillInfos_,
+            oldExtensionSkillInfos,
             JsonType::OBJECT,
             false,
             parseResult,
             ArrayType::NOT_ARRAY);
+        for (auto &[key, skills] : oldExtensionSkillInfos) {
+            auto it = baseExtensionInfos_.find(key);
+            if (it != baseExtensionInfos_.end() && it->second.skills.empty()) {
+                it->second.skills = std::move(skills);
+            }
+        }
         GetValueIfFindKey<std::map<std::string, ExtendResourceInfo>>(jsonObject,
             jsonObjectEnd,
             BUNDLE_EXTEND_RESOURCES,
@@ -2001,10 +2011,14 @@ std::optional<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfo(
 
 std::map<std::string, std::vector<Skill>> InnerBundleInfo::GetInnerSkillInfos() const
 {
-    if (dynamicSkills_.empty()) {
-        return skillInfos_;
+    std::map<std::string, std::vector<Skill>> skillInfos;
+    for (const auto &info : baseAbilityInfos_) {
+        skillInfos.emplace(info.first, info.second.skills);
     }
-    std::map<std::string, std::vector<Skill>> mergedSkills = skillInfos_;
+    if (dynamicSkills_.empty()) {
+        return skillInfos;
+    }
+    std::map<std::string, std::vector<Skill>> mergedSkills = std::move(skillInfos);
     for (const auto &[key, dynamicVector] : dynamicSkills_) {
         auto &mergedVector = mergedSkills[key];
         mergedVector.reserve(mergedVector.size() + dynamicVector.size());
@@ -2129,9 +2143,7 @@ bool InnerBundleInfo::AddModuleInfo(const InnerBundleInfo &newInfo)
     }
     AddInnerModuleInfo(newInfo.innerModuleInfos_);
     AddModuleAbilityInfo(newInfo.baseAbilityInfos_);
-    AddModuleSkillInfo(newInfo.skillInfos_);
     AddModuleExtensionInfos(newInfo.baseExtensionInfos_);
-    AddModuleExtensionSkillInfos(newInfo.extensionSkillInfos_);
     AddModuleFormInfo(newInfo.formInfos_);
     AddModuleShortcutInfo(newInfo.shortcutInfos_);
     AddModuleCommonEvent(newInfo.commonEvents_);
@@ -2406,23 +2418,20 @@ bool InnerBundleInfo::IsHideDesktopIconForEvent() const
 
 bool InnerBundleInfo::IsExistLauncherAbility() const
 {
-    bool isExistLauncherAbility = false;
     OHOS::AAFwk::Want want;
     want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
     want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
     for (const auto& abilityInfoPair : baseAbilityInfos_) {
-        auto skillsPair = skillInfos_.find(abilityInfoPair.first);
-        if (skillsPair == skillInfos_.end()) {
+        if (abilityInfoPair.second.type != AbilityType::PAGE) {
             continue;
         }
-        for (const Skill& skill : skillsPair->second) {
-            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
-                isExistLauncherAbility = true;
-                break;
+        for (const Skill& skill : abilityInfoPair.second.skills) {
+            if (skill.MatchLauncher(want)) {
+                return true;
             }
         }
     }
-    return isExistLauncherAbility;
+    return false;
 }
 
 void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo)
@@ -2519,9 +2528,7 @@ void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)
     RemoveModuleInfo(newInfo.currentPackage_);
     AddInnerModuleInfo(newInfo.innerModuleInfos_);
     AddModuleAbilityInfo(newInfo.baseAbilityInfos_);
-    AddModuleSkillInfo(newInfo.skillInfos_);
     AddModuleExtensionInfos(newInfo.baseExtensionInfos_);
-    AddModuleExtensionSkillInfos(newInfo.extensionSkillInfos_);
     AddModuleFormInfo(newInfo.formInfos_);
     AddModuleShortcutInfo(newInfo.shortcutInfos_);
     AddModuleCommonEvent(newInfo.commonEvents_);
@@ -2764,16 +2771,6 @@ void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
         formInfos_.erase(abilityKey);
     }
 
-    // delete old skillInfos
-    for (auto skillKey : oldModuleInfo.skillKeys) {
-        auto skillItem = skillInfos_.find(skillKey);
-        if (skillItem == skillInfos_.end()) {
-            continue;
-        }
-
-        skillInfos_.erase(skillItem);
-    }
-
     // delete old extensionInfos
     for (auto extensionKey : oldModuleInfo.extensionKeys) {
         auto extensionItem = baseExtensionInfos_.find(extensionKey);
@@ -2782,16 +2779,6 @@ void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
         }
 
         baseExtensionInfos_.erase(extensionItem);
-    }
-
-    // delete old extensionSkillInfos
-    for (auto extensionSkillKey : oldModuleInfo.extensionSkillKeys) {
-        auto extensionSkillItem = extensionSkillInfos_.find(extensionSkillKey);
-        if (extensionSkillItem == extensionSkillInfos_.end()) {
-            continue;
-        }
-
-        extensionSkillInfos_.erase(extensionSkillItem);
     }
 
     // update application debug

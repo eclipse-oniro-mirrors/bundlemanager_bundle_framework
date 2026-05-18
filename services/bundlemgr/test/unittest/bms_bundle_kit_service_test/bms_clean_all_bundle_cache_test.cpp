@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -386,15 +386,15 @@ void BmsCleanAllBundleCacheTest::MockInstallBundle(
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
     moduleInfo.entryAbilityKey = keyName;
     InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
-    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
     skill.entities = {ENTITY};
     std::vector<Skill> skills;
     skills.emplace_back(skill);
-    innerBundleInfo.InsertSkillInfo(keyName, skills);
+    innerAbilityInfo.skills = skills;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
+    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     SaveToDatabase(bundleName, innerBundleInfo, userDataClearable, isSystemApp);
 }
 
@@ -475,14 +475,14 @@ void BmsCleanAllBundleCacheTest::MockInstallBundle(
         InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
         std::string keyName = bundleName + "." + moduleName + "." + abilityName;
         InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
-        innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
-        innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
         Skill skill;
         skill.actions = {ACTION};
         skill.entities = {ENTITY};
         std::vector<Skill> skills;
         skills.emplace_back(skill);
-        innerBundleInfo.InsertSkillInfo(keyName, skills);
+        innerAbilityInfo.skills = skills;
+        innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
+        innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     }
     SaveToDatabase(bundleName, innerBundleInfo, userDataClearable, isSystemApp);
 }

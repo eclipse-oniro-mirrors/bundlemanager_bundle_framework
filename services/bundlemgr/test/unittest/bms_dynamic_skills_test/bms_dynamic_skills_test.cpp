@@ -298,7 +298,9 @@ HWTEST_F(BmsDynamicSkillsTest, SetAbilityFileTypesForSelf_0700, Function | Small
 HWTEST_F(BmsDynamicSkillsTest, SetAbilityFileTypesForSelf_0800, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
-    info.skillInfos_ = {{KEY, BuildSkillsVector(1)}};
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.skills = BuildSkillsVector(1);
+    info.baseAbilityInfos_ = {{KEY, innerAbilityInfo}};
     auto skillInfos = info.GetInnerSkillInfos();
     EXPECT_EQ(skillInfos.size(), 1);
     auto item = skillInfos.begin();

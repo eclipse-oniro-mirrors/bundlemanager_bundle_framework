@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -137,6 +137,7 @@ const uint32_t ABILITY_SIZE_THREE = 3;
 const uint32_t EXTENSION_SIZE_TWO = 2;
 const uint32_t SKILL_SIZE_ZERO = 0;
 const uint32_t SKILL_SIZE_TWO = 2;
+const uint32_t SKILL_SIZE_THREE = 3;
 const uint32_t PERMISSION_SIZE_ZERO = 0;
 const uint32_t PERMISSION_SIZE_TWO = 2;
 const uint32_t META_DATA_SIZE_ONE = 1;
@@ -302,14 +303,14 @@ public:
         InnerBundleInfo &innerBundleInfo) const;
     void MockInstallBundle(
         const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
-        bool userDataClearable = true, bool isSystemApp = false) const;
-    void MockInstallExtension(
-        const std::string &bundleName, const std::string &moduleName, const std::string &extensionName) const;
+        bool userDataClearable = true, bool isSystemApp = false, bool needAddSkill = false) const;
+    void MockInstallExtension(const std::string &bundleName, const std::string &moduleName,
+        const std::string &extensionName, bool needAddSkill = false) const;
     void MockInstallExtensionWithUri(
         const std::string &bundleName, const std::string &moduleName, const std::string &extensionName) const;
     void MockInstallBundle(
         const std::string &bundleName, const std::vector<std::string> &moduleNameList, const std::string &abilityName,
-        bool userDataClearable = true, bool isSystemApp = false) const;
+        bool userDataClearable = true, bool isSystemApp = false, bool needAddSkill = false) const;
     void MockUninstallBundle(const std::string &bundleName) const;
     AbilityInfo MockAbilityInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
@@ -714,43 +715,43 @@ void BmsBundleKitServiceTest::AddInnerBundleInfoByTest(const std::string &bundle
 
 void BmsBundleKitServiceTest::MockInstallBundle(
     const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
-    bool userDataClearable, bool isSystemApp) const
+    bool userDataClearable, bool isSystemApp, bool needAddSkill) const
 {
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
     moduleInfo.entryAbilityKey = keyName;
     InnerAbilityInfo innerAbilityInfo = MockInnerAbilityInfo(bundleName, moduleName, abilityName);
+    if (needAddSkill) {
+        Skill skill;
+        skill.actions = {ACTION};
+        skill.entities = {ENTITY};
+        innerAbilityInfo.skills.emplace_back(skill);
+    }
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    Skill skill;
-    skill.actions = {ACTION};
-    skill.entities = {ENTITY};
-    std::vector<Skill> skills;
-    skills.emplace_back(skill);
-    innerBundleInfo.InsertSkillInfo(keyName, skills);
     SaveToDatabase(bundleName, innerBundleInfo, userDataClearable, isSystemApp);
 }
 
 void BmsBundleKitServiceTest::MockInstallExtension(const std::string &bundleName,
-    const std::string &moduleName, const std::string &extensionName) const
+    const std::string &moduleName, const std::string &extensionName, bool needAddSkill) const
 {
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + extensionName;
     std::string keyName02 = bundleName + "." + moduleName + "." + extensionName + "02";
     InnerExtensionInfo innerExtensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
     InnerExtensionInfo innerExtensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
+    if (needAddSkill) {
+        Skill skill;
+        skill.actions = {ACTION};
+        skill.entities = {ENTITY};
+        innerExtensionInfo.skills.emplace_back(skill);
+        innerExtensionInfo02.skills.emplace_back(skill);
+    }
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertExtensionInfo(keyName, innerExtensionInfo);
     innerBundleInfo.InsertExtensionInfo(keyName02, innerExtensionInfo02);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    Skill skill;
-    skill.actions = {ACTION};
-    skill.entities = {ENTITY};
-    std::vector<Skill> skills;
-    skills.emplace_back(skill);
-    innerBundleInfo.InsertExtensionSkillInfo(keyName, skills);
-    innerBundleInfo.InsertExtensionSkillInfo(keyName02, skills);
     SaveToDatabase(bundleName, innerBundleInfo, false, false);
 }
 
@@ -766,11 +767,6 @@ void BmsBundleKitServiceTest::MockInstallExtensionWithUri(const std::string &bun
     innerBundleInfo.InsertExtensionInfo(keyName, innerExtensionInfo);
     innerBundleInfo.InsertExtensionInfo(keyName02, innerExtensionInfo02);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    Skill skill = MockExtensionSkillInfo();
-    std::vector<Skill> skills;
-    skills.emplace_back(skill);
-    innerBundleInfo.InsertExtensionSkillInfo(keyName, skills);
-    innerBundleInfo.InsertExtensionSkillInfo(keyName02, skills);
     SaveToDatabase(bundleName, innerBundleInfo, false, false);
 }
 
@@ -841,7 +837,7 @@ void BmsBundleKitServiceTest::SaveToDatabase(const std::string &bundleName,
 
 void BmsBundleKitServiceTest::MockInstallBundle(
     const std::string &bundleName, const std::vector<std::string> &moduleNameList, const std::string &abilityName,
-    bool userDataClearable, bool isSystemApp) const
+    bool userDataClearable, bool isSystemApp, bool needAddSkill) const
 {
     if (moduleNameList.empty()) {
         return;
@@ -851,14 +847,14 @@ void BmsBundleKitServiceTest::MockInstallBundle(
         InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
         std::string keyName = bundleName + "." + moduleName + "." + abilityName;
         InnerAbilityInfo innerAbilityInfo = MockInnerAbilityInfo(bundleName, moduleName, abilityName);
+        if (needAddSkill) {
+            Skill skill;
+            skill.actions = {ACTION};
+            skill.entities = {ENTITY};
+            innerAbilityInfo.skills.emplace_back(skill);
+        }
         innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
         innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-        Skill skill;
-        skill.actions = {ACTION};
-        skill.entities = {ENTITY};
-        std::vector<Skill> skills;
-        skills.emplace_back(skill);
-        innerBundleInfo.InsertSkillInfo(keyName, skills);
     }
     SaveToDatabase(bundleName, innerBundleInfo, userDataClearable, isSystemApp);
 }
@@ -2819,7 +2815,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0600, Function | SmallTest | 
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfo_0700, Function | SmallTest | Level1)
 {
     std::vector<std::string> moduleList {MODULE_NAME_TEST, MODULE_NAME_TEST_1, MODULE_NAME_TEST_2};
-    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST, true, false, true);
     Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -3028,7 +3024,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0600, Function | SmallTest |
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0700, Function | SmallTest | Level1)
 {
     std::vector<std::string> moduleList {MODULE_NAME_TEST, MODULE_NAME_TEST_1, MODULE_NAME_TEST_2};
-    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST, true, false, true);
     Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -3050,7 +3046,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0700, Function | SmallTest |
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0800, Function | SmallTest | Level1)
 {
     std::vector<std::string> moduleList {MODULE_NAME_TEST, MODULE_NAME_TEST_1, MODULE_NAME_TEST_2};
-    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST, true, false, true);
     Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -3104,30 +3100,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_1000, Function | SmallTest |
     std::vector<AbilityInfo> result;
 
     uint32_t flags = GET_ABILITY_INFO_WITH_SKILL;
-    bool testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, 0, result);
-    EXPECT_EQ(testRet, true);
-    EXPECT_EQ(result.size(), MODULE_NAMES_SIZE_ONE);
-    EXPECT_EQ(result[0].skills.size(), SKILL_SIZE_TWO);
-    CheckSkillInfos(result[0].skills);
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: QueryAbilityInfos_1100
- * @tc.name: test can get the ability info with skill flag by implicit query
- * @tc.desc: 1.system run normally
- *           2.get ability info successfully
- */
-HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_1100, Function | SmallTest | Level1)
-{
-    std::vector<std::string> moduleList {MODULE_NAME_TEST, MODULE_NAME_TEST_1, MODULE_NAME_TEST_2};
-    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST);
-    Want want;
-    want.SetAction("action.system.home");
-    want.AddEntity("entity.system.home");
-    want.SetElementName("", BUNDLE_NAME_TEST, "", MODULE_NAME_TEST_1);
-    std::vector<AbilityInfo> result;
-    int32_t flags = GET_ABILITY_INFO_WITH_SKILL;
     bool testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, 0, result);
     EXPECT_EQ(testRet, true);
     EXPECT_EQ(result.size(), MODULE_NAMES_SIZE_ONE);
@@ -3193,7 +3165,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_1200, Function | SmallTest |
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_1300, Function | SmallTest | Level1)
 {
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true, false, true);
     AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX1);
     AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX2);
     AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX3);
@@ -3281,13 +3253,11 @@ HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0300, Function | SmallT
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
     InnerAbilityInfo innerAbilityInfo = MockInnerAbilityInfo(bundleName, moduleName, abilityName);
+    Skill skill;
+    innerAbilityInfo.skills.emplace_back(skill);
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    Skill skill;
-    std::vector<Skill> skills;
-    skills.emplace_back(skill);
-    innerBundleInfo.InsertSkillInfo(keyName, skills);
     SaveToDatabase(bundleName, innerBundleInfo, true, false);
 
     Want want;
@@ -3395,13 +3365,11 @@ HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundleSync_0300, Function | Sm
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
     InnerAbilityInfo innerAbilityInfo = MockInnerAbilityInfo(bundleName, moduleName, abilityName);
+    Skill skill;
+    innerAbilityInfo.skills.emplace_back(skill);
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    Skill skill;
-    std::vector<Skill> skills;
-    skills.emplace_back(skill);
-    innerBundleInfo.InsertSkillInfo(keyName, skills);
     SaveToDatabase(bundleName, innerBundleInfo, true, false);
 
     Want want;
@@ -3461,7 +3429,9 @@ HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0100, Function | 
     skill.actions = {Constants::ACTION_HOME};
     skill.entities = {Constants::ENTITY_HOME};
     std::vector<Skill> skills = {skill};
-    innerBundleInfo.InsertSkillInfo(keyName, skills);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.skills = skills;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
 
     ApplicationInfo appInfo;
     appInfo.bundleName = BUNDLE_NAME_TEST;
@@ -3494,7 +3464,9 @@ HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0200, Function | 
     skill.actions = {Constants::WANT_ACTION_HOME};
     skill.entities = {Constants::ENTITY_HOME};
     std::vector<Skill> skills = {skill};
-    innerBundleInfo.InsertSkillInfo(keyName, skills);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.skills = skills;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
 
     ApplicationInfo appInfo;
     appInfo.bundleName = BUNDLE_NAME_TEST;
@@ -3527,7 +3499,9 @@ HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0300, Function | 
     skill.actions = {Constants::ACTION_HOME};
     skill.entities = {Constants::ENTITY_HOME};
     std::vector<Skill> skills = {skill};
-    innerBundleInfo.InsertSkillInfo(keyName, skills);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.skills = skills;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
 
     ApplicationInfo appInfo;
     appInfo.bundleName = BUNDLE_NAME_TEST;
@@ -3559,7 +3533,9 @@ HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0400, Function | 
     skill.actions = {Constants::ACTION_HOME};
     skill.entities = {Constants::ENTITY_HOME};
     std::vector<Skill> skills = {skill};
-    innerBundleInfo.InsertSkillInfo("different.key", skills);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.skills = skills;
+    innerBundleInfo.InsertAbilitiesInfo("different.key", innerAbilityInfo);
 
     ApplicationInfo appInfo;
     appInfo.bundleName = BUNDLE_NAME_TEST;
@@ -3592,7 +3568,9 @@ HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0500, Function | 
     skill.actions = {Constants::ACTION_HOME};
     skill.entities = {"entity.other"};
     std::vector<Skill> skills = {skill};
-    innerBundleInfo.InsertSkillInfo(keyName, skills);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.skills = skills;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
 
     ApplicationInfo appInfo;
     appInfo.bundleName = BUNDLE_NAME_TEST;
@@ -3625,7 +3603,9 @@ HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0600, Function | 
     skill.actions = {"action.other"};
     skill.entities = {Constants::ENTITY_HOME};
     std::vector<Skill> skills = {skill};
-    innerBundleInfo.InsertSkillInfo(keyName, skills);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.skills = skills;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
 
     ApplicationInfo appInfo;
     appInfo.bundleName = BUNDLE_NAME_TEST;
@@ -3661,7 +3641,9 @@ HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0700, Function | 
     skill2.actions = {Constants::WANT_ACTION_HOME};
     skill2.entities = {Constants::ENTITY_HOME};
     std::vector<Skill> skills = {skill1, skill2};
-    innerBundleInfo.InsertSkillInfo(keyName, skills);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.skills = skills;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
 
     ApplicationInfo appInfo;
     appInfo.bundleName = BUNDLE_NAME_TEST;
@@ -3693,7 +3675,9 @@ HWTEST_F(BmsBundleKitServiceTest, SetLaunchWantActionAndEntity_0800, Function | 
     Skill skill;
     // empty actions and entities
     std::vector<Skill> skills = {skill};
-    innerBundleInfo.InsertSkillInfo(keyName, skills);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.skills = skills;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
 
     ApplicationInfo appInfo;
     appInfo.bundleName = BUNDLE_NAME_TEST;
@@ -7995,7 +7979,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0600, Function | SmallTest
     bool stateChanged = false;
     APP_LOGI("begin of QueryAbilityInfosV9_0600");
     std::vector<std::string> moduleList {MODULE_NAME_TEST, MODULE_NAME_TEST_1, MODULE_NAME_TEST_2};
-    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST, true, false, true);
     Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -8385,7 +8369,7 @@ HWTEST_F(BmsBundleKitServiceTest, BatchQueryAbilityInfos_0600, Function | SmallT
     bool stateChanged = false;
     APP_LOGI("begin of BatchQueryAbilityInfos_0600");
     std::vector<std::string> moduleList {MODULE_NAME_TEST, MODULE_NAME_TEST_1, MODULE_NAME_TEST_2};
-    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST, true, false, true);
     Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -8438,7 +8422,7 @@ HWTEST_F(BmsBundleKitServiceTest, BatchQueryAbilityInfos_0800, Function | SmallT
 {
     APP_LOGI("begin of BatchQueryAbilityInfos_0800");
     std::vector<std::string> moduleList {MODULE_NAME_TEST, MODULE_NAME_TEST_1, MODULE_NAME_TEST_2};
-    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_NAME_TEST, moduleList, ABILITY_NAME_TEST, true, false, true);
     Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -8450,7 +8434,7 @@ HWTEST_F(BmsBundleKitServiceTest, BatchQueryAbilityInfos_0800, Function | SmallT
     ErrCode ret = GetBundleDataMgr()->BatchQueryAbilityInfos(wants, flags, 0, abilityInfos);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(abilityInfos.size(), ABILITY_SIZE_THREE);
-    EXPECT_EQ(abilityInfos[0].skills.size(), SKILL_SIZE_TWO);
+    EXPECT_EQ(abilityInfos[0].skills.size(), SKILL_SIZE_THREE);
     abilityInfos.clear();
     flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
     ret = GetBundleDataMgr()->BatchQueryAbilityInfos(wants, flags, 0, abilityInfos);
@@ -8606,7 +8590,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0600, Function | 
     APP_LOGI("begin of QueryExtensionAbilityInfosV9_0600");
     std::string moduleName = "m1";
     std::string extension = "test-extension";
-    MockInstallExtension(BUNDLE_NAME_TEST, moduleName, extension);
+    MockInstallExtension(BUNDLE_NAME_TEST, moduleName, extension, true);
     Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -8667,7 +8651,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_1000, Function | 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string moduleName = "m1";
     std::string extension = "test-extension";
-    MockInstallExtension(BUNDLE_NAME_TEST, moduleName, extension);
+    MockInstallExtension(BUNDLE_NAME_TEST, moduleName, extension, true);
     Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -8692,7 +8676,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_1100, Function | 
     APP_LOGI("begin of QueryExtensionAbilityInfosV9_1100");
     std::string moduleName = "m1";
     std::string extension = "test-extension";
-    MockInstallExtension(BUNDLE_NAME_TEST, moduleName, extension);
+    MockInstallExtension(BUNDLE_NAME_TEST, moduleName, extension, true);
     Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -8704,7 +8688,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_1100, Function | 
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(extensionInfos.size(), EXTENSION_SIZE_TWO);
     for (int i = 0; i < extensionInfos.size(); i++) {
-        EXPECT_EQ(extensionInfos[i].skills.size(), SKILL_SIZE_TWO);
+        EXPECT_EQ(extensionInfos[i].skills.size(), SKILL_SIZE_THREE);
     }
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("QueryExtensionAbilityInfosV9_1100 finish");
