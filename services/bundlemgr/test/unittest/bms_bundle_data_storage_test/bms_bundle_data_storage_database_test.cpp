@@ -1596,8 +1596,6 @@ protected:
             "bundleStatus": 1,
             "commonEvents": {
             },
-            "extensionSkillInfos_": {
-            },
             "innerSharedModuleInfos": {
             },
             "formInfos": {
@@ -2921,7 +2919,8 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0700, Function | Smal
     innerModuleInfo.extensionKeys.emplace_back(TEST_KEY1);
     innerModuleInfo.extensionSkillKeys.emplace_back(TEST_KEY2);
     info.InsertExtensionInfo(TEST_KEY1, innerExtensionInfo);
-    info.InsertExtensionSkillInfo(TEST_KEY2, skill);
+    innerExtensionInfo.skills = skill;
+    info.InsertExtensionInfo(TEST_KEY2, innerExtensionInfo);
     info.InsertInnerModuleInfo(WRONG_MODULEPACKAGE, innerModuleInfo);
     info.InsertShortcutInfos(WRONG, shortcutInfo1);
     info.InsertShortcutInfos(WRONG_MODULEPACKAGE, shortcutInfo2);

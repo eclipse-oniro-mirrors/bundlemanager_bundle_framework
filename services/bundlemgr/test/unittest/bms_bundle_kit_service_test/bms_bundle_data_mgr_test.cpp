@@ -616,15 +616,15 @@ void BmsBundleDataMgrTest::MockInstallBundle(
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
     moduleInfo.entryAbilityKey = keyName;
     InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
-    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
     skill.entities = {ENTITY};
     std::vector<Skill> skills;
     skills.emplace_back(skill);
-    innerBundleInfo.InsertSkillInfo(keyName, skills);
+    innerAbilityInfo.skills = skills;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
+    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     SaveToDatabase(bundleName, innerBundleInfo, userDataClearable, isSystemApp);
 }
 
@@ -634,19 +634,19 @@ void BmsBundleDataMgrTest::MockInstallExtension(const std::string &bundleName,
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + extensionName;
     std::string keyName02 = bundleName + "." + moduleName + "." + extensionName + "02";
-    InnerExtensionInfo innerExtensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
-    InnerExtensionInfo innerExtensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertExtensionInfo(keyName, innerExtensionInfo);
-    innerBundleInfo.InsertExtensionInfo(keyName02, innerExtensionInfo02);
-    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
     skill.entities = {ENTITY};
     std::vector<Skill> skills;
     skills.emplace_back(skill);
-    innerBundleInfo.InsertExtensionSkillInfo(keyName, skills);
-    innerBundleInfo.InsertExtensionSkillInfo(keyName02, skills);
+    InnerExtensionInfo innerExtensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
+    innerExtensionInfo.skills = skills;
+    InnerExtensionInfo innerExtensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
+    innerExtensionInfo02.skills = skills;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertExtensionInfo(keyName, innerExtensionInfo);
+    innerBundleInfo.InsertExtensionInfo(keyName02, innerExtensionInfo02);
+    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     SaveToDatabase(bundleName, innerBundleInfo, false, false);
 }
 
@@ -727,14 +727,14 @@ void BmsBundleDataMgrTest::MockInstallBundle(
         InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
         std::string keyName = bundleName + "." + moduleName + "." + abilityName;
         InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
-        innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
-        innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
         Skill skill;
         skill.actions = {ACTION};
         skill.entities = {ENTITY};
         std::vector<Skill> skills;
         skills.emplace_back(skill);
-        innerBundleInfo.InsertSkillInfo(keyName, skills);
+        innerAbilityInfo.skills = skills;
+        innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
+        innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     }
     SaveToDatabase(bundleName, innerBundleInfo, userDataClearable, isSystemApp);
 }

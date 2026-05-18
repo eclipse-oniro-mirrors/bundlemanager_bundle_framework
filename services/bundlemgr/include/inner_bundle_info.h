@@ -336,23 +336,6 @@ public:
         }
     }
     /**
-     * @brief Add skill infos to old InnerBundleInfo object.
-     * @param skillInfos Indicates the Skill object to be add.
-     * @return
-     */
-    void AddModuleSkillInfo(const std::map<std::string, std::vector<Skill>> &skillInfos)
-    {
-        for (const auto &skills : skillInfos) {
-            skillInfos_.try_emplace(skills.first, skills.second);
-        }
-    }
-    void AddModuleExtensionSkillInfos(const std::map<std::string, std::vector<Skill>> &extensionSkillInfos)
-    {
-        for (const auto &skills : extensionSkillInfos) {
-            extensionSkillInfos_.try_emplace(skills.first, skills.second);
-        }
-    }
-    /**
      * @brief Add form infos to old InnerBundleInfo object.
      * @param formInfos Indicates the Forms object to be add.
      * @return
@@ -608,24 +591,6 @@ public:
     void InsertExtensionInfo(const std::string &key, const InnerExtensionInfo &extensionInfo)
     {
         baseExtensionInfos_.emplace(key, extensionInfo);
-    }
-    /**
-     * @brief Insert ability skillInfos.
-     * @param key bundleName.moduleName.abilityName
-     * @param skills ability skills.
-     */
-    void InsertSkillInfo(const std::string &key, const std::vector<Skill> &skills)
-    {
-        skillInfos_.emplace(key, skills);
-    }
-    /**
-     * @brief Insert extension skillInfos.
-     * @param key bundleName.moduleName.extensionName
-     * @param skills extension skills.
-     */
-    void InsertExtensionSkillInfo(const std::string &key, const std::vector<Skill> &skills)
-    {
-        extensionSkillInfos_.emplace(key, skills);
     }
     /**
      * @brief Find AbilityInfo object by Uri.
@@ -1407,9 +1372,13 @@ public:
     /**
      * @brief Obtains all extensionSkillInfos.
      */
-    const std::map<std::string, std::vector<Skill>> &GetExtensionSkillInfos() const
+    const std::map<std::string, std::vector<Skill>> GetExtensionSkillInfos() const
     {
-        return  extensionSkillInfos_;
+        std::map<std::string, std::vector<Skill>> extensionSkillInfos;
+        for (const auto &extensionInfo : baseExtensionInfos_) {
+            extensionSkillInfos.emplace(extensionInfo.first, extensionInfo.second.skills);
+        }
+        return extensionSkillInfos;
     }
     /**
      * @brief Checks if the bundle contains inputMethod type extension.
@@ -2595,12 +2564,10 @@ private:
     std::map<std::string, ShortcutInfo> shortcutInfos_;
 
     std::map<std::string, InnerAbilityInfo> baseAbilityInfos_;
-    std::map<std::string, std::vector<Skill>> skillInfos_;
     std::map<std::string, std::vector<Skill>> dynamicSkills_;
 
     std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos_;
     std::map<std::string, InnerExtensionInfo> baseExtensionInfos_;
-    std::map<std::string, std::vector<Skill>> extensionSkillInfos_;
 
     // shared module info
     std::map<std::string, std::vector<InnerModuleInfo>> innerSharedModuleInfos_ ;

@@ -2709,20 +2709,6 @@ bool ToAbilityInfo(
     return true;
 }
 
-void ToAbilitySkills(const std::vector<Skill> &skills, InnerAbilityInfo &abilityInfo)
-{
-    for (const Skill &skill : skills) {
-        abilityInfo.skills.push_back(skill);
-    }
-}
-
-void ToExtensionAbilitySkills(const std::vector<Skill> &skills, InnerExtensionInfo &extensionInfo)
-{
-    for (const Skill &skill : skills) {
-        extensionInfo.skills.push_back(skill);
-    }
-}
-
 void ToExtensionInfo(
     const Profile::ModuleJson &moduleJson,
     const Profile::Extension &extension,
@@ -2999,8 +2985,7 @@ bool ToInnerBundleInfo(
             .append(moduleJson.module.name).append(".").append(abilityInfo.name);
         innerModuleInfo.abilityKeys.emplace_back(key);
         innerModuleInfo.skillKeys.emplace_back(key);
-        innerBundleInfo.InsertSkillInfo(key, ability.skills);
-        ToAbilitySkills(ability.skills, abilityInfo);
+        abilityInfo.skills = ability.skills;
         if (abilityInfo.startWindow != Constants::EMPTY_STRING) {
             ToAbilityStartWindow(bundleExtractor, abilityInfo.startWindow, abilityInfo.startWindowResource);
         }
@@ -3077,8 +3062,7 @@ bool ToInnerBundleInfo(
             .append(moduleJson.module.name).append(".").append(extension.name);
         innerModuleInfo.extensionKeys.emplace_back(key);
         innerModuleInfo.extensionSkillKeys.emplace_back(key);
-        innerBundleInfo.InsertExtensionSkillInfo(key, extension.skills);
-        ToExtensionAbilitySkills(extension.skills, extensionInfo);
+        extensionInfo.skills = extension.skills;
         innerBundleInfo.InsertExtensionInfo(key, extensionInfo);
     }
     if (!findEntry && !transformParam.isPreInstallApp) {

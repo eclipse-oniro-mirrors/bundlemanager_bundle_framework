@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2428,7 +2428,7 @@ bool ToInnerBundleInfo(
             .append(configJson.module.package).append(".").append(abilityInfo.name);
         innerModuleInfo.abilityKeys.emplace_back(keyName);
         innerModuleInfo.skillKeys.emplace_back(keyName);
-        innerBundleInfo.InsertSkillInfo(keyName, ability.skills);
+        abilityInfo.skills = ability.skills;
         std::vector<FormInfo> formInfos;
         for (const auto &form : ability.formses) {
             FormInfo formInfo;
