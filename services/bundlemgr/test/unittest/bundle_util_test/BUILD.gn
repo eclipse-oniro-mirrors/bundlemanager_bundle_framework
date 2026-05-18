@@ -50,6 +50,7 @@ ohos_unittest("BundleUtilTest") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "libxml2:libxml2",
+    "zlib:shared_libz",
   ]
   defines = []
   if (configpolicy_enable) {
