@@ -188,7 +188,7 @@ static bool ParseAniWantList(ani_env* env, ani_object aniWants, std::vector<OHOS
 static ani_object GetBundleInfoForSelfNative(ani_env* env, ani_int aniBundleFlags, ani_boolean aniIsSync)
 {
     APP_LOGD("ani GetBundleInfoForSelf called");
-    auto startTime = std::chrono::duration_cast<std::chrono::microseconds>(
+    auto startTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count();
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     auto iBundleMgr = CommonFunc::GetBundleMgr();
@@ -205,7 +205,7 @@ static ani_object GetBundleInfoForSelfNative(ani_env* env, ani_int aniBundleFlag
         std::shared_lock<std::shared_mutex> lock(g_aniCacheMutex);
         auto item = g_aniCache.find(query);
         if (item != g_aniCache.end()) {
-            auto endTime = std::chrono::duration_cast<std::chrono::microseconds>(
+            auto endTime = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now().time_since_epoch()).count();
             HistogramUtil::ReportHistogramTimes(
                 isSync ? HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF_SYNC : HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF,
@@ -229,7 +229,7 @@ static ani_object GetBundleInfoForSelfNative(ani_env* env, ani_int aniBundleFlag
         CheckToCache(env, bundleInfo.uid, uid, query, objectBundleInfo);
     }
 
-    auto endTime = std::chrono::duration_cast<std::chrono::microseconds>(
+    auto endTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count();
     HistogramUtil::ReportHistogramTimes(
         isSync ? HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF_SYNC : HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF,
@@ -1312,7 +1312,7 @@ static void CleanBundleCacheFilesNative(ani_env* env, ani_string aniBundleName, 
 static ani_long GetAllBundleCacheSizeNative(ani_env* env)
 {
     APP_LOGD("ani GetAllBundleCacheSizeNative called");
-    auto startTime = std::chrono::duration_cast<std::chrono::microseconds>(
+    auto startTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count();
     sptr<ProcessCacheCallbackHost> cacheCallback = new (std::nothrow) ProcessCacheCallbackHost();
     if (cacheCallback == nullptr) {
@@ -1345,7 +1345,7 @@ static ani_long GetAllBundleCacheSizeNative(ani_env* env)
         cacheSize = uint64_t(INT64_MAX);
     }
 
-    auto endTime = std::chrono::duration_cast<std::chrono::microseconds>(
+    auto endTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count();
     HistogramUtil::ReportHistogramTimes("AbilityKit.bundleManager.getAllBundleCacheSize",
         static_cast<int32_t>(endTime - startTime));

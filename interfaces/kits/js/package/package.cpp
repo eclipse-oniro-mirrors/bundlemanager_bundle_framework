@@ -217,7 +217,7 @@ static void HasInstalledAsyncComplete(napi_env env, napi_status status, void *da
             napi_call_function(env, nullptr, callback, ARGS_SIZE_TWO, result, &placeHolder);
             errCode = INVALID_PARAM;
             HistogramUtil::ReportHistogramBoolean(
-                "AbilityKit.package.CheckPackageHasInstalledOptions.fail", true);
+                "AbilityKit.CheckPackageHasInstalledOptions.fail", true);
         }
     } else {
         errCode = 0;
@@ -228,14 +228,14 @@ static void HasInstalledAsyncComplete(napi_env env, napi_status status, void *da
             NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->successRef, &callback));
             napi_call_function(env, nullptr, callback, ARGS_SIZE_ONE, result, &placeHolder);
             HistogramUtil::ReportHistogramBoolean(
-                "AbilityKit.package.CheckPackageHasInstalledOptions.success", true);
+                "AbilityKit.CheckPackageHasInstalledOptions.success", true);
         }
     }
     if (asyncCallbackInfo->completeRef) {
         NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->completeRef, &callback));
         napi_call_function(env, nullptr, callback, 0, nullptr, &placeHolder);
         HistogramUtil::ReportHistogramBoolean(
-            "AbilityKit.package.CheckPackageHasInstalledOptions.complete", true);
+            "AbilityKit.CheckPackageHasInstalledOptions.complete", true);
     }
     HistogramUtil::ReportHistogramEnumeration("AbilityKit.Package.hasInstalled", errCode, HISTOGRAM_BOUNDARY);
     APP_LOGD("NAPI_HasInstalled, main event thread complete end");
