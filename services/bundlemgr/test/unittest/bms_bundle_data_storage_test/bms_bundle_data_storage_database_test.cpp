@@ -964,6 +964,16 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
     "uninstallState":true
 })"_json;
 
+const nlohmann::json EXTENSION_SKILL_JSON = R"([
+    {
+        "actions": ["ext.action.legacy"],
+        "entities": [],
+        "uris": [],
+        "permissions": [],
+        "domainVerify": false
+    }
+])"_json;
+
 InnerBundleInfo CreateBundleInfoForBundleInfoV9Test(const std::string &bundleName,
     const std::string &modulePackage, const std::string &moduleName, int32_t userId, int32_t uid)
 {
@@ -7006,5 +7016,364 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0006, Function | SmallTe
     EXPECT_EQ(moduleInfo.skillProfiles[1].name, "skill2");
     EXPECT_EQ(moduleInfo.skillProfiles[1].abilityName, "Ability2");
     EXPECT_EQ(moduleInfo.skillProfiles[1].permissions.size(), 2);
+}
+
+/**
+ * @tc.number: SkillsDedup_FromJson_0100
+ * @tc.name: FromJson_LegacySkillInfos_MergedIntoAbility
+ * @tc.desc: 1. Old persisted JSON contains top-level "skillInfos" key (FA model legacy format)
+ *              and the corresponding baseAbilityInfos[key].skills is empty.
+ *           2. FromJson should merge legacy skillInfos into baseAbilityInfos_[key].skills.
+ *           3. Covers FA-model OTA upgrade self-heal path.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillsDedup_FromJson_0100, Function | SmallTest | Level1)
+{
+    nlohmann::json testJson = innerBundleInfoJson_;
+    const std::string abilityKey =
+        "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility";
+
+    // Simulate FA-model legacy data: ability.skills is empty array, skills live in top-level map.
+    testJson["baseAbilityInfos"][abilityKey]["skills"] = nlohmann::json::array();
+    testJson["skillInfos"][abilityKey] = R"([
+        {
+            "actions": ["test.action.legacy"],
+            "entities": ["test.entity.legacy"],
+            "uris": [],
+            "permissions": [],
+            "domainVerify": false
+        }
+    ])"_json;
+
+    InnerBundleInfo info;
+    EXPECT_EQ(info.FromJson(testJson), OHOS::ERR_OK);
+
+    auto it = info.baseAbilityInfos_.find(abilityKey);
+    ASSERT_NE(it, info.baseAbilityInfos_.end());
+    ASSERT_EQ(it->second.skills.size(), 1U);
+    ASSERT_FALSE(it->second.skills[0].actions.empty());
+    EXPECT_EQ(it->second.skills[0].actions[0], "test.action.legacy");
+    ASSERT_FALSE(it->second.skills[0].entities.empty());
+    EXPECT_EQ(it->second.skills[0].entities[0], "test.entity.legacy");
+}
+
+/**
+ * @tc.number: SkillsDedup_FromJson_0200
+ * @tc.name: FromJson_LegacyExtensionSkillInfos_MergedIntoExtension
+ * @tc.desc: 1. Old persisted JSON contains top-level "extensionSkillInfos" key with data and
+ *              the corresponding baseExtensionInfos[key].skills is empty.
+ *           2. FromJson should merge legacy data into baseExtensionInfos_[key].skills.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillsDedup_FromJson_0200, Function | SmallTest | Level1)
+{
+    nlohmann::json testJson = innerBundleInfoJson_;
+    const std::string extKey = "com.ohos.test.entry.ext1";
+
+    // Inject a minimal extension into baseExtensionInfos with empty skills.
+    testJson["baseExtensionInfos"][extKey] = nlohmann::json::parse(R"({
+        "bundleName": "com.ohos.test",
+        "moduleName": "entry",
+        "name": "ext1",
+        "type": 0,
+        "extensionTypeName": "form",
+        "srcEntrance": "",
+        "icon": "",
+        "iconId": 0,
+        "label": "",
+        "labelId": 0,
+        "description": "",
+        "descriptionId": 0,
+        "priority": 0,
+        "permissions": [],
+        "appIdentifierAllowList": [],
+        "appIdAllowList": [],
+        "metadata": [],
+        "resourcePath": "",
+        "hapPath": "",
+        "enabled": true,
+        "readPermission": "",
+        "writePermission": "",
+        "process": "",
+        "compileMode": 0,
+        "uid": -1,
+        "appIndex": 0,
+        "uri": "",
+        "needCreateSandbox": false,
+        "dataGroupIds": [],
+        "validDataGroupIds": [],
+        "customProcess": "",
+        "isolationProcess": false,
+        "extensionProcessMode": 0,
+        "skills": [],
+        "skillUri": []
+    })");
+    testJson["extensionSkillInfos"][extKey] = EXTENSION_SKILL_JSON;
+
+    InnerBundleInfo info;
+    EXPECT_EQ(info.FromJson(testJson), OHOS::ERR_OK);
+
+    auto it = info.baseExtensionInfos_.find(extKey);
+    ASSERT_NE(it, info.baseExtensionInfos_.end());
+    ASSERT_EQ(it->second.skills.size(), 1U);
+    ASSERT_FALSE(it->second.skills[0].actions.empty());
+    EXPECT_EQ(it->second.skills[0].actions[0], "ext.action.legacy");
+}
+
+/**
+ * @tc.number: SkillsDedup_FromJson_0300
+ * @tc.name: FromJson_BothFormats_AbilitySkillsWins
+ * @tc.desc: 1. Stage-model legacy data has skills BOTH inside ability and in top-level map
+ *              (possibly with different content if data was ever corrupted).
+ *           2. FromJson must NOT overwrite already-populated ability.skills with legacy data.
+ *           3. Guards against Stage-model OTA paths producing duplicate / wrong skills.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillsDedup_FromJson_0300, Function | SmallTest | Level1)
+{
+    nlohmann::json testJson = innerBundleInfoJson_;
+    const std::string abilityKey =
+        "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility";
+
+    testJson["baseAbilityInfos"][abilityKey]["skills"] = R"([
+        {
+            "actions": ["stage.action"],
+            "entities": [],
+            "uris": [],
+            "permissions": [],
+            "domainVerify": false
+        }
+    ])"_json;
+    // Different content in legacy map; must be discarded.
+    testJson["skillInfos"][abilityKey] = R"([
+        {
+            "actions": ["legacy.action.should.be.discarded"],
+            "entities": [],
+            "uris": [],
+            "permissions": [],
+            "domainVerify": false
+        }
+    ])"_json;
+
+    InnerBundleInfo info;
+    EXPECT_EQ(info.FromJson(testJson), OHOS::ERR_OK);
+
+    auto it = info.baseAbilityInfos_.find(abilityKey);
+    ASSERT_NE(it, info.baseAbilityInfos_.end());
+    ASSERT_EQ(it->second.skills.size(), 1U);
+    ASSERT_FALSE(it->second.skills[0].actions.empty());
+    EXPECT_EQ(it->second.skills[0].actions[0], "stage.action");
+}
+
+/**
+ * @tc.number: SkillsDedup_FromJson_0400
+ * @tc.name: FromJson_OrphanedLegacyKey_NoCrash
+ * @tc.desc: 1. Legacy "skillInfos" contains a key that does NOT exist in baseAbilityInfos_
+ *              (dirty data scenario).
+ *           2. FromJson must skip silently without crash and without inserting orphan abilities.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillsDedup_FromJson_0400, Function | SmallTest | Level1)
+{
+    nlohmann::json testJson = innerBundleInfoJson_;
+
+    testJson["skillInfos"]["nonexistent.bundle.module.ability"] = R"([
+        {"actions": ["orphan.action"], "entities": [], "uris": [], "permissions": [], "domainVerify": false}
+    ])"_json;
+
+    InnerBundleInfo info;
+    EXPECT_EQ(info.FromJson(testJson), OHOS::ERR_OK);
+    EXPECT_EQ(info.baseAbilityInfos_.count("nonexistent.bundle.module.ability"), 0U);
+}
+
+/**
+ * @tc.number: SkillsDedup_FromJson_0500
+ * @tc.name: Test FromJson handles missing innerBundleUserInfos for old versions
+ * @tc.desc: Test BuildDefaultUserInfo is called when innerBundleUserInfos is missing (old database compatibility)
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillsDedup_FromJson_0500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    nlohmann::json testJson = innerBundleInfoJson_;
+    testJson.erase("innerBundleUserInfos");
+    int32_t originalParseResult = OHOS::ERR_OK;
+    EXPECT_EQ(info.FromJson(testJson), originalParseResult);
+    const auto& userInfos = info.GetInnerBundleUserInfos();
+    EXPECT_FALSE(userInfos.empty());
+}
+
+/**
+ * @tc.number: SkillsDedup_FromJson_0600
+ * @tc.name: Test FromJson handles completely malformed JSON
+ * @tc.desc: Test error handling with invalid JSON structure
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillsDedup_FromJson_0600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    nlohmann::json invalidJson = nlohmann::json::object();
+    invalidJson["appType"] = "should_be_number";
+    invalidJson["userId_"] = "should_be_number";
+    invalidJson["baseBundleInfo"] = "should_be_object";
+    invalidJson["baseApplicationInfo"] = "should_be_object";
+    int32_t result = info.FromJson(invalidJson);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: SkillsDedup_ToJson_0100
+ * @tc.name: ToJson_NoLegacyTopLevelSkillKeys
+ * @tc.desc: 1. ToJson must NOT emit the legacy top-level "skillInfos" / "extensionSkillInfos" keys.
+ *           2. Guarantees disk format converges to new schema after any write.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillsDedup_ToJson_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerAbilityInfo abilityInfo;
+    abilityInfo.bundleName = BUNDLE_NAME;
+    abilityInfo.moduleName = MODULE_NAME;
+    abilityInfo.name = ABILITY_NAME;
+    Skill skill;
+    skill.actions = {"test.action"};
+    abilityInfo.skills.push_back(skill);
+    info.InsertAbilitiesInfo("k1", abilityInfo);
+
+    nlohmann::json jsonObject;
+    info.ToJson(jsonObject);
+
+    EXPECT_FALSE(jsonObject.contains("skillInfos"));
+    EXPECT_FALSE(jsonObject.contains("extensionSkillInfos"));
+}
+
+/**
+ * @tc.number: IsExistLauncherAbility_0100
+ * @tc.name: Test IsExistLauncherAbility returns false when no abilities exist
+ *           Test IsExistLauncherAbility returns false when only non-PAGE abilities exist
+ * @tc.desc: Test when baseAbilityInfos_ is empty
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, IsExistLauncherAbility_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    EXPECT_FALSE(info.IsExistLauncherAbility());
+
+    InnerAbilityInfo abilityInfo;
+    abilityInfo.type = AbilityType::SERVICE;
+    abilityInfo.name = "ServiceAbility";
+    abilityInfo.moduleName = "entry";
+
+    Skill skill;
+    skill.actions.push_back("action.system.home");
+    skill.entities.push_back("entity.system.home");
+    abilityInfo.skills.push_back(skill);
+
+    std::string abilityKey = "com.example.test.entry.ServiceAbility";
+    info.baseAbilityInfos_.emplace(abilityKey, abilityInfo);
+    EXPECT_FALSE(info.IsExistLauncherAbility());
+}
+
+/**
+ * @tc.number: IsExistLauncherAbility_0200
+ * @tc.name: Test IsExistLauncherAbility returns false when skills don't match launcher
+ * @tc.desc: Test when PAGE type abilities exist but their skills don't match launcher
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, IsExistLauncherAbility_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerAbilityInfo abilityInfo;
+    abilityInfo.type = AbilityType::PAGE;
+    abilityInfo.name = "MainAbility";
+    abilityInfo.moduleName = "entry";
+
+    Skill skill;
+    skill.actions.push_back("some.other.action");
+    skill.entities.push_back("some.entity");
+    abilityInfo.skills.push_back(skill);
+
+    std::string abilityKey = "com.example.test.entry.MainAbility";
+    info.baseAbilityInfos_.emplace(abilityKey, abilityInfo);
+    EXPECT_FALSE(info.IsExistLauncherAbility());
+}
+
+/**
+ * @tc.number: IsExistLauncherAbility_0300
+ * @tc.name: IsExistLauncherAbility_FAModel_AfterMerge
+ * @tc.desc: 1. FA-model legacy bundle: ability.skills empty + launcher skills in top-level map.
+ *           2. After FromJson self-heal, IsExistLauncherAbility must return true.
+ *           3. CRITICAL regression guard against losing launcher recognition for FA apps.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, IsExistLauncherAbility_0300, Function | SmallTest | Level1)
+{
+    nlohmann::json testJson = innerBundleInfoJson_;
+    const std::string abilityKey =
+        "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility";
+
+    // Ability is PAGE type (AbilityType::PAGE = 1 typically; the template already sets it).
+    // Clear ability.skills to simulate FA-model legacy state.
+    testJson["baseAbilityInfos"][abilityKey]["skills"] = nlohmann::json::array();
+    testJson["baseAbilityInfos"][abilityKey]["type"] = static_cast<int>(AbilityType::PAGE);
+    testJson["skillInfos"][abilityKey] = R"([
+        {
+            "actions": ["ohos.want.action.home"],
+            "entities": ["entity.system.home"],
+            "uris": [],
+            "permissions": [],
+            "domainVerify": false
+        }
+    ])"_json;
+
+    InnerBundleInfo info;
+    EXPECT_EQ(info.FromJson(testJson), OHOS::ERR_OK);
+    EXPECT_TRUE(info.IsExistLauncherAbility());
+}
+
+/**
+ * @tc.number: SkillsDedup_RemoveModule_0100
+ * @tc.name: RemoveModuleInfo_AbilitySkillsClearedWithModule
+ * @tc.desc: 1. After RemoveModuleInfo, the module's abilities are erased from baseAbilityInfos_,
+ *              and their embedded skills die with them.
+ *           2. Replaces deleted RemoveModuleInfo_0400 which tested the obsolete skillInfos_ map.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillsDedup_RemoveModule_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = TEST_PACK_AGE;
+    moduleInfo.abilityKeys.push_back(TEST_KEY);
+    info.innerModuleInfos_.try_emplace(TEST_PACK_AGE, moduleInfo);
+
+    InnerAbilityInfo abilityInfo;
+    Skill skill;
+    skill.actions = {"test.action"};
+    abilityInfo.skills.push_back(skill);
+    info.baseAbilityInfos_.try_emplace(TEST_KEY, abilityInfo);
+
+    info.RemoveModuleInfo(TEST_PACK_AGE);
+
+    EXPECT_EQ(info.baseAbilityInfos_.count(TEST_KEY), 0U);
+    auto skills = info.GetInnerSkillInfos();
+    EXPECT_EQ(skills.count(TEST_KEY), 0U);
+}
+
+/**
+ * @tc.number: SkillsDedup_RemoveModule_0200
+ * @tc.name: RemoveModuleInfo_ExtensionSkillsClearedWithModule
+ * @tc.desc: 1. After RemoveModuleInfo, the module's extensions are erased and embedded
+ *              extension skills die with them.
+ *           2. Replaces deleted RemoveModuleInfo_0600.
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillsDedup_RemoveModule_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = TEST_PACK_AGE;
+    moduleInfo.extensionKeys.push_back(TEST_KEY);
+    info.innerModuleInfos_.try_emplace(TEST_PACK_AGE, moduleInfo);
+
+    InnerExtensionInfo extInfo;
+    Skill skill;
+    skill.actions = {"ext.action"};
+    extInfo.skills.push_back(skill);
+    info.baseExtensionInfos_.try_emplace(TEST_KEY, extInfo);
+
+    info.RemoveModuleInfo(TEST_PACK_AGE);
+
+    EXPECT_EQ(info.baseExtensionInfos_.count(TEST_KEY), 0U);
+    auto extSkills = info.GetExtensionSkillInfos();
+    EXPECT_EQ(extSkills.count(TEST_KEY), 0U);
 }
 } // OHOS
