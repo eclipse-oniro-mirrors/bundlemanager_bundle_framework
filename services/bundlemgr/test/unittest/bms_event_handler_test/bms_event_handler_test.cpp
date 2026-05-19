@@ -1575,6 +1575,33 @@ HWTEST_F(BmsEventHandlerTest, HandleInstallHmp_0100, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: HandleInstallHmp_0200
+ * @tc.name: test HandleInstallHmp
+ * @tc.desc: test HandleInstallHmp
+ */
+HWTEST_F(BmsEventHandlerTest, HandleInstallHmp_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    handler->moduleUpdateStatus_ = ModuleUpdateStatus::UPDATE;
+    std::string bundleName = BUNDLE_TEST_NAME;
+    std::string bundleDir = BUNDLE_TEST_PATH;
+    std::map<std::string, std::vector<std::string>> moduleUpdateAppServiceMap = { { bundleName, { bundleDir } } };
+    std::map<std::string, std::vector<std::string>> moduleUpdateNotAppServiceMap;
+    bool ret = handler->HandleInstallHmp(moduleUpdateAppServiceMap, moduleUpdateNotAppServiceMap);
+    EXPECT_TRUE(ret);
+    handler->ProcessModuleUpdateSystemParameters();
+    handler->moduleUpdateStatus_ = ModuleUpdateStatus::REVERT;
+    handler->ProcessModuleUpdateSystemParameters();
+    handler->SavePreInstallExceptionBundleName(bundleName);
+    handler->DeletePreInstallExceptionShared(bundleDir);
+    moduleUpdateAppServiceMap.clear();
+    moduleUpdateNotAppServiceMap = { { bundleName, { bundleDir } } };
+    ret = handler->HandleInstallHmp(moduleUpdateAppServiceMap, moduleUpdateNotAppServiceMap);
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: HandleInstallModuleUpdateNormalApp_0100
  * @tc.name: HandleInstallModuleUpdateNormalApp
  * @tc.desc: test HandleInstallModuleUpdateNormalApp
@@ -3477,5 +3504,75 @@ HWTEST_F(BmsEventHandlerTest, SendBundleUpdateFailedEvent_0100, Function | Small
     bundleInfo.versionCode = 1000000;
     bundleInfo.isPreInstallApp = false;
     handler->SendBundleUpdateFailedEvent(bundleInfo, ERR_APPEXECFWK_OTA_INSTALL_VERSION_DOWNGRADE);
+}
+
+/**
+ * @tc.number: AnalyzeHaps_0100
+ * @tc.name: test AnalyzeHaps
+ * @tc.desc: test AnalyzeHaps
+ */
+HWTEST_F(BmsEventHandlerTest, AnalyzeHaps_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);std::string bundleName;
+    int32_t uid = TEST_UID;
+    std::string bundleDataDirPath;
+    int32_t limitSize = 1;
+    handler->PrepareBundleDirQuota(bundleName, uid, bundleDataDirPath, limitSize);
+    bool isPreInstallApp = false;
+    std::map<std::string, std::vector<std::string>> hapPathsMap = { { BUNDLE_TEST_NAME, { BUNDLE_TEST_PATH } } };
+    std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
+    handler->AnalyzeHaps(isPreInstallApp, hapPathsMap, installInfos);
+    EXPECT_TRUE(installInfos.empty());
+}
+
+/**
+ * @tc.number: NeedProcessOtaNewPreloadInstall_0100
+ * @tc.name: test NeedProcessOtaNewPreloadInstall
+ * @tc.desc: test NeedProcessOtaNewPreloadInstall
+ */
+HWTEST_F(BmsEventHandlerTest, NeedProcessOtaNewPreloadInstall_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::string bundleName;
+    std::string scanPath;
+    std::list<std::string> scanPathList = { scanPath };
+    bool ret = handler->NeedProcessOtaNewPreloadInstall(bundleName, scanPath);
+    EXPECT_FALSE(ret);
+    handler->InnerProcessRebootSkillsInstall(scanPathList);
+    handler->otaNewInstallWhitelistLoaded_ = true;
+    handler->LoadOtaNewInstallWhitelist();
+    bundleName = BUNDLE_TEST_NAME;
+    handler->otaNewInstallEnable_ = true;
+    ret = handler->NeedProcessOtaNewPreloadInstall(bundleName, scanPath);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: OTAInstallSystemSkills_0100
+ * @tc.name: test OTAInstallSystemSkills
+ * @tc.desc: test OTAInstallSystemSkills
+ */
+HWTEST_F(BmsEventHandlerTest, OTAInstallSystemSkills_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::vector<std::string> filePaths;
+    std::set<int32_t> userIds;
+    ErrCode ret = handler->OTAInstallSystemSkills(filePaths, userIds);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    filePaths.push_back(BUNDLE_TEST_PATH);
+    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr = nullptr;
+    std::set<std::string> exceptionPaths = { BUNDLE_TEST_PATH };
+    bool needDeleteRecord = false;
+    handler->HandlePreInstallAppPathsException(preInstallExceptionMgr, exceptionPaths, needDeleteRecord);
+    ret = handler->OTAInstallSystemSkills(filePaths, userIds);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    userIds.insert({ Constants::DEFAULT_USERID, Constants::U1, Constants::INVALID_USERID });
+    preInstallExceptionMgr = std::make_shared<PreInstallExceptionMgr>();
+    handler->HandlePreInstallSharedBundlePathsException(preInstallExceptionMgr, exceptionPaths);
+    ret = handler->OTAInstallSystemSkills(filePaths, userIds);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
 }
 } // OHOS
