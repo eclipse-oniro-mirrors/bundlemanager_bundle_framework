@@ -959,7 +959,7 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryP
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
     Security::Verify::HapVerifyResult hapVerifyResult;
     Security::Verify::ProvisionInfo provisionInfo;
-    provisionInfo.distributionType == Security::Verify::AppDistType::NONE_TYPE;
+    provisionInfo.distributionType = Security::Verify::AppDistType::NONE_TYPE;
     provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
     hapVerifyResult.SetProvisionInfo(provisionInfo);
     hapVerifyResults.push_back(hapVerifyResult);
@@ -1675,6 +1675,8 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ProcessIn
     installParam.userId = USER_ID;
     ErrCode ret = installer_->ProcessInstallBundleByBundleName("testbundleName", installParam);
     EXPECT_EQ(ret, ERR_OK);
+    installer_->dataMgr_->bundleInfos_.erase("testbundleName");
+    installer_->dataMgr_->dataStorage_->DeleteStorageBundleInfo(bundleInfo);
 }
 
 /**
