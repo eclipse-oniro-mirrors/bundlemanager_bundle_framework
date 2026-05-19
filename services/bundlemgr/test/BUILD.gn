@@ -137,6 +137,7 @@ group("unittest") {
       "unittest/bundle_install_checker_test:unittest",
       "unittest/bms_bundle_resource_icon_test:unittest",
       "unittest/bms_status_receiver_proxy_test:unittest",
+      "unittest/bms_spm_module_parser_test:unittest",
       "unittest/bms_rpc_id_result_test:unittest",
       "unittest/bms_default_app_host_test:unittest",
       "unittest/bms_default_app_proxy_test:unittest",
