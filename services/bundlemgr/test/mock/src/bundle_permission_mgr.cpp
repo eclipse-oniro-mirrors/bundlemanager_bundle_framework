@@ -112,6 +112,11 @@ void SetIsBundleSelfCallingForTestFalse(bool value)
     g_isBundleSelfCallingFalse = value;
 }
 
+void SetIsNativeTokenTypeOnlyForTest(bool value)
+{
+    g_isNativeTokenTypeOnly = value;
+}
+
 void ResetTestValues()
 {
     g_isNativeTokenType = true;

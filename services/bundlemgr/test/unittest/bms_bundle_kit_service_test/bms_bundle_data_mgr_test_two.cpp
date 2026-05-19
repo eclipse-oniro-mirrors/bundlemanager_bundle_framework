@@ -1918,6 +1918,20 @@ HWTEST_F(BmsBundleDataMgrTest2, RegisterBundleStatusCallback_0001, Function | Me
 }
 
 /**
+ * @tc.number: RegisterBundleStatusCallback_0002
+ * @tc.name: test BundleMgrHostImpl::RegisterBundleStatusCallback
+ * @tc.desc: 1. system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest2, RegisterBundleStatusCallback_0002, Function | MediumTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    sptr<IBundleStatusCallback> bundleStatusCallback = new (std::nothrow) IBundleStatusCallbackTest();
+    bundleStatusCallback->SetBundleName(BUNDLE_NAME_DEMO);
+    bool ret = bundleMgrHostImpl_->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: RegisterBundleEventCallback_0001
  * @tc.name: test BundleMgrHostImpl::RegisterBundleEventCallback
  * @tc.desc: 1. system run normally
