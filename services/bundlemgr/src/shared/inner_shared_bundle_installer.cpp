@@ -177,6 +177,7 @@ void InnerSharedBundleInstaller::sendStartSharedBundleInstallNotify(const Instal
             item.second.GetAppId().c_str(), item.second.GetAppIdentifier().c_str());
         NotifyBundleEvents installRes = {
             .type = NotifyType::START_INSTALL,
+            .bundleType = static_cast<int32_t>(BundleType::SHARED),
             .bundleName = item.second.GetBundleName(),
             .modulePackage = item.second.GetCurModuleName(),
             .appId = item.second.GetAppId(),
