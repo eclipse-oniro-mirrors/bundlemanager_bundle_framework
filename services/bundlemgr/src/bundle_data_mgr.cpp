@@ -9429,15 +9429,6 @@ void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t 
     }
 }
 
-bool BundleDataMgr::CreateAppGroupDir(const InnerBundleInfo &info, int32_t userId, DataDirEl dirEl)
-{
-    auto dataGroupInfoMap = info.GetDataGroupInfos();
-    bool needCreateEl5Dir = info.NeedCreateEl5Dir();
-    bool hasInputMethodExtension = info.HasInputMethodExtension();
-    
-    return CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl, hasInputMethodExtension);
-}
-
 bool BundleDataMgr::CreateAppGroupDir(
     const std::unordered_map<std::string, std::vector<DataGroupInfo>> &dataGroupInfoMap,
     int32_t userId, bool needCreateEl5Dir, DataDirEl dirEl, bool hasInputMethodExtension)
@@ -10110,7 +10101,6 @@ void BundleDataMgr::ProcessAllUserDataGroupInfosWhenBundleUpdate(InnerBundleInfo
             DataGroupInfo dataGroupInfo;
             CreateNewDataGroupInfo(groupId, userId, dataItem.second[0], dataGroupInfo);
             innerBundleInfo.AddDataGroupInfo(groupId, dataGroupInfo);
-            (void)CreateAppGroupDir(innerBundleInfo, userId);
         }
     }
 }
@@ -10139,77 +10129,97 @@ void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
     const std::unordered_set<std::string> &dataGroupIdList, int32_t userId, bool needSaveStorage)
 {
     APP_LOGD("called for user: %{public}d", userId);
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto bundleInfoItem = bundleInfos_.find(bundleName);
-    if (bundleInfoItem == bundleInfos_.end()) {
-        APP_LOGW("%{public}s not found", bundleName.c_str());
-        return;
-    }
-    auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
-    for (const auto &dataItem : dataGroupInfos) {
-        std::string oldGroupId = dataItem.first;
-        if (dataGroupIdList.find(oldGroupId) == dataGroupIdList.end()) {
-            bundleInfoItem->second.DeleteDataGroupInfo(oldGroupId);
+    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
+    bool needCreateEl5Dir = false;
+    bool hasInputMethodExtension = false;
+    std::unordered_set<int32_t> userIds;
+    {
+        std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto bundleInfoItem = bundleInfos_.find(bundleName);
+        if (bundleInfoItem == bundleInfos_.end()) {
+            APP_LOGW("%{public}s not found", bundleName.c_str());
+            return;
         }
-    }
-    if (dataGroupIdList.empty()) {
-        APP_LOGD("dataGroupIdList is empty");
-        return;
-    }
-    std::map<std::string, std::pair<int32_t, std::string>> dataGroupIndexMap;
-    std::unordered_set<int32_t> uniqueIdSet;
-    GetDataGroupIndexMap(dataGroupIndexMap, uniqueIdSet);
-    for (const std::string &groupId : dataGroupIdList) {
-        DataGroupInfo dataGroupInfo;
-        dataGroupInfo.dataGroupId = groupId;
-        dataGroupInfo.userId = userId;
-        auto iter = dataGroupIndexMap.find(groupId);
-        if (iter != dataGroupIndexMap.end()) {
-            dataGroupInfo.uuid = iter->second.second;
-            int32_t uid = iter->second.first + userId * Constants::BASE_USER_RANGE + DATA_GROUP_UID_OFFSET;
-            dataGroupInfo.uid = uid;
-            dataGroupInfo.gid = uid;
-        } else {
-            // need to generate a valid uniqueId
-            GenerateDataGroupUuidAndUid(dataGroupInfo, userId, uniqueIdSet);
+        auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
+        for (const auto &dataItem : dataGroupInfos) {
+            std::string oldGroupId = dataItem.first;
+            if (dataGroupIdList.find(oldGroupId) == dataGroupIdList.end()) {
+                bundleInfoItem->second.DeleteDataGroupInfo(oldGroupId);
+            }
         }
-        bundleInfoItem->second.AddDataGroupInfo(groupId, dataGroupInfo);
+        if (dataGroupIdList.empty()) {
+            APP_LOGD("dataGroupIdList is empty");
+            return;
+        }
+        std::map<std::string, std::pair<int32_t, std::string>> dataGroupIndexMap;
+        std::unordered_set<int32_t> uniqueIdSet;
+        GetDataGroupIndexMap(dataGroupIndexMap, uniqueIdSet);
+        for (const std::string &groupId : dataGroupIdList) {
+            DataGroupInfo dataGroupInfo;
+            dataGroupInfo.dataGroupId = groupId;
+            dataGroupInfo.userId = userId;
+            auto iter = dataGroupIndexMap.find(groupId);
+            if (iter != dataGroupIndexMap.end()) {
+                dataGroupInfo.uuid = iter->second.second;
+                int32_t uid = iter->second.first + userId * Constants::BASE_USER_RANGE + DATA_GROUP_UID_OFFSET;
+                dataGroupInfo.uid = uid;
+                dataGroupInfo.gid = uid;
+            } else {
+                // need to generate a valid uniqueId
+                GenerateDataGroupUuidAndUid(dataGroupInfo, userId, uniqueIdSet);
+            }
+            bundleInfoItem->second.AddDataGroupInfo(groupId, dataGroupInfo);
+        }
+        ProcessAllUserDataGroupInfosWhenBundleUpdate(bundleInfoItem->second);
+        if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(bundleInfoItem->second)) {
+            APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        }
+        dataGroupInfoMap = bundleInfoItem->second.GetDataGroupInfos();
+        needCreateEl5Dir = bundleInfoItem->second.NeedCreateEl5Dir();
+        hasInputMethodExtension = bundleInfoItem->second.HasInputMethodExtension();
+        userIds = bundleInfoItem->second.GetUsers();
     }
-    (void)CreateAppGroupDir(bundleInfoItem->second, userId);
-    ProcessAllUserDataGroupInfosWhenBundleUpdate(bundleInfoItem->second);
-    if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(bundleInfoItem->second)) {
-        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+    for (int32_t userId : userIds) {
+        (void)CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, DataDirEl::NONE, hasInputMethodExtension);
     }
 }
 
 void BundleDataMgr::GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId)
 {
     APP_LOGD("called for -b %{public}s, -u %{public}d", bundleName.c_str(), userId);
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto bundleInfoItem = bundleInfos_.find(bundleName);
-    if (bundleInfoItem == bundleInfos_.end()) {
-        APP_LOGW("%{public}s not found", bundleName.c_str());
-        return;
-    }
-    auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
-    if (dataGroupInfos.empty()) {
-        return;
-    }
-    for (const auto &dataItem : dataGroupInfos) {
-        std::string groupId = dataItem.first;
-        if (dataItem.second.empty()) {
-            APP_LOGW("id infos %{public}s empty in %{public}s", groupId.c_str(), bundleName.c_str());
-            continue;
+    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
+    bool needCreateEl5Dir = false;
+    bool hasInputMethodExtension = false;
+    {
+        std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto bundleInfoItem = bundleInfos_.find(bundleName);
+        if (bundleInfoItem == bundleInfos_.end()) {
+            APP_LOGW("%{public}s not found", bundleName.c_str());
+            return;
         }
-        DataGroupInfo dataGroupInfo;
-        CreateNewDataGroupInfo(groupId, userId, dataItem.second[0], dataGroupInfo);
-        bundleInfoItem->second.AddDataGroupInfo(groupId, dataGroupInfo);
-        //need create group dir
-        (void)CreateAppGroupDir(bundleInfoItem->second, userId);
+        auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
+        if (dataGroupInfos.empty()) {
+            return;
+        }
+        for (const auto &dataItem : dataGroupInfos) {
+            std::string groupId = dataItem.first;
+            if (dataItem.second.empty()) {
+                APP_LOGW("id infos %{public}s empty in %{public}s", groupId.c_str(), bundleName.c_str());
+                continue;
+            }
+            DataGroupInfo dataGroupInfo;
+            CreateNewDataGroupInfo(groupId, userId, dataItem.second[0], dataGroupInfo);
+            bundleInfoItem->second.AddDataGroupInfo(groupId, dataGroupInfo);
+        }
+        if (!dataStorage_->SaveStorageBundleInfo(bundleInfoItem->second)) {
+            APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        }
+        dataGroupInfoMap = bundleInfoItem->second.GetDataGroupInfos();
+        needCreateEl5Dir = bundleInfoItem->second.NeedCreateEl5Dir();
+        hasInputMethodExtension = bundleInfoItem->second.HasInputMethodExtension();
     }
-    if (!dataStorage_->SaveStorageBundleInfo(bundleInfoItem->second)) {
-        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
-    }
+    //need create group dir
+    (void)CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, DataDirEl::NONE, hasInputMethodExtension);
 }
 
 void BundleDataMgr::DeleteUserDataGroupInfos(const std::string &bundleName, int32_t userId, bool keepData)
@@ -10837,10 +10847,14 @@ void BundleDataMgr::AddAppHspBundleName(const BundleType type, const std::string
 ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
 {
     APP_LOGI("with -u %{public}d begin", userId);
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::map<std::string, InnerBundleInfo> bundleInfosCopy;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        bundleInfosCopy = bundleInfos_;
+    }
     std::vector<CreateDirParam> createDirParams;
     std::vector<CreateDirParam> el5Params;
-    for (const auto &item : bundleInfos_) {
+    for (const auto &item : bundleInfosCopy) {
         const InnerBundleInfo &info = item.second;
         int32_t responseUserId = info.GetResponseUserId(userId);
         if (responseUserId == Constants::INVALID_USERID) {
@@ -10867,9 +10881,9 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
         if (it != reqPermissions.end()) {
             el5Params.emplace_back(createDirParam);
         }
-        CreateAppGroupDir(info, responseUserId);
+        (void)CreateAppGroupDir(info.GetDataGroupInfos(), responseUserId, info.NeedCreateEl5Dir(),
+            DataDirEl::NONE, info.HasInputMethodExtension());
     }
-    lock.unlock();
     APP_LOGI("begin create dirs");
     auto res = InstalldClient::GetInstance()->CreateBundleDataDirWithVector(createDirParams);
     APP_LOGI("end, res %{public}d", res);
@@ -10881,33 +10895,36 @@ ErrCode BundleDataMgr::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl
 {
     APP_LOGI("with -u %{public}d -el %{public}d begin", userId, static_cast<uint8_t>(dirEl));
     std::vector<CreateDirParam> createDirParams;
+    std::map<std::string, InnerBundleInfo> bundleInfosCopy;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        for (const auto &item : bundleInfos_) {
-            const InnerBundleInfo &info = item.second;
-            if (!info.HasInnerBundleUserInfo(userId)) {
-                APP_LOGW("bundle %{public}s is not installed in user %{public}d or 0",
-                    info.GetBundleName().c_str(), userId);
-                continue;
-            }
-            if (dirEl == DataDirEl::EL5 && !info.NeedCreateEl5Dir()) {
-                continue;
-            }
-            CreateDirParam createDirParam;
-            createDirParam.bundleName = info.GetBundleName();
-            createDirParam.userId = userId;
-            createDirParam.uid = info.GetUid(userId);
-            createDirParam.gid = info.GetGid(userId);
-            createDirParam.apl = info.GetAppPrivilegeLevel();
-            createDirParam.isPreInstallApp = info.IsPreInstallApp();
-            createDirParam.debug =
-                info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
-            createDirParam.extensionDirs = info.GetAllExtensionDirs();
-            createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
-            createDirParam.dataDirEl = dirEl;
-            createDirParams.emplace_back(createDirParam);
-            CreateAppGroupDir(info, userId, dirEl);
+        bundleInfosCopy = bundleInfos_;
+    }
+    for (const auto &item : bundleInfosCopy) {
+        const InnerBundleInfo &info = item.second;
+        if (!info.HasInnerBundleUserInfo(userId)) {
+            APP_LOGW("bundle %{public}s is not installed in user %{public}d or 0",
+                info.GetBundleName().c_str(), userId);
+            continue;
         }
+        if (dirEl == DataDirEl::EL5 && !info.NeedCreateEl5Dir()) {
+            continue;
+        }
+        CreateDirParam createDirParam;
+        createDirParam.bundleName = info.GetBundleName();
+        createDirParam.userId = userId;
+        createDirParam.uid = info.GetUid(userId);
+        createDirParam.gid = info.GetGid(userId);
+        createDirParam.apl = info.GetAppPrivilegeLevel();
+        createDirParam.isPreInstallApp = info.IsPreInstallApp();
+        createDirParam.debug =
+            info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+        createDirParam.extensionDirs = info.GetAllExtensionDirs();
+        createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
+        createDirParam.dataDirEl = dirEl;
+        createDirParams.emplace_back(createDirParam);
+        (void)CreateAppGroupDir(info.GetDataGroupInfos(), userId, info.NeedCreateEl5Dir(),
+            dirEl, info.HasInputMethodExtension());
     }
     ErrCode res = ERR_OK;
     if (dirEl != DataDirEl::EL5) {

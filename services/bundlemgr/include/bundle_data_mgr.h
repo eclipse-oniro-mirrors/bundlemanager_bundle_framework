@@ -1554,7 +1554,6 @@ private:
         bool hasInputMethodExtension = false);
     ErrCode CreateGroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId,
         bool needCreateEl5Dir, DataDirEl dirEl, bool hasInputMethodExtension = false);
-    bool CreateAppGroupDir(const InnerBundleInfo &info, int32_t userId, DataDirEl dirEl = DataDirEl::NONE);
 
     void PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const;
     void PostProcessAnyUserFlags(int32_t flags, int32_t userId,
