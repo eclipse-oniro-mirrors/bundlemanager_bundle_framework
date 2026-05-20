@@ -650,7 +650,7 @@ HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_1500, Function | MediumTest | 
     ErrCode retCode = hostImpl->IsApplicationEnabled("", isRemovable);
     EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_NOT_READY);
 
-    retCode = hostImpl->SetApplicationEnabled("", isRemovable, USERID);
+    retCode = hostImpl->SetApplicationEnabled("", isRemovable, USERID, false);
     EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_NOT_READY);
 
     retCode = hostImpl->IsAbilityEnabled(abilityInfo, isRemovable);
@@ -819,7 +819,7 @@ HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_1900, Function | MediumTest | 
         "", "", "", mediaDataPtr, len, USERID);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
-    retCode = hostImpl->SetApplicationEnabled("", isEnabled, USERID);
+    retCode = hostImpl->SetApplicationEnabled("", isEnabled, USERID, false);
     EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_NOT_READY);
 
     retCode = hostImpl->SetAbilityEnabled(abilityInfo, isEnabled, USERID);
@@ -844,7 +844,7 @@ HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_1901, Function | MediumTest | 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     bool isEnabled = true;
 
-    auto retCode = hostImpl->SetApplicationEnabled("", isEnabled, USERID);
+    auto retCode = hostImpl->SetApplicationEnabled("", isEnabled, USERID, false);
     EXPECT_NE(retCode, ERR_OK);
 }
 

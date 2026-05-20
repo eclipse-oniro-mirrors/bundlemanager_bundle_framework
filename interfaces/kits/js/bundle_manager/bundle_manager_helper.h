@@ -31,7 +31,8 @@ public:
     static ErrCode InnerGetDynamicIcon(const std::string& bundleName, std::string& moduleName);
     static ErrCode InnerIsAbilityEnabled(const AbilityInfo& abilityInfo, bool& isEnable, int32_t appIndex);
     static ErrCode InnerSetAbilityEnabled(const AbilityInfo& abilityInfo, bool& isEnable, int32_t appIndex);
-    static ErrCode InnerSetApplicationEnabled(const std::string& bundleName, bool& isEnable, int32_t appIndex);
+    static ErrCode InnerSetApplicationEnabled(const std::string& bundleName, bool& isEnable, int32_t appIndex,
+        bool killProcess);
     static ErrCode InnerEnableDynamicIcon(
         const std::string& bundleName, const std::string& moduleName, int32_t appIndex, int32_t userId, bool isDefault);
     static ErrCode InnerGetAppCloneIdentity(int32_t uid, std::string& bundleName, int32_t& appIndex);

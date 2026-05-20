@@ -626,7 +626,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3700, Functi
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3800, Function | SmallTest | Level0)
 {
     bool isEnable = false;
-    ErrCode ret = bundleMgrHostImpl_->SetApplicationEnabled(BUNDLE_NAME, isEnable, USERID);
+    ErrCode ret = bundleMgrHostImpl_->SetApplicationEnabled(BUNDLE_NAME, isEnable, USERID, false);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 

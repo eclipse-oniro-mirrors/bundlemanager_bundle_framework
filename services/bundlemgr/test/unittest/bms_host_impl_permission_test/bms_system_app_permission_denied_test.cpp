@@ -271,7 +271,7 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0013, TestSize.Leve
     int32_t appIndex = 0; // Example app index
     bool isEnable = true; // Enable the clone application
     int32_t userId = 0; // Example user ID
-    auto ret = localBundleMgrHostImpl->SetCloneApplicationEnabled(bundleName, appIndex, isEnable, userId);
+    auto ret = localBundleMgrHostImpl->SetCloneApplicationEnabled(bundleName, appIndex, isEnable, userId, false);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 

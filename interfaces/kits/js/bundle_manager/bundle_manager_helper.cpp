@@ -87,7 +87,8 @@ ErrCode BundleManagerHelper::InnerSetAbilityEnabled(const AbilityInfo& abilityIn
     return CommonFunc::ConvertErrCode(ret);
 }
 
-ErrCode BundleManagerHelper::InnerSetApplicationEnabled(const std::string& bundleName, bool& isEnable, int32_t appIndex)
+ErrCode BundleManagerHelper::InnerSetApplicationEnabled(const std::string& bundleName, bool& isEnable, int32_t appIndex,
+    bool killProcess)
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
@@ -96,9 +97,10 @@ ErrCode BundleManagerHelper::InnerSetApplicationEnabled(const std::string& bundl
     }
     ErrCode ret = ERR_OK;
     if (appIndex == 0) {
-        ret = bundleMgr->SetApplicationEnabled(bundleName, isEnable);
+        ret = bundleMgr->SetApplicationEnabled(bundleName, isEnable, Constants::UNSPECIFIED_USERID, killProcess);
     } else {
-        ret = bundleMgr->SetCloneApplicationEnabled(bundleName, appIndex, isEnable);
+        ret = bundleMgr->SetCloneApplicationEnabled(bundleName, appIndex, isEnable,
+            Constants::UNSPECIFIED_USERID, killProcess);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
