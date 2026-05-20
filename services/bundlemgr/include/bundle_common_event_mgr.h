@@ -59,12 +59,19 @@ enum class DynamicIconType : uint8_t {
     ALTERNATE_ICON = 1,
 };
 
+enum class ChangeType : int32_t {
+    UNKNOWN = 0,
+    SET_APPLICATION_ENABLE = 1,
+    SET_APPLICATION_DISABLE = 2,
+};
+
 struct NotifyBundleEvents {
     bool isAgingUninstall = false;
     bool isBmsExtensionUninstalled = false;
     bool isModuleUpdate = false;
     bool isAppUpdate = false;
     NotifyType type = NotifyType::INSTALL;
+    ChangeType changeType = ChangeType::UNKNOWN;
     ErrCode resultCode = ERR_OK;
     uint32_t accessTokenId = 0;
     int32_t uid = 0;

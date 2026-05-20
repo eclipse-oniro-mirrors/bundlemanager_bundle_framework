@@ -73,6 +73,7 @@ constexpr const char* ADDED_SKILLS = "added";
 constexpr const char* CHANGED_SKILLS = "changed";
 constexpr const char* REMOVED_SKILLS = "removed";
 constexpr const char* SKILL_TYPE = "skillType";
+constexpr const char* CHANGE_TYPE = "changeType";
 constexpr int32_t CONTROL_API_VERSION = 25;
 }
 
@@ -327,6 +328,7 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(IS_BUNDLE_EXIST, installResult.isBundleExist);
     want.SetParam(CROSS_APP_SHARED_CONFIG, installResult.crossAppSharedConfig);
     want.SetParam(IS_RECOVER, installResult.isRecover);
+    want.SetParam(CHANGE_TYPE, static_cast<int32_t>(installResult.changeType));
     for (const auto &item : installResult.metadataConfigInfos) {
             want.SetParam(item.first, item.second);
     }
