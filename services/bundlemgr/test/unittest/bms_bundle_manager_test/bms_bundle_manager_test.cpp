@@ -2000,6 +2000,9 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0029, Function | SmallTest | Lev
 {
     bool testRet = GetBundleDataMgr()->IsPreInstallApp("");
     EXPECT_EQ(testRet, false);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    testRet = hostImpl->IsPreInstallApp("");
+    EXPECT_EQ(testRet, false);
 }
 
 /**
@@ -4420,5 +4423,29 @@ HWTEST_F(BmsBundleManagerTest, SetBundleFirstLaunch_0003, Function | MediumTest 
     ErrCode ret = hostImpl->SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
     setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetBundleFirstLaunch_0004
+ * @tc.name: test SetBundleFirstLaunch with nullptr dataMgr
+ * @tc.desc: 1.calling uid is foundation uid
+ *           2.dataMgr is nullptr
+ *           3.return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleManagerTest, SetBundleFirstLaunch_0004, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::INVALID_USERID;
+    int32_t appIndex = 0;
+    bool isBundleFirstLaunched = true;
+    ClearDataMgr();
+
+    // Set uid to foundation uid
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode ret = hostImpl->SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
+    setuid(Constants::ROOT_UID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    ResetDataMgr();
 }
 } // OHOS

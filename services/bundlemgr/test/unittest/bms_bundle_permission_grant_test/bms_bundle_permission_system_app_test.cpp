@@ -53,6 +53,7 @@ void ResetTestValues();
 void SetGetCallingUid(int32_t uid);
 void ResetCallingUid();
 void SetNativeTokenTypeForTest(bool value);
+void SetIsNativeTokenTypeOnlyForTest(bool value);
 
 namespace OHOS {
 namespace {
@@ -3708,5 +3709,157 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0090
     ErrCode ret = bundleMgrHostImpl_->GetLaunchWantForBundle(BUNDLE_NAME, want, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0091
+ * @tc.name: test GetShortcutInfoByAbility of BundleMgrHostImpl
+ * @tc.desc: GetShortcutInfoByAbility false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0091, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto testRet = bundleMgrHostImpl_->GetShortcutInfoByAbility(BUNDLE_NAME, MOUDLE_NAME, ABILITY_NAME,
+        USERID, APP_INDEX, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0092
+ * @tc.name: test GetBundleInodeCount of BundleMgrHostImpl
+ * @tc.desc: GetBundleInodeCount false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0092, Function | SmallTest | Level0)
+{
+    SetVerifyCallingPermissionForTest(false);
+    SetIsSelfCalling(true);
+    uint64_t inodeCount = 0;
+    ErrCode ret = bundleMgrHostImpl_->GetBundleInodeCount(BUNDLE_NAME, APP_INDEX, USERID, inodeCount);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0093
+ * @tc.name: test QueryDataGroupInfos of BundleMgrHostImpl
+ * @tc.desc: QueryDataGroupInfos false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0093, Function | SmallTest | Level0)
+{
+    SetVerifyCallingPermissionForTest(false);
+    std::vector<DataGroupInfo> infos;
+    bool ret = bundleMgrHostImpl_->QueryDataGroupInfos(BUNDLE_NAME, USERID, infos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0094
+ * @tc.name: test GetAllPreinstalledApplicationInfos of BundleMgrHostImpl
+ * @tc.desc: GetAllPreinstalledApplicationInfos false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0094, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+    ErrCode ret = bundleMgrHostImpl_->GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0095
+ * @tc.name: test GetAllPreinstalledApplicationInfos of BundleMgrHostImpl
+ * @tc.desc: GetAllPreinstalledApplicationInfos false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0095, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+    ErrCode ret = bundleMgrHostImpl_->GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0096
+ * @tc.name: test GetAllNewPreinstalledApplicationInfos of BundleMgrHostImpl
+ * @tc.desc: GetAllNewPreinstalledApplicationInfos false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0096, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+    ErrCode ret = bundleMgrHostImpl_->GetAllNewPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0097
+ * @tc.name: test GetAllNewPreinstalledApplicationInfos of BundleMgrHostImpl
+ * @tc.desc: GetAllNewPreinstalledApplicationInfos false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0097, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+    ErrCode ret = bundleMgrHostImpl_->GetAllNewPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0098
+ * @tc.name: test GetAllBundleNames of BundleMgrHostImpl
+ * @tc.desc: GetAllBundleNames false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0098, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    std::vector<std::string> bundleNames;
+    uint32_t flags = 0;
+    bool withExtBundle = false;
+    ErrCode ret = bundleMgrHostImpl_->GetAllBundleNames(flags, USERID, withExtBundle, bundleNames);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0099
+ * @tc.name: test GetAllBundleNames of BundleMgrHostImpl
+ * @tc.desc: GetAllBundleNames false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0099, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    std::vector<std::string> bundleNames;
+    uint32_t flags = 0;
+    bool withExtBundle = false;
+    ErrCode ret = bundleMgrHostImpl_->GetAllBundleNames(flags, USERID, withExtBundle, bundleNames);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0103
+ * @tc.name: test BmsBundleSyetemAppFalseTest of BundleMgrHostImpl
+ * @tc.desc: BmsBundleSyetemAppFalseTest true
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0103, Function | SmallTest | Level0)
+{
+    SetIsNativeTokenTypeOnlyForTest(false);
+    ErrCode ret = bundleMgrHostImpl_->CheckAppDisableForbidden(BUNDLE_NAME, USERID, APP_INDEX, false);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0104
+ * @tc.name: test GetAllJsonProfile of BundleMgrHostImpl
+ * @tc.desc: GetAllJsonProfile true
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0104, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    std::vector<JsonProfileInfo> profileInfos;
+    auto testRet = bundleMgrHostImpl_->GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, USERID, profileInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
 } // OHOS

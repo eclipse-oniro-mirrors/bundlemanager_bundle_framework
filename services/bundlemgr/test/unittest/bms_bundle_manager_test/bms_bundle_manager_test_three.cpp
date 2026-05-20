@@ -2211,6 +2211,24 @@ HWTEST_F(BmsBundleManagerTest3, GetPluginInfo_0001, Function | MediumTest | Leve
 }
 
 /**
+ * @tc.number: GetPluginInfo_0002
+ * @tc.name: test GetPluginInfo
+ * @tc.desc: 1.test GetPluginInfo
+ */
+HWTEST_F(BmsBundleManagerTest3, GetPluginInfo_0002, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    std::string hostBundleName = "bundle";
+    std::string pluginBundleName = "plugin";
+    int32_t userId = 100;
+    PluginBundleInfo pluginBundleInfo;
+    ErrCode retCode = hostImpl->GetPluginInfo(hostBundleName, pluginBundleName, 100, pluginBundleInfo);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
 * @tc.number: GetTestRunner_0100
 * @tc.name: GetTestRunner_0100
 * @tc.desc: test GetTestRunner
@@ -2744,5 +2762,264 @@ HWTEST_F(BmsBundleManagerTest3, OnAddSystemAbility_0001, Function | SmallTest | 
     std::string deviceId;
     EXPECT_NO_THROW(
         DelayedSingleton<BundleMgrService>::GetInstance()->OnAddSystemAbility(abilityManagerServiceId, deviceId));
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_5000
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetPreferableBundleInfoFromHapPaths
+ */
+HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_5000, Function | MediumTest | Level1)
+{
+    std::vector<std::string> hapPaths;
+    BundleInfo bundleInfo;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    ErrCode retCode = hostImpl->GetPreferableBundleInfoFromHapPaths(hapPaths, bundleInfo);
+    EXPECT_FALSE(retCode);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_5100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetOdid
+ */
+HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_5100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    std::string odid = "odid";
+    ErrCode retCode = hostImpl->GetOdid(odid);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_5200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetOdidByBundleName
+ */
+HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_5200, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    std::string odid = "odid";
+    ErrCode retCode = hostImpl->GetOdidByBundleName(BUNDLE_NAME, odid);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_5300
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleInfosForContinuation
+ */
+HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_5300, Function | MediumTest | Level1)
+{
+    BundleInfo bundleInfo;
+    std::vector<BundleInfo> bundleInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    ErrCode retCode = hostImpl->GetBundleInfosForContinuation(FLAG, bundleInfos, USERID);
+    EXPECT_FALSE(retCode);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_5400
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetCompatibleDeviceTypeNative
+ */
+HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_5400, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    std::string deviceType = DEVICETYPE;
+    ErrCode retCode = hostImpl->GetCompatibleDeviceTypeNative(deviceType);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_5500
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleNameByAppId
+ */
+HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_5500, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    std::string appId;
+    std::string bundleName;
+    ErrCode retCode = hostImpl->GetBundleNameByAppId(appId, bundleName);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetRecoverableApplicationInfo_0200
+ * @tc.name: test GetRecoverableApplicationInfo proxy
+ * @tc.desc: 1.query recoverable application infos
+ */
+HWTEST_F(BmsBundleManagerTest3, GetRecoverableApplicationInfo_0200, Function | MediumTest | Level1)
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    std::vector<RecoverableApplicationInfo> recoverableApplications;
+    ErrCode retCode = hostImpl->GetRecoverableApplicationInfo(recoverableApplications);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetAllBundleNames_0100
+ * @tc.name: test GetAllBundleNames dataMgr null
+ * @tc.desc: 1. Verify when DataMgr is nullptr
+ *           2. Return ERR_APPEXECFWK_NULL_PTR
+ */
+HWTEST_F(BmsBundleManagerTest3, GetAllBundleNames_0100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> bundleNames;
+    uint32_t flags = 0;
+    bool withExtBundle = false;
+
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+
+    auto testRet = hostImpl->GetAllBundleNames(flags, USERID, withExtBundle, bundleNames);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_NULL_PTR);
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = savedDataMgr;
+}
+
+/**
+ * @tc.number: GetAllBundleNames_0200
+ * @tc.name: test GetAllBundleNames normal flow
+ * @tc.desc: 1. Test normal execution flow with valid parameters
+ *           2. Should return from data manager
+ */
+HWTEST_F(BmsBundleManagerTest3, GetAllBundleNames_0200, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> bundleNames;
+    uint32_t flags = 0;
+    bool withExtBundle = false;
+
+    auto testRet = hostImpl->GetAllBundleNames(flags, USERID, withExtBundle, bundleNames);
+    EXPECT_EQ(testRet, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetAllBundleNames_0300
+ * @tc.name: test GetAllBundleNames with ext bundle when broker service exists
+ * @tc.desc: 1. Verify behavior when withExtBundle is true and broker service exists
+ *           2. Should query from extension client if conditions met
+ */
+HWTEST_F(BmsBundleManagerTest3, GetAllBundleNames_0300, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> bundleNames;
+    uint32_t flags = 0;
+    bool withExtBundle = true;
+
+    auto testRet = hostImpl->GetAllBundleNames(flags, USERID, withExtBundle, bundleNames);
+    EXPECT_EQ(testRet, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetAllBundleNames_0400
+ * @tc.name: test GetAllBundleNames with different userId
+ * @tc.desc: 1. Test with different userId values
+ *           2. Verify behavior with various user IDs
+ */
+HWTEST_F(BmsBundleManagerTest3, GetAllBundleNames_0400, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> bundleNames;
+    uint32_t flags = 0;
+    int32_t userId = -1;
+    bool withExtBundle = false;
+
+    auto testRet = hostImpl->GetAllBundleNames(flags, userId, withExtBundle, bundleNames);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetAllBundleNames_0500
+ * @tc.name: test GetAllBundleNames with launcher ability flag
+ * @tc.desc: 1. Test with GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY flag
+ *           2. When withExtBundle is true, this flag will be used for extension client query
+ */
+HWTEST_F(BmsBundleManagerTest3, GetAllBundleNames_0500, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> bundleNames;
+    uint32_t flags = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY);
+    bool withExtBundle = true;
+
+    auto testRet = hostImpl->GetAllBundleNames(flags, USERID, withExtBundle, bundleNames);
+    EXPECT_EQ(testRet, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetLabelByBundleName_0100
+ * @tc.name: test GetLabelByBundleName normall
+ * @tc.desc: 1. Test GetLabelByBundleName normall
+ */
+HWTEST_F(BmsBundleManagerTest3, GetLabelByBundleName_0100, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string result;
+    auto testRet = hostImpl->GetLabelByBundleName(BUNDLE_BACKUP_NAME, USERID, result);
+    EXPECT_EQ(testRet, true);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetAllBundleLabel_0100
+ * @tc.name: test GetAllBundleLabel normal
+ * @tc.desc: 1. Test GetAllBundleLabel normal
+ */
+HWTEST_F(BmsBundleManagerTest3, GetAllBundleLabel_0100, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string result;
+    auto testRet = hostImpl->GetLabelByBundleName(BUNDLE_NAME, USERID, result);
+    EXPECT_EQ(testRet, true);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 } // OHOS

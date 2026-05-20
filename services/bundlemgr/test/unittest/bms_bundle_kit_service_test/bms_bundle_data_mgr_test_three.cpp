@@ -2843,6 +2843,24 @@ HWTEST_F(BmsBundleDataMgrTest3, GetContinueBundleNames_0700, Function | SmallTes
 }
 
 /**
+ * @tc.number: GetContinueBundleNames_0800
+ * @tc.name: test GetContinueBundleNames
+ * @tc.desc: 1.system run normally
+ *           2.test GetContinueBundleNames with nullptr dataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetContinueBundleNames_0800, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleNames;
+    std::string continueBundleName{ "com.example.test" };
+    int32_t userId = -4;
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    ClearDataMgr();
+    auto ret = bundleMgrHostImpl_->GetContinueBundleNames(continueBundleName, bundleNames, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    ResetDataMgr();
+}
+
+/**
  * @tc.number: UpdateIsPreInstallApp_0001
  * @tc.name: UpdateIsPreInstallApp
  * @tc.desc: test UpdateIsPreInstallApp
@@ -3493,8 +3511,13 @@ HWTEST_F(BmsBundleDataMgrTest3, RegisterPluginEventCallback_0001, Function | Med
 
     sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
     ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback2);
-    setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_OK);
+
+    ClearDataMgr();
+    ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback2);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+    setuid(Constants::ROOT_UID);
+    ResetDataMgr();
 }
 
 /**
@@ -3515,8 +3538,13 @@ HWTEST_F(BmsBundleDataMgrTest3, UnregisterPluginEventCallback_0001, Function | M
 
     sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
     ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback2);
-    setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_OK);
+
+    ClearDataMgr();
+    ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback2);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+    setuid(Constants::ROOT_UID);
+    ResetDataMgr();
 }
 
 /**
