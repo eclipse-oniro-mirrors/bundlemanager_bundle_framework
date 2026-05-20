@@ -49,6 +49,7 @@ void CreateComponentType(napi_env env, napi_value value);
 void CreateUninstallComponentType(napi_env env, napi_value value);
 void CreateDisposedType(napi_env env, napi_value value);
 void CreateControlType(napi_env env, napi_value value);
+void CreatePageJumpMode(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif /* JS_APP_CONTROL_H */

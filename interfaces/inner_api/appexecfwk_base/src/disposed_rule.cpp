@@ -29,6 +29,7 @@ const char* COMPONENT_TYPE = "componentType";
 const char* UNINSTALL_COMPONENT_TYPE = "uninstallComponentType";
 const char* DISPOSED_TYPE = "disposedType";
 const char* CONTROL_TYPE = "controlType";
+const char* PAGE_JUMP = "pageJump";
 const char* ELEMENT_LIST = "elementList";
 const char* PRIORITY = "priority";
 const char* DEVICE_ID = "deviceId";
@@ -56,6 +57,7 @@ bool DisposedRule::ReadFromParcel(Parcel &parcel)
         elementList.emplace_back(elementName);
     }
     priority = parcel.ReadInt32();
+    pageJump = static_cast<PageJumpMode>(parcel.ReadInt32());
     isEdm = parcel.ReadBool();
     return true;
 }
@@ -72,6 +74,7 @@ bool DisposedRule::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(elementUri));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, priority);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(pageJump));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEdm);
 
     return true;
@@ -153,6 +156,7 @@ void to_json(nlohmann::json &jsonObject, const DisposedRule &disposedRule)
         {CONTROL_TYPE, disposedRule.controlType},
         {ELEMENT_LIST, disposedRule.elementList},
         {PRIORITY, disposedRule.priority},
+        {PAGE_JUMP, disposedRule.pageJump},
         {IS_EDM, disposedRule.isEdm},
     };
 }
@@ -205,6 +209,14 @@ void from_json(const nlohmann::json &jsonObject, DisposedRule &disposedRule)
         jsonObjectEnd,
         PRIORITY,
         disposedRule.priority,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<PageJumpMode>(jsonObject,
+        jsonObjectEnd,
+        PAGE_JUMP,
+        disposedRule.pageJump,
         JsonType::NUMBER,
         false,
         parseResult,

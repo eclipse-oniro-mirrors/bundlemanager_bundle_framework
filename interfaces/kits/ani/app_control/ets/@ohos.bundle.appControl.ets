@@ -46,6 +46,11 @@ export default namespace appControl {
     DISALLOWED_LIST = 2
   }
 
+  export enum PageJumpMode {
+    PAGE_JUMP_WINDOW_SHOW = 0,
+    PAGE_JUMP_WINDOW_NOT_SHOW = 1
+  }
+
   export interface DisposedRule {
     want: Want;
     componentType: ComponentType;
@@ -53,6 +58,7 @@ export default namespace appControl {
     controlType: ControlType;
     elementList: Array<ElementName>;
     priority: int;
+    pageJump?: PageJumpMode;
   }
 
   export interface UninstallDisposedRule {
@@ -74,30 +80,35 @@ export default namespace appControl {
     public controlType: ControlType = ControlType.ALLOWED_LIST;
     public elementList: Array<ElementName>;
     public priority: int;
+    public pageJump?: PageJumpMode = PageJumpMode.PAGE_JUMP_WINDOW_SHOW;
 
     constructor() { }
     constructor(componentType: ComponentType,
       disposedType: DisposedType,
       controlType: ControlType,
       elementList: Array<ElementName>,
-      priority: int) {
+      priority: int,
+      pageJump: PageJumpMode) {
         this.componentType = componentType;
         this.disposedType = disposedType;
         this.controlType = controlType;
         this.elementList = elementList;
         this.priority = priority;
+        this.pageJump = pageJump;
     }
     constructor(componentType: ComponentType,
       disposedType: DisposedType,
       controlType: ControlType,
       elementList: Array<ElementName>,
       priority: int,
+      pageJump: PageJumpMode,
       want: Want) {
         this.componentType = componentType;
         this.disposedType = disposedType;
         this.controlType = controlType;
         this.elementList = elementList;
         this.priority = priority;
+        this.pageJump = pageJump;
         this.want = want;
     }
   }

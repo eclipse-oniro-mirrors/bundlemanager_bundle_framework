@@ -46,6 +46,11 @@ enum class ControlType {
     DISALLOWED_LIST = 2,
 };
 
+enum class PageJumpMode {
+    PAGE_JUMP_WINDOW_SHOW = 0,
+    PAGE_JUMP_WINDOW_NOT_SHOW = 1,
+};
+
 struct DisposedRule : public Parcelable {
 public:
     bool isEdm = false;
@@ -53,6 +58,7 @@ public:
     ComponentType componentType = ComponentType::UI_ABILITY;
     DisposedType disposedType = DisposedType::BLOCK_APPLICATION;
     ControlType controlType = ControlType::ALLOWED_LIST;
+    PageJumpMode pageJump = PageJumpMode::PAGE_JUMP_WINDOW_SHOW;
     std::shared_ptr<AAFwk::Want> want = nullptr;
     std::vector<ElementName> elementList;
 
