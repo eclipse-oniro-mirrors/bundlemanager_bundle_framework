@@ -9726,4 +9726,699 @@ HWTEST_F(BmsDataMgrTest, GetAlternateIcons_0030, Function | MediumTest | Level1)
     EXPECT_EQ(alternateIcons[0].alternateIconName, "test_icon");
     EXPECT_EQ(alternateIcons[0].iconId, static_cast<uint32_t>(100));
 }
+
+/**
+ * @tc.number: GetBundleCacheInfo_0100
+ * @tc.name: GetBundleCacheInfo
+ * @tc.desc: Test normal bundle cache info retrieval without cleaning
+ */
+HWTEST_F(BmsDataMgrTest, GetBundleCacheInfo_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.test";
+    bundleInfo.applicationInfo.name = "TestApp";
+    ApplicationInfo appInfo;
+    appInfo.name = "TestApp";
+    appInfo.bundleName = "com.example.test";
+    appInfo.userDataClearable = true;
+
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = "entry";
+    moduleInfo.modulePackage = "com.example.test.entry";
+    info.innerModuleInfos_.emplace("entry", moduleInfo);
+
+    std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
+    int32_t userId = 100;
+    bool isClean = false;
+    auto idxFilter = [](std::string& name, std::vector<int32_t>& indexes) -> std::vector<int32_t> {
+        return indexes;
+    };
+
+    dataMgr->GetBundleCacheInfo(idxFilter, info, validBundles, userId, isClean);
+    EXPECT_EQ(validBundles.size(), 1u);
+    if (!validBundles.empty()) {
+        EXPECT_EQ(std::get<0>(validBundles[0]), "com.example.test");
+        EXPECT_EQ(std::get<1>(validBundles[0]).size(), 1u);
+        EXPECT_EQ(std::get<2>(validBundles[0]).size(), 1u);
+        EXPECT_EQ(std::get<2>(validBundles[0])[0], 0);
+    }
+}
+
+/**
+ * @tc.number: GetBundleCacheInfo_0200
+ * @tc.name: GetBundleCacheInfo
+ * @tc.desc: Test bundle with userDataClearable false when isClean is true
+ */
+HWTEST_F(BmsDataMgrTest, GetBundleCacheInfo_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.noclear";
+    bundleInfo.applicationInfo.name = "NoClearApp";
+    ApplicationInfo appInfo;
+    appInfo.name = "NoClearApp";
+    appInfo.bundleName = "com.example.noclear";
+    appInfo.userDataClearable = false;
+
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+
+    std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
+    int32_t userId = 100;
+    bool isClean = true;
+    auto idxFilter = [](std::string& name, std::vector<int32_t>& indexes) -> std::vector<int32_t> {
+        return indexes;
+    };
+
+    dataMgr->GetBundleCacheInfo(idxFilter, info, validBundles, userId, isClean);
+    EXPECT_TRUE(validBundles.empty());
+}
+
+/**
+ * @tc.number: GetBundleCacheInfo_0300
+ * @tc.name: GetBundleCacheInfo
+ * @tc.desc: Test bundle cache info with index filtering when isClean is true
+ */
+HWTEST_F(BmsDataMgrTest, GetBundleCacheInfo_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.filter";
+    bundleInfo.applicationInfo.name = "FilterApp";
+    ApplicationInfo appInfo;
+    appInfo.name = "FilterApp";
+    appInfo.bundleName = "com.example.filter";
+    appInfo.userDataClearable = true;
+
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+
+    std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
+    int32_t userId = 100;
+    bool isClean = true;
+    auto idxFilter = [](std::string& name, std::vector<int32_t>& indexes) -> std::vector<int32_t> {
+        return {0};
+    };
+    dataMgr->GetBundleCacheInfo(idxFilter, info, validBundles, userId, isClean);
+
+    EXPECT_EQ(validBundles.size(), 1u);
+    if (!validBundles.empty()) {
+        EXPECT_EQ(std::get<0>(validBundles[0]), "com.example.filter");
+        EXPECT_EQ(std::get<2>(validBundles[0]).size(), 1u);
+        EXPECT_EQ(std::get<2>(validBundles[0])[0], 0);
+    }
+}
+
+/**
+ * @tc.number: GetBundleCacheInfo_0400
+ * @tc.name: GetBundleCacheInfo
+ * @tc.desc: Test atomic service bundle cache info retrieval
+ */
+HWTEST_F(BmsDataMgrTest, GetBundleCacheInfo_0400, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.atomic";
+    bundleInfo.applicationInfo.name = "AtomicApp";
+    ApplicationInfo appInfo;
+    appInfo.name = "AtomicApp";
+    appInfo.bundleName = "com.example.atomic";
+    appInfo.userDataClearable = true;
+
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(appInfo);
+    info.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+
+    std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
+    int32_t userId = 100;
+    bool isClean = false;
+    auto idxFilter = [](std::string& name, std::vector<int32_t>& indexes) -> std::vector<int32_t> {
+        return indexes;
+    };
+
+    dataMgr->GetBundleCacheInfo(idxFilter, info, validBundles, userId, isClean);
+    EXPECT_GE(validBundles.size(), 1u);
+    if (!validBundles.empty()) {
+        EXPECT_EQ(std::get<0>(validBundles[0]), "com.example.atomic");
+    }
+}
+
+/**
+ * @tc.number: GetInnerBundleInfoWithBundleFlagsV9_0100
+ * @tc.name: GetInnerBundleInfoWithBundleFlagsV9
+ * @tc.desc: Test returning ERR_BUNDLE_MANAGER_APPLICATION_DISABLED when app is disabled and flag is not set
+ */
+HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithBundleFlagsV9_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.example.disabled.app";
+    int32_t userId = -3;
+    int32_t appIndex = 0;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT);
+    const InnerBundleInfo* info = nullptr;
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    ApplicationInfo appInfo;
+    appInfo.name = bundleName;
+    appInfo.bundleName = bundleName;
+
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = userId;
+    userInfo.bundleUserInfo.enabled = false;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_[bundleName] = innerBundleInfo;
+
+
+    ErrCode ret = dataMgr->GetInnerBundleInfoWithBundleFlagsV9(bundleName, flags, info, userId, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
+    EXPECT_EQ(info, nullptr);
+}
+
+/**
+ * @tc.number: NotifyBundleEventCallback_0100
+ * @tc.name: NotifyBundleEventCallback
+ * @tc.desc: Test notifying with null callback in the list (should skip)
+ */
+HWTEST_F(BmsDataMgrTest, NotifyBundleEventCallback_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    EventFwk::CommonEventData eventData;
+    EventFwk::Want want;
+    want.SetAction("test.action.null");
+    eventData.SetWant(want);
+    dataMgr->eventCallbackList_.emplace_back(nullptr);
+    EXPECT_NO_THROW({
+        dataMgr->NotifyBundleEventCallback(eventData);
+    });
+}
+
+/**
+ * @tc.number: GetResourceManager_0100
+ * @tc.name: GetResourceManager
+ * @tc.desc: Test GetResourceManager with empty hapPath, should return nullptr
+ */
+HWTEST_F(BmsDataMgrTest, GetResourceManager_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string hapPath = "";
+    auto resourceManager = dataMgr->GetResourceManager(hapPath);
+    EXPECT_EQ(resourceManager, nullptr);
+}
+
+/**
+ * @tc.number: GetResourceManager_0200
+ * @tc.name: GetResourceManager
+ * @tc.desc: Test GetResourceManager with valid hapPath
+ */
+HWTEST_F(BmsDataMgrTest, GetResourceManager_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string hapPath = HAP_FILE_PATH1;
+    auto resourceManager = dataMgr->GetResourceManager(hapPath);
+    EXPECT_NE(resourceManager, nullptr);
+}
+
+/**
+ * @tc.number: CheckUpdateTimeWithBmsParam_0100
+ * @tc.name: CheckUpdateTimeWithBmsParam
+ * @tc.desc: Test when bmsPara is nullptr, should return false
+ */
+HWTEST_F(BmsDataMgrTest, CheckUpdateTimeWithBmsParam_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto originalParam = bundleMgrService_->bmsParam_;
+    bundleMgrService_->bmsParam_ = nullptr;
+    int64_t updateTime = 100;
+    bool result = dataMgr->CheckUpdateTimeWithBmsParam(updateTime);
+    EXPECT_FALSE(result);
+    bundleMgrService_->bmsParam_ = originalParam;
+}
+
+/**
+ * @tc.number: CheckUpdateTimeWithBmsParam_0200
+ * @tc.name: CheckUpdateTimeWithBmsParam
+ * @tc.desc: Test when updateTime string is less than config value, should return false
+ */
+HWTEST_F(BmsDataMgrTest, CheckUpdateTimeWithBmsParam_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto bmsPara = std::make_shared<BmsParam>();
+    ASSERT_NE(bmsPara, nullptr);
+    bmsPara->SaveBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT, "200");
+    auto originalParam = bundleMgrService_->bmsParam_;
+    bundleMgrService_->bmsParam_ = bmsPara;
+    int64_t updateTime = 100;
+
+    bool result = dataMgr->CheckUpdateTimeWithBmsParam(updateTime);
+    EXPECT_FALSE(result);
+    bundleMgrService_->bmsParam_ = originalParam;
+}
+
+/**
+ * @tc.number: CheckUpdateTimeWithBmsParam_0400
+ * @tc.name: CheckUpdateTimeWithBmsParam
+ * @tc.desc: Test when updateTime string is greater than config value, should return true
+ */
+HWTEST_F(BmsDataMgrTest, CheckUpdateTimeWithBmsParam_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto bmsPara = std::make_shared<BmsParam>();
+    ASSERT_NE(bmsPara, nullptr);
+    bmsPara->SaveBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT, "100");
+    auto originalParam = bundleMgrService_->bmsParam_;
+    bundleMgrService_->bmsParam_ = bmsPara;
+    int64_t updateTime = 200;
+
+    bool result = dataMgr->CheckUpdateTimeWithBmsParam(updateTime);
+    EXPECT_TRUE(result);
+    bundleMgrService_->bmsParam_ = originalParam;
+}
+
+/**
+ * @tc.number: FilterExtensionAbilityInfosByModuleName_0100
+ * @tc.name: FilterExtensionAbilityInfosByModuleName
+ * @tc.desc: Test when moduleName is empty, extensionInfos should not change
+ */
+HWTEST_F(BmsDataMgrTest, FilterExtensionAbilityInfosByModuleName_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    ExtensionAbilityInfo info1;
+    info1.moduleName = "module1";
+    extensionInfos.push_back(info1);
+
+    ExtensionAbilityInfo info2;
+    info2.moduleName = "module2";
+    extensionInfos.push_back(info2);
+
+    dataMgr->FilterExtensionAbilityInfosByModuleName("", extensionInfos);
+    EXPECT_EQ(extensionInfos.size(), 2);
+    EXPECT_EQ(extensionInfos[0].moduleName, "module1");
+    EXPECT_EQ(extensionInfos[1].moduleName, "module2");
+}
+
+/**
+ * @tc.number: FilterExtensionAbilityInfosByModuleName_0200
+ * @tc.name: FilterExtensionAbilityInfosByModuleName
+ * @tc.desc: Test when moduleName is not empty, keep matched and remove unmatched
+ */
+HWTEST_F(BmsDataMgrTest, FilterExtensionAbilityInfosByModuleName_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    ExtensionAbilityInfo info1;
+    info1.moduleName = "targetModule";
+    extensionInfos.push_back(info1);
+
+    ExtensionAbilityInfo info2;
+    info2.moduleName = "otherModule";
+    extensionInfos.push_back(info2);
+
+    ExtensionAbilityInfo info3;
+    info3.moduleName = "targetModule";
+    extensionInfos.push_back(info3);
+
+    dataMgr->FilterExtensionAbilityInfosByModuleName("targetModule", extensionInfos);
+    EXPECT_EQ(extensionInfos.size(), 2);
+    EXPECT_EQ(extensionInfos[0].moduleName, "targetModule");
+    EXPECT_EQ(extensionInfos[1].moduleName, "targetModule");
+}
+
+/**
+ * @tc.number: FilterExtensionAbilityInfosByModuleName_0300
+ * @tc.name: FilterExtensionAbilityInfosByModuleName
+ * @tc.desc: Test when no items match the moduleName, list becomes empty
+ */
+HWTEST_F(BmsDataMgrTest, FilterExtensionAbilityInfosByModuleName_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    ExtensionAbilityInfo info1;
+    info1.moduleName = "moduleA";
+    extensionInfos.push_back(info1);
+
+    ExtensionAbilityInfo info2;
+    info2.moduleName = "moduleB";
+    extensionInfos.push_back(info2);
+
+    dataMgr->FilterExtensionAbilityInfosByModuleName("nonExisting", extensionInfos);
+    EXPECT_TRUE(extensionInfos.empty());
+}
+
+/**
+ * @tc.number: FilterExtensionAbilityInfosByModuleName_0400
+ * @tc.name: FilterExtensionAbilityInfosByModuleName
+ * @tc.desc: Test when all items match the moduleName, list remains unchanged
+ */
+HWTEST_F(BmsDataMgrTest, FilterExtensionAbilityInfosByModuleName_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    ExtensionAbilityInfo info1;
+    info1.moduleName = "sameModule";
+    extensionInfos.push_back(info1);
+
+    ExtensionAbilityInfo info2;
+    info2.moduleName = "sameModule";
+    extensionInfos.push_back(info2);
+
+    dataMgr->FilterExtensionAbilityInfosByModuleName("sameModule", extensionInfos);
+    EXPECT_EQ(extensionInfos.size(), 2);
+    EXPECT_EQ(extensionInfos[0].moduleName, "sameModule");
+    EXPECT_EQ(extensionInfos[1].moduleName, "sameModule");
+}
+
+/**
+ * @tc.number: GetMatchExtensionInfos_0100
+ * @tc.name: GetMatchExtensionInfos
+ * @tc.desc: Test GetMatchExtensionInfos with valid want and extension info, verify result
+ */
+HWTEST_F(BmsDataMgrTest, GetMatchExtensionInfos_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    Want want;
+    want.SetAction("ohos.action.test");
+    want.SetUri("http://www.test.com");
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.test";
+    info.SetBaseBundleInfo(bundleInfo);
+
+    ApplicationInfo appInfo;
+    appInfo.name = "com.example.test";
+    appInfo.bundleName = "com.example.test";
+    info.SetBaseApplicationInfo(appInfo);
+
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t flags = GET_EXTENSION_INFO_WITH_APPLICATION | GET_EXTENSION_INFO_WITH_PERMISSION |
+                    GET_EXTENSION_INFO_WITH_METADATA | GET_EXTENSION_INFO_WITH_SKILL;
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+
+    dataMgr->GetMatchExtensionInfos(want, flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.size(), 0);
+}
+
+/**
+ * @tc.number: GetMatchExtensionInfos_0200
+ * @tc.name: GetMatchExtensionInfos
+ * @tc.desc: Test GetMatchExtensionInfos with flags clearing permissions/metadata/skills
+ */
+HWTEST_F(BmsDataMgrTest, GetMatchExtensionInfos_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    Want want;
+    want.SetAction("ohos.action.test");
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.test2";
+    info.SetBaseBundleInfo(bundleInfo);
+
+    ApplicationInfo appInfo;
+    appInfo.name = "com.example.test2";
+    appInfo.bundleName = "com.example.test2";
+    info.SetBaseApplicationInfo(appInfo);
+
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t flags = 0;
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+
+    dataMgr->GetMatchExtensionInfos(want, flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.size(), 0);
+}
+
+/**
+ * @tc.number: GetMatchExtensionInfos_0300
+ * @tc.name: GetMatchExtensionInfos
+ * @tc.desc: Test GetMatchExtensionInfos with empty want (no match expected)
+ */
+HWTEST_F(BmsDataMgrTest, GetMatchExtensionInfos_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    Want want;
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.test3";
+    info.SetBaseBundleInfo(bundleInfo);
+
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t flags = 0;
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+
+    dataMgr->GetMatchExtensionInfos(want, flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.size(), 0);
+}
+
+/**
+ * @tc.number: EmplaceExtensionInfo_0100
+ * @tc.name: EmplaceExtensionInfo
+ * @tc.desc: Test EmplaceExtensionInfo with GET_EXTENSION_ABILITY_INFO_WITH_SKILL_URI flag
+ */
+HWTEST_F(BmsDataMgrTest, EmplaceExtensionInfo_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.test";
+    info.SetBaseBundleInfo(bundleInfo);
+
+    ApplicationInfo appInfo;
+    appInfo.name = "com.example.test";
+    appInfo.bundleName = "com.example.test";
+    info.SetBaseApplicationInfo(appInfo);
+
+    std::vector<Skill> skills;
+    Skill skill;
+    SkillUri uri;
+    uri.scheme = "http";
+    uri.host = "www.example.com";
+    uri.path = "/test";
+    skill.uris.push_back(uri);
+    skills.push_back(skill);
+
+    ExtensionAbilityInfo extensionInfo;
+    extensionInfo.name = "TestExtension";
+    extensionInfo.bundleName = "com.example.test";
+
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_SKILL_URI);
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    std::optional<size_t> matchSkillIndex = 0;
+    std::optional<size_t> matchUriIndex = 0;
+
+    dataMgr->EmplaceExtensionInfo(info, skills, extensionInfo, flags,
+        userId, infos, matchSkillIndex, matchUriIndex, appIndex);
+    EXPECT_EQ(infos.size(), 1);
+    EXPECT_EQ(infos[0].name, "TestExtension");
+    EXPECT_EQ(infos[0].appIndex, appIndex);
+    EXPECT_FALSE(infos[0].skillUri.empty());
+    EXPECT_EQ(infos[0].skillUri[0].scheme, "http");
+    EXPECT_EQ(infos[0].skillUri[0].host, "www.example.com");
+    EXPECT_TRUE(infos[0].skillUri[0].isMatch);
+}
+
+/**
+ * @tc.number: GetMatchExtensionInfosV9_0100
+ * @tc.name: GetMatchExtensionInfosV9
+ * @tc.desc: Test GetMatchExtensionInfosV9 with Share Action
+ */
+HWTEST_F(BmsDataMgrTest, GetMatchExtensionInfosV9_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    Want want;
+    want.SetAction("ohos.want.action.sendData");
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.share";
+    info.SetBaseBundleInfo(bundleInfo);
+
+    ApplicationInfo appInfo;
+    appInfo.name = "com.example.share";
+    appInfo.bundleName = "com.example.share";
+    info.SetBaseApplicationInfo(appInfo);
+
+    Skill skill;
+    skill.actions.push_back("ohos.want.action.sendData");
+
+    InnerExtensionInfo innerExtInfo;
+    innerExtInfo.name = "ShareExtension";
+    innerExtInfo.bundleName = "com.example.share";
+
+    std::string extKey = "com.example.share.ShareExtension";
+    innerExtInfo.skills.emplace_back(skill);
+    info.baseExtensionInfos_[extKey] = innerExtInfo;
+
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t flags = 0;
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+
+    dataMgr->GetMatchExtensionInfosV9(want, flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.size(), 1);
+}
+
+/**
+ * @tc.number: GetMatchExtensionInfosV9_0200
+ * @tc.name: GetMatchExtensionInfosV9
+ * @tc.desc: Test GetMatchExtensionInfosV9 with no match
+ */
+HWTEST_F(BmsDataMgrTest, GetMatchExtensionInfosV9_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    Want want;
+    want.SetAction("ohos.action.nonexistent");
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.none";
+    info.SetBaseBundleInfo(bundleInfo);
+
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t flags = 0;
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+
+    dataMgr->GetMatchExtensionInfosV9(want, flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.size(), 0);
+}
+
+/**
+ * @tc.number: GetAllExtensionInfos_0200
+ * @tc.name: GetAllExtensionInfos
+ * @tc.desc: Test GetAllExtensionInfos with GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION flag
+ */
+HWTEST_F(BmsDataMgrTest, GetAllExtensionInfos_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.test";
+    info.SetBaseBundleInfo(bundleInfo);
+
+    ApplicationInfo appInfo;
+    appInfo.name = "com.example.test";
+    appInfo.bundleName = "com.example.test";
+    appInfo.labelId = 12345;
+    info.SetBaseApplicationInfo(appInfo);
+
+    InnerExtensionInfo innerExtInfo;
+    innerExtInfo.name = "TestExtension";
+    innerExtInfo.bundleName = "com.example.test";
+    innerExtInfo.moduleName = "default";
+    innerExtInfo.type = ExtensionAbilityType::FORM; // Example type
+
+    std::string extKey = "com.example.test.TestExtension";
+    info.baseExtensionInfos_[extKey] = innerExtInfo;
+
+
+    std::vector<ExtensionAbilityInfo> infos;
+    uint32_t flags = static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION);
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+
+    dataMgr->GetAllExtensionInfos(flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.size(), 1);
+    EXPECT_EQ(infos[0].name, "TestExtension");
+    EXPECT_EQ(infos[0].appIndex, appIndex);
+}
+
+/**
+ * @tc.number: GetAllExtensionInfos_0300
+ * @tc.name: GetAllExtensionInfos
+ * @tc.desc: Test GetAllExtensionInfos without GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION flag
+ */
+HWTEST_F(BmsDataMgrTest, GetAllExtensionInfos_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.perm";
+    info.SetBaseBundleInfo(bundleInfo);
+
+    ApplicationInfo appInfo;
+    appInfo.name = "com.example.perm";
+    appInfo.bundleName = "com.example.perm";
+    info.SetBaseApplicationInfo(appInfo);
+
+    InnerExtensionInfo innerExtInfo;
+    innerExtInfo.name = "PermExtension";
+    innerExtInfo.bundleName = "com.example.perm";
+    innerExtInfo.moduleName = "default";
+    innerExtInfo.type = ExtensionAbilityType::SERVICE;
+
+    std::string extKey = "com.example.perm.PermExtension";
+    info.baseExtensionInfos_[extKey] = innerExtInfo;
+
+    std::vector<ExtensionAbilityInfo> infos;
+    uint32_t flags = 0;
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+
+    dataMgr->GetAllExtensionInfos(flags, userId, info, infos, appIndex);
+
+    EXPECT_EQ(infos.size(), 1);
+    EXPECT_EQ(infos[0].name, "PermExtension");
+    EXPECT_TRUE(infos[0].permissions.empty());
+    EXPECT_TRUE(infos[0].metadata.empty());
+    EXPECT_TRUE(infos[0].skills.empty());
+}
 } // OHOS
