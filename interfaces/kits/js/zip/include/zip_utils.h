@@ -146,7 +146,7 @@ using OPTIONS = struct Options;
 
 constexpr PlatformFile kInvalidPlatformFile = -1;
 
-struct tm *GetCurrentSystemTime(void);
+struct tm GetCurrentSystemTime(void);
 bool StartsWith(const std::string &str, const std::string &searchFor);
 bool EndsWith(const std::string &str, const std::string &searchFor);
 void PostTask(const OHOS::AppExecFwk::InnerEvent::Callback &callback);

@@ -91,11 +91,8 @@ bool CloseNewFileEntry(zipFile zip_file)
 
 bool AddFileEntryToZip(zipFile zip_file, FilePath &relativePath, FilePath &absolutePath, const OPTIONS &options)
 {
-    struct tm *lastModified = GetCurrentSystemTime();
-    if (lastModified == nullptr) {
-        return false;
-    }
-    if (!OpenNewFileEntry(zip_file, relativePath, false, lastModified, options)) {
+    struct tm lastModified = GetCurrentSystemTime();
+    if (!OpenNewFileEntry(zip_file, relativePath, false, &lastModified, options)) {
         return false;
     }
     bool success = AddFileContentToZip(zip_file, absolutePath);
@@ -196,8 +193,8 @@ bool ZipWriter::FlushEntriesIfNeeded(bool force, const OPTIONS &options)
                 }
             } else {
                 // Missing file or directory case.
-                struct tm *last_modified = GetCurrentSystemTime();
-                if (!AddDirectoryEntryToZip(zipFile_, relativePath, last_modified, options)) {
+                struct tm last_modified = GetCurrentSystemTime();
+                if (!AddDirectoryEntryToZip(zipFile_, relativePath, &last_modified, options)) {
                     APP_LOGI("Failed to write directory");
                     return false;
                 }
