@@ -1602,6 +1602,8 @@ private:
     bool ParseUserKey(const std::string &userKey, int32_t &userId, int32_t &appIndex) const;
 
 private:
+    ErrCode FindSkillInfoFromAllBundles(const std::string &skillName, uint32_t flags,
+        int32_t requestUserId, SkillInfo &skillInfo);
     static void GetSkillInfoWithFlags(const InnerBundleInfo &info, const InnerModuleInfo &moduleInfo,
         const SkillProfile &profile, uint32_t flags, SkillInfo &skillInfo);
 

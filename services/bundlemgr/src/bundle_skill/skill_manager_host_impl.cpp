@@ -73,14 +73,6 @@ ErrCode SkillManagerHostImpl::GetSkillInfo(const std::string &bundleName, const 
         APP_LOGE("verify permission across local account failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty");
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    }
-    if (moduleName.empty()) {
-        APP_LOGE("moduleName is empty");
-        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
-    }
     if (skillName.empty()) {
         APP_LOGE("skillName is empty");
         return ERR_BUNDLE_MANAGER_SKILL_INFO_NOT_EXIST;
