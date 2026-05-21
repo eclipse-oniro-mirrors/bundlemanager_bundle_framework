@@ -17,13 +17,16 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #define private public
+#include "bms_fuzztest_util.h"
 #include "service_center_connection.h"
 #include "securec.h"
 
 using Want = OHOS::AAFwk::Want;
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
 constexpr size_t U32_AT_SIZE = 4;
 constexpr size_t MESSAGE_SIZE = 4;
@@ -31,11 +34,7 @@ constexpr size_t DCAMERA_SHIFT_24 = 24;
 constexpr size_t DCAMERA_SHIFT_16 = 16;
 constexpr size_t DCAMERA_SHIFT_8 = 8;
 
-uint32_t GetU32Data(const char* ptr)
-{
-    return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
-}
-bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
+bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     int32_t connectState = 0;
     std::condition_variable cv;
@@ -43,8 +42,10 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     ServiceCenterConnection serviceCenterConnection(connectState, cv, connectAbilityMgr);
     sptr<IRemoteObject> remoteObject = nullptr;
     ElementName element;
-    serviceCenterConnection.OnAbilityConnectDone(element, remoteObject, reinterpret_cast<uintptr_t>(data));
-    serviceCenterConnection.OnAbilityDisconnectDone(element, reinterpret_cast<uintptr_t>(data));
+    FuzzedDataProvider fdp(data, size);
+    int32_t resultCode = GenerateRandomUser(fdp);
+    serviceCenterConnection.OnAbilityConnectDone(element, remoteObject, resultCode);
+    serviceCenterConnection.OnAbilityDisconnectDone(element, resultCode);
     return true;
 }
 }
@@ -52,28 +53,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 // Fuzzer entry point.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
-
-    if (size < OHOS::U32_AT_SIZE) {
-        return 0;
-    }
-
-    char* ch = static_cast<char*>(malloc(size + 1));
-    if (ch == nullptr) {
-        return 0;
-    }
-
-    (void)memset_s(ch, size + 1, 0x00, size + 1);
-    if (memcpy_s(ch, size, data, size) != EOK) {
-        free(ch);
-        ch = nullptr;
-        return 0;
-    }
-    OHOS::DoSomethingInterestingWithMyAPI(ch, size);
-    free(ch);
-    ch = nullptr;
+    OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }

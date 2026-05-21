@@ -15,7 +15,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
+#include "bms_fuzztest_util.h"
 #include "launcher_service.h"
 
 #include "launcherservice_fuzzer.h"
@@ -23,21 +25,23 @@
 using Want = OHOS::AAFwk::Want;
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         LauncherService launcherService;
-        std::string bundleName (reinterpret_cast<const char*>(data), size);
-
+        FuzzedDataProvider fdp(data, size);
+        std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        int32_t userId = GenerateRandomUser(fdp);
         std::vector<LauncherAbilityInfo> launcherAbilityInfos;
-        launcherService.GetAbilityList(bundleName, reinterpret_cast<uintptr_t>(data), launcherAbilityInfos);
+        launcherService.GetAbilityList(bundleName, userId, launcherAbilityInfos);
 
         std::vector<ShortcutInfo> shortcutInfos;
         launcherService.GetShortcutInfos(bundleName, shortcutInfos);
-        launcherService.GetAllLauncherAbilityInfos(reinterpret_cast<uintptr_t>(data), launcherAbilityInfos);
+        launcherService.GetAllLauncherAbilityInfos(userId, launcherAbilityInfos);
         launcherService.GetLauncherAbilityByBundleName(bundleName,
-            reinterpret_cast<uintptr_t>(data), launcherAbilityInfos);
-        launcherService.GetAllLauncherAbility(reinterpret_cast<uintptr_t>(data), launcherAbilityInfos);
+            userId, launcherAbilityInfos);
+        launcherService.GetAllLauncherAbility(userId, launcherAbilityInfos);
         launcherService.GetShortcutInfoV9(bundleName, shortcutInfos);
         return true;
     }

@@ -15,19 +15,24 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
+#include "bms_fuzztest_util.h"
 #include "default_app_proxy.h"
 
 #include "resetdefaultapplication_fuzzer.h"
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
-        std::string type (reinterpret_cast<const char*>(data), size);
+        FuzzedDataProvider fdp(data, size);
+        std::string type = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        int32_t userId = GenerateRandomUser(fdp);
         sptr<IRemoteObject> object;
         DefaultAppProxy defaultApp(object);
-        defaultApp.ResetDefaultApplication(reinterpret_cast<uintptr_t>(data), type);
+        defaultApp.ResetDefaultApplication(userId, type);
         return true;
     }
 }

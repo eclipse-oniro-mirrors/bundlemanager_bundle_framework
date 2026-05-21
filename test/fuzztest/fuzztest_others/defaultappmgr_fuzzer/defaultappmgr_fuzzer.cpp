@@ -17,50 +17,55 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "app_control_proxy.h"
+#include "bms_fuzztest_util.h"
 
 #include "defaultappmgr_fuzzer.h"
 #include "default_app_mgr.h"
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t *data, size_t size)
     {
         bool ret = false;
-        std::string type(reinterpret_cast<const char *>(data), size);
+        FuzzedDataProvider fdp(data, size);
+        std::string type = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        int32_t userId = GenerateRandomUser(fdp);
 
         BundleInfo bundleInfo;
         auto errorCode = DefaultAppMgr::GetInstance().GetDefaultApplication(
-            reinterpret_cast<uintptr_t>(data), type, bundleInfo);
+            userId, type, bundleInfo);
 
         Element element;
         element.bundleName = "";
         ret = DefaultAppMgr::GetInstance().VerifyElementFormat(element);
         errorCode = DefaultAppMgr::GetInstance().SetDefaultApplication(
-            reinterpret_cast<uintptr_t>(data), type, element);
-        errorCode = DefaultAppMgr::GetInstance().ResetDefaultApplication(reinterpret_cast<uintptr_t>(data), type);
-        errorCode = DefaultAppMgr::GetInstance().IsDefaultApplication(reinterpret_cast<uintptr_t>(data), type, ret);
-        DefaultAppMgr::GetInstance().HandleCreateUser(reinterpret_cast<uintptr_t>(data));
-        DefaultAppMgr::GetInstance().HandleRemoveUser(reinterpret_cast<uintptr_t>(data));
-        DefaultAppMgr::GetInstance().HandleUninstallBundle(reinterpret_cast<uintptr_t>(data), type, 0);
+            userId, type, element);
+        errorCode = DefaultAppMgr::GetInstance().ResetDefaultApplication(userId, type);
+        errorCode = DefaultAppMgr::GetInstance().IsDefaultApplication(userId, type, ret);
+        DefaultAppMgr::GetInstance().HandleCreateUser(userId);
+        DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
+        DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, type, 0);
         auto normalizedTypeVector = DefaultAppMgr::GetInstance().Normalize(type);
         errorCode = DefaultAppMgr::GetInstance().GetDefaultApplication(
-            reinterpret_cast<uintptr_t>(data), type, bundleInfo);
+            userId, type, bundleInfo);
         AAFwk::Want want;
         want.SetElementName("", "");
         ret = DefaultAppMgr::GetInstance().GetDefaultApplication(want,
-            reinterpret_cast<uintptr_t>(data), bundleInfo.abilityInfos, bundleInfo.extensionInfos, true);
+            userId, bundleInfo.abilityInfos, bundleInfo.extensionInfos, true);
         DefaultAppMgr::GetInstance().GetBrokerBundleInfo(element, bundleInfo);
         DefaultAppMgr::GetInstance().Init();
         auto isAppType = DefaultAppMgr::GetInstance().IsAppType(type);
-        ret = DefaultAppMgr::GetInstance().GetBundleInfo(reinterpret_cast<uintptr_t>(data), type, element, bundleInfo);
+        ret = DefaultAppMgr::GetInstance().GetBundleInfo(userId, type, element, bundleInfo);
         ret = DefaultAppMgr::GetInstance().IsSpecificMimeType(type);
         std::vector<Skill> skills;
         ret = DefaultAppMgr::GetInstance().IsMatch(type, skills);
-        ret = DefaultAppMgr::GetInstance().IsUserIdExist(reinterpret_cast<uintptr_t>(data));
+        ret = DefaultAppMgr::GetInstance().IsUserIdExist(userId);
         ret = DefaultAppMgr::GetInstance().IsElementEmpty(element);
-        ret = DefaultAppMgr::GetInstance().IsElementValid(reinterpret_cast<uintptr_t>(data), type, element);
+        ret = DefaultAppMgr::GetInstance().IsElementValid(userId, type, element);
         ret = DefaultAppMgr::GetInstance().IsEmailWant(want);
         auto str = DefaultAppMgr::GetInstance().GetTypeFromWant(want);
         ret = DefaultAppMgr::GetInstance().IsEmailSkillsValid(skills);
@@ -69,9 +74,9 @@ namespace OHOS {
         ret = DefaultAppMgr::GetInstance().MatchUtd(type, skills);
         ret = DefaultAppMgr::GetInstance().MatchActionAndType(type, type, skills);
         ret = DefaultAppMgr::GetInstance().GetBrokerBundleInfo(element, bundleInfo);
-        errorCode = DefaultAppMgr::GetInstance().GetBundleInfoByAppType(reinterpret_cast<uintptr_t>(data),
+        errorCode = DefaultAppMgr::GetInstance().GetBundleInfoByAppType(userId,
             type, bundleInfo);
-        errorCode = DefaultAppMgr::GetInstance().GetBundleInfoByUtd(reinterpret_cast<uintptr_t>(data),
+        errorCode = DefaultAppMgr::GetInstance().GetBundleInfoByUtd(userId,
             type, bundleInfo);
         errorCode = DefaultAppMgr::GetInstance().VerifyPermission(type);
         return true;

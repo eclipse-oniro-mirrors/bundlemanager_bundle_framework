@@ -34,8 +34,8 @@ namespace OHOS {
         FuzzedDataProvider fdp(data, size);
         std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         sptr<ICleanCacheCallback> cleanCacheCallback;
-        bundleMgrProxy.CleanBundleCacheFiles(bundleName, cleanCacheCallback,
-            reinterpret_cast<uintptr_t>(data));
+        int32_t userId = GenerateRandomUser(fdp);
+        bundleMgrProxy.CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
         return true;
     }
 }

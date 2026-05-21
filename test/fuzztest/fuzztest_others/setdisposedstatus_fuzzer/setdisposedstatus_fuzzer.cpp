@@ -15,22 +15,26 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "app_control_proxy.h"
+#include "bms_fuzztest_util.h"
 
 #include "setdisposedstatus_fuzzer.h"
 
 using Want = OHOS::AAFwk::Want;
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         sptr<IRemoteObject> object;
         AppControlProxy appControl(object);
         Want want;
-        std::string appId (reinterpret_cast<const char*>(data), size);
-        std::string bundleName (reinterpret_cast<const char*>(data), size);
+        FuzzedDataProvider fdp(data, size);
+        std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        int32_t appId = fdp.ConsumeIntegral<int32_t>();
         want.SetAction(bundleName);
         appControl.SetDisposedStatus(appId, want);
         return true;

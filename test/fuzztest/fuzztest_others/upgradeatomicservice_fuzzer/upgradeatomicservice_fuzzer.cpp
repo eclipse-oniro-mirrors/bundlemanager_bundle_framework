@@ -15,7 +15,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
+#include "bms_fuzztest_util.h"
 #include "bundle_mgr_proxy.h"
 
 #include "upgradeatomicservice_fuzzer.h"
@@ -23,15 +25,18 @@
 using Want = OHOS::AAFwk::Want;
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         sptr<IRemoteObject> object;
         BundleMgrProxy bundleMgrProxy(object);
         Want want;
-        std::string bundleName (reinterpret_cast<const char*>(data), size);
+        FuzzedDataProvider fdp(data, size);
+        std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         want.SetAction(bundleName);
-        bundleMgrProxy.UpgradeAtomicService(want, reinterpret_cast<uintptr_t>(data));
+        int32_t userId = GenerateRandomUser(fdp);
+        bundleMgrProxy.UpgradeAtomicService(want, userId);
         return true;
     }
 }

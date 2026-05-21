@@ -25,7 +25,7 @@ ohos_fuzztest("BmsExtensionClientFuzzTest") {
   fuzz_config_file =
       "../../../fuzztest/fuzztest_others/bmsextensionclient_fuzzer"
   use_exceptions = true
-  include_dirs = []
+  include_dirs = [ "${test_path}/fuzztest" ]
   sources = bundle_mgr_source
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",

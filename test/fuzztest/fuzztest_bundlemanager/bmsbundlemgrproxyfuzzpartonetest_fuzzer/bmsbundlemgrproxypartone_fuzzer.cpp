@@ -55,7 +55,7 @@ namespace OHOS {
         AbilityInfo abilityInfo;
         GenerateAbilityInfo<AbilityInfo>(fdp, abilityInfo);
         bundleMgrProxy.IsAbilityEnabled(abilityInfo, isEnable);
-        bundleMgrProxy.SetAbilityEnabled(abilityInfo, isEnable, reinterpret_cast<uintptr_t>(data));
+        bundleMgrProxy.SetAbilityEnabled(abilityInfo, isEnable, userId);
 
         FormInfo formInfo;
         formInfo.bundleName = bundleName;
@@ -77,7 +77,7 @@ namespace OHOS {
         std::string networkId = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         DistributedBundleInfo distributedBundleInfo;
         bundleMgrProxy.GetDistributedBundleInfo(networkId, bundleName, distributedBundleInfo);
-        bundleMgrProxy.GetAppPrivilegeLevel(bundleName, reinterpret_cast<uintptr_t>(data));
+        bundleMgrProxy.GetAppPrivilegeLevel(bundleName, userId);
 
         Want want;
         want.SetAction(bundleName);

@@ -17,17 +17,21 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "app_control_proxy.h"
+#include "bms_fuzztest_util.h"
 
 #include "defaultapphostimpl_fuzzer.h"
 #include "default_app_host_impl.h"
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t *data, size_t size)
     {
-        std::string type(reinterpret_cast<const char *>(data), size);
+        FuzzedDataProvider fdp(data, size);
+        std::string type = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         BundleInfo bundleInfo;
         Element element;
         element.bundleName = "";
@@ -36,10 +40,11 @@ namespace OHOS {
 
         bool isDefaultApp = false;
         auto defaultAppHostImpl_ = std::make_shared<DefaultAppHostImpl>();
-        defaultAppHostImpl_->GetDefaultApplication(reinterpret_cast<uintptr_t>(data), type, bundleInfo);
+        int32_t userId = GenerateRandomUser(fdp);
+        defaultAppHostImpl_->GetDefaultApplication(userId, type, bundleInfo);
         defaultAppHostImpl_->IsDefaultApplication(type, isDefaultApp);
-        defaultAppHostImpl_->SetDefaultApplication(reinterpret_cast<uintptr_t>(data), type, want);
-        defaultAppHostImpl_->ResetDefaultApplication(reinterpret_cast<uintptr_t>(data), type);
+        defaultAppHostImpl_->SetDefaultApplication(userId, type, want);
+        defaultAppHostImpl_->ResetDefaultApplication(userId, type);
 
         return true;
     }
