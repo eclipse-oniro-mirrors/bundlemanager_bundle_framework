@@ -53,6 +53,7 @@ private:
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     int32_t uid_ = 0;
     bool isBundleCrossAppSharedConfig_ = false;
+    bool needNotifyAppSkill_ = false;
     uint32_t accessTokenId_ = 0;
     std::string appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
     std::string moduleName_;
