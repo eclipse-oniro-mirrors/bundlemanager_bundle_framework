@@ -195,7 +195,7 @@ TEST_F(BmsDriverInstallerTest, RemoveDriverSoFile_EmptyModuleName_NoCrash)
     DriverInstaller installer;
     InnerBundleInfo info;
     // Should not crash with empty moduleName - iterates all extensions
-    installer.RemoveDriverSoFile(info, "", false);
+    EXPECT_NO_THROW(installer.RemoveDriverSoFile(info, "", false));
     // No assertion needed - just checking no crash
 }
 
@@ -208,5 +208,5 @@ TEST_F(BmsDriverInstallerTest, RemoveDriverSoFile_NonDriverExtension_Skipped)
     extInfo.moduleName = "module";
     info.baseExtensionInfos_["ext1"] = extInfo;
     // Should skip non-DRIVER extensions without crash
-    installer.RemoveDriverSoFile(info, "module", false);
+    EXPECT_NO_THROW(installer.RemoveDriverSoFile(info, "module", false));
 }
