@@ -376,6 +376,8 @@ public:
     int32_t MockGetCurrentActiveUserId();
     ErrCode MockGetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback);
     ErrCode MockCleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback);
+    static void SetBundleDataMgr();
+    static void UnsetBundleDataMgr();
 
 public:
     static std::shared_ptr<InstalldService> installdService_;
@@ -623,6 +625,32 @@ const std::shared_ptr<BundleDistributedManager> BmsBundleKitServiceTest::GetBund
     return bundleMgrService_->GetBundleDistributedManager();
 }
 #endif
+
+void BmsBundleKitServiceTest::SetBundleDataMgr()
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_->AddUserId(Constants::DEFAULT_USERID);
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+}
+
+void BmsBundleKitServiceTest::UnsetBundleDataMgr()
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+}
+
+class DataMgrGuard {
+public:
+    DataMgrGuard()
+    {
+        BmsBundleKitServiceTest::UnsetBundleDataMgr();
+    }
+
+    ~DataMgrGuard()
+    {
+        BmsBundleKitServiceTest::SetBundleDataMgr();
+    }
+};
 
 std::shared_ptr<BundleDataMgr> BmsBundleKitServiceTest::GetBundleDataMgr() const
 {
@@ -1748,6 +1776,117 @@ ErrCode BmsBundleKitServiceTest::MockCleanAllBundleCache(const sptr<IProcessCach
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     return ERR_OK;
+}
+
+
+static bool WriteLocalFileHeader(std::ofstream &ofs, const std::string &fileName, const std::string &fileData)
+{
+    uint32_t crc = 0;
+    uint32_t size = static_cast<uint32_t>(fileData.size());
+    uint16_t nameLen = static_cast<uint16_t>(fileName.size());
+    uint16_t extraLen = 0;
+
+    ofs.write("PK\x03\x04", 4);
+    uint16_t version = 20;
+    uint16_t flags = 0;
+    uint16_t method = 0;
+    uint16_t modTime = 0;
+    uint16_t modDate = 0;
+    ofs.write(reinterpret_cast<const char*>(&version), 2);
+    ofs.write(reinterpret_cast<const char*>(&flags), 2);
+    ofs.write(reinterpret_cast<const char*>(&method), 2);
+    ofs.write(reinterpret_cast<const char*>(&modTime), 2);
+    ofs.write(reinterpret_cast<const char*>(&modDate), 2);
+    ofs.write(reinterpret_cast<const char*>(&crc), 4);
+    ofs.write(reinterpret_cast<const char*>(&size), 4);
+    ofs.write(reinterpret_cast<const char*>(&size), 4);
+    ofs.write(reinterpret_cast<const char*>(&nameLen), 2);
+    ofs.write(reinterpret_cast<const char*>(&extraLen), 2);
+    ofs.write(fileName.c_str(), nameLen);
+    ofs.write(fileData.c_str(), size);
+    return ofs.good();
+}
+
+static bool WriteCentralDirectoryHeader(std::ofstream &ofs, const std::string &fileName,
+    const std::string &fileData, uint32_t localOffset)
+{
+    uint32_t crc = 0;
+    uint32_t size = static_cast<uint32_t>(fileData.size());
+    uint16_t nameLen = static_cast<uint16_t>(fileName.size());
+    uint16_t extraLen = 0;
+    uint16_t commentLen = 0;
+    uint16_t diskNum = 0;
+    uint16_t intAttr = 0;
+    uint32_t extAttr = 0;
+
+    ofs.write("PK\x01\x02", 4);
+    uint16_t madeBy = 20;
+    uint16_t version = 20;
+    uint16_t flags = 0;
+    uint16_t method = 0;
+    uint16_t modTime = 0;
+    uint16_t modDate = 0;
+    ofs.write(reinterpret_cast<const char*>(&madeBy), 2);
+    ofs.write(reinterpret_cast<const char*>(&version), 2);
+    ofs.write(reinterpret_cast<const char*>(&flags), 2);
+    ofs.write(reinterpret_cast<const char*>(&method), 2);
+    ofs.write(reinterpret_cast<const char*>(&modTime), 2);
+    ofs.write(reinterpret_cast<const char*>(&modDate), 2);
+    ofs.write(reinterpret_cast<const char*>(&crc), 4);
+    ofs.write(reinterpret_cast<const char*>(&size), 4);
+    ofs.write(reinterpret_cast<const char*>(&size), 4);
+    ofs.write(reinterpret_cast<const char*>(&nameLen), 2);
+    ofs.write(reinterpret_cast<const char*>(&extraLen), 2);
+    ofs.write(reinterpret_cast<const char*>(&commentLen), 2);
+    ofs.write(reinterpret_cast<const char*>(&diskNum), 2);
+    ofs.write(reinterpret_cast<const char*>(&intAttr), 2);
+    ofs.write(reinterpret_cast<const char*>(&extAttr), 4);
+    ofs.write(reinterpret_cast<const char*>(&localOffset), 4);
+    ofs.write(fileName.c_str(), nameLen);
+    return ofs.good();
+}
+
+static bool WriteEndOfCentralDirectory(std::ofstream &ofs, uint16_t numEntries,
+    uint32_t cdSize, uint32_t cdOffset)
+{
+    uint16_t diskNum = 0;
+    uint16_t eocdCommentLen = 0;
+
+    ofs.write("PK\x05\x06", 4);
+    ofs.write(reinterpret_cast<const char*>(&diskNum), 2);
+    ofs.write(reinterpret_cast<const char*>(&diskNum), 2);
+    ofs.write(reinterpret_cast<const char*>(&numEntries), 2);
+    ofs.write(reinterpret_cast<const char*>(&numEntries), 2);
+    ofs.write(reinterpret_cast<const char*>(&cdSize), 4);
+    ofs.write(reinterpret_cast<const char*>(&cdOffset), 4);
+    ofs.write(reinterpret_cast<const char*>(&eocdCommentLen), 2);
+    return ofs.good();
+}
+
+static bool CreateSimpleZipFile(const std::string &zipPath, const std::string &fileName, const std::string &fileData)
+{
+    std::ofstream ofs(zipPath, std::ios::binary);
+    if (!ofs) {
+        return false;
+    }
+
+    if (!WriteLocalFileHeader(ofs, fileName, fileData)) {
+        return false;
+    }
+
+    uint32_t localHeaderSize = 30 + static_cast<uint32_t>(fileName.size());
+    uint32_t cdOffset = localHeaderSize + static_cast<uint32_t>(fileData.size());
+
+    if (!WriteCentralDirectoryHeader(ofs, fileName, fileData, 0)) {
+        return false;
+    }
+
+    uint32_t cdSize = 46 + static_cast<uint32_t>(fileName.size());
+    if (!WriteEndOfCentralDirectory(ofs, 1, cdSize, cdOffset)) {
+        return false;
+    }
+
+    return ofs.good();
 }
 
 /**
@@ -9774,5 +9913,437 @@ HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetAlternateIcons_0100, Function | S
     std::vector<AlternateIconInfo> alternateIcons;
     auto ret = bundleMgrProxy->GetAlternateIcons(alternateIcons);
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoV9Impl_0200
+ * @tc.name: test GetBundleArchiveInfoV9 with app file path
+ * @tc.desc: 1. test GetBundleArchiveInfoV9 with .app file path but file not exist
+ *           2. should return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfoV9Impl_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    auto ret = hostImpl->GetBundleArchiveInfoV9("/data/local/tmp/not_exist.app", 0, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoFromAppImpl_0100
+ * @tc.name: test GetBundleArchiveInfoFromApp with empty path
+ * @tc.desc: 1. test GetBundleArchiveInfoFromApp with empty path
+ *           2. should return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfoFromAppImpl_0100, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    auto ret = hostImpl->GetBundleArchiveInfoFromApp("", 0, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoFromAppImpl_0200
+ * @tc.name: test GetBundleArchiveInfoFromApp with empty zip
+ * @tc.desc: 1. test GetBundleArchiveInfoFromApp with valid zip but no hap entries
+ *           2. should return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH because no valid hap
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfoFromAppImpl_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    const std::string emptyApp = "/data/local/tmp/test_empty.app";
+    // Empty zip End of Central Directory Record
+    const unsigned char emptyZip[] = {
+        0x50, 0x4b, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+    {
+        std::ofstream ofs(emptyApp, std::ios::binary);
+        ofs.write(reinterpret_cast<const char*>(emptyZip), sizeof(emptyZip));
+    }
+    auto ret = hostImpl->GetBundleArchiveInfoFromApp(emptyApp, 0, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
+    std::remove(emptyApp.c_str());
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoFromAppImpl_0300
+ * @tc.name: test GetBundleArchiveInfoFromApp with invalid hap in app
+ * @tc.desc: 1. test GetBundleArchiveInfoFromApp with zip containing fake.hap
+ *           2. ParseAndFilterHaps should return parse error
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfoFromAppImpl_0300, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    const std::string invalidHapApp = "/data/local/tmp/test_invalid_hap.app";
+    const unsigned char invalidHapZip[] = {
+        0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x65,
+        0xb0, 0x5c, 0x24, 0x71, 0xc9, 0xbc, 0x17, 0x00, 0x00, 0x00, 0x17, 0x00,
+        0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x66, 0x61, 0x6b, 0x65, 0x2e, 0x68,
+        0x61, 0x70, 0x74, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x6e, 0x6f,
+        0x74, 0x20, 0x61, 0x20, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x20, 0x68, 0x61,
+        0x70, 0x50, 0x4b, 0x01, 0x02, 0x14, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0xf0, 0x65, 0xb0, 0x5c, 0x24, 0x71, 0xc9, 0xbc, 0x17, 0x00, 0x00,
+        0x00, 0x17, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x01, 0x00, 0x00, 0x00, 0x00, 0x66,
+        0x61, 0x6b, 0x65, 0x2e, 0x68, 0x61, 0x70, 0x50, 0x4b, 0x05, 0x06, 0x00,
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x36, 0x00, 0x00, 0x00, 0x3d,
+        0x00, 0x00, 0x00, 0x00, 0x00
+    };
+    {
+        std::ofstream ofs(invalidHapApp, std::ios::binary);
+        ofs.write(reinterpret_cast<const char*>(invalidHapZip), sizeof(invalidHapZip));
+    }
+    auto ret = hostImpl->GetBundleArchiveInfoFromApp(invalidHapApp, 0, bundleInfo);
+    EXPECT_NE(ret, ERR_OK);
+    std::remove(invalidHapApp.c_str());
+}
+
+/**
+ * @tc.number: ParseAndFilterHapsImpl_0100
+ * @tc.name: test ParseAndFilterHaps with valid hap
+ * @tc.desc: 1. test ParseAndFilterHaps with valid test.hap
+ *           2. Parse success and CheckDeviceType success
+ *           3. should return ERR_OK and infos not empty
+ */
+HWTEST_F(BmsBundleKitServiceTest, ParseAndFilterHapsImpl_0100, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> hapPaths = { HAP_FILE_PATH };
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    auto ret = hostImpl->ParseAndFilterHaps(hapPaths, infos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(infos.empty());
+}
+
+/**
+ * @tc.number: ParseAndFilterHapsImpl_0200
+ * @tc.name: test ParseAndFilterHaps with device type mismatch
+ * @tc.desc: 1. test ParseAndFilterHaps with test1.hap
+ *           2. Parse success but CheckDeviceType fails
+ *           3. should return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH and infos empty
+ */
+HWTEST_F(BmsBundleKitServiceTest, ParseAndFilterHapsImpl_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> hapPaths = { HAP_FILE_PATH1 };
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    auto ret = hostImpl->ParseAndFilterHaps(hapPaths, infos);
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: PrepareAppTempDirImpl_0100
+ * @tc.name: test PrepareAppTempDir with empty external dir
+ * @tc.desc: 1. test PrepareAppTempDir with empty external dir
+ *           2. should create temp dir and return true
+ */
+HWTEST_F(BmsBundleKitServiceTest, PrepareAppTempDirImpl_0100, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    std::string tempDir;
+    bool ret = BundleMgrHostImpl::PrepareAppTempDir("", tempDir);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(tempDir.empty());
+    BundleUtil::DeleteDir(tempDir);
+}
+
+/**
+ * @tc.number: PrepareAppTempDirImpl_0200
+ * @tc.name: test PrepareAppTempDir with external dir
+ * @tc.desc: 1. test PrepareAppTempDir with non-empty external dir
+ *           2. should use external dir and return true
+ */
+HWTEST_F(BmsBundleKitServiceTest, PrepareAppTempDirImpl_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    std::string tempDir;
+    bool ret = BundleMgrHostImpl::PrepareAppTempDir("/data/local/tmp", tempDir);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(tempDir, "/data/local/tmp");
+}
+
+/**
+ * @tc.number: DecompressAppFileImpl_0100
+ * @tc.name: test DecompressAppFile with invalid zip
+ * @tc.desc: 1. test DecompressAppFile with invalid app file
+ *           2. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, DecompressAppFileImpl_0100, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    const std::string invalidApp = "/data/local/tmp/test_invalid.app";
+    {
+        std::ofstream ofs(invalidApp);
+        ofs << "not a zip";
+    }
+    std::vector<std::string> hapPaths;
+    bool ret = BundleMgrHostImpl::DecompressAppFile(invalidApp, "/data/local/tmp", hapPaths);
+    EXPECT_FALSE(ret);
+    std::remove(invalidApp.c_str());
+}
+
+/**
+ * @tc.number: MergeInnerBundleInfosImpl_0100
+ * @tc.name: test MergeInnerBundleInfos with empty infos
+ * @tc.desc: 1. test MergeInnerBundleInfos with empty map
+ *           2. should return ERR_OK and mergedInfo unchanged
+ */
+HWTEST_F(BmsBundleKitServiceTest, MergeInnerBundleInfosImpl_0100, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo mergedInfo;
+    auto ret = BundleMgrHostImpl::MergeInnerBundleInfos(infos, mergedInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DecompressAppFileImpl_0200
+ * @tc.name: test DecompressAppFile with valid app file
+ * @tc.desc: 1. test DecompressAppFile with valid zip containing hap/hsp
+ *           2. should return true and collect hap/hsp paths
+ */
+HWTEST_F(BmsBundleKitServiceTest, DecompressAppFileImpl_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    const std::string validApp = "/data/local/tmp/test_valid_decompress.app";
+    static const unsigned char testAppZipData[] = {
+        0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x76, 0x5b, 0xb0, 0x5c, 0xfd, 0x04,
+        0xc6, 0x54, 0x13, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x66, 0x69,
+        0x6c, 0x65, 0x31, 0x2e, 0x68, 0x61, 0x70, 0x74, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x68,
+        0x61, 0x70, 0x20, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x50, 0x4b, 0x03, 0x04, 0x14, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x76, 0x5b, 0xb0, 0x5c, 0x28, 0x55, 0x9d, 0x77, 0x13, 0x00, 0x00, 0x00,
+        0x13, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x66, 0x69, 0x6c, 0x65, 0x32, 0x2e, 0x68, 0x73,
+        0x70, 0x74, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x68, 0x73, 0x70, 0x20, 0x63, 0x6f, 0x6e,
+        0x74, 0x65, 0x6e, 0x74, 0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x76, 0x5b,
+        0xb0, 0x5c, 0xdf, 0xa9, 0x7d, 0x76, 0x13, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00, 0x09, 0x00,
+        0x00, 0x00, 0x66, 0x69, 0x6c, 0x65, 0x33, 0x2e, 0x74, 0x78, 0x74, 0x74, 0x68, 0x69, 0x73, 0x20,
+        0x69, 0x73, 0x20, 0x74, 0x78, 0x74, 0x20, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x50, 0x4b,
+        0x03, 0x04, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x76, 0x5b, 0xb0, 0x5c, 0xcb, 0xef, 0xd8, 0x07,
+        0x11, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x70, 0x61, 0x63, 0x6b,
+        0x2e, 0x69, 0x6e, 0x66, 0x6f, 0x74, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x70, 0x61, 0x63,
+        0x6b, 0x20, 0x69, 0x6e, 0x66, 0x6f, 0x50, 0x4b, 0x01, 0x02, 0x14, 0x00, 0x14, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x76, 0x5b, 0xb0, 0x5c, 0xfd, 0x04, 0xc6, 0x54, 0x13, 0x00, 0x00, 0x00, 0x13, 0x00,
+        0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x01,
+        0x00, 0x00, 0x00, 0x00, 0x66, 0x69, 0x6c, 0x65, 0x31, 0x2e, 0x68, 0x61, 0x70, 0x50, 0x4b, 0x01,
+        0x02, 0x14, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x76, 0x5b, 0xb0, 0x5c, 0x28, 0x55, 0x9d,
+        0x77, 0x13, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x01, 0x3a, 0x00, 0x00, 0x00, 0x66, 0x69, 0x6c, 0x65, 0x32,
+        0x2e, 0x68, 0x73, 0x70, 0x50, 0x4b, 0x01, 0x02, 0x14, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x76, 0x5b, 0xb0, 0x5c, 0xdf, 0xa9, 0x7d, 0x76, 0x13, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00,
+        0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x01, 0x74, 0x00,
+        0x00, 0x00, 0x66, 0x69, 0x6c, 0x65, 0x33, 0x2e, 0x74, 0x78, 0x74, 0x50, 0x4b, 0x01, 0x02, 0x14,
+        0x00, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x76, 0x5b, 0xb0, 0x5c, 0xcb, 0xef, 0xd8, 0x07, 0x11,
+        0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x80, 0x01, 0xae, 0x00, 0x00, 0x00, 0x70, 0x61, 0x63, 0x6b, 0x2e, 0x69, 0x6e,
+        0x66, 0x6f, 0x50, 0x4b, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x04, 0x00, 0xdc, 0x00,
+        0x00, 0x00, 0xe6, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+    {
+        std::ofstream ofs(validApp, std::ios::binary);
+        ofs.write(reinterpret_cast<const char*>(testAppZipData), sizeof(testAppZipData));
+        EXPECT_TRUE(ofs.good());
+    }
+    const std::string tempDir = "/data/local/tmp/test_decompress_out";
+    BundleUtil::DeleteDir(tempDir);
+    BundleUtil::CreateDir(tempDir);
+    std::vector<std::string> hapPaths;
+    bool ret = BundleMgrHostImpl::DecompressAppFile(validApp, tempDir, hapPaths);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(hapPaths.size(), 2);
+    BundleUtil::DeleteDir(tempDir);
+    std::remove(validApp.c_str());
+}
+
+/**
+ * @tc.number: MergeInnerBundleInfosImpl_0200
+ * @tc.name: test MergeInnerBundleInfos with single element
+ * @tc.desc: 1. test MergeInnerBundleInfos with one element
+ *           2. should return ERR_OK and mergedInfo set to the element
+ */
+HWTEST_F(BmsBundleKitServiceTest, MergeInnerBundleInfosImpl_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = "com.example.app";
+    info.SetBaseApplicationInfo(appInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.example.app";
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetCurrentModulePackage("entry");
+    infos.emplace("path1", info);
+    InnerBundleInfo mergedInfo;
+    auto ret = BundleMgrHostImpl::MergeInnerBundleInfos(infos, mergedInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(mergedInfo.GetBundleName(), "com.example.app");
+}
+
+/**
+ * @tc.number: MergeInnerBundleInfosImpl_0300
+ * @tc.name: test MergeInnerBundleInfos with mismatched bundle names
+ * @tc.desc: 1. test MergeInnerBundleInfos with two elements having different bundle names
+ *           2. should return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH
+ */
+HWTEST_F(BmsBundleKitServiceTest, MergeInnerBundleInfosImpl_0300, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo info1;
+    ApplicationInfo appInfo1;
+    appInfo1.bundleName = "com.example.app1";
+    info1.SetBaseApplicationInfo(appInfo1);
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = "com.example.app1";
+    info1.SetBaseBundleInfo(bundleInfo1);
+    info1.SetCurrentModulePackage("entry");
+    infos.emplace("path1", info1);
+    InnerBundleInfo info2;
+    ApplicationInfo appInfo2;
+    appInfo2.bundleName = "com.example.app2";
+    info2.SetBaseApplicationInfo(appInfo2);
+    BundleInfo bundleInfo2;
+    bundleInfo2.name = "com.example.app2";
+    info2.SetBaseBundleInfo(bundleInfo2);
+    info2.SetCurrentModulePackage("feature");
+    infos.emplace("path2", info2);
+    InnerBundleInfo mergedInfo;
+    auto ret = BundleMgrHostImpl::MergeInnerBundleInfos(infos, mergedInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
+}
+
+/**
+ * @tc.number: MergeInnerBundleInfosImpl_0400
+ * @tc.name: test MergeInnerBundleInfos with multiple valid elements and entry module
+ * @tc.desc: 1. test MergeInnerBundleInfos with two elements, second has entry
+ *           2. should return ERR_OK and update base bundle info
+ */
+HWTEST_F(BmsBundleKitServiceTest, MergeInnerBundleInfosImpl_0400, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo info1;
+    ApplicationInfo appInfo1;
+    appInfo1.bundleName = "com.example.app";
+    info1.SetBaseApplicationInfo(appInfo1);
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = "com.example.app";
+    info1.SetBaseBundleInfo(bundleInfo1);
+    info1.SetCurrentModulePackage("feature");
+    InnerModuleInfo moduleInfo1;
+    moduleInfo1.isEntry = false;
+    info1.InsertInnerModuleInfo("feature", moduleInfo1);
+    infos.emplace("path1", info1);
+    InnerBundleInfo info2;
+    ApplicationInfo appInfo2;
+    appInfo2.bundleName = "com.example.app";
+    info2.SetBaseApplicationInfo(appInfo2);
+    BundleInfo bundleInfo2;
+    bundleInfo2.name = "com.example.app";
+    info2.SetBaseBundleInfo(bundleInfo2);
+    info2.SetCurrentModulePackage("entry");
+    InnerModuleInfo moduleInfo2;
+    moduleInfo2.isEntry = true;
+    info2.InsertInnerModuleInfo("entry", moduleInfo2);
+    infos.emplace("path2", info2);
+    InnerBundleInfo mergedInfo;
+    auto ret = BundleMgrHostImpl::MergeInnerBundleInfos(infos, mergedInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(mergedInfo.GetBundleName(), "com.example.app");
+}
+
+/**
+ * @tc.number: MergeInnerBundleInfosImpl_0500
+ * @tc.name: test MergeInnerBundleInfos with duplicate module package
+ * @tc.desc: 1. test MergeInnerBundleInfos with two elements having same currentPackage
+ *           2. AddModuleInfo should fail and return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH
+ */
+HWTEST_F(BmsBundleKitServiceTest, MergeInnerBundleInfosImpl_0500, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo info1;
+    ApplicationInfo appInfo1;
+    appInfo1.bundleName = "com.example.app";
+    info1.SetBaseApplicationInfo(appInfo1);
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = "com.example.app";
+    info1.SetBaseBundleInfo(bundleInfo1);
+    info1.SetCurrentModulePackage("same");
+    InnerModuleInfo moduleInfo1;
+    moduleInfo1.isEntry = false;
+    info1.InsertInnerModuleInfo("same", moduleInfo1);
+    infos.emplace("path1", info1);
+    InnerBundleInfo info2;
+    ApplicationInfo appInfo2;
+    appInfo2.bundleName = "com.example.app";
+    info2.SetBaseApplicationInfo(appInfo2);
+    BundleInfo bundleInfo2;
+    bundleInfo2.name = "com.example.app";
+    info2.SetBaseBundleInfo(bundleInfo2);
+    info2.SetCurrentModulePackage("same");
+    InnerModuleInfo moduleInfo2;
+    moduleInfo2.isEntry = false;
+    info2.InsertInnerModuleInfo("same", moduleInfo2);
+    infos.emplace("path2", info2);
+    InnerBundleInfo mergedInfo;
+    auto ret = BundleMgrHostImpl::MergeInnerBundleInfos(infos, mergedInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoFromAppImpl_0400
+ * @tc.name: test GetBundleArchiveInfoFromApp with invalid zip
+ * @tc.desc: 1. test GetBundleArchiveInfoFromApp with non-zip file
+ *           2. DecompressAppFile fails, should return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfoFromAppImpl_0400, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    const std::string invalidApp = "/data/local/tmp/test_not_zip.app";
+    {
+        std::ofstream ofs(invalidApp);
+        ofs << "this is not a valid zip file";
+    }
+    auto ret = hostImpl->GetBundleArchiveInfoFromApp(invalidApp, 0, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
+    std::remove(invalidApp.c_str());
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoFromAppImpl_0500
+ * @tc.name: test GetBundleArchiveInfoFromApp with valid hap in app
+ * @tc.desc: 1. test GetBundleArchiveInfoFromApp with zip containing real test.hap
+ *           2. should return ERR_OK and bundleInfo valid
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfoFromAppImpl_0500, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    std::ifstream ifs(HAP_FILE_PATH, std::ios::binary);
+    if (!ifs) {
+        EXPECT_TRUE(false) << "hap file not found: " << HAP_FILE_PATH;
+        return;
+    }
+    std::string hapData((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    const std::string appPath = "/data/local/tmp/test_valid_hap.app";
+    EXPECT_TRUE(CreateSimpleZipFile(appPath, "test.hap", hapData));
+    auto ret = hostImpl->GetBundleArchiveInfoFromApp(appPath, 0, bundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    std::remove(appPath.c_str());
 }
 }

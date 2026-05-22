@@ -1358,7 +1358,19 @@ private:
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
     ErrCode GetBundleArchiveInfoBySandBoxPath(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
+    ErrCode GetBundleArchiveInfoFromApp(
+        const std::string &appFilePath, int32_t flags, BundleInfo &bundleInfo,
+        const std::string &externalTempDir = "");
     bool IsPreInstallApp(const std::string &bundleName);
+    static bool PrepareAppTempDir(
+        const std::string &externalTempDir, std::string &tempDir);
+    static bool DecompressAppFile(
+        const std::string &appFilePath, const std::string &tempDir, std::vector<std::string> &hapPaths);
+    static ErrCode ParseAndFilterHaps(
+        const std::vector<std::string> &hapPaths,
+        std::unordered_map<std::string, InnerBundleInfo> &infos);
+    static ErrCode MergeInnerBundleInfos(
+        const std::unordered_map<std::string, InnerBundleInfo> &infos, InnerBundleInfo &mergedInfo);
     bool GetPreferableBundleInfoFromHapPaths(const std::vector<std::string> &hapPaths,
         BundleInfo &bundleInfo);
     bool IsBundleExist(const std::string &bundleName);

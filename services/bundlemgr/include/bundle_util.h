@@ -62,6 +62,13 @@ public:
      */
     static bool CheckFileType(const std::string &fileName, const std::string &extensionName);
     /**
+     * @brief Check whether a file is valid APP file.
+     * @param appPath Indicates the APP file path.
+     * @param realPath Indicates the real path of APP file.
+     * @return Returns ERR_OK if the file checked successfully; returns error code otherwise.
+     */
+    static ErrCode CheckAppFilePath(const std::string &appPath, std::string &realPath);
+    /**
      * @brief Check whether a file name is valid.
      * @param fileName Indicates the file path.
      * @return Returns ERR_OK if the file name checked successfully; returns errcode otherwise.
@@ -253,6 +260,17 @@ public:
     static std::vector<std::string> FileTypeNormalize(const std::string &fileType);
     static std::string Sha256File(const std::string& filePath);
     static ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias);
+    /**
+     * @brief Decompress zip file to dir and collect file paths.
+     * @param zipFilePath Indicates the zip file path.
+     * @param outFilePath Indicates the output directory.
+     * @param filePaths Indicates the collected file paths.
+     * @param filterSuffixes Indicates the suffixes to filter, empty means no filter.
+     * @return Returns true if decompress successfully; returns false otherwise.
+     */
+    static bool DecompressToFile(const std::string &zipFilePath, const std::string &outFilePath,
+        std::vector<std::string> &filePaths,
+        const std::vector<std::string> &filterSuffixes = {});
     static std::vector<std::string> GetPathsToSetContext(const std::string &bundleName,
         int32_t userId, int32_t appIndex);
     static bool IsExecutableBinaryFile(const std::string &filePath);

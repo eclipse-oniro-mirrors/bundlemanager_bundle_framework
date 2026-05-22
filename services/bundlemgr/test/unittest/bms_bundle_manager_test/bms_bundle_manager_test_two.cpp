@@ -2735,6 +2735,63 @@ HWTEST_F(BmsBundleManagerTest2, BundleDataMgr_GetAssetGroupsInfo_1100, Function 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
+/**
+ * @tc.number: BundleMgrHostImpl_3400
+ * @tc.name: test MergeInnerBundleInfos with entry module
+ * @tc.desc: 1. test MergeInnerBundleInfos when second info has entry module
+ *
+ */
+HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_3400, Function | MediumTest | Level1)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo info1;
+    ApplicationInfo appInfo1;
+    appInfo1.bundleName = "com.example.app";
+    info1.SetBaseApplicationInfo(appInfo1);
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = "com.example.app";
+    info1.SetBaseBundleInfo(bundleInfo1);
+    info1.SetCurrentModulePackage("feature");
+    InnerModuleInfo moduleInfo1;
+    moduleInfo1.isEntry = false;
+    info1.InsertInnerModuleInfo("feature", moduleInfo1);
+    infos.emplace("path1", info1);
+
+    InnerBundleInfo info2;
+    ApplicationInfo appInfo2;
+    appInfo2.bundleName = "com.example.app";
+    info2.SetBaseApplicationInfo(appInfo2);
+    BundleInfo bundleInfo2;
+    bundleInfo2.name = "com.example.app";
+    info2.SetBaseBundleInfo(bundleInfo2);
+    info2.SetCurrentModulePackage("entry");
+    InnerModuleInfo moduleInfo2;
+    moduleInfo2.isEntry = true;
+    info2.InsertInnerModuleInfo("entry", moduleInfo2);
+    infos.emplace("path2", info2);
+
+    InnerBundleInfo mergedInfo;
+    auto ret = BundleMgrHostImpl::MergeInnerBundleInfos(infos, mergedInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(mergedInfo.GetBundleName(), "com.example.app");
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_3500
+ * @tc.name: test ParseAndFilterHaps with valid hap
+ * @tc.desc: 1. test ParseAndFilterHaps with valid hap path
+ *
+ */
+HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_3500, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> hapPaths = { RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST };
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    auto ret = hostImpl->ParseAndFilterHaps(hapPaths, infos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(infos.empty());
+}
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: GetBundleSpaceSize_0100

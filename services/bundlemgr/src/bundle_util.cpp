@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "bundle_service_constants.h"
+#include "contrib/minizip/unzip.h"
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
 #endif
@@ -37,6 +38,7 @@
 #include "ipc_skeleton.h"
 #include "mime_type_mgr.h"
 #include "parameter.h"
+#include "scope_guard.h"
 #include "string_ex.h"
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
 #include "type_descriptor.h"
@@ -78,6 +80,10 @@ constexpr const char* DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE = "Cover";
 constexpr const char* APP_INSTALL_PREFIX = "+app_install+";
 constexpr const char* APP_CLONE_PREFIX = "+app_clone+";
 constexpr const char* DATA_CLONE_PATH = "dataclone/";
+constexpr const char PACK_INFO[] = "pack.info";
+constexpr const char* ILLEGAL_PATH_FIELD = "../";
+constexpr const int32_t ZIP_MAX_PATH = 256;
+constexpr const int32_t ZIP_BUF_SIZE = 8192;
 
 std::string GetRenameInstallPrefixTag(const std::string &filePath)
 {
@@ -96,6 +102,84 @@ std::string GetRenameInstallPrefixTag(const std::string &filePath)
         return APP_CLONE_PREFIX;
     }
     return APP_INSTALL_PREFIX;
+}
+
+static bool IsValidFileName(const char* filename)
+{
+    if (std::string(filename).find(ILLEGAL_PATH_FIELD) != std::string::npos) {
+        APP_LOGE("ExtractFileFromZip failed due to invalid fileName: %{public}s", filename);
+        return false;
+    }
+    return true;
+}
+
+static bool ShouldSkipFile(const std::string &fullPath, const char* filename,
+    const std::vector<std::string> &filterSuffixes)
+{
+    if (strcmp(filename, PACK_INFO) == 0) {
+        return true;
+    }
+    if (filterSuffixes.empty()) {
+        return false;
+    }
+    return std::none_of(filterSuffixes.begin(), filterSuffixes.end(),
+        [&fullPath](const auto &suffix) {
+            return BundleUtil::CheckFileType(fullPath, suffix);
+        });
+}
+
+static bool WriteUnzippedData(const unzFile &zipFile, FILE *outFile)
+{
+    std::string buffer;
+    buffer.resize(ZIP_BUF_SIZE);
+    int bytesRead;
+    while ((bytesRead = unzReadCurrentFile(zipFile, &(buffer[0]), ZIP_BUF_SIZE)) > 0) {
+        if (fwrite(&(buffer[0]), 1, static_cast<size_t>(bytesRead), outFile) !=
+            static_cast<size_t>(bytesRead)) {
+            APP_LOGE("Failed to write file");
+            return false;
+        }
+    }
+    if (bytesRead < 0) {
+        APP_LOGE("Failed to read file from zip");
+        return false;
+    }
+    return true;
+}
+
+static bool ExtractFileFromZip(const unzFile &zipFile, const std::string &outFilePath,
+    const char* filename, std::vector<std::string> &filePaths,
+    const std::vector<std::string> &filterSuffixes)
+{
+    if (!IsValidFileName(filename)) {
+        return false;
+    }
+    std::string fullPath = outFilePath + "/" + std::string(filename);
+    if (ShouldSkipFile(fullPath, filename, filterSuffixes)) {
+        return true;
+    }
+    if (unzOpenCurrentFile(zipFile) != UNZ_OK) {
+        APP_LOGE("Failed to open file in zip: %{public}s", filename);
+        return false;
+    }
+    ScopeGuard zipGuard([&zipFile]() { unzCloseCurrentFile(zipFile); });
+
+    FILE *outFile = fopen(fullPath.c_str(), "wb");
+    if (!outFile) {
+        APP_LOGE("Failed to create output file: %{public}s", fullPath.c_str());
+        return false;
+    }
+    ScopeGuard fileGuard([&outFile]() {
+        if (fclose(outFile) != 0) {
+            APP_LOGE("Failed to close file");
+        }
+    });
+
+    if (!WriteUnzippedData(zipFile, outFile)) {
+        return false;
+    }
+    filePaths.emplace_back(fullPath);
+    return true;
 }
 }
 
@@ -126,6 +210,33 @@ ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &re
     ret = CheckFileSize(realPath, MAX_HAP_SIZE);
     if (ret != ERR_OK) {
         APP_LOGE("file size larger than max hap size Max size is: %{public}" PRId64, MAX_HAP_SIZE);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleUtil::CheckAppFilePath(const std::string &appPath, std::string &realPath)
+{
+    ErrCode ret = CheckFileName(appPath);
+    if (ret != ERR_OK) {
+        APP_LOGE("app file path invalid");
+        return ret;
+    }
+    if (!CheckFileType(appPath, ServiceConstants::APP_FILE_SUFFIX)) {
+        APP_LOGE("file is not app");
+        return ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME;
+    }
+    if (!PathToRealPath(appPath, realPath)) {
+        APP_LOGE("app file is not real path");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_IS_NOT_REAL;
+    }
+    if (access(realPath.c_str(), F_OK) != 0) {
+        APP_LOGE("not access the app file path: %{public}s, errno:%{public}d", realPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALL_ACCESS_FILE_FAILED;
+    }
+    ret = CheckFileSize(realPath, MAX_HAP_SIZE);
+    if (ret != ERR_OK) {
+        APP_LOGE("app file size larger than max app size Max size is: %{public}" PRId64, MAX_HAP_SIZE);
         return ret;
     }
     return ERR_OK;
@@ -1372,6 +1483,61 @@ std::vector<std::string> BundleUtil::FileTypeNormalize(const std::string &fileTy
     APP_LOGI("UDMF not support");
     return {};
 #endif
+}
+
+bool BundleUtil::DecompressToFile(const std::string &zipFilePath, const std::string &outFilePath,
+    std::vector<std::string> &filePaths, const std::vector<std::string> &filterSuffixes)
+{
+    mode_t rootMode = 0777;
+    struct stat st;
+    if (stat(outFilePath.c_str(), &st) != 0) {
+        if (mkdir(outFilePath.c_str(), rootMode) != 0) {
+            APP_LOGE("Failed to create directory: %{public}s", outFilePath.c_str());
+            return false;
+        }
+    }
+
+    unzFile zipFile = unzOpen(zipFilePath.c_str());
+    if (!zipFile) {
+        APP_LOGE("Failed to open zip file: %{public}s", zipFilePath.c_str());
+        return false;
+    }
+
+    ScopeGuard zipGuard([&zipFile]() {
+        unzClose(zipFile);
+    });
+
+    unz_global_info globalInfo = {};
+    if (unzGetGlobalInfo(zipFile, &globalInfo) != UNZ_OK) {
+        APP_LOGE("Failed to get global info from zip file: %{public}s", zipFilePath.c_str());
+        return false;
+    }
+
+    bool result = true;
+    for (uLong i = 0; i < globalInfo.number_entry; i++) {
+        char filename[ZIP_MAX_PATH] = {};
+        unz_file_info fileInfo = {};
+        if (unzGetCurrentFileInfo(zipFile, &fileInfo, filename, sizeof(filename) - 1, nullptr, 0, nullptr, 0) !=
+            UNZ_OK) {
+            APP_LOGE("Failed to get file info");
+            result = false;
+            break;
+        }
+
+        if (!ExtractFileFromZip(zipFile, outFilePath, filename, filePaths, filterSuffixes)) {
+            result = false;
+            break;
+        }
+
+        if ((i + 1) < globalInfo.number_entry) {
+            if (unzGoToNextFile(zipFile) != UNZ_OK) {
+                APP_LOGE("Failed to go to next file");
+                result = false;
+                break;
+            }
+        }
+    }
+    return result;
 }
 
 ErrCode BundleUtil::GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias)

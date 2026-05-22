@@ -458,106 +458,6 @@ static bool GetAppFilesFromBundlePath(const std::string &currentBundlePath, std:
     return ret;
 }
 
-static bool ExtractFileFromZip(const unzFile &zipFile, const std::string &outFilePath,
-    const char* filename, std::vector<std::string> &filePaths)
-{
-    std::string fullPath = outFilePath + "/" + std::string(filename);
-    if (strcmp(filename, PACK_INFO) == 0) {
-        return true;
-    }
-    filePaths.emplace_back(fullPath);
-
-    if (unzOpenCurrentFile(zipFile) != UNZ_OK) {
-        APP_LOGE("Failed to open file in zip: %{public}s", filename);
-        return false;
-    }
-
-    ScopeGuard zipGuard([&zipFile]() {
-        unzCloseCurrentFile(zipFile);
-    });
-
-    FILE *outFile = fopen(fullPath.c_str(), "wb");
-    if (!outFile) {
-        APP_LOGE("Failed to create output file: %{public}s", fullPath.c_str());
-        unzCloseCurrentFile(zipFile);
-        return false;
-    }
-
-    ScopeGuard fileGuard([&outFile]() {
-        if (fclose(outFile) != 0) {
-            APP_LOGE("Failed to close file");
-        }
-    });
-
-    std::string buffer;
-    buffer.reserve(ZIP_BUF_SIZE);
-    buffer.resize(ZIP_BUF_SIZE - 1);
-    size_t bytesRead;
-    while ((bytesRead = unzReadCurrentFile(zipFile, &(buffer[0]), ZIP_BUF_SIZE)) > 0) {
-        if (fwrite(&(buffer[0]), 1, bytesRead, outFile) != bytesRead) {
-            APP_LOGE("Failed to write file");
-            return false;
-        }
-    }
-    return true;
-}
-
-static bool DecompressToFile(const std::string &zipFilePath, const std::string &outFilePath,
-    std::vector<std::string> &filePaths)
-{
-    mode_t rootMode = 0777;
-    struct stat st;
-    if (stat(outFilePath.c_str(), &st) != 0) {
-        if (mkdir(outFilePath.c_str(), rootMode) != 0) {
-            APP_LOGE("Failed to create directory: %{public}s", outFilePath.c_str());
-            return false;
-        }
-    }
-
-    unzFile zipFile = unzOpen(zipFilePath.c_str());
-    if (!zipFile) {
-        APP_LOGE("Failed to open zip file: %{public}s", zipFilePath.c_str());
-        return false;
-    }
-
-    ScopeGuard zipGuard([&zipFile]() {
-        unzClose(zipFile);
-    });
-
-    unz_global_info globalInfo = {};
-    if (unzGetGlobalInfo(zipFile, &globalInfo) != UNZ_OK) {
-        APP_LOGE("Failed to get global info from zip file: %{public}s", zipFilePath.c_str());
-        unzClose(zipFile);
-        return false;
-    }
-
-    bool result = true;
-    for (uLong i = 0; i < globalInfo.number_entry; i++) {
-        char filename[ZIP_MAX_PATH] = {};
-        unz_file_info fileInfo = {};
-        if (unzGetCurrentFileInfo(zipFile, &fileInfo, filename, sizeof(filename) - 1, nullptr, 0, nullptr, 0) !=
-            UNZ_OK) {
-            APP_LOGE("Failed to get file info");
-            result = false;
-            break;
-        }
-
-        if (!ExtractFileFromZip(zipFile, outFilePath, filename, filePaths)) {
-            result = false;
-            break;
-        }
-
-        if ((i + 1) < globalInfo.number_entry) {
-            if (unzGoToNextFile(zipFile) != UNZ_OK) {
-                APP_LOGE("Failed to go to next file");
-                result = false;
-                break;
-            }
-        }
-    }
-    return result;
-}
-
 static bool GetInnerBundleInfo(const std::string &hapFilePath, std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     if (hapFilePath.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
@@ -648,7 +548,7 @@ bool BundleStreamInstallerHostImpl::InstallApp(const std::vector<std::string> &p
 
     std::vector<std::string> filePaths;
     for (const auto &appPath : appPaths) {
-        if (!DecompressToFile(appPath, pathVec.front(), filePaths)) {
+        if (!BundleUtil::DecompressToFile(appPath, pathVec.front(), filePaths)) {
             receiver->OnFinished(ERR_APPEXECFWK_INSTALL_DECOMPRESS_APP_FAILED, "");
             return false;
         }

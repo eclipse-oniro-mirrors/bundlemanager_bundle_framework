@@ -14,6 +14,7 @@
  */
 
 #include "bundle_mgr_host_impl.h"
+#include <atomic>
 #include <cinttypes>
 #include "ability_manager_helper.h"
 #include "account_helper.h"
@@ -26,6 +27,7 @@
 #include "bms_extension_client.h"
 #include "bms_extension_data_mgr.h"
 #include "bundle_hitrace_chain.h"
+#include "bundle_install_checker.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -67,6 +69,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+std::atomic<uint32_t> g_tempDirUniqueCounter{0};
 constexpr const char* SYSTEM_APP = "system";
 constexpr const char* THIRD_PARTY_APP = "third-party";
 constexpr const char* APP_LINKING = "applinking";
@@ -1693,6 +1696,15 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
         APP_LOGD("sandbox path");
         return GetBundleArchiveInfoBySandBoxPath(hapFilePath, flags, bundleInfo, true);
     }
+    if (BundleUtil::CheckFileType(hapFilePath, ServiceConstants::APP_FILE_SUFFIX)) {
+        std::string realPath;
+        auto ret = BundleUtil::CheckAppFilePath(hapFilePath, realPath);
+        if (ret != ERR_OK) {
+            APP_LOGE("GetBundleArchiveInfoV9 app file path %{private}s invalid", hapFilePath.c_str());
+            return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+        }
+        return GetBundleArchiveInfoFromApp(realPath, flags, bundleInfo);
+    }
     std::string realPath;
     ErrCode ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
     if (ret != ERR_OK) {
@@ -1738,8 +1750,14 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         APP_LOGE("GetBundleArchiveInfo RevertToRealPath failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    if (BundleUtil::CheckFileType(hapRealPath, ServiceConstants::APP_FILE_SUFFIX) && !fromV9) {
+        APP_LOGE("non-v9 app file is not supported in sandbox path");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
     std::string tempHapPath = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
-        std::string(ServiceConstants::PATH_SEPARATOR) + std::to_string(BundleUtil::GetCurrentTimeNs());
+        std::string(ServiceConstants::PATH_SEPARATOR) +
+        std::to_string(BundleUtil::GetCurrentTimeNs()) + "_" +
+        std::to_string(++g_tempDirUniqueCounter);
     if (!BundleUtil::CreateDir(tempHapPath)) {
         APP_LOGE("GetBundleArchiveInfo make temp dir failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -1750,6 +1768,9 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         BundleDirScene::COPY_HAP_TO_TEMP_PATH) != ERR_OK) {
         APP_LOGE("GetBundleArchiveInfo copy hap file failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (BundleUtil::CheckFileType(tempHapFile, ServiceConstants::APP_FILE_SUFFIX)) {
+        return GetBundleArchiveInfoFromApp(tempHapFile, flags, bundleInfo, tempHapPath);
     }
     std::string realPath;
     auto ret = BundleUtil::CheckFilePath(tempHapFile, realPath);
@@ -7678,6 +7699,134 @@ ErrCode BundleMgrHostImpl::CheckCallingUid()
         LOG_E(BMS_TAG_DEFAULT, "verify callingName failed calling: %{public}d", callingUid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    return ERR_OK;
+}
+
+bool BundleMgrHostImpl::PrepareAppTempDir(
+    const std::string &externalTempDir, std::string &tempDir)
+{
+    if (externalTempDir.empty()) {
+        tempDir = BundleUtil::CreateInstallTempDir(
+            ++g_tempDirUniqueCounter, DirType::STREAM_INSTALL_DIR);
+    } else {
+        tempDir = externalTempDir;
+    }
+    return !tempDir.empty();
+}
+
+bool BundleMgrHostImpl::DecompressAppFile(
+    const std::string &appFilePath, const std::string &tempDir, std::vector<std::string> &hapPaths)
+{
+    std::vector<std::string> filterSuffixes = {
+        ServiceConstants::INSTALL_FILE_SUFFIX,
+        ServiceConstants::HSP_FILE_SUFFIX
+    };
+    if (!BundleUtil::DecompressToFile(appFilePath, tempDir, hapPaths, filterSuffixes)) {
+        APP_LOGE("decompress app file failed");
+        return false;
+    }
+    return true;
+}
+
+ErrCode BundleMgrHostImpl::ParseAndFilterHaps(
+    const std::vector<std::string> &hapPaths,
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    auto bundleInstallChecker = std::make_unique<BundleInstallChecker>();
+    std::unordered_map<std::string, InnerBundleInfo> tempInfos;
+    tempInfos.reserve(1);
+    for (const auto &hapPath : hapPaths) {
+        InnerBundleInfo info;
+        BundleParser bundleParser;
+        bool isAbcCompressed = false;
+        auto ret = bundleParser.Parse(hapPath, info, isAbcCompressed);
+        if (ret != ERR_OK) {
+            APP_LOGE("parse hap failed, path=%{private}s, err=%{public}d", hapPath.c_str(), ret);
+            return ret;
+        }
+        tempInfos.clear();
+        tempInfos.emplace(hapPath, info);
+        if (bundleInstallChecker->CheckDeviceType(tempInfos, ERR_OK) != ERR_OK) {
+            APP_LOGW("device type not match, skip hap: %{private}s", hapPath.c_str());
+            continue;
+        }
+        infos.emplace(hapPath, std::move(info));
+    }
+    if (infos.empty()) {
+        APP_LOGE("no valid hap for current device in app file");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::MergeInnerBundleInfos(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos, InnerBundleInfo &mergedInfo)
+{
+    bool first = true;
+    std::string firstBundleName;
+    for (auto &[path, info] : infos) {
+        if (first) {
+            mergedInfo = info;
+            firstBundleName = info.GetBundleName();
+            first = false;
+            continue;
+        }
+        if (info.GetBundleName() != firstBundleName) {
+            APP_LOGE("bundle name not match, expect %{public}s but got %{public}s",
+                firstBundleName.c_str(), info.GetBundleName().c_str());
+            return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+        }
+        if (info.HasEntry()) {
+            mergedInfo.UpdateBaseBundleInfo(info.GetBaseBundleInfo(), true);
+            mergedInfo.UpdateBaseApplicationInfo(info);
+        }
+        if (!mergedInfo.AddModuleInfo(info)) {
+            APP_LOGE("merge module failed, module=%{public}s", info.GetCurrentModulePackage().c_str());
+            return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetBundleArchiveInfoFromApp(
+    const std::string &appFilePath, int32_t flags, BundleInfo &bundleInfo,
+    const std::string &externalTempDir)
+{
+    if (appFilePath.empty()) {
+        APP_LOGE("app file path is empty");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+
+    std::string tempDir;
+    if (!PrepareAppTempDir(externalTempDir, tempDir)) {
+        APP_LOGE("create temp dir failed for app file");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+    ScopeGuard dirGuard([&tempDir]() {
+        BundleUtil::DeleteDir(tempDir);
+    });
+
+    std::vector<std::string> hapPaths;
+    if (!DecompressAppFile(appFilePath, tempDir, hapPaths)) {
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    auto ret = ParseAndFilterHaps(hapPaths, infos);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+
+    InnerBundleInfo mergedInfo;
+    ret = MergeInnerBundleInfos(infos, mergedInfo);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
+        == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
+        SetProvisionInfoToInnerBundleInfo(appFilePath, mergedInfo);
+    }
+    mergedInfo.GetBundleInfoV9(flags, bundleInfo, ServiceConstants::NOT_EXIST_USERID);
     return ERR_OK;
 }
 }  // namespace AppExecFwk
