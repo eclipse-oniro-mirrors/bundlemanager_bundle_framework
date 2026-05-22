@@ -4089,6 +4089,20 @@ HWTEST_F(BmsDataMgrTest, ImplicitQueryCurAbilityInfosV9_0001, Function | SmallTe
 }
 
 /**
+ * @tc.number: ImplicitQueryCurCloneExtensionAbilityInfos_0001
+ * @tc.name: ImplicitQueryCurCloneExtensionAbilityInfos
+ * @tc.desc: test ImplicitQueryCurCloneExtensionAbilityInfos
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryCurCloneExtensionAbilityInfos_0001, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    std::vector<ExtensionAbilityInfo> abilityInfos;
+    auto ret = bundleDataMgr.ImplicitQueryCurCloneExtensionAbilityInfos(want, 0, USERID, abilityInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: ImplicitQueryCurCloneExtensionAbilityInfosV9_0001
  * @tc.name: ImplicitQueryCurCloneExtensionAbilityInfosV9
  * @tc.desc: test ImplicitQueryCurCloneExtensionAbilityInfosV9
@@ -5552,6 +5566,19 @@ HWTEST_F(BmsDataMgrTest, NotifyPluginEventCallback_0001, TestSize.Level1)
     bundleDataMgr.pluginCallbackMap_[std::string(Constants::FOUNDATION_PROCESS_NAME)].emplace_back(callback);
     bundleDataMgr.pluginCallbackMap_[bundleName].emplace_back(callback);
     EXPECT_NO_THROW(bundleDataMgr.NotifyPluginEventCallback(commonData, bundleName, false));
+}
+
+/**
+ * @tc.number: UnregisterPluginEventCallback_0001
+ * @tc.name: RegisterPluginEventCallback
+ * @tc.desc: test BundleDataMgr::RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+ */
+HWTEST_F(BmsDataMgrTest, RegisterPluginEventCallback_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName;
+    auto ret = bundleDataMgr.RegisterPluginEventCallback(nullptr, bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**
@@ -7337,6 +7364,21 @@ HWTEST_F(BmsDataMgrTest, SetBundleUserInfoRemovable_0001, TestSize.Level1)
 }
 
 /**
+ * @tc.number: SetBundleUserInfoRemovable_0002
+ * @tc.name: SetBundleUserInfoRemovable
+ * @tc.desc: test BundleDataMgr::SetBundleUserInfoRemovable
+ */
+HWTEST_F(BmsDataMgrTest, SetBundleUserInfoRemovable_0002, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.test.bundleName";
+    int32_t userId = 100;
+    bundleDataMgr.AddUserId(userId);
+    bool ret = bundleDataMgr.SetBundleUserInfoRemovable(bundleName, userId, false);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: GetPluginBundlePathForSelf_0010
  * @tc.name: GetPluginBundlePathForSelf
  * @tc.desc: test BundleDataMgr::GetPluginBundlePathForSelf
@@ -8969,6 +9011,51 @@ HWTEST_F(BmsDataMgrTest, CheckBundleExist_0001, Function | MediumTest | Level1)
 }
 
 /**
+ * @tc.number: CheckBundleExist_0002
+ * @tc.name: CheckBundleExist
+ * @tc.desc: test CheckBundleExist
+ */
+HWTEST_F(BmsDataMgrTest, CheckBundleExist_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "test";
+    InnerBundleInfo bundleInfo;
+    bundleDataMgr.bundleInfos_.clear();
+    bundleDataMgr.bundleInfos_[bundleName] = bundleInfo;
+
+    int32_t appIndex = 1;
+    auto ret = bundleDataMgr.CheckBundleExist(bundleName, -4, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CheckBundleExist_0003
+ * @tc.name: CheckBundleExist
+ * @tc.desc: test CheckBundleExist
+ */
+HWTEST_F(BmsDataMgrTest, CheckBundleExist_0003, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "test";
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo userInfo;
+    BundleUserInfo bundleUserInfo;
+    bundleUserInfo.userId = 100;
+    userInfo.bundleUserInfo = bundleUserInfo;
+    std::string key = bundleName + "_" + std::to_string(USERID);
+    bundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    bundleInfo.SetBaseApplicationInfo(appInfo);
+    bundleDataMgr.bundleInfos_.clear();
+    bundleDataMgr.bundleInfos_[bundleName] = bundleInfo;
+
+    int32_t appIndex = 1;
+    auto ret = bundleDataMgr.CheckBundleExist(bundleName, -4, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST);
+}
+
+/**
  * @tc.number: IsSystemHsp_0001
  * @tc.name: IsSystemHsp
  * @tc.desc: test IsSystemHsp
@@ -10420,5 +10507,2076 @@ HWTEST_F(BmsDataMgrTest, GetAllExtensionInfos_0300, Function | SmallTest | Level
     EXPECT_TRUE(infos[0].permissions.empty());
     EXPECT_TRUE(infos[0].metadata.empty());
     EXPECT_TRUE(infos[0].skills.empty());
+}
+
+/**
+ * @tc.number: IsHideDesktopIconForEvent_0001
+ * @tc.name: IsHideDesktopIconForEvent
+ * @tc.desc: test IsHideDesktopIconForEvent with empty bundleName
+ */
+HWTEST_F(BmsDataMgrTest, IsHideDesktopIconForEvent_0001, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "";
+    bool result = dataMgr->IsHideDesktopIconForEvent(bundleName);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: IsHideDesktopIconForEvent_0002
+ * @tc.name: IsHideDesktopIconForEvent
+ * @tc.desc: test IsHideDesktopIconForEvent with valid bundleName
+ */
+HWTEST_F(BmsDataMgrTest, IsHideDesktopIconForEvent_0002, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.hideicon";
+    bool result = dataMgr->IsHideDesktopIconForEvent(bundleName);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: IsHideDesktopIconForEvent_0003
+ * @tc.name: IsHideDesktopIconForEvent
+ * @tc.desc: test IsHideDesktopIconForEvent with valid bundleName and innerBundleInfo
+ */
+HWTEST_F(BmsDataMgrTest, IsHideDesktopIconForEvent_0003, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.hideicon";
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.name = bundleName;
+    applicationInfo.hideDesktopIcon = true;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bool result = dataMgr->IsHideDesktopIconForEvent(bundleName);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: UpdateInnerBundleInfo_0007
+ * @tc.name: UpdateInnerBundleInfo
+ * @tc.desc: test UpdateInnerBundleInfo when bundle does not exist in bundleInfos_
+ */
+HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0007, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string nonExistentBundleName = "com.ohos.nonexistent.bundle";
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = nonExistentBundleName;
+    bundleInfo.applicationInfo.name = "NonExistentApp";
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = nonExistentBundleName;
+    applicationInfo.deviceId = DEVICE_ID;
+    applicationInfo.bundleName = nonExistentBundleName;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    dataMgr->bundleInfos_.clear();
+    bool result = dataMgr->UpdateInnerBundleInfo(innerBundleInfo, false);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckHspVersionIsRelied_0001
+ * @tc.name: CheckHspVersionIsRelied
+ * @tc.desc: test CheckHspVersionIsRelied when other bundle depends on the hsp module
+ */
+HWTEST_F(BmsDataMgrTest, CheckHspVersionIsRelied_0001, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string hspBundleName = "com.ohos.test.hsp";
+    InnerBundleInfo hspInfo;
+    BundleInfo hspBundleInfo;
+    hspBundleInfo.name = hspBundleName;
+    hspBundleInfo.applicationInfo.name = hspBundleName;
+    hspBundleInfo.applicationInfo.bundleName = hspBundleName;
+    ApplicationInfo hspAppInfo;
+    hspAppInfo.name = hspBundleName;
+    hspAppInfo.bundleName = hspBundleName;
+    hspInfo.SetBaseBundleInfo(hspBundleInfo);
+    hspInfo.SetBaseApplicationInfo(hspAppInfo);
+
+    std::string moduleName = "libhsp_module.so";
+    uint32_t versionCode = 1;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = moduleName;
+    hspInfo.InsertInnerModuleInfo(moduleName, innerModuleInfo);
+
+    std::string appBundleName = "com.ohos.test.app";
+    InnerBundleInfo appInfo;
+    BundleInfo appBundleInfo;
+    appBundleInfo.name = appBundleName;
+    appBundleInfo.applicationInfo.name = appBundleName;
+    appBundleInfo.applicationInfo.bundleName = appBundleName;
+    ApplicationInfo appAppInfo;
+    appAppInfo.name = appBundleName;
+    appAppInfo.bundleName = appBundleName;
+    appInfo.SetBaseBundleInfo(appBundleInfo);
+    appInfo.SetBaseApplicationInfo(appAppInfo);
+
+    Dependency dependency;
+    dependency.bundleName = hspBundleName;
+    dependency.moduleName = moduleName;
+    dependency.versionCode = versionCode;
+    innerModuleInfo.dependencies.emplace_back(dependency);
+    appInfo.InsertInnerModuleInfo(moduleName, innerModuleInfo);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(hspBundleName, hspInfo);
+    dataMgr->bundleInfos_.emplace(appBundleName, appInfo);
+
+    bool result = dataMgr->CheckHspVersionIsRelied(versionCode, hspInfo);
+    EXPECT_FALSE(result);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CheckHspBundleIsRelied_0001
+ * @tc.name: CheckHspBundleIsRelied
+ * @tc.desc: test CheckHspBundleIsRelied when other bundle depends on the hsp bundle
+ */
+HWTEST_F(BmsDataMgrTest, CheckHspBundleIsRelied_0001, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string hspBundleName = "com.ohos.test.hsp";
+    InnerBundleInfo hspInfo;
+    BundleInfo hspBundleInfo;
+    hspBundleInfo.name = hspBundleName;
+    hspBundleInfo.applicationInfo.name = hspBundleName;
+    hspBundleInfo.applicationInfo.bundleName = hspBundleName;
+    ApplicationInfo hspAppInfo;
+    hspAppInfo.name = hspBundleName;
+    hspAppInfo.bundleName = hspBundleName;
+    hspInfo.SetBaseBundleInfo(hspBundleInfo);
+    hspInfo.SetBaseApplicationInfo(hspAppInfo);
+
+    std::string appBundleName = "com.ohos.test.app";
+    InnerBundleInfo appInfo;
+    BundleInfo appBundleInfo;
+    appBundleInfo.name = appBundleName;
+    appBundleInfo.applicationInfo.name = appBundleName;
+    appBundleInfo.applicationInfo.bundleName = appBundleName;
+    ApplicationInfo appAppInfo;
+    appAppInfo.name = appBundleName;
+    appAppInfo.bundleName = appBundleName;
+    appInfo.SetBaseBundleInfo(appBundleInfo);
+    appInfo.SetBaseApplicationInfo(appAppInfo);
+
+    std::string moduleName = "libhsp_module.so";
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = moduleName;
+    Dependency dependency;
+    dependency.bundleName = hspBundleName;
+    dependency.moduleName = "libhsp_module.so";
+    dependency.versionCode = 1;
+    innerModuleInfo.dependencies.emplace_back(dependency);
+    appInfo.InsertInnerModuleInfo(moduleName, innerModuleInfo);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(hspBundleName, hspInfo);
+    dataMgr->bundleInfos_.emplace(appBundleName, appInfo);
+
+    bool result = dataMgr->CheckHspBundleIsRelied(hspBundleName);
+    EXPECT_TRUE(result);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ResetAOTFlags_0001
+ * @tc.name: ResetAOTFlags
+ * @tc.desc: test ResetAOTFlags when bundle exists and AOT flags are not initial
+ */
+HWTEST_F(BmsDataMgrTest, ResetAOTFlags_0001, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.aot.reset";
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = bundleName;
+    bundleInfo.applicationInfo.bundleName = bundleName;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    if (innerBundleInfo.baseApplicationInfo_) {
+        innerBundleInfo.baseApplicationInfo_->arkNativeFilePath = "/data/test/ark_native.so";
+        innerBundleInfo.baseApplicationInfo_->arkNativeFileAbi = "arm64-v8a";
+    }
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+
+    dataMgr->ResetAOTFlags(bundleName);
+    auto it = dataMgr->bundleInfos_.find(bundleName);
+    EXPECT_TRUE(it != dataMgr->bundleInfos_.end());
+    if (it != dataMgr->bundleInfos_.end() && it->second.baseApplicationInfo_) {
+        EXPECT_TRUE(it->second.baseApplicationInfo_->arkNativeFilePath.empty());
+        EXPECT_TRUE(it->second.baseApplicationInfo_->arkNativeFileAbi.empty());
+    }
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllSystemHspCodePaths_0002
+ * @tc.name: GetAllSystemHspCodePaths
+ * @tc.desc: test GetAllSystemHspCodePaths when bundleInfos_ contains APP_SERVICE_FWK bundle
+ */
+HWTEST_F(BmsDataMgrTest, GetAllSystemHspCodePaths_0002, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    dataMgr->bundleInfos_.clear();
+
+    std::string bundleName = "com.ohos.test.system.hsp";
+    std::string expectedCodePath = "/data/app/el1/bundle/public/com.ohos.test.system.hsp";
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = bundleName;
+    bundleInfo.applicationInfo.bundleName = bundleName;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::APP_SERVICE_FWK;
+
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    applicationInfo.codePath = expectedCodePath;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    std::vector<std::string> resultPaths = dataMgr->GetAllSystemHspCodePaths();
+    EXPECT_EQ(resultPaths.size(), 1);
+    if (!resultPaths.empty()) {
+        EXPECT_EQ(resultPaths[0], expectedCodePath);
+    }
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllLiteBundleInfo_0002
+ * @tc.name: GetAllLiteBundleInfo
+ * @tc.desc: test GetAllLiteBundleInfo with valid userId and installed bundle
+ */
+HWTEST_F(BmsDataMgrTest, GetAllLiteBundleInfo_0002, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    int32_t userId = 100;
+    std::string bundleName = "com.ohos.test.lite.bundle";
+    dataMgr->AddUserId(userId);
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = bundleName;
+    bundleInfo.applicationInfo.bundleName = bundleName;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+
+    std::string key = bundleName + "_" + std::to_string(userId);
+    innerBundleInfo.innerBundleUserInfos_[key] = innerBundleUserInfo;
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    std::vector<std::tuple<std::string, int32_t, int32_t>> result = dataMgr->GetAllLiteBundleInfo(userId);
+    EXPECT_EQ(result.size(), 1);
+    if (!result.empty()) {
+        auto [resBundleName, resUid, resGid] = result[0];
+        EXPECT_EQ(resBundleName, bundleName);
+    }
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CreateAppEl5GroupDir_0002
+ * @tc.name: CreateAppEl5GroupDir
+ * @tc.desc: test CreateAppEl5GroupDir when NeedCreateEl5Dir is true but no matching userId in data groups
+ */
+HWTEST_F(BmsDataMgrTest, CreateAppEl5GroupDir_0002, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.el5.nomatch";
+    int32_t userId = 100;
+    int32_t otherUserId = 101;
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = bundleName;
+    bundleInfo.applicationInfo.bundleName = bundleName;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    DataGroupInfo dataGroupInfo;
+    dataGroupInfo.dataGroupId = "group_other";
+    dataGroupInfo.userId = otherUserId;
+    innerBundleInfo.AddDataGroupInfo("group_other", dataGroupInfo);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+    EXPECT_NO_THROW(dataMgr->CreateAppEl5GroupDir(bundleName, userId));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CreateAppEl5GroupDir_0003
+ * @tc.name: CreateAppEl5GroupDir
+ * @tc.desc: test CreateAppEl5GroupDir when NeedCreateEl5Dir is true and matching userId exists
+ */
+HWTEST_F(BmsDataMgrTest, CreateAppEl5GroupDir_0003, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.el5.match";
+    int32_t userId = 100;
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = bundleName;
+    bundleInfo.applicationInfo.bundleName = bundleName;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    DataGroupInfo dataGroupInfo;
+    dataGroupInfo.dataGroupId = "group_match";
+    dataGroupInfo.userId = userId;
+    innerBundleInfo.AddDataGroupInfo("group_match", dataGroupInfo);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+    EXPECT_NO_THROW(dataMgr->CreateAppEl5GroupDir(bundleName, userId));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CreateEl5GroupDirs_0002
+ * @tc.name: CreateEl5GroupDirs
+ * @tc.desc: test CreateEl5GroupDirs with empty dataGroupInfos
+ */
+HWTEST_F(BmsDataMgrTest, CreateEl5GroupDirs_0002, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<DataGroupInfo> dataGroupInfos;
+    int32_t userId = 100;
+    bool hasInputMethodExtension = false;
+
+    ErrCode result = dataMgr->CreateEl5GroupDirs(dataGroupInfos, userId, hasInputMethodExtension);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateEl5GroupDirs_0003
+ * @tc.name: CreateEl5GroupDirs
+ * @tc.desc: test CreateEl5GroupDirs with valid dataGroupInfos
+ */
+HWTEST_F(BmsDataMgrTest, CreateEl5GroupDirs_0003, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<DataGroupInfo> dataGroupInfos;
+    DataGroupInfo info;
+    info.uuid = "test-uuid-123";
+    info.userId = 100;
+    info.uid = 10010;
+    info.gid = 10010;
+    dataGroupInfos.push_back(info);
+
+    int32_t userId = 100;
+    bool hasInputMethodExtension = true;
+    ErrCode result = dataMgr->CreateEl5GroupDirs(dataGroupInfos, userId, hasInputMethodExtension);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllAppInstallExtendedInfo_0001
+ * @tc.name: GetAllAppInstallExtendedInfo
+ * @tc.desc: test GetAllAppInstallExtendedInfo with APP_SERVICE_FWK bundle type
+ */
+HWTEST_F(BmsDataMgrTest, GetAllAppInstallExtendedInfo_0001, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.appservicefwk";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::APP_SERVICE_FWK;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+    ErrCode result = dataMgr->GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+    EXPECT_EQ(result, ERR_OK);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: DeleteUserDataGroupInfos_0001
+ * @tc.name: DeleteUserDataGroupInfos
+ * @tc.desc: test DeleteUserDataGroupInfos with valid dataGroupInfos
+ */
+HWTEST_F(BmsDataMgrTest, DeleteUserDataGroupInfos_0001, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.deletegroup";
+    int32_t userId = 100;
+    bool keepData = false;
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = bundleName;
+    bundleInfo.applicationInfo.bundleName = bundleName;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    DataGroupInfo dataGroupInfo;
+    dataGroupInfo.dataGroupId = "test_group_id";
+    dataGroupInfo.userId = userId;
+    dataGroupInfo.uuid = "test-uuid-for-group";
+    dataGroupInfo.uid = 10010;
+    dataGroupInfo.gid = 10010;
+
+    innerBundleInfo.AddDataGroupInfo("test_group_id", dataGroupInfo);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+    EXPECT_NO_THROW(dataMgr->DeleteUserDataGroupInfos(bundleName, userId, keepData));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: IsShareDataGroupIdNoLock_0001
+ * @tc.name: IsShareDataGroupIdNoLock
+ * @tc.desc: test IsShareDataGroupIdNoLock returns true when dataGroupId is shared by multiple bundles
+ */
+HWTEST_F(BmsDataMgrTest, IsShareDataGroupIdNoLock_0001, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName1 = "com.ohos.test.bundle1";
+    std::string bundleName2 = "com.ohos.test.bundle2";
+    std::string sharedDataGroupId = "shared_group_id";
+    int32_t userId = 100;
+
+    InnerBundleInfo innerBundleInfo1;
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = bundleName1;
+    bundleInfo1.applicationInfo.name = bundleName1;
+    bundleInfo1.applicationInfo.bundleName = bundleName1;
+
+    ApplicationInfo applicationInfo1;
+    applicationInfo1.name = bundleName1;
+    applicationInfo1.bundleName = bundleName1;
+
+    innerBundleInfo1.SetBaseBundleInfo(bundleInfo1);
+    innerBundleInfo1.SetBaseApplicationInfo(applicationInfo1);
+
+    DataGroupInfo dataGroupInfo1;
+    dataGroupInfo1.dataGroupId = sharedDataGroupId;
+    dataGroupInfo1.userId = userId;
+    dataGroupInfo1.uuid = "uuid-for-bundle1";
+    dataGroupInfo1.uid = 10010;
+    dataGroupInfo1.gid = 10010;
+    innerBundleInfo1.AddDataGroupInfo(sharedDataGroupId, dataGroupInfo1);
+
+    InnerBundleInfo innerBundleInfo2;
+    BundleInfo bundleInfo2;
+    bundleInfo2.name = bundleName2;
+    bundleInfo2.applicationInfo.name = bundleName2;
+    bundleInfo2.applicationInfo.bundleName = bundleName2;
+
+    ApplicationInfo applicationInfo2;
+    applicationInfo2.name = bundleName2;
+    applicationInfo2.bundleName = bundleName2;
+
+    innerBundleInfo2.SetBaseBundleInfo(bundleInfo2);
+    innerBundleInfo2.SetBaseApplicationInfo(applicationInfo2);
+
+    DataGroupInfo dataGroupInfo2;
+    dataGroupInfo2.dataGroupId = sharedDataGroupId;
+    dataGroupInfo2.userId = userId;
+    dataGroupInfo2.uuid = "uuid-for-bundle2";
+    dataGroupInfo2.uid = 10020;
+    dataGroupInfo2.gid = 10020;
+    innerBundleInfo2.AddDataGroupInfo(sharedDataGroupId, dataGroupInfo2);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName1, innerBundleInfo1);
+    dataMgr->bundleInfos_.emplace(bundleName2, innerBundleInfo2);
+    bool result = dataMgr->IsShareDataGroupIdNoLock(sharedDataGroupId, userId);
+    EXPECT_TRUE(result);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ScanAllBundleGroupInfo_0100
+ * @tc.name: test ScanAllBundleGroupInfo with empty dataGroupInfo list
+ * @tc.desc: 1. Construct bundle info with a dataGroupId mapping to an empty DataGroupInfo list
+ *           2. Call ScanAllBundleGroupInfo to cover the branch where dataGroupItem.second.empty() is true
+ */
+HWTEST_F(BmsDataMgrTest, ScanAllBundleGroupInfo_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.scan.group.empty";
+    InnerBundleInfo innerBundleInfo;
+
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = bundleName;
+    bundleInfo.applicationInfo.bundleName = bundleName;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    std::string emptyGroupId = "empty_group_id";
+    innerBundleInfo.dataGroupInfos_[emptyGroupId] = std::vector<DataGroupInfo>();
+
+    std::string validGroupId = "valid_group_id";
+    DataGroupInfo validDataGroupInfo;
+    validDataGroupInfo.dataGroupId = validGroupId;
+    validDataGroupInfo.userId = 0;
+    validDataGroupInfo.uid = 10000;
+    validDataGroupInfo.uuid = "valid-uuid";
+    innerBundleInfo.dataGroupInfos_[validGroupId] = { validDataGroupInfo };
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    EXPECT_NO_THROW(dataMgr->ScanAllBundleGroupInfo());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: UpdateOverlayInfo_0001
+ * @tc.name: test UpdateOverlayInfo with valid overlay and target bundle
+ * @tc.desc: 1. Construct target bundle info and add to bundleInfos_
+ *           2. Construct overlay bundle info
+ *           3. Call UpdateOverlayInfo
+ */
+HWTEST_F(BmsDataMgrTest, UpdateOverlayInfo_0001, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string targetBundleName = "com.ohos.test.target";
+    InnerBundleInfo targetInnerBundleInfo;
+
+    BundleInfo targetBundleInfo;
+    targetBundleInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.bundleName = targetBundleName;
+
+    ApplicationInfo targetAppInfo;
+    targetAppInfo.name = targetBundleName;
+    targetAppInfo.bundleName = targetBundleName;
+
+    targetInnerBundleInfo.SetBaseBundleInfo(targetBundleInfo);
+    targetInnerBundleInfo.SetBaseApplicationInfo(targetAppInfo);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(targetBundleName, targetInnerBundleInfo);
+
+    std::string overlayBundleName = "com.ohos.test.overlay";
+    InnerBundleInfo overlayInnerBundleInfo;
+
+    BundleInfo overlayBundleInfo;
+    overlayBundleInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.bundleName = overlayBundleName;
+
+    ApplicationInfo overlayAppInfo;
+    overlayAppInfo.name = overlayBundleName;
+    overlayAppInfo.bundleName = overlayBundleName;
+
+    overlayInnerBundleInfo.SetBaseBundleInfo(overlayBundleInfo);
+    overlayInnerBundleInfo.SetBaseApplicationInfo(overlayAppInfo);
+    overlayInnerBundleInfo.SetTargetBundleName(targetBundleName);
+    overlayInnerBundleInfo.SetOverlayType(OVERLAY_INTERNAL_BUNDLE);
+
+    InnerBundleInfo oldInfo = targetInnerBundleInfo;
+    bool result = dataMgr->UpdateOverlayInfo(overlayInnerBundleInfo, oldInfo);
+    EXPECT_FALSE(result);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ResetExternalOverlayModuleState_0001
+ * @tc.name: test ResetExternalOverlayModuleState normal path
+ * @tc.desc: 1. Construct an overlay bundle with matching target name and module package
+ *           2. Call ResetExternalOverlayModuleState
+ */
+HWTEST_F(BmsDataMgrTest, ResetExternalOverlayModuleState_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string targetBundleName = "com.ohos.test.target.normal";
+    std::string modulePackage = "com.ohos.test.module.normal";
+    std::string overlayBundleName = "com.ohos.test.overlay.normal";
+
+    InnerBundleInfo overlayInnerBundleInfo;
+    BundleInfo overlayBundleInfo;
+    overlayBundleInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.bundleName = overlayBundleName;
+
+    ApplicationInfo overlayAppInfo;
+    overlayAppInfo.name = overlayBundleName;
+    overlayAppInfo.bundleName = overlayBundleName;
+
+    overlayInnerBundleInfo.SetBaseBundleInfo(overlayBundleInfo);
+    overlayInnerBundleInfo.SetBaseApplicationInfo(overlayAppInfo);
+    overlayInnerBundleInfo.SetTargetBundleName(targetBundleName);
+
+    InnerModuleInfo dummyModuleInfo;
+    dummyModuleInfo.moduleName = "entry_normal";
+    dummyModuleInfo.modulePackage = "com.ohos.test.entry.normal";
+    dummyModuleInfo.targetModuleName = modulePackage;
+    overlayInnerBundleInfo.innerModuleInfos_["entry_normal"] = dummyModuleInfo;
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(overlayBundleName, overlayInnerBundleInfo);
+
+    EXPECT_NO_THROW(dataMgr->ResetExternalOverlayModuleState(targetBundleName, modulePackage));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ResetExternalOverlayModuleState_0002
+ * @tc.name: test ResetExternalOverlayModuleState with non-matching target bundle name
+ * @tc.desc: 1. Construct an overlay bundle with non-matching target name
+ *           2. Call ResetExternalOverlayModuleState
+ */
+HWTEST_F(BmsDataMgrTest, ResetExternalOverlayModuleState_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string targetBundleName = "com.ohos.test.target.nomatch";
+    std::string otherTargetName = "com.ohos.test.other.target";
+    std::string modulePackage = "com.ohos.test.module.nomatch";
+    std::string overlayBundleName = "com.ohos.test.overlay.nomatch";
+
+    InnerBundleInfo overlayInnerBundleInfo;
+    BundleInfo overlayBundleInfo;
+    overlayBundleInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.bundleName = overlayBundleName;
+
+    ApplicationInfo overlayAppInfo;
+    overlayAppInfo.name = overlayBundleName;
+    overlayAppInfo.bundleName = overlayBundleName;
+
+    overlayInnerBundleInfo.SetBaseBundleInfo(overlayBundleInfo);
+    overlayInnerBundleInfo.SetBaseApplicationInfo(overlayAppInfo);
+    overlayInnerBundleInfo.SetTargetBundleName(otherTargetName);
+
+    InnerModuleInfo dummyModuleInfo;
+    dummyModuleInfo.moduleName = "entry_nomatch";
+    dummyModuleInfo.modulePackage = "com.ohos.test.entry.nomatch";
+    dummyModuleInfo.targetModuleName = modulePackage;
+    overlayInnerBundleInfo.innerModuleInfos_["entry_nomatch"] = dummyModuleInfo;
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(overlayBundleName, overlayInnerBundleInfo);
+
+    EXPECT_NO_THROW(dataMgr->ResetExternalOverlayModuleState(targetBundleName, modulePackage));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ResetExternalOverlayModuleState_0003
+ * @tc.name: test ResetExternalOverlayModuleState with non-matching module package
+ * @tc.desc: 1. Construct an overlay bundle with matching target name but non-matching module package
+ *           2. Call ResetExternalOverlayModuleState
+ */
+HWTEST_F(BmsDataMgrTest, ResetExternalOverlayModuleState_0003, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string targetBundleName = "com.ohos.test.target.modnomatch";
+    std::string modulePackage = "com.ohos.test.module.modnomatch";
+    std::string otherModulePackage = "com.ohos.test.other.module";
+    std::string overlayBundleName = "com.ohos.test.overlay.modnomatch";
+
+    InnerBundleInfo overlayInnerBundleInfo;
+    BundleInfo overlayBundleInfo;
+    overlayBundleInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.bundleName = overlayBundleName;
+
+    ApplicationInfo overlayAppInfo;
+    overlayAppInfo.name = overlayBundleName;
+    overlayAppInfo.bundleName = overlayBundleName;
+
+    overlayInnerBundleInfo.SetBaseBundleInfo(overlayBundleInfo);
+    overlayInnerBundleInfo.SetBaseApplicationInfo(overlayAppInfo);
+    overlayInnerBundleInfo.SetTargetBundleName(targetBundleName);
+
+    InnerModuleInfo dummyModuleInfo;
+    dummyModuleInfo.moduleName = "entry_modnomatch";
+    dummyModuleInfo.modulePackage = "com.ohos.test.entry.modnomatch";
+    dummyModuleInfo.targetModuleName = otherModulePackage;
+    overlayInnerBundleInfo.innerModuleInfos_["entry_modnomatch"] = dummyModuleInfo;
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(overlayBundleName, overlayInnerBundleInfo);
+
+    EXPECT_NO_THROW(dataMgr->ResetExternalOverlayModuleState(targetBundleName, modulePackage));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ResetExternalOverlayModuleState_0004
+ * @tc.name: test ResetExternalOverlayModuleState with empty bundleInfos_
+ * @tc.desc: 1. Clear bundleInfos_
+ *           2. Call ResetExternalOverlayModuleState
+ */
+HWTEST_F(BmsDataMgrTest, ResetExternalOverlayModuleState_0004, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    dataMgr->bundleInfos_.clear();
+
+    std::string targetBundleName = "com.ohos.test.target.empty";
+    std::string modulePackage = "com.ohos.test.module.empty";
+
+    EXPECT_NO_THROW(dataMgr->ResetExternalOverlayModuleState(targetBundleName, modulePackage));
+}
+
+/**
+ * @tc.number: BuildExternalOverlayConnection_0001
+ * @tc.name: test BuildExternalOverlayConnection normal path
+ * @tc.desc: 1. Construct target bundle (preinstall, stage, non-service) and overlay bundle
+ *           2. Ensure fingerprint matches and module target matches
+ *           3. Call BuildExternalOverlayConnection
+ */
+HWTEST_F(BmsDataMgrTest, BuildExternalOverlayConnection_0001, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string targetBundleName = "com.ohos.test.target.normal";
+    std::string overlayBundleName = "com.ohos.test.overlay.normal";
+    std::string moduleName = "com.ohos.test.module.normal";
+    std::string fingerprint = "test_fingerprint_123";
+
+    InnerBundleInfo overlayInnerBundleInfo;
+    BundleInfo overlayBundleInfo;
+    overlayBundleInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.bundleName = overlayBundleName;
+
+    ApplicationInfo overlayAppInfo;
+    overlayAppInfo.name = overlayBundleName;
+    overlayAppInfo.bundleName = overlayBundleName;
+
+    overlayInnerBundleInfo.SetBaseBundleInfo(overlayBundleInfo);
+    overlayInnerBundleInfo.SetBaseApplicationInfo(overlayAppInfo);
+    overlayInnerBundleInfo.SetTargetBundleName(targetBundleName);
+    overlayInnerBundleInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
+    overlayInnerBundleInfo.SetCertificateFingerprint(fingerprint);
+    overlayInnerBundleInfo.SetOverlayState(OverlayState::OVERLAY_ENABLE);
+    overlayInnerBundleInfo.SetTargetPriority(100);
+
+    InnerModuleInfo overlayModuleInfo;
+    overlayModuleInfo.moduleName = "entry_overlay_normal";
+    overlayModuleInfo.modulePackage = "com.ohos.test.overlay.pkg.normal";
+    overlayModuleInfo.targetModuleName = moduleName;
+    overlayModuleInfo.targetPriority = 10;
+    overlayModuleInfo.hapPath = "/data/app/el1/bundle/public/" + overlayBundleName + "/entry_overlay_normal.hap";
+    overlayInnerBundleInfo.innerModuleInfos_["entry_overlay_normal"] = overlayModuleInfo;
+
+    InnerBundleUserInfo overlayUserInfo;
+    overlayUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    std::string userKey = overlayBundleName + "_" + std::to_string(Constants::DEFAULT_USERID);
+    overlayInnerBundleInfo.innerBundleUserInfos_[userKey] = overlayUserInfo;
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(overlayBundleName, overlayInnerBundleInfo);
+
+    InnerBundleInfo targetInnerBundleInfo;
+    BundleInfo targetBundleInfo;
+    targetBundleInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.bundleName = targetBundleName;
+
+    ApplicationInfo targetAppInfo;
+    targetAppInfo.name = targetBundleName;
+    targetAppInfo.bundleName = targetBundleName;
+
+    targetInnerBundleInfo.SetBaseBundleInfo(targetBundleInfo);
+    targetInnerBundleInfo.SetBaseApplicationInfo(targetAppInfo);
+    targetInnerBundleInfo.SetIsPreInstallApp(true);
+    targetInnerBundleInfo.SetCertificateFingerprint(fingerprint);
+    targetInnerBundleInfo.SetIsNewVersion(true);
+    targetInnerBundleInfo.SetEntryInstallationFree(false);
+
+    EXPECT_NO_THROW(dataMgr->BuildExternalOverlayConnection(
+        moduleName, targetInnerBundleInfo, Constants::DEFAULT_USERID));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BuildExternalOverlayConnection_0002
+ * @tc.name: test BuildExternalOverlayConnection with non-matching target bundle name
+ * @tc.desc: 1. Construct an overlay bundle with non-matching target name
+ *           2. Call BuildExternalOverlayConnection
+ */
+HWTEST_F(BmsDataMgrTest, BuildExternalOverlayConnection_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string targetBundleName = "com.ohos.test.target.nomatch";
+    std::string otherTargetName = "com.ohos.test.other.target";
+    std::string overlayBundleName = "com.ohos.test.overlay.nomatch";
+    std::string moduleName = "com.ohos.test.module";
+
+    InnerBundleInfo overlayInnerBundleInfo;
+    BundleInfo overlayBundleInfo;
+    overlayBundleInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.bundleName = overlayBundleName;
+
+    ApplicationInfo overlayAppInfo;
+    overlayAppInfo.name = overlayBundleName;
+    overlayAppInfo.bundleName = overlayBundleName;
+
+    overlayInnerBundleInfo.SetBaseBundleInfo(overlayBundleInfo);
+    overlayInnerBundleInfo.SetBaseApplicationInfo(overlayAppInfo);
+    overlayInnerBundleInfo.SetTargetBundleName(otherTargetName);
+    overlayInnerBundleInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(overlayBundleName, overlayInnerBundleInfo);
+
+    InnerBundleInfo targetInnerBundleInfo;
+    BundleInfo targetBundleInfo;
+    targetBundleInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.bundleName = targetBundleName;
+
+    ApplicationInfo targetAppInfo;
+    targetAppInfo.name = targetBundleName;
+    targetAppInfo.bundleName = targetBundleName;
+
+    targetInnerBundleInfo.SetBaseBundleInfo(targetBundleInfo);
+    targetInnerBundleInfo.SetBaseApplicationInfo(targetAppInfo);
+
+    EXPECT_NO_THROW(dataMgr->BuildExternalOverlayConnection(
+        moduleName, targetInnerBundleInfo, Constants::DEFAULT_USERID));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BuildExternalOverlayConnection_0003
+ * @tc.name: test BuildExternalOverlayConnection with non-preinstall target bundle
+ * @tc.desc: 1. Construct an overlay bundle targeting the given bundle
+ *           2. Set target bundle as non-preinstall
+ *           3. Call BuildExternalOverlayConnection
+ */
+HWTEST_F(BmsDataMgrTest, BuildExternalOverlayConnection_0003, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string targetBundleName = "com.ohos.test.target.notpre";
+    std::string overlayBundleName = "com.ohos.test.overlay.notpre";
+    std::string moduleName = "com.ohos.test.module";
+
+    InnerBundleInfo overlayInnerBundleInfo;
+    BundleInfo overlayBundleInfo;
+    overlayBundleInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.bundleName = overlayBundleName;
+
+    ApplicationInfo overlayAppInfo;
+    overlayAppInfo.name = overlayBundleName;
+    overlayAppInfo.bundleName = overlayBundleName;
+
+    overlayInnerBundleInfo.SetBaseBundleInfo(overlayBundleInfo);
+    overlayInnerBundleInfo.SetBaseApplicationInfo(overlayAppInfo);
+    overlayInnerBundleInfo.SetTargetBundleName(targetBundleName);
+    overlayInnerBundleInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(overlayBundleName, overlayInnerBundleInfo);
+
+    InnerBundleInfo targetInnerBundleInfo;
+    BundleInfo targetBundleInfo;
+    targetBundleInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.bundleName = targetBundleName;
+
+    ApplicationInfo targetAppInfo;
+    targetAppInfo.name = targetBundleName;
+    targetAppInfo.bundleName = targetBundleName;
+
+    targetInnerBundleInfo.SetBaseBundleInfo(targetBundleInfo);
+    targetInnerBundleInfo.SetBaseApplicationInfo(targetAppInfo);
+    targetInnerBundleInfo.SetIsPreInstallApp(false);
+
+    EXPECT_NO_THROW(dataMgr->BuildExternalOverlayConnection(
+        moduleName, targetInnerBundleInfo, Constants::DEFAULT_USERID));
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BuildExternalOverlayConnection_0004
+ * @tc.name: test BuildExternalOverlayConnection with different fingerprint
+ * @tc.desc: 1. Construct overlay and target bundles with different fingerprints
+ *           2. Call BuildExternalOverlayConnection
+ */
+HWTEST_F(BmsDataMgrTest, BuildExternalOverlayConnection_0004, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string targetBundleName = "com.ohos.test.target.fp";
+    std::string overlayBundleName = "com.ohos.test.overlay.fp";
+    std::string moduleName = "com.ohos.test.module";
+
+    InnerBundleInfo overlayInnerBundleInfo;
+    BundleInfo overlayBundleInfo;
+    overlayBundleInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.bundleName = overlayBundleName;
+
+    ApplicationInfo overlayAppInfo;
+    overlayAppInfo.name = overlayBundleName;
+    overlayAppInfo.bundleName = overlayBundleName;
+
+    overlayInnerBundleInfo.SetBaseBundleInfo(overlayBundleInfo);
+    overlayInnerBundleInfo.SetBaseApplicationInfo(overlayAppInfo);
+    overlayInnerBundleInfo.SetTargetBundleName(targetBundleName);
+    overlayInnerBundleInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
+    overlayInnerBundleInfo.SetCertificateFingerprint("fp_overlay");
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(overlayBundleName, overlayInnerBundleInfo);
+
+    InnerBundleInfo targetInnerBundleInfo;
+    BundleInfo targetBundleInfo;
+    targetBundleInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.bundleName = targetBundleName;
+
+    ApplicationInfo targetAppInfo;
+    targetAppInfo.name = targetBundleName;
+    targetAppInfo.bundleName = targetBundleName;
+
+    targetInnerBundleInfo.SetBaseBundleInfo(targetBundleInfo);
+    targetInnerBundleInfo.SetBaseApplicationInfo(targetAppInfo);
+    targetInnerBundleInfo.SetIsPreInstallApp(true);
+    targetInnerBundleInfo.SetCertificateFingerprint("fp_target");
+
+    EXPECT_NO_THROW(dataMgr->BuildExternalOverlayConnection(
+        moduleName, targetInnerBundleInfo, Constants::DEFAULT_USERID));
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BuildExternalOverlayConnection_0005
+ * @tc.name: test BuildExternalOverlayConnection with FA model (not new version)
+ * @tc.desc: 1. Set target bundle as FA model (isNewVersion = false)
+ *           2. Call BuildExternalOverlayConnection
+ */
+HWTEST_F(BmsDataMgrTest, BuildExternalOverlayConnection_0005, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string targetBundleName = "com.ohos.test.target.fa";
+    std::string overlayBundleName = "com.ohos.test.overlay.fa";
+    std::string moduleName = "com.ohos.test.module";
+    std::string fingerprint = "fp_fa";
+
+    InnerBundleInfo overlayInnerBundleInfo;
+    BundleInfo overlayBundleInfo;
+    overlayBundleInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.bundleName = overlayBundleName;
+
+    ApplicationInfo overlayAppInfo;
+    overlayAppInfo.name = overlayBundleName;
+    overlayAppInfo.bundleName = overlayBundleName;
+
+    overlayInnerBundleInfo.SetBaseBundleInfo(overlayBundleInfo);
+    overlayInnerBundleInfo.SetBaseApplicationInfo(overlayAppInfo);
+    overlayInnerBundleInfo.SetTargetBundleName(targetBundleName);
+    overlayInnerBundleInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
+    overlayInnerBundleInfo.SetCertificateFingerprint(fingerprint);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(overlayBundleName, overlayInnerBundleInfo);
+
+    InnerBundleInfo targetInnerBundleInfo;
+    BundleInfo targetBundleInfo;
+    targetBundleInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.bundleName = targetBundleName;
+
+    ApplicationInfo targetAppInfo;
+    targetAppInfo.name = targetBundleName;
+    targetAppInfo.bundleName = targetBundleName;
+
+    targetInnerBundleInfo.SetBaseBundleInfo(targetBundleInfo);
+    targetInnerBundleInfo.SetBaseApplicationInfo(targetAppInfo);
+    targetInnerBundleInfo.SetIsPreInstallApp(true);
+    targetInnerBundleInfo.SetCertificateFingerprint(fingerprint);
+    targetInnerBundleInfo.SetIsNewVersion(false);
+
+    EXPECT_NO_THROW(dataMgr->BuildExternalOverlayConnection(
+        moduleName, targetInnerBundleInfo, Constants::DEFAULT_USERID));
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BuildExternalOverlayConnection_0006
+ * @tc.name: test BuildExternalOverlayConnection with service bundle (installation free)
+ * @tc.desc: 1. Set target bundle as service (entryInstallationFree = true)
+ *           2. Call BuildExternalOverlayConnection
+ */
+HWTEST_F(BmsDataMgrTest, BuildExternalOverlayConnection_0006, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string targetBundleName = "com.ohos.test.target.svc";
+    std::string overlayBundleName = "com.ohos.test.overlay.svc";
+    std::string moduleName = "com.ohos.test.module";
+    std::string fingerprint = "fp_svc";
+
+    InnerBundleInfo overlayInnerBundleInfo;
+    BundleInfo overlayBundleInfo;
+    overlayBundleInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.bundleName = overlayBundleName;
+
+    ApplicationInfo overlayAppInfo;
+    overlayAppInfo.name = overlayBundleName;
+    overlayAppInfo.bundleName = overlayBundleName;
+
+    overlayInnerBundleInfo.SetBaseBundleInfo(overlayBundleInfo);
+    overlayInnerBundleInfo.SetBaseApplicationInfo(overlayAppInfo);
+    overlayInnerBundleInfo.SetTargetBundleName(targetBundleName);
+    overlayInnerBundleInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
+    overlayInnerBundleInfo.SetCertificateFingerprint(fingerprint);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(overlayBundleName, overlayInnerBundleInfo);
+
+    InnerBundleInfo targetInnerBundleInfo;
+    BundleInfo targetBundleInfo;
+    targetBundleInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.bundleName = targetBundleName;
+
+    ApplicationInfo targetAppInfo;
+    targetAppInfo.name = targetBundleName;
+    targetAppInfo.bundleName = targetBundleName;
+
+    targetInnerBundleInfo.SetBaseBundleInfo(targetBundleInfo);
+    targetInnerBundleInfo.SetBaseApplicationInfo(targetAppInfo);
+    targetInnerBundleInfo.SetIsPreInstallApp(true);
+    targetInnerBundleInfo.SetCertificateFingerprint(fingerprint);
+    targetInnerBundleInfo.SetIsNewVersion(true);
+    targetInnerBundleInfo.SetEntryInstallationFree(true);
+
+    EXPECT_NO_THROW(dataMgr->BuildExternalOverlayConnection(
+        moduleName, targetInnerBundleInfo, Constants::DEFAULT_USERID));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: RemoveOverlayInfoAndConnection_0001
+ * @tc.name: test RemoveOverlayInfoAndConnection with external overlay and existing target bundle
+ * @tc.desc: 1. Construct an external overlay bundle info
+ *           2. Add target bundle to bundleInfos_
+ *           3. Call RemoveOverlayInfoAndConnection
+ */
+HWTEST_F(BmsDataMgrTest, RemoveOverlayInfoAndConnection_0001, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string targetBundleName = "com.ohos.test.target.remove";
+    std::string overlayBundleName = "com.ohos.test.overlay.remove";
+
+    InnerBundleInfo targetInnerBundleInfo;
+    BundleInfo targetBundleInfo;
+    targetBundleInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.name = targetBundleName;
+    targetBundleInfo.applicationInfo.bundleName = targetBundleName;
+
+    ApplicationInfo targetAppInfo;
+    targetAppInfo.name = targetBundleName;
+    targetAppInfo.bundleName = targetBundleName;
+
+    targetInnerBundleInfo.SetBaseBundleInfo(targetBundleInfo);
+    targetInnerBundleInfo.SetBaseApplicationInfo(targetAppInfo);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(targetBundleName, targetInnerBundleInfo);
+
+    InnerBundleInfo overlayInnerBundleInfo;
+    BundleInfo overlayBundleInfo;
+    overlayBundleInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.name = overlayBundleName;
+    overlayBundleInfo.applicationInfo.bundleName = overlayBundleName;
+
+    ApplicationInfo overlayAppInfo;
+    overlayAppInfo.name = overlayBundleName;
+    overlayAppInfo.bundleName = overlayBundleName;
+
+    overlayInnerBundleInfo.SetBaseBundleInfo(overlayBundleInfo);
+    overlayInnerBundleInfo.SetBaseApplicationInfo(overlayAppInfo);
+    overlayInnerBundleInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
+    overlayInnerBundleInfo.SetTargetBundleName(targetBundleName);
+
+    EXPECT_NO_THROW(dataMgr->RemoveOverlayInfoAndConnection(overlayInnerBundleInfo, overlayBundleName));
+    auto it = dataMgr->bundleInfos_.find(targetBundleName);
+    EXPECT_TRUE(it != dataMgr->bundleInfos_.end());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ConvertServiceHspToSharedBundleInfo_0002
+ * @tc.name: test ConvertServiceHspToSharedBundleInfo with non-service HSP bundle
+ * @tc.desc: 1. Construct a normal app bundle info (not APP_SERVICE_FWK)
+ *           2. Call ConvertServiceHspToSharedBundleInfo
+ */
+HWTEST_F(BmsDataMgrTest, ConvertServiceHspToSharedBundleInfo_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.normal.app";
+    InnerBundleInfo innerBundleInfo;
+
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = bundleName;
+    bundleInfo.applicationInfo.bundleName = bundleName;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::APP;
+
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    std::vector<BaseSharedBundleInfo> baseSharedBundleInfos;
+    EXPECT_NO_THROW(dataMgr->ConvertServiceHspToSharedBundleInfo(innerBundleInfo, baseSharedBundleInfos));
+    EXPECT_TRUE(baseSharedBundleInfos.empty());
+}
+
+/**
+ * @tc.number: GetUidByBundleName_0001
+ * @tc.name: test GetUidByBundleName with UNSPECIFIED_USERID
+ * @tc.desc: Call GetUidByBundleName with UNSPECIFIED_USERID
+ */
+HWTEST_F(BmsDataMgrTest, GetUidByBundleName_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    auto ret = dataMgr->GetUidByBundleName(BUNDLE_NAME, Constants::UNSPECIFIED_USERID, 0);
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: HasOnlySharedModules_0001
+ * @tc.name: test HasOnlySharedModules with empty modules
+ * @tc.desc: 1. Construct InnerBundleInfo with no modules
+ *           2. Call HasOnlySharedModules, expect true
+ */
+HWTEST_F(BmsDataMgrTest, HasOnlySharedModules_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.ohos.test.empty.modules";
+    bundleInfo.applicationInfo.name = "com.ohos.test.empty.modules";
+    bundleInfo.applicationInfo.bundleName = "com.ohos.test.empty.modules";
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = "com.ohos.test.empty.modules";
+    applicationInfo.bundleName = "com.ohos.test.empty.modules";
+
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    bool result = dataMgr->HasOnlySharedModules(innerBundleInfo);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: HasOnlySharedModules_0002
+ * @tc.name: test HasOnlySharedModules with only shared modules
+ * @tc.desc: 1. Construct InnerBundleInfo with only shared modules
+ *           2. Call HasOnlySharedModules, expect true
+ */
+HWTEST_F(BmsDataMgrTest, HasOnlySharedModules_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.ohos.test.only.shared";
+    bundleInfo.applicationInfo.name = "com.ohos.test.only.shared";
+    bundleInfo.applicationInfo.bundleName = "com.ohos.test.only.shared";
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = "com.ohos.test.only.shared";
+    applicationInfo.bundleName = "com.ohos.test.only.shared";
+
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    InnerModuleInfo sharedModule;
+    sharedModule.moduleName = "sharedModule";
+    sharedModule.modulePackage = "com.ohos.test.only.shared.sharedModule";
+    sharedModule.distro.moduleType = Profile::MODULE_TYPE_SHARED;
+
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    moduleInfos["sharedModule"] = sharedModule;
+    innerBundleInfo.AddInnerModuleInfo(moduleInfos);
+
+    bool result = dataMgr->HasOnlySharedModules(innerBundleInfo);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: HasOnlySharedModules_0003
+ * @tc.name: test HasOnlySharedModules with mixed modules (entry and shared)
+ * @tc.desc: 1. Construct InnerBundleInfo with entry and shared modules
+ *           2. Call HasOnlySharedModules, expect false
+ */
+HWTEST_F(BmsDataMgrTest, HasOnlySharedModules_0003, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.ohos.test.mixed.modules";
+    bundleInfo.applicationInfo.name = "com.ohos.test.mixed.modules";
+    bundleInfo.applicationInfo.bundleName = "com.ohos.test.mixed.modules";
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = "com.ohos.test.mixed.modules";
+    applicationInfo.bundleName = "com.ohos.test.mixed.modules";
+
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    InnerModuleInfo entryModule;
+    entryModule.moduleName = "entry";
+    entryModule.modulePackage = "com.ohos.test.mixed.modules.entry";
+    entryModule.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
+
+    InnerModuleInfo sharedModule;
+    sharedModule.moduleName = "sharedModule";
+    sharedModule.modulePackage = "com.ohos.test.mixed.modules.sharedModule";
+    sharedModule.distro.moduleType = Profile::MODULE_TYPE_SHARED;
+
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    moduleInfos["entry"] = entryModule;
+    moduleInfos["sharedModule"] = sharedModule;
+    innerBundleInfo.AddInnerModuleInfo(moduleInfos);
+
+    bool result = dataMgr->HasOnlySharedModules(innerBundleInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: HasOnlySharedModules_0004
+ * @tc.name: test HasOnlySharedModules with only feature modules
+ * @tc.desc: 1. Construct InnerBundleInfo with only feature modules
+ *           2. Call HasOnlySharedModules, expect false
+ */
+HWTEST_F(BmsDataMgrTest, HasOnlySharedModules_0004, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "com.ohos.test.only.feature";
+    bundleInfo.applicationInfo.name = "com.ohos.test.only.feature";
+    bundleInfo.applicationInfo.bundleName = "com.ohos.test.only.feature";
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = "com.ohos.test.only.feature";
+    applicationInfo.bundleName = "com.ohos.test.only.feature";
+
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    InnerModuleInfo featureModule;
+    featureModule.moduleName = "feature";
+    featureModule.modulePackage = "com.ohos.test.only.feature.feature";
+    featureModule.distro.moduleType = Profile::MODULE_TYPE_FEATURE;
+
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    moduleInfos["feature"] = featureModule;
+    innerBundleInfo.AddInnerModuleInfo(moduleInfos);
+
+    bool result = dataMgr->HasOnlySharedModules(innerBundleInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: QueryAllCloneExtensionInfos_0001
+ * @tc.name: test QueryAllCloneExtensionInfos explicit query with no clone apps
+ * @tc.desc: 1. Set bundleName and extensionName in Want
+ *           2. Ensure no clone apps exist for the bundle
+ */
+HWTEST_F(BmsDataMgrTest, QueryAllCloneExtensionInfos_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.no.clone.v9";
+    std::string extensionName = "com.ohos.test.Extension";
+
+    Want want;
+    ElementName element;
+    element.SetBundleName(bundleName);
+    element.SetAbilityName(extensionName);
+    want.SetElement(element);
+
+    std::vector<ExtensionAbilityInfo> infos;
+    dataMgr->QueryAllCloneExtensionInfos(want, 0, Constants::DEFAULT_USERID, infos);
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: QueryAllCloneExtensionInfos_0002
+ * @tc.name: test QueryAllCloneExtensionInfos explicit query with clone apps
+ * @tc.desc: 1. Set bundleName and extensionName in Want
+ *           2. Add bundle info with clone info to bundleInfos_
+ */
+HWTEST_F(BmsDataMgrTest, QueryAllCloneExtensionInfos_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.with.clone.v9";
+    std::string extensionName = "com.ohos.test.Extension";
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    innerBundleUserInfo.uid = 10010;
+
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    cloneInfo.uid = 10011;
+    std::string cloneKey = std::to_string(1);
+    innerBundleUserInfo.cloneInfos[cloneKey] = cloneInfo;
+    std::string key = bundleName + "_" + std::to_string(Constants::DEFAULT_USERID);
+    innerBundleInfo.innerBundleUserInfos_[key] = innerBundleUserInfo;
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    Want want;
+    ElementName element;
+    element.SetBundleName(bundleName);
+    element.SetAbilityName(extensionName);
+    want.SetElement(element);
+
+    std::vector<ExtensionAbilityInfo> infos;
+    dataMgr->QueryAllCloneExtensionInfos(want, 0, Constants::DEFAULT_USERID, infos);
+    EXPECT_TRUE(infos.empty());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: QueryAllCloneExtensionInfos_0003
+ * @tc.name: test QueryAllCloneExtensionInfos implicit query current bundle
+ * @tc.desc: 1. Set bundleName but empty extensionName in Want
+ *           2. Add bundle info to bundleInfos_
+ */
+HWTEST_F(BmsDataMgrTest, QueryAllCloneExtensionInfos_0003, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.implicit.cur.v9";
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    innerBundleUserInfo.uid = 10010;
+    std::string key = bundleName + "_" + std::to_string(Constants::DEFAULT_USERID);
+    innerBundleInfo.innerBundleUserInfos_[key] = innerBundleUserInfo;
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    Want want;
+    ElementName element;
+    element.SetBundleName(bundleName);
+    want.SetElement(element);
+    std::vector<ExtensionAbilityInfo> infos;
+    dataMgr->QueryAllCloneExtensionInfos(want, 0, Constants::DEFAULT_USERID, infos);
+    EXPECT_TRUE(infos.empty());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: QueryAllCloneExtensionInfosV9_0001
+ * @tc.name: test QueryAllCloneExtensionInfosV9 with invalid user id
+ * @tc.desc: 1. Call QueryAllCloneExtensionInfosV9 with INVALID_USERID
+ */
+HWTEST_F(BmsDataMgrTest, QueryAllCloneExtensionInfosV9_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    Want want;
+    ElementName element;
+    element.SetBundleName("com.ohos.test.bundle");
+    element.SetAbilityName("com.ohos.test.Extension");
+    want.SetElement(element);
+
+    std::vector<ExtensionAbilityInfo> infos;
+    dataMgr->QueryAllCloneExtensionInfosV9(want, 0, Constants::INVALID_USERID, infos);
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: QueryAllCloneExtensionInfosV9_0002
+ * @tc.name: test QueryAllCloneExtensionInfosV9 explicit query with clone apps
+ * @tc.desc: 1. Set bundleName and extensionName in Want
+ *           2. Add bundle info with clone info to bundleInfos_
+ */
+HWTEST_F(BmsDataMgrTest, QueryAllCloneExtensionInfosV9_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.with.clone.v9";
+    std::string extensionName = "com.ohos.test.Extension";
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    innerBundleUserInfo.uid = 10010;
+
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    cloneInfo.uid = 10011;
+    std::string cloneKey = std::to_string(1);
+    innerBundleUserInfo.cloneInfos[cloneKey] = cloneInfo;
+    std::string key = bundleName + "_" + std::to_string(Constants::DEFAULT_USERID);
+    innerBundleInfo.innerBundleUserInfos_[key] = innerBundleUserInfo;
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    Want want;
+    ElementName element;
+    element.SetBundleName(bundleName);
+    element.SetAbilityName(extensionName);
+    want.SetElement(element);
+    std::vector<ExtensionAbilityInfo> infos;
+    dataMgr->QueryAllCloneExtensionInfosV9(want, 0, Constants::DEFAULT_USERID, infos);
+    EXPECT_TRUE(infos.empty());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: QueryAllCloneExtensionInfosV9_0003
+ * @tc.name: test QueryAllCloneExtensionInfosV9 implicit query current bundle
+ * @tc.desc: 1. Set bundleName but empty extensionName in Want
+ *           2. Add bundle info to bundleInfos_
+ */
+HWTEST_F(BmsDataMgrTest, QueryAllCloneExtensionInfosV9_0003, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.implicit.cur.v9";
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    innerBundleUserInfo.uid = 10010;
+    std::string key = bundleName + "_" + std::to_string(Constants::DEFAULT_USERID);
+    innerBundleInfo.innerBundleUserInfos_[key] = innerBundleUserInfo;
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    Want want;
+    ElementName element;
+    element.SetBundleName(bundleName);
+    want.SetElement(element);
+    std::vector<ExtensionAbilityInfo> infos;
+    dataMgr->QueryAllCloneExtensionInfosV9(want, 0, Constants::DEFAULT_USERID, infos);
+    EXPECT_TRUE(infos.empty());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ImplicitQueryAllCloneExtensionAbilityInfos_0001
+ * @tc.name: test ImplicitQueryAllCloneExtensionAbilityInfos with check flags failed
+ * @tc.desc: 1. Add bundle info with clone info to bundleInfos_
+ *           2. Set flags to GET_EXTENSION_INFO_SYSTEMAPP_ONLY but bundle is not system app
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryAllCloneExtensionAbilityInfos_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.clone.check.fail";
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    innerBundleUserInfo.uid = 10010;
+
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 0;
+    cloneInfo.uid = 10011;
+    std::string cloneKey = std::to_string(1);
+    innerBundleUserInfo.cloneInfos[cloneKey] = cloneInfo;
+
+    std::string key = bundleName + "_" + std::to_string(Constants::DEFAULT_USERID);
+    innerBundleInfo.innerBundleUserInfos_[key] = innerBundleUserInfo;
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    Want want;
+    std::vector<ExtensionAbilityInfo> infos;
+    auto ret = dataMgr->ImplicitQueryAllCloneExtensionAbilityInfos(want, 0, USERID, infos);
+    EXPECT_TRUE(ret);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ImplicitQueryAllCloneExtensionAbilityInfos_0002
+ * @tc.name: test ImplicitQueryAllCloneExtensionAbilityInfos successful match
+ * @tc.desc: 1. Add bundle info with clone info to bundleInfos_
+ *           2. Call with valid flags
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryAllCloneExtensionAbilityInfos_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.clone.success";
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    innerBundleUserInfo.uid = 10010;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    cloneInfo.uid = 10011;
+    std::string cloneKey = std::to_string(1);
+    innerBundleUserInfo.cloneInfos[cloneKey] = cloneInfo;
+
+    std::string key = bundleName + "_" + std::to_string(Constants::DEFAULT_USERID);
+    innerBundleInfo.innerBundleUserInfos_[key] = innerBundleUserInfo;
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    Want want;
+    std::vector<ExtensionAbilityInfo> infos;
+    auto ret = dataMgr->ImplicitQueryAllCloneExtensionAbilityInfos(want, 0, -1, infos);
+    EXPECT_TRUE(ret);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ImplicitQueryAllCloneExtensionAbilityInfosV9_0001
+ * @tc.name: test ImplicitQueryAllCloneExtensionAbilityInfosV9 with check flags failed
+ * @tc.desc: 1. Add bundle info with clone info to bundleInfos_
+ *           2. Set flags to GET_EXTENSION_INFO_SYSTEMAPP_ONLY but bundle is not system app
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryAllCloneExtensionAbilityInfosV9_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.clone.check.fail";
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    innerBundleUserInfo.uid = 10010;
+
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 0;
+    cloneInfo.uid = 10011;
+    std::string cloneKey = std::to_string(1);
+    innerBundleUserInfo.cloneInfos[cloneKey] = cloneInfo;
+
+    std::string key = bundleName + "_" + std::to_string(Constants::DEFAULT_USERID);
+    innerBundleInfo.innerBundleUserInfos_[key] = innerBundleUserInfo;
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    Want want;
+    std::vector<ExtensionAbilityInfo> infos;
+    auto ret = dataMgr->ImplicitQueryAllCloneExtensionAbilityInfosV9(want, 0, USERID, infos);
+    EXPECT_EQ(ret, ERR_OK);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ImplicitQueryAllCloneExtensionAbilityInfosV9_0002
+ * @tc.name: test ImplicitQueryAllCloneExtensionAbilityInfosV9 successful match
+ * @tc.desc: 1. Add bundle info with clone info to bundleInfos_
+ *           2. Call with valid flags
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryAllCloneExtensionAbilityInfosV9_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.clone.success";
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    innerBundleUserInfo.uid = 10010;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    cloneInfo.uid = 10011;
+    std::string cloneKey = std::to_string(1);
+    innerBundleUserInfo.cloneInfos[cloneKey] = cloneInfo;
+
+    std::string key = bundleName + "_" + std::to_string(Constants::DEFAULT_USERID);
+    innerBundleInfo.innerBundleUserInfos_[key] = innerBundleUserInfo;
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    Want want;
+    std::vector<ExtensionAbilityInfo> infos;
+    auto ret = dataMgr->ImplicitQueryAllCloneExtensionAbilityInfosV9(want, 0, -1, infos);
+    EXPECT_EQ(ret, ERR_OK);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAppIdByBundleName_0001
+ * @tc.name: test GetAppIdByBundleName with non-existent bundle
+ * @tc.desc: 1. Call GetAppIdByBundleName with a bundle name that does not exist in bundleInfos_
+ */
+HWTEST_F(BmsDataMgrTest, GetAppIdByBundleName_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.non.existent";
+    std::string appId;
+
+    ErrCode ret = dataMgr->GetAppIdByBundleName(bundleName, appId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(appId.empty());
+}
+
+/**
+ * @tc.number: GetAppIdByBundleName_0002
+ * @tc.name: test GetAppIdByBundleName with existing bundle
+ * @tc.desc: 1. Add bundle info to bundleInfos_ with a specific appId
+ *           2. Call GetAppIdByBundleName
+ */
+HWTEST_F(BmsDataMgrTest, GetAppIdByBundleName_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.existent";
+    std::string expectedAppId = "test_app_id_12345";
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.appId = expectedAppId;
+    bundleInfo.applicationInfo.name = bundleName;
+    bundleInfo.applicationInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    std::string appId;
+    ErrCode ret = dataMgr->GetAppIdByBundleName(bundleName, appId);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(appId, expectedAppId);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: UpdateAppEncryptedStatus_0001
+ * @tc.name: test UpdateAppEncryptedStatus with null dataStorage
+ * @tc.desc: 1. Add bundle info to bundleInfos_
+ *           2. Set dataStorage_ to nullptr
+ *           3. Call UpdateAppEncryptedStatus
+ */
+HWTEST_F(BmsDataMgrTest, UpdateAppEncryptedStatus_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.encrypt.status";
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    auto originalDataStorage = dataMgr->dataStorage_;
+    dataMgr->dataStorage_ = nullptr;
+    ErrCode ret = dataMgr->UpdateAppEncryptedStatus(bundleName, true, 0, true);
+    dataMgr->dataStorage_ = originalDataStorage;
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CheckShortcutIdsUnique_0001
+ * @tc.name: test CheckShortcutIdsUnique success path
+ * @tc.desc: 1. Add bundle info to bundleInfos_
+ *           2. Prepare shortcut infos with unique IDs
+ *           3. Call CheckShortcutIdsUnique and expect ERR_OK
+ */
+HWTEST_F(BmsDataMgrTest, CheckShortcutIdsUnique_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.shortcut.unique";
+    int32_t userId = Constants::DEFAULT_USERID;
+    int32_t appIndex = 0;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.isNewVersion_ = false;
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = bundleName;
+    shortcutInfo.appIndex = appIndex;
+    shortcutInfo.id = "unique_shortcut_id_1";
+    shortcutInfos.push_back(shortcutInfo);
+
+    std::vector<std::string> ids;
+    ErrCode ret = dataMgr->CheckShortcutIdsUnique(innerBundleInfo, userId, shortcutInfos, ids);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ids.size(), 1);
+    EXPECT_EQ(ids[0], "unique_shortcut_id_1");
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CheckShortcutIdsUnique_0002
+ * @tc.name: test CheckShortcutIdsUnique conflict with static shortcut
+ * @tc.desc: 1. Add bundle info with static shortcuts to bundleInfos_
+ *           2. Prepare shortcut infos with same ID as static one
+ *           3. Call CheckShortcutIdsUnique and expect ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL
+ */
+HWTEST_F(BmsDataMgrTest, CheckShortcutIdsUnique_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.ohos.test.shortcut.static.conflict";
+    int32_t userId = Constants::DEFAULT_USERID;
+    int32_t appIndex = 0;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.isNewVersion_ = false;
+    ShortcutInfo staticShortcut;
+    staticShortcut.id = "static_shortcut_id";
+    staticShortcut.sourceType = 0;
+    innerBundleInfo.InsertShortcutInfos("static_shortcut_id", staticShortcut);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = bundleName;
+    shortcutInfo.appIndex = appIndex;
+    shortcutInfo.id = "static_shortcut_id";
+    shortcutInfos.push_back(shortcutInfo);
+
+    std::vector<std::string> ids;
+    ErrCode ret = dataMgr->CheckShortcutIdsUnique(innerBundleInfo, userId, shortcutInfos, ids);
+    EXPECT_EQ(ret, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
+    EXPECT_TRUE(ids.empty());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ProcessIdleInfo_0001
+ * @tc.name: test ProcessIdleInfo with empty userInfo
+ * @tc.desc: test ProcessIdleInfo with empty userInfo
+ */
+HWTEST_F(BmsDataMgrTest, ProcessIdleInfo_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo bundleInfo;
+    ApplicationInfo appInfo;
+    appInfo.bundleType = BundleType::APP;
+    appInfo.appPrivilegeLevel = ServiceConstants::APL_NORMAL;
+    bundleInfo.SetBaseApplicationInfo(appInfo);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+
+    auto ret = dataMgr->ProcessIdleInfo();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ProcessIdleInfo_0002
+ * @tc.name: test ProcessIdleInfo with valid userInfo
+ * @tc.desc: test ProcessIdleInfo with valid userInfo
+ */
+HWTEST_F(BmsDataMgrTest, ProcessIdleInfo_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo bundleInfo;
+    ApplicationInfo appInfo;
+    appInfo.bundleType = BundleType::APP;
+    appInfo.appPrivilegeLevel = ServiceConstants::APL_NORMAL;
+    bundleInfo.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    InnerBundleCloneInfo cloneInfo;
+    userInfo.cloneInfos.emplace(BUNDLE_NAME, cloneInfo);
+    bundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME, userInfo);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+
+    auto ret = dataMgr->ProcessIdleInfo();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetSkillInfoWithFlags_0001
+ * @tc.name: test GetSkillInfoWithFlags with SkillInfoFlag::GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS
+ * @tc.desc: test GetSkillInfoWithFlags with SkillInfoFlag::GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS
+ */
+HWTEST_F(BmsDataMgrTest, GetSkillInfoWithFlags_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo bundleInfo;
+    InnerModuleInfo moduleInfo;
+    RequestPermission requestPermission;
+    requestPermission.name = "ohos.permission.CAMERA";
+    moduleInfo.requestPermissions.push_back(requestPermission);
+    SkillProfile profile;
+    uint32_t flag = static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS);
+    SkillInfo skillInfo;
+    dataMgr->GetSkillInfoWithFlags(bundleInfo, moduleInfo, profile, flag, skillInfo);
+    EXPECT_EQ(skillInfo.requestPermissions.size(), 1);
+    EXPECT_EQ(skillInfo.requestPermissions[0], "ohos.permission.CAMERA");
+}
+
+/**
+ * @tc.number: GetSkillInfoWithFlags_0002
+ * @tc.name: test GetSkillInfoWithFlags with SkillInfoFlag::GET_SKILL_INFO_WITH_DESCRIPTION
+ * @tc.desc: test GetSkillInfoWithFlags with SkillInfoFlag::GET_SKILL_INFO_WITH_DESCRIPTION
+ */
+HWTEST_F(BmsDataMgrTest, GetSkillInfoWithFlags_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo bundleInfo;
+    InnerModuleInfo moduleInfo;
+    SkillProfile profile;
+    uint32_t flag = static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_DESCRIPTION);
+    SkillInfo skillInfo;
+    EXPECT_NO_THROW(dataMgr->GetSkillInfoWithFlags(bundleInfo, moduleInfo, profile, flag, skillInfo));
+}
+
+/**
+ * @tc.number: GetSkillInfo_0001
+ * @tc.name: test GetSkillInfo with empty innerBundleUserInfo
+ * @tc.desc: test GetSkillInfo with empty innerBundleUserInfo
+ */
+HWTEST_F(BmsDataMgrTest, GetSkillInfo_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    uint32_t flag = 0;
+    SkillInfo skillInfo;
+    auto ret = dataMgr->GetSkillInfo(BUNDLE_NAME, MODULE_NAME, "", flag, -4, skillInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetSkillInfo_0002
+ * @tc.name: test GetSkillInfo with valid innerBundleUserInfo
+ * @tc.desc: test GetSkillInfo with valid innerBundleUserInfo
+ */
+HWTEST_F(BmsDataMgrTest, GetSkillInfo_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo userInfo;
+    BundleUserInfo bundleUserInfo;
+    bundleUserInfo.userId = 100;
+    userInfo.bundleUserInfo = bundleUserInfo;
+    bundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME, userInfo);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+    dataMgr->multiUserIdsSet_.insert(100);
+
+    uint32_t flag = 0;
+    SkillInfo skillInfo;
+    auto ret = dataMgr->GetSkillInfo(BUNDLE_NAME, MODULE_NAME, "", flag, -4, skillInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetSkillInfos_0001
+ * @tc.name: test GetSkillInfos with empty innerBundleUserInfo
+ * @tc.desc: test GetSkillInfos with empty innerBundleUserInfo
+ */
+HWTEST_F(BmsDataMgrTest, GetSkillInfos_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    uint32_t flag = 0;
+    std::vector<SkillInfo> skillInfos;
+    auto ret = dataMgr->GetSkillInfos(BUNDLE_NAME, flag, -4, skillInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetSkillInfos_0002
+ * @tc.name: test GetSkillInfos with valid innerBundleUserInfo
+ * @tc.desc: test GetSkillInfos with valid innerBundleUserInfo
+ */
+HWTEST_F(BmsDataMgrTest, GetSkillInfos_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo userInfo;
+    BundleUserInfo bundleUserInfo;
+    bundleUserInfo.userId = 100;
+    userInfo.bundleUserInfo = bundleUserInfo;
+    bundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME, userInfo);
+
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+    dataMgr->multiUserIdsSet_.insert(100);
+
+    uint32_t flag = 0;
+    std::vector<SkillInfo> skillInfos;
+    auto ret = dataMgr->GetSkillInfos(BUNDLE_NAME, flag, -4, skillInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 } // OHOS
