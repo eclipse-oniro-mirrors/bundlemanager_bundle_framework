@@ -4010,6 +4010,120 @@ HWTEST_F(BmsBundleKitServiceTest, IsMatchedAbilityExist_0100, Function | SmallTe
 }
 
 /**
+ * @tc.number: IsMatchedAbilityExist_0200
+ * @tc.name: test IsMatchedAbilityExist
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsMatchedAbilityExist_0200, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    InnerBundleInfo info;
+    InnerAbilityInfo abilityInfo;
+    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
+    info.baseAbilityInfos_.emplace(BUNDLE_NAME_TEST, abilityInfo);
+    std::vector<std::string> paramMimeTypes;
+    bool testRet = GetBundleDataMgr()->IsMatchedAbilityExist(want, info, DEFAULT_USERID, paramMimeTypes);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: IsMatchedAbilityExist_0300
+ * @tc.name: test IsMatchedAbilityExist
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsMatchedAbilityExist_0300, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    InnerBundleInfo info;
+    InnerAbilityInfo abilityInfo;
+    info.baseAbilityInfos_.emplace(BUNDLE_NAME_TEST, abilityInfo);
+    std::vector<std::string> paramMimeTypes;
+    bool testRet = GetBundleDataMgr()->IsMatchedAbilityExist(want, info, DEFAULT_USERID, paramMimeTypes);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: IsMatchedAbilityExist_0400
+ * @tc.name: test IsMatchedAbilityExist
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsMatchedAbilityExist_0400, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    InnerBundleInfo info;
+    InnerAbilityInfo abilityInfo;
+    info.baseAbilityInfos_.emplace(BUNDLE_NAME_TEST, abilityInfo);
+    InnerBundleUserInfo bundleUserInfo;
+    info.innerBundleUserInfos_.emplace(BUNDLE_NAME_TEST, bundleUserInfo);
+    std::vector<std::string> paramMimeTypes;
+    bool testRet = GetBundleDataMgr()->IsMatchedAbilityExist(want, info, DEFAULT_USERID, paramMimeTypes);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: IsMatchedAbilityExist_0500
+ * @tc.name: test IsMatchedAbilityExist
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsMatchedAbilityExist_0500, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    InnerBundleInfo info;
+    InnerAbilityInfo abilityInfo;
+    Skill skill;
+    skill.actions.emplace_back("action.system.home");
+    abilityInfo.skills.emplace_back(skill);
+    info.baseAbilityInfos_.emplace(BUNDLE_NAME_TEST, abilityInfo);
+    InnerBundleUserInfo bundleUserInfo;
+    info.innerBundleUserInfos_.emplace(BUNDLE_NAME_TEST, bundleUserInfo);
+    std::vector<std::string> paramMimeTypes;
+    bool testRet = GetBundleDataMgr()->IsMatchedAbilityExist(want, info, DEFAULT_USERID, paramMimeTypes);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: IsMatchedAbilityExist_0600
+ * @tc.name: test IsMatchedAbilityExist
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsMatchedAbilityExist_0600, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    want.SetUri("xxx.txt");
+    InnerBundleInfo info;
+    InnerAbilityInfo abilityInfo;
+    Skill skill;
+    abilityInfo.skills.emplace_back(skill);
+    abilityInfo.supportExtNames.emplace_back("txt");
+    info.baseAbilityInfos_.emplace(BUNDLE_NAME_TEST, abilityInfo);
+    InnerBundleUserInfo bundleUserInfo;
+    info.innerBundleUserInfos_.emplace(BUNDLE_NAME_TEST, bundleUserInfo);
+    std::vector<std::string> paramMimeTypes;
+    bool testRet = GetBundleDataMgr()->IsMatchedAbilityExist(want, info, DEFAULT_USERID, paramMimeTypes);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: IsMatchedAbilityExist_0700
+ * @tc.name: test IsMatchedAbilityExist
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsMatchedAbilityExist_0700, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    InnerBundleInfo info;
+    InnerAbilityInfo abilityInfo;
+    Skill skill;
+    abilityInfo.skills.emplace_back(skill);
+    info.baseAbilityInfos_.emplace(BUNDLE_NAME_TEST, abilityInfo);
+    InnerBundleUserInfo bundleUserInfo;
+    info.innerBundleUserInfos_.emplace(BUNDLE_NAME_TEST, bundleUserInfo);
+    std::vector<std::string> paramMimeTypes;
+    bool testRet = GetBundleDataMgr()->IsMatchedAbilityExist(want, info, DEFAULT_USERID, paramMimeTypes);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
  * @tc.number: QueryAbilityInfoWithFlags_0100
  * @tc.name: test can get the ability infos
  * @tc.desc: 1.system run normally
