@@ -274,6 +274,7 @@ public:
     static std::vector<std::string> GetPathsToSetContext(const std::string &bundleName,
         int32_t userId, int32_t appIndex);
     static bool IsExecutableBinaryFile(const std::string &filePath);
+    static bool IsVmEnabled();
 private:
     static std::mutex g_mutex;
     static std::recursive_mutex configXmlMutex_;

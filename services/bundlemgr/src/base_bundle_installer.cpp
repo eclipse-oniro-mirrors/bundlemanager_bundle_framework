@@ -8030,7 +8030,7 @@ void BaseBundleInstaller::UpdateHasCloudkitConfig()
 ErrCode BaseBundleInstaller::UninstallBundleFromBmsExtension(const std::string &bundleName)
 {
     LOG_D(BMS_TAG_INSTALLER, "start to uninstall bundle from bms extension");
-    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
+    if (!BundleUtil::IsVmEnabled()) {
         LOG_W(BMS_TAG_INSTALLER, "broker is not started");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
@@ -8053,14 +8053,10 @@ ErrCode BaseBundleInstaller::UninstallBundleFromBmsExtension(const std::string &
 ErrCode BaseBundleInstaller::CheckBundleInBmsExtension(const std::string &bundleName, int32_t userId)
 {
     LOG_D(BMS_TAG_INSTALLER, "start to check bundle(%{public}s) from bms extension", bundleName.c_str());
-    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
-        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "broker is not started");
-        return ERR_OK;
-    }
     BmsExtensionDataMgr bmsExtensionDataMgr;
     BundleInfo extensionBundleInfo;
-    auto ret = bmsExtensionDataMgr.GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, userId,
-        extensionBundleInfo);
+    auto ret = bmsExtensionDataMgr.GetBundleInfo(
+        bundleName, BundleFlag::GET_BUNDLE_INFO_WITH_FUSION, userId, extensionBundleInfo);
     if (ret == ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "the bundle(%{public}s) is already existed in the bms extension", bundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_ALREADY_EXIST;

@@ -1110,7 +1110,6 @@ public:
     virtual bool QueryAppGalleryBundleName(std::string &bundleName) override;
     virtual ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         int32_t triggerMode) override;
-    void SetBrokerServiceStatus(bool isServiceExisted);
 
     /**
      * @brief Query extension info with type name.
@@ -1404,10 +1403,7 @@ private:
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
     void SetAtomicServiceRemovable(const ShortcutInfo &shortcutInfo, bool isEnable, int32_t userId);
     bool CheckAcrossUserPermission(const int32_t userId);
-    bool IsQueryBundleInfoExt(const uint32_t flags) const;
-    bool IsQueryAbilityInfoExt(const uint32_t flags) const;
 
-    bool IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags) const;
     ErrCode CheckAppDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isEnabled);
 
     ErrCode HandleKillProcess(const std::string &bundleName, int32_t userId, int32_t appIndex,
@@ -1421,8 +1417,6 @@ private:
     // Frequency limit for GetTopNLargestItemsInAppDataDir
     std::mutex lastSuccessCallTimeMutex_;
     std::chrono::steady_clock::time_point lastSuccessCallTime_ = std::chrono::steady_clock::time_point{};
-
-    std::atomic<bool> isBrokerServiceExisted_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

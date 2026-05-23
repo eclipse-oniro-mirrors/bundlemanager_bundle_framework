@@ -298,11 +298,6 @@ bool BundleMgrService::Hidump(const std::vector<std::string>& args, std::string&
     return false;
 }
 
-bool BundleMgrService::IsBrokerServiceStarted() const
-{
-    return false;
-}
-
 int32_t BundleMgrService::OnExtension(const std::string& extension, MessageParcel& data, MessageParcel& reply)
 {
     return 0;

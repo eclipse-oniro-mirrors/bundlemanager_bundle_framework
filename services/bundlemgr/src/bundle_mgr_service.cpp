@@ -42,7 +42,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr int32_t BUNDLE_BROKER_SERVICE_ABILITY_ID = 0x00010500;
 constexpr int16_t EL5_FILEKEY_SERVICE_ABILITY_ID = 8250;
 constexpr int16_t ABILITY_MANAGER_SERVICE_ID = 501;
 constexpr const char* FUN_BMS_START = "BundleMgrService::Start";
@@ -93,7 +92,6 @@ void BundleMgrService::OnStart()
     }
 
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
-    AddSystemAbilityListener(BUNDLE_BROKER_SERVICE_ABILITY_ID);
     AddSystemAbilityListener(EL5_FILEKEY_SERVICE_ABILITY_ID);
     AddSystemAbilityListener(ABILITY_MANAGER_SERVICE_ID);
     APP_LOGI_NOFUNC("BundleMgrService OnStart end");
@@ -604,12 +602,6 @@ void BundleMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
         AOTSignDataCacheMgr::GetInstance().RegisterScreenUnlockListener();
     }
 #endif
-    if (BUNDLE_BROKER_SERVICE_ABILITY_ID == systemAbilityId) {
-        if (host_ != nullptr) {
-            isBrokerServiceStarted_ = true;
-            host_->SetBrokerServiceStatus(true);
-        }
-    }
     if (EL5_FILEKEY_SERVICE_ABILITY_ID == systemAbilityId) {
         int32_t reg = Security::AccessToken::El5FilekeyManagerKit::RegisterCallback(sptr(new El5FilekeyCallback()));
         APP_LOGI("Register El5FilekeyCallback result: %{public}d", reg);
@@ -627,11 +619,6 @@ bool BundleMgrService::Hidump(const std::vector<std::string> &args, std::string&
 
     APP_LOGD("HidumpHelper failed");
     return false;
-}
-
-bool BundleMgrService::IsBrokerServiceStarted() const
-{
-    return isBrokerServiceStarted_;
 }
 
 int32_t BundleMgrService::OnExtension(const std::string& extension, MessageParcel& data, MessageParcel& reply)

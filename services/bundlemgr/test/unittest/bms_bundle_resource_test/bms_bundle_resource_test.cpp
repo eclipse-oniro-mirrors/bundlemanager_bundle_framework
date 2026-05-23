@@ -52,6 +52,7 @@
 #include "bundle_system_state.h"
 #include "launcher_ability_resource_info.h"
 #include "nlohmann/json.hpp"
+#include "parameters.h"
 #endif
 
 #include "bundle_verify_mgr.h"
@@ -3390,7 +3391,12 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0166, Function | SmallTest
     ret = bundleResourceHostImpl->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, "", USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     ret = bundleResourceHostImpl->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, USERID);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    } else {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    }
 }
 
 /**
@@ -3408,7 +3414,12 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0167, Function | SmallTest
     auto ret = bundleResourceHostImpl->DeleteResourceInfo("");
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     ret = bundleResourceHostImpl->DeleteResourceInfo(key);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        EXPECT_EQ(ret, ERR_OK);
+    } else {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    }
 }
 
 /**

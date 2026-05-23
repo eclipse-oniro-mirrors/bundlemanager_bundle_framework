@@ -53,6 +53,7 @@
 #include "mock_bundle_status.h"
 #include "nlohmann/json.hpp"
 #include "parameter.h"
+#include "parameters.h"
 #include "pre_install_bundle_info.h"
 #include "perf_profile.h"
 #include "process_cache_callback_host.h"
@@ -1775,7 +1776,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleStats_0100, Function | SmallTest | Le
     ASSERT_NE(hostImpl, nullptr);
     std::vector<int64_t> bundleStats;
     int32_t appIndex = 0;
-    hostImpl->isBrokerServiceExisted_ = true;
     bool ret = hostImpl->GetBundleStats(BUNDLE_NAME_TEST, DEFAULT_USERID, bundleStats, appIndex);
     EXPECT_FALSE(ret);
 }
@@ -1814,7 +1814,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleStats_0300, Function | SmallTest | Le
     std::string bundleName = "com.example.CheckAppIndex_1000_1";
     std::vector<int64_t> bundleStats;
     int32_t appIndex = 0;
-    hostImpl->isBrokerServiceExisted_ = true;
  
     // test bundlename not in bundleinfos or uninstallbundleinfos
     bool ret = hostImpl->GetBundleStats(bundleName, DEFAULT_USERID, bundleStats, appIndex);
@@ -1836,19 +1835,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleStats_0300, Function | SmallTest | Le
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->DeleteUninstallBundleInfo(bundleName,
         DEFAULT_USERID);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
-}
-
-/**
- * @tc.number: SetBrokerServiceStatus_0100
- * @tc.name: test SetBrokerServiceStatus
- * @tc.desc: 1.Test the SetBrokerServiceStatus by BundleMgrHostImpl
- */
-HWTEST_F(BmsBundleKitServiceTest, SetBrokerServiceStatus_0100, Function | SmallTest | Level1)
-{
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ASSERT_NE(hostImpl, nullptr);
-    hostImpl->SetBrokerServiceStatus(true);
-    EXPECT_TRUE(hostImpl->isBrokerServiceExisted_);
 }
 
 /**
@@ -6789,7 +6775,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0900, Function | SmallTes
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
-    hostImpl->isBrokerServiceExisted_ = true;
     bool testRet = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_DEMO, DEFAULT_USERID);
     EXPECT_FALSE(testRet);
 
@@ -8379,11 +8364,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetNameAndIndexForUidImpl_0300, Function | Sma
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string bundleName = BUNDLE_NAME_TEST;
-    hostImpl->isBrokerServiceExisted_ = true;
     int32_t appindex = 0;
     auto ret = hostImpl->GetNameAndIndexForUid(0, bundleName, appindex);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
-    hostImpl->isBrokerServiceExisted_ = false;
 }
 
 /**
@@ -9108,10 +9091,15 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesImpl_0100, Function | Sma
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     sptr<ICleanCacheCallback> cleanCacheCallback =  new (std::nothrow) ICleanCacheCallbackTest();
     int32_t appindex = 0;
-    hostImpl->isBrokerServiceExisted_ = true;
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
     ErrCode ret = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCacheCallback, DEFAULT_USERID, appindex);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    hostImpl->isBrokerServiceExisted_ = false;
+    if (isEnableHmos || isEnableFusion) {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
+    if (!isEnableHmos && !isEnableFusion) {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    }
 }
 
 /**
@@ -9130,6 +9118,122 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesImpl_0200, Function | Sma
     ErrCode ret = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCacheCallback, DEFAULT_USERID, appindex);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     ResetTestValues();
+}
+
+/**
+ * @tc.number: CleanBundleCacheFilesImpl_0300
+ * @tc.name: test CleanBundleCacheFiles with IsVmEnabled true
+ * @tc.desc: 1. test CleanBundleCacheFiles when IsVmEnabled true
+ *           2. should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesImpl_0300, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    sptr<ICleanCacheCallback> cleanCacheCallback =  new (std::nothrow) ICleanCacheCallbackTest();
+    int32_t appindex = 0;
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    ErrCode ret = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCacheCallback, DEFAULT_USERID, appindex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+}
+
+/**
+ * @tc.number: CleanBundleCacheFilesImpl_0400
+ * @tc.name: test CleanBundleCacheFiles with IsVmEnabled true
+ * @tc.desc: 1. test CleanBundleCacheFiles when IsVmEnabled true
+ *           2. should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesImpl_0400, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    sptr<ICleanCacheCallback> cleanCacheCallback =  new (std::nothrow) ICleanCacheCallbackTest();
+    int32_t appindex = 0;
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    ErrCode ret = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCacheCallback, DEFAULT_USERID, appindex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+}
+
+/**
+ * @tc.number: CleanBundleCacheFilesImpl_0500
+ * @tc.name: test CleanBundleCacheFiles with IsVmEnabled true
+ * @tc.desc: 1. test CleanBundleCacheFiles when IsVmEnabled true
+ *           2. should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesImpl_0500, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    sptr<ICleanCacheCallback> cleanCacheCallback =  new (std::nothrow) ICleanCacheCallbackTest();
+    int32_t appindex = 0;
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    ErrCode ret = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCacheCallback, DEFAULT_USERID, appindex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+}
+
+/**
+ * @tc.number: CleanBundleCacheFilesImpl_0600
+ * @tc.name: test CleanBundleCacheFiles with IsVmEnabled true
+ * @tc.desc: 1. test CleanBundleCacheFiles when IsVmEnabled true
+ *           2. should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesImpl_0600, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    sptr<ICleanCacheCallback> cleanCacheCallback =  new (std::nothrow) ICleanCacheCallbackTest();
+    int32_t appindex = 0;
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    ErrCode ret = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCacheCallback, DEFAULT_USERID, appindex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
 }
 
 /**
@@ -11728,5 +11832,117 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllJsonProfile_0200, Function | SmallTest |
     std::vector<JsonProfileInfo> profileInfos;
     auto ret = bundleMgrHostImpl_->GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, -1, profileInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: CleanBundleDataFilesImpl_0400
+ * @tc.name: test CleanBundleDataFiles with invalid appindex
+ * @tc.desc: 1. test CleanBundleDataFiles when invalid appindex
+ *           2. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesImpl_0400, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    int32_t appindex = 0;
+    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, DEMO_UID);
+    EXPECT_FALSE(ret);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+}
+
+/**
+ * @tc.number: CleanBundleDataFilesImpl_0500
+ * @tc.name: test CleanBundleDataFiles with invalid appindex
+ * @tc.desc: 1. test CleanBundleDataFiles when invalid appindex
+ *           2. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesImpl_0500, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    int32_t appindex = 0;
+    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, DEMO_UID);
+    EXPECT_FALSE(ret);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+}
+
+/**
+ * @tc.number: CleanBundleDataFilesImpl_0600
+ * @tc.name: test CleanBundleDataFiles with invalid appindex
+ * @tc.desc: 1. test CleanBundleDataFiles when invalid appindex
+ *           2. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesImpl_0600, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    int32_t appindex = 0;
+    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, DEMO_UID);
+    EXPECT_FALSE(ret);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+}
+
+/**
+ * @tc.number: CleanBundleDataFilesImpl_0700
+ * @tc.name: test CleanBundleDataFiles with invalid appindex
+ * @tc.desc: 1. test CleanBundleDataFiles when invalid appindex
+ *           2. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesImpl_0700, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    int32_t appindex = 0;
+    auto ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID, appindex, DEMO_UID);
+    EXPECT_FALSE(ret);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
 }
 }

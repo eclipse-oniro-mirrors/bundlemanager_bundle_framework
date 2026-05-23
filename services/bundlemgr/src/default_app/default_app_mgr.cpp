@@ -929,16 +929,13 @@ bool DefaultAppMgr::GetBrokerBundleInfo(const Element& element, BundleInfo& bund
         LOG_W(BMS_TAG_DEFAULT, "invalid param, get broker bundleInfo failed");
         return false;
     }
-    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
-        LOG_W(BMS_TAG_DEFAULT, "broker not started, get broker bundleInfo failed");
-        return false;
-    }
     Want want;
     ElementName elementName("", element.bundleName, element.abilityName, element.moduleName);
     want.SetElement(elementName);
     AbilityInfo abilityInfo;
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    ErrCode ret = bmsExtensionClient->QueryAbilityInfo(want, 0, Constants::START_USERID, abilityInfo, true);
+    ErrCode ret = bmsExtensionClient->QueryAbilityInfo(
+        want, AbilityInfoFlag::GET_ABILITY_INFO_WITH_FUSION, Constants::START_USERID, abilityInfo, true);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "query abilityInfo from broker failed");
         return false;

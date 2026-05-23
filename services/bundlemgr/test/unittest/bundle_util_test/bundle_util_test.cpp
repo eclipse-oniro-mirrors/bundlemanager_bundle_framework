@@ -33,6 +33,7 @@
 #define private public
 #include "histogram_util.h"
 #undef private
+#include "parameters.h"
 #include "xml_util.h"
 
 using namespace testing::ext;
@@ -1005,5 +1006,105 @@ HWTEST_F(BundleUtilTest, HistogramUtilTest_0010, TestSize.Level2)
     errorCode = -1;
     HistogramUtil::ConvertErrorCodeToHistogramEnumeration(errorCode);
     EXPECT_EQ(errorCode, static_cast<int32_t>(CommonErrorType::OPERATION_FAILED));
+}
+
+/**
+ * @tc.number: IsVmEnabled_0100
+ * @tc.name: test the IsVmEnabled.
+ * @tc.desc: test the IsVmEnabled of BundleUtil.
+ */
+HWTEST_F(BundleUtilTest, IsVmEnabled_0100, TestSize.Level2)
+{
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    auto ret = BundleUtil::IsVmEnabled();
+    EXPECT_FALSE(ret);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+}
+
+/**
+ * @tc.number: IsVmEnabled_0200
+ * @tc.name: test the IsVmEnabled.
+ * @tc.desc: test the IsVmEnabled of BundleUtil.
+ */
+HWTEST_F(BundleUtilTest, IsVmEnabled_0200, TestSize.Level2)
+{
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    auto ret = BundleUtil::IsVmEnabled();
+    EXPECT_TRUE(ret);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+}
+
+/**
+ * @tc.number: IsVmEnabled_0300
+ * @tc.name: test the IsVmEnabled.
+ * @tc.desc: test the IsVmEnabled of BundleUtil.
+ */
+HWTEST_F(BundleUtilTest, IsVmEnabled_0300, TestSize.Level2)
+{
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    auto ret = BundleUtil::IsVmEnabled();
+    EXPECT_TRUE(ret);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+}
+
+/**
+ * @tc.number: IsVmEnabled_0400
+ * @tc.name: test the IsVmEnabled.
+ * @tc.desc: test the IsVmEnabled of BundleUtil.
+ */
+HWTEST_F(BundleUtilTest, IsVmEnabled_0400, TestSize.Level2)
+{
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    auto ret = BundleUtil::IsVmEnabled();
+    EXPECT_TRUE(ret);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
 }
 } // OHOS
