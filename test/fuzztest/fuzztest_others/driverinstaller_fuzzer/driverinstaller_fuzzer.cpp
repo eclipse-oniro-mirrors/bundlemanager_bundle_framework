@@ -16,7 +16,10 @@
 #define private public
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 #include <iostream>
+
+#include "bms_fuzztest_util.h"
 #include "driver_installer.h"
 
 #include "driverinstaller_fuzzer.h"
@@ -24,18 +27,20 @@
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AAFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
 constexpr size_t U32_AT_SIZE = 4;
 constexpr uint8_t ENABLE = 2;
-    bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
+    bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
         InnerBundleInfo info;
-        std::string bundleName(reinterpret_cast<const char*>(data), size);
-        std::string moduleName(reinterpret_cast<const char*>(data), size);
-        std::string fileName(reinterpret_cast<const char*>(data), size);
-        std::string destinedDir(reinterpret_cast<const char*>(data), size);
-        bool isModuleExisted = *data % ENABLE;
+        FuzzedDataProvider fdp(data, size);
+        std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        std::string moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        std::string fileName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        std::string destinedDir = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        bool isModuleExisted = fdp.ConsumeBool();
         auto res = driverInstaller->CreateDriverSoDestinedDir(bundleName,
         moduleName, fileName, destinedDir, isModuleExisted);
 
@@ -49,7 +54,7 @@ constexpr uint8_t ENABLE = 2;
         InnerBundleInfo oldInfo;
         driverInstaller->CopyAllDriverFile(newInfos, oldInfo);
 
-        std::string srcPath(reinterpret_cast<const char*>(data), size);
+        std::string srcPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         driverInstaller->CopyDriverSoFile(info, srcPath, isModuleExisted);
 
         driverInstaller->RemoveAndReNameDriverFile(newInfos, oldInfo);
@@ -63,32 +68,6 @@ constexpr uint8_t ENABLE = 2;
 // Fuzzer entry point.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-     /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
-
-    /* Validate the length of size */
-    if (size < OHOS::U32_AT_SIZE) {
-        return 0;
-    }
-
-    char* ch = (char*)malloc(size + 1);
-    if (ch == nullptr) {
-        std::cout << "malloc failed." << std::endl;
-        return 0;
-    }
-
-    (void)memset_s(ch, size + 1, 0x00, size + 1);
-    if (memcpy_s(ch, size + 1, data, size) != EOK) {
-        std::cout << "copy failed." << std::endl;
-        free(ch);
-        ch = nullptr;
-        return 0;
-    }
-
-    OHOS::DoSomethingInterestingWithMyAPI(ch, size);
-    free(ch);
-    ch = nullptr;
+    OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }

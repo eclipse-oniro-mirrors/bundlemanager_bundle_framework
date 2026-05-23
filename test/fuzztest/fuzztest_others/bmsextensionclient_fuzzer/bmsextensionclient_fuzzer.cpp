@@ -15,20 +15,25 @@
 #define private public
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "bms_extension_client.h"
+#include "bms_fuzztest_util.h"
 
 #include "bmsextensionclient_fuzzer.h"
 
 using Want = OHOS::AAFwk::Want;
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
 constexpr uint8_t ENABLE = 2;
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         Want want;
-        std::string bundleName (reinterpret_cast<const char*>(data), size);
+        FuzzedDataProvider fdp(data, size);
+        std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         bool boolParam = *data % ENABLE;
         want.SetAction(bundleName);
         std::vector<AbilityInfo> abilityInfos;
@@ -40,31 +45,32 @@ constexpr uint8_t ENABLE = 2;
         sptr<IRemoteObject> callback;
         BmsExtensionClient bmsExtensionClient;
         BundleInfo bundleInfo;
-        bmsExtensionClient.QueryLauncherAbility(want, reinterpret_cast<uintptr_t>(data),
+        int32_t userId = GenerateRandomUser(fdp);
+        bmsExtensionClient.QueryLauncherAbility(want, userId,
                                                 abilityInfos);
-        bmsExtensionClient.QueryAbilityInfos(want, reinterpret_cast<uintptr_t>(data),
-                                             reinterpret_cast<uintptr_t>(data), abilityInfos);
-        bmsExtensionClient.BatchQueryAbilityInfos(wants, reinterpret_cast<uintptr_t>(data),
-                                                  reinterpret_cast<uintptr_t>(data),
+        bmsExtensionClient.QueryAbilityInfos(want, userId,
+                                             userId, abilityInfos);
+        bmsExtensionClient.BatchQueryAbilityInfos(wants, userId,
+                                                  userId,
                                                   abilityInfos);
-        bmsExtensionClient.QueryAbilityInfo(want, reinterpret_cast<uintptr_t>(data),
-                                            reinterpret_cast<uintptr_t>(data), abilityInfo);
-        bmsExtensionClient.GetBundleInfos(reinterpret_cast<uintptr_t>(data), bundleInfos,
-                                          reinterpret_cast<uintptr_t>(data));
-        bmsExtensionClient.GetBundleInfo(bundleName, reinterpret_cast<uintptr_t>(data), bundleInfo,
-                                         reinterpret_cast<uintptr_t>(data), boolParam);
-        bmsExtensionClient.BatchGetBundleInfo(bundleNames, reinterpret_cast<uintptr_t>(data),
-                                              bundleInfos, reinterpret_cast<uintptr_t>(data));
-        bmsExtensionClient.ImplicitQueryAbilityInfos(want, reinterpret_cast<uintptr_t>(data),
-                                                     reinterpret_cast<uintptr_t>(data),
+        bmsExtensionClient.QueryAbilityInfo(want, userId,
+                                            userId, abilityInfo);
+        bmsExtensionClient.GetBundleInfos(userId, bundleInfos,
+                                          userId);
+        bmsExtensionClient.GetBundleInfo(bundleName, userId, bundleInfo,
+                                         userId, boolParam);
+        bmsExtensionClient.BatchGetBundleInfo(bundleNames, userId,
+                                              bundleInfos, userId);
+        bmsExtensionClient.ImplicitQueryAbilityInfos(want, userId,
+                                                     userId,
                                                      abilityInfos, boolParam);
-        bmsExtensionClient.GetBundleStats(bundleName, reinterpret_cast<uintptr_t>(data), bundleStats);
-        bmsExtensionClient.ClearCache(bundleName, callback, reinterpret_cast<uintptr_t>(data));
-        bmsExtensionClient.ClearData(bundleName, reinterpret_cast<uintptr_t>(data));
+        bmsExtensionClient.GetBundleStats(bundleName, userId, bundleStats);
+        bmsExtensionClient.ClearCache(bundleName, callback, userId);
+        bmsExtensionClient.ClearData(bundleName, userId);
         int32_t uid =  3024;
-        bmsExtensionClient.GetUidByBundleName(bundleName, reinterpret_cast<uintptr_t>(data),
+        bmsExtensionClient.GetUidByBundleName(bundleName, userId,
                                               uid);
-        bmsExtensionClient.GetBundleNameByUid(reinterpret_cast<uintptr_t>(data), bundleName);
+        bmsExtensionClient.GetBundleNameByUid(userId, bundleName);
     
         bmsExtensionClient.ModifyLauncherAbilityInfo(abilityInfo);
         bmsExtensionClient.GetDataMgr();

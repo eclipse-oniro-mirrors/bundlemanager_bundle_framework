@@ -16,18 +16,21 @@
 #define private public
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "basebundleinstallerchecksyscap_fuzzer.h"
 #include "base_bundle_installer.h"
+#include "bms_fuzztest_util.h"
 #include "securec.h"
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
-    constexpr size_t U32_AT_SIZE = 4;
 
-    bool DoSomethingInterestingWithMyAPI(const char *data, size_t size)
+    bool DoSomethingInterestingWithMyAPI(const uint8_t *data, size_t size)
     {
         BaseBundleInstaller basebundleinstall;
-        std::vector<std::string> bundlePaths = {std::string(data, size)};
+        FuzzedDataProvider fdp(data, size);
+        std::vector<std::string> bundlePaths = {fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH)};
         auto ret1 = basebundleinstall.CheckSysCap(bundlePaths);
         return true;
     }
@@ -36,28 +39,6 @@ namespace OHOS {
 // Fuzzer entry point.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
-
-    if (size < OHOS::U32_AT_SIZE) {
-        return 0;
-    }
-
-    char *ch = static_cast<char *>(malloc(size + 1));
-    if (ch == nullptr) {
-        return 0;
-    }
-
-    (void)memset_s(ch, size + 1, 0x00, size + 1);
-    if (memcpy_s(ch, size, data, size) != EOK) {
-        free(ch);
-        ch = nullptr;
-        return 0;
-    }
-    OHOS::DoSomethingInterestingWithMyAPI(ch, size);
-    free(ch);
-    ch = nullptr;
+    OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }

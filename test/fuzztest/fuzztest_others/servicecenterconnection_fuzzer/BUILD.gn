@@ -21,7 +21,10 @@ ohos_fuzztest("ServiceCenterConnectionFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
       "../../../fuzztest/fuzztest_others/servicecenterconnection_fuzzer"
-  include_dirs = [ "${services_path}/bundlemgr/include/extend_resource" ]
+  include_dirs = [
+    "${test_path}/fuzztest",
+    "${services_path}/bundlemgr/include/extend_resource"
+  ]
   sources = bundle_mgr_source
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",

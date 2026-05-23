@@ -22,7 +22,7 @@ ohos_fuzztest("BaseBundleInstallerCheckSysCapFuzzTest") {
       "../../../fuzztest/fuzztest_others/basebundleinstallerchecksyscap_fuzzer"
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = []
+  include_dirs = [ "${test_path}/fuzztest" ]
   sources = bundle_mgr_source
   sources += bundle_install_sources
 

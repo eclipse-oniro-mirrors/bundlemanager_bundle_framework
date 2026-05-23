@@ -13,12 +13,16 @@
  * limitations under the License.
  */
 
+#include <fuzzer/FuzzedDataProvider.h>
+
+#include "bms_fuzztest_util.h"
 #include "quickfixbootscanner_fuzzer.h"
 #define private public
 #include "quick_fix_boot_scanner.h"
 #include "securec.h"
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
 constexpr size_t U32_AT_SIZE = 4;
 constexpr size_t MESSAGE_SIZE = 4;
@@ -26,11 +30,7 @@ constexpr size_t DCAMERA_SHIFT_24 = 24;
 constexpr size_t DCAMERA_SHIFT_16 = 16;
 constexpr size_t DCAMERA_SHIFT_8 = 8;
 
-uint32_t GetU32Data(const char* ptr)
-{
-    return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
-}
-bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
+bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     QuickFixBootScanner quickFixBootScanner;
     quickFixBootScanner.ProcessQuickFixBootUp();
@@ -38,18 +38,19 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     quickFixBootScanner.SetQuickFixState(state_);
     quickFixBootScanner.ProcessState();
     quickFixBootScanner.RestoreQuickFix();
-    std::string bundlePath (reinterpret_cast<const char*>(data), size);
-    std::string realPath (reinterpret_cast<const char*>(data), size);
+    FuzzedDataProvider fdp(data, size);
+    std::string bundlePath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    std::string realPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     std::vector<std::string> fileDir;
     fileDir.push_back(bundlePath);
     quickFixBootScanner.ProcessQuickFixDir(fileDir);
     quickFixBootScanner.ReprocessQuickFix(realPath, bundlePath);
-    std::string bundleName(data, size);
-    std::string quickFixPath(data, size);
+    std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    std::string quickFixPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     ApplicationInfo info;
     quickFixBootScanner.GetApplicationInfo(bundleName, quickFixPath, info);
-    int32_t quickFixVersion = reinterpret_cast<uintptr_t>(data);
-    int32_t fileVersion = reinterpret_cast<uintptr_t>(data);
+    int32_t quickFixVersion = fdp.ConsumeIntegral<int32_t>();
+    int32_t fileVersion = fdp.ConsumeIntegral<int32_t>();
     quickFixBootScanner.ProcessWithBundleHasQuickFixInfo(bundleName, quickFixPath, quickFixVersion, fileVersion);
     quickFixBootScanner.RemoveInvalidDir();
     return true;
@@ -59,28 +60,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 // Fuzzer entry point.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
-
-    if (size < OHOS::U32_AT_SIZE) {
-        return 0;
-    }
-
-    char* ch = static_cast<char*>(malloc(size + 1));
-    if (ch == nullptr) {
-        return 0;
-    }
-
-    (void)memset_s(ch, size + 1, 0x00, size + 1);
-    if (memcpy_s(ch, size, data, size) != EOK) {
-        free(ch);
-        ch = nullptr;
-        return 0;
-    }
-    OHOS::DoSomethingInterestingWithMyAPI(ch, size);
-    free(ch);
-    ch = nullptr;
+    OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }

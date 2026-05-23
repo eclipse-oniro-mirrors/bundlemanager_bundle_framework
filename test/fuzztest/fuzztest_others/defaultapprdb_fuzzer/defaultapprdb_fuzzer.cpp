@@ -17,13 +17,16 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fuzzer/FuzzedDataProvider.h>
 
 #include "app_control_proxy.h"
+#include "bms_fuzztest_util.h"
 
 #include "defaultapprdb_fuzzer.h"
 #include "default_app_rdb.h"
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t *data, size_t size)
     {
@@ -34,22 +37,24 @@ namespace OHOS {
         Element element;
         element.bundleName = "";
         auto defaultAppDb_ = std::make_shared<DefaultAppRdb>();
-        defaultAppDb_->GetDefaultApplicationInfo(reinterpret_cast<uintptr_t>(data), type, element);
+        FuzzedDataProvider fdp(data, size);
+        int32_t userId = GenerateRandomUser(fdp);
+        defaultAppDb_->GetDefaultApplicationInfo(userId, type, element);
         std::map<std::string, Element> currentInfos;
-        defaultAppDb_->GetDefaultApplicationInfos(reinterpret_cast<uintptr_t>(data), currentInfos);
+        defaultAppDb_->GetDefaultApplicationInfos(userId, currentInfos);
         std::map<std::string, Element> newInfos;
-        defaultAppDb_->SetDefaultApplicationInfos(reinterpret_cast<uintptr_t>(data), newInfos);
-        defaultAppDb_->SetDefaultApplicationInfo(reinterpret_cast<uintptr_t>(data), type, element);
-        defaultAppDb_->DeleteDefaultApplicationInfos(reinterpret_cast<uintptr_t>(data));
-        defaultAppDb_->DeleteDefaultApplicationInfo(reinterpret_cast<uintptr_t>(data), type);
+        defaultAppDb_->SetDefaultApplicationInfos(userId, newInfos);
+        defaultAppDb_->SetDefaultApplicationInfo(userId, type, element);
+        defaultAppDb_->DeleteDefaultApplicationInfos(userId);
+        defaultAppDb_->DeleteDefaultApplicationInfo(userId, type);
         defaultAppDb_->RegisterDeathListener();
         defaultAppDb_->UnRegisterDeathListener();
         defaultAppDb_->LoadDefaultApplicationConfig();
         defaultAppDb_->LoadBackUpDefaultApplicationConfig();
         defaultAppDb_->ConvertMimeTypeToUtd();
-        defaultAppDb_->DeleteDataFromDb(reinterpret_cast<uintptr_t>(data));
-        defaultAppDb_->SaveDataToDb(reinterpret_cast<uintptr_t>(data), newInfos);
-        defaultAppDb_->GetDataFromDb(reinterpret_cast<uintptr_t>(data), newInfos);
+        defaultAppDb_->DeleteDataFromDb(userId);
+        defaultAppDb_->SaveDataToDb(userId, newInfos);
+        defaultAppDb_->GetDataFromDb(userId, newInfos);
         DefaultAppData defaultAppData;
         const std::string DEFAULT_APP_JSON_PATH = "/etc/app/backup_default_app.json";
         defaultAppDb_->ParseConfig(DEFAULT_APP_JSON_PATH, defaultAppData);

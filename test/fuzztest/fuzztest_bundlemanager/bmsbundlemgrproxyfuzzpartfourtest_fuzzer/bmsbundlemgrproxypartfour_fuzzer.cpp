@@ -81,7 +81,7 @@ namespace OHOS {
         AbilityInfo abilityInfo;
         bundleMgrProxy.QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo);
         ElementName element;
-        bundleMgrProxy.QueryCloneAbilityInfo(element, flags, appIndex, abilityInfo, reinterpret_cast<uintptr_t>(data));
+        bundleMgrProxy.QueryCloneAbilityInfo(element, flags, appIndex, abilityInfo, userId);
         bundleMgrProxy.GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo);
         element.SetAbilityName(abilityName);
         element.SetBundleName(bundleName);
