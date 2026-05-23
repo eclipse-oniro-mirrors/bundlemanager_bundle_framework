@@ -34,6 +34,7 @@ constexpr const char* PROPERTYNAME_WANT = "want";
 constexpr const char* PROPERTYNAME_COMPONENT_TYPE = "componentType";
 constexpr const char* PROPERTYNAME_DISPOSED_TYPE = "disposedType";
 constexpr const char* PROPERTYNAME_CONTROL_TYPE = "controlType";
+constexpr const char* PROPERTYNAME_PAGE_JUMP = "pageJump";
 constexpr const char* PROPERTYNAME_ELEMENT_LIST = "elementList";
 constexpr const char* PROPERTYNAME_PRIORITY = "priority";
 constexpr const char* PROPERTYNAME_UNINSTALL_COMPONENT_TYPE = "uninstallComponentType";
@@ -72,6 +73,7 @@ ani_object AniAppControlCommon::ConvertDisposedRule(ani_env* env, const Disposed
         { .r = EnumUtils::EnumNativeToETS_AppControl_ControlType(env, static_cast<int32_t>(disposedRule.controlType)) },
         { .r = elementList },
         { .i = disposedRule.priority },
+        { .r = EnumUtils::EnumNativeToETS_AppControl_PageJumpMode(env, static_cast<int32_t>(disposedRule.pageJump)) },
         { .r = want },
     };
     static const std::string ctorSig =
@@ -81,6 +83,7 @@ ani_object AniAppControlCommon::ConvertDisposedRule(ani_env* env, const Disposed
             .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_CONTROL_TYPE)   // controlType: ControlType
             .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                     // elementList: Array<ElementName>
             .AddInt()                                                      // priority: int
+            .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_PAGE_JUMP_MODE) // pageJump: PageJumpMode
             .BuildSignatureDescriptor();
     static const std::string ctorSigWithWant =
         arkts::ani_signature::SignatureBuilder()
@@ -89,6 +92,7 @@ ani_object AniAppControlCommon::ConvertDisposedRule(ani_env* env, const Disposed
             .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_CONTROL_TYPE)   // controlType: ControlType
             .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                     // elementList: Array<ElementName>
             .AddInt()                                                      // priority: int
+            .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_PAGE_JUMP_MODE) // pageJump: PageJumpMode
             .AddClass(CLASSNAME_WANT)                                      // want: Want
             .BuildSignatureDescriptor();
     return CommonFunAni::CreateNewObjectByClassV2(
@@ -271,6 +275,11 @@ bool AniAppControlCommon::ParseDisposedRule(ani_env* env, ani_object object, Dis
     // priority: int
     RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_PRIORITY, &intValue));
     disposedRule.priority = intValue;
+
+    // pageJump?: PageJumpMode
+    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_PAGE_JUMP, &enumItem)) {
+        RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, disposedRule.pageJump));
+    }
 
     return true;
 }

@@ -489,7 +489,6 @@ void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
     napi_value nControlType;
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<int32_t>(rule.controlType), &nControlType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "controlType", nControlType));
-
     napi_value nElementList;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nElementList));
     for (size_t idx = 0; idx < rule.elementList.size(); idx++) {
@@ -502,6 +501,9 @@ void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
     napi_value nPriority;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, rule.priority, &nPriority));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "priority", nPriority));
+    napi_value nPageJump;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<int32_t>(rule.pageJump), &nPageJump));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "pageJump", nPageJump));
 }
 
 bool ParseDisposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
@@ -581,6 +583,26 @@ bool ParseDisposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
     if (!CommonFunc::ParseInt(env, prop, rule.priority)) {
         APP_LOGW("priority parseInt failed");
         return false;
+    }
+    bool hasPageJump = false;
+    NAPI_CALL_BASE(env, napi_has_named_property(env, nRule, "pageJump", &hasPageJump), false);
+    if (hasPageJump) {
+        napi_get_named_property(env, nRule, "pageJump", &prop);
+        NAPI_CALL_BASE(env, napi_typeof(env, prop, &valueType), false);
+        if (valueType == napi_undefined) {
+            return true;
+        }
+        int32_t pageJump;
+        if (!CommonFunc::ParseInt(env, prop, pageJump)) {
+            APP_LOGW("pageJump parseInt failed");
+            return false;
+        }
+        if (pageJump > static_cast<int32_t>(PageJumpMode::PAGE_JUMP_WINDOW_NOT_SHOW) ||
+            pageJump < static_cast<int32_t>(PageJumpMode::PAGE_JUMP_WINDOW_SHOW)) {
+            APP_LOGW("pageJump not valid");
+            return false;
+        }
+        rule.pageJump = static_cast<PageJumpMode>(pageJump);
     }
     return true;
 }
@@ -1265,6 +1287,19 @@ void CreateControlType(napi_env env, napi_value value)
         &nDisAllowedList));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DISALLOWED_LIST",
         nDisAllowedList));
+}
+
+void CreatePageJumpMode(napi_env env, napi_value value)
+{
+    napi_value nPageJumpWindowShow;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(PageJumpMode::PAGE_JUMP_WINDOW_SHOW),
+        &nPageJumpWindowShow));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PAGE_JUMP_WINDOW_SHOW", nPageJumpWindowShow));
+    napi_value nPageJumpWindowNotShow;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(PageJumpMode::PAGE_JUMP_WINDOW_NOT_SHOW), &nPageJumpWindowNotShow));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, value, "PAGE_JUMP_WINDOW_NOT_SHOW", nPageJumpWindowNotShow));
 }
 }
 }

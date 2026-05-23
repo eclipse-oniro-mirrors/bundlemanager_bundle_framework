@@ -39,6 +39,9 @@ static napi_value AppControlExport(napi_env env, napi_value exports)
     napi_value controlType = nullptr;
     NAPI_CALL(env, napi_create_object(env, &controlType));
     CreateControlType(env, controlType);
+    napi_value pageJumpMode = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &pageJumpMode));
+    CreatePageJumpMode(env, pageJumpMode);
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getDisposedStatus", GetDisposedStatus),
@@ -59,6 +62,7 @@ static napi_value AppControlExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("UninstallComponentType", uninstallComponentType),
         DECLARE_NAPI_PROPERTY("DisposedType", disposedType),
         DECLARE_NAPI_PROPERTY("ControlType", controlType),
+        DECLARE_NAPI_PROPERTY("PageJumpMode", pageJumpMode),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

@@ -57,6 +57,7 @@ constexpr const char* CLASSNAME_ZLIB_RETURN_STATUS = "@ohos.zlib.zlib.ReturnStat
 constexpr const char* CLASSNAME_APPCONTROL_COMPONENT_TYPE = "@ohos.bundle.appControl.appControl.ComponentType";
 constexpr const char* CLASSNAME_APPCONTROL_DISPOSED_TYPE = "@ohos.bundle.appControl.appControl.DisposedType";
 constexpr const char* CLASSNAME_APPCONTROL_CONTROL_TYPE = "@ohos.bundle.appControl.appControl.ControlType";
+constexpr const char* CLASSNAME_APPCONTROL_PAGE_JUMP_MODE = "@ohos.bundle.appControl.appControl.PageJumpMode";
 constexpr const char* CLASSNAME_APPCONTROL_UNINSTALL_COMPONENT_TYPE =
     "@ohos.bundle.appControl.appControl.UninstallComponentType";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_INSTALL_STATUS =
@@ -549,6 +550,16 @@ public:
     static inline ani_enum_item EnumNativeToETS_AppControl_ControlType(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_APPCONTROL_CONTROL_TYPE, value, 1);
+    }
+
+    /* appControl.PageJumpMode
+    enum PageJumpMode {
+        PAGE_JUMP_WINDOW_SHOW = 0,
+        PAGE_JUMP_WINDOW_NOT_SHOW = 1
+    } */
+    static inline ani_enum_item EnumNativeToETS_AppControl_PageJumpMode(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_APPCONTROL_PAGE_JUMP_MODE, value, 0);
     }
 
     /* appControl.UninstallComponentType

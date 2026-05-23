@@ -4629,9 +4629,33 @@ HWTEST_F(BmsBundleAppControlTest, GetDisposedRules_0700, Function | SmallTest | 
     EXPECT_EQ(disposedRuleConfigurations[0].disposedRule.componentType, disposedRule.componentType);
     EXPECT_EQ(disposedRuleConfigurations[0].disposedRule.disposedType, disposedRule.disposedType);
     EXPECT_EQ(disposedRuleConfigurations[0].disposedRule.controlType, disposedRule.controlType);
+    EXPECT_EQ(disposedRuleConfigurations[0].disposedRule.pageJump, PageJumpMode::PAGE_JUMP_WINDOW_SHOW);
 
     ret = rdb->DeleteDisposedRule(CALLER_BUNDLE_NAME, { appId }, appIndex, TEST_USERID);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DisposedRuleFromString_0100
+ * @tc.name: test DisposedRule from json without pageJump
+ * @tc.desc: 1.FromString test
+ */
+HWTEST_F(BmsBundleAppControlTest, DisposedRuleFromString_0100, Function | SmallTest | Level1)
+{
+    const std::string ruleString = R"({
+        "want":"",
+        "componentType":1,
+        "disposedType":1,
+        "controlType":1,
+        "elementList":[],
+        "priority":0,
+        "isEdm":false
+    })";
+    DisposedRule rule;
+
+    bool ret = DisposedRule::FromString(ruleString, rule);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(rule.pageJump, PageJumpMode::PAGE_JUMP_WINDOW_SHOW);
 }
 
 /**
