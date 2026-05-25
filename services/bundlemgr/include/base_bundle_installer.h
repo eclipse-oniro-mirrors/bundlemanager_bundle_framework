@@ -208,6 +208,13 @@ protected:
 
     bool IsEnterpriseForAllUser(const InstallParam &installParam, const std::string &bundleName);
 
+    /**
+     * @brief Check if the bundle is a driver application.
+     * @param info Indicates the InnerBundleInfo object of a bundle.
+     * @return Returns true if the bundle contains driver extension ability; returns false otherwise.
+     */
+    bool IsDriverApplication(const InnerBundleInfo &info) const;
+
 private:
     /**
      * @brief The real procedure for system and normal bundle install.
@@ -877,6 +884,8 @@ private:
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
+    void CreatePrintServiceDir();
+    ErrCode DeletePrintServiceDir(const InnerBundleInfo &info) const;
     void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
     ErrCode CleanArkStartupCache(const std::string &bundleName) const;

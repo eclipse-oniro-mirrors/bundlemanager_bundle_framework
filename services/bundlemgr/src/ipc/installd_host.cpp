@@ -374,6 +374,12 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::PROCESS_BIN_FILES):
             result = HandleProcessBinFiles(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_PRINT_SERVICE_DIR):
+            result = HandleCreatePrintServiceDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_PRINT_SERVICE_DIR):
+            result = HandleRemovePrintServiceDir(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1585,6 +1591,31 @@ bool InstalldHost::HandleDeleteCertAndRemoveKey(MessageParcel &data, MessageParc
     }
 
     ErrCode result = DeleteCertAndRemoveKey(certPaths);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCreatePrintServiceDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    int32_t appUid = data.ReadInt32();
+    LOG_I(BMS_TAG_INSTALLD, "HandleCreatePrintServiceDir bundleName=%{public}s userId=%{public}d appIndex=%{public}d",
+        bundleName.c_str(), userId, appIndex);
+    ErrCode result = CreatePrintServiceDir(bundleName, userId, appIndex, static_cast<uid_t>(appUid));
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleRemovePrintServiceDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    LOG_I(BMS_TAG_INSTALLD, "HandleRemovePrintServiceDir bundleName=%{public}s userId=%{public}d appIndex=%{public}d",
+        bundleName.c_str(), userId, appIndex);
+    ErrCode result = RemovePrintServiceDir(bundleName, userId, appIndex);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

@@ -798,5 +798,24 @@ ErrCode InstalldClient::GetTopNLargestItemsInAppDataDir(const std::string &bundl
     return CallService(&IInstalld::GetTopNLargestItemsInAppDataDir, bundleName, appIndex, userId,
         timeout, largestItems);
 }
+
+ErrCode InstalldClient::CreatePrintServiceDir(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, uid_t appUid)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::CreatePrintServiceDir, bundleName, userId, appIndex, appUid);
+}
+
+ErrCode InstalldClient::RemovePrintServiceDir(const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::RemovePrintServiceDir, bundleName, userId, appIndex);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

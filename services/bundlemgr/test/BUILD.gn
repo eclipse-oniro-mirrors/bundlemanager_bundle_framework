@@ -120,6 +120,7 @@ group("unittest") {
       "unittest/bms_new_bundle_data_dir_mgr_test:unittest",
       "unittest/bms_on_demand_install_test:unittest",
       "unittest/bms_patch_parser_test:unittest",
+      "unittest/bms_print_service_dir_test:unittest",
       "unittest/bms_rdb_data_manager_test:unittest",
       "unittest/bms_service_bundle_scan_test:unittest",
       "unittest/bms_service_startup_test:unittest",

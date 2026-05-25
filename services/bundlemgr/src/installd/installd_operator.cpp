@@ -5382,5 +5382,119 @@ bool InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(const std::string &di
         return false;
     }
 }
+
+ErrCode InstalldOperator::CreatePrintServiceDir(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, uid_t appUid)
+{
+    LOG_I(BMS_TAG_INSTALLD, "bundleName=%{public}s userId=%{public}d appIndex=%{public}d appUid=%{public}d",
+        bundleName.c_str(), userId, appIndex, appUid);
+
+    if (bundleName.empty() || userId < 0 || appUid < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid parameters");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    // Print service uid is fixed to 3823
+    constexpr uid_t PRINT_SERVICE_UID = 3823;
+    constexpr mode_t PRINT_SERVICE_DIR_MODE = 02750;
+
+    // Build directory path
+    std::string baseDir = std::string("/data/service/el1/") + std::to_string(userId) + "/print_service/data";
+    std::string bundleDirName = bundleName;
+    if (appIndex > 0) {
+        // Clone application format: +clone-{appIndex}+{bundleName}
+        bundleDirName = "+" + std::string(CLONE_DIR_PATH_PREFIX) + "-" + std::to_string(appIndex) +
+            "+" + bundleName;
+    }
+    std::string bundleDir = baseDir + "/" + bundleDirName;
+
+    // Check if parent directory exists
+    if (access(baseDir.c_str(), F_OK) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "print service base directory not exists: %{public}s", baseDir.c_str());
+        return ERR_APPEXECFWK_PRINT_SERVICE_PARENT_DIR_NOT_EXISTS;
+    }
+
+    // Check if target directory exists
+    struct stat statBuf;
+    if (stat(bundleDir.c_str(), &statBuf) == 0) {
+        // Directory exists, verify and fix permissions
+        LOG_I(BMS_TAG_INSTALLD, "print service dir exists, verify permissions: %{public}s", bundleDir.c_str());
+        if (statBuf.st_uid != appUid || statBuf.st_gid != PRINT_SERVICE_UID ||
+            (statBuf.st_mode & 07777) != PRINT_SERVICE_DIR_MODE) {
+            if (chmod(bundleDir.c_str(), PRINT_SERVICE_DIR_MODE) != 0) {
+                LOG_W(BMS_TAG_INSTALLD, "failed to chmod existing dir: %{public}s, errno=%{public}d",
+                    bundleDir.c_str(), errno);
+            }
+            if (chown(bundleDir.c_str(), appUid, PRINT_SERVICE_UID) != 0) {
+                LOG_W(BMS_TAG_INSTALLD, "failed to chown existing dir: %{public}s, errno=%{public}d",
+                    bundleDir.c_str(), errno);
+            }
+        }
+        return ERR_OK;
+    }
+
+    // Create directory
+    if (mkdir(bundleDir.c_str(), PRINT_SERVICE_DIR_MODE) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to create print service dir: %{public}s, errno=%{public}d",
+            bundleDir.c_str(), errno);
+        return ERR_APPEXECFWK_PRINT_SERVICE_DIR_CREATE_FAILED;
+    }
+
+    // Set permissions (ensure sticky bit)
+    if (chmod(bundleDir.c_str(), PRINT_SERVICE_DIR_MODE) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to chmod print service dir: %{public}s, errno=%{public}d",
+            bundleDir.c_str(), errno);
+        // Attempt to cleanup on failure
+        rmdir(bundleDir.c_str());
+        return ERR_APPEXECFWK_PRINT_SERVICE_DIR_CHMOD_FAILED;
+    }
+
+    // Set owner and group
+    if (chown(bundleDir.c_str(), appUid, PRINT_SERVICE_UID) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to chown print service dir: %{public}s, errno=%{public}d",
+            bundleDir.c_str(), errno);
+        return ERR_APPEXECFWK_PRINT_SERVICE_DIR_CHOWN_FAILED;
+    }
+
+    LOG_I(BMS_TAG_INSTALLD, "create print service dir success: %{public}s", bundleDir.c_str());
+    return ERR_OK;
+}
+
+ErrCode InstalldOperator::RemovePrintServiceDir(const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    LOG_I(BMS_TAG_INSTALLD, "bundleName=%{public}s userId=%{public}d appIndex=%{public}d",
+        bundleName.c_str(), userId, appIndex);
+
+    if (bundleName.empty() || userId < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid parameters");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    // Build directory path
+    std::string baseDir = std::string("/data/service/el1/") + std::to_string(userId) + "/print_service/data";
+    std::string bundleDirName = bundleName;
+    if (appIndex > 0) {
+        // Clone application format: +clone-{appIndex}+{bundleName}
+        bundleDirName = "+" + std::string(CLONE_DIR_PATH_PREFIX) + "-" + std::to_string(appIndex) +
+            "+" + bundleName;
+    }
+    std::string bundleDir = baseDir + "/" + bundleDirName;
+
+    // Check if directory exists
+    struct stat statBuf;
+    if (stat(bundleDir.c_str(), &statBuf) != 0 || !S_ISDIR(statBuf.st_mode)) {
+        LOG_W(BMS_TAG_INSTALLD, "print service dir not exists or not a directory: %{public}s", bundleDir.c_str());
+        return ERR_OK;
+    }
+
+    // Remove directory recursively
+    if (!ForceRemoveDirectory(bundleDir)) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to remove print service dir: %{public}s", bundleDir.c_str());
+        return ERR_APPEXECFWK_PRINT_SERVICE_DIR_REMOVE_FAILED;
+    }
+
+    LOG_I(BMS_TAG_INSTALLD, "remove print service dir success: %{public}s", bundleDir.c_str());
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -130,6 +130,26 @@ public:
         std::vector<SkillsPackageInfo> &skillInfoList);
 
     /**
+     * @brief Create print service directory for driver application.
+     * @param bundleName Indicates the bundle name.
+     * @param userId Indicates the user ID.
+     * @param appIndex Indicates the app index for clone applications.
+     * @param appUid Indicates the application uid for directory owner.
+     * @return Returns ERR_OK if the print service directory created successfully; returns error code otherwise.
+     */
+    static ErrCode CreatePrintServiceDir(const std::string &bundleName, int32_t userId, int32_t appIndex,
+        uid_t appUid);
+
+    /**
+     * @brief Remove print service directory for driver application.
+     * @param bundleName Indicates the bundle name.
+     * @param userId Indicates the user ID.
+     * @param appIndex Indicates the app index for clone applications.
+     * @return Returns ERR_OK if the print service directory removed successfully; returns error code otherwise.
+     */
+    static ErrCode RemovePrintServiceDir(const std::string &bundleName, int32_t userId, int32_t appIndex);
+
+    /**
      * @brief Parse SKILL.md to extract name and description.
      * @param skillMdPath Path to SKILL.md file.
      * @param name Output parameter for skill name.

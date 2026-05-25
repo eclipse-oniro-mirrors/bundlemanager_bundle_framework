@@ -3659,5 +3659,28 @@ ErrCode InstalldHostImpl::ExtractSkillsPackage(const SkillsPackageParam &param,
     }
     return InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
 }
+
+ErrCode InstalldHostImpl::CreatePrintServiceDir(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, uid_t appUid)
+{
+    LOG_I(BMS_TAG_INSTALLD, "CreatePrintServiceDir bundleName=%{public}s userId=%{public}d appIndex=%{public}d",
+        bundleName.c_str(), userId, appIndex);
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    return InstalldOperator::CreatePrintServiceDir(bundleName, userId, appIndex, appUid);
+}
+
+ErrCode InstalldHostImpl::RemovePrintServiceDir(const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    LOG_I(BMS_TAG_INSTALLD, "RemovePrintServiceDir bundleName=%{public}s userId=%{public}d appIndex=%{public}d",
+        bundleName.c_str(), userId, appIndex);
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    return InstalldOperator::RemovePrintServiceDir(bundleName, userId, appIndex);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

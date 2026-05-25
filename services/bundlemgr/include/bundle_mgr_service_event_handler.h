@@ -56,9 +56,10 @@ enum OTAFlag : uint32_t {
     CHECK_RECOVERABLE_APPLICATION_INFO = 0x00002000,
     CHECK_INSTALL_SOURCE = 0x00004000,
     DELETE_DEPRECATED_ARK_PATHS = 0x00008000,
-    CHECK_EXTENSION_ABILITY = 0x00010000,
-    PROCESS_DYNAMIC_ICON = 0x00020000,
-    PROCESS_THEME_AND_DYNAMIC_ICON = 0x00040000,
+    CHECK_PRINT_SERVICE_DIR = 0x00020000,
+    CHECK_EXTENSION_ABILITY = 0x00040000,
+    PROCESS_DYNAMIC_ICON = 0x00080000,
+    PROCESS_THEME_AND_DYNAMIC_ICON = 0x00100000,
     CHECK_SYSTEM_OPTIMIZE_SHADER_CAHCE_DIR = 0x00080000,
     UPDATE_MODULE_JSON = 0x00100000,
     PROCESS_ROUTER_MAP = 0x00200000,
@@ -584,6 +585,8 @@ private:
     void InnerProcessCheckAppFileManagerDir();
     void ProcessCheckPreinstallData();
     void InnerProcessCheckPreinstallData();
+    void ProcessCheckPrintServiceDir();
+    void InnerProcessCheckPrintServiceDir();
     void ProcessCheckShaderCacheDir();
     void InnerProcessCheckShaderCacheDir();
     void ProcessCheckSystemOptimizeShaderCacheDir();

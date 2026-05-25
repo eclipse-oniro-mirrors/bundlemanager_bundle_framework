@@ -1402,6 +1402,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckAppLogDir();
     ProcessCheckAppFileManagerDir();
     ProcessCheckPreinstallData();
+    ProcessCheckPrintServiceDir();
     ProcessCheckSystemOptimizeDir();
     ProcessCheckShaderCacheDir();
     ProcessCheckSystemOptimizeShaderCacheDir();
@@ -1561,6 +1562,108 @@ void BMSEventHandler::InnerProcessCheckPreinstallData()
         }
         // Use pre-install record key; resultBundleInfo.name may be empty if no path parsed successfully.
         dataMgr->SavePreInstallBundleInfo(preInstallBundleInfo.GetBundleName(), preInstallBundleInfo);
+    }
+}
+
+void BMSEventHandler::ProcessCheckPrintServiceDir()
+{
+    bool checkPrintServiceDir = false;
+    CheckOtaFlag(OTAFlag::CHECK_PRINT_SERVICE_DIR, checkPrintServiceDir);
+    if (checkPrintServiceDir) {
+        LOG_I(BMS_TAG_DEFAULT, "Not need to check print service dir due to has checked");
+        return;
+    }
+
+    // Check if print service base directory exists for any user
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    bool printServiceDirExists = false;
+    for (const auto &userId : userIds) {
+        std::string printServiceBaseDir = std::string("/data/service/el1/") + std::to_string(userId) + "/print_service/data";
+        bool isExist = false;
+        if (InstalldClient::GetInstance()->IsExistDir(printServiceBaseDir, isExist) == ERR_OK && isExist) {
+            printServiceDirExists = true;
+            LOG_D(BMS_TAG_DEFAULT, "print service base directory exists: %{public}s", printServiceBaseDir.c_str());
+            break;
+        }
+    }
+
+    if (!printServiceDirExists) {
+        LOG_I(BMS_TAG_DEFAULT, "print service base directory does not exist, skip check print service dir");
+        return;
+    }
+
+    LOG_I(BMS_TAG_DEFAULT, "Need to check print service dir for driver apps");
+    InnerProcessCheckPrintServiceDir();
+    UpdateOtaFlag(OTAFlag::CHECK_PRINT_SERVICE_DIR);
+}
+
+void BMSEventHandler::InnerProcessCheckPrintServiceDir()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::vector<BundleInfo> bundleInfos;
+        if (!dataMgr->GetBundleInfos(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+            bundleInfos, userId)) {
+            LOG_W(BMS_TAG_DEFAULT, "GetBundleInfos for userId %{public}d failed", userId);
+            continue;
+        }
+
+        for (const auto &bundleInfo : bundleInfos) {
+            // Check if the bundle is a driver application
+            bool isDriverApp = false;
+            for (const auto &extensionInfo : bundleInfo.extensionInfos) {
+                if (extensionInfo.type == ExtensionAbilityType::DRIVER) {
+                    isDriverApp = true;
+                    LOG_D(BMS_TAG_DEFAULT, "find driver extension ability, bundleName: %{public}s",
+                        bundleInfo.name.c_str());
+                    break;
+                }
+            }
+
+            if (!isDriverApp) {
+                continue;
+            }
+
+            // Get bundle uid and appIndex
+            InnerBundleInfo innerBundleInfo;
+            if (!dataMgr->FetchInnerBundleInfo(bundleInfo.name, innerBundleInfo)) {
+                LOG_W(BMS_TAG_DEFAULT, "FetchInnerBundleInfo failed for %{public}s", bundleInfo.name.c_str());
+                continue;
+            }
+
+            InnerBundleUserInfo innerBundleUserInfo;
+            if (!innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+                LOG_W(BMS_TAG_DEFAULT, "GetInnerBundleUserInfo failed for %{public}s, userId %{public}d",
+                    bundleInfo.name.c_str(), userId);
+                continue;
+            }
+
+            int32_t appIndex = innerBundleInfo.GetAppIndex();
+            std::string bundleName = bundleInfo.name;
+            uid_t appUid = innerBundleUserInfo.uid;
+
+            LOG_I(BMS_TAG_DEFAULT, "create print service dir for existing driver app: bundleName=%{public}s, "
+                "userId=%{public}d, appIndex=%{public}d, uid=%{public}d",
+                bundleName.c_str(), userId, appIndex, appUid);
+
+            ErrCode ret = InstalldClient::GetInstance()->CreatePrintServiceDir(bundleName, userId, appIndex, appUid);
+            if (ret != ERR_OK) {
+                LOG_W(BMS_TAG_DEFAULT, "create print service dir failed for %{public}s, error=%{public}d",
+                    bundleName.c_str(), ret);
+            }
+        }
     }
 }
 

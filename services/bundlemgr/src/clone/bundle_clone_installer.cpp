@@ -311,6 +311,9 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     ScopeGuard createEl5DirGuard([&] { RemoveEl5Dir(userInfo, userId, appIndex); });
     CreateEl5Dir(info, userId, uid, appIndex);
 
+    ScopeGuard createPrintServiceDirGuard([&] { RemovePrintServiceDir(bundleName, userId, appIndex); });
+    CreatePrintServiceDir(info, userId, uid, appIndex);
+
     // process icon and label
     {
         auto appIndexes = info.GetCloneBundleAppIndexes();
@@ -326,6 +329,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     createCloneDataDirGuard.Dismiss();
     addCloneBundleGuard.Dismiss();
     createEl5DirGuard.Dismiss();
+    createPrintServiceDirGuard.Dismiss();
     APP_LOGI("InstallCloneApp %{public}s appIndex:%{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
 }
@@ -397,6 +401,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
             APP_LOGW("RemoveCloneDataDir failed");
         }
         RemoveEl5Dir(userInfo, userId, appIndex);
+        RemovePrintServiceDir(bundleName, userId, appIndex);
 
         if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
@@ -603,6 +608,47 @@ void BundleCloneInstaller::RemoveEl5Dir(InnerBundleUserInfo &userInfo,
     EncryptionParam encryptionParam(key, "", 0, userId, EncryptionDirType::APP);
     if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(encryptionParam) != ERR_OK) {
         APP_LOGD("delete encryption key id failed");
+    }
+}
+
+void BundleCloneInstaller::CreatePrintServiceDir(InnerBundleInfo &info, const int32_t userId,
+    const int32_t uid, const int32_t appIndex)
+{
+    // Check if the application is a driver application
+    const auto &extensions = info.GetInnerExtensionInfos();
+    bool isDriverApp = false;
+    for (const auto &item : extensions) {
+        if (item.second.type == ExtensionAbilityType::DRIVER) {
+            isDriverApp = true;
+            APP_LOGD("find driver extension ability, bundleName: %{public}s, moduleName: %{public}s",
+                item.second.bundleName.c_str(), item.second.moduleName.c_str());
+            break;
+        }
+    }
+
+    if (!isDriverApp) {
+        APP_LOGD("not a driver application, skip create print service dir");
+        return;
+    }
+
+    APP_LOGI("create print service dir for driver clone app: bundleName=%{public}s, userId=%{public}d, "
+        "appIndex=%{public}d, uid=%{public}d", info.GetBundleName().c_str(), userId, appIndex, uid);
+
+    ErrCode ret = InstalldClient::GetInstance()->CreatePrintServiceDir(info.GetBundleName(), userId, appIndex, uid);
+    if (ret != ERR_OK) {
+        APP_LOGW("create print service dir for clone app failed: %{public}d", ret);
+    }
+}
+
+void BundleCloneInstaller::RemovePrintServiceDir(const std::string &bundleName, const int32_t userId,
+    const int32_t appIndex)
+{
+    APP_LOGI("remove print service dir for clone app: bundleName=%{public}s, userId=%{public}d, appIndex=%{public}d",
+        bundleName.c_str(), userId, appIndex);
+
+    ErrCode ret = InstalldClient::GetInstance()->RemovePrintServiceDir(bundleName, userId, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGW("remove print service dir for clone app failed: %{public}d", ret);
     }
 }
 

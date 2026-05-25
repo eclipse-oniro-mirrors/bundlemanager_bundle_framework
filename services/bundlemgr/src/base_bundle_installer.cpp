@@ -1846,6 +1846,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         }
     });
 
+    // create print service directory for driver applications
+    CreatePrintServiceDir();
+
     // process bin file permission
     result = ProcessBinFiles(newInfos);
     CHECK_RESULT_WITH_ROLLBACK(result, "process bin files failed %{public}d", newInfos, oldInfo);
@@ -2368,6 +2371,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "fail to DeleteShaderCache, error is %{public}d", result);
     }
 
+    result = DeletePrintServiceDir(oldInfo);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "fail to DeletePrintServiceDir, error is %{public}d", result);
+    }
+
     DeleteUseLessSharefilesForDefaultUser(bundleName, userId_);
 
     result = CleanAsanDirectory(oldInfo);
@@ -2855,6 +2863,8 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             CreateExtensionDataDir(oldInfo);
             bundleName_ = bundleName;
             CreateScreenLockProtectionDir();
+            // create print service directory for driver applications
+            CreatePrintServiceDir();
             // extract ap file
             result = ExtractAllArkProfileFile(oldInfo);
             if (result != ERR_OK) {
@@ -8542,6 +8552,40 @@ ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, in
     return InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, uid, gid, createDirParam);
 }
 
+void BaseBundleInstaller::CreatePrintServiceDir()
+{
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreatePrintServiceDir start");
+    InnerBundleInfo info;
+    if (!GetTempBundleInfo(info)) {
+        LOG_E(BMS_TAG_INSTALLER, "get temp bundle info failed");
+        return;
+    }
+
+    if (!IsDriverApplication(info)) {
+        LOG_D(BMS_TAG_INSTALLER, "not a driver application, skip create print service dir");
+        return;
+    }
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!info.GetInnerBundleUserInfo(userId_, innerBundleUserInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed",
+            info.GetBundleName().c_str(), userId_);
+        return;
+    }
+
+    int32_t appIndex = info.GetAppIndex();
+    std::string bundleName = info.GetBundleName();
+    uid_t appUid = innerBundleUserInfo.uid;
+
+    LOG_I(BMS_TAG_INSTALLER, "create print service dir for driver app: bundleName=%{public}s, userId=%{public}d, "
+        "appIndex=%{public}d, appUid=%{public}d", bundleName.c_str(), userId_, appIndex, appUid);
+
+    ErrCode ret = InstalldClient::GetInstance()->CreatePrintServiceDir(bundleName, userId_, appIndex, appUid);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "create print service dir failed: %{public}d", ret);
+    }
+}
+
 ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) const
 {
     std::string shaderCachePath;
@@ -8549,6 +8593,33 @@ ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) co
     LOG_D(BMS_TAG_INSTALLER, "DeleteShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(
         shaderCachePath, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR, bundleName);
+}
+
+ErrCode BaseBundleInstaller::DeletePrintServiceDir(const InnerBundleInfo &info) const
+{
+    if (!IsDriverApplication(info)) {
+        LOG_D(BMS_TAG_INSTALLER, "not a driver application, skip delete print service dir");
+        return ERR_OK;
+    }
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!info.GetInnerBundleUserInfo(userId_, innerBundleUserInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed",
+            info.GetBundleName().c_str(), userId_);
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
+    }
+
+    int32_t appIndex = info.GetAppIndex();
+    std::string bundleName = info.GetBundleName();
+
+    LOG_I(BMS_TAG_INSTALLER, "delete print service dir for driver app: bundleName=%{public}s, userId=%{public}d, "
+        "appIndex=%{public}d", bundleName.c_str(), userId_, appIndex);
+
+    ErrCode ret = InstalldClient::GetInstance()->RemovePrintServiceDir(bundleName, userId_, appIndex);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "delete print service dir failed: %{public}d", ret);
+    }
+    return ret;
 }
 
 void BaseBundleInstaller::DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName,
@@ -8861,6 +8932,19 @@ bool BaseBundleInstaller::IsDriverForAllUser(const std::string &bundleName)
                     item.second.bundleName.c_str(), item.second.moduleName.c_str());
                 return true;
             }
+        }
+    }
+    return false;
+}
+
+bool BaseBundleInstaller::IsDriverApplication(const InnerBundleInfo &info) const
+{
+    const auto &extensions = info.GetInnerExtensionInfos();
+    for (const auto &item : extensions) {
+        if (item.second.type == ExtensionAbilityType::DRIVER) {
+            APP_LOGD(BMS_TAG_INSTALLER, "find driver extension ability, bundleName: %{public}s, moduleName: %{public}s",
+                item.second.bundleName.c_str(), item.second.moduleName.c_str());
+            return true;
         }
     }
     return false;

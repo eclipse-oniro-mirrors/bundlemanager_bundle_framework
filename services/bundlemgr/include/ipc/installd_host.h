@@ -303,6 +303,22 @@ private:
      */
     bool HandleExtractSkillsPackage(MessageParcel &data, MessageParcel &reply);
 
+    /**
+     * @brief Handles the CreatePrintServiceDir function called from a Installd proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleCreatePrintServiceDir(MessageParcel &data, MessageParcel &reply);
+
+    /**
+     * @brief Handles the RemovePrintServiceDir function called from a Installd proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleRemovePrintServiceDir(MessageParcel &data, MessageParcel &reply);
+
     bool HandleDeleteCertAndRemoveKey(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk

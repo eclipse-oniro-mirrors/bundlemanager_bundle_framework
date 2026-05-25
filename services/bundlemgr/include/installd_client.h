@@ -352,6 +352,25 @@ public:
     ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId, const int32_t timeout, std::string &largestItems);
 
+    /**
+     * @brief Create print service directory for driver application.
+     * @param bundleName Indicates the bundle name.
+     * @param userId Indicates the user ID.
+     * @param appIndex Indicates the app index for clone applications.
+     * @param appUid Indicates the application uid for directory owner.
+     * @return Returns ERR_OK if the print service directory created successfully; returns error code otherwise.
+     */
+    ErrCode CreatePrintServiceDir(const std::string &bundleName, int32_t userId, int32_t appIndex, uid_t appUid);
+
+    /**
+     * @brief Remove print service directory for driver application.
+     * @param bundleName Indicates the bundle name.
+     * @param userId Indicates the user ID.
+     * @param appIndex Indicates the app index for clone applications.
+     * @return Returns ERR_OK if the print service directory removed successfully; returns error code otherwise.
+     */
+    ErrCode RemovePrintServiceDir(const std::string &bundleName, int32_t userId, int32_t appIndex);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();
