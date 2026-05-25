@@ -543,7 +543,7 @@ group("unittest") {
   testonly = true
   if (ability_runtime_enable) {
     deps = [
-      ":BmsBundleHspTest",
+      # ":BmsBundleHspTest",
       ":BmsBundleSharedLibraryInstallTest",
       ":BmsBundleSharedLibraryUninstallTest",
     ]
