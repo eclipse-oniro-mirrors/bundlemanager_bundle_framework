@@ -8,9 +8,10 @@
 |------|-----|
 | feature_id | print-service-dir-support |
 | feature_name | 驱动应用打印服务目录管理 |
-| status | Implementing |
+| status | Releasing |
 | created_at | 2026-05-25 |
 | updated_at | 2026-05-25 |
+| stage | Stage 4: Release |
 
 ## 目标
 
