@@ -1204,6 +1204,9 @@ bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     if (!OHOS::ChangeModeFile(path, mode)) {
         LOG_W(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
     }
+    if (param.extractFileType == ExtractFileType::NPAPI_PLUGIN) {
+        return FsyncNpapiPluginFile(path);
+    }
     return FsyncFile(path);
 }
 
@@ -1228,6 +1231,24 @@ bool InstalldOperator::FsyncFile(const std::string &path)
         }
     }
     (void)fclose(fileFp);
+    return true;
+}
+
+bool InstalldOperator::FsyncNpapiPluginFile(const std::string &path)
+{
+    int32_t fileFd = open(path.c_str(), O_WRONLY | O_CLOEXEC);
+    if (fileFd < 0) {
+        LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed %{public}d", path.c_str(), errno);
+        return false;
+    }
+    if (fsync(fileFd) != 0) {
+        if (fsync(fileFd) != 0) {
+            LOG_E(BMS_TAG_INSTALLER, "retry fsync %{public}s failed %{public}d", path.c_str(), errno);
+            close(fileFd);
+            return false;
+        }
+    }
+    close(fileFd);
     return true;
 }
 
