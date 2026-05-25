@@ -3862,4 +3862,37 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0104
     auto testRet = bundleMgrHostImpl_->GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, USERID, profileInfos);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0105
+ * @tc.name: test GetGroupDir
+ * @tc.desc: 1. GetGroupDir failed
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0105, Function | SmallTest | Level1)
+{
+    SetSystemAppFalseForTest(false);
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string dataGroupId = "data-group-id-1";
+    std::string dir;
+    auto ret = dataMgr->GetGroupDir(dataGroupId, dir, USERID);
+    EXPECT_FALSE(ret);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0106
+ * @tc.name: test GetGroupDir
+ * @tc.desc: 1. GetGroupDir failed
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0106, Function | SmallTest | Level1)
+{
+    SetNativeTokenTypeForTest(false);
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string dataDir;
+    auto ret = dataMgr->GetDirByBundleNameAndAppIndex(BUNDLE_NAME, APP_INDEX, dataDir);
+    EXPECT_TRUE(ret);
+    ResetTestValues();
+}
 } // OHOS

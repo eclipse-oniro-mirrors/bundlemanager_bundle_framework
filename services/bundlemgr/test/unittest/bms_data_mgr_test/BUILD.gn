@@ -177,6 +177,11 @@ ohos_unittest("BmsDataMgrTest") {
         [ "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp" ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
+
+  if (bundle_framework_overlay_install) {
+    sources += overlay_installation
+    defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
+  }
 }
 
 ohos_unittest("BmsExtensionDataMgrTest") {
