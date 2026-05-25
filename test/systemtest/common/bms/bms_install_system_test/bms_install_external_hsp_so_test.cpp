@@ -16,6 +16,7 @@
 #include <fstream>
 #include <future>
 #include <gtest/gtest.h>
+#include <unistd.h>
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
@@ -240,7 +241,9 @@ void BmsInstallExternalHspSoTest::SetUpTestCase()
 }
 
 void BmsInstallExternalHspSoTest::TearDownTestCase()
-{}
+{
+    sleep(1);
+}
 
 void BmsInstallExternalHspSoTest::SetUp()
 {}

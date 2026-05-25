@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 #include "ability_info.h"
 #include "app_control_constants.h"
@@ -102,6 +103,7 @@ void BmsBundleAppApiVersionTest::SetUpTestCase()
 void BmsBundleAppApiVersionTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleAppApiVersionTest::SetUp()

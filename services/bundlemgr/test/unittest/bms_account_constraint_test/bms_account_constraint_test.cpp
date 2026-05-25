@@ -18,6 +18,7 @@
 
 #include <fstream>
 #include <gtest/gtest.h>
+#include <unistd.h>
 
 #include "account_helper.h"
 #include "app_provision_info_manager.h"
@@ -91,6 +92,7 @@ void BmsAccountConstraintTest::SetUpTestCase()
 void BmsAccountConstraintTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsAccountConstraintTest::SetUp()

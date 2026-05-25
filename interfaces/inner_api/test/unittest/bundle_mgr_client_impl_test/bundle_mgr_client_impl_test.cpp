@@ -93,6 +93,7 @@ void BundleMgrClientImplTest::SetUpTestCase()
 void BundleMgrClientImplTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BundleMgrClientImplTest::SetUp()
