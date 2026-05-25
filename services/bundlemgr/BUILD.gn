@@ -642,9 +642,11 @@ ohos_shared_library("installs") {
 
   external_deps = [
     "access_token:el5_filekey_manager_sdk",
+    "app_file_service:remote_file_share_native",
     "appspawn:hnpapi",
     "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",
+    "dfs_service:distributed_file_daemon_kit_inner",
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
     "hilog:libhilog",
@@ -702,7 +704,11 @@ ohos_shared_library("installs") {
 }
 
 ohos_prebuilt_etc("installs.cfg") {
-  source = "installs.cfg"
+  if (bundle_framework_npapi_enable) {
+    source = "installs_npapi.cfg"
+  } else {
+    source = "installs.cfg"
+  }
   relative_install_dir = "init"
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

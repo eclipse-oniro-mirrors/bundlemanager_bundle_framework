@@ -625,6 +625,12 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
         return true;
     }
 
+    if ((extractParam.extractFileType == ExtractFileType::NPAPI_PLUGIN) &&
+        !extractor.IsDirExist(ServiceConstants::NPAPI_PLUGIN_PATH)) {
+        LOG_E(BMS_TAG_INSTALLD, "hap has no npapi_plugins directory");
+        return false;
+    }
+
     std::vector<std::string> entryNames;
     if (!extractor.GetZipFileNames(entryNames) || entryNames.empty()) {
         LOG_E(BMS_TAG_INSTALLD, "get entryNames failed");
@@ -737,7 +743,8 @@ bool InstalldOperator::IsNativeFile(
 
     if (!checkSuffix && extractParam.extractFileType != ExtractFileType::RES_FILE
         && extractParam.extractFileType != ExtractFileType::SO
-        && extractParam.extractFileType != ExtractFileType::HNPS_FILE) {
+        && extractParam.extractFileType != ExtractFileType::HNPS_FILE
+        && extractParam.extractFileType != ExtractFileType::NPAPI_PLUGIN) {
         LOG_D(BMS_TAG_INSTALLD, "file type error");
         return false;
     }
@@ -1255,6 +1262,10 @@ bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, c
             prefix = ServiceConstants::HNPS + cpuAbi + ServiceConstants::PATH_SEPARATOR;
             break;
         }
+        case ExtractFileType::NPAPI_PLUGIN: {
+            prefix = ServiceConstants::NPAPI_PLUGIN_PATH;
+            break;
+        }
         default: {
             return false;
         }
@@ -1281,6 +1292,9 @@ bool InstalldOperator::DetermineSuffix(const ExtractFileType &extractFileType, s
             break;
         }
         case ExtractFileType::HNPS_FILE: {
+            break;
+        }
+        case ExtractFileType::NPAPI_PLUGIN: {
             break;
         }
         default: {
@@ -4976,6 +4990,9 @@ bool InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
             return StartsWith(dir, BASE_SKILL_DIR);
         case BundleDirScene::REMOVE_VERIFY_FILE:
             return StartsWith(dir, Constants::BUNDLE_CODE_DIR) && IsContainsPathPart(dir, VERIFY_FILE_PATH);
+        case BundleDirScene::REMOVE_NPAPI_PLUGIN_DIR:
+            return StartsWith(dir, ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH) &&
+                   IsContainsPathPart(dir, ServiceConstants::NPAPI_PLUGIN_TARGET_DIR);
         default:
             return false;
     }
@@ -5047,6 +5064,7 @@ bool InstalldOperator::IsValidPathByRemoveDirScene(
         case BundleDirScene::REMOVE_SKILL_MODULE_DIR:
         case BundleDirScene::REMOVE_SKILL_BUNDLE_DIR:
         case BundleDirScene::REMOVE_VERIFY_FILE:
+        case BundleDirScene::REMOVE_NPAPI_PLUGIN_DIR:
             return IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(dir, bundleName, scene);
         case BundleDirScene::REMOVE_PRELOAD_APP_DIR:
         case BundleDirScene::REMOVE_ASAN_LOG_DIR:

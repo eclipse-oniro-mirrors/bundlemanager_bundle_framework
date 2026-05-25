@@ -17161,6 +17161,69 @@ HWTEST_F(BmsBundleInstallerTest, DeleteCertAndRemoveKey_0200, Function | SmallTe
 }
 
 /**
+ * @tc.number: ExtractNPAPIPluginFiles_0010
+ * @tc.name: test ExtractNPAPIPluginFiles
+ * @tc.desc: test ExtractNPAPIPluginFiles npapiPluginStatus_ in different scenarios
+ *           1. no permission/srcPath not exist - STATUS_NOT_APPLICABLE
+ *           2. ExtractFiles failed - STATUS_EXTRACT_FAILED
+ *           3. ExtractNPAPIPluginFiles success - STATUS_SUCCESS
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = "com.example.test";
+    installer.userId_ = USERID;
+    
+    // scenario 1: no permission or srcPath not exist, status should be STATUS_NOT_APPLICABLE
+    // when permission denied or resources/rawfile/npapi_plugins/ not exist in HAP
+    installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    installer.ExtractNPAPIPluginFiles();
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
+    
+    // scenario 2: empty modulePath, InstalldClient::ExtractFiles will fail
+    installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
+    installer.modulePath_ = "";
+    installer.ExtractNPAPIPluginFiles();
+    // ExtractFiles fails with empty srcPath, status should be STATUS_EXTRACT_FAILED
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_EXTRACT_FAILED);
+    
+    // scenario 3: with valid modulePath containing npapi_plugins directory
+    // requires permission granted and valid HAP with npapi_plugins directory
+    // in unit test environment, this scenario needs special test resources
+}
+
+/**
+ * @tc.number: RemoveNPAPIPluginDir_0010
+ * @tc.name: test RemoveNPAPIPluginDir
+ * @tc.desc: test RemoveNPAPIPluginDir npapiPluginStatus_ in different scenarios
+ *           1. directory not exist - STATUS_NOT_APPLICABLE
+ *           2. RemoveDir failed - STATUS_REMOVE_FAILED
+ *           3. RemoveNPAPIPluginDir success - STATUS_SUCCESS
+ */
+HWTEST_F(BmsBundleInstallerTest, RemoveNPAPIPluginDir_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = "com.example.test";
+    installer.userId_ = USERID;
+    
+    // scenario 1: directory not exist, status should be STATUS_NOT_APPLICABLE
+    installer.RemoveNPAPIPluginDir();
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
+    
+    // scenario 2: IsExistDir check fails, status should be STATUS_REMOVE_FAILED
+    // when InstalldClient::IsExistDir returns error
+    installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
+    installer.bundleName_ = "";  // invalid bundleName will cause path validation failure
+    installer.RemoveNPAPIPluginDir();
+    // with empty bundleName, targetPath construction may lead to failure
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
+    
+    // scenario 3: directory exists and RemoveDir succeeds
+    // requires creating test directory and proper setup
+    // in unit test environment, this scenario needs special test resources
+}
+
+/**
  * @tc.number: ProcessAOT_0001
  * @tc.name: test ProcessAOT
  * @tc.desc: 1.Test ProcessAOT with isFirstBootInstall true

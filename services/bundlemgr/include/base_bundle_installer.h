@@ -78,6 +78,13 @@ protected:
         INSTALL_FAILED,
     };
 
+    enum class NpapiPluginStatus : int32_t {
+        STATUS_NOT_APPLICABLE = -1,
+        STATUS_SUCCESS = 0,
+        STATUS_EXTRACT_FAILED = 1,
+        STATUS_REMOVE_FAILED = 2,
+    };
+
     enum SingletonState {
         DEFAULT,
         SINGLETON_TO_NON = 1,
@@ -730,6 +737,8 @@ private:
     ErrCode CheckMDMUpdateBundleForSelf(const InstallParam &installParam, InnerBundleInfo &oldInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, bool isAppExist);
     void ExtractResourceFiles(const InnerBundleInfo &info, const std::string &targetPath) const;
+    void ExtractNPAPIPluginFiles();
+    void RemoveNPAPIPluginDir();
     void RemoveTempSoDir(const std::string &tempSoDir, const std::string &bundleName);
     bool CheckAppIdentifier(const std::string &oldAppIdentifier, const std::string &newAppIdentifier,
         const std::string &oldAppId, const std::string &newAppId);
@@ -1103,6 +1112,7 @@ private:
     std::vector<std::string> removeExtensionDirs_;
     // used to record system event infos
     EventInfo sysEventInfo_;
+    NpapiPluginStatus npapiPluginStatus_ = NpapiPluginStatus::STATUS_NOT_APPLICABLE;
     Security::Verify::HapVerifyResult verifyRes_;
     InstallerBundleTempInfo tempInfo_;
     // indicates whether the application has been restored to the preinstall

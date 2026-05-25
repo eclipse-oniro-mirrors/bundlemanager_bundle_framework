@@ -40,6 +40,7 @@ declare_args() {
   bundle_framework_form_dimension_2_3 = false
   bundle_framework_form_dimension_3_3 = false
   bundle_framework_bss_enable = false
+  bundle_framework_npapi_enable = false
 
   ability_runtime_enable = true
   account_enable = true
@@ -230,4 +231,6 @@ print(
     "user_auth_framework_impl_enabled = " + "$user_auth_framework_impl_enabled")
 print(
     "bundle_framework_bss_enable = " + "$bundle_framework_bss_enable")
+print(
+    "bundle_framework_npapi_enable = " + "$bundle_framework_npapi_enable")
 print("bms_accesscontrol_sandbox_manager = " + "$bms_accesscontrol_sandbox_manager")

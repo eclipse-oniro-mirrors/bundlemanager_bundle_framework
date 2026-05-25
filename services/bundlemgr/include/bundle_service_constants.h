@@ -39,6 +39,9 @@ constexpr const char* AN = "an/";
 constexpr const char* RES_FILE_PATH = "resources/resfile/";
 constexpr const char* HNPS_FILE_PATH = "hnp_tmp_extract_dir/";
 constexpr const char* HNPS = "hnp/";
+constexpr const char* NPAPI_PLUGIN_PATH = "resources/rawfile/npapi_plugins/";
+constexpr const char* NPAPI_PLUGIN_TARGET_BASE_PATH = "/storage/media/";
+constexpr const char* NPAPI_PLUGIN_TARGET_DIR = "/local/files/Docs/Download/.mozilla/plugins/";
 constexpr const char* DIR_EL1 = "el1";
 constexpr const char* DIR_EL2 = "el2";
 constexpr const char* DIR_EL3 = "el3";
@@ -159,6 +162,7 @@ constexpr const char* PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE = "ohos.permission.U
 constexpr const char* PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
 constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 constexpr const char* PERMISSION_SUPPORT_PLUGIN = "ohos.permission.kernel.SUPPORT_PLUGIN";
+constexpr const char* PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB = "ohos.permission.SUPPORT_NP_PLUGIN_FOR_WEB";
 constexpr const char* PERMISSION_MANAGE_STORAGE = "ohos.permission.atomicService.MANAGE_STORAGE";
 constexpr const char* PERMISSION_MANAGE_AGING = "ohos.permission.atomicService.MANAGE_AGING";
 

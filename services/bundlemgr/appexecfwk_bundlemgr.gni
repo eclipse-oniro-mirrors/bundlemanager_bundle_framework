@@ -179,7 +179,9 @@ bundle_install_deps = [
 ]
 
 bundle_install_external_deps = [
+  "app_file_service:remote_file_share_native",
   "appspawn:appspawn_client",
+  "dfs_service:distributed_file_daemon_kit_inner",
   "ffrt:libffrt",
   "hitrace:libhitracechain",
   "libxml2:libxml2",

@@ -15,10 +15,12 @@
 
 #include "installd/installd_host_impl.h"
 
+#include <chrono>
 #include <cinttypes>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <future>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -55,6 +57,7 @@
 #define SELINUX_HAP_INPUT_ISOLATE_FULL 512
 #endif
 #endif // WITH_SELINUX
+#include "file_mount_manager.h"
 #include "hitrace_meter.h"
 #include "installd/installd_operator.h"
 #include "installd/installd_permission_mgr.h"
@@ -107,6 +110,7 @@ enum class DirType : uint8_t {
     DIR_EL2,
 };
 constexpr int32_t CONTENT_EDIT = 2;
+constexpr int32_t UNMOUNT_DIS_SHARE_TIMEOUT_MS = 3000;
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -1097,6 +1101,19 @@ static void CleanNewBackupExtHomeDir(const std::string &bundleName, const int us
 
 static ErrCode RemoveDistributedDir(const std::string &bundleName, const int userid)
 {
+    std::future<int32_t> unMountFuture = std::async(std::launch::async,
+    [&bundleName, userid]() {
+        return OHOS::Storage::DistributedFile::FileMountManager::UMountDisShareFile(bundleName, userid);
+    });
+    std::future_status status = unMountFuture.wait_for(
+        std::chrono::milliseconds(UNMOUNT_DIS_SHARE_TIMEOUT_MS));
+    if (status == std::future_status::timeout) {
+        LOG_E(BMS_TAG_INSTALLD, "unmount remote_share timeout for %{public}s", bundleName.c_str());
+    } else if (status == std::future_status::ready) {
+        int32_t unMountRet = unMountFuture.get();
+        LOG_I(BMS_TAG_INSTALLD, "unmount remote_share failed %{public}d for %{public}s",
+            unMountRet, bundleName.c_str());
+    }
     std::string distributedFile = DISTRIBUTED_FILE + bundleName;
     distributedFile = distributedFile.replace(distributedFile.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::DeleteDir(distributedFile)) {

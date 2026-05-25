@@ -2024,6 +2024,7 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         if (isHnpInstalled_) {
             RollbackHnpInstall(bundleName_, { userId_ });
         }
+        RemoveNPAPIPluginDir();
         return;
     }
     InnerBundleInfo preInfo;
@@ -2293,6 +2294,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "rm hnp failed");
         }
+        RemoveNPAPIPluginDir();
         auto res = RemoveBundleUserData(oldInfo, installParam, !installParam.isRemoveUser);
         if (res != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "remove bundle user data failed");
@@ -2341,6 +2343,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (installParam.isKeepData) {
         BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
     }
+
+    RemoveNPAPIPluginDir();
 
     ErrCode result = RemoveBundle(oldInfo, installParam, !installParam.isRemoveUser);
     if (result != ERR_OK) {
@@ -4453,6 +4457,8 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         }
     }
 
+    ExtractNPAPIPluginFiles();
+
     if (info.IsPreInstallApp()) {
         info.SetModuleHapPath(modulePath_);
     } else {
@@ -4688,6 +4694,58 @@ void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, cons
     extractParam.extractFileType = ExtractFileType::RESOURCE;
     ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
     LOG_D(BMS_TAG_INSTALLER, "ExtractResourceFiles ret : %{public}d", ret);
+}
+
+void BaseBundleInstaller::ExtractNPAPIPluginFiles()
+{
+    LOG_D(BMS_TAG_INSTALLER, "ExtractNPAPIPluginFiles begin");
+    if (BundlePermissionMgr::VerifyPermission(bundleName_,
+        ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB, userId_) !=
+        Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+        LOG_D(BMS_TAG_INSTALLER, "no permission to extract npapi plugin files");
+        npapiPluginStatus_ = NpapiPluginStatus::STATUS_NOT_APPLICABLE;
+        return;
+    }
+    std::string targetPath = ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH + std::to_string(userId_) +
+        ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + bundleName_;
+    ExtractParam extractParam;
+    extractParam.srcPath = modulePath_;
+    extractParam.targetPath = targetPath;
+    extractParam.extractFileType = ExtractFileType::NPAPI_PLUGIN;
+    ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "ExtractNPAPIPluginFiles failed, error is %{public}d", ret);
+        npapiPluginStatus_ = NpapiPluginStatus::STATUS_EXTRACT_FAILED;
+        return;
+    }
+    npapiPluginStatus_ = NpapiPluginStatus::STATUS_SUCCESS;
+    LOG_D(BMS_TAG_INSTALLER, "ExtractNPAPIPluginFiles end successfully");
+}
+
+void BaseBundleInstaller::RemoveNPAPIPluginDir()
+{
+    std::string targetPath = ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH + std::to_string(userId_) +
+        ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + bundleName_;
+    bool isExist = false;
+    ErrCode ret = InstalldClient::GetInstance()->IsExistDir(targetPath, isExist);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "check plugin directory existence failed");
+        npapiPluginStatus_ = NpapiPluginStatus::STATUS_REMOVE_FAILED;
+        return;
+    }
+    if (!isExist) {
+        LOG_D(BMS_TAG_INSTALLER, "plugin directory not exist, no need to remove");
+        npapiPluginStatus_ = NpapiPluginStatus::STATUS_NOT_APPLICABLE;
+        return;
+    }
+    ret = InstalldClient::GetInstance()->RemoveDir(targetPath, BundleDirScene::REMOVE_NPAPI_PLUGIN_DIR, bundleName_);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "remove plugin directory failed, error is %{public}d", ret);
+        npapiPluginStatus_ = NpapiPluginStatus::STATUS_REMOVE_FAILED;
+        return;
+    }
+    npapiPluginStatus_ = NpapiPluginStatus::STATUS_SUCCESS;
+    LOG_D(BMS_TAG_INSTALLER, "RemoveNPAPIPluginDir end successfully for bundle %{public}s", bundleName_.c_str());
 }
 
 ErrCode BaseBundleInstaller::ExtractResFileDir(const std::string &modulePath) const
@@ -7021,6 +7079,7 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
     sysEventInfo_.isPatch = installParam.isPatch;
     sysEventInfo_.isKeepData = installParam.isKeepData;
     sysEventInfo_.endTime = BundleUtil::GetCurrentTimeMs();
+    sysEventInfo_.npapiPluginStatus = static_cast<int32_t>(npapiPluginStatus_);
     GetCallingEventInfo(sysEventInfo_);
     if (InitDataMgr()) {
         dataMgr_->GetOdidByBundleName(bundleName, sysEventInfo_.odid);
