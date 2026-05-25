@@ -16,6 +16,7 @@
 #define private public
 #define protected public
 #include <gtest/gtest.h>
+#include <unistd.h>
 
 #include "base_bundle_installer.h"
 #include "bundle_clone_installer.h"
@@ -99,6 +100,7 @@ void BmsBundleShareFilesTest::SetUpTestCase()
 void BmsBundleShareFilesTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleShareFilesTest::SetUp()

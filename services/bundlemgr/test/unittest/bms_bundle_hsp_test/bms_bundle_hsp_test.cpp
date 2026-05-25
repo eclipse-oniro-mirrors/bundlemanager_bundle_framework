@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
@@ -92,6 +93,7 @@ void BmsBundleHspTest::SetUpTestCase()
 void BmsBundleHspTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleHspTest::SetUp()

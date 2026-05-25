@@ -14,6 +14,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <unistd.h>
 
 #include "bundle_data_mgr.h"
 #include "bundle_info.h"
@@ -90,6 +91,7 @@ void BmsBundleQuickFixSwitcherTest::SetUpTestCase()
 void BmsBundleQuickFixSwitcherTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleQuickFixSwitcherTest::SetUp()

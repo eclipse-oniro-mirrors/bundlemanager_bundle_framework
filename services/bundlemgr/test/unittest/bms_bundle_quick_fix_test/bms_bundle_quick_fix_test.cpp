@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 #include "appexecfwk_errors.h"
 #include "bundle_info.h"
@@ -147,6 +148,7 @@ void BmsBundleQuickFixTest::SetUpTestCase()
 void BmsBundleQuickFixTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleQuickFixTest::SetUp()

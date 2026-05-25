@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 #include "ability_info.h"
 #include "app_control_constants.h"
@@ -200,6 +201,7 @@ void BmsBundleAppControlTest::SetUpTestCase()
 void BmsBundleAppControlTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleAppControlTest::SetUp()

@@ -19,6 +19,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <unistd.h>
 
 #include "account_helper.h"
 #include "base_bundle_installer.h"
@@ -60,7 +61,9 @@ void BmsSpaceIsolationTest::SetUpTestCase()
 {}
 
 void BmsSpaceIsolationTest::TearDownTestCase()
-{}
+{
+    sleep(1);
+}
 
 void BmsSpaceIsolationTest::SetUp()
 {

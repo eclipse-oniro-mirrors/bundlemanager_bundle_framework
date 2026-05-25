@@ -172,6 +172,7 @@ void BmsBundleOtaUpdateTest::SetUpTestCase()
 void BmsBundleOtaUpdateTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleOtaUpdateTest::SetUp()

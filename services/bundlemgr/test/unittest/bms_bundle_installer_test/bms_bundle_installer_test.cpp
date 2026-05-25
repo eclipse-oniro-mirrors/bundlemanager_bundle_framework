@@ -569,6 +569,7 @@ void BmsBundleInstallerTest::SetUpTestCase()
 void BmsBundleInstallerTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleInstallerTest::SetUp()

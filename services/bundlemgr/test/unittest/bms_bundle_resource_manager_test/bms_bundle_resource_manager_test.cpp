@@ -18,6 +18,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -87,6 +88,7 @@ void BmsBundleResourceManagerTest::SetUpTestCase()
 void BmsBundleResourceManagerTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleResourceManagerTest::SetUp()

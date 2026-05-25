@@ -16,6 +16,7 @@
 #include <chrono>
 #include <fstream>
 #include <gtest/gtest.h>
+#include <unistd.h>
 #include <unordered_map>
 #include <vector>
 
@@ -111,6 +112,7 @@ void BmsBundleGetWindowPropertiesTest::SetUpTestCase()
 void BmsBundleGetWindowPropertiesTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleGetWindowPropertiesTest::SetUp()
