@@ -413,8 +413,8 @@ namespace bundleManager {
     return setApplicationEnabledNative(bundleName, isEnabled, 0, false, true);
   }
 
-  function setApplicationEnabledSync(bundleName: string, appIndex: int, isEnabled: boolean, killProcess?: boolean): void {
-    return setApplicationEnabledNative(bundleName, isEnabled, appIndex, killProcess ?? false, true);
+  function setApplicationEnabledSync(bundleName: string, appIndex: int, isEnabled: boolean, killProcess: boolean): void {
+    return setApplicationEnabledNative(bundleName, isEnabled, appIndex, killProcess, true);
   }
 
   function queryExtensionAbilityInfoSync(want: Want, extensionAbilityType: ExtensionAbilityType,
@@ -1141,10 +1141,10 @@ namespace bundleManager {
     return p;
   }
 
-  function setApplicationEnabled(bundleName: string, appIndex: int, isEnabled: boolean, killProcess?: boolean): Promise<void> {
+  function setApplicationEnabled(bundleName: string, appIndex: int, isEnabled: boolean, killProcess: boolean): Promise<void> {
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
-        return setApplicationEnabledNative(bundleName, isEnabled, appIndex, killProcess ?? false, false);
+        return setApplicationEnabledNative(bundleName, isEnabled, appIndex, killProcess, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
