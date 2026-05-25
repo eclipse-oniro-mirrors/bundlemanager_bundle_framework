@@ -93,15 +93,10 @@ std::shared_ptr<BundleMgrService> BmsBundleShareFilesTest::bundleMgrService_ =
     DelayedSingleton<BundleMgrService>::GetInstance();
 
 void BmsBundleShareFilesTest::SetUpTestCase()
-{
-    bundleMgrService_->OnStart();
-}
+{}
 
 void BmsBundleShareFilesTest::TearDownTestCase()
-{
-    bundleMgrService_->OnStop();
-    sleep(1);
-}
+{}
 
 void BmsBundleShareFilesTest::SetUp()
 {

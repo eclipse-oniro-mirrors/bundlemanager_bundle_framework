@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "aot_handler.h"
 #include "aot_sign_data_cache_mgr.h"
@@ -67,16 +68,21 @@ BmsAOTHandlerTest::~BmsAOTHandlerTest()
 
 void BmsAOTHandlerTest::SetUpTestCase()
 {
-    bundleMgrService_->OnStart();
-    bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
-    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME_SECONDS));
-    installdService_->Start();
+    if (!bundleMgrService_->IsServiceReady()) {
+        bundleMgrService_->OnStart();
+        bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
+        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME_SECONDS));
+    }
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
+    }
 }
 
 void BmsAOTHandlerTest::TearDownTestCase()
 {
     AOTHandler::GetInstance().serialQueue_ = nullptr;
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsAOTHandlerTest::SetUp()

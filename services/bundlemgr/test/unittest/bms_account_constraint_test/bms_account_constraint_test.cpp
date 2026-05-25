@@ -84,16 +84,12 @@ BmsAccountConstraintTest::~BmsAccountConstraintTest()
 
 void BmsAccountConstraintTest::SetUpTestCase()
 {
-    bundleMgrService_->OnStart();
-    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    bundleMgrService_->InitBundleDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
 }
 
 void BmsAccountConstraintTest::TearDownTestCase()
-{
-    bundleMgrService_->OnStop();
-    sleep(1);
-}
+{}
 
 void BmsAccountConstraintTest::SetUp()
 {
@@ -186,12 +182,13 @@ HWTEST_F(BmsAccountConstraintTest, LoadPreInstallWhiteList_0200, Function | Medi
     std::vector<int32_t> userIds;
     auto installAndRecoverPair1 =
         std::make_pair(std::vector<std::string>(), std::vector<std::string>{testName});
-    bundleMgrService_->handler_->userInstallAndRecoverMap_[100] = installAndRecoverPair1;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    handler->userInstallAndRecoverMap_[100] = installAndRecoverPair1;
     auto installAndRecoverPair2 = std::make_pair(std::vector<std::string>(), std::vector<std::string>());
-    bundleMgrService_->handler_->userInstallAndRecoverMap_[101] = installAndRecoverPair2;
+    handler->userInstallAndRecoverMap_[101] = installAndRecoverPair2;
     bundleMgrService_->dataMgr_ = nullptr;
-    bundleMgrService_->handler_->LoadPreInstallWhiteList();
-    auto ret = bundleMgrService_->handler_->IsRecoverListEmpty(testName, userIds);
+    handler->LoadPreInstallWhiteList();
+    auto ret = handler->IsRecoverListEmpty(testName, userIds);
     EXPECT_FALSE(ret);
     EXPECT_FALSE(userIds.empty());
     bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
