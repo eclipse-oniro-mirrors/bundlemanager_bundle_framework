@@ -33,6 +33,7 @@
 #include "driver_install_ext.h"
 #include "file_ex.h"
 #include "installd/installd_operator.h"
+#include "ipc/extract_param.h"
 #include "ipc/skills_package_param.h"
 #include "skills_installer/skills_package_info.h"
 
@@ -541,6 +542,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2600, Function | Sma
     EXPECT_TRUE(ret);
 
     extractParam.extractFileType = ExtractFileType::HNPS_FILE;
+    ret = InstalldOperator::IsNativeFile(TEST_RES_FILE, extractParam);
+    EXPECT_FALSE(ret);
+
+    extractParam.extractFileType = ExtractFileType::NPAPI_PLUGIN;
     ret = InstalldOperator::IsNativeFile(TEST_RES_FILE, extractParam);
     EXPECT_FALSE(ret);
 
@@ -1626,6 +1631,32 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9500, Function | Sma
     EXPECT_TRUE(ret);
     ret = InstalldOperator::DetermineSuffix(ExtractFileType::ALL, suffixes);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_9501
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DeterminePrefix with NPAPI_PLUGIN type
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9501, Function | SmallTest | Level1)
+{
+    std::string cpuAbi = "";
+    std::string prefix = "";
+    auto ret = InstalldOperator::DeterminePrefix(ExtractFileType::NPAPI_PLUGIN, cpuAbi, prefix);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(prefix, ServiceConstants::NPAPI_PLUGIN_PATH);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_9502
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DetermineSuffix with NPAPI_PLUGIN type
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9502, Function | SmallTest | Level1)
+{
+    std::vector<std::string> suffixes;
+    auto ret = InstalldOperator::DetermineSuffix(ExtractFileType::NPAPI_PLUGIN, suffixes);
+    EXPECT_TRUE(ret);
 }
 
 /**

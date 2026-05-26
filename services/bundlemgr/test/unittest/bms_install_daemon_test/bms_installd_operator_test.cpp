@@ -29,6 +29,7 @@
 
 #include "bundle_util.h"
 #include "bundle_extractor.h"
+#include "bundle_service_constants.h"
 #include "directory_ex.h"
 #include "file_ex.h"
 #define private public
@@ -2250,6 +2251,47 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartT
     ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
         dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_VERIFY_FILE);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0700
+ * @tc.name: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo
+ * @tc.desc: test IsValidPathByRemoveDirSceneNeedBundleNamePartTwo for REMOVE_NPAPI_PLUGIN_DIR
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0700, Function | SmallTest | Level0)
+{
+    std::string dir = TEST_BUNDLE_PATCH + TEST_STRING;
+    auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_NPAPI_PLUGIN_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH) + "100" +
+          ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + TEST_STRING;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_NPAPI_PLUGIN_DIR);
+    EXPECT_FALSE(ret);
+
+    dir = std::string(ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH) + "100" +
+          ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_NPAPI_PLUGIN_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = std::string(ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH) + "200" +
+          ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_NPAPI_PLUGIN_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = std::string("/storage/media/") + "100" + "/local/files/Docs/Download/.mozilla/plugins/" + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_NPAPI_PLUGIN_DIR);
+    EXPECT_TRUE(ret);
+
+    dir = std::string("/invalid/path/") + TEST_BUNDLE_NAME;
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
+        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_NPAPI_PLUGIN_DIR);
+    EXPECT_FALSE(ret);
 }
 
 /**

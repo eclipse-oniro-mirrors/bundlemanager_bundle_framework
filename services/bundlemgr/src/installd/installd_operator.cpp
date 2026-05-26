@@ -167,7 +167,7 @@ static const std::map<BundleDirScene, std::vector<std::string>> ALLOWED_PATH_PRE
     {BundleDirScene::SET_ARK_STARTUP_CACHE_APL, {"/data/app/el1/%/system_optimize/"}},
     {BundleDirScene::PEND_SIGN_AOT, {"/data/app/el1/public/aot_compiler/ark_cache/",
         "/data/service/el1/public/for-all-app/"}},
-    {BundleDirScene::EXTRACT_FILES, {"/data/app/el1/", "/data/service/el1/public/"}},
+    {BundleDirScene::EXTRACT_FILES, {"/data/app/el1/", "/data/service/el1/public/", "/storage/media/"}},
     {BundleDirScene::VERIFY_CODE_SIGNATURE, {"/data/app/el1/bundle/"}},
     {BundleDirScene::REMOVE_EXTENSION_DIR, {"/data/app/el1/"}},
     {BundleDirScene::CLEAN_BUNDLE_DATA_DIR, {"/data/app/", "/data/local/shader_cache/"}},

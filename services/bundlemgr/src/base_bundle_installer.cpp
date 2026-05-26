@@ -1302,6 +1302,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         CHECK_RESULT(result, "InnerProcessUpdateHapToken failed %{public}d");
     }
 
+    for (const auto &item : newInfos) {
+        ExtractNPAPIPluginFiles(item.first);
+    }
+
     if (result == ERR_OK) {
         userGuard.Dismiss();
     }
@@ -4457,8 +4461,6 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         }
     }
 
-    ExtractNPAPIPluginFiles();
-
     if (info.IsPreInstallApp()) {
         info.SetModuleHapPath(modulePath_);
     } else {
@@ -4696,7 +4698,7 @@ void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, cons
     LOG_D(BMS_TAG_INSTALLER, "ExtractResourceFiles ret : %{public}d", ret);
 }
 
-void BaseBundleInstaller::ExtractNPAPIPluginFiles()
+void BaseBundleInstaller::ExtractNPAPIPluginFiles(const std::string &modulePath)
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractNPAPIPluginFiles begin");
     if (BundlePermissionMgr::VerifyPermission(bundleName_,
@@ -4709,7 +4711,8 @@ void BaseBundleInstaller::ExtractNPAPIPluginFiles()
     std::string targetPath = ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH + std::to_string(userId_) +
         ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + bundleName_;
     ExtractParam extractParam;
-    extractParam.srcPath = modulePath_;
+    extractParam.bundleName = bundleName_;
+    extractParam.srcPath = modulePath;
     extractParam.targetPath = targetPath;
     extractParam.extractFileType = ExtractFileType::NPAPI_PLUGIN;
     ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
