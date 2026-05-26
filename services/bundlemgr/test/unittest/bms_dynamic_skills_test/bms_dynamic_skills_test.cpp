@@ -293,27 +293,22 @@ HWTEST_F(BmsDynamicSkillsTest, SetAbilityFileTypesForSelf_0700, Function | Small
 /**
  * @tc.number: SetAbilityFileTypesForSelf_0800
  * @tc.name: SetAbilityFileTypesForSelf_0800
- * @tc.desc: 1.test GetInnerSkillInfos
+ * @tc.desc: 1.test AppendDynamicSkills
  */
 HWTEST_F(BmsDynamicSkillsTest, SetAbilityFileTypesForSelf_0800, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
-    InnerAbilityInfo innerAbilityInfo;
-    innerAbilityInfo.skills = BuildSkillsVector(1);
-    info.baseAbilityInfos_ = {{KEY, innerAbilityInfo}};
-    auto skillInfos = info.GetInnerSkillInfos();
-    EXPECT_EQ(skillInfos.size(), 1);
-    auto item = skillInfos.begin();
-    EXPECT_EQ(item->first, KEY);
-    EXPECT_EQ(item->second.size(), 1);
+    std::vector<Skill> skills;
+    info.AppendDynamicSkills(KEY, skills);
+    EXPECT_TRUE(skills.empty());
 
     info.dynamicSkills_ = {{KEY, BuildSkillsVector(1)}};
-    skillInfos = info.GetInnerSkillInfos();
-    EXPECT_EQ(skillInfos.size(), 1);
-    item = skillInfos.begin();
-    EXPECT_EQ(item->first, KEY);
-    size_t expectSize = 2;
-    EXPECT_EQ(item->second.size(), expectSize);
+    info.AppendDynamicSkills("", skills);
+    EXPECT_TRUE(skills.empty());
+
+    info.AppendDynamicSkills(KEY, skills);
+    EXPECT_FALSE(skills.empty());
+    EXPECT_EQ(skills.size(), 1);
 }
 
 /**

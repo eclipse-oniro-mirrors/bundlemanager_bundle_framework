@@ -2009,22 +2009,16 @@ std::optional<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfo(
     return std::nullopt;
 }
 
-std::map<std::string, std::vector<Skill>> InnerBundleInfo::GetInnerSkillInfos() const
+void InnerBundleInfo::AppendDynamicSkills(const std::string &key, std::vector<Skill> &skills) const
 {
-    std::map<std::string, std::vector<Skill>> skillInfos;
-    for (const auto &info : baseAbilityInfos_) {
-        skillInfos.emplace(info.first, info.second.skills);
-    }
     if (dynamicSkills_.empty()) {
-        return skillInfos;
+        return;
     }
-    std::map<std::string, std::vector<Skill>> mergedSkills = std::move(skillInfos);
-    for (const auto &[key, dynamicVector] : dynamicSkills_) {
-        auto &mergedVector = mergedSkills[key];
-        mergedVector.reserve(mergedVector.size() + dynamicVector.size());
-        mergedVector.insert(mergedVector.end(), dynamicVector.begin(), dynamicVector.end());
+    auto item = dynamicSkills_.find(key);
+    if (item != dynamicSkills_.end()) {
+        skills.reserve(skills.size() + item->second.size());
+        skills.insert(skills.end(), item->second.begin(), item->second.end());
     }
-    return mergedSkills;
 }
 
 void InnerBundleInfo::UpdateDynamicSkills()

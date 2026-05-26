@@ -1347,9 +1347,9 @@ public:
         return baseAbilityInfos_;
     }
     /**
-     * @brief Obtains all skillInfos.
+     * @brief Append dynamic skills.
      */
-    std::map<std::string, std::vector<Skill>> GetInnerSkillInfos() const;
+    void AppendDynamicSkills(const std::string &key, std::vector<Skill> &skills) const;
     void UpdateDynamicSkills();
     ErrCode SetAbilityFileTypes(const std::string &moduleName, const std::string &abilityName,
         const std::vector<std::string> &fileTypes);
@@ -1368,17 +1368,6 @@ public:
     const std::map<std::string, InnerExtensionInfo> &GetInnerExtensionInfos() const
     {
         return baseExtensionInfos_;
-    }
-    /**
-     * @brief Obtains all extensionSkillInfos.
-     */
-    const std::map<std::string, std::vector<Skill>> GetExtensionSkillInfos() const
-    {
-        std::map<std::string, std::vector<Skill>> extensionSkillInfos;
-        for (const auto &extensionInfo : baseExtensionInfos_) {
-            extensionSkillInfos.emplace(extensionInfo.first, extensionInfo.second.skills);
-        }
-        return extensionSkillInfos;
     }
     /**
      * @brief Checks if the bundle contains inputMethod type extension.
