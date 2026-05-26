@@ -33,6 +33,7 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 constexpr const char* SYSCAP_NAME = "rpcid.sc";
+constexpr int32_t MAX_RPCID_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 static constexpr const char* ROUTER_MAP = "routerMap";
 static constexpr const char* ROUTER_MAP_DATA = "data";
 static constexpr const char* ROUTER_ITEM_KEY_CUSTOM_DATA = "customData";
@@ -202,11 +203,15 @@ ErrCode BundleParser::ParseSysCap(const std::string &pathName, std::vector<std::
     if (rpcidLen < 0) {
         return ERR_APPEXECFWK_PARSE_UNEXPECTED;
     }
-    char rpcidBuf[rpcidLen];
-    rpcidStream.read(rpcidBuf, rpcidLen);
+    if (rpcidLen > MAX_RPCID_FILE_SIZE) {
+        APP_LOGE("rpcid.sc file size %{public}d exceeds limit %{public}d", rpcidLen, MAX_RPCID_FILE_SIZE);
+        return ERR_APPEXECFWK_PARSE_RPCID_FAILED;
+    }
+    auto rpcidBuf = std::make_unique<char[]>(rpcidLen);
+    rpcidStream.read(rpcidBuf.get(), rpcidLen);
     uint32_t outLen;
     char *outBuffer;
-    int result = RPCIDStreamDecodeToBuffer(rpcidBuf, rpcidLen, &outBuffer, &outLen);
+    int result = RPCIDStreamDecodeToBuffer(rpcidBuf.get(), rpcidLen, &outBuffer, &outLen);
     if (result != 0) {
         APP_LOGE("Decode syscaps failed");
         return ERR_APPEXECFWK_PARSE_RPCID_FAILED;
