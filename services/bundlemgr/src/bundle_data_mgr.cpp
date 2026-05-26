@@ -3017,6 +3017,10 @@ bool BundleDataMgr::GetApplicationInfos(
             LOG_D(BMS_TAG_QUERY, "app %{public}s is disabled", info.GetBundleName().c_str());
             continue;
         }
+        if (info.GetApplicationBundleType() == BundleType::SKILL) {
+            LOG_D(BMS_TAG_QUERY, "app %{public}s is skill", info.GetBundleName().c_str());
+            continue;
+        }
         int32_t responseUserId = info.GetResponseUserId(requestUserId);
         if (info.GetApplicationEnabled(responseUserId) ||
             (static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)) {
@@ -3227,6 +3231,10 @@ ErrCode BundleDataMgr::GetApplicationInfosV9(
         const InnerBundleInfo &info = item.second;
         if (info.IsDisabled()) {
             APP_LOGD("app %{public}s is disabled", info.GetBundleName().c_str());
+            continue;
+        }
+        if (info.GetApplicationBundleType() == BundleType::SKILL) {
+            APP_LOGD("app %{public}s is skill", info.GetBundleName().c_str());
             continue;
         }
         int32_t responseUserId = info.GetResponseUserId(requestUserId);
@@ -14421,7 +14429,8 @@ ErrCode BundleDataMgr::GetSkillInfo(const std::string &bundleName, const std::st
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &info = item->second;
-    if (!info.HasInnerBundleUserInfo(requestUserId)) {
+    int32_t responseUserId = info.GetResponseUserId(requestUserId);
+    if (responseUserId == Constants::INVALID_USERID) {
         APP_LOGE("bundle %{public}s is not installed for user %{public}d", bundleName.c_str(), requestUserId);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
@@ -14467,7 +14476,8 @@ ErrCode BundleDataMgr::GetSkillInfos(const std::string &bundleName, uint32_t fla
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &info = item->second;
-    if (!info.HasInnerBundleUserInfo(requestUserId)) {
+    int32_t responseUserId = info.GetResponseUserId(requestUserId);
+    if (responseUserId == Constants::INVALID_USERID) {
         APP_LOGE("bundle %{public}s is not installed for user %{public}d", bundleName.c_str(), requestUserId);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
@@ -14491,7 +14501,8 @@ ErrCode BundleDataMgr::GetAllSkillInfos(uint32_t flags, int32_t userId,
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &[bundleName, info] : bundleInfos_) {
-        if (!info.HasInnerBundleUserInfo(requestUserId)) {
+        int32_t responseUserId = info.GetResponseUserId(requestUserId);
+        if (responseUserId == Constants::INVALID_USERID) {
             continue;
         }
         for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
