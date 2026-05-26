@@ -2694,6 +2694,42 @@ HWTEST_F(BmsEventHandlerTest, ProcessRebootBundleUninstall_0300, Function | Smal
 }
 
 /**
+ * @tc.number: ProcessRebootBundleUninstall_0400
+ * @tc.name: ProcessRebootBundleUninstall skip data preload app
+ * @tc.desc: test ProcessRebootBundleUninstall should skip bundles whose
+ *           first bundle path starts with /data/preload/app/
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessRebootBundleUninstall_0400, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+
+    PreInstallBundleInfo preInstallBundleInfo;
+    std::string bundlePath = std::string(ServiceConstants::DATA_PRELOAD_APP) + "com.example.test/entry.hap";
+    preInstallBundleInfo.AddBundlePath(bundlePath);
+    handler->loadExistData_.emplace(BUNDLE_NAME, preInstallBundleInfo);
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    handler->ProcessRebootBundleUninstall();
+
+    // data preload app should not be uninstalled, bundle info should remain
+    auto infoIter = dataMgr->bundleInfos_.find(BUNDLE_NAME);
+    EXPECT_NE(infoIter, dataMgr->bundleInfos_.end());
+
+    // loadExistData_ should still contain the data preload entry
+    auto loadIter = handler->loadExistData_.find(BUNDLE_NAME);
+    EXPECT_NE(loadIter, handler->loadExistData_.end());
+}
+
+/**
  * @tc.number: SaveUninstalledPreloadAppToFile_0100
  * @tc.name: SaveUninstalledPreloadAppToFile
  * @tc.desc: test SaveUninstalledPreloadAppToFile

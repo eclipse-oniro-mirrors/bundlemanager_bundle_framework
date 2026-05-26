@@ -3830,6 +3830,10 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
             if (loadIter.second.GetBundleType() == BundleType::SKILL) {
                 continue;
             }
+            auto bundlePaths = loadIter.second.GetBundlePaths();
+            if (!bundlePaths.empty() && bundlePaths.front().find(ServiceConstants::DATA_PRELOAD_APP) == 0) {
+                continue;
+            }
             LOG_I(BMS_TAG_DEFAULT, "ProcessRebootBundleUninstall OTA uninstall app(%{public}s)", bundleName.c_str());
             if (InnerProcessUninstallForExistPreBundle(hasInstalledInfo)) {
                 continue;
