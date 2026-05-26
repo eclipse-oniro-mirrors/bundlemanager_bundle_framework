@@ -21,7 +21,7 @@
     {
       "name": "release",
       "arkOptions": {
-        "integratedHsp": true,
+        "integratedHsp": false,
         "obfuscation": {
           "ruleOptions": {
             "enable": false,
