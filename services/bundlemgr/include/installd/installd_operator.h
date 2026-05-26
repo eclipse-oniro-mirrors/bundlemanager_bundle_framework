@@ -397,6 +397,8 @@ public:
 
     static bool FsyncFile(const std::string &path);
 
+    static bool FsyncNpapiPluginFile(const std::string &path);
+
     static ErrCode DeleteCertAndRemoveKey(const std::string &path);
 
     static bool IsValidBundleName(const std::string &bundleName);
