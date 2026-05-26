@@ -46,6 +46,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* IS_ENABLE = "isEnable";
+constexpr const char* KILL_PROCESS = "killProcess";
 constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* ICON_ID = "iconId";
 constexpr const char* LABEL_ID = "labelId";
@@ -1958,6 +1959,8 @@ bool HandleSetApplicationEnabledArg(
     } else if (index == ARGS_POS_THREE) {
         if (!CommonFunc::ParseBool(env, arg, asyncCallbackInfo->killProcess)) {
             APP_LOGE("parse killProcess failed");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, KILL_PROCESS, TYPE_BOOLEAN);
+            return false;
         }
     } else {
         APP_LOGE("param check error");

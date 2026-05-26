@@ -33,6 +33,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 constexpr const char* IS_ENABLE = "isEnable";
+constexpr const char* KILL_PROCESS = "killProcess";
 constexpr const char* EXTENSIONABILITY_TYPE = "extensionAbilityType";
 bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
 {
@@ -143,7 +144,7 @@ napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info)
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
             return nullptr;
         }
-    } else {
+    } else if (argc == ARGS_SIZE_FOUR) {
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], appIndex)) {
             APP_LOGE("parse appIndex failed");
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
@@ -154,11 +155,15 @@ napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info)
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
             return nullptr;
         }
-        if (argc == ARGS_SIZE_FOUR) {
-            if (!CommonFunc::ParseBool(env, args[ARGS_POS_THREE], killProcess)) {
-                APP_LOGE("parse killProcess failed");
-            }
+        if (!CommonFunc::ParseBool(env, args[ARGS_POS_THREE], killProcess)) {
+            APP_LOGE("parse killProcess failed");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, KILL_PROCESS, TYPE_BOOLEAN);
+            return nullptr;
         }
+    } else {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
     }
 
     ErrCode ret = BundleManagerHelper::InnerSetApplicationEnabled(bundleName, isEnable, appIndex, killProcess);
