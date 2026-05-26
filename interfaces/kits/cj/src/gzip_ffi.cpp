@@ -231,7 +231,7 @@ FFI_EXPORT char* FfiBundleManagerGZipGets(void* ffiInst, uint8_t* buf, int64_t l
     if (ffiInst == nullptr || buf == nullptr || len <= 0) {
         *errCode = ERR_ZLIB_INTERNAL_STRUCT_ERROR;
         APP_LOGE("FfiBundleManagerGZipGets param check failed");
-        return 0;
+        return nullptr;
     }
     auto entity = static_cast<CjGZipEntity*>(ffiInst);
     return entity->GzGets(buf, len, errCode);
