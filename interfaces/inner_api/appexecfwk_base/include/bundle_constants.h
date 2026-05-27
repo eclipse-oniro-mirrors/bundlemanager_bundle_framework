@@ -202,6 +202,7 @@ constexpr const char* APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM = "enterprise_mdm";
 constexpr const char* APP_DISTRIBUTION_TYPE_INTERNALTESTING = "internaltesting";
 constexpr const char* APP_DISTRIBUTION_TYPE_OS_INTEGRATION = "os_integration";
 constexpr const char* APP_DISTRIBUTION_TYPE_CROWDTESTING = "crowdtesting";
+constexpr const char* APP_DISTRIBUTION_TYPE_DEVELOPER = "developer_id";
 // app provision type
 constexpr const char* APP_PROVISION_TYPE_DEBUG = "debug";
 constexpr const char* APP_PROVISION_TYPE_RELEASE = "release";

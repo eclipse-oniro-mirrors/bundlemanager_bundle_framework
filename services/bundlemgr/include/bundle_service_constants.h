@@ -162,6 +162,7 @@ constexpr const char* PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE = "ohos.permission.U
 constexpr const char* PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
 constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 constexpr const char* PERMISSION_SUPPORT_PLUGIN = "ohos.permission.kernel.SUPPORT_PLUGIN";
+constexpr const char* PERMISSION_SUPPORT_LOCAL_PLUGIN = "ohos.permission.kernel.SUPPORT_LOCAL_PLUGIN";
 constexpr const char* PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB = "ohos.permission.SUPPORT_NP_PLUGIN_FOR_WEB";
 constexpr const char* PERMISSION_MANAGE_STORAGE = "ohos.permission.atomicService.MANAGE_STORAGE";
 constexpr const char* PERMISSION_MANAGE_AGING = "ohos.permission.atomicService.MANAGE_AGING";

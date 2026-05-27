@@ -12702,8 +12702,24 @@ ErrCode BundleDataMgr::GetAllPluginInfo(const std::string &hostBundleName, int32
     return InnerGetAllPluginInfo(hostBundleName, requestUserId, pluginBundleInfos);
 }
 
+ErrCode BundleDataMgr::GetAllLocalPluginInfoForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos) const
+{
+    APP_LOGD("start GetAllLocalPluginInfoForSelf");
+    std::string callingBundleName;
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    ErrCode ret = GetNameForUid(uid, callingBundleName);
+    if (ret != ERR_OK) {
+        APP_LOGE("get bundleName failed %{public}d %{public}d", ret, uid);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    int32_t userId = BundleUtil::GetUserIdByUid(uid);
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    return InnerGetAllPluginInfo(callingBundleName, userId, pluginBundleInfos,
+        Constants::APP_DISTRIBUTION_TYPE_DEVELOPER);
+}
+
 ErrCode BundleDataMgr::InnerGetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
-    std::vector<PluginBundleInfo> &pluginBundleInfos) const
+    std::vector<PluginBundleInfo> &pluginBundleInfos, const std::string &appDistributionType) const
 {
     auto item = bundleInfos_.find(hostBundleName);
     if (item == bundleInfos_.end()) {
@@ -12718,16 +12734,23 @@ ErrCode BundleDataMgr::InnerGetAllPluginInfo(const std::string &hostBundleName, 
     }
     std::unordered_map<std::string, PluginBundleInfo> pluginInfoMap = innerBundleInfo.GetAllPluginBundleInfo();
     const InnerBundleUserInfo *innerBundleUserInfoPtr = nullptr;
-    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfoPtr)) {
-        if (!innerBundleUserInfoPtr) {
+    if (!innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfoPtr)) {
+        return ERR_OK;
+    }
+    if (!innerBundleUserInfoPtr) {
         LOG_NOFUNC_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by InnerGetAllPluginInfo is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-        }
-        for (const auto &pluginName : innerBundleUserInfoPtr->installedPluginSet) {
-            if (pluginInfoMap.find(pluginName) != pluginInfoMap.end()) {
-                APP_LOGD("pluginName: %{public}s", pluginName.c_str());
-                pluginBundleInfos.emplace_back(pluginInfoMap[pluginName]);
+    }
+    for (const auto &pluginName : innerBundleUserInfoPtr->installedPluginSet) {
+        if (pluginInfoMap.find(pluginName) != pluginInfoMap.end()) {
+            APP_LOGD("pluginName: %{public}s", pluginName.c_str());
+            if (!appDistributionType.empty() &&
+                pluginInfoMap[pluginName].appInfo.appDistributionType != appDistributionType) {
+                APP_LOGD("pluginName: %{public}s distribution type is not %{public}s, skip it",
+                    pluginName.c_str(), appDistributionType.c_str());
+                continue;
             }
+            pluginBundleInfos.emplace_back(pluginInfoMap[pluginName]);
         }
     }
     return ERR_OK;

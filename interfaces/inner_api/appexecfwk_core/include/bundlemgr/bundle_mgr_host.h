@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -987,6 +987,7 @@ private:
 
     ErrCode HandleGetAllPluginInfo(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetPluginInfosForSelf(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetAllLocalPluginInfoForSelf(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetDirByBundleNameAndAppIndex(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetAllBundleDirs(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleRegisterPluginEventCallback(MessageParcel &data, MessageParcel &reply);

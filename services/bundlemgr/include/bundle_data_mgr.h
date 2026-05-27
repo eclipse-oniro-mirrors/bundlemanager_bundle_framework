@@ -1254,7 +1254,8 @@ public:
     ErrCode GetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
         std::vector<PluginBundleInfo> &pluginBundleInfos) const;
     ErrCode InnerGetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
-        std::vector<PluginBundleInfo> &pluginBundleInfos) const;
+        std::vector<PluginBundleInfo> &pluginBundleInfos, const std::string &appDistributionType = "") const;
+    ErrCode GetAllLocalPluginInfoForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos) const;
     ErrCode GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const;
     ErrCode GetDirForAtomicServiceByUserId(const std::string &bundleName, int32_t userId,
         AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const;
