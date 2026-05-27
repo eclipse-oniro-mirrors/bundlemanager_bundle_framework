@@ -20,6 +20,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_file_util.h"
 #include "hitrace_meter.h"
 #include "ipc_types.h"
 #include "parcel.h"
@@ -30,7 +31,6 @@ namespace AppExecFwk {
 namespace {
 constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // allow max 1GB resource size
 constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 100 * 1024 * 1024; // max ipc size 100MB
-const int32_t CLONE_APP_INDEX_MAX = 5;
 bool GetData(size_t size, const void *data, void *&buffer)
 {
     if (data == nullptr) {
@@ -132,7 +132,7 @@ ErrCode BundleResourceProxy::CheckBundleOptionInfoInvalid(const std::vector<Bund
             return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
         } else if (options.abilityName.empty()) {
             return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-        } else if (options.appIndex < 0 || options.appIndex > CLONE_APP_INDEX_MAX) {
+        } else if (options.appIndex < 0 || options.appIndex > BundleFileUtil::GetCloneMaxCount()) {
             return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
         }
     }

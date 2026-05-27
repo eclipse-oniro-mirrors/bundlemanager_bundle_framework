@@ -20,6 +20,7 @@
 #include "ani_common_start_options.h"
 #include <ani_signature_builder.h>
 #include "app_log_wrapper.h"
+#include "bundle_file_util.h"
 #include "business_error_ani.h"
 #include "common_fun_ani.h"
 #include "common_func.h"
@@ -212,7 +213,7 @@ static ani_object GetShortcutInfoByAppIndex(ani_env* env, ani_string aniBundleNa
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    if (aniAppIndex < Constants::MAIN_APP_INDEX || aniAppIndex > Constants::CLONE_APP_INDEX_MAX) {
+    if (aniAppIndex < Constants::MAIN_APP_INDEX || aniAppIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE("appIndex: %{public}d not in valid range", aniAppIndex);
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
         return nullptr;

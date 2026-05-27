@@ -21,6 +21,7 @@
 #include "app_log_tag_wrapper.h"
 #include "bundle_errors.h"
 #include "bundle_common_event.h"
+#include "bundle_file_util.h"
 #include "bundle_manager_helper.h"
 #include "bundle_manager_sync.h"
 #include "bundle_mgr_client.h"
@@ -2398,7 +2399,7 @@ bool ParseCleanBundleCacheFilesAppIndex(napi_env env, napi_value args, int32_t &
         BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
         return false;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE("appIndex: %{public}d not in valid range", appIndex);
         BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
         return false;

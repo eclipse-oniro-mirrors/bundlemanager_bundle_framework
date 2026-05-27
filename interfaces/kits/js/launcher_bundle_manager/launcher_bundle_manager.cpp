@@ -21,6 +21,7 @@
 #include "ability_manager_errors.h"
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
+#include "bundle_file_util.h"
 #include "business_error.h"
 #include "common_func.h"
 #include "ipc_skeleton.h"
@@ -393,7 +394,7 @@ bool ParseGetShortcutInfoAppIndex(napi_env env, napi_value args, int32_t &appInd
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
         return false;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE("appIndex: %{public}d not in valid range", appIndex);
         BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
         return false;

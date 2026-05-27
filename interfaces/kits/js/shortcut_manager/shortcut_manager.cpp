@@ -19,6 +19,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
+#include "bundle_file_util.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "business_error.h"
@@ -424,7 +425,8 @@ static bool CheckShortcutInfo(napi_env env, const std::string &referenceBundleNa
         napi_throw(env, businessError);
         return false;
     }
-    if (shortcutInfo.appIndex < Constants::MAIN_APP_INDEX || shortcutInfo.appIndex > Constants::CLONE_APP_INDEX_MAX) {
+    if (shortcutInfo.appIndex < Constants::MAIN_APP_INDEX ||
+        shortcutInfo.appIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE("appIndex: %{public}d not in valid range", shortcutInfo.appIndex);
         BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
         return false;
@@ -777,7 +779,7 @@ static bool ParseDeleteDynamicParam(
         return false;
     }
     if (callbackInfo.appIndex < Constants::MAIN_APP_INDEX ||
-        callbackInfo.appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        callbackInfo.appIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE("appIndex:%{public}d not in valid range", callbackInfo.appIndex);
         BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
         return false;

@@ -68,6 +68,7 @@ ohos_shared_library("libappexecfwk_common") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "init:libbegetutil",
   ]
 
   subsystem_name = "bundlemanager"

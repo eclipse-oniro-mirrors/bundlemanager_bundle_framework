@@ -26,6 +26,7 @@
 #include "aot/aot_handler.h"
 #include "bms_extension_client.h"
 #include "bms_extension_data_mgr.h"
+#include "bundle_file_util.h"
 #include "bundle_hitrace_chain.h"
 #include "bundle_install_checker.h"
 #include "bundle_parser.h"
@@ -3517,7 +3518,7 @@ ErrCode BundleMgrHostImpl::GetShortcutInfoByAbility(const std::string &bundleNam
         APP_LOGE_NOFUNC("impl fail to GetShortcutInfoByAbility due to abilityName empty");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE_NOFUNC("impl fail to GetShortcutInfoByAbility due to appIndex out of range");
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -7370,7 +7371,7 @@ ErrCode BundleMgrHostImpl::RecoverBackupBundleData(const std::string &bundleName
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    if (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX || !CheckAppIndex(bundleName, userId, appIndex)) {
+    if (appIndex > BundleFileUtil::GetCloneMaxCount() || !CheckAppIndex(bundleName, userId, appIndex)) {
         APP_LOGE("invalid appIndex or appIndex not exist");
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -7413,7 +7414,7 @@ ErrCode BundleMgrHostImpl::RemoveBackupBundleData(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    if (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX || !CheckAppIndex(bundleName, userId, appIndex)) {
+    if (appIndex > BundleFileUtil::GetCloneMaxCount() || !CheckAppIndex(bundleName, userId, appIndex)) {
         APP_LOGE("invalid appIndex or appIndex not exist");
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }

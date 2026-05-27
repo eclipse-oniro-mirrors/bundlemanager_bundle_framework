@@ -46,6 +46,7 @@
 #include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_file_util.h"
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "directory_ex.h"
@@ -3761,7 +3762,7 @@ bool InstalldOperator::IsValidUid(const int32_t uid)
 
 bool InstalldOperator::IsValidAppIndex(const int32_t appIndex)
 {
-    return (appIndex >= Constants::MAIN_APP_INDEX) && (appIndex <= Constants::CLONE_APP_INDEX_MAX);
+    return (appIndex >= Constants::MAIN_APP_INDEX) && (appIndex <= BundleFileUtil::GetCloneMaxCount());
 }
 
 bool InstalldOperator::IsValidApl(const std::string &apl)

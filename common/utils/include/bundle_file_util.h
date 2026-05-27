@@ -33,6 +33,7 @@ public:
     static bool IsExistFile(const std::string &filePath);
     static bool IsExistDir(const std::string &dirPath);
     static bool IsReportDataPartitionUsageEvent(const std::string &path);
+    static int32_t GetCloneMaxCount();
 };
 } // AppExecFwk
 } // OHOS

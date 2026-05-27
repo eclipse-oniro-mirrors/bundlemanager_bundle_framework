@@ -61,6 +61,7 @@ const uint32_t GID = 3;
 const uint32_t USERID = 4;
 const int32_t ZERO_SIZE = 0;
 const int32_t INVALIED_ID = -1;
+constexpr int32_t CLONE_APP_INDEX_MAX_DEFAULT = 5;
 const std::string HOST = "host";
 const std::string PORT = "port";
 const std::string PATH = "path";
@@ -1090,6 +1091,17 @@ HWTEST_F(BmsHapModuleInfoTest, LibrarySupportDirectory_from_json_002, Function |
     HapModuleInfo hapModuleInfo;
     from_json(jsonObject, hapModuleInfo);
     EXPECT_EQ(hapModuleInfo.librarySupportDirectory.size(), 0);
+}
+
+/**
+ * @tc.number: GetCloneMaxCount_0001
+ * @tc.name: test GetCloneMaxCount returns consistent value
+ * @tc.desc: 1. call GetCloneMaxCount
+ */
+HWTEST_F(BmsHapModuleInfoTest, GetCloneMaxCount_0001, Function | SmallTest | Level0)
+{
+    int32_t maxCount = BundleFileUtil::GetCloneMaxCount();
+    EXPECT_TRUE(maxCount >= CLONE_APP_INDEX_MAX_DEFAULT);
 }
 }
 }

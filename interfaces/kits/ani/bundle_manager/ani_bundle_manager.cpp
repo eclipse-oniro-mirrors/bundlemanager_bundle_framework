@@ -31,6 +31,7 @@
 #include "app_install_extended_info.h"
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
+#include "bundle_file_util.h"
 #include "bundle_manager_helper.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
@@ -1287,7 +1288,7 @@ static void CleanBundleCacheFilesNative(ani_env* env, ani_string aniBundleName, 
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, TYPE_STRING);
         return;
     }
-    if (aniAppIndex < Constants::MAIN_APP_INDEX || aniAppIndex > Constants::CLONE_APP_INDEX_MAX) {
+    if (aniAppIndex < Constants::MAIN_APP_INDEX || aniAppIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE("appIndex: %{public}d not in valid range", aniAppIndex);
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, Constants::APP_INDEX, TYPE_NUMBER);
         return;
@@ -1383,6 +1384,13 @@ static void CleanAllBundleCacheNative(ani_env* env)
     if (result != 0) {
         APP_LOGE("CleanAllBundleCache failed, result %{public}d", result);
     }
+}
+
+static ani_int GetCloneMaxCountNative([[maybe_unused]] ani_env* env)
+{
+    int32_t cloneMaxCount = BundleFileUtil::GetCloneMaxCount();
+    APP_LOGD("GetCloneMaxCount: %{public}d", cloneMaxCount);
+    return static_cast<ani_int>(cloneMaxCount);
 }
 
 static ani_object GetAppProvisionInfoNative(
@@ -2224,7 +2232,7 @@ static ani_string GetSandboxDataDir(ani_env* env, ani_string aniBundleName, ani_
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    if (aniAppIndex < Constants::MAIN_APP_INDEX || aniAppIndex > Constants::CLONE_APP_INDEX_MAX) {
+    if (aniAppIndex < Constants::MAIN_APP_INDEX || aniAppIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE("appIndex: %{public}d not in valid range", aniAppIndex);
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, Constants::APP_INDEX, TYPE_NUMBER);
         return nullptr;
@@ -2624,6 +2632,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(GetBundleInstallStatusNative) },
         ani_native_function { "getAlternateIconsNative", nullptr,
             reinterpret_cast<void*>(GetAlternateIconsNative) },
+        ani_native_function { "getCloneMaxCountNative", nullptr,
+            reinterpret_cast<void*>(GetCloneMaxCountNative) },
     };
 
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

@@ -25,6 +25,7 @@
 #include "bms_extension_data_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
+#include "bundle_file_util.h"
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
@@ -5576,7 +5577,7 @@ ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
     InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
     std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
 
-    if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -5615,7 +5616,7 @@ ErrCode InnerBundleInfo::RemoveCloneBundle(const int32_t userId, const int32_t a
     InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
     std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
 
-    if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE("Remove Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -5751,7 +5752,7 @@ ErrCode InnerBundleInfo::VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appI
             return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED;
         }
     }
-    int32_t maxCount = std::min(multiAppModeData.maxCount, ServiceConstants::CLONE_APP_INDEX_MAX);
+    int32_t maxCount = std::min(multiAppModeData.maxCount, BundleFileUtil::GetCloneMaxCount());
     if (appIndex > maxCount) {
         APP_LOGE("AppIndex %{public}d exceed max limit %{public}d in userId: %{public}d",
             appIndex, maxCount, userId);

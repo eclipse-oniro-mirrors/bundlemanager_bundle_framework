@@ -323,6 +323,8 @@ namespace bundleManager {
 
   native function cleanAllBundleCacheNative(): void;
 
+  native function getCloneMaxCountNative(): int;
+
   native function getAppProvisionInfoNative(bundleName: string, userId: int, isSync: boolean): AppProvisionInfo;
 
   native function getAllAppProvisionInfoNative(userId: int): Array<AppProvisionInfo>;
@@ -1397,7 +1399,7 @@ namespace bundleManager {
   }
 
   function cleanBundleCacheFiles(bundleName: string, appIndex: int): Promise<void> {
-    if (appIndex < MAIN_APP_INDEX || appIndex > CLONE_APP_INDEX_MAX) {
+    if (appIndex < MAIN_APP_INDEX || appIndex > getCloneMaxCountNative()) {
       throw createBusinessError(ERROR_INVALID_APPINDEX_CODE, ERROR_INVALID_APPINDEX_MSG);
     }
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: Error) => void) : void => {
