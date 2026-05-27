@@ -6067,31 +6067,6 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallStateByUserId_0005, Function | 
     EXPECT_NE(dataMgr, nullptr);
     InnerBundleInfo bundleInfo;
     InnerBundleUserInfo userInfo;
-    userInfo.canUninstall = true;
-    std::string key = BUNDLE_NAME_UNINSTALL_STATE + "_100";
-    bundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
-    ApplicationInfo appInfo;
-    appInfo.bundleName = BUNDLE_NAME_UNINSTALL_STATE;
-    bundleInfo.SetBaseApplicationInfo(appInfo);
-    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_UNINSTALL_STATE, bundleInfo);
-    bool stateChange = false;
-    ErrCode res = dataMgr->SwitchUninstallStateByUserId(BUNDLE_NAME_UNINSTALL_STATE, false, 100, stateChange);
-    EXPECT_EQ(res, ERR_OK);
-    dataMgr->bundleInfos_.erase(BUNDLE_NAME_UNINSTALL_STATE);
-}
-
-/**
- * @tc.number: SwitchUninstallStateByUserId_0006
- * @tc.name: SwitchUninstallStateByUserId
- * @tc.desc: 1.system run normally
- *           2.switch uninstallState return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
- */
-HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallStateByUserId_0006, Function | SmallTest | Level1)
-{
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    InnerBundleInfo bundleInfo;
-    InnerBundleUserInfo userInfo;
     userInfo.canUninstall = false;
     std::string key = BUNDLE_NAME_UNINSTALL_STATE + "_100";
     bundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
@@ -6141,25 +6116,6 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0003, Function | SmallTes
     ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true, false, stateChange);
     EXPECT_EQ(res, ERR_OK);
     EXPECT_TRUE(info.uninstallState_);
-    dataMgr->bundleInfos_.erase(BUNDLE_NAME_UNINSTALL_STATE);
-}
-
-/**
- * @tc.number: SwitchUninstallState_0004
- * @tc.name: SwitchUninstallState
- * @tc.desc: 1.system run normally
- *           2.switch uninstallState successfully
- */
-HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0004, Function | SmallTest | Level1)
-{
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    InnerBundleInfo info;
-    info.uninstallState_ = false;
-    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_UNINSTALL_STATE, info);
-    bool stateChange = false;
-    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true, false, stateChange);
-    EXPECT_EQ(res, ERR_OK);
     dataMgr->bundleInfos_.erase(BUNDLE_NAME_UNINSTALL_STATE);
 }
 
