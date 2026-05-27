@@ -48,7 +48,6 @@ public:
     static void StartBundleService();
     void SetUp();
     void TearDown();
-    std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
 
 BmsSpaceIsolationTest::BmsSpaceIsolationTest()
@@ -61,22 +60,16 @@ void BmsSpaceIsolationTest::SetUpTestCase()
 {}
 
 void BmsSpaceIsolationTest::TearDownTestCase()
-{
-    sleep(1);
-}
+{}
 
 void BmsSpaceIsolationTest::SetUp()
 {
-    bundleMgrService_ = OHOS::DelayedSingleton<BundleMgrService>::GetInstance();
-    bundleMgrService_->OnStart();
     OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "false");
 }
 
 void BmsSpaceIsolationTest::TearDown()
 {
     OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "false");
-    bundleMgrService_->OnStop();
-    bundleMgrService_ = nullptr;
 }
 
 /**
@@ -1028,6 +1021,7 @@ HWTEST_F(BmsSpaceIsolationTest, CheckAppDistributionType_0200,
     Function | SmallTest | Level1)
 {
     BundleInstallChecker checker;
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBmsParam();
     auto bmsPara =
         DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
     ASSERT_NE(bmsPara, nullptr);
