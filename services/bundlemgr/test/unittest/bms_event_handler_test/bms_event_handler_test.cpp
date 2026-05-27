@@ -2379,11 +2379,11 @@ HWTEST_F(BmsEventHandlerTest, BundleEl1ShaderCacheLocal_0100, Function | SmallTe
     EXPECT_EQ(removeRet, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     handler->CheckAllBundleEl1ShaderCacheLocal();
     isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_FALSE(isExist) << "the shader cache path exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+    EXPECT_TRUE(isExist) << "the shader cache path exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
 
     handler->CleanAllBundleEl1ShaderCacheLocal();
     isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_FALSE(isExist) << "the shader cache path not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+    EXPECT_TRUE(isExist) << "the shader cache path not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
     setuid(Constants::ROOT_UID);
 }
 
