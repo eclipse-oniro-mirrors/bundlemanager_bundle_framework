@@ -285,12 +285,6 @@ ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs, std::vector<uint8_t
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (!InstalldOperator::IsValidBundleName(aotArgs.bundleName) ||
-        !InstalldOperator::IsValidBundleName(aotArgs.moduleName)) {
-        LOG_E(BMS_TAG_INSTALLD, "param -n %{public}s -m %{public}s",
-            aotArgs.bundleName.c_str(), aotArgs.moduleName.c_str());
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
     ErrCode ret = ERR_OK;
     AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
     LOG_D(BMS_TAG_INSTALLD, "execute AOT ret : %{public}d", ret);
@@ -2442,14 +2436,6 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
-    }
-    if (!InstalldOperator::IsValidBundleName(codeSignatureParam.bundleName)) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function VerifyCodeSignatureForHap with invalid bundleName");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    if (!InstalldOperator::IsFileNameValid(codeSignatureParam.modulePath)) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function VerifyCodeSignatureForHap with invalid modulePath");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     ErrCode ret = ERR_OK;
     if (codeSignatureParam.isCompileSdkOpenHarmony && !Security::CodeSign::CodeSignUtils::IsSupportOHCodeSign()) {
