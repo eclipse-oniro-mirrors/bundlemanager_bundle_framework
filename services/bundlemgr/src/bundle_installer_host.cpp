@@ -26,6 +26,7 @@
 #endif
 #include "app_log_tag_wrapper.h"
 #include "bundle_clone_installer.h"
+#include "bundle_cli_sandbox_installer.h"
 #include "bundle_file_util.h"
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_hitrace_chain.h"
@@ -144,6 +145,9 @@ int BundleInstallerHost::OnRemoteRequest(
             break;
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_NEW_PREINSTALLED_APPS):
             HandleUninstallNewPreinstalledApps(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::CREATE_CLI_SANDBOX_APP):
+            HandleCreateCliSandboxApp(data, reply);
             break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1520,6 +1524,36 @@ ErrCode BundleInstallerHost::DeleteReSignCert(int32_t userId)
         return ERR_APPEXECFWK_ENTERPRISE_CERT_DELETE_CERT_ERROR;
     }
     return ERR_OK;
+}
+
+ErrCode BundleInstallerHost::CreateCliSandboxApp(const std::string &callerBundleName,
+    const std::string &bundleName, int32_t userId, int32_t &appIndex)
+{
+    if (callerBundleName.empty() || bundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "CreateCliSandboxApp failed due to empty parameters");
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    }
+
+    auto installer = std::make_shared<BundleCliSandboxInstaller>();
+    return installer->CreateCliSandboxApp(callerBundleName, bundleName, userId, appIndex);
+}
+
+void BundleInstallerHost::HandleCreateCliSandboxApp(MessageParcel &data, MessageParcel &reply)
+{
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("CreateCliSandboxApp", HITRACE_FLAG_INCLUDE_ASYNC);
+    LOG_D(BMS_TAG_INSTALLER, "handle create cli sandbox app message");
+    std::string callerBundleName = Str16ToStr8(data.ReadString16());
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = 0;
+
+    auto ret = CreateCliSandboxApp(callerBundleName, bundleName, userId, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "write ret failed");
+    }
+    if (ret == ERR_OK && !reply.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_INSTALLER, "write appIndex failed");
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

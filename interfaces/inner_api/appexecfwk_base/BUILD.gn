@@ -18,6 +18,7 @@ config("appexecfwk_base_sdk_config") {
   include_dirs = [
     "include",
     "include/bundle_resource",
+    "include/cli_sandbox",
     "include/clone",
     "include/distributed_manager",
     "include/free_install",

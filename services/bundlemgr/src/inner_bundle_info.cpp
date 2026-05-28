@@ -5624,6 +5624,83 @@ ErrCode InnerBundleInfo::RemoveCloneBundle(const int32_t userId, const int32_t a
     return ERR_OK;
 }
 
+ErrCode InnerBundleInfo::AddCliSandboxBundle(const InnerCliSandboxInfo &sandboxInfo)
+{
+    int32_t userId = sandboxInfo.userId;
+    int32_t appIndex = sandboxInfo.appIndex;
+    const std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    if (innerBundleUserInfos_.find(key) == innerBundleUserInfos_.end()) {
+        APP_LOGE("AddCliSandboxBundle Fail, userId: %{public}d not found in bundleName: %{public}s",
+            userId, GetBundleName().c_str());
+        return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
+    }
+    InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
+    std::map<std::string, InnerCliSandboxInfo> &sandboxInfos = userInfo.sandboxInfos;
+
+    if (appIndex < ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN ||
+        appIndex > ServiceConstants::CLI_SANDBOX_APP_INDEX_MAX) {
+        APP_LOGE("AddCliSandboxBundle Fail, appIndex: %{public}d not in valid range", appIndex);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
+    }
+    std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    if (sandboxInfos.find(appIndexKey) != sandboxInfos.end()) {
+        APP_LOGE("AddCliSandboxBundle Fail, appIndex: %{public}d existed", appIndex);
+        return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED;
+    }
+    sandboxInfos[appIndexKey] = sandboxInfo;
+    APP_LOGD("Add CLI sandbox userId: %{public}d appIndex: %{public}d in bundle: %{public}s",
+        userId, appIndex, GetBundleName().c_str());
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::RemoveCliSandboxBundle(const int32_t userId, const int32_t appIndex)
+{
+    const std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    if (innerBundleUserInfos_.find(key) == innerBundleUserInfos_.end()) {
+        APP_LOGE("RemoveCliSandboxBundle Fail, userId: %{public}d not found in bundleName: %{public}s",
+            userId, GetBundleName().c_str());
+        return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
+    }
+    InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
+    std::map<std::string, InnerCliSandboxInfo> &sandboxInfos = userInfo.sandboxInfos;
+
+    if (appIndex < ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN ||
+        appIndex > ServiceConstants::CLI_SANDBOX_APP_INDEX_MAX) {
+        APP_LOGE("RemoveCliSandboxBundle Fail, appIndex: %{public}d not in valid range", appIndex);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
+    }
+    std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    if (sandboxInfos.find(appIndexKey) == sandboxInfos.end()) {
+        APP_LOGD("appIndex: %{public}d not found", appIndex);
+        return ERR_OK;
+    }
+    sandboxInfos.erase(appIndexKey);
+    APP_LOGD("Remove CLI sandbox userId: %{public}d appIndex: %{public}d in bundle: %{public}s",
+        userId, appIndex, GetBundleName().c_str());
+    return ERR_OK;
+}
+
+bool InnerBundleInfo::AddCallerToCliSandbox(const int32_t userId, const int32_t appIndex,
+    const std::string &callerBundleName)
+{
+    const std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    if (innerBundleUserInfos_.find(key) == innerBundleUserInfos_.end()) {
+        return false;
+    }
+    InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
+    std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    auto it = userInfo.sandboxInfos.find(appIndexKey);
+    if (it == userInfo.sandboxInfos.end()) {
+        return false;
+    }
+    // avoid duplicate
+    auto &names = it->second.callerBundleNames;
+    if (std::find(names.begin(), names.end(), callerBundleName) == names.end()) {
+        names.push_back(callerBundleName);
+    }
+    return true;
+}
+
 ErrCode InnerBundleInfo::GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex)
 {
     const std::string key = NameAndUserIdToKey(GetBundleName(), userId);

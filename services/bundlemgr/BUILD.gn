@@ -28,6 +28,7 @@ config("bundlemgr_common_config") {
     "include/bundle_backup",
     "include/bundle_resource",
     "include/bundle_skill",
+    "include/cli_sandbox",
     "include/clone",
     "include/common",
     "include/default_app",

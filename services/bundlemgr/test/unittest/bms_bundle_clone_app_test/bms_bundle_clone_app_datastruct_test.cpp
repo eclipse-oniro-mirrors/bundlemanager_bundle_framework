@@ -24,6 +24,7 @@
 #include "inner_bundle_clone_info.h"
 #include "inner_bundle_user_info.h"
 #include "inner_bundle_info.h"
+#include "inner_cli_sandbox_info.h"
 #include "json_constants.h"
 #include "json_serializer.h"
 #include "nlohmann/json.hpp"

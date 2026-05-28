@@ -11487,6 +11487,96 @@ ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const in
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::AddCliSandboxBundle(const std::string &bundleName, const InnerCliSandboxInfo &sandboxInfo)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo &innerBundleInfo = infoItem->second;
+    ErrCode res = innerBundleInfo.AddCliSandboxBundle(sandboxInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("innerBundleInfo AddCliSandboxBundle fail");
+        return res;
+    }
+    if (dataStorage_ == nullptr) {
+        APP_LOGE("dataStorage_ is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    APP_LOGD("update bundle info in memory for add cli sandbox, userId: %{public}d, appIndex: %{public}d",
+        sandboxInfo.userId, sandboxInfo.appIndex);
+    auto nowBundleStatus = innerBundleInfo.GetBundleStatus();
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        innerBundleInfo.SetBundleStatus(nowBundleStatus);
+        innerBundleInfo.RemoveCliSandboxBundle(sandboxInfo.userId, sandboxInfo.appIndex);
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    innerBundleInfo.SetBundleStatus(nowBundleStatus);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::RemoveCliSandboxBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo &innerBundleInfo = infoItem->second;
+    ErrCode res = innerBundleInfo.RemoveCliSandboxBundle(userId, appIndex);
+    if (res != ERR_OK) {
+        APP_LOGE("innerBundleInfo RemoveCliSandboxBundle fail");
+        return res;
+    }
+    auto nowBundleStatus = innerBundleInfo.GetBundleStatus();
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    if (dataStorage_ == nullptr) {
+        APP_LOGE("dataStorage_ is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        innerBundleInfo.SetBundleStatus(nowBundleStatus);
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    innerBundleInfo.SetBundleStatus(nowBundleStatus);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::AddCallerToCliSandbox(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, const std::string &callerBundleName)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo &innerBundleInfo = infoItem->second;
+    if (!innerBundleInfo.AddCallerToCliSandbox(userId, appIndex, callerBundleName)) {
+        APP_LOGE("AddCallerToCliSandbox fail");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    auto nowBundleStatus = innerBundleInfo.GetBundleStatus();
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    if (dataStorage_ == nullptr) {
+        APP_LOGE("dataStorage_ is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        innerBundleInfo.SetBundleStatus(nowBundleStatus);
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    innerBundleInfo.SetBundleStatus(nowBundleStatus);
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::QueryAbilityInfoByContinueType(const std::string &bundleName,
     const std::string &continueType, AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex) const
 {

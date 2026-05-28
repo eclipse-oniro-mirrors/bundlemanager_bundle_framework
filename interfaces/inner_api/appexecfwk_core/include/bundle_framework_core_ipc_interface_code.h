@@ -325,6 +325,7 @@ enum class BundleInstallerInterfaceCode : uint8_t {
     DELETE_ENTERPRISE_RE_SIGNATURE_CERT = 17,
     GET_ENTERPRISE_RE_SIGNATURE_CERT = 18,
     UNINSTALL_NEW_PREINSTALLED_APPS = 19,
+    CREATE_CLI_SANDBOX_APP = 20,
 };
 
 /* SAID: 401-28 Interface No.28 subservice also provides the following interfaces */
