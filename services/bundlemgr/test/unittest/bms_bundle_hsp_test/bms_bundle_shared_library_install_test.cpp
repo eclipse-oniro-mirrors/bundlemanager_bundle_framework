@@ -94,7 +94,12 @@ BmsBundleSharedLibraryInstallTest::~BmsBundleSharedLibraryInstallTest()
 {}
 
 void BmsBundleSharedLibraryInstallTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleSharedLibraryInstallTest::TearDownTestCase()
 {
@@ -104,7 +109,6 @@ void BmsBundleSharedLibraryInstallTest::TearDownTestCase()
 void BmsBundleSharedLibraryInstallTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundleSharedLibraryInstallTest::TearDown()

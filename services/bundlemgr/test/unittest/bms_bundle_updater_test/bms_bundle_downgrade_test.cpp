@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
+
 #include <gtest/gtest.h>
 
 #include <chrono>
@@ -83,20 +86,20 @@ std::shared_ptr<InstalldService> BmsBundleDowngradeTest::installdService_ =
 
 void BmsBundleDowngradeTest::SetUpTestCase()
 {
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
 }
 
 void BmsBundleDowngradeTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
-    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
 }
 
 void BmsBundleDowngradeTest::SetUp()
 {
-    installdService_->Start();
-    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsServiceReady()) {
-        DelayedSingleton<BundleMgrService>::GetInstance()->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
     }
 }
 
@@ -188,7 +191,9 @@ void BmsBundleDowngradeTest::StopInstalldService() const
 
 void BmsBundleDowngradeTest::StartInstalldService() const
 {
-    installdService_->Start();
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
+    }
 }
 
 void BmsBundleDowngradeTest::StopBundleService() const

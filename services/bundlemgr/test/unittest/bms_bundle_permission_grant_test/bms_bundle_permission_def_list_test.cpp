@@ -77,7 +77,12 @@ BmsBundlePermissionDefListTest::~BmsBundlePermissionDefListTest()
 {}
 
 void BmsBundlePermissionDefListTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundlePermissionDefListTest::TearDownTestCase()
 {
@@ -87,7 +92,6 @@ void BmsBundlePermissionDefListTest::TearDownTestCase()
 void BmsBundlePermissionDefListTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundlePermissionDefListTest::InitInnerBundleInfo(InnerBundleInfo &innerBundleInfo)

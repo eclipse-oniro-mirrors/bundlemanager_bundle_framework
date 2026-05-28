@@ -97,7 +97,11 @@ BmsBundleOverlayCheckerTest::~BmsBundleOverlayCheckerTest()
 {}
 
 void BmsBundleOverlayCheckerTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleOverlayCheckerTest::TearDownTestCase()
 {
@@ -106,10 +110,6 @@ void BmsBundleOverlayCheckerTest::TearDownTestCase()
 
 void BmsBundleOverlayCheckerTest::SetUp()
 {
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    }
 }
 
 void BmsBundleOverlayCheckerTest::BuildInternalOverlayConnection(

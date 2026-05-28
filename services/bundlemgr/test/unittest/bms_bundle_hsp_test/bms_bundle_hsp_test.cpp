@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
 #include <fstream>
 #include <gtest/gtest.h>
 #include <sstream>
@@ -88,7 +90,12 @@ BmsBundleHspTest::~BmsBundleHspTest()
 {}
 
 void BmsBundleHspTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleHspTest::TearDownTestCase()
 {
@@ -99,7 +106,6 @@ void BmsBundleHspTest::TearDownTestCase()
 void BmsBundleHspTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundleHspTest::TearDown()

@@ -98,7 +98,12 @@ BmsBundleAppProvisionInfoTest::~BmsBundleAppProvisionInfoTest()
 {}
 
 void BmsBundleAppProvisionInfoTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleAppProvisionInfoTest::TearDownTestCase()
 {
@@ -108,7 +113,6 @@ void BmsBundleAppProvisionInfoTest::TearDownTestCase()
 void BmsBundleAppProvisionInfoTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundleAppProvisionInfoTest::TearDown()

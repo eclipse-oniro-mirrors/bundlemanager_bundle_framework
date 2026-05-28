@@ -67,6 +67,9 @@ BmsSandboxRdbTest::~BmsSandboxRdbTest()
 
 void BmsSandboxRdbTest::SetUpTestCase()
 {
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
 }
 
 void BmsSandboxRdbTest::TearDownTestCase()
@@ -78,10 +81,6 @@ void BmsSandboxRdbTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
-    }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
 }
 

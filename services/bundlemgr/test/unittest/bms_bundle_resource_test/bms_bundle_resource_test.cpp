@@ -153,7 +153,12 @@ BmsBundleResourceTest::~BmsBundleResourceTest()
 {}
 
 void BmsBundleResourceTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleResourceTest::TearDownTestCase()
 {
@@ -164,7 +169,6 @@ void BmsBundleResourceTest::TearDownTestCase()
 void BmsBundleResourceTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundleResourceTest::TearDown()

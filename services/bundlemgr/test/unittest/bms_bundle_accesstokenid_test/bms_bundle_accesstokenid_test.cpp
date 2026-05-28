@@ -106,7 +106,12 @@ BmsBundleAccessTokenIdTest::~BmsBundleAccessTokenIdTest()
 {}
 
 void BmsBundleAccessTokenIdTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleAccessTokenIdTest::TearDownTestCase()
 {
@@ -116,7 +121,6 @@ void BmsBundleAccessTokenIdTest::TearDownTestCase()
 void BmsBundleAccessTokenIdTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
     // set "persist.bms.supportCompressNativeLibs"
     SetParameter(COMPRESS_NATIVE_LIBS.c_str(), "true");
 }

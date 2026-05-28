@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
+
 #include <fstream>
 #include <gtest/gtest.h>
 #include <sstream>
@@ -81,7 +84,12 @@ BmsBundleSharedLibraryUninstallTest::~BmsBundleSharedLibraryUninstallTest()
 {}
 
 void BmsBundleSharedLibraryUninstallTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleSharedLibraryUninstallTest::TearDownTestCase()
 {
@@ -91,7 +99,6 @@ void BmsBundleSharedLibraryUninstallTest::TearDownTestCase()
 void BmsBundleSharedLibraryUninstallTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundleSharedLibraryUninstallTest::TearDown()

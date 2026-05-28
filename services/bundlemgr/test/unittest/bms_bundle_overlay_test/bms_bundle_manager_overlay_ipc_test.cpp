@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
+
 #include <gtest/gtest.h>
 
 #include "appexecfwk_errors.h"
@@ -64,7 +67,12 @@ BmsBundleManagerIpcTest::~BmsBundleManagerIpcTest()
 {}
 
 void BmsBundleManagerIpcTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    bundleMgrService_->InitOverlayManager();
+}
 
 void BmsBundleManagerIpcTest::TearDownTestCase()
 {
@@ -73,10 +81,6 @@ void BmsBundleManagerIpcTest::TearDownTestCase()
 
 void BmsBundleManagerIpcTest::SetUp()
 {
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    }
 }
 
 void BmsBundleManagerIpcTest::TearDown()

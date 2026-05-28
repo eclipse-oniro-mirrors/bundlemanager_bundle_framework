@@ -77,7 +77,11 @@ BmsNewBundleDataDirMgrTest::~BmsNewBundleDataDirMgrTest()
 
 void BmsNewBundleDataDirMgrTest::SetUpTestCase()
 {
-    StartBundleService();
+    bundleMgrService_->InitBmsParam();
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
     StartInstalldService();
 }
 

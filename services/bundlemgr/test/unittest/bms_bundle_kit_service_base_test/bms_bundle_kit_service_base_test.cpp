@@ -137,7 +137,13 @@ std::shared_ptr<InstalldService> BmsBundleKitServiceBaseTest::installdService_ =
     std::make_shared<InstalldService>();
 
 void BmsBundleKitServiceBaseTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitFreeInstall();
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(DEFAULT_USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleKitServiceBaseTest::TearDownTestCase()
 {
@@ -148,10 +154,6 @@ void BmsBundleKitServiceBaseTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
-    }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        bundleMgrService_->GetDataMgr()->AddUserId(DEFAULT_USERID);
     }
 }
 

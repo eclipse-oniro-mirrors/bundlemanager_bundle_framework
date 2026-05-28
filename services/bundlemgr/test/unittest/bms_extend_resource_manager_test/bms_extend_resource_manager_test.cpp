@@ -99,7 +99,10 @@ BmsExtendResourceManagerTest::~BmsExtendResourceManagerTest()
 
 void BmsExtendResourceManagerTest::SetUpTestCase()
 {
-    StartBundleService();
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
     StartInstalldService();
     InstallBundle(BUNDLE_PATH);
 }

@@ -196,7 +196,12 @@ BmsBundleAppControlTest::~BmsBundleAppControlTest()
 {}
 
 void BmsBundleAppControlTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleAppControlTest::TearDownTestCase()
 {
@@ -207,7 +212,6 @@ void BmsBundleAppControlTest::TearDownTestCase()
 void BmsBundleAppControlTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundleAppControlTest::TearDown()

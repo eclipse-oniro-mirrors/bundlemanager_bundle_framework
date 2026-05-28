@@ -109,7 +109,12 @@ BmsPluginInstallerTest::~BmsPluginInstallerTest()
 {}
 
 void BmsPluginInstallerTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsPluginInstallerTest::TearDownTestCase()
 {
@@ -118,7 +123,6 @@ void BmsPluginInstallerTest::TearDownTestCase()
 
 void BmsPluginInstallerTest::SetUp()
 {
-    StartBundleService();
     StartInstalldService();
     InstallBundle(HOST_BUNDLE_PATH1);
     OHOS::system::SetParameter(ServiceConstants::IS_SUPPORT_PLUGIN, "true");

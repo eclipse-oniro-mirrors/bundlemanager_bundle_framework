@@ -98,7 +98,12 @@ BmsBundleAppApiVersionTest::~BmsBundleAppApiVersionTest()
 {}
 
 void BmsBundleAppApiVersionTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleAppApiVersionTest::TearDownTestCase()
 {
@@ -109,7 +114,6 @@ void BmsBundleAppApiVersionTest::TearDownTestCase()
 void BmsBundleAppApiVersionTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundleAppApiVersionTest::TearDown()

@@ -153,7 +153,13 @@ BmsBundleDefaultAppTest::~BmsBundleDefaultAppTest()
 {}
 
 void BmsBundleDefaultAppTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitDefaultApp();
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleDefaultAppTest::TearDownTestCase()
 {
@@ -162,7 +168,6 @@ void BmsBundleDefaultAppTest::TearDownTestCase()
 
 void BmsBundleDefaultAppTest::SetUp()
 {
-    StartBundleService();
     StartInstalldService();
     InstallBundle(BUNDLE_PATH);
 }

@@ -67,7 +67,12 @@ std::shared_ptr<InstalldService> BmsBundleDataMgrSharedTest::installdService_ =
     std::make_shared<InstalldService>();
 
 void BmsBundleDataMgrSharedTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleDataMgrSharedTest::TearDownTestCase()
 {
@@ -78,11 +83,6 @@ void BmsBundleDataMgrSharedTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
-    }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        bundleMgrService_->GetDataMgr()->AddUserId(USERID);
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
 }
 

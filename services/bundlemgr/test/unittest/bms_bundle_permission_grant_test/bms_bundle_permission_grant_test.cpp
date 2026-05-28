@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
+
 #include <fstream>
 #include <gtest/gtest.h>
 #include <sstream>
@@ -74,7 +77,12 @@ BmsBundlePermissionGrantTest::~BmsBundlePermissionGrantTest()
 {}
 
 void BmsBundlePermissionGrantTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundlePermissionGrantTest::TearDownTestCase()
 {
@@ -84,7 +92,6 @@ void BmsBundlePermissionGrantTest::TearDownTestCase()
 void BmsBundlePermissionGrantTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundlePermissionGrantTest::TearDown()
