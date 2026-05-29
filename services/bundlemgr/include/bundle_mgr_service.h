@@ -161,8 +161,6 @@ public:
     sptr<IOverlayManager> GetOverlayManagerProxy() const;
 #endif
 
-    bool IsBrokerServiceStarted() const;
-
     int32_t OnExtension(const std::string& extension, MessageParcel& data, MessageParcel& reply) override;
 
 protected:
@@ -197,7 +195,6 @@ private:
     bool ready_ = false;
     bool registerToService_ = false;
     bool notifyBundleScanStatus = false;
-    std::atomic<bool> isBrokerServiceStarted_ = false;
     std::shared_ptr<BMSEventHandler> handler_;
     std::shared_ptr<BundleDataMgr> dataMgr_;
     std::shared_ptr<HidumpHelper> hidumpHelper_;

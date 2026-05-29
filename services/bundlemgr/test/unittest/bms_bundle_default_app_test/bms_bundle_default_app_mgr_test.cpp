@@ -1281,22 +1281,6 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, GetBrokerBundleInfo_0200, Function | SmallT
 }
 
 /**
- * @tc.number: GetBrokerBundleInfo_0300
- * @tc.name: Test GetBrokerBundleInfo by DefaultAppMgr
- * @tc.desc: 1.GetBrokerBundleInfo
- */
-HWTEST_F(BmsBundleDefaultAppMgrTest, GetBrokerBundleInfo_0300, Function | SmallTest | Level1)
-{
-    Element element;
-    element.bundleName = BUNDLE_NAME;
-    element.abilityName = ABILITY_NAME;
-    BundleInfo bundleInfo;
-    DelayedSingleton<BundleMgrService>::GetInstance()->isBrokerServiceStarted_ = true;
-    auto ret = DefaultAppMgr::GetInstance().GetBrokerBundleInfo(element, bundleInfo);
-    EXPECT_FALSE(ret);
-}
-
-/**
  * @tc.number: IsSpecificMimeType_0100
  * @tc.name: Test IsSpecificMimeType by DefaultAppMgr
  * @tc.desc: 1.IsSpecificMimeType

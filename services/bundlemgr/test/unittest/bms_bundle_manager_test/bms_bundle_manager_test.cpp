@@ -3320,7 +3320,6 @@ HWTEST_F(BmsBundleManagerTest, GetBundleInfosV9_0001, Function | MediumTest | Le
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT), bundleInfos, USERID);
     EXPECT_EQ(ret1, ERR_OK);
 
-    hostImpl->isBrokerServiceExisted_ = true;
     ErrCode ret2 = hostImpl->GetBundleInfosV9(
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT), bundleInfos, USERID);
     EXPECT_EQ(ret2, ERR_OK);

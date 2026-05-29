@@ -9478,9 +9478,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetNameForUidImpl_0100, Function | SmallTest |
     ASSERT_NE(hostImpl, nullptr);
     auto ret = hostImpl->GetNameForUid(DEMO_UID, name);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
-    hostImpl->isBrokerServiceExisted_ = true;
-    ret = hostImpl->GetNameForUid(DEMO_UID, name);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**

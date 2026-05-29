@@ -230,6 +230,8 @@ constexpr const char* ENTERPRISE_SPACE_USER_ID_LIST = "persist.space_mgr_service
 constexpr const char* RELABEL_PARAM = "persist.bms.test.relabel";
 constexpr const char* BMS_RELABEL_PARAM = "const.bms.relabel";
 constexpr const char* HAP_BIN_INSTALL_ENABLE = "const.bms.bin_install";
+constexpr const char* ENABLE_HMOS_SERVICE_BROKER = "persist.hmos_fusion_mgr.ctl.support_hmos";
+constexpr const char* ENABLE_FUSION = "persist.win_service_broker.ctl.bms_vm_enable";
 //extResource
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
 // hmdfs and sharefs config

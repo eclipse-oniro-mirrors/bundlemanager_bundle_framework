@@ -195,6 +195,9 @@ const std::string TEST_EXTENSION_TYPE_NAME = "extension_type_name";
 const std::string TEST_PATH = "../test";
 const std::string TEST_ERROR_STRING = "test.error.string";
 const int32_t TEST_EL5_USERID = 2000;
+enum {
+    BMS_BROKER_ERR_UNINSTALL_FAILED = 8585218,
+};
 }  // namespace
 
 class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
@@ -7348,6 +7351,122 @@ HWTEST_F(BmsBundleInstallerTest, UninstallBundleFromBmsExtension_0200, Function 
     auto ret = installer.UninstallBundleFromBmsExtension(BUNDLE_BACKUP_NAME);
     EXPECT_NE(ret, ERR_OK);
     UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: UninstallBundleFromBmsExtension_0300
+ * @tc.name: test UninstallBundleFromBmsExtension
+ * @tc.desc: test UninstallBundleFromBmsExtension of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallBundleFromBmsExtension_0300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    auto ret = installer.UninstallBundleFromBmsExtension("");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+}
+
+/**
+ * @tc.number: UninstallBundleFromBmsExtension_0400
+ * @tc.name: test UninstallBundleFromBmsExtension
+ * @tc.desc: test UninstallBundleFromBmsExtension of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallBundleFromBmsExtension_0400, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    auto ret = installer.UninstallBundleFromBmsExtension("");
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #else
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+    #endif
+    if (isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+}
+
+/**
+ * @tc.number: UninstallBundleFromBmsExtension_0500
+ * @tc.name: test UninstallBundleFromBmsExtension
+ * @tc.desc: test UninstallBundleFromBmsExtension of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallBundleFromBmsExtension_0500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
+    auto ret = installer.UninstallBundleFromBmsExtension("");
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, BMS_BROKER_ERR_UNINSTALL_FAILED);
+    #else
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+    #endif
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    if (isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+}
+
+/**
+ * @tc.number: UninstallBundleFromBmsExtension_0600
+ * @tc.name: test UninstallBundleFromBmsExtension
+ * @tc.desc: test UninstallBundleFromBmsExtension of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallBundleFromBmsExtension_0600, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
+    }
+    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
+    }
+    auto ret = installer.UninstallBundleFromBmsExtension("");
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, BMS_BROKER_ERR_UNINSTALL_FAILED);
+    #else
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+    #endif
+    if (!isEnableHmos) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
+    }
+    if (!isEnableFusion) {
+        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
+    }
 }
 
 /**

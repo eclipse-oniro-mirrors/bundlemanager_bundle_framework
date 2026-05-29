@@ -38,6 +38,7 @@
 #include "ipc_skeleton.h"
 #include "mime_type_mgr.h"
 #include "parameter.h"
+#include "parameters.h"
 #include "scope_guard.h"
 #include "string_ex.h"
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
@@ -1644,6 +1645,17 @@ bool BundleUtil::IsExecutableBinaryFile(const std::string &filePath)
     }
     (void)fclose(fp);
     return isExec;
+}
+
+bool BundleUtil::IsVmEnabled()
+{
+    bool isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
+    bool isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
+    APP_LOGD("Get system parameter isEnableHmos: %{public}d, isEnableFusion: %{public}d", isEnableHmos, isEnableFusion);
+    if (isEnableHmos || isEnableFusion) {
+        return true;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

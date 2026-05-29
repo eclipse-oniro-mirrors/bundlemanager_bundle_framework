@@ -364,10 +364,8 @@ bool BundleMgrHostImpl::GetBundleInfo(
     }
     bool res = dataMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId);
     if (!res) {
-        if (IsQueryBundleInfoExt(static_cast<uint32_t>(flags))) {
-            auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-            return bmsExtensionClient->GetBundleInfo(bundleName, flags, bundleInfo, userId) == ERR_OK;
-        }
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        return bmsExtensionClient->GetBundleInfo(bundleName, flags, bundleInfo, userId) == ERR_OK;
     }
     return res;
 }
@@ -427,11 +425,9 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
     }
     auto res = dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
     if (res != ERR_OK) {
-        if (IsQueryBundleInfoExt(static_cast<uint32_t>(flags))) {
-            auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-            if (bmsExtensionClient->GetBundleInfo(bundleName, flags, bundleInfo, userId, true) == ERR_OK) {
-                return ERR_OK;
-            }
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        if (bmsExtensionClient->GetBundleInfo(bundleName, flags, bundleInfo, userId, true) == ERR_OK) {
+            return ERR_OK;
         }
         QueryEventInfo info = PrepareQueryEvent(res, bundleName, "GetBundleInfoV9", -1, userId, 0, flags);
         SendQueryBundleInfoEvent(info, intervalTime, false);
@@ -534,10 +530,9 @@ ErrCode BundleMgrHostImpl::BatchGetBundleInfo(const std::vector<std::string> &bu
     if (bundleInfos.size() == bundleNames.size()) {
         return ERR_OK;
     }
-    if (IsQueryBundleInfoExt(static_cast<uint32_t>(flags))) {
-        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-        bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId, true);
-    }
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId, true);
+
     return bundleInfos.empty() ? ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST : ERR_OK;
 }
 
@@ -671,10 +666,8 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
         return false;
     }
     dataMgr->GetBundleInfos(flags, bundleInfos, userId);
-    if (IsQueryBundleInfoExt(static_cast<uint32_t>(flags))) {
-        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-        bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId);
-    }
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId);
     APP_LOGI_NOFUNC("GetBundleInfos size:%{public}zu", bundleInfos.size());
     return !bundleInfos.empty();
 }
@@ -705,7 +698,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
     bool getCloud = (static_cast<uint32_t>(flags) &
         static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT))
         == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT);
-    if (IsQueryBundleInfoExt(static_cast<uint32_t>(flags)) && !getMenu && !getCloud) {
+    if (!getMenu && !getCloud) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         if (bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId, true) == ERR_OK) {
             LOG_D(BMS_TAG_QUERY, "query bundle infos from bms extension successfully");
@@ -831,7 +824,7 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     auto ret = dataMgr->GetNameForUid(uid, name);
-    if (ret != ERR_OK && isBrokerServiceExisted_) {
+    if (ret != ERR_OK) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         ret = bmsExtensionClient->GetBundleNameByUid(uid, name);
         if (ret != ERR_OK) {
@@ -874,7 +867,7 @@ ErrCode BundleMgrHostImpl::GetNameAndIndexForUid(const int uid, std::string &bun
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     auto ret = dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
-    if (ret != ERR_OK && isBrokerServiceExisted_) {
+    if (ret != ERR_OK) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         ret = bmsExtensionClient->GetBundleNameByUid(uid, bundleName);
         if (ret != ERR_OK) {
@@ -1203,7 +1196,7 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
     }
     bool res = dataMgr->QueryAbilityInfo(want, flags, userId, abilityInfo);
     if (!res) {
-        if (!IsAppLinking(flags) && IsQueryAbilityInfoExtWithoutBroker(static_cast<uint32_t>(flags))) {
+        if (!IsAppLinking(flags)) {
             auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
             return (bmsExtensionClient->QueryAbilityInfo(want, flags, userId, abilityInfo) == ERR_OK);
         }
@@ -1240,7 +1233,7 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
         return false;
     }
     dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
-    if (!IsAppLinking(flags) && IsQueryAbilityInfoExt(static_cast<uint32_t>(flags))) {
+    if (!IsAppLinking(flags)) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos);
     }
@@ -1270,7 +1263,7 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
     }
     auto res = dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (!IsAppLinking(flags) && IsQueryAbilityInfoExtWithoutBroker(static_cast<uint32_t>(flags)) &&
+    if (!IsAppLinking(flags) &&
         bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos, true) == ERR_OK) {
         LOG_D(BMS_TAG_QUERY, "query ability infos from bms extension successfully");
         return ERR_OK;
@@ -1330,7 +1323,7 @@ ErrCode BundleMgrHostImpl::BatchQueryAbilityInfos(
     }
     auto res = dataMgr->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (!IsAppLinking(flags) && IsQueryAbilityInfoExt(static_cast<uint32_t>(flags)) &&
+    if (!IsAppLinking(flags) &&
         bmsExtensionClient->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos, true) == ERR_OK) {
         APP_LOGD("query ability infos from bms extension successfully");
         return ERR_OK;
@@ -2212,7 +2205,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
-    if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
+    if (BundleUtil::IsVmEnabled() && !IsBundleExist(bundleName)) {
         return ClearCache(bundleName, cleanCacheCallback, userId, callingUid, callingBundleName);
     }
 
@@ -2395,7 +2388,7 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
             callingUid, callingBundleName);
         return false;
     }
-    if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
+    if (BundleUtil::IsVmEnabled() && !IsBundleExist(bundleName)) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         ErrCode ret = bmsExtensionClient->ClearData(bundleName, userId);
         APP_LOGI("ret : %{public}d", ret);
@@ -4014,7 +4007,7 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         return ret;
     }
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (!IsAppLinking(flags) && IsQueryAbilityInfoExt(static_cast<uint32_t>(flags)) &&
+    if (!IsAppLinking(flags) &&
         bmsExtensionClient->ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, false) == ERR_OK) {
         APP_LOGD("implicitly query from bms extension successfully");
         FilterAbilityInfos(abilityInfos);
@@ -4176,7 +4169,7 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
             return false;
         }
     }
-    if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
+    if (!IsBundleExist(bundleName)) {
         UninstallBundleInfo uninstallBundleInfo;
         if (!dataMgr->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
             APP_LOGD("bundle is not existed and not uninstalled with keepdata before");
@@ -5107,12 +5100,6 @@ bool BundleMgrHostImpl::GetGroupDir(const std::string &dataGroupId, std::string 
     }
     int32_t userId = AccountHelper::GetUserIdByCallerType();
     return dataMgr->GetGroupDir(dataGroupId, dir, userId);
-}
-
-void BundleMgrHostImpl::SetBrokerServiceStatus(bool isServiceExisted)
-{
-    APP_LOGD("broker service status is %{public}d", isServiceExisted);
-    isBrokerServiceExisted_ = isServiceExisted;
 }
 
 bool BundleMgrHostImpl::QueryAppGalleryBundleName(std::string &bundleName)
@@ -6128,11 +6115,9 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfoExt(const std::string &bundleName, 
     }
     auto res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
     if (res != ERR_OK) {
-        if (IsQueryBundleInfoExt(static_cast<uint32_t>(flags))) {
-            auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-            if (bmsExtensionClient->GetBundleInfo(bundleName, flags, bundleInfo, userId, true) == ERR_OK) {
-                return ERR_OK;
-            }
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        if (bmsExtensionClient->GetBundleInfo(bundleName, flags, bundleInfo, userId, true) == ERR_OK) {
+            return ERR_OK;
         }
         APP_LOGE_NOFUNC("GetCloneBundleInfoExt fail -n %{public}s -u %{public}d -i %{public}d -f %{public}d"
             " err:%{public}d", bundleName.c_str(), userId, appIndex, flags, res);
@@ -6201,11 +6186,12 @@ ErrCode BundleMgrHostImpl::GetAllBundleNames(const uint32_t flags, int32_t userI
         return ERR_APPEXECFWK_NULL_PTR;
     }
     auto ret = dataMgr->GetAllBundleNames(flags, userId, bundleNames);
-    if (withExtBundle && isBrokerServiceExisted_) {
+    if (withExtBundle) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         std::vector<BundleInfo> bundleInfos;
-        ErrCode res = bmsExtensionClient->GetBundleInfos(flags &
-            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY), bundleInfos, userId);
+        ErrCode res = bmsExtensionClient->GetBundleInfos((flags &
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY)) |
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_FUSION), bundleInfos, userId);
         if (res == ERR_OK) {
             std::for_each(bundleInfos.begin(), bundleInfos.end(), [&bundleNames](const auto& bundleInfo) {
                 bundleNames.push_back(bundleInfo.name);
@@ -7475,45 +7461,6 @@ ErrCode BundleMgrHostImpl::GetBundleInstallStatus(const std::string &bundleName,
     }
     dataMgr->GetBundleInstallStatus(bundleName, userId, bundleInstallStatus);
     return ERR_OK;
-}
-
-bool BundleMgrHostImpl::IsQueryBundleInfoExt(const uint32_t flags) const
-{
-    if (!isBrokerServiceExisted_) {
-        return false;
-    }
-    if ((flags &
-        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT)) ==
-        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT)) {
-        APP_LOGI("no need to query bundle info from bms extension");
-        return false;
-    }
-    return true;
-}
-
-bool BundleMgrHostImpl::IsQueryAbilityInfoExt(const uint32_t flags) const
-{
-    if (!isBrokerServiceExisted_) {
-        return false;
-    }
-    if ((flags &
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXT)) ==
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXT)) {
-        APP_LOGI("no need to query ability info from bms extension");
-        return false;
-    }
-    return true;
-}
-
-bool BundleMgrHostImpl::IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags) const
-{
-    if ((flags &
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXT)) ==
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXT)) {
-        APP_LOGI("no need to query ability info from bms extension");
-        return false;
-    }
-    return true;
 }
 
 ErrCode BundleMgrHostImpl::GetAllJsonProfile(ProfileType profileType, int32_t userId,
