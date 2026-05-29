@@ -296,27 +296,25 @@ HWTEST_F(BmsDynamicSkillsTest, SetAbilityFileTypesForSelf_0700, Function | Small
 /**
  * @tc.number: SetAbilityFileTypesForSelf_0800
  * @tc.name: SetAbilityFileTypesForSelf_0800
- * @tc.desc: 1.test GetInnerSkillInfos
+ * @tc.desc: 1.test GetMergedSkills
  */
 HWTEST_F(BmsDynamicSkillsTest, SetAbilityFileTypesForSelf_0800, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
-    InnerAbilityInfo innerAbilityInfo;
-    innerAbilityInfo.skills = BuildSkillsVector(1);
-    info.baseAbilityInfos_ = {{KEY, innerAbilityInfo}};
-    auto skillInfos = info.GetInnerSkillInfos();
-    EXPECT_EQ(skillInfos.size(), 1);
-    auto item = skillInfos.begin();
-    EXPECT_EQ(item->first, KEY);
-    EXPECT_EQ(item->second.size(), 1);
+    std::vector<Skill> skills;
+    std::vector<Skill> mergedBuffer;
+    auto ret = info.GetMergedSkills(KEY, skills, mergedBuffer);
+    EXPECT_TRUE(ret.empty());
+    
+    info.dynamicSkills_ = {{KEY, BuildSkillsVector(1)}, {KEY2, skills}};
+    ret = info.GetMergedSkills("", skills, mergedBuffer);
+    EXPECT_TRUE(ret.empty());
+    ret = info.GetMergedSkills(KEY2, skills, mergedBuffer);
+    EXPECT_TRUE(ret.empty());
 
-    info.dynamicSkills_ = {{KEY, BuildSkillsVector(1)}};
-    skillInfos = info.GetInnerSkillInfos();
-    EXPECT_EQ(skillInfos.size(), 1);
-    item = skillInfos.begin();
-    EXPECT_EQ(item->first, KEY);
-    size_t expectSize = 2;
-    EXPECT_EQ(item->second.size(), expectSize);
+    ret = info.GetMergedSkills(KEY, skills, mergedBuffer);
+    EXPECT_FALSE(ret.empty());
+    EXPECT_EQ(ret.size(), 1);
 }
 
 /**

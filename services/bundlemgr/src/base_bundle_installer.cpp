@@ -8382,9 +8382,10 @@ void BaseBundleInstaller::VerifyDomain()
         ClearDomainVerifyStatus(appIdentifier, bundleName_);
     }
     std::vector<AppDomainVerify::SkillUri> skillUris;
-    std::map<std::string, std::vector<Skill>> skillInfos = bundleInfo.GetInnerSkillInfos();
-    for (const auto &skillInfo : skillInfos) {
-        PrepareSkillUri(skillInfo.second, skillUris);
+    for (const auto &abilityInfo : bundleInfo.GetInnerAbilityInfos()) {
+        std::vector<Skill> mergedBuffer;
+        auto &skills = bundleInfo.GetMergedSkills(abilityInfo.first, abilityInfo.second.skills, mergedBuffer);
+        PrepareSkillUri(skills, skillUris);
     }
     if (skillUris.empty()) {
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "no skill uri need to verify domain");
