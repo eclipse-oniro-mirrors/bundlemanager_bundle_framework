@@ -936,6 +936,9 @@ public:
     virtual bool QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo) override;
 
+    virtual bool QueryExtensionAbilityInfoByUriOptimal(const std::string &uri, int32_t userId,
+        ExtensionAbilityInfo &extensionAbilityInfo) override;
+
     virtual std::string GetAppIdByBundleName(const std::string &bundleName, const int userId) override;
 
     virtual std::string GetAppType(const std::string &bundleName) override;

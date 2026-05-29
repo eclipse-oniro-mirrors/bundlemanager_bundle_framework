@@ -831,6 +831,9 @@ public:
     bool QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo) const;
 
+    bool QueryExtensionAbilityInfoByUriOptimal(const std::string &uri, int32_t userId,
+        ExtensionAbilityInfo &extensionAbilityInfo) const;
+
     ErrCode AddInnerBundleUserInfo(const std::string &bundleName, const InnerBundleUserInfo& newUserInfo);
 
     bool RemoveInnerBundleUserInfo(const std::string &bundleName, int32_t userId);

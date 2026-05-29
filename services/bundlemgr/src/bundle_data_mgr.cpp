@@ -8252,6 +8252,75 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
     return false;
 }
 
+bool BundleDataMgr::QueryExtensionAbilityInfoByUriOptimal(const std::string &uri, int32_t userId,
+    ExtensionAbilityInfo &extensionAbilityInfo) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal invalid userId");
+        return false;
+    }
+    if (uri.empty()) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal uri empty");
+        return false;
+    }
+    std::string convertUri = uri;
+    size_t schemePos = uri.find(PARAM_URI_SEPARATOR);
+    if (schemePos != uri.npos) {
+        size_t cutPos = uri.find(ServiceConstants::PATH_SEPARATOR, schemePos + PARAM_URI_SEPARATOR_LEN);
+        if (cutPos != uri.npos) {
+            convertUri = uri.substr(0, cutPos);
+        }
+        convertUri.replace(schemePos, PARAM_URI_SEPARATOR_LEN, URI_SEPARATOR);
+    } else {
+        if (convertUri.compare(0, DATA_PROXY_URI_PREFIX_LEN, DATA_PROXY_URI_PREFIX) != 0) {
+            LOG_NOFUNC_W(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal invalid uri");
+            return false;
+        }
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal bundleInfos_ empty");
+        return false;
+    }
+    ExtensionAbilityInfo normalResult;
+    bool hasNormalResult = false;
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &info = item.second;
+        if (info.IsDisabled()) {
+            LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal app %{public}s disabled",
+                info.GetBundleName().c_str());
+            continue;
+        }
+        int32_t responseUserId = info.GetResponseUserId(requestUserId);
+        if (!info.GetApplicationEnabled(responseUserId)) {
+            continue;
+        }
+        ExtensionAbilityInfo tmpInfo;
+        bool ret = info.FindExtensionAbilityInfoByUri(convertUri, tmpInfo);
+        if (!ret) {
+            continue;
+        }
+        info.GetApplicationInfo(
+            ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
+            tmpInfo.applicationInfo);
+        if (info.IsSystemApp()) {
+            extensionAbilityInfo = tmpInfo;
+            return true;
+        }
+        if (!hasNormalResult) {
+            normalResult = tmpInfo;
+            hasNormalResult = true;
+        }
+    }
+    if (hasNormalResult) {
+        extensionAbilityInfo = normalResult;
+        return true;
+    }
+    LOG_NOFUNC_W(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal (%{public}s) failed", convertUri.c_str());
+    return false;
+}
+
 std::string BundleDataMgr::GetStringById(const std::string &bundleName, const std::string &moduleName,
     uint32_t resId, int32_t userId, const std::string &localeInfo)
 {

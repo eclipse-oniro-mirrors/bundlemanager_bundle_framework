@@ -3414,6 +3414,37 @@ bool BundleMgrProxy::QueryExtensionAbilityInfoByUri(const std::string &uri, int3
     return true;
 }
 
+bool BundleMgrProxy::QueryExtensionAbilityInfoByUriOptimal(const std::string &uri, int32_t userId,
+    ExtensionAbilityInfo &extensionAbilityInfo)
+{
+    LOG_D(BMS_TAG_QUERY, "begin to QueryExtensionAbilityInfoByUriOptimal");
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (uri.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal uri is empty");
+        return false;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal write MessageParcel fail");
+        return false;
+    }
+    if (!data.WriteString(uri)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal write uri fail");
+        return false;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal write userId fail");
+        return false;
+    }
+
+    if (!GetParcelableInfo<ExtensionAbilityInfo>(
+        BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_BY_URI_OPTIMAL, data, extensionAbilityInfo)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal failed from server");
+        return false;
+    }
+    return true;
+}
+
 bool BundleMgrProxy::ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo)
 {
