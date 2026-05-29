@@ -459,9 +459,20 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     }
 
     std::vector<std::string> realPaths;
-    if (!bundleFilePaths.empty() && !BundleFileUtil::CheckFilePath(bundleFilePaths, realPaths)) {
-        LOG_E(BMS_TAG_INSTALLER, "stream install failed due to check file failed");
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    if (!bundleFilePaths.empty()) {
+        if (!installParam.IsSupportDataCloneInstall() && !BundleFileUtil::CheckFilePath(bundleFilePaths, realPaths)) {
+            LOG_E(BMS_TAG_INSTALLER, "stream install failed due to check file failed");
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        } else if (installParam.IsSupportDataCloneInstall()) {
+            if (bundleFilePaths.size() != 1) {
+                LOG_E(BMS_TAG_INSTALLER, "stream install failed due to data clone install only support one hap file");
+                return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+            }
+            if (!BundleFileUtil::GetHapFilesFromCloneDir(bundleFilePaths[0], realPaths)) {
+                LOG_E(BMS_TAG_INSTALLER, "stream install failed due to get hap files from clone dir failed");
+                return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+            }
+        }
     }
 
     sptr<IBundleStreamInstaller> streamInstaller = CreateStreamInstaller(installParam, statusReceiver, realPaths);

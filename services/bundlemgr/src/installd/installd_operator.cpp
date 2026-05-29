@@ -1360,6 +1360,64 @@ std::string InstalldOperator::GetPathDir(const std::string &path)
     return path.substr(0, pos + 1);
 }
 
+ bool InstalldOperator::ChangeDirModeRecursively(const std::string &path, mode_t fileMode, mode_t dirMode)
+{
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        LOG_D(BMS_TAG_INSTALLD, "fail to opendir:%{public}s, errno:%{public}d", path.c_str(), errno);
+        return false;
+    }
+
+    // Lambda to ensure resource safety on exit
+    auto failAndClose = [&]() {
+        closedir(dir);
+        return false;
+    };
+
+    #ifdef WITH_SELINUX
+        constexpr const char* SELINUX_CONTEXT = "u:object_r:data_app_el1_file:s0";
+        if (lsetfilecon(path.c_str(), SELINUX_CONTEXT) < 0) {
+            LOG_E(BMS_TAG_INSTALLD, "setcon %{public}s failed errno:%{public}d", path.c_str(), errno);
+            return failAndClose();
+        }
+    #endif
+
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
+            continue;
+        }
+
+        std::string subPath = path + ServiceConstants::PATH_SEPARATOR + ptr->d_name;
+
+        #ifdef WITH_SELINUX
+                if (lsetfilecon(subPath.c_str(), SELINUX_CONTEXT) < 0) {
+                    LOG_E(BMS_TAG_INSTALLD, "setcon %{public}s failed errno:%{public}d", subPath.c_str(), errno);
+                    return failAndClose();
+                }
+        #endif
+
+        if (ptr->d_type == DT_DIR) {
+            if (!ChangeDirModeRecursively(subPath, fileMode, dirMode)) {
+                return failAndClose();
+            }
+        }
+
+        if (chmod(subPath.c_str(), ptr->d_type == DT_DIR ? dirMode : fileMode) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "change mode for %{public}s failed, errno:%{public}d", subPath.c_str(), errno);
+            return failAndClose();
+        }
+    }
+    closedir(dir);
+
+    if (chmod(path.c_str(), dirMode) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "change mode for %{public}s failed, errno:%{public}d", path.c_str(), errno);
+        return false;
+    }
+    return true;
+}
+
+
 bool InstalldOperator::ChangeDirOwnerRecursively(const std::string &path, const int uid, const int gid)
 {
     std::string subPath;

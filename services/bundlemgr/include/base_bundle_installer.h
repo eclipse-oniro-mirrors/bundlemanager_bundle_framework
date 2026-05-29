@@ -1061,6 +1061,7 @@ private:
     bool isBundleCrossAppSharedConfig_ = false;
     bool isHnpInstalled_ = false;
     bool isKeepTokenId_ = false;
+    bool supportDataCloneInstall_ = false;
     bool hasShareFilesProcessed_ = false;
     bool hasOldShareFilesJsonSaved_ = false;
     InstallerState state_ = InstallerState::INSTALL_START;
