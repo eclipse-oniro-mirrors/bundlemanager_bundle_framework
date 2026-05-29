@@ -172,10 +172,10 @@ static const std::map<BundleDirScene, std::vector<std::string>> ALLOWED_PATH_PRE
     {BundleDirScene::VERIFY_CODE_SIGNATURE, {"/data/app/el1/bundle/"}},
     {BundleDirScene::REMOVE_EXTENSION_DIR, {"/data/app/el1/"}},
     {BundleDirScene::CLEAN_BUNDLE_DATA_DIR, {"/data/app/", "/data/local/shader_cache/"}},
-    {BundleDirScene::CHANGE_BMS_FILE_STAT, { "/data/service/el1/public/bms/bundle_manager_service/app_install/" }},
+    {BundleDirScene::CHANGE_BMS_FILE_STAT, { "/data/service/el1/public/bms/bundle_manager_service/app_install" }},
     {BundleDirScene::GET_BUNDLE_CACHE_PATH,
-        { "/data/app/el1/", "/data/app/el2/", "/data/app/el3/", "/data/app/el4/" }},
-    {BundleDirScene::SCAN_DIR, { "/data/app/el1/" }},
+        { "/data/app/el1", "/data/app/el2", "/data/app/el3", "/data/app/el4" }},
+    {BundleDirScene::SCAN_DIR, { "/data/app/el1" }},
     {BundleDirScene::OBTAIN_QUICK_FIX_FILE_DIR, { "/data/app/el1/bundle/public" }},
     {BundleDirScene::HASH_SO_FILE, { "/data/app/el1/bundle/public" }},
 };
