@@ -4040,6 +4040,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    createDirParam.sessionId = sessionId_;
 
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
@@ -5743,6 +5744,7 @@ bool BaseBundleInstaller::UpdateExtensionDirsApl(const std::vector<std::string> 
         createDirParam.apl = info.GetAppPrivilegeLevel();
         createDirParam.isPreInstallApp = info.IsPreInstallApp();
         createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+        createDirParam.sessionId = sessionId_;
         createDirParam.extensionDirs.assign(updateExtensionDirs.begin(), updateExtensionDirs.end());
         auto result = InstalldClient::GetInstance()->SetDirsApl(createDirParam, true);
         if (result != ERR_OK) {
@@ -7001,6 +7003,7 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
 void BaseBundleInstaller::ResetInstallProperties()
 {
     bundleInstallChecker_->ResetProperties();
+    SetCheckResultMsg("");
     isContainEntry_ = false;
     isAppExist_ = false;
     hasInstalledInUser_ = false;
@@ -7033,6 +7036,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     targetSoPathMap_.clear();
     isAppService_ = false;
     sessionCommitted_ = false;
+    sessionId_ = 0;
     modulePathMap_.clear();
     aggregatedRequestPermissions_.clear();
     oldApplicationReservedFlag_ = 0;
@@ -7466,12 +7470,9 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &
     codeSignatureParam.cpuAbi = cpuAbi;
     codeSignatureParam.targetSoPath = targetSoPath;
     codeSignatureParam.signatureFileDir = signatureFileDir;
-    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
-    codeSignatureParam.isInternaltestingBundle = isInternaltestingBundle_;
-    codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isPreInstalledBundle = IsDataPreloadHap(modulePath_) ? false : info.IsPreInstallApp();
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
-    bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
+    bundleInstallChecker_->ProcessCodeSignatureParam(sessionId_, verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
@@ -7503,13 +7504,10 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     codeSignatureParam.cpuAbi = cpuAbi;
     codeSignatureParam.modulePath = realHapPath;
     codeSignatureParam.signatureFileDir = signatureFileDir;
-    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
-    codeSignatureParam.isInternaltestingBundle = isInternaltestingBundle_;
-    codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.isPreInstalledBundle = IsDataPreloadHap(realHapPath) ? false : info.IsPreInstallApp();
     codeSignatureParam.isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
-    bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
+    bundleInstallChecker_->ProcessCodeSignatureParam(sessionId_, verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
@@ -8257,8 +8255,8 @@ ErrCode BaseBundleInstaller::DeliveryProfileToCodeSign() const
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
         provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING ||
         provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
-        return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
-            provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
+        // SPM mode: installd queries profileBlock via sessionId
+        return InstalldClient::GetInstance()->DeliverySignProfile(bundleName_, sessionId_);
     }
     return ERR_OK;
 }
@@ -8569,6 +8567,10 @@ ErrCode BaseBundleInstaller::DeleteArkStartupCache(const std::string &cacheDir,
 void BaseBundleInstaller::SetVerifyPermissionResult(const Security::AccessToken::HapInfoCheckResult &checkResult)
 {
     auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+    if (result.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "result empty");
+        return;
+    }
     SetCheckResultMsg(result);
     LOG_NOFUNC_E(BMS_TAG_INSTALLER, "%{public}s", result.c_str());
 }

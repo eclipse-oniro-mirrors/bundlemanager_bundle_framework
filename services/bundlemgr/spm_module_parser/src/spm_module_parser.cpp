@@ -33,6 +33,8 @@ constexpr const char* KEY_APP_TARGET_API_VERSION = "targetAPIVersion";
 constexpr const char* KEY_MODULE_NAME = "name";
 constexpr const char* KEY_MODULE_SKILL_PROFILES = "skillProfiles";
 constexpr const char* KEY_MODULE_REQUEST_PERMISSIONS = "requestPermissions";
+constexpr const char* KEY_MODULE_REQ_PERMISSIONS = "reqPermissions";
+
 constexpr const char* KEY_MODULE_DEFINE_PERMISSIONS = "definePermissions";
 // skillProfile fields
 constexpr const char* KEY_SKILL_PROFILE_NAME = "name";
@@ -157,7 +159,10 @@ bool ParseRequestPermissions(const nlohmann::json &moduleObj, std::vector<Reques
 {
     auto it = moduleObj.find(KEY_MODULE_REQUEST_PERMISSIONS);
     if (it == moduleObj.end()) {
-        return true; // optional field
+        it = moduleObj.find(KEY_MODULE_REQ_PERMISSIONS);
+        if (it == moduleObj.end()) {
+            return true; // optional field
+        }
     }
     if (!it->is_array()) {
         return false;

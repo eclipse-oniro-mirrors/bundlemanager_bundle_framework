@@ -303,6 +303,7 @@ ErrCode BundleMultiUserInstaller::CreateDataDir(InnerBundleInfo &info,
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    createDirParam.sessionId = sessionId_;
     createDirParam.extensionDirs = info.GetAllExtensionDirs();
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {

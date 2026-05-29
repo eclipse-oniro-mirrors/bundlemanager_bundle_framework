@@ -15095,29 +15095,6 @@ HWTEST_F(BmsBundleInstallerTest, VerifyCodeSignatureForHap_0100, Function | Smal
 }
 
 /**
- * @tc.number: DeliverySignProfile_0100
- * @tc.name: test DeliverySignProfile
- * @tc.desc: test DeliverySignProfile of InstalldHostImpl
- */
-HWTEST_F(BmsBundleInstallerTest, DeliverySignProfile_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    std::string bundleName = TEST_EMPTY_STRING;
-    int32_t profileBlockLength = ZERO_CODE;
-    const unsigned char* profileBlock = new unsigned char[0];
-    ErrCode ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    bundleName = TEST_ERROR_STRING;
-    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, nullptr);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    profileBlockLength = TEST_LENGTH;
-    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_CODE_SIGNATURE_DELIVERY_FILE_FAILED);
-}
-
-/**
  * @tc.number: AddCertAndEnableKey_0100
  * @tc.name: test AddCertAndEnableKey
  * @tc.desc: test AddCertAndEnableKey of InstalldHostImpl

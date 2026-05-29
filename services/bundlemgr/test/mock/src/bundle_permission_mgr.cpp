@@ -198,7 +198,8 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, con
 {
     return false;
 }
-int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId, bool isTokenReserved)
+int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId,
+	    const std::string &bundleName, Security::AccessToken::ReservedType type)
 {
     return -1;
 }
@@ -207,7 +208,8 @@ bool BundlePermissionMgr::VerifyAcrossUserPermission(int userId)
     return false;
 }
 #else
-int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId, bool isTokenReserved)
+int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId,
+	    const std::string &bundleName, Security::AccessToken::ReservedType type)
 {
     return 0;
 }
@@ -462,34 +464,34 @@ Security::AccessToken::HapInfoParams CreateHapInfoParams(const InnerBundleInfo &
 }
 
 #ifdef BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE
-int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
-    const bool isDebugGrant)
+    const std::string &appServiceCapabilities,
+    const bool isDebugGrant, int32_t &sessionId)
 {
     return -1;
 }
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-    const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
+    InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
     const std::string &appServiceCapabilities, bool dataRefresh,
-    const bool isDebugGrant)
+    const bool isDebugGrant, int32_t sessionId)
 {
     return -1;
 }
 #else
-int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
-    const bool isDebugGrant)
+    const std::string &appServiceCapabilities,
+    const bool isDebugGrant, int32_t &sessionId)
 {
     return 0;
 }
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-    const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
+    InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
     const std::string &appServiceCapabilities, bool dataRefresh,
-    const bool isDebugGrant)
+    const bool isDebugGrant, int32_t sessionId)
 {
     return 0;
 }
@@ -497,6 +499,58 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
 std::string BundlePermissionMgr::GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult)
 {
     return "";
+}
+Security::AccessToken::BundlePolicy BundlePermissionMgr::CreateBundlePolicy(
+    const InnerBundleInfo &innerBundleInfo, const bool isDebugGrant, int32_t dlpType)
+{
+    Security::AccessToken::BundlePolicy policy;
+    return policy;
+}
+
+Security::AccessToken::HapBaseInfo BundlePermissionMgr::CreateHapBaseInfo(
+    const InnerBundleInfo &innerBundleInfo, const int32_t userId)
+{
+    Security::AccessToken::HapBaseInfo hapBaseInfo;
+    hapBaseInfo.userID = userId;
+    hapBaseInfo.bundleName = innerBundleInfo.GetBundleName();
+    hapBaseInfo.instIndex = innerBundleInfo.GetAppIndex();
+    return hapBaseInfo;
+}
+
+int32_t BundlePermissionMgr::PrepareHapIdentity(
+    const InnerBundleInfo &innerBundleInfo,
+    int32_t userId, int32_t dlpType, bool isDebugGrant,
+    const std::string &appServiceCapabilities,
+    int32_t &sessionId,
+    Security::AccessToken::Identity &identity)
+{
+    identity.uid = 20000000;
+    identity.tokenId = 1;
+    return 0;
+}
+
+int32_t BundlePermissionMgr::UpdateHapPolicy(
+    int32_t sessionId,
+    int32_t tokenId,
+    const InnerBundleInfo &innerBundleInfo,
+    bool isDebugGrant,
+    const std::string &appServiceCapabilities)
+{
+    return 0;
+}
+
+int32_t BundlePermissionMgr::CheckHapPermissionInfo(int32_t sessionId,
+    Security::AccessToken::InstallTypeEnum type, Security::AccessToken::HapInfoCheckResult &checkResult)
+{
+    return 0;
+}
+
+int32_t BundlePermissionMgr::FinishHapInstall(
+    int32_t sessionId,
+    bool isSuccess,
+    const std::map<std::string, std::string> &modulePathMap)
+{
+    return 0;
 }
 } // AppExecFwk
 } // OHOS

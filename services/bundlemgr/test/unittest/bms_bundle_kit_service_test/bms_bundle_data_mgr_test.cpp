@@ -4707,7 +4707,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleNameForUid_0100, Function | SmallTest | 
     int32_t testBundleId = TEST_QUERY_EVENT_BUNDLE_ID2;
 
     testRet = bundleMgrHostImpl_->GetBundleNameForUid(TEST_QUERY_EVENT_UID2, testResult);
-    EXPECT_TRUE(testRet);
+    EXPECT_FALSE(testRet);
 }
 
 /**

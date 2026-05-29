@@ -311,6 +311,7 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     createDirParam.isDlpSandbox = (appIndex > DLP_SANDBOX_APP_INDEX);
     createDirParam.dlpType = dlpType;
+    createDirParam.sessionId = sessionId_;
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         // if user is not activated, access el2-el4 may return ok but dir cannot be created

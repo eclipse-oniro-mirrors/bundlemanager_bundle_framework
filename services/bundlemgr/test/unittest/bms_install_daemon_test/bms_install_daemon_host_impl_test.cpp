@@ -1105,9 +1105,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6000, Function | Sma
     ASSERT_NE(installdProxy, nullptr);
 
     std::string bundleName = "com.acts.example";
-    int32_t  profileBlockLength = 0;
-    const unsigned char * profileBlock = new unsigned char[0];
-    ErrCode ret = installdProxy->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    ErrCode ret = installdProxy->DeliverySignProfile(bundleName, 0);
     EXPECT_EQ(ret,  ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1289,11 +1287,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7200, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
     std::string bundleName = "com.example.test";
-    int32_t profileBlockLength = 1;
-    unsigned char *profileBlock = new unsigned char[1];
-    ErrCode res = hostImpl->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    ErrCode res = hostImpl->DeliverySignProfile(bundleName, 0);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-    delete[] profileBlock;
 }
 
 /**

@@ -376,8 +376,7 @@ ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &code
     return ERR_OK;
 }
 
-ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-    const unsigned char *profileBlock)
+ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t sessionId)
 {
     return ERR_OK;
 }
@@ -519,5 +518,10 @@ ErrCode InstalldClient::GetTopNLargestItemsInAppDataDir(const std::string &bundl
 {
     return ERR_OK;
 }
+ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
+{
+    return ERR_OK;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

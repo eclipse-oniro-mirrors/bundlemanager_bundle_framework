@@ -3611,4 +3611,598 @@ HWTEST_F(BmsEventHandlerTest, OTAInstallSystemSkills_0100, Function | SmallTest 
     ret = handler->OTAInstallSystemSkills(filePaths, userIds);
     EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
 }
+
+// ============================================================================
+// ProcessAccessTokenMigration test cases
+// ============================================================================
+namespace Security {
+namespace AccessToken {
+    void SetPreMigrateRetForTest(int32_t value);
+    void SetMigrateInstalledBundlesRetForTest(int32_t value);
+    void SetMigrateResultsForTest(const std::vector<BundleMigrateResult>& results);
+}
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0100
+ * @tc.name: ProcessAccessTokenMigration already migrated
+ * @tc.desc: OTA flag already set → calls FinishMigration and returns early
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0100, Function | SmallTest | Level0)
+{
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    // Set OTA flag to include PROCESS_ACCESS_TOKEN_MIGRATION bit (0x02000000)
+    bmsParam->SaveBmsParam("otaFlag", std::to_string(static_cast<int32_t>(0x02000000)));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->ProcessAccessTokenMigration();
+    // Verify OTA flag unchanged (already migrated, no UpdateOtaFlag called)
+    std::string val;
+    bmsParam->GetBmsParam("otaFlag", val);
+    EXPECT_EQ(val, std::to_string(static_cast<int32_t>(0x02000000)));
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0200
+ * @tc.name: ProcessAccessTokenMigration not migrated
+ * @tc.desc: OTA flag not set → calls InnerProcessAccessTokenMigration and sets flag
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0200, Function | SmallTest | Level0)
+{
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("otaFlag", "0");
+    AccessToken::SetPreMigrateRetForTest(
+        AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->ProcessAccessTokenMigration();
+    std::string val;
+    bmsParam->GetBmsParam("otaFlag", val);
+    EXPECT_NE(val, "0");
+    AccessToken::SetPreMigrateRetForTest(0);
+}
+
+// ============================================================================
+// InnerProcessAccessTokenMigration test cases
+// ============================================================================
+
+/**
+ * @tc.number: InnerProcessAccessTokenMigration_0100
+ * @tc.name: InnerProcessAccessTokenMigration DataMgr is null
+ * @tc.desc: DataMgr is nullptr → returns false
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessAccessTokenMigration_0100, Function | SmallTest | Level0)
+{
+    auto bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedDataMgr = bms->dataMgr_;
+    bms->dataMgr_ = nullptr;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    bool result = handler->InnerProcessAccessTokenMigration();
+    EXPECT_FALSE(result);
+    bms->dataMgr_ = savedDataMgr;
+}
+
+/**
+ * @tc.number: InnerProcessAccessTokenMigration_0200
+ * @tc.name: InnerProcessAccessTokenMigration normal flow
+ * @tc.desc: Normal flow with empty bundles → PreMigrateUIDList returns
+ *           ERR_MIGRATION_COMPLETED → exits early, returns true
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessAccessTokenMigration_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    AccessToken::SetPreMigrateRetForTest(
+        AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    bool result = handler->InnerProcessAccessTokenMigration();
+    EXPECT_TRUE(result);
+    AccessToken::SetPreMigrateRetForTest(0);
+}
+
+// ============================================================================
+// CollectAndPreMigrateUids test cases
+// ============================================================================
+
+/**
+ * @tc.number: CollectAndPreMigrateUids_0100
+ * @tc.name: CollectAndPreMigrateUids empty bundles
+ * @tc.desc: No installed bundles → uidList empty → returns false
+ */
+HWTEST_F(BmsEventHandlerTest, CollectAndPreMigrateUids_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<int32_t> uidList;
+    bool result = handler->CollectAndPreMigrateUids(dataMgr, uidList);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CollectAndPreMigrateUids_0200
+ * @tc.name: CollectAndPreMigrateUids PreMigrateUIDList ERR_MIGRATION_COMPLETED
+ * @tc.desc: Has bundles with valid UIDs, PreMigrateUIDList returns
+ *           ERR_MIGRATION_COMPLETED → returns false
+ */
+HWTEST_F(BmsEventHandlerTest, CollectAndPreMigrateUids_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test.bundle.migrate";
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000001;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_["test.bundle.migrate"] = info;
+    AccessToken::SetPreMigrateRetForTest(
+        AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<int32_t> uidList;
+    bool result = handler->CollectAndPreMigrateUids(dataMgr, uidList);
+    EXPECT_FALSE(result);
+    dataMgr->bundleInfos_.clear();
+    AccessToken::SetPreMigrateRetForTest(0);
+}
+
+/**
+ * @tc.number: CollectAndPreMigrateUids_0300
+ * @tc.name: CollectAndPreMigrateUids success
+ * @tc.desc: Has bundles with valid UIDs, PreMigrateUIDList returns success
+ */
+HWTEST_F(BmsEventHandlerTest, CollectAndPreMigrateUids_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test.bundle.migrate";
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000001;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_["test.bundle.migrate"] = info;
+    AccessToken::SetPreMigrateRetForTest(AccessToken::AccessTokenKitRet::RET_SUCCESS);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<int32_t> uidList;
+    bool result = handler->CollectAndPreMigrateUids(dataMgr, uidList);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(uidList.size(), 1);
+    EXPECT_EQ(uidList[0], 20000001);
+    dataMgr->bundleInfos_.clear();
+    AccessToken::SetPreMigrateRetForTest(0);
+}
+
+/**
+ * @tc.number: CollectAndPreMigrateUids_0400
+ * @tc.name: CollectAndPreMigrateUids skip zero uid
+ * @tc.desc: Bundles with uid == 0 should be skipped
+ */
+HWTEST_F(BmsEventHandlerTest, CollectAndPreMigrateUids_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test.bundle.zero";
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 0; // uid == 0, should be skipped
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_["test.bundle.zero"] = info;
+    AccessToken::SetPreMigrateRetForTest(AccessToken::AccessTokenKitRet::RET_SUCCESS);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<int32_t> uidList;
+    bool result = handler->CollectAndPreMigrateUids(dataMgr, uidList);
+    EXPECT_FALSE(result); // uidList is empty, returns false
+    dataMgr->bundleInfos_.clear();
+    AccessToken::SetPreMigrateRetForTest(0);
+}
+
+// ============================================================================
+// BuildMigrationData test cases
+// ============================================================================
+
+/**
+ * @tc.number: BuildMigrationData_0100
+ * @tc.name: BuildMigrationData single bundle
+ * @tc.desc: One installed bundle with user info → correct MigratedInfo output
+ */
+HWTEST_F(BmsEventHandlerTest, BuildMigrationData_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test.build01";
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000001;
+    userInfo.accessTokenId = 100;
+    userInfo.accessTokenIdEx = 100;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_["test.build01"] = info;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<std::string> bundleNames = {"test.build01"};
+    std::unordered_map<std::string, InnerBundleInfo> sandboxMap;
+    std::map<std::string, UninstallBundleInfo> uninstallInfos;
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenIdExList;
+    handler->BuildMigrationData(dataMgr, bundleNames, sandboxMap, uninstallInfos,
+        migratedList, oldTokenIdExList);
+    EXPECT_EQ(migratedList.size(), 1);
+    EXPECT_EQ(migratedList[0].bundleName, "test.build01");
+    EXPECT_EQ(migratedList[0].uidList.size(), 1);
+    EXPECT_EQ(migratedList[0].uidList[0], 20000001);
+    EXPECT_EQ(migratedList[0].hapBaseInfoList.size(), 1);
+    EXPECT_EQ(migratedList[0].hapBaseInfoList[0].userID, 100);
+    EXPECT_EQ(migratedList[0].hapBaseInfoList[0].bundleName, "test.build01");
+    EXPECT_EQ(migratedList[0].reservedTypeList.size(), 1);
+    EXPECT_EQ(migratedList[0].reservedTypeList[0],
+        Security::AccessToken::ReservedType::NONE);
+    EXPECT_EQ(oldTokenIdExList.size(), 1);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BuildMigrationData_0200
+ * @tc.name: BuildMigrationData bundle not found
+ * @tc.desc: bundleName in list but not in dataMgr → skipped
+ */
+HWTEST_F(BmsEventHandlerTest, BuildMigrationData_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<std::string> bundleNames = {"non.existent.bundle"};
+    std::unordered_map<std::string, InnerBundleInfo> sandboxMap;
+    std::map<std::string, UninstallBundleInfo> uninstallInfos;
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenIdExList;
+    handler->BuildMigrationData(dataMgr, bundleNames, sandboxMap, uninstallInfos,
+        migratedList, oldTokenIdExList);
+    EXPECT_EQ(migratedList.size(), 0);
+}
+
+/**
+ * @tc.number: BuildMigrationData_0300
+ * @tc.name: BuildMigrationData uninstalled bundle
+ * @tc.desc: Uninstalled bundle → reservedTypeList should be RESERVED_DATA
+ */
+HWTEST_F(BmsEventHandlerTest, BuildMigrationData_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<std::string> bundleNames;
+    std::unordered_map<std::string, InnerBundleInfo> sandboxMap;
+    std::map<std::string, UninstallBundleInfo> uninstallInfos;
+    UninstallBundleInfo uninstInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = 20000100;
+    dui.accessTokenIdEx = 500;
+    uninstInfo.userInfos["100"] = dui;
+    uninstallInfos["uninst.bundle"] = uninstInfo;
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenIdExList;
+    handler->BuildMigrationData(dataMgr, bundleNames, sandboxMap, uninstallInfos,
+        migratedList, oldTokenIdExList);
+    EXPECT_EQ(migratedList.size(), 1);
+    EXPECT_EQ(migratedList[0].bundleName, "uninst.bundle");
+    EXPECT_EQ(migratedList[0].reservedTypeList.size(), 1);
+    EXPECT_EQ(migratedList[0].reservedTypeList[0],
+        Security::AccessToken::ReservedType::RESERVED_DATA);
+}
+
+// ============================================================================
+// ExecuteMigrationWithRetry test cases
+// ============================================================================
+
+/**
+ * @tc.number: ExecuteMigrationWithRetry_0100
+ * @tc.name: ExecuteMigrationWithRetry all success
+ * @tc.desc: Single bundle, MigrateInstalledBundles returns success → all marked
+ */
+HWTEST_F(BmsEventHandlerTest, ExecuteMigrationWithRetry_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    Security::AccessToken::MigratedInfo m;
+    m.bundleName = "test.success";
+    m.uidList.push_back(20000001);
+    m.hapBaseInfoList.push_back({100, "test.success", 0});
+    m.reservedTypeList.push_back(Security::AccessToken::ReservedType::NONE);
+    migratedList.push_back(m);
+    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenIdExList;
+    Security::AccessToken::AccessTokenIDEx oldId;
+    oldId.tokenIDEx = 100;
+    oldId.tokenIdExStruct.tokenID = 100;
+    oldTokenIdExList.push_back({oldId});
+    Security::AccessToken::BundleMigrateResult result;
+    result.errcode = 0;
+    Security::AccessToken::AccessTokenIDEx newId;
+    newId.tokenIDEx = 100;
+    newId.tokenIdExStruct.tokenID = 100;
+    result.tokenIdList.push_back(newId);
+    result.reservedTypeList.push_back(Security::AccessToken::ReservedType::NONE);
+    AccessToken::SetMigrateResultsForTest({result});
+    AccessToken::SetMigrateInstalledBundlesRetForTest(
+        AccessToken::AccessTokenKitRet::RET_SUCCESS);
+    std::vector<bool> successFlags;
+    handler->ExecuteMigrationWithRetry(dataMgr, migratedList, oldTokenIdExList,
+        successFlags);
+    EXPECT_EQ(successFlags.size(), 1);
+    EXPECT_TRUE(successFlags[0]);
+    AccessToken::SetMigrateInstalledBundlesRetForTest(0);
+    AccessToken::SetMigrateResultsForTest({});
+}
+
+/**
+ * @tc.number: ExecuteMigrationWithRetry_0200
+ * @tc.name: ExecuteMigrationWithRetry UID duplicated
+ * @tc.desc: MigrateInstalledBundles returns ERR_MIGRATION_UID_DUPLICATED →
+ *           marked as success and flagged for reporting
+ */
+HWTEST_F(BmsEventHandlerTest, ExecuteMigrationWithRetry_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    Security::AccessToken::MigratedInfo m;
+    m.bundleName = "test.dup";
+    m.uidList.push_back(20000002);
+    m.hapBaseInfoList.push_back({100, "test.dup", 0});
+    m.reservedTypeList.push_back(Security::AccessToken::ReservedType::NONE);
+    migratedList.push_back(m);
+    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenIdExList;
+    Security::AccessToken::AccessTokenIDEx oldId;
+    oldId.tokenIDEx = 200;
+    oldId.tokenIdExStruct.tokenID = 200;
+    oldTokenIdExList.push_back({oldId});
+    Security::AccessToken::BundleMigrateResult result;
+    result.errcode = Security::AccessToken::AccessTokenError::ERR_MIGRATION_UID_DUPLICATED;
+    AccessToken::SetMigrateResultsForTest({result});
+    AccessToken::SetMigrateInstalledBundlesRetForTest(
+        AccessToken::AccessTokenKitRet::RET_SUCCESS);
+    std::vector<bool> successFlags;
+    handler->ExecuteMigrationWithRetry(dataMgr, migratedList, oldTokenIdExList,
+        successFlags);
+    EXPECT_EQ(successFlags.size(), 1);
+    EXPECT_TRUE(successFlags[0]); // UID duplicated is treated as success
+    AccessToken::SetMigrateInstalledBundlesRetForTest(0);
+    AccessToken::SetMigrateResultsForTest({});
+}
+
+/**
+ * @tc.number: ExecuteMigrationWithRetry_0300
+ * @tc.name: ExecuteMigrationWithRetry ERR_MIGRATION_COMPLETED
+ * @tc.desc: MigrateInstalledBundles returns ERR_MIGRATION_COMPLETED →
+ *           breaks early
+ */
+HWTEST_F(BmsEventHandlerTest, ExecuteMigrationWithRetry_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    Security::AccessToken::MigratedInfo m;
+    m.bundleName = "test.completed";
+    m.uidList.push_back(20000003);
+    m.hapBaseInfoList.push_back({100, "test.completed", 0});
+    m.reservedTypeList.push_back(Security::AccessToken::ReservedType::NONE);
+    migratedList.push_back(m);
+    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenIdExList;
+    oldTokenIdExList.push_back({});
+    AccessToken::SetMigrateInstalledBundlesRetForTest(
+        Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED);
+    std::vector<bool> successFlags;
+    handler->ExecuteMigrationWithRetry(dataMgr, migratedList, oldTokenIdExList,
+        successFlags);
+    // Should have set successFlags size but not marked any as true (broke early)
+    EXPECT_EQ(successFlags.size(), 1);
+    EXPECT_FALSE(successFlags[0]);
+    AccessToken::SetMigrateInstalledBundlesRetForTest(0);
+}
+
+/**
+ * @tc.number: ExecuteMigrationWithRetry_0400
+ * @tc.name: ExecuteMigrationWithRetry token changed
+ * @tc.desc: Old token != new token → tokenUpdateList populated
+ */
+HWTEST_F(BmsEventHandlerTest, ExecuteMigrationWithRetry_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test.token.update";
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000010;
+    userInfo.accessTokenId = 10;
+    userInfo.accessTokenIdEx = 10;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_["test.token.update"] = info;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    Security::AccessToken::MigratedInfo m;
+    m.bundleName = "test.token.update";
+    m.uidList.push_back(20000010);
+    m.hapBaseInfoList.push_back({100, "test.token.update", 0});
+    m.reservedTypeList.push_back(Security::AccessToken::ReservedType::NONE);
+    migratedList.push_back(m);
+    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenIdExList;
+    Security::AccessToken::AccessTokenIDEx oldId;
+    oldId.tokenIDEx = 10;
+    oldId.tokenIdExStruct.tokenID = 10;
+    oldTokenIdExList.push_back({oldId});
+    Security::AccessToken::BundleMigrateResult result;
+    result.errcode = 0;
+    Security::AccessToken::AccessTokenIDEx newId;
+    newId.tokenIDEx = 99;
+    newId.tokenIdExStruct.tokenID = 99;
+    result.tokenIdList.push_back(newId);
+    result.reservedTypeList.push_back(Security::AccessToken::ReservedType::NONE);
+    AccessToken::SetMigrateResultsForTest({result});
+    AccessToken::SetMigrateInstalledBundlesRetForTest(
+        AccessToken::AccessTokenKitRet::RET_SUCCESS);
+    std::vector<bool> successFlags;
+    handler->ExecuteMigrationWithRetry(dataMgr, migratedList, oldTokenIdExList,
+        successFlags);
+    EXPECT_EQ(successFlags.size(), 1);
+    EXPECT_TRUE(successFlags[0]);
+    dataMgr->bundleInfos_.clear();
+    AccessToken::SetMigrateInstalledBundlesRetForTest(0);
+    AccessToken::SetMigrateResultsForTest({});
+}
+
+// ============================================================================
+// MarkMigratedBundles test cases
+// ============================================================================
+
+/**
+ * @tc.number: MarkMigratedBundles_0100
+ * @tc.name: MarkMigratedBundles all success
+ * @tc.desc: All bundles in successFlags → all should be marked checkBySpm=true
+ */
+HWTEST_F(BmsEventHandlerTest, MarkMigratedBundles_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info1;
+    info1.baseApplicationInfo_->bundleName = "test.mark01";
+    info1.SetBundleCheckBySpm(false);
+    InnerBundleInfo info2;
+    info2.baseApplicationInfo_->bundleName = "test.mark02";
+    info2.SetBundleCheckBySpm(false);
+    dataMgr->bundleInfos_["test.mark01"] = info1;
+    dataMgr->bundleInfos_["test.mark02"] = info2;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<std::string> bundleNames = {"test.mark01", "test.mark02"};
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    Security::AccessToken::MigratedInfo m1;
+    m1.bundleName = "test.mark01";
+    migratedList.push_back(m1);
+    Security::AccessToken::MigratedInfo m2;
+    m2.bundleName = "test.mark02";
+    migratedList.push_back(m2);
+    std::vector<bool> successFlags = {true, true};
+    handler->MarkMigratedBundles(dataMgr, bundleNames, migratedList, successFlags);
+    EXPECT_TRUE(dataMgr->bundleInfos_["test.mark01"].IsBundleCheckBySpm());
+    EXPECT_TRUE(dataMgr->bundleInfos_["test.mark02"].IsBundleCheckBySpm());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: MarkMigratedBundles_0200
+ * @tc.name: MarkMigratedBundles partial success
+ * @tc.desc: Only successful bundles should be marked, failed ones unchanged
+ */
+HWTEST_F(BmsEventHandlerTest, MarkMigratedBundles_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info1;
+    info1.baseApplicationInfo_->bundleName = "test.partial01";
+    info1.SetBundleCheckBySpm(false);
+    InnerBundleInfo info2;
+    info2.baseApplicationInfo_->bundleName = "test.partial02";
+    info2.SetBundleCheckBySpm(false);
+    dataMgr->bundleInfos_["test.partial01"] = info1;
+    dataMgr->bundleInfos_["test.partial02"] = info2;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<std::string> bundleNames = {"test.partial01", "test.partial02"};
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    Security::AccessToken::MigratedInfo m1;
+    m1.bundleName = "test.partial01";
+    migratedList.push_back(m1);
+    Security::AccessToken::MigratedInfo m2;
+    m2.bundleName = "test.partial02";
+    migratedList.push_back(m2);
+    std::vector<bool> successFlags = {true, false};
+    handler->MarkMigratedBundles(dataMgr, bundleNames, migratedList, successFlags);
+    EXPECT_TRUE(dataMgr->bundleInfos_["test.partial01"].IsBundleCheckBySpm());
+    EXPECT_FALSE(dataMgr->bundleInfos_["test.partial02"].IsBundleCheckBySpm());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: MarkMigratedBundles_0300
+ * @tc.name: MarkMigratedBundles all failed
+ * @tc.desc: No bundles succeed → no checkBySpm set
+ */
+HWTEST_F(BmsEventHandlerTest, MarkMigratedBundles_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test.fail";
+    info.SetBundleCheckBySpm(false);
+    dataMgr->bundleInfos_["test.fail"] = info;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<std::string> bundleNames = {"test.fail"};
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    Security::AccessToken::MigratedInfo m;
+    m.bundleName = "test.fail";
+    migratedList.push_back(m);
+    std::vector<bool> successFlags = {false};
+    handler->MarkMigratedBundles(dataMgr, bundleNames, migratedList, successFlags);
+    EXPECT_FALSE(dataMgr->bundleInfos_["test.fail"].IsBundleCheckBySpm());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: MarkMigratedBundles_0400
+ * @tc.name: MarkMigratedBundles bundle not found
+ * @tc.desc: bundleName not in dataMgr → skip without crash
+ */
+HWTEST_F(BmsEventHandlerTest, MarkMigratedBundles_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<std::string> bundleNames = {"missing.bundle"};
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    Security::AccessToken::MigratedInfo m;
+    m.bundleName = "missing.bundle";
+    migratedList.push_back(m);
+    std::vector<bool> successFlags = {true};
+    handler->MarkMigratedBundles(dataMgr, bundleNames, migratedList, successFlags);
+    // No crash expected
+}
 } // OHOS

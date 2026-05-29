@@ -1393,8 +1393,6 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootBundleUninstall();
     ProcessRebootAppServiceUninstall();
     ProcessRebootSkillsUninstall();
-    //refresh application permissions
-    ProcessUpdatePermissions();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
     ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
     XCollieHelper::ResumeFoundationWatchdog();

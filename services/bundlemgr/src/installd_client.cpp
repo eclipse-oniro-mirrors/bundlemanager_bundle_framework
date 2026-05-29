@@ -572,14 +572,13 @@ ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &code
     return CallService(&IInstalld::VerifyCodeSignatureForHap, codeSignatureParam);
 }
 
-ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-    const unsigned char *profileBlock)
+ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t sessionId)
 {
-    if (bundleName.empty() || profileBlock == nullptr) {
-        APP_LOGE("bundle name or profile block is empty");
+    if (sessionId == 0) {
+        APP_LOGE("sessionId is 0, refused");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::DeliverySignProfile, bundleName, profileBlockLength, profileBlock);
+    return CallService(&IInstalld::DeliverySignProfile, bundleName, sessionId);
 }
 
 ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
@@ -589,6 +588,11 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::RemoveSignProfile, bundleName);
+}
+
+ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
+{
+    return CallService(&IInstalld::ClearSessionProvisionCache, sessionId);
 }
 
 ErrCode InstalldClient::AddCertAndEnableKey(const std::string &certPath, const std::string &certContent)

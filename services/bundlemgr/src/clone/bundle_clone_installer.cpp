@@ -545,6 +545,7 @@ ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    createDirParam.sessionId = sessionId_;
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         // if user is not activated, access el2-el4 may return ok but dir cannot be created

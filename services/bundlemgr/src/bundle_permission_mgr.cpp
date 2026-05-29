@@ -19,6 +19,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
+#include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "parameter.h"
 #include "privacy_kit.h"
@@ -1017,6 +1018,7 @@ int32_t BundlePermissionMgr::FinishHapInstall(
             sessionId, ret);
         return ret;
     }
+    InstalldClient::GetInstance()->ClearSessionProvisionCache(sessionId);
     return ERR_OK;
 }
 

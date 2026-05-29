@@ -209,6 +209,97 @@ int AccessTokenKit::GetHapTokenInfo(AccessTokenID tokenID, HapTokenInfo& hapToke
     hapTokenInfoRes.bundleName = "tokenBundle";
     return g_errCode;
 }
+
+int32_t AccessTokenKit::GetCacheSignInfoBySessionId(
+    int32_t sessionId, std::vector<TrustedBundleInfo>& bundleInfo)
+{
+    return 0;
+}
+
+int32_t AccessTokenKit::CheckHapPermissionInfo(
+    int32_t sessionId, InstallTypeEnum type, HapInfoCheckResult& result)
+{
+    return 0;
+}
+
+int32_t AccessTokenKit::PrepareHapIdentity(
+    int32_t& sessionId, const HapBaseInfo& info, const BundlePolicy& policy, Identity& identity)
+{
+    identity.uid = 20000000;
+    identity.tokenId = 1;
+    return 0;
+}
+
+int32_t AccessTokenKit::UpdateHapPolicy(int32_t sessionId, int32_t tokenId, const BundlePolicy& policy)
+{
+    return 0;
+}
+
+int32_t AccessTokenKit::FinishInstall(int32_t sessionId, bool isSuccess,
+    const std::map<std::string, std::string>& modulePathMap)
+{
+    return 0;
+}
+
+int32_t AccessTokenKit::DeleteIdentity(
+    AccessTokenID tokenID, const std::string& bundleName, ReservedType type)
+{
+    return 0;
+}
+
+int32_t g_preMigrateRet = 0;
+int32_t g_migrateInstalledBundlesRet = 0;
+std::vector<BundleMigrateResult> g_migrateResults;
+
+void SetPreMigrateRetForTest(int32_t value)
+{
+    g_preMigrateRet = value;
+}
+
+void SetMigrateInstalledBundlesRetForTest(int32_t value)
+{
+    g_migrateInstalledBundlesRet = value;
+}
+
+void SetMigrateResultsForTest(const std::vector<BundleMigrateResult>& results)
+{
+    g_migrateResults = results;
+}
+
+int32_t AccessTokenKit::PreMigrateUIDList(const std::vector<int32_t>& uidList)
+{
+    return g_preMigrateRet;
+}
+
+int32_t AccessTokenKit::MigrateInstalledBundles(
+    const std::vector<MigratedInfo>& migratedInfoList,
+    std::vector<BundleMigrateResult>& results)
+{
+    results = g_migrateResults;
+    return g_migrateInstalledBundlesRet;
+}
+
+int32_t AccessTokenKit::FinishMigration()
+{
+    return 0;
+}
+
+int32_t AccessTokenKit::CheckHapSignInfo(const BundleHapList& hapList, int32_t& sessionId,
+    std::vector<TrustedBundleInfo>& trustedBundleInfo)
+{
+    return 0;
+}
+
+int32_t AccessTokenKit::GetHapSignInfo(const std::string& bundleName,
+    std::vector<TrustedBundleInfo>& trustedBundleInfo)
+{
+    return 0;
+}
+
+int32_t AccessTokenKit::GetHapBaseInfoByUid(int32_t uid, HapBaseInfo& info)
+{
+    return 0;
+}
 }
 }
 }

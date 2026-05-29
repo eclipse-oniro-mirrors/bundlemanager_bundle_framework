@@ -40,6 +40,7 @@ struct CodeSignatureParam : public Parcelable {
     std::string pluginId;
     uint32_t profileBlockLength = 0;
     std::shared_ptr<unsigned char[]> profileBlock;
+    int32_t sessionId = 0;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);

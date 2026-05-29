@@ -50,6 +50,26 @@ public:
     static int32_t UpdateHapToken(AccessTokenIDEx& tokenIdEx, const UpdateHapInfoParams& info,
         const HapPolicyParams& policy, HapInfoCheckResult& checkResult);
     static int GetHapTokenInfo(AccessTokenID tokenID, HapTokenInfo& hapTokenInfoRes);
+    static int32_t GetCacheSignInfoBySessionId(
+        int32_t sessionId, std::vector<TrustedBundleInfo>& bundleInfo);
+    static int32_t CheckHapPermissionInfo(
+        int32_t sessionId, InstallTypeEnum type, HapInfoCheckResult& result);
+    static int32_t PrepareHapIdentity(
+        int32_t& sessionId, const HapBaseInfo& info, const BundlePolicy& policy, Identity& identity);
+    static int32_t UpdateHapPolicy(int32_t sessionId, int32_t tokenId, const BundlePolicy& policy);
+    static int32_t FinishInstall(int32_t sessionId, bool isSuccess,
+        const std::map<std::string, std::string>& modulePathMap);
+    static int32_t DeleteIdentity(
+        AccessTokenID tokenID, const std::string& bundleName, ReservedType type);
+    static int32_t PreMigrateUIDList(const std::vector<int32_t>& uidList);
+    static int32_t MigrateInstalledBundles(const std::vector<MigratedInfo>& migratedInfoList,
+        std::vector<BundleMigrateResult>& results);
+    static int32_t FinishMigration();
+    static int32_t CheckHapSignInfo(const BundleHapList& hapList, int32_t& sessionId,
+        std::vector<TrustedBundleInfo>& trustedBundleInfo);
+    static int32_t GetHapSignInfo(const std::string& bundleName,
+        std::vector<TrustedBundleInfo>& trustedBundleInfo);
+    static int32_t GetHapBaseInfoByUid(int32_t uid, HapBaseInfo& info);
 };
 } // namespace AccessToken
 } // namespace Security

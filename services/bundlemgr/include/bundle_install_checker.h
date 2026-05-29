@@ -263,7 +263,9 @@ public:
     static bool CheckSaneDriverIsolation(const Security::Verify::HapVerifyResult &hapVerifyResult, const int32_t userId,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
 
-    void ProcessCodeSignatureParam(const Security::Verify::HapVerifyResult &hapVerifyResult,
+    void ProcessCodeSignatureParam(
+        int32_t sessionId,
+        const Security::Verify::HapVerifyResult &hapVerifyResult,
         CodeSignatureParam &codeSignatureParam);
 
     static ErrCode ParseProfileDataToProvisionInfo(
