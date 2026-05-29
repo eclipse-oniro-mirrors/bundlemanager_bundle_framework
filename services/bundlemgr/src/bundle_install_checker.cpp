@@ -20,6 +20,7 @@
 
 #include "app_log_tag_wrapper.h"
 #include "bundle_extractor.h"
+#include "bundle_file_util.h"
 #include "bms_extension_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
@@ -2129,7 +2130,7 @@ bool BundleInstallChecker::DetermineCloneApp(InnerBundleInfo &innerBundleInfo)
     }
     MultiAppModeData multiAppMode;
     multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
-    multiAppMode.maxCount = std::min(cloneNum, Constants::CLONE_APP_INDEX_MAX);
+    multiAppMode.maxCount = std::min(cloneNum, BundleFileUtil::GetCloneMaxCount());
     innerBundleInfo.SetMultiAppMode(multiAppMode);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DetermineCloneNum -n %{public}s -c %{public}d",
         innerBundleInfo.GetBundleName().c_str(), cloneNum);

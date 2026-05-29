@@ -16,6 +16,7 @@
 #include "app_log_wrapper.h"
 #include <ani_signature_builder.h>
 #include "bundle_errors.h"
+#include "bundle_file_util.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "business_error_ani.h"
@@ -324,6 +325,13 @@ static ani_boolean IsShortcutSupportedNative(ani_env* env)
 #endif
 }
 
+static ani_int GetCloneMaxCountNative([[maybe_unused]] ani_env* env)
+{
+    int32_t cloneMaxCount = BundleFileUtil::GetCloneMaxCount();
+    APP_LOGD("GetCloneMaxCount: %{public}d", cloneMaxCount);
+    return static_cast<ani_int>(cloneMaxCount);
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -361,6 +369,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(GetShortcutInfoByAbilityNative) },
         ani_native_function { "isShortcutSupportedNative", nullptr,
             reinterpret_cast<void*>(IsShortcutSupportedNative) },
+        ani_native_function { "getCloneMaxCountNative", nullptr,
+            reinterpret_cast<void*>(GetCloneMaxCountNative) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

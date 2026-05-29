@@ -21,6 +21,7 @@
 #include "app_control_constants.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_constants.h"
+#include "bundle_file_util.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_service_constants.h"
@@ -821,7 +822,7 @@ ErrCode AppControlManagerHostImpl::GetDisposedRuleForCloneApp(const std::string 
         LOG_W(BMS_TAG_DEFAULT, "verify get disposed rule permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -854,7 +855,7 @@ ErrCode AppControlManagerHostImpl::SetDisposedRuleForCloneApp(const std::string 
         LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -894,7 +895,7 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedRuleForCloneApp(const std::stri
         LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -943,7 +944,7 @@ ErrCode AppControlManagerHostImpl::GetUninstallDisposedRule(const std::string &a
         LOG_W(BMS_TAG_DEFAULT, "verify get uninstall disposed rule permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -974,7 +975,7 @@ ErrCode AppControlManagerHostImpl::SetUninstallDisposedRule(const std::string &a
         LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -1018,7 +1019,7 @@ ErrCode AppControlManagerHostImpl::DeleteUninstallDisposedRule(const std::string
         LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }

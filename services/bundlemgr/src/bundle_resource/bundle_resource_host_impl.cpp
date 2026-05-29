@@ -16,6 +16,7 @@
 #include "bundle_resource_host_impl.h"
 
 #include "bms_extension_client.h"
+#include "bundle_file_util.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_manager.h"
 #include "bundle_mgr_service.h"
@@ -43,7 +44,7 @@ ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleN
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
+    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount())) {
         APP_LOGE("get bundle resource Fail, bundleName: %{public}s appIndex: %{public}d not in valid range",
             bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
@@ -72,7 +73,7 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfo(const std::string
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
+    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount())) {
         APP_LOGE("get bundle resource Fail, bundleName: %{public}s appIndex: %{public}d not in valid range",
             bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
@@ -125,7 +126,7 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfoList(const std::ve
         singleResource.moduleName = moduleName;
         singleResource.abilityName = abilityName;
         singleResource.appIndex = appIndex;
-        if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
+        if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount())) {
             APP_LOGW("get bundle resource fail, appIndex: %{public}d not in valid range", appIndex);
             launcherAbilityResourceInfo.emplace_back(std::move(singleResource));
             result = ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
@@ -384,7 +385,7 @@ ErrCode BundleResourceHostImpl::GetExtensionAbilityResourceInfo(const std::strin
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     
-    if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
+    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount())) {
         APP_LOGE("get bundle resource Fail, bundleName: %{public}s appIndex: %{public}d not in valid range",
             bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;

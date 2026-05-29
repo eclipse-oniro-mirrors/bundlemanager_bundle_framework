@@ -21,6 +21,7 @@
 #include "account_helper.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_update_selinux_mgr.h"
+#include "bundle_file_util.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
@@ -337,7 +338,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         APP_LOGE("UninstallCloneApp failed due to empty bundle name");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME;
     }
-    if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX;
     }

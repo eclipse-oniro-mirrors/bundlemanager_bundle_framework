@@ -16,6 +16,7 @@
 #include "default_app_host_impl.h"
 
 #include "app_log_tag_wrapper.h"
+#include "bundle_file_util.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "event_report.h"
@@ -57,7 +58,7 @@ ErrCode DefaultAppHostImpl::SetDefaultApplicationForAppClone(const int32_t userI
         LOG_E(BMS_TAG_DEFAULT, "userId not exist");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    if (appIndex > Constants::CLONE_APP_INDEX_MAX || appIndex <= Constants::MAIN_APP_INDEX) {
+    if (appIndex > BundleFileUtil::GetCloneMaxCount() || appIndex <= Constants::MAIN_APP_INDEX) {
         LOG_E(BMS_TAG_DEFAULT, "Invalid appIndex:%{public}d", appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }

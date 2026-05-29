@@ -26,6 +26,7 @@
 #endif
 #include "app_log_tag_wrapper.h"
 #include "bundle_clone_installer.h"
+#include "bundle_file_util.h"
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_hitrace_chain.h"
 #include "bundle_memory_guard.h"
@@ -1075,7 +1076,7 @@ ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, in
         LOG_E(BMS_TAG_INSTALLER, "UninstallCloneApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
-    if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX;
     }

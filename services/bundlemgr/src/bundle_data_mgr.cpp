@@ -37,6 +37,7 @@
 #include "preinstall_data_storage_rdb.h"
 #include "hap_token_info.h"
 #include "bundle_event_callback_death_recipient.h"
+#include "bundle_file_util.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_client.h"
 #include "bundle_parser.h"
@@ -6887,7 +6888,7 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
 ErrCode BundleDataMgr::GetShortcutInfoByAppIndex(const std::string &bundleName, const int32_t appIndex,
     std::vector<ShortcutInfo> &shortcutInfos) const
 {
-    if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
+    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount())) {
         APP_LOGE("name %{public}s invalid appIndex :%{public}d", bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -6930,7 +6931,7 @@ ErrCode BundleDataMgr::GetShortcutInfoByAbility(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
+    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount())) {
         APP_LOGE("name %{public}s invalid appIndex:%{public}d", bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -11267,7 +11268,7 @@ ErrCode BundleDataMgr::HandleDetermineCloneNumList(
         }
         MultiAppModeData multiAppMode;
         multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
-        multiAppMode.maxCount = std::min(cloneNum, static_cast<uint32_t>(Constants::CLONE_APP_INDEX_MAX));
+        multiAppMode.maxCount = std::min(cloneNum, static_cast<uint32_t>(BundleFileUtil::GetCloneMaxCount()));
         infoItem->second.SetMultiAppMode(multiAppMode);
         if (!dataStorage_->SaveStorageBundleInfo(infoItem->second)) {
             APP_LOGW_NOFUNC("SaveStorageBundleInfo failed -n %{public}s", bundleName.c_str());
@@ -12332,7 +12333,7 @@ ErrCode BundleDataMgr::IsBundleInstalled(const std::string &bundleName, int32_t 
         APP_LOGE("name %{public}s invalid userid :%{public}d", bundleName.c_str(), userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
+    if ((appIndex < 0) || (appIndex > BundleFileUtil::GetCloneMaxCount())) {
         APP_LOGE("name %{public}s invalid appIndex :%{public}d", bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -12459,7 +12460,7 @@ ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleNa
     std::string &dataDir)
 {
     APP_LOGD("start GetDir bundleName : %{public}s appIndex : %{public}d", bundleName.c_str(), appIndex);
-    if (appIndex < 0 || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < 0 || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
     }
     if (!BundlePermissionMgr::IsNativeTokenType()) {
@@ -14202,7 +14203,7 @@ ErrCode BundleDataMgr::CheckBundleExist(const std::string &bundleName, int32_t u
         APP_LOGE_NOFUNC("check bundle invalid -u %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    if (appIndex < 0 || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < 0 || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE_NOFUNC("check bundle invalid appIndex -n %{public}s -a %{public}d", bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }

@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_file_util.h"
 #include "bundle_resource_constants.h"
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
@@ -184,7 +185,7 @@ bool BundleResourceIconRdb::DeleteResourceIconInfos(const std::string &bundleNam
     absRdbPredicates.Or();
     absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, bundleName + BundleResourceConstants::SEPARATOR);
     for (int32_t index = ServiceConstants::CLONE_APP_INDEX_MIN;
-        index <= ServiceConstants::CLONE_APP_INDEX_MAX; ++index) {
+        index <= BundleFileUtil::GetCloneMaxCount(); ++index) {
         absRdbPredicates.Or();
         absRdbPredicates.EqualTo(BundleResourceConstants::NAME, std::to_string(index) +
             BundleResourceConstants::UNDER_LINE + bundleName);

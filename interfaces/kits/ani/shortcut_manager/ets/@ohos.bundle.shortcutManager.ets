@@ -58,6 +58,7 @@ namespace shortcutManager {
   native function setShortcutsEnabledNative(shortcutInfo: Array<ShortcutInfo>, isEnabled: boolean): void;
   native function getShortcutInfoByAbilityNative(bundleName: string, moduleName: string, abilityName: string, userId: int, appIndex: int): Array<ShortcutInfo>;
   native function isShortcutSupportedNative(): boolean;
+  native function getCloneMaxCountNative(): int;
 
   function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: int): Promise<void> {
     if (shortcutInfo.appIndex < MAIN_APP_INDEX || shortcutInfo.sourceType === ERROR_SOURCETYPE) {
@@ -153,7 +154,7 @@ namespace shortcutManager {
       if (shortcutInfo[i].id === "" || idSet.has(shortcutInfo[i].id)) {
         throw createBusinessError(ERROR_SHORTCUT_ID_ILLEGAL_ERROR, SHORTCUT_ID_ILLEGAL);
       }
-      if (shortcutInfo[i].appIndex < MAIN_APP_INDEX || shortcutInfo[i].appIndex > CLONE_APP_INDEX_MAX) {
+      if (shortcutInfo[i].appIndex < MAIN_APP_INDEX || shortcutInfo[i].appIndex > getCloneMaxCountNative()) {
         throw createBusinessError(ERROR_INVALID_APPINDEX_CODE, ERROR_INVALID_APPINDEX_MSG);
       }
       if (shortcutInfo[i].sourceType < DEFAULT_SHORTCUT ||
@@ -187,7 +188,7 @@ namespace shortcutManager {
   }
 
   function deleteDynamicShortcutInfos(bundleName: string, appIndex: int, userId: int, ids?: Array<string>): Promise<void> {
-    if (appIndex < MAIN_APP_INDEX || appIndex > CLONE_APP_INDEX_MAX) {
+    if (appIndex < MAIN_APP_INDEX || appIndex > getCloneMaxCountNative()) {
       throw createBusinessError(ERROR_INVALID_APPINDEX_CODE, ERROR_INVALID_APPINDEX_MSG);
     }
     const idsValue: Array<string> = ids ?? [];
@@ -238,7 +239,7 @@ namespace shortcutManager {
   function getShortcutInfoByAbility(bundleName: string, moduleName: string, abilityName: string, userId?: int, appIndex?: int): Array<ShortcutInfo> {
     let userIdInfo: int = userId ?? EMPTY_USER_ID;
     let appIndexInfo: int = appIndex ?? 0;
-    if (appIndexInfo < MAIN_APP_INDEX || appIndexInfo > CLONE_APP_INDEX_MAX) {
+    if (appIndexInfo < MAIN_APP_INDEX || appIndexInfo > getCloneMaxCountNative()) {
       throw createBusinessError(ERROR_INVALID_APPINDEX_CODE, ERROR_INVALID_APPINDEX_MSG);
     }
     return getShortcutInfoByAbilityNative(bundleName, moduleName, abilityName, userIdInfo, appIndexInfo);

@@ -19,6 +19,7 @@
 #include <unordered_set>
 
 #include "app_log_tag_wrapper.h"
+#include "bundle_file_util.h"
 #include "parameter.h"
 #include "parameters.h"
 
@@ -2530,7 +2531,7 @@ bool ToApplicationInfo(
         applicationInfo.multiAppMode.maxCount = app.multiAppMode.maxCount;
         if (applicationInfo.multiAppMode.multiAppModeType == MultiAppModeType::APP_CLONE) {
             int32_t maxNumber = applicationInfo.multiAppMode.maxCount;
-            if (maxNumber <= Constants::INITIAL_APP_INDEX || maxNumber > ServiceConstants::CLONE_APP_INDEX_MAX) {
+            if (maxNumber <= Constants::INITIAL_APP_INDEX || maxNumber > BundleFileUtil::GetCloneMaxCount()) {
                 return false;
             }
         }

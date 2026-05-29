@@ -26,6 +26,8 @@
 
 #include "app_log_wrapper.h"
 #include "directory_ex.h"
+#include "parameter.h"
+#include "parameters.h"
 #include "string_ex.h"
 
 namespace {
@@ -38,6 +40,8 @@ constexpr const char* ABC_FILE_SUFFIX = ".abc";
 constexpr const char* JSON_FILE_SUFFIX = ".json";
 constexpr const char* APP_FILE_SUFFIX = ".app";
 constexpr const char* PATH_SEPARATOR = "/";
+constexpr const char* CLONE_MAX_COUNT_PARAM = "const.bms.appCloneMaxCount";
+constexpr int32_t CLONE_APP_INDEX_MAX_DEFAULT = 5;
 constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
 constexpr int32_t PATH_MAX_SIZE = 4096;
@@ -289,6 +293,13 @@ bool BundleFileUtil::IsReportDataPartitionUsageEvent(const std::string &path)
         return true;
     }
     return false;
+}
+
+int32_t BundleFileUtil::GetCloneMaxCount()
+{
+    static int32_t cloneMaxCount =
+        OHOS::system::GetIntParameter<int32_t>(CLONE_MAX_COUNT_PARAM, CLONE_APP_INDEX_MAX_DEFAULT);
+    return cloneMaxCount;
 }
 } // AppExecFwk
 } // OHOS

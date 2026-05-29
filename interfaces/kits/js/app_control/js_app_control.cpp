@@ -22,6 +22,7 @@
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_errors.h"
+#include "bundle_file_util.h"
 #include "business_error.h"
 #include "common_func.h"
 #include "disposed_rule.h"
@@ -638,7 +639,7 @@ bool ParseDisposedRuleConfiguration(napi_env env, napi_value nDisposedRuleConfig
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, Constants::APP_INDEX, TYPE_NUMBER);
         return false;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ERROR_INVALID_APPINDEX, SET_DISPOSED_RULES);
         napi_throw(env, businessError);

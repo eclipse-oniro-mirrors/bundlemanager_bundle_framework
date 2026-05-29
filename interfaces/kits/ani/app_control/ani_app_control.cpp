@@ -20,6 +20,7 @@
 #include "app_control_interface.h"
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
+#include "bundle_file_util.h"
 #include "business_error_ani.h"
 #include "common_fun_ani.h"
 #include "common_func.h"
@@ -427,7 +428,7 @@ static bool ParseDisposedRuleConfiguration(
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
         return false;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE("appIndex invalid");
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, SET_DISPOSED_RULES, "");
         return false;
