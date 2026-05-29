@@ -388,6 +388,8 @@ ohos_source_set("verify_manager_stub") {
   part_name = "bundle_framework"
 }
 ohos_source_set("bundle_mgr_ext_proxy") {
+  branch_protector_ret = "pac_ret"
+
   sanitize = {
     boundary_sanitize = true
     cfi = true
@@ -425,6 +427,8 @@ ohos_source_set("bundle_mgr_ext_proxy") {
 }
 
 ohos_source_set("bundle_mgr_ext_stub") {
+  branch_protector_ret = "pac_ret"
+  
   sanitize = {
     boundary_sanitize = true
     cfi = true
