@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
+
 #include <chrono>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -102,6 +105,10 @@ BmsBundleUninstallerTest::~BmsBundleUninstallerTest()
 
 void BmsBundleUninstallerTest::SetUpTestCase()
 {
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
 }
 
 void BmsBundleUninstallerTest::TearDownTestCase()
@@ -111,7 +118,6 @@ void BmsBundleUninstallerTest::TearDownTestCase()
 
 void BmsBundleUninstallerTest::SetUp()
 {
-    StartBundleService();
     StartInstalldService();
 }
 

@@ -91,7 +91,12 @@ BmsBundlePermissionFalseTest::~BmsBundlePermissionFalseTest()
 {}
 
 void BmsBundlePermissionFalseTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    bundleMgrService_->InitExtendResourceManager();
+}
 
 void BmsBundlePermissionFalseTest::TearDownTestCase()
 {
@@ -101,7 +106,6 @@ void BmsBundlePermissionFalseTest::TearDownTestCase()
 void BmsBundlePermissionFalseTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundlePermissionFalseTest::TearDown()

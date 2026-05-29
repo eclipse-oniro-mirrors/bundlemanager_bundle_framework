@@ -130,10 +130,9 @@ void BmsSandboxAppTest::SetUpTestCase()
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
     }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    }
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
 }
 
 void BmsSandboxAppTest::TearDownTestCase()

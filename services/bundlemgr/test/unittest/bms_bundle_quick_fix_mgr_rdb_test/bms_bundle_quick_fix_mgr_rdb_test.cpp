@@ -212,7 +212,13 @@ void BmsBundleQuickFixMgrRdbTest::StartService()
 }
 
 void BmsBundleQuickFixMgrRdbTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitQuickFixManager();
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleQuickFixMgrRdbTest::TearDownTestCase()
 {
@@ -224,7 +230,6 @@ void BmsBundleQuickFixMgrRdbTest::SetUp()
     if (installdService_ != nullptr && !installdService_->IsServiceReady()) {
         installdService_->Start();
     }
-    StartService();
     auto dataMgr = GetBundleDataMgr();
     if (dataMgr != nullptr) {
         dataMgr->AddUserId(USERID);

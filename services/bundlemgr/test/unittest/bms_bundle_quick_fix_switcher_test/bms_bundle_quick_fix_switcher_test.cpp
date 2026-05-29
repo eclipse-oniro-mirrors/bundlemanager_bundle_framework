@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
+
 #include <gtest/gtest.h>
 #include <unistd.h>
 
@@ -86,7 +89,13 @@ BmsBundleQuickFixSwitcherTest::~BmsBundleQuickFixSwitcherTest()
 {}
 
 void BmsBundleQuickFixSwitcherTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitQuickFixManager();
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleQuickFixSwitcherTest::TearDownTestCase()
 {
@@ -98,14 +107,6 @@ void BmsBundleQuickFixSwitcherTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
-    }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        bundleMgrService_->GetDataMgr()->AddUserId(USERID);
-    }
-    auto dataMgr = GetBundleDataMgr();
-    if (dataMgr != nullptr) {
-        dataMgr->AddUserId(USERID);
     }
 }
 

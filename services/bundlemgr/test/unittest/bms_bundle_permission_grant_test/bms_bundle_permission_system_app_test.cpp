@@ -103,7 +103,11 @@ BmsBundlePermissionSyetemAppFalseTest::~BmsBundlePermissionSyetemAppFalseTest()
 {}
 
 void BmsBundlePermissionSyetemAppFalseTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundlePermissionSyetemAppFalseTest::TearDownTestCase()
 {
@@ -113,7 +117,6 @@ void BmsBundlePermissionSyetemAppFalseTest::TearDownTestCase()
 void BmsBundlePermissionSyetemAppFalseTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundlePermissionSyetemAppFalseTest::TearDown()

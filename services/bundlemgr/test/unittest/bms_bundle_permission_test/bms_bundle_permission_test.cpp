@@ -91,20 +91,20 @@ std::shared_ptr<InstalldService> BmsBundlePermissionTest::installdService_ =
 
 void BmsBundlePermissionTest::SetUpTestCase()
 {
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
 }
 
 void BmsBundlePermissionTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
-    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
 }
 
 void BmsBundlePermissionTest::SetUp()
 {
-    installdService_->Start();
-    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsServiceReady()) {
-        DelayedSingleton<BundleMgrService>::GetInstance()->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
     }
 }
 
@@ -232,7 +232,9 @@ void BmsBundlePermissionTest::StopInstalldService() const
 
 void BmsBundlePermissionTest::StartInstalldService() const
 {
-    installdService_->Start();
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
+    }
 }
 
 void BmsBundlePermissionTest::StopBundleService() const

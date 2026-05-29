@@ -81,7 +81,11 @@ BmsBundlePermissionTokenTest::~BmsBundlePermissionTokenTest()
 {}
 
 void BmsBundlePermissionTokenTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundlePermissionTokenTest::TearDownTestCase()
 {
@@ -91,7 +95,6 @@ void BmsBundlePermissionTokenTest::TearDownTestCase()
 void BmsBundlePermissionTokenTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundlePermissionTokenTest::TearDown()

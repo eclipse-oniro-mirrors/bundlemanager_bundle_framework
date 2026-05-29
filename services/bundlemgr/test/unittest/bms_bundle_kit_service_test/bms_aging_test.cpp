@@ -293,7 +293,12 @@ std::shared_ptr<InstalldService> BmsAgingTest::installdService_ =
     std::make_shared<InstalldService>();
 
 void BmsAgingTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(DEFAULT_USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsAgingTest::TearDownTestCase()
 {
@@ -304,11 +309,6 @@ void BmsAgingTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
-    }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        bundleMgrService_->GetDataMgr()->AddUserId(DEFAULT_USERID);
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
 }
 

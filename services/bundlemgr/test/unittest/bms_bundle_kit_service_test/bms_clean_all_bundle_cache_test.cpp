@@ -264,7 +264,12 @@ std::shared_ptr<InstalldService> BmsCleanAllBundleCacheTest::installdService_ =
     std::make_shared<InstalldService>();
 
 void BmsCleanAllBundleCacheTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(DEFAULT_USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsCleanAllBundleCacheTest::TearDownTestCase()
 {
@@ -275,11 +280,6 @@ void BmsCleanAllBundleCacheTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
-    }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        bundleMgrService_->GetDataMgr()->AddUserId(DEFAULT_USERID);
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
     installRes_ = {
         .bundleName = HAP_FILE_PATH,

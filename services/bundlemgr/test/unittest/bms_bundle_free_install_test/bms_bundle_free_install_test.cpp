@@ -107,7 +107,13 @@ BmsBundleFreeInstallTest::~BmsBundleFreeInstallTest()
 {}
 
 void BmsBundleFreeInstallTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitFreeInstall();
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleFreeInstallTest::TearDownTestCase()
 {
@@ -116,7 +122,6 @@ void BmsBundleFreeInstallTest::TearDownTestCase()
 
 void BmsBundleFreeInstallTest::SetUp()
 {
-    StartBundleService();
     auto dataMgr = GetBundleDataMgr();
     if (dataMgr != nullptr) {
         dataMgr->AddUserId(USERID);
@@ -261,10 +266,6 @@ void BmsBundleFreeInstallTest::UninstallBundleInfo(const std::string bundleName)
 
 void BmsBundleFreeInstallTest::StartBundleService()
 {
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    }
 }
 
 const std::shared_ptr<BundleDataMgr> BmsBundleFreeInstallTest::GetBundleDataMgr() const

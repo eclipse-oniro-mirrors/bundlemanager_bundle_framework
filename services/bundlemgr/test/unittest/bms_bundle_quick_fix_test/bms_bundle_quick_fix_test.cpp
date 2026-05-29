@@ -143,7 +143,12 @@ BmsBundleQuickFixTest::~BmsBundleQuickFixTest()
 {}
 
 void BmsBundleQuickFixTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitQuickFixManager();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleQuickFixTest::TearDownTestCase()
 {
@@ -154,7 +159,6 @@ void BmsBundleQuickFixTest::TearDownTestCase()
 void BmsBundleQuickFixTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
     auto dataMgr = GetBundleDataMgr();
     if (dataMgr != nullptr) {
         dataMgr->AddUserId(USERID);

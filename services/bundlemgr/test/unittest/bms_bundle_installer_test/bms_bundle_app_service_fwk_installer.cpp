@@ -174,6 +174,10 @@ ErrCode BmsBundleAppServiceFwkInstallerTest::UnInstallBundle(const std::string &
 
 void BmsBundleAppServiceFwkInstallerTest::SetUpTestCase()
 {
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
 }
 
 void BmsBundleAppServiceFwkInstallerTest::InitAppServiceFwkInstaller(AppServiceFwkInstaller &appServiceFwkInstaller)
@@ -197,11 +201,6 @@ void BmsBundleAppServiceFwkInstallerTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
-    }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        bundleMgrService_->GetDataMgr()->AddUserId(USERID);
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
 }
 

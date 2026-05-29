@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
+
 #include <gtest/gtest.h>
 #include <string>
 
@@ -82,7 +85,12 @@ BmsBundleQuickFixQueryTest::~BmsBundleQuickFixQueryTest()
 {}
 
 void BmsBundleQuickFixQueryTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitQuickFixManager();
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleQuickFixQueryTest::TearDownTestCase()
 {
@@ -91,10 +99,6 @@ void BmsBundleQuickFixQueryTest::TearDownTestCase()
 
 void BmsBundleQuickFixQueryTest::SetUp()
 {
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    }
     auto dataMgr = GetBundleDataMgr();
     if (dataMgr != nullptr) {
         dataMgr->AddUserId(USERID);

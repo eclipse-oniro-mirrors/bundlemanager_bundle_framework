@@ -13,10 +13,14 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
+
 #include <fstream>
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
@@ -86,17 +90,22 @@ BmsBundleDependenciesTest::~BmsBundleDependenciesTest()
 {}
 
 void BmsBundleDependenciesTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleDependenciesTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleDependenciesTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundleDependenciesTest::TearDown()

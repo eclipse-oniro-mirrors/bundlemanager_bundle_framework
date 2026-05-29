@@ -62,20 +62,21 @@ std::shared_ptr<InstalldService> BmsInstallExceptionMgrTest::installdService_ =
     std::make_shared<InstalldService>();
 
 void BmsInstallExceptionMgrTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsInstallExceptionMgrTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
-    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
 }
 
 void BmsInstallExceptionMgrTest::SetUp()
 {
-    installdService_->Start();
-    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsServiceReady()) {
-        DelayedSingleton<BundleMgrService>::GetInstance()->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
     }
 }
 

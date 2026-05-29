@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
+
 #include <chrono>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -107,7 +110,12 @@ std::shared_ptr<InstalldService> BmsBundleGetWindowPropertiesTest::installdServi
     std::make_shared<InstalldService>();
 
 void BmsBundleGetWindowPropertiesTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(DEFAULT_USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleGetWindowPropertiesTest::TearDownTestCase()
 {
@@ -119,11 +127,6 @@ void BmsBundleGetWindowPropertiesTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
-    }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        bundleMgrService_->GetDataMgr()->AddUserId(DEFAULT_USERID);
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
     // install test hap
     std::vector<std::string> pathVec {BUNLDE_FILE_PATH};

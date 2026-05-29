@@ -65,7 +65,6 @@ public:
     void AddInnerAppQuickFix(const InnerAppQuickFix &appQuickFixInfo) const;
     InnerAppQuickFix GenerateAppQuickFixInfo(const std::string &bundleName, const QuickFixStatus &status,
         bool flag = true) const;
-    void StartService();
     void AddInnerBundleInfo(const std::string &bundleName) const;
     void CheckQuickFixInfo(const std::string &bundleName, size_t size) const;
     void QueryAllInnerQuickFixInfo(std::map<std::string, InnerAppQuickFix> &innerQuickFixInfos) const;
@@ -98,11 +97,18 @@ BmsBundleQuickFixBootScannerTest::~BmsBundleQuickFixBootScannerTest()
 {}
 
 void BmsBundleQuickFixBootScannerTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+    bundleMgrService_->ready_ = true;
+}
 
 void BmsBundleQuickFixBootScannerTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleQuickFixBootScannerTest::SetUp()
@@ -110,22 +116,10 @@ void BmsBundleQuickFixBootScannerTest::SetUp()
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
     }
-    StartService();
 }
 
 void BmsBundleQuickFixBootScannerTest::TearDown()
 {}
-
-void BmsBundleQuickFixBootScannerTest::StartService()
-{
-    bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    EXPECT_NE(bundleMgrService_, nullptr);
-    if (bundleMgrService_ != nullptr && !bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        bundleMgrService_->GetDataMgr()->AddUserId(USERID);
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    }
-}
 
 void BmsBundleQuickFixBootScannerTest::AddInnerAppQuickFix(const InnerAppQuickFix &appQuickFixInfo) const
 {
@@ -294,9 +288,6 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0100
     InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::DEPLOY_END);
     AddInnerAppQuickFix(innerAppQuickFix);
 
-    SetUp();
-    StartService();
-
     std::map<std::string, InnerAppQuickFix> innerQuickFixInfos;
     QueryAllInnerQuickFixInfo(innerQuickFixInfos);
     EXPECT_EQ(1, innerQuickFixInfos.size());
@@ -321,9 +312,6 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0200
 
     InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::SWITCH_ENABLE_START);
     AddInnerAppQuickFix(innerAppQuickFix);
-
-    SetUp();
-    StartService();
 
     std::map<std::string, InnerAppQuickFix> innerQuickFixInfos;
     QueryAllInnerQuickFixInfo(innerQuickFixInfos);
@@ -352,9 +340,6 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0300
     AddInnerAppQuickFix(innerAppQuickFix);
     CreateQuickFileDir();
 
-    SetUp();
-    StartService();
-
     int patchPathExist = access(PATCH_PATH.c_str(), F_OK);
     EXPECT_EQ(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
     std::map<std::string, InnerAppQuickFix> innerQuickFixInfos;
@@ -381,9 +366,6 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0400
     AddInnerAppQuickFix(innerAppQuickFix);
     CreateQuickFileDir();
 
-    SetUp();
-    StartService();
-
     int patchPathExist = access(PATCH_PATH.c_str(), F_OK);
     EXPECT_EQ(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
     std::map<std::string, InnerAppQuickFix> innerQuickFixInfos;
@@ -409,9 +391,6 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0500
     InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::DELETE_START, false);
     AddInnerAppQuickFix(innerAppQuickFix);
     CreateQuickFileDir();
-
-    SetUp();
-    StartService();
 
     int patchPathExist = access(PATCH_PATH.c_str(), F_OK);
     EXPECT_EQ(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
@@ -440,9 +419,6 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0600
     AddInnerAppQuickFix(innerAppQuickFix);
     CreateQuickFileDir();
 
-    SetUp();
-    StartService();
-
     int patchPathExist = access(PATCH_PATH.c_str(), F_OK);
     EXPECT_EQ(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
     std::map<std::string, InnerAppQuickFix> innerQuickFixInfos;
@@ -468,9 +444,6 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0700
     InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::DEFAULT_STATUS, false);
     AddInnerAppQuickFix(innerAppQuickFix);
     CreateQuickFileDir();
-
-    SetUp();
-    StartService();
 
     int patchPathExist = access(PATCH_PATH.c_str(), F_OK);
     EXPECT_EQ(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;

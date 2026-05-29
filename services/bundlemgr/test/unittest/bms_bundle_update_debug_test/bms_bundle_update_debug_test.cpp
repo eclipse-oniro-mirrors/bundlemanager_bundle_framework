@@ -97,20 +97,20 @@ std::shared_ptr<InstalldService> BmsBundleUpdateDebugTest::installdService_ =
 
 void BmsBundleUpdateDebugTest::SetUpTestCase()
 {
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
 }
 
 void BmsBundleUpdateDebugTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
-    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
 }
 
 void BmsBundleUpdateDebugTest::SetUp()
 {
-    installdService_->Start();
-    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsServiceReady()) {
-        DelayedSingleton<BundleMgrService>::GetInstance()->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
     }
 }
 
@@ -238,7 +238,9 @@ void BmsBundleUpdateDebugTest::StopInstalldService() const
 
 void BmsBundleUpdateDebugTest::StartInstalldService() const
 {
-    installdService_->Start();
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
+    }
 }
 
 void BmsBundleUpdateDebugTest::StopBundleService() const

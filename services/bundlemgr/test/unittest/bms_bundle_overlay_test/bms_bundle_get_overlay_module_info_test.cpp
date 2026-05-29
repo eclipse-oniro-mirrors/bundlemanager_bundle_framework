@@ -79,7 +79,11 @@ BmsBundleGetOverlayModuleInfoTest::~BmsBundleGetOverlayModuleInfoTest()
 {}
 
 void BmsBundleGetOverlayModuleInfoTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleGetOverlayModuleInfoTest::TearDownTestCase()
 {
@@ -87,10 +91,6 @@ void BmsBundleGetOverlayModuleInfoTest::TearDownTestCase()
 }
 void BmsBundleGetOverlayModuleInfoTest::SetUp()
 {
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    }
 }
 
 void BmsBundleGetOverlayModuleInfoTest::TearDown()

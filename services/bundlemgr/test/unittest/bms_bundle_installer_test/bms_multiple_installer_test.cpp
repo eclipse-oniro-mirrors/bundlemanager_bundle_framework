@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
+
 #include <chrono>
 #include <cstdio>
 #include <dirent.h>
@@ -225,6 +228,10 @@ ErrCode BmsMultipleInstallerTest::UpdateThirdPartyBundle(const std::string &file
 
 void BmsMultipleInstallerTest::SetUpTestCase()
 {
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
 }
 
 void BmsMultipleInstallerTest::TearDownTestCase()
@@ -236,10 +243,6 @@ void BmsMultipleInstallerTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
-    }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
 }
 

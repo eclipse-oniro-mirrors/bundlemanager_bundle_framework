@@ -68,11 +68,10 @@ BmsAOTHandlerTest::~BmsAOTHandlerTest()
 
 void BmsAOTHandlerTest::SetUpTestCase()
 {
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME_SECONDS));
-    }
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
     }

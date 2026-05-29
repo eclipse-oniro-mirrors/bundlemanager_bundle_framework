@@ -83,7 +83,12 @@ BmsBundleDataGroupTest::~BmsBundleDataGroupTest()
 {}
 
 void BmsBundleDataGroupTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundleDataGroupTest::TearDownTestCase()
 {
@@ -92,10 +97,6 @@ void BmsBundleDataGroupTest::TearDownTestCase()
 
 void BmsBundleDataGroupTest::SetUp()
 {
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    }
 }
 
 void BmsBundleDataGroupTest::TearDown()

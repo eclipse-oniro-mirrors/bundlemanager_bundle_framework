@@ -194,11 +194,10 @@ void BmsDriverInstallerTest::SetUpTestCase()
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
     }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        bundleMgrService_->GetDataMgr()->AddUserId(USERID);
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    }
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
     if (access(DRIVER_FILE_DIR.c_str(), F_OK) == 0) {
         return;
     }

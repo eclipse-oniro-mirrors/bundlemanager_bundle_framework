@@ -217,6 +217,10 @@ ErrCode BmsBundleInstallerPermissionTest::UnInstallBundle(const std::string &bun
 
 void BmsBundleInstallerPermissionTest::SetUpTestCase()
 {
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
 }
 
 void BmsBundleInstallerPermissionTest::TearDownTestCase()
@@ -228,11 +232,6 @@ void BmsBundleInstallerPermissionTest::SetUp()
 {
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
-    }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        bundleMgrService_->GetDataMgr()->AddUserId(USERID);
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
 }
 

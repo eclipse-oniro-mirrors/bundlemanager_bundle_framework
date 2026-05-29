@@ -73,7 +73,12 @@ BmsBundlePermissionStartFullTest::~BmsBundlePermissionStartFullTest()
 {}
 
 void BmsBundlePermissionStartFullTest::SetUpTestCase()
-{}
+{
+    bundleMgrService_->InitBundleInstaller();
+    bundleMgrService_->InitBundleDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    bundleMgrService_->GetDataMgr()->LoadDataFromPersistentStorage();
+}
 
 void BmsBundlePermissionStartFullTest::TearDownTestCase()
 {
@@ -83,7 +88,6 @@ void BmsBundlePermissionStartFullTest::TearDownTestCase()
 void BmsBundlePermissionStartFullTest::SetUp()
 {
     StartInstalldService();
-    StartBundleService();
 }
 
 void BmsBundlePermissionStartFullTest::TearDown()
