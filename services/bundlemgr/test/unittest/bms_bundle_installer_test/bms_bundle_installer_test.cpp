@@ -17283,9 +17283,8 @@ HWTEST_F(BmsBundleInstallerTest, DeleteCertAndRemoveKey_0200, Function | SmallTe
  * @tc.number: ExtractNPAPIPluginFiles_0010
  * @tc.name: test ExtractNPAPIPluginFiles
  * @tc.desc: test ExtractNPAPIPluginFiles npapiPluginStatus_ in different scenarios
- *           1. no permission/srcPath not exist - STATUS_NOT_APPLICABLE
- *           2. ExtractFiles failed - STATUS_EXTRACT_FAILED
- *           3. ExtractNPAPIPluginFiles success - STATUS_SUCCESS
+ *           1. modulePath not exist - STATUS_EXTRACT_FAILED
+ *           2. empty modulePath - STATUS_EXTRACT_FAILED
  */
 HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0010, Function | SmallTest | Level0)
 {
@@ -17293,22 +17292,74 @@ HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0010, Function | SmallT
     installer.bundleName_ = "com.example.test";
     installer.userId_ = USERID;
     
-    // scenario 1: no permission or srcPath not exist, status should be STATUS_NOT_APPLICABLE
-    // when permission denied or resources/rawfile/npapi_plugins/ not exist in HAP
-    installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    installer.ExtractNPAPIPluginFiles();
-    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
+    // scenario 1: modulePath not exist, ExtractFiles will fail
+    installer.modulePath_ = RESOURCE_ROOT_PATH + INVALID_BUNDLE;
+    installer.ExtractNPAPIPluginFiles(installer.modulePath_);
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_EXTRACT_FAILED);
     
     // scenario 2: empty modulePath, InstalldClient::ExtractFiles will fail
     installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
     installer.modulePath_ = "";
-    installer.ExtractNPAPIPluginFiles();
-    // ExtractFiles fails with empty srcPath, status should be STATUS_EXTRACT_FAILED
+    installer.ExtractNPAPIPluginFiles(installer.modulePath_);
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_EXTRACT_FAILED);
+}
+
+/**
+ * @tc.number: ExtractNPAPIPluginFiles_0020
+ * @tc.name: test ExtractNPAPIPluginFiles with different userId
+ * @tc.desc: test ExtractNPAPIPluginFiles npapiPluginStatus_ with different userId scenarios
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = "com.example.test.npapi";
+    installer.modulePath_ = "";
+    
+    // scenario 1: userId = 0, empty modulePath leads to STATUS_EXTRACT_FAILED
+    installer.userId_ = 0;
+    installer.ExtractNPAPIPluginFiles(installer.modulePath_);
     EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_EXTRACT_FAILED);
     
-    // scenario 3: with valid modulePath containing npapi_plugins directory
-    // requires permission granted and valid HAP with npapi_plugins directory
-    // in unit test environment, this scenario needs special test resources
+    // scenario 2: userId = Constants::START_USERID (100)
+    installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
+    installer.userId_ = Constants::START_USERID;
+    installer.ExtractNPAPIPluginFiles(installer.modulePath_);
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_EXTRACT_FAILED);
+    
+    // scenario 3: userId = TEST_EL5_USERID (2000)
+    installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
+    installer.userId_ = TEST_EL5_USERID;
+    installer.ExtractNPAPIPluginFiles(installer.modulePath_);
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_EXTRACT_FAILED);
+}
+
+/**
+ * @tc.number: ExtractNPAPIPluginFiles_0030
+ * @tc.name: test ExtractNPAPIPluginFiles with different bundleName
+ * @tc.desc: test ExtractNPAPIPluginFiles npapiPluginStatus_ with different bundleName scenarios
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0030, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = USERID;
+    installer.modulePath_ = "";
+    
+    // scenario 1: empty bundleName, empty modulePath leads to STATUS_EXTRACT_FAILED
+    installer.bundleName_ = "";
+    installer.ExtractNPAPIPluginFiles(installer.modulePath_);
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_EXTRACT_FAILED);
+    
+    // scenario 2: bundleName with special characters
+    installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
+    installer.bundleName_ = "com.test.special_chars";
+    installer.ExtractNPAPIPluginFiles(installer.modulePath_);
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_EXTRACT_FAILED);
+    
+    // scenario 3: bundleName with invalid format
+    installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
+    installer.bundleName_ = "invalid";
+    installer.ExtractNPAPIPluginFiles(installer.modulePath_);
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_EXTRACT_FAILED);
 }
 
 /**
@@ -17340,6 +17391,63 @@ HWTEST_F(BmsBundleInstallerTest, RemoveNPAPIPluginDir_0010, Function | SmallTest
     // scenario 3: directory exists and RemoveDir succeeds
     // requires creating test directory and proper setup
     // in unit test environment, this scenario needs special test resources
+}
+
+/**
+ * @tc.number: RemoveNPAPIPluginDir_0020
+ * @tc.name: test RemoveNPAPIPluginDir with different userId
+ * @tc.desc: test RemoveNPAPIPluginDir npapiPluginStatus_ with different userId scenarios
+ */
+HWTEST_F(BmsBundleInstallerTest, RemoveNPAPIPluginDir_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = "com.example.test.npapi";
+    
+    // scenario 1: userId = 0
+    installer.userId_ = 0;
+    installer.RemoveNPAPIPluginDir();
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
+    
+    // scenario 2: userId = Constants::START_USERID (100)
+    installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
+    installer.userId_ = Constants::START_USERID;
+    installer.RemoveNPAPIPluginDir();
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
+    
+    // scenario 3: userId = TEST_EL5_USERID (2000)
+    installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
+    installer.userId_ = TEST_EL5_USERID;
+    installer.RemoveNPAPIPluginDir();
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
+}
+
+/**
+ * @tc.number: RemoveNPAPIPluginDir_0030
+ * @tc.name: test RemoveNPAPIPluginDir with directory creation and removal
+ * @tc.desc: test RemoveNPAPIPluginDir with real directory operations
+ */
+HWTEST_F(BmsBundleInstallerTest, RemoveNPAPIPluginDir_0030, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = "com.example.test.npapi.remove";
+    installer.userId_ = USERID;
+    
+    // Create a test directory that simulates NPAPI plugin directory
+    std::string targetPath = ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH + std::to_string(USERID) +
+        ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + installer.bundleName_;
+    
+    // Try to remove non-existent directory
+    installer.RemoveNPAPIPluginDir();
+    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
+    
+    // Create test directory for removal test
+    ErrCode createRet = InstalldOperator::MkOwnerDir(targetPath, 0, 0, 0);
+    if (createRet == ERR_OK) {
+        installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
+        installer.RemoveNPAPIPluginDir();
+        // After removal, status should be STATUS_SUCCESS
+        EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_SUCCESS);
+    }
 }
 
 /**

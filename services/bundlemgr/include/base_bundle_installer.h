@@ -737,7 +737,7 @@ private:
     ErrCode CheckMDMUpdateBundleForSelf(const InstallParam &installParam, InnerBundleInfo &oldInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, bool isAppExist);
     void ExtractResourceFiles(const InnerBundleInfo &info, const std::string &targetPath) const;
-    void ExtractNPAPIPluginFiles();
+    void ExtractNPAPIPluginFiles(const std::string &modulePath);
     void RemoveNPAPIPluginDir();
     void RemoveTempSoDir(const std::string &tempSoDir, const std::string &bundleName);
     bool CheckAppIdentifier(const std::string &oldAppIdentifier, const std::string &newAppIdentifier,
