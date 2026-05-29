@@ -35,11 +35,12 @@ public:
     static AOTHandler& GetInstance();
     static std::string BuildArkProfilePath(
         const int32_t userId, const std::string &bundleName = "", const std::string &moduleName = "");
-    static std::string BuildSharedArkCachePath(
-        const std::string &bundleName, std::optional<uint32_t> versionCode = std::nullopt);
     static AOTCompileStatus ConvertToAOTCompileStatus(const ErrCode ret, const uint8_t triggerType);
+    static void DeleteHostPrivateSharedHspAOT(
+        const std::string &hspBundleName, std::optional<uint32_t> versionCode = std::nullopt);
 
-    void HandleInstallAOTAsync(const std::string &bundleName) const;
+    void HandleHapInstallAOTAsync(const std::string &bundleName) const;
+    void HandleSharedHspChangedAOTAsync(const std::string &bundleName) const;
     void HandleOTA();
     void HandleIdle() const;
     ErrCode HandleCompile(const std::string &bundleName, const std::string &compileMode, bool isAllBundle,
@@ -52,17 +53,27 @@ private:
     ~AOTHandler() = default;
     DISALLOW_COPY_AND_MOVE(AOTHandler);
 
-    void HandleInstallAOT(const std::string &bundleName) const;
+    void HandleHapInstallAOT(const std::string &bundleName) const;
+    void CompileDependentSharedHspAOT(const InnerBundleInfo &hostInfo,
+        const uint8_t triggerType) const;
+    void HandleSharedHspChangedAOT(const std::string &bundleName) const;
+    void CompileHostsForChangedSharedHsp(const InnerBundleInfo &sharedInfo) const;
+    void CompileHostSharedHspAOT(const InnerBundleInfo &hostInfo,
+        const BaseSharedBundleInfo &sharedBundleInfo,
+        const uint8_t triggerType) const;
     bool ShouldCompileSharedModule(const InnerModuleInfo &moduleInfo) const;
+    bool ShouldCompileSharedHspModule(const BaseSharedBundleInfo &sharedBundleInfo) const;
     bool ShouldCompileAppModule(const InnerModuleInfo &moduleInfo) const;
+    bool HasCompilableSharedHspModule(const InnerBundleInfo &sharedInfo) const;
     ErrCode MkApDestDirIfNotExist() const;
     void CopyApWithBundle(const std::string &bundleName, const BundleInfo &bundleInfo,
         const int32_t userId, std::vector<std::string> &results) const;
     std::string GetSouceAp(const std::string &mergedAp, const std::string &rtAp) const;
     bool IsSupportARM64() const;
     std::string FindArkProfilePath(const std::string &bundleName, const std::string &moduleName) const;
-    void BuildSharedArgs(uint32_t versionCode, AOTArgs &aotArgs) const;
     bool BuildAppArgs(const InnerBundleInfo &info, const std::string &compileMode, AOTArgs &aotArgs) const;
+    std::optional<AOTArgs> BuildHostSharedHspAOTArgs(const InnerBundleInfo &hostInfo,
+        const BaseSharedBundleInfo &sharedBundleInfo, const uint8_t triggerType) const;
     std::optional<AOTArgs> BuildAOTArgs(const InnerBundleInfo &info, const std::string &moduleName,
         const std::string &compileMode, bool isEnableBaselinePgo, const uint8_t triggerType) const;
     bool NeedCompile(const InnerBundleInfo &info, const std::string &moduleName) const;

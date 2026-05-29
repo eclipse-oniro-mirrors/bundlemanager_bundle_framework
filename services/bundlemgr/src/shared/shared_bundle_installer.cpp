@@ -238,7 +238,7 @@ void SharedBundleInstaller::ProcessAOT() const
         return;
     }
     for (const auto &installer : innerInstallers_) {
-        AOTHandler::GetInstance().HandleInstallAOTAsync(installer.first);
+        AOTHandler::GetInstance().HandleSharedHspChangedAOTAsync(installer.first);
     }
 }
 }  // namespace AppExecFwk

@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "bundle_constants.h"
-#include "hap_module_info.h"
 #include "parcel.h"
 
 namespace OHOS {
@@ -29,7 +28,6 @@ struct SharedModuleInfo : public Parcelable {
     bool compressNativeLibs = true;
     uint32_t versionCode = 0;
     uint32_t descriptionId = 0;
-    AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
     std::string name;
     std::string versionName;
     std::string description;

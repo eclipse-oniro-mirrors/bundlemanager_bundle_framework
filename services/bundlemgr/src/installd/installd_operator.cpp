@@ -4950,8 +4950,6 @@ bool InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
         case BundleDirScene::REMOVE_BUNDLE_CODE_DIR:
         case BundleDirScene::REMOVE_MODULE_DIR:
             return StartsWith(dir, Constants::BUNDLE_CODE_DIR);
-        case BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR:
-            return StartsWith(dir, ServiceConstants::SHARED_HSP_ARK_CACHE_PATH);
         case BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR:
             return StartsWith(dir, ServiceConstants::HAP_ARK_CACHE_PATH);
         case BundleDirScene::REMOVE_BUNDLE_HNP_DIR:
@@ -5066,7 +5064,6 @@ bool InstalldOperator::IsValidPathByRemoveDirScene(
     switch (scene) {
         case BundleDirScene::REMOVE_BUNDLE_CODE_DIR:
         case BundleDirScene::REMOVE_MODULE_DIR:
-        case BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR:
         case BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR:
         case BundleDirScene::REMOVE_BUNDLE_HNP_DIR:
         case BundleDirScene::REMOVE_BMS_BUNDLE_LIB_DIR:
@@ -5242,7 +5239,6 @@ bool InstalldOperator::IsValidPathByClearDirScene(const std::string &dir, const 
             return StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, ARK_PROFILE_PATH);
         case BundleDirScene::CLEAR_ARK_CACHE_DIR:
             return StartsWith(dir, std::string(ServiceConstants::FOR_ALL_APP_DIR) + FRAMEWORK_ARK_CACHE_PATH) ||
-                   StartsWith(dir, ServiceConstants::SHARED_HSP_ARK_CACHE_PATH) ||
                    StartsWith(dir, ServiceConstants::HAP_ARK_CACHE_PATH);
         default:
             return false;

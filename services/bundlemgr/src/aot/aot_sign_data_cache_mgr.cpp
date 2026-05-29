@@ -71,7 +71,7 @@ void AOTSignDataCacheMgr::AddSignDataForModule(const AOTArgs &aotArgs, const uin
     }
     std::lock_guard<std::mutex> lock(mutex_);
     moduleSignDataVector_.emplace_back(ModuleSignData{aotArgs.bundleType, aotArgs.triggerType, versionCode,
-        aotArgs.bundleName, aotArgs.moduleName, signData});
+        aotArgs.bundleName, aotArgs.moduleName, aotArgs.anFileName, signData});
 }
 
 void AOTSignDataCacheMgr::UnregisterScreenUnlockEvent()
@@ -145,22 +145,12 @@ bool AOTSignDataCacheMgr::EnforceCodeSignForModule()
         return false;
     }
     for (const ModuleSignData &signData : moduleSignDataVector_) {
-        std::filesystem::path anFileName;
-        if (signData.bundleType == static_cast<uint8_t>(BundleType::SHARED)) {
-            anFileName = AOTHandler::BuildSharedArkCachePath(signData.bundleName, signData.versionCode);
-            anFileName /= signData.moduleName + ServiceConstants::AN_SUFFIX;
-        } else {
-            anFileName = ServiceConstants::HAP_ARK_CACHE_PATH;
-            anFileName /= signData.bundleName;
-            anFileName /= ServiceConstants::ARM64;
-            anFileName /= signData.moduleName + ServiceConstants::AN_SUFFIX;
-        }
-        ErrCode signRet = InstalldClient::GetInstance()->PendSignAOT(anFileName.string(), signData.signData);
+        ErrCode signRet = InstalldClient::GetInstance()->PendSignAOT(signData.anFileName, signData.signData);
         if (signRet == ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
             APP_LOGE_NOFUNC("sign service disabled");
             return false;
         }
-        if (signRet == ERR_OK) {
+        if (signRet == ERR_OK && signData.bundleType != static_cast<uint8_t>(BundleType::SHARED)) {
             AOTCompileStatus status = AOTHandler::ConvertToAOTCompileStatus(signRet, signData.triggerType);
             dataMgr->SetAOTCompileStatus(signData.bundleName, signData.moduleName, status, signData.versionCode);
         }

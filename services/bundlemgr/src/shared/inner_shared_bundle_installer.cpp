@@ -233,8 +233,7 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
     MergeBundleInfos();
 
     newBundleInfo_.ResetAOTFlags();
-    (void)InstalldClient::GetInstance()->RemoveDir(
-        AOTHandler::BuildSharedArkCachePath(bundleName_), BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR, bundleName_);
+    AOTHandler::DeleteHostPrivateSharedHspAOT(bundleName_);
 
     UpdateRouterInfoForSharedBundle(newBundleInfo_);
     result = SavePreInstallInfo(installParam);

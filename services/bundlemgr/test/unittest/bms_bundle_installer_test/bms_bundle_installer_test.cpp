@@ -17209,7 +17209,7 @@ HWTEST_F(BmsBundleInstallerTest, ClearDir_0200, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
     std::string dir =
-        std::string(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
+        std::string(ServiceConstants::HAP_ARK_CACHE_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_STRING;
     ErrCode ret = impl.ClearDir(dir, BundleDirScene::CLEAR_ARK_CACHE_DIR);
     EXPECT_EQ(ret, ERR_OK);
 }
