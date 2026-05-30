@@ -4473,6 +4473,40 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfoByUri_0200, Function 
 }
 
 /**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0100
+ * @tc.name: test can get the extension ability info by uri optimal
+ * @tc.desc: 1.system run normally
+ *           2.uri not include :///, invalid
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfoByUriOptimal_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    ExtensionAbilityInfo extensionAbilityInfo;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bool testRet = bundleMgrProxy->QueryExtensionAbilityInfoByUriOptimal(
+        URI, DEFAULT_USERID, extensionAbilityInfo);
+    EXPECT_EQ(false, testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0200
+ * @tc.name: test QueryExtensionAbilityInfoByUriOptimal with empty uri
+ * @tc.desc: 1.system run normally
+ *           2.query info failed by empty uri
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfoByUriOptimal_0200, Function | SmallTest | Level1)
+{
+    ExtensionAbilityInfo extensionAbilityInfo;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bool testRet = bundleMgrProxy->QueryExtensionAbilityInfoByUriOptimal(
+        "", DEFAULT_USERID, extensionAbilityInfo);
+    EXPECT_EQ(false, testRet);
+}
+
+/**
  * @tc.number: QueryKeepAliveBundleInfos_0100
  * @tc.name: test can get the keep alive bundle infos
  * @tc.desc: 1.system run normally

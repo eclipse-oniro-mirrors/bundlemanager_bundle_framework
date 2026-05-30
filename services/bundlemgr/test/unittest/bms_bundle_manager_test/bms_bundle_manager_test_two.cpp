@@ -2845,6 +2845,26 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleSpaceSize_0400, Function | MediumTest |
     EXPECT_EQ(ret, size);
 }
 
+/**
+ * @tc.name: test QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: 1.query extension info by uri optimal with invalid params
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleManagerTest2, QueryExtensionAbilityInfoByUriOptimal_0100, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string uri = "dataability:///com.example.FileShare/person/10";
+    int32_t userId = Constants::INVALID_USERID;
+    ExtensionAbilityInfo info;
+    bool ret = dataMgr->QueryExtensionAbilityInfoByUriOptimal(uri, userId, info);
+    EXPECT_EQ(ret, false);
+
+    userId = Constants::ALL_USERID;
+    ret = dataMgr->QueryExtensionAbilityInfoByUriOptimal(uri, userId, info);
+    EXPECT_EQ(ret, false);
+}
+
 #endif
 
 } // OHOS

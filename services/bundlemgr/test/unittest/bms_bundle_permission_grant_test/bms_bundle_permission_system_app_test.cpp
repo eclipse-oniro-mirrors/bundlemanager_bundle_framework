@@ -3898,4 +3898,18 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0106
     EXPECT_TRUE(ret);
     ResetTestValues();
 }
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_QueryExtensionAbilityInfoByUriOptimal
+ * @tc.name: test QueryExtensionAbilityInfoByUriOptimal of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. QueryExtensionAbilityInfoByUriOptimal false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest,
+    BmsBundleSyetemAppFalseTest_QueryExtensionAbilityInfoByUriOptimal, Function | SmallTest | Level0)
+{
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool ret = bundleMgrHostImpl_->QueryExtensionAbilityInfoByUriOptimal(HAP_FILE_PATH, USERID, extensionAbilityInfo);
+    EXPECT_EQ(ret, false);
+}
 } // OHOS

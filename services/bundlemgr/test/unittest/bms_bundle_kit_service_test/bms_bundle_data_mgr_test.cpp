@@ -7587,4 +7587,120 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplGetAlternateIcons_0001, Function
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_NE(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0100
+ * @tc.name: test QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: 1.system run normally
+ *           2.query with disabled app should fail
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0100, Function | SmallTest | Level1)
+{
+    std::string uri = "/:4///";
+    ExtensionAbilityInfo extensionAbilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    bool testRet = GetBundleDataMgr()->QueryExtensionAbilityInfoByUriOptimal(
+        uri, USERID, extensionAbilityInfo);
+    EXPECT_EQ(false, testRet);
+    GetBundleDataMgr()->multiUserIdsSet_.clear();
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0200
+ * @tc.name: test QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: 1.system run normally
+ *           2.query with valid uri but no matching extension
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0200, Function | SmallTest | Level1)
+{
+    std::string uri = "/:4///";
+    ExtensionAbilityInfo extensionAbilityInfo;
+    InnerBundleInfo innerBundleInfo;
+
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    bool testRet = GetBundleDataMgr()->QueryExtensionAbilityInfoByUriOptimal(
+        uri, USERID, extensionAbilityInfo);
+    EXPECT_EQ(false, testRet);
+    GetBundleDataMgr()->multiUserIdsSet_.clear();
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0300
+ * @tc.name: test QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: 1.system run normally
+ *           2.query via hostImpl with no permission should fail
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0300, Function | SmallTest | Level1)
+{
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool testRet = bundleMgrHostImpl_->QueryExtensionAbilityInfoByUriOptimal(
+        HAP_FILE_PATH, USERID, extensionAbilityInfo);
+    EXPECT_EQ(false, testRet);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0400
+ * @tc.name: test QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: 1.system run normally
+ *           2.query with invalid uri (no :/// and not datashareproxy)
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0400, Function | SmallTest | Level1)
+{
+    std::string uri = "invaliduri";
+    ExtensionAbilityInfo extensionAbilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    bool testRet = GetBundleDataMgr()->QueryExtensionAbilityInfoByUriOptimal(
+        uri, USERID, extensionAbilityInfo);
+    EXPECT_EQ(false, testRet);
+    GetBundleDataMgr()->multiUserIdsSet_.clear();
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0500
+ * @tc.name: test QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: 1.system run normally
+ *           2.query with datashareproxy:// uri but no matching extension
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0500, Function | SmallTest | Level1)
+{
+    std::string uri = "datashareproxy://com.example.test";
+    ExtensionAbilityInfo extensionAbilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    bool testRet = GetBundleDataMgr()->QueryExtensionAbilityInfoByUriOptimal(
+        uri, USERID, extensionAbilityInfo);
+    EXPECT_EQ(false, testRet);
+    GetBundleDataMgr()->multiUserIdsSet_.clear();
+}
 } // OHOS
