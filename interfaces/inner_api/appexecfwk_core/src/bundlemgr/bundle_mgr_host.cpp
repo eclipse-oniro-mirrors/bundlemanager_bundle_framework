@@ -351,6 +351,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_BY_URI):
             errCode = this->HandleQueryExtensionAbilityInfoByUri(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_BY_URI_OPTIMAL):
+            errCode = this->HandleQueryExtensionAbilityInfoByUriOptimal(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPID_BY_BUNDLE_NAME):
             errCode = this->HandleGetAppIdByBundleName(data, reply);
             break;
@@ -2886,6 +2889,26 @@ ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfoByUri(MessageParcel &data,
     int32_t userId = data.ReadInt32();
     ExtensionAbilityInfo extensionAbilityInfo;
     bool ret = QueryExtensionAbilityInfoByUri(uri, userId, extensionAbilityInfo);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret) {
+        if (!reply.WriteParcelable(&extensionAbilityInfo)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfoByUriOptimal(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string uri = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool ret = QueryExtensionAbilityInfoByUriOptimal(uri, userId, extensionAbilityInfo);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

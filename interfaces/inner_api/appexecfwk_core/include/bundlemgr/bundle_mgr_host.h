@@ -717,6 +717,8 @@ private:
 
     ErrCode HandleQueryExtensionAbilityInfoByUri(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleQueryExtensionAbilityInfoByUriOptimal(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetAppIdByBundleName(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAppType(MessageParcel &data, MessageParcel &reply);

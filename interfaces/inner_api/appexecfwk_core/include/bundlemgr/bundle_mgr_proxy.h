@@ -946,6 +946,9 @@ public:
     virtual bool QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo) override;
 
+    virtual bool QueryExtensionAbilityInfoByUriOptimal(const std::string &uri, int32_t userId,
+        ExtensionAbilityInfo &extensionAbilityInfo) override;
+
     virtual bool ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo) override;
 

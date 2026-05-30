@@ -3833,6 +3833,28 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, i
     return dataMgr->QueryExtensionAbilityInfoByUri(uri, userId, extensionAbilityInfo);
 }
 
+bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUriOptimal(const std::string &uri, int32_t userId,
+    ExtensionAbilityInfo &extensionAbilityInfo)
+{
+    LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal uri:%{private}s -u %{public}d", uri.c_str(), userId);
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal uid:%{public}d not foundation", uid);
+        return false;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
+        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal verify permission failed");
+        return false;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUriOptimal DataMgr is nullptr");
+        return false;
+    }
+    return dataMgr->QueryExtensionAbilityInfoByUriOptimal(uri, userId, extensionAbilityInfo);
+}
+
 std::string BundleMgrHostImpl::GetAppIdByBundleName(const std::string &bundleName, const int userId)
 {
     APP_LOGD("bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
