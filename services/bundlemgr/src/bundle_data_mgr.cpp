@@ -9726,6 +9726,16 @@ ErrCode BundleDataMgr::GenerateAppInstallExtendedInfo(const InnerBundleInfo &inn
         uniqueDependencies.insert(dep.bundleName);
         SharedBundleInfo sharedBundleInfo;
         if (GetSharedBundleInfoBySelfNoLock(dep.bundleName, sharedBundleInfo) == ERR_OK) {
+            auto &sharedModuleInfos = sharedBundleInfo.sharedModuleInfos;
+            sharedModuleInfos.erase(std::remove_if(sharedModuleInfos.begin(), sharedModuleInfos.end(),
+                [](const SharedModuleInfo &moduleInfo) {
+                    if (BundleUtil::IsExistFile(moduleInfo.hapPath)) {
+                        return false;
+                    }
+                    APP_LOGW("Remove invalid shared module %{public}s, hapPath %{public}s",
+                        moduleInfo.name.c_str(), moduleInfo.hapPath.c_str());
+                    return true;
+                }), sharedModuleInfos.end());
             appInstallExtendedInfo.sharedBundleInfos.emplace_back(sharedBundleInfo);
         } else {
             APP_LOGW("GetSharedBundleInfo failed for bundle %{public}s", dep.bundleName.c_str());
