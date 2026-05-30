@@ -1052,22 +1052,6 @@ static void EnableDynamicIconNative(
     }
 }
 
-static void SetAlternateIconNative(ani_env* env, ani_string aniAlternateIconName)
-{
-    APP_LOGD("ani SetAlternateIconNative called");
-    std::string alternateIconName;
-    if (!CommonFunAni::ParseString(env, aniAlternateIconName, alternateIconName)) {
-        APP_LOGE("alternateIconName invalid");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, ALTERNATE_ICON_NAME, TYPE_STRING);
-        return;
-    }
-    ErrCode ret = BundleManagerHelper::InnerSetAlternateIcon(alternateIconName);
-    if (ret != ERR_OK) {
-        APP_LOGE("SetAlternateIconNative failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, ret, SET_ALTERNATE_ICON, "");
-    }
-}
-
 static ani_object GetBundleArchiveInfoNative(
     ani_env* env, ani_string aniHapFilePath, ani_int aniBundleFlags, ani_boolean aniIsSync)
 {
@@ -2461,25 +2445,6 @@ static ani_enum_item GetBundleInstallStatusNative(ani_env* env, ani_string aniBu
     return EnumUtils::EnumNativeToETS_BundleManager_BundleInstallStatus(env, static_cast<int32_t>(status));
 }
 
-static ani_object GetAlternateIconsNative(ani_env* env)
-{
-    APP_LOGD("ani GetAlternateIcons called");
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("Can not get iBundleMgr");
-        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
-        return nullptr;
-    }
-    std::vector<AlternateIconInfo> alternateIcons;
-    ErrCode ret = iBundleMgr->GetAlternateIcons(alternateIcons);
-    if (ret != ERR_OK) {
-        APP_LOGE_NOFUNC("GetAlternateIcons failed ret:%{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), GET_ALTERNATE_ICONS, "");
-        return nullptr;
-    }
-    return CommonFunAni::ConvertAniArray(env, alternateIcons, CommonFunAni::ConvertAlternateIconInfo);
-}
-
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -2532,7 +2497,6 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "queryAbilityInfoWithWantsNative", nullptr,
             reinterpret_cast<void*>(QueryAbilityInfoWithWantsNative) },
         ani_native_function { "enableDynamicIconNative", nullptr, reinterpret_cast<void*>(EnableDynamicIconNative) },
-        ani_native_function { "setAlternateIconNative", nullptr, reinterpret_cast<void*>(SetAlternateIconNative) },
         ani_native_function { "getBundleArchiveInfoNative", nullptr,
             reinterpret_cast<void*>(GetBundleArchiveInfoNative) },
         ani_native_function { "getLaunchWant", nullptr, reinterpret_cast<void*>(GetLaunchWant) },
@@ -2599,8 +2563,6 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(IsApplicationDisableForbidden) },
         ani_native_function { "getBundleInstallStatusNative", nullptr,
             reinterpret_cast<void*>(GetBundleInstallStatusNative) },
-        ani_native_function { "getAlternateIconsNative", nullptr,
-            reinterpret_cast<void*>(GetAlternateIconsNative) },
     };
 
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

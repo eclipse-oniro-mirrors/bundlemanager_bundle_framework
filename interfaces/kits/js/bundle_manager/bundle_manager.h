@@ -455,8 +455,6 @@ napi_value SetAbilityFileTypesForSelf(napi_env env, napi_callback_info info);
 napi_value RecoverBackupBundleData(napi_env env, napi_callback_info info);
 napi_value RemoveBackupBundleData(napi_env env, napi_callback_info info);
 napi_value IsApplicationDisableForbidden(napi_env env, napi_callback_info info);
-napi_value SetAlternateIcon(napi_env env, napi_callback_info info);
-napi_value GetAlternateIcons(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
