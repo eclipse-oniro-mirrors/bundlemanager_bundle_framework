@@ -12579,4 +12579,135 @@ HWTEST_F(BmsDataMgrTest, GetSkillInfos_0002, Function | SmallTest | Level1)
     auto ret = dataMgr->GetSkillInfos(BUNDLE_NAME, flag, -4, skillInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0001
+ * @tc.name: QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: test QueryExtensionAbilityInfoByUriOptimal with invalid userId
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string uri = "dataability:///com.example.test/path";
+    int32_t userId = Constants::INVALID_USERID;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfoByUriOptimal(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0002
+ * @tc.name: QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: test QueryExtensionAbilityInfoByUriOptimal with empty uri
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string uri = "";
+    int32_t userId = Constants::ANY_USERID;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfoByUriOptimal(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0003
+ * @tc.name: QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: test QueryExtensionAbilityInfoByUriOptimal with uri containing :/// and no match
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0003, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string uri = "dataability:///com.example.test/path";
+    int32_t userId = Constants::ANY_USERID;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfoByUriOptimal(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0004
+ * @tc.name: QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: test QueryExtensionAbilityInfoByUriOptimal with datashareproxy:// uri and no match
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0004, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string uri = "datashareproxy://com.example.test";
+    int32_t userId = Constants::ANY_USERID;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfoByUriOptimal(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0005
+ * @tc.name: QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: test QueryExtensionAbilityInfoByUriOptimal with invalid uri (no :/// and not datashareproxy)
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0005, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string uri = "invaliduri";
+    int32_t userId = Constants::ANY_USERID;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfoByUriOptimal(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0006
+ * @tc.name: QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: test QueryExtensionAbilityInfoByUriOptimal with disabled app should be skipped
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0006, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string uri = "dataability:///com.example.test/path";
+    int32_t userId = Constants::ANY_USERID;
+    ExtensionAbilityInfo extensionAbilityInfo;
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    bundleDataMgr.bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    bundleDataMgr.multiUserIdsSet_.insert(USERID);
+
+    bool result = bundleDataMgr.QueryExtensionAbilityInfoByUriOptimal(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+    bundleDataMgr.multiUserIdsSet_.clear();
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0007
+ * @tc.name: QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: test QueryExtensionAbilityInfoByUriOptimal with uri containing :/// and path separator
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0007, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string uri = "dataability:///com.example.test/path/sub";
+    int32_t userId = Constants::ANY_USERID;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfoByUriOptimal(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0008
+ * @tc.name: QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: test QueryExtensionAbilityInfoByUriOptimal with bundleInfos empty
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0008, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string uri = "dataability:///com.example.test/path";
+    int32_t userId = Constants::ANY_USERID;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bundleDataMgr.bundleInfos_.clear();
+    bool result = bundleDataMgr.QueryExtensionAbilityInfoByUriOptimal(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+}
 } // OHOS

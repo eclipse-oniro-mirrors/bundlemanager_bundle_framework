@@ -4447,4 +4447,34 @@ HWTEST_F(BmsBundleManagerTest, SetBundleFirstLaunch_0004, Function | MediumTest 
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
     ResetDataMgr();
 }
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0100
+ * @tc.name: test QueryExtensionAbilityInfoByUriOptimal
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfoByUriOptimal_0100, Function | SmallTest | Level1)
+{
+    ExtensionAbilityInfo extensionAbilityInfo;
+    GetBundleDataMgr()->bundleInfos_.clear();
+    bool testRet = GetBundleDataMgr()->QueryExtensionAbilityInfoByUriOptimal(
+        "dataability://com.example.hiworld.himusic.UserADataAbility", USERID, extensionAbilityInfo);
+    EXPECT_EQ(testRet, false);
+    EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimal_0200
+ * @tc.name: test QueryExtensionAbilityInfoByUriOptimal via hostImpl
+ * @tc.desc: 1.system run normally
+ *           2.call hostImpl directly
+*/
+HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfoByUriOptimal_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool retBool = hostImpl->QueryExtensionAbilityInfoByUriOptimal("", USERID, extensionAbilityInfo);
+    EXPECT_EQ(retBool, false);
+}
 } // OHOS

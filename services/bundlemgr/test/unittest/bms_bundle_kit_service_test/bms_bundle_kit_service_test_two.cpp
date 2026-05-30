@@ -12024,4 +12024,50 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFilesImpl_0700, Function | Smal
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
     }
 }
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimalImpl_0100
+ * @tc.name: test QueryExtensionAbilityInfoByUriOptimal with dataMgr nullptr
+ * @tc.desc: 1. test QueryExtensionAbilityInfoByUriOptimal when dataMgr nullptr
+ *           2. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfoByUriOptimalImpl_0100, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ExtensionAbilityInfo extensionAbilityInfo;
+    auto ret = hostImpl->QueryExtensionAbilityInfoByUriOptimal(URI_HOST, DEFAULT_USERID, extensionAbilityInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimalImpl_0200
+ * @tc.name: test QueryExtensionAbilityInfoByUriOptimal with non-foundation uid
+ * @tc.desc: 1. test QueryExtensionAbilityInfoByUriOptimal when uid is not foundation
+ *           2. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfoByUriOptimalImpl_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ExtensionAbilityInfo extensionAbilityInfo;
+    auto ret = hostImpl->QueryExtensionAbilityInfoByUriOptimal(URI_HOST, DEFAULT_USERID, extensionAbilityInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUriOptimalImpl_0300
+ * @tc.name: test QueryExtensionAbilityInfoByUriOptimal with foundation uid but no permission
+ * @tc.desc: 1. set uid to foundation
+ *           2. test QueryExtensionAbilityInfoByUriOptimal without permission
+ *           3. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfoByUriOptimalImpl_0300, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ExtensionAbilityInfo extensionAbilityInfo;
+    setuid(Constants::FOUNDATION_UID);
+    auto ret = hostImpl->QueryExtensionAbilityInfoByUriOptimal(URI_HOST, DEFAULT_USERID, extensionAbilityInfo);
+    EXPECT_FALSE(ret);
+    setuid(0);
+}
 }
