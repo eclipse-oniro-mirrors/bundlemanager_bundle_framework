@@ -17,7 +17,7 @@ import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { HapModuleInfo, RouterItem } from 'bundleManager.HapModuleInfo';
 import bundleManager from '@ohos.bundle.bundleManager';
 import { BundleInfo, ReqPermissionDetail, UsedScene, SignatureInfo, AppCloneIdentity, DynamicIconInfo,
-  AlternateIconInfo, BundleOptions} from 'bundleManager.BundleInfo';
+  BundleOptions} from 'bundleManager.BundleInfo';
 import { ApplicationInfoInner } from './ApplicationInfoInner';
 
 export class BundleInfoInner implements BundleInfo {
@@ -147,19 +147,6 @@ export class DynamicIconInfoInner implements DynamicIconInfo {
     this.moduleName = moduleName;
     this.userId = userId;
     this.appIndex = appIndex;
-  }
-}
-
-export class AlternateIconInfoInner implements AlternateIconInfo {
-  public readonly iconName: string = '';
-  public readonly iconId: long;
-  public readonly enabled: boolean;
-
-  constructor() { }
-  constructor(iconName: string, iconId: long, enabled: boolean) {
-    this.iconName = iconName;
-    this.iconId = iconId;
-    this.enabled = enabled;
   }
 }
 

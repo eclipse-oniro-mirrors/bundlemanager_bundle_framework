@@ -2824,61 +2824,6 @@ napi_value GetDynamicIcon(napi_env env, napi_callback_info info)
     return promise;
 }
 
-void SetAlternateIconExec(napi_env env, void *data)
-{
-    AlternateIconCallbackInfo *asyncCallbackInfo = reinterpret_cast<AlternateIconCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null");
-        return;
-    }
-    asyncCallbackInfo->err = BundleManagerHelper::InnerSetAlternateIcon(asyncCallbackInfo->alternateIconName);
-}
-
-void SetAlternateIconComplete(napi_env env, napi_status status, void *data)
-{
-    AlternateIconCallbackInfo *asyncCallbackInfo = reinterpret_cast<AlternateIconCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null");
-        return;
-    }
-    std::unique_ptr<AlternateIconCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[ARGS_POS_TWO] = {0};
-    if (asyncCallbackInfo->err == NO_ERROR) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
-    } else {
-        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(
-            env, asyncCallbackInfo->err, SET_ALTERNATE_ICON);
-    }
-    CommonFunc::NapiReturnDeferred<AlternateIconCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
-}
-
-napi_value SetAlternateIcon(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("SetAlternateIcon called");
-    NapiArg args(env, info);
-    AlternateIconCallbackInfo *asyncCallbackInfo = new (std::nothrow) AlternateIconCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null");
-        return nullptr;
-    }
-    std::unique_ptr<AlternateIconCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
-    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->alternateIconName)) {
-        APP_LOGE("alternateIconName invalid");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ALTERNATE_ICON_NAME, TYPE_STRING);
-        return nullptr;
-    }
-    auto promise = CommonFunc::AsyncCallNativeMethod<AlternateIconCallbackInfo>(
-        env, asyncCallbackInfo, SET_ALTERNATE_ICON, SetAlternateIconExec, SetAlternateIconComplete);
-    callbackPtr.release();
-    APP_LOGD("call SetAlternateIcon done");
-    return promise;
-}
-
 void DeleteAbcExec(napi_env env, void *data)
 {
     VerifyCallbackInfo* asyncCallbackInfo = reinterpret_cast<VerifyCallbackInfo*>(data);
@@ -6521,64 +6466,6 @@ napi_value IsApplicationDisableForbidden(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_boolean(env, forbidden, &nForbidden));
     APP_LOGD("call IsApplicationDisableForbidden done");
     return nForbidden;
-}
-
-static ErrCode InnerGetAlternateIcons(std::vector<AlternateIconInfo> &alternateIcons)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("Can not get iBundleMgr");
-        return ERR_APPEXECFWK_NULL_PTR;
-    }
-    return iBundleMgr->GetAlternateIcons(alternateIcons);
-}
-
-void GetAlternateIconsExec(napi_env env, void *data)
-{
-    AlternateIconsCallbackInfo *asyncCallbackInfo = reinterpret_cast<AlternateIconsCallbackInfo*>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null");
-        return;
-    }
-    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(
-        InnerGetAlternateIcons(asyncCallbackInfo->alternateIcons));
-}
-
-void GetAlternateIconsComplete(napi_env env, napi_status status, void *data)
-{
-    AlternateIconsCallbackInfo *asyncCallbackInfo = reinterpret_cast<AlternateIconsCallbackInfo*>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null");
-        return;
-    }
-    std::unique_ptr<AlternateIconsCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[ARGS_SIZE_TWO] = {0};
-    if (asyncCallbackInfo->err == SUCCESS) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
-        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
-        CommonFunc::ConvertAlternateIconInfos(env, asyncCallbackInfo->alternateIcons, result[ARGS_POS_ONE]);
-    } else {
-        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, GET_ALTERNATE_ICONS);
-    }
-    CommonFunc::NapiReturnDeferred<AlternateIconsCallbackInfo>(
-        env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
-}
-
-napi_value GetAlternateIcons(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("Napi begin GetAlternateIcons");
-    AlternateIconsCallbackInfo *asyncCallbackInfo =
-        new (std::nothrow) AlternateIconsCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null");
-        return nullptr;
-    }
-    std::unique_ptr<AlternateIconsCallbackInfo> callbackPtr {asyncCallbackInfo};
-    auto promise = CommonFunc::AsyncCallNativeMethod<AlternateIconsCallbackInfo>(env, asyncCallbackInfo,
-        "GetAlternateIcons", GetAlternateIconsExec, GetAlternateIconsComplete);
-    callbackPtr.release();
-    APP_LOGD("Call GetAlternateIcons done");
-    return promise;
 }
 } // namespace AppExecFwk
 } // namespace OHOS
