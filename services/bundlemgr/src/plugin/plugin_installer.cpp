@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 
 #include <fcntl.h>
 #include <iostream>
+#include <mutex>
 #include <sstream>
 
 #include "app_log_tag_wrapper.h"
@@ -24,9 +25,14 @@
 #include "bundle_common_event_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "hitrace_meter.h"
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+#include "installd/binary_security_wrapper.h"
+#endif
 #include "installd_client.h"
+#include "interfaces/hap_verify.h"
 #include "ipc_skeleton.h"
 #include "json_util.h"
 #include "scope_guard.h"
@@ -46,6 +52,76 @@ constexpr const char* PLUGIN_ID_SEPARATOR_OTHER = "|";
 constexpr const char* REMOVE_TMP_SUFFIX = "_removed";
 constexpr const char* APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install/";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
+constexpr int32_t LOCAL_PLUGIN_ACTION_INSTALL = 1;
+constexpr int32_t LOCAL_PLUGIN_ACTION_UPDATE = 2;
+constexpr int32_t LOCAL_PLUGIN_ACTION_UNINSTALL = 3;
+constexpr size_t MAX_LOCAL_PLUGIN_EVENT_REPORT_ONCE = 30;
+const int64_t ONE_DAY =  86400;
+constexpr const char* LOCAL_PLUGIN_FILE_PATH_SEPARATOR = "|#|";
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+constexpr int32_t BINARY_SWITCH_ENABLED = 1;
+#endif
+
+struct LocalPluginEventInfo {
+    int64_t recordTime = 0;
+    int32_t userId = Constants::INVALID_USERID;
+    int32_t actionType = 0;
+    ErrCode errCode = ERR_OK;
+    std::string hostBundleName;
+    std::string bundleName;
+    std::string filePath;
+};
+
+std::mutex g_localPluginEventMutex;
+std::vector<LocalPluginEventInfo> g_localPluginEventInfos;
+
+void InsertLocalPluginEventInfo(LocalPluginEventInfo eventInfo)
+{
+    std::lock_guard<std::mutex> lock(g_localPluginEventMutex);
+    eventInfo.recordTime = BundleUtil::GetCurrentTime();
+    g_localPluginEventInfos.emplace_back(eventInfo);
+}
+
+bool NeedReport(std::vector<LocalPluginEventInfo> &reportInfos)
+{
+    std::lock_guard<std::mutex> lock(g_localPluginEventMutex);
+    if (g_localPluginEventInfos.empty()) {
+        return false;
+    }
+
+    int64_t now = BundleUtil::GetCurrentTime();
+    bool reachCount = g_localPluginEventInfos.size() >= MAX_LOCAL_PLUGIN_EVENT_REPORT_ONCE;
+    bool reachInterval =
+        (now - g_localPluginEventInfos.front().recordTime) >= ONE_DAY;
+    if (!reachCount && !reachInterval) {
+        return false;
+    }
+
+    size_t reportCount = std::min(g_localPluginEventInfos.size(), MAX_LOCAL_PLUGIN_EVENT_REPORT_ONCE);
+    auto reportBegin = g_localPluginEventInfos.end() - reportCount;
+    reportInfos.assign(reportBegin, g_localPluginEventInfos.end());
+    g_localPluginEventInfos.clear();
+    return true;
+}
+
+bool TransLocalPluginEventInfo(const std::vector<LocalPluginEventInfo> &infos, EventInfo &report)
+{
+    if (infos.empty()) {
+        APP_LOGW("no local plugin event info to transform");
+        return false;
+    }
+
+    for (const auto &info : infos) {
+        report.userIdList.push_back(info.userId);
+        report.hostBundleNameList.push_back(info.hostBundleName);
+        report.bundleNameList.push_back(info.bundleName);
+        report.actionTypeList.push_back(info.actionType);
+        report.filePath.push_back(info.filePath);
+        report.errorCodeList.push_back(info.errCode);
+    }
+    return true;
+}
+
 }
 
 PluginInstaller::PluginInstaller()
@@ -120,6 +196,65 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
     return ERR_OK;
 }
 
+ErrCode PluginInstaller::InstallLocalPlugin(const std::string &hostBundleName,
+    const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to install local plugin for %{public}s", hostBundleName.c_str());
+
+    isLocalPluginInstall_ = true;
+    ErrCode result = InstallLocalPluginInner(hostBundleName, pluginFilePaths, installPluginParam);
+    SendLocalPluginSystemEvent(hostBundleName, installPluginParam.userId,
+        isPluginExist_ ? LOCAL_PLUGIN_ACTION_UPDATE : LOCAL_PLUGIN_ACTION_INSTALL, result);
+
+    return result;
+}
+
+ErrCode PluginInstaller::InstallLocalPluginInner(const std::string &hostBundleName,
+    const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam)
+{
+    if (!InitDataMgr()) {
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    auto &mtx = dataMgr_->GetBundleMutex(hostBundleName);
+    std::lock_guard lock {mtx};
+    InnerBundleInfo hostBundleInfo;
+    if (!dataMgr_->FetchInnerBundleInfo(hostBundleName, hostBundleInfo)) {
+        APP_LOGE("hostBundleName:%{public}s get bundle info failed", hostBundleName.c_str());
+        return ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND;
+    }
+    if (!hostBundleInfo.HasInnerBundleUserInfo(installPluginParam.userId)) {
+        APP_LOGE("HostBundleName: %{public}s not installed in user %{public}d",
+            hostBundleName.c_str(), installPluginParam.userId);
+        return ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND;
+    }
+
+    ErrCode result = CheckExternalSourcePluginSwitch();
+    CHECK_RESULT(result, "check external source plugin switch failed %{public}d");
+
+    userId_ = installPluginParam.userId;
+    result = ParseFiles(pluginFilePaths, installPluginParam);
+    CHECK_RESULT(result, "parse file failed %{public}d");
+
+    if (bundleName_ == hostBundleName) {
+        APP_LOGE("plugin name:%{public}s same as host bundle name", bundleName_.c_str());
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_SAME_BUNDLE_NAME;
+    }
+
+    bundleNameWithTime_ = bundleName_ + "." + std::to_string(BundleUtil::GetCurrentTimeNs());
+
+    result = ProcessPluginInstall(hostBundleInfo);
+    CHECK_RESULT(result, "process local plugin install failed %{public}d");
+
+    int32_t uid = hostBundleInfo.GetUid(userId_);
+    NotifyPluginEvents(isPluginExist_ ? NotifyType::UPDATE : NotifyType::INSTALL, uid);
+    SendPluginCommonEvent(hostBundleName, bundleName_,
+        isPluginExist_ ? NotifyType::UPDATE : NotifyType::INSTALL);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "install local plugin finished");
+    return ERR_OK;
+}
+
 ErrCode PluginInstaller::UninstallPlugin(const std::string &hostBundleName, const std::string &pluginBundleName,
     const InstallPluginParam &installPluginParam)
 {
@@ -127,19 +262,40 @@ ErrCode PluginInstaller::UninstallPlugin(const std::string &hostBundleName, cons
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to uninstall plugin %{public}s for %{public}s",
         pluginBundleName.c_str(), hostBundleName.c_str());
 
+    return UninstallPluginInner(hostBundleName, pluginBundleName, installPluginParam, true);
+}
+
+ErrCode PluginInstaller::UninstallLocalPlugin(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const InstallPluginParam &installPluginParam, bool needCheckUserId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to uninstall local plugin %{public}s for %{public}s",
+        pluginBundleName.c_str(), hostBundleName.c_str());
+    
+    isLocalPluginInstall_ = true;
+    auto result = UninstallPluginInner(hostBundleName, pluginBundleName, installPluginParam, needCheckUserId);
+    SendLocalPluginSystemEvent(hostBundleName, installPluginParam.userId, LOCAL_PLUGIN_ACTION_UNINSTALL, result);
+    return result;
+}
+
+ErrCode PluginInstaller::UninstallPluginInner(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const InstallPluginParam &installPluginParam, bool needCheckUserId)
+{
     ErrCode result = ERR_OK;
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    // check userId
-    if (installPluginParam.userId < Constants::DEFAULT_USERID) {
-        APP_LOGE("userId(%{public}d) invalid", installPluginParam.userId);
-        return ERR_APPEXECFWK_USER_NOT_EXIST;
+    if (needCheckUserId) {
+        if (installPluginParam.userId < Constants::DEFAULT_USERID) {
+            APP_LOGE("userId(%{public}d) invalid", installPluginParam.userId);
+            return ERR_APPEXECFWK_USER_NOT_EXIST;
+        }
+        if (!dataMgr_->HasUserId(installPluginParam.userId)) {
+            APP_LOGE("user %{public}d not exist", installPluginParam.userId);
+            return ERR_APPEXECFWK_USER_NOT_EXIST;
+        }
     }
-    if (!dataMgr_->HasUserId(installPluginParam.userId)) {
-        APP_LOGE("user %{public}d not exist", installPluginParam.userId);
-        return ERR_APPEXECFWK_USER_NOT_EXIST;
-    }
+
     auto &mtx = dataMgr_->GetBundleMutex(hostBundleName);
     std::lock_guard lock {mtx};
     // check host application exist in userId
@@ -163,8 +319,14 @@ ErrCode PluginInstaller::UninstallPlugin(const std::string &hostBundleName, cons
     }
     userId_ = installPluginParam.userId;
     bundleName_ = pluginBundleName;
+    const std::string &distributionType = oldPluginInfo_.appInfo.appDistributionType;
+    result = CheckPluginDistributionType(distributionType == Constants::APP_DISTRIBUTION_TYPE_DEVELOPER);
+    if (result != ERR_OK) {
+        APP_LOGE("check plugin distribution type for uninstall failed");
+        return ERR_APPEXECFWK_PLUGIN_NOT_FOUND;
+    }
     result = ProcessPluginUninstall(hostBundleInfo);
-    CHECK_RESULT(result, "process plugin install failed %{public}d");
+    CHECK_RESULT(result, "process plugin uninstall failed %{public}d");
 
     int32_t uid = hostBundleInfo.GetUid(userId_);
     NotifyPluginEvents(NotifyType::UNINSTALL_BUNDLE, uid);
@@ -200,7 +362,7 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
     // check syscap
     ErrCode checkSysCapRes = bundleInstallChecker_->CheckSysCap(bundlePaths);
     if (checkSysCapRes != ERR_OK) {
-        APP_LOGD("hap syscap check failed %{public}d", result);
+        APP_LOGD("hap syscap check failed %{public}d", checkSysCapRes);
     }
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
@@ -209,6 +371,10 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
         APP_LOGE("check multi hap signature info failed %{public}d", result);
         return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
     }
+    auto distributionType = hapVerifyResults[0].GetProvisionInfo().distributionType;
+    isDeveloperDistribution_ = (distributionType == Security::Verify::AppDistType::DEVELOPER);
+    result = CheckPluginDistributionType(isDeveloperDistribution_);
+    CHECK_RESULT(result, "check local plugin distribution type failed %{public}d");
 
     // parse bundle infos
     InstallCheckParam checkParam;
@@ -257,11 +423,26 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
         DEBUG_APP_IDENTIFIER : hapVerifyResults[0].GetProvisionInfo().bundleInfo.appIdentifier;
     compileSdkType_ = parsedBundles_.empty() ? COMPILE_SDK_TYPE_OPEN_HARMONY :
         (parsedBundles_.begin()->second).GetBaseApplicationInfo().compileSdkType;
+
+    if (isDeveloperDistribution_) {
+        APP_LOGI("developer distribution plugin skips plugin id check");
+        return ERR_OK;
+    }
+
     if (!ParsePluginId(hapVerifyResults[0].GetProvisionInfo().appServiceCapabilities, pluginIds_)) {
         APP_LOGE("parse plugin id failed");
         return ERR_APPEXECFWK_PLUGIN_INSTALL_PARSE_PLUGINID_ERROR;
     }
     return result;
+}
+
+ErrCode PluginInstaller::CheckPluginDistributionType(bool isDeveloperDistribution) const
+{
+    if (isLocalPluginInstall_ == isDeveloperDistribution) {
+        return ERR_OK;
+    }
+    APP_LOGE("plugin distribution type does not match current install mode");
+    return ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW;
 }
 
 ErrCode PluginInstaller::MkdirIfNotExist(const std::string &bundleName, BundleDirScene scene, const std::string &dir)
@@ -352,8 +533,6 @@ ErrCode PluginInstaller::ObtainHspFileAndSignatureFilePath(const std::vector<std
         bundlePaths.emplace_back(inBundlePaths[0]);
         return ERR_OK;
     }
-    int32_t numberOfHsp = 0;
-    int32_t numberOfSignatureFile = 0;
     for (const auto &path : inBundlePaths) {
         if ((path.find(ServiceConstants::HSP_FILE_SUFFIX) == std::string::npos) &&
             (path.find(ServiceConstants::CODE_SIGNATURE_FILE_SUFFIX) == std::string::npos)) {
@@ -361,11 +540,9 @@ ErrCode PluginInstaller::ObtainHspFileAndSignatureFilePath(const std::vector<std
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
         if (BundleUtil::EndWith(path, ServiceConstants::HSP_FILE_SUFFIX)) {
-            numberOfHsp++;
             bundlePaths.emplace_back(path);
         }
         if (BundleUtil::EndWith(path, ServiceConstants::CODE_SIGNATURE_FILE_SUFFIX)) {
-            numberOfSignatureFile++;
             signatureFilePath = path;
         }
     }
@@ -428,6 +605,7 @@ ErrCode PluginInstaller::VerifyCodeSignatureForNativeFiles(const std::string &bu
     codeSignatureParam.targetSoPath = targetSoPath;
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
+    codeSignatureParam.isDeveloperDistribution = isDeveloperDistribution_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
@@ -451,10 +629,13 @@ ErrCode PluginInstaller::VerifyCodeSignatureForHsp(const std::string &hspPath,
     codeSignatureParam.appIdentifier = appIdentifier;
     codeSignatureParam.signatureFileDir = signatureFileDir_;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle;
+    codeSignatureParam.isDeveloperDistribution = isDeveloperDistribution_;
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = false;
-    codeSignatureParam.isPlugin = true;
-    codeSignatureParam.pluginId = JoinPluginId();
+    codeSignatureParam.isPlugin = !codeSignatureParam.isDeveloperDistribution;
+    if (codeSignatureParam.isPlugin) {
+        codeSignatureParam.pluginId = JoinPluginId();
+    }
     bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
     if (InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam) != ERR_OK) {
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
@@ -489,6 +670,7 @@ ErrCode PluginInstaller::DeliveryProfileToCodeSign(
     if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::DEVELOPER ||
         provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
         if (provisionInfo.profileBlockLength == 0 || provisionInfo.profileBlock == nullptr) {
             APP_LOGE("invalid sign profile");
@@ -531,7 +713,7 @@ ErrCode PluginInstaller::CheckPluginId(const std::string &hostBundleName)
             return ERR_OK;
         }
     }
-    APP_LOGD("check plugin id success");
+    APP_LOGE("check plugin id failed");
     return ERR_APPEXECFWK_PLUGIN_INSTALL_CHECK_PLUGINID_ERROR;
 }
 
@@ -573,6 +755,53 @@ ErrCode PluginInstaller::CheckSupportPluginPermission(const std::string &hostBun
     return ERR_APPEXECFWK_SUPPORT_PLUGIN_PERMISSION_ERROR;
 }
 
+ErrCode PluginInstaller::CheckExternalSourcePluginSwitch() const
+{
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+    int32_t outSwitchStatus = 0;
+    auto ret = InstalldClient::GetInstance()->CheckExternalSourcePluginSwitch(outSwitchStatus);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckExternalSourcePluginSwitch failed %{public}d", ret);
+        return ret;
+    }
+    if (outSwitchStatus != BINARY_SWITCH_ENABLED) {
+        APP_LOGE("independent binary switch is disabled");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW;
+    }
+#else
+    APP_LOGE("binary security switch check failed, SECURITY_PRIVACY_SERVER_ENABLE is disabled");
+    return ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED;
+#endif
+    return ERR_OK;
+}
+
+ErrCode PluginInstaller::CheckHspPluginCertValidity() const
+{
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+    auto hspPlugin = verifyRes_.GetProvisionInfo().hspPluginInfo;
+    HspPluginParam hspPluginParam;
+    hspPluginParam.certType = hspPlugin.certType;
+    hspPluginParam.subjectCN = hspPlugin.subjectCN;
+    hspPluginParam.issuerCN = hspPlugin.issuerCN;
+    hspPluginParam.subjectOU = hspPlugin.subjectOU;
+    hspPluginParam.issuerC = hspPlugin.issuerC;
+    hspPluginParam.issuerO = hspPlugin.issuerO;
+    hspPluginParam.issuerOU = hspPlugin.issuerOU;
+    hspPluginParam.subjectO = hspPlugin.subjectO;
+    hspPluginParam.serialNumber = hspPlugin.serialNumber;
+    hspPluginParam.authKeyIdentifier = hspPlugin.authKeyIdentifier;
+    auto ret = InstalldClient::GetInstance()->CheckHspPluginCertValidity(hspPluginParam);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckHspPluginCertValidity failed %{public}d", ret);
+        return ret;
+    }
+#else
+    APP_LOGE("hsp plugin cert validity check failed, SECURITY_PRIVACY_SERVER_ENABLE is disabled");
+    return ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED;
+#endif
+    return ERR_OK;
+}
+
 ErrCode PluginInstaller::CheckPluginAppLabelInfo()
 {
     if (parsedBundles_.empty()) {
@@ -604,6 +833,9 @@ ErrCode PluginInstaller::ProcessPluginInstall(const InnerBundleInfo &hostBundleI
     CHECK_RESULT(result, "plugin dir check failed %{public}d");
     isPluginExist_ = dataMgr_->FetchPluginBundleInfo(hostBundleInfo.GetBundleName(), bundleName_, oldPluginInfo_);
     if (isPluginExist_) {
+        if (!CheckDistributionTypeForUpdate()) {
+            return ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW;
+        }
         if (!CheckAppIdentifier()) {
             return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
         }
@@ -616,7 +848,10 @@ ErrCode PluginInstaller::ProcessPluginInstall(const InnerBundleInfo &hostBundleI
         result = ExtractPluginBundles(item.first, item.second, pluginDir, hostBundleInfo.GetBundleName());
         CHECK_RESULT(result, "extract plugin bundles failed %{public}d");
     }
-
+    if (isLocalPluginInstall_) {
+        result = CheckHspPluginCertValidity();
+        CHECK_RESULT(result, "check hsp plugin cert validity failed %{public}d");
+    }
     ScopeGuard dataRollBackGuard([&] { PluginRollBack(hostBundleInfo.GetBundleName());});
     InnerBundleInfo pluginInfo;
     MergePluginBundleInfo(pluginInfo);
@@ -630,6 +865,26 @@ ErrCode PluginInstaller::ProcessPluginInstall(const InnerBundleInfo &hostBundleI
     dataRollBackGuard.Dismiss();
     APP_LOGD("install plugin bundle successfully: %{public}s", bundleName_.c_str());
     return result;
+}
+
+bool PluginInstaller::CheckDistributionTypeForUpdate() const
+{
+    const std::string &oldDistributionType = oldPluginInfo_.appInfo.appDistributionType;
+    if (isDeveloperDistribution_) {
+        if (!oldDistributionType.empty() &&
+            oldDistributionType != Constants::APP_DISTRIBUTION_TYPE_DEVELOPER) {
+            APP_LOGE("developer distribution plugin cannot overwrite non-developer plugin, old type:%{public}s",
+                oldDistributionType.c_str());
+            return false;
+        }
+        return true;
+    }
+
+    if (oldDistributionType == Constants::APP_DISTRIBUTION_TYPE_DEVELOPER) {
+        APP_LOGE("normal plugin install cannot overwrite developer plugin");
+        return false;
+    }
+    return true;
 }
 
 ErrCode PluginInstaller::CreatePluginDir(const std::string &hostBundleName, std::string &pluginDir)
@@ -969,6 +1224,57 @@ void PluginInstaller::SendPluginCommonEvent(
 {
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyPluginCommonEvents(hostBundleName, pluginBundleName, notifyType);
+}
+
+void PluginInstaller::SendLocalPluginSystemEvent(const std::string &hostBundleName, int32_t userId,
+    int32_t actionType, ErrCode errCode)
+{
+    LocalPluginEventInfo eventInfo;
+    eventInfo.hostBundleName = hostBundleName;
+    eventInfo.bundleName = bundleName_;
+    eventInfo.userId = userId;
+    eventInfo.actionType = actionType;
+    eventInfo.errCode = errCode;
+    eventInfo.filePath = GetLocalPluginEventFilePath();
+    InsertLocalPluginEventInfo(eventInfo);
+
+    std::vector<LocalPluginEventInfo> reportInfos;
+    if (NeedReport(reportInfos)) {
+        EventInfo report;
+        if (!TransLocalPluginEventInfo(reportInfos, report)) {
+            return;
+        }
+        EventReport::SendSystemEvent(BMSEventType::BUNDLE_LOCAL_PLUGIN_OPERATION, report);
+    }
+}
+
+std::string PluginInstaller::GetLocalPluginEventFilePath() const
+{
+    if (parsedBundles_.empty()) {
+        APP_LOGW("parsedBundles is empty");
+        return Constants::EMPTY_STRING;
+    }
+    std::vector<std::string> eventPaths;
+    for (const auto &bundleItem : parsedBundles_) {
+        for (const auto &innerModuleInfo : bundleItem.second.GetInnerModuleInfos()) {
+            if (!innerModuleInfo.second.hapPath.empty()) {
+                eventPaths.emplace_back(innerModuleInfo.second.hapPath);
+            }
+        }
+    }
+    std::ostringstream oss;
+    bool isFirstPath = true;
+    for (const auto &path : eventPaths) {
+        if (path.empty()) {
+            continue;
+        }
+        if (!isFirstPath) {
+            oss << LOCAL_PLUGIN_FILE_PATH_SEPARATOR;
+        }
+        oss << path;
+        isFirstPath = false;
+    }
+    return oss.str();
 }
 } // AppExecFwk
 } // OHOS

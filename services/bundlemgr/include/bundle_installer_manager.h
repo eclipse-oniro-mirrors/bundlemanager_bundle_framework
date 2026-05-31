@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@
 #include "nocopyable.h"
 
 #include "bundle_installer.h"
+#include "plugin/install_plugin_param.h"
 #include "status_receiver_interface.h"
 #include "thread_pool.h"
 
@@ -101,6 +102,22 @@ public:
     void CreateUninstallTask(const UninstallParam &uninstallParam, const sptr<IStatusReceiver> &statusReceive);
 
     void CreateUninstallAndRecoverTask(const std::string &bundleName, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver);
+
+    /**
+     * @brief Create a plugin installer object for installing local plugin via task pool.
+     * @param hostBundleName Indicates the bundle name of the host application.
+     * @param pluginFilePaths Indicates the paths for storing the HSP of the plugin to install or update.
+     * @param installPluginParam Indicates the install parameters.
+     */
+    void CreateInstallLocalPluginTask(const std::string &hostBundleName,
+        const std::vector<std::string> &pluginFilePaths,
+        const InstallPluginParam &installPluginParam,
+        const sptr<IStatusReceiver> &statusReceiver);
+
+    void CreateUninstallLocalPluginTask(const std::string &hostBundleName,
+        const std::string &pluginBundleName,
+        const InstallPluginParam &installPluginParam,
         const sptr<IStatusReceiver> &statusReceiver);
 
     void AddTask(const ThreadPoolTask &task, const std::string &taskName);

@@ -795,6 +795,11 @@ public:
      */
     virtual sptr<IBundleInstaller> GetBundleInstaller() override;
     /**
+     * @brief Obtains the interface used to install and uninstall local plugins through the proxy object.
+     * @return Returns a pointer to ILocalPluginInstaller class if exist; returns nullptr otherwise.
+     */
+    virtual sptr<ILocalPluginInstaller> GetLocalPluginInstaller() override;
+    /**
      * @brief Obtains the interface used to create or delete user.
      * @return Returns a pointer to IBundleUserMgr class if exist; returns nullptr otherwise.
      */

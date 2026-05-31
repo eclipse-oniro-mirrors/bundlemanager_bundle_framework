@@ -56,3 +56,12 @@ HIGH_RISK_EVENT:
   FILE_PATH: {type: STRING, arrsize: 99, desc: file path}
   START_TIME: {type: INT64, desc: start time}
   END_TIME: {type: INT64, desc: end time}
+
+BUNDLE_LOCAL_PLUGIN_OPERATION:
+  __BASE: {type: STATISTIC, level: MINOR, desc: local plugin operation}
+  USERID_LIST: {type: INT32, arrsize: 30, desc: userId list of the host bundle}
+  HOST_BUNDLE_NAME_LIST: {type: STRING, arrsize: 30, desc: host bundleName list}
+  BUNDLE_NAME_LIST: {type: STRING, arrsize: 30, desc: plugin bundleName list}
+  ACTION_TYPE_LIST: {type: INT32, arrsize: 30, desc: action type list}
+  FILE_PATH_LIST: {type: STRING, arrsize: 30, desc: plugin hsp file path list}
+  ERROR_CODE_LIST: {type: INT32, arrsize: 30, desc: error code list}

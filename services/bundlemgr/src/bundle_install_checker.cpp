@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -139,6 +139,8 @@ static std::map<std::string, AppDistributionTypeEnum> AppDistributionTypeEnumMap
         AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_INTERNALTESTING },
     { Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING,
         AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_CROWDTESTING },
+    { Constants::APP_DISTRIBUTION_TYPE_DEVELOPER,
+        AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_DEVELOPER },
 };
 
 std::string GetAppDistributionType(const Security::Verify::AppDistType &type)
@@ -2061,7 +2063,8 @@ void BundleInstallChecker::ProcessCodeSignatureParam(
     if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
-        provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING) {
+        provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::DEVELOPER) {
         unsigned char *originalProfile = provisionInfo.profileBlock.get();
         if (originalProfile == nullptr) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "invalid originalProfile");

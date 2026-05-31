@@ -33,6 +33,7 @@
 #include "ipc/encryption_param.h"
 #include "ipc/extract_param.h"
 #include "ipc/file_stat.h"
+#include "ipc/hsp_plugin_param.h"
 #include "ipc/install_hnp_param.h"
 #include "ipc/skills_package_param.h"
 #include "ipc/verify_bin_param.h"
@@ -577,6 +578,16 @@ public:
     }
 
     virtual ErrCode ProcessBinFiles(const VerifyBinParam &verifyBinParam)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode CheckExternalSourcePluginSwitch(int32_t &outSwitchStatus)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode CheckHspPluginCertValidity(const HspPluginParam &hspPluginParam)
     {
         return ERR_OK;
     }

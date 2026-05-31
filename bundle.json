@@ -147,7 +147,8 @@
                         "bundlemgr/bundle_user_mgr_proxy.h",
                         "bundlemgr/clean_cache_callback_proxy.h",
                         "bundlemgr/process_cache_callback_proxy.h",
-                        "bundlemgr/bundle_mgr_client_impl.h"
+                        "bundlemgr/bundle_mgr_client_impl.h",
+                        "bundlemgr/local_plugin_installer_interface.h"
                       ]
                     },
                     "name": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core:appexecfwk_core"

@@ -291,6 +291,10 @@ private:
 
     bool HandleProcessBinFiles(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleCheckExternalSourcePluginSwitch(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCheckHspPluginCertValidity(MessageParcel &data, MessageParcel &reply);
+
     bool HandleResetBmsDBSecurity(MessageParcel &data, MessageParcel &reply);
 
     bool HandleCopyDir(MessageParcel &data, MessageParcel &reply);

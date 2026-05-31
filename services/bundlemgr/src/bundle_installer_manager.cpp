@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@
 #include "idle_condition_mgr/idle_condition_mgr.h"
 #include "ipc_skeleton.h"
 #include "parameters.h"
+#include "plugin/plugin_installer.h"
 #include "xcollie_helper.h"
 
 namespace OHOS {
@@ -216,6 +217,52 @@ void BundleInstallerManager::CreateUninstallAndRecoverTask(const std::string &bu
         XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task, "UninstallAndRecover -n " + bundleName);
+}
+
+void BundleInstallerManager::CreateInstallLocalPluginTask(const std::string &hostBundleName,
+    const std::vector<std::string> &pluginFilePaths,
+    const InstallPluginParam &installPluginParam,
+    const sptr<IStatusReceiver> &statusReceiver)
+{
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto task = [hostBundleName, pluginFilePaths, installPluginParam, statusReceiver, traceId] {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
+        BundleMemoryGuard memoryGuard;
+        int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        std::shared_ptr<PluginInstaller> pluginInstaller = std::make_shared<PluginInstaller>();
+        ErrCode ret = pluginInstaller->InstallLocalPlugin(hostBundleName, pluginFilePaths, installPluginParam);
+        if (statusReceiver != nullptr) {
+            statusReceiver->OnFinished(ret, "");
+        }
+        g_taskCounter--;
+        XCollieHelper::CancelTimer(timerId);
+    };
+    std::string paths;
+    for (const auto &path : pluginFilePaths) {
+        paths.append(path).append(" ");
+    }
+    AddTask(task, "InstallLocalPluginTask host:" + hostBundleName + " paths:" + paths);
+}
+
+void BundleInstallerManager::CreateUninstallLocalPluginTask(const std::string &hostBundleName,
+    const std::string &pluginBundleName,
+    const InstallPluginParam &installPluginParam,
+    const sptr<IStatusReceiver> &statusReceiver)
+{
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto task = [hostBundleName, pluginBundleName, installPluginParam, statusReceiver, traceId] {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
+        BundleMemoryGuard memoryGuard;
+        int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        std::shared_ptr<PluginInstaller> pluginInstaller = std::make_shared<PluginInstaller>();
+        ErrCode ret = pluginInstaller->UninstallLocalPlugin(hostBundleName, pluginBundleName, installPluginParam);
+        if (statusReceiver != nullptr) {
+            statusReceiver->OnFinished(ret, "");
+        }
+        g_taskCounter--;
+        XCollieHelper::CancelTimer(timerId);
+    };
+    AddTask(task, "UninstallLocalPluginTask host:" + hostBundleName + " plugin:" + pluginBundleName);
 }
 
 std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const sptr<IStatusReceiver> &statusReceiver)

@@ -3347,6 +3347,18 @@ sptr<IBundleInstaller> BundleMgrHostImpl::GetBundleInstaller()
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
 }
 
+sptr<ILocalPluginInstaller> BundleMgrHostImpl::GetLocalPluginInstaller()
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("start GetLocalPluginInstaller");
+    auto installerHost = DelayedSingleton<BundleMgrService>::GetInstance()->GetLocalPluginInstaller();
+    if (installerHost == nullptr) {
+        APP_LOGE("installerHost is nullptr");
+        return nullptr;
+    }
+    return installerHost;
+}
+
 sptr<IBundleUserMgr> BundleMgrHostImpl::GetBundleUserMgr()
 {
     int32_t callingUid = IPCSkeleton::GetCallingUid();

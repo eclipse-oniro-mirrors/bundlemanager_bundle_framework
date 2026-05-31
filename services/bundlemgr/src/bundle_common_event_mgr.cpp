@@ -57,6 +57,7 @@ constexpr const char* DEVELOPERID = "developerId";
 constexpr const char* CHANGE_DEFAULT_APPLICATION = "ohos.permission.CHANGE_DEFAULT_APPLICATION";
 constexpr const char* UTD_IDS = "utdIds";
 constexpr const char* USER_ID = "userId";
+constexpr const char* PLUGIN_BUNDLE_NAME = "pluginBundleName";
 constexpr const char* SHORTCUT_CHANGED = "usual.event.SHORTCUT_CHANGED";
 constexpr const char* SHORTCUT_ID = "shortcutId";
 constexpr const char* SHORTCUT_IDS = "shortcutIds";
@@ -540,9 +541,12 @@ void BundleCommonEventMgr::NotifyPluginCommonEvents(const std::string &hostBundl
     ElementName element;
     element.SetBundleName(hostBundleName);
     want.SetElement(element);
+    want.SetParam(PLUGIN_BUNDLE_NAME, pluginBundleName);
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     publishInfo.SetBundleName(hostBundleName);
+    publishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
+    publishInfo.SetValidationRule(EventFwk::ValidationRule::OR);
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
         APP_LOGE("PublishCommonEvent failed");

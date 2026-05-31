@@ -61,6 +61,7 @@
 #include "hitrace_meter.h"
 #include "installd/installd_operator.h"
 #include "installd/installd_permission_mgr.h"
+#include "interfaces/hap_verify.h"
 #include "ipc/verify_bin_param.h"
 #include "parameters.h"
 #include "inner_bundle_clone_common.h"
@@ -2471,6 +2472,9 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
     if (codeSignatureParam.isEnterpriseResigned) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_ENTERPRISE_RESIGN;
     }
+    if (codeSignatureParam.isDeveloperDistribution) {
+        codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_LOCAL_HSP_PLUGIN;
+    }
     if (codeSignatureParam.signatureFileDir.empty()) {
         std::shared_ptr<CodeSignHelper> codeSignHelper = std::make_shared<CodeSignHelper>();
         Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?
@@ -3502,6 +3506,55 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
         LOG_E(BMS_TAG_INSTALLD, "ProcessHapBinInstall failed %{public}d", result);
         return ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION;
     }
+#endif
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CheckExternalSourcePluginSwitch(int32_t &outSwitchStatus)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+    auto ret = BinarySecurityWrapper::GetInstance().RequestIndependentBinarySwitchAsync(outSwitchStatus);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "RequestIndependentBinarySwitchAsync failed %{public}d", ret);
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+#else
+    LOG_E(BMS_TAG_INSTALLD, "SECURITY_PRIVACY_SERVER_ENABLE is disabled");
+    return ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED;
+#endif
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CheckHspPluginCertValidity(const HspPluginParam &hspPluginParam)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+#ifdef SECURITY_PRIVACY_SERVER_ENABLE
+    Security::Verify::HspPlugin hspPlugin;
+    hspPlugin.certType = hspPluginParam.certType;
+    hspPlugin.subjectCN = hspPluginParam.subjectCN;
+    hspPlugin.issuerCN = hspPluginParam.issuerCN;
+    hspPlugin.subjectOU = hspPluginParam.subjectOU;
+    hspPlugin.issuerC = hspPluginParam.issuerC;
+    hspPlugin.issuerO = hspPluginParam.issuerO;
+    hspPlugin.issuerOU = hspPluginParam.issuerOU;
+    hspPlugin.subjectO = hspPluginParam.subjectO;
+    hspPlugin.serialNumber = hspPluginParam.serialNumber;
+    hspPlugin.authKeyIdentifier = hspPluginParam.authKeyIdentifier;
+    auto ret = BinarySecurityWrapper::GetInstance().CheckHspPluginCertValidity(hspPlugin);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "CheckHspPluginCertValidity failed %{public}d", ret);
+        return ERR_APPEXECFWK_PLUGIN_CERT_REVOKED;
+    }
+#else
+    LOG_E(BMS_TAG_INSTALLD, "SECURITY_PRIVACY_SERVER_ENABLE is disabled");
+    return ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED;
 #endif
     return ERR_OK;
 }

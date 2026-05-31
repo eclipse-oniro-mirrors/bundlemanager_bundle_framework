@@ -45,6 +45,7 @@
 #include "extend_resource_manager_interface.h"
 #include "ibundle_mgr_ext.h"
 #include "module_test_runner.h"
+#include "local_plugin_installer_interface.h"
 #include "overlay_manager_interface.h"
 #include "plugin/plugin_bundle_info.h"
 #include "quick_fix_manager_interface.h"
@@ -1201,6 +1202,14 @@ public:
      * @return Returns a pointer to IBundleInstaller class if exist; returns nullptr otherwise.
      */
     virtual sptr<IBundleInstaller> GetBundleInstaller()
+    {
+        return nullptr;
+    }
+    /**
+     * @brief Obtains the interface used to install and uninstall local plugins.
+     * @return Returns a pointer to ILocalPluginInstaller class if exist; returns nullptr otherwise.
+     */
+    virtual sptr<ILocalPluginInstaller> GetLocalPluginInstaller()
     {
         return nullptr;
     }
