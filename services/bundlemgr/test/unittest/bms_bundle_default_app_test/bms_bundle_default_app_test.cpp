@@ -1779,14 +1779,10 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_8200, Function | SmallTest
 /**
  * @tc.number: AOT_EXECUTOR_0100
  * @tc.name: test AOTExecutor
- * @tc.desc: decimal convert to correct hex
+ * @tc.desc: test CheckArgs, GetAbcFileInfo, PrepareArgs
  */
 HWTEST_F(BmsBundleDefaultAppTest, AOT_EXECUTOR_0100, Function | SmallTest | Level1)
 {
-    uint32_t decimal = 16;
-    std::string hex = AOTExecutor::GetInstance().DecToHex(decimal);
-    EXPECT_EQ(hex, "0x10");
-
     AOTArgs aotArgs;
     bool ret = AOTExecutor::GetInstance().CheckArgs(aotArgs);
     EXPECT_EQ(ret, false);

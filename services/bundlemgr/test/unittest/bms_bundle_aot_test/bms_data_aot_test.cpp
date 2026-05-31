@@ -179,9 +179,8 @@ void BmsAOTMgrTest::ResetDataMgr()
 
 /**
  * @tc.number: AOTExecutor_0100
- * @tc.name: test AOTExecutor
- * @tc.desc: 1. system running normally
- *           2. verify function return value
+ * @tc.name: test ExecuteAOT with empty args
+ * @tc.desc: verify ExecuteAOT returns error when AOTArgs has empty hapPath and outputPath.
  */
 HWTEST_F(BmsAOTMgrTest, AOTExecutor_0100, Function | SmallTest | Level1)
 {
@@ -345,38 +344,6 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1100, Function | SmallTest | Level1)
     AOTExecutor::GetInstance().ResetState();
     EXPECT_EQ(AOTExecutor::GetInstance().state_.running, false);
     EXPECT_EQ(AOTExecutor::GetInstance().state_.outputPath, "");
-}
-
-/**
- * @tc.number: MapSysCompArgs_0100
- * @tc.name: test MapSysCompArgs
- * @tc.desc: 1. call MapSysCompArgs, expect get set value
- */
-HWTEST_F(BmsAOTMgrTest, MapSysCompArgs_0100, Function | SmallTest | Level1)
-{
-    AOTArgs aotArgs;
-    aotArgs.anFileName = "anFileName";
-    std::unordered_map<std::string, std::string> argsMap;
-
-    AOTExecutor::GetInstance().MapSysCompArgs(aotArgs, argsMap);
-    EXPECT_EQ(argsMap[IS_SYS_COMP], IS_SYS_COMP_TRUE);
-    EXPECT_EQ(argsMap[AN_FILE_NAME], aotArgs.anFileName);
-}
-
-/**
- * @tc.number: MapBundleArgs_0100
- * @tc.name: test MapBundleArgs
- * @tc.desc: 1. call MapBundleArgs, expect get set value
- */
-HWTEST_F(BmsAOTMgrTest, MapBundleArgs_0100, Function | SmallTest | Level1)
-{
-    AOTArgs aotArgs;
-    aotArgs.anFileName = "anFileName";
-    std::unordered_map<std::string, std::string> argsMap;
-
-    AOTExecutor::GetInstance().MapBundleArgs(aotArgs, argsMap);
-    EXPECT_EQ(argsMap[IS_SYS_COMP], IS_SYS_COMP_FALSE);
-    EXPECT_EQ(argsMap[AN_FILE_NAME], aotArgs.anFileName);
 }
 
 /**
@@ -924,45 +891,6 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3000, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.number: AOTExecutor_1200
- * @tc.name: test GetSubjectInfo
- * @tc.desc: test GetSubjectInfo function running normally
- */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1200, Function | SmallTest | Level1)
-{
-    std::optional<AOTArgs> aotArgs;
-    AOTArgs aotArg;
-    aotArg.bundleName = "bundleName";
-    aotArg.moduleName = "moduleName";
-    auto json = AOTExecutor::GetInstance().GetSubjectInfo(aotArg);
-    EXPECT_EQ(json.empty(), false);
-}
-
-/**
- * @tc.number: AOTExecutor_1300
- * @tc.name: test MapBundleArgs
- * @tc.desc: test MapBundleArgs function running normally
- */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1300, Function | SmallTest | Level1)
-{
-    AOTArgs aotArgs;
-    aotArgs.bundleName = "bundleName";
-    aotArgs.moduleName = "moduleName";
-    aotArgs.compileMode = "compileMode";
-    aotArgs.hapPath = "hapPath";
-    aotArgs.coreLibPath = "coreLibPath";
-    aotArgs.outputPath = "outputPath";
-    aotArgs.arkProfilePath = "arkProfilePath";
-    aotArgs.offset = OFFSET;
-    aotArgs.length = LENGTH;
-    aotArgs.hspVector.emplace_back(CreateHspInfo());
-    aotArgs.hspVector.emplace_back(CreateHspInfo());
-    std::unordered_map<std::string, std::string> argsMap;
-    AOTExecutor::GetInstance().MapBundleArgs(aotArgs, argsMap);
-    EXPECT_EQ(argsMap.empty(), false);
-}
-
-/**
  * @tc.number: AOTExecutor_1400
  * @tc.name: test PendSignAOT
  * @tc.desc: test PendSignAOT function running with exception parameter
@@ -1084,17 +1012,6 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0500, Function | SmallTest | Level1)
     AOTSignDataCacheMgr& signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
     bool ret = signDataCacheMgr.EnforceCodeSign();
     EXPECT_TRUE(ret);
-}
-
-/**
- * @tc.number: AOTExecutor_1500
- * @tc.name: test DecToHex
- * @tc.desc: test DecToHex function return value
- */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1500, Function | SmallTest | Level1)
-{
-    std::string result = AOTExecutor::GetInstance().DecToHex(50);
-    EXPECT_EQ(result, "0x32");
 }
 
 /**
@@ -1558,8 +1475,9 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_1000, Function | SmallTest | Level1)
 
 /**
  * @tc.number: AOTExecutor_2300
- * @tc.name: test StartAOTCompiler success scenario without using mock
- * @tc.desc: verify the behavior of StartAOTCompiler when all prerequisites are satisfied for successful execution.
+ * @tc.name: test StartAOTCompiler with invalid bundleUid
+ * @tc.desc: verify StartAOTCompiler returns failure when AotCompilerClient is unavailable
+ *           in UT environment (bundleUid=-1, non-sysComp path).
  */
 HWTEST_F(BmsAOTMgrTest, AOTExecutor_2300, TestSize.Level1)
 {
@@ -1569,14 +1487,26 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_2300, TestSize.Level1)
     aotArgs.bundleGid = -1;
 
     std::vector<uint8_t> signData;
+    auto res = AOTExecutor::GetInstance().StartAOTCompiler(aotArgs, signData);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+}
 
-#if defined(CODE_SIGNATURE_ENABLE)
+/**
+ * @tc.number: AOTExecutor_2400
+ * @tc.name: test StartAOTCompiler with isSysComp=true
+ * @tc.desc: verify StartAOTCompiler skips MkAOTOutputDir and directly calls AotCompiler
+ *           when isSysComp is true (system component path).
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_2400, Function | SmallTest | Level1)
+{
+    AOTArgs aotArgs;
+    aotArgs.isSysComp = true;
+    aotArgs.sysCompPath = "/system/lib64/libabc.so";
+    aotArgs.anFileName = "test_an_file";
+
+    std::vector<uint8_t> signData;
     auto res = AOTExecutor::GetInstance().StartAOTCompiler(aotArgs, signData);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
-#else
-    auto res = AOTExecutor::GetInstance().StartAOTCompiler(aotArgs, signData);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
-#endif
 }
 
 /**
@@ -2979,30 +2909,6 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0600, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.number: MapBundleArgs_0200
- * @tc.name: test MapBundleArgs emits new fields
- * @tc.desc: verify MapBundleArgs adds bundleType, triggerType, staticAndHybridModuleCnt to argsMap
- */
-HWTEST_F(BmsAOTMgrTest, MapBundleArgs_0200, Function | SmallTest | Level1)
-{
-    AOTArgs aotArgs;
-    aotArgs.bundleName = "bundleName";
-    aotArgs.moduleName = "moduleName";
-    aotArgs.bundleType = static_cast<uint8_t>(BundleType::SHARED);
-    aotArgs.triggerType = ServiceConstants::AOT_TRIGGER_INSTALL;
-    aotArgs.staticAndHybridModuleCnt = 3;
-    aotArgs.outputPath = "outputPath";
-    aotArgs.compileMode = COMPILE_FULL;
-
-    std::unordered_map<std::string, std::string> argsMap;
-    AOTExecutor::GetInstance().MapBundleArgs(aotArgs, argsMap);
-    EXPECT_EQ(argsMap["bundleType"], std::to_string(aotArgs.bundleType));
-    EXPECT_EQ(argsMap["triggerType"], std::to_string(aotArgs.triggerType));
-    EXPECT_EQ(argsMap["staticAndHybridModuleCnt"], std::to_string(aotArgs.staticAndHybridModuleCnt));
-    EXPECT_EQ(argsMap["target-compiler-mode"], aotArgs.compileMode);
-}
-
-/**
  * @tc.number: MkAOTOutputDir_SharedType_0100
  * @tc.name: test MkAOTOutputDir with SHARED bundleType
  * @tc.desc: verify MkAOTOutputDir uses SHARED_HSP_ARK_CACHE_PATH as basePath for shared bundle
@@ -3842,5 +3748,301 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppHybridMode_0100, Function | SmallTes
     EXPECT_EQ(item->second.GetAOTCompileStatus("hybridFeature"), AOTCompileStatus::NOT_COMPILED);
     EXPECT_EQ(item->second.GetAOTCompileStatus("dynamicFeature"), AOTCompileStatus::NOT_COMPILED);
     dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: MapSysCompArgs_0100
+ * @tc.name: test MapSysCompArgs with isSysComp=true
+ * @tc.desc: verify MapSysCompArgs correctly maps sysComp fields
+ *           without mapping non-sysComp fields.
+ */
+HWTEST_F(BmsAOTMgrTest, MapSysCompArgs_0100, Function | SmallTest | Level1)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    AOTArgs aotArgs;
+    aotArgs.isSysComp = true;
+    aotArgs.sysCompPath = "/system/lib64/module.abc";
+    aotArgs.anFileName = "/data/ark-cache/syscomp.an";
+    aotArgs.bundleName = "should_not_appear";
+
+    ArkCompiler::AotCompilerArgs args;
+    ErrCode ret = AOTExecutor::GetInstance().MapSysCompArgs(aotArgs, args);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(args.isSysComp);
+    EXPECT_EQ(args.sysCompPath, aotArgs.sysCompPath);
+    EXPECT_EQ(args.abcPath, aotArgs.sysCompPath);
+    EXPECT_EQ(args.anFileName, aotArgs.anFileName);
+    // Non-sysComp fields should not be mapped (remain default)
+    EXPECT_TRUE(args.bundleName.empty());
+    EXPECT_EQ(args.processUid, static_cast<int32_t>(getuid()));
+#else
+    GTEST_SKIP() << "CODE_SIGNATURE_ENABLE not defined";
+#endif
+}
+
+/**
+ * @tc.number: MapBundleArgs_DirectFields_0100
+ * @tc.name: test MapBundleArgs direct field mappings with isSysComp=false
+ * @tc.desc: verify identity and direct field mappings from AOTArgs to AotCompilerArgs.
+ */
+HWTEST_F(BmsAOTMgrTest, MapBundleArgs_DirectFields_0100, Function | SmallTest | Level1)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    AOTArgs aotArgs;
+    aotArgs.isSysComp = false;
+    aotArgs.compileMode = "partial";
+    aotArgs.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    aotArgs.bundleName = "com.test.bundle";
+    aotArgs.moduleName = "entry";
+    aotArgs.appIdentifier = "com.test.bundle_12345";
+    aotArgs.bundleUid = 100200;
+    aotArgs.bundleGid = 100200;
+    aotArgs.hapPath = "/data/app/com.test.bundle/entry.hap";
+    aotArgs.anFileName = "/data/ark-cache/com.test.bundle/entry.an";
+    aotArgs.outputPath = "/data/ark-cache/com.test.bundle";
+    aotArgs.arkProfilePath = "/data/app/ark_profile/com.test.bundle/entry.ap";
+    aotArgs.offset = 1024;
+    aotArgs.length = 2048;
+    aotArgs.optBCRangeList = "0-100";
+    aotArgs.isScreenOff = 1;
+    aotArgs.isEncryptedBundle = 0;
+    aotArgs.isEnableBaselinePgo = 1;
+    aotArgs.bundleType = 0;
+    aotArgs.triggerType = 1;
+
+    ArkCompiler::AotCompilerArgs args;
+    ErrCode ret = AOTExecutor::GetInstance().MapBundleArgs(aotArgs, args);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(args.isSysComp);
+    EXPECT_EQ(args.processUid, static_cast<int32_t>(getuid()));
+    EXPECT_EQ(args.compileMode, "partial");
+    EXPECT_EQ(args.moduleArkTSMode, Constants::ARKTS_MODE_DYNAMIC);
+    EXPECT_EQ(args.bundleName, "com.test.bundle");
+    EXPECT_EQ(args.moduleName, "entry");
+    EXPECT_EQ(args.appIdentifier, "com.test.bundle_12345");
+    EXPECT_EQ(args.bundleUid, 100200);
+    EXPECT_EQ(args.bundleGid, 100200);
+    EXPECT_EQ(args.hapPath, "/data/app/com.test.bundle/entry.hap");
+    EXPECT_EQ(args.anFileName, "/data/ark-cache/com.test.bundle/entry.an");
+    EXPECT_EQ(args.outputPath, "/data/ark-cache/com.test.bundle");
+#else
+    GTEST_SKIP() << "CODE_SIGNATURE_ENABLE not defined";
+#endif
+}
+
+/**
+ * @tc.number: MapBundleArgs_DerivedFields_0100
+ * @tc.name: test MapBundleArgs derived fields (abcPath, pgoDir)
+ * @tc.desc: verify derived fields abcPath and pgoDir are correctly computed.
+ */
+HWTEST_F(BmsAOTMgrTest, MapBundleArgs_DerivedFields_0100, Function | SmallTest | Level1)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    AOTArgs aotArgs;
+    aotArgs.isSysComp = false;
+    aotArgs.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    aotArgs.hapPath = "/data/app/com.test.bundle/entry.hap";
+    aotArgs.arkProfilePath = "/data/app/ark_profile/com.test.bundle/entry.ap";
+
+    ArkCompiler::AotCompilerArgs args;
+    ErrCode ret = AOTExecutor::GetInstance().MapBundleArgs(aotArgs, args);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(args.abcPath, aotArgs.hapPath + std::string("/") + "ets/modules.abc");
+    EXPECT_EQ(args.pgoDir, "/data/app/ark_profile/com.test.bundle");
+#else
+    GTEST_SKIP() << "CODE_SIGNATURE_ENABLE not defined";
+#endif
+}
+
+/**
+ * @tc.number: MapBundleArgs_Options_0100
+ * @tc.name: test MapBundleArgs compilation options and extra ints
+ * @tc.desc: verify optBCRangeList, screenOff, encryptedBundle, baselinePgo,
+ *           bundleType, and triggerType are correctly mapped.
+ */
+HWTEST_F(BmsAOTMgrTest, MapBundleArgs_Options_0100, Function | SmallTest | Level1)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    AOTArgs aotArgs;
+    aotArgs.isSysComp = false;
+    aotArgs.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    aotArgs.hapPath = "/data/app/test/entry.hap";
+    aotArgs.outputPath = "/data/ark-cache/test";
+    aotArgs.optBCRangeList = "0-100";
+    aotArgs.isScreenOff = 1;
+    aotArgs.isEncryptedBundle = 0;
+    aotArgs.isEnableBaselinePgo = 1;
+    aotArgs.bundleType = 0;
+    aotArgs.triggerType = 1;
+
+    ArkCompiler::AotCompilerArgs args;
+    ErrCode ret = AOTExecutor::GetInstance().MapBundleArgs(aotArgs, args);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(args.optBCRangeList, "0-100");
+    EXPECT_EQ(args.isScreenOff, 1u);
+    EXPECT_EQ(args.isEncryptedBundle, 0u);
+    EXPECT_EQ(args.isEnableBaselinePgo, 1u);
+    EXPECT_EQ(args.bundleType, 0);
+    EXPECT_EQ(args.triggerType, 1);
+#else
+    GTEST_SKIP() << "CODE_SIGNATURE_ENABLE not defined";
+#endif
+}
+
+/**
+ * @tc.number: MapBundleArgs_HspModules_0100
+ * @tc.name: test MapBundleArgs maps HSP module info correctly
+ * @tc.desc: verify HspModuleInfo fields are mapped from HspInfo to ArkCompiler::HspModuleInfo.
+ */
+HWTEST_F(BmsAOTMgrTest, MapBundleArgs_HspModules_0100, Function | SmallTest | Level1)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    AOTArgs aotArgs;
+    aotArgs.isSysComp = false;
+    aotArgs.hapPath = "/data/app/test/entry.hap";
+    aotArgs.outputPath = "/data/ark-cache/test";
+    aotArgs.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+
+    HspInfo hsp;
+    hsp.bundleName = "com.test.hsp";
+    hsp.moduleName = "hspModule";
+    hsp.hapPath = "/data/app/com.test.hsp/hsp.hap";
+    hsp.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    aotArgs.hspVector.push_back(hsp);
+
+    ArkCompiler::AotCompilerArgs args;
+    ErrCode ret = AOTExecutor::GetInstance().MapBundleArgs(aotArgs, args);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(args.hspModules.size(), 1u);
+    EXPECT_EQ(args.hspModules[0].bundleName, "com.test.hsp");
+    EXPECT_EQ(args.hspModules[0].moduleName, "hspModule");
+    EXPECT_EQ(args.hspModules[0].hapPath, "/data/app/com.test.hsp/hsp.hap");
+    EXPECT_EQ(args.hspModules[0].moduleArkTSMode, Constants::ARKTS_MODE_STATIC);
+#else
+    GTEST_SKIP() << "CODE_SIGNATURE_ENABLE not defined";
+#endif
+}
+
+/**
+ * @tc.number: HandleCompilerResult_SignFailed_0100
+ * @tc.name: test HandleCompilerResult with ERR_AOT_COMPILER_SIGN_FAILED
+ * @tc.desc: verify HandleCompilerResult returns SIGN_AOT_FAILED when compiler reports
+ *           local signature failure.
+ */
+HWTEST_F(BmsAOTMgrTest, HandleCompilerResult_SignFailed_0100, Function | SmallTest | Level1)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    std::vector<uint8_t> fileData;
+    std::vector<uint8_t> signData;
+    constexpr int16_t ERR_AOT_COMPILER_SIGN_FAILED = 10004;
+    ErrCode ret = AOTExecutor::GetInstance().HandleCompilerResult(
+        ERR_AOT_COMPILER_SIGN_FAILED, fileData, signData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED);
+#else
+    GTEST_SKIP() << "CODE_SIGNATURE_ENABLE not defined";
+#endif
+}
+
+/**
+ * @tc.number: HandleCompilerResult_Crash_0100
+ * @tc.name: test HandleCompilerResult with ERR_AOT_COMPILER_CALL_CRASH
+ * @tc.desc: verify HandleCompilerResult returns AOT_EXECUTE_CRASH when compiler process crashes.
+ */
+HWTEST_F(BmsAOTMgrTest, HandleCompilerResult_Crash_0100, Function | SmallTest | Level1)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    std::vector<uint8_t> fileData;
+    std::vector<uint8_t> signData;
+    constexpr int16_t ERR_AOT_COMPILER_CALL_CRASH = 10008;
+    ErrCode ret = AOTExecutor::GetInstance().HandleCompilerResult(
+        ERR_AOT_COMPILER_CALL_CRASH, fileData, signData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CRASH);
+#else
+    GTEST_SKIP() << "CODE_SIGNATURE_ENABLE not defined";
+#endif
+}
+
+/**
+ * @tc.number: HandleCompilerResult_Cancelled_0100
+ * @tc.name: test HandleCompilerResult with ERR_AOT_COMPILER_CALL_CANCELLED
+ * @tc.desc: verify HandleCompilerResult returns AOT_EXECUTE_CANCELLED when compiler is cancelled.
+ */
+HWTEST_F(BmsAOTMgrTest, HandleCompilerResult_Cancelled_0100, Function | SmallTest | Level1)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    std::vector<uint8_t> fileData;
+    std::vector<uint8_t> signData;
+    constexpr int16_t ERR_AOT_COMPILER_CALL_CANCELLED = 10009;
+    ErrCode ret = AOTExecutor::GetInstance().HandleCompilerResult(
+        ERR_AOT_COMPILER_CALL_CANCELLED, fileData, signData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CANCELLED);
+#else
+    GTEST_SKIP() << "CODE_SIGNATURE_ENABLE not defined";
+#endif
+}
+
+/**
+ * @tc.number: HandleCompilerResult_GeneralFail_0100
+ * @tc.name: test HandleCompilerResult with a generic error code
+ * @tc.desc: verify HandleCompilerResult returns AOT_EXECUTE_FAILED for non-specific error codes.
+ */
+HWTEST_F(BmsAOTMgrTest, HandleCompilerResult_GeneralFail_0100, Function | SmallTest | Level1)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    std::vector<uint8_t> fileData;
+    std::vector<uint8_t> signData;
+    ErrCode ret = AOTExecutor::GetInstance().HandleCompilerResult(
+        ERR_APPEXECFWK_INSTALLD_PARAM_ERROR, fileData, signData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+#else
+    GTEST_SKIP() << "CODE_SIGNATURE_ENABLE not defined";
+#endif
+}
+
+/**
+ * @tc.number: HandleCompilerResult_Success_0100
+ * @tc.name: test HandleCompilerResult with ERR_OK
+ * @tc.desc: verify HandleCompilerResult copies fileData to signData and returns ERR_OK
+ *           on successful compilation.
+ */
+HWTEST_F(BmsAOTMgrTest, HandleCompilerResult_Success_0100, Function | SmallTest | Level1)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    std::vector<uint8_t> fileData = {0xAA, 0xBB, 0xCC, 0xDD};
+    std::vector<uint8_t> signData;
+    ErrCode ret = AOTExecutor::GetInstance().HandleCompilerResult(ERR_OK, fileData, signData);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(signData.size(), fileData.size());
+    EXPECT_EQ(signData, fileData);
+#else
+    GTEST_SKIP() << "CODE_SIGNATURE_ENABLE not defined";
+#endif
+}
+
+/**
+ * @tc.number: MkAOTOutputDir_AppType_UsesCompilerServiceGid_0100
+ * @tc.name: test MkAOTOutputDir App type uses COMPILER_SERVICE_GID
+ * @tc.desc: verify MkAOTOutputDir for non-shared bundles creates output directory
+ *           under HAP_ARK_CACHE_PATH/bundleName with COMPILER_SERVICE_GID ownership.
+ *           Since UT environment cannot create real directories, verify the return value
+ *           is consistent with whether HAP_ARK_CACHE_PATH base exists.
+ */
+HWTEST_F(BmsAOTMgrTest, MkAOTOutputDir_AppType_UsesCompilerServiceGid_0100, Function | SmallTest | Level1)
+{
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "com.test.app.gid";
+    aotArgs.bundleType = 0; // non-shared
+    aotArgs.bundleUid = 1000;
+    aotArgs.bundleGid = 1000;
+    aotArgs.outputPath = "/data/test/ark-cache/com.test.app.gid";
+
+    bool ret = AOTExecutor::GetInstance().MkAOTOutputDir(aotArgs);
+    // In UT environment HAP_ARK_CACHE_PATH does not exist, so MkAOTOutputDir should fail
+    // (MkdirWithAuth validates basePath is a directory)
+    struct stat st;
+    bool baseExists = (stat(ServiceConstants::HAP_ARK_CACHE_PATH, &st) == 0);
+    if (!baseExists) {
+        EXPECT_FALSE(ret);
+    }
 }
 } // OHOS

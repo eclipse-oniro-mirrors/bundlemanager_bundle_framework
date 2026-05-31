@@ -22,7 +22,6 @@
 #include <cstring>
 #include <filesystem>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -44,30 +43,12 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* ABC_RELATIVE_PATH = "ets/modules.abc";
 constexpr const char* STATIC_ABC_RELATIVE_PATH = "ets/modules_static.abc";
-constexpr const char* HEX_PREFIX = "0x";
-constexpr const char* BUNDLE_NAME = "bundleName";
-constexpr const char* MODULE_NAME = "moduleName";
-constexpr const char* PKG_PATH = "pkgPath";
-constexpr const char* ABC_NAME = "abcName";
-constexpr const char* ABC_PATH = "ABC-Path";
-constexpr const char* AN_FILE_NAME = "anFileName";
-constexpr const char* ABC_OFFSET = "abcOffset";
-constexpr const char* ABC_SIZE = "abcSize";
-constexpr const char* PROCESS_UID = "processUid";
-constexpr const char* BUNDLE_UID = "bundleUid";
-constexpr const char* APP_IDENTIFIER = "appIdentifier";
-constexpr const char* IS_ENCRYPTED_BUNDLE = "isEncryptedBundle";
-constexpr const char* IS_SCREEN_OFF = "isScreenOff";
-constexpr const char* PGO_DIR = "pgoDir";
-constexpr const char* IS_SYS_COMP = "isSysComp";
-constexpr const char* IS_SYS_COMP_FALSE = "0";
-constexpr const char* IS_SYS_COMP_TRUE = "1";
 constexpr uint8_t SHARED_BUNDLE_TYPE = 2; // Keep aligned with BundleType::SHARED.
-
 #if defined(CODE_SIGNATURE_ENABLE)
 constexpr int16_t ERR_AOT_COMPILER_SIGN_FAILED = 10004;
 constexpr int16_t ERR_AOT_COMPILER_CALL_CRASH = 10008;
 constexpr int16_t ERR_AOT_COMPILER_CALL_CANCELLED = 10009;
+constexpr int16_t ERR_OK_AOT_FILE_EXIST = 10012;
 #endif
 }
 
@@ -75,16 +56,6 @@ AOTExecutor& AOTExecutor::GetInstance()
 {
     static AOTExecutor executor;
     return executor;
-}
-
-std::string AOTExecutor::DecToHex(uint32_t decimal) const
-{
-    APP_LOGD("DecToHex begin, decimal : %{public}u", decimal);
-    std::stringstream ss;
-    ss << std::hex << decimal;
-    std::string hexString = HEX_PREFIX + ss.str();
-    APP_LOGD("hex : %{public}s", hexString.c_str());
-    return hexString;
 }
 
 bool AOTExecutor::CheckArgs(const AOTArgs &aotArgs) const
@@ -153,80 +124,6 @@ ErrCode AOTExecutor::PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) 
     }
     APP_LOGD("PrepareArgs success");
     return ERR_OK;
-}
-
-nlohmann::json AOTExecutor::GetSubjectInfo(const AOTArgs &aotArgs) const
-{
-    /* obtain the uid of current process */
-    int32_t currentProcessUid = static_cast<int32_t>(getuid());
-
-    std::filesystem::path filePath(aotArgs.arkProfilePath);
-    nlohmann::json subject;
-    subject[BUNDLE_NAME] = aotArgs.bundleName;
-    subject[MODULE_NAME] = aotArgs.moduleName;
-    subject[PKG_PATH] = aotArgs.hapPath;
-    subject[ABC_NAME] = GetAbcRelativePath(aotArgs.moduleArkTSMode);
-    subject[ABC_OFFSET] = DecToHex(aotArgs.offset);
-    subject[ABC_SIZE] = DecToHex(aotArgs.length);
-    subject[PROCESS_UID] = DecToHex(currentProcessUid);
-    subject[BUNDLE_UID] = DecToHex(aotArgs.bundleUid);
-    subject[APP_IDENTIFIER] = aotArgs.appIdentifier;
-    subject[IS_ENCRYPTED_BUNDLE] = DecToHex(aotArgs.isEncryptedBundle);
-    subject[IS_SCREEN_OFF] = DecToHex(aotArgs.isScreenOff);
-    subject[PGO_DIR] = filePath.parent_path().string();
-    return subject;
-}
-
-void AOTExecutor::MapSysCompArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap)
-{
-    APP_LOGI_NOFUNC("MapSysCompArgs : %{public}s", aotArgs.ToString().c_str());
-    argsMap.emplace(IS_SYS_COMP, IS_SYS_COMP_TRUE);
-    argsMap.emplace(ABC_PATH, aotArgs.sysCompPath);
-    argsMap.emplace(AN_FILE_NAME, aotArgs.anFileName);
-    uid_t uid = getuid();
-    if (uid > UINT32_MAX) {
-        APP_LOGE_NOFUNC("invalid uid");
-        return;
-    }
-    argsMap.emplace(PROCESS_UID, DecToHex(uid));
-}
-
-void AOTExecutor::MapBundleArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap)
-{
-    APP_LOGD("MapBundleArgs : %{public}s", aotArgs.ToString().c_str());
-    nlohmann::json subject = GetSubjectInfo(aotArgs);
-
-    nlohmann::json objectArray = nlohmann::json::array();
-    for (const auto &hspInfo : aotArgs.hspVector) {
-        nlohmann::json object;
-        object[BUNDLE_NAME] = hspInfo.bundleName;
-        object[MODULE_NAME] = hspInfo.moduleName;
-        object[PKG_PATH] = hspInfo.hapPath;
-        object[ABC_NAME] = GetAbcRelativePath(hspInfo.moduleArkTSMode);
-        object[Constants::MODULE_ARKTS_MODE] = hspInfo.moduleArkTSMode;
-        object[ABC_OFFSET] = DecToHex(hspInfo.offset);
-        object[ABC_SIZE] = DecToHex(hspInfo.length);
-        objectArray.push_back(object);
-    }
-    argsMap.emplace("bundleType", std::to_string(aotArgs.bundleType));
-    argsMap.emplace("triggerType", std::to_string(aotArgs.triggerType));
-    argsMap.emplace("staticAndHybridModuleCnt", std::to_string(aotArgs.staticAndHybridModuleCnt));
-    argsMap.emplace("target-compiler-mode", aotArgs.compileMode);
-    argsMap.emplace("aot-file", aotArgs.outputPath + ServiceConstants::PATH_SEPARATOR + aotArgs.moduleName);
-    argsMap.emplace("compiler-pkg-info", subject.dump());
-    argsMap.emplace("compiler-external-pkg-info", objectArray.dump());
-    argsMap.emplace("compiler-opt-bc-range", aotArgs.optBCRangeList);
-    argsMap.emplace("compiler-device-state", std::to_string(aotArgs.isScreenOff));
-    argsMap.emplace("compiler-baseline-pgo", std::to_string(aotArgs.isEnableBaselinePgo));
-    std::string abcPath =
-        aotArgs.hapPath + ServiceConstants::PATH_SEPARATOR + GetAbcRelativePath(aotArgs.moduleArkTSMode);
-    argsMap.emplace(ABC_PATH, abcPath);
-    argsMap.emplace("BundleUid", std::to_string(aotArgs.bundleUid));
-    argsMap.emplace("BundleGid", std::to_string(aotArgs.bundleGid));
-    argsMap.emplace(AN_FILE_NAME, aotArgs.anFileName);
-    argsMap.emplace("appIdentifier", aotArgs.appIdentifier);
-    argsMap.emplace(Constants::MODULE_ARKTS_MODE, aotArgs.moduleArkTSMode);
-    argsMap.emplace(IS_SYS_COMP, IS_SYS_COMP_FALSE);
 }
 
 ErrCode AOTExecutor::PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData) const
@@ -317,47 +214,129 @@ bool AOTExecutor::MkAOTOutputDir(const AOTArgs &aotArgs) const
     if (aotArgs.bundleType == SHARED_BUNDLE_TYPE) {
         basePath = ServiceConstants::SHARED_HSP_ARK_CACHE_PATH;
         targetPath = aotArgs.outputPath;
-    } else {
-        basePath = ServiceConstants::HAP_ARK_CACHE_PATH;
-        targetPath = basePath / aotArgs.bundleName;
+        return MkdirWithAuth(basePath, targetPath, aotArgs.bundleUid, aotArgs.bundleGid, dirMode);
     }
-    return MkdirWithAuth(basePath, targetPath, aotArgs.bundleUid, aotArgs.bundleGid, dirMode);
+    basePath = ServiceConstants::HAP_ARK_CACHE_PATH;
+    targetPath = basePath / aotArgs.bundleName;
+    return MkdirWithAuth(basePath, targetPath,
+        static_cast<uid_t>(ServiceConstants::COMPILER_SERVICE_GID),
+        static_cast<gid_t>(ServiceConstants::COMPILER_SERVICE_GID), dirMode);
+}
+
+#if defined(CODE_SIGNATURE_ENABLE)
+ErrCode AOTExecutor::MapSysCompArgs(const AOTArgs &aotArgs, ArkCompiler::AotCompilerArgs &args) const
+{
+    APP_LOGI("MapSysCompArgs: %{public}s", aotArgs.ToString().c_str());
+    args.isSysComp = true;
+    args.sysCompPath = aotArgs.sysCompPath;
+    args.abcPath = aotArgs.sysCompPath;
+    args.anFileName = aotArgs.anFileName;
+    uid_t uid = getuid();
+    if (uid > UINT32_MAX) {
+        APP_LOGE("invalid uid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    args.processUid = static_cast<int32_t>(uid);
+    return ERR_OK;
+}
+
+ErrCode AOTExecutor::MapBundleArgs(const AOTArgs &aotArgs, ArkCompiler::AotCompilerArgs &args) const
+{
+    APP_LOGD("MapBundleArgs: %{public}s", aotArgs.ToString().c_str());
+    args.isSysComp = false;
+    uid_t uid = getuid();
+    if (uid > UINT32_MAX) {
+        APP_LOGE("invalid uid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    args.processUid = static_cast<int32_t>(uid);
+    args.compileMode = aotArgs.compileMode;
+    args.moduleArkTSMode = aotArgs.moduleArkTSMode;
+    args.bundleName = aotArgs.bundleName;
+    args.moduleName = aotArgs.moduleName;
+    args.appIdentifier = aotArgs.appIdentifier;
+    args.bundleUid = aotArgs.bundleUid;
+    args.bundleGid = aotArgs.bundleGid;
+    args.hapPath = aotArgs.hapPath;
+    args.abcPath = aotArgs.hapPath + ServiceConstants::PATH_SEPARATOR + GetAbcRelativePath(aotArgs.moduleArkTSMode);
+    args.anFileName = aotArgs.anFileName;
+    args.outputPath = aotArgs.outputPath;
+    args.optBCRangeList = aotArgs.optBCRangeList;
+    args.isScreenOff = aotArgs.isScreenOff;
+    args.isEncryptedBundle = aotArgs.isEncryptedBundle;
+    args.isEnableBaselinePgo = aotArgs.isEnableBaselinePgo;
+    args.pgoDir = std::filesystem::path(aotArgs.arkProfilePath).parent_path().string();
+    args.bundleType = aotArgs.bundleType;
+    args.triggerType = aotArgs.triggerType;
+    for (const auto &hsp : aotArgs.hspVector) {
+        ArkCompiler::HspModuleInfo hspInfo;
+        hspInfo.bundleName = hsp.bundleName;
+        hspInfo.moduleName = hsp.moduleName;
+        hspInfo.hapPath = hsp.hapPath;
+        hspInfo.moduleArkTSMode = hsp.moduleArkTSMode;
+        args.hspModules.push_back(hspInfo);
+    }
+    return ERR_OK;
+}
+#endif
+
+ErrCode AOTExecutor::HandleCompilerResult(ErrCode ret,
+    const std::vector<uint8_t> &fileData, std::vector<uint8_t> &signData) const
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    if (ret == ERR_AOT_COMPILER_SIGN_FAILED) {
+        APP_LOGE("aot compiler local signature fail");
+        return ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
+    }
+    if (ret == ERR_AOT_COMPILER_CALL_CRASH) {
+        APP_LOGE("aot compiler crash");
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CRASH;
+    }
+    if (ret == ERR_AOT_COMPILER_CALL_CANCELLED) {
+        APP_LOGE("aot compiler cancel");
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CANCELLED;
+    }
+    if (ret == ERR_OK_AOT_FILE_EXIST) {
+        APP_LOGI("aot file already exists, skip compilation");
+        return ERR_OK;
+    }
+    if (ret != ERR_OK) {
+        APP_LOGE("aot compiler fail");
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    }
+    signData = fileData;
+    APP_LOGI("aot compiler success");
+    return ERR_OK;
+#else
+    return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+#endif
 }
 
 ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<uint8_t> &signData)
 {
 #if defined(CODE_SIGNATURE_ENABLE)
-    std::unordered_map<std::string, std::string> argsMap;
+    ArkCompiler::AotCompilerArgs args;
+    ErrCode mapRet = ERR_OK;
     if (aotArgs.isSysComp) {
-        MapSysCompArgs(aotArgs, argsMap);
+        mapRet = MapSysCompArgs(aotArgs, args);
+        if (mapRet != ERR_OK) {
+            APP_LOGE("MapSysCompArgs failed, ret=%{public}d", mapRet);
+            return mapRet;
+        }
     } else {
-        MapBundleArgs(aotArgs, argsMap);
+        mapRet = MapBundleArgs(aotArgs, args);
+        if (mapRet != ERR_OK) {
+            APP_LOGE("MapBundleArgs failed, ret=%{public}d", mapRet);
+            return mapRet;
+        }
         if (!MkAOTOutputDir(aotArgs)) {
             return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
         }
     }
     APP_LOGI("start to aot compiler");
-    std::vector<int16_t> fileData;
-    ErrCode ret = ArkCompiler::AotCompilerClient::GetInstance().AotCompiler(argsMap, fileData);
-    if (ret == ERR_AOT_COMPILER_SIGN_FAILED) {
-        APP_LOGE("aot compiler local signature fail");
-        return ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
-    } else if (ret == ERR_AOT_COMPILER_CALL_CRASH) {
-        APP_LOGE("aot compiler crash");
-        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CRASH;
-    } else if (ret == ERR_AOT_COMPILER_CALL_CANCELLED) {
-        APP_LOGE("aot compiler cancel");
-        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CANCELLED;
-    } else if (ret != ERR_OK) {
-        APP_LOGE("aot compiler fail");
-        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
-    }
-    uint32_t byteSize = static_cast<uint32_t>(fileData.size());
-    for (uint32_t i = 0; i < byteSize; ++i) {
-        signData.emplace_back(static_cast<uint8_t>(fileData[i]));
-    }
-    APP_LOGI("aot compiler success");
-    return ERR_OK;
+    std::vector<uint8_t> fileData;
+    ErrCode ret = ArkCompiler::AotCompilerClient::GetInstance().AotCompiler(args, fileData);
+    return HandleCompilerResult(ret, fileData, signData);
 #else
     APP_LOGE("code signature disable, ignore");
     return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
