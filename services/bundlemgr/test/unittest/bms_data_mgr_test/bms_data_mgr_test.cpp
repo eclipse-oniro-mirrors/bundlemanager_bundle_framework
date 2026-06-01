@@ -18,6 +18,7 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
+#include <unistd.h>
 
 #include "ability_manager_helper.h"
 #include "access_token.h"
@@ -126,6 +127,7 @@ void BmsDataMgrTest::SetUpTestCase()
 void BmsDataMgrTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 

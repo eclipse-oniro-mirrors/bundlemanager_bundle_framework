@@ -94,6 +94,7 @@ void BmsBundleDowngradeTest::SetUpTestCase()
 void BmsBundleDowngradeTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleDowngradeTest::SetUp()
