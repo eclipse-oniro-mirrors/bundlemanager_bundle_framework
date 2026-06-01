@@ -63,6 +63,7 @@ enum class BMSEventType : uint8_t {
     DESKTOP_SHORTCUT,
     APP_STATUS_CHANGE,
     HIGH_RISK_EVENT,
+    BUNDLE_LOCAL_PLUGIN_OPERATION,
 };
 
 enum class BundleEventType : uint8_t {
@@ -256,7 +257,10 @@ struct EventInfo {
     std::vector<int32_t> appIndexList;
     std::vector<int32_t> callingUidList;
     std::vector<int32_t> flagList;
+    std::vector<int32_t> actionTypeList;
+    std::vector<int32_t> errorCodeList;
     std::vector<std::string> bundleNameList;
+    std::vector<std::string> hostBundleNameList;
     std::vector<std::string> callingAppIdList;
     std::vector<std::string> callingBundleNameList;
 
@@ -332,7 +336,10 @@ struct EventInfo {
         appIndexList.clear();
         callingUidList.clear();
         flagList.clear();
+        actionTypeList.clear();
+        errorCodeList.clear();
         bundleNameList.clear();
+        hostBundleNameList.clear();
         callingAppIdList.clear();
         callingBundleNameList.clear();
         targetAPIVersion = 0;

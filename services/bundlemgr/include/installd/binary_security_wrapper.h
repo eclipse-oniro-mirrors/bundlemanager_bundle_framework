@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "appexecfwk_errors.h"
+#include "interfaces/hap_verify.h"
 #include "single_delayed_task_mgr.h"
 
 namespace OHOS {
@@ -38,6 +39,10 @@ public:
         const std::string &appIdentifier, int32_t userId,
         const std::vector<BinFileInfo> &binFileInfos);
 
+    ErrCode RequestIndependentBinarySwitchAsync(int32_t &outSwitchStatus);
+
+    ErrCode CheckHspPluginCertValidity(Security::Verify::HspPlugin &hspPlugin);
+
 private:
     BinarySecurityWrapper();
     ~BinarySecurityWrapper() = default;
@@ -48,15 +53,25 @@ private:
     BinarySecurityWrapper& operator=(BinarySecurityWrapper&&) = delete;
 
     bool LoadLibraryNoLock();
+    bool HasNoResolvedSymbolsNoLock() const;
+    bool ResolveSymbolNoLock(const char* symbolName, void **func);
+    bool ResolveProcessHapBinInstallNoLock();
+    bool ResolveRequestIndependentBinarySwitchAsyncNoLock();
+    bool ResolveCheckHspPluginCertValidityNoLock();
+    void UnloadLibraryNoLock();
     void UnloadLibrary();
     void ScheduleUnload();
 
     using ProcessHapBinInstallFunc = int32_t(*)(const std::string&, const std::string&,
         int32_t, const std::vector<BinFileInfo>&);
+    using RequestIndependentBinarySwitchAsyncFunc = int32_t(*)(int32_t &);
+    using CheckHspPluginCertValidityFunc = int32_t(*)(Security::Verify::HspPlugin &);
 
     mutable std::shared_mutex mutex_;
     void* handle_ = nullptr;
     ProcessHapBinInstallFunc processHapBinInstallFunc_ = nullptr;
+    RequestIndependentBinarySwitchAsyncFunc requestIndependentBinarySwitchAsyncFunc_ = nullptr;
+    CheckHspPluginCertValidityFunc checkHspPluginCertValidityFunc_ = nullptr;
     std::shared_ptr<SingleDelayedTaskMgr> delayedTaskMgr_ = nullptr;
 };
 

@@ -290,6 +290,8 @@ constexpr const char* RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
 constexpr const char* RESOURCE_NAME_OF_RECOVER = "Recover";
 constexpr const char* RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF = "UpdateBundleForSelf";
 constexpr const char* RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER = "UninstallUpdates";
+constexpr const char* RESOURCE_NAME_OF_INSTALL_LOCAL_PLUGIN = "InstallLocalPlugin";
+constexpr const char* RESOURCE_NAME_OF_UNINSTALL_LOCAL_PLUGIN = "UninstallLocalPlugin";
 constexpr const char* INSTALL_PERMISSION =
     "ohos.permission.INSTALL_BUNDLE or "
     "ohos.permission.INSTALL_ENTERPRISE_BUNDLE or "
@@ -301,6 +303,7 @@ constexpr const char* UNINSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE or 
 constexpr const char* UNINSTALL_BUNDLE_PERMISSION = "ohos.permission.UNINSTALL_BUNDLE";
 constexpr const char* RECOVER_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.RECOVER_BUNDLE";
 constexpr const char* INSTALL_SELF_PERMISSION = "ohos.permission.INSTALL_SELF_BUNDLE";
+constexpr const char* PERMISSION_SUPPORT_LOCAL_PLUGIN = "ohos.permission.kernel.SUPPORT_LOCAL_PLUGIN";
 constexpr const char* PARAMETERS = "parameters";
 constexpr const char* CORRESPONDING_TYPE = "corresponding type";
 constexpr const char* FILE_PATH = "filePath";

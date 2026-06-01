@@ -758,6 +758,16 @@ ErrCode InstalldClient::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
     return CallService(&IInstalld::ProcessBinFiles, verifyBinParam);
 }
 
+ErrCode InstalldClient::CheckExternalSourcePluginSwitch(int32_t &outSwitchStatus)
+{
+    return CallService(&IInstalld::CheckExternalSourcePluginSwitch, outSwitchStatus);
+}
+
+ErrCode InstalldClient::CheckHspPluginCertValidity(const HspPluginParam &hspPluginParam)
+{
+    return CallService(&IInstalld::CheckHspPluginCertValidity, hspPluginParam);
+}
+
 ErrCode InstalldClient::ResetBmsDBSecurity()
 {
     return CallService(&IInstalld::ResetBmsDBSecurity);

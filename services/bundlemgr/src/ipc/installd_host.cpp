@@ -374,6 +374,12 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::PROCESS_BIN_FILES):
             result = HandleProcessBinFiles(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CHECK_EXTERNAL_SOURCE_PLUGIN_SWITCH):
+            result = HandleCheckExternalSourcePluginSwitch(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CHECK_HSP_PLUGIN_CERT_VALIDITY):
+            result = HandleCheckHspPluginCertValidity(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1522,6 +1528,34 @@ bool InstalldHost::HandleProcessBinFiles(MessageParcel &data, MessageParcel &rep
     }
 
     ErrCode result = ProcessBinFiles(*verifyBinParam);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCheckExternalSourcePluginSwitch(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t outSwitchStatus = 0;
+    ErrCode result = CheckExternalSourcePluginSwitch(outSwitchStatus);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (result == ERR_OK) {
+        if (!reply.WriteInt32(outSwitchStatus)) {
+            LOG_E(BMS_TAG_INSTALLD, "fail to write outSwitchStatus");
+            return false;
+        }
+    }
+    return true;
+}
+
+bool InstalldHost::HandleCheckHspPluginCertValidity(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<HspPluginParam> hspPluginParam(data.ReadParcelable<HspPluginParam>());
+    if (hspPluginParam == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to read HspPluginParam from data");
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+        return false;
+    }
+
+    ErrCode result = CheckHspPluginCertValidity(*hspPluginParam);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

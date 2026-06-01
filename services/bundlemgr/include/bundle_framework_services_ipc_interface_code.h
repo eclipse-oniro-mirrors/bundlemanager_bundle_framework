@@ -104,6 +104,8 @@ enum class InstalldInterfaceCode : uint32_t {
     PROCESS_BIN_FILES = 76,
     EXTRACT_SKILLS_PACKAGE = 77,
     GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR = 78,
+    CHECK_EXTERNAL_SOURCE_PLUGIN_SWITCH = 79,
+    CHECK_HSP_PLUGIN_CERT_VALIDITY = 80,
 };
 
 } // namespace AppExecFwk

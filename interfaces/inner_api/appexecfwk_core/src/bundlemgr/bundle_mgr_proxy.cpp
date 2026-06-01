@@ -42,6 +42,7 @@
 #include "ffrt.h"
 #include "hitrace_meter.h"
 #include "json_util.h"
+#include "local_plugin_installer_proxy.h"
 #include "param_validator.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_proxy.h"
@@ -2853,6 +2854,31 @@ sptr<IBundleInstaller> BundleMgrProxy::GetBundleInstaller()
     }
 
     APP_LOGD("get bundle installer success");
+    return installer;
+}
+
+sptr<ILocalPluginInstaller> BundleMgrProxy::GetLocalPluginInstaller()
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetLocalPluginInstaller due to write InterfaceToken fail");
+        return nullptr;
+    }
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_LOCAL_PLUGIN_INSTALLER, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("read failed");
+        return nullptr;
+    }
+    sptr<ILocalPluginInstaller> installer = iface_cast<ILocalPluginInstaller>(object);
+    if (installer == nullptr) {
+        APP_LOGE("local plugin installer is nullptr");
+    }
     return installer;
 }
 

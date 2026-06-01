@@ -1545,6 +1545,34 @@ ErrCode InstalldProxy::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
     return TransactInstalldCmd(InstalldInterfaceCode::PROCESS_BIN_FILES, data, reply, option);
 }
 
+ErrCode InstalldProxy::CheckExternalSourcePluginSwitch(int32_t &outSwitchStatus)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+
+    MessageParcel reply;
+    MessageOption option;
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::CHECK_EXTERNAL_SOURCE_PLUGIN_SWITCH, data, reply, option);
+    if (ret == ERR_OK) {
+        outSwitchStatus = reply.ReadInt32();
+    }
+    return ret;
+}
+
+ErrCode InstalldProxy::CheckHspPluginCertValidity(const HspPluginParam &hspPluginParam)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&hspPluginParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable hspPluginParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::CHECK_HSP_PLUGIN_CERT_VALIDITY, data, reply, option);
+}
+
 ErrCode InstalldProxy::ResetBmsDBSecurity()
 {
     MessageParcel data;

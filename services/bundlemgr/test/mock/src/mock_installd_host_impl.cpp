@@ -444,6 +444,17 @@ ErrCode InstalldHostImpl::DeleteCertAndRemoveKey(const std::vector<std::string> 
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CheckExternalSourcePluginSwitch(int32_t &outSwitchStatus)
+{
+    outSwitchStatus = 0;
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CheckHspPluginCertValidity(const HspPluginParam &hspPluginParam)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
 {
     return ERR_OK;

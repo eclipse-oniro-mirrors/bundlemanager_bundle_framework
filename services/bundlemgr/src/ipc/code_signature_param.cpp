@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,7 @@ constexpr const char* CODE_SIGNATURE_TARGET_SO_PATH = "targetSoPath";
 constexpr const char* CODE_SIGNATURE_SIGNATURE_FILE_PATH = "signatureFileDir";
 constexpr const char* CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE = "isEnterpriseBundle";
 constexpr const char* CODE_SIGNATURE_IS_ENTERPRISE_RESIGNED = "isEnterpriseResigned";
+constexpr const char* CODE_SIGNATURE_IS_DEVELOPER_DISTRIBUTION = "isDeveloperDistribution";
 constexpr const char* CODE_SIGNATURE_APP_IDENTIFIER = "appIdentifier";
 constexpr const char* CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE = "isPreInstalledBundle";
 constexpr const char* CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY = "isCompileSdkOpenHarmony";
@@ -50,6 +51,7 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
     signatureFileDir = Str16ToStr8(parcel.ReadString16());
     isEnterpriseBundle = parcel.ReadBool();
     isEnterpriseResigned = parcel.ReadBool();
+    isDeveloperDistribution = parcel.ReadBool();
     appIdentifier = Str16ToStr8(parcel.ReadString16());
     isPreInstalledBundle = parcel.ReadBool();
     isCompileSdkOpenHarmony = parcel.ReadBool();
@@ -87,6 +89,7 @@ bool CodeSignatureParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(signatureFileDir));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEnterpriseBundle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEnterpriseResigned);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDeveloperDistribution);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPreInstalledBundle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isCompileSdkOpenHarmony);
@@ -124,6 +127,7 @@ std::string CodeSignatureParam::ToString() const
         { CODE_SIGNATURE_SIGNATURE_FILE_PATH, signatureFileDir },
         { CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE, isEnterpriseBundle },
         { CODE_SIGNATURE_IS_ENTERPRISE_RESIGNED, isEnterpriseResigned },
+        { CODE_SIGNATURE_IS_DEVELOPER_DISTRIBUTION, isDeveloperDistribution },
         { CODE_SIGNATURE_APP_IDENTIFIER, appIdentifier },
         { CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE, isPreInstalledBundle },
         { CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY, isCompileSdkOpenHarmony },

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,6 +44,7 @@
 #endif
 #include "extend_resource_manager_host_impl.h"
 #include "hidump_helper.h"
+#include "local_plugin_installer_host.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_host_impl.h"
 #endif
@@ -100,6 +101,7 @@ public:
      * @return Returns the pointer of IBundleInstaller object.
      */
     sptr<BundleInstallerHost> GetBundleInstaller() const;
+    sptr<LocalPluginInstallerHost> GetLocalPluginInstaller() const;
     /**
      * @brief Get a IBundleUserMgr object for IPC
      * @return Returns the pointer of IBundleUserMgr object.
@@ -175,6 +177,7 @@ private:
     void InitOobePreloadUninstallMgr();
     bool InitBundleMgrHost();
     bool InitBundleInstaller();
+    bool InitLocalPluginInstaller();
     void InitBundleDataMgr();
     bool InitBundleUserMgr();
     bool InitVerifyManager();
@@ -207,6 +210,7 @@ private:
 #endif
     sptr<BundleMgrHostImpl> host_;
     sptr<BundleInstallerHost> installer_;
+    sptr<LocalPluginInstallerHost> localPluginInstaller_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
     sptr<IVerifyManager> verifyManager_;
     sptr<IExtendResourceManager> extendResourceManager_;

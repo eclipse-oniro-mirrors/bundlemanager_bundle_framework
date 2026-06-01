@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,6 +63,7 @@ BundleMgrService::~BundleMgrService()
 {
     host_ = nullptr;
     installer_ = nullptr;
+    localPluginInstaller_ = nullptr;
     if (handler_) {
         handler_.reset();
     }
@@ -134,6 +135,7 @@ bool BundleMgrService::Init()
     InitPreInstallExceptionMgr();
     CHECK_INIT_RESULT(InitBundleMgrHost(), "Init bundleMgr fail");
     CHECK_INIT_RESULT(InitBundleInstaller(), "Init bundleInstaller fail");
+    CHECK_INIT_RESULT(InitLocalPluginInstaller(), "Init local plugin installer fail");
     InitBundleDataMgr();
     APP_LOGI_NOFUNC("BundleMgrService InitOobePreloadUninstallMgr");
     InitOobePreloadUninstallMgr();
@@ -193,6 +195,20 @@ bool BundleMgrService::InitBundleInstaller()
             return false;
         }
         installer_->Init();
+    }
+
+    return true;
+}
+
+bool BundleMgrService::InitLocalPluginInstaller()
+{
+    if (localPluginInstaller_ == nullptr) {
+        localPluginInstaller_ = new (std::nothrow) LocalPluginInstallerHost();
+        if (localPluginInstaller_ == nullptr) {
+            APP_LOGE("init local plugin installer fail");
+            return false;
+        }
+        localPluginInstaller_->Init();
     }
 
     return true;
@@ -389,6 +405,11 @@ bool BundleMgrService::InitSkillManager()
 sptr<BundleInstallerHost> BundleMgrService::GetBundleInstaller() const
 {
     return installer_;
+}
+
+sptr<LocalPluginInstallerHost> BundleMgrService::GetLocalPluginInstaller() const
+{
+    return localPluginInstaller_;
 }
 
 void BundleMgrService::RegisterDataMgr(std::shared_ptr<BundleDataMgr> dataMgrImpl)

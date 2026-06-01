@@ -260,6 +260,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_TOP_N_LARGEST_ITEMS_IN_APP_DATA_DIR = 234,
     GET_ALTERNATE_ICONS = 235,
     QUERY_EXTENSION_ABILITY_INFO_BY_URI_OPTIMAL = 236,
+    GET_LOCAL_PLUGIN_INSTALLER = 237,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -339,6 +340,18 @@ enum class BundleStreamInstallerInterfaceCode : uint8_t {
     CREATE_SIGNATURE_FILE_STREAM = 3,
     CREATE_PGO_FILE_STREAM = 4,
     CREATE_EXT_PROFILE_FILE_STREAM = 5
+};
+
+enum class LocalPluginStreamInstallerInterfaceCode : uint8_t {
+    CREATE_PLUGIN_FILE_STREAM = 0,
+    COMMIT_LOCAL_PLUGIN_INSTALL = 1,
+};
+
+enum class LocalPluginInstallerInterfaceCode : uint8_t {
+    UNINSTALL = 0,
+    CREATE_LOCAL_PLUGIN_STREAM_INSTALLER = 1,
+    DESTROY_LOCAL_PLUGIN_STREAM_INSTALLER = 2,
+    INTERNAL_UNINSTALL = 3,
 };
 
 /* SAID: 401-26 Interface No.26 subservice also provides the following interfaces */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,7 @@ const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIB
     { Security::Verify::AppDistType::INTERNALTESTING, Constants::APP_DISTRIBUTION_TYPE_INTERNALTESTING },
     { Security::Verify::AppDistType::OS_INTEGRATION, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
     { Security::Verify::AppDistType::CROWDTESTING, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
+    { Security::Verify::AppDistType::DEVELOPER, Constants::APP_DISTRIBUTION_TYPE_DEVELOPER },
 };
 
 namespace {

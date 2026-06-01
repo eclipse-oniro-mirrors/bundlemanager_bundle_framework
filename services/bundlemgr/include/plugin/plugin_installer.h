@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,6 +44,16 @@ public:
      */
     ErrCode InstallPlugin(const std::string &hostBundleName, const std::vector<std::string> &pluginFilePaths,
         const InstallPluginParam &installPluginParam);
+
+    /**
+     * @brief Install or update local plugin application distributed by developer.
+     * @param hostBundleName Indicates the bundle name of the host application.
+     * @param pluginFilePaths Indicates the paths for storing the HSP of the plugin to install or update.
+     * @param installPluginParam Indicates the install parameters.
+     * @return Returns ERR_OK if the plugin application is installed successfully; returns errcode otherwise.
+     */
+    ErrCode InstallLocalPlugin(const std::string &hostBundleName, const std::vector<std::string> &pluginFilePaths,
+        const InstallPluginParam &installPluginParam);
     
     /**
      * @brief uninstall plugin application.
@@ -54,9 +64,14 @@ public:
      */
     ErrCode UninstallPlugin(const std::string &hostBundleName, const std::string &pluginBundleName,
         const InstallPluginParam &installPluginParam);
+
+    ErrCode UninstallLocalPlugin(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const InstallPluginParam &installPluginParam, bool needCheckUserId = false);
     
 private:
     bool isPluginExist_ = false;
+    bool isLocalPluginInstall_ = false;
+    bool isDeveloperDistribution_ = false;
     bool isEnterpriseBundle_ = false;
     bool isCompressNativeLibs_ = true;
     int32_t userId_ = Constants::INVALID_USERID;
@@ -83,8 +98,11 @@ private:
     ErrCode ParseFiles(const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam);
     ErrCode DeliveryProfileToCodeSign(std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const;
     ErrCode CheckPluginId(const std::string &hostBundleName);
+    ErrCode InstallLocalPluginInner(const std::string &hostBundleName,
+        const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam);
     ErrCode ProcessPluginInstall(const InnerBundleInfo &hostBundleInfo);
     ErrCode CreatePluginDir(const std::string &hostBundleName, std::string &pluginDir);
+    bool CheckDistributionTypeForUpdate() const;
     ErrCode ExtractPluginBundles(const std::string &bundlePath, InnerBundleInfo &newInfo, const std::string &pluginDir,
         const std::string &hostBundleName);
     ErrCode CheckPluginAppLabelInfo();
@@ -93,6 +111,11 @@ private:
     void PluginRollBack(const std::string &hostBundleName);
     ErrCode RemovePluginDir(const InnerBundleInfo &hostBundleInfo);
     ErrCode CheckSupportPluginPermission(const std::string &hostBundleName);
+    ErrCode CheckPluginDistributionType(bool isDeveloperDistribution) const;
+    ErrCode UninstallPluginInner(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const InstallPluginParam &installPluginParam, bool needCheckUserId);
+    ErrCode CheckExternalSourcePluginSwitch() const;
+    ErrCode CheckHspPluginCertValidity() const;
     ErrCode SaveHspToInstallDir(const std::string &bundlePath, const std::string &pluginBundleDir,
         const std::string &moduleName, InnerBundleInfo &newInfo);
     void RemoveEmptyDirs(const std::string &pluginDir, const std::string &hostBundleName) const;
@@ -125,6 +148,9 @@ private:
     void DeleteRouterInfoForPlugin(const std::string &hostBundleName);
     void SendPluginCommonEvent(const std::string &hostBundleName, const std::string &pluginBundleName,
         const NotifyType &notifyType);
+    void SendLocalPluginSystemEvent(const std::string &hostBundleName, int32_t userId,
+        int32_t actionType, ErrCode errCode);
+    std::string GetLocalPluginEventFilePath() const;
 
 #define CHECK_RESULT(errcode, errmsg)                                              \
     do {                                                                           \

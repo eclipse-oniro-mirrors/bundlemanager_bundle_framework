@@ -55,6 +55,7 @@ ohos_unittest("BmsBundleRdbDataManagerTest") {
   ]
 
   external_deps = [
+    "appverify:libhapverify",
     "googletest:gmock_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",

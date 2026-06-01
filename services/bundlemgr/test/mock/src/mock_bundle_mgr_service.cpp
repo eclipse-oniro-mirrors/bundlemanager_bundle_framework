@@ -104,6 +104,11 @@ bool BundleMgrService::InitBundleInstaller()
     return false;
 }
 
+bool BundleMgrService::InitLocalPluginInstaller()
+{
+    return false;
+}
+
 void BundleMgrService::InitBundleDataMgr()
 {
 }
@@ -171,6 +176,11 @@ bool BundleMgrService::InitBundleResourceMgr()
 }
 
 sptr<BundleInstallerHost> BundleMgrService::GetBundleInstaller() const
+{
+    return nullptr;
+}
+
+sptr<LocalPluginInstallerHost> BundleMgrService::GetLocalPluginInstaller() const
 {
     return nullptr;
 }

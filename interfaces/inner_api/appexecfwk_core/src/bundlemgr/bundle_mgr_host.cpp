@@ -300,6 +300,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INSTALLER):
             errCode = this->HandleGetBundleInstaller(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_LOCAL_PLUGIN_INSTALLER):
+            errCode = this->HandleGetLocalPluginInstaller(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_FORMS_INFO):
             errCode = this->HandleGetAllFormsInfo(data, reply);
             break;
@@ -2488,6 +2491,22 @@ ErrCode BundleMgrHost::HandleGetBundleInstaller(MessageParcel &data, MessageParc
 
     if (!reply.WriteRemoteObject(installer->AsObject())) {
         APP_LOGE("failed to reply bundle installer to client, for write MessageParcel error");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetLocalPluginInstaller(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    sptr<ILocalPluginInstaller> installer = GetLocalPluginInstaller();
+    if (installer == nullptr) {
+        APP_LOGE("local plugin installer is nullptr");
+        return ERR_APPEXECFWK_INSTALL_HOST_INSTALLER_FAILED;
+    }
+
+    if (!reply.WriteRemoteObject(installer->AsObject())) {
+        APP_LOGE("failed to reply local plugin installer to client, for write MessageParcel error");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

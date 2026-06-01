@@ -2140,6 +2140,9 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
     if (codeSignatureParam.isEnterpriseResigned) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_ENTERPRISE_RESIGN;
     }
+    if (codeSignatureParam.isDeveloperDistribution) {
+        codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_LOCAL_HSP_PLUGIN;
+    }
     if (codeSignatureParam.signatureFileDir.empty()) {
         std::shared_ptr<CodeSignHelper> codeSignHelper = std::make_shared<CodeSignHelper>();
         Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?

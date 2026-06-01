@@ -166,6 +166,7 @@ constexpr const char* PERMISSION_SUPPORT_PLUGIN = "ohos.permission.kernel.SUPPOR
 constexpr const char* PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB = "ohos.permission.SUPPORT_NP_PLUGIN_FOR_WEB";
 constexpr const char* PERMISSION_MANAGE_STORAGE = "ohos.permission.atomicService.MANAGE_STORAGE";
 constexpr const char* PERMISSION_MANAGE_AGING = "ohos.permission.atomicService.MANAGE_AGING";
+constexpr const char* PERMISSION_SUPPORT_LOCAL_PLUGIN = "ohos.permission.kernel.SUPPORT_LOCAL_PLUGIN";
 
 constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
 constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
@@ -222,6 +223,7 @@ constexpr const char* IS_ENTERPRISE_DEVICE = "const.edm.is_enterprise_device";
 constexpr const char* DEVELOPERMODE_STATE = "const.security.developermode.state";
 constexpr const char* BMS_DATA_PRELOAD = "persist.bms.data.preload";
 constexpr const char* IS_SUPPORT_PLUGIN = "const.bms.support_plugin";
+constexpr const char* IS_SUPPORT_LOCAL_PLUGIN = "const.bms.support_local_plugin";
 constexpr const char* IS_DRIVER_FOR_ALL_USERS = "const.bms.driverForAllUsers";
 constexpr const char* HYBRID_SPAWN_ENABLE = "persist.appspawn.hybridspawn.enable";
 constexpr const char* HYBRID_SPAWN_UNIFIED = "persist.appspawn.hybridspawn.unified";
