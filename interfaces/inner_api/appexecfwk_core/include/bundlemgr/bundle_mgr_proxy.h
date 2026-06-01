@@ -1357,6 +1357,8 @@ public:
 
     virtual ErrCode GetPluginInfosForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos) override;
 
+    virtual ErrCode GetAllLocalPluginInfoForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos) override;
+
     virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;
 
     virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;

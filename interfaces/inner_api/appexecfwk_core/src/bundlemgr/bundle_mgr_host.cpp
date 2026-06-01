@@ -808,6 +808,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_API_TARGET_VERSION_BY_UID):
             errCode = HandleGetApiTargetVersionByUid(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_LOCAL_PLUGIN_INFO_FOR_SELF):
+            errCode = HandleGetAllLocalPluginInfoForSelf(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -5194,6 +5197,24 @@ ErrCode BundleMgrHost::HandleGetPluginInfosForSelf(MessageParcel &data, MessageP
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::vector<PluginBundleInfo> pluginBundleInfos;
     auto ret = GetPluginInfosForSelf(pluginBundleInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(pluginBundleInfos, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllLocalPluginInfoForSelf(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = GetAllLocalPluginInfoForSelf(pluginBundleInfos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

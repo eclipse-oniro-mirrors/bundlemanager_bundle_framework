@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,6 +40,7 @@ const char* PLUGIN_BUNDLE_INFO_APPLICATION_INFO = "appInfo";
 const char* PLUGIN_BUNDLE_INFO_NATIVE_LIB_PATH = "nativeLibraryPath";
 const char* COMPILE_MODE_ES_MODULE = "esmodule";
 const char* PLUGIN_BUNDLE_INFO_EXTENSION_INFOS = "extensionInfos";
+const char* PLUGIN_BUNDLE_INFO_IS_DEVELOPER_DISTRIBUTION = "isDeveloperDistribution";
 }
 
 bool PluginBundleInfo::ReadFromParcel(Parcel &parcel)
@@ -91,6 +92,7 @@ bool PluginBundleInfo::ReadFromParcel(Parcel &parcel)
     if (!ReadExtensionInfos(parcel)) {
         return false;
     }
+    isDeveloperDistribution = parcel.ReadBool();
     return true;
 }
 
@@ -141,6 +143,7 @@ bool PluginBundleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, extensionInfo.first);
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &extensionInfo.second);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDeveloperDistribution);
     return true;
 }
 
@@ -173,6 +176,7 @@ void to_json(nlohmann::json &jsonObject, const PluginBundleInfo &pluginBundleInf
         {PLUGIN_BUNDLE_INFO_ABILITY_INFOS, pluginBundleInfo.abilityInfos},
         {PLUGIN_BUNDLE_INFO_APPLICATION_INFO, pluginBundleInfo.appInfo},
         {PLUGIN_BUNDLE_INFO_EXTENSION_INFOS, pluginBundleInfo.extensionInfos},
+        {PLUGIN_BUNDLE_INFO_IS_DEVELOPER_DISTRIBUTION, pluginBundleInfo.isDeveloperDistribution},
     };
 }
 
@@ -284,6 +288,12 @@ void from_json(const nlohmann::json &jsonObject, PluginBundleInfo &pluginBundleI
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        PLUGIN_BUNDLE_INFO_IS_DEVELOPER_DISTRIBUTION,
+        pluginBundleInfo.isDeveloperDistribution,
+        false,
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read pluginBundleInfo error : %{public}d", parseResult);
     }

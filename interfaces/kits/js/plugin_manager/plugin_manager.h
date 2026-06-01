@@ -24,6 +24,7 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "plugin/plugin_bundle_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -39,8 +40,14 @@ struct UninstallLocalPluginCallbackInfo : public BaseCallbackInfo {
     InstallResult installResult;
 };
 
+struct GetAllLocalPluginCallbackInfo : public BaseCallbackInfo {
+    explicit GetAllLocalPluginCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+};
+
 napi_value InstallLocalPlugin(napi_env env, napi_callback_info info);
 napi_value UninstallLocalPlugin(napi_env env, napi_callback_info info);
+napi_value GetAllLocalPluginInfoForSelf(napi_env env, napi_callback_info info);
 } // namespace AppExecFwk
 } // namespace OHOS
 

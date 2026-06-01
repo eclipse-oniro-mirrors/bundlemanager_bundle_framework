@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+* Copyright (c) 2023-2026 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -1538,6 +1538,20 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BundleMgrHostImpl_0004, Function | SmallTe
     int32_t userId = 0;
     ExtensionAbilityInfo extensionInfo;
     auto ret = localBundleMgrHostImpl->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0005
+ * @tc.name: BundleMgrHostImpl_0005
+ * @tc.desc: test GetAllLocalPluginInfoForSelf
+ */
+HWTEST_F(BmsBundleDataMgrNullptrTest, BundleMgrHostImpl_0005, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = localBundleMgrHostImpl->GetAllLocalPluginInfoForSelf(pluginBundleInfos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
 } // OHOS

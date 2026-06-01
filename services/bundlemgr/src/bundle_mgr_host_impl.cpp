@@ -6641,6 +6641,21 @@ ErrCode BundleMgrHostImpl::GetPluginInfosForSelf(std::vector<PluginBundleInfo> &
     return dataMgr->GetAllPluginInfo(callingBundleName, BundleUtil::GetUserIdByUid(uid), pluginBundleInfos);
 }
 
+ErrCode BundleMgrHostImpl::GetAllLocalPluginInfoForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos)
+{
+    APP_LOGD("start GetAllLocalPluginInfoForSelf");
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_SUPPORT_LOCAL_PLUGIN)) {
+        LOG_E(BMS_TAG_INSTALLER, "GetAllLocalPluginInfoForSelf permission denied");
+        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetAllLocalPluginInfoForSelf(pluginBundleInfos);
+}
+
 ErrCode BundleMgrHostImpl::GetBundleNameByAppId(const std::string &appId, std::string &bundleName)
 {
     APP_LOGD("start GetBundleNameByAppId");
