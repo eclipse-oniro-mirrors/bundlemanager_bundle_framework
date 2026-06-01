@@ -3301,6 +3301,19 @@ bool BundleDataMgr::GetBundleInfo(
     return true;
 }
 
+ErrCode BundleDataMgr::BuildBundleInfoWithProcess(const InnerBundleInfo &info, const std::string &bundleName,
+    uint32_t flags, int32_t userId, int32_t responseUserId, int32_t appIndex, BundleInfo &bundleInfo) const
+{
+    ErrCode ret = info.GetBundleInfoV9(flags, bundleInfo, responseUserId, appIndex);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    ProcessCertificate(bundleInfo, bundleName, flags);
+    ProcessBundleMenu(bundleInfo, flags, true);
+    ProcessBundleRouterMap(bundleInfo, flags, userId);
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::GetBundleInfoV9(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId, int32_t appIndex) const
 {
@@ -3344,12 +3357,12 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     }
 
     int32_t responseUserId = innerBundleInfo->GetResponseUserId(requestUserId);
-    innerBundleInfo->GetBundleInfoV9(flags, bundleInfo, responseUserId, appIndex);
+    ErrCode buildRet = BuildBundleInfoWithProcess(*innerBundleInfo, bundleName, flags, userId,
+        responseUserId, appIndex, bundleInfo);
+    if (buildRet != ERR_OK) {
+        return buildRet;
+    }
     PostProcessAnyUserFlags(flags, responseUserId, originalUserId, bundleInfo, *innerBundleInfo);
-
-    ProcessCertificate(bundleInfo, bundleName, flags);
-    ProcessBundleMenu(bundleInfo, flags, true);
-    ProcessBundleRouterMap(bundleInfo, flags, userId);
     LOG_D(BMS_TAG_QUERY, "get bundleInfo(%{public}s) successfully in user(%{public}d)",
         bundleName.c_str(), userId);
     return ERR_OK;
@@ -11768,6 +11781,71 @@ ErrCode BundleDataMgr::GetCloneBundleInfo(
     LOG_D(BMS_TAG_QUERY, "get bundleInfo(%{public}s) successfully in user(%{public}d)",
         bundleName.c_str(), userId);
     return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetMainAndCloneBundleInfo(
+    const std::string &bundleName, uint32_t flags, int32_t userId, std::vector<BundleInfo> &bundleInfos) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID; 
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        LOG_D(BMS_TAG_QUERY, "bundleName: %{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &info = item->second;
+    if (info.IsDisabled()) {
+        LOG_D(BMS_TAG_QUERY, "bundleName: %{public}s is disabled", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
+    }
+    int32_t responseUserId = info.GetResponseUserId(requestUserId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        LOG_D(BMS_TAG_QUERY, "user %{public}d not exist for bundle %{public}s", userId, bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    bool withDisable = (flags &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE)) != 0;
+    if (!AddBundleInfoIfEnabled(info, bundleName, flags, userId, bundleInfos, withDisable, 0, responseUserId)) {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    const InnerBundleUserInfo *bundleUserInfoPtr = nullptr;
+    (void)info.GetInnerBundleUserInfo(responseUserId, bundleUserInfoPtr);
+    if (bundleUserInfoPtr != nullptr && !bundleUserInfoPtr->cloneInfos.empty()) {
+        for (const auto &cloneItem : bundleUserInfoPtr->cloneInfos) {
+            if (!AddBundleInfoIfEnabled(info, bundleName, flags, userId, bundleInfos, withDisable,
+                cloneItem.second.appIndex, responseUserId)) {
+                return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+            }
+        }
+    }
+    if (bundleInfos.empty()) {
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+    }
+    LOG_D(BMS_TAG_QUERY, "get main and clone bundleInfo(%{public}s) successfully in "
+        "user(%{public}d), size: %{public}zu", bundleName.c_str(), userId, bundleInfos.size());
+    return ERR_OK;
+}
+
+bool BundleDataMgr::AddBundleInfoIfEnabled(const InnerBundleInfo &info, const std::string &bundleName,
+    uint32_t flags, int32_t userId, std::vector<BundleInfo> &bundleInfos, bool withDisable,
+    int32_t appIndex, int32_t responseUserId) const
+{
+    bool isEnabled = false;
+    if (info.GetApplicationEnabledV9(responseUserId, isEnabled, appIndex) != ERR_OK) {
+        return false;
+    }
+    if (!withDisable && !isEnabled) {
+        return true;
+    }
+    BundleInfo tmpInfo;
+    if (BuildBundleInfoWithProcess(info, bundleName, flags, userId, responseUserId, appIndex, tmpInfo) != ERR_OK) {
+        return false;
+    }
+    bundleInfos.emplace_back(std::move(tmpInfo));
+    return true;
 }
 
 void BundleDataMgr::QueryAllCloneExtensionInfos(const Want &want, int32_t flags, int32_t userId,

@@ -1186,6 +1186,8 @@ public:
         int32_t appIndex, AbilityInfo &abilityInfo) const;
     ErrCode GetCloneBundleInfo(const std::string &bundleName, int32_t flags, int32_t appIndex,
         BundleInfo &bundleInfo, int32_t userId) const;
+    ErrCode GetMainAndCloneBundleInfo(const std::string &bundleName, uint32_t flags,
+        int32_t userId, std::vector<BundleInfo> &bundleInfos) const;
     std::vector<int32_t> GetCloneAppIndexes(const std::string &bundleName, int32_t userId) const;
     std::set<int32_t> GetCloneAppIndexes(const std::string &bundleName) const;
 
@@ -1479,6 +1481,11 @@ private:
     void ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo, BundleInfo &bundleInfo) const;
     void GetCloneBundleInfos(const InnerBundleInfo &info, int32_t flags, int32_t userId,
         std::vector<BundleInfo> &bundleInfos) const;
+    bool AddBundleInfoIfEnabled(const InnerBundleInfo &info, const std::string &bundleName, uint32_t flags,
+        int32_t userId, std::vector<BundleInfo> &bundleInfos, bool withDisable,
+        int32_t appIndex, int32_t responseUserId) const;
+    ErrCode BuildBundleInfoWithProcess(const InnerBundleInfo &info, const std::string &bundleName, uint32_t flags,
+        int32_t userId, int32_t responseUserId, int32_t appIndex, BundleInfo &bundleInfo) const;
     void GetBundleNameAndIndexByName(const std::string &keyName, std::string &bundleName, int32_t &appIndex) const;
     void GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos,
         const ElementName &element, int32_t flags, int32_t userId) const;

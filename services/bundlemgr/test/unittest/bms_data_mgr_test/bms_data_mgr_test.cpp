@@ -12604,4 +12604,270 @@ HWTEST_F(BmsDataMgrTest, IsValidAppUid_0400, Function | SmallTest | Level1)
     int32_t uid = USERID * Constants::BASE_USER_RANGE + Constants::MAX_APP_UID;
     EXPECT_TRUE(bundleDataMgr.IsValidAppUid(uid));
 }
+
+/**
+ * @tc.number: GetMainAndCloneBundleInfo_0100
+ * @tc.name: test GetMainAndCloneBundleInfo
+ * @tc.desc: 1.invalid userId
+ */
+HWTEST_F(BmsDataMgrTest, GetMainAndCloneBundleInfo_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "";
+    uint32_t flags = 0;
+    int32_t userId = Constants::INVALID_USERID;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = dataMgr->GetMainAndCloneBundleInfo(bundleName, flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    userId = Constants::ANY_USERID;
+    ret = dataMgr->GetMainAndCloneBundleInfo(bundleName, flags, userId, bundleInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetMainAndCloneBundleInfo_0200
+ * @tc.name: test GetMainAndCloneBundleInfo
+ * @tc.desc: 1.bundle not exist
+ */
+HWTEST_F(BmsDataMgrTest, GetMainAndCloneBundleInfo_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    std::string bundleName = "com.example.notexist";
+    uint32_t flags = 0;
+    int32_t userId = USERID;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = dataMgr->GetMainAndCloneBundleInfo(bundleName, flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetMainAndCloneBundleInfo_0300
+ * @tc.name: test GetMainAndCloneBundleInfo
+ * @tc.desc: 1.bundle disabled
+ */
+HWTEST_F(BmsDataMgrTest, GetMainAndCloneBundleInfo_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    int32_t userId = USERID;
+    BundleUserInfo userInfo;
+    userInfo.userId = userId;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo = userInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    dataMgr->multiUserIdsSet_.insert(userId);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    std::vector<BundleInfo> bundleInfos;
+    uint32_t flags = 0;
+    ErrCode ret = dataMgr->GetMainAndCloneBundleInfo(BUNDLE_NAME, flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_DISABLED);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+    dataMgr->multiUserIdsSet_.erase(userId);
+}
+
+/**
+ * @tc.number: GetMainAndCloneBundleInfo_0400
+ * @tc.name: test GetMainAndCloneBundleInfo
+ * @tc.desc: 1.bundle not available for user
+ */
+HWTEST_F(BmsDataMgrTest, GetMainAndCloneBundleInfo_0400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    int32_t validUserId = USERID;
+    BundleUserInfo userInfo;
+    userInfo.userId = validUserId;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo = userInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    dataMgr->multiUserIdsSet_.insert(validUserId);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    std::vector<BundleInfo> bundleInfos;
+    uint32_t flags = 0;
+    int32_t invalidUserId = 999;
+    ErrCode ret = dataMgr->GetMainAndCloneBundleInfo(BUNDLE_NAME, flags, invalidUserId, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+    dataMgr->multiUserIdsSet_.erase(validUserId);
+}
+
+/**
+ * @tc.number: GetMainAndCloneBundleInfo_0500
+ * @tc.name: test GetMainAndCloneBundleInfo
+ * @tc.desc: 1.ANY_USERID but no user infos
+ */
+HWTEST_F(BmsDataMgrTest, GetMainAndCloneBundleInfo_0500, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    std::vector<BundleInfo> bundleInfos;
+    uint32_t flags = 0;
+    int32_t userId = Constants::ANY_USERID;
+    ErrCode ret = dataMgr->GetMainAndCloneBundleInfo(BUNDLE_NAME, flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: GetMainAndCloneBundleInfo_0600
+ * @tc.name: test GetMainAndCloneBundleInfo
+ * @tc.desc: 1.main bundle only, no clone apps
+ */
+HWTEST_F(BmsDataMgrTest, GetMainAndCloneBundleInfo_0600, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo baseBundleInfo;
+    baseBundleInfo.name = BUNDLE_NAME;
+    innerBundleInfo.SetBaseBundleInfo(baseBundleInfo);
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.name = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    int32_t userId = USERID;
+    BundleUserInfo userInfo;
+    userInfo.userId = userId;
+    userInfo.enabled = true;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo = userInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    dataMgr->multiUserIdsSet_.insert(userId);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    std::vector<BundleInfo> bundleInfos;
+    uint32_t flags = 0;
+    ErrCode ret = dataMgr->GetMainAndCloneBundleInfo(BUNDLE_NAME, flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GE(bundleInfos.size(), 1);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+    dataMgr->multiUserIdsSet_.erase(userId);
+}
+
+/**
+ * @tc.number: GetMainAndCloneBundleInfo_0700
+ * @tc.name: test GetMainAndCloneBundleInfo
+ * @tc.desc: 1.main bundle with clone apps
+ */
+HWTEST_F(BmsDataMgrTest, GetMainAndCloneBundleInfo_0700, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo baseBundleInfo;
+    baseBundleInfo.name = BUNDLE_NAME;
+    innerBundleInfo.SetBaseBundleInfo(baseBundleInfo);
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.name = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    int32_t userId = USERID;
+    BundleUserInfo userInfo;
+    userInfo.userId = userId;
+    userInfo.enabled = true;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo = userInfo;
+    InnerBundleCloneInfo cloneInfo1;
+    cloneInfo1.appIndex = 1;
+    cloneInfo1.enabled = true;
+    cloneInfo1.userId = userId;
+    innerBundleUserInfo.cloneInfos.emplace(InnerBundleUserInfo::AppIndexToKey(1), cloneInfo1);
+    InnerBundleCloneInfo cloneInfo2;
+    cloneInfo2.appIndex = 2;
+    cloneInfo2.enabled = true;
+    cloneInfo2.userId = userId;
+    innerBundleUserInfo.cloneInfos.emplace(InnerBundleUserInfo::AppIndexToKey(2), cloneInfo2);
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    dataMgr->multiUserIdsSet_.insert(userId);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    std::vector<BundleInfo> bundleInfos;
+    uint32_t flags = 0;
+    ErrCode ret = dataMgr->GetMainAndCloneBundleInfo(BUNDLE_NAME, flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GE(bundleInfos.size(), 1);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+    dataMgr->multiUserIdsSet_.erase(userId);
+}
+
+/**
+ * @tc.number: GetMainAndCloneBundleInfo_0800
+ * @tc.name: test GetMainAndCloneBundleInfo
+ * @tc.desc: 1.get bundle info with GET_BUNDLE_INFO_WITH_DISABLE flag
+ */
+HWTEST_F(BmsDataMgrTest, GetMainAndCloneBundleInfo_0800, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo baseBundleInfo;
+    baseBundleInfo.name = BUNDLE_NAME;
+    innerBundleInfo.SetBaseBundleInfo(baseBundleInfo);
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.name = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    int32_t userId = USERID;
+    BundleUserInfo userInfo;
+    userInfo.userId = userId;
+    userInfo.enabled = true;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo = userInfo;
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    cloneInfo.enabled = false;
+    cloneInfo.userId = userId;
+    innerBundleUserInfo.cloneInfos.emplace(InnerBundleUserInfo::AppIndexToKey(1), cloneInfo);
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    dataMgr->multiUserIdsSet_.insert(userId);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    std::vector<BundleInfo> bundleInfos;
+    uint32_t flags = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    ErrCode ret = dataMgr->GetMainAndCloneBundleInfo(BUNDLE_NAME, flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GE(bundleInfos.size(), 1);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+    dataMgr->multiUserIdsSet_.erase(userId);
+}
+
+/**
+ * @tc.number: GetMainAndCloneBundleInfo_0900
+ * @tc.name: test GetMainAndCloneBundleInfo
+ * @tc.desc: 1.empty bundle name
+ */
+HWTEST_F(BmsDataMgrTest, GetMainAndCloneBundleInfo_0900, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    std::string bundleName = "";
+    uint32_t flags = 0;
+    int32_t userId = USERID;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = dataMgr->GetMainAndCloneBundleInfo(bundleName, flags, userId, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
 } // OHOS

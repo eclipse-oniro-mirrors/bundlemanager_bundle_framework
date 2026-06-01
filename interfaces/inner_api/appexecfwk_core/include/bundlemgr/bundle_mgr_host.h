@@ -945,6 +945,8 @@ private:
 
     ErrCode HandleGetCloneBundleInfoExt(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetMainAndCloneBundleInfo(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetCloneAppIndexes(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetLaunchWant(MessageParcel &data, MessageParcel &reply);

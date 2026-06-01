@@ -1206,6 +1206,9 @@ public:
     virtual ErrCode GetCloneBundleInfoExt(const std::string &bundleName, uint32_t flags, int32_t appIndex,
         int32_t userId, BundleInfo &bundleInfo) override;
 
+    virtual ErrCode GetMainAndCloneBundleInfo(const std::string &bundleName, uint32_t flags,
+        int32_t userId, std::vector<BundleInfo> &bundleInfos) override;
+
     virtual ErrCode GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
