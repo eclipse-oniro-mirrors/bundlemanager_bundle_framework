@@ -29,6 +29,7 @@ constexpr const char* KEY_MODULE = "module";
 constexpr const char* KEY_APP_BUNDLE_NAME = "bundleName";
 constexpr const char* KEY_APP_BUNDLE_TYPE = "bundleType";
 constexpr const char* KEY_APP_TARGET_API_VERSION = "targetAPIVersion";
+constexpr const char* KEY_APP_API_VERSION = "apiVersion";
 // module fields
 constexpr const char* KEY_MODULE_NAME = "name";
 constexpr const char* KEY_MODULE_SKILL_PROFILES = "skillProfiles";
@@ -42,6 +43,8 @@ constexpr const char* KEY_REQUEST_PERM_REASON = "reason";
 constexpr const char* KEY_REQUEST_PERM_REASON_ID = "reasonId";
 constexpr const char* KEY_REQUEST_PERM_MODULE_NAME = "moduleName";
 constexpr const char* KEY_REQUEST_PERM_REQUIRED_FEATURE = "requiredFeature";
+// apiVersion fields
+constexpr const char* KEY_API_VERSION_TARGET = "target";
 // definePermission fields
 constexpr const char* KEY_DEFINE_PERM_NAME = "name";
 constexpr const char* KEY_DEFINE_PERM_GRANT_MODE = "grantMode";
@@ -197,6 +200,25 @@ bool ParseSkillNames(const nlohmann::json &moduleObj, std::vector<std::string> &
     }
     return true;
 }
+
+bool ParseApiTargetVersion(const nlohmann::json &appObj, int32_t &apiTargetVersion)
+{
+    // Stage model
+    auto it = appObj.find(KEY_APP_TARGET_API_VERSION);
+    if (it != appObj.end()) {
+        apiTargetVersion = GetJsonInt32(appObj, KEY_APP_TARGET_API_VERSION);
+        return true;
+    }
+    // FA model
+    auto apiIt = appObj.find(KEY_APP_API_VERSION);
+    if (apiIt == appObj.end()) {
+        return true; // optional field, no version info
+    }
+    if (apiIt->is_object()) {
+        apiTargetVersion = GetJsonInt32(*apiIt, KEY_API_VERSION_TARGET);
+    }
+    return true;
+}
 } // anonymous namespace
 
 bool ParseSpmModule(const std::string &moduleJson, InnerModuleInfoForSpm &moduleInfo)
@@ -228,7 +250,7 @@ bool ParseSpmModule(const std::string &moduleJson, InnerModuleInfoForSpm &module
     moduleInfo.bundleType = ConvertBundleType(bundleTypeStr);
 
     // targetAPIVersion (optional)
-    moduleInfo.apiTargetVersion = GetJsonInt32(appObj, KEY_APP_TARGET_API_VERSION);
+    (void)ParseApiTargetVersion(appObj, moduleInfo.apiTargetVersion);
 
     // Parse module section
     auto moduleIt = jsonObject.find(KEY_MODULE);
