@@ -526,6 +526,9 @@ ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
         return ResultCode::SYSTEM_ERROR;
     }
 
+    // Recover system-level HSP and inter-app shared bundles which are not scanned
+    ReInstallSystemHspAndSharedBundles();
+
     return ResultCode::RECOVER_OK;
 }
 
@@ -628,6 +631,7 @@ bool BMSEventHandler::AnalyzeUserData(
 
 ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
 {
+    ReInstallSystemHspAndSharedBundles();
     // First, reinstall all preInstall app from preInstall dir
     std::vector<std::string> preInstallDirs;
     GetPreInstallDir(preInstallDirs);
@@ -1007,6 +1011,12 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
         return;
     }
 
+    std::string developerId = info.GetDeveloperId();
+    if (!developerId.empty()) {
+        std::string odid;
+        dataMgr->GenerateOdid(developerId, odid);
+        info.UpdateOdid(developerId, odid);
+    }
     auto& hapModuleName = info.GetCurModuleName();
     std::vector<std::string> dbModuleNames;
     dbInfo.GetModuleNames(dbModuleNames);
@@ -1317,6 +1327,29 @@ void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &shared
         LOG_W(BMS_TAG_DEFAULT, "install system shared bundle: %{public}s error", sharedBundlePath.c_str());
     } else {
         DeletePreInstallExceptionShared(sharedBundlePath);
+    }
+}
+
+void BMSEventHandler::ReInstallSystemHspAndSharedBundles()
+{
+    if (!LoadPreInstallProFile()) {
+        LOG_W(BMS_TAG_DEFAULT, "LoadPreInstallProFile failed, skip system HSP install");
+        return;
+    }
+
+    // Install system-level HSP from systemHspList_
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "ReInstallSystemHspAndSharedBundles start");
+    InnerProcessBootSystemHspInstall();
+
+    // Install shared bundles from installList_
+    std::list<std::string> sharedBundleDirs;
+    for (const auto &installInfo : installList_) {
+        if (installInfo.bundleDir.find(PRE_INSTALL_HSP_PATH) != std::string::npos) {
+            sharedBundleDirs.emplace_back(installInfo.bundleDir);
+        }
+    }
+    if (!sharedBundleDirs.empty()) {
+        InnerProcessRebootSharedBundleInstall(sharedBundleDirs, Constants::AppType::SYSTEM_APP);
     }
 }
 
@@ -4879,10 +4912,18 @@ bool BMSEventHandler::CheckAndParseHapFiles(
         LOG_E(BMS_TAG_DEFAULT, "CheckMultiNativeFile failed %{public}d", ret);
         return false;
     }
+    std::string developerId;
+    if (!hapVerifyResults.empty()) {
+        developerId = hapVerifyResults[0].GetProvisionInfo().bundleInfo.developerId;
+        if (developerId.empty()) {
+            developerId = hapVerifyResults[0].GetProvisionInfo().bundleInfo.bundleName;
+        }
+    }
 
     // set hapPath
-    std::for_each(infos.begin(), infos.end(), [](auto &item) {
+    std::for_each(infos.begin(), infos.end(), [&developerId](auto &item) {
         item.second.SetModuleHapPath(item.first);
+        item.second.UpdateDeveloperId(developerId);
     });
 
     return true;
