@@ -102,7 +102,6 @@ enum class BundleDirScene : int32_t {
 
     // RemoveDir scenes
     REMOVE_BUNDLE_CODE_DIR = 501,
-    REMOVE_SHARED_ARK_CACHE_DIR = 502,
     REMOVE_AOT_ARK_CACHE_DIR = 503,
     REMOVE_BUNDLE_HNP_DIR = 504,
     REMOVE_BMS_BUNDLE_LIB_DIR = 505,

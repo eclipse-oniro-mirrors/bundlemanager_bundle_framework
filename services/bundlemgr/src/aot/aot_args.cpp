@@ -131,6 +131,7 @@ bool AOTArgs::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, moduleArkTSMode);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSysComp);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, sysCompPath);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, hostBundleName);
     return true;
 }
 
@@ -163,6 +164,7 @@ bool AOTArgs::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, moduleArkTSMode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSysComp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, sysCompPath);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, hostBundleName);
     return true;
 }
 
@@ -200,6 +202,7 @@ std::string AOTArgs::ToString() const
         + ", isScreenOff = " + std::to_string(isScreenOff)
         + ", isEnableBaselinePgo = " + std::to_string(isEnableBaselinePgo)
         + ", moduleArkTSMode = " + moduleArkTSMode
+        + ", hostBundleName = " + hostBundleName
         + ", isSysComp = " + (isSysComp ? "true" : "false")
         + ", sysCompPath = " + sysCompPath + "]";
     ret.append(" hspVector = ");

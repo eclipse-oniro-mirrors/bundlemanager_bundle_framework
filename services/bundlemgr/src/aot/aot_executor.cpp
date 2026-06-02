@@ -212,7 +212,7 @@ bool AOTExecutor::MkAOTOutputDir(const AOTArgs &aotArgs) const
     std::filesystem::path targetPath;
     mode_t dirMode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     if (aotArgs.bundleType == SHARED_BUNDLE_TYPE) {
-        basePath = ServiceConstants::SHARED_HSP_ARK_CACHE_PATH;
+        basePath = ServiceConstants::HAP_ARK_CACHE_PATH;
         targetPath = aotArgs.outputPath;
         return MkdirWithAuth(basePath, targetPath, aotArgs.bundleUid, aotArgs.bundleGid, dirMode);
     }
@@ -268,6 +268,7 @@ ErrCode AOTExecutor::MapBundleArgs(const AOTArgs &aotArgs, ArkCompiler::AotCompi
     args.pgoDir = std::filesystem::path(aotArgs.arkProfilePath).parent_path().string();
     args.bundleType = aotArgs.bundleType;
     args.triggerType = aotArgs.triggerType;
+    args.hostBundleName = aotArgs.hostBundleName;
     for (const auto &hsp : aotArgs.hspVector) {
         ArkCompiler::HspModuleInfo hspInfo;
         hspInfo.bundleName = hsp.bundleName;

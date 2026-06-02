@@ -56,6 +56,7 @@ struct AOTArgs : public Parcelable {
     std::string arkProfilePath;
     std::string anFileName;
     std::string appIdentifier;
+    std::string hostBundleName;
     std::string optBCRangeList;
     std::string moduleArkTSMode;
     std::vector<HspInfo> hspVector;

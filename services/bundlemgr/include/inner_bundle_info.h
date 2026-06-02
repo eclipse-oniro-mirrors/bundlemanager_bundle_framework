@@ -2375,7 +2375,6 @@ public:
     void SetNativeLibraryFileNames(const std::string &moduleName, const std::vector<std::string> &fileNames);
     void UpdateSharedModuleInfo();
     AOTCompileStatus GetAOTCompileStatus(const std::string &moduleName) const;
-    AOTCompileStatus GetAOTCompileStatusWithVersion(const std::string &moduleName, uint32_t versionCode) const;
     void SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus);
     bool IsAOTFlagsInitial() const;
     void ResetAOTFlags();

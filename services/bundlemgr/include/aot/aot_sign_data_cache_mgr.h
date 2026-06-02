@@ -63,6 +63,7 @@ private:
         uint32_t versionCode = 0;
         std::string bundleName;
         std::string moduleName;
+        std::string anFileName;
         std::vector<uint8_t> signData;
     };
     std::atomic<bool> isLocked_ { true };

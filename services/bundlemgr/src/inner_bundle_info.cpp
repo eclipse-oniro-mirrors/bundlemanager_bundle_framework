@@ -342,16 +342,6 @@ AOTCompileStatus InnerBundleInfo::GetAOTCompileStatus(const std::string &moduleN
     return item->second.aotCompileStatus;
 }
 
-AOTCompileStatus InnerBundleInfo::GetAOTCompileStatusWithVersion(
-    const std::string &moduleName, uint32_t versionCode) const
-{
-    auto item = innerModuleInfos_.find(moduleName);
-    if (item != innerModuleInfos_.end() && item->second.versionCode == versionCode) {
-        return item->second.aotCompileStatus;
-    }
-    return AOTCompileStatus::NOT_COMPILED;
-}
-
 bool InnerBundleInfo::IsAOTFlagsInitial() const
 {
     if (!baseApplicationInfo_->arkNativeFilePath.empty()) {
@@ -2564,8 +2554,6 @@ bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleNam
     baseSharedBundleInfo.compressNativeLibs = innerModuleInfo.compressNativeLibs;
     baseSharedBundleInfo.nativeLibraryFileNames = innerModuleInfo.nativeLibraryFileNames;
     baseSharedBundleInfo.librarySupportDirectory = innerModuleInfo.librarySupportDirectory;
-    baseSharedBundleInfo.aotCompileStatus =
-        GetAOTCompileStatusWithVersion(moduleName, innerModuleInfo.versionCode);
     return true;
 }
 
@@ -2597,8 +2585,6 @@ bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uin
             baseSharedBundleInfo.compressNativeLibs = item.compressNativeLibs;
             baseSharedBundleInfo.nativeLibraryFileNames = item.nativeLibraryFileNames;
             baseSharedBundleInfo.librarySupportDirectory = item.librarySupportDirectory;
-            baseSharedBundleInfo.aotCompileStatus =
-                GetAOTCompileStatusWithVersion(moduleName, versionCode);
             return true;
         }
     }
@@ -2679,8 +2665,6 @@ bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) co
             sharedModuleInfo.moduleArkTSMode = info.moduleArkTSMode;
             sharedModuleInfo.nativeLibraryFileNames = info.nativeLibraryFileNames;
             sharedModuleInfo.librarySupportDirectory = info.librarySupportDirectory;
-            sharedModuleInfo.aotCompileStatus =
-                GetAOTCompileStatusWithVersion(infoVector.first, info.versionCode);
             sharedModuleInfos.emplace_back(sharedModuleInfo);
         }
     }

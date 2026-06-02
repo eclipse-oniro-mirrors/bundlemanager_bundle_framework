@@ -1238,9 +1238,6 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirScene_0100, Function | S
         TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_MODULE_DIR);
     EXPECT_TRUE(ret);
     ret = InstalldOperator::IsValidPathByRemoveDirScene(
-        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR);
-    EXPECT_FALSE(ret);
-    ret = InstalldOperator::IsValidPathByRemoveDirScene(
         TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR);
     EXPECT_FALSE(ret);
     ret = InstalldOperator::IsValidPathByRemoveDirScene(
@@ -1924,21 +1921,6 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartO
 {
     std::string dir = std::string(ServiceConstants::HAP_ARK_CACHE_PATH) + TEST_BUNDLE_NAME;
     auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
-        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR);
-    EXPECT_FALSE(ret);
-
-    dir = std::string(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH) + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
-        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR);
-    EXPECT_TRUE(ret);
-
-    dir = std::string(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH) + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
-        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR);
-    EXPECT_FALSE(ret);
-
-    dir = std::string(ServiceConstants::HAP_ARK_CACHE_PATH) + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartOne(
         dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR);
     EXPECT_TRUE(ret);
 
@@ -3042,10 +3024,6 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByClearDirScene_0200, Function | Sm
     EXPECT_FALSE(ret);
 
     dir = std::string(ServiceConstants::FOR_ALL_APP_DIR) + FRAMEWORK_ARK_CACHE_PATH + TEST_STRING;
-    ret = InstalldOperator::IsValidPathByClearDirScene(dir, BundleDirScene::CLEAR_ARK_CACHE_DIR);
-    EXPECT_TRUE(ret);
-
-    dir = std::string(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH) + TEST_STRING;
     ret = InstalldOperator::IsValidPathByClearDirScene(dir, BundleDirScene::CLEAR_ARK_CACHE_DIR);
     EXPECT_TRUE(ret);
 

@@ -201,7 +201,6 @@ constexpr int32_t OVERLAY_MINIMUM_PRIORITY = 1;
 constexpr const char* COMPILE_PARTIAL = "partial";
 constexpr const char* COMPILE_FULL = "full";
 constexpr const char* HAP_ARK_CACHE_PATH = "/data/app/el1/public/aot_compiler/ark_cache/";
-constexpr const char* SHARED_HSP_ARK_CACHE_PATH = "/data/service/el1/public/for-all-app/shared_bundles_ark_cache/";
 constexpr const char* FOR_ALL_APP_DIR = "/data/service/el1/public/for-all-app/";
 constexpr uint16_t SYSTEM_UID = 1000;
 

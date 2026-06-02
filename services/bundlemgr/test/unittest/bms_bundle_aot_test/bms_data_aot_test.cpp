@@ -1432,6 +1432,7 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0800, Function | SmallTest | Level1)
 {
     AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
     AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
+    data.anFileName = AN_FILE_NAME;
     signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
     SetPendSignAOTCode(ERR_OK);
     InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
@@ -1448,6 +1449,7 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0900, Function | SmallTest | Level1)
 {
     AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
     AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
+    data.anFileName = AN_FILE_NAME;
     signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
     SetPendSignAOTCode(ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE);
     InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
@@ -1464,6 +1466,7 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_1000, Function | SmallTest | Level1)
 {
     AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
     AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
+    data.anFileName = AN_FILE_NAME;
     signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
     SetPendSignAOTCode(ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
@@ -1859,6 +1862,7 @@ HWTEST_F(BmsAOTMgrTest, AddSignDataForModule_0700, Function | SmallTest | Level1
     AOTArgs aotArgs;
     aotArgs.bundleName = "bundleName";
     aotArgs.moduleName = "moduleName";
+    aotArgs.anFileName = AN_FILE_NAME;
     aotArgs.bundleType = static_cast<uint8_t>(BundleType::SHARED);
     aotArgs.triggerType = ServiceConstants::AOT_TRIGGER_INSTALL;
     std::vector<uint8_t> signData = {0x01, 0x02};
@@ -1874,6 +1878,7 @@ HWTEST_F(BmsAOTMgrTest, AddSignDataForModule_0700, Function | SmallTest | Level1
     EXPECT_EQ(cacheData.versionCode, versionCode);
     EXPECT_EQ(cacheData.bundleName, aotArgs.bundleName);
     EXPECT_EQ(cacheData.moduleName, aotArgs.moduleName);
+    EXPECT_EQ(cacheData.anFileName, aotArgs.anFileName);
     EXPECT_EQ(cacheData.signData, signData);
 
     AOTSignDataCacheMgr::GetInstance().moduleSignDataVector_.clear();
@@ -1930,6 +1935,7 @@ HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_0200, Function | SmallTest | Le
     data.versionCode = VERSION_CODE;
     data.bundleName = AOT_BUNDLE_NAME;
     data.moduleName = AOT_MODULE_NAME;
+    data.anFileName = AN_FILE_NAME;
     data.signData = {0x01};
     signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
 
@@ -1993,7 +1999,7 @@ HWTEST_F(BmsAOTMgrTest, IsAOTFlagsInitial_0100, Function | SmallTest | Level1)
 /**
  * @tc.number: AOTHandler_SharedHsp_BuildAOTArgs_0100
  * @tc.name: test BuildAOTArgs for shared bundle
- * @tc.desc: verify BuildAOTArgs builds correct shared args when bundleType is SHARED
+ * @tc.desc: verify BuildAOTArgs rejects shared bundle global AOT
  */
 HWTEST_F(BmsAOTMgrTest, AOTHandler_SharedHsp_BuildAOTArgs_0100, Function | SmallTest | Level1)
 {
@@ -2013,23 +2019,629 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_SharedHsp_BuildAOTArgs_0100, Function | Small
 
     auto ret = AOTHandler::GetInstance().BuildAOTArgs(
         innerBundleInfo, AOT_MODULE_NAME, "", false, ServiceConstants::AOT_TRIGGER_INSTALL);
-    ASSERT_NE(ret, std::nullopt);
-    EXPECT_EQ(ret->bundleType, static_cast<uint8_t>(BundleType::SHARED));
-    EXPECT_EQ(ret->compileMode, ServiceConstants::COMPILE_FULL);
-    EXPECT_EQ(ret->bundleUid, ServiceConstants::SYSTEM_UID);
-    EXPECT_EQ(ret->bundleGid, ServiceConstants::SYSTEM_UID);
-    EXPECT_EQ(ret->triggerType, ServiceConstants::AOT_TRIGGER_INSTALL);
-
-    std::string expectedOutputPath = AOTHandler::BuildSharedArkCachePath(AOT_BUNDLE_NAME, VERSION_CODE);
-    EXPECT_EQ(ret->outputPath, expectedOutputPath);
+    EXPECT_EQ(ret, std::nullopt);
 }
 
 /**
- * @tc.number: AOTHandler_SharedHsp_HandleInstallAOT_0100
- * @tc.name: test HandleInstallAOTAsync for shared bundle
- * @tc.desc: verify HandleInstallAOTAsync processes shared bundle correctly
+ * @tc.number: AOTHandler_SharedHsp_BuildHostSharedHspAOTArgs_0100
+ * @tc.name: test BuildHostSharedHspAOTArgs for host-private shared hsp AOT
+ * @tc.desc: verify host-private shared hsp AOT args contain host bundle name and host-private output path
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_SharedHsp_HandleInstallAOT_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_SharedHsp_BuildHostSharedHspAOTArgs_0100, Function | SmallTest | Level1)
+{
+    std::string hostBundleName = "com.example.host";
+    std::string sharedBundleName = "com.example.sharedhsp";
+    InnerBundleInfo hostInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = hostBundleName;
+    applicationInfo.bundleType = BundleType::APP;
+    hostInfo.SetBaseApplicationInfo(applicationInfo);
+    hostInfo.SetAppIdentifier("hostAppIdentifier");
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = hostBundleName;
+    userInfo.uid = 200100;
+    userInfo.gids.emplace_back(200101);
+    userInfo.bundleUserInfo.userId = Constants::START_USERID;
+    hostInfo.innerBundleUserInfos_.emplace(
+        hostBundleName + Constants::FILE_UNDERLINE + std::to_string(Constants::START_USERID), userInfo);
+
+    BaseSharedBundleInfo sharedBundleInfo;
+    sharedBundleInfo.bundleName = sharedBundleName;
+    sharedBundleInfo.moduleName = AOT_MODULE_NAME;
+    sharedBundleInfo.versionCode = VERSION_CODE;
+    sharedBundleInfo.hapPath = HAP_PATH;
+    sharedBundleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+
+    auto ret = AOTHandler::GetInstance().BuildHostSharedHspAOTArgs(
+        hostInfo, sharedBundleInfo, ServiceConstants::AOT_TRIGGER_INSTALL);
+    ASSERT_NE(ret, std::nullopt);
+    EXPECT_EQ(ret->bundleName, sharedBundleName);
+    EXPECT_EQ(ret->moduleName, AOT_MODULE_NAME);
+    EXPECT_EQ(ret->hostBundleName, hostBundleName);
+    EXPECT_EQ(ret->bundleType, static_cast<uint8_t>(BundleType::SHARED));
+    EXPECT_EQ(ret->compileMode, ServiceConstants::COMPILE_FULL);
+    EXPECT_EQ(ret->bundleUid, userInfo.uid);
+    EXPECT_EQ(ret->bundleGid, userInfo.gids[0]);
+    EXPECT_EQ(ret->triggerType, ServiceConstants::AOT_TRIGGER_INSTALL);
+
+    std::string expectedOutputPath = std::string(ServiceConstants::HAP_ARK_CACHE_PATH) + hostBundleName +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::ARM64 + ServiceConstants::PATH_SEPARATOR +
+        sharedBundleName + ServiceConstants::PATH_SEPARATOR + std::to_string(VERSION_CODE);
+    EXPECT_EQ(ret->outputPath, expectedOutputPath);
+    EXPECT_EQ(ret->anFileName, expectedOutputPath + ServiceConstants::PATH_SEPARATOR + AOT_MODULE_NAME +
+        ServiceConstants::AN_SUFFIX);
+}
+
+/**
+ * @tc.number: AOTHandler_HostSharedHsp_BuildAOTArgs_0200
+ * @tc.name: test BuildHostSharedHspAOTArgs without host user info
+ * @tc.desc: verify host-private shared HSP AOT args are not built when uid/gid cannot be resolved
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_HostSharedHsp_BuildAOTArgs_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo hostInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "com.example.host.no.user";
+    applicationInfo.bundleType = BundleType::APP;
+    hostInfo.SetBaseApplicationInfo(applicationInfo);
+
+    BaseSharedBundleInfo sharedBundleInfo;
+    sharedBundleInfo.bundleName = "com.example.sharedhsp";
+    sharedBundleInfo.moduleName = AOT_MODULE_NAME;
+    sharedBundleInfo.versionCode = VERSION_CODE;
+    sharedBundleInfo.hapPath = HAP_PATH;
+    sharedBundleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+
+    auto ret = AOTHandler::GetInstance().BuildHostSharedHspAOTArgs(
+        hostInfo, sharedBundleInfo, ServiceConstants::AOT_TRIGGER_INSTALL);
+    EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: AOTHandler_HostSharedHsp_BuildAOTArgs_0300
+ * @tc.name: test BuildHostSharedHspAOTArgs with debug host and encrypted shared module
+ * @tc.desc: verify debug appIdentifier, explicit gid and encrypted module branch
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_HostSharedHsp_BuildAOTArgs_0300, Function | SmallTest | Level1)
+{
+    std::string hostBundleName = "com.example.host.debug";
+    InnerBundleInfo hostInfo;
+    ApplicationInfo hostApplicationInfo;
+    hostApplicationInfo.bundleName = hostBundleName;
+    hostApplicationInfo.bundleType = BundleType::APP;
+    hostApplicationInfo.appProvisionType = Constants::APP_PROVISION_TYPE_DEBUG;
+    hostInfo.SetBaseApplicationInfo(hostApplicationInfo);
+    hostInfo.SetAppIdentifier("hostIdentifier");
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = hostBundleName;
+    userInfo.bundleUserInfo.userId = Constants::START_USERID;
+    userInfo.uid = 20000;
+    userInfo.gids.emplace_back(21000);
+    hostInfo.AddInnerBundleUserInfo(userInfo);
+
+    BaseSharedBundleInfo sharedBundleInfo;
+    sharedBundleInfo.bundleName = "com.example.sharedhsp.encrypted";
+    sharedBundleInfo.moduleName = AOT_MODULE_NAME;
+    sharedBundleInfo.versionCode = VERSION_CODE;
+    sharedBundleInfo.hapPath = HAP_PATH;
+    sharedBundleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+
+    InnerBundleInfo sharedInfo;
+    ApplicationInfo sharedApplicationInfo;
+    sharedApplicationInfo.bundleName = sharedBundleInfo.bundleName;
+    sharedApplicationInfo.bundleType = BundleType::SHARED;
+    sharedInfo.SetBaseApplicationInfo(sharedApplicationInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    moduleInfo.isEncrypted = true;
+    sharedInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        sharedBundleInfo.bundleName, sharedInfo);
+
+    auto ret = AOTHandler::GetInstance().BuildHostSharedHspAOTArgs(
+        hostInfo, sharedBundleInfo, ServiceConstants::AOT_TRIGGER_INSTALL);
+    ASSERT_NE(ret, std::nullopt);
+    EXPECT_EQ(ret->appIdentifier, "DEBUG_LIB_ID");
+    EXPECT_EQ(ret->bundleGid, userInfo.gids[0]);
+    EXPECT_EQ(ret->isEncryptedBundle, 1u);
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(sharedBundleInfo.bundleName);
+}
+
+/**
+ * @tc.number: AOTHandler_HostSharedHsp_BuildAOTArgs_0400
+ * @tc.name: test BuildHostSharedHspAOTArgs with null dataMgr
+ * @tc.desc: verify host-private shared HSP args can be built without querying shared bundle info
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_HostSharedHsp_BuildAOTArgs_0400, Function | SmallTest | Level1)
+{
+    std::string hostBundleName = "com.example.host.no.datamgr";
+    InnerBundleInfo hostInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = hostBundleName;
+    applicationInfo.bundleType = BundleType::APP;
+    hostInfo.SetBaseApplicationInfo(applicationInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = hostBundleName;
+    userInfo.bundleUserInfo.userId = Constants::START_USERID;
+    userInfo.uid = 20000;
+    hostInfo.AddInnerBundleUserInfo(userInfo);
+
+    BaseSharedBundleInfo sharedBundleInfo;
+    sharedBundleInfo.bundleName = "com.example.sharedhsp.no.datamgr";
+    sharedBundleInfo.moduleName = AOT_MODULE_NAME;
+    sharedBundleInfo.versionCode = VERSION_CODE;
+    sharedBundleInfo.hapPath = HAP_PATH;
+    sharedBundleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+
+    ClearDataMgr();
+    auto ret = AOTHandler::GetInstance().BuildHostSharedHspAOTArgs(
+        hostInfo, sharedBundleInfo, ServiceConstants::AOT_TRIGGER_INSTALL);
+    EXPECT_NE(ret, std::nullopt);
+    if (ret) {
+        EXPECT_EQ(ret->isEncryptedBundle, 0u);
+    }
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: AOTHandler_HostSharedHsp_BuildAOTArgs_0500
+ * @tc.name: test BuildHostSharedHspAOTArgs with non-encrypted shared module
+ * @tc.desc: verify queried shared module keeps isEncryptedBundle false when module is not encrypted
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_HostSharedHsp_BuildAOTArgs_0500, Function | SmallTest | Level1)
+{
+    std::string hostBundleName = "com.example.host.release";
+    InnerBundleInfo hostInfo;
+    ApplicationInfo hostApplicationInfo;
+    hostApplicationInfo.bundleName = hostBundleName;
+    hostApplicationInfo.bundleType = BundleType::APP;
+    hostInfo.SetBaseApplicationInfo(hostApplicationInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = hostBundleName;
+    userInfo.bundleUserInfo.userId = Constants::START_USERID;
+    userInfo.uid = 20000;
+    hostInfo.AddInnerBundleUserInfo(userInfo);
+
+    BaseSharedBundleInfo sharedBundleInfo;
+    sharedBundleInfo.bundleName = "com.example.sharedhsp.not.encrypted";
+    sharedBundleInfo.moduleName = AOT_MODULE_NAME;
+    sharedBundleInfo.versionCode = VERSION_CODE;
+    sharedBundleInfo.hapPath = HAP_PATH;
+    sharedBundleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+
+    InnerBundleInfo sharedInfo;
+    ApplicationInfo sharedApplicationInfo;
+    sharedApplicationInfo.bundleName = sharedBundleInfo.bundleName;
+    sharedApplicationInfo.bundleType = BundleType::SHARED;
+    sharedInfo.SetBaseApplicationInfo(sharedApplicationInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    moduleInfo.isEncrypted = false;
+    sharedInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(sharedBundleInfo.bundleName, sharedInfo);
+
+    auto ret = AOTHandler::GetInstance().BuildHostSharedHspAOTArgs(
+        hostInfo, sharedBundleInfo, ServiceConstants::AOT_TRIGGER_INSTALL);
+    ASSERT_NE(ret, std::nullopt);
+    EXPECT_EQ(ret->isEncryptedBundle, 0u);
+
+    dataMgr->bundleInfos_.erase(sharedBundleInfo.bundleName);
+}
+
+/**
+ * @tc.number: AOTHandler_DeleteHostPrivateSharedHspAOT_0100
+ * @tc.name: test DeleteHostPrivateSharedHspAOT
+ * @tc.desc: verify DeleteHostPrivateSharedHspAOT handles empty hsp bundle name
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_DeleteHostPrivateSharedHspAOT_0100, Function | SmallTest | Level1)
+{
+    AOTHandler::DeleteHostPrivateSharedHspAOT("");
+    EXPECT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+}
+
+/**
+ * @tc.number: AOTHandler_DeleteHostPrivateSharedHspAOT_0200
+ * @tc.name: test DeleteHostPrivateSharedHspAOT with null dataMgr
+ * @tc.desc: verify DeleteHostPrivateSharedHspAOT returns early when dataMgr is null
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_DeleteHostPrivateSharedHspAOT_0200, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    AOTHandler::DeleteHostPrivateSharedHspAOT("com.example.sharedhsp");
+    EXPECT_EQ(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: AOTHandler_DeleteHostPrivateSharedHspAOT_0300
+ * @tc.name: test DeleteHostPrivateSharedHspAOT with installed hosts
+ * @tc.desc: verify DeleteHostPrivateSharedHspAOT handles host-private shared HSP AOT cleanup
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_DeleteHostPrivateSharedHspAOT_0300, Function | SmallTest | Level1)
+{
+    std::string hspBundleName = "com.example.sharedhsp.delete";
+    InnerBundleInfo sharedInfo;
+    ApplicationInfo sharedApplicationInfo;
+    sharedApplicationInfo.bundleName = hspBundleName;
+    sharedApplicationInfo.bundleType = BundleType::SHARED;
+    sharedInfo.SetBaseApplicationInfo(sharedApplicationInfo);
+    BundleInfo sharedBundleBaseInfo;
+    sharedBundleBaseInfo.name = hspBundleName;
+    sharedInfo.SetBaseBundleInfo(sharedBundleBaseInfo);
+    InnerModuleInfo sharedModule;
+    sharedModule.moduleName = AOT_MODULE_NAME;
+    sharedModule.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    sharedModule.bundleType = BundleType::SHARED;
+    sharedModule.versionCode = VERSION_CODE;
+    sharedModule.hapPath = HAP_PATH;
+    sharedInfo.InsertInnerSharedModuleInfo(AOT_MODULE_NAME, sharedModule);
+    InnerModuleInfo higherSharedModule = sharedModule;
+    higherSharedModule.versionCode = VERSION_CODE + 1;
+    sharedInfo.InsertInnerSharedModuleInfo(AOT_MODULE_NAME, higherSharedModule);
+
+    InnerBundleInfo hostInfo;
+    ApplicationInfo hostApplicationInfo;
+    hostApplicationInfo.bundleName = "com.example.host.delete";
+    hostApplicationInfo.bundleType = BundleType::APP;
+    hostInfo.SetBaseApplicationInfo(hostApplicationInfo);
+    InnerModuleInfo hostModule;
+    hostModule.moduleName = "entry";
+    Dependency targetDependency;
+    targetDependency.bundleName = hspBundleName;
+    targetDependency.moduleName = AOT_MODULE_NAME;
+    targetDependency.versionCode = VERSION_CODE;
+    hostModule.dependencies.emplace_back(targetDependency);
+    hostInfo.innerModuleInfos_.try_emplace(hostModule.moduleName, hostModule);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(hspBundleName, sharedInfo);
+    dataMgr->bundleInfos_.emplace(hostApplicationInfo.bundleName, hostInfo);
+
+    AOTHandler::DeleteHostPrivateSharedHspAOT(hspBundleName, VERSION_CODE);
+    EXPECT_NE(dataMgr->bundleInfos_.find(hostApplicationInfo.bundleName), dataMgr->bundleInfos_.end());
+
+    dataMgr->bundleInfos_.erase(hspBundleName);
+    dataMgr->bundleInfos_.erase(hostApplicationInfo.bundleName);
+}
+
+/**
+ * @tc.number: AOTHandler_CompileDependentSharedHspAOT_0100
+ * @tc.name: test CompileDependentSharedHspAOT with null dataMgr
+ * @tc.desc: verify CompileDependentSharedHspAOT returns early when dataMgr is null
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_CompileDependentSharedHspAOT_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo hostInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "com.example.host";
+    applicationInfo.bundleType = BundleType::APP;
+    hostInfo.SetBaseApplicationInfo(applicationInfo);
+
+    ClearDataMgr();
+    AOTHandler::GetInstance().CompileDependentSharedHspAOT(hostInfo, ServiceConstants::AOT_TRIGGER_INSTALL);
+    EXPECT_EQ(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: AOTHandler_CompileDependentSharedHspAOT_0200
+ * @tc.name: test CompileDependentSharedHspAOT without shared dependencies
+ * @tc.desc: verify CompileDependentSharedHspAOT returns when dependency query fails
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_CompileDependentSharedHspAOT_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo hostInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "com.example.host.no.deps";
+    applicationInfo.bundleType = BundleType::APP;
+    hostInfo.SetBaseApplicationInfo(applicationInfo);
+
+    AOTHandler::GetInstance().CompileDependentSharedHspAOT(hostInfo, ServiceConstants::AOT_TRIGGER_INSTALL);
+    EXPECT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+}
+
+/**
+ * @tc.number: AOTHandler_CompileHostsForChangedSharedHsp_0100
+ * @tc.name: test CompileHostsForChangedSharedHsp with empty bundle name
+ * @tc.desc: verify CompileHostsForChangedSharedHsp returns early when shared hsp bundle name is empty
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_CompileHostsForChangedSharedHsp_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo sharedInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleType = BundleType::SHARED;
+    sharedInfo.SetBaseApplicationInfo(applicationInfo);
+
+    AOTHandler::GetInstance().CompileHostsForChangedSharedHsp(sharedInfo);
+    EXPECT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+}
+
+/**
+ * @tc.number: AOTHandler_CompileHostsForChangedSharedHsp_0200
+ * @tc.name: test CompileHostsForChangedSharedHsp without static or hybrid module
+ * @tc.desc: verify CompileHostsForChangedSharedHsp returns when shared hsp has no compilable module
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_CompileHostsForChangedSharedHsp_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo sharedInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "com.example.sharedhsp.dynamic.only";
+    applicationInfo.bundleType = BundleType::SHARED;
+    sharedInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    moduleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    sharedInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+
+    AOTHandler::GetInstance().CompileHostsForChangedSharedHsp(sharedInfo);
+    EXPECT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+}
+
+/**
+ * @tc.number: AOTHandler_CompileHostsForChangedSharedHsp_0300
+ * @tc.name: test CompileHostsForChangedSharedHsp skips non-host candidates
+ * @tc.desc: verify same bundle, shared bundle, old host and dependency matching branches
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_CompileHostsForChangedSharedHsp_0300, Function | SmallTest | Level1)
+{
+    std::string hspBundleName = "com.example.sharedhsp.changed";
+    InnerBundleInfo sharedInfo;
+    ApplicationInfo sharedApplicationInfo;
+    sharedApplicationInfo.bundleName = hspBundleName;
+    sharedApplicationInfo.bundleType = BundleType::SHARED;
+    sharedInfo.SetBaseApplicationInfo(sharedApplicationInfo);
+    BundleInfo sharedBundleBaseInfo;
+    sharedBundleBaseInfo.name = hspBundleName;
+    sharedInfo.SetBaseBundleInfo(sharedBundleBaseInfo);
+    InnerModuleInfo sharedModule;
+    sharedModule.moduleName = AOT_MODULE_NAME;
+    sharedModule.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    sharedModule.bundleType = BundleType::SHARED;
+    sharedModule.versionCode = VERSION_CODE;
+    sharedModule.hapPath = HAP_PATH;
+    sharedInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, sharedModule);
+    sharedInfo.InsertInnerSharedModuleInfo(AOT_MODULE_NAME, sharedModule);
+
+    InnerBundleInfo anotherSharedInfo;
+    ApplicationInfo anotherSharedApplicationInfo;
+    anotherSharedApplicationInfo.bundleName = "com.example.other.shared";
+    anotherSharedApplicationInfo.bundleType = BundleType::SHARED;
+    anotherSharedInfo.SetBaseApplicationInfo(anotherSharedApplicationInfo);
+    BundleInfo anotherSharedBundleBaseInfo;
+    anotherSharedBundleBaseInfo.name = anotherSharedApplicationInfo.bundleName;
+    anotherSharedInfo.SetBaseBundleInfo(anotherSharedBundleBaseInfo);
+    InnerModuleInfo anotherSharedModule;
+    anotherSharedModule.moduleName = "otherModule";
+    anotherSharedModule.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    anotherSharedModule.bundleType = BundleType::SHARED;
+    anotherSharedModule.versionCode = VERSION_CODE;
+    anotherSharedModule.hapPath = HAP_PATH;
+    anotherSharedInfo.InsertInnerSharedModuleInfo(anotherSharedModule.moduleName, anotherSharedModule);
+
+    InnerBundleInfo oldHostInfo;
+    ApplicationInfo oldHostApplicationInfo;
+    oldHostApplicationInfo.bundleName = "com.example.old.host";
+    oldHostApplicationInfo.bundleType = BundleType::APP;
+    oldHostInfo.SetBaseApplicationInfo(oldHostApplicationInfo);
+    oldHostInfo.SetIsNewVersion(false);
+
+    InnerBundleInfo hostWithoutDepsInfo;
+    ApplicationInfo hostWithoutDepsApplicationInfo;
+    hostWithoutDepsApplicationInfo.bundleName = "com.example.host.without.deps";
+    hostWithoutDepsApplicationInfo.bundleType = BundleType::APP;
+    hostWithoutDepsInfo.SetBaseApplicationInfo(hostWithoutDepsApplicationInfo);
+    hostWithoutDepsInfo.SetIsNewVersion(true);
+
+    InnerBundleInfo hostWithOtherDepInfo;
+    ApplicationInfo hostWithOtherDepApplicationInfo;
+    hostWithOtherDepApplicationInfo.bundleName = "com.example.host.with.other.dep";
+    hostWithOtherDepApplicationInfo.bundleType = BundleType::APP;
+    hostWithOtherDepInfo.SetBaseApplicationInfo(hostWithOtherDepApplicationInfo);
+    hostWithOtherDepInfo.SetIsNewVersion(true);
+    InnerModuleInfo hostOtherDepModule;
+    hostOtherDepModule.moduleName = "entry";
+    Dependency otherDependency;
+    otherDependency.bundleName = anotherSharedApplicationInfo.bundleName;
+    otherDependency.moduleName = anotherSharedModule.moduleName;
+    otherDependency.versionCode = VERSION_CODE;
+    hostOtherDepModule.dependencies.emplace_back(otherDependency);
+    hostWithOtherDepInfo.innerModuleInfos_.try_emplace(hostOtherDepModule.moduleName, hostOtherDepModule);
+
+    InnerBundleInfo hostWithTargetDepInfo;
+    ApplicationInfo hostWithTargetDepApplicationInfo;
+    hostWithTargetDepApplicationInfo.bundleName = "com.example.host.with.target.dep";
+    hostWithTargetDepApplicationInfo.bundleType = BundleType::APP;
+    hostWithTargetDepInfo.SetBaseApplicationInfo(hostWithTargetDepApplicationInfo);
+    hostWithTargetDepInfo.SetIsNewVersion(true);
+    InnerModuleInfo hostTargetDepModule;
+    hostTargetDepModule.moduleName = "entry";
+    Dependency targetDependency;
+    targetDependency.bundleName = hspBundleName;
+    targetDependency.moduleName = AOT_MODULE_NAME;
+    targetDependency.versionCode = VERSION_CODE;
+    hostTargetDepModule.dependencies.emplace_back(targetDependency);
+    hostWithTargetDepInfo.innerModuleInfos_.try_emplace(hostTargetDepModule.moduleName, hostTargetDepModule);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(hspBundleName, sharedInfo);
+    dataMgr->bundleInfos_.emplace(anotherSharedApplicationInfo.bundleName, anotherSharedInfo);
+    dataMgr->bundleInfos_.emplace(oldHostApplicationInfo.bundleName, oldHostInfo);
+    dataMgr->bundleInfos_.emplace(hostWithoutDepsApplicationInfo.bundleName, hostWithoutDepsInfo);
+    dataMgr->bundleInfos_.emplace(hostWithOtherDepApplicationInfo.bundleName, hostWithOtherDepInfo);
+    dataMgr->bundleInfos_.emplace(hostWithTargetDepApplicationInfo.bundleName, hostWithTargetDepInfo);
+
+    AOTHandler::GetInstance().CompileHostsForChangedSharedHsp(sharedInfo);
+    EXPECT_NE(dataMgr->bundleInfos_.find(hostWithoutDepsApplicationInfo.bundleName), dataMgr->bundleInfos_.end());
+
+    dataMgr->bundleInfos_.erase(hspBundleName);
+    dataMgr->bundleInfos_.erase(anotherSharedApplicationInfo.bundleName);
+    dataMgr->bundleInfos_.erase(oldHostApplicationInfo.bundleName);
+    dataMgr->bundleInfos_.erase(hostWithoutDepsApplicationInfo.bundleName);
+    dataMgr->bundleInfos_.erase(hostWithOtherDepApplicationInfo.bundleName);
+    dataMgr->bundleInfos_.erase(hostWithTargetDepApplicationInfo.bundleName);
+}
+
+/**
+ * @tc.number: AOTHandler_CompileHostsForChangedSharedHsp_0400
+ * @tc.name: test CompileHostsForChangedSharedHsp with null dataMgr
+ * @tc.desc: verify CompileHostsForChangedSharedHsp returns early when dataMgr is null
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_CompileHostsForChangedSharedHsp_0400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo sharedInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "com.example.sharedhsp.null.datamgr";
+    applicationInfo.bundleType = BundleType::SHARED;
+    sharedInfo.SetBaseApplicationInfo(applicationInfo);
+
+    ClearDataMgr();
+    AOTHandler::GetInstance().CompileHostsForChangedSharedHsp(sharedInfo);
+    EXPECT_EQ(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: AOTHandler_HandleSharedHspChangedAOT_0200
+ * @tc.name: test HandleSharedHspChangedAOT with non-existent bundle name
+ * @tc.desc: verify HandleSharedHspChangedAOT returns early when shared hsp bundle does not exist
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_HandleSharedHspChangedAOT_0200, Function | SmallTest | Level1)
+{
+    AOTHandler::GetInstance().HandleSharedHspChangedAOT("nonExistentSharedHsp");
+    EXPECT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+}
+
+/**
+ * @tc.number: AOTHandler_HandleSharedHspChangedAOT_0300
+ * @tc.name: test HandleSharedHspChangedAOT with null dataMgr
+ * @tc.desc: verify HandleSharedHspChangedAOT returns early when dataMgr is null
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_HandleSharedHspChangedAOT_0300, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    AOTHandler::GetInstance().HandleSharedHspChangedAOT("com.example.sharedhsp.null.datamgr");
+    EXPECT_EQ(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: AOTHandler_HandleSharedHspChangedAOT_0400
+ * @tc.name: test HandleSharedHspChangedAOT with old shared hsp
+ * @tc.desc: verify HandleSharedHspChangedAOT returns early when shared hsp is not new version
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_HandleSharedHspChangedAOT_0400, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.sharedhsp.old";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    AOTHandler::GetInstance().HandleSharedHspChangedAOT(bundleName);
+    EXPECT_FALSE(dataMgr->bundleInfos_.at(bundleName).GetIsNewVersion());
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: AOTHandler_HandleSharedHspChangedAOT_0500
+ * @tc.name: test HandleSharedHspChangedAOT with non-shared bundle
+ * @tc.desc: verify HandleSharedHspChangedAOT returns early when bundle type is APP
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_HandleSharedHspChangedAOT_0500, Function | SmallTest | Level1)
+{
+    std::string bundleName = "com.example.host.not.shared";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.bundleType = BundleType::APP;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    AOTHandler::GetInstance().HandleSharedHspChangedAOT(bundleName);
+    EXPECT_EQ(dataMgr->bundleInfos_.at(bundleName).GetApplicationBundleType(), BundleType::APP);
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: AOTHandler_HandleSharedHspChangedAOTAsync_0100
+ * @tc.name: test HandleSharedHspChangedAOTAsync with non-existent bundle
+ * @tc.desc: verify HandleSharedHspChangedAOTAsync can dispatch task and return safely
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_HandleSharedHspChangedAOTAsync_0100, Function | SmallTest | Level1)
+{
+    AOTHandler::GetInstance().HandleSharedHspChangedAOTAsync("nonExistentSharedHsp");
+    std::this_thread::sleep_for(std::chrono::milliseconds(ASYNC_WAIT_MILLI_SECONDS));
+    EXPECT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+}
+
+/**
+ * @tc.number: AOTHandler_CompileHostSharedHspAOT_0100
+ * @tc.name: test CompileHostSharedHspAOT with dynamic shared hsp module
+ * @tc.desc: verify CompileHostSharedHspAOT returns early when shared hsp module is dynamic
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_CompileHostSharedHspAOT_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo hostInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "com.example.host";
+    applicationInfo.bundleType = BundleType::APP;
+    hostInfo.SetBaseApplicationInfo(applicationInfo);
+
+    BaseSharedBundleInfo sharedBundleInfo;
+    sharedBundleInfo.bundleName = "com.example.sharedhsp";
+    sharedBundleInfo.moduleName = AOT_MODULE_NAME;
+    sharedBundleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+
+    AOTHandler::GetInstance().CompileHostSharedHspAOT(
+        hostInfo, sharedBundleInfo, ServiceConstants::AOT_TRIGGER_INSTALL);
+    EXPECT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+}
+
+/**
+ * @tc.number: AOTHandler_CompileHostSharedHspAOT_0200
+ * @tc.name: test CompileHostSharedHspAOT without host user info
+ * @tc.desc: verify CompileHostSharedHspAOT returns when BuildHostSharedHspAOTArgs fails
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_CompileHostSharedHspAOT_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo hostInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "com.example.host.no.user";
+    applicationInfo.bundleType = BundleType::APP;
+    hostInfo.SetBaseApplicationInfo(applicationInfo);
+
+    BaseSharedBundleInfo sharedBundleInfo;
+    sharedBundleInfo.bundleName = "com.example.sharedhsp";
+    sharedBundleInfo.moduleName = AOT_MODULE_NAME;
+    sharedBundleInfo.versionCode = VERSION_CODE;
+    sharedBundleInfo.hapPath = HAP_PATH;
+    sharedBundleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+
+    AOTHandler::GetInstance().CompileHostSharedHspAOT(
+        hostInfo, sharedBundleInfo, ServiceConstants::AOT_TRIGGER_INSTALL);
+    EXPECT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
+}
+
+/**
+ * @tc.number: AOTHandler_SharedHsp_HandleHapInstallAOT_0100
+ * @tc.name: test HandleSharedHspChangedAOTAsync for shared bundle
+ * @tc.desc: verify HandleSharedHspChangedAOTAsync processes shared bundle correctly
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_SharedHsp_HandleHapInstallAOT_0100, Function | SmallTest | Level1)
 {
     std::string bundleName = "com.example.sharedhsp";
     InnerBundleInfo innerBundleInfo;
@@ -2050,7 +2662,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_SharedHsp_HandleInstallAOT_0100, Function | S
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
 
-    AOTHandler::GetInstance().HandleInstallAOTAsync(bundleName);
+    AOTHandler::GetInstance().HandleSharedHspChangedAOTAsync(bundleName);
     std::this_thread::sleep_for(std::chrono::milliseconds(ASYNC_WAIT_MILLI_SECONDS));
 
     auto item = dataMgr->bundleInfos_.find(bundleName);
@@ -2060,11 +2672,11 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_SharedHsp_HandleInstallAOT_0100, Function | S
 }
 
 /**
- * @tc.number: AOTHandler_SharedHsp_HandleInstallAOT_0200
- * @tc.name: test HandleInstallAOTAsync skips dynamic ArkTS shared bundle
- * @tc.desc: verify HandleInstallAOTAsync returns early for dynamic ArkTS mode shared bundle
+ * @tc.number: AOTHandler_SharedHsp_HandleHapInstallAOT_0200
+ * @tc.name: test HandleSharedHspChangedAOTAsync skips dynamic ArkTS shared bundle
+ * @tc.desc: verify HandleSharedHspChangedAOTAsync returns early for dynamic ArkTS mode shared bundle
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_SharedHsp_HandleInstallAOT_0200, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_SharedHsp_HandleHapInstallAOT_0200, Function | SmallTest | Level1)
 {
     std::string bundleName = "com.example.sharedhsp.dynamic";
     InnerBundleInfo innerBundleInfo;
@@ -2082,7 +2694,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_SharedHsp_HandleInstallAOT_0200, Function | S
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
 
-    AOTHandler::GetInstance().HandleInstallAOTAsync(bundleName);
+    AOTHandler::GetInstance().HandleSharedHspChangedAOTAsync(bundleName);
     std::this_thread::sleep_for(std::chrono::milliseconds(ASYNC_WAIT_MILLI_SECONDS));
 
     auto item = dataMgr->bundleInfos_.find(bundleName);
@@ -2136,7 +2748,7 @@ HWTEST_F(BmsAOTMgrTest, SharedBundleInstaller_ProcessAOT_0300, Function | SmallT
 /**
  * @tc.number: SharedBundleInstaller_ProcessAOT_0400
  * @tc.name: test ProcessAOT triggers AOT for normal install
- * @tc.desc: verify ProcessAOT calls HandleInstallAOTAsync for each shared bundle during normal install
+ * @tc.desc: verify ProcessAOT calls HandleSharedHspChangedAOTAsync for each shared bundle during normal install
  */
 HWTEST_F(BmsAOTMgrTest, SharedBundleInstaller_ProcessAOT_0400, Function | SmallTest | Level1)
 {
@@ -2262,50 +2874,6 @@ HWTEST_F(BmsAOTMgrTest, NeedCompile_0100, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.number: GetAOTCompileStatusWithVersion_0100
- * @tc.name: test GetAOTCompileStatusWithVersion
- * @tc.desc: 1.module found with matching versionCode → return actual status
- *           2.module found with mismatching versionCode → return NOT_COMPILED
- *           3.module not found → return NOT_COMPILED
- */
-HWTEST_F(BmsAOTMgrTest, GetAOTCompileStatusWithVersion_0100, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = AOT_MODULE_NAME;
-    moduleInfo.versionCode = VERSION_CODE;
-    moduleInfo.aotCompileStatus = AOTCompileStatus::IDLE_COMPILE_SUCCESS;
-    info.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
-
-    auto status = info.GetAOTCompileStatusWithVersion(AOT_MODULE_NAME, VERSION_CODE);
-    EXPECT_EQ(status, AOTCompileStatus::IDLE_COMPILE_SUCCESS);
-
-    status = info.GetAOTCompileStatusWithVersion(AOT_MODULE_NAME, VERSION_CODE + 1);
-    EXPECT_EQ(status, AOTCompileStatus::NOT_COMPILED);
-
-    status = info.GetAOTCompileStatusWithVersion("nonExistModule", VERSION_CODE);
-    EXPECT_EQ(status, AOTCompileStatus::NOT_COMPILED);
-}
-
-/**
- * @tc.number: GetAOTCompileStatusWithVersion_0200
- * @tc.name: test GetAOTCompileStatusWithVersion with INSTALL_COMPILE_SUCCESS
- * @tc.desc: verify INSTALL_COMPILE_SUCCESS is returned when version matches
- */
-HWTEST_F(BmsAOTMgrTest, GetAOTCompileStatusWithVersion_0200, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = AOT_MODULE_NAME;
-    moduleInfo.versionCode = VERSION_CODE;
-    moduleInfo.aotCompileStatus = AOTCompileStatus::INSTALL_COMPILE_SUCCESS;
-    info.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
-
-    auto status = info.GetAOTCompileStatusWithVersion(AOT_MODULE_NAME, VERSION_CODE);
-    EXPECT_EQ(status, AOTCompileStatus::INSTALL_COMPILE_SUCCESS);
-}
-
-/**
  * @tc.number: BuildAppArgs_0100
  * @tc.name: test BuildAppArgs idle partial with empty profile
  * @tc.desc: verify BuildAOTArgs returns nullopt when triggerType is idle,
@@ -2363,7 +2931,7 @@ HWTEST_F(BmsAOTMgrTest, BuildAppArgs_0400, Function | SmallTest | Level1)
     InnerBundleInfo innerBundleInfo;
     ApplicationInfo applicationInfo;
     applicationInfo.bundleName = AOT_BUNDLE_NAME;
-    applicationInfo.bundleType = BundleType::SHARED;
+    applicationInfo.bundleType = BundleType::APP;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     BundleInfo bundleInfo;
     bundleInfo.versionCode = VERSION_CODE;
@@ -2375,11 +2943,11 @@ HWTEST_F(BmsAOTMgrTest, BuildAppArgs_0400, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.number: HandleInstallAOT_0100
- * @tc.name: test HandleInstallAOT with not stage model
- * @tc.desc: verify HandleInstallAOT returns early if IsNewVersion is false
+ * @tc.number: HandleHapInstallAOT_0100
+ * @tc.name: test HandleHapInstallAOT with not stage model
+ * @tc.desc: verify HandleHapInstallAOT returns early if IsNewVersion is false
  */
-HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, HandleHapInstallAOT_0100, Function | SmallTest | Level1)
 {
     std::string bundleName = "com.example.oldmodel";
     InnerBundleInfo innerBundleInfo;
@@ -2390,7 +2958,7 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0100, Function | SmallTest | Level1)
 
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
-    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    AOTHandler::GetInstance().HandleHapInstallAOT(bundleName);
     auto item = dataMgr->bundleInfos_.find(bundleName);
     ASSERT_NE(item, dataMgr->bundleInfos_.end());
     EXPECT_FALSE(item->second.GetIsNewVersion());
@@ -2398,11 +2966,11 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0100, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.number: HandleInstallAOT_0200
- * @tc.name: test HandleInstallAOT with all-dynamic ArkTS app
- * @tc.desc: verify HandleInstallAOT returns early if app ArkTS mode is dynamic
+ * @tc.number: HandleHapInstallAOT_0200
+ * @tc.name: test HandleHapInstallAOT with all-dynamic ArkTS app
+ * @tc.desc: verify HandleHapInstallAOT returns early if app ArkTS mode is dynamic
  */
-HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0200, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, HandleHapInstallAOT_0200, Function | SmallTest | Level1)
 {
     std::string bundleName = "com.example.dynamicapp";
     InnerBundleInfo innerBundleInfo;
@@ -2418,7 +2986,7 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0200, Function | SmallTest | Level1)
 
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
-    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    AOTHandler::GetInstance().HandleHapInstallAOT(bundleName);
     auto item = dataMgr->bundleInfos_.find(bundleName);
     ASSERT_NE(item, dataMgr->bundleInfos_.end());
     EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::NOT_COMPILED);
@@ -2426,37 +2994,37 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0200, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.number: HandleInstallAOT_0300
- * @tc.name: test HandleInstallAOT with dataMgr null
- * @tc.desc: verify HandleInstallAOT returns early if dataMgr is null
+ * @tc.number: HandleHapInstallAOT_0300
+ * @tc.name: test HandleHapInstallAOT with dataMgr null
+ * @tc.desc: verify HandleHapInstallAOT returns early if dataMgr is null
  */
-HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0300, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, HandleHapInstallAOT_0300, Function | SmallTest | Level1)
 {
     ClearDataMgr();
-    AOTHandler::GetInstance().HandleInstallAOT(AOT_BUNDLE_NAME);
+    AOTHandler::GetInstance().HandleHapInstallAOT(AOT_BUNDLE_NAME);
     ResetDataMgr();
     EXPECT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), nullptr);
 }
 
 /**
- * @tc.number: HandleInstallAOT_0400
- * @tc.name: test HandleInstallAOT with bundle not found
- * @tc.desc: verify HandleInstallAOT returns early if QueryInnerBundleInfo fails
+ * @tc.number: HandleHapInstallAOT_0400
+ * @tc.name: test HandleHapInstallAOT with bundle not found
+ * @tc.desc: verify HandleHapInstallAOT returns early if QueryInnerBundleInfo fails
  */
-HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0400, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, HandleHapInstallAOT_0400, Function | SmallTest | Level1)
 {
-    AOTHandler::GetInstance().HandleInstallAOT("nonExistentBundle");
+    AOTHandler::GetInstance().HandleHapInstallAOT("nonExistentBundle");
     EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.count("nonExistentBundle"), 0);
 }
 
 /**
- * @tc.number: HandleInstallAOT_0500
- * @tc.name: test HandleInstallAOT for non-shared app without bap file
- * @tc.desc: verify HandleInstallAOT skips compilation for non-shared app modules
+ * @tc.number: HandleHapInstallAOT_0500
+ * @tc.name: test HandleHapInstallAOT for non-shared app without bap file
+ * @tc.desc: verify HandleHapInstallAOT skips compilation for non-shared app modules
  *           when bap file is not present (dynamic module skipped by dynamic check,
  *           static module skipped by bap file check)
  */
-HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0500, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, HandleHapInstallAOT_0500, Function | SmallTest | Level1)
 {
     std::string bundleName = "com.example.mixedmodules";
     InnerBundleInfo innerBundleInfo;
@@ -2481,7 +3049,7 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_0500, Function | SmallTest | Level1)
 
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
         bundleName, innerBundleInfo);
-    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    AOTHandler::GetInstance().HandleHapInstallAOT(bundleName);
     // static module: no bap file so skipped; dynamic module: skipped by dynamic check
     auto item = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.find(bundleName);
     ASSERT_NE(item, DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.end());
@@ -2708,60 +3276,6 @@ HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_DataMgrNull_0100, Function | Sm
 }
 
 /**
- * @tc.number: EnforceCodeSignForModule_SharedPath_0100
- * @tc.name: test EnforceCodeSignForModule with SHARED bundleType
- * @tc.desc: verify EnforceCodeSignForModule uses shared ark cache path for SHARED bundleType
- */
-HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_SharedPath_0100, Function | SmallTest | Level1)
-{
-    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
-    signDataCacheMgr.moduleSignDataVector_.clear();
-
-    AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
-    data.bundleType = static_cast<uint8_t>(BundleType::SHARED);
-    data.triggerType = ServiceConstants::AOT_TRIGGER_INSTALL;
-    data.versionCode = VERSION_CODE;
-    data.bundleName = "com.example.shared.sign";
-    data.moduleName = AOT_MODULE_NAME;
-    data.signData = {0x01, 0x02};
-    signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
-
-    SetPendSignAOTCode(ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
-    bool ret = signDataCacheMgr.EnforceCodeSignForModule();
-    EXPECT_TRUE(ret);
-    InstalldClient::GetInstance()->installdProxy_ = nullptr;
-    InstalldClient::GetInstance()->GetInstalldProxy();
-}
-
-/**
- * @tc.number: EnforceCodeSignForModule_AppPath_0100
- * @tc.name: test EnforceCodeSignForModule with APP bundleType
- * @tc.desc: verify EnforceCodeSignForModule uses hap ark cache path for APP bundleType
- */
-HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_AppPath_0100, Function | SmallTest | Level1)
-{
-    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
-    signDataCacheMgr.moduleSignDataVector_.clear();
-
-    AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
-    data.bundleType = static_cast<uint8_t>(BundleType::APP);
-    data.triggerType = ServiceConstants::AOT_TRIGGER_IDLE;
-    data.versionCode = VERSION_CODE;
-    data.bundleName = "com.example.app.sign";
-    data.moduleName = AOT_MODULE_NAME;
-    data.signData = {0x01, 0x02};
-    signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
-
-    SetPendSignAOTCode(ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
-    bool ret = signDataCacheMgr.EnforceCodeSignForModule();
-    EXPECT_TRUE(ret);
-    InstalldClient::GetInstance()->installdProxy_ = nullptr;
-    InstalldClient::GetInstance()->GetInstalldProxy();
-}
-
-/**
  * @tc.number: EnforceCodeSignForModule_SignOK_Install_0100
  * @tc.name: test EnforceCodeSignForModule sets INSTALL_COMPILE_SUCCESS on sign success
  * @tc.desc: verify triggerType is used in ConvertToAOTCompileStatus during code sign
@@ -2777,6 +3291,7 @@ HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_SignOK_Install_0100, Function |
     data.versionCode = VERSION_CODE;
     data.bundleName = AOT_BUNDLE_NAME;
     data.moduleName = AOT_MODULE_NAME;
+    data.anFileName = AN_FILE_NAME;
     data.signData = {0x01};
     signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
 
@@ -2821,6 +3336,7 @@ HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_SignOK_Idle_0100, Function | Sm
     data.versionCode = VERSION_CODE;
     data.bundleName = AOT_BUNDLE_NAME;
     data.moduleName = AOT_MODULE_NAME;
+    data.anFileName = AN_FILE_NAME;
     data.signData = {0x01};
     signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
 
@@ -2850,6 +3366,53 @@ HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_SignOK_Idle_0100, Function | Sm
 }
 
 /**
+ * @tc.number: EnforceCodeSignForModule_SharedBundle_0100
+ * @tc.name: test EnforceCodeSignForModule signs host-private shared HSP without status update
+ * @tc.desc: verify shared bundle pending sign uses cached anFileName and does not write global AOT status
+ */
+HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForModule_SharedBundle_0100, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    signDataCacheMgr.moduleSignDataVector_.clear();
+    AppExecFwk::AOTSignDataCacheMgr::ModuleSignData data;
+    data.signData = {0x0A, 0x0B};
+    data.versionCode = VERSION_CODE;
+    data.triggerType = ServiceConstants::AOT_TRIGGER_INSTALL;
+    data.bundleType = static_cast<uint8_t>(BundleType::SHARED);
+    data.bundleName = AOT_BUNDLE_NAME;
+    data.moduleName = AOT_MODULE_NAME;
+    data.anFileName = "host_private_shared_hsp.an";
+    signDataCacheMgr.moduleSignDataVector_.emplace_back(data);
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bInfo;
+    bInfo.versionCode = VERSION_CODE;
+    innerBundleInfo.SetBaseBundleInfo(bInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        AOT_BUNDLE_NAME, innerBundleInfo);
+
+    SetPendSignAOTCode(ERR_OK);
+    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
+    bool ret = signDataCacheMgr.EnforceCodeSignForModule();
+    EXPECT_TRUE(ret);
+
+    auto item = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.find(AOT_BUNDLE_NAME);
+    ASSERT_NE(item, DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.end());
+    EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::NOT_COMPILED);
+
+    InstalldClient::GetInstance()->installdProxy_ = nullptr;
+    InstalldClient::GetInstance()->GetInstalldProxy();
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(AOT_BUNDLE_NAME);
+}
+
+/**
  * @tc.number: AOTArgs_0400
  * @tc.name: test AOTArgs new fields Marshalling and Unmarshalling
  * @tc.desc: verify bundleType, triggerType and staticAndHybridModuleCnt survive marshalling
@@ -2864,6 +3427,7 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0400, Function | SmallTest | Level1)
     aotArgs.moduleName = "moduleName";
     aotArgs.hapPath = "hapPath";
     aotArgs.outputPath = "outputPath";
+    aotArgs.hostBundleName = "hostBundleName";
 
     Parcel parcel;
     bool ret = aotArgs.Marshalling(parcel);
@@ -2875,6 +3439,7 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0400, Function | SmallTest | Level1)
     EXPECT_EQ(aotArgsPtr->staticAndHybridModuleCnt, aotArgs.staticAndHybridModuleCnt);
     EXPECT_EQ(aotArgsPtr->bundleName, aotArgs.bundleName);
     EXPECT_EQ(aotArgsPtr->moduleName, aotArgs.moduleName);
+    EXPECT_EQ(aotArgsPtr->hostBundleName, aotArgs.hostBundleName);
 }
 
 /**
@@ -2888,6 +3453,7 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0500, Function | SmallTest | Level1)
     EXPECT_EQ(aotArgs.bundleType, 0);
     EXPECT_EQ(aotArgs.triggerType, ServiceConstants::AOT_TRIGGER_IDLE);
     EXPECT_EQ(aotArgs.staticAndHybridModuleCnt, 0u);
+    EXPECT_TRUE(aotArgs.hostBundleName.empty());
 }
 
 /**
@@ -2901,32 +3467,13 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0600, Function | SmallTest | Level1)
     aotArgs.bundleType = static_cast<uint8_t>(BundleType::SHARED);
     aotArgs.triggerType = ServiceConstants::AOT_TRIGGER_INSTALL;
     aotArgs.staticAndHybridModuleCnt = 7;
+    aotArgs.hostBundleName = "hostBundleName";
     std::string ret = aotArgs.ToString();
     EXPECT_NE(ret.find("bundleType = " + std::to_string(aotArgs.bundleType)), std::string::npos);
     EXPECT_NE(ret.find("triggerType = " + std::to_string(aotArgs.triggerType)), std::string::npos);
     EXPECT_NE(ret.find("staticAndHybridModuleCnt = " + std::to_string(aotArgs.staticAndHybridModuleCnt)),
         std::string::npos);
-}
-
-/**
- * @tc.number: MkAOTOutputDir_SharedType_0100
- * @tc.name: test MkAOTOutputDir with SHARED bundleType
- * @tc.desc: verify MkAOTOutputDir uses SHARED_HSP_ARK_CACHE_PATH as basePath for shared bundle
- */
-HWTEST_F(BmsAOTMgrTest, MkAOTOutputDir_SharedType_0100, Function | SmallTest | Level1)
-{
-    AOTArgs aotArgs;
-    aotArgs.bundleName = "com.example.shared.mkdir";
-    aotArgs.bundleType = 2;
-    aotArgs.outputPath = std::string(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH) + aotArgs.bundleName;
-    aotArgs.bundleUid = ServiceConstants::SYSTEM_UID;
-    aotArgs.bundleGid = ServiceConstants::SYSTEM_UID;
-    bool ret = AOTExecutor::GetInstance().MkAOTOutputDir(aotArgs);
-    struct stat st;
-    bool baseExists = (stat(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH, &st) == 0);
-    if (!baseExists) {
-        EXPECT_FALSE(ret);
-    }
+    EXPECT_NE(ret.find("hostBundleName = " + aotArgs.hostBundleName), std::string::npos);
 }
 
 /**
@@ -3004,7 +3551,7 @@ HWTEST_F(BmsAOTMgrTest, MkAOTOutputDir_Traversal_0100, Function | SmallTest | Le
 {
     AOTArgs sharedArgs;
     sharedArgs.bundleType = static_cast<uint8_t>(BundleType::SHARED);
-    sharedArgs.outputPath = std::string(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH) + "../escape";
+    sharedArgs.outputPath = std::string(ServiceConstants::HAP_ARK_CACHE_PATH) + "../escape";
     sharedArgs.bundleUid = ServiceConstants::SYSTEM_UID;
     sharedArgs.bundleGid = ServiceConstants::SYSTEM_UID;
     EXPECT_FALSE(AOTExecutor::GetInstance().MkAOTOutputDir(sharedArgs));
@@ -3027,11 +3574,15 @@ HWTEST_F(BmsAOTMgrTest, StaticAndHybridModuleCnt_0100, Function | SmallTest | Le
     InnerBundleInfo innerBundleInfo;
     ApplicationInfo applicationInfo;
     applicationInfo.bundleName = AOT_BUNDLE_NAME;
-    applicationInfo.bundleType = BundleType::SHARED;
+    applicationInfo.bundleType = BundleType::APP;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     BundleInfo bundleInfo;
     bundleInfo.versionCode = VERSION_CODE;
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = Constants::START_USERID;
+    userInfo.uid = 200100;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
 
     InnerModuleInfo staticModule;
     staticModule.moduleName = "staticModule";
@@ -3064,11 +3615,15 @@ HWTEST_F(BmsAOTMgrTest, StaticAndHybridModuleCnt_0200, Function | SmallTest | Le
     InnerBundleInfo innerBundleInfo;
     ApplicationInfo applicationInfo;
     applicationInfo.bundleName = AOT_BUNDLE_NAME;
-    applicationInfo.bundleType = BundleType::SHARED;
+    applicationInfo.bundleType = BundleType::APP;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     BundleInfo bundleInfo;
     bundleInfo.versionCode = VERSION_CODE;
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = Constants::START_USERID;
+    userInfo.uid = 200100;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
 
     InnerModuleInfo moduleA;
     moduleA.moduleName = "moduleA";
@@ -3246,50 +3801,6 @@ HWTEST_F(BmsAOTMgrTest, IsAOTFlagsInitial_InstallCompileSuccess_0100, Function |
     info.innerModuleInfos_[moduleName].aotCompileStatus = AOTCompileStatus::INSTALL_COMPILE_SUCCESS;
     bool ret = info.IsAOTFlagsInitial();
     EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: BuildSharedArgs_0100
- * @tc.name: test BuildSharedArgs sets correct fields
- * @tc.desc: verify BuildSharedArgs sets uid/gid to SYSTEM_UID, compileMode to full,
- *           and outputPath to shared cache path
- */
-HWTEST_F(BmsAOTMgrTest, BuildSharedArgs_0100, Function | SmallTest | Level1)
-{
-    AOTArgs aotArgs;
-    aotArgs.bundleName = AOT_BUNDLE_NAME;
-    aotArgs.moduleName = AOT_MODULE_NAME;
-    AOTHandler::GetInstance().BuildSharedArgs(VERSION_CODE, aotArgs);
-
-    EXPECT_EQ(aotArgs.bundleUid, ServiceConstants::SYSTEM_UID);
-    EXPECT_EQ(aotArgs.bundleGid, ServiceConstants::SYSTEM_UID);
-    EXPECT_EQ(aotArgs.bundleType, static_cast<uint8_t>(BundleType::SHARED));
-    EXPECT_EQ(aotArgs.compileMode, ServiceConstants::COMPILE_FULL);
-    std::string expectedPath = AOTHandler::BuildSharedArkCachePath(AOT_BUNDLE_NAME, VERSION_CODE);
-    EXPECT_EQ(aotArgs.outputPath, expectedPath);
-}
-
-/**
- * @tc.number: BuildSharedArkCachePath_0100
- * @tc.name: test BuildSharedArkCachePath all branches
- * @tc.desc: verify empty bundleName, no-version and with-version branches
- */
-HWTEST_F(BmsAOTMgrTest, BuildSharedArkCachePath_0100, Function | SmallTest | Level1)
-{
-    std::string emptyPath = AOTHandler::BuildSharedArkCachePath("");
-    EXPECT_EQ(emptyPath, Constants::EMPTY_STRING);
-
-    std::string bundleName = "com.example.shared";
-    std::filesystem::path basePath(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH);
-    basePath /= bundleName;
-    std::string noVersionPath = AOTHandler::BuildSharedArkCachePath(bundleName);
-    EXPECT_EQ(noVersionPath, basePath.string());
-
-    std::filesystem::path withVersionPath(basePath);
-    withVersionPath /= std::to_string(VERSION_CODE);
-    withVersionPath /= ServiceConstants::ARM64;
-    std::string builtWithVersionPath = AOTHandler::BuildSharedArkCachePath(bundleName, VERSION_CODE);
-    EXPECT_EQ(builtWithVersionPath, withVersionPath.string());
 }
 
 /**
@@ -3492,6 +4003,62 @@ HWTEST_F(BmsAOTMgrTest, ShouldCompileSharedModule_0300, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: ShouldCompileSharedHspModule_0100
+ * @tc.name: test ShouldCompileSharedHspModule with dynamic module
+ * @tc.desc: verify host-private shared HSP AOT skips dynamic ArkTS mode module
+ */
+HWTEST_F(BmsAOTMgrTest, ShouldCompileSharedHspModule_0100, Function | SmallTest | Level1)
+{
+    BaseSharedBundleInfo sharedBundleInfo;
+    sharedBundleInfo.bundleName = "com.example.sharedhsp";
+    sharedBundleInfo.moduleName = "dynamicSharedHspModule";
+    sharedBundleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    bool result = AOTHandler::GetInstance().ShouldCompileSharedHspModule(sharedBundleInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: ShouldCompileSharedHspModule_0200
+ * @tc.name: test ShouldCompileSharedHspModule with static module
+ * @tc.desc: verify host-private shared HSP AOT accepts static ArkTS mode module
+ */
+HWTEST_F(BmsAOTMgrTest, ShouldCompileSharedHspModule_0200, Function | SmallTest | Level1)
+{
+    BaseSharedBundleInfo sharedBundleInfo;
+    sharedBundleInfo.bundleName = "com.example.sharedhsp";
+    sharedBundleInfo.moduleName = "staticSharedHspModule";
+    sharedBundleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    bool result = AOTHandler::GetInstance().ShouldCompileSharedHspModule(sharedBundleInfo);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: HasCompilableSharedHspModule_0100
+ * @tc.name: test HasCompilableSharedHspModule
+ * @tc.desc: verify dynamic-only shared HSP is skipped and static module makes it compilable
+ */
+HWTEST_F(BmsAOTMgrTest, HasCompilableSharedHspModule_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo sharedInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "com.example.sharedhsp";
+    applicationInfo.bundleType = BundleType::SHARED;
+    sharedInfo.SetBaseApplicationInfo(applicationInfo);
+
+    InnerModuleInfo dynamicModule;
+    dynamicModule.moduleName = "dynamicModule";
+    dynamicModule.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    sharedInfo.innerModuleInfos_.try_emplace(dynamicModule.moduleName, dynamicModule);
+    EXPECT_FALSE(AOTHandler::GetInstance().HasCompilableSharedHspModule(sharedInfo));
+
+    InnerModuleInfo staticModule;
+    staticModule.moduleName = "staticModule";
+    staticModule.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    sharedInfo.innerModuleInfos_.try_emplace(staticModule.moduleName, staticModule);
+    EXPECT_TRUE(AOTHandler::GetInstance().HasCompilableSharedHspModule(sharedInfo));
+}
+
+/**
  * @tc.number: ShouldCompileAppModule_0100
  * @tc.name: test ShouldCompileAppModule with dynamic module
  * @tc.desc: verify ShouldCompileAppModule returns false for dynamic ArkTS mode module
@@ -3551,11 +4118,11 @@ HWTEST_F(BmsAOTMgrTest, ShouldCompileAppModule_0400, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: HandleInstallAOT_SharedNotInList_0100
- * @tc.name: test HandleInstallAOT skips shared bundle not in enable list
- * @tc.desc: verify HandleInstallAOT returns early for shared bundle not in AOT enable list
+ * @tc.number: HandleHapInstallAOT_SharedNotInList_0100
+ * @tc.name: test HandleHapInstallAOT skips shared bundle not in enable list
+ * @tc.desc: verify HandleHapInstallAOT returns early for shared bundle not in AOT enable list
  */
-HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_SharedNotInList_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, HandleHapInstallAOT_SharedNotInList_0100, Function | SmallTest | Level1)
 {
     std::string bundleName = "com.example.shared.notinlist";
     InnerBundleInfo innerBundleInfo;
@@ -3576,7 +4143,7 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_SharedNotInList_0100, Function | SmallT
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
 
-    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    AOTHandler::GetInstance().HandleHapInstallAOT(bundleName);
     auto item = dataMgr->bundleInfos_.find(bundleName);
     ASSERT_NE(item, dataMgr->bundleInfos_.end());
     EXPECT_EQ(item->second.GetAOTCompileStatus(AOT_MODULE_NAME), AOTCompileStatus::NOT_COMPILED);
@@ -3584,13 +4151,13 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_SharedNotInList_0100, Function | SmallT
 }
 
 /**
- * @tc.number: HandleInstallAOT_AppDynamicModuleSkipped_0100
- * @tc.name: test HandleInstallAOT skips dynamic module via ShouldCompileAppModule
+ * @tc.number: HandleHapInstallAOT_AppDynamicModuleSkipped_0100
+ * @tc.name: test HandleHapInstallAOT skips dynamic module via ShouldCompileAppModule
  * @tc.desc: verify non-shared app with one dynamic module and one static module:
  *           dynamic module is filtered by ShouldCompileAppModule (dynamic check),
  *           static module is filtered by ShouldCompileAppModule (no bap file)
  */
-HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppDynamicModuleSkipped_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, HandleHapInstallAOT_AppDynamicModuleSkipped_0100, Function | SmallTest | Level1)
 {
     std::string bundleName = "com.example.app.mixmodules";
     InnerBundleInfo innerBundleInfo;
@@ -3619,7 +4186,7 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppDynamicModuleSkipped_0100, Function 
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
 
-    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    AOTHandler::GetInstance().HandleHapInstallAOT(bundleName);
     auto item = dataMgr->bundleInfos_.find(bundleName);
     ASSERT_NE(item, dataMgr->bundleInfos_.end());
     // non-shared app skips whitelist, enters module loop via ShouldCompileAppModule
@@ -3631,12 +4198,12 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppDynamicModuleSkipped_0100, Function 
 }
 
 /**
- * @tc.number: HandleInstallAOT_AppNoBap_0100
- * @tc.name: test HandleInstallAOT for non-shared app enters module loop
+ * @tc.number: HandleHapInstallAOT_AppNoBap_0100
+ * @tc.name: test HandleHapInstallAOT for non-shared app enters module loop
  * @tc.desc: verify non-shared bundle skips whitelist check and enters module loop
  *           where ShouldCompileAppModule filters by bap file presence
  */
-HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppNoBap_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, HandleHapInstallAOT_AppNoBap_0100, Function | SmallTest | Level1)
 {
     std::string bundleName = "com.example.app.nobap";
     InnerBundleInfo innerBundleInfo;
@@ -3658,7 +4225,7 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppNoBap_0100, Function | SmallTest | L
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
 
-    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    AOTHandler::GetInstance().HandleHapInstallAOT(bundleName);
     // no bap file in HAP_PATH, so module stays NOT_COMPILED
     auto item = dataMgr->bundleInfos_.find(bundleName);
     ASSERT_NE(item, dataMgr->bundleInfos_.end());
@@ -3667,11 +4234,11 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppNoBap_0100, Function | SmallTest | L
 }
 
 /**
- * @tc.number: HandleInstallAOT_AppInvalidHapPath_0100
- * @tc.name: test HandleInstallAOT for non-shared app with invalid hap path
+ * @tc.number: HandleHapInstallAOT_AppInvalidHapPath_0100
+ * @tc.name: test HandleHapInstallAOT for non-shared app with invalid hap path
  * @tc.desc: verify ShouldCompileAppModule returns false when BundleExtractor init fails
  */
-HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppInvalidHapPath_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, HandleHapInstallAOT_AppInvalidHapPath_0100, Function | SmallTest | Level1)
 {
     std::string bundleName = "com.example.app.invalidhap";
     InnerBundleInfo innerBundleInfo;
@@ -3693,7 +4260,7 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppInvalidHapPath_0100, Function | Smal
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
 
-    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    AOTHandler::GetInstance().HandleHapInstallAOT(bundleName);
     auto item = dataMgr->bundleInfos_.find(bundleName);
     ASSERT_NE(item, dataMgr->bundleInfos_.end());
     EXPECT_EQ(item->second.GetAOTCompileStatus("entry"), AOTCompileStatus::NOT_COMPILED);
@@ -3701,13 +4268,13 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppInvalidHapPath_0100, Function | Smal
 }
 
 /**
- * @tc.number: HandleInstallAOT_AppHybridMode_0100
- * @tc.name: test HandleInstallAOT for hybrid app with mixed modules
- * @tc.desc: verify HandleInstallAOT processes hybrid app correctly:
+ * @tc.number: HandleHapInstallAOT_AppHybridMode_0100
+ * @tc.name: test HandleHapInstallAOT for hybrid app with mixed modules
+ * @tc.desc: verify HandleHapInstallAOT processes hybrid app correctly:
  *           app-level mode is hybrid (not filtered), dynamic modules skipped,
  *           static modules checked for bap file
  */
-HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppHybridMode_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTMgrTest, HandleHapInstallAOT_AppHybridMode_0100, Function | SmallTest | Level1)
 {
     std::string bundleName = "com.example.app.hybrid";
     InnerBundleInfo innerBundleInfo;
@@ -3740,7 +4307,7 @@ HWTEST_F(BmsAOTMgrTest, HandleInstallAOT_AppHybridMode_0100, Function | SmallTes
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
 
-    AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+    AOTHandler::GetInstance().HandleHapInstallAOT(bundleName);
     auto item = dataMgr->bundleInfos_.find(bundleName);
     ASSERT_NE(item, dataMgr->bundleInfos_.end());
     // static and hybrid: no bap so NOT_COMPILED; dynamic: skipped by dynamic check
@@ -3809,6 +4376,7 @@ HWTEST_F(BmsAOTMgrTest, MapBundleArgs_DirectFields_0100, Function | SmallTest | 
     aotArgs.isEnableBaselinePgo = 1;
     aotArgs.bundleType = 0;
     aotArgs.triggerType = 1;
+    aotArgs.hostBundleName = "com.test.host";
 
     ArkCompiler::AotCompilerArgs args;
     ErrCode ret = AOTExecutor::GetInstance().MapBundleArgs(aotArgs, args);
@@ -3825,6 +4393,7 @@ HWTEST_F(BmsAOTMgrTest, MapBundleArgs_DirectFields_0100, Function | SmallTest | 
     EXPECT_EQ(args.hapPath, "/data/app/com.test.bundle/entry.hap");
     EXPECT_EQ(args.anFileName, "/data/ark-cache/com.test.bundle/entry.an");
     EXPECT_EQ(args.outputPath, "/data/ark-cache/com.test.bundle");
+    EXPECT_EQ(args.hostBundleName, "com.test.host");
 #else
     GTEST_SKIP() << "CODE_SIGNATURE_ENABLE not defined";
 #endif

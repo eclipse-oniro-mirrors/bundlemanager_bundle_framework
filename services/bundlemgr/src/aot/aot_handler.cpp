@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <dlfcn.h>
 #include <filesystem>
+#include <functional>
 #include <fstream>
 #include <iostream>
 #include <sys/stat.h>
@@ -94,10 +95,38 @@ constexpr const char* BM_AOT_TEST = "bm.aot.test";
 
 constexpr const char* SYS_COMP_ARK_CACHE_PATH = "/data/service/el1/public/for-all-app/framework_ark_cache/";
 constexpr const char* SYS_COMP_CONFIG_PATH = "/system/etc/ark/system_framework_aot_enable_list.conf";
-constexpr const char* BUNDLE_INSTALL_AOT_CONFIG_PATH = "/system/etc/ark/static_app_install_aot_enable_list.conf";
 
 constexpr const char* DEPRECATED_ARK_CACHE_PATH = "/data/local/ark-cache";
 constexpr const char* DEPRECATED_ARK_PROFILE_PATH = "/data/local/ark-profile";
+
+using SharedHspHostCallback =
+    std::function<void(const std::string &, const InnerBundleInfo &, const BaseSharedBundleInfo &)>;
+
+void ForEachSharedHspHost(std::shared_ptr<BundleDataMgr> dataMgr, const std::string &hspBundleName,
+    const SharedHspHostCallback &callback)
+{
+    const auto bundleInfos = dataMgr->GetAllInnerBundleInfos();
+    for (const auto &[hostBundleName, hostInfo] : bundleInfos) {
+        if (hostBundleName == hspBundleName ||
+            hostInfo.GetApplicationBundleType() == BundleType::SHARED) {
+            continue;
+        }
+        std::vector<BaseSharedBundleInfo> sharedBundleInfos;
+        ErrCode ret = dataMgr->GetBaseSharedBundleInfos(hostBundleName, sharedBundleInfos,
+            GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO);
+        if (ret != ERR_OK) {
+            APP_LOGW_NOFUNC("get shared hsp dependencies failed, host:%{public}s, ret:%{public}d",
+                hostBundleName.c_str(), ret);
+            continue;
+        }
+        for (const auto &sharedBundleInfo : sharedBundleInfos) {
+            if (sharedBundleInfo.bundleName != hspBundleName) {
+                continue;
+            }
+            callback(hostBundleName, hostInfo, sharedBundleInfo);
+        }
+    }
+}
 }
 
 AOTHandler::AOTHandler()
@@ -129,21 +158,32 @@ std::string AOTHandler::BuildArkProfilePath(
     return path.string();
 }
 
-std::string AOTHandler::BuildSharedArkCachePath(
-    const std::string &bundleName, std::optional<uint32_t> versionCode)
+void AOTHandler::DeleteHostPrivateSharedHspAOT(
+    const std::string &hspBundleName, std::optional<uint32_t> versionCode)
 {
-    if (bundleName.empty()) {
-        APP_LOGW_NOFUNC("bundleName is empty");
-        return Constants::EMPTY_STRING;
+    if (hspBundleName.empty()) {
+        APP_LOGW_NOFUNC("hspBundleName is empty");
+        return;
     }
-    std::filesystem::path path(ServiceConstants::SHARED_HSP_ARK_CACHE_PATH);
-    path /= bundleName;
-    if (!versionCode.has_value()) {
-        return path.string();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE_NOFUNC("dataMgr is null");
+        return;
     }
-    path /= std::to_string(versionCode.value());
-    path /= ServiceConstants::ARM64;
-    return path.string();
+
+    ForEachSharedHspHost(dataMgr, hspBundleName, [&hspBundleName, &versionCode](
+        const std::string &hostBundleName, const InnerBundleInfo &, const BaseSharedBundleInfo &) {
+        std::filesystem::path anDir(ServiceConstants::HAP_ARK_CACHE_PATH);
+        anDir /= hostBundleName;
+        anDir /= ServiceConstants::ARM64;
+        anDir /= hspBundleName;
+        if (versionCode.has_value()) {
+            anDir /= std::to_string(versionCode.value());
+        }
+        APP_LOGI_NOFUNC("delete host private shared hsp aot dir:%{public}s", anDir.string().c_str());
+        (void)InstalldClient::GetInstance()->RemoveDir(
+            anDir.string(), BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR, hostBundleName);
+    });
 }
 
 bool AOTHandler::IsSupportARM64() const
@@ -182,15 +222,6 @@ std::string AOTHandler::FindArkProfilePath(const std::string &bundleName, const 
     return Constants::EMPTY_STRING;
 }
 
-void AOTHandler::BuildSharedArgs(uint32_t versionCode, AOTArgs &aotArgs) const
-{
-    aotArgs.bundleUid = ServiceConstants::SYSTEM_UID;
-    aotArgs.bundleGid = ServiceConstants::SYSTEM_UID;
-    aotArgs.bundleType = static_cast<uint8_t>(BundleType::SHARED);
-    aotArgs.compileMode = ServiceConstants::COMPILE_FULL;
-    aotArgs.outputPath = BuildSharedArkCachePath(aotArgs.bundleName, versionCode);
-}
-
 bool AOTHandler::BuildAppArgs(const InnerBundleInfo &info, const std::string &compileMode, AOTArgs &aotArgs) const
 {
     if (aotArgs.triggerType == ServiceConstants::AOT_TRIGGER_IDLE) {
@@ -224,6 +255,56 @@ bool AOTHandler::BuildAppArgs(const InnerBundleInfo &info, const std::string &co
     return true;
 }
 
+std::optional<AOTArgs> AOTHandler::BuildHostSharedHspAOTArgs(const InnerBundleInfo &hostInfo,
+    const BaseSharedBundleInfo &sharedBundleInfo, const uint8_t triggerType) const
+{
+    AOTArgs aotArgs;
+    aotArgs.bundleName = sharedBundleInfo.bundleName;
+    aotArgs.moduleName = sharedBundleInfo.moduleName;
+    aotArgs.triggerType = triggerType;
+    aotArgs.bundleType = static_cast<uint8_t>(BundleType::SHARED);
+    aotArgs.compileMode = ServiceConstants::COMPILE_FULL;
+    aotArgs.hapPath = sharedBundleInfo.hapPath;
+    aotArgs.moduleArkTSMode = sharedBundleInfo.moduleArkTSMode;
+    aotArgs.hostBundleName = hostInfo.GetBundleName();
+    aotArgs.outputPath = ServiceConstants::HAP_ARK_CACHE_PATH + aotArgs.hostBundleName +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::ARM64 + ServiceConstants::PATH_SEPARATOR +
+        aotArgs.bundleName + ServiceConstants::PATH_SEPARATOR + std::to_string(sharedBundleInfo.versionCode);
+    aotArgs.anFileName = aotArgs.outputPath + ServiceConstants::PATH_SEPARATOR + aotArgs.moduleName +
+        ServiceConstants::AN_SUFFIX;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    int32_t activeUserId = AccountHelper::GetUserIdByCallerType();
+    if (activeUserId < Constants::START_USERID) {
+        activeUserId = Constants::START_USERID;
+    }
+    if (!hostInfo.GetInnerBundleUserInfo(activeUserId, innerBundleUserInfo)) {
+        APP_LOGE_NOFUNC("host bundle(%{public}s) get user(%{public}d) failed",
+            aotArgs.hostBundleName.c_str(), activeUserId);
+        return std::nullopt;
+    }
+    aotArgs.bundleUid = innerBundleUserInfo.uid;
+    aotArgs.bundleGid = hostInfo.GetGid(activeUserId);
+    if (aotArgs.bundleGid == ServiceConstants::INVALID_GID) {
+        aotArgs.bundleGid = innerBundleUserInfo.uid;
+    }
+    aotArgs.appIdentifier = (hostInfo.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
+        DEBUG_APP_IDENTIFIER : hostInfo.GetAppIdentifier();
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr) {
+        InnerBundleInfo sharedInfo;
+        if (dataMgr->QueryInnerBundleInfo(sharedBundleInfo.bundleName, sharedInfo)) {
+            aotArgs.isEncryptedBundle = sharedInfo.IsEncryptedMoudle(sharedBundleInfo.moduleName) ? 1 : 0;
+        }
+    }
+    aotArgs.optBCRangeList = system::GetParameter(COMPILE_OPTCODE_RANGE_KEY, "");
+    aotArgs.isScreenOff = static_cast<uint32_t>(CheckDeviceState());
+    aotArgs.staticAndHybridModuleCnt = 1;
+    APP_LOGD("host shared hsp args: %{public}s", aotArgs.ToString().c_str());
+    return aotArgs;
+}
+
 std::optional<AOTArgs> AOTHandler::BuildAOTArgs(const InnerBundleInfo &info, const std::string &moduleName,
     const std::string &compileMode, bool isEnableBaselinePgo, const uint8_t triggerType) const
 {
@@ -233,8 +314,10 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(const InnerBundleInfo &info, con
     aotArgs.triggerType = triggerType;
 
     if (info.GetApplicationBundleType() == BundleType::SHARED) {
-        BuildSharedArgs(info.GetVersionCode(), aotArgs);
-    } else if (!BuildAppArgs(info, compileMode, aotArgs)) {
+        APP_LOGI_NOFUNC("shared bundle %{public}s does not support global AOT", info.GetBundleName().c_str());
+        return std::nullopt;
+    }
+    if (!BuildAppArgs(info, compileMode, aotArgs)) {
         return std::nullopt;
     }
 
@@ -276,6 +359,9 @@ ErrCode AOTHandler::AOTInternal(const std::optional<AOTArgs> &aotArgs, uint32_t 
 #ifdef CODE_SIGNATURE_ENABLE
     AOTSignDataCacheMgr::GetInstance().AddSignDataForModule(*aotArgs, versionCode, pendSignData, ret);
 #endif
+    if (aotArgs->bundleType == static_cast<uint8_t>(BundleType::SHARED)) {
+        return ret;
+    }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr) {
         APP_LOGE("dataMgr is null");
@@ -304,19 +390,38 @@ AOTCompileStatus AOTHandler::ConvertToAOTCompileStatus(const ErrCode ret, const 
     }
 }
 
-void AOTHandler::HandleInstallAOTAsync(const std::string &bundleName) const
+void AOTHandler::HandleHapInstallAOTAsync(const std::string &bundleName) const
 {
-    APP_LOGI_NOFUNC("HandleInstallAOTAsync begin, bundleName: %{public}s", bundleName.c_str());
+    APP_LOGI_NOFUNC("HandleHapInstallAOTAsync begin, bundleName: %{public}s", bundleName.c_str());
     auto task = [bundleName]() {
-        AOTHandler::GetInstance().HandleInstallAOT(bundleName);
+        AOTHandler::GetInstance().HandleHapInstallAOT(bundleName);
     };
     ffrt::submit(task, {}, {}, ffrt::task_attr().name("InstallAOTTask"));
+}
+
+void AOTHandler::HandleSharedHspChangedAOTAsync(const std::string &bundleName) const
+{
+    APP_LOGI_NOFUNC("HandleSharedHspChangedAOTAsync begin, bundleName: %{public}s", bundleName.c_str());
+    auto task = [bundleName]() {
+        AOTHandler::GetInstance().HandleSharedHspChangedAOT(bundleName);
+    };
+    ffrt::submit(task, {}, {}, ffrt::task_attr().name("SharedHspChangedAOTTask"));
 }
 
 bool AOTHandler::ShouldCompileSharedModule(const InnerModuleInfo &moduleInfo) const
 {
     if (moduleInfo.moduleArkTSMode == Constants::ARKTS_MODE_DYNAMIC) {
         APP_LOGD("shared module %{public}s is dynamic, skip", moduleInfo.moduleName.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool AOTHandler::ShouldCompileSharedHspModule(const BaseSharedBundleInfo &sharedBundleInfo) const
+{
+    if (sharedBundleInfo.moduleArkTSMode == Constants::ARKTS_MODE_DYNAMIC) {
+        APP_LOGD("shared hsp module %{public}s/%{public}s is dynamic, skip",
+            sharedBundleInfo.bundleName.c_str(), sharedBundleInfo.moduleName.c_str());
         return false;
     }
     return true;
@@ -341,9 +446,41 @@ bool AOTHandler::ShouldCompileAppModule(const InnerModuleInfo &moduleInfo) const
     return true;
 }
 
-void AOTHandler::HandleInstallAOT(const std::string &bundleName) const
+bool AOTHandler::HasCompilableSharedHspModule(const InnerBundleInfo &sharedInfo) const
 {
-    APP_LOGI_NOFUNC("HandleInstallAOT begin, bundleName: %{public}s", bundleName.c_str());
+    for (const auto &[moduleName, moduleInfo] : sharedInfo.GetInnerModuleInfos()) {
+        if (ShouldCompileSharedModule(moduleInfo)) {
+            return true;
+        }
+    }
+    APP_LOGI_NOFUNC("shared hsp %{public}s has no static or hybrid module, skip host-private AOT",
+        sharedInfo.GetBundleName().c_str());
+    return false;
+}
+
+void AOTHandler::CompileDependentSharedHspAOT(const InnerBundleInfo &hostInfo,
+    const uint8_t triggerType) const
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE_NOFUNC("dataMgr is null");
+        return;
+    }
+    std::vector<BaseSharedBundleInfo> sharedBundleInfos;
+    ErrCode ret = dataMgr->GetBaseSharedBundleInfos(hostInfo.GetBundleName(), sharedBundleInfos,
+        GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO);
+    if (ret != ERR_OK) {
+        APP_LOGW_NOFUNC("get shared hsp dependencies failed, host:%{public}s, ret:%{public}d",
+            hostInfo.GetBundleName().c_str(), ret);
+        return;
+    }
+    for (const auto &sharedBundleInfo : sharedBundleInfos) {
+        CompileHostSharedHspAOT(hostInfo, sharedBundleInfo, triggerType);
+    }
+}
+
+void AOTHandler::HandleSharedHspChangedAOT(const std::string &bundleName) const
+{
     if (!IsSupportARM64()) {
         APP_LOGD("current device doesn't support arm64, no need to AOT");
         return;
@@ -362,31 +499,94 @@ void AOTHandler::HandleInstallAOT(const std::string &bundleName) const
         APP_LOGD("not stage model, no need to AOT");
         return;
     }
-    if (info.GetApplicationArkTSMode() == Constants::ARKTS_MODE_DYNAMIC) {
-        APP_LOGD("arkTSMode is dynamic, no need to AOT");
+    if (info.GetApplicationBundleType() != BundleType::SHARED) {
+        APP_LOGW_NOFUNC("bundle %{public}s is not shared hsp", bundleName.c_str());
+        return;
+    }
+    CompileHostsForChangedSharedHsp(info);
+}
+
+void AOTHandler::CompileHostsForChangedSharedHsp(const InnerBundleInfo &sharedInfo) const
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE_NOFUNC("dataMgr is null");
+        return;
+    }
+    const std::string hspBundleName = sharedInfo.GetBundleName();
+    if (hspBundleName.empty()) {
+        APP_LOGW_NOFUNC("hspBundleName is empty");
+        return;
+    }
+    if (!HasCompilableSharedHspModule(sharedInfo)) {
+        return;
+    }
+    ForEachSharedHspHost(dataMgr, hspBundleName, [this](
+        const std::string &, const InnerBundleInfo &hostInfo, const BaseSharedBundleInfo &sharedBundleInfo) {
+        if (!hostInfo.GetIsNewVersion()) {
+            return;
+        }
+        CompileHostSharedHspAOT(hostInfo, sharedBundleInfo, ServiceConstants::AOT_TRIGGER_INSTALL);
+    });
+}
+
+void AOTHandler::CompileHostSharedHspAOT(const InnerBundleInfo &hostInfo,
+    const BaseSharedBundleInfo &sharedBundleInfo, const uint8_t triggerType) const
+{
+    if (!ShouldCompileSharedHspModule(sharedBundleInfo)) {
+        return;
+    }
+    std::optional<AOTArgs> aotArgs = BuildHostSharedHspAOTArgs(hostInfo, sharedBundleInfo, triggerType);
+    if (!aotArgs) {
+        return;
+    }
+    APP_LOGI_NOFUNC("AOT compile shared hsp %{public}s/%{public}s for host %{public}s",
+        sharedBundleInfo.bundleName.c_str(), sharedBundleInfo.moduleName.c_str(), hostInfo.GetBundleName().c_str());
+    (void)AOTInternal(aotArgs, sharedBundleInfo.versionCode);
+}
+
+void AOTHandler::HandleHapInstallAOT(const std::string &bundleName) const
+{
+    APP_LOGI_NOFUNC("HandleHapInstallAOT begin, bundleName: %{public}s", bundleName.c_str());
+    if (!IsSupportARM64()) {
+        APP_LOGD("current device doesn't support arm64, no need to AOT");
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE_NOFUNC("dataMgr is null");
+        return;
+    }
+    InnerBundleInfo info;
+    if (!dataMgr->QueryInnerBundleInfo(bundleName, info)) {
+        APP_LOGE_NOFUNC("QueryInnerBundleInfo failed");
+        return;
+    }
+    if (!info.GetIsNewVersion()) {
+        APP_LOGD("not stage model, no need to AOT");
+        return;
+    }
+    bool isShared = (info.GetApplicationBundleType() == BundleType::SHARED);
+    if (isShared) {
+        APP_LOGD("shared bundle %{public}s should use shared HSP changed AOT flow", bundleName.c_str());
         return;
     }
 
-    bool isShared = (info.GetApplicationBundleType() == BundleType::SHARED);
-    if (isShared) {
-        std::vector<std::string> enableList = GetAOTEnableList(BUNDLE_INSTALL_AOT_CONFIG_PATH);
-        if (std::find(enableList.begin(), enableList.end(), bundleName) == enableList.end()) {
-            APP_LOGD("shared bundle %{public}s not in AOT enable list", bundleName.c_str());
-            return;
+    if (info.GetApplicationArkTSMode() == Constants::ARKTS_MODE_DYNAMIC) {
+        APP_LOGD("host app arkTSMode is dynamic, skip host app AOT");
+    } else {
+        for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
+            if (!ShouldCompileAppModule(moduleInfo)) {
+                continue;
+            }
+            APP_LOGI_NOFUNC("AOT compile for %{public}s/%{public}s", bundleName.c_str(), moduleName.c_str());
+            std::optional<AOTArgs> aotArgs = BuildAOTArgs(
+                info, moduleName, ServiceConstants::COMPILE_FULL, false, ServiceConstants::AOT_TRIGGER_INSTALL);
+            (void)AOTInternal(aotArgs, info.GetVersionCode());
         }
     }
-
-    for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
-        bool shouldCompile = isShared ? ShouldCompileSharedModule(moduleInfo) : ShouldCompileAppModule(moduleInfo);
-        if (!shouldCompile) {
-            continue;
-        }
-        APP_LOGI_NOFUNC("AOT compile for %{public}s/%{public}s", bundleName.c_str(), moduleName.c_str());
-        std::optional<AOTArgs> aotArgs = BuildAOTArgs(
-            info, moduleName, ServiceConstants::COMPILE_FULL, false, ServiceConstants::AOT_TRIGGER_INSTALL);
-        (void)AOTInternal(aotArgs, info.GetVersionCode());
-    }
-    APP_LOGI_NOFUNC("HandleInstallAOT end");
+    CompileDependentSharedHspAOT(info, ServiceConstants::AOT_TRIGGER_INSTALL);
+    APP_LOGI_NOFUNC("HandleHapInstallAOT end");
 }
 
 void AOTHandler::ClearArkAp() const
@@ -450,8 +650,7 @@ void AOTHandler::HandleResetBundleAOT(const std::string &bundleName, bool isAllB
     }
     dataMgr->ResetAOTFlags(bundleName);
     if (bundleType == BundleType::SHARED) {
-        (void)InstalldClient::GetInstance()->RemoveDir(
-            BuildSharedArkCachePath(bundleName), BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR, bundleName);
+        DeleteHostPrivateSharedHspAOT(bundleName);
     } else {
         (void)InstalldClient::GetInstance()->RemoveDir(
             ServiceConstants::HAP_ARK_CACHE_PATH + bundleName, BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR, bundleName);
@@ -480,8 +679,6 @@ void AOTHandler::ResetAllBundleAOT() const
         return;
     }
     dataMgr->ResetAllBundleAOTFlags();
-    (void)InstalldClient::GetInstance()->ClearDir(
-        ServiceConstants::SHARED_HSP_ARK_CACHE_PATH, BundleDirScene::CLEAR_ARK_CACHE_DIR);
     (void)InstalldClient::GetInstance()->ClearDir(
         ServiceConstants::HAP_ARK_CACHE_PATH, BundleDirScene::CLEAR_ARK_CACHE_DIR);
     APP_LOGI_NOFUNC("ResetAllBundleAOT end");
@@ -843,6 +1040,10 @@ void AOTHandler::HandleIdleWithSingleModule(
     const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const
 {
     APP_LOGD("HandleIdleWithSingleModule, moduleName : %{public}s", moduleName.c_str());
+    if (info.GetApplicationBundleType() == BundleType::SHARED) {
+        APP_LOGI_NOFUNC("skip shared bundle global AOT in idle compile: %{public}s", info.GetBundleName().c_str());
+        return;
+    }
     if (!NeedCompile(info, moduleName)) {
         return;
     }
@@ -866,6 +1067,10 @@ ErrCode AOTHandler::HandleCompileWithSingleModule(const InnerBundleInfo &info, c
     const std::string &compileMode, bool isEnableBaselinePgo) const
 {
     APP_LOGI("HandleCompileWithSingleModule, moduleName : %{public}s", moduleName.c_str());
+    if (info.GetApplicationBundleType() == BundleType::SHARED) {
+        APP_LOGI_NOFUNC("skip shared bundle global AOT in explicit compile: %{public}s", info.GetBundleName().c_str());
+        return ERR_OK;
+    }
     std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode, isEnableBaselinePgo,
         ServiceConstants::AOT_TRIGGER_IDLE);
     return AOTInternal(aotArgs, info.GetVersionCode());
@@ -992,6 +1197,9 @@ ErrCode AOTHandler::HandleCompileBundles(const std::vector<std::string> &bundleN
         } else {
             compileResult = bundleToCompile + ":" + compileResult;
             ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+        }
+        if (info.GetApplicationBundleType() != BundleType::SHARED) {
+            CompileDependentSharedHspAOT(info, ServiceConstants::AOT_TRIGGER_IDLE);
         }
         compileResults.emplace_back(compileResult);
     });
@@ -1146,6 +1354,9 @@ void AOTHandler::IdleForBundle(const std::string &compileMode) const
         std::for_each(moduleNames.cbegin(), moduleNames.cend(), [this, &info, &compileMode](const auto &moduleName) {
             HandleIdleWithSingleModule(info, moduleName, compileMode);
         });
+        if (info.GetApplicationBundleType() != BundleType::SHARED) {
+            CompileDependentSharedHspAOT(info, ServiceConstants::AOT_TRIGGER_IDLE);
+        }
     });
     APP_LOGI_NOFUNC("IdleForBundle end");
 }

@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "bundle_constants.h"
-#include "hap_module_info.h"
 #include "parcel.h"
 
 namespace OHOS {
@@ -28,7 +27,6 @@ namespace AppExecFwk {
 struct BaseSharedBundleInfo : public Parcelable {
     bool compressNativeLibs = true;
     uint32_t versionCode;
-    AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
     std::string bundleName;
     std::string moduleName;
     std::string nativeLibraryPath;

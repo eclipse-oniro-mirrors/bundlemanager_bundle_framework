@@ -679,8 +679,7 @@ ErrCode BaseBundleInstaller::UninstallHspBundle(std::string &uninstallDir, const
         LOG_E(BMS_TAG_INSTALLER, "update uninstall success failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
-    (void)InstalldClient::GetInstance()->RemoveDir(
-        AOTHandler::BuildSharedArkCachePath(bundleName), BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR, bundleName);
+    AOTHandler::DeleteHostPrivateSharedHspAOT(bundleName);
     // delete router map for hsp
     if (!dataMgr_->DeleteRouterInfo(bundleName)) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete router map failed", bundleName.c_str());
@@ -714,13 +713,9 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
     }
     if (static_cast<uint32_t>(versionCode) == info.GetVersionCode()) {
         info.ResetAOTFlags();
-        (void)InstalldClient::GetInstance()->RemoveDir(AOTHandler::BuildSharedArkCachePath(info.GetBundleName()),
-            BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR, info.GetBundleName());
+        AOTHandler::DeleteHostPrivateSharedHspAOT(info.GetBundleName());
     } else {
-        std::string versionAnDir = AOTHandler::BuildSharedArkCachePath(
-            info.GetBundleName(), static_cast<uint32_t>(versionCode));
-        (void)InstalldClient::GetInstance()->RemoveDir(
-            versionAnDir, BundleDirScene::REMOVE_SHARED_ARK_CACHE_DIR, info.GetBundleName());
+        AOTHandler::DeleteHostPrivateSharedHspAOT(info.GetBundleName(), static_cast<uint32_t>(versionCode));
     }
     if (!dataMgr_->RemoveHspModuleByVersionCode(versionCode, info)) {
         LOG_E(BMS_TAG_INSTALLER, "remove hsp module by versionCode failed");
@@ -7529,7 +7524,7 @@ void BaseBundleInstaller::ProcessAOT(const InstallParam &installParam) const
         LOG_D(BMS_TAG_INSTALLER, "is create user, no need to AOT");
         return;
     }
-    AOTHandler::GetInstance().HandleInstallAOTAsync(bundleName_);
+    AOTHandler::GetInstance().HandleHapInstallAOTAsync(bundleName_);
 }
 
 void BaseBundleInstaller::RemoveOldHapIfOTA(const InstallParam &installParam,
