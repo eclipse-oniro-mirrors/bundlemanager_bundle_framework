@@ -2452,10 +2452,20 @@ void BundleDataMgr::GetCloneBundleInfos(const InnerBundleInfo& info, int32_t fla
     if (bundleUserInfoPtr->cloneInfos.empty()) {
         return;
     }
+    int32_t checkFlag = ApplicationFlag::GET_BASIC_APPLICATION_INFO;
+    if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
+        == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE)) {
+        checkFlag = ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE;
+    }
     bundleInfos.reserve(bundleInfos.size() + bundleUserInfoPtr->cloneInfos.size());
     LOG_D(BMS_TAG_QUERY, "app %{public}s start get bundle clone info",
         info.GetBundleName().c_str());
     for (const auto &item : bundleUserInfoPtr->cloneInfos) {
+        if (CheckInnerBundleInfoWithFlags(info, checkFlag, userId, item.second.appIndex) != ERR_OK) {
+            LOG_D(BMS_TAG_QUERY, "clone app %{public}s appIndex:%{public}d is disabled, skip",
+                info.GetBundleName().c_str(), item.second.appIndex);
+            continue;
+        }
         BundleInfo cloneBundleInfo;
         ErrCode ret = info.GetBundleInfoV9(flags, cloneBundleInfo, userId, item.second.appIndex);
         if (ret == ERR_OK) {
@@ -4323,12 +4333,17 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
             == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE)) {
             flag = GET_APPLICATION_INFO_WITH_DISABLE;
         }
+        bool mainAppEnabled = true;
         if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flag, responseUserId) != ERR_OK) {
             auto &hp = innerBundleInfo.GetInnerBundleUserInfos();
             if (ofAnyUserFlag && hp.size() > 0) {
                 responseUserId = hp.begin()->second.bundleUserInfo.userId;
-            } else {
+            } else if (innerBundleInfo.IsDisabled()) {
+                // bundle is completely disabled, skip everything including clones
                 continue;
+            } else {
+                // main app is application-disabled, skip main app but still process clones
+                mainAppEnabled = false;
             }
         }
         uint32_t launchFlag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY);
@@ -4345,15 +4360,16 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
                 innerBundleInfo.GetBundleName().c_str());
             continue;
         }
-        BundleInfo bundleInfo;
-        if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) != ERR_OK) {
-            continue;
+        if (mainAppEnabled) {
+            BundleInfo bundleInfo;
+            if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) == ERR_OK) {
+                ProcessCertificate(bundleInfo, innerBundleInfo.GetBundleName(), flags);
+                ProcessBundleMenu(bundleInfo, flags, true);
+                ProcessBundleRouterMap(bundleInfo, flags, userId);
+                PostProcessAnyUserFlags(flags, responseUserId, requestUserId, bundleInfo, innerBundleInfo);
+                bundleInfos.emplace_back(std::move(bundleInfo));
+            }
         }
-        ProcessCertificate(bundleInfo, innerBundleInfo.GetBundleName(), flags);
-        ProcessBundleMenu(bundleInfo, flags, true);
-        ProcessBundleRouterMap(bundleInfo, flags, userId);
-        PostProcessAnyUserFlags(flags, responseUserId, requestUserId, bundleInfo, innerBundleInfo);
-        bundleInfos.emplace_back(std::move(bundleInfo));
         if (!ofAnyUserFlag && ((static_cast<uint32_t>(flags) &
             static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE)) !=
             static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE))) {
