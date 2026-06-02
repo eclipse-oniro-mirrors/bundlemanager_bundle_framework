@@ -2278,6 +2278,7 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
         baseApplicationInfo_->cloudStructuredDataSyncEnabled =
             info.baseApplicationInfo_->cloudStructuredDataSyncEnabled;
         baseApplicationInfo_->alternateIcons = info.baseApplicationInfo_->alternateIcons;
+        baseApplicationInfo_->curAlternateIconModuleName = info.baseApplicationInfo_->iconResource.moduleName;
     }
     // update BundleInfo
     if (baseBundleInfo_ != nullptr && info.baseApplicationInfo_ != nullptr) {
