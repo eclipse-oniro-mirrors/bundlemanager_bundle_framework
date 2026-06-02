@@ -716,6 +716,7 @@ private:
     void SaveHmpBundlePathInfo(const std::string &hmpName,
         const std::string &bundleName, const std::string bundlePath, bool isAppService);
     void ListeningUserUnlocked() const;
+    void RegisterOobeAgreeTermsEvent() const;
     void RemoveUnreservedSandbox() const;
     void HandleSceneBoard() const;
     static void InnerProcessStockBundleProvisionInfo();
