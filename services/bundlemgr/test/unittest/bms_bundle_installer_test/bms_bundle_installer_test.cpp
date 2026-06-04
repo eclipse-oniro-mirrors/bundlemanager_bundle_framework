@@ -5992,11 +5992,9 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest 
     dataMgr->bundleInfos_.clear();
     bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::INSTALL_START);
     bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME_TEST, info);
-    ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
     
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
-    EXPECT_EQ(ret3, ERR_OK);
 
     BaseBundleInstaller installer;
     installer.InitDataMgr();
@@ -9660,8 +9658,6 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0410, Function | SmallTest | L
     ScopeGuard callingBundleInfoGuard([&] { dataMgr->bundleInfos_.erase("com.example.caller"); });
 
     // Map UID to calling bundle name
-    dataMgr->bundleIdMap_[11111] = "com.example.caller";
-    ScopeGuard bundleIdGuard([&] { dataMgr->bundleIdMap_.erase(11111); });
 
     BaseBundleInstaller installer;
     installer.userId_ = USERID;
@@ -15096,29 +15092,6 @@ HWTEST_F(BmsBundleInstallerTest, VerifyCodeSignatureForHap_0100, Function | Smal
     codeSignatureParam.signatureFileDir = TEST_ERROR_STRING;
     ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
     EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
- * @tc.number: DeliverySignProfile_0100
- * @tc.name: test DeliverySignProfile
- * @tc.desc: test DeliverySignProfile of InstalldHostImpl
- */
-HWTEST_F(BmsBundleInstallerTest, DeliverySignProfile_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    std::string bundleName = TEST_EMPTY_STRING;
-    int32_t profileBlockLength = ZERO_CODE;
-    const unsigned char* profileBlock = new unsigned char[0];
-    ErrCode ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    bundleName = TEST_ERROR_STRING;
-    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, nullptr);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    profileBlockLength = TEST_LENGTH;
-    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_CODE_SIGNATURE_DELIVERY_FILE_FAILED);
 }
 
 /**

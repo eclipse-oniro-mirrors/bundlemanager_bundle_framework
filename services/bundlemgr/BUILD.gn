@@ -646,6 +646,7 @@ ohos_shared_library("installs") {
 
   external_deps = [
     "access_token:el5_filekey_manager_sdk",
+    "access_token:libaccesstoken_sdk",
     "app_file_service:remote_file_share_native",
     "appspawn:hnpapi",
     "appverify:libhapverify",

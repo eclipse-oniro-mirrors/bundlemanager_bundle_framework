@@ -5115,7 +5115,6 @@ HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0100, Function | SmallTest | Le
     InnerBundleUserInfo userInfo;
     userInfo.bundleUserInfo = bundleUserInfo;
     userInfo.bundleName = BUNDLE_NAME;
-    impl->dataMgr_->GenerateUidAndGid(userInfo);
 
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
@@ -5147,7 +5146,6 @@ HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0200, Function | SmallTest | Le
     InnerBundleUserInfo userInfo;
     userInfo.bundleUserInfo = bundleUserInfo;
     userInfo.bundleName = cloneBundleName;
-    impl->dataMgr_->GenerateUidAndGid(userInfo);
 
     InnerBundleCloneInfo cloneInfo;
     cloneInfo.appIndex = 1;

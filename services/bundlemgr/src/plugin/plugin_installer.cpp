@@ -143,6 +143,8 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to install plugin for %{public}s", hostBundleName.c_str());
 
+    sessionId_ = 0;
+    sessionCommitted_ = false;
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
@@ -174,6 +176,11 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
     result = CheckSupportPluginPermission(hostBundleInfo.GetBundleName());
     CHECK_RESULT(result, "check host application permission failed %{public}d");
     // parse hsp file
+    ScopeGuard sessionGuard([&] {
+        if (!sessionCommitted_ && sessionId_ != 0) {
+            BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
+        }
+    });
     result = ParseFiles(pluginFilePaths, installPluginParam);
     CHECK_RESULT(result, "parse file failed %{public}d");
     if (bundleName_ == hostBundleName) {
@@ -192,6 +199,14 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
     NotifyPluginEvents(isPluginExist_ ? NotifyType::UPDATE : NotifyType::INSTALL, uid);
     SendPluginCommonEvent(hostBundleName, bundleName_,
         isPluginExist_ ? NotifyType::UPDATE : NotifyType::INSTALL);
+    if (!sessionCommitted_ && sessionId_ != 0) {
+        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, true, {});
+        if (finishRet != ERR_OK) {
+            APP_LOGE("FinishHapInstall failed, errCode:%{public}d", finishRet);
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        sessionCommitted_ = true;
+    }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "install plugin finished");
     return ERR_OK;
 }
@@ -366,7 +381,8 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
     }
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
-    result = bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyResults);
+    result = bundleInstallChecker_->CheckHapsSignInfoAndInitSession(
+        bundlePaths, hapVerifyResults, false, sessionId_, userId_);
     if (result != ERR_OK) {
         APP_LOGE("check multi hap signature info failed %{public}d", result);
         return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
@@ -604,13 +620,10 @@ ErrCode PluginInstaller::VerifyCodeSignatureForNativeFiles(const std::string &bu
     codeSignatureParam.cpuAbi = cpuAbi;
     codeSignatureParam.targetSoPath = targetSoPath;
     codeSignatureParam.signatureFileDir = signatureFileDir;
-    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
-    codeSignatureParam.isDeveloperDistribution = isDeveloperDistribution_;
-    codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
     codeSignatureParam.isCompressNativeLibrary = isCompressNativeLibs_;
-    bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
+    bundleInstallChecker_->ProcessCodeSignatureParam(sessionId_, verifyRes_, codeSignatureParam);
     if (InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam) != ERR_OK) {
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
@@ -626,17 +639,14 @@ ErrCode PluginInstaller::VerifyCodeSignatureForHsp(const std::string &hspPath,
     codeSignatureParam.modulePath = hspPath;
     codeSignatureParam.cpuAbi = cpuAbi_;
     codeSignatureParam.targetSoPath = soPath_;
-    codeSignatureParam.appIdentifier = appIdentifier;
     codeSignatureParam.signatureFileDir = signatureFileDir_;
-    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle;
-    codeSignatureParam.isDeveloperDistribution = isDeveloperDistribution_;
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = false;
-    codeSignatureParam.isPlugin = !codeSignatureParam.isDeveloperDistribution;
+    codeSignatureParam.isPlugin = !isDeveloperDistribution_;
     if (codeSignatureParam.isPlugin) {
         codeSignatureParam.pluginId = JoinPluginId();
     }
-    bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
+    bundleInstallChecker_->ProcessCodeSignatureParam(sessionId_, verifyRes_, codeSignatureParam);
     if (InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam) != ERR_OK) {
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
@@ -665,6 +675,9 @@ ErrCode PluginInstaller::DeliveryProfileToCodeSign(
         APP_LOGE("no sign info in the all haps");
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
+    if (sessionId_ == 0) {
+        return ERR_OK;
+    }
 
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyResults[0].GetProvisionInfo();
     if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
@@ -672,12 +685,8 @@ ErrCode PluginInstaller::DeliveryProfileToCodeSign(
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
         provisionInfo.distributionType == Security::Verify::AppDistType::DEVELOPER ||
         provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
-        if (provisionInfo.profileBlockLength == 0 || provisionInfo.profileBlock == nullptr) {
-            APP_LOGE("invalid sign profile");
-            return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
-        }
-        return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
-            provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
+        // SPM mode: installd queries profileBlock via sessionId
+        return InstalldClient::GetInstance()->DeliverySignProfile(bundleName_, sessionId_);
     }
     return ERR_OK;
 }
@@ -863,6 +872,14 @@ ErrCode PluginInstaller::ProcessPluginInstall(const InnerBundleInfo &hostBundleI
     RemoveOldInstallDir(hostBundleInfo.GetBundleName());
     deleteDirGuard.Dismiss();
     dataRollBackGuard.Dismiss();
+    if (!sessionCommitted_ && sessionId_ != 0) {
+        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, true, {});
+        if (finishRet != ERR_OK) {
+            APP_LOGE("FinishHapInstall failed, errCode:%{public}d", finishRet);
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        sessionCommitted_ = true;
+    }
     APP_LOGD("install plugin bundle successfully: %{public}s", bundleName_.c_str());
     return result;
 }

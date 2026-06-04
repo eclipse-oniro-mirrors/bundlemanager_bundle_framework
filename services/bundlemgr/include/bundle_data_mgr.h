@@ -155,7 +155,6 @@ public:
      * @param innerBundleUserInfo Indicates the InnerBundleUserInfo object.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    ErrCode GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInfo);
     /**
      * @brief Recycle uid and gid .
      * @param info Indicates the InnerBundleInfo object.
@@ -1407,7 +1406,6 @@ private:
         int32_t appIndex = 0) const;
     ErrCode ExplicitQueryAbilityInfoV9(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
         int32_t appIndex = 0) const;
-    ErrCode GenerateBundleId(const std::string &bundleName, int32_t &bundleId);
     int32_t GetUserIdByUid(int32_t uid) const;
     bool GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
     ErrCode GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
@@ -1528,7 +1526,7 @@ private:
     void RemoveOverlayInfoAndConnection(const InnerBundleInfo &innerBundleInfo, const std::string &bundleName);
     ErrCode FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerBundleInfo, const std::string &moduleName,
         const std::string &abilityName, AbilityInfo &abilityInfo) const;
-    void RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap);
+    void RestoreSandboxUidAndGid();
     bool IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode ProcessBundleMenu(BundleInfo& bundleInfo, int32_t flag, bool clearData) const;
     bool MatchShare(const Want &want, const std::vector<Skill> &skills) const;
@@ -1611,14 +1609,12 @@ private:
         const SkillProfile &profile, uint32_t flags, SkillInfo &skillInfo);
 
     bool initialUserFlag_ = false;
-    int32_t baseAppUid_ = Constants::BASE_APP_UID;
     mutable std::mutex stateMutex_;
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex hspBundleNameMutex_;
     mutable std::mutex pluginCallbackMutex_;
     mutable std::mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleInfoMutex_;
-    mutable std::shared_mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
     mutable std::shared_mutex bundleMutex_;
     mutable std::shared_mutex installingBundleNamesMutex_;
@@ -1639,10 +1635,6 @@ private:
     std::vector<sptr<IBundleEventCallback>> eventCallbackList_;
     // using for locking by bundleName
     std::unordered_map<std::string, std::mutex> bundleMutexMap_;
-    // using for generating bundleId
-    // key:bundleId
-    // value:bundleName
-    std::map<int32_t, std::string> bundleIdMap_;
     // all installed bundles
     // key:bundleName
     // value:innerbundleInfo

@@ -20,11 +20,14 @@
 #include <string>
 #include <map>
 
+#include "access_token_error.h"
+
 namespace OHOS {
 namespace Security {
 namespace AccessToken {
 typedef unsigned int AccessTokenID;
 typedef unsigned int AccessTokenAttr;
+typedef uint64_t FullTokenID;
 static const int DEFAULT_TOKEN_VERSION = 1;
 static const int FIRSTCALLER_TOKENID_DEFAULT = 0;
 static AccessTokenID INVALID_TOKENID = 0;
@@ -78,6 +81,22 @@ typedef enum TypeATokenAvailableTypeEnum {
     NORMAL = 1,
     MDM = 2,
 } ATokenAvailableTypeEnum;
+
+typedef enum TypeInstallTypeEnum {
+    TYPE_INSTALL = 0,
+    TYPE_REPLACE,
+    TYPE_MERGE
+} InstallTypeEnum;
+
+typedef enum DlpType {
+    DLP_COMMON = 0,
+    DLP_READ = 1,
+    DLP_FULL_CONTROL = 2,
+    BUTT_DLP_TYPE,
+} HapDlpType;
+
+// AccessTokenError moved to access_token_error.h to avoid
+// duplication with the real SDK header of the same name.
 
 typedef enum TypePermissionFlag {
     PERMISSION_DEFAULT_FLAG = 0,

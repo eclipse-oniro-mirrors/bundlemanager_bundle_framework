@@ -42,6 +42,18 @@ namespace AppExecFwk {
 using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::string, std::string> &,
     const CodeCryptoHapInfo &, bool &);
 
+struct SessionProvisionInfo {
+    std::string bundleName;
+    std::string apl;
+    int32_t distributionType = 0;
+    int32_t provisionType = 0;
+    bool isEnterpriseResigned = false;
+    bool isDeveloperDistribution = false;
+    std::string appIdentifier;
+    uint32_t profileBlockLength = 0;
+    std::shared_ptr<unsigned char[]> profileBlock;
+};
+
 class InstalldOperator {
 public:
     /**

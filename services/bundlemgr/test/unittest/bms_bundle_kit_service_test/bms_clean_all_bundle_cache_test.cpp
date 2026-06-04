@@ -682,7 +682,6 @@ void BmsCleanAllBundleCacheTest::SetDataMgrData(const std::string &bundleName) c
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     int32_t userId = dataMgr->GetUserIdByUid(callingUid);
     int32_t bundleId = callingUid - userId * Constants::BASE_USER_RANGE;
-    dataMgr->bundleIdMap_.insert({bundleId, bundleName});
     InnerBundleInfo bundleInfo;
     bundleInfo.baseApplicationInfo_->bundleName = bundleName;
 
@@ -786,12 +785,10 @@ HWTEST_F(BmsCleanAllBundleCacheTest, CleanCacheForSelf_0200, Function | SmallTes
 
     sptr<MockCleanCache> cleanCache = nullptr;
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    dataMgr->bundleIdMap_.insert({BASE_TEST_UID, BUNDLE_NAME_TEST});
     auto result = hostImpl->CleanBundleCacheFilesForSelf(cleanCache);
     EXPECT_EQ(result, ERR_APPEXECFWK_NULL_PTR);
 
     IPCSkeleton::SetCallingUid(20000001);
-    dataMgr->bundleIdMap_.erase(BASE_TEST_UID);
     CleanFileDir();
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }

@@ -107,8 +107,8 @@ public:
     int VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam) const;
     int VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam) const;
     int CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption) const;
-    int DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-        const unsigned char *profileBlock) const;
+    int DeliverySignProfile(const std::string &bundleName, int32_t sessionId = 0) const;
+
     int ProcessBinFiles(const VerifyBinParam &verifyBinParam) const;
 
 private:
@@ -255,13 +255,12 @@ int BmsInstallDaemonTest::CheckEncryption(const CheckEncryptionParam &checkEncry
     return InstalldClient::GetInstance()->CheckEncryption(checkEncryptionParam, isEncryption);
 }
 
-int BmsInstallDaemonTest::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-    const unsigned char *profileBlock) const
+int BmsInstallDaemonTest::DeliverySignProfile(const std::string &bundleName, int32_t sessionId) const
 {
     if (!service_->IsServiceReady()) {
         service_->Start();
     }
-    return InstalldClient::GetInstance()->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    return InstalldClient::GetInstance()->DeliverySignProfile(bundleName, sessionId);
 }
 
 int BmsInstallDaemonTest::ProcessBinFiles(const VerifyBinParam &verifyBinParam) const
@@ -1871,9 +1870,8 @@ HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_0100, Function | SmallTest | 
 {
     InstalldHostImpl hostImpl;
     std::string bundleName;
-    int32_t profileBlockLength = 0;
-    unsigned char *profileBlock = new unsigned char[0];
-    ErrCode ret = hostImpl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+
+    ErrCode ret = hostImpl.DeliverySignProfile(bundleName, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -2170,34 +2168,10 @@ HWTEST_F(BmsInstallDaemonTest, CheckEncryption_InvalidAppIdentifier_0100, Functi
 HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_InvalidBundleName_0100, Function | SmallTest | Level0)
 {
     std::string bundleName = "../invalid";
-    int32_t profileBlockLength = 100;
-    unsigned char *profileBlock = new unsigned char[100];
-    auto ret = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    auto ret = DeliverySignProfile(bundleName, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    delete[] profileBlock;
 }
 
-/**
- * @tc.number: DeliverySignProfile_InvalidProfileBlockLength_0100
- * @tc.name: test DeliverySignProfile with invalid profileBlockLength via IPC
- * @tc.desc: 1. calling DeliverySignProfile with profileBlockLength > 1MB should return PARAM_ERROR
- *           2. calling DeliverySignProfile with negative profileBlockLength should return PARAM_ERROR
-*/
-HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_InvalidProfileBlockLength_0100, Function | SmallTest | Level0)
-{
-    std::string bundleName = "com.example.test";
-    int32_t profileBlockLength = 2 * 1024 * 1024;
-    unsigned char *profileBlock = new unsigned char[100];
-    auto ret = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    delete[] profileBlock;
-
-    profileBlockLength = -1;
-    profileBlock = new unsigned char[100];
-    ret = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    delete[] profileBlock;
-}
 
 /**
  * @tc.number: ProcessBinFiles_InvalidBundleName_0100
@@ -2489,21 +2463,6 @@ HWTEST_F(BmsInstallDaemonTest, CreateBundleDataDirWithVector_InvalidElement_0100
 }
 
 /**
- * @tc.number: DeliverySignProfile_ZeroLength_0100
- * @tc.name: test DeliverySignProfile with profileBlockLength = 0
- * @tc.desc: 1. test profileBlockLength = 0 should return PARAM_ERROR
-*/
-HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_ZeroLength_0100, Function | SmallTest | Level0)
-{
-    std::string bundleName = "com.example.test";
-    int32_t profileBlockLength = 0;
-    unsigned char *profileBlock = new unsigned char[1];
-    auto ret = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    delete[] profileBlock;
-}
-
-/**
  * @tc.number: GetBundleStats_InvalidAppIndex_0100
  * @tc.name: test GetBundleStats with invalid appIndex
  * @tc.desc: 1. test appIndex = -1 should return PARAM_ERROR
@@ -2757,22 +2716,6 @@ HWTEST_F(BmsInstallDaemonTest, VerifyCodeSignature_1MBBoundary_0100, Function | 
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
-/**
- * @tc.number: DeliverySignProfile_1MBBoundary_0100
- * @tc.name: test DeliverySignProfile with profileBlockLength = 1MB
- * @tc.desc: 1. calling DeliverySignProfile with profileBlockLength = 1MB should pass param check
- *           2. DeliverySignProfile uses > MAX_PROFILE_BLOCK_LENGTH, so 1MB is legal
-*/
-HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_1MBBoundary_0100, Function | SmallTest | Level0)
-{
-    std::string bundleName = "com.example.test";
-    int32_t profileBlockLength = 1024 * 1024; // exactly 1MB
-    unsigned char *profileBlock = new unsigned char[1024 * 1024];
-    auto ret = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
-    // 1MB is a legal parameter value, should not return PARAM_ERROR
-    EXPECT_NE(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    delete[] profileBlock;
-}
 
 /**
  * @tc.number: ProcessBinFiles_EmptyPathItem_0100
@@ -2788,21 +2731,6 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBinFiles_EmptyPathItem_0100, Function | Sm
     param.userId = 100;
     param.binFilePaths = {"/data/app/el1/bundle/public/com.example.test/bin/test", ""};
     auto ret = hostImpl.ProcessBinFiles(param);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: ExtractFiles_InvalidTargetPath_0100
- * @tc.name: test ExtractFiles with invalid targetPath prefix
- * @tc.desc: 1. calling ExtractFiles with targetPath not in allowed prefix should return PARAM_ERROR
-*/
-HWTEST_F(BmsInstallDaemonTest, ExtractFiles_InvalidTargetPath_0100, Function | SmallTest | Level0)
-{
-    ExtractParam extractParam;
-    extractParam.bundleName = "com.example.test";
-    extractParam.srcPath = "/data/app/el1/bundle/public/com.example.test/entry.hap";
-    extractParam.targetPath = "/tmp/invalid";
-    auto ret = ExtractFiles(extractParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

@@ -464,7 +464,6 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, IsDefaultApplication_0070, Function | Small
 
     int32_t uid = 20000001;
     int32_t bundleId = uid - 100 * Constants::BASE_USER_RANGE;
-    dataMgr->bundleIdMap_.emplace(bundleId, BUNDLE_NAME);
 
     auto ret = DefaultAppMgr::GetInstance().IsDefaultApplication(userId, type, isDefaultApp);
     EXPECT_EQ(ret, ERR_OK);

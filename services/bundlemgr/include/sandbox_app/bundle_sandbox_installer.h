@@ -65,6 +65,8 @@ private:
     std::string bundleName_;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     std::shared_ptr<BundleSandboxDataMgr> sandboxDataMgr_ = nullptr;
+    int32_t sessionId_ = 0;
+    bool sessionCommitted_ = false;
 };
 } // AppExecFwk
 } // OHOS

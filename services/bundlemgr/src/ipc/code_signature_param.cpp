@@ -77,6 +77,7 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
         }
         profileBlock = std::move(tempProfilePtr);
     }
+    sessionId = parcel.ReadInt32();
     return true;
 }
 
@@ -103,6 +104,7 @@ bool CodeSignatureParam::Marshalling(Parcel &parcel) const
             return false;
         }
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     return true;
 }
 

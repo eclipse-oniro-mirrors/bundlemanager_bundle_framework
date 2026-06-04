@@ -99,7 +99,6 @@ void BmsBundleVerifyManagerHostImplTest::SetDataMgrData()
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     int32_t userId = dataMgr->GetUserIdByUid(callingUid);
     int32_t bundleId = callingUid - userId * Constants::BASE_USER_RANGE;
-    dataMgr->bundleIdMap_.insert({bundleId, TEST_BUNDLE_NAME});
     InnerBundleInfo bundleInfo;
     bundleInfo.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
 
@@ -212,7 +211,6 @@ HWTEST_F(BmsBundleVerifyManagerHostImplTest, VerifyTest_0600, Function | SmallTe
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     int32_t userId = dataMgr->GetUserIdByUid(callingUid);
     int32_t bundleId = callingUid - userId * Constants::BASE_USER_RANGE;
-    dataMgr->bundleIdMap_.insert({bundleId, TEST_BUNDLE_NAME});
     InnerBundleInfo bundleInfo;
     bundleInfo.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
 

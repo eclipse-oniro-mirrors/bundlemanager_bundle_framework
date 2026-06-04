@@ -515,13 +515,12 @@ ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &code
     return CallService(&IInstalld::VerifyCodeSignatureForHap, codeSignatureParam);
 }
 
-ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-    const unsigned char *profileBlock)
+ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t sessionId)
 {
-    if (bundleName.empty() || profileBlock == nullptr) {
+    if (sessionId == 0) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::DeliverySignProfile, bundleName, profileBlockLength, profileBlock);
+    return CallService(&IInstalld::DeliverySignProfile, bundleName, sessionId);
 }
 
 ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
@@ -728,5 +727,10 @@ ErrCode InstalldClient::GetTopNLargestItemsInAppDataDir(const std::string &bundl
 void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject>& remoteObject) {}
 
 void InstalldClient::OnLoadSystemAbilityFail() {}
+
+ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

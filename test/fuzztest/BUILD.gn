@@ -21,7 +21,6 @@ group("fuzztest") {
     # deps file
     "fuzztest_others/GetExtResource_fuzzer:GetExtResourceFuzzTest",
     "fuzztest_others/RemoveExtResource_fuzzer:RemoveExtResourceFuzzTest",
-    "fuzztest_others/basebundleinstallercheckmultiplehapssigninfo_fuzzer:BaseBundleInstallerCheckMultipleHapsSignInfoFuzzTest",
     "fuzztest_others/basebundleinstallerchecksyscap_fuzzer:BaseBundleInstallerCheckSysCapFuzzTest",
     "fuzztest_others/basebundleinstallercheckuninstallinnerbundleinfo_fuzzer:BaseBundleInstallerCheckUninstallInnerBundleInfoFuzzTest",
     "fuzztest_others/basebundleinstallercreatebundleanddatadir_fuzzer:BaseBundleInstallerCreateBundleAndDataDirFuzzTest",

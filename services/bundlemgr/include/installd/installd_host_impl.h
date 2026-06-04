@@ -286,8 +286,7 @@ public:
 
     virtual ErrCode VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam) override;
 
-    virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-        const unsigned char *profileBlock) override;
+    virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t sessionId = 0) override;
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
 
@@ -317,6 +316,8 @@ public:
     virtual ErrCode DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId) override;
 
     virtual ErrCode ClearDir(const std::string &dir, BundleDirScene scene) override;
+
+    virtual ErrCode ClearSessionProvisionCache(int32_t sessionId) override;
 
     virtual ErrCode RestoreconPath(const std::string &path, const std::string &bundleName,
         BundleDirScene scene) override;
@@ -384,6 +385,25 @@ private:
     void InnerCleanBundleDataDirByName(std::string &suffixName, const int userid, const int appIndex = 0);
     ErrCode ResetBmsDBSecurityByPath(const std::string &parentPath, const std::string &fileFlag);
     ErrCode ResetSecurityByPath(const FileStat &fileStat, const std::string &targetPath);
+
+    /**
+     * @brief Query provisioning info from access_token by session ID.
+     * @param sessionId SPM session ID.
+     * @param info Output SessionProvisionInfo from AT query.
+     * @return Returns ERR_OK if sessionId==0 or query+parse succeeds; returns error code otherwise.
+     */
+    ErrCode QueryProvisionInfoBySessionId(int32_t sessionId, const std::string &bundleName,
+        SessionProvisionInfo &info);
+
+    /**
+     * @brief Resolve APL value: validate via AT when sessionId != 0, use param.apl when sessionId == 0.
+     * @param createDirParam Contains sessionId and apl.
+     * @param resolvedApl Output resolved APL string.
+     * @return Returns ERR_OK or ERR_APPEXECFWK_INSTALLD_PARAM_ERROR on validation mismatch.
+     */
+    ErrCode GetResolvedApl(CreateDirParam &createDirParam);
+
+    std::map<int32_t, SessionProvisionInfo> sessionProvisionCache_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

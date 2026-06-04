@@ -1520,10 +1520,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_VerifyCodeSignatureForHap_
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeliverySignProfile_0100, TestSize.Level1)
 {
     std::string bundleName;
-    int32_t profileBlockLength = 0;
-    unsigned char *profileBlock = new unsigned char[0];
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    ErrCode result = installClient_->DeliverySignProfile(bundleName, 0);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1535,10 +1533,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeliverySignProfile_0100, 
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeliverySignProfile_0200, TestSize.Level1)
 {
     std::string bundleName = "bundleName";
-    int32_t profileBlockLength = 1;
-    unsigned char *profileBlock = new unsigned char[1];
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    ErrCode result = installClient_->DeliverySignProfile(bundleName, 0);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 

@@ -761,11 +761,9 @@ HWTEST_F(BmsBundleInstallCheckerTest, GetCallingEventInfo_0003, Function | Small
     EventInfo eventInfo;
     eventInfo.callingUid = TEST_UID;
 
-    baseBundleInstaller.dataMgr_->bundleIdMap_.insert(std::pair<int32_t, std::string>(TEST_BUNDLE_ID, BUNDLE_NAME));
     baseBundleInstaller.GetCallingEventInfo(eventInfo);
     EXPECT_EQ(eventInfo.callingBundleName, BUNDLE_NAME);
 
-    baseBundleInstaller.dataMgr_->bundleIdMap_.erase(TEST_BUNDLE_ID);
     baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
 

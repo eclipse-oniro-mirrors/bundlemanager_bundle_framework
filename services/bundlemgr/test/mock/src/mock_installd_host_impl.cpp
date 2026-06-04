@@ -330,8 +330,7 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-    const unsigned char *profileBlock)
+ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int32_t sessionId)
 {
     return ERR_OK;
 }
@@ -468,6 +467,11 @@ ErrCode InstalldHostImpl::ExtractSkillsPackage(const SkillsPackageParam &param,
 
 ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
     const int32_t userId, const int32_t timeout, std::string &largestItems)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ClearSessionProvisionCache(int32_t sessionId)
 {
     return ERR_OK;
 }

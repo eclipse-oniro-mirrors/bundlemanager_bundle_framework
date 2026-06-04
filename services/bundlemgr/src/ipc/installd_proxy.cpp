@@ -1161,23 +1161,17 @@ ErrCode InstalldProxy::VerifyCodeSignatureForHap(const CodeSignatureParam &codeS
     return ERR_OK;
 }
 
-ErrCode InstalldProxy::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
-    const unsigned char *profileBlock)
+ErrCode InstalldProxy::DeliverySignProfile(const std::string &bundleName, int32_t sessionId)
 {
-    if (profileBlockLength <= 0 || profileBlockLength > ServiceConstants::MAX_PROFILE_BLOCK_LENGTH
-        || profileBlock == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "invalid params");
+    if (sessionId == 0) {
+        LOG_E(BMS_TAG_INSTALLD, "sessionId is 0, refused");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     MessageParcel data;
     (void)data.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
-    INSTALLD_PARCEL_WRITE(data, Int32, profileBlockLength);
-    if (!data.WriteRawData(profileBlock, profileBlockLength)) {
-        LOG_E(BMS_TAG_INSTALLD, "Failed to write raw data");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
+    INSTALLD_PARCEL_WRITE(data, Int32, sessionId);
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -1203,6 +1197,18 @@ ErrCode InstalldProxy::RemoveSignProfile(const std::string &bundleName)
         return ret;
     }
     return ERR_OK;
+}
+
+ErrCode InstalldProxy::ClearSessionProvisionCache(int32_t sessionId)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, sessionId);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(
+        InstalldInterfaceCode::CLEAR_SESSION_PROVISION_CACHE, data, reply, option);
 }
 
 ErrCode InstalldProxy::AddCertAndEnableKey(const std::string &certPath, const std::string &certContent)

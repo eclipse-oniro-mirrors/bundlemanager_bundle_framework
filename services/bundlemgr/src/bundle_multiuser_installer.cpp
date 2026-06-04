@@ -192,31 +192,39 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     InnerBundleUserInfo newUserInfo;
     newUserInfo.bundleName = bundleName;
     newUserInfo.bundleUserInfo.userId = userId;
-    ErrCode ret = dataMgr_->GenerateUidAndGid(newUserInfo);
-    if (ret != ERR_OK) {
-        return ret;
-    }
+    ErrCode ret = ERR_OK;
+    int32_t uid = 0;
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
         Constants::APP_PROVISION_TYPE_FILE_NAME);
-    int32_t uid = newUserInfo.uid;
 
     // 4. generate the accesstoken id and inherit original permissions
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
-    Security::AccessToken::HapInfoCheckResult checkResult;
+    bool sessionCommitted = false;
+    ScopeGuard sessionGuard([&] {
+        if (!sessionCommitted && sessionId_ != 0) {
+            BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
+        }
+    });
     if (!RecoverHapToken(bundleName, userId, newTokenIdEx, info)) {
         AppProvisionInfo appProvisionInfo;
         if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
             APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
         }
-        if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult,
-            appProvisionInfo.appServiceCapabilities) != ERR_OK) {
-            auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
-            APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
+        ret = BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx,
+            appProvisionInfo.appServiceCapabilities, false, sessionId_);
+        if (ret != ERR_OK) {
+            APP_LOGE("bundleName:%{public}s InitHapToken failed, errCode:%{public}d",
+                bundleName.c_str(), ret);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
     }
+    uid = info.GetUid(userId);
+    if (uid == Constants::INVALID_UID) {
+        APP_LOGE("InitHapToken returned invalid uid for bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
     ScopeGuard applyAccessTokenGuard([&] {
-        BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID);
+        BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID, bundleName);
     });
     newUserInfo.accessTokenId = newTokenIdEx.tokenIdExStruct.tokenID;
     newUserInfo.accessTokenIdEx = newTokenIdEx.tokenIDEx;
@@ -275,6 +283,10 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
 #endif
     needNotifyAppSkill_ = true;
     APP_LOGI("InstallExisted %{public}s succesfully", bundleName.c_str());
+    sessionGuard.Dismiss();
+    if (sessionId_ != 0) {
+        BundlePermissionMgr::FinishHapInstall(sessionId_, true, {});
+    }
     return ERR_OK;
 }
 
@@ -291,6 +303,7 @@ ErrCode BundleMultiUserInstaller::CreateDataDir(InnerBundleInfo &info,
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    createDirParam.sessionId = sessionId_;
     createDirParam.extensionDirs = info.GetAllExtensionDirs();
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
@@ -377,10 +390,11 @@ void BundleMultiUserInstaller::ResetInstallProperties()
     needNotifyAppSkill_ = false;
     appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
     moduleName_.clear();
+    sessionId_ = 0;
 }
 
 bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,
-    Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo)
+    Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, InnerBundleInfo &innerBundleInfo)
 {
     UninstallBundleInfo uninstallBundleInfo;
     if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
@@ -395,17 +409,15 @@ bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, co
         accessTokenIdEx.tokenIdExStruct.tokenID =
             uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenId;
         accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenIdEx;
-        Security::AccessToken::HapInfoCheckResult checkResult;
         AppProvisionInfo appProvisionInfo;
         if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
             APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
         }
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId, checkResult,
-            appProvisionInfo.appServiceCapabilities) == ERR_OK) {
+        if (BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, 0, accessTokenIdEx,
+            appProvisionInfo.appServiceCapabilities, false, sessionId_) == ERR_OK) {
             return true;
         } else {
-            auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
-            APP_LOGW("bundleName:%{public}s UpdateHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
+            APP_LOGW("bundleName:%{public}s InitHapToken failed in RecoverHapToken", bundleName.c_str());
         }
     }
     return false;

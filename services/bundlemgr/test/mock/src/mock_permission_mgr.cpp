@@ -116,7 +116,8 @@ Security::AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam
 }
 
 int32_t BundlePermissionMgr::DeleteAccessTokenId(
-    const Security::AccessToken::AccessTokenID tokenId, bool isTokenReserved)
+    const Security::AccessToken::AccessTokenID tokenId, const std::string &bundleName,
+    Security::AccessToken::ReservedType type)
 {
     return -1;
 }
@@ -273,17 +274,18 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
     return hapInfo;
 }
 
-int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
-    const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
-    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
-    const bool isDebugGrant)
+int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, const int32_t userId,
+    const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
+    const std::string &appServiceCapabilities,
+    const bool isDebugGrant, int32_t &sessionId)
 {
     return ERR_OK;
 }
 
-int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
-    const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
-    const std::string &appServiceCapabilities, bool dataRefresh, const bool isDebugGrant)
+int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
+    InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
+    const std::string &appServiceCapabilities, bool dataRefresh,
+    const bool isDebugGrant, int32_t sessionId)
 {
     return ERR_OK;
 }
@@ -292,6 +294,54 @@ std::string BundlePermissionMgr::GetCheckResultMsg(const Security::AccessToken::
 {
     std::string result = "";
     return result;
+}
+
+int32_t BundlePermissionMgr::CheckHapPermissionInfo(int32_t sessionId,
+    Security::AccessToken::InstallTypeEnum type, Security::AccessToken::HapInfoCheckResult &checkResult)
+{
+    return ERR_OK;
+}
+
+int32_t BundlePermissionMgr::FinishHapInstall(
+    int32_t sessionId,
+    bool isSuccess,
+    const std::map<std::string, std::string> &modulePathMap)
+{
+    return ERR_OK;
+}
+
+Security::AccessToken::BundlePolicy BundlePermissionMgr::CreateBundlePolicy(
+    const InnerBundleInfo &innerBundleInfo, const bool isDebugGrant, int32_t dlpType)
+{
+    Security::AccessToken::BundlePolicy policy;
+    return policy;
+}
+
+Security::AccessToken::HapBaseInfo BundlePermissionMgr::CreateHapBaseInfo(
+    const InnerBundleInfo &innerBundleInfo, const int32_t userId)
+{
+    Security::AccessToken::HapBaseInfo hapBaseInfo;
+    return hapBaseInfo;
+}
+
+int32_t BundlePermissionMgr::PrepareHapIdentity(
+    const InnerBundleInfo &innerBundleInfo,
+    int32_t userId, int32_t dlpType, bool isDebugGrant,
+    const std::string &appServiceCapabilities,
+    int32_t &sessionId,
+    Security::AccessToken::Identity &identity)
+{
+    return ERR_OK;
+}
+
+int32_t BundlePermissionMgr::UpdateHapPolicy(
+    int32_t sessionId,
+    int32_t tokenId,
+    const InnerBundleInfo &innerBundleInfo,
+    bool isDebugGrant,
+    const std::string &appServiceCapabilities)
+{
+    return ERR_OK;
 }
 
 bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)

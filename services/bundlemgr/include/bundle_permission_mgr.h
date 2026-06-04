@@ -16,9 +16,12 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_PERMISSION_MGR_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_PERMISSION_MGR_H
 
+#include <map>
+
 #include "accesstoken_kit.h"
 #include "bundle_constants.h"
 #include "default_permission.h"
+#include "hap_token_info.h"
 #include "inner_bundle_info.h"
 #include "permission_define.h"
 
@@ -60,20 +63,29 @@ public:
     static bool RequestPermissionFromUser(
         const std::string &bundleName, const std::string &permissionName, const int32_t userId);
 
-    static int32_t InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+    static int32_t InitHapToken(InnerBundleInfo &innerBundleInfo, const int32_t userId,
         const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-        Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
-        const bool isDebugGrant = false);
+        const std::string &appServiceCapabilities,
+        const bool isDebugGrant, int32_t &sessionId);
 
     static int32_t UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-        const InnerBundleInfo &innerBundleInfo, int32_t userId,
+        InnerBundleInfo &innerBundleInfo, int32_t userId,
         Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
-        bool dataRefresh = false, const bool isDebugGrant = false);
+        bool dataRefresh = false, const bool isDebugGrant = false, int32_t sessionId = 0);
+
+    static int32_t CheckHapPermissionInfo(int32_t sessionId, Security::AccessToken::InstallTypeEnum type,
+        Security::AccessToken::HapInfoCheckResult &checkResult);
+
+    static int32_t FinishHapInstall(
+        int32_t sessionId,
+        bool isSuccess,
+        const std::map<std::string, std::string> &modulePathMap);
 
     static std::string GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult);
 
     static int32_t DeleteAccessTokenId(const Security::AccessToken::AccessTokenID tokenId,
-        bool isTokenReserved = false);
+        const std::string &bundleName,
+        Security::AccessToken::ReservedType type = Security::AccessToken::ReservedType::NONE);
 
     static bool GetRequestPermissionStates(BundleInfo &bundleInfo, uint32_t tokenId, const std::string deviceId);
 
@@ -139,6 +151,26 @@ private:
 
     static Security::AccessToken::HapInfoParams CreateHapInfoParams(const InnerBundleInfo &innerBundleInfo,
         const int32_t userId, const int32_t dlpType);
+
+    static Security::AccessToken::BundlePolicy CreateBundlePolicy(
+        const InnerBundleInfo &innerBundleInfo, const bool isDebugGrant, int32_t dlpType);
+
+    static Security::AccessToken::HapBaseInfo CreateHapBaseInfo(
+        const InnerBundleInfo &innerBundleInfo, const int32_t userId);
+
+    static int32_t PrepareHapIdentity(
+        const InnerBundleInfo &innerBundleInfo,
+        int32_t userId, int32_t dlpType, bool isDebugGrant,
+        const std::string &appServiceCapabilities,
+        int32_t &sessionId,
+        Security::AccessToken::Identity &identity);
+
+    static int32_t UpdateHapPolicy(
+        int32_t sessionId,
+        int32_t tokenId,
+        const InnerBundleInfo &innerBundleInfo,
+        bool isDebugGrant,
+        const std::string &appServiceCapabilities);
 
     static void ConvertPermissionDef(const Security::AccessToken::PermissionDef &permDef,
         PermissionDef &permissionDef);
