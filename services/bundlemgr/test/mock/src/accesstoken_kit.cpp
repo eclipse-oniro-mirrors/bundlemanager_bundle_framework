@@ -15,6 +15,8 @@
 
 #include "accesstoken_kit.h"
 
+#include "interfaces/hap_verify.h"
+
 namespace OHOS {
 namespace Security {
 namespace AccessToken {
@@ -284,9 +286,47 @@ int32_t AccessTokenKit::FinishMigration()
     return 0;
 }
 
+// Wraps VerifyOrParseHapPermission to produce TrustedBundleInfo, mirroring
+// CheckMultipleHapsSignInfo's real HapVerify call path.
+static TrustedBundleInfo BuildTrustedBundleInfoFromHap(const std::string &filePath)
+{
+    Security::Verify::VerifyParams params;
+    params.filePath = filePath;
+    params.type = Security::Verify::VerifyType::All;
+
+    Security::Verify::BootstrapInfo bootstrapInfo;
+    Security::Verify::ProvisionInfo provisionInfo;
+    bool isChanged = false;
+    (void)Security::Verify::VerifyOrParseHapPermission(
+        params, bootstrapInfo, provisionInfo, isChanged);
+
+    TrustedBundleInfo info;
+    info.moduleInfo = bootstrapInfo.moduleRaw;
+    info.sharedFiles = bootstrapInfo.shareFilesRaw;
+
+    // profileJsonRaw from BootstrapInfo is the native JSON that ParseProvision expects
+    info.profileData.provisionRaw = bootstrapInfo.profileJsonRaw;
+    info.profileData.appId = provisionInfo.appId;
+    info.profileData.fingerprint = provisionInfo.fingerprint;
+    info.profileData.organization = provisionInfo.organization;
+    info.profileData.isOpenHarmony = provisionInfo.isOpenHarmony;
+    info.profileData.isEnterpriseResigned = provisionInfo.isEnterpriseResigned;
+    info.profileData.profileBlockLength = provisionInfo.profileBlockLength;
+    if (provisionInfo.profileBlock && provisionInfo.profileBlockLength > 0) {
+        info.profileData.profileBlock.assign(
+            provisionInfo.profileBlock.get(),
+            provisionInfo.profileBlock.get() + provisionInfo.profileBlockLength);
+    }
+    return info;
+}
+
 int32_t AccessTokenKit::CheckHapSignInfo(const BundleHapList& hapList, int32_t& sessionId,
     std::vector<TrustedBundleInfo>& trustedBundleInfo)
 {
+    sessionId = 1;
+    for (const auto &bundlePath : hapList.hapPaths) {
+        trustedBundleInfo.emplace_back(BuildTrustedBundleInfoFromHap(bundlePath));
+    }
     return 0;
 }
 
