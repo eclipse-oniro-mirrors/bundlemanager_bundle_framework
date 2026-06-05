@@ -346,7 +346,8 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
     if (!sessionCommitted_ && sessionId_ != 0) {
         Security::AccessToken::HapInfoCheckResult checkResult;
         Security::AccessToken::InstallTypeEnum installType = isAppExist_ ?
-            Security::AccessToken::TYPE_REPLACE : Security::AccessToken::TYPE_INSTALL;
+            (versionUpgrade_ ? Security::AccessToken::TYPE_REPLACE :
+             Security::AccessToken::TYPE_MERGE) : Security::AccessToken::TYPE_INSTALL;
         int32_t permCheckRet = BundlePermissionMgr::CheckHapPermissionInfo(
             sessionId_, installType, checkResult);
         if (permCheckRet != ERR_OK) {

@@ -481,6 +481,8 @@ bool BundleCloneInstaller::DeleteUninstalledCloneData(const std::string &bundleN
         APP_LOGE("the cloneInfo is not found");
         return false;
     }
+    BundlePermissionMgr::DeleteAccessTokenId(it->second.accessTokenId, bundleName,
+        Security::AccessToken::ReservedType::NONE);
     if (RemoveCloneDataDir(bundleName, userId, appIndex, false) != ERR_OK) {
         APP_LOGW("RemoveCloneDataDir failed");
     }

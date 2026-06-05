@@ -713,7 +713,7 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(
     }
 
     info.bundleName = provisionInfo.bundleInfo.bundleName;
-    info.apl = provisionInfo.bundleInfo.apl;
+    info.apl = provisionInfo.bundleInfo.apl.empty() ? ServiceConstants::APL_NORMAL : provisionInfo.bundleInfo.apl;
     info.distributionType = static_cast<int32_t>(provisionInfo.distributionType);
     info.provisionType = static_cast<int32_t>(provisionInfo.type);
     info.isEnterpriseResigned = provisionInfo.isEnterpriseResigned;
