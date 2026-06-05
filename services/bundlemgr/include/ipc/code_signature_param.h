@@ -30,7 +30,7 @@ struct CodeSignatureParam : public Parcelable {
     bool isInternaltestingBundle = false;
     bool isCompressNativeLibrary = true;
     bool isPlugin = false;
-    bool isDeveloperDistribution = false;
+    bool isLocalHspPlugin = false;
     std::string bundleName;
     std::string modulePath;
     std::string cpuAbi;

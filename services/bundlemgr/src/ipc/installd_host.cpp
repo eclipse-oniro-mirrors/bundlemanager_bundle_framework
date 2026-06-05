@@ -1545,14 +1545,9 @@ bool InstalldHost::HandleCheckExternalSourcePluginSwitch(MessageParcel &data, Me
 
 bool InstalldHost::HandleCheckHspPluginCertValidity(MessageParcel &data, MessageParcel &reply)
 {
-    std::unique_ptr<HspPluginParam> hspPluginParam(data.ReadParcelable<HspPluginParam>());
-    if (hspPluginParam == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "fail to read HspPluginParam from data");
-        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-        return false;
-    }
-
-    ErrCode result = CheckHspPluginCertValidity(*hspPluginParam);
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t sessionId = data.ReadInt32();
+    ErrCode result = CheckHspPluginCertValidity(bundleName, sessionId);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

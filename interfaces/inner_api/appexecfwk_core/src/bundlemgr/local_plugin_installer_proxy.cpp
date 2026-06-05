@@ -207,8 +207,12 @@ ErrCode LocalPluginInstallerProxy::Install(const std::vector<std::string> &plugi
 
     sptr<ILocalPluginStreamInstaller> pluginStreamInstaller = CreateLocalPluginStreamInstaller(statusReceiver);
     if (pluginStreamInstaller == nullptr) {
-        APP_LOGE("local plugin stream install failed due to nullptr stream installer");
-        return ERR_APPEXECFWK_NULL_PTR;
+        if (statusReceiver != nullptr) {
+            APP_LOGE("local plugin stream install failed, errcode pass through onFinished");
+            return ERR_OK;
+        } else {
+            return ERR_APPEXECFWK_NULL_PTR;
+        }
     }
     for (const auto &path : streamPaths) {
         ret = WriteFileToLocalPluginStream(pluginStreamInstaller, path);
@@ -291,11 +295,13 @@ sptr<ILocalPluginStreamInstaller> LocalPluginInstallerProxy::CreateLocalPluginSt
     sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("CreateLocalPluginStreamInstaller create nullptr remote object");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_PARCEL_ERROR, "");
         return nullptr;
     }
     sptr<ILocalPluginStreamInstaller> pluginStreamInstaller = iface_cast<ILocalPluginStreamInstaller>(object);
     if (pluginStreamInstaller == nullptr) {
         APP_LOGE("CreateLocalPluginStreamInstaller failed");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_NULL_PTR, "");
         return nullptr;
     }
     pluginStreamInstaller->SetLocalPluginInstallerId(installerId);

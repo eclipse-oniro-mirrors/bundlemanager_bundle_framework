@@ -71,7 +71,7 @@ public:
 private:
     bool isPluginExist_ = false;
     bool isLocalPluginInstall_ = false;
-    bool isDeveloperDistribution_ = false;
+    bool isDebug_ = false;
     bool isEnterpriseBundle_ = false;
     bool isCompressNativeLibs_ = true;
     bool sessionCommitted_ = false;
@@ -113,7 +113,7 @@ private:
     void PluginRollBack(const std::string &hostBundleName);
     ErrCode RemovePluginDir(const InnerBundleInfo &hostBundleInfo);
     ErrCode CheckSupportPluginPermission(const std::string &hostBundleName);
-    ErrCode CheckPluginDistributionType(bool isDeveloperDistribution) const;
+    ErrCode CheckPluginDistribution(bool isDeveloperDistribution) const;
     ErrCode UninstallPluginInner(const std::string &hostBundleName, const std::string &pluginBundleName,
         const InstallPluginParam &installPluginParam, bool needCheckUserId);
     ErrCode CheckExternalSourcePluginSwitch() const;

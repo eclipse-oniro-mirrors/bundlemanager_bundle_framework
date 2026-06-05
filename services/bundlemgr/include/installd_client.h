@@ -312,7 +312,7 @@ public:
 
     ErrCode CheckExternalSourcePluginSwitch(int32_t &outSwitchStatus);
 
-    ErrCode CheckHspPluginCertValidity(const HspPluginParam &hspPluginParam);
+    ErrCode CheckHspPluginCertValidity(const std::string &bundleName, int32_t sessionId);
 
     ErrCode HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
         std::vector<std::string> &soName, std::vector<std::string> &soHash);
