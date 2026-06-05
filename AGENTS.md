@@ -1,397 +1,85 @@
 # AGENTS.md
 
-This file provides guidance for AI when working in this codebase.
+本文件是给 AI 编码助手使用的仓库工作指南。所有在本仓库中进行的分析、修改、测试和提交说明，都应优先遵循这里的约定。
 
-## Overview
+## 项目定位
 
-This is the **BundleManager Bundle Framework** of OpenHarmony, a core subsystem responsible for application bundle management. It provides capabilities for application installation, update, uninstallation, and information query.
+本仓库属于 OpenHarmony Bundle Manager Bundle Framework，主要负责应用包管理相关能力，包括应用安装、更新、卸载、查询、资源管理、权限校验、分布式管理以及若干扩展能力。
 
-## Quick Start
+工作时请把它视为系统级基础组件：接口稳定性、权限边界、用户隔离、数据一致性和错误码兼容性都很重要。
 
-### Prerequisites
+## 工作原则
 
-This project is part of OpenHarmony and requires:
-- OpenHarmony build environment (HB, GN, Ninja)
-- OpenHarmony SDK
-- Linux build environment (Ubuntu 18.04+ recommended)
+- 修改前先阅读相关目录、调用链和已有测试，优先沿用现有风格。
+- 保持改动范围收敛，不做与任务无关的重构、格式化或命名调整。
+- 不回滚用户已有改动；遇到工作区脏文件时，只处理与当前任务直接相关的文件。
+- 对系统能力、安装卸载流程、权限、数据库、IPC、用户态隔离等逻辑保持谨慎。
+- 新增行为应尽量有测试或至少说明无法测试的原因。
+- 日志、错误码、权限检查和空指针检查应遵循仓库已有模式。
 
-### Build Commands
+## 工程 Skill 位置
+
+本工程的专用 skill 放在仓库根目录的 `skills/` 下。需要使用工程内 skill 时，应优先从该目录读取对应的 `SKILL.md` 及其 `references/` 资料。
+
+## 目录速览
+
+- `interfaces/`：对外或内部接口定义。
+- `services/bundlemgr/`：Bundle Manager 服务主体实现。
+- `services/bundlemgr/include/`：服务层头文件。
+- `services/bundlemgr/src/`：服务层实现代码。
+- `services/bundlemgr/src/installd/`：与安装守护进程相关的客户端和特权操作协作逻辑。
+- `services/bundlemgr/src/rdb/`：持久化数据库相关实现。
+- `services/bundlemgr/src/verify/`：签名、完整性等校验相关逻辑。
+- `services/bundlemgr/test/`：服务层测试。
+- `test/`：单元、模块、系统、性能、模糊等测试资源。
+- `sa_profile/`：系统能力配置。
+- `bundle.json`：组件元信息和依赖声明。
+
+## 构建与测试
+
+本仓库通常依赖完整 OpenHarmony 构建环境。常见命令示例：
 
 ```bash
-# Build all bundle framework targets for a specific product
 ./build.sh --product-name rk3568 --build-target bundle_framework
-
-# Or for other common products
-./build.sh --product-name ohos-sdk --build-target bundle_framework
-./build.sh --product-name rk3568 --build-target bms_target
-
-# Build only the service layer
 ./build.sh --product-name rk3568 --build-target services/bundlemgr:bms_target
-
-# Build with specific feature enabled
-./build.sh --product-name rk3568 --build-target bundle_framework --gn-args bundle_framework_free_install=true
-```
-
-### Common Build Issues
-
-- Ensure `hb` tool is properly installed and in PATH
-- Product name must match available products in OpenHarmony vendor tree
-- Feature flags can be toggled via `--gn-args` parameter
-
-## Architecture
-
-### Directory Structure
-
-```
-bundlemanager_bundle_framework/
-├── interfaces/                      # Interface layer
-│   ├── inner_api/                   # Internal APIs (for other subsystems)
-│   └── kits/                        # Application development interfaces (supports C/C++, JS, Cangjie, ANI)
-├── services/                        # Service implementations
-│   └── bundlemgr/                   # Bundle manager service
-│       ├── include/                 # Header files (organized same as src/)
-│       ├── src/                     # Source code
-│       │   ├── aging/               # Bundle aging management (resource cleanup)
-│       │   ├── aot/                 # AOT (Ahead-Of-Time) compilation management
-│       │   ├── app_control/         # Application control and app jump interception
-│       │   ├── app_provision_info/  # App provisioning profile management
-│       │   ├── app_service_fwk/     # Application service framework installation
-│       │   ├── bms_extension/       # BMS extension client
-│       │   ├── bundle_backup/       # Backup and restore functionality
-│       │   ├── bundle_resource/     # Bundle resource management
-│       │   ├── bundlemgr_ext/       # BundleManager extension
-│       │   ├── clone/               # Application clone support
-│       │   ├── common/              # Common utilities and helper classes
-│       │   ├── data/                # Data processing
-│       │   ├── default_app/         # Default application management
-│       │   ├── distributed_manager/ # Distributed bundle management
-│       │   ├── driver/              # Driver installation support
-│       │   ├── exception/           # Exception handling
-│       │   ├── extend_resource/     # Extended resource management
-│       │   ├── first_install_data_mgr/ # First installation data management
-│       │   ├── free_install/        # Free installation (on-demand) capability
-│       │   ├── idle_condition_mgr/  # Idle condition management
-│       │   ├── installd/            # Installd client (privileged process)
-│       │   ├── ipc/                 # IPC communication
-│       │   ├── navigation/          # Navigation related
-│       │   ├── on_demand_install/   # On-demand installation
-│       │   ├── overlay/             # Overlay installation support
-│       │   ├── plugin/              # Plugin support
-│       │   ├── quick_fix/           # Quick fix (patch) management
-│       │   ├── rdb/                 # Relational database wrapper
-│       │   ├── rpcid_decode/        # RPC ID decoding
-│       │   ├── sandbox_app/         # Sandbox application support
-│       │   ├── shared/              # Shared bundle management
-│       │   ├── uninstall_data_mgr/  # Uninstallation data management
-│       │   ├── user_auth/           # User authentication
-│       │   ├── utd/                 # Unified Type Descriptor
-│       │   └── verify/              # Verification functionality
-│       └── test/                    # Service layer unit tests
-├── test/                            # System/integration level tests
-└── etc/                             # Configuration files
-```
-
-### Key Components
-
-Core components and functional subsystems of the bundle management framework (located in `services/bundlemgr/src/`):
-
-#### Core Service Classes
-
-- **bundle_mgr_service.cpp**: BundleMgrService implementation (SA 401), main system ability service that coordinates all bundle management operations
-- **bundle_data_mgr.cpp**: BundleDataMgr implementation, central data manager for storing and querying bundle/component information
-- **bundle_installer.cpp**: BundleInstaller implementation, handles installation, update, and uninstallation logic
-- **bundle_mgr_host_impl.cpp**: BundleMgrHostImpl implementation, provides IPC host for IBundleMgr interface
-
-#### Functional Module Categories
-
-**Installation and Uninstallation**
-- **base_bundle_installer.cpp**: Base installer implementation
-- **bundle_install_checker.cpp**: Installation checker
-- **bundle_parser.cpp**: Bundle parser
-- **installd/**: Installd client, communicates with InstalldService (SA 511) via IPC, performs privileged file/directory operations
-
-**Data and Resource Management**
-- **data/**: Data processing modules
-- **rdb/**: Relational database wrapper
-- **bundle_resource/**: Bundle resource management
-- **extend_resource/**: Extended resource management
-- **bundle_backup/**: Backup and restore functionality
-
-**Permissions and Security**
-- **verify/**: Verification functionality (code signing, integrity checks, etc.)
-- **bundle_permission_mgr.cpp**: Bundle permission management
-- **user_auth/**: User authentication
-
-**Advanced Features**
-- **free_install/**: Free installation (on-demand) capability
-- **on_demand_install/**: On-demand installation
-- **overlay/**: Overlay installation support
-- **quick_fix/**: Quick fix (patch) management
-- **clone/**: Application clone support
-- **sandbox_app/**: Sandbox application support
-- **shared/**: Shared bundle management
-- **aot/**: AOT (Ahead-Of-Time) compilation management
-
-**Application Control**
-- **app_control/**: Application control and app jump interception
-- **default_app/**: Default application management
-- **app_service_fwk/**: Application service framework installation
-
-**Distributed and Backup**
-- **distributed_manager/**: Distributed bundle management
-- **first_install_data_mgr/**: First installation data management
-- **uninstall_data_mgr/**: Uninstallation data management
-
-**System Functions**
-- **aging/**: Bundle aging management for resource cleanup
-- **app_provision_info/**: App provisioning profile management
-- **bms_extension/**: BMS extension client
-- **bundlemgr_ext/**: BundleManager extension
-- **driver/**: Driver installation support
-- **exception/**: Exception handling
-- **idle_condition_mgr/**: Idle condition management
-- **navigation/**: Navigation related
-- **plugin/**: Plugin support
-- **rpcid_decode/**: RPC ID decoding
-- **utd/**: Unified Type Descriptor
-
-**Communication and Infrastructure**
-- **ipc/**: IPC communication
-- **common/**: Common utilities and helper classes
-
-### Process Architecture
-
-The bundle management framework adopts a **multi-process architecture**, separating operations with different privilege levels into independent processes. Bundle management calls to the installd module require IPC:
-
-#### BundleMgrService (SA 401)
-- **Process**: Foundation process
-- **Function**: Provides core APIs for application bundle management (installation, uninstallation, query, etc.)
-- **Dependent Services**:
-  - Common event service (for system events)
-  - Bundle proxy service
-  - EL5 file encryption key service
-  - InstalldService (SA 511)
-
-#### InstalldService (SA 511)
-- **Process**: Installs process (independent privileged process)
-- **Function**: Executes file system operations that require elevated privileges
-- **Configuration**: See `sa_profile/511.json`
-  - Process name: `installs`
-  - Library file: `libinstalls.z.so`
-  - Start phase: `CoreStartPhase`
-  - On-demand unload: Automatically unloads after 180 seconds of inactivity
-
-## Build System
-
-This project uses **GN (Generate Ninja)** as the build system.
-
-### Key Build Files
-
-- Root build: `BUILD.gn`
-- Service build: `services/bundlemgr/BUILD.gn`
-- Configuration: `appexecfwk.gni`, `services/bundlemgr/appexecfwk_bundlemgr.gni`
-
-### Build Targets
-
-Main build target:
-```bash
-# Build all bundle framework targets
-./build.sh --product-name <product> --build-target bundle_framework
-```
-
-### Build Configuration
-
-Feature switches (defined in `appexecfwk.gni`):
-- `bundle_framework_free_install`: Enable free installation capability
-- `bundle_framework_default_app`: Enable default application management
-- `bundle_framework_quick_fix`: Enable quick fix support
-- `bundle_framework_overlay_install`: Enable overlay installation
-- `bundle_framework_sandbox_app`: Enable sandbox application support
-- `bundle_framework_graphics`: Enable graphics-related bundle management features
-- `bundle_framework_launcher`: Enable launcher service capabilities
-- `bundle_framework_form_dimension_2_3`: Enable form dimension 2.3 support
-- `bundle_framework_form_dimension_3_3`: Enable form dimension 3.3 support
-
-## Development Patterns
-
-### Logging
-
-**Location**: `common/log/` (see `common/log/README.md` for details)
-
-**Usage**:
-```cpp
-// Include header file
-#include "app_log_wrapper.h"
-
-// Define in GN file
-defines = [
-    "APP_LOG_TAG = \"BMS\"",
-    "LOG_DOMAIN = 0xD001120",
-]
-
-// Use logging macros
-APP_LOGD("Debug: %{public}d", 123);                      // Debug
-APP_LOGI("Info: %{public}s", "string");                  // Info
-APP_LOGW("Warning");                                      // Warning
-APP_LOGE("Error: %{private}s", "sensitive information"); // Error
-```
-
-### Data Storage
-
-**Technology**: Uses RDB (Relational Database) for persistent storage
-
-**Key Files**:
-- Interface: `services/bundlemgr/include/bundle_data_storage_interface.h`
-- Implementation: `services/bundlemgr/src/rdb/`
-
-### Error Handling
-
-**Error Code Definitions**: `interfaces/kits/native/inner_api/appexecfwk_errors.h`
-- Categorized by module: general, installation, database, code signing, quick fix, overlay installation, etc.
-
-**Error Checking Macros**: `services/bundlemgr/src/common/common_fun_ani.h`
-- Null pointer checking macros like RETURN_IF_NULL, RETURN_FALSE_IF_NULL, etc.
-
-**Handling Patterns**: Check-and-return, error code mapping (RDB_ERR_MAP, CODE_SIGNATURE_ERR_MAP), exception protection (JSON, dynamic library loading), retry mechanisms
-
-## Testing
-
-### Test Structure
-
-- `test/unittest/`: Unit tests for individual components
-- `test/moduletest/`: Module integration tests
-- `test/systemtest/`: System-level end-to-end tests
-- `test/benchmarktest/`: Performance benchmark tests
-- `test/fuzztest/`: Fuzzing tests
-- `test/sceneProject/`: Test HAP files and test applications
-
-### Test Resources
-
-- `test/resource/bmssystemtestability/`: Test Ability source code
-- `test/resource/bundlemgrservice/`: Bundle manager service test resources
-
-### Running Tests
-
-```bash
-# Build all test targets
-./build.sh --product-name rk3568 --build-target test_target
-
-# Run specific test types
-./build.sh --product-name rk3568 --build-target test/unittest
-./build.sh --product-name rk3568 --build-target test/moduletest
-./build.sh --product-name rk3568 --build-target test/systemtest
-./build.sh --product-name rk3568 --build-target test/benchmarktest
-./build.sh --product-name rk3568 --build-target test/fuzztest
-
-# Run individual test component
 ./build.sh --product-name rk3568 --build-target services/bundlemgr/test:unittest
 ```
 
-### Test Organization
+如果当前环境缺少 OpenHarmony 构建链、产品配置或依赖仓库，请不要伪造构建结果；在最终说明中明确写出未能运行的命令和原因。
 
-Tests are organized by the component they test:
-- **Unit tests**: Test individual classes and functions in isolation
-- **Module tests**: Test integration between related components
-- **System tests**: End-to-end testing of the full bundle management workflow
-- **Benchmark tests**: Performance testing for critical paths
-- **Fuzz tests**: Security and robustness testing with malformed inputs
+## 代码风格
 
-## Important Concepts
+- C++ 代码遵循仓库既有命名、文件组织、错误处理和日志写法。
+- 优先使用已有工具类、宏、常量和错误码映射。
+- 日志避免输出敏感信息，按现有规则区分 `public` 与 `private`。
+- 对外接口变更要检查调用方、IDL、序列化、权限和兼容性影响。
+- 多用户相关逻辑必须明确处理 `userId`，不要默认只考虑当前用户。
+- 涉及文件系统特权操作时，应通过安装服务或已有封装处理，不要在 BundleMgrService 中直接绕过权限边界。
 
-- **Bundle**: Application package (HAP file), containing code, resources, and configuration
-- **HAP**: Harmony Ability Package - OpenHarmony application package format
-- **Module**: HAP file containing one or more Abilities
-- **Ability**: Application component representing functionality
-- **Extension**: Special Ability type (data, cards, etc.)
-- **InnerBundleInfo**: Internal representation of bundle information, containing rich metadata
-- **ApplicationInfo**: Application-level information (package name, version, permissions, etc.)
-- **AbilityInfo**: Component-level information (type, launch mode, permissions, etc.)
+## 常见关注点
 
-## Key Dependencies
+- 安装、更新、卸载流程中的状态回滚和异常路径。
+- RDB 事务、并发安装、数据迁移和缓存一致性。
+- Bundle 信息、Ability 信息、Extension 信息的查询条件和过滤规则。
+- 签名校验、权限授予、配置解析和错误码映射。
+- SA 401 与 SA 511 的 IPC 调用、死亡回调和超时处理。
+- Quick Fix、Overlay、Sandbox、Clone、Shared Bundle 等扩展能力的特殊约束。
 
-This component depends on many OpenHarmony subsystems (see `bundle.json` for complete list):
-- `ability_runtime`: Ability framework
-- `samgr`: System ability manager
-- `ipc`: IPC framework
-- `storage_service`: File storage
-- `access_token`: Permission management
-- `resource_manager`: Resource management
-- `appverify`: Application verification
-- `hitrace`, `hisysevent`, `hilog`: DFX capabilities
+## 提交前检查
 
-## Debugging
+完成修改后，至少进行以下检查：
 
-### Log Locations
+- `git diff` 确认只包含预期改动。
+- 能运行的最小相关测试已经运行。
+- 无法运行测试时，说明环境限制。
+- 新增或修改的错误路径有清晰返回值和日志。
+- 修改接口、配置或构建文件时，检查相关依赖和目标。
 
-Bundle manager logs are routed through HiLog (OpenHarmony's logging system):
+## 回复约定
 
-- **Service logs**: BundleMgrService (SA 401) outputs to system log with domain `0xD001120`
-- **Installd logs**: InstalldService (SA 511) outputs with its own log domain
-- **Log viewing**: Use `hdc shell hilog -T BMS` to filter bundle manager logs
+向用户汇报时请简洁说明：
 
-### Dynamic Log Control
-
-```cpp
-// In code, dynamically adjust log level
-AppLogWrapper::SetLogLevel(AppLogLevel::DEBUG);  // Show all logs
-AppLogWrapper::SetLogLevel(AppLogLevel::ERROR);  // Show only errors
-```
-
-### HiSysEvent Events
-
-Bundle manager reports events via HiSysEvent (see `hisysevent.yaml` for schema):
-
-Common event domains:
-- `BMS_INSTALL`: Installation/uninstallation events
-- `BMS_CODE_SIGNATURE`: Code signing verification events
-- `BMS_QUICK_FIX`: Quick fix patch events
-- `BMS_OVERLAY`: Overlay installation events
-
-### Viewing Events
-
-```bash
-# View bundle manager events
-hdc shell hidumper -s 1201 -a "-e BMS"
-
-# Query specific events
-hdc shell hisysevent -q -d BMS_INSTALL -t 100
-```
-
-### Common Debugging Scenarios
-
-**Installation failures:**
-1. Check InstalldService status: `hdc shell hidumper -s 511`
-2. Verify signature verification in logs
-3. Check disk space and permissions
-
-**Permission issues:**
-1. Verify access token grants in logs
-2. Check `bundle_permission_mgr.cpp` flow
-3. Review provisioning profile parsing
-
-**IPC communication issues:**
-1. Verify both SA 401 and SA 511 are running: `hdc shell hidumper -s samgr`
-2. Check for death recipient callbacks in logs
-3. Monitor binder transaction logs
-
-**Database issues:**
-1. Check RDB storage initialization in `bundle_data_storage_rdb.cpp`
-2. Verify database schema in `services/bundlemgr/src/rdb/`
-3. Look for transaction failures in logs
-
-### Gotchas
-
-- **Privilege separation**: File operations must go through InstalldService (SA 511), not directly in BundleMgrService
-- **Multi-user support**: Bundle operations are user-scoped; always check userId parameter
-- **IPC timeout**: Bundle operations can take time; adjust timeout if installing large HAPs
-- **RDB transaction conflicts**: Database operations may fail during concurrent installations
-- **Signature verification**: All HAPs must be signed; development signing differs from production
-- **Overlay installation**: Overlay bundles have special restrictions on target bundles
-
-## Configuration Files
-
-- `bundle.json`: Component metadata and dependencies
-- `sa_profile/401.json`: System ability configuration for BundleMgrService
-- `sa_profile/511.json`: System ability configuration for installation service
-- `services/bundlemgr/installs.cfg`: Installation configuration
-- `hisysevent.yaml`: HiSysEvent event reporting configuration
+- 改了哪些文件。
+- 行为上解决了什么问题。
+- 运行了哪些验证。
+- 哪些验证因环境限制未运行。
