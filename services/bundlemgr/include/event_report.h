@@ -221,6 +221,7 @@ struct EventInfo {
     int32_t errorCode = 0;
     int32_t rebuildType = 0;
     int32_t npapiPluginStatus = -1;
+    int32_t skillCount = 0;
     int64_t lastReportEventTime = 0;
     std::string bundleName;
     std::string moduleName;
