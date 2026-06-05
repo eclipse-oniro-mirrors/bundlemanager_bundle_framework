@@ -15,6 +15,9 @@
 
 #include "accesstoken_kit.h"
 
+#include <atomic>
+#include <map>
+
 #include "interfaces/hap_verify.h"
 
 namespace OHOS {
@@ -27,6 +30,9 @@ static constexpr int GRANT_STATUS = 100;
 #endif
 unsigned int g_accessTokenID = 0;
 int32_t g_errCode = 0;
+// Cache for sessionId and trustedBundleInfo
+static std::map<int32_t, std::vector<TrustedBundleInfo>> g_signInfoCache;
+static std::atomic<int32_t> g_nextSessionId{1};
 
 void SetAccessTokenIDForTest(unsigned int value)
 {
@@ -215,6 +221,11 @@ int AccessTokenKit::GetHapTokenInfo(AccessTokenID tokenID, HapTokenInfo& hapToke
 int32_t AccessTokenKit::GetCacheSignInfoBySessionId(
     int32_t sessionId, std::vector<TrustedBundleInfo>& bundleInfo)
 {
+    auto it = g_signInfoCache.find(sessionId);
+    if (it != g_signInfoCache.end()) {
+        bundleInfo = it->second;
+        return 0;
+    }
     return 0;
 }
 
@@ -323,10 +334,11 @@ static TrustedBundleInfo BuildTrustedBundleInfoFromHap(const std::string &filePa
 int32_t AccessTokenKit::CheckHapSignInfo(const BundleHapList& hapList, int32_t& sessionId,
     std::vector<TrustedBundleInfo>& trustedBundleInfo)
 {
-    sessionId = 1;
+    sessionId = g_nextSessionId++;
     for (const auto &bundlePath : hapList.hapPaths) {
         trustedBundleInfo.emplace_back(BuildTrustedBundleInfoFromHap(bundlePath));
     }
+    g_signInfoCache[sessionId] = trustedBundleInfo;
     return 0;
 }
 
