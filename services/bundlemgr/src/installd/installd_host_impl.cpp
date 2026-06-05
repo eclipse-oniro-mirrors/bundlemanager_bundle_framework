@@ -2954,14 +2954,6 @@ ErrCode InstalldHostImpl::RemoveExtensionDir(int32_t userId, const std::vector<s
                 extensionBundleDir.c_str());
             return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
         }
-        std::string fullPath = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR +
-            ServiceConstants::BUNDLE_EL[0] + ServiceConstants::PATH_SEPARATOR +
-            std::to_string(userId) + ServiceConstants::BASE + extensionBundleDir;
-        if (!InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::REMOVE_EXTENSION_DIR, fullPath)) {
-            LOG_E(BMS_TAG_INSTALLD, "RemoveExtensionDir failed for invalid path prefix: %{public}s",
-                extensionBundleDir.c_str());
-            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-        }
         auto ret = RemoveExtensionDir(userId, extensionBundleDir);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "remove dir failed: %{public}s", extensionBundleDir.c_str());
