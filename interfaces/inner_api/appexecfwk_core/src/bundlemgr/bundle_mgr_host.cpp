@@ -745,6 +745,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES_FOR_SELF):
             errCode = HandleCleanBundleCacheFilesForSelf(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::AUTO_CLEAN_PARTIAL_CACHE):
+            errCode = HandleCleanBundlePartialCacheAutomatic(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_DEBUGGABLE_APPLICATION):
             errCode = HandleIsDebuggableApplication(data, reply);
             break;
@@ -2075,6 +2078,34 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFilesForSelf(MessageParcel &data, M
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCleanBundlePartialCacheAutomatic(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    uint64_t cacheSize = data.ReadUint64();
+    uint64_t beforeCleanedSize = 0;
+    uint64_t afterCleanedSize = 0;
+    auto ret = CleanBundlePartialCacheAutomatic(
+        bundleName, userId, appIndex, cacheSize, beforeCleanedSize, afterCleanedSize);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteUint64(beforeCleanedSize)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        if (!reply.WriteUint64(afterCleanedSize)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }

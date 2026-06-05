@@ -880,6 +880,22 @@ public:
     }
 
     /**
+     * @brief Clears partial cache data of a specified application.
+     * @param bundleName Indicates the bundle name of the application whose cache data is to be cleared.
+     * @param userId Indicates the user id.
+     * @param appIndex Indicates the app index.
+     * @param cacheSize Indicates the size of the cache data is to be reserved.
+     * @param beforeCleanedSize Indicates the size of the cache data before clearing.
+     * @param afterCleanedSize Indicates the size of the cache data after clearing.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode CleanBundlePartialCacheAutomatic(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, const uint64_t cacheSize, uint64_t &beforeCleanedSize, uint64_t &afterCleanedSize)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    /**
      * @brief Clears application running data of a specified application.
      * @param bundleName Indicates the bundle name of the application whose data is to be cleared.
      * @param userId Indicates the user id.

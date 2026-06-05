@@ -7682,4 +7682,24 @@ HWTEST_F(BmsBundleDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0500, Funct
     EXPECT_EQ(false, testRet);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
 }
+
+/**
+ * @tc.number: HandleCleanBundlePartialCacheAutomatic_0100
+ * @tc.name: HandleCleanBundlePartialCacheAutomatic
+ * @tc.desc: test HandleCleanBundlePartialCacheAutomatic(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, HandleCleanBundlePartialCacheAutomatic_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(BUNDLE_NAME_TEST);
+    data.WriteInt32(USERID);
+    data.WriteInt32(DEFAULT_APP_INDEX);
+    uint64_t cacheSize = 0;
+    data.WriteUint64(cacheSize);
+    auto ret = localBundleMgrHost->HandleCleanBundlePartialCacheAutomatic(data, reply);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

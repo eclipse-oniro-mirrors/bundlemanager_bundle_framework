@@ -261,6 +261,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_ALTERNATE_ICONS = 235,
     QUERY_EXTENSION_ABILITY_INFO_BY_URI_OPTIMAL = 236,
     GET_LOCAL_PLUGIN_INSTALLER = 237,
+    AUTO_CLEAN_PARTIAL_CACHE = 238,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

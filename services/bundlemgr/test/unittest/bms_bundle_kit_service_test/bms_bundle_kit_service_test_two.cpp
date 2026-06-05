@@ -12043,4 +12043,50 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfoByUriOptimalImpl_0300
     EXPECT_FALSE(ret);
     setuid(0);
 }
+
+/**
+ * @tc.number: IsAppRunning_0100
+ * @tc.name: IsAppRunning_0100
+ * @tc.desc: test IsAppRunning via BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsAppRunning_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto ret = bundleMgrHostImpl_->IsAppRunning(BUNDLE_NAME, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_GET_SYSTEM_ABILITY_FAILED);
+}
+
+/**
+ * @tc.number: CleanBundlePartialCacheAutomatic_0100
+ * @tc.name: CleanBundlePartialCacheAutomatic_0100
+ * @tc.desc: test CleanBundlePartialCacheAutomatic via BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundlePartialCacheAutomatic_0100, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(false);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    uint64_t cacheSize = 0;
+    uint64_t beforeCleanedSize = 0;
+    uint64_t afterCleanedSize = 0;
+    auto ret = bundleMgrHostImpl_->CleanBundlePartialCacheAutomatic(
+        BUNDLE_NAME, DEFAULT_USERID, APP_INDEX, cacheSize, beforeCleanedSize, afterCleanedSize);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CleanBundlePartialCacheAutomatic_0200
+ * @tc.name: CleanBundlePartialCacheAutomatic_0200
+ * @tc.desc: test CleanBundlePartialCacheAutomatic via BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundlePartialCacheAutomatic_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    uint64_t cacheSize = 0;
+    uint64_t beforeCleanedSize = 0;
+    uint64_t afterCleanedSize = 0;
+    auto ret = bundleMgrHostImpl_->CleanBundlePartialCacheAutomatic(
+        BUNDLE_NAME, DEFAULT_USERID, APP_INDEX, cacheSize, beforeCleanedSize, afterCleanedSize);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_GET_SYSTEM_ABILITY_FAILED);
+}
 }

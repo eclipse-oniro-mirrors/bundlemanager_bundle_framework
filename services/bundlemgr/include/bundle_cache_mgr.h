@@ -56,6 +56,47 @@ public:
     static ErrCode CleanBundleCache(const std::vector<std::tuple<std::string,
         std::vector<std::string>, std::vector<int32_t>>> &validBundles, int32_t userId);
     static ErrCode CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback);
+    static bool TryMarkCleaning(const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+    {
+        std::unique_lock<std::shared_mutex> lock(cleaningMutex_);
+
+        auto& appMap = cleaningMap_[userId];
+        auto& bundleMap = appMap[appIndex];
+        auto& cleaningFlag = bundleMap[bundleName];
+
+        if (cleaningFlag.load() || isCleaningAllCache_.load()) {
+            return false;
+        }
+
+        cleaningFlag.store(true);
+        return true;
+    }
+
+    static void TryMarkCleaning()
+    {
+        isCleaningAllCache_.store(true);
+    }
+
+    static void MarkCleaningDone(const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+    {
+        std::unique_lock<std::shared_mutex> lock(cleaningMutex_);
+
+        auto& appMap = cleaningMap_[userId];
+        auto& bundleMap = appMap[appIndex];
+        auto& cleaningFlag = bundleMap[bundleName];
+
+        cleaningFlag.store(false);
+    }
+
+    static void MarkCleaningDone()
+    {
+        isCleaningAllCache_.store(false);
+    }
+
+private:
+    inline static std::atomic<bool> isCleaningAllCache_ = false;
+    inline static std::shared_mutex cleaningMutex_;
+    inline static std::map<int32_t, std::map<int32_t, std::map<std::string, std::atomic<bool>>>> cleaningMap_;
 };
 } // AppExecFwk
 } // OHOS

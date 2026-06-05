@@ -15,6 +15,7 @@
 
 #include <cstdio>
 #include <cinttypes>
+#include <fcntl.h>
 #include "file_ex.h"
 #include <gtest/gtest.h>
 #include <sys/stat.h>
@@ -2762,5 +2763,55 @@ HWTEST_F(BmsInstallDaemonTest, IsExistExtensionDir_PathTraversal_0100, Function 
     bool isExist = false;
     ErrCode ret = hostImpl.IsExistExtensionDir(userId, extensionBundleDir, isExist);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeleteOldCacheFiles_Normal_0100
+ * @tc.name: test DeleteOldCacheFiles cleanedSize > cacheSize
+ * @tc.desc: 1. test DeleteOldCacheFiles with cleanedSize > cacheSize
+*/
+HWTEST_F(BmsInstallDaemonTest, DeleteOldCacheFiles_Normal_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    auto ret = mkdir("./temp", 0777);
+    ASSERT_EQ(ret, 0);
+    ret = mkdir("./temp/test", 0777);
+    ASSERT_EQ(ret, 0);
+    int32_t fd = creat("./temp/filename.txt", 0777);
+    ASSERT_NE(fd, -1);
+    std::vector<std::string> paths = {"./temp"};
+    uint64_t cacheSize = 0;
+    uint64_t cleanedSize = 999;
+    ret = hostImpl.DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
+    EXPECT_EQ(ret, ERR_OK);
+    std::error_code ec;
+    EXPECT_FALSE(std::filesystem::is_empty("./temp", ec));
+    std::filesystem::remove_all("./temp", ec);
+}
+
+/**
+ * @tc.number: DeleteOldCacheFiles_Normal_0200
+ * @tc.name: test DeleteOldCacheFiles normal
+ * @tc.desc: 1. test DeleteOldCacheFiles normal
+*/
+HWTEST_F(BmsInstallDaemonTest, DeleteOldCacheFiles_Normal_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    auto ret = mkdir("./temp", 0777);
+    ASSERT_EQ(ret, 0);
+    ret = mkdir("./temp/test", 0777);
+    ASSERT_EQ(ret, 0);
+    ret = mkdir("./temp/test/test", 0777);
+    ASSERT_EQ(ret, 0);
+    int32_t fd = creat("./temp/test/filename.txt", 0777);
+    ASSERT_NE(fd, -1);
+    std::vector<std::string> paths = {"/data/test/temp"};
+    uint64_t cacheSize = 999;
+    uint64_t cleanedSize = 0;
+    ret = hostImpl.DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
+    EXPECT_EQ(ret, ERR_OK);
+    std::error_code ec;
+    EXPECT_TRUE(std::filesystem::is_empty("./temp", ec));
+    std::filesystem::remove_all("./temp", ec);
 }
 } // OHOS

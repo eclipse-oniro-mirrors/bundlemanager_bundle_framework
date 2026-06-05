@@ -357,6 +357,15 @@ public:
     ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId, const int32_t timeout, std::string &largestItems);
 
+    /**
+     * @brief Delete older cache files until the desired cache size is achieved.
+     * @param paths Indicates the paths of cache files to be deleted.
+     * @param cacheSize Indicates the size of cache files that need to be deleted.
+     * @param cleanedSize Output parameter indicating the size of deleted cache files.
+     * @return Returns ERR_OK if delete old cache files successfully; returns error code otherwise.
+     */
+    ErrCode DeleteOldCacheFiles(const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

@@ -2093,6 +2093,52 @@ ErrCode BundleMgrProxy::CleanBundleCacheFilesForSelf(const sptr<ICleanCacheCallb
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::CleanBundlePartialCacheAutomatic(const std::string &bundleName, const int32_t userId,
+    const int32_t appIndex, const uint64_t cacheSize, uint64_t &beforeCleanedSize, uint64_t &afterCleanedSize)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to CleanBundlePartialCacheAutomatic of %{public}s, userId:%{public}d, appIndex:%{public}d",
+        bundleName.c_str(), userId, appIndex);
+    if (bundleName.empty()) {
+        APP_LOGE("fail to CleanBundlePartialCacheAutomatic due to params empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("fail to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to CleanBundlePartialCacheAutomatic due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to CleanBundlePartialCacheAutomatic due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to CleanBundlePartialCacheAutomatic due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint64(cacheSize)) {
+        APP_LOGE_NOFUNC("fail to write cache size fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::AUTO_CLEAN_PARTIAL_CACHE, data, reply)) {
+        APP_LOGE("fail to CleanBundlePartialCacheAutomatic from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        beforeCleanedSize = reply.ReadUint64();
+        afterCleanedSize = reply.ReadUint64();
+    }
+    return ret;
+}
+
 bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName,
     const int userId, const int appIndex, const int callerUid)
 {
