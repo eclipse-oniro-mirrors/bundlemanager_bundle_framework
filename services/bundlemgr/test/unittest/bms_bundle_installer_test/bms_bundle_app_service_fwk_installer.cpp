@@ -2143,4 +2143,80 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeleteDataGroupDirs_0001, Function
     userId = 100;
     EXPECT_NO_THROW(InstalldClient::GetInstance()->DeleteDataGroupDirs(uuidList, userId));
 }
+
+/**
+ * @tc.number: CheckNeedInstall_0700
+ * @tc.name: test CheckNeedInstall
+ * @tc.desc: 1.Verify isAppExist_ is set to false when app does not exist (new install)
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0700, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo newInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME_WRONG;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    infos[VERSION_ONE_LIBRARY_ONE_PATH] = newInfo;
+
+    appServiceFwkInstaller.bundleName_ = BUNDLE_NAME_WRONG;
+    appServiceFwkInstaller.versionCode_ = VERSION;
+    InnerBundleInfo oldInfo;
+    bool isDowngrade = false;
+    bool result = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo, isDowngrade);
+    EXPECT_TRUE(result);
+    EXPECT_FALSE(appServiceFwkInstaller.isAppExist_);
+}
+
+/**
+ * @tc.number: CheckNeedInstall_0800
+ * @tc.name: test CheckNeedInstall
+ * @tc.desc: 1.Verify isAppExist_ is set to true when app exists (update scenario)
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0800, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo newInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    newInfo.baseBundleInfo_->versionCode = VERSION_HIGH;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    AddBundleInfo(BUNDLE_NAME, newInfo);
+
+    appServiceFwkInstaller.bundleName_ = BUNDLE_NAME;
+    appServiceFwkInstaller.versionCode_ = VERSION_HIGH;
+    infos[VERSION_ONE_LIBRARY_ONE_PATH] = newInfo;
+
+    InnerBundleInfo oldInfo;
+    bool isDowngrade = false;
+    bool result = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo, isDowngrade);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(appServiceFwkInstaller.isAppExist_);
+    EXPECT_TRUE(appServiceFwkInstaller.moduleUpdate_);
+
+    DeleteBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ResetProperties_0010
+ * @tc.name: test ResetProperties
+ * @tc.desc: 1.Verify isAppExist_ is reset to false in ResetProperties
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ResetProperties_0010, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    appServiceFwkInstaller.isAppExist_ = true;
+    appServiceFwkInstaller.versionUpgrade_ = true;
+    appServiceFwkInstaller.moduleUpdate_ = true;
+
+    appServiceFwkInstaller.ResetProperties();
+    EXPECT_FALSE(appServiceFwkInstaller.isAppExist_);
+    EXPECT_FALSE(appServiceFwkInstaller.versionUpgrade_);
+    EXPECT_FALSE(appServiceFwkInstaller.moduleUpdate_);
+}
 }

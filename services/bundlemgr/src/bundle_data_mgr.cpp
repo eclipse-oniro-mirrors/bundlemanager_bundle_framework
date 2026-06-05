@@ -4455,11 +4455,21 @@ ErrCode BundleDataMgr::GetBundleNameAndIndexForUid(const int32_t uid, std::strin
     return ERR_OK;
 }
 
+bool BundleDataMgr::IsValidAppUid(const int32_t uid) const
+{
+    int32_t userId = GetUserIdByUid(uid);
+    int32_t bundleId = uid - userId * Constants::BASE_USER_RANGE;
+    if (bundleId >= Constants::BASE_APP_UID && bundleId <= Constants::MAX_APP_UID) {
+        return true;
+    }
+    return false;
+}
+
 ErrCode BundleDataMgr::GetBundleNameAndIndex(const int32_t uid, std::string &bundleName,
     int32_t &appIndex) const
 {
-    if (uid < Constants::BASE_APP_UID) {
-        APP_LOGD("the uid(%{public}d) is not an application", uid);
+    if (!IsValidAppUid(uid)) {
+        APP_LOGD("the uid(%{public}d) is not a valid app uid", uid);
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
 
@@ -4500,8 +4510,8 @@ ErrCode BundleDataMgr::GetInnerBundleInfoNoLock(const std::string bundleName, co
 ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerBundleInfo& innerBundleInfo,
     int32_t &appIndex) const
 {
-    if (uid < Constants::BASE_APP_UID) {
-        APP_LOGD("the uid(%{public}d) is not an application", uid);
+    if (!IsValidAppUid(uid)) {
+        APP_LOGD("the uid(%{public}d) is not a valid app uid", uid);
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
 

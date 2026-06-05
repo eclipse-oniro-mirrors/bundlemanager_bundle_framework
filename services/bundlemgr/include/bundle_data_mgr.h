@@ -1374,6 +1374,7 @@ private:
      * @return Returns true if install state is UPDATING_START or UNINSTALL_START; returns false otherwise.
      */
     bool IsDisableState(const InstallState state) const;
+    bool IsValidAppUid(const int32_t uid) const;
     /**
      * @brief Delete bundle info if InstallState is not INSTALL_FAIL.
      * @param bundleName Indicates the bundle Names.

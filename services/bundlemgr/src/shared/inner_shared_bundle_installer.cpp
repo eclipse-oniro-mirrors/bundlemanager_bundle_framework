@@ -16,6 +16,7 @@
 #include "inner_shared_bundle_installer.h"
 
 #include <fcntl.h>
+#include <map>
 
 #include "aot/aot_handler.h"
 #include "app_provision_info_manager.h"
@@ -258,7 +259,7 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
         newBundleInfo_.GetBaseBundleInfo().versionCode, AppPatchType::SHARED_BUNDLES, installParam.isPatch);
     // check mark install finish
     if (!sessionCommitted_ && sessionId_ != 0) {
-        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, true, {});
+        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
         if (finishRet != ERR_OK) {
             APP_LOGE("FinishHapInstall failed, errCode:%{public}d", finishRet);
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;

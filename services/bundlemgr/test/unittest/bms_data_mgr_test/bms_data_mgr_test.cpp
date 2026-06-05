@@ -12556,4 +12556,52 @@ HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0008, Function | 
     bool result = bundleDataMgr.QueryExtensionAbilityInfoByUriOptimal(uri, userId, extensionAbilityInfo);
     EXPECT_EQ(result, false);
 }
+
+/**
+ * @tc.number: IsValidAppUid_0100
+ * @tc.name: test IsValidAppUid
+ * @tc.desc: 1.Valid uid with bundleId in range [BASE_APP_UID, MAX_APP_UID]
+ */
+HWTEST_F(BmsDataMgrTest, IsValidAppUid_0100, Function | SmallTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t uid = USERID * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
+    EXPECT_TRUE(bundleDataMgr.IsValidAppUid(uid));
+}
+
+/**
+ * @tc.number: IsValidAppUid_0200
+ * @tc.name: test IsValidAppUid
+ * @tc.desc: 1.Invalid uid with bundleId below BASE_APP_UID
+ */
+HWTEST_F(BmsDataMgrTest, IsValidAppUid_0200, Function | SmallTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t uid = USERID * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID - 1;
+    EXPECT_FALSE(bundleDataMgr.IsValidAppUid(uid));
+}
+
+/**
+ * @tc.number: IsValidAppUid_0300
+ * @tc.name: test IsValidAppUid
+ * @tc.desc: 1.Invalid uid with bundleId above MAX_APP_UID
+ */
+HWTEST_F(BmsDataMgrTest, IsValidAppUid_0300, Function | SmallTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t uid = USERID * Constants::BASE_USER_RANGE + Constants::MAX_APP_UID + 1;
+    EXPECT_FALSE(bundleDataMgr.IsValidAppUid(uid));
+}
+
+/**
+ * @tc.number: IsValidAppUid_0400
+ * @tc.name: test IsValidAppUid
+ * @tc.desc: 1.Valid uid with bundleId equal to MAX_APP_UID (boundary)
+ */
+HWTEST_F(BmsDataMgrTest, IsValidAppUid_0400, Function | SmallTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t uid = USERID * Constants::BASE_USER_RANGE + Constants::MAX_APP_UID;
+    EXPECT_TRUE(bundleDataMgr.IsValidAppUid(uid));
+}
 } // OHOS

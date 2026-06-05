@@ -15,6 +15,8 @@
 
 #include "independent_skills_installer.h"
 
+#include <map>
+
 #include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
@@ -189,7 +191,18 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
     PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, hspPaths,
         newInfos.begin()->second.GetVersionCode(), AppPatchType::SERVICE_FWK, installParam.isPatch);
     if (!sessionCommitted_ && sessionId_ != 0) {
-        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, true, {});
+        std::map<std::string, std::string> modulePathMap;
+        for (const auto &[hapPath, info] : newInfos) {
+            std::string modulePackage = info.GetCurrentModulePackage();
+            if (modulePackage.empty()) {
+                continue;
+            }
+            std::string finalPath = info.GetModuleHapPath(modulePackage);
+            if (!finalPath.empty()) {
+                modulePathMap[hapPath] = finalPath;
+            }
+        }
+        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, true, modulePathMap);
         if (finishRet != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "FinishHapInstall failed, errCode:%{public}d", finishRet);
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;

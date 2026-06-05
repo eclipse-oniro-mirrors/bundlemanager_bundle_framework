@@ -111,6 +111,7 @@ private:
 
     bool versionUpgrade_ = false;
     bool moduleUpdate_ = false;
+    bool isAppExist_ = false;
     bool isEnterpriseBundle_ = false;
     bool isCompressNativeLibs_ = true;
     bool sessionCommitted_ = false;

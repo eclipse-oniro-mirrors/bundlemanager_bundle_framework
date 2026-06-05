@@ -15,6 +15,8 @@
 
 #include "app_service_fwk_installer.h"
 
+#include <map>
+
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
@@ -214,6 +216,7 @@ void AppServiceFwkInstaller::ResetProperties()
     versionCode_ = 0;
     sessionId_ = 0;
     sessionCommitted_ = false;
+    isAppExist_ = false;
     newInnerBundleInfo_ = InnerBundleInfo();
     isEnterpriseBundle_ = false;
     appIdentifier_ = "";
@@ -341,7 +344,27 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
     PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, hspPaths,
         newInfos.begin()->second.GetVersionCode(), AppPatchType::SERVICE_FWK, installParam.isPatch);
     if (!sessionCommitted_ && sessionId_ != 0) {
-        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, true, {});
+        Security::AccessToken::HapInfoCheckResult checkResult;
+        Security::AccessToken::InstallTypeEnum installType = isAppExist_ ?
+            Security::AccessToken::TYPE_REPLACE : Security::AccessToken::TYPE_INSTALL;
+        int32_t permCheckRet = BundlePermissionMgr::CheckHapPermissionInfo(
+            sessionId_, installType, checkResult);
+        if (permCheckRet != ERR_OK) {
+            APP_LOGE("CheckHapPermissionInfo failed, errCode:%{public}d", permCheckRet);
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
+        std::map<std::string, std::string> modulePathMap;
+        for (const auto &[hapPath, info] : newInfos) {
+            std::string modulePackage = info.GetCurrentModulePackage();
+            if (modulePackage.empty()) {
+                continue;
+            }
+            std::string finalPath = info.GetModuleHapPath(modulePackage);
+            if (!finalPath.empty()) {
+                modulePathMap[hapPath] = finalPath;
+            }
+        }
+        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, true, modulePathMap);
         if (finishRet != ERR_OK) {
             APP_LOGE("FinishHapInstall failed, errCode:%{public}d", finishRet);
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -1040,8 +1063,10 @@ bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::stri
     }
     if (!(dataMgr_->FetchInnerBundleInfo(bundleName_, oldInfo))) {
         APP_LOGD("bundleName %{public}s not existed local", bundleName_.c_str());
+        isAppExist_ = false;
         return true;
     }
+    isAppExist_ = true;
     APP_LOGI_NOFUNC("%{public}s old version:%{public}d, new version:%{public}d",
         bundleName_.c_str(), oldInfo.GetVersionCode(), versionCode_);
     if (oldInfo.GetVersionCode() == versionCode_) {

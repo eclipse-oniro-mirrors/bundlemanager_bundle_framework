@@ -3307,4 +3307,85 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_RollBack_
     bool ret = installer_->RollBack(newInfos, ERR_APPEXECFWK_INSTALL_FAILED_NO_PROFILE_BLOCK_FAIL);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: IndependentSkillsInstaller_ResetProperties_0002
+ * Function: ResetProperties
+ * @tc.name: test ResetProperties resets sessionId_ and sessionCommitted_
+ * @tc.desc: 1. system running normally
+ *           2. test ResetProperties resets session-related fields used for FinishHapInstall
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_ResetProperties_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer_ = std::make_shared<IndependentSkillsInstaller>();
+    installer_->dataMgr_ = dataMgr_;
+
+    installer_->sessionId_ = 12345;
+    installer_->sessionCommitted_ = true;
+    installer_->uninstallModuleVec_.emplace_back(MODULE_NAME);
+    installer_->deleteBundlePath_.emplace_back(TEST_HSP_PATH);
+    installer_->toDeleteTempHspPath_.emplace_back(TEST_HSP_PATH2);
+
+    installer_->ResetProperties();
+
+    EXPECT_EQ(installer_->sessionId_, 0);
+    EXPECT_EQ(installer_->sessionCommitted_, false);
+    EXPECT_TRUE(installer_->uninstallModuleVec_.empty());
+    EXPECT_TRUE(installer_->deleteBundlePath_.empty());
+    EXPECT_TRUE(installer_->toDeleteTempHspPath_.empty());
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_Constructor_0002
+ * Function: IndependentSkillsInstaller
+ * @tc.name: test IndependentSkillsInstaller member variable initialization
+ * @tc.desc: 1. system running normally
+ *           2. test sessionId_ and sessionCommitted_ are initialized correctly
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_Constructor_0002,
+    Function | SmallTest | Level0)
+{
+    auto installer = std::make_shared<IndependentSkillsInstaller>();
+    EXPECT_NE(installer, nullptr);
+    EXPECT_EQ(installer->sessionId_, 0);
+    EXPECT_EQ(installer->sessionCommitted_, false);
+    EXPECT_TRUE(installer->needDeleteSkillsPackageInfo_.empty());
+}
+
+/**
+ * @tc.number: IndependentSkillsInstaller_CheckAppLabelInfo_0004
+ * Function: CheckAppLabelInfo
+ * @tc.name: test CheckAppLabelInfo with skill type bundle
+ * @tc.desc: 1. system running normally
+ *           2. test CheckAppLabelInfo validates bundleName_ and versionCode_ are set
+ */
+HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_CheckAppLabelInfo_0004,
+    Function | SmallTest | Level0)
+{
+    auto installer = std::make_shared<IndependentSkillsInstaller>();
+    installer->dataMgr_ = dataMgr_;
+
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleType = BundleType::SKILL;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.baseBundleInfo_->versionCode = VERSION_CODE;
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_SKILLS;
+    moduleInfo.moduleName = MODULE_NAME;
+    SkillProfile skillProfile;
+    skillProfile.name = SKILL_NAME;
+    moduleInfo.skillProfiles.emplace_back(skillProfile);
+    info.innerModuleInfos_.emplace(MODULE_NAME, moduleInfo);
+    info.currentPackage_ = MODULE_NAME;
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos.emplace(TEST_HSP_PATH, info);
+
+    ErrCode ret = installer->CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(installer->bundleName_, BUNDLE_NAME);
+    EXPECT_EQ(installer->versionCode_, VERSION_CODE);
+}
 } // namespace OHOS
