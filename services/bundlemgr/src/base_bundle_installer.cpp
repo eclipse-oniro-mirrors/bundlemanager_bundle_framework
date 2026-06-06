@@ -3078,6 +3078,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &i
         installHnpParam.cpuAbi = info.GetCpuAbi();
         installHnpParam.packageName = info.GetBundleName();
         installHnpParam.appIdentifier = appIdentifier_;
+        installHnpParam.sessionId = sessionId_;
         for (auto &hnpPackage : hnpPackages) {
             if (hnpPackage.independentSign) {
                 installHnpParam.hnpPaths.emplace_back(hnpPackage.type + ServiceConstants::PATH_SEPARATOR
