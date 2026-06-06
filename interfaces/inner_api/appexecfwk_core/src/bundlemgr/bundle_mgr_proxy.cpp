@@ -6798,6 +6798,18 @@ ErrCode BundleMgrProxy::GetPluginInfosForSelf(std::vector<PluginBundleInfo> &plu
         BundleMgrInterfaceCode::GET_PLUGIN_INFOS_FOR_SELF, data, pluginBundleInfos);
 }
 
+ErrCode BundleMgrProxy::GetAllLocalPluginInfoForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<PluginBundleInfo>(
+        BundleMgrInterfaceCode::GET_ALL_LOCAL_PLUGIN_INFO_FOR_SELF, data, pluginBundleInfos);
+}
+
 ErrCode BundleMgrProxy::GetAllBundleNames(const uint32_t flags, int32_t userId, bool withExtBundle,
     std::vector<std::string> &bundleNames)
 {

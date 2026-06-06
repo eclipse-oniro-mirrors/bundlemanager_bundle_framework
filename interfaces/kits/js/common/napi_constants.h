@@ -197,6 +197,7 @@ constexpr const char* REMOVE_BACKUP_BUNDLE_DATA = "RemoveBackupBundleData";
 constexpr const char* GET_BUNDLE_INSTALL_STATUS = "getBundleInstallStatus";
 constexpr const char* IS_APPLICATION_DISABLE_FORBIDDEN = "isApplicationDisableForbidden";
 constexpr const char* GET_ALTERNATE_ICONS = "GetAlternateIcons";
+constexpr const char* GET_ALL_LOCAL_PLUGIN_INFO_FOR_SELF = "GetAllLocalPluginInfoForSelf";
 
 inline const std::set<int32_t> SUPPORTED_PROFILE_LIST = { 1, 8 };
 inline const std::set<int32_t> UNINSTALL_COMPONENT_TYPE_LIST = { 1, 2 };

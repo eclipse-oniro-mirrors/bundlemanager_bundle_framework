@@ -998,6 +998,7 @@ private:
 
     ErrCode HandleGetAllPluginInfo(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetPluginInfosForSelf(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetAllLocalPluginInfoForSelf(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetDirByBundleNameAndAppIndex(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetAllBundleDirs(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleRegisterPluginEventCallback(MessageParcel &data, MessageParcel &reply);

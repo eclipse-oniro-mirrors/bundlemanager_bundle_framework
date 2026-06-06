@@ -16,6 +16,7 @@
 #include <ani_signature_builder.h>
 
 #include <array>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -30,6 +31,7 @@
 #include "common_func.h"
 #include "installer_callback.h"
 #include "installer_helper.h"
+#include "plugin_bundle_info.h"
 #include "napi_constants.h"
 
 namespace OHOS {
@@ -152,6 +154,27 @@ static void AniUninstallLocalPlugin(ani_env* env, ani_string aniPluginBundleName
     }
 }
 
+static ani_object GetAllLocalPluginInfoForSelfNative(ani_env* env)
+{
+    APP_LOGD("ani GetAllLocalPluginInfoForSelfNative called");
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    ErrCode ret = iBundleMgr->GetAllLocalPluginInfoForSelf(pluginBundleInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetAllLocalPluginInfoForSelf failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), GET_ALL_LOCAL_PLUGIN_INFO_FOR_SELF,
+            PERMISSION_SUPPORT_LOCAL_PLUGIN);
+        return nullptr;
+    }
+
+    return CommonFunAni::ConvertAniArray(env, pluginBundleInfos, CommonFunAni::ConvertPluginBundleInfo);
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -169,6 +192,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "installLocalPluginNative", nullptr, reinterpret_cast<void*>(AniInstallLocalPlugin) },
         ani_native_function { "uninstallLocalPluginNative", nullptr,
             reinterpret_cast<void*>(AniUninstallLocalPlugin) },
+        ani_native_function { "getAllLocalPluginInfoForSelfNative", nullptr,
+            reinterpret_cast<void*>(GetAllLocalPluginInfoForSelfNative) },
     };
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
     RETURN_ANI_STATUS_IF_NOT_OK(res, "Cannot bind native methods");
