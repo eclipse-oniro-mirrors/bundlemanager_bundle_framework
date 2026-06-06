@@ -6088,6 +6088,7 @@ ErrCode BaseBundleInstaller::ProcessBinFiles(
     verifyBinParam.appIdentifier = appIdentifier_;
     verifyBinParam.userId = userId_;
     verifyBinParam.binFilePaths = binFilePaths;
+    verifyBinParam.sessionId = sessionId_;
 
     return InstalldClient::GetInstance()->ProcessBinFiles(verifyBinParam);
 }
