@@ -1205,6 +1205,20 @@ HWTEST_F(BmsExtendResourceManagerTest, GetAllDynamicIconInfo_0002, Function | Sm
 }
 
 /**
+ * @tc.number: CheckAcrossUserPermission_0001
+ * @tc.name: Test CheckAcrossUserPermission
+ * @tc.desc: 1.CheckAcrossUserPermission
+ */
+HWTEST_F(BmsExtendResourceManagerTest, CheckAcrossUserPermission_0001, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.CheckAcrossUserPermission(-2);
+    EXPECT_TRUE(ret);
+    ret = impl.CheckAcrossUserPermission(100);
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: CreateFd_0100
  * @tc.name: Test CreateFd
  * @tc.desc: 1.CreateFd
