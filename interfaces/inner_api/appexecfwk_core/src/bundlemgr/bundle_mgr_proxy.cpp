@@ -6126,6 +6126,32 @@ ErrCode BundleMgrProxy::GetCloneBundleInfoExt(const std::string &bundleName, uin
     return GetParcelInfoIntelligent<BundleInfo>(BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO_EXT, data, bundleInfo);
 }
 
+ErrCode BundleMgrProxy::GetMainAndCloneBundleInfo(const std::string &bundleName, uint32_t flags,
+    int32_t userId, std::vector<BundleInfo> &bundleInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to GetMainAndCloneBundleInfo of %{public}s", bundleName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetMainAndCloneBundleInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetMainAndCloneBundleInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(flags)) {
+        APP_LOGE("fail to GetMainAndCloneBundleInfo due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetMainAndCloneBundleInfo due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<BundleInfo>(
+        BundleMgrInterfaceCode::GET_MAIN_AND_CLONE_BUNDLE_INFO, data, bundleInfos);
+}
+
 ErrCode BundleMgrProxy::GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
     int32_t userId)
 {

@@ -1294,6 +1294,9 @@ public:
     virtual ErrCode GetCloneBundleInfoExt(const std::string &bundleName, uint32_t flags, int32_t appIndex,
         int32_t userId, BundleInfo &bundleInfo) override;
 
+    virtual ErrCode GetMainAndCloneBundleInfo(const std::string &bundleName, uint32_t flags,
+        int32_t userId, std::vector<BundleInfo> &bundleInfos) override;
+
     virtual ErrCode GetLaunchWant(Want &want) override;
 
     virtual ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) override;

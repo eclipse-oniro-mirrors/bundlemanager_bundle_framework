@@ -317,4 +317,45 @@ HWTEST_F(BmsBundleCloneAppIPCTest, QueryExtensionAbility_001, Function | SmallTe
             || result == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
 }
+
+HWTEST_F(BmsBundleCloneAppIPCTest, GetMainAndCloneBundleInfoTest001_AppNotFound, Function | SmallTest | Level0)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    const std::string bundleName = "ohos.samples.appnotfound";
+    const int32_t userId = 100;
+    uint32_t flags = 0;
+    std::vector<BundleInfo> bundleInfos;
+    auto result = bundleMgrProxy->GetMainAndCloneBundleInfo(bundleName, flags, userId, bundleInfos);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+HWTEST_F(BmsBundleCloneAppIPCTest, GetMainAndCloneBundleInfoTest002_UserNotFound, Function | SmallTest | Level0)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    const std::string bundleName = "ohos.samples.etsclock";
+    const int32_t userId = 200;
+    uint32_t flags = 0;
+    std::vector<BundleInfo> bundleInfos;
+    auto result = bundleMgrProxy->GetMainAndCloneBundleInfo(bundleName, flags, userId, bundleInfos);
+    EXPECT_TRUE(result == ERR_BUNDLE_MANAGER_INVALID_USER_ID
+        || result == ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED);
+}
+
+HWTEST_F(BmsBundleCloneAppIPCTest, GetMainAndCloneBundleInfoTest003_ANY_USERID, Function | SmallTest | Level0)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    const std::string bundleName = "ohos.samples.etsclock";
+    uint32_t flags = 0;
+    int32_t userId = Constants::ANY_USERID;
+    std::vector<BundleInfo> bundleInfos;
+    auto result = bundleMgrProxy->GetMainAndCloneBundleInfo(bundleName, flags, userId, bundleInfos);
+    EXPECT_TRUE(result == ERR_OK || result == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+        || result == ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    if (result == ERR_OK) {
+        EXPECT_GT(bundleInfos.size(), 0);
+    }
+}
 } // OHOS
