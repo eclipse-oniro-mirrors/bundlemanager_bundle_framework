@@ -315,11 +315,9 @@ ErrCode BundleInstallChecker::CheckHapsSignInfoAndInitSession(
     std::vector<Security::AccessToken::TrustedBundleInfo> trustedBundleInfo;
     int32_t signRet = Security::AccessToken::AccessTokenKit::CheckHapSignInfo(
         hapList, sessionId, trustedBundleInfo);
-    if (signRet == Security::AccessToken::AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED) {
-        LOG_E(BMS_TAG_INSTALLER, "CheckHapSignInfo failed: multiple haps incompatible, err=%{public}d", signRet);
-        return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
-    }
-    if (signRet != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+    if (signRet != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS
+        // confit for succesing check
+        && signRet != Security::AccessToken::AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED) {
         LOG_E(BMS_TAG_INSTALLER, "CheckHapSignInfo failed, err=%{public}d", signRet);
         return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
     }
