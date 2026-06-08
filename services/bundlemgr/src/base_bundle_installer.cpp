@@ -23,6 +23,7 @@
 #include <sys/statfs.h>
 #include <sstream>
 
+#include "access_token_error.h"
 #include "account_helper.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "aging/bundle_aging_mgr.h"
@@ -1151,13 +1152,14 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             Security::AccessToken::TYPE_REPLACE : Security::AccessToken::TYPE_MERGE;
         int32_t permCheckRet = BundlePermissionMgr::CheckHapPermissionInfo(
             sessionId_, installType, checkResult);
-        if (permCheckRet != ERR_OK) {
+        if (permCheckRet != ERR_OK && 
+            permCheckRet != Security::AccessToken::AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED) {
             LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s CheckHapPermissionInfo failed, ret:%{public}d",
                 bundleName_.c_str(), permCheckRet);
             SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
-
+        
         hasInstalledInUser_ = oldInfo.HasInnerBundleUserInfo(userId_);
         if (!hasInstalledInUser_) {
             if (AccountHelper::CheckOsAccountConstraintEnabled(userId_, ServiceConstants::CONSTRAINT_APPS_INSTALL)) {
@@ -1183,6 +1185,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
             oldInfo.SetAggregatedRequestPermissions(aggregatedRequestPermissions_);
+            
             if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo, false)
                 && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx,
                 verifyRes_.GetProvisionInfo().appServiceCapabilities, false, sessionId_) != ERR_OK) {
@@ -1243,7 +1246,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         Security::AccessToken::HapInfoCheckResult checkResult;
         int32_t permCheckRet = BundlePermissionMgr::CheckHapPermissionInfo(
             sessionId_, Security::AccessToken::TYPE_INSTALL, checkResult);
-        if (permCheckRet != ERR_OK) {
+        if (permCheckRet != ERR_OK && 
+            permCheckRet != Security::AccessToken::AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED) {
             LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s CheckHapPermissionInfo failed, ret:%{public}d",
                 bundleName_.c_str(), permCheckRet);
             SetVerifyPermissionResult(checkResult);
