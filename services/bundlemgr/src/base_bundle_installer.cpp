@@ -110,6 +110,7 @@ constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
 constexpr const char* LIBS_TMP = "libs+tmp";
 constexpr const char* PRIVILEGE_ALLOW_HDC_INSTALL = "AllowHdcInstall";
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
+constexpr int32_t KEEP_DATA_PRELOAD_ENABLED = 1;
 
 bool IsSupportedAppSkillBundleType(BundleType bundleType)
 {
@@ -4531,10 +4532,16 @@ bool BaseBundleInstaller::RemoveDataPreloadHapFiles(const std::string &bundleNam
     auto preinstalledAppPath = preInstallBundleInfo.GetBundlePaths().front();
     LOG_D(BMS_TAG_INSTALLER, "preinstalledAppPath %{public}s", preinstalledAppPath.c_str());
     if (IsDataPreloadHap(preinstalledAppPath)) {
-        std::filesystem::path apFilePath(preinstalledAppPath);
-        std::string delDir = apFilePath.parent_path().string();
-        if (InstalldClient::GetInstance()->RemoveDir(delDir, BundleDirScene::REMOVE_PRELOAD_APP_DIR) != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "removeDir failed :%{public}s", delDir.c_str());
+        bool keepHap =
+            OHOS::system::GetIntParameter<int32_t>(ServiceConstants::KEEP_DATA_PRELOAD_HAP, 0) == KEEP_DATA_PRELOAD_ENABLED;
+        if (!keepHap) {
+            std::filesystem::path apFilePath(preinstalledAppPath);
+            std::string delDir = apFilePath.parent_path().string();
+            if (InstalldClient::GetInstance()->RemoveDir(delDir, BundleDirScene::REMOVE_PRELOAD_APP_DIR) != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "removeDir failed :%{public}s", delDir.c_str());
+            }
+        } else {
+            LOG_I(BMS_TAG_INSTALLER, "keep data preload hap for %{public}s", bundleName.c_str());
         }
         if (!dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
             LOG_E(BMS_TAG_INSTALLER, "deletePreInfoInDb bundle %{public}s failed", bundleName.c_str());
