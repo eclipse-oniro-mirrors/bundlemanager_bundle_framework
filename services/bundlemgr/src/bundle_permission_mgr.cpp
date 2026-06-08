@@ -1022,5 +1022,60 @@ int32_t BundlePermissionMgr::FinishHapInstall(
     return ERR_OK;
 }
 
+int32_t BundlePermissionMgr::UpdateAppPermission(InnerBundleInfo &innerBundleInfo, int32_t userId,
+    Security::AccessToken::InstallTypeEnum installType)
+{
+    std::vector<std::string> bundlePaths;
+    for (const auto &[packageName, moduleInfo] : innerBundleInfo.GetInnerModuleInfos()) {
+        std::string hapPath = innerBundleInfo.GetModuleHapPath(packageName);
+        if (!hapPath.empty()) {
+            bundlePaths.emplace_back(hapPath);
+        }
+    }
+    if (bundlePaths.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "UpdateAppPermission failed, no valid module hap paths");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+
+    int32_t sessionId = 0;
+    Security::AccessToken::BundleHapList hapList;
+    hapList.hapPaths = bundlePaths;
+    hapList.isPreInstalled = innerBundleInfo.IsPreInstallApp();
+    hapList.userId = userId;
+    std::vector<Security::AccessToken::TrustedBundleInfo> trustedBundleInfo;
+    int32_t signRet = Security::AccessToken::AccessTokenKit::CheckHapSignInfo(
+        hapList, sessionId, trustedBundleInfo);
+    if (signRet == Security::AccessToken::AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED) {
+        LOG_E(BMS_TAG_DEFAULT, "UpdateAppPermission CheckHapSignInfo incompatible, err=%{public}d", signRet);
+        return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+    }
+    if (signRet != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        LOG_E(BMS_TAG_DEFAULT, "UpdateAppPermission CheckHapSignInfo failed, err=%{public}d", signRet);
+        return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "UpdateAppPermission sessionId=%{public}d", sessionId);
+
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    int32_t permRet = CheckHapPermissionInfo(sessionId, installType, checkResult);
+    if (permRet != ERR_OK) {
+        auto msg = GetCheckResultMsg(checkResult);
+        LOG_E(BMS_TAG_DEFAULT, "UpdateAppPermission CheckHapPermissionInfo failed, msg=%{public}s err=%{public}d",
+            msg.c_str(), permRet);
+        (void)FinishHapInstall(sessionId, false, {});
+        return permRet;
+    }
+
+    std::map<std::string, std::string> modulePathMap;
+    for (const auto &hapPath : bundlePaths) {
+        modulePathMap[hapPath] = hapPath;
+    }
+    int32_t finishRet = FinishHapInstall(sessionId, true, modulePathMap);
+    if (finishRet != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "UpdateAppPermission FinishHapInstall failed, err=%{public}d", finishRet);
+        return finishRet;
+    }
+    return ERR_OK;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

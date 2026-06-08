@@ -353,5 +353,11 @@ bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
 {
     return true;
 }
+
+int32_t BundlePermissionMgr::UpdateAppPermission(InnerBundleInfo &innerBundleInfo, int32_t userId,
+    Security::AccessToken::InstallTypeEnum installType)
+{
+    return ERR_OK;
+}
 }
 }

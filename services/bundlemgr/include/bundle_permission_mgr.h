@@ -81,6 +81,9 @@ public:
         bool isSuccess,
         const std::map<std::string, std::string> &modulePathMap);
 
+    static int32_t UpdateAppPermission(InnerBundleInfo &innerBundleInfo, int32_t userId,
+        Security::AccessToken::InstallTypeEnum installType);
+
     static std::string GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult);
 
     static int32_t DeleteAccessTokenId(const Security::AccessToken::AccessTokenID tokenId,

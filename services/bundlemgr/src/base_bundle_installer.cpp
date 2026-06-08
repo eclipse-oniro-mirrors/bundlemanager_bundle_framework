@@ -2765,6 +2765,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     driverInstaller->RemoveDriverSoFile(oldInfo, oldInfo.GetModuleName(modulePackage), false);
     isBundleExist_ = true;
+    (void)BundlePermissionMgr::UpdateAppPermission(oldInfo, userId_,
+        Security::AccessToken::TYPE_REPLACE);
     LOG_D(BMS_TAG_INSTALLER, "finish %{public}s in %{public}s uninstall", bundleName.c_str(), modulePackage.c_str());
     return ERR_OK;
 }
@@ -4241,6 +4243,8 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
             bundleName.c_str(), userId_);
         return false;
     }
+    BundlePermissionMgr::DeleteAccessTokenId(it->second.accessTokenId, bundleName,
+        Security::AccessToken::ReservedType::NONE);
     ErrCode result = InstalldClient::GetInstance()->RemoveBundleDataDir(bundleName, userId_,
         uninstallBundleInfo.bundleType == BundleType::ATOMIC_SERVICE, true);
     LOG_I(BMS_TAG_INSTALLER, "remove dirs res %{public}d", result);

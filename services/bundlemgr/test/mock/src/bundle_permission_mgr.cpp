@@ -138,6 +138,13 @@ void ResetTestValues()
 }
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
+int32_t g_updateAppPermissionRet = 0;
+
+void SetUpdateAppPermissionRetForTest(int32_t value)
+{
+    g_updateAppPermissionRet = value;
+}
+
 namespace AppExecFwk {
 using namespace Security::AccessToken;
 
@@ -537,6 +544,12 @@ int32_t BundlePermissionMgr::UpdateHapPolicy(
     const std::string &appServiceCapabilities)
 {
     return 0;
+}
+
+int32_t BundlePermissionMgr::UpdateAppPermission(InnerBundleInfo &innerBundleInfo, int32_t userId,
+    Security::AccessToken::InstallTypeEnum installType)
+{
+    return g_updateAppPermissionRet;
 }
 
 int32_t BundlePermissionMgr::CheckHapPermissionInfo(int32_t sessionId,
