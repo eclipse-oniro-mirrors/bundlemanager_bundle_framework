@@ -106,7 +106,6 @@ constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
 constexpr const char* LIBS_TMP = "libs+tmp";
 constexpr const char* PRIVILEGE_ALLOW_HDC_INSTALL = "AllowHdcInstall";
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
-constexpr int32_t APP_SKILL_TYPE = 0;
 
 bool IsSupportedAppSkillBundleType(BundleType bundleType)
 {
@@ -4709,8 +4708,7 @@ bool BaseBundleInstaller::NotifyAppSkillStatus(
         return false;
     }
     int32_t realUserId = userId == Constants::INVALID_USERID ? userId_ : userId;
-    commonEventMgr->NotifySkillEvents(bundleName, realUserId, addedSkills, changedSkills, removedSkills,
-        APP_SKILL_TYPE);
+    commonEventMgr->NotifySkillEvents(bundleName, realUserId, addedSkills, changedSkills, removedSkills);
     return true;
 }
 

@@ -73,7 +73,6 @@ constexpr const char* IS_BMS_EXTENSION_UNINSTALLED = "isBmsExtensionUninstalled"
 constexpr const char* ADDED_SKILLS = "added";
 constexpr const char* CHANGED_SKILLS = "changed";
 constexpr const char* REMOVED_SKILLS = "removed";
-constexpr const char* SKILL_TYPE = "skillType";
 constexpr const char* CHANGE_TYPE = "changeType";
 constexpr int32_t CONTROL_API_VERSION = 25;
 }
@@ -556,7 +555,7 @@ void BundleCommonEventMgr::NotifyPluginCommonEvents(const std::string &hostBundl
 
 void BundleCommonEventMgr::NotifySkillEvents(
     const std::string &bundleName, int32_t userId, const std::vector<std::string> &addedSkills,
-    const std::vector<std::string> &changedSkills, const std::vector<std::string> &removedSkills, int32_t skillType)
+    const std::vector<std::string> &changedSkills, const std::vector<std::string> &removedSkills)
 {
     if (bundleName.empty() || (addedSkills.empty() && changedSkills.empty() && removedSkills.empty())) {
         APP_LOGD("NotifySkillEvents ignored, bundleName or skill changes is empty");
@@ -574,7 +573,6 @@ void BundleCommonEventMgr::NotifySkillEvents(
     want.SetParam(ADDED_SKILLS, addedSkills);
     want.SetParam(CHANGED_SKILLS, changedSkills);
     want.SetParam(REMOVED_SKILLS, removedSkills);
-    want.SetParam(SKILL_TYPE, skillType);
 
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;

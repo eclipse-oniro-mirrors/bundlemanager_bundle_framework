@@ -143,7 +143,7 @@ public:
         const NotifyType &type);
     void NotifySkillEvents(const std::string &bundleName, int32_t userId,
         const std::vector<std::string> &addedSkills, const std::vector<std::string> &changedSkills,
-        const std::vector<std::string> &removedSkills, int32_t skillType);
+        const std::vector<std::string> &removedSkills);
 
     // Async version of NotifySetDisposedRule
     void NotifySetDisposedRuleAsync(const std::string &appId, int32_t userId,

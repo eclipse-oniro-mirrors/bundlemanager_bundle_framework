@@ -38,8 +38,6 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
 namespace {
-constexpr int32_t APP_SKILL_TYPE = 0;
-
 void CollectAppSkillChangedItems(const InnerBundleInfo &info, std::vector<std::string> &skillItems)
 {
     for (const auto &moduleInfo : info.GetInnerModuleInfos()) {
@@ -104,8 +102,7 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
         std::vector<std::string> emptySkills;
         if (dataMgr_->FetchInnerBundleInfo(bundleName, info)) {
             CollectAppSkillChangedItems(info, addedSkills);
-            commonEventMgr->NotifySkillEvents(bundleName, userId, addedSkills, emptySkills, emptySkills,
-                APP_SKILL_TYPE);
+            commonEventMgr->NotifySkillEvents(bundleName, userId, addedSkills, emptySkills, emptySkills);
         }
     }
 
