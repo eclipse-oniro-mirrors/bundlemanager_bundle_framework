@@ -35,6 +35,7 @@
 #include "bundle_storage_stats.h"
 #include "bundle_user_mgr_interface.h"
 #include "clean_cache_callback_interface.h"
+#include "clean_cache_info.h"
 #include "common_event_info.h"
 #include "get_largest_items_callback_interface.h"
 #include "data_group_info.h"
@@ -875,6 +876,19 @@ public:
      */
     virtual ErrCode CleanBundleCacheFilesAutomatic(uint64_t cacheSize, CleanType cleanType,
         std::optional<uint64_t>& cleanedSize)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    /**
+     * @brief Clears partial cache data of a specified application.
+     * @param cacheInfo Indicates the cache info for the application whose cache data is to be cleared.
+     * @param beforeCleanedSize Indicates the size of the cache data before clearing.
+     * @param afterCleanedSize Indicates the size of the cache data after clearing.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode CleanBundlePartialCacheAutomatic(
+        const CleanCacheInfo &cacheInfo, uint64_t &beforeCleanedSize, uint64_t &afterCleanedSize)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

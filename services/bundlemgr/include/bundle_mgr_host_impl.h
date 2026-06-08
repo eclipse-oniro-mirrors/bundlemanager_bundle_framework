@@ -621,6 +621,15 @@ public:
      */
     virtual ErrCode CleanBundleCacheFilesForSelf(const sptr<ICleanCacheCallback> cleanCacheCallback) override;
     /**
+     * @brief Clears partial cache data of a specified application.
+     * @param cleanCacheInfo Indicates the information about the cache to be cleared.
+     * @param beforeCleanedSize Indicates the size of the cache data before clearing.
+     * @param afterCleanedSize Indicates the size of the cache data after clearing.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode CleanBundlePartialCacheAutomatic(
+        const CleanCacheInfo &cleanCacheInfo, uint64_t &beforeCleanedSize, uint64_t &afterCleanedSize) override;
+    /**
      * @brief Clears application running data of a specified application.
      * @param bundleName Indicates the bundle name of the application whose data is to be cleared.
      * @param userId Indicates the user id.
@@ -1361,6 +1370,8 @@ private:
         int32_t userId, CleanType cleanType, int32_t appIndex, uint64_t &cleanCacheSize);
     void CleanBundleCacheTaskGetCleanSize(const std::string &bundleName, int32_t userId, CleanType cleanType,
         int32_t appIndex, int32_t callingUid, const std::string &callingBundleName, uint64_t &cleanCacheSize);
+    ErrCode CleanBundlePartialCacheGetCleanSize(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, const std::string &path, uint64_t &cleanCacheSize);
     void GetTopNLargestItemsTask(const std::string &bundleName, int32_t appIndex, int32_t userId,
         const sptr<IGetLargestItemsCallback> getLargestItemsCallback);
     bool CleanBundleCacheByInodeCount(const std::string &bundleName, int32_t userId,
@@ -1424,6 +1435,7 @@ private:
     ErrCode CheckGetTopNLargestItemsFrequencyLimit();
 
     ErrCode CheckCallingUid();
+    ErrCode IsAppRunning(const std::string &bundleName, const int32_t userId);
 
     // Frequency limit for GetTopNLargestItemsInAppDataDir
     std::mutex lastSuccessCallTimeMutex_;

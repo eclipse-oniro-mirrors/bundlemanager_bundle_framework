@@ -1001,4 +1001,18 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractSkillsPackage_0100, Function | SmallT
     bool res = installdHost.HandleExtractSkillsPackage(data, reply);
     EXPECT_FALSE(res);
 }
+
+/**
+ * @tc.number: HandleDeleteOldCacheFiles_0100
+ * @tc.name: test HandleDeleteOldCacheFiles
+ * @tc.desc: 1.HandleDeleteOldCacheFiles test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleDeleteOldCacheFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleDeleteOldCacheFiles(data, reply);
+    EXPECT_FALSE(res);
+}
 } // OHOS

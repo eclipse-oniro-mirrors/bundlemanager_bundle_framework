@@ -732,5 +732,15 @@ ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::DeleteOldCacheFiles(
+    const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
+{
+    if (paths.empty()) {
+        APP_LOGE("paths is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::DeleteOldCacheFiles, paths, cacheSize, cleanedSize);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

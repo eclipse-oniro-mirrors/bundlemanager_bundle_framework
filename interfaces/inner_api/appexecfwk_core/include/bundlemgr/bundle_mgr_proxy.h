@@ -641,6 +641,15 @@ public:
     virtual ErrCode CleanBundleCacheFilesForSelf(const sptr<ICleanCacheCallback> cleanCacheCallback) override;
 
     /**
+     * @brief Clears partial cache data of a specified bundle through the proxy object.
+     * @param cacheInfo Indicates the information about the cache to be cleared.
+     * @param beforeCleanedSize Indicates the size of the cache data before clearing.
+     * @param afterCleanedSize Indicates the size of the cache data after clearing.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode CleanBundlePartialCacheAutomatic(
+        const CleanCacheInfo &cacheInfo, uint64_t &beforeCleanedSize, uint64_t &afterCleanedSize) override;
+    /**
      * @brief Clears application running data of a specified application through the proxy object.
      * @param bundleName Indicates the bundle name of the application whose data is to be cleared.
      * @param userId Indicates the user id.

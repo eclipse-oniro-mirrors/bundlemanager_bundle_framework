@@ -19,6 +19,7 @@
 #include <cinttypes>
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
+#include "scope_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -248,6 +249,10 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
     dataMgr->GetBundleCacheInfos(userId, validBundles, true);
     if (!validBundles.empty()) {
         auto CleanAllBundleCache = [validBundles, userId, processCacheCallback, startTime]() {
+            BundleCacheMgr::TryMarkCleaning();
+            ScopeGuard guard([]() {
+                BundleCacheMgr::MarkCleaningDone();
+            });
             ErrCode result = ERR_OK;
             APP_LOGI("thread for CleanBundleCache start");
             result = CleanBundleCache(validBundles, userId);
