@@ -4205,4 +4205,19 @@ HWTEST_F(BmsEventHandlerTest, MarkMigratedBundles_0400, Function | SmallTest | L
     handler->MarkMigratedBundles(dataMgr, bundleNames, migratedList, successFlags);
     // No crash expected
 }
+
+/**
+ * @tc.number: ReInstallSystemHspAndSharedBundles_0001
+ * @tc.name: test ReInstallSystemHspAndSharedBundles
+ * @tc.desc: test ReInstallSystemHspAndSharedBundles with valid profile loaded
+ */
+HWTEST_F(BmsEventHandlerTest, ReInstallSystemHspAndSharedBundles_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleInstaller();
+    handler->LoadPreInstallProFile();
+    EXPECT_NO_THROW(handler->ReInstallSystemHspAndSharedBundles());
+}
 } // OHOS
