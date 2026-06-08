@@ -1379,6 +1379,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8000, Function | Sma
     param.hapPath = "happath";
     param.cpuAbi = "cpuabi";
     param.packageName = "";
+    param.sessionId = 0;
     bool ret = InstalldOperator::ProcessBundleInstallNative(param);
     EXPECT_FALSE(ret);
 }
@@ -1397,6 +1398,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8100, Function | Sma
     param.hapPath = "";
     param.cpuAbi = "cpuabi";
     param.packageName = "com.acts.example";
+    param.sessionId = 0;
     bool ret = InstalldOperator::ProcessBundleInstallNative(param);
     EXPECT_FALSE(ret);
 }
@@ -1415,6 +1417,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8200, Function | Sma
     param.hapPath = "happath";
     param.cpuAbi = "";
     param.packageName = "com.acts.example";
+    param.sessionId = 0;
     bool ret = InstalldOperator::ProcessBundleInstallNative(param);
     EXPECT_FALSE(ret);
 }

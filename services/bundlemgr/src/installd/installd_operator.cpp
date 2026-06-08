@@ -846,7 +846,7 @@ bool InstalldOperator::ProcessBundleInstallNative(const InstallHnpParam &param)
     hapInfo.count = static_cast<int32_t>(count);
     hapInfo.independentSignHnpPaths = independentSignHnps.data();
 
-    int ret = NativeInstallHnp(param.userId.c_str(), param.hnpRootPath.c_str(), &hapInfo, 1);
+    int ret = NativeInstallHnp(param.userId.c_str(), param.hnpRootPath.c_str(), &hapInfo, 1, param.sessionId);
     LOG_I(BMS_TAG_INSTALLD, "NativeInstallHnp ret: %{public}d", ret);
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "Native package installation failed with error code: %{public}d", ret);
