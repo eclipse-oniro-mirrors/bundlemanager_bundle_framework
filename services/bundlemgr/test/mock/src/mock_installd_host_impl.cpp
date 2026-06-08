@@ -449,7 +449,7 @@ ErrCode InstalldHostImpl::CheckExternalSourcePluginSwitch(int32_t &outSwitchStat
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CheckHspPluginCertValidity(const HspPluginParam &hspPluginParam)
+ErrCode InstalldHostImpl::CheckHspPluginCertValidity(const std::string &bundleName, int32_t sessionId)
 {
     return ERR_OK;
 }

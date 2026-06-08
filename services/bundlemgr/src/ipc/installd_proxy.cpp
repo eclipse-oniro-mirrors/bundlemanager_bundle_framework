@@ -1565,14 +1565,16 @@ ErrCode InstalldProxy::CheckExternalSourcePluginSwitch(int32_t &outSwitchStatus)
     return ret;
 }
 
-ErrCode InstalldProxy::CheckHspPluginCertValidity(const HspPluginParam &hspPluginParam)
+ErrCode InstalldProxy::CheckHspPluginCertValidity(const std::string &bundleName, int32_t sessionId)
 {
+    if (sessionId == 0) {
+        LOG_E(BMS_TAG_INSTALLD, "sessionId is 0, refused");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    if (!data.WriteParcelable(&hspPluginParam)) {
-        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable hspPluginParam failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, sessionId);
 
     MessageParcel reply;
     MessageOption option;

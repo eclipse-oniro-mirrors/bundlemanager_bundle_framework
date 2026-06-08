@@ -45,6 +45,7 @@ struct PluginBundleInfo : public Parcelable {
     std::unordered_map<std::string, AbilityInfo> abilityInfos;
     std::unordered_map<std::string, ExtensionAbilityInfo> extensionInfos;
     ApplicationInfo appInfo;
+    bool isDeveloperDistribution = false;
 
     bool GetAbilityInfoByName(const std::string &abilityName, const std::string &moduleName, AbilityInfo &info);
     bool GetHapModuleInfo(const std::string &moduleName, HapModuleInfo &hapInfo);

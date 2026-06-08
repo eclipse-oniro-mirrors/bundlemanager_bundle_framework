@@ -2139,7 +2139,7 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
     if (codeSignatureParam.isEnterpriseResigned) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_ENTERPRISE_RESIGN;
     }
-    if (codeSignatureParam.isDeveloperDistribution) {
+    if (codeSignatureParam.isLocalHspPlugin) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_LOCAL_HSP_PLUGIN;
     }
     if (codeSignatureParam.signatureFileDir.empty()) {

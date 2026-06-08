@@ -717,8 +717,6 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(
     info.distributionType = static_cast<int32_t>(provisionInfo.distributionType);
     info.provisionType = static_cast<int32_t>(provisionInfo.type);
     info.isEnterpriseResigned = provisionInfo.isEnterpriseResigned;
-    info.isDeveloperDistribution = (info.distributionType ==
-        static_cast<int32_t>(Security::Verify::AppDistType::DEVELOPER));
     info.appIdentifier = provisionInfo.bundleInfo.appIdentifier;
     info.profileBlockLength = static_cast<uint32_t>(provisionInfo.profileBlockLength);
     if (provisionInfo.profileBlock != nullptr && provisionInfo.profileBlockLength > 0) {
@@ -2438,7 +2436,6 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSign
     }
     localParam.bundleName = info.bundleName;
     localParam.isEnterpriseResigned = info.isEnterpriseResigned;
-    localParam.isDeveloperDistribution = info.isDeveloperDistribution;
     localParam.appIdentifier = (info.provisionType ==
         static_cast<int32_t>(Security::Verify::ProvisionType::DEBUG)) ?
         DEBUG_APP_IDENTIFIER : info.appIdentifier;
@@ -2658,7 +2655,6 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
     }
     localParam.bundleName = info.bundleName;
     localParam.isEnterpriseResigned = info.isEnterpriseResigned;
-    localParam.isDeveloperDistribution = info.isDeveloperDistribution;
     localParam.appIdentifier = (info.provisionType ==
         static_cast<int32_t>(Security::Verify::ProvisionType::DEBUG)) ?
         DEBUG_APP_IDENTIFIER : info.appIdentifier;
@@ -2702,7 +2698,7 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
     if (localParam.isEnterpriseResigned) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_ENTERPRISE_RESIGN;
     }
-    if (localParam.isDeveloperDistribution) {
+    if (localParam.isLocalHspPlugin) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_LOCAL_HSP_PLUGIN;
     }
     if (localParam.signatureFileDir.empty()) {
@@ -3745,7 +3741,7 @@ ErrCode InstalldHostImpl::CheckExternalSourcePluginSwitch(int32_t &outSwitchStat
     auto ret = BinarySecurityWrapper::GetInstance().RequestIndependentBinarySwitchAsync(outSwitchStatus);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "RequestIndependentBinarySwitchAsync failed %{public}d", ret);
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_PLUGIN_EXTERNAL_SWITCH_CHECK_ERROR;
     }
 #else
     LOG_E(BMS_TAG_INSTALLD, "SECURITY_PRIVACY_SERVER_ENABLE is disabled");
@@ -3754,25 +3750,36 @@ ErrCode InstalldHostImpl::CheckExternalSourcePluginSwitch(int32_t &outSwitchStat
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CheckHspPluginCertValidity(const HspPluginParam &hspPluginParam)
+ErrCode InstalldHostImpl::CheckHspPluginCertValidity(const std::string &bundleName, int32_t sessionId)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+    if (sessionId == 0) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
-    Security::Verify::HspPlugin hspPlugin;
-    hspPlugin.certType = hspPluginParam.certType;
-    hspPlugin.subjectCN = hspPluginParam.subjectCN;
-    hspPlugin.issuerCN = hspPluginParam.issuerCN;
-    hspPlugin.subjectOU = hspPluginParam.subjectOU;
-    hspPlugin.issuerC = hspPluginParam.issuerC;
-    hspPlugin.issuerO = hspPluginParam.issuerO;
-    hspPlugin.issuerOU = hspPluginParam.issuerOU;
-    hspPlugin.subjectO = hspPluginParam.subjectO;
-    hspPlugin.serialNumber = hspPluginParam.serialNumber;
-    hspPlugin.authKeyIdentifier = hspPluginParam.authKeyIdentifier;
-    auto ret = BinarySecurityWrapper::GetInstance().CheckHspPluginCertValidity(hspPlugin);
+    SessionProvisionInfo info;
+    ErrCode queryRet = QueryProvisionInfoBySessionId(sessionId, bundleName, info);
+    if (queryRet != ERR_OK) {
+        return queryRet;
+    }
+    if (info.profileBlock == nullptr || info.profileBlockLength == 0) {
+        LOG_E(BMS_TAG_INSTALLD, "profileBlock not found in AT for sessionId=%{public}d", sessionId);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (info.profileBlockLength > static_cast<uint32_t>(ServiceConstants::MAX_PROFILE_BLOCK_LENGTH)) {
+        LOG_E(BMS_TAG_INSTALLD, "profileBlockLength exceeds max: %{public}u", info.profileBlockLength);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    Security::Verify::HspPlugin hspPluginInfo;
+    auto ret = Security::Verify::ParseHspPluginInfo(info.profileBlockLength, info.profileBlock.get(), hspPluginInfo);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "ParseHspPluginInfo failed %{public}d", ret);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    ret = BinarySecurityWrapper::GetInstance().CheckHspPluginCertValidity(hspPluginInfo);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CheckHspPluginCertValidity failed %{public}d", ret);
         return ERR_APPEXECFWK_PLUGIN_CERT_REVOKED;

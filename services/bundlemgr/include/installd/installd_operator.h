@@ -48,7 +48,6 @@ struct SessionProvisionInfo {
     int32_t distributionType = 0;
     int32_t provisionType = 0;
     bool isEnterpriseResigned = false;
-    bool isDeveloperDistribution = false;
     std::string appIdentifier;
     uint32_t profileBlockLength = 0;
     std::shared_ptr<unsigned char[]> profileBlock;
