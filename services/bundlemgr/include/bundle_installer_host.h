@@ -166,6 +166,9 @@ public:
 
     virtual ErrCode UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames) override;
 
+    virtual ErrCode CreateCliSandboxApp(const std::string &callerBundleName,
+        const std::string &bundleName, int32_t userId, int32_t &appIndex) override;
+
     virtual ErrCode DeleteReSignCert(int32_t userId) override;
 private:
     /**
@@ -252,6 +255,7 @@ private:
     void HandleUninstallCloneApp(MessageParcel &data, MessageParcel &reply);
     void HandleInstallExisted(MessageParcel &data, MessageParcel &reply);
     void HandleUninstallNewPreinstalledApps(MessageParcel &data, MessageParcel &reply);
+    void HandleCreateCliSandboxApp(MessageParcel &data, MessageParcel &reply);
     void HandleAddEnterpriseResignCert(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleDeleteEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply);

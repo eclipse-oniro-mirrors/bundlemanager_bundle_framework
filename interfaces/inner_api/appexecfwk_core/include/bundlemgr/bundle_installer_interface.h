@@ -212,6 +212,20 @@ public:
     {
         return ERR_OK;
     }
+
+    /**
+     * @brief Create CLI sandbox application.
+     * @param callerBundleName Indicates the caller bundle name.
+     * @param bundleName Indicates the bundle name of the application to create sandbox.
+     * @param userId Indicates the user id.
+     * @param appIndex Indicates the appIndex of the created sandbox application.
+     * @return Returns ERR_OK if the CLI sandbox application is created successfully; returns errcode otherwise.
+     */
+    virtual ErrCode CreateCliSandboxApp(const std::string &callerBundleName,
+        const std::string &bundleName, int32_t userId, int32_t &appIndex)
+    {
+        return ERR_OK;
+    }
 };
 
 #define PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                                 \

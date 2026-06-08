@@ -3905,4 +3905,392 @@ HWTEST_F(BmsBundleDataMgrTest2, GetAllowListenBundleNames_0400, Function | Small
     dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
     ClearDataMgr();
 }
+
+/**
+ * @tc.number: AddCliSandboxBundle_0100
+ * @tc.name: test AddCliSandboxBundle
+ * @tc.desc: 1.bundle not exist
+ *           2.call AddCliSandboxBundle
+ *           3.return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleDataMgrTest2, AddCliSandboxBundle_0100, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.userId = USERID;
+    sandboxInfo.appIndex = 2000;
+    auto result = dataMgr->AddCliSandboxBundle(BUNDLE_NAME_TEST, sandboxInfo);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: AddCliSandboxBundle_0200
+ * @tc.name: test AddCliSandboxBundle
+ * @tc.desc: 1.bundle exist but userId not found in innerBundleUserInfos_
+ *           2.call AddCliSandboxBundle
+ *           3.return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST
+ */
+HWTEST_F(BmsBundleDataMgrTest2, AddCliSandboxBundle_0200, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerInfo);
+
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.userId = USERID;
+    sandboxInfo.appIndex = 2000;
+    auto result = dataMgr->AddCliSandboxBundle(BUNDLE_NAME_TEST, sandboxInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST);
+
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: AddCliSandboxBundle_0300
+ * @tc.name: test AddCliSandboxBundle
+ * @tc.desc: 1.bundle exist with userId, appIndex in valid range
+ *           2.call AddCliSandboxBundle
+ *           3.return ERR_OK and sandboxInfo stored
+ */
+HWTEST_F(BmsBundleDataMgrTest2, AddCliSandboxBundle_0300, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME_TEST;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerInfo);
+
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.userId = USERID;
+    sandboxInfo.appIndex = 2000;
+    sandboxInfo.uid = TEST_UID;
+    sandboxInfo.accessTokenId = 12345;
+    sandboxInfo.sandboxType = SandboxIsolationType::FullIsolation;
+    sandboxInfo.callerBundleNames.push_back(BUNDLE_TEST1);
+    auto result = dataMgr->AddCliSandboxBundle(BUNDLE_NAME_TEST, sandboxInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    // verify sandbox info stored
+    auto &storedInfo = dataMgr->bundleInfos_.at(BUNDLE_NAME_TEST);
+    std::string key = BUNDLE_NAME_TEST + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto &storedUserInfo = storedInfo.innerBundleUserInfos_.at(key);
+    auto appIndexKey = InnerBundleUserInfo::AppIndexToKey(2000);
+    EXPECT_TRUE(storedUserInfo.sandboxInfos.find(appIndexKey) != storedUserInfo.sandboxInfos.end());
+    EXPECT_EQ(storedUserInfo.sandboxInfos.at(appIndexKey).uid, TEST_UID);
+    EXPECT_EQ(storedUserInfo.sandboxInfos.at(appIndexKey).callerBundleNames.size(), 1u);
+    EXPECT_EQ(storedUserInfo.sandboxInfos.at(appIndexKey).callerBundleNames[0], BUNDLE_TEST1);
+
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: AddCliSandboxBundle_0400
+ * @tc.name: test AddCliSandboxBundle
+ * @tc.desc: 1.sandbox already exist for same appIndex
+ *           2.call AddCliSandboxBundle again
+ *           3.return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED
+ */
+HWTEST_F(BmsBundleDataMgrTest2, AddCliSandboxBundle_0400, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME_TEST;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerInfo);
+
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.userId = USERID;
+    sandboxInfo.appIndex = 2000;
+    auto result = dataMgr->AddCliSandboxBundle(BUNDLE_NAME_TEST, sandboxInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    // add again with same appIndex
+    result = dataMgr->AddCliSandboxBundle(BUNDLE_NAME_TEST, sandboxInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED);
+
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: AddCliSandboxBundle_0500
+ * @tc.name: test AddCliSandboxBundle
+ * @tc.desc: 1.appIndex out of valid range (< 2000)
+ *           2.call AddCliSandboxBundle
+ *           3.return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX
+ */
+HWTEST_F(BmsBundleDataMgrTest2, AddCliSandboxBundle_0500, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME_TEST;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerInfo);
+
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.userId = USERID;
+    sandboxInfo.appIndex = 100; // below CLI_SANDBOX_APP_INDEX_MIN(2000)
+    auto result = dataMgr->AddCliSandboxBundle(BUNDLE_NAME_TEST, sandboxInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX);
+
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: RemoveCliSandboxBundle_0100
+ * @tc.name: test RemoveCliSandboxBundle
+ * @tc.desc: 1.bundle not exist
+ *           2.call RemoveCliSandboxBundle
+ *           3.return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleDataMgrTest2, RemoveCliSandboxBundle_0100, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    auto result = dataMgr->RemoveCliSandboxBundle(BUNDLE_NAME_TEST, USERID, 2000);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: RemoveCliSandboxBundle_0200
+ * @tc.name: test RemoveCliSandboxBundle
+ * @tc.desc: 1.sandbox exist
+ *           2.call RemoveCliSandboxBundle
+ *           3.return ERR_OK and sandbox removed
+ */
+HWTEST_F(BmsBundleDataMgrTest2, RemoveCliSandboxBundle_0200, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME_TEST;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerInfo);
+
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.userId = USERID;
+    sandboxInfo.appIndex = 2000;
+    auto result = dataMgr->AddCliSandboxBundle(BUNDLE_NAME_TEST, sandboxInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    result = dataMgr->RemoveCliSandboxBundle(BUNDLE_NAME_TEST, USERID, 2000);
+    EXPECT_EQ(result, ERR_OK);
+
+    // verify sandbox removed
+    auto &storedInfo = dataMgr->bundleInfos_.at(BUNDLE_NAME_TEST);
+    std::string key = BUNDLE_NAME_TEST + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto &storedUserInfo = storedInfo.innerBundleUserInfos_.at(key);
+    auto appIndexKey = InnerBundleUserInfo::AppIndexToKey(2000);
+    EXPECT_TRUE(storedUserInfo.sandboxInfos.find(appIndexKey) == storedUserInfo.sandboxInfos.end());
+
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: RemoveCliSandboxBundle_0300
+ * @tc.name: test RemoveCliSandboxBundle
+ * @tc.desc: 1.sandbox not exist for given appIndex
+ *           2.call RemoveCliSandboxBundle
+ *           3.return ERR_OK (idempotent)
+ */
+HWTEST_F(BmsBundleDataMgrTest2, RemoveCliSandboxBundle_0300, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME_TEST;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerInfo);
+
+    // remove non-existent sandbox
+    auto result = dataMgr->RemoveCliSandboxBundle(BUNDLE_NAME_TEST, USERID, 2000);
+    EXPECT_EQ(result, ERR_OK);
+
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: AddCallerToCliSandbox_0100
+ * @tc.name: test AddCallerToCliSandbox
+ * @tc.desc: 1.bundle not exist
+ *           2.call AddCallerToCliSandbox
+ *           3.return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleDataMgrTest2, AddCallerToCliSandbox_0100, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    auto result = dataMgr->AddCallerToCliSandbox(BUNDLE_NAME_TEST, USERID, 2000, BUNDLE_TEST1);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: AddCallerToCliSandbox_0200
+ * @tc.name: test AddCallerToCliSandbox
+ * @tc.desc: 1.sandbox exist
+ *           2.call AddCallerToCliSandbox with new caller
+ *           3.return ERR_OK and caller added
+ */
+HWTEST_F(BmsBundleDataMgrTest2, AddCallerToCliSandbox_0200, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME_TEST;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerInfo);
+
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.userId = USERID;
+    sandboxInfo.appIndex = 2000;
+    sandboxInfo.callerBundleNames.push_back(BUNDLE_TEST1);
+    auto result = dataMgr->AddCliSandboxBundle(BUNDLE_NAME_TEST, sandboxInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    // add another caller
+    result = dataMgr->AddCallerToCliSandbox(BUNDLE_NAME_TEST, USERID, 2000, BUNDLE_TEST2);
+    EXPECT_EQ(result, ERR_OK);
+
+    // verify caller added
+    auto &storedInfo = dataMgr->bundleInfos_.at(BUNDLE_NAME_TEST);
+    std::string key = BUNDLE_NAME_TEST + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto &storedUserInfo = storedInfo.innerBundleUserInfos_.at(key);
+    auto appIndexKey = InnerBundleUserInfo::AppIndexToKey(2000);
+    auto &names = storedUserInfo.sandboxInfos.at(appIndexKey).callerBundleNames;
+    EXPECT_EQ(names.size(), 2u);
+    EXPECT_EQ(names[0], BUNDLE_TEST1);
+    EXPECT_EQ(names[1], BUNDLE_TEST2);
+
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: AddCallerToCliSandbox_0300
+ * @tc.name: test AddCallerToCliSandbox
+ * @tc.desc: 1.sandbox exist with caller
+ *           2.call AddCallerToCliSandbox with same caller (duplicate)
+ *           3.return ERR_OK and no duplicate added
+ */
+HWTEST_F(BmsBundleDataMgrTest2, AddCallerToCliSandbox_0300, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME_TEST;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerInfo);
+
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.userId = USERID;
+    sandboxInfo.appIndex = 2000;
+    sandboxInfo.callerBundleNames.push_back(BUNDLE_TEST1);
+    auto result = dataMgr->AddCliSandboxBundle(BUNDLE_NAME_TEST, sandboxInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    // add same caller again
+    result = dataMgr->AddCallerToCliSandbox(BUNDLE_NAME_TEST, USERID, 2000, BUNDLE_TEST1);
+    EXPECT_EQ(result, ERR_OK);
+
+    // verify no duplicate
+    auto &storedInfo = dataMgr->bundleInfos_.at(BUNDLE_NAME_TEST);
+    std::string key = BUNDLE_NAME_TEST + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto &storedUserInfo = storedInfo.innerBundleUserInfos_.at(key);
+    auto appIndexKey = InnerBundleUserInfo::AppIndexToKey(2000);
+    auto &names = storedUserInfo.sandboxInfos.at(appIndexKey).callerBundleNames;
+    EXPECT_EQ(names.size(), 1u);
+    EXPECT_EQ(names[0], BUNDLE_TEST1);
+
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    ClearDataMgr();
+}
+
+/**
+ * @tc.number: AddCallerToCliSandbox_0400
+ * @tc.name: test AddCallerToCliSandbox
+ * @tc.desc: 1.sandbox not exist for given appIndex
+ *           2.call AddCallerToCliSandbox
+ *           3.return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest2, AddCallerToCliSandbox_0400, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerInfo;
+    innerInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME_TEST;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerInfo.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerInfo);
+
+    // no sandbox added, appIndex not exist
+    auto result = dataMgr->AddCallerToCliSandbox(BUNDLE_NAME_TEST, USERID, 2000, BUNDLE_TEST1);
+    EXPECT_EQ(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+    ClearDataMgr();
+}
 } // OHOS

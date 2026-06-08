@@ -2439,6 +2439,11 @@ public:
     ErrCode RemoveCloneBundle(const int32_t userId, const int32_t appIndex);
     ErrCode GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex);
     ErrCode IsCloneAppIndexExisted(const int32_t userId, const int32_t appIndex, bool &res);
+    // CLI sandbox methods
+    ErrCode AddCliSandboxBundle(const InnerCliSandboxInfo &sandboxInfo);
+    ErrCode RemoveCliSandboxBundle(const int32_t userId, const int32_t appIndex);
+    bool AddCallerToCliSandbox(const int32_t userId, const int32_t appIndex,
+        const std::string &callerBundleName);
     bool GetApplicationInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
         ApplicationInfo &appInfo) const;
     bool GetBundleInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,

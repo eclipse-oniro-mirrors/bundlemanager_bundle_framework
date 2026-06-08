@@ -31,6 +31,7 @@ constexpr const char* INNER_BUNDLE_USER_INFO_IS_REMOVABLE = "isRemovable";
 constexpr const char* INNER_BUNDLE_USER_INFO_CAN_UNINSTALL = "canUninstall";
 constexpr const char* INNER_BUNDLE_USER_INFO_IS_BUNDLE_FIRST_LAUNCH = "isBundleFirstLaunched";
 constexpr const char* INNER_BUNDLE_USER_INFO_CLONE_INFOS = "cloneInfos";
+constexpr const char* INNER_BUNDLE_USER_INFO_SANDBOX_INFOS = "sandboxInfos";
 constexpr const char* INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET = "installedPluginSet";
 constexpr const char* INNER_BUNDLE_USER_INFO_CUR_DYNAMIC_ICON_MODULE = "curDynamicIconModule";
 constexpr const char* INNER_BUNDLE_USER_INFO_CUR_ALTERNATE_ICON_NAME = "curAlternateIconName";
@@ -52,6 +53,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleU
         {INNER_BUNDLE_USER_INFO_CAN_UNINSTALL, innerBundleUserInfo.canUninstall},
         {INNER_BUNDLE_USER_INFO_IS_BUNDLE_FIRST_LAUNCH, innerBundleUserInfo.isBundleFirstLaunched},
         {INNER_BUNDLE_USER_INFO_CLONE_INFOS, innerBundleUserInfo.cloneInfos},
+        {INNER_BUNDLE_USER_INFO_SANDBOX_INFOS, innerBundleUserInfo.sandboxInfos},
         {INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET, innerBundleUserInfo.installedPluginSet},
         {INNER_BUNDLE_USER_INFO_CUR_DYNAMIC_ICON_MODULE, innerBundleUserInfo.curDynamicIconModule},
         {INNER_BUNDLE_USER_INFO_CUR_ALTERNATE_ICON_NAME, innerBundleUserInfo.curAlternateIconName},
@@ -89,6 +91,9 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
     GetValueIfFindKey<std::map<std::string, InnerBundleCloneInfo>>(jsonObject, jsonObjectEnd,
         INNER_BUNDLE_USER_INFO_CLONE_INFOS,
         innerBundleUserInfo.cloneInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::map<std::string, InnerCliSandboxInfo>>(jsonObject, jsonObjectEnd,
+        INNER_BUNDLE_USER_INFO_SANDBOX_INFOS,
+        innerBundleUserInfo.sandboxInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::unordered_set<std::string>>(jsonObject, jsonObjectEnd,
         INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET,
         innerBundleUserInfo.installedPluginSet, JsonType::ARRAY, false, parseResult, ArrayType::STRING);

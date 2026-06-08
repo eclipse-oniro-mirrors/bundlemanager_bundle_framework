@@ -130,6 +130,10 @@ constexpr const char* PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOU
     "(ohos.permission.GET_BUNDLE_INFO_PRIVILEGED and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
 constexpr const char* PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST =
     "ohos.permission.ENTERPRISE_GET_INSTALLED_BUNDLE_LIST";
+constexpr const char* PERMISSION_SUPPORT_SANDBOX_BUNDLE =
+    "ohos.permission.SUPPORT_SANDBOX_BUNDLE";
+constexpr const char* PERMISSION_MANAGER_SANDBOX_BUNDLE =
+    "ohos.permission.MANAGER_SANDBOX_BUNDLE";
 
 enum class AppType {
     SYSTEM_APP = 0,
@@ -228,6 +232,10 @@ constexpr const char* SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 constexpr int32_t MAIN_APP_INDEX = 0;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 constexpr int32_t ALL_CLONE_APP_INDEX = -1;
+
+// cli sandbox application
+constexpr int32_t CLI_SANDBOX_APP_INDEX_MIN = 2000;
+constexpr int32_t CLI_SANDBOX_APP_INDEX_MAX = 3000;
 
 //param key-value
 constexpr const char* VERIFY_UNINSTALL_RULE_KEY = "ohos.bms.param.verifyUninstallRule";

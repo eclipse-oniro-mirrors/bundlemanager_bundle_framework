@@ -18,6 +18,7 @@
 
 #include "bundle_user_info.h"
 #include "inner_bundle_clone_info.h"
+#include "inner_cli_sandbox_info.h"
 #include "json_util.h"
 #include "plugin/plugin_bundle_info.h"
 
@@ -55,6 +56,9 @@ struct InnerBundleUserInfo {
 
     // appIndex -> cloneInfo
     std::map<std::string, InnerBundleCloneInfo> cloneInfos;
+
+    // appIndex -> cliSandboxInfo
+    std::map<std::string, InnerCliSandboxInfo> sandboxInfos;
 
     // use to record plugin that exist in current user
     std::unordered_set<std::string> installedPluginSet;
