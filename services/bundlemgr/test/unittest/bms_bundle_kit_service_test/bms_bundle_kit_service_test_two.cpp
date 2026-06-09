@@ -7211,6 +7211,24 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAcrossUserPermission_0400, Function | Sma
 }
 
 /**
+ * @tc.number: CheckAcrossUserPermission_0500
+ * @tc.name: test CheckAcrossUserPermission with UNSPECIFIED_USERID
+ * @tc.desc: 1. test when userId is UNSPECIFIED_USERID (-2)
+ *           2. should return true directly without checking token or permission
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckAcrossUserPermission_0500, Function | SmallTest | Level1)
+{
+    SetNativeTokenTypeForTest(false);
+    SetVerifyCallingPermissionForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->CheckAcrossUserPermission(Constants::UNSPECIFIED_USERID);
+
+    EXPECT_EQ(result, true);
+    ResetTestValues();
+}
+
+/**
  * @tc.number: PluginBundleInfoTest
  * @tc.name: PluginBundleInfoTest to_json and from_json branch cover
  * @tc.desc: 1.Test to_json and from_json

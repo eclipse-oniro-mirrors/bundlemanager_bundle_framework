@@ -4667,6 +4667,9 @@ bool BundleMgrHostImpl::VerifySystemApi(int32_t beginApiVersion)
 
 bool BundleMgrHostImpl::CheckAcrossUserPermission(const int32_t userId)
 {
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        return true;
+    }
     if (BundlePermissionMgr::IsNativeTokenType()) {
         return true;
     }
