@@ -3050,6 +3050,20 @@ HWTEST_F(BmsEventHandlerTest, InnerProcessRouterMap_0100, Function | SmallTest |
 }
 
 /**
+ * @tc.number: ProcessEmptyOdid_0001
+ * @tc.name: ProcessEmptyOdid
+ * @tc.desc: test ProcessEmptyOdid
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessEmptyOdid_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        EXPECT_NO_THROW(handler->ProcessEmptyOdid());
+    }
+}
+
+/**
  * @tc.number: InstallSystemBundleNeedCheckUserForPatch_0100
  * @tc.name: InstallSystemBundleNeedCheckUserForPatch
  * @tc.desc: test InstallSystemBundleNeedCheckUserForPatch

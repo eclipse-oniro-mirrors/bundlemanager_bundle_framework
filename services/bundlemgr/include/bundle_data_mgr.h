@@ -1357,6 +1357,7 @@ public:
         int32_t userId, std::vector<SkillInfo> &skillInfos);
     ErrCode GetAllSkillInfos(uint32_t flags, int32_t userId,
         std::vector<SkillInfo> &skillInfos);
+    void ProcessEmptyOdid();
 private:
     /**
      * @brief Init transferStates.

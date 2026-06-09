@@ -464,6 +464,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         CheckALLResourceInfo();
         RemoveUninstalledPreloadFile();
         ProcessRouterMap();
+        ProcessEmptyOdid();
     }
     // need process main bundle status
     BmsKeyEventMgr::ProcessMainBundleStatusFinally();
@@ -1415,6 +1416,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckInstallSource();
     ProcessCheckAppExtensionAbility();
     ProcessRouterMap();
+    ProcessEmptyOdid();
     // Driver update may cause shader cache invalidity and need to be cleared
     CleanSystemOptimizeShaderCache();
     CleanAllBundleShaderCache();
@@ -3570,6 +3572,16 @@ void BMSEventHandler::ProcessRebootSkillsUninstall()
         }
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "Reboot scan and OTA uninstall for skills success");
+}
+
+void BMSEventHandler::ProcessEmptyOdid()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "ProcessEmptyOdid DataMgr is nullptr");
+        return;
+    }
+    dataMgr->ProcessEmptyOdid();
 }
 
 void BMSEventHandler::ProcessCheckAppExtensionAbility()
