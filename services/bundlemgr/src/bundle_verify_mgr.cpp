@@ -89,6 +89,17 @@ ErrCode BundleVerifyMgr::HapVerify(const std::string &filePath, HapVerifyResult 
     return res;
 }
 
+ErrCode BundleVerifyMgr::ConvertHapVerifyResultCode(int32_t hapVerifyResultCode)
+{
+    size_t len = sizeof(HAP_VERIFY_ERR_MAP_KEY) / sizeof(HAP_VERIFY_ERR_MAP_KEY[0]);
+    for (size_t i = 0; i < len; i++) {
+        if (hapVerifyResultCode == HAP_VERIFY_ERR_MAP_KEY[i]) {
+            return HAP_VERIFY_ERR_MAP_VALUE[i];
+        }
+    }
+    return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
+}
+
 bool BundleVerifyMgr::isDebug_ = false;
 
 void BundleVerifyMgr::EnableDebug()

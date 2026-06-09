@@ -31,6 +31,7 @@ class BundleVerifyMgr {
 public:
     static ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,
         bool readFile = false, const int32_t userId = Constants::INVALID_USERID);
+    static ErrCode ConvertHapVerifyResultCode(int32_t hapVerifyResultCode);
     static void EnableDebug();
     static void DisableDebug();
     static ErrCode ParseHapProfile(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,

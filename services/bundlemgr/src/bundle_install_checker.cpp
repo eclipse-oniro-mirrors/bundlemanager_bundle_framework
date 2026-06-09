@@ -313,13 +313,14 @@ ErrCode BundleInstallChecker::CheckHapsSignInfoAndInitSession(
     hapList.isPreInstalled = isPreInstallApp;
     hapList.userId = userId;
     std::vector<Security::AccessToken::TrustedBundleInfo> trustedBundleInfo;
+    Security::AccessToken::HapVerifyResultInfo resultInfo;
     int32_t signRet = Security::AccessToken::AccessTokenKit::CheckHapSignInfo(
-        hapList, sessionId, trustedBundleInfo);
+        hapList, sessionId, trustedBundleInfo, resultInfo);
     if (signRet != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS
         // confit for succesing check
         && signRet != Security::AccessToken::AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED) {
         LOG_E(BMS_TAG_INSTALLER, "CheckHapSignInfo failed, err=%{public}d", signRet);
-        return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
+        return BundleVerifyMgr::ConvertHapVerifyResultCode(resultInfo.errorCode);
     }
     LOG_I(BMS_TAG_INSTALLER, "CheckHapSignInfo success, sessionId=%{public}d", sessionId);
 
