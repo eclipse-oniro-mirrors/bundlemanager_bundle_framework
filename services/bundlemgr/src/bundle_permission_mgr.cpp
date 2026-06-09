@@ -800,6 +800,11 @@ int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, cons
                 newUserInfo.gids.emplace_back(identity.uid);
                 innerBundleInfo.AddInnerBundleUserInfo(newUserInfo);
             }
+            auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+            if (dataMgr != nullptr) {
+                dataMgr->UpdateUidMap(identity.uid, innerBundleInfo.GetBundleName(),
+                    innerBundleInfo.GetAppIndex());
+            }
             int32_t bundleId = identity.uid - userId * Constants::BASE_USER_RANGE;
             BundleUtil::MakeFsConfig(innerBundleInfo.GetBundleName(), bundleId,
                 ServiceConstants::HMDFS_CONFIG_PATH);

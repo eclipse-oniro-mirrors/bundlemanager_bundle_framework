@@ -2217,6 +2217,11 @@ void BMSEventHandler::BuildMigrationData(
     }
     for (const auto &[key, info] : sandboxMap) {
         std::string bn = info.GetBundleName();
+        int32_t sandboxAppIndex = 0;
+        auto pos = key.find(Constants::FILE_UNDERLINE);
+        if (pos != std::string::npos) {
+            OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex);
+        }
         auto &m = migratedMap[bn];
         if (m.bundleName.empty()) {
             m.bundleName = bn;
@@ -2229,7 +2234,7 @@ void BMSEventHandler::BuildMigrationData(
             int32_t userId = ui.bundleUserInfo.userId;
             m.uidList.emplace_back(ui.uid);
             m.hapBaseInfoList.emplace_back(
-                Security::AccessToken::HapBaseInfo{userId, bn, 0});
+                Security::AccessToken::HapBaseInfo{userId, bn, sandboxAppIndex});
             m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
             oldTokens.emplace_back(Security::AccessToken::AccessTokenIDEx{ui.accessTokenIdEx});
         }
@@ -2240,12 +2245,22 @@ void BMSEventHandler::BuildMigrationData(
         std::vector<Security::AccessToken::AccessTokenIDEx> oldTokens;
         for (const auto &[uidStr, dui] : ui.userInfos) {
             int32_t userId = 0;
-            if (!OHOS::StrToInt(uidStr, userId) || userId == -3) {
-                continue;
+            int32_t appIndex = 0;
+            auto underscorePos = uidStr.find(Constants::FILE_UNDERLINE);
+            if (underscorePos != std::string::npos) {
+                // Clone entry: key is "userId_appIndex"
+                if (!OHOS::StrToInt(uidStr.substr(0, underscorePos), userId)) {
+                    continue;
+                }
+                OHOS::StrToInt(uidStr.substr(underscorePos + 1), appIndex);
+            } else {
+                if (!OHOS::StrToInt(uidStr, userId) || userId == -3) {
+                    continue;
+                }
             }
             m.uidList.emplace_back(dui.uid);
             m.hapBaseInfoList.emplace_back(
-                Security::AccessToken::HapBaseInfo{userId, bn, 0});
+                Security::AccessToken::HapBaseInfo{userId, bn, appIndex});
             m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::RESERVED_DATA);
             oldTokens.emplace_back(Security::AccessToken::AccessTokenIDEx{dui.accessTokenIdEx});
         }

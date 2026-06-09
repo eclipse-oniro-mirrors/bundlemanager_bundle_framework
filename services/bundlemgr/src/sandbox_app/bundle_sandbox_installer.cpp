@@ -247,6 +247,7 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete accessToken failed");
     }
+    dataMgr_->RemoveUidFromMap(info, userId_);
 
 #ifdef BMS_ACCESSCONTROL_SANDBOX_MANAGER
     std::string sandboxKey = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
@@ -336,6 +337,7 @@ void BundleSandboxInstaller::SandboxAppRollBack(InnerBundleInfo &info, const int
     APP_LOGI("SandboxAppRollBack begin");
     BundlePermissionMgr::DeleteAccessTokenId(info.GetAccessTokenId(userId), info.GetBundleName(),
         Security::AccessToken::ReservedType::NONE);
+    dataMgr_->RemoveUidFromMap(info, userId);
     auto bundleName = info.GetBundleName();
     auto appIndex = info.GetAppIndex();
     if (sandboxDataMgr_ == nullptr) {

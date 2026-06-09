@@ -2067,10 +2067,12 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
                 AccessToken::AccessTokenKitRet::RET_SUCCESS) {
                 LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
             }
+            dataMgr_->RemoveUidFromMap(newInfos.begin()->second, userId_);
         } else {
             BundlePermissionMgr::DeleteAccessTokenId(
                 newInfos.begin()->second.GetAccessTokenId(userId_),
                 bundleName_, Security::AccessToken::ReservedType::RESERVED_DATA);
+            dataMgr_->RemoveUidFromMap(newInfos.begin()->second, userId_);
         }
         // remove driver file
         std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
@@ -3061,10 +3063,12 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, const InstallPa
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
         }
+        dataMgr_->RemoveUidFromMap(info, userId_);
         DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(info.GetBundleName(), userId_, 0);
     } else {
         BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_,
             bundleName_, Security::AccessToken::ReservedType::RESERVED_DATA);
+        dataMgr_->RemoveUidFromMap(info, userId_);
     }
 
     return ERR_OK;
@@ -4250,6 +4254,7 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
     }
     BundlePermissionMgr::DeleteAccessTokenId(it->second.accessTokenId, bundleName,
         Security::AccessToken::ReservedType::NONE);
+    dataMgr_->RemoveUidFromMap(it->second.uid);
     ErrCode result = InstalldClient::GetInstance()->RemoveBundleDataDir(bundleName, userId_,
         uninstallBundleInfo.bundleType == BundleType::ATOMIC_SERVICE, true);
     LOG_I(BMS_TAG_INSTALLER, "remove dirs res %{public}d", result);
@@ -6863,9 +6868,11 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
         }
+        dataMgr_->RemoveUidFromMap(innerBundleInfo, userId_);
     } else {
         BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_,
             bundleName_, Security::AccessToken::ReservedType::RESERVED_DATA);
+        dataMgr_->RemoveUidFromMap(innerBundleInfo, userId_);
     }
     if (innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
         int32_t uid = innerBundleInfo.GetUid(userId_);

@@ -225,6 +225,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     }
     ScopeGuard applyAccessTokenGuard([&] {
         BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID, bundleName);
+        dataMgr_->RemoveUidFromMap(uid);
     });
     newUserInfo.accessTokenId = newTokenIdEx.tokenIdExStruct.tokenID;
     newUserInfo.accessTokenIdEx = newTokenIdEx.tokenIDEx;

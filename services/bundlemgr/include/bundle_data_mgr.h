@@ -1186,6 +1186,9 @@ public:
         AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex = 0) const;
     ErrCode GetBundleNameAndIndex(const int32_t uid, std::string &bundleName, int32_t &appIndex) const;
     ErrCode GetBundleNameAndIndexForUid(const int32_t uid, std::string &bundleName, int32_t &appIndex) const;
+    void UpdateUidMap(int32_t uid, const std::string &bundleName, int32_t appIndex);
+    void RemoveUidFromMap(int32_t uid);
+    void RemoveUidFromMap(const InnerBundleInfo &info, int32_t userId);
 
     ErrCode QueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
         int32_t appIndex, AbilityInfo &abilityInfo) const;
@@ -1652,6 +1655,10 @@ private:
     // key:bundleName
     // value:innerbundleInfo
     std::map<std::string, InnerBundleInfo> bundleInfos_;
+    // bundleId -> {bundleName, appIndex} for fast lookup without AT service IPC
+    // bundleId = uid - userId * BASE_USER_RANGE, same bundleName+appIndex across users share one entry
+    mutable std::shared_mutex uidMapMutex_;
+    std::unordered_map<int32_t, std::pair<std::string, int32_t>> uidMap_;
     // key:bundle name
     std::map<std::string, InstallState> installStates_;
     // current-status:previous-statue pair

@@ -14,6 +14,7 @@
  */
 
 #include "bundle_permission_mgr.h"
+#include <mutex>
 
 bool g_isSystemApp = true;
 bool g_isNativeTokenType = true;
@@ -492,6 +493,19 @@ int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, cons
     const std::string &appServiceCapabilities,
     const bool isDebugGrant, int32_t &sessionId)
 {
+    Security::AccessToken::Identity identity;
+    int32_t ret = PrepareHapIdentity(innerBundleInfo, userId, dlpType, isDebugGrant,
+        appServiceCapabilities, sessionId, identity);
+    if (ret != 0 || identity.uid <= 0) {
+        return -1;
+    }
+    InnerBundleUserInfo newUserInfo;
+    newUserInfo.uid = identity.uid;
+    newUserInfo.gids.emplace_back(identity.uid);
+    newUserInfo.bundleUserInfo.userId = userId;
+    newUserInfo.bundleName = innerBundleInfo.GetBundleName();
+    innerBundleInfo.AddInnerBundleUserInfo(newUserInfo);
+    tokenIdeEx.tokenIdExStruct.tokenID = identity.tokenId;
     return 0;
 }
 
@@ -531,7 +545,27 @@ int32_t BundlePermissionMgr::PrepareHapIdentity(
     int32_t &sessionId,
     Security::AccessToken::Identity &identity)
 {
-    identity.uid = 20000000;
+    static constexpr int32_t MOCK_BASE_APP_UID = 10000;
+    static constexpr int32_t MOCK_BASE_USER_RANGE = 200000;
+    static std::mutex mockMutex;
+    static std::map<std::pair<std::string, int32_t>, int32_t> mockBundleIdMap;  // {bundleName, appIndex} -> bundleId
+    static int32_t mockNextBundleId = MOCK_BASE_APP_UID;
+
+    std::string bundleName = innerBundleInfo.GetBundleName();
+    int32_t appIndex = innerBundleInfo.GetAppIndex();
+    int32_t bundleId;
+    {
+        std::lock_guard<std::mutex> lock(mockMutex);
+        auto key = std::make_pair(bundleName, appIndex);
+        auto iter = mockBundleIdMap.find(key);
+        if (iter != mockBundleIdMap.end()) {
+            bundleId = iter->second;
+        } else {
+            bundleId = mockNextBundleId++;
+            mockBundleIdMap[key] = bundleId;
+        }
+    }
+    identity.uid = userId * MOCK_BASE_USER_RANGE + bundleId;
     identity.tokenId = 1;
     return 0;
 }
