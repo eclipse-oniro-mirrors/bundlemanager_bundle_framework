@@ -1534,28 +1534,50 @@ ErrCode BundleInstallerHost::DeleteReSignCert(int32_t userId)
     return ERR_OK;
 }
 
-ErrCode BundleInstallerHost::CreateCliSandboxApp(const std::string &callerBundleName,
-    const std::string &bundleName, int32_t userId, int32_t &appIndex)
+ErrCode BundleInstallerHost::CreateCliSandboxApp(const std::string &creatorBundleName,
+    const std::string &envCreatorBundleName, const std::string &bundleName,
+    int32_t userId, int32_t &appIndex)
 {
-    if (callerBundleName.empty() || bundleName.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "CreateCliSandboxApp failed due to empty parameters");
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    if (envCreatorBundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "env creatorBundleName is empty");
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_ENV_CREATOR_BUNDLE_NAME;
+    }
+
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "bundleName is empty");
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_BUNDLE_NAME;
+    }
+
+    std::string finalCreatorBundleName = creatorBundleName;
+    int32_t result = BundlePermissionMgr::VerifyPermission(
+        envCreatorBundleName, Constants::PERMISSION_CLI_MANAGER_WEB_SANDBOX, userId);
+    if (result != Constants::PERMISSION_GRANTED) {
+        LOG_W(BMS_TAG_INSTALLER, "env creator %{public}s does not have permission", envCreatorBundleName.c_str());
+        finalCreatorBundleName = envCreatorBundleName;
+    }
+
+    int32_t finalResult = BundlePermissionMgr::VerifyPermission(
+        finalCreatorBundleName, Constants::PERMISSION_MANAGER_SANDBOX_BUNDLE, userId);
+    if (finalResult != Constants::PERMISSION_GRANTED) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "creator %{public}s does not have permission", finalCreatorBundleName.c_str());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
     auto installer = std::make_shared<BundleCliSandboxInstaller>();
-    return installer->CreateCliSandboxApp(callerBundleName, bundleName, userId, appIndex);
+    return installer->CreateCliSandboxApp(finalCreatorBundleName, bundleName, userId, appIndex);
 }
 
 void BundleInstallerHost::HandleCreateCliSandboxApp(MessageParcel &data, MessageParcel &reply)
 {
     BUNDLE_MANAGER_HITRACE_CHAIN_NAME("CreateCliSandboxApp", HITRACE_FLAG_INCLUDE_ASYNC);
     LOG_D(BMS_TAG_INSTALLER, "handle create cli sandbox app message");
-    std::string callerBundleName = Str16ToStr8(data.ReadString16());
+    std::string creatorBundleName = Str16ToStr8(data.ReadString16());
+    std::string envCreatorBundleName = Str16ToStr8(data.ReadString16());
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t userId = data.ReadInt32();
     int32_t appIndex = 0;
 
-    auto ret = CreateCliSandboxApp(callerBundleName, bundleName, userId, appIndex);
+    auto ret = CreateCliSandboxApp(creatorBundleName, envCreatorBundleName, bundleName, userId, appIndex);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_INSTALLER, "write ret failed");
     }

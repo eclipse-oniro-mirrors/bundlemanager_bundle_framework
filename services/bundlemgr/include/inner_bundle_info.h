@@ -1247,6 +1247,8 @@ public:
         int32_t appIndex = 0) const;
     ErrCode GetBundleInfoV9(int32_t flags,
         BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
+    ErrCode GetBundleInfoForCliSandbox(int32_t flags,
+        BundleInfo &bundleInfo, int32_t userId, int32_t appIndex) const;
     bool CheckSpecialMetaData(const std::string &metaData) const;
     /**
      * @brief Obtains the FormInfo objects provided by all applications on the device.
@@ -2443,10 +2445,16 @@ public:
     ErrCode AddCliSandboxBundle(const InnerCliSandboxInfo &sandboxInfo);
     ErrCode RemoveCliSandboxBundle(const int32_t userId, const int32_t appIndex);
     bool AddCallerToCliSandbox(const int32_t userId, const int32_t appIndex,
-        const std::string &callerBundleName);
+        const std::string &creatorBundleName);
+    bool IsCliSandboxCreator(const int32_t userId, const int32_t appIndex,
+        const std::string &creatorBundleName) const;
     bool GetApplicationInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
         ApplicationInfo &appInfo) const;
     bool GetBundleInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
+        BundleInfo &bundleInfo) const;
+    bool GetApplicationInfoAdaptCliSandbox(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
+        ApplicationInfo &appInfo) const;
+    bool GetBundleInfoAdaptCliSandbox(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
         BundleInfo &bundleInfo) const;
     ErrCode VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appIndex);
     void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo, bool getDesc = false) const;

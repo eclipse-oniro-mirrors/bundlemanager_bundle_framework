@@ -117,7 +117,7 @@ void BmsBundleCliSandboxInstallerTest::SetBundleInfoWithSandbox(const std::strin
     sandboxInfo.appIndex = appIndex;
     sandboxInfo.uid = TEST_UID;
     sandboxInfo.accessTokenId = TEST_ACCESS_TOKEN_ID;
-    sandboxInfo.callerBundleNames = callerNames;
+    sandboxInfo.creatorBundleNames = callerNames;
     userInfo.sandboxInfos[InnerBundleUserInfo::AppIndexToKey(appIndex)] = sandboxInfo;
 
     InnerBundleInfo innerBundleInfo;
@@ -662,6 +662,132 @@ HWTEST_F(BmsBundleCliSandboxInstallerTest, DestroyAllCliSandboxApps_0600, TestSi
     SetBundleDataMgr();
     auto result = installer_->DestroyAllCliSandboxApps(BUNDLE_NAME, 999);
     EXPECT_EQ(result, ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_USER_NOT_EXIST);
+    UnsetBundleDataMgr();
+}
+
+/**
+ * @tc.number: CreateCliSandboxApp_0100
+ * @tc.name: CreateCliSandboxApp - Empty creatorBundleName
+ * @tc.desc: Test CreateCliSandboxApp when creatorBundleName is empty
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, CreateCliSandboxApp_0100, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    int32_t appIndex = 0;
+    EXPECT_EQ(installer_->CreateCliSandboxApp("", BUNDLE_NAME, USER_ID, appIndex),
+        ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_CREATOR_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: CreateCliSandboxApp_0200
+ * @tc.name: CreateCliSandboxApp - Empty bundleName
+ * @tc.desc: Test CreateCliSandboxApp when bundleName is empty
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, CreateCliSandboxApp_0200, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    int32_t appIndex = 0;
+    EXPECT_EQ(installer_->CreateCliSandboxApp(CREATOR_BUNDLE_NAME, "", USER_ID, appIndex),
+        ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ProcessCreateCliSandbox_0100
+ * @tc.name: ProcessCreateCliSandbox - DataMgr unavailable
+ * @tc.desc: Test ProcessCreateCliSandbox when DataMgr is null
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, ProcessCreateCliSandbox_0100, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    UnsetBundleDataMgr();
+    installer_->dataMgr_ = nullptr;
+    int32_t appIndex = 0;
+    EXPECT_EQ(installer_->ProcessCreateCliSandbox(
+        CREATOR_BUNDLE_NAME, BUNDLE_NAME, USER_ID, appIndex),
+        ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: ProcessCreateCliSandbox_0200
+ * @tc.name: ProcessCreateCliSandbox - Bundle not installed
+ * @tc.desc: Test ProcessCreateCliSandbox when target bundle not installed
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, ProcessCreateCliSandbox_0200, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    SetUserIdToDataMgr(USER_ID);
+    installer_->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(installer_->dataMgr_, nullptr);
+    int32_t appIndex = 0;
+    EXPECT_EQ(installer_->ProcessCreateCliSandbox(
+        CREATOR_BUNDLE_NAME, BUNDLE_NAME, USER_ID, appIndex),
+        ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_APP_NOT_EXISTED);
+    DeleteBundle(BUNDLE_NAME);
+    UnsetBundleDataMgr();
+}
+
+/**
+ * @tc.number: ProcessCreateCliSandbox_0300
+ * @tc.name: ProcessCreateCliSandbox - User not exist
+ * @tc.desc: Test ProcessCreateCliSandbox when userId not exist in dataMgr
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, ProcessCreateCliSandbox_0300, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    installer_->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(installer_->dataMgr_, nullptr);
+
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    info.AddInnerBundleUserInfo(userInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_[BUNDLE_NAME] = info;
+
+    int32_t appIndex = 0;
+    EXPECT_EQ(installer_->ProcessCreateCliSandbox(
+        CREATOR_BUNDLE_NAME, BUNDLE_NAME, USER_ID, appIndex),
+        ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_USER_NOT_EXIST);
+
+    DeleteBundle(BUNDLE_NAME);
+    UnsetBundleDataMgr();
+}
+
+/**
+ * @tc.number: ProcessCreateCliSandbox_0400
+ * @tc.name: ProcessCreateCliSandbox - Creator not installed
+ * @tc.desc: Test ProcessCreateCliSandbox when creator bundle is not installed for the user
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, ProcessCreateCliSandbox_0400, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    SetUserIdToDataMgr(USER_ID);
+    installer_->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(installer_->dataMgr_, nullptr);
+
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    info.AddInnerBundleUserInfo(userInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_[BUNDLE_NAME] = info;
+
+    int32_t appIndex = 0;
+    // creator not in bundleInfos_
+    EXPECT_EQ(installer_->ProcessCreateCliSandbox(
+        CREATOR_BUNDLE_NAME, BUNDLE_NAME, USER_ID, appIndex),
+        ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_CREATOR_NOT_INSTALLED);
+
+    DeleteBundle(BUNDLE_NAME);
     UnsetBundleDataMgr();
 }
 } // namespace OHOS

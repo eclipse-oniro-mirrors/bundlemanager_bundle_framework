@@ -33,9 +33,9 @@ struct InnerCliSandboxInfo {
     uint32_t accessTokenId = 0;
     uint64_t accessTokenIdEx = 0;
     int64_t installTime = 0;
-    SandboxIsolationType sandboxType = SandboxIsolationType::PartialIsolation;
+    SandboxIsolationType sandboxType = SandboxIsolationType::FullIsolation;
     std::vector<int32_t> gids;
-    std::vector<std::string> callerBundleNames;
+    std::vector<std::string> creatorBundleNames;
 };
 
 void from_json(const nlohmann::json& jsonObject, InnerCliSandboxInfo& info);

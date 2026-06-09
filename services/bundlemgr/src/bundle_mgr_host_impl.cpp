@@ -6250,6 +6250,55 @@ ErrCode BundleMgrHostImpl::QueryCloneAbilityInfo(const ElementName &element,
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::QuerySandboxCloneAbilityInfo(const std::string &creatorBundleName,
+    const ElementName &element, int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = element.GetBundleName();
+    std::string moduleName = element.GetModuleName();
+    std::string abilityName = element.GetAbilityName();
+    LOG_D(BMS_TAG_QUERY,
+        "-c:%{public}s, -n:%{public}s, -m:%{public}s, -a:%{public}s, -f:%{public}d, -i:%{public}d, -u:%{public}d",
+        creatorBundleName.c_str(), bundleName.c_str(), moduleName.c_str(), abilityName.c_str(),
+        flags, appIndex, userId);
+
+    if (creatorBundleName.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "impl query creatorBundleName is empty");
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_CREATOR_BUNDLE_NAME;
+    }
+
+    if (bundleName.empty() || abilityName.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QuerySandboxCloneAbilityInfo invalid params");
+        return ERR_APPEXECFWK_CLI_SANDBOX_QUERY_PARAM_ERROR;
+    }
+
+    if (appIndex < Constants::CLI_SANDBOX_APP_INDEX_MIN || appIndex > Constants::CLI_SANDBOX_APP_INDEX_MAX) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "query impl appIndex %{public}d is not in cli sandbox range", appIndex);
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_APP_INDEX;
+    }
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED})) {
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto res = dataMgr->QuerySandboxCloneAbilityInfo(
+        creatorBundleName, element, flags, userId, appIndex, abilityInfo);
+    if (res != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QuerySandboxCloneAbilityInfo fail, err: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int32_t flags,
     int32_t appIndex, BundleInfo &bundleInfo, int32_t userId)
 {
@@ -6270,7 +6319,12 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    auto res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
+    ErrCode res = ERR_OK;
+    if (appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX) {
+        res = dataMgr->GetCliSandboxBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
+    } else {
+        res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
+    }
     if (res != ERR_OK) {
         APP_LOGW_NOFUNC("GetCloneBundleInfo fail -n %{public}s -u %{public}d -i %{public}d -f %{public}d"
             " err:%{public}d", bundleName.c_str(), userId, appIndex, flags, res);
@@ -6295,7 +6349,12 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfoExt(const std::string &bundleName, 
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    auto res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
+    ErrCode res = ERR_OK;
+    if (appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX) {
+        res = dataMgr->GetCliSandboxBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
+    } else {
+        res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
+    }
     if (res != ERR_OK) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         if (bmsExtensionClient->GetBundleInfo(bundleName, flags, bundleInfo, userId, true) == ERR_OK) {
@@ -6356,6 +6415,30 @@ ErrCode BundleMgrHostImpl::GetCloneAppIndexes(const std::string &bundleName, std
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     appIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetCliSandboxAppIndexes(const std::string &bundleName,
+    std::vector<int32_t> &appIndexes, int32_t userId)
+{
+    APP_LOGD("start GetCliSandboxAppIndexes bundleName = %{public}s, userId = %{public}d",
+        bundleName.c_str(), userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)
+        && !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGD("verify permission success, begin to GetCliSandboxAppIndexes");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    appIndexes = dataMgr->GetCliSandboxAppIndexes(bundleName, userId);
     return ERR_OK;
 }
 

@@ -38,6 +38,7 @@ export class BundleInfoInner implements BundleInfo {
   readonly appIndex: int;
   readonly firstInstallTime?: long;
   readonly buildVersion?: string | undefined;
+  readonly sandboxCreatorBundleName?: string | undefined;
 
   constructor() { }
   constructor(name: string,
@@ -56,7 +57,8 @@ export class BundleInfoInner implements BundleInfo {
     routerMap: Array<RouterItem>,
     appIndex: int,
     firstInstallTime?: long,
-    buildVersion?: string) {
+    buildVersion?: string,
+    sandboxCreatorBundleName?: string) {
       this.name = name;
       this.vendor = vendor;
       this.versionCode = versionCode;
@@ -74,6 +76,7 @@ export class BundleInfoInner implements BundleInfo {
       this.appIndex = appIndex;
       this.firstInstallTime = firstInstallTime;
       this.buildVersion = buildVersion;
+      this.sandboxCreatorBundleName = sandboxCreatorBundleName;
   }
   constructor(name: string, hapModulesInfo: Array<HapModuleInfo>) {
       this.name = name;

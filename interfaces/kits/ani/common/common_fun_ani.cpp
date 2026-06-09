@@ -441,6 +441,10 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     ani_string buildVersion = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleInfo.buildVersion, buildVersion));
 
+    // sandboxCreatorBundleName: string
+    ani_string sandboxCreatorBundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleInfo.sandboxCreatorBundleName, sandboxCreatorBundleName));
+
     ani_value args[] = {
         { .r = name },
         { .r = vendor },
@@ -459,6 +463,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         { .i = bundleInfo.appIndex },
         { .r = firstInstallTime },
         { .r = buildVersion },
+        { .r = sandboxCreatorBundleName },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
@@ -478,6 +483,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         .AddInt()                                   // appIndex: int
         .AddClass(CommonFunAniNS::CLASSNAME_LONG)   // firstInstallTime?: long
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // buildVersion?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // sandboxCreatorBundleName?: string
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_INFO_INNER, ctorSig, args);
 }

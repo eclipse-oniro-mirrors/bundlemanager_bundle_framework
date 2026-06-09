@@ -787,7 +787,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
         "updateTime":0,
         "vendor":"example",
         "versionCode":1000000,
-        "versionName":"1.0.0"
+        "versionName":"1.0.0",
+        "sandboxCreatorBundleName":""
     },
     "baseDataDir":"",
     "baseExtensionInfos":{},
@@ -865,7 +866,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "installTime":1678677771,
             "uid":20010065,
             "updateTime":1678677771,
-            "cloneInfos":{}
+            "cloneInfos":{},
+            "sandboxInfos":{}
         }
     },
     "innerModuleInfos":{
@@ -1599,7 +1601,8 @@ protected:
                 "oldAppIds":[],
                 "routerArray": [],
                 "isNewVersion": false,
-                "buildVersion": ""
+                "buildVersion": "",
+                "sandboxCreatorBundleName": ""
             },
             "baseExtensionInfos_": {
             },

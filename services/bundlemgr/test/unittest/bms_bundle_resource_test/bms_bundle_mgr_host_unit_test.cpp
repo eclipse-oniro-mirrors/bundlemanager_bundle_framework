@@ -4530,5 +4530,83 @@ HWTEST_F(BmsBundleMgrHostUnitTest, HandleCleanBundlePartialCacheAutomatic_0100, 
     ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: HandleQuerySandboxCloneAbilityInfo_0100
+ * @tc.name: test the HandleQuerySandboxCloneAbilityInfo
+ * @tc.desc: 1. creatorBundleName is empty
+ *           2. test HandleQuerySandboxCloneAbilityInfo
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleQuerySandboxCloneAbilityInfo_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(""); // creatorBundleName empty
+    data.WriteParcelable(new ElementName());
+    data.WriteString(""); // moduleName
+    data.WriteInt32(1); // flags
+    data.WriteInt32(2000); // appIndex in valid range
+    data.WriteInt32(100); // userId
+    ErrCode res = bundleMgrHost.HandleQuerySandboxCloneAbilityInfo(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_CREATOR_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: HandleQuerySandboxCloneAbilityInfo_0200
+ * @tc.name: test the HandleQuerySandboxCloneAbilityInfo
+ * @tc.desc: 1. appIndex out of cli sandbox range
+ *           2. test HandleQuerySandboxCloneAbilityInfo
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleQuerySandboxCloneAbilityInfo_0200, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(TEST_BUNDLE_NAME); // creatorBundleName
+    data.WriteParcelable(new ElementName());
+    data.WriteString(""); // moduleName
+    data.WriteInt32(1); // flags
+    data.WriteInt32(100); // appIndex below CLI_SANDBOX_APP_INDEX_MIN
+    data.WriteInt32(100); // userId
+    ErrCode res = bundleMgrHost.HandleQuerySandboxCloneAbilityInfo(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_APP_INDEX);
+}
+
+/**
+ * @tc.number: HandleQuerySandboxCloneAbilityInfo_0300
+ * @tc.name: test the HandleQuerySandboxCloneAbilityInfo
+ * @tc.desc: 1. parcel has no ElementName (read fails)
+ *           2. test HandleQuerySandboxCloneAbilityInfo returns parcel error
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleQuerySandboxCloneAbilityInfo_0300, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    // write only creatorBundleName, no ElementName parcelable follows
+    data.WriteString(TEST_BUNDLE_NAME);
+    ErrCode res = bundleMgrHost.HandleQuerySandboxCloneAbilityInfo(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetCliSandboxAppIndexes_0100
+ * @tc.name: test the HandleGetCliSandboxAppIndexes
+ * @tc.desc: 1. valid parcel layout, GetCliSandboxAppIndexes returns error (permission/dataMgr)
+ *           2. test HandleGetCliSandboxAppIndexes writes errCode to reply
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetCliSandboxAppIndexes_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(TEST_BUNDLE_NAME);
+    data.WriteInt32(100); // userId
+    ErrCode res = bundleMgrHost.HandleGetCliSandboxAppIndexes(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+    ErrCode retCode = reply.ReadInt32();
+    EXPECT_NE(retCode, ERR_OK);
+}
 } // namespace AppExecFwk
 } // namespace OHOS

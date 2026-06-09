@@ -6099,6 +6099,61 @@ ErrCode BundleMgrProxy::QueryCloneAbilityInfo(const ElementName &element,
         BundleMgrInterfaceCode::GET_CLONE_ABILITY_INFO, data, abilityInfo);
 }
 
+ErrCode BundleMgrProxy::QuerySandboxCloneAbilityInfo(const std::string &creatorBundleName,
+    const ElementName &element, int32_t flags, int32_t appIndex,
+    AbilityInfo &abilityInfo, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (creatorBundleName.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "proxy query creatorBundleName is empty");
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_CREATOR_BUNDLE_NAME;
+    }
+
+    std::string bundleName = element.GetBundleName();
+    std::string abilityName = element.GetAbilityName();
+    if (bundleName.empty() || abilityName.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QuerySandboxCloneAbilityInfo invalid params");
+        return ERR_APPEXECFWK_CLI_SANDBOX_QUERY_PARAM_ERROR;
+    }
+
+    if (appIndex < Constants::CLI_SANDBOX_APP_INDEX_MIN || appIndex > Constants::CLI_SANDBOX_APP_INDEX_MAX) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "proxy query appIndex %{public}d is not in cli sandbox range", appIndex);
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_APP_INDEX;
+    }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY, "write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(creatorBundleName)) {
+        LOG_E(BMS_TAG_QUERY, "write creatorBundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&element)) {
+        LOG_E(BMS_TAG_QUERY, "write element fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(element.GetModuleName())) {
+        LOG_E(BMS_TAG_QUERY, "write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        LOG_E(BMS_TAG_QUERY, "write flags failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_QUERY, "write appIndex failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_QUERY, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<AbilityInfo>(
+        BundleMgrInterfaceCode::QUERY_SANDBOX_CLONE_ABILITY_INFO, data, abilityInfo);
+}
+
 ErrCode BundleMgrProxy::GetCloneBundleInfo(const std::string &bundleName, int32_t flags, int32_t appIndex,
     BundleInfo &bundleInfo, int32_t userId)
 {
@@ -6215,6 +6270,41 @@ ErrCode BundleMgrProxy::GetCloneAppIndexes(const std::string &bundleName, std::v
     }
     if (!reply.ReadInt32Vector(&appIndexes)) {
         APP_LOGE("fail to GetCloneAppIndexes from reply");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ret;
+}
+
+ErrCode BundleMgrProxy::GetCliSandboxAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
+    int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to GetCliSandboxAppIndexes of %{public}s", bundleName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetCliSandboxAppIndexes due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("failed to GetCliSandboxAppIndexes due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetCliSandboxAppIndexes due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_CLI_SANDBOX_APP_INDEXES, data, reply)) {
+        APP_LOGE("fail to GetCliSandboxAppIndexes from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if (!reply.ReadInt32Vector(&appIndexes)) {
+        APP_LOGE("fail to GetCliSandboxAppIndexes from reply");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ret;

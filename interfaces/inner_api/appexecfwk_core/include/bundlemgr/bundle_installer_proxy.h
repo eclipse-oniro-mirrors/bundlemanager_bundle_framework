@@ -151,8 +151,9 @@ public:
 
     virtual ErrCode UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames) override;
 
-    virtual ErrCode CreateCliSandboxApp(const std::string &callerBundleName,
-        const std::string &bundleName, int32_t userId, int32_t &appIndex) override;
+    virtual ErrCode CreateCliSandboxApp(const std::string &creatorBundleName,
+        const std::string &envCreatorBundleName, const std::string &bundleName,
+        int32_t userId, int32_t &appIndex) override;
 
     virtual ErrCode DestroyCliSandboxApp(const std::string &creatorBundleName,
         const std::string &envCallerBundleName, const std::string &bundleName,

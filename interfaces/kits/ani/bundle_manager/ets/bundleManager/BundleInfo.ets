@@ -35,6 +35,7 @@ export interface BundleInfo {
   readonly appIndex: int;
   readonly firstInstallTime?: long;
   readonly buildVersion?: string;
+  readonly sandboxCreatorBundleName?: string;
 }
 
 export interface ReqPermissionDetail {

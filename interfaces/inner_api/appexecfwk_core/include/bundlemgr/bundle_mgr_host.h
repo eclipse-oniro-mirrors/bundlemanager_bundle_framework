@@ -948,6 +948,8 @@ private:
 
     ErrCode HandleQueryCloneAbilityInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleQuerySandboxCloneAbilityInfo(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetCloneBundleInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetCloneBundleInfoExt(MessageParcel &data, MessageParcel &reply);
@@ -955,6 +957,8 @@ private:
     ErrCode HandleGetMainAndCloneBundleInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetCloneAppIndexes(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetCliSandboxAppIndexes(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetLaunchWant(MessageParcel &data, MessageParcel &reply);
 

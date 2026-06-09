@@ -11584,6 +11584,259 @@ HWTEST_F(BmsBundleKitServiceTest, GetCloneAppIndexes_0200, Function | SmallTest 
 }
 
 /**
+ * @tc.number: QuerySandboxCloneAbilityInfo_0100
+ * @tc.name: test QuerySandboxCloneAbilityInfo
+ * @tc.desc: 1.creatorBundleName is empty
+ *           2.call QuerySandboxCloneAbilityInfo
+ *           3.return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_CREATOR_BUNDLE_NAME
+ */
+HWTEST_F(BmsBundleKitServiceTest, QuerySandboxCloneAbilityInfo_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    element.SetAbilityName(ABILITY_NAME);
+    int32_t flags = 1;
+    int32_t appIndex = 2000;
+    AbilityInfo abilityInfo;
+    ErrCode ret = hostImpl->QuerySandboxCloneAbilityInfo(
+        "", element, flags, appIndex, abilityInfo, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_CREATOR_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: QuerySandboxCloneAbilityInfo_0200
+ * @tc.name: test QuerySandboxCloneAbilityInfo
+ * @tc.desc: 1.bundleName and abilityName empty
+ *           2.call QuerySandboxCloneAbilityInfo
+ *           3.return ERR_APPEXECFWK_CLI_SANDBOX_QUERY_PARAM_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, QuerySandboxCloneAbilityInfo_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    ElementName element;
+    int32_t flags = 1;
+    int32_t appIndex = 2000;
+    AbilityInfo abilityInfo;
+    ErrCode ret = hostImpl->QuerySandboxCloneAbilityInfo(
+        BUNDLE_NAME, element, flags, appIndex, abilityInfo, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLI_SANDBOX_QUERY_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: QuerySandboxCloneAbilityInfo_0300
+ * @tc.name: test QuerySandboxCloneAbilityInfo
+ * @tc.desc: 1.appIndex out of cli sandbox range (lower than 2000)
+ *           2.call QuerySandboxCloneAbilityInfo
+ *           3.return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_APP_INDEX
+ */
+HWTEST_F(BmsBundleKitServiceTest, QuerySandboxCloneAbilityInfo_0300, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    element.SetAbilityName(ABILITY_NAME);
+    int32_t flags = 1;
+    int32_t appIndex = 100;
+    AbilityInfo abilityInfo;
+    ErrCode ret = hostImpl->QuerySandboxCloneAbilityInfo(
+        BUNDLE_NAME, element, flags, appIndex, abilityInfo, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_APP_INDEX);
+}
+
+/**
+ * @tc.number: QuerySandboxCloneAbilityInfo_0400
+ * @tc.name: test QuerySandboxCloneAbilityInfo
+ * @tc.desc: 1.appIndex out of cli sandbox range (greater than 3000)
+ *           2.call QuerySandboxCloneAbilityInfo
+ *           3.return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_APP_INDEX
+ */
+HWTEST_F(BmsBundleKitServiceTest, QuerySandboxCloneAbilityInfo_0400, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    element.SetAbilityName(ABILITY_NAME);
+    int32_t flags = 1;
+    int32_t appIndex = 3001;
+    AbilityInfo abilityInfo;
+    ErrCode ret = hostImpl->QuerySandboxCloneAbilityInfo(
+        BUNDLE_NAME, element, flags, appIndex, abilityInfo, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_APP_INDEX);
+}
+
+/**
+ * @tc.number: QuerySandboxCloneAbilityInfo_0500
+ * @tc.name: test QuerySandboxCloneAbilityInfo
+ * @tc.desc: 1.caller is not system app
+ *           2.call QuerySandboxCloneAbilityInfo
+ *           3.return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, QuerySandboxCloneAbilityInfo_0500, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    element.SetAbilityName(ABILITY_NAME);
+    int32_t flags = 1;
+    int32_t appIndex = 2000;
+    AbilityInfo abilityInfo;
+    SetSystemAppForTest(false);
+    ErrCode ret = hostImpl->QuerySandboxCloneAbilityInfo(
+        BUNDLE_NAME, element, flags, appIndex, abilityInfo, DEFAULT_USERID);
+    SetSystemAppForTest(true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: QuerySandboxCloneAbilityInfo_0600
+ * @tc.name: test QuerySandboxCloneAbilityInfo
+ * @tc.desc: 1.system app but no GET_BUNDLE_INFO_PRIVILEGED permission
+ *           2.call QuerySandboxCloneAbilityInfo
+ *           3.return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, QuerySandboxCloneAbilityInfo_0600, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    element.SetAbilityName(ABILITY_NAME);
+    int32_t flags = 1;
+    int32_t appIndex = 2000;
+    AbilityInfo abilityInfo;
+    SetVerifyCallingPermissionForTest(false);
+    ErrCode ret = hostImpl->QuerySandboxCloneAbilityInfo(
+        BUNDLE_NAME, element, flags, appIndex, abilityInfo, DEFAULT_USERID);
+    SetVerifyCallingPermissionForTest(true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: QuerySandboxCloneAbilityInfo_0700
+ * @tc.name: test QuerySandboxCloneAbilityInfo
+ * @tc.desc: 1.params and permission ok but DataMgr unavailable
+ *           2.call QuerySandboxCloneAbilityInfo
+ *           3.return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, QuerySandboxCloneAbilityInfo_0700, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    DataMgrGuard guard;
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    element.SetAbilityName(ABILITY_NAME);
+    int32_t flags = 1;
+    int32_t appIndex = 2000;
+    AbilityInfo abilityInfo;
+    ErrCode ret = hostImpl->QuerySandboxCloneAbilityInfo(
+        BUNDLE_NAME, element, flags, appIndex, abilityInfo, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetCloneBundleInfo_0300
+ * @tc.name: test GetCloneBundleInfo
+ * @tc.desc: 1.appIndex in cli sandbox range and DataMgr unavailable
+ *           2.call GetCloneBundleInfo
+ *           3.return ERR_BUNDLE_MANAGER_INTERNAL_ERROR (sandbox branch selected)
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetCloneBundleInfo_0300, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    DataMgrGuard guard;
+    int32_t flags = 1;
+    int32_t appIndex = 2000; // in cli sandbox range
+    BundleInfo bundleInfo;
+    ErrCode ret = hostImpl->GetCloneBundleInfo(BUNDLE_NAME_DEMO, flags, appIndex, bundleInfo, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetCloneBundleInfoExt_0300
+ * @tc.name: test GetCloneBundleInfoExt
+ * @tc.desc: 1.appIndex in cli sandbox range and DataMgr unavailable
+ *           2.call GetCloneBundleInfoExt with foundation uid
+ *           3.fall through to bms extension path (sandbox branch selected)
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetCloneBundleInfoExt_0300, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    DataMgrGuard guard;
+    int32_t flags = 1;
+    int32_t appIndex = 2000; // in cli sandbox range
+    BundleInfo bundleInfo;
+    auto uid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode ret = hostImpl->GetCloneBundleInfoExt(BUNDLE_NAME_DEMO, flags, appIndex, DEFAULT_USERID, bundleInfo);
+    setuid(uid);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetCliSandboxAppIndexes_0100
+ * @tc.name: test GetCliSandboxAppIndexes
+ * @tc.desc: 1.caller is not system app
+ *           2.call GetCliSandboxAppIndexes
+ *           3.return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetCliSandboxAppIndexes_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<int32_t> appIndexes;
+    SetSystemAppForTest(false);
+    ErrCode ret = hostImpl->GetCliSandboxAppIndexes(BUNDLE_NAME_DEMO, appIndexes, DEFAULT_USERID);
+    SetSystemAppForTest(true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: GetCliSandboxAppIndexes_0200
+ * @tc.name: test GetCliSandboxAppIndexes
+ * @tc.desc: 1.system app but no GET_BUNDLE_INFO_PRIVILEGED permission and not bundle self calling
+ *           2.call GetCliSandboxAppIndexes
+ *           3.return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetCliSandboxAppIndexes_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<int32_t> appIndexes;
+    SetVerifyCallingPermissionForTest(false);
+    SetIsBundleSelfCallingForTest(false);
+    ErrCode ret = hostImpl->GetCliSandboxAppIndexes(BUNDLE_NAME_DEMO, appIndexes, DEFAULT_USERID);
+    SetVerifyCallingPermissionForTest(true);
+    SetIsBundleSelfCallingForTest(true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetCliSandboxAppIndexes_0300
+ * @tc.name: test GetCliSandboxAppIndexes
+ * @tc.desc: 1.params and permission ok but DataMgr unavailable
+ *           2.call GetCliSandboxAppIndexes
+ *           3.return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetCliSandboxAppIndexes_0300, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    DataMgrGuard guard;
+    std::vector<int32_t> appIndexes;
+    ErrCode ret = hostImpl->GetCliSandboxAppIndexes(BUNDLE_NAME_DEMO, appIndexes, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
  * @tc.number: QueryCloneExtensionAbilityInfoWithAppIndex_0200
  * @tc.name: test QueryCloneExtensionAbilityInfoWithAppIndex
  * @tc.desc: 1.Test the QueryCloneExtensionAbilityInfoWithAppIndex by BundleMgrHostImpl
