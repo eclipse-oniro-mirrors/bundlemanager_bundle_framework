@@ -2253,8 +2253,9 @@ void BMSEventHandler::ExecuteMigrationWithRetry(const std::shared_ptr<BundleData
         Security::AccessToken::AccessTokenIDEx tokenIdEx;
     };
     std::vector<TokenUpdateInfo> tokenUpdateList;
-    std::vector<Security::AccessToken::HapBaseInfo> uidDuplicatedHapList;
-    std::vector<int32_t> uidDuplicatedUidList;
+    std::vector<Security::AccessToken::HapBaseInfo> failedHapList;
+    std::vector<int32_t> failedUidList;
+    std::vector<int32_t> failedErrCodeList;
 
     for (int32_t round = 0; round < MAX_RETRY_ROUNDS && remaining > 0; ++round) {
         if (round > 0) {
@@ -2311,26 +2312,22 @@ void BMSEventHandler::ExecuteMigrationWithRetry(const std::shared_ptr<BundleData
                         successFlags[origIdx] = true;
                         --remaining;
                     }
-                } else if (result.errcode ==
-                    Security::AccessToken::AccessTokenError::ERR_MIGRATION_UID_DUPLICATED) {
+                } else {
                     LOG_W(BMS_TAG_DEFAULT,
-                        "Migration uid duplicated: bundle=%{public}s",
-                        migratedList[origIdx].bundleName.c_str());
+                        "Migration failed: bundle=%{public}s err=%{public}d",
+                        migratedList[origIdx].bundleName.c_str(), result.errcode);
                     auto &item = migratedList[origIdx];
                     for (size_t k = 0; k < item.hapBaseInfoList.size(); ++k) {
-                        uidDuplicatedHapList.emplace_back(item.hapBaseInfoList[k]);
+                        failedHapList.emplace_back(item.hapBaseInfoList[k]);
+                        failedErrCodeList.emplace_back(result.errcode);
                         if (k < item.uidList.size()) {
-                            uidDuplicatedUidList.emplace_back(item.uidList[k]);
+                            failedUidList.emplace_back(item.uidList[k]);
                         }
                     }
                     if (!successFlags[origIdx]) {
                         successFlags[origIdx] = true;
                         --remaining;
                     }
-                } else {
-                    LOG_W(BMS_TAG_DEFAULT,
-                        "Migration failed: bundle=%{public}s err=%{public}d",
-                        migratedList[origIdx].bundleName.c_str(), result.errcode);
                 }
             }
         }
@@ -2347,16 +2344,17 @@ void BMSEventHandler::ExecuteMigrationWithRetry(const std::shared_ptr<BundleData
         LOG_I(BMS_TAG_DEFAULT, "All %{public}zu migration items completed", migratedList.size());
     }
 
-    // Report uid duplicated events via QUERY_BUNDLE_INFO
-    if (!uidDuplicatedHapList.empty()) {
+    // Report migration failed events via QUERY_BUNDLE_INFO
+    if (!failedHapList.empty()) {
         EventInfo eventInfo;
-        for (size_t i = 0; i < uidDuplicatedHapList.size(); ++i) {
-            eventInfo.bundleNameList.emplace_back(uidDuplicatedHapList[i].bundleName);
-            eventInfo.userIdList.emplace_back(uidDuplicatedHapList[i].userID);
-            eventInfo.appIndexList.emplace_back(uidDuplicatedHapList[i].instIndex);
+        for (size_t i = 0; i < failedHapList.size(); ++i) {
+            eventInfo.bundleNameList.emplace_back(failedHapList[i].bundleName);
+            eventInfo.userIdList.emplace_back(failedHapList[i].userID);
+            eventInfo.appIndexList.emplace_back(failedHapList[i].instIndex);
         }
-        eventInfo.uidList = uidDuplicatedUidList;
-        eventInfo.errCode = ERR_APPEXECFWK_ACCESS_TOKEN_MIGRATION_UID_DUPLICATED;
+        eventInfo.uidList = failedUidList;
+        eventInfo.errorCodeList = failedErrCodeList;
+        eventInfo.errCode = ERR_APPEXECFWK_ACCESS_TOKEN_MIGRATION_FAILED;
         EventReport::SendSystemEvent(BMSEventType::QUERY_BUNDLE_INFO, eventInfo);
     }
 
