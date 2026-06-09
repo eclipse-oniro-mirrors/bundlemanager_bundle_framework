@@ -14,12 +14,14 @@
  */
 
 import { BusinessError } from '@ohos.base';
+import { PluginBundleInfo } from 'bundleManager.PluginBundleInfo';
 
 namespace pluginBundleManager {
   loadLibraryWithPermissionCheck("ani_plugin_bundle_manager.z", "@ohos.bundle.pluginBundleManager");
 
   native function installLocalPluginNative(pluginFilePaths: Array<string>): void;
   native function uninstallLocalPluginNative(pluginBundleName: string): void;
+  native function getAllLocalPluginInfoForSelfNative(): Array<PluginBundleInfo>;
 
   function installLocalPlugin(pluginFilePaths: Array<string>): Promise<void> {
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void,
@@ -47,6 +49,23 @@ namespace pluginBundleManager {
       p1.then((): void => {
         resolve(Promise.resolve());
       }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
+  }
+
+  function getAllLocalPluginInfoForSelf(): Promise<Array<PluginBundleInfo>> {
+    let p = new Promise<Array<PluginBundleInfo>>((resolve: (pluginBundleInfo: Array<PluginBundleInfo>)
+      => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): Array<PluginBundleInfo> => {
+        return getAllLocalPluginInfoForSelfNative();
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let pluginBundleInfo: Array<PluginBundleInfo> = e as Array<PluginBundleInfo>;
+        resolve(pluginBundleInfo);
+        }, (err: Error): void => {
         reject(err as BusinessError);
       });
     });

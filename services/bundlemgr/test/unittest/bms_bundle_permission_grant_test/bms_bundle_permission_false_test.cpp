@@ -2243,4 +2243,16 @@ HWTEST_F(BmsBundlePermissionFalseTest,
     bool ret = bundleMgrHostImpl_->QueryExtensionAbilityInfoByUriOptimal(HAP_FILE_PATH, USERID, extensionAbilityInfo);
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: GetAllLocalPluginInfoForSelf_0100
+ * @tc.name: test BundleMgrHostImpl GetAllLocalPluginInfoForSelf without permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetAllLocalPluginInfoForSelf_0100, Function | SmallTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = bundleMgrHostImpl_->GetAllLocalPluginInfoForSelf(pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+}
 } // OHOS

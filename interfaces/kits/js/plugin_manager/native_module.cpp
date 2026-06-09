@@ -28,6 +28,7 @@ static napi_value PluginManagerExport(napi_env env, napi_value exports)
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("installLocalPlugin", InstallLocalPlugin),
         DECLARE_NAPI_FUNCTION("uninstallLocalPlugin", UninstallLocalPlugin),
+        DECLARE_NAPI_FUNCTION("getAllLocalPluginInfoForSelf", GetAllLocalPluginInfoForSelf),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
     APP_LOGI("init js plugin manager success");

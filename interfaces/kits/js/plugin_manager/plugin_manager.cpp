@@ -227,5 +227,87 @@ napi_value UninstallLocalPlugin(napi_env env, napi_callback_info info)
     APP_LOGD("UninstallLocalPlugin done");
     return promise;
 }
+
+static void ProcessPluginInfos(
+    napi_env env, napi_value result, const std::vector<PluginBundleInfo> &pluginBundleInfos)
+{
+    if (pluginBundleInfos.empty()) {
+        APP_LOGD("pluginBundleInfos is null");
+        return;
+    }
+    size_t index = 0;
+    for (const auto &item : pluginBundleInfos) {
+        napi_value objPluginInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objPluginInfo));
+        CommonFunc::ConvertPluginBundleInfo(env, item, objPluginInfo);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, result, index, objPluginInfo));
+        index++;
+    }
+}
+
+static ErrCode InnerGetAllLocalPluginInfoForSelf(std::vector<PluginBundleInfo>& pluginBundleInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAllLocalPluginInfoForSelf(pluginBundleInfos);
+    APP_LOGD("GetAllLocalPluginInfoForSelf ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+void GetAllLocalPluginInfoForSelfExec(napi_env env, void *data)
+{
+    GetAllLocalPluginCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetAllLocalPluginCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetAllLocalPluginInfoForSelf(asyncCallbackInfo->pluginBundleInfos);
+}
+
+void GetAllLocalPluginInfoForSelfComplete(napi_env env, napi_status status, void *data)
+{
+    APP_LOGI("GetAllLocalPluginInfoForSelfComplete begin");
+    GetAllLocalPluginCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetAllLocalPluginCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<GetAllLocalPluginCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        ProcessPluginInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->pluginBundleInfos);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_ALL_LOCAL_PLUGIN_INFO_FOR_SELF, PERMISSION_SUPPORT_LOCAL_PLUGIN);
+    }
+    CommonFunc::NapiReturnDeferred<GetAllLocalPluginCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetAllLocalPluginInfoForSelf(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("napi GetAllLocalPluginInfoForSelf begin");
+    NapiArg args(env, info);
+    GetAllLocalPluginCallbackInfo *asyncCallbackInfo = new (std::nothrow) GetAllLocalPluginCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<GetAllLocalPluginCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ZERO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<GetAllLocalPluginCallbackInfo>(env, asyncCallbackInfo,
+        GET_ALL_LOCAL_PLUGIN_INFO_FOR_SELF, GetAllLocalPluginInfoForSelfExec, GetAllLocalPluginInfoForSelfComplete);
+    callbackPtr.release();
+    APP_LOGI_NOFUNC("napi GetAllLocalPluginInfoForSelf end");
+    return promise;
+}
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -10379,4 +10379,30 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfoFromAppImpl_0500, Function
     EXPECT_EQ(ret, ERR_OK);
     std::remove(appPath.c_str());
 }
+
+/**
+ * @tc.number: Proxy_GetAllLocalPluginInfoForSelf_0100
+ * @tc.name: test BundleMgrProxy interface GetAllLocalPluginInfoForSelf
+ */
+HWTEST_F(BmsBundleKitServiceTest, Proxy_GetAllLocalPluginInfoForSelf_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = bundleMgrProxy->GetAllLocalPluginInfoForSelf(pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetAllLocalPluginInfoForSelf_0100
+ * @tc.name: test BundleMgrHostImpl GetAllLocalPluginInfoForSelf
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllLocalPluginInfoForSelf_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = hostImpl->GetAllLocalPluginInfoForSelf(pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
 }
