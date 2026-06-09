@@ -33,6 +33,7 @@ bool VerifyBinParam::ReadFromParcel(Parcel &parcel)
         std::string binFilePath = Str16ToStr8(parcel.ReadString16());
         binFilePaths.emplace_back(binFilePath);
     }
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     return true;
 }
 
@@ -45,6 +46,7 @@ bool VerifyBinParam::Marshalling(Parcel &parcel) const
     for (auto &item : binFilePaths) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     return true;
 }
 
