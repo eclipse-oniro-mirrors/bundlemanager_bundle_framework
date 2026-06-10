@@ -14133,13 +14133,12 @@ HWTEST_F(BmsBundleInstallerTest, CheckInstallAllowDowngrade_1100, Function | Sma
 
 /**
  * @tc.number: InstallParamMarshalling_0100
- * @tc.name: test InstallParam Marshalling with allowPatchDowngrade
+ * @tc.name: test InstallParam Marshalling
  * @tc.desc: 1.Test InstallParam Marshalling and Unmarshalling
 */
 HWTEST_F(BmsBundleInstallerTest, InstallParamMarshalling_0100, Function | SmallTest | Level0)
 {
     InstallParam installParam;
-    installParam.allowPatchDowngrade = true;
     installParam.isKeepData = true;
 
     Parcel parcel;
@@ -14149,7 +14148,6 @@ HWTEST_F(BmsBundleInstallerTest, InstallParamMarshalling_0100, Function | SmallT
     InstallParam* newParam = InstallParam::Unmarshalling(parcel);
     EXPECT_NE(newParam, nullptr);
     if (newParam != nullptr) {
-        EXPECT_EQ(newParam->allowPatchDowngrade, true);
         EXPECT_EQ(newParam->isKeepData, true);
         delete newParam;
     }
@@ -14157,14 +14155,12 @@ HWTEST_F(BmsBundleInstallerTest, InstallParamMarshalling_0100, Function | SmallT
 
 /**
  * @tc.number: InstallParamMarshalling_0200
- * @tc.name: test InstallParam Marshalling with allowPatchDowngrade = false
+ * @tc.name: test InstallParam Marshalling
  * @tc.desc: 1.Test InstallParam Marshalling and Unmarshalling with default value
 */
 HWTEST_F(BmsBundleInstallerTest, InstallParamMarshalling_0200, Function | SmallTest | Level0)
 {
     InstallParam installParam;
-    // default value is false
-    EXPECT_EQ(installParam.allowPatchDowngrade, false);
 
     Parcel parcel;
     bool ret = installParam.Marshalling(parcel);
@@ -14173,7 +14169,6 @@ HWTEST_F(BmsBundleInstallerTest, InstallParamMarshalling_0200, Function | SmallT
     InstallParam* newParam = InstallParam::Unmarshalling(parcel);
     EXPECT_NE(newParam, nullptr);
     if (newParam != nullptr) {
-        EXPECT_EQ(newParam->allowPatchDowngrade, false);
         delete newParam;
     }
 }
@@ -14186,7 +14181,6 @@ HWTEST_F(BmsBundleInstallerTest, InstallParamMarshalling_0200, Function | SmallT
 HWTEST_F(BmsBundleInstallerTest, InstallParamMarshalling_0300, Function | SmallTest | Level0)
 {
     InstallParam installParam;
-    installParam.allowPatchDowngrade = true;
     installParam.isPatch = true;
     installParam.isKeepData = true;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
@@ -14200,7 +14194,6 @@ HWTEST_F(BmsBundleInstallerTest, InstallParamMarshalling_0300, Function | SmallT
     InstallParam* newParam = InstallParam::Unmarshalling(parcel);
     EXPECT_NE(newParam, nullptr);
     if (newParam != nullptr) {
-        EXPECT_EQ(newParam->allowPatchDowngrade, true);
         EXPECT_EQ(newParam->isPatch, true);
         EXPECT_EQ(newParam->isKeepData, true);
         EXPECT_EQ(newParam->installFlag, InstallFlag::REPLACE_EXISTING);
