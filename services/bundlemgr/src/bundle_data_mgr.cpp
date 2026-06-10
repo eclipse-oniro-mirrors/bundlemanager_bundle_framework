@@ -11200,7 +11200,7 @@ std::string BundleDataMgr::GenerateOdidNoLock(const std::string &developerId) co
         std::string odidExist;
         item.second.GetDeveloperidAndOdid(developerIdExist, odidExist);
         std::string groupIdExist = BundleUtil::ExtractGroupIdByDevelopId(developerIdExist);
-        if (groupId == groupIdExist) {
+        if (groupId == groupIdExist && !odidExist.empty()) {
             // Found existing odid for this groupId
             APP_LOGI_NOFUNC("found existing odid:%{private}s for groupId:%{public}s",
                 odidExist.c_str(), groupId.c_str());
@@ -13498,6 +13498,25 @@ std::string BundleDataMgr::GenerateUuidByKey(const std::string &key) const
 
     std::string message = key + deviceUdid;
     return OHOS::Security::Verify::GenerateUuidByKey(message);
+}
+
+void BundleDataMgr::ProcessEmptyOdid()
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (auto &item : bundleInfos_) {
+        std::string developerId;
+        std::string odid;
+        item.second.GetDeveloperidAndOdid(developerId, odid);
+        if (!developerId.empty() && odid.empty()) {
+            std::string newOdid = GenerateOdidNoLock(developerId);
+            item.second.UpdateOdid(developerId, newOdid);
+            if (!dataStorage_->SaveStorageBundleInfo(item.second)) {
+                APP_LOGE_NOFUNC("ProcessEmptyOdid save %{public}s failed", item.first.c_str());
+            }
+            APP_LOGI_NOFUNC("ProcessEmptyOdid for %{public}s, odid:%{private}s",
+                item.first.c_str(), newOdid.c_str());
+        }
+    }
 }
 
 void BundleDataMgr::FilterShortcutJson(nlohmann::json &jsonResult)

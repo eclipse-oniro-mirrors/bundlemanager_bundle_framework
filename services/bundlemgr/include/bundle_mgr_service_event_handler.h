@@ -634,6 +634,7 @@ private:
     void InnerProcessCheckAppExtensionAbility();
     void ProcessRouterMap();
     void InnerProcessRouterMap();
+    void ProcessEmptyOdid();
     bool IsSystemUpgrade();
     bool IsTestSystemUpgrade();
     bool IsSystemFingerprintChanged();
