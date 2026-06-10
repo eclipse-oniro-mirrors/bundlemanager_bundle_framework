@@ -66,7 +66,8 @@ public:
         std::vector<BundleMigrateResult>& results);
     static int32_t FinishMigration();
     static int32_t CheckHapSignInfo(const BundleHapList& hapList, int32_t& sessionId,
-        std::vector<TrustedBundleInfo>& trustedBundleInfo);
+        std::vector<TrustedBundleInfo>& trustedBundleInfo,
+        HapVerifyResultInfo& resultInfo);
     static int32_t GetHapSignInfo(const std::string& bundleName,
         std::vector<TrustedBundleInfo>& trustedBundleInfo);
     static int32_t GetHapBaseInfoByUid(int32_t uid, HapBaseInfo& info);

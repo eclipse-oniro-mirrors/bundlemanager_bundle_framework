@@ -96,6 +96,11 @@ struct BundleMigrateResult final {
     std::vector<ReservedType> reservedTypeList;
     int32_t errcode = 0;
 };
+
+struct HapVerifyResultInfo {
+    uint32_t index = 0;
+    int32_t errorCode = 0;
+};
 } // namespace AccessToken
 } // namespace Security
 } // namespace OHOS

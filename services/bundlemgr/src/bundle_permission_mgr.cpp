@@ -1048,8 +1048,9 @@ int32_t BundlePermissionMgr::UpdateAppPermission(InnerBundleInfo &innerBundleInf
     hapList.isPreInstalled = innerBundleInfo.IsPreInstallApp();
     hapList.userId = userId;
     std::vector<Security::AccessToken::TrustedBundleInfo> trustedBundleInfo;
+    Security::AccessToken::HapVerifyResultInfo resultInfo;
     int32_t signRet = Security::AccessToken::AccessTokenKit::CheckHapSignInfo(
-        hapList, sessionId, trustedBundleInfo);
+        hapList, sessionId, trustedBundleInfo, resultInfo);
     if (signRet == Security::AccessToken::AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED) {
         LOG_E(BMS_TAG_DEFAULT, "UpdateAppPermission CheckHapSignInfo incompatible, err=%{public}d", signRet);
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;

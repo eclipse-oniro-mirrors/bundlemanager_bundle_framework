@@ -359,7 +359,7 @@ static TrustedBundleInfo BuildTrustedBundleInfoFromHap(const std::string &filePa
 }
 
 int32_t AccessTokenKit::CheckHapSignInfo(const BundleHapList& hapList, int32_t& sessionId,
-    std::vector<TrustedBundleInfo>& trustedBundleInfo)
+    std::vector<TrustedBundleInfo>& trustedBundleInfo, HapVerifyResultInfo& resultInfo)
 {
     sessionId = g_nextSessionId++;
     for (const auto &bundlePath : hapList.hapPaths) {
