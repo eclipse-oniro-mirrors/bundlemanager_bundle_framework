@@ -268,6 +268,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     });
     ScopeGuard applyAccessTokenGuard([&] {
         BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID, bundleName);
+        dataMgr_->RemoveUidFromMap(uid);
     });
 
     uid = info.GetUid(userId);
@@ -418,11 +419,13 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             APP_LOGE("delete AT failed clone");
         }
+        dataMgr_->RemoveUidFromMap(uid_);
         DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId, appIndex);
     } else {
         isKeepData_ = true;
         BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_, bundleName,
             Security::AccessToken::ReservedType::RESERVED_DATA);
+        dataMgr_->RemoveUidFromMap(uid_);
         UninstallBundleInfo uninstallBundleInfo;
         uninstallBundleInfo.appId = appId_;
         uninstallBundleInfo.appIdentifier = appIdentifier_;
@@ -483,6 +486,7 @@ bool BundleCloneInstaller::DeleteUninstalledCloneData(const std::string &bundleN
     }
     BundlePermissionMgr::DeleteAccessTokenId(it->second.accessTokenId, bundleName,
         Security::AccessToken::ReservedType::NONE);
+    dataMgr_->RemoveUidFromMap(it->second.uid);
     if (RemoveCloneDataDir(bundleName, userId, appIndex, false) != ERR_OK) {
         APP_LOGW("RemoveCloneDataDir failed");
     }

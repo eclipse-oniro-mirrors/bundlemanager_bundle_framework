@@ -666,7 +666,8 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(
             if (pos == std::string::npos) {
                 LOG_D(BMS_TAG_INSTALLD, "sandbox map contains invalid element");
                 bundleNameOri = bundleName;
-            } else {
+            } else if (OHOS::StrToInt(bundleName.substr(0, pos), appIdx)) {
+                APP_LOGD("sandbox name %{public}s", bundleName.c_str());
                 bundleNameOri = bundleName.substr(pos + 1);
             }
         }

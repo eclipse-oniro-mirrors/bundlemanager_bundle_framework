@@ -2186,6 +2186,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0800, Function | 
     applicationInfo.bundleName = BUNDLE_NAME;
     newInfo.baseBundleInfo_->versionCode = VERSION_HIGH;
     newInfo.SetBaseApplicationInfo(applicationInfo);
+    newInfo.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
     AddBundleInfo(BUNDLE_NAME, newInfo);
 
     appServiceFwkInstaller.bundleName_ = BUNDLE_NAME;

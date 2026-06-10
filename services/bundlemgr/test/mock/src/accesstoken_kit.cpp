@@ -17,6 +17,8 @@
 
 #include <atomic>
 #include <map>
+#include <mutex>
+#include <unordered_map>
 
 #include "interfaces/hap_verify.h"
 
@@ -235,11 +237,36 @@ int32_t AccessTokenKit::CheckHapPermissionInfo(
     return 0;
 }
 
+namespace {
+constexpr int32_t MOCK_BASE_APP_UID = 10000;
+constexpr int32_t MOCK_BASE_USER_RANGE = 200000;
+
+std::mutex g_mockUidMutex;
+std::map<std::pair<std::string, int32_t>, int32_t> g_mockBundleIdMap;  // {bundleName, appIndex} -> bundleId
+std::unordered_map<int32_t, std::pair<std::string, int32_t>> g_mockUidToBundleMap;  // uid -> {bundleName, appIndex}
+int32_t g_mockNextBundleId = MOCK_BASE_APP_UID;
+
+int32_t MockGenerateBundleId(const std::string &bundleName, int32_t appIndex)
+{
+    auto key = std::make_pair(bundleName, appIndex);
+    auto iter = g_mockBundleIdMap.find(key);
+    if (iter != g_mockBundleIdMap.end()) {
+        return iter->second;
+    }
+    int32_t bundleId = g_mockNextBundleId++;
+    g_mockBundleIdMap[key] = bundleId;
+    return bundleId;
+}
+}  // namespace
+
 int32_t AccessTokenKit::PrepareHapIdentity(
     int32_t& sessionId, const HapBaseInfo& info, const BundlePolicy& policy, Identity& identity)
 {
-    identity.uid = 20000000;
+    int32_t bundleId = MockGenerateBundleId(info.bundleName, info.instIndex);
+    identity.uid = info.userID * MOCK_BASE_USER_RANGE + bundleId;
     identity.tokenId = 1;
+    std::lock_guard<std::mutex> lock(g_mockUidMutex);
+    g_mockUidToBundleMap[identity.uid] = {info.bundleName, info.instIndex};
     return 0;
 }
 
@@ -350,6 +377,12 @@ int32_t AccessTokenKit::GetHapSignInfo(const std::string& bundleName,
 
 int32_t AccessTokenKit::GetHapBaseInfoByUid(int32_t uid, HapBaseInfo& info)
 {
+    std::lock_guard<std::mutex> lock(g_mockUidMutex);
+    auto iter = g_mockUidToBundleMap.find(uid);
+    if (iter != g_mockUidToBundleMap.end()) {
+        info.bundleName = iter->second.first;
+        info.instIndex = iter->second.second;
+    }
     return 0;
 }
 }

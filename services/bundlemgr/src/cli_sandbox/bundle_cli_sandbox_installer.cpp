@@ -162,6 +162,7 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &ca
     });
     ScopeGuard applyAccessTokenGuard([&] {
         BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID, bundleName);
+        dataMgr_->RemoveUidFromMap(uid);
     });
 
     uid = info.GetUid(userId);
