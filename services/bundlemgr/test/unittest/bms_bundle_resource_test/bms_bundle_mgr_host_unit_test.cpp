@@ -4509,5 +4509,26 @@ HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetTopNLargestItemsInAppDataDir_0100, F
     ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, UNKNOWN_ERROR);
 }
+
+/**
+ * @tc.number: HandleCleanBundlePartialCacheAutomatic_0100
+ * @tc.name: test the HandleCleanBundlePartialCacheAutomatic
+ * @tc.desc: 1. system running normally
+ *           2. test HandleCleanBundlePartialCacheAutomatic with empty cacheInfo
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleCleanBundlePartialCacheAutomatic_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::AUTO_CLEAN_PARTIAL_CACHE);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    CleanCacheInfo cacheInfo;
+    data.WriteParcelable(&cacheInfo);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // namespace AppExecFwk
 } // namespace OHOS

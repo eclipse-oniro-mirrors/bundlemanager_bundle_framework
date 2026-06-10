@@ -2209,6 +2209,26 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_8400, Function | SmallTe
 }
 
 /**
+ * @tc.number: OnRemoteRequestTest_8500
+ * @tc.name: test OnRemoteRequest of InstalldHost
+ * @tc.desc: 1. Calling function with InstalldInterfaceCode DELETE_OLD_CACHE_FILES
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_8500, Function | SmallTest | Level0)
+{
+    uint32_t code = static_cast<uint32_t>(InstalldInterfaceCode::DELETE_OLD_CACHE_FILES);
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    InstalldHost installdHost;
+    auto res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleExtractFiles_0100
  * @tc.name: HandleExtractFiles
  * @tc.desc: test HandleExtractFiles of InstalldHost

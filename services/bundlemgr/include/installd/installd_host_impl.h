@@ -347,6 +347,16 @@ public:
     virtual ErrCode ExtractSkillsPackage(const SkillsPackageParam &param,
         std::vector<SkillsPackageInfo> &skillInfoList) override;
 
+    /**
+     * @brief Delete older cache files until the desired cache size is achieved.
+     * @param paths Indicates the paths of cache files to be deleted.
+     * @param cacheSize Indicates the size of cache files that need to be deleted.
+     * @param cleanedSize Output parameter indicating the size of deleted cache files.
+     * @return Returns ERR_OK if delete old cache files successfully; returns error code otherwise.
+     */
+    virtual ErrCode DeleteOldCacheFiles(
+        const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize) override;
+
 private:
     std::string GetExtensionConfigPath() const;
     /**
@@ -402,6 +412,8 @@ private:
      * @return Returns ERR_OK or ERR_APPEXECFWK_INSTALLD_PARAM_ERROR on validation mismatch.
      */
     ErrCode GetResolvedApl(CreateDirParam &createDirParam);
+    void GetFilesAndSortByLastModifiedTime(const std::vector<std::string> &paths,
+        std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> &fileTimePairs);
 
     std::map<int32_t, SessionProvisionInfo> sessionProvisionCache_;
 };

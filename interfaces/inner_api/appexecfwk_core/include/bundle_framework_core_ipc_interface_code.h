@@ -263,6 +263,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_LOCAL_PLUGIN_INSTALLER = 237,
     GET_MAIN_AND_CLONE_BUNDLE_INFO = 238,
     GET_ALL_LOCAL_PLUGIN_INFO_FOR_SELF = 239,
+    AUTO_CLEAN_PARTIAL_CACHE = 240,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

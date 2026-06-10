@@ -536,5 +536,11 @@ ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::DeleteOldCacheFiles(
+    const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

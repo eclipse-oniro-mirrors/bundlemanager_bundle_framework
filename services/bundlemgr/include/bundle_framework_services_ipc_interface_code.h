@@ -107,6 +107,7 @@ enum class InstalldInterfaceCode : uint32_t {
     CHECK_EXTERNAL_SOURCE_PLUGIN_SWITCH = 79,
     CHECK_HSP_PLUGIN_CERT_VALIDITY = 80,
     CLEAR_SESSION_PROVISION_CACHE = 81,
+    DELETE_OLD_CACHE_FILES = 82,
 };
 
 } // namespace AppExecFwk

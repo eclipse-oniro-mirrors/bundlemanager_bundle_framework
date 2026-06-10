@@ -7699,4 +7699,25 @@ HWTEST_F(BmsBundleDataMgrTest, HandleGetAllLocalPluginInfoForSelf_0100, Function
     auto ret = localBundleMgrHost->HandleGetAllLocalPluginInfoForSelf(data, reply);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: HandleCleanBundlePartialCacheAutomatic_0100
+ * @tc.name: HandleCleanBundlePartialCacheAutomatic
+ * @tc.desc: test HandleCleanBundlePartialCacheAutomatic(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, HandleCleanBundlePartialCacheAutomatic_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    CleanCacheInfo cacheInfo;
+    cacheInfo.bundleName = BUNDLE_NAME_TEST;
+    cacheInfo.userId = USERID;
+    cacheInfo.appIndex = DEFAULT_APP_INDEX;
+    cacheInfo.cacheThreshold = 0;
+    data.WriteParcelable(&cacheInfo);
+    auto ret = localBundleMgrHost->HandleCleanBundlePartialCacheAutomatic(data, reply);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

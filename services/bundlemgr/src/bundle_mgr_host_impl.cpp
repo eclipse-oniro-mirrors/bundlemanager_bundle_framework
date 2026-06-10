@@ -1892,6 +1892,11 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize, Cl
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
+    BundleCacheMgr::TryMarkCleaning();
+    ScopeGuard guard([]() {
+        BundleCacheMgr::MarkCleaningDone();
+    });
+
     // Get current active userId
     int32_t currentUserId = AccountHelper::GetUserIdByCallerType();
     APP_LOGI("current active userId is %{public}d", currentUserId);
@@ -2267,6 +2272,96 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesForSelf(const sptr<ICleanCacheCa
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::IsAppRunning(const std::string &bundleName, const int32_t userId)
+{
+    sptr<IAppMgr> appMgrProxy =
+        iface_cast<IAppMgr>(SystemAbilityHelper::GetSystemAbility(APP_MGR_SERVICE_ID));
+    if (appMgrProxy == nullptr) {
+        APP_LOGE_NOFUNC("fail to find the app mgr service to check app is running");
+        return ERR_BUNDLE_MANAGER_GET_SYSTEM_ABILITY_FAILED;
+    }
+
+    std::vector<RunningProcessInfo> runningList;
+    int result = appMgrProxy->GetAllRunningProcesses(runningList);
+    if (result != ERR_OK) {
+        APP_LOGE_NOFUNC("Get all running processes failed");
+        return ERR_BUNDLE_MANAGER_GET_ALL_RUNNING_PROCESSES_FAILED;
+    }
+
+    bool isRunning = std::any_of(runningList.begin(), runningList.end(),
+        [&userId, &bundleName](const RunningProcessInfo &info) {
+            if (BundleUtil::GetUserIdByUid(info.uid_) != userId) {
+                return false;
+            }
+            return std::find(info.bundleNames.begin(), info.bundleNames.end(), bundleName) != info.bundleNames.end();
+        });
+    if (isRunning) {
+        APP_LOGW("the specified application is running, can not clean cacheFiles");
+        return ERR_BUNDLE_MANAGER_ALL_BUNDLES_ARE_RUNNING;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::CleanBundlePartialCacheAutomatic(
+    const CleanCacheInfo &cleanCacheInfo, uint64_t &beforeCleanedSize, uint64_t &afterCleanedSize)
+{
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("CleanBundlePartialCacheAutomatic", HITRACE_FLAG_INCLUDE_ASYNC);
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto userId = cleanCacheInfo.userId;
+    if (!CheckAcrossUserPermission(userId)) {
+        APP_LOGE("verify permission across local account failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("BundleCacheTask dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto bundleName = cleanCacheInfo.bundleName;
+    auto appIndex = cleanCacheInfo.appIndex;
+    auto ret = dataMgr->CheckBundleExist(bundleName, userId, appIndex);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+
+    ret = IsAppRunning(bundleName, userId);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+
+    if (!BundleCacheMgr::TryMarkCleaning(bundleName, userId, appIndex)) {
+        APP_LOGI("%{public}s is already being cleaned, skip", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_IS_BEING_CLEANED;
+    }
+
+    ScopeGuard guard([&bundleName, &userId, &appIndex]() {
+        BundleCacheMgr::MarkCleaningDone(bundleName, userId, appIndex);
+    });
+
+    std::vector<std::string> moduleNames;
+    dataMgr->GetBundleModuleNames(bundleName, moduleNames);
+
+    BundleCacheMgr::GetBundleCacheSizeByAppIndex(bundleName, userId, appIndex, moduleNames, beforeCleanedSize);
+    auto cacheThreshold = cleanCacheInfo.cacheThreshold;
+    if (beforeCleanedSize <= cacheThreshold) {
+        APP_LOGI("the reserved cache size meets the requirement, no need to clean");
+        afterCleanedSize = beforeCleanedSize;
+        return ERR_OK;
+    }
+
+    auto cachePaths = BundleCacheMgr::GetBundleCachePath(bundleName, userId, appIndex, moduleNames);
+    auto needFreeSize = beforeCleanedSize - cacheThreshold;
+    uint64_t cleanedSize = 0;
+    ret = InstalldClient::GetInstance()->DeleteOldCacheFiles(cachePaths, needFreeSize, cleanedSize);
+    afterCleanedSize = (cleanedSize >= beforeCleanedSize) ? 0 : beforeCleanedSize - cleanedSize;
+    return ret;
+}
+
 void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     const sptr<ICleanCacheCallback> cleanCacheCallback,
     const std::shared_ptr<BundleDataMgr> &dataMgr,
@@ -2283,6 +2378,10 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, appIndex, traceId,
         this, callingUid, callingBundleName]() {
         BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
+        BundleCacheMgr::TryMarkCleaning(bundleName, userId, appIndex);
+        ScopeGuard guard([&bundleName, &userId, &appIndex]() {
+            BundleCacheMgr::MarkCleaningDone(bundleName, userId, appIndex);
+        });
         std::vector<std::string> caches = rootDir;
         std::string shaderCachePath;
         shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);

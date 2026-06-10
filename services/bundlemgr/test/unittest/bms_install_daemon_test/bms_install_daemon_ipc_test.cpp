@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1513,6 +1513,59 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7800, Function | SmallTest |
     createDirParam.uid = UID;
     auto ret = proxy->SetDirsApl(createDirParam, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_7900
+ * @tc.name: test Marshalling function of DeleteOldCacheFiles
+ * @tc.desc: 1. calling DeleteOldCacheFiles of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7900, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+    
+    std::vector<std::string> paths;
+    uint64_t cacheSize = 0;
+    uint64_t cleanedSize;
+    auto ret = proxy->DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_8000
+ * @tc.name: test Marshalling function of DeleteOldCacheFiles
+ * @tc.desc: 1. calling DeleteOldCacheFiles of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_8000, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+    
+    auto ret = mkdir("/data/test/temp", 0777);
+    ASSERT_EQ(ret, 0);
+    std::vector<std::string> paths = {"/data/test/temp"};
+    uint64_t cacheSize = 1;
+    uint64_t cleanedSize;
+    ret = proxy->DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_8100
+ * @tc.name: test Marshalling function of DeleteOldCacheFiles
+ * @tc.desc: 1. calling DeleteOldCacheFiles of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_8100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    std::vector<std::string> paths = {""};
+    uint64_t cacheSize = UINT64_MAX;
+    uint64_t cleanedSize;
+    auto ret = proxy->DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SERVICE_DIED);
 }
 
 /**

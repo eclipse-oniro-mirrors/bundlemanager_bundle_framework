@@ -1001,4 +1001,52 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractSkillsPackage_0100, Function | SmallT
     bool res = installdHost.HandleExtractSkillsPackage(data, reply);
     EXPECT_FALSE(res);
 }
+
+/**
+ * @tc.number: HandleDeleteOldCacheFiles_0100
+ * @tc.name: test HandleDeleteOldCacheFiles
+ * @tc.desc: 1.HandleDeleteOldCacheFiles test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleDeleteOldCacheFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleDeleteOldCacheFiles(data, reply);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: HandleDeleteOldCacheFiles_0200
+ * @tc.name: test HandleDeleteOldCacheFiles
+ * @tc.desc: 1.HandleDeleteOldCacheFiles test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleDeleteOldCacheFiles_0200, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    data.WriteInt32(1);
+    data.WriteString16(Str8ToStr16(""));
+    data.WriteUint64(UINT64_MAX);
+    MessageParcel reply;
+    bool res = installdHost.HandleDeleteOldCacheFiles(data, reply);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: HandleDeleteOldCacheFiles_0300
+ * @tc.name: test HandleDeleteOldCacheFiles
+ * @tc.desc: 1.HandleDeleteOldCacheFiles test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleDeleteOldCacheFiles_0300, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    data.WriteInt32(1);
+    data.WriteString16(Str8ToStr16("/data/test"));
+    data.WriteUint64(UINT64_MAX);
+    MessageParcel reply;
+    bool res = installdHost.HandleDeleteOldCacheFiles(data, reply);
+    EXPECT_TRUE(res);
+}
 } // OHOS
