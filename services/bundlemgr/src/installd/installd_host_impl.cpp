@@ -1260,7 +1260,7 @@ static ErrCode RemoveDistributedDir(const std::string &bundleName, const int use
         LOG_E(BMS_TAG_INSTALLD, "unmount remote_share timeout for %{public}s", bundleName.c_str());
     } else if (status == std::future_status::ready) {
         int32_t unMountRet = unMountFuture.get();
-        LOG_I(BMS_TAG_INSTALLD, "unmount remote_share failed %{public}d for %{public}s",
+        LOG_I(BMS_TAG_INSTALLD, "unmount remote_share result %{public}d for %{public}s",
             unMountRet, bundleName.c_str());
     }
     std::string distributedFile = DISTRIBUTED_FILE + bundleName;
