@@ -1677,9 +1677,11 @@ bool BundleDataMgr::ImplicitQueryCurAbilityInfos(const Want &want, int32_t flags
     std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const
 {
     LOG_D(BMS_TAG_QUERY, "begin to ImplicitQueryCurAbilityInfos");
+    int32_t appFlags = (static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
+        ? GET_APPLICATION_INFO_WITH_DISABLE : GET_BASIC_APPLICATION_INFO;
     std::string bundleName = want.GetElement().GetBundleName();
     const InnerBundleInfo* innerBundleInfo = nullptr;
-    if ((appIndex == 0) && (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, userId))) {
+    if ((appIndex == 0) && (!GetInnerBundleInfoWithFlags(bundleName, appFlags, innerBundleInfo, userId))) {
         LOG_W(BMS_TAG_QUERY, "ImplicitQueryCurAbilityInfos failed bundleName:%{public}s", bundleName.c_str());
         return false;
     }
@@ -1713,6 +1715,8 @@ bool BundleDataMgr::ImplicitQueryCurCloneAbilityInfos(const Want &want, int32_t 
     std::vector<AbilityInfo> &abilityInfos) const
 {
     LOG_D(BMS_TAG_QUERY, "begin ImplicitQueryCurCloneAbilityInfos");
+    int32_t appFlags = (static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
+        ? GET_APPLICATION_INFO_WITH_DISABLE : GET_BASIC_APPLICATION_INFO;
     std::string bundleName = want.GetElement().GetBundleName();
     std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(bundleName, userId);
     if (cloneAppIndexes.empty()) {
@@ -1722,7 +1726,7 @@ bool BundleDataMgr::ImplicitQueryCurCloneAbilityInfos(const Want &want, int32_t 
     MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
     for (int32_t appIndex: cloneAppIndexes) {
         const InnerBundleInfo* innerBundleInfo = nullptr;
-        if (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, userId, appIndex)) {
+        if (!GetInnerBundleInfoWithFlags(bundleName, appFlags, innerBundleInfo, userId, appIndex)) {
             continue;
         }
         if (!innerBundleInfo) {
@@ -1819,6 +1823,8 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags
     std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const
 {
     LOG_D(BMS_TAG_QUERY, "begin to ImplicitQueryAllAbilityInfos");
+    int32_t appFlags = (static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
+        ? GET_APPLICATION_INFO_WITH_DISABLE : GET_BASIC_APPLICATION_INFO;
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         LOG_W(BMS_TAG_QUERY, "invalid userId");
@@ -1831,7 +1837,7 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags
         for (const auto &item : bundleInfos_) {
             const InnerBundleInfo &innerBundleInfo = item.second;
             int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-            if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flags, responseUserId) != ERR_OK) {
+            if (CheckInnerBundleInfoWithFlags(innerBundleInfo, appFlags, responseUserId) != ERR_OK) {
                 LOG_D(BMS_TAG_QUERY,
                     "ImplicitQueryAllAbilityInfos failed, bundleName:%{public}s, responseUserId:%{public}d",
                     innerBundleInfo.GetBundleName().c_str(), responseUserId);
@@ -1869,6 +1875,8 @@ void BundleDataMgr::ImplicitQueryAllCloneAbilityInfos(const Want &want, int32_t 
     std::vector<AbilityInfo> &abilityInfos) const
 {
     LOG_D(BMS_TAG_QUERY, "begin ImplicitQueryAllCloneAbilityInfos");
+    int32_t appFlags = (static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
+        ? GET_APPLICATION_INFO_WITH_DISABLE : GET_BASIC_APPLICATION_INFO;
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         LOG_W(BMS_TAG_QUERY, "invalid userId");
@@ -1884,7 +1892,7 @@ void BundleDataMgr::ImplicitQueryAllCloneAbilityInfos(const Want &want, int32_t 
         }
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         for (int32_t appIndex: cloneAppIndexes) {
-            if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flags, responseUserId, appIndex) != ERR_OK) {
+            if (CheckInnerBundleInfoWithFlags(innerBundleInfo, appFlags, responseUserId, appIndex) != ERR_OK) {
                 LOG_D(BMS_TAG_QUERY,
                     "failed, bundleName:%{public}s, responseUserId:%{public}d, appIndex:%{public}d",
                     innerBundleInfo.GetBundleName().c_str(), responseUserId, appIndex);
@@ -7626,9 +7634,11 @@ bool BundleDataMgr::ImplicitQueryCurExtensionInfos(const Want &want, int32_t fla
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to ImplicitQueryCurExtensionInfos");
+    int32_t appFlags = (static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
+        ? GET_APPLICATION_INFO_WITH_DISABLE : GET_BASIC_APPLICATION_INFO;
     std::string bundleName = want.GetElement().GetBundleName();
     const InnerBundleInfo *innerBundleInfo = nullptr;
-    if ((appIndex == 0) && (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, userId))) {
+    if ((appIndex == 0) && (!GetInnerBundleInfoWithFlags(bundleName, appFlags, innerBundleInfo, userId))) {
         LOG_D(BMS_TAG_QUERY, "ImplicitQueryExtensionAbilityInfos failed, bundleName:%{public}s",
             bundleName.c_str());
         return false;
@@ -7647,7 +7657,7 @@ bool BundleDataMgr::ImplicitQueryCurExtensionInfos(const Want &want, int32_t fla
         innerBundleInfo = &sandboxInfo;
     }
     if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
-        bool ret = GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, userId, appIndex);
+        bool ret = GetInnerBundleInfoWithFlags(bundleName, appFlags, innerBundleInfo, userId, appIndex);
         if (!ret) {
             LOG_D(BMS_TAG_QUERY, "ImplicitQueryExtensionAbilityInfos failed errCode %{public}d", ret);
             return false;
@@ -7718,6 +7728,8 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t fla
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to ImplicitQueryAllExtensionInfos");
+    int32_t appFlags = (static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
+        ? GET_APPLICATION_INFO_WITH_DISABLE : GET_BASIC_APPLICATION_INFO;
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         LOG_E(BMS_TAG_QUERY, "invalid userId, userId:%{public}d", userId);
@@ -7729,7 +7741,7 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t fla
         for (const auto &item : bundleInfos_) {
             const InnerBundleInfo &innerBundleInfo = item.second;
             int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-            if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flags, responseUserId) != ERR_OK) {
+            if (CheckInnerBundleInfoWithFlags(innerBundleInfo, appFlags, responseUserId) != ERR_OK) {
                 continue;
             }
             GetMatchExtensionInfos(want, flags, responseUserId, innerBundleInfo, infos);
@@ -7762,7 +7774,7 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t fla
         for (const auto &item : bundleInfos_) {
             int32_t responseUserId = item.second.GetResponseUserId(requestUserId);
             const InnerBundleInfo &innerBundleInfo = item.second;
-            if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flags, responseUserId, appIndex) != ERR_OK) {
+            if (CheckInnerBundleInfoWithFlags(innerBundleInfo, appFlags, responseUserId, appIndex) != ERR_OK) {
                 LOG_D(BMS_TAG_QUERY,
                     "failed, bundleName:%{public}s, responseUserId:%{public}d, appIndex:%{public}d",
                     innerBundleInfo.GetBundleName().c_str(), responseUserId, appIndex);
