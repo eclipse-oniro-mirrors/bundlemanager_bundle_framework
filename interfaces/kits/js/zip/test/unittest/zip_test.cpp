@@ -13,10 +13,13 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
+#include <fstream>
 #include <memory>
+#include <set>
 #include <thread>
 
 #include "zip.h"
+#include "zip_reader.h"
 #include "zlib_callback_info.h"
 namespace OHOS {
 namespace AppExecFwk {
@@ -28,7 +31,56 @@ const std::string BASE_PATH = "/data/app/el2/100/base/";
 const std::string APP_PATH = "com.example.zlib/com.example.zlib/com.example.zlib.MainAbility/files/";
 const std::string TEST_ZIP_OK = "/data/test/resource/bms/test_zip/resourceManagerTest.hap";
 const std::string TEST_ZIP_DMAGED = "/data/test/resource/bms/test_zip/ohos_test.xml";
+const std::string KEEP_TOP_LEVEL_TEST_PATH = "/data/test/zip_keep_top_level/";
+const std::string KEEP_TOP_LEVEL_SINGLE_PATH = KEEP_TOP_LEVEL_TEST_PATH + "single";
+const std::string KEEP_TOP_LEVEL_FIRST_PATH = KEEP_TOP_LEVEL_TEST_PATH + "first";
+const std::string KEEP_TOP_LEVEL_SECOND_PATH = KEEP_TOP_LEVEL_TEST_PATH + "second";
+const std::string KEEP_TOP_LEVEL_SINGLE_ZIP = KEEP_TOP_LEVEL_TEST_PATH + "single.zip";
+const std::string KEEP_TOP_LEVEL_SINGLE_FALSE_ZIP = KEEP_TOP_LEVEL_TEST_PATH + "single_false.zip";
+const std::string KEEP_TOP_LEVEL_MULTI_ZIP = KEEP_TOP_LEVEL_TEST_PATH + "multi.zip";
+
+bool CreateTestFile(const std::string &path)
+{
+    std::ofstream file(path);
+    file << "zip test";
+    return file.good();
+}
+
+bool PrepareKeepTopLevelTestFiles()
+{
+    return FilePath::CreateDirectory(FilePath(KEEP_TOP_LEVEL_SINGLE_PATH)) &&
+        FilePath::CreateDirectory(FilePath(KEEP_TOP_LEVEL_FIRST_PATH)) &&
+        FilePath::CreateDirectory(FilePath(KEEP_TOP_LEVEL_SECOND_PATH)) &&
+        CreateTestFile(KEEP_TOP_LEVEL_SINGLE_PATH + "/single.txt") &&
+        CreateTestFile(KEEP_TOP_LEVEL_FIRST_PATH + "/first.txt") &&
+        CreateTestFile(KEEP_TOP_LEVEL_SECOND_PATH + "/second.txt");
+}
+
+std::set<std::string> GetZipEntryNames(const std::string &zipPath)
+{
+    std::set<std::string> entryNames;
+    FilePath filePath(zipPath);
+    ZipReader reader;
+    if (!reader.Open(filePath)) {
+        return entryNames;
+    }
+    while (reader.HasMore()) {
+        if (!reader.OpenCurrentEntryInZip()) {
+            return {};
+        }
+        FilePath entryPath = reader.CurrentEntryInfo()->GetFilePath();
+        entryNames.insert(entryPath.Value());
+        if (!reader.AdvanceToNextEntry()) {
+            return {};
+        }
+    }
+    return entryNames;
+}
 }  // namespac
+
+bool Zip(const ZipParams &params, const OPTIONS &options);
+bool Zips(const ZipParams &params, const OPTIONS &options);
+
 class ZipTest : public testing::Test {
 public:
     ZipTest()
@@ -52,7 +104,18 @@ void ZipTest::SetUp()
 {}
 
 void ZipTest::TearDown()
-{}
+{
+    unlink(KEEP_TOP_LEVEL_SINGLE_ZIP.c_str());
+    unlink(KEEP_TOP_LEVEL_SINGLE_FALSE_ZIP.c_str());
+    unlink(KEEP_TOP_LEVEL_MULTI_ZIP.c_str());
+    unlink((KEEP_TOP_LEVEL_SINGLE_PATH + "/single.txt").c_str());
+    unlink((KEEP_TOP_LEVEL_FIRST_PATH + "/first.txt").c_str());
+    unlink((KEEP_TOP_LEVEL_SECOND_PATH + "/second.txt").c_str());
+    rmdir(KEEP_TOP_LEVEL_SINGLE_PATH.c_str());
+    rmdir(KEEP_TOP_LEVEL_FIRST_PATH.c_str());
+    rmdir(KEEP_TOP_LEVEL_SECOND_PATH.c_str());
+    rmdir(KEEP_TOP_LEVEL_TEST_PATH.c_str());
+}
 
 void ZipCallBack(int result)
 {
@@ -109,6 +172,48 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_zip_0100_zip1file, Function | MediumTest | L
     OPTIONS options;
     auto ret = Zip(src, dest, options, false, zlibCallbackInfo);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_keep_top_level_folder_0100
+ * @tc.name: keep_top_level_folder_0100
+ * @tc.desc: Verify Zip keeps the source directory name only when keepTopLevelFolder is true.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_keep_top_level_folder_0100, Function | MediumTest | Level1)
+{
+    ASSERT_TRUE(PrepareKeepTopLevelTestFiles());
+    OPTIONS options;
+    std::vector<FilePath> srcFiles = { FilePath(KEEP_TOP_LEVEL_SINGLE_PATH) };
+
+    ZipParams withoutTopLevelParams(srcFiles, FilePath(KEEP_TOP_LEVEL_SINGLE_FALSE_ZIP));
+    ASSERT_TRUE(Zip(withoutTopLevelParams, options));
+    EXPECT_EQ(GetZipEntryNames(KEEP_TOP_LEVEL_SINGLE_FALSE_ZIP), std::set<std::string>({ "single.txt" }));
+
+    options.keepTopLevelFolder = true;
+    ZipParams withTopLevelParams(srcFiles, FilePath(KEEP_TOP_LEVEL_SINGLE_ZIP));
+    ASSERT_TRUE(Zip(withTopLevelParams, options));
+    EXPECT_EQ(GetZipEntryNames(KEEP_TOP_LEVEL_SINGLE_ZIP), std::set<std::string>({ "single/single.txt" }));
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_keep_top_level_folder_0200
+ * @tc.name: keep_top_level_folder_0200
+ * @tc.desc: Verify Zips keeps each source directory name when keepTopLevelFolder is true.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_keep_top_level_folder_0200, Function | MediumTest | Level1)
+{
+    ASSERT_TRUE(PrepareKeepTopLevelTestFiles());
+    std::vector<FilePath> srcFiles = {
+        FilePath(KEEP_TOP_LEVEL_FIRST_PATH),
+        FilePath(KEEP_TOP_LEVEL_SECOND_PATH)
+    };
+    OPTIONS options;
+    options.keepTopLevelFolder = true;
+    ZipParams params(srcFiles, FilePath(KEEP_TOP_LEVEL_MULTI_ZIP));
+
+    ASSERT_TRUE(Zips(params, options));
+    EXPECT_EQ(GetZipEntryNames(KEEP_TOP_LEVEL_MULTI_ZIP),
+        std::set<std::string>({ "first/first.txt", "second/second.txt" }));
 }
 
 /**

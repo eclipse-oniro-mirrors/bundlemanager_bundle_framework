@@ -121,7 +121,7 @@ void FilePath::GetComponents(std::vector<std::string> &components)
     }
 }
 
-FilePath FilePath::DirName()
+FilePath FilePath::DirName() const
 {
     FilePath newPath(path_);
     newPath.StripTrailingSeparatorsInternal();

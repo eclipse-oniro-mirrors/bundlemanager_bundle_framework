@@ -57,6 +57,7 @@ constexpr const char* PROPERTYNAME_DONE = "done";
 constexpr const char* PROPERTYNAME_DICTIONARY_LENGTH = "dictionaryLength";
 constexpr const char* PROPERTYNAME_PENDING = "pending";
 constexpr const char* PROPERTYNAME_BITS = "bits";
+constexpr const char* PROPERTYNAME_KEEP_TOP_LEVEL_FOLDER = "keepTopLevelFolder";
 } // namespace
 using namespace arkts::ani_signature;
 
@@ -91,6 +92,12 @@ bool ParseOptions(ani_env* env, ani_object object, LIBZIP::OPTIONS& options)
     // parallel?: ParallelStrategy
     if (CommonFunAni::CallGetterOptional(env, object, PROPERTY_NAME_PARALLEL, &enumItem)) {
         RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, options.parallel));
+    }
+
+    // keepTopLevelFolder?: boolean
+    ani_boolean keepTopLevelFolder = false;
+    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_KEEP_TOP_LEVEL_FOLDER, &keepTopLevelFolder)) {
+        options.keepTopLevelFolder = CommonFunAni::AniBooleanToBool(keepTopLevelFolder);
     }
 
     return true;

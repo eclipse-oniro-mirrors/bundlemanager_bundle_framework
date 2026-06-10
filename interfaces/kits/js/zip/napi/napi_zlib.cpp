@@ -618,6 +618,14 @@ bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg)
                 PATH_SEPARATOR_STRATEGY_CHECK(ret, false)
                 options.pathSeparatorStrategy = static_cast<PATH_SEPARATOR_STRATEGY>(ret);
             }
+        } else if (strProName == std::string("keepTopLevelFolder")) {
+            napi_valuetype boolType = napi_undefined;
+            NAPI_CALL_BASE(env, napi_typeof(env, jsProValue, &boolType), false);
+            if (boolType == napi_boolean) {
+                bool keepTopLevel = false;
+                NAPI_CALL_BASE(env, napi_get_value_bool(env, jsProValue, &keepTopLevel), false);
+                options.keepTopLevelFolder = keepTopLevel;
+            }
         }
     }
     return true;

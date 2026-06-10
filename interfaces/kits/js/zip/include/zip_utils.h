@@ -122,6 +122,7 @@ struct Options {
     COMPRESS_STRATEGY strategy;  // CompressStrategy
     PARALLEL_STRATEGY parallel;  // ParallelStrategy
     PATH_SEPARATOR_STRATEGY pathSeparatorStrategy;  // PathSeparatorStrategy
+    bool keepTopLevelFolder; // Whether to keep the top-level folder in the zip archive
 
     // default constructor
     Options()
@@ -140,6 +141,7 @@ struct Options {
         strategy = COMPRESS_STRATEGY_DEFAULT_STRATEGY;
         parallel = PARALLEL_STRATEGY_SEQUENTIAL;
         pathSeparatorStrategy = PATH_SEPARATOR_STRATEGY_DEFAULT;
+        keepTopLevelFolder = false;
     }
 };
 using OPTIONS = struct Options;
