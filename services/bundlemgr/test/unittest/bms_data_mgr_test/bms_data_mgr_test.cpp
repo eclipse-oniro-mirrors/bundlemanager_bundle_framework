@@ -12870,4 +12870,244 @@ HWTEST_F(BmsDataMgrTest, GetMainAndCloneBundleInfo_0900, Function | SmallTest | 
     ErrCode ret = dataMgr->GetMainAndCloneBundleInfo(bundleName, flags, userId, bundleInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
+
+static const std::string TEST_ACTION = "action.test.flags.mapping";
+static const std::string TEST_BUNDLE = "com.test.flags.mapping";
+static const std::string TEST_ABILITY = "TestAbility";
+static const std::string TEST_MODULE = "entry";
+static const std::string TEST_EXTENSION = "TestExtension";
+
+/**
+ * Helper: create a disabled InnerBundleInfo with an ability (matched by TEST_ACTION) and install it.
+ */
+static InnerBundleInfo CreateDisabledBundleWithAbility(const std::string &bundleName, int32_t userId)
+{
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    ApplicationInfo appInfo;
+    appInfo.name = bundleName;
+    appInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = userId;
+    userInfo.bundleUserInfo.enabled = false;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    // Add an ability with a skill that matches TEST_ACTION
+    Skill skill;
+    skill.actions.emplace_back(TEST_ACTION);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = TEST_ABILITY;
+    innerAbilityInfo.bundleName = bundleName;
+    innerAbilityInfo.moduleName = TEST_MODULE;
+    innerAbilityInfo.skills.emplace_back(skill);
+    std::string abilityKey = bundleName + "." + TEST_MODULE + "." + TEST_ABILITY;
+    innerBundleInfo.InsertAbilitiesInfo(abilityKey, innerAbilityInfo);
+
+    return innerBundleInfo;
+}
+
+/**
+ * Helper: create a disabled InnerBundleInfo with an extension (matched by TEST_ACTION) and install it.
+ */
+static InnerBundleInfo CreateDisabledBundleWithExtension(const std::string &bundleName, int32_t userId)
+{
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    ApplicationInfo appInfo;
+    appInfo.name = bundleName;
+    appInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = userId;
+    userInfo.bundleUserInfo.enabled = false;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    // Add an extension with a skill that matches TEST_ACTION
+    Skill skill;
+    skill.actions.emplace_back(TEST_ACTION);
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.name = TEST_EXTENSION;
+    innerExtensionInfo.bundleName = bundleName;
+    innerExtensionInfo.moduleName = TEST_MODULE;
+    innerExtensionInfo.skills.emplace_back(skill);
+    std::string extensionKey = bundleName + "." + TEST_MODULE + "." + TEST_EXTENSION;
+    innerBundleInfo.InsertExtensionInfo(extensionKey, innerExtensionInfo);
+
+    return innerBundleInfo;
+}
+
+/**
+ * @tc.number: ImplicitQueryCurAbilityFlagsMapping_0100
+ * @tc.name: ImplicitQueryCurAbilityInfos flags mapping
+ * @tc.desc: Without GET_ABILITY_INFO_WITH_DISABLE, disabled app should NOT be found
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryCurAbilityFlagsMapping_0100, Function | SmallTest | Level0)
+{
+    BundleDataMgr dataMgr;
+    auto info = CreateDisabledBundleWithAbility(TEST_BUNDLE, USERID);
+    dataMgr.bundleInfos_[TEST_BUNDLE] = info;
+
+    Want want;
+    ElementName elementName("", TEST_BUNDLE, TEST_ABILITY, TEST_MODULE);
+    want.SetElement(elementName);
+    want.SetAction(TEST_ACTION);
+    int32_t flags = static_cast<int32_t>(GET_ABILITY_INFO_DEFAULT);
+    std::vector<AbilityInfo> abilityInfos;
+    auto ret = dataMgr.ImplicitQueryCurAbilityInfos(want, flags, USERID, abilityInfos, 0);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ImplicitQueryCurAbilityFlagsMapping_0200
+ * @tc.name: ImplicitQueryCurAbilityInfos flags mapping
+ * @tc.desc: With GET_ABILITY_INFO_WITH_DISABLE, disabled app SHOULD be found and results not empty
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryCurAbilityFlagsMapping_0200, Function | SmallTest | Level0)
+{
+    BundleDataMgr dataMgr;
+    auto info = CreateDisabledBundleWithAbility(TEST_BUNDLE, USERID);
+    dataMgr.bundleInfos_[TEST_BUNDLE] = info;
+
+    Want want;
+    ElementName elementName("", TEST_BUNDLE, TEST_ABILITY, TEST_MODULE);
+    want.SetElement(elementName);
+    want.SetAction(TEST_ACTION);
+    int32_t flags = static_cast<int32_t>(GET_ABILITY_INFO_WITH_DISABLE);
+    std::vector<AbilityInfo> abilityInfos;
+    auto ret = dataMgr.ImplicitQueryCurAbilityInfos(want, flags, USERID, abilityInfos, 0);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(abilityInfos.empty());
+}
+
+/**
+ * @tc.number: ImplicitQueryAllAbilityFlagsMapping_0100
+ * @tc.name: ImplicitQueryAllAbilityInfos flags mapping
+ * @tc.desc: Without GET_ABILITY_INFO_WITH_DISABLE, disabled app should be skipped
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryAllAbilityFlagsMapping_0100, Function | SmallTest | Level0)
+{
+    BundleDataMgr dataMgr;
+    dataMgr.AddUserId(USERID);
+    auto info = CreateDisabledBundleWithAbility(TEST_BUNDLE, USERID);
+    dataMgr.bundleInfos_[TEST_BUNDLE] = info;
+
+    Want want;
+    want.SetAction(TEST_ACTION);
+    int32_t flags = static_cast<int32_t>(GET_ABILITY_INFO_DEFAULT);
+    std::vector<AbilityInfo> abilityInfos;
+    dataMgr.ImplicitQueryAllAbilityInfos(want, flags, USERID, abilityInfos, 0);
+    EXPECT_TRUE(abilityInfos.empty());
+}
+
+/**
+ * @tc.number: ImplicitQueryAllAbilityFlagsMapping_0200
+ * @tc.name: ImplicitQueryAllAbilityInfos flags mapping
+ * @tc.desc: With GET_ABILITY_INFO_WITH_DISABLE, disabled app should pass the check and results not empty
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryAllAbilityFlagsMapping_0200, Function | SmallTest | Level0)
+{
+    BundleDataMgr dataMgr;
+    dataMgr.AddUserId(USERID);
+    auto info = CreateDisabledBundleWithAbility(TEST_BUNDLE, USERID);
+    dataMgr.bundleInfos_[TEST_BUNDLE] = info;
+
+    Want want;
+    want.SetAction(TEST_ACTION);
+    int32_t flags = static_cast<int32_t>(GET_ABILITY_INFO_WITH_DISABLE);
+    std::vector<AbilityInfo> abilityInfos;
+    dataMgr.ImplicitQueryAllAbilityInfos(want, flags, USERID, abilityInfos, 0);
+    EXPECT_FALSE(abilityInfos.empty());
+}
+
+/**
+ * @tc.number: ImplicitQueryCurExtensionFlagsMapping_0100
+ * @tc.name: ImplicitQueryCurExtensionInfos flags mapping
+ * @tc.desc: Without GET_ABILITY_INFO_WITH_DISABLE, disabled app should NOT be found
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryCurExtensionFlagsMapping_0100, Function | SmallTest | Level0)
+{
+    BundleDataMgr dataMgr;
+    auto info = CreateDisabledBundleWithExtension(TEST_BUNDLE, USERID);
+    dataMgr.bundleInfos_[TEST_BUNDLE] = info;
+
+    Want want;
+    ElementName elementName("", TEST_BUNDLE, "", TEST_MODULE);
+    want.SetElement(elementName);
+    want.SetAction(TEST_ACTION);
+    int32_t flags = static_cast<int32_t>(GET_ABILITY_INFO_DEFAULT);
+    std::vector<ExtensionAbilityInfo> infos;
+    auto ret = dataMgr.ImplicitQueryCurExtensionInfos(want, flags, USERID, infos, 0);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ImplicitQueryCurExtensionFlagsMapping_0200
+ * @tc.name: ImplicitQueryCurExtensionInfos flags mapping
+ * @tc.desc: With GET_ABILITY_INFO_WITH_DISABLE, disabled app SHOULD be found and results not empty
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryCurExtensionFlagsMapping_0200, Function | SmallTest | Level0)
+{
+    BundleDataMgr dataMgr;
+    auto info = CreateDisabledBundleWithExtension(TEST_BUNDLE, USERID);
+    dataMgr.bundleInfos_[TEST_BUNDLE] = info;
+
+    Want want;
+    ElementName elementName("", TEST_BUNDLE, "", TEST_MODULE);
+    want.SetElement(elementName);
+    want.SetAction(TEST_ACTION);
+    int32_t flags = static_cast<int32_t>(GET_ABILITY_INFO_WITH_DISABLE);
+    std::vector<ExtensionAbilityInfo> infos;
+    auto ret = dataMgr.ImplicitQueryCurExtensionInfos(want, flags, USERID, infos, 0);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(infos.empty());
+}
+
+/**
+ * @tc.number: ImplicitQueryAllExtensionFlagsMapping_0100
+ * @tc.name: ImplicitQueryAllExtensionInfos flags mapping
+ * @tc.desc: Without GET_ABILITY_INFO_WITH_DISABLE, disabled app should be skipped
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryAllExtensionFlagsMapping_0100, Function | SmallTest | Level0)
+{
+    BundleDataMgr dataMgr;
+    dataMgr.AddUserId(USERID);
+    auto info = CreateDisabledBundleWithExtension(TEST_BUNDLE, USERID);
+    dataMgr.bundleInfos_[TEST_BUNDLE] = info;
+
+    Want want;
+    want.SetAction(TEST_ACTION);
+    int32_t flags = static_cast<int32_t>(GET_ABILITY_INFO_DEFAULT);
+    std::vector<ExtensionAbilityInfo> infos;
+    dataMgr.ImplicitQueryAllExtensionInfos(want, flags, USERID, infos, 0);
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: ImplicitQueryAllExtensionFlagsMapping_0200
+ * @tc.name: ImplicitQueryAllExtensionInfos flags mapping
+ * @tc.desc: With GET_ABILITY_INFO_WITH_DISABLE, disabled app should pass the check and results not empty
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryAllExtensionFlagsMapping_0200, Function | SmallTest | Level0)
+{
+    BundleDataMgr dataMgr;
+    dataMgr.AddUserId(USERID);
+    auto info = CreateDisabledBundleWithExtension(TEST_BUNDLE, USERID);
+    dataMgr.bundleInfos_[TEST_BUNDLE] = info;
+
+    Want want;
+    want.SetAction(TEST_ACTION);
+    int32_t flags = static_cast<int32_t>(GET_ABILITY_INFO_WITH_DISABLE);
+    std::vector<ExtensionAbilityInfo> infos;
+    dataMgr.ImplicitQueryAllExtensionInfos(want, flags, USERID, infos, 0);
+    EXPECT_FALSE(infos.empty());
+}
 } // OHOS
