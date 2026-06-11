@@ -1465,7 +1465,6 @@ bool BundleDataMgr::IsMatchedAbilityExist(const Want &want, const InnerBundleInf
     int32_t userId, const std::vector<std::string> &paramMimeTypes) const
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    const std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
         const InnerAbilityInfo &innerAbilityInfo = abilityInfoPair.second;
 
@@ -1479,17 +1478,15 @@ bool BundleDataMgr::IsMatchedAbilityExist(const Want &want, const InnerBundleInf
             continue;
         }
 
-        auto skillsPair = skillInfos.find(abilityInfoPair.first);
-        if (skillsPair == skillInfos.end()) {
-            continue;
-        }
+        std::vector<Skill> mergedBuffer;
+        auto &skills = info.GetMergedSkills(abilityInfoPair.first, innerAbilityInfo.skills, mergedBuffer);
         bool isPrivateType = MatchPrivateType(
             want, innerAbilityInfo.supportExtNames, innerAbilityInfo.supportMimeTypes, paramMimeTypes);
         if (isPrivateType) {
             return true;
         }
-        for (size_t skillIndex = 0; skillIndex < skillsPair->second.size(); ++skillIndex) {
-            const Skill &skill = skillsPair->second[skillIndex];
+        for (size_t skillIndex = 0; skillIndex < skills.size(); ++skillIndex) {
+            const Skill &skill = skills[skillIndex];
             size_t matchUriIndex = 0;
             if (skill.Match(want, matchUriIndex)) {
                 return true;
@@ -1993,16 +1990,13 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
     if (CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_SYSTEMAPP_ONLY) && !info.IsSystemApp()) {
         return;
     }
-    const std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
         bool isPrivateType = MatchPrivateType(
             want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes, paramMimeTypes);
-        auto skillsPair = skillInfos.find(abilityInfoPair.first);
-        if (skillsPair == skillInfos.end()) {
-            continue;
-        }
-        for (size_t skillIndex = 0; skillIndex < skillsPair->second.size(); ++skillIndex) {
-            const Skill &skill = skillsPair->second[skillIndex];
+        std::vector<Skill> mergedBuffer;
+        auto &skills = info.GetMergedSkills(abilityInfoPair.first, abilityInfoPair.second.skills, mergedBuffer);
+        for (size_t skillIndex = 0; skillIndex < skills.size(); ++skillIndex) {
+            const Skill &skill = skills[skillIndex];
             size_t matchUriIndex = 0;
             if (isPrivateType || skill.Match(want, matchUriIndex)) {
                 AbilityInfo abilityinfo = InnerAbilityInfo::ConvertToAbilityInfo(abilityInfoPair.second);
@@ -2031,7 +2025,7 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
                     info.AppendDynamicSkillsToAbilityIfExist(abilityinfo);
                 }
                 if (CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_WITH_SKILL_URI)) {
-                    AddSkillUrisInfo(skillsPair->second, abilityinfo.skillUri, skillIndex, matchUriIndex);
+                    AddSkillUrisInfo(skills, abilityinfo.skillUri, skillIndex, matchUriIndex);
                 }
                 abilityinfo.appIndex = appIndex;
                 abilityInfos.emplace_back(abilityinfo);
@@ -2137,36 +2131,33 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags, cons
         LOG_W(BMS_TAG_QUERY, "target not system app");
         return;
     }
-    const std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
         AbilityInfo abilityinfo = InnerAbilityInfo::ConvertToAbilityInfo(abilityInfoPair.second);
-        auto skillsPair = skillInfos.find(abilityInfoPair.first);
-        if (skillsPair == skillInfos.end()) {
-            continue;
-        }
+        std::vector<Skill> mergedBuffer;
+        auto &skills = info.GetMergedSkills(abilityInfoPair.first, abilityInfoPair.second.skills, mergedBuffer);
         bool isPrivateType = MatchPrivateType(
             want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes, paramMimeTypes);
         if (isPrivateType) {
-            EmplaceAbilityInfo(info, skillsPair->second, abilityinfo, flags, userId, abilityInfos,
+            EmplaceAbilityInfo(info, skills, abilityinfo, flags, userId, abilityInfos,
                 std::nullopt, std::nullopt, appIndex);
             continue;
         }
         if (want.GetAction() == SHARE_ACTION) {
-            if (!MatchShare(want, skillsPair->second)) {
+            if (!MatchShare(want, skills)) {
                 continue;
             }
-            EmplaceAbilityInfo(info, skillsPair->second, abilityinfo, flags, userId, abilityInfos,
+            EmplaceAbilityInfo(info, skills, abilityinfo, flags, userId, abilityInfos,
                 std::nullopt, std::nullopt, appIndex);
             continue;
         }
-        for (size_t skillIndex = 0; skillIndex < skillsPair->second.size(); ++skillIndex) {
-            const Skill &skill = skillsPair->second[skillIndex];
+        for (size_t skillIndex = 0; skillIndex < skills.size(); ++skillIndex) {
+            const Skill &skill = skills[skillIndex];
             size_t matchUriIndex = 0;
             if (skill.Match(want, matchUriIndex)) {
                 if (abilityinfo.name == ServiceConstants::APP_DETAIL_ABILITY) {
                     continue;
                 }
-                EmplaceAbilityInfo(info, skillsPair->second, abilityinfo, flags, userId, abilityInfos,
+                EmplaceAbilityInfo(info, skills, abilityinfo, flags, userId, abilityInfos,
                     skillIndex, matchUriIndex, appIndex);
                 break;
             }
@@ -2375,13 +2366,10 @@ void BundleDataMgr::GetMultiLauncherAbilityInfo(const Want& want,
     int64_t installTime, std::vector<AbilityInfo>& abilityInfos) const
 {
     int32_t count = 0;
-    const std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto& abilityInfoPair : info.GetInnerAbilityInfos()) {
-        auto skillsPair = skillInfos.find(abilityInfoPair.first);
-        if (skillsPair == skillInfos.end()) {
-            continue;
-        }
-        for (const Skill& skill : skillsPair->second) {
+        std::vector<Skill> mergedBuffer;
+        auto &skills = info.GetMergedSkills(abilityInfoPair.first, abilityInfoPair.second.skills, mergedBuffer);
+        for (const Skill& skill : skills) {
             if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
                 count++;
                 AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(abilityInfoPair.second);
@@ -5497,15 +5485,17 @@ void BundleDataMgr::SetLaunchWantActionAndEntity(
         return action == Constants::ACTION_HOME || action == Constants::WANT_ACTION_HOME;
     };
     
-    auto skillInfos = innerBundleInfo->GetInnerSkillInfos();
+    const auto &infos = innerBundleInfo->GetInnerAbilityInfos();
     const std::string &key = innerBundleInfo->GetEntryAbilityKey();
-    auto skillIt = skillInfos.find(key);
-    if (skillIt == skillInfos.end()) {
+    auto abilityIt = infos.find(key);
+    if (abilityIt == infos.end()) {
         want.SetAction(Constants::ACTION_HOME);
         want.AddEntity(Constants::ENTITY_HOME);
         return;
     }
-    for (const auto &skill : skillIt->second) {
+    std::vector<Skill> mergedBuffer;
+    auto &skills = innerBundleInfo->GetMergedSkills(key, abilityIt->second.skills, mergedBuffer);
+    for (const auto &skill : skills) {
         auto actionIt = std::find_if(skill.actions.begin(), skill.actions.end(),
             entryActionMatcher);
         if (actionIt == skill.actions.end()) {
@@ -8020,22 +8010,16 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
     const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    auto extensionSkillInfos = info.GetExtensionSkillInfos();
-    auto innerExtensionInfos = info.GetInnerExtensionInfos();
-    for (const auto &skillInfos : extensionSkillInfos) {
-        for (size_t skillIndex = 0; skillIndex < skillInfos.second.size(); ++skillIndex) {
-            const Skill &skill = skillInfos.second[skillIndex];
+    for (const auto &innerExtensionInfo : info.GetInnerExtensionInfos()) {
+        const auto &extensionSkillInfos = innerExtensionInfo.second.skills;
+        for (size_t skillIndex = 0; skillIndex < extensionSkillInfos.size(); ++skillIndex) {
+            const Skill &skill = extensionSkillInfos[skillIndex];
             size_t matchUriIndex = 0;
             if (!skill.Match(want, matchUriIndex)) {
                 continue;
             }
-            if (innerExtensionInfos.find(skillInfos.first) == innerExtensionInfos.end()) {
-                LOG_W(BMS_TAG_QUERY, "cannot find the extension info with %{public}s",
-                    skillInfos.first.c_str());
-                break;
-            }
             ExtensionAbilityInfo extensionInfo =
-                InnerExtensionInfo::ConvertToExtensionInfo(innerExtensionInfos[skillInfos.first]);
+                InnerExtensionInfo::ConvertToExtensionInfo(innerExtensionInfo.second);
             if ((static_cast<uint32_t>(flags) & GET_EXTENSION_INFO_WITH_APPLICATION) ==
                 GET_EXTENSION_INFO_WITH_APPLICATION) {
                 info.GetApplicationInfo(
@@ -8055,7 +8039,7 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
             }
             if ((static_cast<uint32_t>(flags) &
                 GET_EXTENSION_INFO_WITH_SKILL_URI) == GET_EXTENSION_INFO_WITH_SKILL_URI) {
-                AddSkillUrisInfo(skillInfos.second, extensionInfo.skillUri, skillIndex, matchUriIndex);
+                AddSkillUrisInfo(extensionSkillInfos, extensionInfo.skillUri, skillIndex, matchUriIndex);
             }
             extensionInfo.appIndex = appIndex;
             infos.emplace_back(std::move(extensionInfo));
@@ -8102,38 +8086,27 @@ void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, in
     const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    auto extensionSkillInfos = info.GetExtensionSkillInfos();
-    auto innerExtensionInfos = info.GetInnerExtensionInfos();
-    for (const auto &skillInfos : extensionSkillInfos) {
+    for (const auto &innerExtensionInfo : info.GetInnerExtensionInfos()) {
+        const auto &extensionSkillInfos = innerExtensionInfo.second.skills;
         if (want.GetAction() == SHARE_ACTION) {
-            if (!MatchShare(want, skillInfos.second)) {
-                continue;
-            }
-            if (innerExtensionInfos.find(skillInfos.first) == innerExtensionInfos.end()) {
-                LOG_W(BMS_TAG_QUERY, "cannot find the extension info with %{public}s",
-                    skillInfos.first.c_str());
+            if (!MatchShare(want, extensionSkillInfos)) {
                 continue;
             }
             ExtensionAbilityInfo extensionInfo =
-                InnerExtensionInfo::ConvertToExtensionInfo(innerExtensionInfos[skillInfos.first]);
-            EmplaceExtensionInfo(info, skillInfos.second, extensionInfo, flags, userId, infos,
+                InnerExtensionInfo::ConvertToExtensionInfo(innerExtensionInfo.second);
+            EmplaceExtensionInfo(info, extensionSkillInfos, extensionInfo, flags, userId, infos,
                 std::nullopt, std::nullopt, appIndex);
             continue;
         }
-        for (size_t skillIndex = 0; skillIndex < skillInfos.second.size(); ++skillIndex) {
-            const Skill &skill = skillInfos.second[skillIndex];
+        for (size_t skillIndex = 0; skillIndex < extensionSkillInfos.size(); ++skillIndex) {
+            const Skill &skill = extensionSkillInfos[skillIndex];
             size_t matchUriIndex = 0;
             if (!skill.Match(want, matchUriIndex)) {
                 continue;
             }
-            if (innerExtensionInfos.find(skillInfos.first) == innerExtensionInfos.end()) {
-                LOG_W(BMS_TAG_QUERY, "cannot find the extension info with %{public}s",
-                    skillInfos.first.c_str());
-                break;
-            }
             ExtensionAbilityInfo extensionInfo =
-                InnerExtensionInfo::ConvertToExtensionInfo(innerExtensionInfos[skillInfos.first]);
-            EmplaceExtensionInfo(info, skillInfos.second, extensionInfo, flags, userId, infos,
+                InnerExtensionInfo::ConvertToExtensionInfo(innerExtensionInfo.second);
+            EmplaceExtensionInfo(info, extensionSkillInfos, extensionInfo, flags, userId, infos,
                 skillIndex, matchUriIndex, appIndex);
             break;
         }
@@ -8702,9 +8675,10 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
         std::string key;
         key.append(bundleName).append(".").append(abilityInfo.package).append(".").append(abilityName);
         APP_LOGD("begin to find ability skills, key : %{public}s", key.c_str());
-        for (const auto& infoItem : innerBundleInfo.GetInnerSkillInfos()) {
+        for (const auto &infoItem : innerBundleInfo.GetInnerAbilityInfos()) {
             if (infoItem.first == key) {
-                skills = infoItem.second;
+                std::vector<Skill> mergedBuffer;
+                skills = innerBundleInfo.GetMergedSkills(key, infoItem.second.skills, mergedBuffer);
                 APP_LOGD("find ability skills success");
                 break;
             }
@@ -8713,9 +8687,9 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
         std::string key;
         key.append(bundleName).append(".").append(moduleName).append(".").append(extensionName);
         APP_LOGD("begin to find extension skills, key : %{public}s", key.c_str());
-        for (const auto& infoItem : innerBundleInfo.GetExtensionSkillInfos()) {
+        for (const auto &infoItem : innerBundleInfo.GetInnerExtensionInfos()) {
             if (infoItem.first == key) {
-                skills = infoItem.second;
+                skills = infoItem.second.skills;
                 APP_LOGD("find extension skills success");
                 break;
             }

@@ -2938,9 +2938,8 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0700, Function | Smal
     info.InsertCommonEvents(WRONG_MODULEPACKAGE, commonEvent2);
     info.RemoveModuleInfo(WRONG_MODULEPACKAGE);
     auto ret1 = info.GetInnerExtensionInfos();
-    auto ret2 = info.GetExtensionSkillInfos();
     EXPECT_EQ(ret1[TEST_KEY1].name, "");
-    EXPECT_EQ(ret2[TEST_KEY2].empty(), true);
+    EXPECT_EQ(ret1[TEST_KEY2].skills.empty(), true);
 }
 
 /**
@@ -7345,8 +7344,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillsDedup_RemoveModule_0100, Functi
     info.RemoveModuleInfo(TEST_PACK_AGE);
 
     EXPECT_EQ(info.baseAbilityInfos_.count(TEST_KEY), 0U);
-    auto skills = info.GetInnerSkillInfos();
-    EXPECT_EQ(skills.count(TEST_KEY), 0U);
 }
 
 /**
@@ -7373,7 +7370,5 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillsDedup_RemoveModule_0200, Functi
     info.RemoveModuleInfo(TEST_PACK_AGE);
 
     EXPECT_EQ(info.baseExtensionInfos_.count(TEST_KEY), 0U);
-    auto extSkills = info.GetExtensionSkillInfos();
-    EXPECT_EQ(extSkills.count(TEST_KEY), 0U);
 }
 } // OHOS
