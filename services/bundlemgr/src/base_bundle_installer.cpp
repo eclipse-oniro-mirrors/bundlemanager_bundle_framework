@@ -47,11 +47,13 @@
 #include "bms_extension_data_mgr.h"
 #include "bms_update_selinux_mgr.h"
 #include "bundle_clone_installer.h"
+#include "bundle_file_util.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
 #include "bundle_parser.h"
 #include "bundle_util.h"
 #include "code_protect_bundle_info.h"
+#include "data_clone_install_helper.h"
 #include "datetime_ex.h"
 #include "driver_installer.h"
 #include "hitrace_meter.h"
@@ -1614,17 +1616,23 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     userId_ = GetUserId(installParam.userId);
     result = CheckUserId(userId_);
     CHECK_RESULT(result, "userId check failed %{public}d");
-
+    supportDataCloneInstall_ = installParam.IsSupportDataCloneInstall();
+    if (supportDataCloneInstall_ && !DataCloneInstallHelper::AreAllCloneInstallPaths(inBundlePaths)) {
+        LOG_E(BMS_TAG_INSTALLER, "not all paths are valid for clone install");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
     std::vector<std::string> parsedPaths;
     result = ParseHapPaths(installParam, inBundlePaths, parsedPaths);
     CHECK_RESULT(result, "hap file parse failed %{public}d");
-
     std::vector<std::string> bundlePaths;
-    // check hap paths
-    result = BundleUtil::CheckFilePath(parsedPaths, bundlePaths);
-    CHECK_RESULT(result, "hap file check failed %{public}d");
-    UpdateInstallerState(InstallerState::INSTALL_BUNDLE_CHECKED);                  // ---- 5%
-
+    if (supportDataCloneInstall_) {
+        bundlePaths = parsedPaths;
+    } else {
+        // check hap paths
+        result = BundleUtil::CheckFilePath(parsedPaths, bundlePaths);
+        CHECK_RESULT(result, "hap file check failed %{public}d");
+        UpdateInstallerState(InstallerState::INSTALL_BUNDLE_CHECKED);                  // ---- 5%
+    }
     // copy the haps to the dir which cannot be accessed from caller
     result = CopyHapsToSecurityDir(installParam, bundlePaths);
     CHECK_RESULT(result, "copy file failed %{public}d");
@@ -1818,6 +1826,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         result = bundleInstallChecker_->CalculateInstallInodes(newInfos, !isAppExist_);
         CHECK_RESULT(result, "check inode requirements failed %{public}d");
     }
+    if (supportDataCloneInstall_ && isAppExist_) {
+        LOG_E(BMS_TAG_INSTALLER, "data clone install does not support app update");
+        return ERR_APPEXECFWK_INSTALL_ALREADY_EXIST;
+    }
     bool oldAppHasKey = oldInfo.GetApplicationReservedFlag() &
         static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED);
     ScopeGuard encrytedKeyGuard([&] { dataMgr_->UpdateAppEncryptedStatus(bundleName_, oldAppHasKey, 0, false); });
@@ -1852,10 +1864,18 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // copy hap or hsp to real install dir
     SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
     if (installParam.copyHapToInstallPath) {
-        LOG_D(BMS_TAG_INSTALLER, "begin to copy hap to install path");
-        result = SaveHapToInstallPath(newInfos, oldInfo);
-        CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
-    } else {
+        if (supportDataCloneInstall_) {
+            for (const auto &hapPath : bundlePaths) {
+                result = VerifyCodeSignatureForHap(newInfos, hapPath, hapPath);
+                CHECK_RESULT_WITH_ROLLBACK(result, "verify code signature for hap failed %{public}d", newInfos, oldInfo);
+            }
+        } else {
+            LOG_D(BMS_TAG_INSTALLER, "begin to copy hap to install path");
+            result = SaveHapToInstallPath(newInfos, oldInfo);
+            CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
+        }
+    }
+    if (!installParam.copyHapToInstallPath || supportDataCloneInstall_) {
         if ((result = CheckHapEncryption(newInfos, oldInfo, false)) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "check encryption of pre-hap failed %{public}d", result);
         }
@@ -2020,6 +2040,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CheckAddResultMsg(cacheInfo, isContainEntry_);
     PrintDataStat();
     ProcessAOT(installParam);
+    if (supportDataCloneInstall_) {
+        LOG_D(BMS_TAG_INSTALLER, "support data clone install successfully, bundleName:%{public}s", bundleName_.c_str());
+    }
     return result;
 }
 
@@ -4508,12 +4531,14 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         }
     }
 
-    ExtractResourceFiles(info, modulePath);
-
-    result = ExtractResFileDir(modulePath);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "fail to ExtractResFileDir, error is %{public}d", result);
-        return result;
+    // data clone install no need to extract res files
+    if (!supportDataCloneInstall_) {
+        ExtractResourceFiles(info, modulePath);
+        result = ExtractResFileDir(modulePath);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "fail to ExtractResFileDir, error is %{public}d", result);
+            return result;
+        }
     }
 
     if (auto hnpPackageInfos = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
@@ -7135,7 +7160,13 @@ void BaseBundleInstaller::RestoreHaps(const std::vector<std::string> &bundlePath
         LOG_W(BMS_TAG_INSTALLER, "Invalid bundle path: %{public}s", bundlePaths.front().c_str());
         return;
     }
-
+    if (installParam.IsSupportDataCloneInstall()) {
+        if (!BundleUtil::RenameFile(bundlePaths_[0],targetDir)) {
+            LOG_W(BMS_TAG_INSTALLER, "data clone install failed: %{public}s -> %{public}s",
+                bundlePaths_[0].c_str(), targetDir.c_str());
+        }
+        return;
+    }
     for (const auto &originPath : bundlePaths_) {
         std::string targetPath = targetDir + originPath.substr(originPath.find_last_of('/') + 1);
         LOG_I(BMS_TAG_INSTALLER, "Restore hap: %{public}s -> %{public}s", originPath.c_str(), targetPath.c_str());
@@ -7445,10 +7476,13 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         return ret;
     }
     if (isCompressNativeLibrary) {
-        auto result = ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
-        CHECK_RESULT(result, "fail to extract module dir, error is %{public}d");
+        // data clone install no need to extract so
+        if (!supportDataCloneInstall_) {
+            auto result = ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
+            CHECK_RESULT(result, "fail to extract module dir, error is %{public}d");
+        }
         // verify hap or hsp code signature for compressed so files
-        result = VerifyCodeSignatureForNativeFiles(info, cpuAbi, targetSoPath, signatureFileDir);
+        auto result = VerifyCodeSignatureForNativeFiles(info, cpuAbi, targetSoPath, signatureFileDir);
         CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
         // check whether the hap or hsp is encrypted
         result = CheckSoEncryption(info, cpuAbi, targetSoPath);
@@ -7635,6 +7669,31 @@ ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installPa
         LOG_D(BMS_TAG_INSTALLER, "no need to copy preInstallApp to secure dir");
         return ERR_OK;
     }
+    if (supportDataCloneInstall_) {
+        if (bundlePaths.empty()) {
+            LOG_E(BMS_TAG_INSTALLER, "bundle path empty");
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
+        size_t pos = bundlePaths[0].rfind(ServiceConstants::PATH_SEPARATOR);
+        std::string dirPath = (pos != std::string::npos) ? bundlePaths[0].substr(0, pos) : bundlePaths[0];
+        std::string destination = DataCloneInstallHelper::RenameDirToSecurityDir(dirPath, bundlePaths,
+            toDeleteTempHapPath_, userId_);
+        if (!BundleUtil::RenameFile(dirPath, destination)) {
+            LOG_E(BMS_TAG_INSTALLER, "rename dir %{private}s to %{private}s failed", dirPath.c_str(),
+                destination.c_str());
+            return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
+        }
+        bundlePaths_.clear();
+        bundlePaths.clear();
+        if (!destination.empty()) {
+            bundlePaths_.push_back(destination);
+        }
+        if (!BundleFileUtil::GetHapFilesFromCloneDir(destination, bundlePaths)) {
+            LOG_E(BMS_TAG_INSTALLER, "GetHapFilesFromCloneDir failed for %{public}s", destination.c_str());
+            return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
+        }
+        return ERR_OK;
+    }
     for (size_t index = 0; index < bundlePaths.size(); ++index) {
         if (!BundleUtil::CheckSystemSize(bundlePaths[index], APP_INSTALL_PATH)) {
             LOG_E(BMS_TAG_INSTALLER, "install %{private}s failed insufficient disk memory", bundlePaths[index].c_str());
@@ -7660,7 +7719,7 @@ ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
         parsedPaths.assign(inBundlePaths.begin(), inBundlePaths.end());
         return ERR_OK;
     }
-    LOG_I(BMS_TAG_INSTALLER, "rename install");
+    LOG_I(BMS_TAG_INSTALLER, "rename install, supportDataCloneInstall:%{public}d", supportDataCloneInstall_);
     int32_t userId = sysEventInfo_.callingUid / Constants::BASE_USER_RANGE;
     const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
         ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId);
@@ -9580,6 +9639,10 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     const InnerBundleInfo &oldInfo, const std::string &bundleName,
     const bool isBundleUpdate, const bool needCopyHap)
 {
+    if (supportDataCloneInstall_) {
+        // rename to real code path
+        return DataCloneInstallHelper::RenameToRealCodePath(bundlePaths_, bundleName);
+    }
     if (!isBundleUpdate) {
         // move so file to real installation dir
         bool needDeleteOldLibraryPath = NeedDeleteOldNativeLib(newInfos, oldInfo);
@@ -9822,6 +9885,15 @@ void BaseBundleInstaller::InnerProcessTargetSoPath(const InnerBundleInfo &info, 
     const std::string &modulePath, std::string &nativeLibraryPath, std::string &targetSoPath)
 {
     bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
+    // for data clone install
+    if (supportDataCloneInstall_) {
+        if (!bundlePaths_.empty()) {
+            targetSoPath = bundlePaths_[0] + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
+        } else {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "data clone install bundlePaths empty -n %{public}s", bundleName_.c_str());
+        }
+        return;
+    }
     // extract so file: if hap so is not isolated, then extract so to tmp path.
     if (isLibIsolated) {
         if (BundleUtil::EndWith(modulePath, ServiceConstants::TMP_SUFFIX)) {

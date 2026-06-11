@@ -171,6 +171,57 @@ bool BundleFileUtil::CheckFileSize(const std::string &bundlePath, const int64_t 
     return true;
 }
 
+bool BundleFileUtil::GetHapFilesFromCloneDir(const std::string &currentBundlePath,
+    std::vector<std::string> &hapFileList)
+{
+    APP_LOGD("GetHapFilesFromCloneDir with path is %{public}s", currentBundlePath.c_str());
+    if (currentBundlePath.empty()) {
+        return false;
+    }
+
+    std::string realBundlePath = "";
+    if (!PathToRealPath(currentBundlePath, realBundlePath)) {
+        APP_LOGE("PathToRealPath failed for %{public}s", currentBundlePath.c_str());
+        return false;
+    }
+
+    DIR* dir = opendir(realBundlePath.c_str());
+    if (dir == nullptr) {
+        char errMsg[256] = {0};
+        strerror_r(errno, errMsg, sizeof(errMsg));
+        APP_LOGE("open %{public}s failure due to %{public}s errno %{public}d",
+            realBundlePath.c_str(), errMsg, errno);
+        return false;
+    }
+
+    std::string bundlePath = realBundlePath;
+    if (bundlePath.back() != FILE_SEPARATOR_CHAR) {
+        bundlePath.append(PATH_SEPARATOR);
+    }
+    struct dirent *entry = nullptr;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+        const std::string hapFilePath = bundlePath + entry->d_name;
+        std::string realFilePath = "";
+        if (!CheckFilePath(hapFilePath, realFilePath)) {
+            APP_LOGW("invalid hap path %{public}s", hapFilePath.c_str());
+            continue;
+        }
+        hapFileList.emplace_back(realFilePath);
+        APP_LOGD("find hap path %{public}s", realFilePath.c_str());
+
+        if (hapFileList.size() > MAX_HAP_NUMBER) {
+            APP_LOGE("max hap number %{public}hhu, stop add", MAX_HAP_NUMBER);
+            closedir(dir);
+            return false;
+        }
+    }
+    closedir(dir);
+    return true;
+}
+
 bool BundleFileUtil::GetHapFilesFromBundlePath(const std::string &currentBundlePath,
     std::vector<std::string> &hapFileList)
 {

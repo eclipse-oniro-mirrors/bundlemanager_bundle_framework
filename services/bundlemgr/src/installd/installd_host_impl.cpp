@@ -18,6 +18,7 @@
 #include <chrono>
 #include <cinttypes>
 #include <cstdio>
+#include <dirent.h>
 #include <filesystem>
 #include <fstream>
 #include <future>
@@ -119,6 +120,76 @@ constexpr int32_t UNMOUNT_DIS_SHARE_TIMEOUT_MS = 3000;
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
+
+static ErrCode ApplyCloneInstallPerms(const std::string &path)
+{
+    mode_t targetFileMode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    mode_t resourceFileMode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    mode_t dirMode = S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to opendir:%{public}s, errno:%{public}d", path.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_CHMOD_FAILED;
+    }
+
+    // Lambda to handle sub-path permissions, capturing mode variables to reduce parameter count
+    auto handleSubPathPermission = [&](const std::string &subPath, bool isDir, const char* name) -> ErrCode {
+        if (isDir) {
+            // libs dir uses resourceFileMode, other dirs (e.g., entry) use targetFileMode
+            mode_t mode = (strcmp(name, "libs") == 0) ? resourceFileMode : targetFileMode;
+            if (!InstalldOperator::ChangeDirModeRecursively(subPath, mode, dirMode)) {
+                LOG_E(BMS_TAG_INSTALLD, "change dir mode failed, path: %{public}s", subPath.c_str());
+                return ERR_APPEXECFWK_INSTALLD_CHMOD_FAILED;
+            }
+        } else {
+            // Files directly under the root path use resourceFileMode
+            if (chmod(subPath.c_str(), resourceFileMode) != 0) {
+                LOG_E(BMS_TAG_INSTALLD, "change mode for file %{public}s failed, errno:%{public}d",
+                    subPath.c_str(), errno);
+            }
+        }
+        return ERR_OK;
+    };
+
+    struct dirent *entryPtr = nullptr;
+    while ((entryPtr = readdir(dir)) != nullptr) {
+        if (strcmp(entryPtr->d_name, ".") == 0 || strcmp(entryPtr->d_name, "..") == 0) {
+            continue;
+        }
+        
+        std::string subPath = path + ServiceConstants::PATH_SEPARATOR + entryPtr->d_name;
+        bool isDir = (entryPtr->d_type == DT_DIR);
+        
+        ErrCode ret = handleSubPathPermission(subPath, isDir, entryPtr->d_name);
+        if (ret != ERR_OK) {
+            closedir(dir);
+            return ret;
+        }
+    }
+    closedir(dir);
+
+    // Set permission for the root directory itself
+    if (chmod(path.c_str(), dirMode) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "change mode for dir %{public}s failed, errno:%{public}d", path.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_CHMOD_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode ProcessCopyHapToInstallPath(const std::string &oldPath, const std::string &newPath)
+{
+    if (!InstalldOperator::RenameFile(oldPath, newPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "rename file %{public}s to %{public}s failed errno:%{public}d",
+            oldPath.c_str(), newPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED;
+    }
+    if (!InstalldOperator::ChangeDirOwnerRecursively(newPath, INSTALLS_UID, INSTALLS_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "change dir owner failed, path: %{public}s", newPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_CHMOD_FAILED;
+    }
+    return ApplyCloneInstallPerms(newPath);
+}
 }
 
 InstalldHostImpl::InstalldHostImpl()
@@ -368,6 +439,10 @@ ErrCode InstalldHostImpl::RenameModuleDir(
     if (oldPath.empty() || newPath.empty()) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function RenameModuleDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (scene == BundleDirScene::COPY_HAP_TO_INSTALL_PATH) {
+        return ProcessCopyHapToInstallPath(oldPath, newPath);
     }
 
     if (!InstalldOperator::IsValidBundleName(bundleName) ||

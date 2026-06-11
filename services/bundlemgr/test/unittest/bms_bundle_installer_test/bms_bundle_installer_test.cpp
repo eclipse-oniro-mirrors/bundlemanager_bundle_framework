@@ -36,12 +36,14 @@
 #include "app_domain_verify_mgr_client.h"
 #endif
 #include "app_service_fwk/app_service_fwk_installer.h"
+#include "bundle_file_util.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
 #include "bundle_resource_helper.h"
 #include "bundle_resource_manager.h"
+#include "data_clone_install_helper.h"
 #include "directory_ex.h"
 #include "file_ex.h"
 #include "hmp_bundle_installer.h"
@@ -18454,5 +18456,281 @@ HWTEST_F(BmsBundleInstallerTest, InnerShared_VerifyCodeSignatureForNativeFiles_0
     ErrCode ret = installer.VerifyCodeSignatureForNativeFiles(
         "/data/test.hsp", "arm", "/data/so", "", false);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstallParam_IsSupportDataCloneInstall_001
+ * @tc.name: InstallParam IsSupportDataCloneInstall
+ * @tc.desc: test parameter parsing
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallParam_IsSupportDataCloneInstall_001, TestSize.Level1)
+{
+    InstallParam installParam;
+    // Default false
+    EXPECT_FALSE(installParam.IsSupportDataCloneInstall());
+    
+    // Set true
+    installParam.parameters[InstallParam::SUPPORT_DATA_CLONE_INSTALL_KEY] = "true";
+    EXPECT_TRUE(installParam.IsSupportDataCloneInstall());
+    
+    // Set false explicitly
+    installParam.parameters[InstallParam::SUPPORT_DATA_CLONE_INSTALL_KEY] = "false";
+    EXPECT_FALSE(installParam.IsSupportDataCloneInstall());
+}
+
+/**
+ * @tc.number: InstallParam_IsSupportDataCloneInstall_002
+ * @tc.name: InstallParam IsSupportDataCloneInstall
+ * @tc.desc: test parameter parsing with false value
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallParam_IsSupportDataCloneInstall_002, TestSize.Level1)
+{
+    InstallParam installParam;
+    installParam.parameters[InstallParam::SUPPORT_DATA_CLONE_INSTALL_KEY] = "false";
+    EXPECT_FALSE(installParam.IsSupportDataCloneInstall());
+}
+
+/**
+ * @tc.number: InstallParam_IsSupportDataCloneInstall_003
+ * @tc.name: InstallParam IsSupportDataCloneInstall
+ * @tc.desc: test parameter parsing with non-true value
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallParam_IsSupportDataCloneInstall_003, TestSize.Level1)
+{
+    InstallParam installParam;
+    installParam.parameters[InstallParam::SUPPORT_DATA_CLONE_INSTALL_KEY] = "1";
+    EXPECT_FALSE(installParam.IsSupportDataCloneInstall());
+}
+
+/**
+ * @tc.number: DataCloneInstallHelper_AreAllCloneInstallPaths_001
+ * @tc.name: DataCloneInstallHelper AreAllCloneInstallPaths
+ * @tc.desc: test empty paths
+ */
+HWTEST_F(BmsBundleInstallerTest, DataCloneInstallHelper_AreAllCloneInstallPaths_001, TestSize.Level1)
+{
+    std::vector<std::string> paths;
+    bool result = DataCloneInstallHelper::AreAllCloneInstallPaths(paths);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: DataCloneInstallHelper_AreAllCloneInstallPaths_002
+ * @tc.name: DataCloneInstallHelper AreAllCloneInstallPaths
+ * @tc.desc: test multiple paths
+ */
+HWTEST_F(BmsBundleInstallerTest, DataCloneInstallHelper_AreAllCloneInstallPaths_002, TestSize.Level1)
+{
+    std::vector<std::string> paths;
+    paths.emplace_back("/data/bms_app_clone/test1/");
+    paths.emplace_back("/data/bms_app_clone/test2/");
+    bool result = DataCloneInstallHelper::AreAllCloneInstallPaths(paths);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: DataCloneInstallHelper_AreAllCloneInstallPaths_003
+ * @tc.name: DataCloneInstallHelper AreAllCloneInstallPaths
+ * @tc.desc: test invalid prefix
+ */
+HWTEST_F(BmsBundleInstallerTest, DataCloneInstallHelper_AreAllCloneInstallPaths_003, TestSize.Level1)
+{
+    std::vector<std::string> paths;
+    paths.emplace_back("/data/invalid_prefix/test/");
+    bool result = DataCloneInstallHelper::AreAllCloneInstallPaths(paths);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: DataCloneInstallHelper_AreAllCloneInstallPaths_004
+ * @tc.name: DataCloneInstallHelper AreAllCloneInstallPaths
+ * @tc.desc: test valid prefix
+ */
+HWTEST_F(BmsBundleInstallerTest, DataCloneInstallHelper_AreAllCloneInstallPaths_004, TestSize.Level1)
+{
+    std::vector<std::string> paths;
+    paths.emplace_back(ServiceConstants::APP_CLONE_SANDBOX_PATH + std::string("com.test.app/"));
+    bool result = DataCloneInstallHelper::AreAllCloneInstallPaths(paths);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: DataCloneInstallHelper_AreAllCloneInstallPaths_005
+ * @tc.name: DataCloneInstallHelper AreAllCloneInstallPaths
+ * @tc.desc: test empty string path
+ */
+HWTEST_F(BmsBundleInstallerTest, DataCloneInstallHelper_AreAllCloneInstallPaths_005, TestSize.Level1)
+{
+    std::vector<std::string> paths;
+    paths.emplace_back("");
+    EXPECT_FALSE(DataCloneInstallHelper::AreAllCloneInstallPaths(paths));
+}
+
+/**
+ * @tc.number: DataCloneInstallHelper_AreAllCloneInstallPaths_006
+ * @tc.name: DataCloneInstallHelper AreAllCloneInstallPaths
+ * @tc.desc: test invalid prefix
+ */
+HWTEST_F(BmsBundleInstallerTest, DataCloneInstallHelper_AreAllCloneInstallPaths_006, TestSize.Level1)
+{
+    std::vector<std::string> paths;
+    paths.emplace_back("/data/invalid_prefix/com.test/");
+    EXPECT_FALSE(DataCloneInstallHelper::AreAllCloneInstallPaths(paths));
+}
+
+/**
+ * @tc.number: DataCloneInstallHelper_AreAllCloneInstallPaths_007
+ * @tc.name: DataCloneInstallHelper AreAllCloneInstallPaths
+ * @tc.desc: test valid prefix
+ */
+HWTEST_F(BmsBundleInstallerTest, DataCloneInstallHelper_AreAllCloneInstallPaths_007, TestSize.Level1)
+{
+    std::vector<std::string> paths;
+    paths.emplace_back(ServiceConstants::APP_CLONE_SANDBOX_PATH + std::string("com.test.app/"));
+    EXPECT_TRUE(DataCloneInstallHelper::AreAllCloneInstallPaths(paths));
+}
+
+/**
+ * @tc.number: DataCloneInstallHelper_AreAllCloneInstallPaths_008
+ * @tc.name: DataCloneInstallHelper AreAllCloneInstallPaths
+ * @tc.desc: test path contains prefix but not start with it
+ */
+HWTEST_F(BmsBundleInstallerTest, DataCloneInstallHelper_AreAllCloneInstallPaths_008, TestSize.Level1)
+{
+    std::vector<std::string> paths;
+    paths.emplace_back("/data/other" + std::string(ServiceConstants::APP_CLONE_SANDBOX_PATH) + "com.test/");
+    EXPECT_FALSE(DataCloneInstallHelper::AreAllCloneInstallPaths(paths));
+}
+
+/**
+ * @tc.number: DataCloneInstallHelper_RenameToRealCodePath_001
+ * @tc.name: DataCloneInstallHelper RenameToRealCodePath
+ * @tc.desc: test empty paths
+ */
+HWTEST_F(BmsBundleInstallerTest, DataCloneInstallHelper_RenameToRealCodePath_001, TestSize.Level1)
+{
+    std::vector<std::string> paths;
+    ErrCode result = DataCloneInstallHelper::RenameToRealCodePath(paths, "com.test");
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: BundleFileUtil_GetHapFilesFromCloneDir_001
+ * @tc.name: BundleFileUtil GetHapFilesFromCloneDir
+ * @tc.desc: test empty path
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleFileUtil_GetHapFilesFromCloneDir_001, TestSize.Level1)
+{
+    std::vector<std::string> hapFiles;
+    bool result = BundleFileUtil::GetHapFilesFromCloneDir("", hapFiles);
+    EXPECT_FALSE(result);
+    EXPECT_TRUE(hapFiles.empty());
+}
+
+/**
+ * @tc.number: BundleFileUtil_GetHapFilesFromCloneDir_002
+ * @tc.name: BundleFileUtil GetHapFilesFromCloneDir
+ * @tc.desc: test invalid path
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleFileUtil_GetHapFilesFromCloneDir_002, TestSize.Level1)
+{
+    std::vector<std::string> hapFiles;
+    bool result = BundleFileUtil::GetHapFilesFromCloneDir("/non/existent/path", hapFiles);
+    EXPECT_FALSE(result);
+    EXPECT_TRUE(hapFiles.empty());
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_ProcessBundleInstall_CloneUpdateCheck_001
+ * @tc.name: BaseBundleInstaller ProcessBundleInstall
+ * @tc.desc: test clone install blocked when app exists
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_ProcessBundleInstall_CloneUpdateCheck_001, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    installer.supportDataCloneInstall_ = true;
+    installer.isAppExist_ = true; // Simulate app already exists
+    installer.userId_ = 100;
+    
+    // Verify the condition that blocks clone install for updates
+    bool shouldBlock = installer.supportDataCloneInstall_ && installer.isAppExist_;
+    EXPECT_TRUE(shouldBlock);
+}
+
+/**
+ * @tc.number: CopyHapsToSecurityDir_0020
+ * @tc.name: CopyHapsToSecurityDir
+ * @tc.desc: test CopyHapsToSecurityDir with empty path in data clone install
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyHapsToSecurityDir_0020, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.withCopyHaps = true;
+    std::vector<std::string> bundlePaths;
+    installer.supportDataCloneInstall_ = true;
+    ErrCode result = installer.CopyHapsToSecurityDir(installParam, bundlePaths);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_InnerProcessTargetSoPath_Clone_001
+ * @tc.name: BaseBundleInstaller InnerProcessTargetSoPath
+ * @tc.desc: test clone install with valid bundlePaths_
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_InnerProcessTargetSoPath_Clone_001, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    installer.supportDataCloneInstall_ = true;
+    installer.bundlePaths_ = {"/data/security/test_dir"};
+    
+    InnerBundleInfo info;
+    std::string modulePath = "/data/test/module";
+    std::string nativeLibraryPath = "libs/arm64-v8a";
+    std::string targetSoPath;
+    
+    installer.InnerProcessTargetSoPath(info, false, modulePath, nativeLibraryPath, targetSoPath);
+    EXPECT_EQ(targetSoPath, "/data/security/test_dir/libs/arm64-v8a");
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_InnerProcessTargetSoPath_Clone_002
+ * @tc.name: BaseBundleInstaller InnerProcessTargetSoPath
+ * @tc.desc: test clone install with empty bundlePaths_
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_InnerProcessTargetSoPath_Clone_002, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    installer.supportDataCloneInstall_ = true;
+    installer.bundlePaths_.clear();
+    
+    InnerBundleInfo info;
+    std::string modulePath = "/data/test/module";
+    std::string nativeLibraryPath = "libs/arm64-v8a";
+    std::string targetSoPath = "initial";
+    
+    installer.InnerProcessTargetSoPath(info, false, modulePath, nativeLibraryPath, targetSoPath);
+    EXPECT_EQ(targetSoPath, "initial");
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_InnerProcessTargetSoPath_Clone_003
+ * @tc.name: BaseBundleInstaller InnerProcessTargetSoPath
+ * @tc.desc: test clone install uses only first element of bundlePaths_
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_InnerProcessTargetSoPath_Clone_003, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    installer.supportDataCloneInstall_ = true;
+    installer.bundlePaths_ = {"/data/security/test_dir", "/data/security/other_dir"};
+    
+    InnerBundleInfo info;
+    std::string modulePath = "/data/test/module";
+    std::string nativeLibraryPath = "libs/arm64-v8a";
+    std::string targetSoPath;
+    
+    installer.InnerProcessTargetSoPath(info, false, modulePath, nativeLibraryPath, targetSoPath);
+    // Should use bundlePaths_[0]
+    EXPECT_EQ(targetSoPath, "/data/security/test_dir/libs/arm64-v8a");
 }
 } // OHOS

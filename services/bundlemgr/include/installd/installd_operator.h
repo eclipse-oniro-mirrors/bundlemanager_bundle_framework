@@ -293,6 +293,8 @@ public:
 
     static bool ChangeDirOwnerRecursively(const std::string &path, const int uid, const int gid);
 
+    static bool ChangeDirModeRecursively(const std::string &path, mode_t fileMode, mode_t dirMode);
+
     static bool IsDiffFiles(const std::string &entryName,
         const std::string &targetPath, const std::string &cpuAbi);
 
