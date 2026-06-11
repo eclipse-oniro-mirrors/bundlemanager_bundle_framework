@@ -6780,9 +6780,8 @@ HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0010, Function | MediumTest |
 HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0020, Function | MediumTest | Level1)
 {
     std::vector<ShortcutInfo> shortcutInfos;
-    std::string bundleName = "com.ohos.hello";
-    std::string shortcutId = "id_test1";
     BundleDataMgr bundleDataMgr;
+    bundleDataMgr.uidMap_[Constants::BASE_APP_UID] = {"com.ohos.hello", 0};
     auto ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
@@ -6795,14 +6794,13 @@ HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0020, Function | MediumTest |
 HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0030, Function | MediumTest | Level1)
 {
     std::vector<ShortcutInfo> shortcutInfos;
-    std::string bundleName = "com.ohos.hello";
-    std::string shortcutId = "id_test1";
     ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
     BundleDataMgr bundleDataMgr;
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.InsertShortcutInfos("id_test1", shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
     bundleDataMgr.bundleInfos_.emplace("fake_bundle", innerBundleInfo);
+    bundleDataMgr.uidMap_[Constants::BASE_APP_UID] = {"com.ohos.hello", 0};
     auto ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
@@ -6823,15 +6821,17 @@ HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0040, Function | MediumTest |
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.uidMap_[Constants::BASE_APP_UID] = {bundleName, 0};
     auto ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
     EXPECT_EQ(ret, ERR_OK);
+    ASSERT_FALSE(shortcutInfos.empty());
 
     std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
         std::make_shared<ShortcutVisibleDataStorageRdb>();
     ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
     shortcutInfo.visible = false;
     shortcutVisibleDataStorageRdb->SaveStorageShortcutVisibleInfo(
-        bundleName, shortcutId, 0, 100, shortcutInfo);
+        bundleName, shortcutId, 0, USERID, shortcutInfo);
     ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_FALSE(shortcutInfos[0].visible);
@@ -8042,6 +8042,54 @@ HWTEST_F(BmsDataMgrTest, UpdateUninstallBundleInfo_0001, Function | MediumTest |
     bundleDataMgr.uninstallDataMgr_ = nullptr;
     ret = bundleDataMgr.UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UpdateUninstallBundleCheckBySpm_0001
+ * @tc.name: UpdateUninstallBundleCheckBySpm
+ * @tc.desc: test UpdateUninstallBundleCheckBySpm with nullptr uninstallDataMgr_
+ */
+HWTEST_F(BmsDataMgrTest, UpdateUninstallBundleCheckBySpm_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.uninstallDataMgr_ = nullptr;
+    bool ret = bundleDataMgr.UpdateUninstallBundleCheckBySpm("com.ohos.test", true);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UpdateUninstallBundleCheckBySpm_0002
+ * @tc.name: UpdateUninstallBundleCheckBySpm
+ * @tc.desc: test UpdateUninstallBundleCheckBySpm with non-existent bundle
+ */
+HWTEST_F(BmsDataMgrTest, UpdateUninstallBundleCheckBySpm_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    EXPECT_NE(bundleDataMgr.uninstallDataMgr_, nullptr);
+    bool ret = bundleDataMgr.UpdateUninstallBundleCheckBySpm("com.nonexistent.bundle", true);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UpdateUninstallBundleCheckBySpm_0003
+ * @tc.name: UpdateUninstallBundleCheckBySpm
+ * @tc.desc: test UpdateUninstallBundleCheckBySpm success
+ */
+HWTEST_F(BmsDataMgrTest, UpdateUninstallBundleCheckBySpm_0003, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo uninstallDataUserInfo;
+    uninstallBundleInfo.userInfos.emplace("100", uninstallDataUserInfo);
+    EXPECT_NE(bundleDataMgr.uninstallDataMgr_, nullptr);
+    bundleDataMgr.uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
+    bool ret = bundleDataMgr.UpdateUninstallBundleCheckBySpm(bundleName, true);
+    EXPECT_TRUE(ret);
+    UninstallBundleInfo result;
+    bundleDataMgr.uninstallDataMgr_->GetUninstallBundleInfo(bundleName, result);
+    EXPECT_TRUE(result.checkBySpm);
+    bundleDataMgr.uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName);
 }
 
 /**
@@ -9653,6 +9701,7 @@ HWTEST_F(BmsDataMgrTest, GetAlternateIcons_0030, Function | MediumTest | Level1)
     appInfo.alternateIcons.push_back(icon);
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.uidMap_[Constants::BASE_APP_UID] = {bundleName, 0};
     auto ret = bundleDataMgr.GetAlternateIcons(alternateIcons);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(alternateIcons.size(), static_cast<size_t>(1));

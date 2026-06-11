@@ -111,6 +111,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     }
     info.SetAppIndex(newAppIndex);
     info.SetIsSandbox(true);
+    info.SetBundleCheckBySpm(true);
 
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
     AppProvisionInfo appProvisionInfo;

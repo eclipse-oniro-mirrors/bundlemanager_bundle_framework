@@ -1155,6 +1155,7 @@ ErrCode AppServiceFwkInstaller::MarkInstallFinish()
         APP_LOGE("mark finish failed, -n %{public}s not exist", bundleName_.c_str());
         return ERR_APPEXECFWK_FETCH_BUNDLE_ERROR;
     }
+    info.SetBundleCheckBySpm(true);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
     if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
