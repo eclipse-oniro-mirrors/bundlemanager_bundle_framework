@@ -302,6 +302,13 @@ ErrCode BaseBundleInstaller::InstallBundle(
     sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
+    if (result == Security::AccessToken::AccessTokenError::ERR_BUNDLE_ALREADY_EXIST) {
+        // if bundleName is not empty, delete the access token id and try to install again
+        if (!bundleName_.empty()) {
+            BundlePermissionMgr::DeleteAccessTokenId(0, bundleName_, Security::AccessToken::ReservedType::NONE);
+            result = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
+        }
+    }
     if (result != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON && result != ERR_OK &&
         installParam.isDataPreloadHap && GetUserId(installParam.userId) == Constants::DEFAULT_USERID) {
         LOG_E(BMS_TAG_INSTALLER, "set parameter BMS_DATA_PRELOAD false");
@@ -1245,6 +1252,9 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         Security::AccessToken::HapInfoCheckResult checkResult;
         int32_t permCheckRet = BundlePermissionMgr::CheckHapPermissionInfo(
             sessionId_, Security::AccessToken::TYPE_INSTALL, checkResult);
+        if (permCheckRet == Security::AccessToken::AccessTokenError::ERR_BUNDLE_ALREADY_EXIST) {
+            return permCheckRet;
+        }
         if (permCheckRet != ERR_OK && 
             permCheckRet != Security::AccessToken::AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED) {
             LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s CheckHapPermissionInfo failed, ret:%{public}d",
