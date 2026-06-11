@@ -600,6 +600,20 @@ bool BundleDataMgr::UpdateUninstallBundleInfo(const std::string &bundleName,
     return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
 }
 
+bool BundleDataMgr::UpdateUninstallBundleCheckBySpm(const std::string &bundleName, bool checkBySpm)
+{
+    if (uninstallDataMgr_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    UninstallBundleInfo info;
+    if (!uninstallDataMgr_->GetUninstallBundleInfo(bundleName, info)) {
+        return false;
+    }
+    info.checkBySpm = checkBySpm;
+    return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, info);
+}
+
 bool BundleDataMgr::GetUninstallBundleInfo(const std::string &bundleName,
     UninstallBundleInfo &uninstallBundleInfo) const
 {
@@ -822,6 +836,7 @@ ErrCode BundleDataMgr::AddInnerBundleUserInfo(
     std::lock_guard<std::mutex> stateLock(stateMutex_);
     auto& info = bundleInfos_.at(bundleName);
     info.AddInnerBundleUserInfo(newUserInfo);
+    info.SetBundleCheckBySpm(true);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     ErrCode ret = dataStorage_->SaveStorageBundleInfoWithCode(info);
     if (ret != ERR_OK) {
@@ -11547,6 +11562,7 @@ ErrCode BundleDataMgr::AddCloneBundle(const std::string &bundleName, const Inner
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     InnerBundleInfo &innerBundleInfo = infoItem->second;
+    innerBundleInfo.SetBundleCheckBySpm(true);
     ErrCode res = innerBundleInfo.AddCloneBundle(attr);
     if (res != ERR_OK) {
         APP_LOGE("innerBundleInfo addCloneBundleInfo fail");

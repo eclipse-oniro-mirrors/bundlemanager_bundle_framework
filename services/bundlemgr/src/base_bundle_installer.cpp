@@ -2361,6 +2361,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             LOG_E(BMS_TAG_INSTALLER, "remove bundle user data failed");
             return res;
         }
+        uninstallBundleInfo.checkBySpm = true;
         SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
         if (installParam.isKeepData) {
             BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
@@ -2399,7 +2400,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "save install mark failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
-
+    uninstallBundleInfo.checkBySpm = true;
     SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
     if (installParam.isKeepData) {
         BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
@@ -2687,6 +2688,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 LOG_E(BMS_TAG_INSTALLER, "remove bundle failed");
                 return result;
             }
+            uninstallBundleInfo.checkBySpm = true;
             SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
             if (installParam.isKeepData) {
                 BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
@@ -2727,6 +2729,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         if (removeRes != ERR_OK) {
             return removeRes;
         }
+        uninstallBundleInfo.checkBySpm = true;
         SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
         UninstallDebugAppSandbox(bundleName, uid, oldInfo);
         if (!PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName)) {

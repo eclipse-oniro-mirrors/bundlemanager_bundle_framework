@@ -2193,6 +2193,9 @@ void BMSEventHandler::BuildMigrationData(
         if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
             continue;
         }
+        if (info.IsBundleCheckBySpm()) {
+            continue;
+        }
         auto &m = migratedMap[bundleName];
         m.bundleName = bundleName;
         m.pathList.hapPaths = info.GetAllHapPaths();
@@ -2224,7 +2227,11 @@ void BMSEventHandler::BuildMigrationData(
         if (pos != std::string::npos) {
             OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex);
         }
-        auto &m = migratedMap[bn];
+        auto it = migratedMap.find(bn);
+        if (it == migratedMap.end()) {
+            continue;
+        }
+        auto &m = it->second;
         if (m.bundleName.empty()) {
             m.bundleName = bn;
             m.pathList.hapPaths = info.GetAllHapPaths();
@@ -2242,15 +2249,22 @@ void BMSEventHandler::BuildMigrationData(
         }
     }
     for (const auto &[bn, ui] : uninstallBundleInfos) {
+        if (ui.checkBySpm) {
+            continue;
+        }
+        auto existingIt = migratedMap.find(bn);
         Security::AccessToken::MigratedInfo m;
-        m.bundleName = bn;
-        std::vector<Security::AccessToken::AccessTokenIDEx> oldTokens;
+        if (existingIt != migratedMap.end()) {
+            m = std::move(existingIt->second);
+        } else {
+            m.bundleName = bn;
+        }
+        auto &oldTokens = oldTokenMap[bn];
         for (const auto &[uidStr, dui] : ui.userInfos) {
             int32_t userId = 0;
             int32_t appIndex = 0;
             auto underscorePos = uidStr.find(Constants::FILE_UNDERLINE);
             if (underscorePos != std::string::npos) {
-                // Clone entry: key is "userId_appIndex"
                 if (!OHOS::StrToInt(uidStr.substr(0, underscorePos), userId)) {
                     continue;
                 }
@@ -2266,10 +2280,7 @@ void BMSEventHandler::BuildMigrationData(
             m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::RESERVED_DATA);
             oldTokens.emplace_back(Security::AccessToken::AccessTokenIDEx{dui.accessTokenIdEx});
         }
-        if (!m.uidList.empty()) {
-            oldTokenMap[bn] = std::move(oldTokens);
-            migratedMap[bn] = std::move(m);
-        }
+        migratedMap[bn] = std::move(m);
     }
     for (auto &[bn, m] : migratedMap) {
         if (m.uidList.empty()) {
@@ -2464,6 +2475,7 @@ void BMSEventHandler::MarkMigratedBundles(
         }
         info.SetBundleCheckBySpm(true);
         dataMgr->UpdateInnerBundleInfo(info);
+        dataMgr->UpdateUninstallBundleCheckBySpm(bundleName, true);
     }
 }
 
