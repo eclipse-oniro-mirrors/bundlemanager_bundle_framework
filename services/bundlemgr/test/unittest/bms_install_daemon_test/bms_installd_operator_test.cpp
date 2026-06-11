@@ -536,16 +536,6 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByMkDirSceneNeedBundleName_0200, Fu
     ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
         BundleDirScene::EL1_ARK_STARTUP_CACHE_DIR, TEST_BUNDLE_NAME, path);
     EXPECT_TRUE(ret);
-
-    path = std::string(ServiceConstants::SHADER_CACHE_PATH) + TEST_STRING;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
-        BundleDirScene::SHADER_CACHE_DIR, TEST_BUNDLE_NAME, path);
-    EXPECT_FALSE(ret);
-
-    path = std::string(ServiceConstants::SHADER_CACHE_PATH) + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
-        BundleDirScene::SHADER_CACHE_DIR, TEST_BUNDLE_NAME, path);
-    EXPECT_TRUE(ret);
 }
 
 /**
@@ -569,16 +559,6 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByMkDirSceneNeedBundleName_0300, Fu
     path = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::DATABASE + TEST_BUNDLE_NAME;
     ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
         BundleDirScene::SCREEN_LOCK_FILE_DATA_BASE_DIR, TEST_BUNDLE_NAME, path);
-    EXPECT_TRUE(ret);
-
-    path = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
-        BundleDirScene::EL1_SHADER_CACHE_DIR, TEST_BUNDLE_NAME, path);
-    EXPECT_FALSE(ret);
-
-    path = std::string(APP_EL1_PATH) + ServiceConstants::SHADER_CACHE_SUBDIR + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
-        BundleDirScene::EL1_SHADER_CACHE_DIR, TEST_BUNDLE_NAME, path);
     EXPECT_TRUE(ret);
 }
 
@@ -620,30 +600,6 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByMkDirSceneNeedBundleName_0400, Fu
 
     ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(BundleDirScene::SET_DIR_APL, TEST_BUNDLE_NAME, path);
     EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: IsValidPathByMkDirSceneNoBundleName_0100
- * @tc.name: test IsValidPathByMkDirSceneNoBundleName
- * @tc.desc: test IsValidPathByMkDirSceneNoBundleName of InstalldOperator
- */
-HWTEST_F(BmsInstalldOperatorTest, IsValidPathByMkDirSceneNoBundleName_0100, Function | SmallTest | Level0)
-{
-    std::string path = TEST_BUNDLE_PATCH + TEST_STRING;
-    auto ret = InstalldOperator::IsValidPathByMkDirSceneNoBundleName(BundleDirScene::CLOUD_SHADER_DIR, path);
-    EXPECT_FALSE(ret);
-
-    path = ServiceConstants::RELATIVE_PATH;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNoBundleName(BundleDirScene::CLOUD_SHADER_COMMON_DIR, path);
-    EXPECT_FALSE(ret);
-
-    path = std::string(ServiceConstants::CLOUD_SHADER_PATH) + TEST_STRING;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNoBundleName(BundleDirScene::CLOUD_SHADER_DIR, path);
-    EXPECT_TRUE(ret);
-
-    path = std::string(ServiceConstants::CLOUD_SHADER_COMMON_PATH) + TEST_STRING;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNoBundleName(BundleDirScene::CLOUD_SHADER_COMMON_DIR, path);
-    EXPECT_TRUE(ret);
 }
 
 /**
@@ -1269,9 +1225,6 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirScene_0200, Function | S
 {
     auto ret = InstalldOperator::IsValidPathByRemoveDirScene(
         TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR);
-    EXPECT_FALSE(ret);
-    ret = InstalldOperator::IsValidPathByRemoveDirScene(
-        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR);
     EXPECT_FALSE(ret);
     ret = InstalldOperator::IsValidPathByRemoveDirScene(
         TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARE_FILE_DIR);
@@ -2055,23 +2008,8 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartT
  */
 HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0200, Function | SmallTest | Level0)
 {
-    std::string dir = std::string(ServiceConstants::SHADER_CACHE_PATH) + TEST_STRING;
+    std::string dir = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
     auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
-        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR);
-    EXPECT_FALSE(ret);
-
-    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
-        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR);
-    EXPECT_FALSE(ret);
-
-    dir = std::string(ServiceConstants::SHADER_CACHE_PATH) + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
-        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR);
-    EXPECT_TRUE(ret);
-
-    dir = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
         dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARE_FILE_DIR);
     EXPECT_FALSE(ret);
 
@@ -2093,7 +2031,7 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartT
  */
 HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0300, Function | SmallTest | Level0)
 {
-    std::string dir = std::string(ServiceConstants::SHADER_CACHE_PATH) + TEST_BUNDLE_NAME;
+    std::string dir = std::string(ServiceConstants::HAP_COPY_PATH) + TEST_BUNDLE_NAME;
     auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
         dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_CLOUD_SHADER_CACHE_DIR);
     EXPECT_FALSE(ret);
@@ -3585,10 +3523,6 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByCleanBundleDirsScene_0200, Functi
     EXPECT_FALSE(ret);
 
     dir = std::string(APP_EL1_PATH) + ServiceConstants::SHADER_CACHE_SUBDIR + bundleName;
-    ret = InstalldOperator::IsValidPathByCleanBundleDirsScene(dir, bundleName, BundleDirScene::CLEAN_SHADER_CACHE_DIR);
-    EXPECT_TRUE(ret);
-
-    dir = std::string(ServiceConstants::SHADER_CACHE_PATH) + bundleName;
     ret = InstalldOperator::IsValidPathByCleanBundleDirsScene(dir, bundleName, BundleDirScene::CLEAN_SHADER_CACHE_DIR);
     EXPECT_TRUE(ret);
 }

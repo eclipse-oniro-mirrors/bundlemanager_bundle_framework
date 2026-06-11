@@ -185,7 +185,7 @@ static const std::map<BundleDirScene, std::vector<std::string>> ALLOWED_PATH_PRE
         "/data/service/el1/public/for-all-app"}},
     {BundleDirScene::EXTRACT_FILES, {"/data/app/el1", "/data/service/el1/public", "/storage/media"}},
     {BundleDirScene::VERIFY_CODE_SIGNATURE, {"/data/app/el1/bundle", "/data/app/el1/skills"}},
-    {BundleDirScene::CLEAN_BUNDLE_DATA_DIR, {"/data/app", "/data/local/shader_cache", "/data/service"}},
+    {BundleDirScene::CLEAN_BUNDLE_DATA_DIR, {"/data/app", "/data/service"}},
     {BundleDirScene::CHANGE_BMS_FILE_STAT, { "/data/service/el1/public/bms/bundle_manager_service/app_install"}},
     {BundleDirScene::GET_BUNDLE_CACHE_PATH,
         { "/data/app/el1", "/data/app/el2", "/data/app/el3", "/data/app/el4", "/data/app/el5"}},
@@ -4642,10 +4642,6 @@ bool InstalldOperator::GetBundleDataDirPaths(const std::string &bundleName, cons
     el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
         std::to_string(userId));
     dataDirPaths.push_back(el1ArkStartupCachePath);
-    // /data/app/el1/<userId>/shader_cache/<bundleName>
-    std::string el1ShaderCachePath = ServiceConstants::NEW_SHADER_CACHE_PATH + bundleNameDir;
-    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId));
-    dataDirPaths.emplace_back(el1ShaderCachePath);
     // service
     std::string servicePath = std::string("/data/service/el1/") + std::to_string(userId) +
         std::string("/backup/bundles/") + bundleNameDir;
@@ -4810,17 +4806,12 @@ bool InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
             return StartsWith(path, APP_EL1_PATH) && IsContainsPathPart(path, SYSTEM_OPTIMIZE_DIR) &&
                    IsContainsBundleName(path, bundleName) &&
                    IsContainsPathPart(path, ServiceConstants::ARK_STARTUP_CACHE_DIR);
-        case BundleDirScene::SHADER_CACHE_DIR:
-            return StartsWith(path, ServiceConstants::SHADER_CACHE_PATH) && IsContainsBundleName(path, bundleName);
         case BundleDirScene::SCREEN_LOCK_FILE_BASE_DIR:
             return StartsWith(path, ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) &&
                    IsContainsPathPart(path, ServiceConstants::BASE) && IsContainsBundleName(path, bundleName);
         case BundleDirScene::SCREEN_LOCK_FILE_DATA_BASE_DIR:
             return StartsWith(path, ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) &&
                    IsContainsPathPart(path, ServiceConstants::DATABASE) && IsContainsBundleName(path, bundleName);
-        case BundleDirScene::EL1_SHADER_CACHE_DIR:
-            return StartsWith(path, APP_EL1_PATH) && IsContainsPathPart(path, ServiceConstants::SHADER_CACHE_SUBDIR) &&
-                   IsContainsBundleName(path, bundleName);
         case BundleDirScene::EL1_SYSTEM_OPTIMIZE_SHADER_CACHE_DIR:
             return StartsWith(path, APP_EL1_PATH) && IsContainsPathPart(path, SYSTEM_OPTIMIZE_DIR) &&
                    IsContainsBundleName(path, bundleName) &&
@@ -4846,10 +4837,6 @@ bool InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
 bool InstalldOperator::IsValidPathByMkDirSceneNoBundleName(const BundleDirScene &scene, const std::string &path)
 {
     switch (scene) {
-        case BundleDirScene::CLOUD_SHADER_DIR:
-            return StartsWith(path, ServiceConstants::CLOUD_SHADER_PATH);
-        case BundleDirScene::CLOUD_SHADER_COMMON_DIR:
-            return StartsWith(path, ServiceConstants::CLOUD_SHADER_COMMON_PATH);
         case BundleDirScene::SERVICE_BMS_GALLERY_DOWNLOAD_DIR:
             return StartsWith(
                 path, std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH);
@@ -5164,8 +5151,6 @@ bool InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
         case BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR:
             return StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, SYSTEM_OPTIMIZE_DIR) &&
                    IsContainsPathPart(dir, ServiceConstants::ARK_STARTUP_CACHE_DIR);
-        case BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR:
-            return StartsWith(dir, ServiceConstants::SHADER_CACHE_PATH);
         case BundleDirScene::REMOVE_SHARE_FILE_DIR:
             return StartsWith(dir, APP_EL2_PATH) && IsContainsPathPart(dir, ServiceConstants::SHAREFILES);
         case BundleDirScene::REMOVE_CLOUD_SHADER_CACHE_DIR:
@@ -5252,7 +5237,6 @@ bool InstalldOperator::IsValidPathByRemoveDirScene(
         case BundleDirScene::REMOVE_BUNDLE_LIB_DIR:
             return IsValidPathByRemoveDirSceneNeedBundleNamePartOne(dir, bundleName, scene);
         case BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR:
-        case BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR:
         case BundleDirScene::REMOVE_SHARE_FILE_DIR:
         case BundleDirScene::REMOVE_CLOUD_SHADER_CACHE_DIR:
         case BundleDirScene::REMOVE_BUNDLE_PLUGIN_DIR:
@@ -5567,8 +5551,7 @@ bool InstalldOperator::IsValidPathByCleanBundleDirsScene(const std::string &dir,
 
     switch (scene) {
         case BundleDirScene::CLEAN_SHADER_CACHE_DIR:
-            return (StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, ServiceConstants::SHADER_CACHE_SUBDIR)) ||
-                   StartsWith(dir, ServiceConstants::SHADER_CACHE_PATH);
+            return (StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, ServiceConstants::SHADER_CACHE_SUBDIR));
         case BundleDirScene::CLEAN_ARK_STARTUP_CACHE_DIR:
             return StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, SYSTEM_OPTIMIZE_DIR) &&
                    IsContainsPathPart(dir, ServiceConstants::ARK_STARTUP_CACHE_DIR);

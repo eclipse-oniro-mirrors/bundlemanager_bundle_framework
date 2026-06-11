@@ -373,8 +373,6 @@ public:
     void ClearBundleInfo();
     void ClearDataMgr();
     void ResetDataMgr();
-    bool CheckShaderCachePathExist(const std::string &bundleName,
-        const int32_t appIndex, const int32_t &userId) const;
     bool WriteToConfigFile(const std::string& bundleName) const;
     ErrCode MkdirIfNotExist(const std::string &bundleName, BundleDirScene scene, const std::string &dir) const;
     void GetExistedEntries(const std::string &filename,
@@ -736,26 +734,6 @@ void BmsBundleInstallerTest::ClearBundleInfo()
     EXPECT_TRUE(result) << "the bundle info in db clear fail: " << BUNDLE_NAME;
 }
 
-bool BmsBundleInstallerTest::CheckShaderCachePathExist(const std::string &bundleName,
-    const int32_t appIndex, const int32_t &userId) const
-{
-    bool isExist = false;
-    std::string cloneBundleName = bundleName;
-    if (appIndex != 0) {
-        cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
-    }
-    std::string newShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-    newShaderCachePath = newShaderCachePath.replace(newShaderCachePath.find("%"), 1, std::to_string(userId));
-    newShaderCachePath = newShaderCachePath + bundleName;
-    if (access(newShaderCachePath.c_str(), F_OK) == 0) {
-        isExist = true;
-    } else {
-        LOG_E(BMS_TAG_INSTALLD, "%{public}s can not access, errno: %{public}d",
-            newShaderCachePath.c_str(), errno);
-    }
-    return isExist;
-}
-
 void BmsBundleInstallerTest::GetExistedEntries(const std::string &filename,
     std::set<std::string> &existingEntries, std::vector<std::string> &allLines) const
 {
@@ -852,127 +830,6 @@ CreateDirParam BmsBundleInstallerTest::PrepareCreateDirParam(
     createDirParam.debug = debug;
     createDirParam.uid = uid;
     return createDirParam;
-}
-
-/**
- * @tc.number: ShaderCache_0010
- * @tc.name: test the right system bundle file can be installed, clean shader cache
- * @tc.desc: 1.the system bundle shader cache path exist
- */
-HWTEST_F(BmsBundleInstallerTest, ShaderCache_0010, Function | SmallTest | Level0)
-{
-    // test for /data/app/el1/userid/shader_cache does not exist
-    std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1,
-        std::to_string(USERID));
-    ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
-    ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->RemoveDir(
-        el1ShaderCachePath, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    std::string bundleShaderCachePath = el1ShaderCachePath + BUNDLE_NAME;
-    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    bool result = InstallSystemBundle(bundleFile);
-    result = CheckShaderCachePathExist(BUNDLE_NAME, 0, USERID);
-    EXPECT_TRUE(result) << "the shader cache pathexist: " << bundleShaderCachePath;
-    ClearBundleInfo();
-}
-
-
-/**
- * @tc.number: ShaderCache_0020
- * @tc.name: test the right system bundle file can be installed, clean shader cache
- * @tc.desc: 1.the system bundle shader cache path exist
- */
-HWTEST_F(BmsBundleInstallerTest, ShaderCache_0020, Function | SmallTest | Level0)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    // test for /data/app/el1/userid/shader_cache exist
-    std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1,
-        std::to_string(USERID));
-    ErrCode ret = InstalldOperator::MkOwnerDir(el1ShaderCachePath, 0, 0, 0);
-    EXPECT_TRUE(ret);
-
-    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    bool result = InstallSystemBundle(bundleFile);
-    result = CheckShaderCachePathExist(BUNDLE_NAME, 0, USERID);
-    EXPECT_TRUE(result) << "the shader cache path does not exist: " << bundleFile;
-
-    InnerBundleInfo info;
-    dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, info);
-    BaseBundleInstaller installer;
-    installer.InitDataMgr();
-    // test CleanShaderCache succeed
-    ret = installer.CleanShaderCache(info, BUNDLE_NAME, USERID);
-    EXPECT_EQ(ret, ERR_OK);
-
-    // test CleanArkStartupCache succeed
-    ret = installer.CleanArkStartupCache(BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_OK);
-
-    // test DeleteShaderCache succeed
-    ret = installer.DeleteShaderCache(BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_OK);
-
-    // test DeleteShaderCache succeed
-    ret = installer.DeleteShaderCache(BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_OK);
-
-    // test DeleteEl1ShaderAndArkStartupCache succeed
-    ret = installer.DeleteEl1ShaderAndArkStartupCache(info, BUNDLE_NAME, USERID);
-    EXPECT_EQ(ret, ERR_OK);
-
-    // test DeleteCloudShader succeed
-    ret = installer.DeleteCloudShader(BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_OK);
-    ClearBundleInfo();
-}
-
-/**
- * @tc.number: ShaderCache_0030
- * @tc.name: test the right system bundle file can be installed, clean shader cache
- * @tc.desc: 1.the system bundle shader cache path exist
- */
-HWTEST_F(BmsBundleInstallerTest, ShaderCache_0030, Function | SmallTest | Level0)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    bool result = InstallSystemBundle(bundleFile);
-    result = CheckShaderCachePathExist(BUNDLE_NAME, 0, USERID);
-    EXPECT_TRUE(result) << "the shader cache path does not exist: " << bundleFile;
-
-    InnerBundleInfo info;
-    dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, info);
-    BaseBundleInstaller installer;
-    installer.InitDataMgr();
-    // test CleanShaderCache failed
-    StopInstalldService();
-    ErrCode ret = installer.CleanShaderCache(info, BUNDLE_NAME, USERID);
-    EXPECT_NE(ret, ERR_OK);
-
-    // test CleanArkStartupCache failed
-    StopInstalldService();
-    ret = installer.CleanArkStartupCache(BUNDLE_NAME);
-    EXPECT_NE(ret, ERR_OK);
-
-    // test DeleteShaderCache failed
-    StopInstalldService();
-    ret = installer.DeleteShaderCache(BUNDLE_NAME);
-    EXPECT_NE(ret, ERR_OK);
-
-    // test DeleteShaderCache failed
-    StopInstalldService();
-    ret = installer.DeleteShaderCache(BUNDLE_NAME);
-    EXPECT_NE(ret, ERR_OK);
-
-    // test DeleteEl1ShaderAndArkStartupCache failed
-    StopInstalldService();
-    ret = installer.DeleteEl1ShaderAndArkStartupCache(info, BUNDLE_NAME, USERID);
-    EXPECT_NE(ret, ERR_OK);
-
-    ClearBundleInfo();
 }
 
 /**
@@ -3728,18 +3585,8 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_2100, Function | SmallTest | L
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     std::string bundleName = "com.test.InstalldHostImpl_2100";
-    std::string shaderCachePath = ServiceConstants::SHADER_CACHE_PATH + bundleName;
-    CreateDirParam createDirParam;
-    createDirParam.bundleName = bundleName;
-    createDirParam.bundleDirScene = BundleDirScene::SHADER_CACHE_DIR;
-    ret = InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, ZERO_CODE, ZERO_CODE, createDirParam);
-    EXPECT_EQ(ret, ERR_OK);
-    dirs.emplace_back(shaderCachePath);
 
     std::string cloneBundleName = "+clone-1+com.test.InstalldHostImpl_2100";
-    std::string el1ShaderCachePath = ServiceConstants::NEW_SHADER_CACHE_PATH + cloneBundleName;
-    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(100));
-    dirs.emplace_back(el1ShaderCachePath);
 
     // clean shader cache in /system_optimize
     std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
