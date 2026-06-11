@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_HOST_IMPL_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_HOST_IMPL_H
 
+#include <mutex>
+
 #include "bundle_constants.h"
 #include "code_sign_helper.h"
 #include "ipc/installd_host.h"
@@ -404,6 +406,7 @@ private:
     ErrCode GetResolvedApl(CreateDirParam &createDirParam);
 
     std::map<int32_t, SessionProvisionInfo> sessionProvisionCache_;
+    std::mutex sessionProvisionCacheMutex_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -719,10 +719,13 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(
         return ERR_OK;
     }
 
-    auto cacheIt = sessionProvisionCache_.find(sessionId);
-    if (cacheIt != sessionProvisionCache_.end()) {
-        info = cacheIt->second;
-        return ERR_OK;
+    {
+        std::lock_guard<std::mutex> lock(sessionProvisionCacheMutex_);
+        auto cacheIt = sessionProvisionCache_.find(sessionId);
+        if (cacheIt != sessionProvisionCache_.end()) {
+            info = cacheIt->second;
+            return ERR_OK;
+        }
     }
 
     std::vector<Security::AccessToken::TrustedBundleInfo> bundleInfoList;
@@ -806,13 +809,17 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(
         }
     }
 
-    sessionProvisionCache_[sessionId] = info;
+    {
+        std::lock_guard<std::mutex> lock(sessionProvisionCacheMutex_);
+        sessionProvisionCache_[sessionId] = info;
+    }
     LOG_D(BMS_TAG_INSTALLD, "QueryProvisionInfoBySessionId success, sessionId=%{public}d", sessionId);
     return ERR_OK;
 }
 
 ErrCode InstalldHostImpl::ClearSessionProvisionCache(int32_t sessionId)
 {
+    std::lock_guard<std::mutex> lock(sessionProvisionCacheMutex_);
     sessionProvisionCache_.erase(sessionId);
     LOG_D(BMS_TAG_INSTALLD, "ClearSessionProvisionCache sessionId=%{public}d", sessionId);
     return ERR_OK;
