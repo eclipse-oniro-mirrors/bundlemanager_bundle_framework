@@ -1821,6 +1821,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!InitTempBundleFromCache(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INIT_INSTALL_TEMP_BUNDLE_ERROR;
     }
+    UpdateDeveloperIdAndOdid(newInfos, hapVerifyResults);
     sysEventInfo_.oldAppProvisionType = oldInfo.GetAppProvisionType();
     if (!(installParam.isOTA || otaInstall_) && !newInfos.empty()) {
         result = bundleInstallChecker_->CalculateInstallInodes(newInfos, !isAppExist_);
@@ -5635,7 +5636,6 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     if (!infos.empty()) {
         bundleType_ = infos.begin()->second.GetApplicationBundleType();
     }
-    UpdateDeveloperId(infos, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
     /* At this place, hapVerifyRes cannot be empty and unnecessary to check it */
     isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyRes[0]);
@@ -5982,7 +5982,7 @@ void BaseBundleInstaller::SetAppDistributionType(const std::unordered_map<std::s
     appDistributionType_ = infos.begin()->second.GetAppDistributionType();
 }
 
-void BaseBundleInstaller::UpdateDeveloperId(
+void BaseBundleInstaller::UpdateDeveloperIdAndOdid(
     std::unordered_map<std::string, InnerBundleInfo> &infos,
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
 {
@@ -6001,8 +6001,16 @@ void BaseBundleInstaller::UpdateDeveloperId(
         developerId = hapVerifyRes[0].GetProvisionInfo().bundleInfo.bundleName;
     }
 
+    if (!isAppExist_) {
+        for (auto &item : infos) {	 
+            item.second.UpdateDeveloperId(developerId);	 
+        }
+        return;
+    }
+    std::string odid;
+    dataMgr->GenerateOdid(developerId, odid);
     for (auto &item : infos) {
-        item.second.UpdateDeveloperId(developerId);
+        item.second.UpdateOdid(developerId, odid);
     }
 }
 

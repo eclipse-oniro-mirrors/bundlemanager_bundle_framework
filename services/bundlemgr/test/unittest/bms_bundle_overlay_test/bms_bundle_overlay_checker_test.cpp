@@ -3216,7 +3216,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0300, Function | Small
 
     installer->GetRemoveExtensionDirs(newInfos, oldInfo);
 
-    installer->UpdateDeveloperId(infos, hapVerifyRes);
+    installer->UpdateDeveloperIdAndOdid(infos, hapVerifyRes);
 
     ErrCode ret = installer->CheckInstallCondition(hapVerifyRes, infos, ERR_OK);
     EXPECT_EQ(ret, ERR_OK);

@@ -18733,4 +18733,70 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_InnerProcessTargetSoPath_Cl
     // Should use bundlePaths_[0]
     EXPECT_EQ(targetSoPath, "/data/security/test_dir/libs/arm64-v8a");
 }
+
+/**
+ * @tc.number: UpdateDeveloperIdAndOdid_0001
+ * @tc.name: first install should not call GenerateOdid
+ * @tc.desc: test UpdateDeveloperIdAndOdid_0001
+ */
+HWTEST_F(BmsBundleInstallerTest, UpdateDeveloperIdAndOdid_0001, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = false;
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = "com.test.first.install";
+    info.SetBaseApplicationInfo(appInfo);
+    infos.emplace("path1", info);
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo provision;
+    provision.bundleInfo.developerId = "developer_001";
+    result.SetProvisionInfo(provision);
+    hapVerifyRes.push_back(result);
+
+    installer.UpdateDeveloperIdAndOdid(infos, hapVerifyRes);
+
+    std::string developerId;
+    std::string odid;
+    infos.begin()->second.GetDeveloperidAndOdid(developerId, odid);
+    EXPECT_EQ(developerId, "developer_001");
+    EXPECT_TRUE(odid.empty());
+}
+
+/**
+ * @tc.number: UpdateDeveloperIdAndOdid_0002
+ * @tc.name: update install should set developerId and odid
+ * @tc.desc: test UpdateDeveloperIdAndOdid_0002
+ */
+HWTEST_F(BmsBundleInstallerTest, UpdateDeveloperIdAndOdid_0002, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = "com.test.update";
+    info.SetBaseApplicationInfo(appInfo);
+    infos.emplace("path1", info);
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo provision;
+    provision.bundleInfo.developerId = "developer_002";
+    result.SetProvisionInfo(provision);
+    hapVerifyRes.push_back(result);
+
+    installer.UpdateDeveloperIdAndOdid(infos, hapVerifyRes);
+
+    std::string developerId;
+    std::string odid;
+    infos.begin()->second.GetDeveloperidAndOdid(developerId, odid);
+    EXPECT_EQ(developerId, "developer_002");
+    EXPECT_FALSE(odid.empty());
+}
 } // OHOS

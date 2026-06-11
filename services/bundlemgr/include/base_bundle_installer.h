@@ -870,7 +870,7 @@ private:
     std::string GetRealSoPath(const std::string &bundleName, const std::string &nativeLibraryPath,
         bool isNeedDeleteOldPath) const;
     void RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &innerBundleInfo, const bool isBundleUpdate = false) const;
-    void UpdateDeveloperId(std::unordered_map<std::string, InnerBundleInfo> &infos,
+    void UpdateDeveloperIdAndOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
