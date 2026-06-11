@@ -305,4 +305,285 @@ HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_011, Functio
 
     instance.handle_ = originalHandle;
 }
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_012
+ * @tc.name: test HasNoResolvedSymbolsNoLock when all func ptrs are null
+ * @tc.desc: 1. HasNoResolvedSymbolsNoLock returns true
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_012, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+    instance.processHapBinInstallFunc_ = nullptr;
+    instance.requestIndependentBinarySwitchAsyncFunc_ = nullptr;
+    instance.checkHspPluginCertValidityFunc_ = nullptr;
+
+    EXPECT_TRUE(instance.HasNoResolvedSymbolsNoLock());
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_013
+ * @tc.name: test HasNoResolvedSymbolsNoLock when one func ptr is set
+ * @tc.desc: 1. HasNoResolvedSymbolsNoLock returns false
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_013, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+    auto savedProcessFunc = instance.processHapBinInstallFunc_;
+    auto savedSwitchFunc = instance.requestIndependentBinarySwitchAsyncFunc_;
+    auto savedCertFunc = instance.checkHspPluginCertValidityFunc_;
+
+    instance.processHapBinInstallFunc_ =
+        reinterpret_cast<decltype(instance.processHapBinInstallFunc_)>(0x1);
+    EXPECT_FALSE(instance.HasNoResolvedSymbolsNoLock());
+
+    instance.processHapBinInstallFunc_ = savedProcessFunc;
+    instance.requestIndependentBinarySwitchAsyncFunc_ = savedSwitchFunc;
+    instance.checkHspPluginCertValidityFunc_ = savedCertFunc;
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_014
+ * @tc.name: test ResolveSymbolNoLock with null func param
+ * @tc.desc: 1. ResolveSymbolNoLock returns false when func is nullptr
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_014, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+    bool ret = instance.ResolveSymbolNoLock("test", nullptr);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_015
+ * @tc.name: test ResolveSymbolNoLock with null symbolName
+ * @tc.desc: 1. ResolveSymbolNoLock returns false when symbolName is nullptr
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_015, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+    void* dummy = nullptr;
+    bool ret = instance.ResolveSymbolNoLock(nullptr, &dummy);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_016
+ * @tc.name: test ResolveSymbolNoLock when handle is null
+ * @tc.desc: 1. ResolveSymbolNoLock returns false when handle_ is nullptr
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_016, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+    void* dummy = nullptr;
+
+    bool ret = instance.ResolveSymbolNoLock("test", &dummy);
+    EXPECT_FALSE(ret);
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_017
+ * @tc.name: test ResolveSymbolNoLock when func already resolved
+ * @tc.desc: 1. ResolveSymbolNoLock returns true when *func is non-null
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_017, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    auto savedProcessFunc = instance.processHapBinInstallFunc_;
+
+    instance.handle_ = dlopen(nullptr, RTLD_LAZY);
+    ASSERT_NE(instance.handle_, nullptr);
+    instance.processHapBinInstallFunc_ =
+        reinterpret_cast<decltype(instance.processHapBinInstallFunc_)>(0x1);
+
+    bool ret = instance.ResolveProcessHapBinInstallNoLock();
+    EXPECT_TRUE(ret);
+
+    instance.processHapBinInstallFunc_ = savedProcessFunc;
+    dlclose(instance.handle_);
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_018
+ * @tc.name: test ResolveProcessHapBinInstallNoLock with null handle
+ * @tc.desc: 1. ResolveProcessHapBinInstallNoLock returns false when handle_ is null
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_018, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+    instance.processHapBinInstallFunc_ = nullptr;
+
+    bool ret = instance.ResolveProcessHapBinInstallNoLock();
+    EXPECT_FALSE(ret);
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_019
+ * @tc.name: test ResolveRequestIndependentBinarySwitchAsyncNoLock with null handle
+ * @tc.desc: 1. ResolveRequestIndependentBinarySwitchAsyncNoLock returns false when handle_ is null
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_019, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+    instance.requestIndependentBinarySwitchAsyncFunc_ = nullptr;
+
+    bool ret = instance.ResolveRequestIndependentBinarySwitchAsyncNoLock();
+    EXPECT_FALSE(ret);
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_020
+ * @tc.name: test ResolveCheckHspPluginCertValidityNoLock with null handle
+ * @tc.desc: 1. ResolveCheckHspPluginCertValidityNoLock returns false when handle_ is null
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_020, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+    instance.checkHspPluginCertValidityFunc_ = nullptr;
+
+    bool ret = instance.ResolveCheckHspPluginCertValidityNoLock();
+    EXPECT_FALSE(ret);
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_021
+ * @tc.name: test UnloadLibraryNoLock when handle is null
+ * @tc.desc: 1. UnloadLibraryNoLock handles nullptr handle gracefully
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_021, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+
+    instance.UnloadLibraryNoLock();
+    EXPECT_EQ(instance.handle_, nullptr);
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_022
+ * @tc.name: test UnloadLibraryNoLock after load resets handle and func ptrs
+ * @tc.desc: 1. UnloadLibraryNoLock resets handle_ and all func ptrs to nullptr
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_022, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = dlopen(nullptr, RTLD_LAZY);
+    ASSERT_NE(instance.handle_, nullptr);
+
+    instance.UnloadLibraryNoLock();
+    EXPECT_EQ(instance.handle_, nullptr);
+    EXPECT_EQ(instance.processHapBinInstallFunc_, nullptr);
+    EXPECT_EQ(instance.requestIndependentBinarySwitchAsyncFunc_, nullptr);
+    EXPECT_EQ(instance.checkHspPluginCertValidityFunc_, nullptr);
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_023
+ * @tc.name: test RequestIndependentBinarySwitchAsync without library
+ * @tc.desc: 1. RequestIndependentBinarySwitchAsync returns permission error when library unavailable
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_023, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+
+    int32_t outSwitchStatus = 0;
+    ErrCode ret = instance.RequestIndependentBinarySwitchAsync(outSwitchStatus);
+
+    if (ret == ERR_OK) {
+        EXPECT_NE(instance.handle_, nullptr);
+    } else {
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION);
+    }
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_024
+ * @tc.name: test CheckHspPluginCertValidity without library
+ * @tc.desc: 1. CheckHspPluginCertValidity returns permission error when library unavailable
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_024, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = nullptr;
+
+    Security::Verify::HspPlugin hspPlugin{};
+    ErrCode ret = instance.CheckHspPluginCertValidity(hspPlugin);
+
+    if (ret == ERR_OK) {
+        EXPECT_NE(instance.handle_, nullptr);
+    } else {
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION);
+    }
+
+    instance.handle_ = originalHandle;
+}
+
+/**
+ * @tc.number: BmsBinarySecurityWrapperTest_025
+ * @tc.name: test UnloadLibrary delegates to UnloadLibraryNoLock
+ * @tc.desc: 1. UnloadLibrary resets handle_ and func ptrs to nullptr
+ */
+HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_025, Function | SmallTest | Level0)
+{
+    BinarySecurityWrapper& instance = BinarySecurityWrapper::GetInstance();
+
+    void* originalHandle = instance.handle_;
+    instance.handle_ = dlopen(nullptr, RTLD_LAZY);
+    ASSERT_NE(instance.handle_, nullptr);
+
+    instance.UnloadLibrary();
+    EXPECT_EQ(instance.handle_, nullptr);
+    EXPECT_EQ(instance.processHapBinInstallFunc_, nullptr);
+    EXPECT_EQ(instance.requestIndependentBinarySwitchAsyncFunc_, nullptr);
+    EXPECT_EQ(instance.checkHspPluginCertValidityFunc_, nullptr);
+
+    instance.handle_ = originalHandle;
+}
 } // OHOS

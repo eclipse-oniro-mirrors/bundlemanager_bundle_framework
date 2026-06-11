@@ -13110,4 +13110,33 @@ HWTEST_F(BmsDataMgrTest, ImplicitQueryAllExtensionFlagsMapping_0200, Function | 
     dataMgr.ImplicitQueryAllExtensionInfos(want, flags, USERID, infos, 0);
     EXPECT_FALSE(infos.empty());
 }
+
+/**
+ * @tc.number: GetAllLocalPluginInfoForSelf_0001
+ * @tc.name: GetAllLocalPluginInfoForSelf
+ * @tc.desc: test GetAllLocalPluginInfoForSelf
+ */
+HWTEST_F(BmsDataMgrTest, GetAllLocalPluginInfoForSelf_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = bundleDataMgr.GetAllLocalPluginInfoForSelf(pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAllLocalPluginInfoForSelf_0002
+ * @tc.name: GetAllLocalPluginInfoForSelf
+ * @tc.desc: test GetAllLocalPluginInfoForSelf
+ */
+HWTEST_F(BmsDataMgrTest, GetAllLocalPluginInfoForSelf_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsNewVersion(false);
+    bundleDataMgr.bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = bundleDataMgr.GetAllLocalPluginInfoForSelf(pluginBundleInfos);
+    EXPECT_NE(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
 } // OHOS

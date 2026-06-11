@@ -7699,4 +7699,21 @@ HWTEST_F(BmsBundleDataMgrTest, HandleGetAllLocalPluginInfoForSelf_0100, Function
     auto ret = localBundleMgrHost->HandleGetAllLocalPluginInfoForSelf(data, reply);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+ /**
+ * @tc.number: HandleGetLocalPluginInstaller_0100
+ * @tc.name: HandleGetLocalPluginInstaller
+ * @tc.desc: test BundleMgrHostHandleGetLocalPluginInstaller(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, HandleGetLocalPluginInstaller_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    auto ret = localBundleMgrHost->HandleGetLocalPluginInstaller(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_HOST_INSTALLER_FAILED);
+}
 } // OHOS

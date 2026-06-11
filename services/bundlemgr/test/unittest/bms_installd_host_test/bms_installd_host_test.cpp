@@ -1001,4 +1001,36 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractSkillsPackage_0100, Function | SmallT
     bool res = installdHost.HandleExtractSkillsPackage(data, reply);
     EXPECT_FALSE(res);
 }
+
+/**
+ * @tc.number: HandleCheckExternalSourcePluginSwitch_0100
+ * @tc.name: test HandleCheckExternalSourcePluginSwitch
+ * @tc.desc: 1.HandleCheckExternalSourcePluginSwitch test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleCheckExternalSourcePluginSwitch_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleCheckExternalSourcePluginSwitch(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleCheckHspPluginCertValidity_0100
+ * @tc.name: test HandleCheckHspPluginCertValidity with valid param
+ * @tc.desc: 1.HandleCheckHspPluginCertValidity param is valid
+ */
+HWTEST_F(BmsInstalldHostTest, HandleCheckHspPluginCertValidity_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    std::string bundleName = "com.example.test";
+    int32_t sessionId = 12345;
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(sessionId);
+    bool res = installdHost.HandleCheckHspPluginCertValidity(data, reply);
+    EXPECT_TRUE(res);
+}
 } // OHOS
