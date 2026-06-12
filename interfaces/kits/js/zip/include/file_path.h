@@ -70,7 +70,7 @@ public:
 
     bool ReferencesParent();
     void GetComponents(std::vector<std::string> &components);
-    FilePath DirName();
+    FilePath DirName() const;
     FilePath BaseName();
     bool IsAbsolute();
     std::string Value();

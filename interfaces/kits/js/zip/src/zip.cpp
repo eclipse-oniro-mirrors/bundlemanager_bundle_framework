@@ -148,7 +148,7 @@ bool Zip(const ZipParams &params, const OPTIONS &options)
                 }
                 if (iter != entries.begin()) {
                     FilePath relativePath;
-                    FilePath paramsSrcPath = srcDir;
+                    FilePath paramsSrcPath = options.keepTopLevelFolder ? srcDir.DirName() : srcDir;
                     if (paramsSrcPath.AppendRelativePath(iter->path, &relativePath)) {
                         allRelativeFiles.push_back(std::make_pair(relativePath, iter->path));
                     }
@@ -179,7 +179,7 @@ bool Zip(const ZipParams &params, const OPTIONS &options)
 
 void GetZipsAllRelativeFilesInner(const ZipParams &params, const FilePath &iterPath,
     std::list<FileAccessor::DirectoryContentEntry> &entries,
-    std::vector<std::pair<FilePath, FilePath>> &allRelativeFiles)
+    std::vector<std::pair<FilePath, FilePath>> &allRelativeFiles, bool keepTopLevelFolder)
 {
     FilterCallback filterCallback = params.GetFilterCallback();
     for (auto iter = entries.begin(); iter != entries.end(); ++iter) {
@@ -189,7 +189,7 @@ void GetZipsAllRelativeFilesInner(const ZipParams &params, const FilePath &iterP
         }
         if (iter != entries.begin()) {
             FilePath relativePath;
-            FilePath paramsSrcPath = iterPath;
+            FilePath paramsSrcPath = keepTopLevelFolder ? iterPath.DirName() : iterPath;
             if (paramsSrcPath.AppendRelativePath(iter->path, &relativePath)) {
                 allRelativeFiles.push_back(std::make_pair(relativePath, iter->path));
             }
@@ -203,7 +203,7 @@ void GetZipsAllRelativeFilesInner(const ZipParams &params, const FilePath &iterP
 }
 
 void GetZipsAllRelativeFiles(const ZipParams &params, std::vector<std::pair<FilePath, FilePath>> &allRelativeFiles,
-    std::vector<FilePath> &srcFiles)
+    std::vector<FilePath> &srcFiles, bool keepTopLevelFolder)
 {
     std::list<FileAccessor::DirectoryContentEntry> entries;
     for (auto iterPath = srcFiles.begin(); iterPath != srcFiles.end(); ++iterPath) {
@@ -214,7 +214,7 @@ void GetZipsAllRelativeFiles(const ZipParams &params, std::vector<std::pair<File
         }
         entries.clear();
         entries.push_back(FileAccessor::DirectoryContentEntry(*iterPath, true));
-        GetZipsAllRelativeFilesInner(params, *iterPath, entries, allRelativeFiles);
+        GetZipsAllRelativeFilesInner(params, *iterPath, entries, allRelativeFiles, keepTopLevelFolder);
     }
 }
 
@@ -225,7 +225,7 @@ bool Zips(const ZipParams &params, const OPTIONS &options)
     std::vector<FilePath> srcFiles = params.SrcDir();
     if (filesToAdd->empty()) {
         filesToAdd = &allRelativeFiles;
-        GetZipsAllRelativeFiles(params, allRelativeFiles, srcFiles);
+        GetZipsAllRelativeFiles(params, allRelativeFiles, srcFiles, options.keepTopLevelFolder);
     }
     std::unique_ptr<ZipWriter> zipWriter = nullptr;
     if (params.DestFd() != kInvalidPlatformFile) {

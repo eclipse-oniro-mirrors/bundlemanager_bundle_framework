@@ -107,6 +107,7 @@ export default namespace zlib {
     strategy?: CompressStrategy;
     parallel?: ParallelStrategy;
     pathSeparatorStrategy?: PathSeparatorStrategy;
+    keepTopLevelFolder?: boolean;
   }
 
   class OptionsInner implements Options {
@@ -115,6 +116,7 @@ export default namespace zlib {
     strategy?: CompressStrategy | undefined;
     parallel?: ParallelStrategy | undefined;
     pathSeparatorStrategy?: PathSeparatorStrategy | undefined;
+    keepTopLevelFolder?: boolean | undefined;
   }
 
   export interface GzErrorOutputInfo {
