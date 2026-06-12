@@ -767,9 +767,13 @@ ErrCode InstalldClient::CheckExternalSourcePluginSwitch(int32_t &outSwitchStatus
     return CallService(&IInstalld::CheckExternalSourcePluginSwitch, outSwitchStatus);
 }
 
-ErrCode InstalldClient::CheckHspPluginCertValidity(const HspPluginParam &hspPluginParam)
+ErrCode InstalldClient::CheckHspPluginCertValidity(const std::string &bundleName, int32_t sessionId)
 {
-    return CallService(&IInstalld::CheckHspPluginCertValidity, hspPluginParam);
+    if (sessionId == 0) {
+        APP_LOGE("sessionId is 0, refused");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::CheckHspPluginCertValidity, bundleName, sessionId);
 }
 
 ErrCode InstalldClient::ResetBmsDBSecurity()

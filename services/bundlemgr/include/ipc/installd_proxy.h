@@ -323,7 +323,7 @@ public:
 
     virtual ErrCode CheckExternalSourcePluginSwitch(int32_t &outSwitchStatus) override;
 
-    virtual ErrCode CheckHspPluginCertValidity(const HspPluginParam &hspPluginParam) override;
+    virtual ErrCode CheckHspPluginCertValidity(const std::string &bundleName, int32_t sessionId) override;
 
     virtual ErrCode HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
         std::vector<std::string> &soName, std::vector<std::string> &soHash) override;
