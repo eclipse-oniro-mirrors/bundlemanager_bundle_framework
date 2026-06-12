@@ -17,6 +17,7 @@
 
 #include <map>
 
+#include "access_token_error.h"
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
@@ -93,6 +94,16 @@ ErrCode AppServiceFwkInstaller::Install(
     result = ProcessInstall(hspPaths, installParam);
     APP_LOGI_NOFUNC("install appServiceFwk %{public}s %{public}s result %{public}d first time",
         hspPaths[0].c_str(), bundleName_.c_str(), result);
+    if (result == Security::AccessToken::AccessTokenError::ERR_BUNDLE_ALREADY_EXIST) {
+        if (!bundleName_.empty()) {
+            BundlePermissionMgr::DeleteAccessTokenId(0, bundleName_,
+                Security::AccessToken::ReservedType::NONE);
+            ResetProperties();
+            auto uninstallRes = UnInstall(bundleName_, true);
+            ResetProperties();
+            result = ProcessInstall(hspPaths, installParam);
+        }
+    }
     if (result != ERR_OK && installParam.copyHapToInstallPath) {
         PreInstallBundleInfo preInstallBundleInfo;
         if (!dataMgr_->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo) ||
@@ -350,6 +361,10 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
              Security::AccessToken::TYPE_MERGE) : Security::AccessToken::TYPE_INSTALL;
         int32_t permCheckRet = BundlePermissionMgr::CheckHapPermissionInfo(
             sessionId_, installType, checkResult);
+        if (permCheckRet == Security::AccessToken::AccessTokenError::ERR_BUNDLE_ALREADY_EXIST &&
+            installType == Security::AccessToken::TYPE_INSTALL) {
+            return permCheckRet;
+        }
         if (permCheckRet != ERR_OK) {
             APP_LOGE("CheckHapPermissionInfo failed, errCode:%{public}d", permCheckRet);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;

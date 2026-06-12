@@ -632,6 +632,8 @@ bool BMSEventHandler::AnalyzeUserData(
 
 ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
 {
+    Security::AccessToken::AccessTokenKit::FinishMigration();
+    UpdateOtaFlag(OTAFlag::PROCESS_ACCESS_TOKEN_MIGRATION);
     ReInstallSystemHspAndSharedBundles();
     // First, reinstall all preInstall app from preInstall dir
     std::vector<std::string> preInstallDirs;
