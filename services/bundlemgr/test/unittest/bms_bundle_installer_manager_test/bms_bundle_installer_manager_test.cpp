@@ -206,5 +206,57 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_020, TestSize.Le
     ErrCode result = receiver->GetResultCode();
     EXPECT_NE(ERR_OK, result);
 }
+
+/**
+ * @tc.number: BundleInstallerManagerTest_CreateInstallLocalPluginTask_0001
+ * @tc.name: test CreateInstallLocalPluginTask
+ * @tc.desc: Verify CreateInstallLocalPluginTask runs and returns non-ERR_OK
+ */
+HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_CreateInstallLocalPluginTask_0001, TestSize.Level1)
+{
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(receiver, nullptr);
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = USERID;
+    std::string hostBundleName = BUNDLE_NAME;
+    std::vector<std::string> pluginFilePaths = {RESOURCE_ROOT_PATH + RIGHT_BUNDLE};
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>();
+    bundleInstallerManager->CreateInstallLocalPluginTask(hostBundleName, pluginFilePaths,
+        installPluginParam, receiver);
+    ErrCode result = receiver->GetResultCode();
+    EXPECT_NE(ERR_OK, result);
+}
+
+/**
+ * @tc.number: BundleInstallerManagerTest_CreateUninstallLocalPluginTask_0001
+ * @tc.name: test CreateUninstallLocalPluginTask
+ * @tc.desc: Verify CreateUninstallLocalPluginTask runs and returns non-ERR_OK
+ */
+HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_CreateUninstallLocalPluginTask_0001, TestSize.Level1)
+{
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(receiver, nullptr);
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = USERID;
+    std::string hostBundleName = BUNDLE_NAME;
+    std::string pluginBundleName = MODULE_PACKAGE;
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>();
+    bundleInstallerManager->CreateUninstallLocalPluginTask(hostBundleName, pluginBundleName,
+        installPluginParam, receiver);
+    ErrCode result = receiver->GetResultCode();
+    EXPECT_NE(ERR_OK, result);
+}
+
+/**
+ * @tc.number: BundleInstallerManagerTest_GetLocalPluginInstaller_0001
+ * @tc.name: test GetLocalPluginInstaller when service not started
+ * @tc.desc: Verify GetLocalPluginInstaller returns nullptr
+ */
+HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_GetLocalPluginInstaller_0001, TestSize.Level1)
+{
+    auto hostImpl = std::make_shared<BundleMgrHostImpl>();
+    auto installer = hostImpl->GetLocalPluginInstaller();
+    EXPECT_EQ(installer, nullptr);
+}
 }  // AppExecFwk
 }  // OHOS
