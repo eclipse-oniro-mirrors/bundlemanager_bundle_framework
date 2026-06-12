@@ -1226,6 +1226,7 @@ void IndependentSkillsInstaller::ResetProperties()
     userId_ = -1;
     bundleName_ = "";
     needDeleteSkillsPackageInfo_.clear();
+    toDeleteTempHspPath_.clear();
     sessionId_ = 0;
     sessionCommitted_ = false;
 }

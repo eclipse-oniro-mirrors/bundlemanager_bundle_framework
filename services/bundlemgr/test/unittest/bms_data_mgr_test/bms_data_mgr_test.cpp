@@ -5960,6 +5960,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0003, Function | MediumTest |
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.uidMap_[Constants::BASE_APP_UID] = {bundleName, 0};
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
     EXPECT_EQ(result, ERR_OK);
     bundleDataMgr.shortcutVisibleStorage_->rdbDataManager_ = nullptr;
@@ -5984,6 +5985,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0004, Function | MediumTest |
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
     bundleDataMgr.bundleInfos_.emplace(bundleName2, innerBundleInfo);
+    bundleDataMgr.uidMap_[Constants::BASE_APP_UID] = {bundleName, 0};
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
@@ -6004,6 +6006,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0005, Function | MediumTest |
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.uidMap_[Constants::BASE_APP_UID] = {bundleName, 0};
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
     EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
 }
@@ -6026,6 +6029,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0006, Function | MediumTest |
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.uidMap_[Constants::BASE_APP_UID] = {bundleName, 0};
     bundleDataMgr.shortcutVisibleStorage_->
         SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, shortcutInfo);
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
@@ -6052,6 +6056,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0007, Function | MediumTest |
     innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
     innerBundleInfo.SetIsNewVersion(false);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.uidMap_[Constants::BASE_APP_UID] = {bundleName, 0};
     bundleDataMgr.shortcutVisibleStorage_->
         SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, shortcutInfo);
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
@@ -7271,10 +7276,11 @@ HWTEST_F(BmsDataMgrTest, GetPluginBundlePathForSelf_0020, TestSize.Level1)
     InnerBundleUserInfo userInfo;
     userInfo.bundleUserInfo.userId = userId;
     userInfo.bundleName = hostBundleName;
-    userInfo.uid = 20000001;
+    userInfo.uid = USERID * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
     info.AddInnerBundleUserInfo(userInfo);
     bundleDataMgr.bundleInfos_.emplace(hostBundleName, info);
     bundleDataMgr.AddUserId(userId);
+    bundleDataMgr.uidMap_[Constants::BASE_APP_UID] = {hostBundleName, 0};
 
     std::string pluginCodePath;
     auto ret = bundleDataMgr.GetPluginBundlePathForSelf(pluginBundleName, pluginCodePath);
@@ -7304,11 +7310,12 @@ HWTEST_F(BmsDataMgrTest, GetPluginBundlePathForSelf_0030, TestSize.Level1)
     info.baseApplicationInfo_->bundleName = hostBundleName;
     InnerBundleUserInfo userInfo;
     userInfo.bundleUserInfo.userId = USERID;
-    userInfo.uid = 20000001;
+    userInfo.uid = USERID * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
     userInfo.bundleName = hostBundleName;
     info.AddInnerBundleUserInfo(userInfo);
     bundleDataMgr->bundleInfos_.emplace(hostBundleName, info);
     bundleDataMgr->AddUserId(USERID);
+    bundleDataMgr->uidMap_[Constants::BASE_APP_UID] = {hostBundleName, 0};
 
     auto ret = bundleDataMgr->AddPluginInfo(hostBundleName, pluginBundleInfo, USERID);
     EXPECT_EQ(ret, ERR_OK);
@@ -7341,11 +7348,12 @@ HWTEST_F(BmsDataMgrTest, GetPluginBundlePathForSelf_0040, TestSize.Level1)
     info.baseApplicationInfo_->bundleName = hostBundleName;
     InnerBundleUserInfo userInfo;
     userInfo.bundleUserInfo.userId = USERID;
-    userInfo.uid = 20000001;
+    userInfo.uid = USERID * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
     userInfo.bundleName = hostBundleName;
     info.AddInnerBundleUserInfo(userInfo);
     bundleDataMgr->bundleInfos_.emplace(hostBundleName, info);
     bundleDataMgr->AddUserId(USERID);
+    bundleDataMgr->uidMap_[Constants::BASE_APP_UID] = {hostBundleName, 0};
 
     auto ret = bundleDataMgr->AddPluginInfo(hostBundleName, pluginBundleInfo, USERID);
     EXPECT_EQ(ret, ERR_OK);
@@ -13023,6 +13031,7 @@ HWTEST_F(BmsDataMgrTest, ImplicitQueryCurAbilityFlagsMapping_0100, Function | Sm
 HWTEST_F(BmsDataMgrTest, ImplicitQueryCurAbilityFlagsMapping_0200, Function | SmallTest | Level0)
 {
     BundleDataMgr dataMgr;
+    dataMgr.AddUserId(USERID);
     auto info = CreateDisabledBundleWithAbility(TEST_BUNDLE, USERID);
     dataMgr.bundleInfos_[TEST_BUNDLE] = info;
 
@@ -13106,6 +13115,7 @@ HWTEST_F(BmsDataMgrTest, ImplicitQueryCurExtensionFlagsMapping_0100, Function | 
 HWTEST_F(BmsDataMgrTest, ImplicitQueryCurExtensionFlagsMapping_0200, Function | SmallTest | Level0)
 {
     BundleDataMgr dataMgr;
+    dataMgr.AddUserId(USERID);
     auto info = CreateDisabledBundleWithExtension(TEST_BUNDLE, USERID);
     dataMgr.bundleInfos_[TEST_BUNDLE] = info;
 

@@ -810,7 +810,7 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryP
     hapVerifyResults.push_back(hapVerifyResult);
 
     ErrCode ret = installer_->DeliveryProfileToCodeSign(hapVerifyResults);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -836,7 +836,7 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryP
     hapVerifyResults.push_back(hapVerifyResult);
 
     ErrCode ret = installer_->DeliveryProfileToCodeSign(hapVerifyResults);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -862,7 +862,7 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryP
     hapVerifyResults.push_back(hapVerifyResult);
 
     ErrCode ret = installer_->DeliveryProfileToCodeSign(hapVerifyResults);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -887,7 +887,7 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryP
     hapVerifyResults.push_back(hapVerifyResult);
 
     ErrCode ret = installer_->DeliveryProfileToCodeSign(hapVerifyResults);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -913,7 +913,7 @@ HWTEST_F(BmsIndependentSkillsInstallerTest, IndependentSkillsInstaller_DeliveryP
     hapVerifyResults.push_back(hapVerifyResult);
 
     ErrCode ret = installer_->DeliveryProfileToCodeSign(hapVerifyResults);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**

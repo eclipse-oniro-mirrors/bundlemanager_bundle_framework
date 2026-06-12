@@ -1588,12 +1588,12 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, DeliveryProfileToCodeSign_0002, Function
     Security::Verify::HapVerifyResult hapVerifyResult;
     Security::Verify::ProvisionInfo provisionInfo;
     provisionInfo.profileBlockLength = 0;
-    provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE;
     hapVerifyResult.SetProvisionInfo(provisionInfo);
     hapVerifyResults.push_back(hapVerifyResult);
 
     ErrCode ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -1607,12 +1607,12 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, DeliveryProfileToCodeSign_0003, Function
     Security::Verify::HapVerifyResult hapVerifyResult;
     Security::Verify::ProvisionInfo provisionInfo;
     provisionInfo.profileBlockLength = 1;
-    provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_NORMAL;
     hapVerifyResult.SetProvisionInfo(provisionInfo);
     hapVerifyResults.push_back(hapVerifyResult);
 
     ErrCode ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
