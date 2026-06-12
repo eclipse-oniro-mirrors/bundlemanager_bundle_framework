@@ -232,6 +232,7 @@ void BmsBundleManagerTest3::SetUpTestCase()
 void BmsBundleManagerTest3::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleManagerTest3::SetUp()

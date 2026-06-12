@@ -21,6 +21,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_manager.h"
 #include "bundle_manager_sync.h"
+#include "ffrt.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -204,7 +205,10 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
-    RegisterClearCacheListener();
+    auto task = []() {
+        RegisterClearCacheListener();
+    };
+    ffrt::submit(task);
     void* key = reinterpret_cast<void*>(ClearCacheListener::HandleCleanEnv);
     napi_add_env_cleanup_hook(env, ClearCacheListener::HandleCleanEnv, key);
     APP_LOGD("init js bundle manager success");

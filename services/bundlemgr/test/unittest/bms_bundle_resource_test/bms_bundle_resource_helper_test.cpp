@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
+#include <unistd.h>
 
 #include "application_info.h"
 #include "bundle_info.h"
@@ -121,6 +122,7 @@ void BmsBundleResourceHelperTest::SetUpTestCase()
 void BmsBundleResourceHelperTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleResourceHelperTest::SetUp()

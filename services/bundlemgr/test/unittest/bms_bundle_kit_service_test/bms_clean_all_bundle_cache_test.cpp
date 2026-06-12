@@ -20,6 +20,7 @@
 #include <chrono>
 #include <fstream>
 #include <thread>
+#include <unistd.h>
 #include <gtest/gtest.h>
 
 #include "ability_manager_client.h"
@@ -274,6 +275,7 @@ void BmsCleanAllBundleCacheTest::SetUpTestCase()
 void BmsCleanAllBundleCacheTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsCleanAllBundleCacheTest::SetUp()
