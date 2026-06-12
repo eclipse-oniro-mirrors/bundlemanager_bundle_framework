@@ -1197,5 +1197,25 @@ HWTEST_F(BmsBundleInstallerProxyTest, UninstallNewPreinstalledApps_0100, Functio
 
     EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR);
 }
+
+/**
+ * @tc.number: DestroyCliSandboxApp_0100
+ * @tc.name: test the DestroyCliSandboxApp
+ * @tc.desc: 1. send request fail
+ *           2. test DestroyCliSandboxApp
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, DestroyCliSandboxApp_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string creatorBundleName = "com.example.caller";
+    std::string envCallerBundleName = "com.example.envcaller";
+    std::string bundleName = "com.example.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+    auto res = bundleInstallerProxy.DestroyCliSandboxApp(
+        creatorBundleName, envCallerBundleName, bundleName, userId, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
 }
 }

@@ -9232,6 +9232,21 @@ HWTEST_F(BmsBundleInstallerTest, UninstallCloneApp_0100, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: UninstallCloneApp_0200
+ * @tc.name: test UninstallCloneApp with CLI sandbox appIndex
+ * @tc.desc: 1.Test the UninstallCloneApp with CLI sandbox appIndex range
+ *           2.Verify routing to DestroyCliSandboxApp for appIndex 2000-3000
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallCloneApp_0200, Function | SmallTest | Level0)
+{
+    int32_t appIndex = ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN;
+    DestroyAppCloneParam destroyAppCloneParam;
+    BundleInstallerHost bundleInstallerHost;
+    ErrCode result = bundleInstallerHost.UninstallCloneApp(BUNDLE_NAME, USERID, appIndex, destroyAppCloneParam);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_APP_NOT_EXISTED);
+}
+
+/**
  * @tc.number: HandleUninstallCloneApp_0100
  * @tc.name: test Install
  * @tc.desc: 1.Test the HandleUninstallCloneApp of BundleInstallerHost

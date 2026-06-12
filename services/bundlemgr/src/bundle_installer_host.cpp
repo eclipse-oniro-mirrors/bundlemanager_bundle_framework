@@ -149,6 +149,9 @@ int BundleInstallerHost::OnRemoteRequest(
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::CREATE_CLI_SANDBOX_APP):
             HandleCreateCliSandboxApp(data, reply);
             break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::DESTROY_CLI_SANDBOX_APP):
+            HandleDestroyCliSandboxApp(data, reply);
+            break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
@@ -1080,6 +1083,11 @@ ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, in
         LOG_E(BMS_TAG_INSTALLER, "UninstallCloneApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+    if (appIndex >= ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN &&
+        appIndex <= ServiceConstants::CLI_SANDBOX_APP_INDEX_MAX) {
+        auto installer = std::make_shared<BundleCliSandboxInstaller>();
+        return installer->DestroyCliSandboxApp("", "", bundleName, userId, appIndex, true);
+    }
     if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN || appIndex > BundleFileUtil::GetCloneMaxCount()) {
         APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX;
@@ -1553,6 +1561,31 @@ void BundleInstallerHost::HandleCreateCliSandboxApp(MessageParcel &data, Message
     }
     if (ret == ERR_OK && !reply.WriteInt32(appIndex)) {
         LOG_E(BMS_TAG_INSTALLER, "write appIndex failed");
+    }
+}
+
+ErrCode BundleInstallerHost::DestroyCliSandboxApp(const std::string &creatorBundleName,
+    const std::string &envCallerBundleName, const std::string &bundleName,
+    int32_t userId, int32_t appIndex)
+{
+    auto installer = std::make_shared<BundleCliSandboxInstaller>();
+    return installer->DestroyCliSandboxApp(creatorBundleName, envCallerBundleName,
+        bundleName, userId, appIndex, false);
+}
+
+void BundleInstallerHost::HandleDestroyCliSandboxApp(MessageParcel &data, MessageParcel &reply)
+{
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("DestroyCliSandboxApp", HITRACE_FLAG_INCLUDE_ASYNC);
+    LOG_D(BMS_TAG_INSTALLER, "handle destroy cli sandbox app message");
+    std::string creatorBundleName = Str16ToStr8(data.ReadString16());
+    std::string envCallerBundleName = Str16ToStr8(data.ReadString16());
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+
+    auto ret = DestroyCliSandboxApp(creatorBundleName, envCallerBundleName, bundleName, userId, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "write ret failed");
     }
 }
 }  // namespace AppExecFwk

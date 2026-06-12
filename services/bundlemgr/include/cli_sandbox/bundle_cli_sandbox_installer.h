@@ -41,13 +41,34 @@ public:
     ErrCode CreateCliSandboxApp(const std::string &callerBundleName,
         const std::string &bundleName, int32_t userId, int32_t &appIndex);
 
+    /**
+     * @brief Destroy CLI sandbox application.
+     * @param callerBundleName Indicates the caller bundle name.
+     * @param envCallerBundleName Indicates the env caller bundle name.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param userId Indicates the user id.
+     * @param appIndex Indicates the appIndex of the sandbox to destroy.
+     * @return Returns ERR_OK if destroyed successfully; returns error code otherwise.
+     */
+    ErrCode DestroyCliSandboxApp(const std::string &creatorBundleName,
+        const std::string &envCallerBundleName, const std::string &bundleName,
+        int32_t userId, int32_t appIndex, bool skipCallerCheck);
+
 private:
+    ErrCode ProcessDestroyCliSandbox(const std::string &creatorBundleName,
+        const std::string &envCallerBundleName, const std::string &bundleName,
+        int32_t userId, int32_t appIndex, bool skipCallerCheck);
+    void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
+        int32_t appIndex, const InnerBundleInfo& innerBundleInfo);
+
     ErrCode ProcessCreateCliSandbox(const std::string &callerBundleName,
         const std::string &bundleName, int32_t userId, int32_t &appIndex);
     ErrCode CreateSandboxDataDir(InnerBundleInfo &info, int32_t userId,
         int32_t uid, int32_t appIndex) const;
-    ErrCode RemoveSandboxDataDir(const std::string &bundleName, int32_t userId, int32_t appIndex) const;
+    ErrCode RemoveSandboxDataDir(const std::string &bundleName, int32_t userId, int32_t appIndex, bool sync) const;
     ErrCode GetDataMgr();
+    std::string GetActualCreatorBundleName(const std::string &creatorBundleName,
+        const std::string &envCallerBundleName, int32_t userId);
 
     void CreateEl5Dir(InnerBundleInfo &info, const int32_t userId,
         const int32_t uid, const int32_t appIndex);
