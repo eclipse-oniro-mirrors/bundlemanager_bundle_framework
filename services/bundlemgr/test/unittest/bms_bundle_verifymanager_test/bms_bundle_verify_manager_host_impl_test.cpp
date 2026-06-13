@@ -107,6 +107,7 @@ void BmsBundleVerifyManagerHostImplTest::SetDataMgrData()
     std::string userKey = TEST_BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(userId);
     bundleInfo.innerBundleUserInfos_.insert({userKey, innerBundleUserInfo});
     dataMgr->bundleInfos_.insert({TEST_BUNDLE_NAME, bundleInfo});
+    dataMgr->UpdateUidMap(callingUid, TEST_BUNDLE_NAME, 0);
 }
 
 /**

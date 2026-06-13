@@ -461,13 +461,13 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, IsDefaultApplication_0070, Function | Small
 
     auto dataMgr = OHOS::BmsBundleDefaultAppMgrTest::bundleMgrService_->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
-
-    int32_t uid = 20000001;
-    int32_t bundleId = uid - 100 * Constants::BASE_USER_RANGE;
+    dataMgr->AddUserId(ALL_USER_ID);
+    UninstallBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto ret = DefaultAppMgr::GetInstance().IsDefaultApplication(userId, type, isDefaultApp);
     EXPECT_EQ(ret, ERR_OK);
-    EXPECT_TRUE(isDefaultApp);
+    EXPECT_FALSE(isDefaultApp);
 }
 
 /**

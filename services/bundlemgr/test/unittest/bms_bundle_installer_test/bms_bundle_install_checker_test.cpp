@@ -755,6 +755,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, GetCallingEventInfo_0003, Function | Small
     EXPECT_NE(baseBundleInstaller.dataMgr_, nullptr);
     bool ret1 = baseBundleInstaller.dataMgr_ ->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
     bool ret2 =  baseBundleInstaller.dataMgr_ ->AddInnerBundleInfo(BUNDLE_NAME, info);
+    baseBundleInstaller.dataMgr_->UpdateUidMap(TEST_UID, BUNDLE_NAME, 0);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
 

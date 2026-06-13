@@ -35,12 +35,14 @@ ohos_unittest("BmsAccountConstraintTest") {
   sources -= [
     "${services_path}/bundlemgr/src/account_helper.cpp",
     "${services_path}/bundlemgr/src/xml_util.cpp",
-    "${services_path}/bundlemgr/src/installd_client.cpp"
+    "${services_path}/bundlemgr/src/installd_client.cpp",
+    "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp",
   ]
   sources += [
     "${services_path}/bundlemgr/test/mock/src/xml_util.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_account_helper_constraint.cpp",
     "${services_path}/bundlemgr/test/unittest/bms_account_constraint_test/mock/mock_install_client.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp",
   ]
 
   sources += [ "bms_account_constraint_test.cpp" ]

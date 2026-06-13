@@ -700,6 +700,10 @@ HWTEST_F(BmsBundleCloneInstallerTest, DeleteUninstalledCloneData_0300, Function 
     ScopeGuard unsetGuard([this] { UnsetBundleDataMgr(); });
     bundleCloneInstall_->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo uninstallDataUserInfo;
+    uninstallDataUserInfo.accessTokenId = 1;
+    std::string key = std::to_string(userId_) + "_" + std::to_string(1);
+    uninstallBundleInfo.userInfos[key] = uninstallDataUserInfo;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME, uninstallBundleInfo));

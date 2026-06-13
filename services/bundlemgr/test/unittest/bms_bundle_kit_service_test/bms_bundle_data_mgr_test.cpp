@@ -4487,6 +4487,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetCallingInfo_0100, Function | SmallTest | Level
 
     dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
     dataMgr->AddInnerBundleInfo(bundleName, info);
+    dataMgr->UpdateUidMap(TEST_QUERY_EVENT_UID, bundleName, 0);
 
     int32_t testBundleId = TEST_QUERY_EVENT_BUNDLE_ID;
     ret = bundleMgrHostImpl_->GetCallingInfo(callingUid, callingBundleName, callingAppId);

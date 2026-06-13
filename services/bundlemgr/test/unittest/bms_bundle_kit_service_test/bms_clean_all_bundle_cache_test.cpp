@@ -463,6 +463,8 @@ void BmsCleanAllBundleCacheTest::SaveToDatabase(const std::string &bundleName,
     EXPECT_TRUE(startRet);
     EXPECT_TRUE(addRet);
     EXPECT_TRUE(endRet);
+    dataMgr->UpdateUidMap(BASE_TEST_UID, bundleName, 0);
+    dataMgr->UpdateUidMap(TEST_UID, bundleName, 0);
 }
 
 void BmsCleanAllBundleCacheTest::MockInstallBundle(

@@ -1190,11 +1190,13 @@ HWTEST_F(BmsBundleDataMgrTest3, BatchQueryAbilityInfos_0200, Function | MediumTe
 HWTEST_F(BmsBundleDataMgrTest3, GetCloneBundleInfos_0001, Function | MediumTest | Level1)
 {
     ResetDataMgr();
+    GetBundleDataMgr()->AddUserId(USERID);
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_DEMO;
     BundleInfo bundleInfo;
     bundleInfo.name = BUNDLE_NAME_DEMO;
     bundleInfo.applicationInfo.bundleName = BUNDLE_NAME_DEMO;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
     std::vector<BundleInfo> bundleInfos;
     int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
     GetBundleDataMgr()->GetCloneBundleInfos(innerBundleInfo, flags, USERID, bundleInfos);

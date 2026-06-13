@@ -4603,16 +4603,26 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
     // 1. Check local uidMap_ first (keyed by bundleId = uid - userId * BASE_USER_RANGE)
     {
         int32_t bundleId = uid - GetUserIdByUid(uid) * Constants::BASE_USER_RANGE;
-        std::shared_lock<std::shared_mutex> mapLock(uidMapMutex_);
-        auto iter = uidMap_.find(bundleId);
-        if (iter != uidMap_.end()) {
+        std::string cachedBundleName;
+        int32_t cachedAppIndex = 0;
+        bool found = false;
+        {
+            std::shared_lock<std::shared_mutex> mapLock(uidMapMutex_);
+            auto iter = uidMap_.find(bundleId);
+            if (iter != uidMap_.end()) {
+                cachedBundleName = iter->second.first;
+                cachedAppIndex = iter->second.second;
+                found = true;
+            }
+        }
+        if (found) {
             std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-            auto bundleInfoIter = bundleInfos_.find(iter->second.first);
+            auto bundleInfoIter = bundleInfos_.find(cachedBundleName);
             if (bundleInfoIter != bundleInfos_.end()) {
                 innerBundleInfo = bundleInfoIter->second;
-                appIndex = iter->second.second;
+                appIndex = cachedAppIndex;
                 APP_LOGD("uid %{public}d bundleId %{public}d -> bundleName %{public}s appIndex %{public}d (local map)",
-                    uid, bundleId, iter->second.first.c_str(), appIndex);
+                    uid, bundleId, cachedBundleName.c_str(), appIndex);
                 return ERR_OK;
             }
         }
