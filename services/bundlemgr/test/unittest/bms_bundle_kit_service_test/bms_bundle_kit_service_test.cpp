@@ -3333,7 +3333,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_1300, Function | SmallTest |
     EXPECT_EQ(count, 3);
 
     result.clear();
-    flags = 0x100; // GET_ABILITY_INFO_WITH_DISABLE
+    flags = GET_ABILITY_INFO_WITH_DISABLE;
     testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
     EXPECT_TRUE(testRet);
     count = 0;

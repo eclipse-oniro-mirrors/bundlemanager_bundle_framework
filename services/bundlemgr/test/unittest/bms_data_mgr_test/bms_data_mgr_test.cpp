@@ -13012,6 +13012,7 @@ static InnerBundleInfo CreateDisabledBundleWithExtension(const std::string &bund
 HWTEST_F(BmsDataMgrTest, ImplicitQueryCurAbilityFlagsMapping_0100, Function | SmallTest | Level0)
 {
     BundleDataMgr dataMgr;
+    dataMgr.AddUserId(USERID);
     auto info = CreateDisabledBundleWithAbility(TEST_BUNDLE, USERID);
     dataMgr.bundleInfos_[TEST_BUNDLE] = info;
 
@@ -13096,6 +13097,7 @@ HWTEST_F(BmsDataMgrTest, ImplicitQueryAllAbilityFlagsMapping_0200, Function | Sm
 HWTEST_F(BmsDataMgrTest, ImplicitQueryCurExtensionFlagsMapping_0100, Function | SmallTest | Level0)
 {
     BundleDataMgr dataMgr;
+    dataMgr.AddUserId(USERID);
     auto info = CreateDisabledBundleWithExtension(TEST_BUNDLE, USERID);
     dataMgr.bundleInfos_[TEST_BUNDLE] = info;
 
