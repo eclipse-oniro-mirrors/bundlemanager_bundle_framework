@@ -737,7 +737,7 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(
         if (bundleName.empty()) {
             return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
         }
-        std::string bundleNameOri;
+        std::string bundleNameOri = bundleName;
         int32_t appIdx = 0;
         if (!BundleCloneCommonHelper::ParseCloneDataDir(bundleName, bundleNameOri, appIdx)) {
             size_t pos = bundleName.rfind(Constants::FILE_UNDERLINE);
