@@ -2787,7 +2787,7 @@ bool GetPermissions(
         if (requestPermission.name.empty()) {
             continue;
         }
-        innerModuleInfo.requestPermissions.emplace_back(requestPermission);
+        innerModuleInfo.bundlePermissions.AddPermission(requestPermission);
     }
     return true;
 }

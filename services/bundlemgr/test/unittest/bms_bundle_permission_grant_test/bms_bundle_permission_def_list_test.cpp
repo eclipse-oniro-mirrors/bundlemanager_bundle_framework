@@ -100,7 +100,7 @@ void BmsBundlePermissionDefListTest::InitInnerBundleInfo(InnerBundleInfo &innerB
     InnerModuleInfo innerModuleInfo;
     RequestPermission requestPermission;
     requestPermission.name = PERMISSION_TEST;
-    innerModuleInfo.requestPermissions.emplace_back(requestPermission);
+    innerModuleInfo.bundlePermissions.AddPermission(requestPermission);
     innerBundleInfo.InsertInnerModuleInfo(MODULE_ENTRY_NAME, innerModuleInfo);
 }
 

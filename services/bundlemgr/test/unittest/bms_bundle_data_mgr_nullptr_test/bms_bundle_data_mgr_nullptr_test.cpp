@@ -1133,7 +1133,7 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCloneInstaller_0020, Function | Medi
     requestPermission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.moduleName = "testname";
-    innerModuleInfo.requestPermissions.emplace_back(requestPermission);
+    innerModuleInfo.bundlePermissions.AddPermission(requestPermission);
     innerBundleInfo.innerModuleInfos_.try_emplace("test", innerModuleInfo);
     installer.CreateEl5Dir(innerBundleInfo, uid, userId, appIndex);
     EXPECT_NE(installer.GetDataMgr(), ERR_OK);

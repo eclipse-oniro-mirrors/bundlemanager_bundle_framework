@@ -24,6 +24,7 @@
 #include "aot/aot_args.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
+#include "bundle_permissions.h"
 #include "bundle_service_constants.h"
 #include "common_event_info.h"
 #include "common_profile.h"
@@ -165,7 +166,8 @@ struct InnerModuleInfo {
     std::vector<ExecutableBinaryPath> executableBinaryPaths;
     // new version fields
     std::vector<DefinePermission> definePermissions;
-    std::vector<RequestPermission> requestPermissions;
+    // permissions stored compactly to reduce memory, see bundle_permissions.h
+    BundlePermissions bundlePermissions;
     std::vector<Metadata> metadata;
     std::vector<SkillProfile> skillProfiles;
     std::vector<Dependency> dependencies;
@@ -1011,7 +1013,8 @@ public:
     {
         std::vector<RequestPermission> requestPermissions;
         if (innerModuleInfos_.count(currentPackage_) == 1) {
-            requestPermissions = innerModuleInfos_.at(currentPackage_).requestPermissions;
+            // permissions are stored compactly, restore them to the standard form
+            requestPermissions = ToRequestPermissions(innerModuleInfos_.at(currentPackage_).bundlePermissions);
         }
         return requestPermissions;
     }

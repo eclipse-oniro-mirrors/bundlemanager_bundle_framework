@@ -68,7 +68,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     innerModuleInfo.moduleName = "entry";
     RequestPermission requestPermission;
     requestPermission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
-    innerModuleInfo.requestPermissions.push_back(requestPermission);
+    innerModuleInfo.bundlePermissions.AddPermission(requestPermission);
     info.innerModuleInfos_["entry"] = innerModuleInfo;
     ApplicationInfo applicationInfo;
     applicationInfo.bundleName = bundleName;

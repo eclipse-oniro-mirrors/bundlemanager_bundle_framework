@@ -996,7 +996,7 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3500, Function | SmallTest |
     InnerBundleInfo innerBundleInfo;
     InnerModuleInfo innerModuleInfo;
     RequestPermission reqPermission;
-    innerModuleInfo.requestPermissions.push_back(reqPermission);
+    innerModuleInfo.bundlePermissions.AddPermission(reqPermission);
     innerBundleInfo.innerModuleInfos_
         .emplace(innerBundleInfo.currentPackage_, innerModuleInfo);
     std::vector<AccessToken::PermissionDef> permDef = BundlePermissionMgr::GetPermissionDefList(innerBundleInfo);
@@ -1075,7 +1075,7 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_4000, Function | SmallTest |
     RequestPermission reqPermission;
     reqPermission.name = "name";
     reqPermission.requiredFeature = "requiredFeature";
-    innerModuleInfo.requestPermissions.push_back(reqPermission);
+    innerModuleInfo.bundlePermissions.AddPermission(reqPermission);
     std::string moduleName = "moduleName";
     innerBundleInfo.InsertInnerModuleInfo(moduleName, innerModuleInfo);
     std::vector<AccessToken::PermissionStateFull> permFull

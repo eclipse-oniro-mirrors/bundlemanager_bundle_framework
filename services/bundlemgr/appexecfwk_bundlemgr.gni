@@ -53,6 +53,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/bundle_installer_host.cpp",
   "${services_path}/bundlemgr/src/bundle_installer_manager.cpp",
   "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp",
+  "${services_path}/bundlemgr/src/bundle_permissions.cpp",
   "${services_path}/bundlemgr/src/bundle_stream_installer_host_impl.cpp",
   "${services_path}/bundlemgr/src/bundle_util.cpp",
   "${services_path}/bundlemgr/src/bundle_verify_mgr.cpp",

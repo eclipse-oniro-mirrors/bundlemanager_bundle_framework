@@ -207,6 +207,8 @@ void BundleDataMgr::DefragMemory()
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     std::map<std::string, InnerBundleInfo> compactedMap(bundleInfos_);
     bundleInfos_.swap(compactedMap);
+    // pool strings are not reallocated by the copy above, compact them too
+    PermissionStringPool::GetInstance().Defrag();
     APP_LOGI_NOFUNC("defrag bundleInfos memory done, size: %{public}zu", bundleInfos_.size());
 }
 
@@ -14582,9 +14584,7 @@ void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
     }
     if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS)) ==
         static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS)) {
-        for (const auto &reqPerm : moduleInfo.requestPermissions) {
-            skillInfo.requestPermissions.emplace_back(reqPerm.name);
-        }
+        moduleInfo.bundlePermissions.AppendPermissionNames(skillInfo.requestPermissions);
     }
     if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_DESCRIPTION)) ==
         static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_DESCRIPTION)) {

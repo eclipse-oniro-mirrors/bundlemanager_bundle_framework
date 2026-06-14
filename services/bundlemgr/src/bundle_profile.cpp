@@ -2208,7 +2208,7 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     GetMetaData(innerModuleInfo.metaData, configJson.module.metaData);
     innerModuleInfo.distro = configJson.module.distro;
     innerModuleInfo.reqCapabilities = configJson.module.reqCapabilities;
-    innerModuleInfo.requestPermissions = configJson.module.requestPermissions;
+    innerModuleInfo.bundlePermissions = ToBundlePermissions(configJson.module.requestPermissions);
     if (configJson.app.bundleName == Profile::SYSTEM_RESOURCES_APP) {
         if (!CheckDefinePermissions(configJson.module.definePermissions)) {
             APP_LOGE("CheckDefinePermissions failed");

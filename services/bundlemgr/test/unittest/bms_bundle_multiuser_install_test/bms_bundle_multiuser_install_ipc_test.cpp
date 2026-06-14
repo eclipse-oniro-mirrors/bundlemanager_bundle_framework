@@ -538,7 +538,7 @@ HWTEST_F(BmsBundleMultiuserInstallIPCTest, CreateEl5Dir_0200, Function | SmallTe
     permission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.moduleName = "entry";
-    innerModuleInfo.requestPermissions.emplace_back(permission);
+    innerModuleInfo.bundlePermissions.AddPermission(permission);
     info.innerModuleInfos_.try_emplace("test", innerModuleInfo);
     installer.CreateEl5Dir(info, TEST_INSTALLER_UID, INVAILD_ID);
     EXPECT_TRUE(installer.GetDataMgr() != ERR_OK);
@@ -558,7 +558,7 @@ HWTEST_F(BmsBundleMultiuserInstallIPCTest, CreateEl5Dir_0300, Function | SmallTe
     permission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.moduleName = "entry";
-    innerModuleInfo.requestPermissions.emplace_back(permission);
+    innerModuleInfo.bundlePermissions.AddPermission(permission);
     info.innerModuleInfos_.try_emplace("test", innerModuleInfo);
     installer.CreateEl5Dir(info, TEST_INSTALLER_UID, INVAILD_ID);
     EXPECT_TRUE(installer.GetDataMgr() == ERR_OK);
