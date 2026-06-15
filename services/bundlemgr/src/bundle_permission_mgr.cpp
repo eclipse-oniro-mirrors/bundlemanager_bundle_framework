@@ -800,6 +800,7 @@ int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, cons
                 newUserInfo.gids.emplace_back(identity.uid);
                 innerBundleInfo.AddInnerBundleUserInfo(newUserInfo);
             }
+            innerBundleInfo.SetAccessTokenIdEx(tokenIdeEx, userId);
             auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
             if (dataMgr != nullptr) {
                 dataMgr->UpdateUidMap(identity.uid, innerBundleInfo.GetBundleName(),

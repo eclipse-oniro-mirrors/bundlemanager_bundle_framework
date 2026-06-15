@@ -1127,6 +1127,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     CHECK_RESULT(result, "update MDM app failed %{public}d");
 
     GetExtensionDirsChange(newInfos, oldInfo);
+    bool isDebugGrant = CheckIsDebugGrant(installParam, newInfos.begin()->second.GetAppProvisionType());
 
     if (isAppExist_) {
         (void)InstalldClient::GetInstance()->RemoveDir(ServiceConstants::HAP_ARK_CACHE_PATH + oldInfo.GetBundleName(),
@@ -1194,9 +1195,9 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
             oldInfo.SetAggregatedRequestPermissions(aggregatedRequestPermissions_);
             
-            if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo, false)
+            if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo, isDebugGrant)
                 && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx,
-                verifyRes_.GetProvisionInfo().appServiceCapabilities, false, sessionId_) != ERR_OK) {
+                verifyRes_.GetProvisionInfo().appServiceCapabilities, isDebugGrant, sessionId_) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
             }
@@ -1232,7 +1233,6 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             }
         }
     }
-    bool isDebugGrant = CheckIsDebugGrant(installParam, newInfos.begin()->second.GetAppProvisionType());
     auto it = newInfos.begin();
     if (!isAppExist_) {
         if (AccountHelper::CheckOsAccountConstraintEnabled(userId_, ServiceConstants::CONSTRAINT_APPS_INSTALL)) {
