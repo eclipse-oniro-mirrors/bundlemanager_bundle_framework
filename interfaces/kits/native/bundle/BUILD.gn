@@ -125,6 +125,7 @@ ohos_shared_library("bundle_ndk_drawable") {
     "hilog:libhilog",
     "image_framework:image_native",
     "resource_management:global_resmgr",
+    "icu:shared_icuuc",
   ]
 
   subsystem_name = "bundlemanager"
