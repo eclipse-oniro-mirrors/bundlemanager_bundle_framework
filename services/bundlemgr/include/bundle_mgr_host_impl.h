@@ -1233,6 +1233,12 @@ public:
     virtual ErrCode GetCliSandboxAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
+    virtual ErrCode GetAppClonePreference(const std::string &bundleName,
+        int32_t userId, AppClonePreference &preference) override;
+
+    virtual ErrCode SetAppClonePreference(const std::string &bundleName,
+        int32_t userId, const AppClonePreference &preference) override;
+
     virtual ErrCode GetLaunchWant(Want &want) override;
 
     virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName, int32_t flags,

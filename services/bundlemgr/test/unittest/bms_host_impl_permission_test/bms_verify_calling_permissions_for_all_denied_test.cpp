@@ -1412,4 +1412,39 @@ HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0085, TestS
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 #endif
+
+/**
+ * @tc.number: GetAppClonePreference_0001
+ * @tc.name: VerifyCallingPermissionsForAllDeniedTest
+ * @tc.desc: GetAppClonePreference VerifyCallingPermissionForAll denied
+ */
+HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, GetAppClonePreference_0001, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "com.example.clone_pref";
+    int32_t userId = 100;
+    AppClonePreference preference;
+    auto ret = localBundleMgrHostImpl->GetAppClonePreference(bundleName, userId, preference);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: SetAppClonePreference_0001
+ * @tc.name: VerifyCallingPermissionsForAllDeniedTest
+ * @tc.desc: SetAppClonePreference VerifyCallingPermissionForAll denied
+ */
+HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, SetAppClonePreference_0001, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "com.example.clone_pref";
+    int32_t userId = 100;
+    AppClonePreference preference;
+    preference.mode = AppClonePreferenceMode::MAIN_APP;
+    auto ret = localBundleMgrHostImpl->SetAppClonePreference(bundleName, userId, preference);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // namespace OHOS

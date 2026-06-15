@@ -19,6 +19,7 @@ install_daemon_sources = [
   "${services_path}/bundlemgr/src/bundle_util.cpp",
   "${services_path}/bundlemgr/src/code_sign_helper.cpp",
   "${services_path}/bundlemgr/src/common/single_delayed_task_mgr.cpp",
+  "${services_path}/bundlemgr/src/driver_install_ext.cpp",
   "${services_path}/bundlemgr/src/installd/binary_security_wrapper.cpp",
   "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
   "${services_path}/bundlemgr/src/installd/installd_load_callback.cpp",
@@ -38,7 +39,6 @@ install_daemon_sources = [
   "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
   "${services_path}/bundlemgr/src/ipc/verify_bin_param.cpp",
-  "${services_path}/bundlemgr/src/driver_install_ext.cpp",
 ]
 
 bundle_install_sources = [
@@ -57,10 +57,11 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/bundle_stream_installer_host_impl.cpp",
   "${services_path}/bundlemgr/src/bundle_util.cpp",
   "${services_path}/bundlemgr/src/bundle_verify_mgr.cpp",
-  "${services_path}/bundlemgr/src/data_clone_install_helper.cpp",
   "${services_path}/bundlemgr/src/data/inner_ability_info.cpp",
   "${services_path}/bundlemgr/src/data/inner_extension_info.cpp",
+  "${services_path}/bundlemgr/src/data_clone_install_helper.cpp",
   "${services_path}/bundlemgr/src/driver/driver_installer.cpp",
+  "${services_path}/bundlemgr/src/driver_install_ext.cpp",
   "${services_path}/bundlemgr/src/event_report.cpp",
   "${services_path}/bundlemgr/src/exception/exception_util.cpp",
   "${services_path}/bundlemgr/src/hmp_bundle_installer.cpp",
@@ -99,7 +100,6 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/utd/utd_handler.cpp",
   "${services_path}/bundlemgr/src/xcollie_helper.cpp",
   "${services_path}/bundlemgr/src/xml_util.cpp",
-  "${services_path}/bundlemgr/src/driver_install_ext.cpp",
 ]
 
 aging = [
@@ -209,6 +209,8 @@ if (bundle_framework_power_mgr_enable) {
 bundle_mgr_source = [
   "${services_path}/bundlemgr/src/account_helper.cpp",
   "${services_path}/bundlemgr/src/aot/aot_device_idle_listener.cpp",
+  "${services_path}/bundlemgr/src/app_clone_preference/app_clone_preference_data_mgr.cpp",
+  "${services_path}/bundlemgr/src/app_clone_preference/app_clone_preference_storage.cpp",
   "${services_path}/bundlemgr/src/app_disable_forbidden/app_disable_forbidden_mgr.cpp",
   "${services_path}/bundlemgr/src/app_disable_forbidden/disable_forbidden_rdb.cpp",
   "${services_path}/bundlemgr/src/app_provision_info/app_provision_info_manager.cpp",

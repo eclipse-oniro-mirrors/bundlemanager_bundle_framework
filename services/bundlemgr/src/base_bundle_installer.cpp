@@ -44,6 +44,7 @@
 #include "ability_manager_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
+#include "app_clone_preference_data_mgr.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_update_selinux_mgr.h"
 #include "bundle_cli_sandbox_installer.h"
@@ -2371,6 +2372,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // Uninstall all CLI sandbox apps
     auto cliSandboxInstaller = std::make_shared<BundleCliSandboxInstaller>();
     cliSandboxInstaller->DestroyAllCliSandboxApps(bundleName, userId_);
+
+    RemoveAppClonePreference(bundleName, userId_);
 
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
@@ -9247,6 +9250,19 @@ bool BaseBundleInstaller::IsEnterpriseForAllUser(const InstallParam &installPara
     }
     LOG_W(BMS_TAG_INSTALLER, "app not exist: %{public}s", bundleName.c_str());
     return false;
+}
+
+void BaseBundleInstaller::RemoveAppClonePreference(const std::string &bundleName, int32_t userId)
+{
+    auto appClonePrefDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetAppClonePreferenceDataMgr();
+    if (appClonePrefDataMgr == nullptr) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "AppClonePreferenceDataMgr is null, skip preference cleanup");
+        return;
+    }
+    appClonePrefDataMgr->DeleteAppClonePreference(bundleName, userId);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER,
+        "deleted app clone preference for %{public}s in userId %{public}d on main app uninstall",
+        bundleName.c_str(), userId);
 }
 
 bool BaseBundleInstaller::SetDisposedRuleWhenBundleUpdateStart(

@@ -6553,6 +6553,62 @@ ErrCode BundleMgrHostImpl::GetCliSandboxAppIndexes(const std::string &bundleName
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::GetAppClonePreference(const std::string &bundleName,
+    int32_t userId, AppClonePreference &preference)
+{
+    APP_LOGD("start GetAppClonePreference bundleName = %{public}s, userId = %{public}d",
+        bundleName.c_str(), userId);
+    if (IPCSkeleton::GetCallingUid() != Constants::FOUNDATION_UID) {
+        if (!BundlePermissionMgr::IsSystemApp()) {
+            APP_LOGE_NOFUNC("GetAppClonePreference non-system app calling system api");
+            return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        }
+        if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
+            Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES)) {
+            APP_LOGE_NOFUNC("GetAppClonePreference verify permission failed");
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
+    }
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (service == nullptr) {
+        APP_LOGE_NOFUNC("GetAppClonePreference BundleMgrService is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto prefDataMgr = service->GetAppClonePreferenceDataMgr();
+    if (prefDataMgr == nullptr) {
+        APP_LOGE_NOFUNC("GetAppClonePreference AppClonePreferenceDataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return prefDataMgr->GetAppClonePreference(bundleName, userId, preference);
+}
+
+ErrCode BundleMgrHostImpl::SetAppClonePreference(const std::string &bundleName,
+    int32_t userId, const AppClonePreference &preference)
+{
+    APP_LOGD("start SetAppClonePreference bundleName = %{public}s, userId = %{public}d",
+        bundleName.c_str(), userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE_NOFUNC("SetAppClonePreference non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
+        Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (service == nullptr) {
+        APP_LOGE_NOFUNC("SetAppClonePreference BundleMgrService is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto prefDataMgr = service->GetAppClonePreferenceDataMgr();
+    if (prefDataMgr == nullptr) {
+        APP_LOGE_NOFUNC("SetAppClonePreference AppClonePreferenceDataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return prefDataMgr->SetAppClonePreference(bundleName, userId, preference);
+}
+
 ErrCode BundleMgrHostImpl::GetLaunchWant(Want &want)
 {
     APP_LOGD("start GetLaunchWant");

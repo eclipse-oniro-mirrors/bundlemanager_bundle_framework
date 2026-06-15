@@ -385,6 +385,14 @@ struct CloneAppBundleInfosCallbackInfo : public BaseCallbackInfo {
     std::vector<BundleInfo> bundleInfos;
 };
 
+struct AppClonePreferenceCallbackInfo : public BaseCallbackInfo {
+    explicit AppClonePreferenceCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+
+    std::string bundleName;
+    AppClonePreference preference;
+    AppClonePreference resultPreference;
+};
+
 struct RecoverOrRemoveBackupBundleDataCallbackInfo : public BaseCallbackInfo {
     explicit RecoverOrRemoveBackupBundleDataCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
 
@@ -446,6 +454,8 @@ napi_value SwitchUninstallState(napi_env env, napi_callback_info info);
 napi_value GetAppCloneBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetAllInstallInfo(napi_env env, napi_callback_info info);
 napi_value GetAllAppCloneBundleInfo(napi_env env, napi_callback_info info);
+napi_value GetAppClonePreference(napi_env env, napi_callback_info info);
+napi_value SetAppClonePreference(napi_env env, napi_callback_info info);
 napi_value GetAppCloneIdentity(napi_env env, napi_callback_info info);
 napi_value GetAllPluginInfo(napi_env env, napi_callback_info info);
 napi_value GetAllBundleCacheSize(napi_env env, napi_callback_info info);
@@ -479,6 +489,7 @@ void CreateProfileTypeObject(napi_env env, napi_value value);
 void CreateAppDistributionTypeObject(napi_env env, napi_value value);
 void RegisterClearCacheListener();
 void CreateMultiAppModeTypeObject(napi_env env, napi_value value);
+void CreateAppClonePreferenceModeObject(napi_env env, napi_value value);
 void CreateApplicationInfoFlagObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS

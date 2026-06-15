@@ -20,6 +20,7 @@
 #include "alternate_icon_info.h"
 #include "appexecfwk_errors.h"
 #include "application_info.h"
+#include "app_clone_preference.h"
 #include "app_install_extended_info.h"
 #include "app_provision_info.h"
 #include "bundle_additional_info.h"
@@ -1903,6 +1904,18 @@ public:
 
     virtual ErrCode GetCliSandboxAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
         int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetAppClonePreference(const std::string &bundleName,
+        int32_t userId, AppClonePreference &preference)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode SetAppClonePreference(const std::string &bundleName,
+        int32_t userId, const AppClonePreference &preference)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

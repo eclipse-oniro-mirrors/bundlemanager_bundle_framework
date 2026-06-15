@@ -6363,6 +6363,59 @@ ErrCode BundleMgrProxy::GetCliSandboxAppIndexes(const std::string &bundleName, s
     return ret;
 }
 
+ErrCode BundleMgrProxy::GetAppClonePreference(const std::string &bundleName,
+    int32_t userId, AppClonePreference &preference)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to GetAppClonePreference of %{public}s", bundleName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("GetAppClonePreference fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE_NOFUNC("GetAppClonePreference fail to write bundleName");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE_NOFUNC("GetAppClonePreference fail to write userId");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<AppClonePreference>(
+        BundleMgrInterfaceCode::GET_APP_CLONE_PREFERENCE, data, preference);
+}
+
+ErrCode BundleMgrProxy::SetAppClonePreference(const std::string &bundleName,
+    int32_t userId, const AppClonePreference &preference)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to SetAppClonePreference of %{public}s", bundleName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("SetAppClonePreference fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference fail to write bundleName");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference fail to write userId");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&preference)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference fail to write preference");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ErrCode ret = SendTransactCmdWithErrCode(BundleMgrInterfaceCode::SET_APP_CLONE_PREFERENCE, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("SetAppClonePreference SendTransactCmd fail %{public}d", ret);
+        return ret;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::GetLaunchWant(Want &want)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

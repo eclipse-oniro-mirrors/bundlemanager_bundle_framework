@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <set>
 
+#include "app_clone_preference.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_file_util.h"
@@ -641,6 +642,12 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLI_SANDBOX_APP_INDEXES):
             errCode = this->HandleGetCliSandboxAppIndexes(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APP_CLONE_PREFERENCE):
+            errCode = this->HandleGetAppClonePreference(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_APP_CLONE_PREFERENCE):
+            errCode = this->HandleSetAppClonePreference(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_LAUNCH_WANT):
             errCode = this->HandleGetLaunchWant(data, reply);
@@ -4938,6 +4945,54 @@ ErrCode BundleMgrHost::HandleGetCliSandboxAppIndexes(MessageParcel &data, Messag
     }
     if (ret == ERR_OK && !reply.WriteInt32Vector(appIndexes)) {
         APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAppClonePreference(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t userId = 0;
+    if (!data.ReadInt32(userId)) {
+        APP_LOGE_NOFUNC("HandleGetAppClonePreference read userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    AppClonePreference preference;
+    auto ret = GetAppClonePreference(bundleName, userId, preference);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE_NOFUNC("HandleGetAppClonePreference write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteParcelable(&preference)) {
+        APP_LOGE_NOFUNC("HandleGetAppClonePreference write preference failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetAppClonePreference(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t userId = 0;
+    if (!data.ReadInt32(userId)) {
+        APP_LOGE_NOFUNC("HandleSetAppClonePreference read userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    std::unique_ptr<AppClonePreference> preferencePtr(data.ReadParcelable<AppClonePreference>());
+    if (preferencePtr == nullptr) {
+        APP_LOGE_NOFUNC("HandleSetAppClonePreference read preference failed");
+        if (!reply.WriteInt32(ERR_BUNDLE_MANAGER_PARAM_ERROR)) {
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        return ERR_OK;
+    }
+    auto ret = SetAppClonePreference(bundleName, userId, *preferencePtr);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE_NOFUNC("HandleSetAppClonePreference write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
