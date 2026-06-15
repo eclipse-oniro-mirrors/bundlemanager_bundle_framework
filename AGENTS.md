@@ -17,7 +17,7 @@
 - 新增行为应尽量有测试或至少说明无法测试的原因。
 - 日志、错误码、权限检查和空指针检查应遵循仓库已有模式。
 
-## 代码地图
+## 代码结构
 
 ### 目录与分层
 
@@ -32,7 +32,7 @@ services/bundlemgr/ 服务实现层 (SA 401 foundation 进程)
   ↓ InstalldClient (IPC 跨进程调用)
 services/bundlemgr/src/installd/ 特权操作层 (SA 511 installs 进程 · 目录创建/HAP解压/权限设置)
   ↓
-OpenHarmony 其他系统组件
+其他系统模块
 ```
 
 ### 关键目录
@@ -86,7 +86,7 @@ OpenHarmony 其他系统组件
 | RDB / 数据迁移 | 表结构变更需考虑跨版本迁移脚本和缓存失效 | `bms-install-flow` |
 | APP_LOG / LOG_NOFUNC / %{public} %{private} | 日志敏感信息标注规则，BMS tag 区分 installer/query/installd/ext 等 | `bms-logging` |
 | Provision profile / code signature | 安装安全校验链，失败后不能继续写入 | `bms-security-verify` |
-| bundle.json / appexecfwk.gni | 功能开关影响构建范围，不要假设代码一定参与编译 | `bms-navigation` references |
+| bundle.json / appexecfwk.gni | 编译选项影响构建范围，不要假设代码一定参与编译 | `bms-navigation` references |
 
 ### 规划声明
 
