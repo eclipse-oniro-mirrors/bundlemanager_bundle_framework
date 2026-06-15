@@ -32,7 +32,7 @@ services/bundlemgr/ 服务实现层 (SA 401 foundation 进程)
   ↓ InstalldClient (IPC 跨进程调用)
 services/bundlemgr/src/installd/ 特权操作层 (SA 511 installs 进程 · 目录创建/HAP解压/权限设置)
   ↓
-OpenHarmony 其他系统服务
+OpenHarmony 其他系统组件
 ```
 
 ### 关键目录
@@ -51,7 +51,7 @@ OpenHarmony 其他系统服务
 
 ## 知识路由
 
-本工程的专用 skill 放在仓库根目录的 `skills/` 下，skill中的reference文档包含本领域的权威知识。命中触发条件后，必须在规划阶段读取对应 skill 的 `SKILL.md` 和 `references/`，再开始编辑。
+本工程的专用 skill 放在仓库根目录的 `skills/` 下，skill中的reference文档包含本领域的知识。命中触发条件后，必须在规划阶段读取对应 skill 的 `SKILL.md` 和 `references/`，再开始编辑。
 
 ### 按场景路由
 
@@ -103,7 +103,7 @@ OpenHarmony 其他系统服务
 - 双进程 IPC 分层：Foundation 进程（SA 401）控制业务流程与权限，Installd 进程（SA 511）执行特权文件操作。Foundation 进程不得直接做需要高权限的文件系统操作，必须通过 InstalldClient IPC 请求 Installd 进程完成。
 - 权限检查必须在能力入口执行（HostImpl 层），不能信任调用方入参。
 - userId 不是可选参数：入参含特殊值须显式解析，不能默认当前用户；request userId 经推导和权限校验后可能变为不同用户或 INVALID_USERID（response userId），须同时处理两条路径。
-- 安装、更新、卸载共用 BaseBundleInstaller，修改任一流程须同时检查其余两个；每个流程内部均有回滚、清理和异常恢复分支，不能只改成功路径。
+- 安装、更新、卸载共用 BaseBundleInstaller，修改其中一个流程须同时检查另外两个；每个流程内部均有回滚、清理和异常恢复分支，需同时考虑成功路径和非成功路径。
 - IPC 消息码注册必须在枚举文件和 host 分发中同步完成，缺一则 IPC 不完整。
 - 错误码属于公共兼容性边界，新增错误码必须归入 `appexecfwk_errors.h` 的已有模块偏移。
 
