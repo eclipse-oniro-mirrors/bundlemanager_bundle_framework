@@ -196,14 +196,6 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
     NotifyPluginEvents(isPluginExist_ ? NotifyType::UPDATE : NotifyType::INSTALL, uid);
     SendPluginCommonEvent(hostBundleName, bundleName_,
         isPluginExist_ ? NotifyType::UPDATE : NotifyType::INSTALL);
-    if (!sessionCommitted_ && sessionId_ != 0) {
-        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, true, {});
-        if (finishRet != ERR_OK) {
-            APP_LOGE("FinishHapInstall failed, errCode:%{public}d", finishRet);
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
-        sessionCommitted_ = true;
-    }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "install plugin finished");
     return ERR_OK;
 }
@@ -436,8 +428,6 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
     // check enterprise bundle
     /* At this place, hapVerifyResults cannot be empty and unnecessary to check it */
     verifyRes_ = hapVerifyResults[0];
-    isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyResults[0]);
-    appIdentifier_ = isDebug_ ? DEBUG_APP_IDENTIFIER : provisionInfo.bundleInfo.appIdentifier;
     compileSdkType_ = parsedBundles_.empty() ? COMPILE_SDK_TYPE_OPEN_HARMONY :
         (parsedBundles_.begin()->second).GetBaseApplicationInfo().compileSdkType;
 
@@ -632,8 +622,7 @@ ErrCode PluginInstaller::VerifyCodeSignatureForNativeFiles(const std::string &bu
     return ERR_OK;
 }
 
-ErrCode PluginInstaller::VerifyCodeSignatureForHsp(const std::string &hspPath,
-    const std::string &appIdentifier, bool isEnterpriseBundle, bool isCompileSdkOpenHarmony) const
+ErrCode PluginInstaller::VerifyCodeSignatureForHsp(const std::string &hspPath, bool isCompileSdkOpenHarmony) const
 {
     APP_LOGI("begin to verify code signature for hsp");
     CodeSignatureParam codeSignatureParam;
@@ -646,29 +635,11 @@ ErrCode PluginInstaller::VerifyCodeSignatureForHsp(const std::string &hspPath,
     codeSignatureParam.isPreInstalledBundle = false;
     codeSignatureParam.isPlugin = !isLocalPluginInstall_;
     codeSignatureParam.isLocalHspPlugin = isLocalPluginInstall_ && !isDebug_;
-    if (codeSignatureParam.isPlugin) {
-        codeSignatureParam.pluginId = JoinPluginId();
-    }
     bundleInstallChecker_->ProcessCodeSignatureParam(sessionId_, verifyRes_, codeSignatureParam);
     if (InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam) != ERR_OK) {
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
     return ERR_OK;
-}
-
-std::string PluginInstaller::JoinPluginId() const
-{
-    if (pluginIds_.empty()) {
-        return Constants::EMPTY_STRING;
-    }
-    std::ostringstream oss;
-    for (size_t i = 0; i < pluginIds_.size(); ++i) {
-        if (i != 0) {
-            oss << std::string(PLUGIN_ID_SEPARATOR);
-        }
-        oss << pluginIds_[i];
-    }
-    return oss.str();
 }
 
 ErrCode PluginInstaller::DeliveryProfileToCodeSign(
@@ -1043,8 +1014,7 @@ ErrCode PluginInstaller::SaveHspToInstallDir(const std::string &bundlePath,
         result = InstalldClient::GetInstance()->MoveHapToCodeDir(bundlePath, hspPath);
         CHECK_RESULT(result, "move hsp to install dir failed %{public}d");
         bool isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
-        result = VerifyCodeSignatureForHsp(hspPath, appIdentifier_, isEnterpriseBundle_,
-            isCompileSdkOpenHarmony);
+        result = VerifyCodeSignatureForHsp(hspPath, isCompileSdkOpenHarmony);
     }
     newInfo.SetModuleHapPath(hspPath);
 

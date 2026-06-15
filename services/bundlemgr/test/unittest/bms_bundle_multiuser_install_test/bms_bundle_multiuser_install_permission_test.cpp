@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -175,11 +175,8 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0003, Function
 {
     PluginInstaller installer;
     std::string hspPath;
-    std::string appIdentifier;
-    bool isEnterpriseBundle = true;
     bool isCompileSdkOpenHarmony = true;
-    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, appIdentifier, isEnterpriseBundle,
-        isCompileSdkOpenHarmony);
+    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, isCompileSdkOpenHarmony);
     EXPECT_EQ(ret, ERR_OK);
 }
 
