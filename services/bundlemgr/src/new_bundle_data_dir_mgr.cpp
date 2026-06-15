@@ -302,6 +302,13 @@ bool NewBundleDataDirMgr::InnerProcessOtaBundleDataDirEl5(
         cloneParam.appIndex = cloneInfo.second.appIndex;
         createDirParams.emplace_back(cloneParam);
     }
+    for (const auto &cliSandboxInfo : userInfo.sandboxInfos) {
+        CreateDirParam cliParam = createDirParam;
+        cliParam.uid = cliSandboxInfo.second.uid;
+        cliParam.gid = cliSandboxInfo.second.uid;
+        cliParam.appIndex = cliSandboxInfo.second.appIndex;
+        createDirParams.emplace_back(cliParam);
+    }
     dataMgr->CreateEl5Dir(createDirParams, true);
     dataMgr->CreateAppEl5GroupDir(bundleName, userId);
     return true;

@@ -36,6 +36,8 @@ namespace bundleManager {
   const EMPTY_STRING: string = "ani empty string";
   const MAIN_APP_INDEX: int = 0;
   const CLONE_APP_INDEX_MAX: int = 5;
+  const CLI_SANDBOX_APP_INDEX_MIN: int = 2000;
+  const CLI_SANDBOX_APP_INDEX_MAX: int = 3000;
   const ERROR_INVALID_APPINDEX_CODE: int = 17700061;
   const ERROR_INVALID_APPINDEX_MSG: string = "BusinessError 17700061: The specified app index is invalid.";
   const ERROR_PARAM_CHECK_ERROR: int = 401;
@@ -1399,7 +1401,9 @@ namespace bundleManager {
   }
 
   function cleanBundleCacheFiles(bundleName: string, appIndex: int): Promise<void> {
-    if (appIndex < MAIN_APP_INDEX || appIndex > getCloneMaxCountNative()) {
+    if (appIndex < MAIN_APP_INDEX ||
+      (appIndex > getCloneMaxCountNative() && appIndex < CLI_SANDBOX_APP_INDEX_MIN) ||
+      appIndex > CLI_SANDBOX_APP_INDEX_MAX) {
       throw createBusinessError(ERROR_INVALID_APPINDEX_CODE, ERROR_INVALID_APPINDEX_MSG);
     }
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: Error) => void) : void => {

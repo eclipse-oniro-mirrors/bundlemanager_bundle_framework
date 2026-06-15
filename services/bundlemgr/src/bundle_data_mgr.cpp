@@ -2557,6 +2557,43 @@ std::set<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundleNam
     return infoItem->second.GetCloneBundleAppIndexes();
 }
 
+std::vector<int32_t> BundleDataMgr::GetCliSandboxAppIndexes(const std::string &bundleName, int32_t userId) const
+{
+    std::vector<int32_t> cliSandboxAppIndexes;
+    std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+    if (userId == Constants::ANY_USERID) {
+        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
+            LOG_W(BMS_TAG_QUERY, "no userInfos for this bundle(%{public}s)", bundleName.c_str());
+            return cliSandboxAppIndexes;
+        }
+        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+    }
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return cliSandboxAppIndexes;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        LOG_W(BMS_TAG_QUERY, "no bundleName %{public}s found", bundleName.c_str());
+        return cliSandboxAppIndexes;
+    }
+    const InnerBundleInfo &bundleInfo = infoItem->second;
+    const InnerBundleUserInfo *innerBundleUserInfoPtr = nullptr;
+    if (!bundleInfo.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfoPtr)) {
+        return cliSandboxAppIndexes;
+    }
+    if (!innerBundleUserInfoPtr) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by GetCliSandboxAppIndexes is null");
+        return cliSandboxAppIndexes;
+    }
+    for (const auto &sandboxInfo : innerBundleUserInfoPtr->sandboxInfos) {
+        LOG_I(BMS_TAG_QUERY, "get cliSandboxAppIndexes: %{public}d", sandboxInfo.second.appIndex);
+        cliSandboxAppIndexes.emplace_back(sandboxInfo.second.appIndex);
+    }
+    return cliSandboxAppIndexes;
+}
+
 std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesNoLock(const std::string &bundleName, int32_t userId) const
 {
     std::vector<int32_t> cloneAppIndexes;
@@ -4755,6 +4792,8 @@ void BundleDataMgr::GetBundleCacheInfo(
     info.GetModuleNames(moduleNameList);
     std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, userId);
     cloneAppIndexes.emplace_back(0);
+    std::vector<int32_t> cliSandboxAppIndexes = GetCliSandboxAppIndexesByInnerBundleInfo(info, userId);
+    cloneAppIndexes.insert(cloneAppIndexes.end(), cliSandboxAppIndexes.begin(), cliSandboxAppIndexes.end());
     std::vector<int32_t> allAppIndexes = cloneAppIndexes;
     if (isClean) {
         allAppIndexes = idxFilter(bundleName, cloneAppIndexes);
@@ -5109,6 +5148,8 @@ void BundleDataMgr::GetAllInstallBundleUids(const int32_t userId, const int32_t 
         if (type == BundleType::APP) {
             std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, responseUserId);
             allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
+            std::vector<int32_t> cliAppIndexes = GetCliSandboxAppIndexesByInnerBundleInfo(info, responseUserId);
+            allAppIndexes.insert(allAppIndexes.end(), cliAppIndexes.begin(), cliAppIndexes.end());
         }
         for (int32_t appIndex: allAppIndexes) {
             int32_t uid = info.GetUid(responseUserId, appIndex);
@@ -6421,6 +6462,20 @@ bool BundleDataMgr::RestoreUidAndGid()
                 BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH,
                     info.second.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
                 UpdateUidMap(cloneInfo.uid, bundleName, cloneInfo.appIndex);
+            }
+            // cli sandbox
+            const auto &cliSandboxInfos = innerBundleUserInfo.sandboxInfos;
+            for (auto iter = cliSandboxInfos.begin(); iter != cliSandboxInfos.end(); iter++) {
+                auto &cliInfo = iter->second;
+                int32_t bundleId = cliInfo.uid - cliInfo.userId * Constants::BASE_USER_RANGE;
+                std::string cliBundleName =
+                    BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, cliInfo.appIndex);
+                BundleUtil::MakeFsConfig(cliBundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(cliBundleName, bundleId,
+                    ServiceConstants::SHAREFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH,
+                    info.second.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
+                UpdateUidMap(cliInfo.uid, bundleName, cliInfo.appIndex);
             }
         }
     }
@@ -12752,6 +12807,30 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesByInnerBundleInfo(const In
     return cloneAppIndexes;
 }
 
+std::vector<int32_t> BundleDataMgr::GetCliSandboxAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
+    int32_t userId) const
+{
+    std::vector<int32_t> cliSandboxAppIndexes;
+    const InnerBundleUserInfo *innerBundleUserInfoPtr = nullptr;
+    if (!innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfoPtr)) {
+        return cliSandboxAppIndexes;
+    }
+    if (!innerBundleUserInfoPtr) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "The InnerBundleInfo is null");
+        return cliSandboxAppIndexes;
+    }
+    const std::map<std::string, InnerCliSandboxInfo> &cliSandboxInfos = innerBundleUserInfoPtr->sandboxInfos;
+    if (cliSandboxInfos.empty()) {
+        return cliSandboxAppIndexes;
+    }
+    for (const auto &cliSandboxInfo : cliSandboxInfos) {
+        LOG_D(BMS_TAG_QUERY, "get cliSandboxAppIndexes by inner bundle info: %{public}d",
+            cliSandboxInfo.second.appIndex);
+        cliSandboxAppIndexes.emplace_back(cliSandboxInfo.second.appIndex);
+    }
+    return cliSandboxAppIndexes;
+}
+
 ErrCode BundleDataMgr::GetBundleDir(int32_t userId, BundleType type, AccountSA::OhosAccountInfo &accountInfo,
     BundleDir &bundleDir) const
 {
@@ -14345,12 +14424,17 @@ ErrCode BundleDataMgr::GetCreateDirParamByBundleOption(
         createDirParam.uid = innerBundleUserInfo.uid;
     } else {
         auto cloneInfo = innerBundleUserInfo.cloneInfos.find(InnerBundleUserInfo::AppIndexToKey(optionInfo.appIndex));
-        if (cloneInfo == innerBundleUserInfo.cloneInfos.end()) {
+        auto cliSandboxInfo =
+            innerBundleUserInfo.sandboxInfos.find(InnerBundleUserInfo::AppIndexToKey(optionInfo.appIndex));
+        if (cloneInfo != innerBundleUserInfo.cloneInfos.end()) {
+            createDirParam.uid = cloneInfo->second.uid;
+        } else if (cliSandboxInfo != innerBundleUserInfo.sandboxInfos.end()) {
+            createDirParam.uid = cliSandboxInfo->second.uid;
+        } else {
             APP_LOGE("can not find in -u %{public}d -i %{public}d -n%{public}s",
                 optionInfo.userId, optionInfo.appIndex, optionInfo.bundleName.c_str());
             return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
         }
-        createDirParam.uid = cloneInfo->second.uid;
     }
     createDirParam.bundleName = item->second.GetBundleName();
     createDirParam.apl = item->second.GetAppPrivilegeLevel();
@@ -14410,7 +14494,8 @@ bool BundleDataMgr::ProcessIdleInfo() const
             bundleOptionInfo.userId = userInfo.second.bundleUserInfo.userId;
             bundleOptionInfos.emplace_back(bundleOptionInfo);
             auto cloneInfos = userInfo.second.cloneInfos;
-            if (cloneInfos.empty()) {
+            auto cliSandboxInfos = userInfo.second.sandboxInfos;
+            if (cloneInfos.empty() && cliSandboxInfos.empty()) {
                 continue;
             }
             for (const auto &cloneInfo : cloneInfos) {
@@ -14419,6 +14504,13 @@ bool BundleDataMgr::ProcessIdleInfo() const
                 bundleCloneInfo.userId = cloneInfo.second.userId;
                 bundleCloneInfo.appIndex = cloneInfo.second.appIndex;
                 bundleOptionInfos.emplace_back(bundleCloneInfo);
+            }
+            for (const auto &cliInfo : cliSandboxInfos) {
+                BundleOptionInfo bundleCliInfo;
+                bundleCliInfo.bundleName = bundleName;
+                bundleCliInfo.userId = cliInfo.second.userId;
+                bundleCliInfo.appIndex = cliInfo.second.appIndex;
+                bundleOptionInfos.emplace_back(bundleCliInfo);
             }
         }
     }

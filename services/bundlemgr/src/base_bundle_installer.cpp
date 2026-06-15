@@ -46,6 +46,7 @@
 #include "app_provision_info_manager.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_update_selinux_mgr.h"
+#include "bundle_cli_sandbox_installer.h"
 #include "bundle_clone_installer.h"
 #include "bundle_file_util.h"
 #include "bundle_permission_mgr.h"
@@ -2344,6 +2345,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::shared_ptr<BundleCloneInstaller> cloneInstaller = std::make_shared<BundleCloneInstaller>();
     cloneInstaller->UninstallAllCloneApps(bundleName, installParam.isRemoveUser, installParam.isKeepData,
         installParam.userId);
+    // Uninstall all CLI sandbox apps
+    auto cliSandboxInstaller = std::make_shared<BundleCliSandboxInstaller>();
+    cliSandboxInstaller->DestroyAllCliSandboxApps(bundleName, userId_);
 
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
@@ -3872,6 +3876,17 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
                 return cloneRet;
             }
         }
+        const auto &cliSandboxInfos = userInfo.sandboxInfos;
+        for (const auto &cliInfoPair : cliSandboxInfos) {
+            std::string cliBundleName = BundleCloneCommonHelper::GetCloneDataDir(
+                info.GetBundleName(), cliInfoPair.second.appIndex);
+            createDirParam.uid = cliInfoPair.second.uid;
+            ErrCode ret = this->SetDirApl(createDirParam, cliBundleName);
+            if (ret != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl cli sandbox dir, error is %{public}d", ret);
+                return ret;
+            }
+        }
     }
     return ERR_OK;
 }
@@ -4222,6 +4237,13 @@ void BaseBundleInstaller::CreateEl5AndSetPolicy(InnerBundleInfo &info, bool with
         cloneParam.gid = cloneInfo.second.uid;
         cloneParam.appIndex = cloneInfo.second.appIndex;
         params.emplace_back(cloneParam);
+    }
+    for (const auto &cliSandboxInfo : userInfo.sandboxInfos) {
+        CreateDirParam cliParam = el5Param;
+        cliParam.uid = cliSandboxInfo.second.uid;
+        cliParam.gid = cliSandboxInfo.second.uid;
+        cliParam.appIndex = cliSandboxInfo.second.appIndex;
+        params.emplace_back(cliParam);
     }
     dataMgr_->CreateEl5DirNoCache(params, info);
     tempInfo_.SetTempBundleInfo(info);
@@ -5021,6 +5043,21 @@ int32_t BaseBundleInstaller::UpdateMultiUserInstances(
             failCount++;
         }
     }
+    // 3. update cli sanbox shareFiles
+    for (const auto &[appIndexKey, cliSandboxInfo] : userInfo.sandboxInfos) {
+        int32_t appIndex = cliSandboxInfo.appIndex;
+        uint32_t cliTokenId = cliSandboxInfo.accessTokenId;
+        std::string cliBundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
+
+        ret = ShareFileHelper::UpdateShareFileInfo(
+            shareFilesJson, cliBundleName, userId, cliTokenId);
+        if (ret != 0) {
+            LOG_E(BMS_TAG_INSTALLER,
+                "Failed to update shareFiles for %{public}s, userId=%{public}d, ret=%{public}d",
+                cliBundleName.c_str(), userId, ret);
+            failCount++;
+        }
+    }
     return failCount;
 }
 
@@ -5228,6 +5265,24 @@ int32_t BaseBundleInstaller::RollbackUserInstances(const InnerBundleUserInfo &us
         } else {
             LOG_I(BMS_TAG_INSTALLER,
                 "Rollback: successfully restored for %{public}s userId=%{public}d", cloneBundleName.c_str(), userId);
+        }
+    }
+    // 3. update cli sanbox shareFiles
+    for (const auto &[appIndexKey, cliSandboxInfo] : userInfo.sandboxInfos) {
+        int32_t appIndex = cliSandboxInfo.appIndex;
+        uint32_t cliTokenId = cliSandboxInfo.accessTokenId;
+        std::string cliBundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName_, appIndex);
+
+        ret = ShareFileHelper::UpdateShareFileInfo(
+            oldShareFilesJson_, cliBundleName, userId, cliTokenId);
+        if (ret != 0) {
+            LOG_W(BMS_TAG_INSTALLER,
+                "Rollback: failed to restore shareFiles for %{public}s userId=%{public}d, ret=%{public}d",
+                cliBundleName.c_str(), userId, ret);
+            failCount++;
+        } else {
+            LOG_I(BMS_TAG_INSTALLER,
+                "Rollback: restored shareFiles for %{public}s userId=%{public}d", cliBundleName.c_str(), userId);
         }
     }
     return failCount;
@@ -6478,6 +6533,14 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
             if (!AbilityManagerHelper::UninstallApplicationProcesses(
                 info.GetApplicationName(), cloneInfo.second.uid, true, atoi(cloneInfo.first.c_str()))) {
                 LOG_W(BMS_TAG_INSTALLER, "fail to kill clone application");
+            }
+        }
+        // kill cli sandbox
+        for (auto &cliSandboxInfo : userInfo.sandboxInfos) {
+            if (!AbilityManagerHelper::UninstallApplicationProcesses(
+                info.GetApplicationName(), cliSandboxInfo.second.uid, true, atoi(cliSandboxInfo.first.c_str()))) {
+                LOG_W(BMS_TAG_INSTALLER, "fail to kill cli sandbox, %{public}s %{public}s",
+                    info.GetApplicationName().c_str(), cliSandboxInfo.first.c_str());
             }
         }
     }
@@ -9456,6 +9519,14 @@ void BaseBundleInstaller::UpdateKillApplicationProcess(const InnerBundleInfo &ol
             if (!AbilityManagerHelper::UninstallApplicationProcesses(
                 oldInfo.GetApplicationName(), cloneInfo.second.uid, true, atoi(cloneInfo.first.c_str()))) {
                 LOG_W(BMS_TAG_INSTALLER, "fail to kill clone application");
+            }
+        }
+        // kill cli sandbox
+        for (auto &sandboxInfo : userInfo.sandboxInfos) {
+            if (!AbilityManagerHelper::UninstallApplicationProcesses(
+                oldInfo.GetApplicationName(), sandboxInfo.second.uid, true, atoi(sandboxInfo.first.c_str()))) {
+                LOG_W(BMS_TAG_INSTALLER, "fail to kill cli sandbox: %{public}s, %{public}s",
+                    oldInfo.GetApplicationName().c_str(), sandboxInfo.first.c_str());
             }
         }
     }

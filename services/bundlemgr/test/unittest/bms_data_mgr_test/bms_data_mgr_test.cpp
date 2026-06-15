@@ -13173,4 +13173,159 @@ HWTEST_F(BmsDataMgrTest, ImplicitQueryAllExtensionFlagsMapping_0200, Function | 
     dataMgr.ImplicitQueryAllExtensionInfos(want, flags, USERID, infos, 0);
     EXPECT_FALSE(infos.empty());
 }
+
+/**
+ * @tc.number: GetCliSandboxAppIndexes_0100
+ * @tc.name: GetCliSandboxAppIndexes
+ * @tc.desc: test GetCliSandboxAppIndexes with empty bundle name
+ */
+HWTEST_F(BmsDataMgrTest, GetCliSandboxAppIndexes_0100, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<int32_t> cliSandboxAppIndexes;
+    std::string bundleName = "";
+    int32_t userId = Constants::ANY_USERID;
+    auto ret = bundleDataMgr.GetCliSandboxAppIndexes(bundleName, userId);
+    EXPECT_EQ(ret, cliSandboxAppIndexes);
+    EXPECT_TRUE(ret.empty());
+}
+
+/**
+ * @tc.number: GetCliSandboxAppIndexes_0200
+ * @tc.name: GetCliSandboxAppIndexes
+ * @tc.desc: test GetCliSandboxAppIndexes with non-existent bundle
+ */
+HWTEST_F(BmsDataMgrTest, GetCliSandboxAppIndexes_0200, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<int32_t> cliSandboxAppIndexes;
+    std::string bundleName = "com.nonexistent.bundle";
+    int32_t userId = USERID;
+    auto ret = bundleDataMgr.GetCliSandboxAppIndexes(bundleName, userId);
+    EXPECT_EQ(ret, cliSandboxAppIndexes);
+    EXPECT_TRUE(ret.empty());
+}
+
+static InnerBundleInfo CreateDefaultInnerBundleInfo(const std::string &bundleName, int32_t userId)
+{
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    ApplicationInfo appInfo;
+    appInfo.name = bundleName;
+    appInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = userId;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    return innerBundleInfo;
+}
+
+/**
+ * @tc.number: GetCliSandboxAppIndexes_0300
+ * @tc.name: GetCliSandboxAppIndexes
+ * @tc.desc: test GetCliSandboxAppIndexes with valid bundle but no CLI sandbox apps
+ */
+HWTEST_F(BmsDataMgrTest, GetCliSandboxAppIndexes_0300, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(USERID);
+    auto bundleInfo = CreateDefaultInnerBundleInfo(BUNDLE_NAME, USERID);
+    bundleDataMgr.bundleInfos_[BUNDLE_NAME] = bundleInfo;
+
+    std::vector<int32_t> cliSandboxAppIndexes;
+    auto ret = bundleDataMgr.GetCliSandboxAppIndexes(BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, cliSandboxAppIndexes);
+    EXPECT_TRUE(ret.empty());
+}
+
+/**
+ * @tc.number: GetCliSandboxAppIndexes_0400
+ * @tc.name: GetCliSandboxAppIndexes
+ * @tc.desc: test GetCliSandboxAppIndexes with bundle containing CLI sandbox apps
+ */
+HWTEST_F(BmsDataMgrTest, GetCliSandboxAppIndexes_0400, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(USERID);
+    auto bundleInfo = CreateDefaultInnerBundleInfo(BUNDLE_NAME, USERID);
+
+    // Add CLI sandbox info to the bundle
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.userId = USERID;
+    sandboxInfo.appIndex = ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN;
+    sandboxInfo.uid = 200100;
+    sandboxInfo.accessTokenId = 12345;
+    std::string key = InnerBundleUserInfo::AppIndexToKey(sandboxInfo.appIndex);
+    userInfo.sandboxInfos[key] = sandboxInfo;
+    bundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    bundleDataMgr.bundleInfos_[BUNDLE_NAME] = bundleInfo;
+
+    std::vector<int32_t> cliSandboxAppIndexes;
+    auto ret = bundleDataMgr.GetCliSandboxAppIndexes(BUNDLE_NAME, USERID);
+    EXPECT_FALSE(ret.empty());
+    EXPECT_EQ(ret.size(), 1);
+    EXPECT_EQ(ret[0], ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN);
+}
+
+/**
+ * @tc.number: GetCliSandboxAppIndexesByInnerBundleInfo_0500
+ * @tc.name: GetCliSandboxAppIndexesByInnerBundleInfo
+ * @tc.desc: test GetCliSandboxAppIndexesByInnerBundleInfo with empty CLI sandbox apps
+ */
+HWTEST_F(BmsDataMgrTest, GetCliSandboxAppIndexesByInnerBundleInfo_0500, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    auto bundleInfo = CreateDefaultInnerBundleInfo(BUNDLE_NAME, USERID);
+
+    std::vector<int32_t> cliSandboxAppIndexes;
+    auto ret = bundleDataMgr.GetCliSandboxAppIndexesByInnerBundleInfo(bundleInfo, USERID);
+    EXPECT_EQ(ret, cliSandboxAppIndexes);
+    EXPECT_TRUE(ret.empty());
+}
+
+/**
+ * @tc.number: GetCliSandboxAppIndexesByInnerBundleInfo_0600
+ * @tc.name: GetCliSandboxAppIndexesByInnerBundleInfo
+ * @tc.desc: test GetCliSandboxAppIndexesByInnerBundleInfo with CLI sandbox apps
+ */
+HWTEST_F(BmsDataMgrTest, GetCliSandboxAppIndexesByInnerBundleInfo_0600, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    auto bundleInfo = CreateDefaultInnerBundleInfo(BUNDLE_NAME, USERID);
+
+    // Add multiple CLI sandbox apps
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+
+    InnerCliSandboxInfo sandboxInfo1;
+    sandboxInfo1.userId = USERID;
+    sandboxInfo1.appIndex = ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN;
+    sandboxInfo1.uid = 200100;
+    sandboxInfo1.accessTokenId = 12345;
+    std::string key1 = InnerBundleUserInfo::AppIndexToKey(sandboxInfo1.appIndex);
+    userInfo.sandboxInfos[key1] = sandboxInfo1;
+
+    InnerCliSandboxInfo sandboxInfo2;
+    sandboxInfo2.userId = USERID;
+    sandboxInfo2.appIndex = ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN + 1;
+    sandboxInfo2.uid = 200101;
+    sandboxInfo2.accessTokenId = 12346;
+    std::string key2 = InnerBundleUserInfo::AppIndexToKey(sandboxInfo2.appIndex);
+    userInfo.sandboxInfos[key2] = sandboxInfo2;
+
+    bundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    std::vector<int32_t> cliSandboxAppIndexes;
+    auto ret = bundleDataMgr.GetCliSandboxAppIndexesByInnerBundleInfo(bundleInfo, USERID);
+    EXPECT_FALSE(ret.empty());
+    EXPECT_EQ(ret.size(), 2);
+}
 } // OHOS

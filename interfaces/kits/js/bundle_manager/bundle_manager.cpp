@@ -2399,7 +2399,9 @@ bool ParseCleanBundleCacheFilesAppIndex(napi_env env, napi_value args, int32_t &
         BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
         return false;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (appIndex < Constants::MAIN_APP_INDEX ||
+        (appIndex > BundleFileUtil::GetCloneMaxCount() && appIndex < Constants::CLI_SANDBOX_APP_INDEX_MIN) ||
+        appIndex > Constants::CLI_SANDBOX_APP_INDEX_MAX) {
         APP_LOGE("appIndex: %{public}d not in valid range", appIndex);
         BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
         return false;

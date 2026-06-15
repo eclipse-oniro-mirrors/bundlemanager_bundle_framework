@@ -215,6 +215,13 @@ bool UpdateAppDataMgr::CreateEl5Dir(const CreateDirParam &createDirParam)
                 cloneParam.appIndex = cloneInfo.second.appIndex;
                 params.emplace_back(cloneParam);
             }
+            for (const auto &cliSandboxInfo : userInfo.sandboxInfos) {
+                CreateDirParam cliParam = createDirParam;
+                cliParam.uid = cliSandboxInfo.second.uid;
+                cliParam.gid = cliSandboxInfo.second.uid;
+                cliParam.appIndex = cliSandboxInfo.second.appIndex;
+                params.emplace_back(cliParam);
+            }
         }
     }
     dataMgr->CreateEl5Dir(params, true);

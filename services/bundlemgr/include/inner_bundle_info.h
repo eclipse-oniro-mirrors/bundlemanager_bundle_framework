@@ -829,12 +829,19 @@ public:
             APP_LOGE_NOFUNC("The InnerBundleInfo obtained by GetUid is null");
             return Constants::INVALID_UID;
         }
-        
         if (appIndex != 0) {
+            // Check clone app first
             auto iter = innerBundleUserInfoPtr->cloneInfos.find(std::to_string(appIndex));
             if (iter != innerBundleUserInfoPtr->cloneInfos.end()) {
                 return iter->second.uid;
             }
+            // Then check CLI sandbox app
+            auto cliIter = innerBundleUserInfoPtr->sandboxInfos.find(
+                InnerBundleUserInfo::AppIndexToKey(appIndex));
+            if (cliIter != innerBundleUserInfoPtr->sandboxInfos.end()) {
+                return cliIter->second.uid;
+            }
+
             return Constants::INVALID_UID;
         }
 

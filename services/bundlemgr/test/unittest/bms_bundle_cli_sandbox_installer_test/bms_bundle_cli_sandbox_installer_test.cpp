@@ -566,4 +566,102 @@ HWTEST_F(BmsBundleCliSandboxInstallerTest, BmsBundleCliSandboxInstallerTest_2100
     auto result = installer_->GetActualCreatorBundleName(OTHER_CALLER, ENV_CALLER_BUNDLE_NAME, USER_ID);
     EXPECT_EQ(result, OTHER_CALLER);
 }
+
+/**
+ * @tc.number: DestroyAllCliSandboxApps_0100
+ * @tc.name: DestroyAllCliSandboxApps - Empty Bundle Name
+ * @tc.desc: Test DestroyAllCliSandboxApps with empty bundle name
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, DestroyAllCliSandboxApps_0100, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    auto result = installer_->DestroyAllCliSandboxApps("", USER_ID);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INVALID_BUNDLE_NAME);
+    UnsetBundleDataMgr();
+}
+
+/**
+ * @tc.number: DestroyAllCliSandboxApps_0200
+ * @tc.name: DestroyAllCliSandboxApps - Non-existent Bundle
+ * @tc.desc: Test DestroyAllCliSandboxApps with non-existent bundle
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, DestroyAllCliSandboxApps_0200, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    SetUserIdToDataMgr(USER_ID);
+    auto result = installer_->DestroyAllCliSandboxApps("non.existent.bundle", USER_ID);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_APP_NOT_EXISTED);
+    UnsetBundleDataMgr();
+}
+
+/**
+ * @tc.number: DestroyAllCliSandboxApps_0300
+ * @tc.name: DestroyAllCliSandboxApps - Bundle Without CLI Sandbox
+ * @tc.desc: Test DestroyAllCliSandboxApps with bundle that has no CLI sandbox apps
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, DestroyAllCliSandboxApps_0300, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    SetUserIdToDataMgr(USER_ID);
+    SetBundleInfoWithSandbox(BUNDLE_NAME, USER_ID, 0, {});
+    auto result = installer_->DestroyAllCliSandboxApps(BUNDLE_NAME, USER_ID);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INTERNAL_ERROR);
+    DeleteBundle(BUNDLE_NAME);
+    UnsetBundleDataMgr();
+}
+
+/**
+ * @tc.number: DestroyAllCliSandboxApps_0400
+ * @tc.name: DestroyAllCliSandboxApps - Bundle With CLI Sandbox
+ * @tc.desc: Test DestroyAllCliSandboxApps with bundle that has CLI sandbox apps
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, DestroyAllCliSandboxApps_0400, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    SetUserIdToDataMgr(USER_ID);
+    std::vector<std::string> callers = {CREATOR_BUNDLE_NAME};
+    SetBundleInfoWithSandbox(BUNDLE_NAME, USER_ID, VALID_APP_INDEX, callers);
+    auto result = installer_->DestroyAllCliSandboxApps(BUNDLE_NAME, USER_ID);
+    EXPECT_EQ(result, ERR_OK);
+    DeleteBundle(BUNDLE_NAME);
+    UnsetBundleDataMgr();
+}
+
+/**
+ * @tc.number: DestroyAllCliSandboxApps_0500
+ * @tc.name: DestroyAllCliSandboxApps - Multiple CLI Sandbox Apps
+ * @tc.desc: Test DestroyAllCliSandboxApps with bundle that has multiple CLI sandbox apps
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, DestroyAllCliSandboxApps_0500, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    SetUserIdToDataMgr(USER_ID);
+    std::vector<std::string> callers1 = {CREATOR_BUNDLE_NAME};
+    std::vector<std::string> callers2 = {ENV_CALLER_BUNDLE_NAME};
+    SetBundleInfoWithSandbox(BUNDLE_NAME, USER_ID, VALID_APP_INDEX, callers1);
+    SetBundleInfoWithSandbox(BUNDLE_NAME, USER_ID, VALID_APP_INDEX + 1, callers2);
+    auto result = installer_->DestroyAllCliSandboxApps(BUNDLE_NAME, USER_ID);
+    EXPECT_EQ(result, ERR_OK);
+    DeleteBundle(BUNDLE_NAME);
+    UnsetBundleDataMgr();
+}
+
+/**
+ * @tc.number: DestroyAllCliSandboxApps_0600
+ * @tc.name: DestroyAllCliSandboxApps - Invalid User ID
+ * @tc.desc: Test DestroyAllCliSandboxApps with invalid user ID
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, DestroyAllCliSandboxApps_0600, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    auto result = installer_->DestroyAllCliSandboxApps(BUNDLE_NAME, 999);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_USER_NOT_EXIST);
+    UnsetBundleDataMgr();
+}
 } // namespace OHOS
