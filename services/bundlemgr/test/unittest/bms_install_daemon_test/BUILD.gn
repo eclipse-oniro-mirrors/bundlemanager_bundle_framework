@@ -453,9 +453,7 @@ group("unittest") {
       ":BmsInstallDaemonTest",
       ":BmsInstalldOperatorTest"
     ]
-    if (is_emulator) {
-      defines += [ "X86_EMULATOR_MODE" ]
-    } else {
+    if (!is_emulator) {
       deps += [
         ":BmsInstallDaemonHostImplTest",
         ":BmsInstallDaemonOperatorTest",
