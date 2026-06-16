@@ -226,6 +226,22 @@ public:
     {
         return ERR_OK;
     }
+
+    /**
+     * @brief Destroy CLI sandbox application.
+     * @param creatorBundleName Indicates the creator bundle name.
+     * @param envCallerBundleName Indicates the env caller bundle name.
+     * @param bundleName Indicates the bundle name of the application to destroy sandbox.
+     * @param userId Indicates the user id.
+     * @param appIndex Indicates the appIndex of the sandbox to destroy.
+     * @return Returns ERR_OK if the CLI sandbox application is destroyed successfully; returns errcode otherwise.
+     */
+    virtual ErrCode DestroyCliSandboxApp(const std::string &creatorBundleName,
+        const std::string &envCallerBundleName, const std::string &bundleName,
+        int32_t userId, int32_t appIndex)
+    {
+        return ERR_OK;
+    }
 };
 
 #define PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                                 \

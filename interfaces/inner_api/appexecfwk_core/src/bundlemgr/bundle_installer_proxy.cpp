@@ -1210,5 +1210,48 @@ ErrCode BundleInstallerProxy::CreateCliSandboxApp(const std::string &callerBundl
     }
     return res;
 }
+
+ErrCode BundleInstallerProxy::DestroyCliSandboxApp(const std::string &creatorBundleName,
+    const std::string &envCallerBundleName, const std::string &bundleName,
+    int32_t userId, int32_t appIndex)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to DestroyCliSandboxApp due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(creatorBundleName))) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to DestroyCliSandboxApp due to write creatorBundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(envCallerBundleName))) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to DestroyCliSandboxApp due to write envCallerBundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(bundleName))) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to DestroyCliSandboxApp due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to DestroyCliSandboxApp due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to DestroyCliSandboxApp due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto ret = SendInstallRequestWithErrCode(
+        BundleInstallerInterfaceCode::DESTROY_CLI_SANDBOX_APP, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "DestroyCliSandboxApp failed due to send request fail");
+        return ret;
+    }
+    return reply.ReadInt32();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
