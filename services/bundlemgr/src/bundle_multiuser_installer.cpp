@@ -186,9 +186,6 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     }
 
     // uid
-    InnerBundleUserInfo newUserInfo;
-    newUserInfo.bundleName = bundleName;
-    newUserInfo.bundleUserInfo.userId = userId;
     ErrCode ret = ERR_OK;
     int32_t uid = 0;
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
@@ -224,8 +221,9 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID, bundleName);
         dataMgr_->RemoveUidFromMap(uid);
     });
-    newUserInfo.accessTokenId = newTokenIdEx.tokenIdExStruct.tokenID;
-    newUserInfo.accessTokenIdEx = newTokenIdEx.tokenIDEx;
+    info.SetAccessTokenIdEx(newTokenIdEx, userId);
+    InnerBundleUserInfo newUserInfo;
+    info.GetInnerBundleUserInfo(userId, newUserInfo);
     uid_ = uid;
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
     int64_t now = BundleUtil::GetCurrentTimeMs();
