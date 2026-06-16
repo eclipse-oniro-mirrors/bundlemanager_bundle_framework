@@ -10447,7 +10447,7 @@ HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0010, Function | Small
 
     RequestPermission requestPermission;
     requestPermission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
-    innerBundleInfo.innerModuleInfos_.begin()->second.requestPermissions.emplace_back(requestPermission);
+    innerBundleInfo.innerModuleInfos_.begin()->second.bundlePermissions.AddPermission(requestPermission);
 
     EXPECT_TRUE(dataMgr->UpdateInnerBundleInfo(innerBundleInfo, false));
 

@@ -4982,7 +4982,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8500, Function | Smal
     RequestPermission requestPermission;
     requestPermission.name = TEST_NAME;
     requestPermissions.push_back(requestPermission);
-    innerModuleInfo.requestPermissions = requestPermissions;
+    innerModuleInfo.bundlePermissions = ToBundlePermissions(requestPermissions);
     std::vector<Metadata> metadatas;
     Metadata metadata;
     metadata.name = NAME;
@@ -5784,7 +5784,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationInfoV9_0001, Function |
     RequestPermission requestPermission;
     requestPermission.name = TEST_NAME;
     requestPermissions.push_back(requestPermission);
-    innerModuleInfo.requestPermissions = requestPermissions;
+    innerModuleInfo.bundlePermissions = ToBundlePermissions(requestPermissions);
     CustomizeData customizeData1;
     customizeData1.name = NAME;
     customizeData1.value = "test";

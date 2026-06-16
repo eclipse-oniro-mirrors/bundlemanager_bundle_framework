@@ -34,6 +34,7 @@ ohos_unittest("BmsBundleCommonEventMgrTest") {
   ]
 
   sources += [
+    "${services_path}/bundlemgr/src/bundle_permissions.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",

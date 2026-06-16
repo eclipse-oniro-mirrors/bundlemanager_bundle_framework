@@ -12375,7 +12375,7 @@ HWTEST_F(BmsDataMgrTest, GetSkillInfoWithFlags_0001, Function | SmallTest | Leve
     InnerModuleInfo moduleInfo;
     RequestPermission requestPermission;
     requestPermission.name = "ohos.permission.CAMERA";
-    moduleInfo.requestPermissions.push_back(requestPermission);
+    moduleInfo.bundlePermissions.AddPermission(requestPermission);
     SkillProfile profile;
     uint32_t flag = static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_REQUEST_PERMISSIONS);
     SkillInfo skillInfo;

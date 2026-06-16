@@ -29,6 +29,7 @@ ohos_unittest("BmsBundleParserTest") {
   module_out_path = module_output_path
 
   sources = [
+    "${services_path}/bundlemgr/src/bundle_permissions.cpp",
     "${services_path}/bundlemgr/src/bundle_util.cpp",
     "${services_path}/bundlemgr/src/common/single_delayed_task_mgr.cpp",
     "${services_path}/bundlemgr/src/data/inner_ability_info.cpp",

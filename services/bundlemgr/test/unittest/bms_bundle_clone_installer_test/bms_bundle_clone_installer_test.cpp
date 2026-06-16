@@ -503,7 +503,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, CreateEl5Dir_0100, Function | SmallTest | 
     requestPermission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.moduleName = "testname";
-    innerModuleInfo.requestPermissions.emplace_back(requestPermission);
+    innerModuleInfo.bundlePermissions.AddPermission(requestPermission);
     innerBundleInfo.innerModuleInfos_.try_emplace("test", innerModuleInfo);
     bundleCloneInstall_->CreateEl5Dir(innerBundleInfo, uid, userId, appIndex);
     EXPECT_EQ(bundleCloneInstall_->GetDataMgr(), ERR_OK);

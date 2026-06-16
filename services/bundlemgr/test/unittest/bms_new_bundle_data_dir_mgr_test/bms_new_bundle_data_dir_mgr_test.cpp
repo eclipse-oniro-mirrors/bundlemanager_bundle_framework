@@ -342,7 +342,7 @@ HWTEST_F(BmsNewBundleDataDirMgrTest, InnerProcessOtaNewInstallBundleDir_0003, Fu
         InnerModuleInfo moduleInfo;
         RequestPermission requestPermission;
         requestPermission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
-        moduleInfo.requestPermissions.emplace_back(requestPermission);
+        moduleInfo.bundlePermissions.AddPermission(requestPermission);
         bundleInfo.innerModuleInfos_[BUNDLE_NAME] = moduleInfo;
         bundleInfo.dataGroupInfos_[BUNDLE_NAME] = {};
         savedDataMgr->bundleInfos_[BUNDLE_NAME] = bundleInfo;
@@ -436,7 +436,7 @@ HWTEST_F(BmsNewBundleDataDirMgrTest, InnerProcessOtaBundleDataDirEl5_0004, Funct
         InnerModuleInfo moduleInfo;
         RequestPermission requestPermission;
         requestPermission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
-        moduleInfo.requestPermissions.emplace_back(requestPermission);
+        moduleInfo.bundlePermissions.AddPermission(requestPermission);
         bundleInfo.innerModuleInfos_[BUNDLE_NAME] = moduleInfo;
         savedDataMgr->bundleInfos_[BUNDLE_NAME] = bundleInfo;
         bool ret = newBundleDirMgr->InnerProcessOtaBundleDataDirEl5(BUNDLE_NAME, USER_ID);
@@ -464,7 +464,7 @@ HWTEST_F(BmsNewBundleDataDirMgrTest, InnerProcessOtaBundleDataDirEl5_0005, Funct
         InnerModuleInfo moduleInfo;
         RequestPermission requestPermission;
         requestPermission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
-        moduleInfo.requestPermissions.emplace_back(requestPermission);
+        moduleInfo.bundlePermissions.AddPermission(requestPermission);
         bundleInfo.innerModuleInfos_[BUNDLE_NAME] = moduleInfo;
         InnerBundleUserInfo userInfo;
         userInfo.uid = 0;

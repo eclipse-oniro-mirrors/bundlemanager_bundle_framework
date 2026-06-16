@@ -548,7 +548,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_SKILL_PROFILES, info.skillProfiles},
         {MODULE_HNP_PACKAGE, info.hnpPackages},
         {MODULE_EXECUTABLE_BINARY_PATHS, info.executableBinaryPaths},
-        {MODULE_REQUEST_PERMISSIONS, info.requestPermissions},
+        // moduleName left empty to match the legacy on-disk format
+        {MODULE_REQUEST_PERMISSIONS, ToRequestPermissions(info.bundlePermissions)},
         {MODULE_DEFINE_PERMISSIONS, info.definePermissions},
         {MODULE_EXTENSION_KEYS, info.extensionKeys},
         {MODULE_EXTENSION_SKILL_KEYS, info.extensionSkillKeys},
@@ -952,14 +953,19 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::vector<RequestPermission>>(jsonObject,
-        jsonObjectEnd,
-        MODULE_REQUEST_PERMISSIONS,
-        info.requestPermissions,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::OBJECT);
+    // read the standard format, then store it compactly
+    {
+        std::vector<RequestPermission> tempRequestPermissions;
+        GetValueIfFindKey<std::vector<RequestPermission>>(jsonObject,
+            jsonObjectEnd,
+            MODULE_REQUEST_PERMISSIONS,
+            tempRequestPermissions,
+            JsonType::ARRAY,
+            false,
+            parseResult,
+            ArrayType::OBJECT);
+        info.bundlePermissions = ToBundlePermissions(tempRequestPermissions);
+    }
     GetValueIfFindKey<std::vector<DefinePermission>>(jsonObject,
         jsonObjectEnd,
         MODULE_DEFINE_PERMISSIONS,
@@ -2837,9 +2843,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
             appInfo.entryDir = info.second.modulePath;
         }
         if (withPermission) {
-            for (const auto &item : info.second.requestPermissions) {
-                appInfo.permissions.emplace_back(item.name);
-            }
+            info.second.bundlePermissions.AppendPermissionNames(appInfo.permissions);
         }
         if (withMetadata) {
             bool isModuleJson = info.second.isModuleJson;
@@ -2920,9 +2924,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
             appInfo.entryDir = info.second.modulePath;
         }
         if (withPermission) {
-            for (const auto &item : info.second.requestPermissions) {
-                appInfo.permissions.emplace_back(item.name);
-            }
+            info.second.bundlePermissions.AppendPermissionNames(appInfo.permissions);
         }
         if (withMetadata) {
             bool isModuleJson = info.second.isModuleJson;
@@ -3038,9 +3040,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
     for (const auto &info : innerModuleInfos_) {
         if ((static_cast<uint32_t>(flags) &
             (GET_BUNDLE_WITH_REQUESTED_PERMISSION | GET_BUNDLE_WITH_REQUESTED_PERMISSION_NO_DETAILED)) != 0) {
-            for (const auto &item : info.second.requestPermissions) {
-                bundleInfo.reqPermissions.push_back(item.name);
-            }
+            info.second.bundlePermissions.AppendPermissionNames(bundleInfo.reqPermissions);
             for (const auto &item : info.second.definePermissions) {
                 bundleInfo.defPermissions.push_back(item.name);
             }
@@ -3172,9 +3172,7 @@ void InnerBundleInfo::GetBundleWithReqPermissionsV9(
         return;
     }
     for (const auto &info : innerModuleInfos_) {
-        for (const auto &item : info.second.requestPermissions) {
-            bundleInfo.reqPermissions.push_back(item.name);
-        }
+        info.second.bundlePermissions.AppendPermissionNames(bundleInfo.reqPermissions);
         for (const auto &item : info.second.definePermissions) {
             bundleInfo.defPermissions.push_back(item.name);
         }
@@ -4054,12 +4052,12 @@ std::vector<RequestPermission> InnerBundleInfo::GetAllRequestPermissions() const
         if (info.second.needDelete) {
             continue;
         }
-        for (auto item : info.second.requestPermissions) {
-            item.moduleName = info.second.moduleName;
-            requestPermissions.push_back(item);
+        auto modulePermissions = ToRequestPermissions(info.second.bundlePermissions, info.second.moduleName);
+        for (auto &item : modulePermissions) {
             if (moduleNameMap.find(item.moduleName) == moduleNameMap.end()) {
                 moduleNameMap[item.moduleName] = info.second.distro.moduleType;
             }
+            requestPermissions.push_back(std::move(item));
         }
     }
     if (!requestPermissions.empty()) {
