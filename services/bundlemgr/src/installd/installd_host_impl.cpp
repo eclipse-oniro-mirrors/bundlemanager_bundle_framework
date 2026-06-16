@@ -806,6 +806,7 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(
                 info.profileBlock.get());
         }
     }
+    info.distributionCertificate = provisionInfo.bundleInfo.distributionCertificate;
 
     {
         std::lock_guard<std::mutex> lock(sessionProvisionCacheMutex_);
@@ -3848,16 +3849,14 @@ ErrCode InstalldHostImpl::CheckHspPluginCertValidity(const std::string &bundleNa
     if (queryRet != ERR_OK) {
         return queryRet;
     }
-    if (info.profileBlock == nullptr || info.profileBlockLength == 0) {
-        LOG_E(BMS_TAG_INSTALLD, "profileBlock not found in AT for sessionId=%{public}d", sessionId);
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    if (info.profileBlockLength > static_cast<uint32_t>(ServiceConstants::MAX_PROFILE_BLOCK_LENGTH)) {
-        LOG_E(BMS_TAG_INSTALLD, "profileBlockLength exceeds max: %{public}u", info.profileBlockLength);
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
     Security::Verify::HspPlugin hspPluginInfo;
-    auto ret = Security::Verify::ParseHspPluginInfo(info.profileBlockLength, info.profileBlock.get(), hspPluginInfo);
+    if (info.provisionType == Security::Verify::ProvisionType::DEBUG) {
+        LOG_E(BMS_TAG_INSTALLD, "Debug provision session, do not need check hsp plugin cert validity");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    } else {
+        hspPluginInfo.certType = Security::Verify::BinaryCertType::Binary_RELEASE;
+    }
+    auto ret = Security::Verify::ParseHspPluginInfo(info.distributionCertificate, hspPluginInfo);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "ParseHspPluginInfo failed %{public}d", ret);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
