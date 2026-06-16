@@ -196,14 +196,6 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
     NotifyPluginEvents(isPluginExist_ ? NotifyType::UPDATE : NotifyType::INSTALL, uid);
     SendPluginCommonEvent(hostBundleName, bundleName_,
         isPluginExist_ ? NotifyType::UPDATE : NotifyType::INSTALL);
-    if (!sessionCommitted_ && sessionId_ != 0) {
-        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, true, {});
-        if (finishRet != ERR_OK) {
-            APP_LOGE("FinishHapInstall failed, errCode:%{public}d", finishRet);
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
-        sessionCommitted_ = true;
-    }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "install plugin finished");
     return ERR_OK;
 }
@@ -864,7 +856,7 @@ ErrCode PluginInstaller::ProcessPluginInstall(const InnerBundleInfo &hostBundleI
     deleteDirGuard.Dismiss();
     dataRollBackGuard.Dismiss();
     if (!sessionCommitted_ && sessionId_ != 0) {
-        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, true, {});
+        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
         if (finishRet != ERR_OK) {
             APP_LOGE("FinishHapInstall failed, errCode:%{public}d", finishRet);
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
