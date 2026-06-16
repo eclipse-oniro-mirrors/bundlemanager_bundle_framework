@@ -2517,36 +2517,38 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSign
     if (queryRet != ERR_OK) {
         return queryRet;
     }
-    localParam.bundleName = info.bundleName;
-    localParam.isEnterpriseResigned = info.isEnterpriseResigned;
-    localParam.appIdentifier = (info.provisionType ==
-        static_cast<int32_t>(Security::Verify::ProvisionType::DEBUG)) ?
-        DEBUG_APP_IDENTIFIER : info.appIdentifier;
-    localParam.isEnterpriseBundle = (info.distributionType ==
-        static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE) ||
-        info.distributionType ==
-        static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_NORMAL) ||
-        info.distributionType ==
-        static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_MDM));
-    localParam.isInternaltestingBundle = (info.distributionType ==
-        static_cast<int32_t>(Security::Verify::AppDistType::INTERNALTESTING));
+    if (!info.bundleName.empty()) {
+        localParam.bundleName = info.bundleName;
+        localParam.isEnterpriseResigned = info.isEnterpriseResigned;
+        localParam.appIdentifier = (info.provisionType ==
+            static_cast<int32_t>(Security::Verify::ProvisionType::DEBUG)) ?
+            DEBUG_APP_IDENTIFIER : info.appIdentifier;
+        localParam.isEnterpriseBundle = (info.distributionType ==
+            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE) ||
+            info.distributionType ==
+            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_NORMAL) ||
+            info.distributionType ==
+            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_MDM));
+        localParam.isInternaltestingBundle = (info.distributionType ==
+            static_cast<int32_t>(Security::Verify::AppDistType::INTERNALTESTING));
+        if (info.profileBlock != nullptr && info.profileBlockLength > 0) {
+            auto tmpProfilePtr = std::make_unique<unsigned char[]>(info.profileBlockLength);
+            if (tmpProfilePtr == nullptr) {
+                LOG_E(BMS_TAG_INSTALLD, "allocate profileBlock failed");
+                return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+            }
+            if (memcpy_s(tmpProfilePtr.get(), info.profileBlockLength,
+                info.profileBlock.get(), info.profileBlockLength) != 0) {
+                LOG_E(BMS_TAG_INSTALLD, "memcpy_s profileBlock failed");
+                return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+            }
+            localParam.profileBlockLength = info.profileBlockLength;
+            localParam.profileBlock = std::move(tmpProfilePtr);
+        }
+    }
     if (!InstalldOperator::IsValidBundleName(localParam.bundleName)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function VerifyCodeSignature with invalid bundleName");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    if (info.profileBlock != nullptr && info.profileBlockLength > 0) {
-        auto tmpProfilePtr = std::make_unique<unsigned char[]>(info.profileBlockLength);
-        if (tmpProfilePtr == nullptr) {
-            LOG_E(BMS_TAG_INSTALLD, "allocate profileBlock failed");
-            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-        }
-        if (memcpy_s(tmpProfilePtr.get(), info.profileBlockLength,
-            info.profileBlock.get(), info.profileBlockLength) != 0) {
-            LOG_E(BMS_TAG_INSTALLD, "memcpy_s profileBlock failed");
-            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-        }
-        localParam.profileBlockLength = info.profileBlockLength;
-        localParam.profileBlock = std::move(tmpProfilePtr);
     }
 
     ErrCode ret = InstalldOperator::VerifyCodeSignature(localParam);
@@ -2736,32 +2738,34 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
     if (queryRet != ERR_OK) {
         return queryRet;
     }
-    localParam.bundleName = info.bundleName;
-    localParam.isEnterpriseResigned = info.isEnterpriseResigned;
-    localParam.appIdentifier = (info.provisionType ==
-        static_cast<int32_t>(Security::Verify::ProvisionType::DEBUG)) ?
-        DEBUG_APP_IDENTIFIER : info.appIdentifier;
-    localParam.isEnterpriseBundle = (info.distributionType ==
-        static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE) ||
-        info.distributionType ==
-        static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_NORMAL) ||
-        info.distributionType ==
-        static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_MDM));
-    localParam.isInternaltestingBundle = (info.distributionType ==
-        static_cast<int32_t>(Security::Verify::AppDistType::INTERNALTESTING));
-    if (info.profileBlock != nullptr && info.profileBlockLength > 0) {
-        auto tmpProfilePtr = std::make_unique<unsigned char[]>(info.profileBlockLength);
-        if (tmpProfilePtr == nullptr) {
-            LOG_E(BMS_TAG_INSTALLD, "allocate profileBlock failed");
-            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    if (!info.bundleName.empty()) {
+        localParam.bundleName = info.bundleName;
+        localParam.isEnterpriseResigned = info.isEnterpriseResigned;
+        localParam.appIdentifier = (info.provisionType ==
+            static_cast<int32_t>(Security::Verify::ProvisionType::DEBUG)) ?
+            DEBUG_APP_IDENTIFIER : info.appIdentifier;
+        localParam.isEnterpriseBundle = (info.distributionType ==
+            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE) ||
+            info.distributionType ==
+            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_NORMAL) ||
+            info.distributionType ==
+            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_MDM));
+        localParam.isInternaltestingBundle = (info.distributionType ==
+            static_cast<int32_t>(Security::Verify::AppDistType::INTERNALTESTING));
+        if (info.profileBlock != nullptr && info.profileBlockLength > 0) {
+            auto tmpProfilePtr = std::make_unique<unsigned char[]>(info.profileBlockLength);
+            if (tmpProfilePtr == nullptr) {
+                LOG_E(BMS_TAG_INSTALLD, "allocate profileBlock failed");
+                return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+            }
+            if (memcpy_s(tmpProfilePtr.get(), info.profileBlockLength,
+                info.profileBlock.get(), info.profileBlockLength) != 0) {
+                LOG_E(BMS_TAG_INSTALLD, "memcpy_s profileBlock failed");
+                return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+            }
+            localParam.profileBlockLength = info.profileBlockLength;
+            localParam.profileBlock = std::move(tmpProfilePtr);
         }
-        if (memcpy_s(tmpProfilePtr.get(), info.profileBlockLength,
-            info.profileBlock.get(), info.profileBlockLength) != 0) {
-            LOG_E(BMS_TAG_INSTALLD, "memcpy_s profileBlock failed");
-            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-        }
-        localParam.profileBlockLength = info.profileBlockLength;
-        localParam.profileBlock = std::move(tmpProfilePtr);
     }
 
     ErrCode ret = ERR_OK;

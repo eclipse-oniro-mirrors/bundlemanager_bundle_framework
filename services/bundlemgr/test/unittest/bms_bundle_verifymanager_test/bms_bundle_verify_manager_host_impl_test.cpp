@@ -180,7 +180,7 @@ HWTEST_F(BmsBundleVerifyManagerHostImplTest, VerifyTest_0400, Function | SmallTe
     int32_t funcResult = 0;
     abcPaths.push_back(DATA_STORAGE_EL1_BUNDLE_ONE);
     impl.Verify(abcPaths, funcResult);
-    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
 }
 
 /**

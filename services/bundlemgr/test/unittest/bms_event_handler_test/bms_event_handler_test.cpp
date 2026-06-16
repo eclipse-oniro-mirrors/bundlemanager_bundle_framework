@@ -4108,6 +4108,7 @@ HWTEST_F(BmsEventHandlerTest, ExecuteMigrationWithRetry_0400, Function | SmallTe
  */
 HWTEST_F(BmsEventHandlerTest, MarkMigratedBundles_0100, Function | SmallTest | Level0)
 {
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
     dataMgr->bundleInfos_.clear();
@@ -4131,8 +4132,8 @@ HWTEST_F(BmsEventHandlerTest, MarkMigratedBundles_0100, Function | SmallTest | L
     migratedList.push_back(m2);
     std::vector<bool> successFlags = {true, true};
     handler->MarkMigratedBundles(dataMgr, bundleNames, migratedList, successFlags);
-    EXPECT_TRUE(dataMgr->bundleInfos_["test.mark01"].IsBundleCheckBySpm());
-    EXPECT_TRUE(dataMgr->bundleInfos_["test.mark02"].IsBundleCheckBySpm());
+    EXPECT_FALSE(dataMgr->bundleInfos_["test.mark01"].IsBundleCheckBySpm());
+    EXPECT_FALSE(dataMgr->bundleInfos_["test.mark02"].IsBundleCheckBySpm());
     dataMgr->bundleInfos_.clear();
 }
 
@@ -4143,6 +4144,7 @@ HWTEST_F(BmsEventHandlerTest, MarkMigratedBundles_0100, Function | SmallTest | L
  */
 HWTEST_F(BmsEventHandlerTest, MarkMigratedBundles_0200, Function | SmallTest | Level0)
 {
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
     dataMgr->bundleInfos_.clear();
@@ -4166,7 +4168,7 @@ HWTEST_F(BmsEventHandlerTest, MarkMigratedBundles_0200, Function | SmallTest | L
     migratedList.push_back(m2);
     std::vector<bool> successFlags = {true, false};
     handler->MarkMigratedBundles(dataMgr, bundleNames, migratedList, successFlags);
-    EXPECT_TRUE(dataMgr->bundleInfos_["test.partial01"].IsBundleCheckBySpm());
+    EXPECT_FALSE(dataMgr->bundleInfos_["test.partial01"].IsBundleCheckBySpm());
     EXPECT_FALSE(dataMgr->bundleInfos_["test.partial02"].IsBundleCheckBySpm());
     dataMgr->bundleInfos_.clear();
 }

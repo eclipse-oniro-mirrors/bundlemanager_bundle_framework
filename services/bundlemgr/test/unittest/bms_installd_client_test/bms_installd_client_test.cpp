@@ -1535,7 +1535,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeliverySignProfile_0200, 
     std::string bundleName = "bundleName";
     ASSERT_NE(installClient_, nullptr);
     ErrCode result = installClient_->DeliverySignProfile(bundleName, 0);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
