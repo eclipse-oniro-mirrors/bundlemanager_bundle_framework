@@ -320,6 +320,12 @@ int32_t BundlePermissionMgr::VerifyPermission(const std::string &bundleName, con
     return g_testVerifyPermission;
 }
 
+int32_t BundlePermissionMgr::VerifyPermissionByInstall(const std::string &bundleName,
+    const std::string &permissionName, int32_t sessionId)
+{
+    return g_testVerifyPermission;
+}
+
 ErrCode BundlePermissionMgr::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
     return ERR_OK;
