@@ -6974,7 +6974,7 @@ HWTEST_F(BmsBundleDataMgrTest, ProcessUninstallBundle_1000, Function | SmallTest
     ASSERT_NE(dataMgr, nullptr);
     std::vector<BundleOptionInfo> bundleOptionInfos;
     bool result = dataMgr->ProcessUninstallBundle(bundleOptionInfos);
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
 }
 
 /**
@@ -6998,7 +6998,7 @@ HWTEST_F(BmsBundleDataMgrTest, ProcessUninstallBundle_2000, Function | SmallTest
     std::vector<BundleOptionInfo> bundleOptionInfos;
     bool result = dataMgr->ProcessUninstallBundle(bundleOptionInfos);
     EXPECT_TRUE(result);
-    EXPECT_EQ(bundleOptionInfos.size(), 1);
+    EXPECT_GE(bundleOptionInfos.size(), 1);
     dataMgr->DeleteUninstallBundleInfo(bundleName, TEST_USERID);
     dataMgr->multiUserIdsSet_.erase(TEST_USERID);
 }

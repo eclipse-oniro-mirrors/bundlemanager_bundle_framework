@@ -9004,6 +9004,15 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
+    if (!sessionCommitted_ && sessionId_ != 0) {
+        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(
+            sessionId_, true, modulePathMap_);
+        if (finishRet != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "FinishHapInstall failed, errCode:%{public}d", finishRet);
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        sessionCommitted_ = true;
+    }
     if (isAppExist_) {
         if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
             if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
@@ -9018,15 +9027,6 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
         if (CommitAppSkills(info) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "commit app skills failed");
             return ERR_APPEXECFWK_ADD_BUNDLE_ERROR;
-        }
-        if (!sessionCommitted_ && sessionId_ != 0) {
-            int32_t finishRet = BundlePermissionMgr::FinishHapInstall(
-                sessionId_, true, modulePathMap_);
-            if (finishRet != ERR_OK) {
-                LOG_E(BMS_TAG_INSTALLER, "FinishHapInstall failed, errCode:%{public}d", finishRet);
-                return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-            }
-            sessionCommitted_ = true;
         }
         return ERR_OK;
     }
@@ -9044,15 +9044,6 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
     if (CommitAppSkills(info) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "commit app skills failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
-    }
-    if (!sessionCommitted_ && sessionId_ != 0) {
-        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(
-            sessionId_, true, modulePathMap_);
-        if (finishRet != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "FinishHapInstall failed, errCode:%{public}d", finishRet);
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
-        sessionCommitted_ = true;
     }
     return ERR_OK;
 }

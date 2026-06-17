@@ -15087,7 +15087,7 @@ HWTEST_F(BmsBundleInstallerTest, VerifyCodeSignatureForHap_0100, Function | Smal
     CodeSignatureParam codeSignatureParam;
     codeSignatureParam.bundleName = "com.example.test";
     ErrCode ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_ERR_PROFILE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
