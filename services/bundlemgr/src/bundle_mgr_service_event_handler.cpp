@@ -2087,7 +2087,6 @@ bool BMSEventHandler::InnerProcessAccessTokenMigration()
         return false;
     }
 
-    std::vector<int32_t> uidList;
     auto bundleNames = dataMgr->GetAllBundleName();
     auto sandboxHelper = dataMgr->GetSandboxAppHelper();
     auto sandboxMap = (sandboxHelper != nullptr) ? sandboxHelper->GetSandboxAppInfoMap()
@@ -2095,88 +2094,21 @@ bool BMSEventHandler::InnerProcessAccessTokenMigration()
     std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
     dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
 
-    // Step 1: Collect UIDs and PreMigrateUIDList
-    if (!CollectAndPreMigrateUids(dataMgr, uidList)) {
-        return true;
-    }
-
-    // Step 2: Build MigratedInfo and collect old tokens
+    // Step 1: Build MigratedInfo and collect old tokens
     std::vector<Security::AccessToken::MigratedInfo> migratedList;
     std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenIdExList;
     BuildMigrationData(dataMgr, bundleNames, sandboxMap, uninstallBundleInfos,
         migratedList, oldTokenIdExList);
 
-    // Step 3: Execute batch migration with retry (includes token update and event report)
+    // Step 2: Execute batch migration with retry (includes token update and event report)
     std::vector<bool> successFlags(migratedList.size(), false);
     ExecuteMigrationWithRetry(dataMgr, migratedList, oldTokenIdExList, successFlags);
 
-    // Step 4: Mark checkBySpm on successfully migrated bundles
+    // Step 3: Mark checkBySpm on successfully migrated bundles
     MarkMigratedBundles(dataMgr, bundleNames, migratedList, successFlags);
 
     Security::AccessToken::AccessTokenKit::FinishMigration();
     LOG_I(BMS_TAG_DEFAULT, "Access token migration completed");
-    return true;
-}
-
-bool BMSEventHandler::CollectAndPreMigrateUids(
-    const std::shared_ptr<BundleDataMgr> &dataMgr, std::vector<int32_t> &uidList)
-{
-    auto bundleNames = dataMgr->GetAllBundleName();
-    for (const auto &bundleName : bundleNames) {
-        InnerBundleInfo innerBundleInfo;
-        if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-            continue;
-        }
-        for (const auto &[key, userInfo] : innerBundleInfo.GetInnerBundleUserInfos()) {
-            if (userInfo.uid > 0) {
-                uidList.emplace_back(userInfo.uid);
-            }
-            for (const auto &[ck, ci] : userInfo.cloneInfos) {
-                if (ci.uid > 0) {
-                    uidList.emplace_back(ci.uid);
-                }
-            }
-        }
-    }
-    auto sandboxHelper = dataMgr->GetSandboxAppHelper();
-    auto sandboxMap = (sandboxHelper != nullptr) ? sandboxHelper->GetSandboxAppInfoMap()
-        : std::unordered_map<std::string, InnerBundleInfo>();
-    for (const auto &[key, info] : sandboxMap) {
-        for (const auto &[uk, ui] : info.GetInnerBundleUserInfos()) {
-            if (ui.uid > 0) {
-                uidList.emplace_back(ui.uid);
-            }
-        }
-    }
-    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
-    if (dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos)) {
-        for (const auto &[bn, ui] : uninstallBundleInfos) {
-            for (const auto &[uidStr, dui] : ui.userInfos) {
-                int32_t userId = 0;
-                if (!OHOS::StrToInt(uidStr, userId) || userId == -3) {
-                    continue;
-                }
-                if (dui.uid > 0) {
-                    uidList.emplace_back(dui.uid);
-                }
-            }
-        }
-    }
-    if (uidList.empty()) {
-        LOG_I(BMS_TAG_DEFAULT, "No UIDs to migrate");
-        Security::AccessToken::AccessTokenKit::FinishMigration();
-        return false;
-    }
-    LOG_I(BMS_TAG_DEFAULT, "PreMigrateUIDList count=%{public}zu", uidList.size());
-    int32_t preMigrateRet = Security::AccessToken::AccessTokenKit::PreMigrateUIDList(uidList);
-    if (preMigrateRet == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED) {
-        LOG_I(BMS_TAG_DEFAULT, "PreMigrateUIDList: migration already completed");
-        return false;
-    }
-    if (preMigrateRet != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_W(BMS_TAG_DEFAULT, "PreMigrateUIDList failed, err=%{public}d, continue migration",
-            preMigrateRet);
-    }
     return true;
 }
 
