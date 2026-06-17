@@ -1359,8 +1359,9 @@ void BaseBundleInstaller::VerifyDelayedAging(InnerBundleInfo &bundleInfo, int32_
 {
     LOG_D(BMS_TAG_INSTALLER, "Start verifying if there is a delay in aging");
     bool isDelayedAging = false;
-    if (BundlePermissionMgr::VerifyPermission(bundleInfo.GetBundleName(), ServiceConstants::PERMISSION_MANAGE_AGING,
-        uid / Constants::BASE_USER_RANGE) != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+    if (BundlePermissionMgr::VerifyPermissionByInstall(bundleInfo.GetBundleName(),
+        ServiceConstants::PERMISSION_MANAGE_AGING, sessionId_) !=
+        Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
         APP_LOGD("no permission to delay aging %{public}s", bundleInfo.GetBundleName().c_str());
         bundleInfo.SetDelayedAging(isDelayedAging);
         return;
@@ -4037,8 +4038,9 @@ void BaseBundleInstaller::ParseSizeFromProvision(
         if (item.first != ServiceConstants::PERMISSION_MANAGE_STORAGE) {
             continue;
         }
-        if (BundlePermissionMgr::VerifyPermission(bundleName, ServiceConstants::PERMISSION_MANAGE_STORAGE,
-            uid / Constants::BASE_USER_RANGE) != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+        if (BundlePermissionMgr::VerifyPermissionByInstall(bundleName,
+            ServiceConstants::PERMISSION_MANAGE_STORAGE, sessionId_) !=
+            Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
             APP_LOGW("no manage storage permission for %{public}s", bundleName.c_str());
             return;
         }
@@ -4815,8 +4817,8 @@ void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, cons
 void BaseBundleInstaller::ExtractNPAPIPluginFiles(const std::string &modulePath)
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractNPAPIPluginFiles begin");
-    if (BundlePermissionMgr::VerifyPermission(bundleName_,
-        ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB, userId_) !=
+    if (BundlePermissionMgr::VerifyPermissionByInstall(bundleName_,
+        ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB, sessionId_) !=
         Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
         LOG_D(BMS_TAG_INSTALLER, "no permission to extract npapi plugin files");
         npapiPluginStatus_ = NpapiPluginStatus::STATUS_NOT_APPLICABLE;

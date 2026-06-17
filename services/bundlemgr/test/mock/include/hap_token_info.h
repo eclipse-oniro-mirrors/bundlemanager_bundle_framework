@@ -101,6 +101,10 @@ struct HapVerifyResultInfo {
     uint32_t index = 0;
     int32_t errorCode = 0;
 };
+
+struct BundlePolicyInfo {
+    std::vector<std::string> reqPermissions;
+};
 } // namespace AccessToken
 } // namespace Security
 } // namespace OHOS

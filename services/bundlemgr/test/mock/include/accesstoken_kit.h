@@ -71,7 +71,12 @@ public:
     static int32_t GetHapSignInfo(const std::string& bundleName,
         std::vector<TrustedBundleInfo>& trustedBundleInfo);
     static int32_t GetHapBaseInfoByUid(int32_t uid, HapBaseInfo& info);
+    static int32_t GetCachePolicyBySessionId(int32_t sessionId, const std::string& bundleName,
+        BundlePolicyInfo& bundlePolicyInfo);
 };
+
+void SetCachePolicyBySessionIdForTest(const BundlePolicyInfo& bundlePolicyInfo);
+void SetCachePolicyBySessionIdRetForTest(int32_t ret);
 } // namespace AccessToken
 } // namespace Security
 } // namespace OHOS

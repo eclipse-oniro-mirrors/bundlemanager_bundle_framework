@@ -385,6 +385,26 @@ int32_t AccessTokenKit::GetHapBaseInfoByUid(int32_t uid, HapBaseInfo& info)
     }
     return 0;
 }
+
+static BundlePolicyInfo g_bundlePolicyInfo;
+static int32_t g_cachePolicyBySessionIdRet = 0;
+
+void SetCachePolicyBySessionIdForTest(const BundlePolicyInfo& bundlePolicyInfo)
+{
+    g_bundlePolicyInfo = bundlePolicyInfo;
+}
+
+void SetCachePolicyBySessionIdRetForTest(int32_t ret)
+{
+    g_cachePolicyBySessionIdRet = ret;
+}
+
+int32_t AccessTokenKit::GetCachePolicyBySessionId(int32_t sessionId, const std::string& bundleName,
+    BundlePolicyInfo& bundlePolicyInfo)
+{
+    bundlePolicyInfo = g_bundlePolicyInfo;
+    return g_cachePolicyBySessionIdRet;
+}
 }
 }
 }
