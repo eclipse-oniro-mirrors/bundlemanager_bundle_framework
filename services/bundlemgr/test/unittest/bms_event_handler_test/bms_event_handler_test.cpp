@@ -41,6 +41,9 @@ using namespace OHOS::AppExecFwk;
 using namespace OHOS::Security;
 using OHOS::DelayedSingleton;
 
+extern bool g_mockSubscribeResult;
+extern bool g_mockSubscribeCalled;
+
 namespace OHOS {
 namespace {
     const std::string CALL_MOCK_BUNDLE_DIR_SUCCESS = "callMockBundleDirSuccess";
@@ -4235,5 +4238,34 @@ HWTEST_F(BmsEventHandlerTest, ReInstallSystemHspAndSharedBundles_0001, Function 
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleInstaller();
     handler->LoadPreInstallProFile();
     EXPECT_NO_THROW(handler->ReInstallSystemHspAndSharedBundles());
+}
+/**
+ * @tc.number: RegisterOobeAgreeTermsEvent_0100
+ * @tc.name: RegisterOobeAgreeTermsEvent
+ * @tc.desc: Test RegisterOobeAgreeTermsEvent subscribe success
+ */
+HWTEST_F(BmsEventHandlerTest, RegisterOobeAgreeTermsEvent_0100, Function | SmallTest | Level0)
+{
+    g_mockSubscribeResult = true;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    g_mockSubscribeCalled = false;
+    handler->RegisterOobeAgreeTermsEvent();
+    EXPECT_TRUE(g_mockSubscribeCalled);
+}
+
+/**
+ * @tc.number: RegisterOobeAgreeTermsEvent_0200
+ * @tc.name: RegisterOobeAgreeTermsEvent
+ * @tc.desc: Test RegisterOobeAgreeTermsEvent subscribe failed
+ */
+HWTEST_F(BmsEventHandlerTest, RegisterOobeAgreeTermsEvent_0200, Function | SmallTest | Level0)
+{
+    g_mockSubscribeResult = false;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    g_mockSubscribeCalled = false;
+    handler->RegisterOobeAgreeTermsEvent();
+    EXPECT_TRUE(g_mockSubscribeCalled);
 }
 } // OHOS

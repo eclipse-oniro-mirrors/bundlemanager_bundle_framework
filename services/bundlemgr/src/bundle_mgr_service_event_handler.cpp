@@ -361,6 +361,7 @@ void BMSEventHandler::AfterBmsStart()
     BmsExtensionDataMgr bmsExtensionDataMgr;
     bmsExtensionDataMgr.BmsExtensionInit();
     ListeningUserUnlocked();
+    RegisterOobeAgreeTermsEvent();
     RemoveUnreservedSandbox();
     ProcessCheckAppEl1Dir();
     ProcessCheckSystemOptimizeDir();
@@ -5202,7 +5203,6 @@ void BMSEventHandler::ListeningUserUnlocked() const
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
-    matchingSkills.AddEvent(OOBE_AGREE_TERMS_EVENT);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     subscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
 
@@ -5218,6 +5218,21 @@ void BMSEventHandler::ListeningUserUnlocked() const
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
         LOG_W(BMS_TAG_DEFAULT, "BMSEventHandler subscribe common event %{public}s failed",
             EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED.c_str());
+    }
+}
+
+void BMSEventHandler::RegisterOobeAgreeTermsEvent() const
+{
+    LOG_I(BMS_TAG_DEFAULT, "register oobe agree terms event start");
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(OOBE_AGREE_TERMS_EVENT);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    subscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
+    subscribeInfo.SetPermission(Constants::PERMISSION_ACCESS_STARTUPGUIDE);
+
+    auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
+    if (!EventFwk::CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
+        LOG_W(BMS_TAG_DEFAULT, "subscribe oobe agree terms event failed");
     }
 }
 
