@@ -355,6 +355,26 @@ int32_t BundlePermissionMgr::VerifyPermission(
     return AccessToken::AccessTokenKit::VerifyAccessToken(tokenId, permissionName);
 }
 
+int32_t BundlePermissionMgr::VerifyPermissionByInstall(
+    const std::string &bundleName, const std::string &permissionName, int32_t sessionId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "VerifyPermissionByInstall bundleName %{public}s, permission %{public}s",
+        bundleName.c_str(), permissionName.c_str());
+    Security::AccessToken::BundlePolicyInfo bundlePolicyInfo;
+    int32_t ret = Security::AccessToken::AccessTokenKit::GetCachePolicyBySessionId(
+        sessionId, bundleName, bundlePolicyInfo);
+    if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "GetCachePolicyBySessionId failed, ret: %{public}d", ret);
+        return Security::AccessToken::PermissionState::PERMISSION_DENIED;
+    }
+    for (const auto &perm : bundlePolicyInfo.reqPermissions) {
+        if (perm == permissionName) {
+            return Security::AccessToken::PermissionState::PERMISSION_GRANTED;
+        }
+    }
+    return Security::AccessToken::PermissionState::PERMISSION_DENIED;
+}
+
 ErrCode BundlePermissionMgr::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
     LOG_D(BMS_TAG_DEFAULT, "BundlePermissionMgr::GetPermissionDef permission %{public}s", permissionName.c_str());

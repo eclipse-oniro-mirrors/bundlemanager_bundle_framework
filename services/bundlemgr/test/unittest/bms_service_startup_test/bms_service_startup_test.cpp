@@ -505,6 +505,53 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0400, Function | SmallTest |
 }
 
 /**
+ * @tc.number: BundlePermissionMgr_VerifyPermissionByInstall_0100
+ * @tc.name: test VerifyPermissionByInstall permission granted
+ * @tc.desc: 1.GetCachePolicyBySessionId returns success with matching permission, expect PERMISSION_GRANTED
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_VerifyPermissionByInstall_0100, Function | SmallTest | Level0)
+{
+    Security::AccessToken::BundlePolicyInfo policyInfo;
+    policyInfo.reqPermissions.push_back("ohos.permission.test");
+    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
+    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(Security::AccessToken::AccessTokenKitRet::RET_SUCCESS);
+    int32_t ret = BundlePermissionMgr::VerifyPermissionByInstall(
+        "com.test.bundle", "ohos.permission.test", 1);
+    EXPECT_EQ(ret, Security::AccessToken::PermissionState::PERMISSION_GRANTED);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_VerifyPermissionByInstall_0200
+ * @tc.name: test VerifyPermissionByInstall permission denied
+ * @tc.desc: 1.GetCachePolicyBySessionId returns success but permission not in reqPermissions, expect PERMISSION_DENIED
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_VerifyPermissionByInstall_0200, Function | SmallTest | Level0)
+{
+    Security::AccessToken::BundlePolicyInfo policyInfo;
+    policyInfo.reqPermissions.push_back("ohos.permission.other");
+    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
+    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(Security::AccessToken::AccessTokenKitRet::RET_SUCCESS);
+    int32_t ret = BundlePermissionMgr::VerifyPermissionByInstall(
+        "com.test.bundle", "ohos.permission.test", 1);
+    EXPECT_EQ(ret, Security::AccessToken::PermissionState::PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_VerifyPermissionByInstall_0300
+ * @tc.name: test VerifyPermissionByInstall GetCachePolicyBySessionId failed
+ * @tc.desc: 1.GetCachePolicyBySessionId returns failure, expect PERMISSION_DENIED
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_VerifyPermissionByInstall_0300, Function | SmallTest | Level0)
+{
+    Security::AccessToken::BundlePolicyInfo policyInfo;
+    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
+    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(Security::AccessToken::AccessTokenKitRet::RET_FAILED);
+    int32_t ret = BundlePermissionMgr::VerifyPermissionByInstall(
+        "com.test.bundle", "ohos.permission.test", 1);
+    EXPECT_EQ(ret, Security::AccessToken::PermissionState::PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: BundlePermissionMgr_0500
  * @tc.name: test CheckPermissionInDefaultPermissions
  * @tc.desc: 1.test CheckPermissionInDefaultPermissions of BundlePermissionMgr

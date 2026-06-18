@@ -47,6 +47,16 @@ public:
     static int32_t VerifyPermission(const std::string &bundleName, const std::string &permissionName,
         const int32_t userId);
     /**
+     * @brief Verify whether a specified bundle has been granted a specific permission during install
+     *        by checking the cached bundle policy info from the install session.
+     * @param bundleName Indicates the name of the bundle to check.
+     * @param permissionName Indicates the permission to check.
+     * @param sessionId Indicates the install session id.
+     * @return Returns 0 if the bundle has the permission; returns -1 otherwise.
+     */
+    static int32_t VerifyPermissionByInstall(const std::string &bundleName, const std::string &permissionName,
+        int32_t sessionId);
+    /**
      * @brief Obtains detailed information about a specified permission.
      * @param permissionName Indicates the name of the permission.
      * @param permissionDef Indicates the object containing detailed information about the given permission.
