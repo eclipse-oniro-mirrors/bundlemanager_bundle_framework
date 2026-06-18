@@ -847,6 +847,7 @@ ErrCode IndependentSkillsInstaller::ExtractSkills(
         LOG_E(BMS_TAG_INSTALLER, "skills %{public}s remove skill failed %{public}d", bundleName_.c_str(), result);
         return result;
     }
+    skillCount_ += static_cast<int32_t>(validSkillInfoList.size());
     result = SkillsDescriptionManager::GetInstance()->AddSkillDescriptions(validSkillInfoList);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "skills %{public}s add description failed %{public}d", bundleName_.c_str(), result);
@@ -1046,7 +1047,22 @@ void IndependentSkillsInstaller::SendBundleSystemEvent(
         (bundleEventType == BundleEventType::UPDATE))) {
         GetInstallEventInfo(sysEventInfo);
     }
+    sysEventInfo.skillCount = GetSkillCount(bundleEventType);
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
+}
+
+int32_t IndependentSkillsInstaller::GetSkillCount(BundleEventType bundleEventType)
+{
+    if (bundleEventType == BundleEventType::INSTALL || bundleEventType == BundleEventType::UPDATE) {
+        return skillCount_;
+    } else if (bundleEventType == BundleEventType::UNINSTALL) {
+        int32_t skillCount = 0;
+        for (const auto &innerModuleInfo : oldInnerBundleInfo_.GetInnerModuleInfos()) {
+            skillCount += static_cast<int32_t>(innerModuleInfo.second.skillProfiles.size());
+        }
+        return skillCount;
+    }
+    return 0;
 }
 
 void IndependentSkillsInstaller::GetInstallEventInfo(EventInfo &eventInfo)
@@ -1225,6 +1241,7 @@ void IndependentSkillsInstaller::ResetProperties()
     hasInstalledInUser_ = false;
     userId_ = -1;
     bundleName_ = "";
+    skillCount_ = 0;
     needDeleteSkillsPackageInfo_.clear();
     toDeleteTempHspPath_.clear();
     sessionId_ = 0;

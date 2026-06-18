@@ -93,6 +93,7 @@ private:
         const std::string &bundleName, const InstallParam &installParam,
         BundleEventType bundleEventType, ErrCode errCode);
     void GetInstallEventInfo(EventInfo &eventInfo);
+    int32_t GetSkillCount(BundleEventType bundleEventType);
     ErrCode ProcessBundleUpdateStatus(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo,
         const std::string &hspPath, const InstallParam &installParam);
     ErrCode ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo,
@@ -117,6 +118,7 @@ private:
     bool hasInstalledInUser_ = false;
     uint32_t versionCode_ = 0;
     int32_t userId_ = -1;
+    int32_t skillCount_ = 0;
     int64_t startTime_ = 0;
     std::string bundleName_;
     std::string appIdentifier_;
