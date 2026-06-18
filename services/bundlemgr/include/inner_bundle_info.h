@@ -78,6 +78,8 @@ struct SkillProfile {
     std::string abilityName;
     std::vector<std::string> srcEntries;
     std::vector<std::string> permissions;
+    std::string version;
+    std::string visibility = Profile::SKILL_PROFILE_VISIBILITY_SYSTEM;
 };
 
 struct InnerModuleInfo {

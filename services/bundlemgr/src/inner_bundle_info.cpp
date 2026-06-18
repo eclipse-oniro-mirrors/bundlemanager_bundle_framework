@@ -176,6 +176,8 @@ constexpr const char* SKILL_PROFILE_NAME = "name";
 constexpr const char* SKILL_PROFILE_ABILITY_NAME = "abilityName";
 constexpr const char* SKILL_PROFILE_SRC_ENTRIES = "srcEntries";
 constexpr const char* SKILL_PROFILE_PERMISSIONS = "permissions";
+constexpr const char* SKILL_PROFILE_VERSION = "version";
+constexpr const char* SKILL_PROFILE_VISIBILITY = "visibility";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 constexpr const char* MODULE_BOOL_SET = "boolSet";
 constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
@@ -292,6 +294,12 @@ void from_json(const nlohmann::json &jsonObject, SkillProfile &skillProfile)
         skillProfile.abilityName,
         false,
         parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_VERSION,
+        skillProfile.version,
+        false,
+        parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         SKILL_PROFILE_SRC_ENTRIES,
@@ -308,6 +316,12 @@ void from_json(const nlohmann::json &jsonObject, SkillProfile &skillProfile)
         false,
         parseResult,
         ArrayType::STRING);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_VISIBILITY,
+        skillProfile.visibility,
+        false,
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read SkillProfile from json error, error code : %{public}d", parseResult);
     }
@@ -318,8 +332,10 @@ void to_json(nlohmann::json &jsonObject, const SkillProfile &skillProfile)
     jsonObject = nlohmann::json {
         {SKILL_PROFILE_NAME, skillProfile.name},
         {SKILL_PROFILE_ABILITY_NAME, skillProfile.abilityName},
+        {SKILL_PROFILE_VERSION, skillProfile.version},
         {SKILL_PROFILE_SRC_ENTRIES, skillProfile.srcEntries},
-        {SKILL_PROFILE_PERMISSIONS, skillProfile.permissions}
+        {SKILL_PROFILE_PERMISSIONS, skillProfile.permissions},
+        {SKILL_PROFILE_VISIBILITY, skillProfile.visibility}
     };
 }
 

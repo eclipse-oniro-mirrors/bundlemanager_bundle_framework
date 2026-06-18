@@ -84,6 +84,12 @@ struct SoFileInfo {
     }
 };
 namespace {
+static bool IsSkillScriptsRelativePath(const std::string &relativePath)
+{
+    std::string normalizedPath = relativePath;
+    std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
+    return normalizedPath == "scripts" || normalizedPath.find("scripts/") == 0;
+}
 constexpr const char* PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 constexpr const char* PREFIX_LIBS_PATH = "/libs/";
 constexpr const char* PREFIX_TARGET_PATH = "/print_service/";
@@ -983,6 +989,10 @@ bool InstalldOperator::ExtractSkillFromHsp(
         if (fileName.find(skillPrefix) == 0) {
             // Calculate relative path and target file path
             std::string relativePath = fileName.substr(skillPrefix.length());
+            if (IsSkillScriptsRelativePath(relativePath)) {
+                LOG_D(BMS_TAG_INSTALLD, "skip skill scripts entry %{public}s", fileName.c_str());
+                continue;
+            }
             std::string targetFilePath = targetPath + "/" + relativePath;
 
             // Create parent directory if needed
