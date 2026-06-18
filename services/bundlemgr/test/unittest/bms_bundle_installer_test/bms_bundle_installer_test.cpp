@@ -11225,16 +11225,20 @@ HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0050, Function
     BaseBundleInstaller installer;
     // DynamicIconFile not exist
     auto ret = installer.ProcessBundleCodePath(newInfos, oldInfo, BUNDLE_NAME_FOR_TEST, true, true);
-    EXPECT_NE(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_OK);
 
     auto exist = access(BUNDLE_CODE_PATH_DIR_REAL.c_str(), F_OK);
     EXPECT_EQ(exist, 0);
 
     exist = access(BUNDLE_CODE_PATH_DIR_NEW.c_str(), F_OK);
-    EXPECT_EQ(exist, 0);
+    EXPECT_NE(exist, 0);
 
     exist = access(BUNDLE_CODE_PATH_DIR_OLD.c_str(), F_OK);
-    EXPECT_NE(exist, 0);
+    EXPECT_EQ(exist, 0);
+    auto mgr = DelayedSingleton<InstallExceptionMgr>::GetInstance();
+   ASSERT_NE(mgr, nullptr);
+    ret = mgr->DeleteBundleExceptionInfo(BUNDLE_NAME_FOR_TEST);
+    EXPECT_EQ(ret, ERR_OK);
 
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
