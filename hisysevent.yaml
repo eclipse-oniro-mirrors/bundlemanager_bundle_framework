@@ -142,6 +142,7 @@ BUNDLE_INSTALL:
   IS_ABC_COMPRESSED: {type: BOOL, desc: isAbcCompressed}
   IS_PATCH: {type: BOOL, desc: is patched}
   NPAPI_PLUGIN_STATUS: {type: INT32, desc: npapiPluginStatus}
+  SKILL_COUNT: {type: INT32, desc: skillCount}
   START_TIME: {type: INT64, desc: bundle installation start time}
   END_TIME: {type: INT64, desc: bundle installation end time}
   HAS_HNP: {type: BOOL, desc: has hnp}
@@ -163,6 +164,7 @@ BUNDLE_UNINSTALL:
   APP_INDEX: {type: INT32, desc: app index}
   IS_KEEPDATA: {type: BOOL, desc: is keepdata}
   NPAPI_PLUGIN_STATUS: {type: INT32, desc: npapiPluginStatus}
+  SKILL_COUNT: {type: INT32, desc: skillCount}
   START_TIME: {type: INT64, desc: bundle uninstallation start time}
   END_TIME: {type: INT64, desc: bundle uninstallation end time}
   ODID: {type: STRING, desc: odid}
@@ -196,6 +198,7 @@ BUNDLE_UPDATE:
   NEW_APP_PROVISION_TYPE: {type: STRING, desc: new app provision type}
   HAS_HNP: {type: BOOL, desc: has hnp}
   NPAPI_PLUGIN_STATUS: {type: INT32, desc: npapiPluginStatus}
+  SKILL_COUNT: {type: INT32, desc: skillCount}
   START_TIME: {type: INT64, desc: bundle update start time}
   END_TIME: {type: INT64, desc: bundle update end time}
   ODID: {type: STRING, desc: odid}

@@ -7208,6 +7208,11 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
     sysEventInfo_.isKeepData = installParam.isKeepData;
     sysEventInfo_.endTime = BundleUtil::GetCurrentTimeMs();
     sysEventInfo_.npapiPluginStatus = static_cast<int32_t>(npapiPluginStatus_);
+    if (bundleEventType == BundleEventType::UNINSTALL) {
+        sysEventInfo_.skillCount = static_cast<int32_t>(oldAppSkillNotifyItems_.size());
+    } else {
+        sysEventInfo_.skillCount = static_cast<int32_t>(newAppSkillNotifyItems_.size());
+    }
     GetCallingEventInfo(sysEventInfo_);
     if (InitDataMgr()) {
         dataMgr_->GetOdidByBundleName(bundleName, sysEventInfo_.odid);
