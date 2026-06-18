@@ -74,6 +74,10 @@ using namespace OHOS::AppExecFwk;
 using OHOS::DelayedSingleton;
 
 namespace OHOS {
+namespace Security::AccessToken {
+    void SetCachePolicyBySessionIdForTest(const BundlePolicyInfo& bundlePolicyInfo);
+    void SetCachePolicyBySessionIdRetForTest(int32_t ret);
+}
 namespace {
 const std::string SYSTEMFIEID_NAME = "com.query.test";
 const std::string SYSTEMFIEID_BUNDLE = "system_module.hap";
@@ -17266,10 +17270,10 @@ HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0010, Function | SmallT
     Security::AccessToken::BundlePolicyInfo policyInfo;
     policyInfo.reqPermissions.push_back(ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB);
     Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(Security::AccessToken::AccessTokenKitRet::RET_SUCCESS);
+    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(0);
     installer.ExtractNPAPIPluginFiles(installer.modulePath_);
     EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_EXTRACT_FAILED);
-    
+
     // scenario 2: empty modulePath, InstalldClient::ExtractFiles will fail
     installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
     installer.modulePath_ = "";
@@ -17290,7 +17294,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0020, Function | SmallT
     Security::AccessToken::BundlePolicyInfo policyInfo;
     policyInfo.reqPermissions.push_back(ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB);
     Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(Security::AccessToken::AccessTokenKitRet::RET_SUCCESS);
+    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(0);
 
     // scenario 1: userId = 0, empty modulePath leads to STATUS_EXTRACT_FAILED
     installer.userId_ = 0;
@@ -17323,7 +17327,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0030, Function | SmallT
     Security::AccessToken::BundlePolicyInfo policyInfo;
     policyInfo.reqPermissions.push_back(ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB);
     Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(Security::AccessToken::AccessTokenKitRet::RET_SUCCESS);
+    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(0);
 
     // scenario 1: empty bundleName, empty modulePath leads to STATUS_EXTRACT_FAILED
     installer.bundleName_ = "";
