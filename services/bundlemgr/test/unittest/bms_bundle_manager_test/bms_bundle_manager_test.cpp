@@ -4478,4 +4478,138 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfoByUriOptimal_0200, Funct
     bool retBool = hostImpl->QueryExtensionAbilityInfoByUriOptimal("", USERID, extensionAbilityInfo);
     EXPECT_EQ(retBool, false);
 }
+
+static InnerBundleInfo CreateDefaultInnerBundleInfo(const std::string &bundleName, int32_t userId)
+{
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    ApplicationInfo appInfo;
+    appInfo.name = bundleName;
+    appInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = userId;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    return innerBundleInfo;
+}
+
+/**
+ * @tc.number: InnerBundleInfo_GetUid_WithCliSandbox_0100
+ * @tc.name: test InnerBundleInfo::GetUid with CLI sandbox app
+ * @tc.desc: 1.system run normally
+ *           2.test GetUid with CLI sandbox app index
+*/
+HWTEST_F(BmsBundleManagerTest, InnerBundleInfo_GetUid_WithCliSandbox_0100, Function | SmallTest | Level1)
+{
+    auto innerBundleInfo = CreateDefaultInnerBundleInfo(BUNDLE_NAME, USERID);
+
+    // Add CLI sandbox info
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.uid = 200100;
+
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.userId = USERID;
+    sandboxInfo.appIndex = ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN;
+    sandboxInfo.uid = 201000;
+    sandboxInfo.accessTokenId = 12345;
+    std::string key = InnerBundleUserInfo::AppIndexToKey(sandboxInfo.appIndex);
+    userInfo.sandboxInfos[key] = sandboxInfo;
+
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    // Test GetUid with CLI sandbox app index
+    int32_t uid = innerBundleInfo.GetUid(USERID, ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN);
+    EXPECT_EQ(uid, 201000);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_GetUid_WithCliSandbox_0200
+ * @tc.name: test InnerBundleInfo::GetUid with non-existent CLI sandbox app
+ * @tc.desc: 1.system run normally
+ *           2.test GetUid with non-existent CLI sandbox app index
+*/
+HWTEST_F(BmsBundleManagerTest, InnerBundleInfo_GetUid_WithCliSandbox_0200, Function | SmallTest | Level1)
+{
+    auto innerBundleInfo = CreateDefaultInnerBundleInfo(BUNDLE_NAME, USERID);
+
+    // Add CLI sandbox info
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.uid = 200100;
+
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.userId = USERID;
+    sandboxInfo.appIndex = ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN;
+    sandboxInfo.uid = 201000;
+    sandboxInfo.accessTokenId = 12345;
+    std::string key = InnerBundleUserInfo::AppIndexToKey(sandboxInfo.appIndex);
+    userInfo.sandboxInfos[key] = sandboxInfo;
+
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    // Test GetUid with non-existent CLI sandbox app index
+    int32_t uid = innerBundleInfo.GetUid(USERID, ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN + 1);
+    EXPECT_EQ(uid, Constants::INVALID_UID);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_GetUid_WithCliSandbox_0300
+ * @tc.name: test InnerBundleInfo::GetUid with clone app and CLI sandbox
+ * @tc.desc: 1.system run normally
+ *           2.test GetUid checks clone app before CLI sandbox
+*/
+HWTEST_F(BmsBundleManagerTest, InnerBundleInfo_GetUid_WithCliSandbox_0300, Function | SmallTest | Level1)
+{
+    auto innerBundleInfo = CreateDefaultInnerBundleInfo(BUNDLE_NAME, USERID);
+
+    // Add both clone app and CLI sandbox info with same appIndex
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.uid = 200100;
+
+    // Add clone app info
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN;
+    cloneInfo.uid = 201100;
+    std::string cloneKey = std::to_string(cloneInfo.appIndex);
+    userInfo.cloneInfos[cloneKey] = cloneInfo;
+
+    // Add CLI sandbox info with same appIndex (should not happen in practice, but for testing)
+    InnerCliSandboxInfo sandboxInfo;
+    sandboxInfo.userId = USERID;
+    sandboxInfo.appIndex = ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN;
+    sandboxInfo.uid = 201000;
+    sandboxInfo.accessTokenId = 12345;
+    std::string sandboxKey = InnerBundleUserInfo::AppIndexToKey(sandboxInfo.appIndex);
+    userInfo.sandboxInfos[sandboxKey] = sandboxInfo;
+
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    // Test GetUid - should return clone app UID (checked first)
+    int32_t uid = innerBundleInfo.GetUid(USERID, ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN);
+    EXPECT_EQ(uid, 201100);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_GetUid_WithCliSandbox_0400
+ * @tc.name: test CLI sandbox app index range constants
+ * @tc.desc: 1.system run normally
+ *           2.verify CLI_SANDBOX_APP_INDEX_MIN and MAX constants
+*/
+HWTEST_F(BmsBundleManagerTest, InnerBundleInfo_GetUid_WithCliSandbox_0400, Function | SmallTest | Level1)
+{
+    // Verify CLI sandbox app index range constants
+    EXPECT_GE(ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN, 2000);
+    EXPECT_LE(ServiceConstants::CLI_SANDBOX_APP_INDEX_MAX, 3000);
+    EXPECT_LT(ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN, ServiceConstants::CLI_SANDBOX_APP_INDEX_MAX);
+
+    // Verify the range does not overlap with clone app index range
+    EXPECT_GT(ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN, ServiceConstants::CLONE_APP_INDEX_MAX);
+}
 } // OHOS

@@ -54,6 +54,14 @@ public:
         const std::string &envCallerBundleName, const std::string &bundleName,
         int32_t userId, int32_t appIndex, bool skipCallerCheck);
 
+    /**
+     * @brief Destroy all CLI sandbox applications for a specific bundle under a specific user.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param userId Indicates the user id.
+     * @return Returns ERR_OK if all destroyed successfully; returns error code otherwise.
+     */
+    ErrCode DestroyAllCliSandboxApps(const std::string &bundleName, int32_t userId);
+
 private:
     ErrCode ProcessDestroyCliSandbox(const std::string &creatorBundleName,
         const std::string &envCallerBundleName, const std::string &bundleName,

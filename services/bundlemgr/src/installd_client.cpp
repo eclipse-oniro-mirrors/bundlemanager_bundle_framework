@@ -15,6 +15,7 @@
 
 #include "installd_client.h"
 
+#include "bundle_constants.h"
 #include "installd/installd_load_callback.h"
 #include "installd_death_recipient.h"
 #include "iservice_registry.h"
@@ -214,7 +215,9 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir,
 ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex,
     const bool isAtomicService)
 {
-    if (bundleName.empty() || userid < 0 || appIndex < 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
+    if (bundleName.empty() || userid < 0 || appIndex < 0 ||
+        (appIndex > Constants::INITIAL_SANDBOX_APP_INDEX && appIndex < Constants::CLI_SANDBOX_APP_INDEX_MIN) ||
+        appIndex > Constants::CLI_SANDBOX_APP_INDEX_MAX) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }

@@ -1199,6 +1199,13 @@ public:
         int32_t userId, std::vector<BundleInfo> &bundleInfos) const;
     std::vector<int32_t> GetCloneAppIndexes(const std::string &bundleName, int32_t userId) const;
     std::set<int32_t> GetCloneAppIndexes(const std::string &bundleName) const;
+    /**
+     * @brief Get all CLI sandbox app indexes for the specified bundle and user.
+     * @param bundleName Indicates the bundle name.
+     * @param userId Indicates the user ID.
+     * @return Returns the vector of CLI sandbox app indexes.
+     */
+    std::vector<int32_t> GetCliSandboxAppIndexes(const std::string &bundleName, int32_t userId) const;
 
     ErrCode ExplicitQueryExtensionInfoV9(const Want &want, int32_t flags, int32_t userId,
         ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
@@ -1276,6 +1283,8 @@ public:
     ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir);
     std::vector<int32_t> GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
+        int32_t userId) const;
+    std::vector<int32_t> GetCliSandboxAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
         int32_t userId) const;
     ErrCode GetBundleDir(int32_t userId, BundleType type, AccountSA::OhosAccountInfo &accountInfo,
         BundleDir &bundleDir) const;

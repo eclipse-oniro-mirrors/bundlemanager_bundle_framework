@@ -525,5 +525,50 @@ std::string BundleCliSandboxInstaller::GetActualCreatorBundleName(
         return envCallerBundleName;
     }
 }
+
+ErrCode BundleCliSandboxInstaller::DestroyAllCliSandboxApps(
+    const std::string &bundleName, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin, bundleName=%{public}s, userId=%{public}d", bundleName.c_str(), userId);
+    if (bundleName.empty()) {
+        APP_LOGE("DestroyAllCliSandboxAppsByBundle failed due to empty bundle name");
+        return ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INVALID_BUNDLE_NAME;
+    }
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INTERNAL_ERROR;
+    }
+    if (!dataMgr_->HasUserId(userId)) {
+        APP_LOGE("destroy sandbox app user %{public}d not exist", userId);
+        return ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_USER_NOT_EXIST;
+    }
+    // Check if bundle is installed
+    InnerBundleInfo info;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("the bundle is not installed");
+        return ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_APP_NOT_EXISTED;
+    }
+    InnerBundleUserInfo userInfo;
+    if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
+        APP_LOGE("the origin application is not installed at current user");
+        return ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID;
+    }
+    ErrCode result = ERR_OK;
+    // uninstall all CLI sandbox app
+    for (auto it = userInfo.sandboxInfos.begin(); it != userInfo.sandboxInfos.end(); it++) {
+        int32_t appIndex = it->second.appIndex;
+        APP_LOGD("uninstall CLI sandbox: bundle=%{public}s, userId=%{public}d, appIndex=%{public}d",
+            bundleName.c_str(), userId, appIndex);
+        if (ProcessDestroyCliSandbox(Constants::EMPTY_STRING, Constants::EMPTY_STRING,
+            bundleName, userId, appIndex, true) != ERR_OK) {
+            APP_LOGE("Destroy CLI sandbox failed, bundleName=%{public}s, userId=%{public}d, appIndex %{public}d",
+                bundleName.c_str(), userId, appIndex);
+            result = ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INTERNAL_ERROR;
+        }
+    }
+    APP_LOGD("end, bundleName=%{public}s, userId=%{public}d, result=%{public}d", bundleName.c_str(), userId, result);
+    return result;
+}
 } // namespace AppExecFwk
 } // namespace OHOS

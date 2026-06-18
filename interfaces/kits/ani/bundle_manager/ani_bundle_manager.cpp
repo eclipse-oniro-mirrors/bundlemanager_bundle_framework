@@ -30,6 +30,7 @@
 #include <ani_signature_builder.h>
 #include "app_install_extended_info.h"
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "bundle_errors.h"
 #include "bundle_file_util.h"
 #include "bundle_manager_helper.h"
@@ -1288,7 +1289,9 @@ static void CleanBundleCacheFilesNative(ani_env* env, ani_string aniBundleName, 
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, TYPE_STRING);
         return;
     }
-    if (aniAppIndex < Constants::MAIN_APP_INDEX || aniAppIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (aniAppIndex < Constants::MAIN_APP_INDEX ||
+        (aniAppIndex > BundleFileUtil::GetCloneMaxCount() && aniAppIndex < Constants::CLI_SANDBOX_APP_INDEX_MIN) ||
+        aniAppIndex > Constants::CLI_SANDBOX_APP_INDEX_MAX) {
         APP_LOGE("appIndex: %{public}d not in valid range", aniAppIndex);
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, Constants::APP_INDEX, TYPE_NUMBER);
         return;

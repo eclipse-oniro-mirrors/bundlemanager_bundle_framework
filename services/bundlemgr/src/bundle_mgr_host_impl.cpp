@@ -1963,7 +1963,9 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize, Cl
         notRunningSum++;
         std::vector<int32_t> appIndexes = {0};
         std::vector<int32_t> cloneIndexes = dataMgr->GetCloneAppIndexes(useStat.bundleName_, currentUserId);
+        std::vector<int32_t> cliSandboxIndexes = dataMgr->GetCliSandboxAppIndexes(useStat.bundleName_, currentUserId);
         appIndexes.insert(appIndexes.end(), cloneIndexes.begin(), cloneIndexes.end());
+        appIndexes.insert(appIndexes.end(), cliSandboxIndexes.begin(), cliSandboxIndexes.end());
         for (const int32_t &appIndex : appIndexes) {
             uint64_t cleanCacheSize = 0; // The cache size of a single application cleaned up
             ErrCode ret = CleanBundleCacheFilesGetCleanSize(useStat.bundleName_, currentUserId, cleanType,
@@ -2169,6 +2171,27 @@ bool BundleMgrHostImpl::CheckAppIndex(const std::string &bundleName, int32_t use
     return true;
 }
 
+bool BundleMgrHostImpl::CheckCliSandboxAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    if (appIndex < Constants::CLI_SANDBOX_APP_INDEX_MIN ||
+        appIndex > Constants::CLI_SANDBOX_APP_INDEX_MAX) {
+        APP_LOGW_NOFUNC("appIndex[%{public}d] is out of range for cli", appIndex);
+        return false;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    std::vector<int32_t> appIndexes = dataMgr->GetCliSandboxAppIndexes(bundleName, userId);
+    bool isAppIndexInvalid = std::find(appIndexes.cbegin(), appIndexes.cend(), appIndex) == appIndexes.cend();
+    if (isAppIndexInvalid) {
+        APP_LOGW_NOFUNC("appIndex[%{public}d] is invalid for cli", appIndex);
+        return false;
+    }
+    return true;
+}
+
 ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
     int32_t userId, int32_t appIndex)
@@ -2229,7 +2252,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ret;
     }
 
-    if (!CheckAppIndex(bundleName, userId, appIndex)) {
+    if (!CheckAppIndex(bundleName, userId, appIndex) && !CheckCliSandboxAppIndex(bundleName, userId, appIndex)) {
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
             callingUid, callingBundleName);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
@@ -2413,7 +2436,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
         }
 
         NotifyBundleEvents installRes;
-        if (appIndex > 0) {
+        if (appIndex > 0 && appIndex <= BundleFileUtil::GetCloneMaxCount()) {
             std::map<std::string, InnerBundleCloneInfo> cloneInfos = innerBundleUserInfo.cloneInfos;
             auto cloneInfoIter = cloneInfos.find(std::to_string(appIndex));
             if (cloneInfoIter == cloneInfos.end()) {
@@ -2422,6 +2445,27 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
                 return;
             }
             int32_t uid = cloneInfoIter->second.uid;
+            installRes = {
+                .type = NotifyType::BUNDLE_CACHE_CLEARED,
+                .resultCode = ERR_OK,
+                .accessTokenId = innerBundleUserInfo.accessTokenId,
+                .uid = uid,
+                .appIndex = appIndex,
+                .bundleName = bundleName,
+                .appDistributionType = innerBundleInfo.GetAppDistributionType(),
+            };
+            NotifyBundleStatus(installRes);
+            return;
+        }
+        if (appIndex >= ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN) {
+            std::map<std::string, InnerCliSandboxInfo> sandboxInfos = innerBundleUserInfo.sandboxInfos;
+            auto iter = sandboxInfos.find(std::to_string(appIndex));
+            if (iter == sandboxInfos.end()) {
+                APP_LOGW("Get calling userCloneInfo in bundle(%{public}s) failed, appIndex:%{public}d",
+                    bundleName.c_str(), appIndex);
+                return;
+            }
+            int32_t uid = iter->second.uid;
             installRes = {
                 .type = NotifyType::BUNDLE_CACHE_CLEARED,
                 .resultCode = ERR_OK,
@@ -2484,7 +2528,7 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         APP_LOGE("the  bundleName empty or invalid userid");
         return false;
     }
-    if (!CheckAppIndex(bundleName, userId, appIndex)) {
+    if (!CheckAppIndex(bundleName, userId, appIndex) && !CheckCliSandboxAppIndex(bundleName, userId, appIndex)) {
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
             callingUid, callingBundleName);
         return false;
@@ -4297,7 +4341,7 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         return false;
     }
 
-    if (!CheckAppIndex(bundleName, userId, appIndex)) {
+    if (!CheckAppIndex(bundleName, userId, appIndex) && !CheckCliSandboxAppIndex(bundleName, userId, appIndex)) {
         UninstallBundleInfo uninstallBundleInfo;
         if (!dataMgr->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
             APP_LOGD("bundle is not existed and not uninstalled with keepdata before");
