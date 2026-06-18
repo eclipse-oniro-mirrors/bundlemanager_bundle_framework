@@ -2110,5 +2110,25 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CleanBundleDataDir_0300, T
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CleanBundleDataDir_0300 end";
 }
+
+/**
+ * @tc.number: BmsInstalldClientTest_DeleteOldCacheFiles_0100
+ * @tc.name: DeleteOldCacheFiles
+ * @tc.desc: Test client-side validation for empty paths.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeleteOldCacheFiles_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_DeleteOldCacheFiles_0100 start";
+    std::vector<std::string> paths;
+    uint64_t cacheSize = 0;
+    uint64_t cleanedSize = 0;
+    ErrCode result = installClient_->DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    paths.push_back("/data/app/el2/100/base/com.example.test/cache");
+    result = installClient_->DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_DeleteOldCacheFiles_0100 end";
+}
 } // namespace AppExecFwk
 } // namespace OHOS

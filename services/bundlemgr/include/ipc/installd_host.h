@@ -310,6 +310,14 @@ private:
     bool HandleExtractSkillsPackage(MessageParcel &data, MessageParcel &reply);
 
     bool HandleDeleteCertAndRemoveKey(MessageParcel &data, MessageParcel &reply);
+
+    /**
+     * @brief Handles the DeleteOldCacheFiles function called from a Installd proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleDeleteOldCacheFiles(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

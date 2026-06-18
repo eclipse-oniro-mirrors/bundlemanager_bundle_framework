@@ -1649,5 +1649,32 @@ ErrCode InstalldProxy::DeleteCertAndRemoveKey(const std::vector<std::string> &ce
     }
     return ERR_OK;
 }
+
+ErrCode InstalldProxy::DeleteOldCacheFiles(
+    const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
+{
+    if (paths.empty() || paths.size() > MAX_VEC_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD, "paths is empty or exceed max path num:%{public}zu", paths.size());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(paths.size()));
+    for (const std::string &path : paths) {
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(path));
+    }
+    INSTALLD_PARCEL_WRITE(data, Uint64, cacheSize);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::DELETE_OLD_CACHE_FILES, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
+        return ret;
+    }
+    cleanedSize = reply.ReadUint64();
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

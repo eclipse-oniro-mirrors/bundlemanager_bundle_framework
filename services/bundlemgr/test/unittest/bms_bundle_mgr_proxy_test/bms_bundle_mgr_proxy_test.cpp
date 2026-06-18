@@ -1897,5 +1897,29 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAlternateIcons_0100, Function | MediumTest | 
     auto ret = bundleMgrProxy.GetAlternateIcons(alternateIcons);
     EXPECT_NE(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: CleanBundlePartialCacheAutomatic_0100
+ * @tc.name: test the CleanBundlePartialCacheAutomatic
+ * @tc.desc: 1. system running normally
+ *           2. test CleanBundlePartialCacheAutomatic
+ */
+HWTEST_F(BmsBundleMgrProxyTest, CleanBundlePartialCacheAutomatic_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    CleanCacheInfo cleanCacheInfo;
+    cleanCacheInfo.bundleName = "";
+    cleanCacheInfo.userId = 100;
+    cleanCacheInfo.appIndex = 0;
+    cleanCacheInfo.cacheThreshold = 0;
+    uint64_t beforeCleanedSize = 0;
+    uint64_t afterCleanedSize = 0;
+    auto res = bundleMgrProxy.CleanBundlePartialCacheAutomatic(cleanCacheInfo, beforeCleanedSize, afterCleanedSize);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    cleanCacheInfo.bundleName = "com.example.test";
+    res = bundleMgrProxy.CleanBundlePartialCacheAutomatic(cleanCacheInfo, beforeCleanedSize, afterCleanedSize);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
+}
 }
 }

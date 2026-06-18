@@ -4048,5 +4048,83 @@ ErrCode InstalldHostImpl::ExtractSkillsPackage(const SkillsPackageParam &param,
     }
     return InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
 }
+
+void InstalldHostImpl::GetFilesAndSortByLastModifiedTime(const std::vector<std::string> &paths,
+    std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> &fileTimePairs)
+{
+    std::vector<std::string> fileList;
+    std::error_code ec;
+    for (const auto &path : paths) {
+        if (!std::filesystem::exists(path, ec) || !std::filesystem::is_directory(path, ec)) {
+            LOG_E(BMS_TAG_DEFAULT, "Path(%{private}s) does not exist or is not a directory", path.c_str());
+            continue;
+        }
+
+        std::vector<std::string> resultList;
+        for (const auto &file : std::filesystem::recursive_directory_iterator(path, ec)) {
+            if (file.is_regular_file(ec) || (file.is_directory(ec) && std::filesystem::is_empty(file.path(), ec))) {
+                resultList.push_back(std::filesystem::absolute(file.path(), ec).string());
+            }
+        }
+        fileList.reserve(fileList.size() + resultList.size());
+        fileList.insert(fileList.end(), resultList.begin(), resultList.end());
+    }
+
+    fileTimePairs.reserve(fileList.size());
+    for (const auto& file : fileList) {
+        auto time = std::filesystem::last_write_time(file, ec);
+        if (!ec) {
+            fileTimePairs.emplace_back(std::filesystem::path(file), time);
+        }
+    }
+
+    std::sort(fileTimePairs.begin(), fileTimePairs.end(),
+        [](const auto& a, const auto& b) {
+            return a.second < b.second;
+        });
+}
+
+ErrCode InstalldHostImpl::DeleteOldCacheFiles(
+    const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> fileTimePairs;
+    GetFilesAndSortByLastModifiedTime(paths, fileTimePairs);
+
+    cleanedSize = 0;
+    for (const auto &file : fileTimePairs) {
+        std::error_code ec;
+        const auto &filePath = file.first;
+        if (std::filesystem::is_directory(filePath, ec)) {
+            std::filesystem::remove(filePath, ec);
+        } else {
+            uint64_t fileSize = std::filesystem::file_size(filePath, ec);
+            if (ec || !std::filesystem::remove(filePath, ec)) {
+                continue;
+            }
+            cleanedSize += fileSize;
+        }
+
+        auto parentPath = filePath.parent_path();
+        while (std::find(paths.begin(), paths.end(), parentPath) == paths.end()) {
+            if (std::filesystem::is_directory(parentPath, ec) &&
+                std::filesystem::is_empty(parentPath, ec)) {
+                std::filesystem::remove(parentPath, ec);
+                parentPath = parentPath.parent_path();
+            } else {
+                break;
+            }
+        }
+
+        if (cleanedSize >= cacheSize) {
+            break;
+        }
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

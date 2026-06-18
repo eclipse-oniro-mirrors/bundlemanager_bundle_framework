@@ -19,6 +19,7 @@
 #include <cinttypes>
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
+#include "scope_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -248,6 +249,10 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
     dataMgr->GetBundleCacheInfos(userId, validBundles, true);
     if (!validBundles.empty()) {
         auto CleanAllBundleCache = [validBundles, userId, processCacheCallback, startTime]() {
+            BundleCacheMgr::TryMarkCleaning();
+            ScopeGuard guard([]() {
+                BundleCacheMgr::MarkCleaningDone();
+            });
             ErrCode result = ERR_OK;
             APP_LOGI("thread for CleanBundleCache start");
             result = CleanBundleCache(validBundles, userId);
@@ -262,6 +267,36 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
         std::thread(CleanAllBundleCache).detach();
     }
     return ERR_OK;
+}
+
+bool BundleCacheMgr::TryMarkCleaning(const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+{
+    std::unique_lock lock(cleaningMutex_);
+    if (isCleaningAllCache_.load()) {
+        return false;
+    }
+
+    auto [it, inserted] = cleaningList_.emplace(
+        bundleName + "_" + std::to_string(userId) + "_" + std::to_string(appIndex));
+    return inserted;
+}
+
+void BundleCacheMgr::TryMarkCleaning()
+{
+    std::unique_lock lock(cleaningMutex_);
+    isCleaningAllCache_.store(true);
+}
+
+void BundleCacheMgr::MarkCleaningDone(const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+{
+    std::unique_lock lock(cleaningMutex_);
+    cleaningList_.erase(bundleName + "_" + std::to_string(userId) + "_" + std::to_string(appIndex));
+}
+
+void BundleCacheMgr::MarkCleaningDone()
+{
+    std::unique_lock lock(cleaningMutex_);
+    isCleaningAllCache_.store(false);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

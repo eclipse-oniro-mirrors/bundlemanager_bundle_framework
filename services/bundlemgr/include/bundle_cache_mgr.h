@@ -56,6 +56,15 @@ public:
     static ErrCode CleanBundleCache(const std::vector<std::tuple<std::string,
         std::vector<std::string>, std::vector<int32_t>>> &validBundles, int32_t userId);
     static ErrCode CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback);
+    static bool TryMarkCleaning(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+    static void TryMarkCleaning();
+    static void MarkCleaningDone(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+    static void MarkCleaningDone();
+
+private:
+    inline static std::atomic<bool> isCleaningAllCache_{false};
+    inline static std::shared_mutex cleaningMutex_;
+    inline static std::unordered_set<std::string> cleaningList_;
 };
 } // AppExecFwk
 } // OHOS

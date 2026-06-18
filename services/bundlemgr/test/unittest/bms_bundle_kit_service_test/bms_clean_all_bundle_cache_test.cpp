@@ -1174,4 +1174,16 @@ HWTEST_F(BmsCleanAllBundleCacheTest, CleanBundleCacheByInodeCount_0400, Function
     ClearDataMgrData(BUNDLE_NAME_TEST);
     SetCleanBundleDataDirResult(true);
 }
+
+/**
+ * @tc.number: TryMarkCleaning_0100
+ * @tc.name: test application is being cleaned
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, TryMarkCleaning_0100, Function | SmallTest | Level1)
+{
+    BundleCacheMgr::TryMarkCleaning();
+    auto ret = BundleCacheMgr::TryMarkCleaning(BUNDLE_NAME_TEST, DEFAULT_USERID, DEFAULT_APP_INDEX);
+    EXPECT_FALSE(ret);
+    BundleCacheMgr::MarkCleaningDone();
+}
 }

@@ -383,6 +383,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::CHECK_HSP_PLUGIN_CERT_VALIDITY):
             result = HandleCheckHspPluginCertValidity(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_OLD_CACHE_FILES):
+            result = HandleDeleteOldCacheFiles(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1612,6 +1615,34 @@ bool InstalldHost::HandleDeleteCertAndRemoveKey(MessageParcel &data, MessageParc
 
     ErrCode result = DeleteCertAndRemoveKey(certPaths);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleDeleteOldCacheFiles(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t pathSize = data.ReadInt32();
+    if (pathSize <= 0 || pathSize > MAX_VEC_SIZE) {
+        APP_LOGE("pathSize is error");
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+        return false;
+    }
+    std::vector<std::string> paths;
+    paths.reserve(pathSize);
+    CONTAINER_SECURITY_VERIFY(data, pathSize, &paths);
+    for (int32_t i = 0; i < pathSize; i++) {
+        std::string path = Str16ToStr8(data.ReadString16());
+        if (path.empty() || path.size() > Constants::BMS_MAX_PATH_LENGTH) {
+            APP_LOGE("path is empty or size is too large");
+            WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+            return false;
+        }
+        paths.emplace_back(std::move(path));
+    }
+    uint64_t cacheSize = data.ReadUint64();
+    uint64_t cleanedSize = 0;
+    ErrCode result = DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Uint64, reply, cleanedSize);
     return true;
 }
 }  // namespace AppExecFwk

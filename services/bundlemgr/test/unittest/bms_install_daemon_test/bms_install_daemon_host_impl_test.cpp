@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
+#include <fcntl.h>
 #include <gtest/gtest.h>
 #include <vector>
+#include <sys/stat.h>
 
 #define private public
 #include "ipc/file_stat.h"
@@ -1777,5 +1779,79 @@ HWTEST_F(BmsInstallDaemonHostImplTest, GetExtensionSandboxTypeList_0100, Functio
     auto ret = hostImpl->GetExtensionSandboxTypeList(typeList);
     // In current test environment, VerifyCallingPermission returns false
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetFilesAndSortByLastModifiedTime_0100
+ * @tc.name: test GetFilesAndSortByLastModifiedTime empty paths
+ * @tc.desc: 1. verify GetFilesAndSortByLastModifiedTime when dir not exist
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, GetFilesAndSortByLastModifiedTime_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> paths = {""};
+    std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> fileTimePairs;
+    hostImpl->GetFilesAndSortByLastModifiedTime(paths, fileTimePairs);
+    EXPECT_TRUE(fileTimePairs.empty());
+}
+
+/**
+ * @tc.number: GetFilesAndSortByLastModifiedTime_0200
+ * @tc.name: test GetFilesAndSortByLastModifiedTime empty paths
+ * @tc.desc: 1. verify GetFilesAndSortByLastModifiedTime when path is not dir
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, GetFilesAndSortByLastModifiedTime_0200, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    int32_t fd = creat("/data/test/filename.txt", 0777);
+    ASSERT_NE(fd, -1);
+    std::vector<std::string> paths = {"/data/test/filename.txt"};
+    std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> fileTimePairs;
+    hostImpl->GetFilesAndSortByLastModifiedTime(paths, fileTimePairs);
+    EXPECT_TRUE(fileTimePairs.empty());
+    unlink("/data/test/filename.txt");
+}
+
+/**
+ * @tc.number: GetFilesAndSortByLastModifiedTime_0300
+ * @tc.name: test GetFilesAndSortByLastModifiedTime empty paths
+ * @tc.desc: 1. verify GetFilesAndSortByLastModifiedTime normal
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, GetFilesAndSortByLastModifiedTime_0300, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = mkdir("/data/test/temp", 0777);
+    ASSERT_EQ(ret, 0);
+    ret = mkdir("/data/test/temp/test", 0777);
+    ASSERT_EQ(ret, 0);
+    int32_t fd = creat("/data/test/temp/filename.txt", 0777);
+    ASSERT_NE(fd, -1);
+    std::vector<std::string> paths = {"/data/test/temp"};
+    std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> fileTimePairs;
+    hostImpl->GetFilesAndSortByLastModifiedTime(paths, fileTimePairs);
+    EXPECT_FALSE(fileTimePairs.empty());
+    EXPECT_EQ(fileTimePairs.size(), 2);
+    std::error_code ec;
+    std::filesystem::remove_all("/data/test/temp", ec);
+}
+
+/**
+ * @tc.number: DeleteOldCacheFiles_0100
+ * @tc.name: test DeleteOldCacheFiles
+ * @tc.desc: 1. verify DeleteOldCacheFiles when permission denied
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, DeleteOldCacheFiles_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> paths;
+    uint64_t cacheSize = 0;
+    uint64_t cleanedSize = 0;
+    auto ret = hostImpl->DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+    EXPECT_EQ(cleanedSize, 0);
 }
 } // OHOS
