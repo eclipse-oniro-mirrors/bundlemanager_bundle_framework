@@ -9762,7 +9762,10 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
         std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
     // process dynamic icon file
     result = ProcessDynamicIconFileWhenUpdate(oldInfo, realAppCodePath, newAppCodePath);
-    CHECK_RESULT(result, "copy extend resource to install path failed %{public}d");
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "-n %{public}s copy extend resource to install path failed %{public}d",
+            oldInfo.GetBundleName().c_str(), result);
+    }
     // process plugin dir
     result = ProcessPluginFilesWhenUpdate(oldInfo, realAppCodePath, newAppCodePath);
     CHECK_RESULT(result, "copy plugin file to install path failed %{public}d");
