@@ -61,7 +61,6 @@ public:
         const std::map<std::string, std::string>& modulePathMap);
     static int32_t DeleteIdentity(
         AccessTokenID tokenID, const std::string& bundleName, ReservedType type);
-    static int32_t PreMigrateUIDList(const std::vector<int32_t>& uidList);
     static int32_t MigrateInstalledBundles(const std::vector<MigratedInfo>& migratedInfoList,
         std::vector<BundleMigrateResult>& results);
     static int32_t FinishMigration();

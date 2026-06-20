@@ -599,8 +599,6 @@ private:
     void InnerProcessCheckInstallSource();
     void ProcessAccessTokenMigration();
     bool InnerProcessAccessTokenMigration();
-    bool CollectAndPreMigrateUids(const std::shared_ptr<BundleDataMgr> &dataMgr,
-        std::vector<int32_t> &uidList);
     void BuildMigrationData(const std::shared_ptr<BundleDataMgr> &dataMgr,
         const std::vector<std::string> &bundleNames,
         const std::unordered_map<std::string, InnerBundleInfo> &sandboxMap,

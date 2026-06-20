@@ -3634,7 +3634,6 @@ HWTEST_F(BmsEventHandlerTest, OTAInstallSystemSkills_0100, Function | SmallTest 
 // ============================================================================
 namespace Security {
 namespace AccessToken {
-    void SetPreMigrateRetForTest(int32_t value);
     void SetMigrateInstalledBundlesRetForTest(int32_t value);
     void SetMigrateResultsForTest(const std::vector<BundleMigrateResult>& results);
 }
@@ -3670,15 +3669,12 @@ HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0200, Function | Small
     auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
     ASSERT_NE(bmsParam, nullptr);
     bmsParam->SaveBmsParam("otaFlag", "0");
-    AccessToken::SetPreMigrateRetForTest(
-        AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     handler->ProcessAccessTokenMigration();
     std::string val;
     bmsParam->GetBmsParam("otaFlag", val);
     EXPECT_NE(val, "0");
-    AccessToken::SetPreMigrateRetForTest(0);
 }
 
 // ============================================================================
@@ -3704,128 +3700,18 @@ HWTEST_F(BmsEventHandlerTest, InnerProcessAccessTokenMigration_0100, Function | 
 
 /**
  * @tc.number: InnerProcessAccessTokenMigration_0200
- * @tc.name: InnerProcessAccessTokenMigration normal flow
- * @tc.desc: Normal flow with empty bundles → PreMigrateUIDList returns
- *           ERR_MIGRATION_COMPLETED → exits early, returns true
+ * @tc.name: InnerProcessAccessTokenMigration normal flow with empty bundles
+ * @tc.desc: No installed bundles → migration completes successfully and returns true
  */
 HWTEST_F(BmsEventHandlerTest, InnerProcessAccessTokenMigration_0200, Function | SmallTest | Level0)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
     dataMgr->bundleInfos_.clear();
-    AccessToken::SetPreMigrateRetForTest(
-        AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     bool result = handler->InnerProcessAccessTokenMigration();
     EXPECT_TRUE(result);
-    AccessToken::SetPreMigrateRetForTest(0);
-}
-
-// ============================================================================
-// CollectAndPreMigrateUids test cases
-// ============================================================================
-
-/**
- * @tc.number: CollectAndPreMigrateUids_0100
- * @tc.name: CollectAndPreMigrateUids empty bundles
- * @tc.desc: No installed bundles → uidList empty → returns false
- */
-HWTEST_F(BmsEventHandlerTest, CollectAndPreMigrateUids_0100, Function | SmallTest | Level0)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    dataMgr->bundleInfos_.clear();
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    std::vector<int32_t> uidList;
-    bool result = handler->CollectAndPreMigrateUids(dataMgr, uidList);
-    EXPECT_FALSE(result);
-}
-
-/**
- * @tc.number: CollectAndPreMigrateUids_0200
- * @tc.name: CollectAndPreMigrateUids PreMigrateUIDList ERR_MIGRATION_COMPLETED
- * @tc.desc: Has bundles with valid UIDs, PreMigrateUIDList returns
- *           ERR_MIGRATION_COMPLETED → returns false
- */
-HWTEST_F(BmsEventHandlerTest, CollectAndPreMigrateUids_0200, Function | SmallTest | Level0)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    dataMgr->bundleInfos_.clear();
-    InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = "test.bundle.migrate";
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleUserInfo.userId = 100;
-    userInfo.uid = 20000001;
-    info.AddInnerBundleUserInfo(userInfo);
-    dataMgr->bundleInfos_["test.bundle.migrate"] = info;
-    AccessToken::SetPreMigrateRetForTest(
-        AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    std::vector<int32_t> uidList;
-    bool result = handler->CollectAndPreMigrateUids(dataMgr, uidList);
-    EXPECT_FALSE(result);
-    dataMgr->bundleInfos_.clear();
-    AccessToken::SetPreMigrateRetForTest(0);
-}
-
-/**
- * @tc.number: CollectAndPreMigrateUids_0300
- * @tc.name: CollectAndPreMigrateUids success
- * @tc.desc: Has bundles with valid UIDs, PreMigrateUIDList returns success
- */
-HWTEST_F(BmsEventHandlerTest, CollectAndPreMigrateUids_0300, Function | SmallTest | Level0)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    dataMgr->bundleInfos_.clear();
-    InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = "test.bundle.migrate";
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleUserInfo.userId = 100;
-    userInfo.uid = 20000001;
-    info.AddInnerBundleUserInfo(userInfo);
-    dataMgr->bundleInfos_["test.bundle.migrate"] = info;
-    AccessToken::SetPreMigrateRetForTest(AccessToken::AccessTokenKitRet::RET_SUCCESS);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    std::vector<int32_t> uidList;
-    bool result = handler->CollectAndPreMigrateUids(dataMgr, uidList);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(uidList.size(), 1);
-    EXPECT_EQ(uidList[0], 20000001);
-    dataMgr->bundleInfos_.clear();
-    AccessToken::SetPreMigrateRetForTest(0);
-}
-
-/**
- * @tc.number: CollectAndPreMigrateUids_0400
- * @tc.name: CollectAndPreMigrateUids skip zero uid
- * @tc.desc: Bundles with uid == 0 should be skipped
- */
-HWTEST_F(BmsEventHandlerTest, CollectAndPreMigrateUids_0400, Function | SmallTest | Level0)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    dataMgr->bundleInfos_.clear();
-    InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = "test.bundle.zero";
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleUserInfo.userId = 100;
-    userInfo.uid = 0; // uid == 0, should be skipped
-    info.AddInnerBundleUserInfo(userInfo);
-    dataMgr->bundleInfos_["test.bundle.zero"] = info;
-    AccessToken::SetPreMigrateRetForTest(AccessToken::AccessTokenKitRet::RET_SUCCESS);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    std::vector<int32_t> uidList;
-    bool result = handler->CollectAndPreMigrateUids(dataMgr, uidList);
-    EXPECT_FALSE(result); // uidList is empty, returns false
-    dataMgr->bundleInfos_.clear();
-    AccessToken::SetPreMigrateRetForTest(0);
 }
 
 // ============================================================================

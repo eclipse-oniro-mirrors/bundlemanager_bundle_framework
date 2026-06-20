@@ -287,14 +287,8 @@ int32_t AccessTokenKit::DeleteIdentity(
     return 0;
 }
 
-int32_t g_preMigrateRet = 0;
 int32_t g_migrateInstalledBundlesRet = 0;
 std::vector<BundleMigrateResult> g_migrateResults;
-
-void SetPreMigrateRetForTest(int32_t value)
-{
-    g_preMigrateRet = value;
-}
 
 void SetMigrateInstalledBundlesRetForTest(int32_t value)
 {
@@ -304,11 +298,6 @@ void SetMigrateInstalledBundlesRetForTest(int32_t value)
 void SetMigrateResultsForTest(const std::vector<BundleMigrateResult>& results)
 {
     g_migrateResults = results;
-}
-
-int32_t AccessTokenKit::PreMigrateUIDList(const std::vector<int32_t>& uidList)
-{
-    return g_preMigrateRet;
 }
 
 int32_t AccessTokenKit::MigrateInstalledBundles(
