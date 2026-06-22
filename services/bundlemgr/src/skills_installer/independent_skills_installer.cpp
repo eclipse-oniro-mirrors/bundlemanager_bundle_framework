@@ -635,14 +635,12 @@ ErrCode IndependentSkillsInstaller::UpdateSkillsPackage(
             LOG_E(BMS_TAG_INSTALLER, "UninstallLowerVersion failed %{public}d, can not rollback", result);
         }
     }
-    // update hapToken
-    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
-    result = BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, oldInfo, userId_, checkResult,
-        verifyRes_.GetProvisionInfo().appServiceCapabilities, false, false, sessionId_);
+    result = BundlePermissionMgr::CheckHapPermissionInfo(
+        sessionId_, Security::AccessToken::TYPE_REPLACE, checkResult);
     if (result != ERR_OK) {
         auto msg = BundlePermissionMgr::GetCheckResultMsg(checkResult);
-        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s update hapToken failed msg %{public}s, err %{public}d",
+        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s CheckHapPermissionInfo failed msg %{public}s, err %{public}d",
             bundleName_.c_str(), msg.c_str(), result);
         return result;
     }
