@@ -187,6 +187,7 @@ bundle_install_external_deps = [
   "dfs_service:distributed_file_daemon_kit_inner",
   "ffrt:libffrt",
   "hitrace:libhitracechain",
+  "icu:shared_icuuc",
   "libxml2:libxml2",
   "memmgr:memmgrclient",
   "openssl:libcrypto_shared",
