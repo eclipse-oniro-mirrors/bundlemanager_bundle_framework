@@ -789,6 +789,72 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1700, Function | SmallTest |
 }
 
 /**
+ * @tc.number: BundlePermissionMgr_InitHapToken_0200
+ * @tc.name: test InitHapToken with ERR_TOKENID_HAS_EXISTED
+ * @tc.desc: 1.When PrepareHapIdentity returns ERR_TOKENID_HAS_EXISTED and sessionId=0,
+ *           2.delete the reserved data token and retry, expect success
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_InitHapToken_0200, Function | SmallTest | Level0)
+{
+    BundlePermissionMgr::Init();
+    InnerBundleInfo innerBundleInfo;
+    int32_t userId = 0;
+    int32_t dlpType = 0;
+    Security::AccessToken::AccessTokenIDEx tokenIdeEx;
+
+    int32_t sessionId = 0;
+    Security::AccessToken::SetPrepareHapIdentityRetForTest(
+        Security::AccessToken::AccessTokenError::ERR_TOKENID_HAS_EXISTED);
+    int32_t ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType,
+        tokenIdeEx, "{}", false, sessionId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_InitHapToken_0300
+ * @tc.name: test InitHapToken skip cleanup when sessionId is not zero
+ * @tc.desc: 1.When sessionId is not 0, skip the ERR_TOKENID_HAS_EXISTED cleanup path
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_InitHapToken_0300, Function | SmallTest | Level0)
+{
+    BundlePermissionMgr::Init();
+    InnerBundleInfo innerBundleInfo;
+    int32_t userId = 0;
+    int32_t dlpType = 0;
+    Security::AccessToken::AccessTokenIDEx tokenIdeEx;
+
+    int32_t sessionId = 1;
+    Security::AccessToken::SetPrepareHapIdentityRetForTest(
+        Security::AccessToken::AccessTokenError::ERR_TOKENID_HAS_EXISTED);
+    int32_t ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType,
+        tokenIdeEx, "{}", false, sessionId);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_InitHapToken_0400
+ * @tc.name: test InitHapToken delete reserved data failed
+ * @tc.desc: 1.When DeleteAccessTokenId fails, do not retry PrepareHapIdentity
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_InitHapToken_0400, Function | SmallTest | Level0)
+{
+    BundlePermissionMgr::Init();
+    InnerBundleInfo innerBundleInfo;
+    int32_t userId = 0;
+    int32_t dlpType = 0;
+    Security::AccessToken::AccessTokenIDEx tokenIdeEx;
+
+    int32_t sessionId = 0;
+    Security::AccessToken::SetPrepareHapIdentityRetForTest(
+        Security::AccessToken::AccessTokenError::ERR_TOKENID_HAS_EXISTED);
+    Security::AccessToken::SetDeleteIdentityRetForTest(
+        Security::AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL);
+    int32_t ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType,
+        tokenIdeEx, "{}", false, sessionId);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
  * @tc.number: BundlePermissionMgr_1800
  * @tc.name: test UpdateHapToken
  * @tc.desc: 1.test UpdateHapToken of BundlePermissionMgr

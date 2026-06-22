@@ -802,6 +802,20 @@ int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, cons
         ret = PrepareHapIdentity(innerBundleInfo, userId, dlpType, isDebugGrant,
             appServiceCapabilities, sessionId, identity);
     }
+    if (sessionId == 0 && ret == Security::AccessToken::AccessTokenError::ERR_TOKENID_HAS_EXISTED) {
+        Security::AccessToken::AccessTokenID tokenId =
+            Security::AccessToken::AccessTokenKit::GetHapTokenID(
+                userId, innerBundleInfo.GetBundleName(), innerBundleInfo.GetAppIndex());
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT,
+            "tokenId existed, delete reserved data, tokenId:%{public}u, bundleName:%{public}s",
+            tokenId, innerBundleInfo.GetBundleName().c_str());
+        int32_t delRet = DeleteAccessTokenId(tokenId, innerBundleInfo.GetBundleName(),
+            Security::AccessToken::ReservedType::RESERVED_DATA);
+        if (delRet == ERR_OK) {
+            ret = PrepareHapIdentity(innerBundleInfo, userId, dlpType, isDebugGrant,
+                appServiceCapabilities, sessionId, identity);
+        }
+    }
     if (ret == ERR_OK) {
         tokenIdeEx.tokenIDEx = identity.tokenId;
         if (identity.uid != Constants::INVALID_UID) {

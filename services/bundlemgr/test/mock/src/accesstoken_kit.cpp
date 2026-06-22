@@ -267,7 +267,9 @@ int32_t AccessTokenKit::PrepareHapIdentity(
     identity.tokenId = 1;
     std::lock_guard<std::mutex> lock(g_mockUidMutex);
     g_mockUidToBundleMap[identity.uid] = {info.bundleName, info.instIndex};
-    return 0;
+    int32_t ret = g_prepareHapIdentityRet;
+    g_prepareHapIdentityRet = 0;
+    return ret;
 }
 
 int32_t AccessTokenKit::UpdateHapPolicy(int32_t sessionId, int32_t tokenId, const BundlePolicy& policy)
@@ -284,7 +286,9 @@ int32_t AccessTokenKit::FinishInstall(int32_t sessionId, bool isSuccess,
 int32_t AccessTokenKit::DeleteIdentity(
     AccessTokenID tokenID, const std::string& bundleName, ReservedType type)
 {
-    return 0;
+    int32_t ret = g_deleteIdentityRet;
+    g_deleteIdentityRet = 0;
+    return ret;
 }
 
 int32_t g_migrateInstalledBundlesRet = 0;
@@ -378,6 +382,9 @@ int32_t AccessTokenKit::GetHapBaseInfoByUid(int32_t uid, HapBaseInfo& info)
 static BundlePolicyInfo g_bundlePolicyInfo;
 static int32_t g_cachePolicyBySessionIdRet = 0;
 
+static int32_t g_prepareHapIdentityRet = 0;
+static int32_t g_deleteIdentityRet = 0;
+
 void SetCachePolicyBySessionIdForTest(const BundlePolicyInfo& bundlePolicyInfo)
 {
     g_bundlePolicyInfo = bundlePolicyInfo;
@@ -386,6 +393,16 @@ void SetCachePolicyBySessionIdForTest(const BundlePolicyInfo& bundlePolicyInfo)
 void SetCachePolicyBySessionIdRetForTest(int32_t ret)
 {
     g_cachePolicyBySessionIdRet = ret;
+}
+
+void SetPrepareHapIdentityRetForTest(int32_t ret)
+{
+    g_prepareHapIdentityRet = ret;
+}
+
+void SetDeleteIdentityRetForTest(int32_t ret)
+{
+    g_deleteIdentityRet = ret;
 }
 
 int32_t AccessTokenKit::GetCachePolicyBySessionId(int32_t sessionId, const std::string& bundleName,
