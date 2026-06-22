@@ -743,7 +743,21 @@ bool AppControlManager::GetAbilityRunningRuleCache(const std::string &key, std::
     std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
     auto iter = abilityRunningControlRuleCache_.find(key);
     if (iter != abilityRunningControlRuleCache_.end()) {
-        disposedRules = iter->second;
+        std::vector<DisposedRule> tempRules = iter->second;
+        // Deep copy want for each DisposedRule
+        for (auto &rule : tempRules) {
+            if (rule.want == nullptr) {
+                continue;
+            }
+            Want *newWant = new (std::nothrow) Want(*(rule.want));
+            if (newWant != nullptr) {
+                rule.want = std::shared_ptr<Want>(newWant);
+            } else {
+                LOG_W(BMS_TAG_DEFAULT, "copy Want failed: %{public}s", key.c_str());
+                return false;
+            }
+        }
+        disposedRules = std::move(tempRules);
         return true;
     }
     return false;

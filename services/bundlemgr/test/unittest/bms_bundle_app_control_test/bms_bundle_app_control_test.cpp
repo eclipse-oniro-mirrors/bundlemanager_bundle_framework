@@ -3392,6 +3392,120 @@ HWTEST_F(BmsBundleAppControlTest, AbilityRunningRuleCache_0100, Function | Small
 }
 
 /**
+ * @tc.number: AbilityRunningRuleCache_0200
+ * @tc.name: Test AbilityRunningRuleCache deep copy verification
+ * @tc.desc: Verify that deep copy prevents shared want modification
+ */
+HWTEST_F(BmsBundleAppControlTest, AbilityRunningRuleCache_0200, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+
+    // Prepare test data with Want
+    DisposedRule rule;
+    rule.callerName = "com.xxx.xx";
+    rule.setTime = 11111111;
+    rule.want = std::make_shared<Want>();
+    rule.want->SetAction("test.action");
+    rule.want->AddEntity("test.entity");
+
+    std::vector<DisposedRule> disposedRules;
+    disposedRules.emplace_back(rule);
+    EXPECT_NO_THROW(appControlManager->SetAbilityRunningRuleCache(ABILITY_RUNNING_KEY, disposedRules));
+
+    // Get cache data first time
+    std::vector<DisposedRule> resultRules1;
+    bool ret = appControlManager->GetAbilityRunningRuleCache(ABILITY_RUNNING_KEY, resultRules1);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(resultRules1.size(), 1);
+    EXPECT_NE(resultRules1[0].want, nullptr);
+    EXPECT_EQ(resultRules1[0].want->GetAction(), "test.action");
+    EXPECT_EQ(resultRules1[0].want->GetEntities().size(), 1);
+
+    // Modify the retrieved want
+    resultRules1[0].want->SetAction("modified.action");
+
+    // Get cache data second time
+    std::vector<DisposedRule> resultRules2;
+    ret = appControlManager->GetAbilityRunningRuleCache(ABILITY_RUNNING_KEY, resultRules2);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(resultRules2.size(), 1);
+
+    // Verify that cache data is NOT modified (deep copy works)
+    EXPECT_EQ(resultRules2[0].want->GetAction(), "test.action");
+    EXPECT_NE(resultRules2[0].want->GetAction(), "modified.action");
+    EXPECT_EQ(resultRules2[0].want->GetEntities().size(), 1);
+
+    // Verify that two retrieved wants are different objects
+    EXPECT_NE(resultRules1[0].want.get(), resultRules2[0].want.get());
+
+    EXPECT_NO_THROW(appControlManager->DeleteAbilityRunningRuleCache({ ABILITY_RUNNING_KEY }));
+}
+
+/**
+ * @tc.number: AbilityRunningRuleCache_0300
+ * @tc.name: Test AbilityRunningRuleCache with multiple rules
+ * @tc.desc: Verify deep copy works correctly with multiple DisposedRules
+ */
+HWTEST_F(BmsBundleAppControlTest, AbilityRunningRuleCache_0300, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+
+    // Prepare test data with multiple rules
+    std::vector<DisposedRule> disposedRules;
+
+    DisposedRule rule1;
+    rule1.callerName = "com.xxx.xx1";
+    rule1.setTime = 11111111;
+    rule1.want = std::make_shared<Want>();
+    rule1.want->SetAction("action1");
+    disposedRules.emplace_back(rule1);
+
+    DisposedRule rule2;
+    rule2.callerName = "com.xxx.xx2";
+    rule2.setTime = 22222222;
+    rule2.want = std::make_shared<Want>();
+    rule2.want->SetAction("action2");
+    disposedRules.emplace_back(rule2);
+
+    DisposedRule rule3;
+    rule3.callerName = "com.xxx.xx3";
+    rule3.setTime = 33333333;
+    rule3.want = nullptr;  // Test with null want
+    disposedRules.emplace_back(rule3);
+
+    EXPECT_NO_THROW(appControlManager->SetAbilityRunningRuleCache(ABILITY_RUNNING_KEY, disposedRules));
+
+    // Get cache data
+    std::vector<DisposedRule> resultRules;
+    bool ret = appControlManager->GetAbilityRunningRuleCache(ABILITY_RUNNING_KEY, resultRules);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(resultRules.size(), 3);
+
+    // Verify each rule is correctly deep copied
+    EXPECT_EQ(resultRules[0].want->GetAction(), "action1");
+    EXPECT_EQ(resultRules[1].want->GetAction(), "action2");
+    EXPECT_EQ(resultRules[2].want, nullptr);
+
+    // Modify first rule's want
+    resultRules[0].want->SetAction("modified1");
+
+    // Get cache data again and verify first rule is NOT modified
+    std::vector<DisposedRule> resultRules2;
+    ret = appControlManager->GetAbilityRunningRuleCache(ABILITY_RUNNING_KEY, resultRules2);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(resultRules2[0].want->GetAction(), "action1");
+    EXPECT_NE(resultRules2[0].want->GetAction(), "modified1");
+
+    EXPECT_NO_THROW(appControlManager->DeleteAbilityRunningRuleCache({ ABILITY_RUNNING_KEY }));
+}
+
+/**
  * @tc.number: GenerateAppRunningRuleCacheKey_0100
  * @tc.name: Test GenerateAppRunningRuleCacheKey_0100
  * @tc.desc: GenerateAppRunningRuleCacheKey_0100 test
