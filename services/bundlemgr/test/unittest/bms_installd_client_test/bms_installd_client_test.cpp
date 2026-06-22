@@ -2130,5 +2130,36 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeleteOldCacheFiles_0100, 
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_DeleteOldCacheFiles_0100 end";
 }
+
+/**
+ * @tc.number: BmsInstalldClientTest_CheckExternalSourcePluginSwitch_0100
+ * @tc.name: CheckExternalSourcePluginSwitch
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CheckExternalSourcePluginSwitch_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CheckExternalSourcePluginSwitch_0100 start";
+    int32_t outSwitchStatus = 0;
+    ErrCode result = installClient_->CheckExternalSourcePluginSwitch(outSwitchStatus);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+
+    outSwitchStatus = 1;
+    result = installClient_->CheckExternalSourcePluginSwitch(outSwitchStatus);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CheckExternalSourcePluginSwitch_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CheckHspPluginCertValidity_0100
+ * @tc.name: CheckHspPluginCertValidity
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CheckHspPluginCertValidity_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CheckHspPluginCertValidity_0100 start";
+    std::string bundleName = "testBundle";
+    int32_t sessionId = 0;
+    ErrCode result = installClient_->CheckHspPluginCertValidity(bundleName, sessionId);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CheckHspPluginCertValidity_0100 end";
+}
 } // namespace AppExecFwk
 } // namespace OHOS

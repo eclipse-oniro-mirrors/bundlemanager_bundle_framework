@@ -10405,4 +10405,33 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllLocalPluginInfoForSelf_0100, Function | 
     auto ret = hostImpl->GetAllLocalPluginInfoForSelf(pluginBundleInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
+
+ /**
+ * @tc.number: InitLocalPluginInstaller_0010
+ * @tc.name: InitLocalPluginInstaller
+ * @tc.desc: 1.Returns whether the interface is called successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, InitLocalPluginInstaller_0010, Function | SmallTest | Level1)
+{
+    bundleMgrService_->localPluginInstaller_ = nullptr;
+    bool testRet = bundleMgrService_->InitLocalPluginInstaller();
+    EXPECT_EQ(testRet, true);
+    ASSERT_NE(bundleMgrService_->GetLocalPluginInstaller(), nullptr);
+
+    testRet = bundleMgrService_->InitLocalPluginInstaller();
+    EXPECT_EQ(testRet, true);
+    ASSERT_NE(bundleMgrService_->GetLocalPluginInstaller(), nullptr);
+}
+
+/**
+ * @tc.number: Proxy_GetLocalPluginInstaller_0100
+ * @tc.name: test BundleMgrProxy interface GetLocalPluginInstaller
+ */
+HWTEST_F(BmsBundleKitServiceTest, Proxy_GetLocalPluginInstaller_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<ILocalPluginInstaller> installer = bundleMgrProxy->GetLocalPluginInstaller();
+    EXPECT_NE(installer, nullptr);
+}
 }

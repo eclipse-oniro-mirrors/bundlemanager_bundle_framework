@@ -201,6 +201,7 @@ const std::string TEST_EXTENSION_TYPE_NAME = "extension_type_name";
 const std::string TEST_PATH = "../test";
 const std::string TEST_ERROR_STRING = "test.error.string";
 const int32_t TEST_EL5_USERID = 2000;
+const std::string PLUGIN_NAME = "com.example.pluginTest1";
 enum {
     BMS_BROKER_ERR_UNINSTALL_FAILED = 8585218,
 };
@@ -18819,5 +18820,207 @@ HWTEST_F(BmsBundleInstallerTest, UpdateDeveloperIdAndOdid_0002, TestSize.Level1)
     infos.begin()->second.GetDeveloperidAndOdid(developerId, odid);
     EXPECT_EQ(developerId, "developer_002");
     EXPECT_FALSE(odid.empty());
+}
+
+/**
+ * @tc.number: InstallLocalPlugin_0001
+ * @tc.name: test InstallLocalPlugin with non-existent host bundle
+ * @tc.desc: Verify InstallLocalPlugin returns ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallLocalPlugin_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InstallPluginParam pluginParam;
+    pluginParam.userId = USERID;
+    std::vector<std::string> pluginFilePaths = {TEST_HSP_PATH};
+    ErrCode ret = installer.InstallLocalPlugin("com.test.nonexistent", pluginFilePaths, pluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+}
+
+/**
+ * @tc.number: InstallLocalPlugin_0002
+ * @tc.name: test InstallLocalPlugin with empty userInfo
+ * @tc.desc: Verify InstallLocalPlugin returns ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallLocalPlugin_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InstallPluginParam pluginParam;
+    pluginParam.userId = USERID;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.emplace(TEST_BUNDLE_NAME, info);
+    std::vector<std::string> pluginFilePaths = {TEST_HSP_PATH};
+    ErrCode ret = installer.InstallLocalPlugin(TEST_BUNDLE_NAME, pluginFilePaths, pluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+    dataMgr->bundleInfos_.erase(TEST_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: InstallLocalPlugin_0003
+ * @tc.name: test InstallLocalPlugin with empty userInfo
+ * @tc.desc: Verify InstallLocalPlugin returns ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallLocalPlugin_0003, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InstallPluginParam pluginParam;
+    pluginParam.userId = USERID;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    std::string key = TEST_BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    InnerBundleUserInfo userInfo;
+    userInfo.installedPluginSet.emplace(PLUGIN_NAME);
+    info.innerBundleUserInfos_.emplace(key, userInfo);
+    dataMgr->bundleInfos_.emplace(TEST_BUNDLE_NAME, info);
+    std::vector<std::string> pluginFilePaths = {TEST_HSP_PATH};
+    ErrCode ret = installer.InstallLocalPlugin(TEST_BUNDLE_NAME, pluginFilePaths, pluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+    dataMgr->bundleInfos_.erase(TEST_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: UninstallLocalPlugin_0001
+ * @tc.name: test UninstallLocalPlugin with empty host bundle name
+ * @tc.desc: Verify UninstallLocalPlugin returns ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallLocalPlugin_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InstallPluginParam pluginParam;
+    pluginParam.userId = 0;
+    ErrCode ret = installer.UninstallLocalPlugin(TEST_BUNDLE_NAME, PLUGIN_NAME, pluginParam, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+
+    pluginParam.userId = USERID;
+    ret = installer.UninstallLocalPlugin(TEST_BUNDLE_NAME, PLUGIN_NAME, pluginParam, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.emplace(USERID);
+    ret = installer.UninstallLocalPlugin(TEST_BUNDLE_NAME, PLUGIN_NAME, pluginParam, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+    dataMgr->bundleInfos_.erase(TEST_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: UninstallLocalPlugin_0002
+ * @tc.name: test UninstallLocalPlugin with non-existent plugin
+ * @tc.desc: Verify UninstallLocalPlugin returns ERR_APPEXECFWK_PLUGIN_NOT_FOUND
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallLocalPlugin_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    InstallPluginParam pluginParam;
+    pluginParam.userId = Constants::ALL_USERID;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
+    PluginBundleInfo pluginInfo;
+    pluginInfo.isDeveloperDistribution = true;
+    info.pluginBundleInfos_.emplace(PLUGIN_NAME, pluginInfo);
+    std::string key = TEST_BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    InnerBundleUserInfo userInfo;
+    userInfo.installedPluginSet.emplace(PLUGIN_NAME);
+    info.innerBundleUserInfos_.emplace(key, userInfo);
+    dataMgr->bundleInfos_.emplace(TEST_BUNDLE_NAME, info);
+    std::vector<std::string> pluginFilePaths = {TEST_HSP_PATH};
+    ErrCode ret = installer.UninstallLocalPlugin(TEST_BUNDLE_NAME, PLUGIN_NAME, pluginParam, false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR);
+    dataMgr->bundleInfos_.erase(TEST_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: CheckPluginDistribution_0001
+ * @tc.name: test CheckPluginDistribution mismatch
+ * @tc.desc: Verify CheckPluginDistribution returns ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckPluginDistribution_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.isLocalPluginInstall_ = true;
+    ErrCode ret = installer.CheckPluginDistribution(false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW);
+}
+
+/**
+ * @tc.number: CheckPluginDistribution_0002
+ * @tc.name: test CheckPluginDistribution match
+ * @tc.desc: Verify CheckPluginDistribution returns ERR_OK
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckPluginDistribution_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.isLocalPluginInstall_ = true;
+    ErrCode ret = installer.CheckPluginDistribution(true);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckExternalSourcePluginSwitch_0001
+ * @tc.name: test CheckExternalSourcePluginSwitch
+ * @tc.desc: Verify CheckExternalSourcePluginSwitch returns
+ *     ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED without SECURITY_PRIVACY_SERVER_ENABLE
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckExternalSourcePluginSwitch_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    ErrCode ret = installer.CheckExternalSourcePluginSwitch();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED);
+}
+
+/**
+ * @tc.number: CheckHspPluginCertValidity_0001
+ * @tc.name: test CheckHspPluginCertValidity
+ * @tc.desc: Verify CheckHspPluginCertValidity returns
+ *     ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED without SECURITY_PRIVACY_SERVER_ENABLE
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckHspPluginCertValidity_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    ErrCode ret = installer.CheckHspPluginCertValidity();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED);
+}
+
+/**
+ * @tc.number: GetLocalPluginEventFilePath_0001
+ * @tc.name: test GetLocalPluginEventFilePath with empty parsedBundles
+ * @tc.desc: Verify GetLocalPluginEventFilePath returns empty string
+ */
+HWTEST_F(BmsBundleInstallerTest, GetLocalPluginEventFilePath_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    std::string path = installer.GetLocalPluginEventFilePath();
+    EXPECT_EQ(path, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: CheckDistributionTypeForUpdate_0001
+ * @tc.name: test CheckDistributionTypeForUpdate mismatch
+ * @tc.desc: Verify CheckDistributionTypeForUpdate returns false
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckDistributionTypeForUpdate_0001, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.isLocalPluginInstall_ = true;
+    installer.oldPluginInfo_.isDeveloperDistribution = false;
+    EXPECT_FALSE(installer.CheckDistributionTypeForUpdate());
+}
+
+/**
+ * @tc.number: CheckDistributionTypeForUpdate_0002
+ * @tc.name: test CheckDistributionTypeForUpdate match
+ * @tc.desc: Verify CheckDistributionTypeForUpdate returns true
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckDistributionTypeForUpdate_0002, Function | SmallTest | Level0)
+{
+    PluginInstaller installer;
+    installer.isLocalPluginInstall_ = true;
+    installer.oldPluginInfo_.isDeveloperDistribution = true;
+    EXPECT_TRUE(installer.CheckDistributionTypeForUpdate());
 }
 } // OHOS
