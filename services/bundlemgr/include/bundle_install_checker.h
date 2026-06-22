@@ -271,6 +271,7 @@ public:
     static ErrCode ParseProfileDataToProvisionInfo(
         const Security::AccessToken::ProfileData &profileData,
         Security::Verify::ProvisionInfo &provisionInfo);
+    void HandleExtensionPermission(InnerBundleInfo &info);
 
 private:
 
