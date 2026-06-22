@@ -4021,17 +4021,10 @@ bool InstalldOperator::ParsePluginId(const std::string &appServiceCapabilities,
     return false;
 }
 
-bool InstalldOperator::ObtainSignInfoForPlugin(
-    const std::string &filePath, std::string &appIdentifier, std::string &pluginId)
+bool InstalldOperator::ObtainSignInfoForPlugin(const std::string &appServiceCapabilities, std::string &pluginId)
 {
-    Security::Verify::HapVerifyResult hapVerifyResult;
-    ErrCode errCode = HapVerify(filePath, hapVerifyResult);
-    if (errCode != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "HapVerify failed, errCode: %{public}d", errCode);
-        return false;
-    }
     std::vector<std::string> pluginIds;
-    if (!ParsePluginId(hapVerifyResult.GetProvisionInfo().appServiceCapabilities, pluginIds)) {
+    if (!ParsePluginId(appServiceCapabilities, pluginIds)) {
         APP_LOGE("parse plugin id failed");
         return false;
     }
@@ -4043,11 +4036,6 @@ bool InstalldOperator::ObtainSignInfoForPlugin(
         oss << pluginIds[i];
     }
     pluginId = oss.str();
-    if (hapVerifyResult.GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) {
-        appIdentifier = DEBUG_APP_IDENTIFIER;
-    } else {
-        appIdentifier = hapVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
-    }
     return true;
 }
 

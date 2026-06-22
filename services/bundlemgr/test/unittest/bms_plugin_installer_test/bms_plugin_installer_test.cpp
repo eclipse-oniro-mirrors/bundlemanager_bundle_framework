@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -613,7 +613,7 @@ HWTEST_F(BmsPluginInstallerTest, VerifyCodeSignatureForNativeFiles_0002, Functio
 HWTEST_F(BmsPluginInstallerTest, VerifyCodeSignatureForHsp_0001, Function | SmallTest | Level0)
 {
     PluginInstaller installer;
-    ErrCode ret = installer.VerifyCodeSignatureForHsp("", "", false, false);
+    ErrCode ret = installer.VerifyCodeSignatureForHsp("", false);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED);
 }
 
@@ -854,26 +854,6 @@ HWTEST_F(BmsPluginInstallerTest, ProcessPluginUninstall_0001, Function | SmallTe
 
     ErrCode ret = installer.ProcessPluginUninstall(bundleInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR);
-}
-
-/**
- * @tc.number: JoinPluginId_0001
- * @tc.name: test JoinPluginId with empty, single, and multiple pluginIds
-*/
-HWTEST_F(BmsPluginInstallerTest, JoinPluginId_0001, Function | SmallTest | Level0)
-{
-    PluginInstaller installer;
-    // empty pluginIds_ branch
-    EXPECT_EQ(installer.JoinPluginId(), Constants::EMPTY_STRING);
-
-    // single id branch
-    installer.pluginIds_.emplace_back("11111111");
-    EXPECT_EQ(installer.JoinPluginId(), "11111111");
-
-    // multiple ids branch (covers loop with separator)
-    installer.pluginIds_.emplace_back("22222222");
-    std::string result = installer.JoinPluginId();
-    EXPECT_EQ(result, "11111111,22222222");
 }
 
 /**
