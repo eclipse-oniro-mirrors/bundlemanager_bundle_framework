@@ -51,6 +51,7 @@ struct SessionProvisionInfo {
     std::string appIdentifier;
     uint32_t profileBlockLength = 0;
     std::shared_ptr<unsigned char[]> profileBlock;
+    std::string distributionCertificate;
 };
 
 class InstalldOperator {
