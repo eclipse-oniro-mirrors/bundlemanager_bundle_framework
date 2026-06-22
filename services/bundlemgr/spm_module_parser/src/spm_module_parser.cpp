@@ -15,6 +15,7 @@
 
 #include "spm_module_parser.h"
 
+#include "app_log_tag_wrapper.h"
 #include "nlohmann/json.hpp"
 
 namespace OHOS {
@@ -32,6 +33,7 @@ constexpr const char* KEY_APP_TARGET_API_VERSION = "targetAPIVersion";
 constexpr const char* KEY_APP_API_VERSION = "apiVersion";
 // module fields
 constexpr const char* KEY_MODULE_NAME = "name";
+constexpr const char* KEY_MODULE_PACKAGE = "package";
 constexpr const char* KEY_MODULE_SKILL_PROFILES = "skillProfiles";
 constexpr const char* KEY_MODULE_REQUEST_PERMISSIONS = "requestPermissions";
 constexpr const char* KEY_MODULE_REQ_PERMISSIONS = "reqPermissions";
@@ -229,17 +231,20 @@ bool ParseApiTargetVersion(const nlohmann::json &appObj, int32_t &apiTargetVersi
 bool ParseSpmModule(const std::string &moduleJson, InnerModuleInfoForSpm &moduleInfo)
 {
     if (moduleJson.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "parse module json failed, input is empty");
         return false;
     }
 
     nlohmann::json jsonObject = nlohmann::json::parse(moduleJson, nullptr, false, true);
     if (jsonObject.is_discarded() || !jsonObject.is_object()) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "parse module json failed, invalid json format");
         return false;
     }
 
     // Parse app section
     auto appIt = jsonObject.find(KEY_APP);
     if (appIt == jsonObject.end() || !appIt->is_object()) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "parse module json failed, app section missing or invalid");
         return false;
     }
     const auto &appObj = *appIt;
@@ -247,6 +252,7 @@ bool ParseSpmModule(const std::string &moduleJson, InnerModuleInfoForSpm &module
     // bundleName (required)
     moduleInfo.bundleName = GetJsonString(appObj, KEY_APP_BUNDLE_NAME);
     if (moduleInfo.bundleName.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "parse module json failed, bundleName is empty");
         return false;
     }
 
@@ -260,28 +266,45 @@ bool ParseSpmModule(const std::string &moduleJson, InnerModuleInfoForSpm &module
     // Parse module section
     auto moduleIt = jsonObject.find(KEY_MODULE);
     if (moduleIt == jsonObject.end() || !moduleIt->is_object()) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "parse module json failed, module section missing or invalid");
         return false;
     }
     const auto &moduleObj = *moduleIt;
 
-    // moduleName (required)
-    moduleInfo.moduleName = GetJsonString(moduleObj, KEY_MODULE_NAME);
+    // moduleName (required) - support both Stage model (name) and FA model (package)
+    // Stage model: use "name" directly
+    // FA model: use "package"; when name starts with ".", concatenate package + name
+    std::string moduleName = GetJsonString(moduleObj, KEY_MODULE_NAME);
+    if (moduleName.empty()) {
+        moduleInfo.moduleName = GetJsonString(moduleObj, KEY_MODULE_PACKAGE);
+    } else {
+        if (moduleName.substr(0, 1) == ".") {
+            std::string package = GetJsonString(moduleObj, KEY_MODULE_PACKAGE);
+            moduleInfo.moduleName = package + moduleName;
+        } else {
+            moduleInfo.moduleName = moduleName;
+        }
+    }
     if (moduleInfo.moduleName.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "parse module json failed, moduleName is empty");
         return false;
     }
 
     // skillProfiles -> skillName (optional)
     if (!ParseSkillNames(moduleObj, moduleInfo.skillName)) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "parse module json failed, skillProfiles is invalid");
         return false;
     }
 
     // requestPermissions (optional)
     if (!ParseRequestPermissions(moduleObj, moduleInfo.requestPermission)) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "parse module json failed, requestPermissions is invalid");
         return false;
     }
 
     // definePermissions (optional)
     if (!ParseDefinePermissions(moduleObj, moduleInfo.definePermission)) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "parse module json failed, definePermissions is invalid");
         return false;
     }
 

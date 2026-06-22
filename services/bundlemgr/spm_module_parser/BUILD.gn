@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("../../../appexecfwk.gni")
 
 config("bms_spm_module_parser_config") {
   include_dirs = [
@@ -33,6 +34,7 @@ ohos_shared_library("spm_module_parser") {
 
   include_dirs = [
     "include",
+    "${common_path}/log/include",
   ]
 
   sources = [
@@ -42,6 +44,7 @@ ohos_shared_library("spm_module_parser") {
   public_configs = [ ":bms_spm_module_parser_config" ]
 
   external_deps = [
+    "hilog:libhilog",
     "json:nlohmann_json_static",
   ]
 
