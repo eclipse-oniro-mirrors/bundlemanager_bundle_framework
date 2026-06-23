@@ -416,6 +416,7 @@ public:
     static ErrCode DeleteCertAndRemoveKey(const std::string &path);
 
     static bool IsValidBundleName(const std::string &bundleName);
+    static bool IsValidBundleNameWithOriBundle(const std::string &bundleName, std::string &oriBundleName);
 
     static bool IsValidUserId(const int32_t userId);
 

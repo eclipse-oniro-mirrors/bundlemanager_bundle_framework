@@ -737,18 +737,8 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(
         if (bundleName.empty()) {
             return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
         }
-        std::string bundleNameOri = bundleName;
-        int32_t appIdx = 0;
-        if (!BundleCloneCommonHelper::ParseCloneDataDir(bundleName, bundleNameOri, appIdx)) {
-            size_t pos = bundleName.rfind(Constants::FILE_UNDERLINE);
-            if (pos == std::string::npos) {
-                LOG_D(BMS_TAG_INSTALLD, "sandbox map contains invalid element");
-                bundleNameOri = bundleName;
-            } else if (OHOS::StrToInt(bundleName.substr(0, pos), appIdx)) {
-                APP_LOGD("sandbox name %{public}s", bundleName.c_str());
-                bundleNameOri = bundleName.substr(pos + 1);
-            }
-        }
+        std::string bundleNameOri;
+        InstalldOperator::IsValidBundleNameWithOriBundle(bundleName, bundleNameOri);
         ret = Security::AccessToken::AccessTokenKit::GetHapSignInfo(bundleNameOri, bundleInfoList);
         if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             LOG_E(BMS_TAG_INSTALLD, "GetHapSignInfo fallback failed bundleName=%{public}s, ret=%{public}d",
