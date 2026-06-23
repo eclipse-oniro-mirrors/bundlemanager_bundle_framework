@@ -35,6 +35,8 @@ int32_t g_errCode = 0;
 // Cache for sessionId and trustedBundleInfo
 static std::map<int32_t, std::vector<TrustedBundleInfo>> g_signInfoCache;
 static std::atomic<int32_t> g_nextSessionId{1};
+static int32_t g_prepareHapIdentityRet = 0;
+static int32_t g_deleteIdentityRet = 0;
 
 void SetAccessTokenIDForTest(unsigned int value)
 {
@@ -381,9 +383,6 @@ int32_t AccessTokenKit::GetHapBaseInfoByUid(int32_t uid, HapBaseInfo& info)
 
 static BundlePolicyInfo g_bundlePolicyInfo;
 static int32_t g_cachePolicyBySessionIdRet = 0;
-
-static int32_t g_prepareHapIdentityRet = 0;
-static int32_t g_deleteIdentityRet = 0;
 
 void SetCachePolicyBySessionIdForTest(const BundlePolicyInfo& bundlePolicyInfo)
 {
