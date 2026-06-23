@@ -3761,53 +3761,62 @@ bool InstalldOperator::ReadCert(const std::string &path, std::vector<unsigned ch
     return true;
 }
 
-bool InstalldOperator::IsValidBundleName(const std::string &bundleName)
+bool InstalldOperator::IsValidBundleNameWithOriBundle(const std::string &bundleName, std::string &oriBundleName)
 {
     if (bundleName.empty() || !IsFileNameValid(bundleName)) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s", bundleName.c_str());
+        oriBundleName = bundleName;
         return false;
     }
     // clone bundleName: +clone-<appIndex>+<bundleName>
-    std::string tempBundleName = bundleName;
+    oriBundleName = bundleName;
     if (bundleName.find(ServiceConstants::CLONE_PREFIX) == 0) {
-        tempBundleName = bundleName.substr(strlen(ServiceConstants::CLONE_PREFIX));
-        size_t plusPos = tempBundleName.find(ServiceConstants::PLUS_SIGN);
+        oriBundleName = bundleName.substr(strlen(ServiceConstants::CLONE_PREFIX));
+        size_t plusPos = oriBundleName.find(ServiceConstants::PLUS_SIGN);
         if (plusPos == std::string::npos) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid clone bundle name -n %{public}s", bundleName.c_str());
+            oriBundleName = bundleName;
             return false;
         }
         int32_t appIndex = 0;
-        if (!OHOS::StrToInt(tempBundleName.substr(0, plusPos), appIndex)) {
+        if (!OHOS::StrToInt(oriBundleName.substr(0, plusPos), appIndex)) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLD, "StrToInt failed -n %{public}s", bundleName.c_str());
+            oriBundleName = bundleName;
             return false;
         }
-        tempBundleName = tempBundleName.substr(plusPos + 1);
+        oriBundleName = oriBundleName.substr(plusPos + 1);
     }
     // sanbox bundleName: <appIndex>_<bundleName>
     auto pos = bundleName.find(Constants::FILE_UNDERLINE);
     if (pos != std::string::npos) {
         int32_t appIndex = 0;
         if (OHOS::StrToInt(bundleName.substr(0, pos), appIndex)) {
-            tempBundleName = bundleName.substr(pos + 1);
+            oriBundleName = bundleName.substr(pos + 1);
         }
     }
     // for normal bundleName
-    if (tempBundleName.size() < Constants::MIN_BUNDLE_NAME || tempBundleName.size() > Constants::MAX_BUNDLE_NAME) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name size -n %{public}s", tempBundleName.c_str());
+    if (oriBundleName.size() < Constants::MIN_BUNDLE_NAME || oriBundleName.size() > Constants::MAX_BUNDLE_NAME) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name size -n %{public}s", oriBundleName.c_str());
         return false;
     }
-    char head = tempBundleName.at(0);
+    char head = oriBundleName.at(0);
     if (!isalpha(head)) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s isalpha false", tempBundleName.c_str());
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s isalpha false", oriBundleName.c_str());
         return false;
     }
-    for (const auto &c : tempBundleName) {
+    for (const auto &c : oriBundleName) {
         if (!isalnum(static_cast<unsigned char>(c)) && (c != '.') && (c != '_')) {
-            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s isalnum false", tempBundleName.c_str());
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s isalnum false", oriBundleName.c_str());
             return false;
         }
     }
     return true;
+}
+
+bool InstalldOperator::IsValidBundleName(const std::string &bundleName)
+{
+    std::string oriBundleName;
+    return IsValidBundleNameWithOriBundle(bundleName, oriBundleName);
 }
 
 bool InstalldOperator::IsValidUserId(const int32_t userId)

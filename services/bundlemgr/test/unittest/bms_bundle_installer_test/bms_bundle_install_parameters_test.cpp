@@ -42,6 +42,7 @@ const std::string INVALID_BUNDLE_NAME_2 = "com/example/test";
 const std::string INVALID_BUNDLE_NAME_3 = "com/..example/test";
 const std::string INVALID_BUNDLE_NAME_4 = "com../example/test";
 const std::string INVALID_CLONE_BUNDLE_NAME = "+clone-1w+com.example.test";
+const std::string INVALID_CLONE_BUNDLE_NAME_NO_PLUS = "+clone-1com.example.test";
 const std::string INVALID_SANDBOX_BUNDLE_NAME = "1w_com.example.test";
 }  // namespace
 
@@ -215,6 +216,95 @@ HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValid_1300, Function |
 {
     bool result = InstalldOperator::IsValidBundleName(INVALID_BUNDLE_NAME_4);
     EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckBundleNameIsValid_1400
+ * @tc.name: test CheckBundleNameIsValid with clone prefix but no plus sign
+ * @tc.desc: 1. test clone bundle name without plus sign should return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValid_1400, Function | SmallTest | Level1)
+{
+    bool result = InstalldOperator::IsValidBundleName(INVALID_CLONE_BUNDLE_NAME_NO_PLUS);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckBundleNameIsValidWithOriBundle_0100
+ * @tc.name: test IsValidBundleNameWithOriBundle with normal name
+ * @tc.desc: 1. test normal name returns original name unchanged
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValidWithOriBundle_0100, Function | SmallTest | Level1)
+{
+    std::string oriBundleName;
+    bool result = InstalldOperator::IsValidBundleNameWithOriBundle(VALID_BUNDLE_NAME_1, oriBundleName);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(oriBundleName, VALID_BUNDLE_NAME_1);
+}
+
+/**
+ * @tc.number: CheckBundleNameIsValidWithOriBundle_0200
+ * @tc.name: test IsValidBundleNameWithOriBundle with clone name
+ * @tc.desc: 1. test clone name extracts original bundle name
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValidWithOriBundle_0200, Function | SmallTest | Level1)
+{
+    std::string oriBundleName;
+    bool result = InstalldOperator::IsValidBundleNameWithOriBundle(VALID_CLONE_BUNDLE_NAME, oriBundleName);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(oriBundleName, VALID_BUNDLE_NAME_1);
+}
+
+/**
+ * @tc.number: CheckBundleNameIsValidWithOriBundle_0300
+ * @tc.name: test IsValidBundleNameWithOriBundle with sandbox name
+ * @tc.desc: 1. test sandbox name extracts original bundle name
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValidWithOriBundle_0300, Function | SmallTest | Level1)
+{
+    std::string oriBundleName;
+    bool result = InstalldOperator::IsValidBundleNameWithOriBundle(VALID_SANDBOX_BUNDLE_NAME, oriBundleName);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(oriBundleName, VALID_BUNDLE_NAME_1);
+}
+
+/**
+ * @tc.number: CheckBundleNameIsValidWithOriBundle_0400
+ * @tc.name: test IsValidBundleNameWithOriBundle with invalid sandbox
+ * @tc.desc: 1. test sandbox with non-numeric appIndex falls back to input
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValidWithOriBundle_0400, Function | SmallTest | Level1)
+{
+    std::string oriBundleName;
+    bool result = InstalldOperator::IsValidBundleNameWithOriBundle(INVALID_SANDBOX_BUNDLE_NAME, oriBundleName);
+    EXPECT_FALSE(result);
+    EXPECT_EQ(oriBundleName, INVALID_SANDBOX_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: CheckBundleNameIsValidWithOriBundle_0500
+ * @tc.name: test IsValidBundleNameWithOriBundle with clone prefix but no plus sign
+ * @tc.desc: 1. test clone without plus sign returns false and falls back to input
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValidWithOriBundle_0500, Function | SmallTest | Level1)
+{
+    std::string oriBundleName;
+    bool result = InstalldOperator::IsValidBundleNameWithOriBundle(INVALID_CLONE_BUNDLE_NAME_NO_PLUS, oriBundleName);
+    EXPECT_FALSE(result);
+    EXPECT_EQ(oriBundleName, INVALID_CLONE_BUNDLE_NAME_NO_PLUS);
+}
+
+/**
+ * @tc.number: CheckBundleNameIsValidWithOriBundle_0600
+ * @tc.name: test IsValidBundleNameWithOriBundle with empty name
+ * @tc.desc: 1. test empty name returns false and falls back to empty
+ */
+HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValidWithOriBundle_0600, Function | SmallTest | Level1)
+{
+    std::string oriBundleName;
+    bool result = InstalldOperator::IsValidBundleNameWithOriBundle(INVALID_BUNDLE_NAME_EMPTY, oriBundleName);
+    EXPECT_FALSE(result);
+    EXPECT_EQ(oriBundleName, INVALID_BUNDLE_NAME_EMPTY);
 }
 
 /**
