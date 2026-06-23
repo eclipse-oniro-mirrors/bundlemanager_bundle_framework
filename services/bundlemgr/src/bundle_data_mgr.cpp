@@ -9036,6 +9036,24 @@ void BundleDataMgr::GetBundleNameList(const int32_t userId, std::vector<std::str
     }
 }
 
+std::vector<std::string> BundleDataMgr::GetSystemAppNames(int32_t userId) const
+{
+    std::vector<std::string> systemApps;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &[bundleName, info] : bundleInfos_) {
+        if (!info.IsSystemApp()) {
+            continue;
+        }
+        int32_t responseUserId = info.GetResponseUserId(userId);
+        if (responseUserId == Constants::INVALID_USERID) {
+            continue;
+        }
+        systemApps.emplace_back(bundleName);
+    }
+    APP_LOGI("ScanSystemAppSize found %{public}zu system apps for userId=%{public}d", systemApps.size(), userId);
+    return systemApps;
+}
+
 ErrCode BundleDataMgr::GetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos)
 {
     if (!HasUserId(userId)) {

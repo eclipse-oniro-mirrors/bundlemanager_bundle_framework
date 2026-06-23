@@ -449,4 +449,49 @@ HWTEST_F(BmsUpdateSelinuxMgrTest, BmsUpdateSelinuxMgr_GetBundleDataPath_007, Fun
     EXPECT_TRUE(hasServicePath);
 }
 
+/**
+ * @tc.number: BmsUpdateSelinuxMgr_HasPendingBundles_001
+ * @tc.name: test HasPendingBundles when rdb has no bundles
+ * @tc.desc: 1.Test HasPendingBundles when GetAllBundle succeeds but returns an empty list
+ *           2.expected to return false (nothing pending)
+ */
+HWTEST_F(BmsUpdateSelinuxMgrTest, BmsUpdateSelinuxMgr_HasPendingBundles_001, Function | SmallTest | Level1)
+{
+    SetGetAllBundleResultForTest(ERR_OK);
+    ClearBundlesForTest();
+
+    EXPECT_FALSE(updateSelinuxMgr_->HasPendingBundles(TEST_USER_ID));
+}
+
+/**
+ * @tc.number: BmsUpdateSelinuxMgr_HasPendingBundles_002
+ * @tc.name: test HasPendingBundles when rdb has pending bundles
+ * @tc.desc: 1.Test HasPendingBundles when GetAllBundle succeeds and returns bundles
+ *           2.expected to return true (relabel work pending)
+ */
+HWTEST_F(BmsUpdateSelinuxMgrTest, BmsUpdateSelinuxMgr_HasPendingBundles_002, Function | SmallTest | Level1)
+{
+    std::vector<BundleOptionInfo> bundleOptionInfos;
+    CreateFakeBundleOptionInfos(bundleOptionInfos);
+    SetGetAllBundleResultForTest(ERR_OK);
+    SetBundlesForTest(bundleOptionInfos);
+
+    EXPECT_TRUE(updateSelinuxMgr_->HasPendingBundles(TEST_USER_ID));
+
+    ClearBundlesForTest();
+}
+
+/**
+ * @tc.number: BmsUpdateSelinuxMgr_HasPendingBundles_003
+ * @tc.name: test HasPendingBundles when rdb GetAllBundle fails
+ * @tc.desc: 1.Test HasPendingBundles when GetAllBundle returns an error
+ *           2.expected to return false (treat failure as no pending work)
+ */
+HWTEST_F(BmsUpdateSelinuxMgrTest, BmsUpdateSelinuxMgr_HasPendingBundles_003, Function | SmallTest | Level1)
+{
+    SetGetAllBundleResultForTest(ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    EXPECT_FALSE(updateSelinuxMgr_->HasPendingBundles(TEST_USER_ID));
+}
+
 } // namespace OHOS

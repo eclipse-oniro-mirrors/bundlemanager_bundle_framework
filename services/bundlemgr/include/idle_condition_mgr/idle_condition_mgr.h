@@ -19,6 +19,7 @@
 #include <mutex>
 #include <unordered_map>
 
+#include "app_data_monitor/app_data_monitor.h"
 #include "idle_condition_listener.h"
 #include "singleton.h"
 #include "thermal_mgr_client.h"
@@ -42,6 +43,8 @@ public:
     void OnThermalLevelChanged(PowerMgr::ThermalLevel level);
     void TryStartRelabel();
     void InterruptRelabel(const std::string stopReason);
+    void TryStartScanAppData();
+    void InterruptScanAppData(const std::string &stopReason);
     void OnConfigChanged();
 
 private:
@@ -50,6 +53,8 @@ private:
     bool IsThermalSatisfied();
     bool CheckInodeForCommericalDevice();
     bool SetIsRelabeling();
+    bool CheckScanConditions(const int32_t userId);
+    bool SetIsScanActive();
     void ReloadParam();
 
 private:
@@ -58,10 +63,12 @@ private:
 
     std::unordered_map<int32_t, std::atomic<bool>> userUnlockedMap_;
     std::atomic<bool> featureEnabled_{true};
+    std::atomic<bool> scanFeatureEnabled_{true};
     std::atomic<bool> screenLocked_{false};
     std::atomic<bool> powerConnected_{false};
     std::atomic<bool> batterySatisfied_{false};
     std::atomic<bool> isRelabeling_{false};
+    std::atomic<bool> isScanActive_{false};
     std::atomic<bool> powerConnectedThreadActive_{false};
     std::shared_ptr<IdleConditionListener> idleConditionListener_;
 };

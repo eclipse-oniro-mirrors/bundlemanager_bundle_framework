@@ -782,7 +782,7 @@ private:
         std::pair<std::vector<std::string>, std::vector<std::string>>> &installAndRecoverList);
     bool IsForceInstallListEmpty(const std::string &bundleName);
     static std::vector<std::string> ObtainRealPath(const std::vector<std::string> &paths);
-    void RegisterRelabelEvent();
+    void RegisterIdleConditionEvent();
     bool ProcessIdleInfo();
     static bool GetBundleNameAndUserIdFromPath(const std::string &path, std::vector<int32_t> &userIds,
         std::string &bundleName);

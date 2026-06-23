@@ -23,6 +23,7 @@
 #include "battery_srv_client.h"
 #include "bms_update_selinux_mgr.h"
 #include "bundle_mgr_service.h"
+#include "bundle_service_constants.h"
 #include "ffrt.h"
 #include "file_ex.h"
 #include "idle_condition_mgr/idle_condition_mgr.h"
@@ -71,6 +72,7 @@ void IdleConditionMgr::OnScreenLocked()
         screenLocked_ = true;
     }
     TryStartRelabel();
+    TryStartScanAppData();
 }
 
 void IdleConditionMgr::OnScreenUnlocked()
@@ -81,6 +83,7 @@ void IdleConditionMgr::OnScreenUnlocked()
         screenLocked_ = false;
     }
     InterruptRelabel("OnScreenUnlocked called");
+    InterruptScanAppData("ScanSystemAppSize OnScreenUnlocked called");
 }
 
 void IdleConditionMgr::OnUserUnlocked(const int32_t userId)
@@ -91,6 +94,7 @@ void IdleConditionMgr::OnUserUnlocked(const int32_t userId)
         userUnlockedMap_[userId] = true;
     }
     TryStartRelabel();
+    TryStartScanAppData();
 }
 
 void IdleConditionMgr::OnUserStopping(const int32_t userId)
@@ -101,6 +105,7 @@ void IdleConditionMgr::OnUserStopping(const int32_t userId)
         userUnlockedMap_[userId] = false;
     }
     InterruptRelabel("OnUserStopping called");
+    InterruptScanAppData("ScanSystemAppSize OnUserStopping called");
 }
 
 void IdleConditionMgr::OnPowerConnected()
@@ -133,6 +138,7 @@ void IdleConditionMgr::OnPowerConnected()
             sharedPtr->powerConnected_ = true;
         }
         sharedPtr->TryStartRelabel();
+        sharedPtr->TryStartScanAppData();
         sharedPtr->powerConnectedThreadActive_ = false;
         APP_LOGI("power connected task done");
     };
@@ -148,8 +154,9 @@ void IdleConditionMgr::OnPowerDisconnected()
     }
     powerConnectedThreadActive_ = false;
     InterruptRelabel("OnPowerDisconnected called");
+    InterruptScanAppData("ScanSystemAppSize OnPowerDisconnected called");
 }
- 
+
 void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
 {
     APP_LOGI_NOFUNC("HandleOnTrim called, level=%{public}d", level);
@@ -160,11 +167,13 @@ void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
             [[fallthrough]];
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_MODERATE:
             TryStartRelabel();
+            TryStartScanAppData();
             break;
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:
             [[fallthrough]];
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
             InterruptRelabel("memory level critical");
+            InterruptScanAppData("ScanSystemAppSize memory level critical");
             break;
         default:
             break;
@@ -239,12 +248,14 @@ void IdleConditionMgr::OnBatteryChanged()
             batterySatisfied_ = false;
         }
         InterruptRelabel("battery capacity low");
+        InterruptScanAppData("ScanSystemAppSize battery capacity low");
     } else {
         {
             std::lock_guard<std::mutex> lock(mutex_);
             batterySatisfied_ = true;
         }
         TryStartRelabel();
+        TryStartScanAppData();
     }
 }
 
@@ -253,10 +264,12 @@ void IdleConditionMgr::OnThermalLevelChanged(PowerMgr::ThermalLevel level)
     APP_LOGI_NOFUNC("OnThermalLevelChanged called, level=%{public}d", level);
     if (level < PowerMgr::ThermalLevel::WARM) {
         TryStartRelabel();
+        TryStartScanAppData();
     } else {
         APP_LOGD("thermal level %{public}d greater than %{public}d interrupt relabel",
             level, PowerMgr::ThermalLevel::WARM);
         InterruptRelabel("OnThermalLevelChanged called");
+        InterruptScanAppData("ScanSystemAppSize OnThermalLevelChanged called");
     }
 }
 
@@ -273,12 +286,14 @@ bool IdleConditionMgr::CheckRelabelConditions(const int32_t userId)
     if (iter != userUnlockedMap_.end() && iter->second) {
         userUnlocked = true;
     }
-    if (userUnlocked && screenLocked_ && powerConnected_ && batterySatisfied_ && g_taskCounter.load() == 0) {
+    if (userUnlocked && screenLocked_ && powerConnected_ && batterySatisfied_
+        && g_taskCounter.load() == 0 && !isScanActive_) {
         return true;
     }
-    APP_LOGI_NOFUNC("relabel state: -u %{public}d, %{public}d, %{public}d, %{public}d, %{public}d, %{public}d",
+    APP_LOGI_NOFUNC("relabel state: -u %{public}d, %{public}d, %{public}d, %{public}d, %{public}d, %{public}d, "
+        "isScanActive=%{public}d",
         userId, userUnlocked, screenLocked_.load(),
-        powerConnected_.load(), batterySatisfied_.load(), g_taskCounter.load());
+        powerConnected_.load(), batterySatisfied_.load(), g_taskCounter.load(), isScanActive_.load());
     return false;
 }
 
@@ -290,6 +305,17 @@ bool IdleConditionMgr::SetIsRelabeling()
         return false;
     }
     isRelabeling_ = true;
+    return true;
+}
+
+bool IdleConditionMgr::SetIsScanActive()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (isScanActive_) {
+        APP_LOGI_NOFUNC("ScanSystemAppSize Scan already active");
+        return false;
+    }
+    isScanActive_ = true;
     return true;
 }
 
@@ -314,6 +340,11 @@ void IdleConditionMgr::TryStartRelabel()
     }
     if (!IsThermalSatisfied()) {
         APP_LOGI_NOFUNC("Thermal not satisfied");
+        return;
+    }
+    auto selinuxMgr = DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance();
+    if (selinuxMgr == nullptr || !selinuxMgr->HasPendingBundles(currentUserId)) {
+        APP_LOGI_NOFUNC("for ScanSystemAppSize no relabel work pending, skip arming relabel");
         return;
     }
     if (!SetIsRelabeling()) {
@@ -375,6 +406,106 @@ void IdleConditionMgr::InterruptRelabel(const std::string stopReason)
     APP_LOGI_NOFUNC("Relabeling interrupted");
 }
 
+bool IdleConditionMgr::CheckScanConditions(const int32_t userId)
+{
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    if (monitor == nullptr) {
+        APP_LOGE("ScanSystemAppSize AppDataMonitor is null");
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool userUnlocked = false;
+    auto iter = userUnlockedMap_.find(userId);
+    if (iter != userUnlockedMap_.end() && iter->second) {
+        userUnlocked = true;
+    }
+    if (userUnlocked && screenLocked_ && powerConnected_ && batterySatisfied_
+        && !monitor->IsScanning() && g_taskCounter.load() == 0 && !isRelabeling_) {
+        return true;
+    }
+    APP_LOGI("ScanSystemAppSize scan conditions not met: userId=%{public}d, userUnlocked=%{public}d, "
+        "screenLocked=%{public}d, powerConnected=%{public}d, battery=%{public}d, taskCounter=%{public}d, "
+        "isRelabeling=%{public}d",
+        userId, userUnlocked, screenLocked_.load(), powerConnected_.load(), batterySatisfied_.load(),
+        g_taskCounter.load(), isRelabeling_.load());
+    return false;
+}
+
+void IdleConditionMgr::TryStartScanAppData()
+{
+    if (!scanFeatureEnabled_.load()) {
+        return;
+    }
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (!CheckScanConditions(currentUserId)) {
+        return;
+    }
+    if (!IsBufferSufficient()) {
+        APP_LOGI("ScanSystemAppSize Buffer not sufficient for scan");
+        return;
+    }
+    if (!IsThermalSatisfied()) {
+        APP_LOGI("ScanSystemAppSize Thermal not satisfied for scan");
+        return;
+    }
+    if (!SetIsScanActive()) {
+        APP_LOGI("ScanSystemAppSize Scan already active");
+        return;
+    }
+    std::weak_ptr<IdleConditionMgr> weakPtr = shared_from_this();
+    auto task = [weakPtr] {
+        APP_LOGI("ScanSystemAppSize App data scan task started");
+        auto sharedPtr = weakPtr.lock();
+        if (sharedPtr == nullptr) {
+            APP_LOGD("ScanSystemAppSize stop scan task, mgr destroyed");
+            return;
+        }
+        ScopeGuard scanActiveGuard([sharedPtr] {
+            std::lock_guard<std::mutex> lock(sharedPtr->mutex_);
+            sharedPtr->isScanActive_ = false;
+        });
+        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+        if (!sharedPtr->CheckScanConditions(currentUserId)) {
+            APP_LOGI("ScanSystemAppSize scan conditions not met in task, skip");
+            return;
+        }
+        if (!sharedPtr->IsBufferSufficient()) {
+            APP_LOGI("ScanSystemAppSize Buffer not sufficient in task, skip");
+            return;
+        }
+        if (!sharedPtr->IsThermalSatisfied()) {
+            APP_LOGI("ScanSystemAppSize Thermal not satisfied in task, skip");
+            return;
+        }
+        auto mon = DelayedSingleton<AppDataMonitor>::GetInstance();
+        if (mon == nullptr) {
+            APP_LOGE("ScanSystemAppSize AppDataMonitor is null in task");
+            return;
+        }
+        mon->StartScan(currentUserId);
+        APP_LOGI("ScanSystemAppSize App data scan task finished");
+    };
+    std::thread(task).detach();
+}
+
+void IdleConditionMgr::InterruptScanAppData(const std::string &stopReason)
+{
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!isScanActive_) {
+            APP_LOGI_NOFUNC("ScanSystemAppSize No scan in progress");
+            return;
+        }
+    }
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    if (monitor == nullptr) {
+        APP_LOGE("ScanSystemAppSize AppDataMonitor is null");
+        return;
+    }
+    monitor->StopScan(stopReason);
+    APP_LOGI_NOFUNC("ScanSystemAppSize Scan interrupted");
+}
+
 void IdleConditionMgr::OnConfigChanged()
 {
     APP_LOGI("OnConfigChanged called");
@@ -389,6 +520,13 @@ void IdleConditionMgr::ReloadParam()
     } else {
         featureEnabled_ = true;
         APP_LOGI("Relabel feature enabled");
+    }
+    if (IdleParamUtil::IsAppDataScanDisabled()) {
+        scanFeatureEnabled_ = false;
+        APP_LOGI("ScanSystemAppSize Scan app data feature disabled");
+    } else {
+        scanFeatureEnabled_ = true;
+        APP_LOGI("ScanSystemAppSize Scan app data feature enabled");
     }
 }
 } // namespace AppExecFwk

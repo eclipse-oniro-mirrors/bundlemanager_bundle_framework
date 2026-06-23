@@ -368,9 +368,10 @@ void BMSEventHandler::AfterBmsStart()
 #ifdef WEBVIEW_ENABLE
     NotifyFWKAfterBmsStart();
 #endif
-    if (OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
-        APP_LOGI_NOFUNC("relabel is true");
-        RegisterRelabelEvent();
+    if (OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false) ||
+        OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, false)) {
+        APP_LOGI_NOFUNC("relabel or scan_app_data is true");
+        RegisterIdleConditionEvent();
     }
     MemoryCompactor::RegisterScreenOffListener();
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
@@ -5168,9 +5169,9 @@ void BMSEventHandler::RegisterOobeAgreeTermsEvent() const
     }
 }
 
-void BMSEventHandler::RegisterRelabelEvent()
+void BMSEventHandler::RegisterIdleConditionEvent()
 {
-    LOG_I(BMS_TAG_DEFAULT, "register relabel event start");
+    LOG_I(BMS_TAG_DEFAULT, "register idle condition event start");
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_LOCKED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED);

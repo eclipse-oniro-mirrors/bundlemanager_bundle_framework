@@ -48,6 +48,7 @@ constexpr const char* BMS_DISK_SPACE = "BMS_DISK_SPACE";
 constexpr const char* APP_CONTROL_RULE = "APP_CONTROL_RULE";
 constexpr const char* DB_ERROR = "DB_ERROR";
 constexpr const char* DEFAULT_APP = "DEFAULT_APP";
+constexpr const char* BUNDLE_LARGE_FILES_MONITOR_EVENT = "BUNDLE_LARGE_FILES_MONITOR_EVENT";
 constexpr const char* QUERY_BUNDLE_INFO = "QUERY_BUNDLE_INFO";
 constexpr const char* BUNDLE_DYNAMIC_SHORTCUTINFO = "BUNDLE_DYNAMIC_SHORTCUTINFO";
 constexpr const char* DESKTOP_SHORTCUT = "DESKTOP_SHORTCUT";
@@ -107,6 +108,7 @@ const char* COMPONENT_NAME_KEY = "COMPONENT_NAME";
 const char* PARTITION_NAME_KEY = "PARTITION_NAME";
 const char* REMAIN_PARTITION_SIZE_KEY = "REMAIN_PARTITION_SIZE";
 const char* USER_DATA_SIZE = "USER_DATA_SIZE";
+const char* EVENT_PARAM_LARGE_FILES = "LARGE_FILES";
 const char* EVENT_PARAM_IS_KEEPDATA = "IS_KEEPDATA";
 const char* EVENT_PARAM_DISABLE_FORBIDDEN = "DISABLE_FORBIDDEN";
 const char* EVENT_PARAM_ODID = "ODID";
@@ -347,6 +349,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::DEFAULT_APP,
             [](const EventInfo& eventInfo) {
                 InnerSendDefaultAppEvent(eventInfo);
+            } },
+        { BMSEventType::BUNDLE_LARGE_FILES_MONITOR,
+            [](const EventInfo& eventInfo) {
+                InnerSendLargeFilesMonitorEvent(eventInfo);
             } },
         { BMSEventType::QUERY_BUNDLE_INFO,
             [](const EventInfo& eventInfo) {
@@ -808,6 +814,17 @@ void InnerEventReport::InnerSendDefaultAppEvent(const EventInfo& eventInfo)
         EVENT_PARAM_WANT, eventInfo.want,
         EVENT_PARAM_UTD, eventInfo.utd,
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
+}
+
+void InnerEventReport::InnerSendLargeFilesMonitorEvent(const EventInfo& eventInfo)
+{
+    InnerSystemEventWrite(
+        BUNDLE_LARGE_FILES_MONITOR_EVENT,
+        HiSysEventType::STATISTIC,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_LARGE_FILES, eventInfo.largeFiles);
 }
 
 void InnerEventReport::InnerSendDataPartitionUsageEvent(const EventInfo& eventInfo)

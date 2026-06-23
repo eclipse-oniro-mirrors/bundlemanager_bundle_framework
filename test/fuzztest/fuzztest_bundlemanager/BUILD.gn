@@ -28,6 +28,7 @@ group("bundlemanagerfuzztest") {
     "bmsagingrequest_fuzzer:BMSAgingRequestFuzzTest",
     "bmsagingutil_fuzzer:BMSAgingUtilFuzzTest",
     "bmsappcontrolhost_fuzzer:BMSAppControlHostFuzzTest",
+    "bmsappdatamonitor_fuzzer:BMSAppDataMonitorFuzzTest",
     "bmsapplicationinfo_fuzzer:BMSApplicationInfoFuzzTest",
     "bmsappservicefwkinstaller_fuzzer:BMSAppServiceFwkInstallerFuzzTest",
     "bmsappservicefwkinstalleraddappprovisioninfo_fuzzer:BMSAppServiceFwkInstallerAddAppProvisionInfoFuzzTest",

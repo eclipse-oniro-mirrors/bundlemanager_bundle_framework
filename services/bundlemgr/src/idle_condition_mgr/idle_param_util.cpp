@@ -30,6 +30,7 @@ constexpr const char* CLOUD_CFG_PATH =
 constexpr const char* VERSION_FILE_NAME = "version.txt";
 constexpr const char* SWITCH_OFF_LIST = "switch_off_list";
 constexpr const char* RELABEL_FEATURE_OFF = "relabel_feature_off";
+constexpr const char* APP_DATA_SCAN_FEATURE_OFF = "app_data_scan_feature_off";
 // the number of digits extracted from the fixed format string "x.x.x.x"
 constexpr int32_t VERSION_LEN = 4;
 }
@@ -56,6 +57,31 @@ bool IdleParamUtil::IsRelabelFeatureDisabled()
         }
     }
     APP_LOGI("off switch not found");
+    return false;
+}
+
+bool IdleParamUtil::IsAppDataScanDisabled()
+{
+    std::string higherVersionPath = GetHigherVersionPath();
+    if (higherVersionPath.empty()) {
+        APP_LOGE("ScanSystemAppSize higherVersionPath is empty");
+        return false;
+    }
+    std::string filePath = higherVersionPath + SWITCH_OFF_LIST;
+    std::ifstream inputFile(filePath);
+    if (!inputFile.is_open()) {
+        APP_LOGE("ScanSystemAppSize Can not open file: %{public}s", filePath.c_str());
+        return false;
+    }
+    std::string line;
+    while (std::getline(inputFile, line)) {
+        Trim(line);
+        if (line == APP_DATA_SCAN_FEATURE_OFF) {
+            APP_LOGI("ScanSystemAppSize app data scan off switch found");
+            return true;
+        }
+    }
+    APP_LOGI("ScanSystemAppSize app data scan off switch not found");
     return false;
 }
 
