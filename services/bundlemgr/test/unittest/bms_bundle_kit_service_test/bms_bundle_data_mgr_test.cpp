@@ -4046,6 +4046,122 @@ HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0700, Functio
 }
 
 /**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_0800
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test Branch C: has U1 user info, no DEFAULT_USERID, no userId -> not recoverable
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0800, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInfo;
+    preInfo.SetRemovable(false);
+    preInfo.SetBundleName(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    preInfo.SetBundleType(BundleType::APP);
+    dataMgr->preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInfo);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
+    EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    dataMgr->preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInfo);
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_0900
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test Branch C: no user info at all -> recoverable
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0900, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInfo;
+    preInfo.SetRemovable(false);
+    preInfo.SetBundleName(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    preInfo.SetBundleType(BundleType::APP);
+    dataMgr->preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInfo);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
+    EXPECT_TRUE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    dataMgr->preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInfo);
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_1000
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test Branch C: has U1 and DEFAULT_USERID user info, no userId -> not recoverable
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_1000, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInfo;
+    preInfo.SetRemovable(false);
+    preInfo.SetBundleName(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    preInfo.SetBundleType(BundleType::APP);
+    dataMgr->preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInfo);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    InnerBundleUserInfo innerBundleUserInfoU1;
+    innerBundleUserInfoU1.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfoU1.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfoU1);
+    InnerBundleUserInfo innerBundleUserInfoDefault;
+    innerBundleUserInfoDefault.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    innerBundleUserInfoDefault.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfoDefault);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
+    EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    dataMgr->preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInfo);
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_1100
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test Branch C: has U1 user info and userId info, no DEFAULT_USERID -> not recoverable
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_1100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInfo;
+    preInfo.SetRemovable(false);
+    preInfo.SetBundleName(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    preInfo.SetBundleType(BundleType::APP);
+    dataMgr->preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInfo);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    InnerBundleUserInfo innerBundleUserInfoU1;
+    innerBundleUserInfoU1.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfoU1.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfoU1);
+    InnerBundleUserInfo innerBundleUserInfo100;
+    innerBundleUserInfo100.bundleUserInfo.userId = TEST_U100;
+    innerBundleUserInfo100.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo100);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
+    EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    dataMgr->preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInfo);
+}
+
+/**
  * @tc.number: SetBit_0001
  * @tc.name: SetBit_0001
  * @tc.desc: test SetBit_0001
