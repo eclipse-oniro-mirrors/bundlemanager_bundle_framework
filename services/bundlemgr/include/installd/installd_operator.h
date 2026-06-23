@@ -52,6 +52,7 @@ struct SessionProvisionInfo {
     uint32_t profileBlockLength = 0;
     std::shared_ptr<unsigned char[]> profileBlock;
     std::string distributionCertificate;
+    std::string appServiceCapabilities;
 };
 
 class InstalldOperator {
@@ -431,8 +432,7 @@ public:
 
     static bool IsValidUuid(const std::string &uuid);
 
-    static bool ObtainSignInfoForPlugin(
-        const std::string &filePath, std::string &appIdentifier, std::string &pluginId);
+    static bool ObtainSignInfoForPlugin(const std::string &appServiceCapabilities, std::string &pluginId);
 
     /**
      * @brief Recursively find largest files/directories up to 6 levels, then drill down to largest file.
