@@ -1090,6 +1090,12 @@ HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0042, TestSize.Level
     codeSignatureParam.profileBlockLength = 0;
     bundleInstallChecker.ProcessCodeSignatureParam(0, hapVerifyResult, codeSignatureParam);
     EXPECT_EQ(codeSignatureParam.profileBlockLength, 100);
+
+    provisionInfo.distributionType = Security::Verify::AppDistType::DEVELOPER;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    codeSignatureParam.profileBlockLength = 0;
+    bundleInstallChecker.ProcessCodeSignatureParam(0, hapVerifyResult, codeSignatureParam);
+    EXPECT_EQ(codeSignatureParam.profileBlockLength, 100);
 }
 
 /**
