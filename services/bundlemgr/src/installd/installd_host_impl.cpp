@@ -2011,11 +2011,13 @@ ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool 
         }
     }
     CreateDirParam localParam = createDirParam;
+#ifndef X86_EMULATOR_MODE
     ErrCode aplRet = GetResolvedApl(localParam);
     if (aplRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "GetResolvedApl failed: %{public}d", aplRet);
         return aplRet;
     }
+#endif
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp,
         createDirParam.debug, createDirParam.isDlpSandbox, createDirParam.dlpType, isExtensionDir);
     ErrCode res = ERR_OK;
