@@ -846,5 +846,18 @@ HWTEST_F(SpmModuleParserTest, ParseSpmModule_4500, Function | SmallTest | Level1
     EXPECT_EQ(info.moduleName, "m");
 }
 
+/**
+ * @tc.name: ParseSpmModule_4600
+ * @tc.desc: FA model – module.name starts with "." should prepend module.package.
+ */
+HWTEST_F(SpmModuleParserTest, ParseSpmModule_4600, Function | SmallTest | Level1)
+{
+    InnerModuleInfoForSpm info;
+    EXPECT_TRUE(ParseSpmModule(
+        R"({ "app": { "bundleName": "com.example.test" },
+            "module": { "package": "com.example.entry", "name": ".MainAbility" } })",
+        info));
+    EXPECT_EQ(info.moduleName, "com.example.entry.MainAbility");
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
