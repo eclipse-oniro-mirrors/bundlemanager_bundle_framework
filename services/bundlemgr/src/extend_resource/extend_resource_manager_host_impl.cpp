@@ -988,9 +988,6 @@ bool ExtendResourceManagerHostImpl::IsNeedUpdateBundleResourceInfo(
 
 bool ExtendResourceManagerHostImpl::CheckAcrossUserPermission(const int32_t userId)
 {
-    if (userId == Constants::UNSPECIFIED_USERID) {
-        return true;
-    }
     // sa no need to check across user permission
     if (BundlePermissionMgr::IsNativeTokenType()) {
         return true;
