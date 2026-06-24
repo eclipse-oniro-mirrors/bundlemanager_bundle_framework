@@ -76,6 +76,8 @@ public:
 
 void SetCachePolicyBySessionIdForTest(const BundlePolicyInfo& bundlePolicyInfo);
 void SetCachePolicyBySessionIdRetForTest(int32_t ret);
+void SetPrepareHapIdentityRetForTest(int32_t ret);
+void SetDeleteIdentityRetForTest(int32_t ret);
 } // namespace AccessToken
 } // namespace Security
 } // namespace OHOS
