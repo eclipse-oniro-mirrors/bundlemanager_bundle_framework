@@ -4049,6 +4049,18 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ENTRY_MODULE), &nGetBundleInfoWithEntryModule));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_ENTRY_MODULE",
         nGetBundleInfoWithEntryModule));
+
+    napi_value nGetBundleInfoWithCommonClone;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_COMMON_CLONE), &nGetBundleInfoWithCommonClone));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_COMMON_CLONE",
+        nGetBundleInfoWithCommonClone));
+
+    napi_value nGetBundleInfoWithSandboxClone;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SANDBOX_CLONE), &nGetBundleInfoWithSandboxClone));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_SANDBOX_CLONE",
+        nGetBundleInfoWithSandboxClone));
 }
 
 static ErrCode InnerGetBundleInfo(const std::string &bundleName, int32_t flags,

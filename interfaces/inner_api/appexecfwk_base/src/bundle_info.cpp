@@ -80,6 +80,7 @@ const char* REQUESTPERMISSION_REQUIRED_FEATURE = "requiredFeature";
 const char* SIGNATUREINFO_APPID = "appId";
 const char* SIGNATUREINFO_FINGERPRINT = "fingerprint";
 const char* BUNDLE_INFO_APP_INDEX = "appIndex";
+const char* BUNDLE_INFO_SANDBOX_CREATOR_BUNDLE_NAME = "sandboxCreatorBundleName";
 const char* BUNDLE_INFO_ERROR_CODE = "errorCode";
 const char* BUNDLE_INFO_SIGNATURE_INFO = "signatureInfo";
 const char* OVERLAY_TYPE = "overlayType";
@@ -601,6 +602,7 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
     }
     isNewVersion = parcel.ReadBool();
     buildVersion = Str16ToStr8(parcel.ReadString16());
+    sandboxCreatorBundleName = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -726,6 +728,7 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isNewVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(buildVersion));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sandboxCreatorBundleName));
     return true;
 }
 
@@ -938,7 +941,8 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_OLD_APPIDS, bundleInfo.oldAppIds},
         {BUNDLE_INFO_ROUTER_ARRAY, bundleInfo.routerArray},
         {BUNDLE_INFO_IS_NEW_VERSION, bundleInfo.isNewVersion},
-        {Constants::BUILD_VERSION, bundleInfo.buildVersion}
+        {Constants::BUILD_VERSION, bundleInfo.buildVersion},
+        {BUNDLE_INFO_SANDBOX_CREATOR_BUNDLE_NAME, bundleInfo.sandboxCreatorBundleName}
     };
 }
 
@@ -1328,6 +1332,12 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         jsonObjectEnd,
         Constants::BUILD_VERSION,
         bundleInfo.buildVersion,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_SANDBOX_CREATOR_BUNDLE_NAME,
+        bundleInfo.sandboxCreatorBundleName,
         false,
         parseResult);
     if (parseResult != ERR_OK) {

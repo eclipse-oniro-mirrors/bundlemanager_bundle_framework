@@ -1048,7 +1048,10 @@ napi_value GetSandboxDataDirSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
         return nullptr;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    bool isValidCloneAppIndex = (appIndex >= Constants::MAIN_APP_INDEX &&
+        appIndex <= BundleFileUtil::GetCloneMaxCount()) ||
+        (appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX);
+    if (!isValidCloneAppIndex) {
         APP_LOGE("appIndex: %{public}d not in valid range", appIndex);
         BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
         return nullptr;

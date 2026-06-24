@@ -607,6 +607,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_ABILITY_INFO):
             errCode = this->HandleQueryCloneAbilityInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_SANDBOX_CLONE_ABILITY_INFO):
+            errCode = this->HandleQuerySandboxCloneAbilityInfo(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO):
             errCode = this->HandleGetCloneBundleInfo(data, reply);
             break;
@@ -615,6 +618,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_APP_INDEXES):
             errCode = this->HandleGetCloneAppIndexes(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLI_SANDBOX_APP_INDEXES):
+            errCode = this->HandleGetCliSandboxAppIndexes(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_LAUNCH_WANT):
             errCode = this->HandleGetLaunchWant(data, reply);
@@ -4773,6 +4779,47 @@ ErrCode BundleMgrHost::HandleQueryCloneAbilityInfo(MessageParcel &data, MessageP
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleQuerySandboxCloneAbilityInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+
+    std::string creatorBundleName = data.ReadString();
+    std::unique_ptr<ElementName> elementNamePtr(data.ReadParcelable<ElementName>());
+    if (!elementNamePtr) {
+        APP_LOGE("ReadParcelable<ElementName> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    std::string moduleName = data.ReadString();
+    elementNamePtr->SetModuleName(moduleName);
+
+    int32_t flags = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+
+    if (creatorBundleName.empty()) {
+        APP_LOGE_NOFUNC("host query creatorBundleName is empty");
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_CREATOR_BUNDLE_NAME;
+    }
+
+    if (appIndex < Constants::CLI_SANDBOX_APP_INDEX_MIN || appIndex > Constants::CLI_SANDBOX_APP_INDEX_MAX) {
+        APP_LOGE_NOFUNC("host query appIndex %{public}d is not in cli sandbox range", appIndex);
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_APP_INDEX;
+    }
+
+    AbilityInfo abilityInfo;
+    auto ret = QuerySandboxCloneAbilityInfo(
+        creatorBundleName, *elementNamePtr, flags, appIndex, abilityInfo, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteParcelable(&abilityInfo)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleGetCloneBundleInfo(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -4843,6 +4890,25 @@ ErrCode BundleMgrHost::HandleGetCloneAppIndexes(MessageParcel &data, MessageParc
 
     std::vector<int32_t> appIndexes;
     auto ret = GetCloneAppIndexes(bundleName, appIndexes, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteInt32Vector(appIndexes)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetCliSandboxAppIndexes(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+
+    std::vector<int32_t> appIndexes;
+    auto ret = GetCliSandboxAppIndexes(bundleName, appIndexes, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

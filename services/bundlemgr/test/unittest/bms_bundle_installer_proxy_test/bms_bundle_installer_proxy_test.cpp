@@ -1217,5 +1217,65 @@ HWTEST_F(BmsBundleInstallerProxyTest, DestroyCliSandboxApp_0100, Function | Medi
         creatorBundleName, envCallerBundleName, bundleName, userId, appIndex);
     EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
+
+/**
+ * @tc.number: CreateCliSandboxApp_0100
+ * @tc.name: test the CreateCliSandboxApp
+ * @tc.desc: 1. envCreatorBundleName is empty
+ *           2. test CreateCliSandboxApp
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, CreateCliSandboxApp_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string creatorBundleName = "com.example.creator";
+    std::string envCreatorBundleName = "";
+    std::string bundleName = "com.example.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto res = bundleInstallerProxy.CreateCliSandboxApp(
+        creatorBundleName, envCreatorBundleName, bundleName, userId, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_ENV_CREATOR_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: CreateCliSandboxApp_0200
+ * @tc.name: test the CreateCliSandboxApp
+ * @tc.desc: 1. bundleName is empty
+ *           2. test CreateCliSandboxApp
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, CreateCliSandboxApp_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string creatorBundleName = "com.example.creator";
+    std::string envCreatorBundleName = "com.example.envcreator";
+    std::string bundleName = "";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto res = bundleInstallerProxy.CreateCliSandboxApp(
+        creatorBundleName, envCreatorBundleName, bundleName, userId, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: CreateCliSandboxApp_0300
+ * @tc.name: test the CreateCliSandboxApp
+ * @tc.desc: 1. valid params but remote object unavailable
+ *           2. test CreateCliSandboxApp
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, CreateCliSandboxApp_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string creatorBundleName = "com.example.creator";
+    std::string envCreatorBundleName = "com.example.envcreator";
+    std::string bundleName = "com.example.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto res = bundleInstallerProxy.CreateCliSandboxApp(
+        creatorBundleName, envCreatorBundleName, bundleName, userId, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
 }
 }

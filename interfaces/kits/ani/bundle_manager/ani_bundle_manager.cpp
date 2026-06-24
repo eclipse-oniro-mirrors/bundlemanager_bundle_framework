@@ -2235,7 +2235,10 @@ static ani_string GetSandboxDataDir(ani_env* env, ani_string aniBundleName, ani_
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    if (aniAppIndex < Constants::MAIN_APP_INDEX || aniAppIndex > BundleFileUtil::GetCloneMaxCount()) {
+    bool isValidCloneAppIndex = (aniAppIndex >= Constants::MAIN_APP_INDEX &&
+        aniAppIndex <= BundleFileUtil::GetCloneMaxCount()) ||
+        (aniAppIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && aniAppIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX);
+    if (!isValidCloneAppIndex) {
         APP_LOGE("appIndex: %{public}d not in valid range", aniAppIndex);
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, Constants::APP_INDEX, TYPE_NUMBER);
         return nullptr;

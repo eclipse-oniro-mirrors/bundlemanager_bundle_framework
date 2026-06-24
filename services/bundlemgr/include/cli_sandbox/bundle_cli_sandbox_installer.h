@@ -32,13 +32,13 @@ public:
 
     /**
      * @brief Create CLI sandbox application.
-     * @param callerBundleName Indicates the caller package name.
+     * @param creatorBundleName Indicates the creator bundle name.
      * @param bundleName Indicates the bundle name of the application.
      * @param userId Indicates the user id.
      * @param appIndex Indicates the appIndex of the created sandbox.
      * @return Returns ERR_OK if created successfully; returns error code otherwise.
      */
-    ErrCode CreateCliSandboxApp(const std::string &callerBundleName,
+    ErrCode CreateCliSandboxApp(const std::string &creatorBundleName,
         const std::string &bundleName, int32_t userId, int32_t &appIndex);
 
     /**
@@ -69,7 +69,7 @@ private:
     void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
         int32_t appIndex, const InnerBundleInfo& innerBundleInfo);
 
-    ErrCode ProcessCreateCliSandbox(const std::string &callerBundleName,
+    ErrCode ProcessCreateCliSandbox(const std::string &creatorBundleName,
         const std::string &bundleName, int32_t userId, int32_t &appIndex);
     ErrCode CreateSandboxDataDir(InnerBundleInfo &info, int32_t userId,
         int32_t uid, int32_t appIndex) const;

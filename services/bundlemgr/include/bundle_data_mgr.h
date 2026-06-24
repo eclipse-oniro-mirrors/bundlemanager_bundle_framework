@@ -1182,7 +1182,9 @@ public:
     ErrCode AddCliSandboxBundle(const std::string &bundleName, const InnerCliSandboxInfo &sandboxInfo);
     ErrCode RemoveCliSandboxBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex);
     ErrCode AddCallerToCliSandbox(const std::string &bundleName, int32_t userId,
-        int32_t appIndex, const std::string &callerBundleName);
+        int32_t appIndex, const std::string &creatorBundleName);
+    ErrCode QuerySandboxCloneAbilityInfo(const std::string &creatorBundleName, const ElementName &element,
+        int32_t flags, int32_t userId, int32_t appIndex, AbilityInfo &abilityInfo) const;
     ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
         AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex = 0) const;
     ErrCode GetBundleNameAndIndex(const int32_t uid, std::string &bundleName, int32_t &appIndex) const;
@@ -1206,6 +1208,10 @@ public:
      * @return Returns the vector of CLI sandbox app indexes.
      */
     std::vector<int32_t> GetCliSandboxAppIndexes(const std::string &bundleName, int32_t userId) const;
+    ErrCode GetCliSandboxBundleInfo(const std::string &bundleName, int32_t flags, int32_t appIndex,
+        BundleInfo &bundleInfo, int32_t userId) const;
+    int32_t GetCliSandboxCountByCreator(const std::string &bundleName, int32_t userId,
+        const std::string &creatorBundleName) const;
 
     ErrCode ExplicitQueryExtensionInfoV9(const Want &want, int32_t flags, int32_t userId,
         ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;

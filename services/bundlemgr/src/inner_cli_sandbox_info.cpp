@@ -26,7 +26,7 @@ const std::string CLI_SANDBOX_INFO_ACCESS_TOKEN_ID = "accessTokenId";
 const std::string CLI_SANDBOX_INFO_ACCESS_TOKEN_ID_EX = "accessTokenIdEx";
 const std::string CLI_SANDBOX_INFO_INSTALL_TIME = "installTime";
 const std::string CLI_SANDBOX_INFO_SANDBOX_TYPE = "sandboxType";
-const std::string CLI_SANDBOX_INFO_CALLER_PACKAGE_NAMES = "callerBundleNames";
+const std::string CLI_SANDBOX_INFO_CREATOR_BUNDLE_NAMES = "creatorBundleNames";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const InnerCliSandboxInfo& info)
@@ -40,7 +40,7 @@ void to_json(nlohmann::json& jsonObject, const InnerCliSandboxInfo& info)
         {CLI_SANDBOX_INFO_ACCESS_TOKEN_ID_EX, info.accessTokenIdEx},
         {CLI_SANDBOX_INFO_INSTALL_TIME, info.installTime},
         {CLI_SANDBOX_INFO_SANDBOX_TYPE, static_cast<int32_t>(info.sandboxType)},
-        {CLI_SANDBOX_INFO_CALLER_PACKAGE_NAMES, info.callerBundleNames}
+        {CLI_SANDBOX_INFO_CREATOR_BUNDLE_NAMES, info.creatorBundleNames}
     };
 }
 
@@ -66,8 +66,8 @@ void from_json(const nlohmann::json& jsonObject, InnerCliSandboxInfo& info)
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, CLI_SANDBOX_INFO_SANDBOX_TYPE,
         sandboxType, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     info.sandboxType = static_cast<SandboxIsolationType>(sandboxType);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, CLI_SANDBOX_INFO_CALLER_PACKAGE_NAMES,
-        info.callerBundleNames, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, CLI_SANDBOX_INFO_CREATOR_BUNDLE_NAMES,
+        info.creatorBundleNames, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("read module InnerCliSandboxInfo from jsonObject error, error code : %{public}d", parseResult);
     }

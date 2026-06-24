@@ -1863,6 +1863,13 @@ public:
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
+    virtual ErrCode QuerySandboxCloneAbilityInfo(const std::string &creatorBundleName,
+        const ElementName &element, int32_t flags, int32_t appIndex,
+        AbilityInfo &abilityInfo, int32_t userId)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
     virtual ErrCode GetCloneBundleInfo(const std::string &bundleName, int32_t flag, int32_t appIndex,
         BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
@@ -1882,6 +1889,12 @@ public:
     }
 
     virtual ErrCode GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
+        int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetCliSandboxAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
         int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;

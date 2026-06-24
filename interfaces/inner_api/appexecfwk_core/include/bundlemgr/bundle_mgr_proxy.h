@@ -1059,6 +1059,9 @@ public:
     virtual ErrCode GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
         int32_t userId) override;
 
+    virtual ErrCode GetCliSandboxAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
+        int32_t userId) override;
+
     virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName,
         int32_t flags, int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo, int32_t userId) override;
 
@@ -1296,6 +1299,10 @@ public:
 
     virtual ErrCode QueryCloneAbilityInfo(const ElementName &element,
         int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId) override;
+
+    virtual ErrCode QuerySandboxCloneAbilityInfo(const std::string &creatorBundleName,
+        const ElementName &element, int32_t flags, int32_t appIndex,
+        AbilityInfo &abilityInfo, int32_t userId) override;
 
     virtual ErrCode GetCloneBundleInfo(const std::string &bundleName, int32_t flag, int32_t appIndex,
         BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;

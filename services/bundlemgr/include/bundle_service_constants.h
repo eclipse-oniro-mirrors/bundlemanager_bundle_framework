@@ -252,6 +252,7 @@ constexpr const char* BMS_TRUE = "true";
 // cli sandbox application
 constexpr int32_t CLI_SANDBOX_APP_INDEX_MIN = 2000;
 constexpr int32_t CLI_SANDBOX_APP_INDEX_MAX = 3000;
+constexpr int32_t CLI_SANDBOX_MAX_COUNT_PER_CREATOR = 5;
 // shader
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
 constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
