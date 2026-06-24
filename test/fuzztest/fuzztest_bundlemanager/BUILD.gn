@@ -136,7 +136,6 @@ group("bundlemanagerfuzztest") {
     "bmsgetuidbybundlename_fuzzer:BMSGetUidByBundleNameFuzzTest",
     "bmshapmoduleinfo_fuzzer:BMSHapModuleInfoFuzzTest",
     "bmshmpbundleinstaller_fuzzer:BMSHmpBundleInstallerFuzzTest",
-    "bmsidleconditionlistener_fuzzer:BMSIdleConditionListenerFuzzTest",
     "bmsidleconditionmgr_fuzzer:BMSIdleConditionMgrFuzzTest",
     "bmsidlemanagerrdb_fuzzer:BMSIdleManagerRdbFuzzTest",
     "bmsinstalldloadcallback_fuzzer:BMSInstalldLoadCallbackFuzzTest",
