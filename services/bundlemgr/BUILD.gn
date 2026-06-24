@@ -705,6 +705,10 @@ ohos_shared_library("installs") {
     defines += [ "SECURITY_PRIVACY_SERVER_ENABLE" ]
   }
 
+  if (is_emulator) {
+    defines += [ "X86_EMULATOR_MODE" ]
+  }
+
   install_enable = true
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

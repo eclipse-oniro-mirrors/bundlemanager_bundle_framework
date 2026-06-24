@@ -328,7 +328,11 @@ ErrCode BundleInstallChecker::CheckHapsSignInfoAndInitSession(
         Security::Verify::ProvisionInfo provisionInfo;
         ErrCode parseRet = ParseProfileDataToProvisionInfo(info.profileData, provisionInfo);
         if (parseRet != ERR_OK) {
+#ifndef X86_EMULATOR_MODE
             return parseRet;
+#else
+            provisionInfo.appId = Constants::EMPTY_STRING;
+#endif
         }
 
         if (!CheckEnterpriseResign(provisionInfo, userId)) {
