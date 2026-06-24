@@ -24,6 +24,13 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr int32_t MAX_INSTALL_PARAM_ENTRIES = 1000;
+constexpr int32_t MAX_INSTALL_HASH_PARAMS = 1000;
+constexpr int32_t MAX_INSTALL_SHARED_PATHS = 500;
+constexpr int32_t MAX_INSTALL_VERIFY_PARAMS = 500;
+constexpr int32_t MAX_INSTALL_PGO_PARAMS = 500;
+}
 bool InstallParam::ReadFromParcel(Parcel &parcel)
 {
     int32_t flagData;
@@ -39,6 +46,10 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
 
     int32_t hashParamSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hashParamSize);
+    if (hashParamSize > MAX_INSTALL_HASH_PARAMS) {
+        APP_LOGE("hashParamSize %{public}d exceeds max", hashParamSize);
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, hashParamSize, &hashParams);
     for (int32_t i = 0; i < hashParamSize; ++i) {
         std::string moduleName = Str16ToStr8(parcel.ReadString16());
@@ -49,6 +60,10 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
 
     int32_t sharedBundleDirPathsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sharedBundleDirPathsSize);
+    if (sharedBundleDirPathsSize > MAX_INSTALL_SHARED_PATHS) {
+        APP_LOGE("sharedBundleDirPathsSize %{public}d exceeds max", sharedBundleDirPathsSize);
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, sharedBundleDirPathsSize, &sharedBundleDirPaths);
     for (int32_t i = 0; i < sharedBundleDirPathsSize; ++i) {
         std::string sharedBundleDirPath = Str16ToStr8(parcel.ReadString16());
@@ -61,6 +76,10 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
 
     int32_t verifyCodeParamSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, verifyCodeParamSize);
+    if (verifyCodeParamSize > MAX_INSTALL_VERIFY_PARAMS) {
+        APP_LOGE("verifyCodeParamSize %{public}d exceeds max", verifyCodeParamSize);
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, verifyCodeParamSize, &verifyCodeParams);
     for (int32_t i = 0; i < verifyCodeParamSize; ++i) {
         std::string moduleName = Str16ToStr8(parcel.ReadString16());
@@ -71,6 +90,10 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
 
     int32_t pgoParamsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, pgoParamsSize);
+    if (pgoParamsSize > MAX_INSTALL_PGO_PARAMS) {
+        APP_LOGE("pgoParamsSize %{public}d exceeds max", pgoParamsSize);
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, pgoParamsSize, &pgoParams);
     for (int32_t i = 0; i < pgoParamsSize; ++i) {
         std::string moduleName = Str16ToStr8(parcel.ReadString16());
@@ -79,6 +102,10 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
     }
     uint32_t parametersSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, parametersSize);
+    if (parametersSize > static_cast<uint32_t>(MAX_INSTALL_PARAM_ENTRIES)) {
+        APP_LOGE("parametersSize %{public}u exceeds max", parametersSize);
+        return false;
+    }
     CONTAINER_SECURITY_VERIFY(parcel, parametersSize, &parameters);
     for (uint32_t i = 0; i < parametersSize; ++i) {
         std::string key = Str16ToStr8(parcel.ReadString16());
