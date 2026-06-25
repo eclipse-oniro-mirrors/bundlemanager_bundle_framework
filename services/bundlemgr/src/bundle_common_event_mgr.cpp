@@ -368,12 +368,13 @@ ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info
     return ERR_OK;
 }
 
-ErrCode BundleCommonEventMgr::NotifyCliSandboxAppStatus(const NotifyBundleEvents &event)
+ErrCode BundleCommonEventMgr::NotifyCliSandboxAppStatus(const NotifyBundleEvents &event,
+    const std::string &action)
 {
     APP_LOGI("NotifyCliSandboxAppStatus bundle:%{public}s appIndex:%{public}d creator:%{public}s",
         event.bundleName.c_str(), event.appIndex, event.sandboxCreatorBundleName.c_str());
     OHOS::AAFwk::Want want;
-    want.SetAction(COMMON_EVENT_SANDBOX_BUNDLE_ADDED);
+    want.SetAction(action);
     ElementName element;
     element.SetBundleName(event.bundleName);
     want.SetElement(element);

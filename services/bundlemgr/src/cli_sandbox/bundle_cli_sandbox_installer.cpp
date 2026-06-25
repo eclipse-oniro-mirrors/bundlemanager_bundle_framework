@@ -21,6 +21,7 @@
 #include "ability_manager_helper.h"
 #include "account_helper.h"
 #include "bundle_app_spawn_client.h"
+#include "bundle_common_event.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_file_util.h"
 #include "bundle_mgr_service.h"
@@ -96,7 +97,7 @@ ErrCode BundleCliSandboxInstaller::CreateCliSandboxApp(const std::string &creato
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     if (result == ERR_OK) {
-        commonEventMgr->NotifyCliSandboxAppStatus(installRes);
+        commonEventMgr->NotifyCliSandboxAppStatus(installRes, COMMON_EVENT_SANDBOX_BUNDLE_ADDED);
     }
 
     ResetInstallProperties();
@@ -387,24 +388,6 @@ ErrCode BundleCliSandboxInstaller::DestroyCliSandboxApp(const std::string &creat
 
     ErrCode result = ProcessDestroyCliSandbox(creatorBundleName, envCallerBundleName,
         bundleName, userId, appIndex, skipCallerCheck);
-
-    NotifyBundleEvents uninstallRes = {
-        .type = NotifyType::UNINSTALL_BUNDLE,
-        .resultCode = result,
-        .accessTokenId = accessTokenId_,
-        .uid = uid_,
-        .appIndex = appIndex,
-        .bundleName = bundleName,
-        .appId = appId_,
-        .appIdentifier = appIdentifier_,
-        .appDistributionType = appDistributionType_,
-        .keepData = false,
-        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-    };
-    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    // todo send common event
-
     ResetInstallProperties();
     PerfProfile::GetInstance().SetBundleUninstallEndTime(GetTickCount());
     return result;
@@ -461,7 +444,13 @@ ErrCode BundleCliSandboxInstaller::ProcessDestroyCliSandbox(const std::string &c
         if (actualCreatorBundleName.empty()) {
             return ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INVALID_CREATOR_BUNDLE_NAME;
         }
-        // todo verify actualCreatorBundleName permission
+        int32_t permissionResult = BundlePermissionMgr::VerifyPermission(actualCreatorBundleName,
+            Constants::PERMISSION_MANAGE_SANDBOX_BUNDLE, userId);
+        if (permissionResult != Constants::PERMISSION_GRANTED) {
+            APP_LOGE("%{public}s does not have permission to destroy cli sandbox app",
+                actualCreatorBundleName.c_str());
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
         auto &callerNames = it->second.creatorBundleNames;
         if (std::find(callerNames.begin(), callerNames.end(), actualCreatorBundleName) == callerNames.end()) {
             APP_LOGE("caller %{public}s is not allowed to destroy sandbox %{public}s appIndex:%{public}d",
@@ -504,6 +493,24 @@ ErrCode BundleCliSandboxInstaller::ProcessDestroyCliSandbox(const std::string &c
     }
     UninstallDebugAppSandbox(bundleName, uid_, appIndex, info);
     APP_LOGI("DestroyCliSandboxApp %{public}s appIndex:%{public}d successfully", bundleName.c_str(), appIndex);
+    // Send event
+    NotifyBundleEvents uninstallRes = {
+        .type = NotifyType::UNINSTALL_BUNDLE,
+        .resultCode = ERR_OK,
+        .accessTokenId = accessTokenId_,
+        .uid = uid_,
+        .appIndex = appIndex,
+        .userId = userId,
+        .bundleName = bundleName,
+        .appId = appId_,
+        .appIdentifier = appIdentifier_,
+        .appDistributionType = appDistributionType_,
+        .sandboxCreatorBundleName = it->second.creatorBundleNames.empty()
+            ? Constants::EMPTY_STRING : it->second.creatorBundleNames.front(),
+        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+    };
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyCliSandboxAppStatus(uninstallRes, COMMON_EVENT_SANDBOX_BUNDLE_REMOVED);
     return ERR_OK;
 }
 
@@ -537,7 +544,7 @@ std::string BundleCliSandboxInstaller::GetActualCreatorBundleName(
     }
 
     int32_t permissionResult = BundlePermissionMgr::VerifyPermission(envCallerBundleName,
-        ServiceConstants::PERMISSION_CLI_MANAGE_WEB_SANDBOX, userId);
+        Constants::PERMISSION_CLI_MANAGE_WEB_SANDBOX, userId);
     if (permissionResult == Constants::PERMISSION_GRANTED) {
         APP_LOGD("Env bundle %{public}s has permission, use creator bundle: %{public}s",
             envCallerBundleName.c_str(), creatorBundleName.c_str());

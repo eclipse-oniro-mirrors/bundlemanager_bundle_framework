@@ -123,7 +123,7 @@ public:
         const std::shared_ptr<BundleDataMgr> &dataMgr);
     ErrCode NotifySandboxAppStatus(const InnerBundleInfo &info, int32_t uid, int32_t userId,
         const SandboxInstallType &type);
-    ErrCode NotifyCliSandboxAppStatus(const NotifyBundleEvents &event);
+    ErrCode NotifyCliSandboxAppStatus(const NotifyBundleEvents &event, const std::string &action);
     void NotifyOverlayModuleStateStatus(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
         int32_t userId, int32_t uid);
     void NotifySetDisposedRule(const std::string &appId, int32_t userId, const std::string &data, int32_t appIndex);
