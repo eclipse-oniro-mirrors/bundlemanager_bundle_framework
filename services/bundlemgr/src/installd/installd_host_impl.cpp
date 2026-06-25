@@ -1692,7 +1692,7 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
             }
         }
     }
-    return InstalldOperator::GetDiskUsageFromPath(cachePaths);
+    return InstalldOperator::GetCacheDiskUsageFromPath(cachePaths);
 }
 
 ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,

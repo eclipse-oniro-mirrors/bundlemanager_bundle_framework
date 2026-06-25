@@ -275,6 +275,8 @@ public:
      */
     static int64_t GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t timeoutMs = -1);
 
+    static int64_t GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs = -1);
+
     static bool InitialiseQuotaMounts();
 
     static int64_t GetDiskUsageFromQuota(const int32_t uid);
