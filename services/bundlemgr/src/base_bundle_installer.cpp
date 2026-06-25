@@ -3295,11 +3295,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     }
 
     if (oldInfo.IsSingleton() != newInfo.IsSingleton()) {
-        if ((oldInfo.IsSingleton() && !newInfo.IsSingleton()) && newInfo.IsPreInstallApp()
-            && AllowSingletonChange(newInfo.GetBundleName())) {
+        if (!newInfo.IsSingleton() && AllowSingletonChange(newInfo.GetBundleName())) {
             singletonState_ = SingletonState::SINGLETON_TO_NON;
-        } else if ((!oldInfo.IsSingleton() && newInfo.IsSingleton()) && newInfo.IsPreInstallApp()
-            && AllowSingletonChange(newInfo.GetBundleName())) {
+        } else if (newInfo.IsSingleton() && AllowSingletonChange(newInfo.GetBundleName())) {
             singletonState_ = SingletonState::NON_TO_SINGLETON;
         } else {
             LOG_E(BMS_TAG_INSTALLER, "Singleton not allow changed");
