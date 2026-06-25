@@ -8131,22 +8131,26 @@ HWTEST_F(BmsDataMgrTest, RemoveUninstalledBundleinfos_0001, Function | MediumTes
     BundleDataMgr bundleDataMgr;
     std::string bundleName = "com.ohos.test";
     std::string bundleName2 = "com.ohos.test2";
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    bundleDataMgr.GetAllUninstallBundleInfo(uninstallBundleInfos);
+    std::cout << "uninstallBundleInfos.size() = " << uninstallBundleInfos.size() << std::endl;
+    for (const auto& uninstallBundleInfo : uninstallBundleInfos) {
+        std::cout << "clear uninstallBundleInfo db = " << uninstallBundleInfo.first << std::endl;
+        bundleDataMgr.uninstallDataMgr_->DeleteUninstallBundleInfo(uninstallBundleInfo.first);
+    }
     int32_t userId = 100;
-    bool ret = bundleDataMgr.RemoveUninstalledBundleinfos(userId);
-    userId = 101;
-    ret = bundleDataMgr.RemoveUninstalledBundleinfos(userId);
     UninstallBundleInfo uninstallBundleInfo;
     UninstallDataUserInfo uninstallDataUserInfo;
     uninstallBundleInfo.userInfos.emplace("101", uninstallDataUserInfo);
     EXPECT_NE(bundleDataMgr.uninstallDataMgr_, nullptr);
     bundleDataMgr.uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
     bundleDataMgr.uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName2, uninstallBundleInfo);
-    ret = bundleDataMgr.RemoveUninstalledBundleinfos(userId);
+    bool ret = bundleDataMgr.RemoveUninstalledBundleinfos(userId);
     EXPECT_TRUE(ret);
     bundleDataMgr.uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName);
     bundleDataMgr.uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName2);
     ret = bundleDataMgr.RemoveUninstalledBundleinfos(userId);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
     bundleDataMgr.uninstallDataMgr_ = nullptr;
     ret = bundleDataMgr.RemoveUninstalledBundleinfos(userId);
     EXPECT_FALSE(ret);
@@ -12318,9 +12322,16 @@ HWTEST_F(BmsDataMgrTest, ProcessIdleInfo_0001, Function | SmallTest | Level1)
 
     dataMgr->bundleInfos_.clear();
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
+    std::cout << "uninstallBundleInfos.size() = " << uninstallBundleInfos.size() << std::endl;
+    for (const auto& uninstallBundleInfo : uninstallBundleInfos) {
+        std::cout << "clear uninstallBundleInfo db = " << uninstallBundleInfo.first << std::endl;
+        dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(uninstallBundleInfo.first);
+    }
 
     auto ret = dataMgr->ProcessIdleInfo();
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
 }
 
 /**

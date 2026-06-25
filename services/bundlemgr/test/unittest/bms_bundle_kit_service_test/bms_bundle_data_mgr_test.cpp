@@ -7088,9 +7088,16 @@ HWTEST_F(BmsBundleDataMgrTest, ProcessUninstallBundle_1000, Function | SmallTest
 {
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
+    std::cout << "uninstallBundleInfos.size() = " << uninstallBundleInfos.size() << std::endl;
+    for (const auto& uninstallBundleInfo : uninstallBundleInfos) {
+        std::cout << "clear uninstallBundleInfo db = " << uninstallBundleInfo.first << std::endl;
+        dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(uninstallBundleInfo.first);
+    }
     std::vector<BundleOptionInfo> bundleOptionInfos;
     bool result = dataMgr->ProcessUninstallBundle(bundleOptionInfos);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
 }
 
 /**
