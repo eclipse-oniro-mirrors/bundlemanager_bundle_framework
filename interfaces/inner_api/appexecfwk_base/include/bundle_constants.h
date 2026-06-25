@@ -131,10 +131,10 @@ constexpr const char* PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOU
 constexpr const char* PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST =
     "ohos.permission.ENTERPRISE_GET_INSTALLED_BUNDLE_LIST";
 constexpr const char* PERMISSION_ACCESS_STARTUPGUIDE = "ohos.permission.ACCESS_STARTUPGUIDE";
-constexpr const char* PERMISSION_MANAGER_SANDBOX_BUNDLE =
-    "ohos.permission.MANAGER_SANDBOX_BUNDLE";
-constexpr const char* PERMISSION_CLI_MANAGER_WEB_SANDBOX =
-    "ohos.permission.CLI_MANAGER_WEB_SANDBOX";
+constexpr const char* PERMISSION_MANAGE_SANDBOX_BUNDLE =
+    "ohos.permission.MANAGE_SANDBOX_BUNDLE";
+constexpr const char* PERMISSION_CLI_MANAGE_WEB_SANDBOX =
+    "ohos.permission.CLI_MANAGE_WEB_SANDBOX";
 
 enum class AppType {
     SYSTEM_APP = 0,

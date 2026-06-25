@@ -167,7 +167,6 @@ constexpr const char* PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB = "ohos.permission.SU
 constexpr const char* PERMISSION_MANAGE_STORAGE = "ohos.permission.atomicService.MANAGE_STORAGE";
 constexpr const char* PERMISSION_MANAGE_AGING = "ohos.permission.atomicService.MANAGE_AGING";
 constexpr const char* PERMISSION_SUPPORT_LOCAL_PLUGIN = "ohos.permission.kernel.SUPPORT_LOCAL_PLUGIN";
-constexpr const char* PERMISSION_CLI_MANAGE_WEB_SANDBOX = "ohos.permission.CLI_MANAGE_WEB_SANDBOX";
 
 constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
 constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";

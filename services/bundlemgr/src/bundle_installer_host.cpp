@@ -1550,14 +1550,14 @@ ErrCode BundleInstallerHost::CreateCliSandboxApp(const std::string &creatorBundl
 
     std::string finalCreatorBundleName = creatorBundleName;
     int32_t result = BundlePermissionMgr::VerifyPermission(
-        envCreatorBundleName, Constants::PERMISSION_CLI_MANAGER_WEB_SANDBOX, userId);
+        envCreatorBundleName, Constants::PERMISSION_CLI_MANAGE_WEB_SANDBOX, userId);
     if (result != Constants::PERMISSION_GRANTED) {
         LOG_W(BMS_TAG_INSTALLER, "env creator %{public}s does not have permission", envCreatorBundleName.c_str());
         finalCreatorBundleName = envCreatorBundleName;
     }
 
     int32_t finalResult = BundlePermissionMgr::VerifyPermission(
-        finalCreatorBundleName, Constants::PERMISSION_MANAGER_SANDBOX_BUNDLE, userId);
+        finalCreatorBundleName, Constants::PERMISSION_MANAGE_SANDBOX_BUNDLE, userId);
     if (finalResult != Constants::PERMISSION_GRANTED) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "creator %{public}s does not have permission", finalCreatorBundleName.c_str());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
