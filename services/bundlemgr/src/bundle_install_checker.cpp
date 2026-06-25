@@ -577,6 +577,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 
         newInfo.SetIsPreInstallApp(checkParam.isPreInstallApp);
         result = ParseBundleInfo(bundlePaths[i], newInfo, packInfo);
+        HandleExtensionPermission(newInfo);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "bundle parse failed %{public}d", result);
             return result;
@@ -2357,5 +2358,21 @@ ErrCode BundleInstallChecker::CalculateInstallInodes(std::unordered_map<std::str
     return BundleUtil::CheckOrphanNodeUseRateIsSufficient() ? ERR_OK : ERR_APPEXECFWK_INSTALL_INODE_INSUFFICIENT;
 }
 
+void BundleInstallChecker::HandleExtensionPermission(InnerBundleInfo &info)
+{
+    if (info.GetAppType() != Constants::AppType::SYSTEM_APP || info.IsPreInstallApp()) {
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (dataMgr == nullptr || dataMgr->GetPreInstallBundleInfo(info.GetBundleName(), preInstallBundleInfo)) {
+        APP_LOGE_NOFUNC("dataMgr is null or is pre app");
+        return;
+    }
+    for (auto &innerExtensionInfo : info.FetchInnerExtensionInfos()) {
+        innerExtensionInfo.second.readPermission.clear();
+        innerExtensionInfo.second.writePermission.clear();
+    }
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

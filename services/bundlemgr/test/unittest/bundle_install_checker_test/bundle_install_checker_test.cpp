@@ -1499,4 +1499,217 @@ HWTEST_F(BundleInstallCheckerTest, CalculateInstallInodes_0011, TestSize.Level2)
     EXPECT_GE(ret, ERR_OK);
 }
 
+/**
+ * @tc.number: HandleExtensionPermission_0001
+ * @tc.name: test HandleExtensionPermission with non-system app
+ * @tc.desc: 1. test with non-system app (THIRD_PARTY_APP)
+ *           2. verify permissions are NOT cleared
+ */
+HWTEST_F(BundleInstallCheckerTest, HandleExtensionPermission_0001, TestSize.Level1)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
+    
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.bundleName = "com.example.test";
+    extensionInfo.moduleName = "entry";
+    extensionInfo.name = "MainExtension";
+    extensionInfo.readPermission = "ohos.permission.READ_TEST";
+    extensionInfo.writePermission = "ohos.permission.WRITE_TEST";
+    innerBundleInfo.InsertExtensionInfo("com.example.test.MainExtension", extensionInfo);
+    
+    bundleInstallChecker.HandleExtensionPermission(innerBundleInfo);
+    
+    // For non-system app, permissions should NOT be cleared
+    auto& extensions = innerBundleInfo.FetchInnerExtensionInfos();
+    EXPECT_EQ(extensions["com.example.test.MainExtension"].readPermission, "ohos.permission.READ_TEST");
+    EXPECT_EQ(extensions["com.example.test.MainExtension"].writePermission, "ohos.permission.WRITE_TEST");
+}
+
+/**
+ * @tc.number: HandleExtensionPermission_0002
+ * @tc.name: test HandleExtensionPermission with system app but pre-install app
+ * @tc.desc: 1. test with system app that is pre-install app
+ *           2. verify permissions are NOT cleared
+ */
+HWTEST_F(BundleInstallCheckerTest, HandleExtensionPermission_0002, TestSize.Level1)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo.baseApplicationInfo_->bundleName = "com.example.preinstall";
+    
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.bundleName = "com.example.preinstall";
+    extensionInfo.moduleName = "entry";
+    extensionInfo.name = "MainExtension";
+    extensionInfo.readPermission = "ohos.permission.READ_TEST";
+    extensionInfo.writePermission = "ohos.permission.WRITE_TEST";
+    innerBundleInfo.InsertExtensionInfo("com.example.preinstall.MainExtension", extensionInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName("com.example.preinstall");
+    dataMgr->SavePreInstallBundleInfo("com.example.preinstall", preInstallBundleInfo);
+    
+    bundleInstallChecker.HandleExtensionPermission(innerBundleInfo);
+    
+    // For pre-install system app, permissions should NOT be cleared
+    auto& extensions = innerBundleInfo.FetchInnerExtensionInfos();
+    EXPECT_EQ(extensions["com.example.preinstall.MainExtension"].readPermission, "ohos.permission.READ_TEST");
+    EXPECT_EQ(extensions["com.example.preinstall.MainExtension"].writePermission, "ohos.permission.WRITE_TEST");
+    
+    dataMgr->DeletePreInstallBundleInfo("com.example.preinstall", preInstallBundleInfo);
+}
+
+/**
+ * @tc.number: HandleExtensionPermission_0003
+ * @tc.name: test HandleExtensionPermission with system app and not pre-install app
+ * @tc.desc: 1. test with system app that is NOT pre-install app
+ *           2. verify permissions ARE cleared
+ */
+HWTEST_F(BundleInstallCheckerTest, HandleExtensionPermission_0003, TestSize.Level1)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo.baseApplicationInfo_->bundleName = "com.example.system";
+    
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.bundleName = "com.example.system";
+    extensionInfo.moduleName = "entry";
+    extensionInfo.name = "MainExtension";
+    extensionInfo.readPermission = "ohos.permission.READ_TEST";
+    extensionInfo.writePermission = "ohos.permission.WRITE_TEST";
+    innerBundleInfo.InsertExtensionInfo("com.example.system.MainExtension", extensionInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    bundleInstallChecker.HandleExtensionPermission(innerBundleInfo);
+    
+    // For non-pre-install system app, permissions should BE cleared
+    auto& extensions = innerBundleInfo.FetchInnerExtensionInfos();
+    EXPECT_EQ(extensions["com.example.system.MainExtension"].readPermission, "");
+    EXPECT_EQ(extensions["com.example.system.MainExtension"].writePermission, "");
+}
+
+/**
+ * @tc.number: HandleExtensionPermission_0004
+ * @tc.name: test HandleExtensionPermission with multiple extensions
+ * @tc.desc: 1. test with system app containing multiple extensions
+ *           2. verify ALL extensions' permissions ARE cleared
+ */
+HWTEST_F(BundleInstallCheckerTest, HandleExtensionPermission_0004, TestSize.Level1)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo.baseApplicationInfo_->bundleName = "com.example.multext";
+    
+    InnerExtensionInfo extensionInfo1;
+    extensionInfo1.bundleName = "com.example.multext";
+    extensionInfo1.moduleName = "entry";
+    extensionInfo1.name = "Extension1";
+    extensionInfo1.readPermission = "ohos.permission.READ_TEST1";
+    extensionInfo1.writePermission = "ohos.permission.WRITE_TEST1";
+    innerBundleInfo.InsertExtensionInfo("com.example.multext.Extension1", extensionInfo1);
+    
+    InnerExtensionInfo extensionInfo2;
+    extensionInfo2.bundleName = "com.example.multext";
+    extensionInfo2.moduleName = "feature";
+    extensionInfo2.name = "Extension2";
+    extensionInfo2.readPermission = "ohos.permission.READ_TEST2";
+    extensionInfo2.writePermission = "ohos.permission.WRITE_TEST2";
+    innerBundleInfo.InsertExtensionInfo("com.example.multext.Extension2", extensionInfo2);
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    bundleInstallChecker.HandleExtensionPermission(innerBundleInfo);
+    
+    // All extensions' permissions should be cleared
+    auto& extensions = innerBundleInfo.FetchInnerExtensionInfos();
+    EXPECT_EQ(extensions["com.example.multext.Extension1"].readPermission, "");
+    EXPECT_EQ(extensions["com.example.multext.Extension1"].writePermission, "");
+    EXPECT_EQ(extensions["com.example.multext.Extension2"].readPermission, "");
+    EXPECT_EQ(extensions["com.example.multext.Extension2"].writePermission, "");
+}
+
+/**
+ * @tc.number: HandleExtensionPermission_0005
+ * @tc.name: test HandleExtensionPermission with empty extensions
+ * @tc.desc: 1. test with system app containing NO extensions
+ *           2. verify method handles empty extensions gracefully
+ */
+HWTEST_F(BundleInstallCheckerTest, HandleExtensionPermission_0005, TestSize.Level1)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo.baseApplicationInfo_->bundleName = "com.example.emptyext";
+    
+    // No extensions added
+    innerBundleInfo.FetchInnerExtensionInfos().clear();
+    
+    bundleInstallChecker.HandleExtensionPermission(innerBundleInfo);
+    
+    // Method should handle empty extensions gracefully
+    auto& extensions = innerBundleInfo.FetchInnerExtensionInfos();
+    EXPECT_EQ(extensions.size(), 0);
+}
+
+/**
+ * @tc.number: HandleExtensionPermission_0006
+ * @tc.name: test HandleExtensionPermission with already empty permissions
+ * @tc.desc: 1. test with system app whose extensions already have empty permissions
+ *           2. verify method handles already empty permissions
+ */
+HWTEST_F(BundleInstallCheckerTest, HandleExtensionPermission_0006, TestSize.Level1)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo.baseApplicationInfo_->bundleName = "com.example.noperm";
+    
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.bundleName = "com.example.noperm";
+    extensionInfo.moduleName = "entry";
+    extensionInfo.name = "MainExtension";
+    extensionInfo.readPermission = "";  // Already empty
+    extensionInfo.writePermission = "";  // Already empty
+    innerBundleInfo.InsertExtensionInfo("com.example.noperm.MainExtension", extensionInfo);
+    
+    bundleInstallChecker.HandleExtensionPermission(innerBundleInfo);
+    
+    // Permissions should remain empty
+    auto& extensions = innerBundleInfo.FetchInnerExtensionInfos();
+    EXPECT_EQ(extensions["com.example.noperm.MainExtension"].readPermission, "");
+    EXPECT_EQ(extensions["com.example.noperm.MainExtension"].writePermission, "");
+}
+
+/**
+ * @tc.number: HandleExtensionPermission_0007
+ * @tc.name: test HandleExtensionPermission with non-system app
+ * @tc.desc: 1. test with non-system app (THIRD_PARTY_APP)
+ *           2. verify permissions are NOT cleared
+ */
+HWTEST_F(BundleInstallCheckerTest, HandleExtensionPermission_0007, TestSize.Level1)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
+    innerBundleInfo.SetIsPreInstallApp(true);
+
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.bundleName = "com.example.test";
+    extensionInfo.moduleName = "entry";
+    extensionInfo.name = "MainExtension";
+    extensionInfo.readPermission = "ohos.permission.READ_TEST";
+    extensionInfo.writePermission = "ohos.permission.WRITE_TEST";
+    innerBundleInfo.InsertExtensionInfo("com.example.test.MainExtension", extensionInfo);
+    
+    bundleInstallChecker.HandleExtensionPermission(innerBundleInfo);
+    
+    // For non-system app, permissions should NOT be cleared
+    auto& extensions = innerBundleInfo.FetchInnerExtensionInfos();
+    EXPECT_EQ(extensions["com.example.test.MainExtension"].readPermission, "ohos.permission.READ_TEST");
+    EXPECT_EQ(extensions["com.example.test.MainExtension"].writePermission, "ohos.permission.WRITE_TEST");
+}
 } // OHOS
