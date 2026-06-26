@@ -200,6 +200,8 @@ const std::string TEST_AMS_EXTENSION_CONFIG = "ams_extension_config";
 const std::string TEST_EXTENSION_TYPE_NAME = "extension_type_name";
 const std::string TEST_PATH = "../test";
 const std::string TEST_ERROR_STRING = "test.error.string";
+const std::string REMOVE_PRELOAD_TEST_BUNDLE = "com.example.remove.preload.test";
+const std::string DATA_PRELOAD_HAP_PATH = "/data/preload/app/com.example.test/entry.hap";
 const int32_t TEST_EL5_USERID = 2000;
 const std::string PLUGIN_NAME = "com.example.pluginTest1";
 enum {
@@ -19106,5 +19108,71 @@ HWTEST_F(BmsBundleInstallerTest, CheckDistributionTypeForUpdate_0002, Function |
     installer.isLocalPluginInstall_ = true;
     installer.oldPluginInfo_.isDeveloperDistribution = true;
     EXPECT_TRUE(installer.CheckDistributionTypeForUpdate());
+}
+
+/**
+* @tc.number: RemoveDataPreloadHapFiles_0100
+* @tc.name: test RemoveDataPreloadHapFiles when KEEP_DATA_PRELOAD_HAP is 0 (default)
+* @tc.desc: 1. KEEP_DATA_PRELOAD_HAP=0 and path is DataPreloadHap
+*           2. invoke RemoveDataPreloadHapFiles
+*           3. should return true and PreInstallBundleInfo be deleted from DB
+*/
+HWTEST_F(BmsBundleInstallerTest, RemoveDataPreloadHapFiles_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    const std::string bundleName = REMOVE_PRELOAD_TEST_BUNDLE + ".keep0";
+    std::string originalValue = OHOS::system::GetParameter(ServiceConstants::KEEP_DATA_PRELOAD_HAP, "");
+    OHOS::system::SetParameter(ServiceConstants::KEEP_DATA_PRELOAD_HAP, "0");
+
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName(bundleName);
+    preInfo.AddBundlePath(DATA_PRELOAD_HAP_PATH);
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(bundleName, preInfo));
+
+    bool result = installer.RemoveDataPreloadHapFiles(bundleName);
+    EXPECT_TRUE(result);
+
+    PreInstallBundleInfo after;
+    bool stillExists = dataMgr->GetPreInstallBundleInfo(bundleName, after);
+    EXPECT_FALSE(stillExists);
+
+    OHOS::system::SetParameter(ServiceConstants::KEEP_DATA_PRELOAD_HAP, originalValue);
+    dataMgr->DeletePreInstallBundleInfo(bundleName, preInfo);
+}
+
+/**
+* @tc.number: RemoveDataPreloadHapFiles_0200
+* @tc.name: test RemoveDataPreloadHapFiles when KEEP_DATA_PRELOAD_HAP is 1
+* @tc.desc: 1. KEEP_DATA_PRELOAD_HAP=1 (commit's new branch) and path is DataPreloadHap
+*           2. invoke RemoveDataPreloadHapFiles
+*           3. RemoveDir is skipped but PreInstallBundleInfo is still deleted from DB
+*/
+HWTEST_F(BmsBundleInstallerTest, RemoveDataPreloadHapFiles_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    const std::string bundleName = REMOVE_PRELOAD_TEST_BUNDLE + ".keep1";
+    std::string originalValue = OHOS::system::GetParameter(ServiceConstants::KEEP_DATA_PRELOAD_HAP, "");
+    OHOS::system::SetParameter(ServiceConstants::KEEP_DATA_PRELOAD_HAP, "1");
+
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName(bundleName);
+    preInfo.AddBundlePath(DATA_PRELOAD_HAP_PATH);
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(bundleName, preInfo));
+
+    bool result = installer.RemoveDataPreloadHapFiles(bundleName);
+    EXPECT_TRUE(result);
+
+    PreInstallBundleInfo after;
+    bool stillExists = dataMgr->GetPreInstallBundleInfo(bundleName, after);
+    EXPECT_FALSE(stillExists);
+
+    OHOS::system::SetParameter(ServiceConstants::KEEP_DATA_PRELOAD_HAP, originalValue);
+    dataMgr->DeletePreInstallBundleInfo(bundleName, preInfo);
 }
 } // OHOS
