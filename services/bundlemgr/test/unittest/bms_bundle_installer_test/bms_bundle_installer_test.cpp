@@ -3008,6 +3008,90 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2900, Function | SmallTest 
 }
 
 /**
+ * @tc.number: ProcessBundleUpdateStatus_0100
+ * @tc.name: test ProcessBundleUpdateStatus
+ * @tc.desc: 1.Test the ProcessBundleUpdateStatus of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessBundleUpdateStatus_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->singleton = false;
+    InnerBundleInfo newInfo;
+    newInfo.baseApplicationInfo_->singleton = true;
+    newInfo.currentPackage_ = MODULE_NAME;
+    bool isReplace = false;
+    bool killProcess = false;
+
+    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
+}
+
+/**
+ * @tc.number: ProcessBundleUpdateStatus_0200
+ * @tc.name: test ProcessBundleUpdateStatus
+ * @tc.desc: 1.Test the ProcessBundleUpdateStatus of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessBundleUpdateStatus_0200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->singleton = true;
+    InnerBundleInfo newInfo;
+    newInfo.baseApplicationInfo_->singleton = false;
+    newInfo.currentPackage_ = MODULE_NAME;
+    bool isReplace = false;
+    bool killProcess = false;
+
+    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
+}
+
+/**
+ * @tc.number: ProcessBundleUpdateStatus_0300
+ * @tc.name: test ProcessBundleUpdateStatus
+ * @tc.desc: 1.Test the ProcessBundleUpdateStatus of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessBundleUpdateStatus_0300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->singleton = true;
+    InnerBundleInfo newInfo;
+    newInfo.baseApplicationInfo_->singleton = false;
+    newInfo.baseApplicationInfo_->bundleName = "com.ohos.formrenderservice";
+    newInfo.currentPackage_ = MODULE_NAME;
+    bool isReplace = false;
+    bool killProcess = false;
+
+    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
+    EXPECT_NE(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
+    EXPECT_EQ(installer.singletonState_, BaseBundleInstaller::SingletonState::SINGLETON_TO_NON);
+}
+
+/**
+ * @tc.number: ProcessBundleUpdateStatus_0400
+ * @tc.name: test ProcessBundleUpdateStatus
+ * @tc.desc: 1.Test the ProcessBundleUpdateStatus of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessBundleUpdateStatus_0400, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->singleton = false;
+    InnerBundleInfo newInfo;
+    newInfo.baseApplicationInfo_->singleton = true;
+    newInfo.baseApplicationInfo_->bundleName = "com.ohos.formrenderservice";
+    newInfo.currentPackage_ = MODULE_NAME;
+    bool isReplace = false;
+    bool killProcess = false;
+
+    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
+    EXPECT_NE(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
+    EXPECT_EQ(installer.singletonState_, BaseBundleInstaller::SingletonState::NON_TO_SINGLETON);
+}
+
+/**
  * @tc.number: baseBundleInstaller_3000
  * @tc.name: test ProcessDeployedHqfInfo
  * @tc.desc: 1.Test the ProcessDeployedHqfInfo of BaseBundleInstaller

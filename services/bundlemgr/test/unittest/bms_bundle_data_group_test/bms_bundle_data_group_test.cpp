@@ -1899,31 +1899,6 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0017, Function | SmallTest 
 }
 
 /**
- * @tc.number: BaseBundleInstaller_0018
- * @tc.name: test ProcessBundleUpdateStatus
- * @tc.desc: 1.ProcessBundleUpdateStatus
- */
-HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0018, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    installer.dataMgr_ = GetBundleDataMgr();
-
-    InnerBundleInfo oldInfo;
-    oldInfo.baseApplicationInfo_->singleton = false;
-
-    InnerBundleInfo newInfo;
-    newInfo.currentPackage_ = "entry";
-    newInfo.baseApplicationInfo_->singleton = true;
-    newInfo.baseBundleInfo_->isPreInstallApp = false;
-    newInfo.baseApplicationInfo_->bundleName = "com.ohos.sceneboard";
-
-    bool isReplace = false;
-    bool killProcess = false;
-    auto ret = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
-}
-
-/**
  * @tc.number: BaseBundleInstaller_0019
  * @tc.name: test ProcessBundleUpdateStatus
  * @tc.desc: 1.ProcessBundleUpdateStatus
