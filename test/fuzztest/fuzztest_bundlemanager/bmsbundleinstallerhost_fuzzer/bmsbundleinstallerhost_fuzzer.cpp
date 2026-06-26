@@ -94,7 +94,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bundleInstallerHost->CheckInstallParam(installParam);
     InstallParam installParam2;
     GenerateInstallParam(fdp, installParam2);
-    bundleInstallerHost->IsPermissionVaild(installParam, installParam2);
+    bundleInstallerHost->IsPermissionValid(installParam, installParam2);
     bundleInstallerHost->CheckBundleInstallerManager(statusReceiver);
 
     DestroyAppCloneParam destroyAppCloneParam;

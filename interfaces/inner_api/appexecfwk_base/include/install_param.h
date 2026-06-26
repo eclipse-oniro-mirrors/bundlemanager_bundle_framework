@@ -72,6 +72,7 @@ struct InstallParam : public Parcelable {
     bool isDataPreloadHap = false;
     // allow patch app downgrade install
     bool allowPatchDowngrade = false;
+    bool isCheckDebugApp = false;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     InstallFlag installFlag = InstallFlag::NORMAL;
     InstallLocation installLocation = InstallLocation::INTERNAL_ONLY;

@@ -19111,6 +19111,75 @@ HWTEST_F(BmsBundleInstallerTest, CheckDistributionTypeForUpdate_0002, Function |
 }
 
 /**
+ * @tc.number: CheckInstallPermission_0700
+ * @tc.name: test CheckInstallPermission
+ * @tc.desc: 1.Test CheckInstallPermission
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckInstallPermission_0700, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    InstallParam installParam;
+    installParam.isCheckDebugApp = true;
+    installParam.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::INTERNALTESTING;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    auto ret = baseBundleInstaller.CheckInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.clear();
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    ret = baseBundleInstaller.CheckInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+
+    installParam.isCheckDebugApp = false;
+    ret = baseBundleInstaller.CheckInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CheckInstallPermission_0800
+ * @tc.name: test CheckInstallPermission
+ * @tc.desc: 1.test CheckInstallPermission
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckInstallPermission_0800, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    InstallParam installParam;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::INTERNALTESTING;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    auto ret = baseBundleInstaller.CheckInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+
+    installParam.isCheckDebugApp = true;
+    ret = baseBundleInstaller.CheckInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+
+    installParam.isCheckDebugApp = false;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.clear();
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    ret = baseBundleInstaller.CheckInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+
+    installParam.isCheckDebugApp = true;
+    ret = baseBundleInstaller.CheckInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
 * @tc.number: RemoveDataPreloadHapFiles_0100
 * @tc.name: test RemoveDataPreloadHapFiles when KEEP_DATA_PRELOAD_HAP is 0 (default)
 * @tc.desc: 1. KEEP_DATA_PRELOAD_HAP=0 and path is DataPreloadHap

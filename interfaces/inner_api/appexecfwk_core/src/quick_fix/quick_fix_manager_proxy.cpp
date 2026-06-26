@@ -46,7 +46,7 @@ QuickFixManagerProxy::~QuickFixManagerProxy()
 
 ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
     const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug, const std::string &inputTargetPath,
-    bool isReplace)
+    bool isReplace, bool isCheckDebugApp)
 {
     LOG_I(BMS_TAG_DEFAULT, "begin to call DeployQuickFix");
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -83,6 +83,10 @@ ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bun
     }
     if (!data.WriteBool(isReplace)) {
         LOG_E(BMS_TAG_DEFAULT, "write isReplace failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isCheckDebugApp)) {
+        LOG_E(BMS_TAG_DEFAULT, "write isCheckDebugApp failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteRemoteObject(statusCallback->AsObject())) {

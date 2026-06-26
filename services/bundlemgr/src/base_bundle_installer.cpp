@@ -6221,11 +6221,23 @@ ErrCode BaseBundleInstaller::CheckInstallPermission(const InstallParam &installP
         installParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installInternaltestingBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        installParam.installUpdateSelfBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
-        !bundleInstallChecker_->VaildInstallPermission(installParam, hapVerifyRes)) {
-        // need vaild permission
-        LOG_E(BMS_TAG_INSTALLER, "install permission denied");
-        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        installParam.installUpdateSelfBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS)) {
+        if (!bundleInstallChecker_->VaildInstallPermission(installParam, hapVerifyRes)) {
+            // check third-party app install provision type
+            if (installParam.isCheckDebugApp && bundleInstallChecker_->CheckIsDebugAppProvisionType(hapVerifyRes)) {
+                LOG_I(BMS_TAG_INSTALLER, "check debug app provision type success");
+                return ERR_OK;
+            }
+            // need vaild permission
+            LOG_E(BMS_TAG_INSTALLER, "install permission denied");
+            return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        }
+    } else {
+        // check third-party app install provision type
+        if (installParam.isCheckDebugApp && !bundleInstallChecker_->CheckIsDebugAppProvisionType(hapVerifyRes)) {
+            LOG_E(BMS_TAG_INSTALLER, "install permission denied");
+            return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        }
     }
     return ERR_OK;
 }

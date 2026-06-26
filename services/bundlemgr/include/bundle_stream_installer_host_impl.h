@@ -46,6 +46,7 @@ public:
     bool InstallApp(const std::vector<std::string> &pathVec);
 
 private:
+    bool VerifyCreateStreamPermission();
     bool isInstallSharedBundlesOnly_ = true;
     uint32_t installerId_ = -1;
     int32_t installedUid_;

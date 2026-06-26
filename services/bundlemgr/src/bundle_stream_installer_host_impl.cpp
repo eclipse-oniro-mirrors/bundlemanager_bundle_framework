@@ -23,6 +23,7 @@
 #include "bundle_permission_mgr.h"
 #include "contrib/minizip/unzip.h"
 #include "ipc_skeleton.h"
+#include "parameters.h"
 #include "scope_guard.h"
 namespace OHOS {
 namespace AppExecFwk {
@@ -128,13 +129,8 @@ void BundleStreamInstallerHostImpl::UnInit()
     BundleUtil::DeleteDir(extProfileDir);
 }
 
-int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
+bool BundleStreamInstallerHostImpl::VerifyCreateStreamPermission()
 {
-    if (fileName.empty()) {
-        APP_LOGE("CreateStream param fileName is empty");
-        return Constants::DEFAULT_STREAM_FD;
-    }
-
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
@@ -145,7 +141,22 @@ int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
             ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_SELF_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_SANDBOX_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE) &&
+        !(OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) &&
+            BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM))) {
+        APP_LOGE("CreateStream permission denied");
+        return false;
+    }
+    return true;
+}
+
+int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
+{
+    if (fileName.empty()) {
+        APP_LOGE("CreateStream param fileName is empty");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+    if (!VerifyCreateStreamPermission()) {
         APP_LOGE("CreateStream permission denied");
         return Constants::DEFAULT_STREAM_FD;
     }
@@ -264,7 +275,9 @@ int32_t BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::strin
             ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_SELF_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_SELF_BUNDLE) &&
+        !(OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) &&
+            BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM))) {
         APP_LOGE("CreateSharedBundleStream permission denied");
         return Constants::DEFAULT_STREAM_FD;
     }

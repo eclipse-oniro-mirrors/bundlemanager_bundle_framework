@@ -1445,6 +1445,9 @@ private:
 
     ErrCode CheckCallingUid();
     ErrCode IsAppRunning(const std::string &bundleName, const int32_t userId);
+    ErrCode CheckIsDebugAppProvisionType(const std::string& bundleName, bool isAllBundle);
+    bool VerifyCleanBundleCacheFilesPermission(const std::string &bundleName, int32_t appIndex, bool &isCheckDebugApp);
+    bool VerifyCleanBundleDataFilesPermission(bool &isCheckDebugApp);
 
     // Frequency limit for GetTopNLargestItemsInAppDataDir
     std::mutex lastSuccessCallTimeMutex_;

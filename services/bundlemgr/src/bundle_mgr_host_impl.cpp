@@ -2192,6 +2192,24 @@ bool BundleMgrHostImpl::CheckCliSandboxAppIndex(const std::string &bundleName, i
     return true;
 }
 
+bool BundleMgrHostImpl::VerifyCleanBundleCacheFilesPermission(const std::string &bundleName, int32_t appIndex,
+    bool &isCheckDebugApp)
+{
+    if (BundlePermissionMgr::IsSystemApp() &&
+        (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE) ||
+        BundlePermissionMgr::IsBundleSelfCalling(bundleName, appIndex))) {
+        return true;
+    }
+
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+        APP_LOGE("verify permission failed");
+        return false;
+    }
+    isCheckDebugApp = true;
+    return true;
+}
+
 ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
     int32_t userId, int32_t appIndex)
@@ -2201,7 +2219,8 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         userId = BundleUtil::GetUserIdByCallingUid();
     }
     APP_LOGI("start -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
-    if (!BundlePermissionMgr::IsSystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -2215,9 +2234,9 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     (void)dataMgr->GetBundleNameForUid(callingUid, callingBundleName);
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE) &&
-        !BundlePermissionMgr::IsBundleSelfCalling(bundleName, appIndex)) {
-        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
+    bool isCheckDebugApp = false;
+    if (!VerifyCleanBundleCacheFilesPermission(bundleName, appIndex, isCheckDebugApp)) {
+        APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
@@ -2250,6 +2269,11 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
                 callingUid, callingBundleName);
         }
         return ret;
+    }
+
+    if (isCheckDebugApp && applicationInfo.appProvisionType != Constants::APP_PROVISION_TYPE_DEBUG) {
+        APP_LOGE("can not clean cache files of non-debug app");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
     if (!CheckAppIndex(bundleName, userId, appIndex) && !CheckCliSandboxAppIndex(bundleName, userId, appIndex)) {
@@ -2491,6 +2515,20 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     ffrt::submit(cleanCache);
 }
 
+bool BundleMgrHostImpl::VerifyCleanBundleDataFilesPermission(bool &isCheckDebugApp)
+{
+    if (!(BundlePermissionMgr::IsSystemApp() &&
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE))) {
+        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+            APP_LOGE("verify permission failed");
+            return false;
+        }
+        isCheckDebugApp = true;
+    }
+    return true;
+}
+
 bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, const int userId,
     const int appIndex, const int callerUid)
 {
@@ -2510,12 +2548,14 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     }
 
     (void)dataMgr->GetBundleNameForUid(callingUid, callingBundleName);
-    if (!BundlePermissionMgr::IsSystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES system api denied");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
-        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
+    bool isCheckDebugApp = false;
+    if (!VerifyCleanBundleDataFilesPermission(isCheckDebugApp)) {
+        APP_LOGE("verify permission failed");
         return false;
     }
     if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
@@ -2555,6 +2595,11 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         APP_LOGE("can not clean dataFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
         return false;
     }
+    if (isCheckDebugApp && applicationInfo.appProvisionType != Constants::APP_PROVISION_TYPE_DEBUG) {
+        APP_LOGE("non-system app can only clean cache files of debug app");
+        return false;
+    }
+
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("%{public}s, userId:%{public}d, GetBundleUserInfo failed", bundleName.c_str(), userId);
@@ -2685,12 +2730,43 @@ bool BundleMgrHostImpl::UnregisterBundleStatusCallback()
     return dataMgr->UnregisterBundleStatusCallback();
 }
 
+ErrCode BundleMgrHostImpl::CheckIsDebugAppProvisionType(const std::string& bundleName, bool isAllBundle)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    }
+    std::vector<std::string> bundleNames;
+    if (isAllBundle) {
+        bundleNames = dataMgr->GetAllBundleName();
+    } else {
+        bundleNames = { bundleName };
+    }
+    for (const auto& name : bundleNames) {
+        bool isDebuggable = false;
+        dataMgr->IsDebuggableApplication(name, isDebuggable);
+        if (!isDebuggable) {
+            LOG_E(BMS_TAG_INSTALLER, "app provision type is not debug for bundle %{public}s", name.c_str());
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHostImpl::CompileProcessAOT(const std::string &bundleName, const std::string &compileMode,
     bool isAllBundle, std::vector<std::string> &compileResults)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("verify permission failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+            APP_LOGE("verify permission failed");
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
+        auto checkDebugResult = CheckIsDebugAppProvisionType(bundleName, isAllBundle);
+        if (checkDebugResult != ERR_OK) {
+            return checkDebugResult;
+        }
     }
     return AOTHandler::GetInstance().HandleCompile(bundleName, compileMode, isAllBundle, compileResults);
 }
@@ -2698,8 +2774,15 @@ ErrCode BundleMgrHostImpl::CompileProcessAOT(const std::string &bundleName, cons
 ErrCode BundleMgrHostImpl::CompileReset(const std::string &bundleName, bool isAllBundle)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("verify permission failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+            APP_LOGE("verify permission failed");
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
+        auto checkDebugResult = CheckIsDebugAppProvisionType(bundleName, isAllBundle);
+        if (checkDebugResult != ERR_OK) {
+            return checkDebugResult;
+        }
     }
     AOTHandler::GetInstance().HandleResetBundleAOT(bundleName, isAllBundle);
     return ERR_OK;
@@ -3485,8 +3568,14 @@ sptr<IBundleInstaller> BundleMgrHostImpl::GetBundleInstaller()
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start GetBundleInstaller");
     if (!VerifySystemApi()) {
-        APP_LOGE("non-system app calling system api");
-        return nullptr;
+        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
+            APP_LOGE("developer mode is not on, non-system app calling system api");
+            return nullptr;
+        }
+        if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+            APP_LOGE("permission denied");
+            return nullptr;
+        }
     }
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
 }

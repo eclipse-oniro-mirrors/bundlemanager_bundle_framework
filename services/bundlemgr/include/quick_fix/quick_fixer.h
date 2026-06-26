@@ -29,7 +29,7 @@ public:
     ~QuickFixer() = default;
 
     void DeployQuickFix(const std::vector<std::string> &bundleFilePaths, bool isDebug = false,
-        const std::string &targetPath = "", bool isReplace = false);
+        const std::string &targetPath = "", bool isReplace = false, bool isCheckDebugApp = false);
     void SwitchQuickFix(const std::string &bundleName, bool enable);
     void DeleteQuickFix(const std::string &bundleName);
 
