@@ -50,6 +50,7 @@
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "directory_ex.h"
+#include "directory_ex_inner.h"
 #include "driver_install_ext.h"
 #include "el5_filekey_manager_error.h"
 #include "el5_filekey_manager_kit.h"
@@ -1685,9 +1686,9 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
         return 0;
     }
     std::string filePath = tmpPath;
-    uint64_t size = GetFolderSize(filePath);
+    uint64_t size = OHOS::GetFolderDiskUsage(filePath);
     if (size > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
-        LOG_E(BMS_TAG_INSTALLD, "GetFolderSize overflow:%{public}s", filePath.c_str());
+        LOG_E(BMS_TAG_INSTALLD, "GetFolderDiskUsage overflow:%{public}s", filePath.c_str());
         return 0;
     } else {
         return static_cast<int64_t>(size);
@@ -1751,6 +1752,35 @@ int64_t InstalldOperator::GetDiskUsageFromPath(const std::vector<std::string> &p
             fileSize, st.c_str());
     }
     return fileSize;
+}
+
+int64_t InstalldOperator::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs)
+{
+    auto startTime = std::chrono::steady_clock::now();
+    int64_t totalSize = 0;
+    for (auto &path : paths) {
+        // check timeout
+        if (timeoutMs > 0) {
+            auto currentTime = std::chrono::steady_clock::now();
+            auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime);
+            auto elapsedMs = std::abs(elapsedTime.count());
+            if (elapsedMs >= timeoutMs) {
+                LOG_W(BMS_TAG_INSTALLD, "timeout, return totalSize:%{public}" PRId64, totalSize);
+                return totalSize;
+            }
+        }
+        int64_t diskSize = GetDiskUsage(path);
+        int64_t tmpSize = 0;
+        if (diskSize > 0) {
+            int64_t fileSize = BundleUtil::GetFileSize(path);
+            tmpSize = (diskSize > fileSize) ? (diskSize - fileSize) : 0;
+        }
+        totalSize += tmpSize;
+        LOG_D(BMS_TAG_INSTALLD, "totalSize:%{public} " PRId64 "diskSize:%{public} " PRId64
+            " tmpSize:%{public} " PRId64 " from: %{public}s",
+            totalSize, diskSize, tmpSize, path.c_str());
+    }
+    return totalSize;
 }
 
 bool InstalldOperator::InitialiseQuotaMounts()
