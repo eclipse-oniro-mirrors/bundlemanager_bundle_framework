@@ -862,11 +862,13 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         }
     }
     CreateDirParam localParam = createDirParam;
+#ifndef X86_EMULATOR_MODE
     ErrCode aplRet = GetResolvedApl(localParam);
     if (aplRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "GetResolvedApl failed: %{public}d", aplRet);
         return aplRet;
     }
+#endif
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
         createDirParam.isDlpSandbox, createDirParam.dlpType, false);
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
@@ -1045,11 +1047,13 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithEl(const CreateDirParam &create
     }
     std::string el = ServiceConstants::BUNDLE_EL[index];
     CreateDirParam localParam = createDirParam;
+#ifndef X86_EMULATOR_MODE
     ErrCode aplRet = GetResolvedApl(localParam);
     if (aplRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "GetResolvedApl failed: %{public}d", aplRet);
         return aplRet;
     }
+#endif
     std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::BASE;
     if (access(bundleDataDir.c_str(), F_OK) != 0) {
         LOG_W(BMS_TAG_INSTALLD, "Base directory %{public}s does not existed, bundleName:%{public}s",
@@ -1217,10 +1221,13 @@ ErrCode InstalldHostImpl::CreateExtensionDir(const CreateDirParam &createDirPara
         return ERR_OK;
     }
     CreateDirParam localParam = createDirParam;
+#ifndef X86_EMULATOR_MODE
     ErrCode aplRet = GetResolvedApl(localParam);
     if (aplRet != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "GetResolvedApl failed: %{public}d", aplRet);
         return aplRet;
     }
+#endif
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
         createDirParam.isDlpSandbox, createDirParam.dlpType, true);
     LOG_I(BMS_TAG_INSTALLD, "CreateExtensionDir parent dir %{public}s for bundle %{public}s, hapFlags:%{public}d",
