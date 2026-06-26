@@ -788,6 +788,7 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(
     info.isEnterpriseResigned = provisionInfo.isEnterpriseResigned;
     info.appIdentifier = provisionInfo.bundleInfo.appIdentifier;
     info.profileBlockLength = static_cast<uint32_t>(provisionInfo.profileBlockLength);
+    info.appServiceCapabilities = provisionInfo.appServiceCapabilities;
     if (provisionInfo.profileBlock != nullptr && provisionInfo.profileBlockLength > 0) {
         info.profileBlock.reset(new(std::nothrow) unsigned char[provisionInfo.profileBlockLength]);
         if (info.profileBlock != nullptr) {
@@ -2752,6 +2753,10 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
             static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_MDM));
         localParam.isInternaltestingBundle = (info.distributionType ==
             static_cast<int32_t>(Security::Verify::AppDistType::INTERNALTESTING));
+        if (localParam.isPlugin) {
+            LOG_D(BMS_TAG_INSTALLD, "obtain sign info for plugin");
+            InstalldOperator::ObtainSignInfoForPlugin(info.appServiceCapabilities, localParam.pluginId);
+        }
         if (info.profileBlock != nullptr && info.profileBlockLength > 0) {
             auto tmpProfilePtr = std::make_unique<unsigned char[]>(info.profileBlockLength);
             if (tmpProfilePtr == nullptr) {
@@ -2808,11 +2813,8 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
                 localParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
         } else if (localParam.isPlugin) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for plugin");
-            std::string appIdentifier;
-            std::string pluginId;
-            InstalldOperator::ObtainSignInfoForPlugin(localParam.modulePath, appIdentifier, pluginId);
-            ret = codeSignHelper->EnforceCodeSignForAppWithPluginId(appIdentifier,
-                pluginId, localParam.modulePath, entryMap, fileType, codeSignFlag);
+            ret = codeSignHelper->EnforceCodeSignForAppWithPluginId(localParam.appIdentifier,
+                localParam.pluginId, localParam.modulePath, entryMap, fileType, codeSignFlag);
         } else {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for non-enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForApp(

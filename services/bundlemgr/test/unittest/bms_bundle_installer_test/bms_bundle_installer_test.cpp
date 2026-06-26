@@ -11765,11 +11765,8 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0025, Function | MediumTest | L
 {
     PluginInstaller installer;
     std::string hspPath;
-    std::string appIdentifier;
-    bool isEnterpriseBundle = true;
     bool isCompileSdkOpenHarmony = true;
-    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, appIdentifier, isEnterpriseBundle,
-        isCompileSdkOpenHarmony);
+    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, isCompileSdkOpenHarmony);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED);
 }
 
@@ -12301,7 +12298,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0057, Function | MediumTest | L
     NotifyType type = NotifyType::START_INSTALL;
     int32_t uid = 1;
     installer.NotifyPluginEvents(type, uid);
-    EXPECT_EQ(installer.isEnterpriseBundle_, false);
+    EXPECT_EQ(installer.isLocalPluginInstall_, false);
 }
 
 /**
@@ -12466,26 +12463,6 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0066, Function | MediumTest | L
     installer.RemoveEmptyDirs(pluginDir, hostBundleName);
     installer.RemoveDir(pluginDir, hostBundleName);
     EXPECT_EQ(pluginDir.empty(), true);
-}
-
-/**
- * @tc.number: PluginInstaller_0067
- * @tc.name: test JoinPluginId
- * @tc.desc: 1.Test JoinPluginId the PluginInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0067, Function | MediumTest | Level1)
-{
-    PluginInstaller installer;
-    std::vector<std::string> pluginIds;
-    auto ret = installer.ParsePluginId(APP_SERVICES_CAPABILITIES1, pluginIds);
-    EXPECT_EQ(ret, true);
-
-    std::string res = installer.JoinPluginId();
-    EXPECT_EQ(res, Constants::EMPTY_STRING);
-
-    installer.pluginIds_ = pluginIds;
-    res = installer.JoinPluginId();
-    EXPECT_EQ(res, "11111111,22222222");
 }
 
 /**
