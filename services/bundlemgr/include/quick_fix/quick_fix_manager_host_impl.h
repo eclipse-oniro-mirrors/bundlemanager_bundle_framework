@@ -30,7 +30,7 @@ public:
 
     virtual ErrCode DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
         const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug = false,
-        const std::string &targetPath = "", bool isReplace = false) override;
+        const std::string &targetPath = "", bool isReplace = false, bool isCheckDebugApp = false) override;
 
     virtual ErrCode SwitchQuickFix(const std::string &bundleName, bool enable,
         const sptr<IQuickFixStatusCallback> &statusCallback) override;
@@ -44,6 +44,10 @@ private:
     bool IsFileNameValid(const std::string &fileName) const;
     ErrCode CopyHqfToSecurityDir(const std::vector<std::string> &bundleFilePaths,
         std::vector<std::string> &securityFilePaths) const;
+    ErrCode VerifyDeployQuickFixPermission();
+    ErrCode VerifyDeleteQuickFixPermission();
+    ErrCode VerifyCreateFdPermission();
+    ErrCode CheckIsDebugAppProvisionType(const std::string &bundleName);
 
     std::atomic<uint32_t> id_ = 0;
     std::shared_ptr<QuickFixMgr> quickFixMgr_ = nullptr;

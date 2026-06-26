@@ -521,6 +521,28 @@ bool BundleInstallerHost::Install(
     return true;
 }
 
+ErrCode BundleInstallerHost::VerifyInstallPermission()
+{
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
+        LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::IsSelfCalling() &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE)) {
+        LOG_E(BMS_TAG_INSTALLER, "install permission denied");
+        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+    }
+    return ERR_OK;
+}
+
 bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
     const sptr<IStatusReceiver> &statusReceiver)
 {
@@ -533,23 +555,11 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return false;
     }
-    if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
-        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
-        return false;
-    }
-    if (!BundlePermissionMgr::IsSelfCalling() &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(
-            ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(
-            ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(
-            ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE)) {
-        LOG_E(BMS_TAG_INSTALLER, "install permission denied");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+    auto verifyResult = VerifyInstallPermission();
+    if (verifyResult != ERR_OK &&
+        (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM))) {
+        statusReceiver->OnFinished(verifyResult, "");
         return false;
     }
     if (!CheckInstallDowngradeParam(installParam)) {
@@ -582,6 +592,46 @@ bool BundleInstallerHost::Recover(
     return true;
 }
 
+ErrCode BundleInstallerHost::VerifyUninstallPermission(bool isCheckSdkVersion)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        if (!isCheckSdkVersion ||
+            !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
+            LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
+            return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        }
+    }
+
+    if (!BundlePermissionMgr::VerifyUninstallPermission()) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall permission denied");
+        return ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerHost::CheckIsDebugAppProvisionType(const std::string &bundleName, int32_t userId)
+{
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "null dataMgr");
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = BundleUtil::GetUserIdByCallingUid();
+    }
+    AppExecFwk::ApplicationInfo applicationInfo;
+    if (!dataMgr->GetApplicationInfo(
+        bundleName, AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, applicationInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "not exist for bundle %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+    if (applicationInfo.appProvisionType != Constants::APP_PROVISION_TYPE_DEBUG) {
+        LOG_E(BMS_TAG_INSTALLER, "app provision type is not debug for bundle %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED;
+    }
+    return ERR_OK;
+}
+
 bool BundleInstallerHost::Uninstall(
     const std::string &bundleName, const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
@@ -594,16 +644,18 @@ bool BundleInstallerHost::Uninstall(
         LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return false;
     }
-    if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
-        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
-        return false;
-    }
-    if (!BundlePermissionMgr::VerifyUninstallPermission()) {
-        LOG_E(BMS_TAG_INSTALLER, "uninstall permission denied");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED, "");
-        return false;
+    bool verifyResult = VerifyUninstallPermission(true);
+    if (verifyResult != ERR_OK) {
+        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+            statusReceiver->OnFinished(verifyResult, "");
+            return false;
+        }
+        auto checkDebugResult = CheckIsDebugAppProvisionType(bundleName, installParam.userId);
+        if (checkDebugResult != ERR_OK) {
+            statusReceiver->OnFinished(checkDebugResult, "");
+            return false;
+        }
     }
     if (installParam.IsForcedUninstall() && IPCSkeleton::GetCallingUid() != Constants::EDC_UID) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall permission denied");
@@ -664,17 +716,21 @@ bool BundleInstallerHost::Uninstall(const UninstallParam &uninstallParam,
         LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return false;
     }
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
-        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
-        return false;
+    bool verifyResult = VerifyUninstallPermission(false);
+    if (verifyResult != ERR_OK) {
+        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+            statusReceiver->OnFinished(verifyResult, "");
+            return false;
+        }
+        auto checkDebugResult = CheckIsDebugAppProvisionType(uninstallParam.bundleName, uninstallParam.userId);
+        if (checkDebugResult != ERR_OK) {
+            statusReceiver->OnFinished(checkDebugResult, "");
+            return false;
+        }
     }
-    if (!BundlePermissionMgr::VerifyUninstallPermission()) {
-        LOG_E(BMS_TAG_INSTALLER, "uninstall permission denied");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED, "");
-        return false;
-    }
-    manager_->CreateUninstallTask(uninstallParam, statusReceiver);
+    UninstallParam callUninstallParam = uninstallParam;
+    manager_->CreateUninstallTask(callUninstallParam, statusReceiver);
     return true;
 }
 
@@ -832,6 +888,21 @@ ErrCode BundleInstallerHost::StreamInstall(const std::vector<std::string> &bundl
     return ERR_OK;
 }
 
+ErrCode BundleInstallerHost::VerifyCreateStreamInstallerPermission(
+    const InstallParam &installParam, InstallParam &verifiedInstallParam)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!IsPermissionValid(installParam, verifiedInstallParam)) {
+        LOG_E(BMS_TAG_INSTALLER, "install permission denied");
+        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+    }
+    return ERR_OK;
+}
+
 sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const InstallParam &installParam,
     const sptr<IStatusReceiver> &statusReceiver, const std::vector<std::string> &originHapPaths)
 {
@@ -839,16 +910,15 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
         LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return nullptr;
     }
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
-        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
-        return nullptr;
-    }
     InstallParam verifiedInstallParam = installParam;
-    if (!IsPermissionVaild(installParam, verifiedInstallParam)) {
-        LOG_E(BMS_TAG_INSTALLER, "install permission denied");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
-        return nullptr;
+    auto verifyResult = VerifyCreateStreamInstallerPermission(installParam, verifiedInstallParam);
+    if (verifyResult != ERR_OK) {
+        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+            statusReceiver->OnFinished(verifyResult, "");
+            return nullptr;
+        }
+        verifiedInstallParam.isCheckDebugApp = true;
     }
     auto uid = IPCSkeleton::GetCallingUid();
     sptr<BundleStreamInstallerHostImpl> streamInstaller(new (std::nothrow) BundleStreamInstallerHostImpl(
@@ -867,7 +937,7 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
     return streamInstaller;
 }
 
-bool BundleInstallerHost::IsPermissionVaild(const InstallParam &installParam, InstallParam &verifiedInstallParam)
+bool BundleInstallerHost::IsPermissionValid(const InstallParam &installParam, InstallParam &verifiedInstallParam)
 {
     verifiedInstallParam.isCallByShell = BundlePermissionMgr::IsShellTokenType();
     verifiedInstallParam.installBundlePermissionStatus =
@@ -898,7 +968,7 @@ bool BundleInstallerHost::IsPermissionVaild(const InstallParam &installParam, In
         BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE));
 }
 
-bool BundleInstallerHost::DestoryBundleStreamInstaller(uint32_t streamInstallerId)
+bool BundleInstallerHost::VerifyDestoryBundleStreamInstallerPermission()
 {
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
@@ -916,6 +986,17 @@ bool BundleInstallerHost::DestoryBundleStreamInstaller(uint32_t streamInstallerI
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
         LOG_E(BMS_TAG_INSTALLER, "install permission denied");
         return false;
+    }
+    return true;
+}
+
+bool BundleInstallerHost::DestoryBundleStreamInstaller(uint32_t streamInstallerId)
+{
+    if (!VerifyDestoryBundleStreamInstallerPermission()) {
+        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+            return false;
+        }
     }
     std::lock_guard<std::mutex> lock(streamInstallMutex_);
     for (auto it = streamInstallers_.begin(); it != streamInstallers_.end();) {
@@ -1376,6 +1457,10 @@ bool BundleInstallerHost::CheckInstallDowngradeParam(const InstallParam &install
     }
     if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
         BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ALLOW_DOWNGRADE)) {
+        return true;
+    }
+    if (OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) &&
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
         return true;
     }
     LOG_E(BMS_TAG_INSTALLER, "no permission to install allow downgrade");

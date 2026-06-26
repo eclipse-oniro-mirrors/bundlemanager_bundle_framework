@@ -473,6 +473,19 @@ bool BundleInstallChecker::CheckProvisionInfoIsValid(
     return !isInvalid;
 }
 
+bool BundleInstallChecker::CheckIsDebugAppProvisionType(
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        if (provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
+            LOG_E(BMS_TAG_INSTALLER, "app provision type is not debug");
+            return false;
+        }
+    }
+    return true;
+}
+
 bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installParam,
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
 {
@@ -702,11 +715,22 @@ ErrCode BundleInstallChecker::CheckInstallPermission(const InstallCheckParam &ch
         checkParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         checkParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         checkParam.installInternaltestingBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        checkParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
-        !VaildInstallPermissionForShare(checkParam, hapVerifyRes)) {
-        // need vaild permission
-        LOG_E(BMS_TAG_INSTALLER, "install permission denied");
-        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        checkParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS)) {
+        if (!VaildInstallPermissionForShare(checkParam, hapVerifyRes)) {
+            // check third-party app install provision type
+            if (checkParam.isCheckDebugApp && CheckIsDebugAppProvisionType(hapVerifyRes)) {
+                LOG_I(BMS_TAG_INSTALLER, "check debug app provision type success");
+                return ERR_OK;
+            }
+            LOG_E(BMS_TAG_INSTALLER, "install permission denied");
+            return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        }
+    } else {
+        // check third-party app install provision type
+        if (checkParam.isCheckDebugApp && !CheckIsDebugAppProvisionType(hapVerifyRes)) {
+            LOG_E(BMS_TAG_INSTALLER, "install permission denied");
+            return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        }
     }
     return ERR_OK;
 }

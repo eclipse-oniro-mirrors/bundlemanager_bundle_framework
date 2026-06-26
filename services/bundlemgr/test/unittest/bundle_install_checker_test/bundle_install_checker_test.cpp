@@ -1500,6 +1500,76 @@ HWTEST_F(BundleInstallCheckerTest, CalculateInstallInodes_0011, TestSize.Level2)
 }
 
 /**
+ * @tc.number: CheckInstallPermission_0100
+ * @tc.name: test CheckInstallPermission
+ * @tc.desc: 1.Test CheckInstallPermission
+ */
+HWTEST_F(BundleInstallCheckerTest, CheckInstallPermission_0100, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InstallCheckParam checkParam;
+    checkParam.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    checkParam.isCheckDebugApp = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.appId = "testAppId";
+    hapVerifyResult.provisionInfo.bundleInfo.apl = "testApl";
+    hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::INTERNALTESTING;
+    hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.provisionInfo.bundleInfo.appIdentifier = "testAppIdentifier1";
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    auto ret = bundleInstallChecker.CheckInstallPermission(checkParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+
+    checkParam.isCheckDebugApp = false;
+    hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyRes.clear();
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    ret = bundleInstallChecker.CheckInstallPermission(checkParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+
+    checkParam.isCheckDebugApp = true;
+    ret = bundleInstallChecker.CheckInstallPermission(checkParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckInstallPermission_0200
+ * @tc.name: test CheckInstallPermission
+ * @tc.desc: 1.Test CheckInstallPermission
+ */
+HWTEST_F(BundleInstallCheckerTest, CheckInstallPermission_0200, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InstallCheckParam checkParam;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.appId = "testAppId";
+    hapVerifyResult.provisionInfo.bundleInfo.apl = "testApl";
+    hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::INTERNALTESTING;
+    hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.provisionInfo.bundleInfo.appIdentifier = "testAppIdentifier1";
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    auto ret = bundleInstallChecker.CheckInstallPermission(checkParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+
+    checkParam.isCheckDebugApp = true;
+    ret = bundleInstallChecker.CheckInstallPermission(checkParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+
+    checkParam.isCheckDebugApp = false;
+    hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyRes.clear();
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    ret = bundleInstallChecker.CheckInstallPermission(checkParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+
+    checkParam.isCheckDebugApp = true;
+    ret = bundleInstallChecker.CheckInstallPermission(checkParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: HandleExtensionPermission_0001
  * @tc.name: test HandleExtensionPermission with non-system app
  * @tc.desc: 1. test with non-system app (THIRD_PARTY_APP)

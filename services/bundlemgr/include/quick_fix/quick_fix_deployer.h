@@ -28,7 +28,7 @@ namespace AppExecFwk {
 class QuickFixDeployer final : public IQuickFix {
 public:
     QuickFixDeployer(const std::vector<std::string> &bundleFilePaths, bool isDebug = false,
-        const std::string &targetPath = "", bool isReplace = false);
+        const std::string &targetPath = "", bool isReplace = false, bool isCheckDebugApp = false);
 
     virtual ~QuickFixDeployer() = default;
 
@@ -134,6 +134,7 @@ private:
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
     DeployQuickFixResult deployQuickFixResult_;
     bool isReplace_ = false;
+    bool isCheckDebugApp_ = false;
 
 #define CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(errcode)                           \
     do {                                                                           \
