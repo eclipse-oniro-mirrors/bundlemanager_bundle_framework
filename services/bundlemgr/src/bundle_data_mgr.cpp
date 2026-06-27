@@ -12014,7 +12014,7 @@ ErrCode BundleDataMgr::QueryCloneAbilityInfo(const ElementName &element, int32_t
     return QueryAbilityInfoWithFlagsV9(ability, flags, responseUserId, *innerBundleInfo, abilityInfo, appIndex);
 }
 
-ErrCode BundleDataMgr::ExplicitQueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
+bool BundleDataMgr::ExplicitQueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
     int32_t appIndex, AbilityInfo &abilityInfo) const
 {
     std::string bundleName = element.GetBundleName();
@@ -12038,7 +12038,7 @@ ErrCode BundleDataMgr::ExplicitQueryCloneAbilityInfo(const ElementName &element,
     }
     if (!innerBundleInfo) {
         LOG_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by ExplicitQueryCloneAbilityInfo is null.");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return false;
     }
 
     int32_t responseUserId = innerBundleInfo->GetResponseUserId(requestUserId);
