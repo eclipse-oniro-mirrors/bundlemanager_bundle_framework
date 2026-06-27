@@ -238,7 +238,8 @@ ErrCode InstalldHostImpl::CreateBundleDir(
 }
 
 ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+    const bool isSystemApp)
 {
     LOG_D(BMS_TAG_INSTALLD, "ExtractModuleFiles extract original src %{public}s and target src %{public}s",
         srcModulePath.c_str(), targetPath.c_str());
@@ -263,7 +264,7 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
         LOG_E(BMS_TAG_INSTALLD, "create target dir %{public}s failed, errno:%{public}d", targetPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
-    if (!InstalldOperator::ExtractFiles(srcModulePath, targetSoPath, cpuAbi)) {
+    if (!InstalldOperator::ExtractFiles(srcModulePath, targetSoPath, cpuAbi, needFakeDecompression, isSystemApp)) {
         LOG_E(BMS_TAG_INSTALLD, "extract %{public}s to %{public}s failed errno:%{public}d",
             srcModulePath.c_str(), targetPath.c_str(), errno);
         InstalldOperator::DeleteDir(targetPath);

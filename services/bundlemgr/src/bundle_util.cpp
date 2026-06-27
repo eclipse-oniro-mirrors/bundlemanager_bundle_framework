@@ -30,6 +30,7 @@
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
 #endif
+#include "decompress.h"
 #include "directory_ex.h"
 #include "elf.h"
 #include "hitrace_meter.h"
@@ -1656,6 +1657,19 @@ bool BundleUtil::IsVmEnabled()
         return true;
     }
     return false;
+}
+
+bool BundleUtil::IsSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive)
+{
+    if (!FileManagement::Decompress::GetSystemFeature()) {
+        APP_LOGD("device not support FakeDecompression");
+        return false;
+    }
+    if (!FileManagement::Decompress::CheckBundleSupported(bundleName, isKeepAlive)) {
+        APP_LOGI("not support FakeDecompression:%{public}s %{public}d", bundleName.c_str(), isKeepAlive);
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

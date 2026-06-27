@@ -52,7 +52,8 @@ public:
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
     ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-        const std::string &targetSoPath, const std::string &cpuAbi);
+        const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+        const bool isSystemApp);
     /**
      * @brief Rename the module directory from temporaily path to the real path.
      * @param oldPath Indicates the old path name.

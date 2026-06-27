@@ -48,7 +48,8 @@ public:
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
     virtual ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-        const std::string &targetSoPath, const std::string &cpuAbi) override;
+        const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+        const bool isSystemApp) override;
     /**
      * @brief Extract the files.
      * @param extractParam Indicates the extractParam.

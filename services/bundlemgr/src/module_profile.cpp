@@ -334,6 +334,7 @@ struct Module {
     bool installationFree = false;
     bool isLibIsolated = false;
     bool compressNativeLibs = true;
+    bool isSoStoredCompressed = false;
     bool extractNativeLibs = true;
     bool hasInsightIntent = false;
     bool deduplicateHar = false;
@@ -1830,6 +1831,12 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         g_parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
+        MODULE_COMPRESS_NATIVE_LIBS,
+        module.isSoStoredCompressed,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
         MODULE_EXTRACT_NATIVE_LIBS,
         module.extractNativeLibs,
         false,
@@ -2861,6 +2868,8 @@ bool ToInnerModuleInfo(
     innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
     innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs || moduleJson.module.extractNativeLibs;
+    innerModuleInfo.isSoStoredCompressed = moduleJson.module.isSoStoredCompressed;
+    innerModuleInfo.extractNativeLibs = moduleJson.module.extractNativeLibs;
     innerModuleInfo.fileContextMenu = moduleJson.module.fileContextMenu;
     innerModuleInfo.easyGo = moduleJson.module.easyGo;
     innerModuleInfo.shareFiles = moduleJson.module.shareFiles;

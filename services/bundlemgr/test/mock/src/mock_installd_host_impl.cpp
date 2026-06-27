@@ -36,7 +36,8 @@ ErrCode InstalldHostImpl::CreateBundleDir(
 }
 
 ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+    const bool isSystemApp)
 {
     return ERR_OK;
 }

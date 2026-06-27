@@ -762,9 +762,14 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
 
         std::string tempSoPath =
             versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;
-        APP_LOGI_NOFUNC("TempSoPath %{public}s cpuAbi %{public}s", tempSoPath.c_str(), cpuAbi_.c_str());
+        auto needFakeDecompression =
+            newInfo.IsFakeDecompressionEnable() &&
+            BundleUtil::IsSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive());
+        auto isSystemApp = newInfo.IsSystemApp();
+        APP_LOGI_NOFUNC("TempSoPath %{public}s cpuAbi %{public}s needFakeDecompression:%{public}d",
+            tempSoPath.c_str(), cpuAbi_.c_str(), needFakeDecompression);
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
-            bundlePath, moduleDir, tempSoPath, cpuAbi_);
+            bundlePath, moduleDir, tempSoPath, cpuAbi_, needFakeDecompression, isSystemApp);
         CHECK_RESULT(result, "Extract module files failed %{public}d");
         if (!copyHapToInstallPath) {
             // verify hap or hsp code signature for compressed so files

@@ -577,8 +577,12 @@ ErrCode PluginInstaller::ProcessNativeLibrary(
         std::string soPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath_;
         APP_LOGD("tempSoPath=%{public}s,cpuAbi=%{public}s, bundlePath=%{public}s",
             soPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
-
-        auto result = InstalldClient::GetInstance()->ExtractModuleFiles(bundlePath, moduleDir, soPath, cpuAbi);
+        auto needFakeDecompression =
+            newInfo.IsFakeDecompressionEnable() &&
+            BundleUtil::IsSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive());
+        auto isSystemApp = newInfo.IsSystemApp();
+        auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
+            bundlePath, moduleDir, soPath, cpuAbi, needFakeDecompression, isSystemApp);
         CHECK_RESULT(result, "extract module files failed %{public}d");
         // verify hap or hsp code signature for compressed so files
         result = VerifyCodeSignatureForNativeFiles(

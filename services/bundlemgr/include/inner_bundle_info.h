@@ -88,6 +88,8 @@ struct InnerModuleInfo {
     bool isStageBasedModel = false;
     bool isLibIsolated = false;
     bool compressNativeLibs = true;
+    bool isSoStoredCompressed = false;
+    bool extractNativeLibs = true;
     bool isEncrypted = false;
     bool asanEnabled = false;
     bool gwpAsanEnabled = false;
@@ -2509,6 +2511,7 @@ public:
         const int32_t userId, const std::string pluginBundleName, PluginBundleInfo &pluginBundleInfo) const;
     bool HasKeepTokenIdMetadata() const;
 
+    bool IsFakeDecompressionEnable() const;
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(

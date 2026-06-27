@@ -44,6 +44,7 @@ ohos_unittest("BmsInstalldClientTest") {
     "appspawn:hnpapi",
     "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",
+    "dfs_service:libdecompress",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",

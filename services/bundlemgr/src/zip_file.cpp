@@ -384,6 +384,7 @@ bool ZipFile::CheckDataDesc(const ZipEntry &zipEntry, const LocalHeader &localHe
 
 bool ZipFile::CheckCoherencyLocalHeaderInternal(const ZipEntry &zipEntry, uint16_t &extraSize, FILE *file) const
 {
+    std::lock_guard<std::mutex> guard(checkCoherencyLocalHeaderInternalMutex_);
     LocalHeader localHeader = {0};
 
     if (zipEntry.localHeaderOffset >= fileLength_) {

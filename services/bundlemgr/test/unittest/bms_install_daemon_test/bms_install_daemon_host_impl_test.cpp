@@ -111,7 +111,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0200, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->ExtractModuleFiles(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING);
+    auto ret = hostImpl->ExtractModuleFiles(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -537,11 +537,11 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2800, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING);
+    auto ret = hostImpl->ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING, false, false);
     EXPECT_NE(ret, ERR_OK);
-    ret = hostImpl->ExtractModuleFiles(TEST_STRING, "", TEST_STRING, TEST_STRING);
+    ret = hostImpl->ExtractModuleFiles(TEST_STRING, "", TEST_STRING, TEST_STRING, false, false);
     EXPECT_NE(ret, ERR_OK);
-    ret = hostImpl->ExtractModuleFiles("", "", TEST_STRING, TEST_STRING);
+    ret = hostImpl->ExtractModuleFiles("", "", TEST_STRING, TEST_STRING, false, false);
     EXPECT_NE(ret, ERR_OK);
 }
 

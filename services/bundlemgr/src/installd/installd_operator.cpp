@@ -49,6 +49,7 @@
 #include "bundle_file_util.h"
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
+#include "decompress.h"
 #include "directory_ex.h"
 #include "directory_ex_inner.h"
 #include "driver_install_ext.h"
@@ -562,7 +563,7 @@ std::string InstalldOperator::GetSameLevelTmpPath(const std::string &path)
 }
 
 bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::string &targetSoPath,
-    const std::string &cpuAbi)
+    const std::string &cpuAbi, const bool needFakeDecompression, const bool isSystemApp)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles start");
     if (targetSoPath.empty()) {
@@ -585,22 +586,27 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
         LOG_D(BMS_TAG_INSTALLD, "ExtractFiles no so files to extract");
         return true;
     }
-    bool extractSoResult = true;
+    std::atomic<bool> extractSoResult(true);
     std::vector<ffrt::dependence> handles;
     for_each(soEntryFiles.begin(), soEntryFiles.end(),
-        [&extractor, &targetSoPath, &cpuAbi, &handles, &extractSoResult](const auto &entry) {
-        ExtractParam param;
-        param.targetPath = targetSoPath;
-        param.cpuAbi = cpuAbi;
-        param.extractFileType = ExtractFileType::SO;
-        ffrt::task_handle handle = ffrt::submit_h([&extractor, entry, param, &extractSoResult] () {
-            LOG_D(BMS_TAG_INSTALLD, "Extracting file %{private}s", entry.c_str());
-            if (!ExtractTargetFile(extractor, entry, param)) {
-                extractSoResult = false;
-            }
-            }, {}, {});
-        handles.push_back(std::move(handle));
-    });
+        [&extractor, &targetSoPath, &cpuAbi, &handles, &extractSoResult, &sourcePath, &needFakeDecompression,
+            &isSystemApp](const auto &entry) {
+            ExtractParam param;
+            param.srcPath = sourcePath;
+            param.targetPath = targetSoPath;
+            param.cpuAbi = cpuAbi;
+            param.extractFileType = ExtractFileType::SO;
+            param.needFakeDecompression = needFakeDecompression;
+            param.isSystemApp = isSystemApp;
+            ffrt::task_handle handle = ffrt::submit_h(
+                [&extractor, entry, param, &extractSoResult]() {
+                    LOG_D(BMS_TAG_INSTALLD, "Extracting file %{private}s", entry.c_str());
+                    if (!ExtractTargetFile(extractor, entry, param)) {
+                        extractSoResult = false;
+                    }
+                }, {}, {});
+            handles.push_back(std::move(handle));
+        });
     ffrt::wait(handles);
 
     LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles end");
@@ -1156,6 +1162,47 @@ ErrCode InstalldOperator::ParseSkillMd(const std::string &skillMdPath,
 
     return ERR_OK;
 }
+bool InstalldOperator::ChangeModeFile(const ExtractParam &param, const std::string &path)
+{
+    mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    if (param.extractFileType == ExtractFileType::AP) {
+        struct stat buf = {};
+        if (stat(param.targetPath.c_str(), &buf) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "fail to stat errno:%{public}d", errno);
+            return false;
+        }
+        ChangeFileAttr(path, buf.st_uid, buf.st_gid);
+        mode = (buf.st_uid == buf.st_gid) ? (S_IRUSR | S_IWUSR) : (S_IRUSR | S_IWUSR | S_IRGRP);
+    }
+    if (!OHOS::ChangeModeFile(path, mode)) {
+        LOG_W(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
+    }
+    return true;
+}
+
+bool InstalldOperator::FakeDecompression(const BundleExtractor &extractor, const std::string &entryName,
+    const ExtractParam &param, const std::string &targetPath)
+{
+    uint32_t offset = 0;
+    uint32_t length = 0;
+    if (!extractor.GetFileInfo(entryName, offset, length)) {
+        LOG_E(BMS_TAG_INSTALLD, "GetFileInfo failed, retry entryName : %{public}s", entryName.c_str());
+        return false;
+    }
+    if (!FileManagement::Decompress::CreateInnerFile(param.srcPath, targetPath, offset, length, param.isSystemApp)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "CreateInnerFile failed, retry entryName : %{public}s srcPath:%{public}s targetPath:%{public}s "
+            "offset:%{public}d length:%{public}d",
+            entryName.c_str(),
+            param.srcPath.c_str(),
+            targetPath.c_str(),
+            offset,
+            length);
+        return false;
+    }
+    ChangeModeFile(param, targetPath);
+    return true;
+}
 
 bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,
     const ExtractParam &param)
@@ -1193,24 +1240,33 @@ bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     if (param.needRemoveOld && IsExistFile(path) && !OHOS::RemoveFile(path)) {
         LOG_W(BMS_TAG_INSTALLD, "remove file %{public}s failed", path.c_str());
     }
+    LOG_D(BMS_TAG_INSTALLD,
+        "entryName:%{public}s srcPath:%{public}s targetPath:%{public}s, needFakeDecompression:%{public}d, "
+        "extractFileType:%{public}d",
+        entryName.c_str(),
+        param.srcPath.c_str(),
+        path.c_str(),
+        param.needFakeDecompression,
+        param.extractFileType);
+    if (param.needFakeDecompression &&
+        (param.extractFileType == ExtractFileType::SO || param.extractFileType == ExtractFileType::RES_FILE) &&
+        InstalldOperator::FakeDecompression(extractor, entryName, param, path)) {
+        LOG_I(BMS_TAG_INSTALLD,
+            "FakeDecompression success,entryName:%{public}s srcPath:%{public}s targetPath:%{public}s",
+            entryName.c_str(),
+            param.srcPath.c_str(),
+            path.c_str());
+        return true;
+    }
+
     if (!extractor.ExtractFile(entryName, path)) {
         if (!extractor.ExtractFile(entryName, path)) {
             LOG_E(BMS_TAG_INSTALLD, "extract file failed, retry entryName : %{public}s", entryName.c_str());
             return false;
         }
     }
-    mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-    if (param.extractFileType == ExtractFileType::AP) {
-        struct stat buf = {};
-        if (stat(param.targetPath.c_str(), &buf) != 0) {
-            LOG_E(BMS_TAG_INSTALLD, "fail to stat errno:%{public}d", errno);
-            return false;
-        }
-        ChangeFileAttr(path, buf.st_uid, buf.st_gid);
-        mode = (buf.st_uid == buf.st_gid) ? (S_IRUSR | S_IWUSR) : (S_IRUSR | S_IWUSR | S_IRGRP);
-    }
-    if (!OHOS::ChangeModeFile(path, mode)) {
-        LOG_W(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
+    if (!ChangeModeFile(param, path)) {
+        return false;
     }
     if (param.extractFileType == ExtractFileType::NPAPI_PLUGIN) {
         return FsyncNpapiPluginFile(path);

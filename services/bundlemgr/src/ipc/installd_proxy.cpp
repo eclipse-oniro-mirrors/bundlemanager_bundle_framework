@@ -175,7 +175,8 @@ ErrCode InstalldProxy::CreateBundleDir(
 }
 
 ErrCode InstalldProxy::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+    const bool isSystemApp)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -183,6 +184,8 @@ ErrCode InstalldProxy::ExtractModuleFiles(const std::string &srcModulePath, cons
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetPath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetSoPath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
+    INSTALLD_PARCEL_WRITE(data, Bool, needFakeDecompression);
+    INSTALLD_PARCEL_WRITE(data, Bool, isSystemApp);
 
     MessageParcel reply;
     MessageOption option;
