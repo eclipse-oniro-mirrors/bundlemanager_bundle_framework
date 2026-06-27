@@ -1215,6 +1215,136 @@ HWTEST_F(BmsServiceStartupTest, BundleStateStorage_0100, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: BundleStateStorage_0200
+ * @tc.name: round-trip state storage with a bundleName containing underscores
+ * @tc.desc: Save / Get / LoadAll / Delete for a bundleName like
+ *           "com.example.my_test_app". Before the rfind fix, KeyToNameAndUserId
+ *           split the key on every '_' and silently dropped entries whose
+ *           bundleName contained an underscore, so LoadAllBundleStateData could
+ *           never return them.
+ */
+HWTEST_F(BmsServiceStartupTest, BundleStateStorage_0200, Function | SmallTest | Level0)
+{
+    BundleStateStorage bundleStateStorage;
+    bundleStateStorage.HasBundleUserInfoJsonDb();
+
+    const std::string bundleName = "com.example.my_test_app";
+    const int32_t userId = 100;
+    BundleUserInfo inInfo;
+    inInfo.enabled = false;
+    inInfo.userId = userId;
+    inInfo.setEnabledCaller = "unittest_caller";
+    inInfo.disabledAbilities = {"com.example.my_test_app.MainAbility"};
+
+    bool ret = bundleStateStorage.SaveBundleStateStorage(bundleName, userId, inInfo);
+    EXPECT_TRUE(ret);
+
+    BundleUserInfo outInfo;
+    ret = bundleStateStorage.GetBundleStateStorage(bundleName, userId, outInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(outInfo.enabled, inInfo.enabled);
+    EXPECT_EQ(outInfo.userId, inInfo.userId);
+    EXPECT_EQ(outInfo.setEnabledCaller, inInfo.setEnabledCaller);
+    EXPECT_EQ(outInfo.disabledAbilities.size(), inInfo.disabledAbilities.size());
+    if (!outInfo.disabledAbilities.empty()) {
+        EXPECT_EQ(outInfo.disabledAbilities[0], inInfo.disabledAbilities[0]);
+    }
+
+    std::map<std::string, std::map<int32_t, BundleUserInfo>> infos;
+    ret = bundleStateStorage.LoadAllBundleStateData(infos);
+    EXPECT_TRUE(ret);
+    auto it = infos.find(bundleName);
+    EXPECT_NE(it, infos.end());
+    if (it != infos.end()) {
+        EXPECT_NE(it->second.find(userId), it->second.end());
+    }
+
+    ret = bundleStateStorage.DeleteBundleState(bundleName, userId);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleStateStorage_0300
+ * @tc.name: round-trip state storage with a regular bundleName (no underscore)
+ * @tc.desc: Regression coverage for the rfind-based key parsing — the no-underscore
+ *           case must continue to parse correctly after the fix.
+ */
+HWTEST_F(BmsServiceStartupTest, BundleStateStorage_0300, Function | SmallTest | Level0)
+{
+    BundleStateStorage bundleStateStorage;
+    bundleStateStorage.HasBundleUserInfoJsonDb();
+
+    const std::string bundleName = "com.example.regularapp";
+    const int32_t userId = 101;
+    BundleUserInfo inInfo;
+    inInfo.enabled = false;
+    inInfo.userId = userId;
+    inInfo.setEnabledCaller = "unittest_caller";
+
+    bool ret = bundleStateStorage.SaveBundleStateStorage(bundleName, userId, inInfo);
+    EXPECT_TRUE(ret);
+
+    BundleUserInfo outInfo;
+    ret = bundleStateStorage.GetBundleStateStorage(bundleName, userId, outInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(outInfo.enabled, inInfo.enabled);
+    EXPECT_EQ(outInfo.userId, inInfo.userId);
+
+    std::map<std::string, std::map<int32_t, BundleUserInfo>> infos;
+    ret = bundleStateStorage.LoadAllBundleStateData(infos);
+    EXPECT_TRUE(ret);
+    auto it = infos.find(bundleName);
+    EXPECT_NE(it, infos.end());
+
+    ret = bundleStateStorage.DeleteBundleState(bundleName, userId);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleStateStorage_0400
+ * @tc.name: two underscore-containing bundleNames coexist under different userIds
+ * @tc.desc: Each (bundleName, userId) maps to a distinct key. Verify the parser
+ *           recovers both entries correctly when both names contain underscores
+ *           and one name is a prefix of the other.
+ */
+HWTEST_F(BmsServiceStartupTest, BundleStateStorage_0400, Function | SmallTest | Level0)
+{
+    BundleStateStorage bundleStateStorage;
+    bundleStateStorage.HasBundleUserInfoJsonDb();
+
+    const std::string bundleNameA = "com.example.my_test_app";
+    const std::string bundleNameB = "com.example.my_test_app_extra";
+    const int32_t userIdA = 100;
+    const int32_t userIdB = 100;
+    BundleUserInfo infoA;
+    infoA.enabled = false;
+    infoA.userId = userIdA;
+    infoA.setEnabledCaller = "callerA";
+    BundleUserInfo infoB;
+    infoB.enabled = true;
+    infoB.userId = userIdB;
+    infoB.setEnabledCaller = "callerB";
+
+    EXPECT_TRUE(bundleStateStorage.SaveBundleStateStorage(bundleNameA, userIdA, infoA));
+    EXPECT_TRUE(bundleStateStorage.SaveBundleStateStorage(bundleNameB, userIdB, infoB));
+
+    std::map<std::string, std::map<int32_t, BundleUserInfo>> infos;
+    EXPECT_TRUE(bundleStateStorage.LoadAllBundleStateData(infos));
+    EXPECT_NE(infos.find(bundleNameA), infos.end());
+    EXPECT_NE(infos.find(bundleNameB), infos.end());
+
+    BundleUserInfo outA;
+    EXPECT_TRUE(bundleStateStorage.GetBundleStateStorage(bundleNameA, userIdA, outA));
+    EXPECT_EQ(outA.setEnabledCaller, "callerA");
+    BundleUserInfo outB;
+    EXPECT_TRUE(bundleStateStorage.GetBundleStateStorage(bundleNameB, userIdB, outB));
+    EXPECT_EQ(outB.setEnabledCaller, "callerB");
+
+    EXPECT_TRUE(bundleStateStorage.DeleteBundleState(bundleNameA, userIdA));
+    EXPECT_TRUE(bundleStateStorage.DeleteBundleState(bundleNameB, userIdB));
+}
+
+/**
  * @tc.number: BmsParam_0100
  * @tc.name: test GetBmsParam
  * @tc.desc: 1.test GetBmsParam of BmsParam

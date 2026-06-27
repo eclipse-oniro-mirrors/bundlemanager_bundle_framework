@@ -25,7 +25,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string::size_type EXPECT_SPLIT_SIZE = 2;
 constexpr const char* BUNDLE_USER_INFO_PATH =
     "/data/service/el1/public/bms/bundle_manager_service/bundle_user_info.json";
 
@@ -42,11 +41,10 @@ bool KeyToNameAndUserId(
     const std::string &key, std::string &bundleName, int32_t &userId)
 {
     bool ret = false;
-    std::vector<std::string> splitStrs;
-    OHOS::SplitStr(key, Constants::FILE_UNDERLINE, splitStrs);
-    if (splitStrs.size() == EXPECT_SPLIT_SIZE) {
-        bundleName = splitStrs[0];
-        userId = atoi(splitStrs[1].c_str());
+    auto pos = key.rfind(Constants::FILE_UNDERLINE);
+    if (pos != std::string::npos) {
+        bundleName = key.substr(0, pos);
+        userId = atoi(key.c_str() + pos + 1);
         ret = true;
     }
 
