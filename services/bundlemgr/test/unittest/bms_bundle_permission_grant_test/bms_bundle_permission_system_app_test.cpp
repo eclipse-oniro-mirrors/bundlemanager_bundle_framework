@@ -4214,7 +4214,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CleanBundleCacheFiles_0100, Func
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
     SetVerifyCallingPermissionForTest(false);
     ret = bundleMgrHostImpl_->CleanBundleCacheFiles(BUNDLE_NAME, cleanCache, USERID);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 
     SetSystemAppFalseForTest(true);
     OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");

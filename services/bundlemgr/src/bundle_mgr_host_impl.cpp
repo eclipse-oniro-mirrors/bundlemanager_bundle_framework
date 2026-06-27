@@ -2220,7 +2220,8 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     }
     APP_LOGI("start -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
+        (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM))) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -2517,16 +2518,16 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
 
 bool BundleMgrHostImpl::VerifyCleanBundleDataFilesPermission(bool &isCheckDebugApp)
 {
-    if (!(BundlePermissionMgr::IsSystemApp() &&
-        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE))) {
-        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
-            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
-            APP_LOGE("verify permission failed");
-            return false;
-        }
-        isCheckDebugApp = true;
+    if (BundlePermissionMgr::IsSystemApp() &&
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
+        return true;
     }
-    return true;
+    if (OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) &&
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+        isCheckDebugApp = true;
+        return true;
+    }
+    return false;
 }
 
 bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, const int userId,
@@ -2548,11 +2549,6 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     }
 
     (void)dataMgr->GetBundleNameForUid(callingUid, callingBundleName);
-    if (!BundlePermissionMgr::IsSystemApp() &&
-        !OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
-        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES system api denied");
-        return false;
-    }
     bool isCheckDebugApp = false;
     if (!VerifyCleanBundleDataFilesPermission(isCheckDebugApp)) {
         APP_LOGE("verify permission failed");
