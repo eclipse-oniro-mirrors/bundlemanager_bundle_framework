@@ -27,6 +27,13 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct StringParcelable : public Parcelable {
+    std::string value;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static StringParcelable *Unmarshalling(Parcel &parcel);
+};
 class BundleMgrHost : public IRemoteStub<IBundleMgr> {
 public:
     BundleMgrHost();
@@ -817,6 +824,8 @@ private:
     ErrCode HandleGetIconById(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAllAppInstallExtendedInfo(MessageParcel &data, MessageParcel &reply);
+    
+    ErrCode HandleGetStringByIdList(MessageParcel &data, MessageParcel &reply);
     
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     ErrCode HandleGetDefaultAppProxy(MessageParcel &data, MessageParcel &reply);

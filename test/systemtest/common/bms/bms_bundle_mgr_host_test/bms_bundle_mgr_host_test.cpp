@@ -18,6 +18,7 @@
 #include <future>
 #include <gtest/gtest.h>
 #include "bundle_mgr_host.h"
+#include "bundle_mgr_proxy.h"
 
 using namespace testing::ext;
 
@@ -2809,6 +2810,108 @@ HWTEST_F(BmsBundleMgrHostTest, HandleSetBundleFirstLaunch_0004, Function | Mediu
     EXPECT_EQ(res, ERR_OK);
     ErrCode innerRet = reply.ReadInt32();
     EXPECT_NE(innerRet, ERR_OK);
+}
+
+ /**
+ * @tc.number: HandleGetStringByIdList_0100
+ * @tc.name: test the HandleGetStringByIdList
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetStringByIdList with empty params
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetStringByIdList_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetStringByIdList(data, reply);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetStringByIdList_0200
+ * @tc.name: test the HandleGetStringByIdList
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetStringByIdList with empty bundleName
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetStringByIdList_0200, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("");  // bundleName
+    data.WriteString("module");  // moduleName
+    std::vector<uint32_t> resIdList = {1, 2};
+    data.WriteUInt32Vector(resIdList);
+    data.WriteInt32(100);  // userId
+    data.WriteString("");  // localeInfo
+    ErrCode res = bundleMgrHost.HandleGetStringByIdList(data, reply);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+}
+
+/**
+ * @tc.number: HandleGetStringByIdList_0300
+ * @tc.name: test the HandleGetStringByIdList
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetStringByIdList with empty moduleName
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetStringByIdList_0300, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("bundle");  // bundleName
+    data.WriteString("");  // moduleName
+    std::vector<uint32_t> resIdList = {1, 2};
+    data.WriteUInt32Vector(resIdList);
+    data.WriteInt32(100);  // userId
+    data.WriteString("");  // localeInfo
+    ErrCode res = bundleMgrHost.HandleGetStringByIdList(data, reply);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+}
+
+/**
+ * @tc.number: HandleGetStringByIdList_0400
+ * @tc.name: test the HandleGetStringByIdList
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetStringByIdList with empty resIdList
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetStringByIdList_0400, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("bundle");  // bundleName
+    data.WriteString("module");  // moduleName
+    std::vector<uint32_t> resIdList;
+    data.WriteUInt32Vector(resIdList);
+    data.WriteInt32(100);  // userId
+    data.WriteString("");  // localeInfo
+    ErrCode res = bundleMgrHost.HandleGetStringByIdList(data, reply);
+    EXPECT_EQ(res, ERR_INVALID_VALUE);
+}
+
+/**
+ * @tc.number: HandleGetStringByIdList_0500
+ * @tc.name: test the HandleGetStringByIdList
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetStringByIdList with resIdList exceeding max size
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetStringByIdList_0500, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("bundle");  // bundleName
+    data.WriteString("module");  // moduleName
+    std::vector<uint32_t> resIdList;
+    for (int i = 0; i < 1001; ++i) {
+        resIdList.push_back(i);
+    }
+    data.WriteUInt32Vector(resIdList);
+    data.WriteInt32(100);  // userId
+    data.WriteString("");  // localeInfo
+    ErrCode res = bundleMgrHost.HandleGetStringByIdList(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 } // AppExecFwk

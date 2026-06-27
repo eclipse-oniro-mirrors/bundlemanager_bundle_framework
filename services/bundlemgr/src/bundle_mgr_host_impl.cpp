@@ -4697,6 +4697,28 @@ std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, cons
     return dataMgr->GetStringById(bundleName, moduleName, resId, userId, localeInfo);
 }
 
+ErrCode BundleMgrHostImpl::GetStringByIdList(const std::string &bundleName,
+    const std::string &moduleName, const std::vector<uint32_t> &resIdList, std::vector<std::string> &labelList,
+    int32_t userId, const std::string &localeInfo)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
+        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE("verify token type failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetStringByIdList(bundleName, moduleName, resIdList, labelList, userId, localeInfo);
+}
+
 std::string BundleMgrHostImpl::GetIconById(
     const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
 {

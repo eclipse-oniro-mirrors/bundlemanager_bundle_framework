@@ -3797,6 +3797,36 @@ HWTEST_F(BmsBundleDataMgrTest, GetStringById_0100, Function | MediumTest | Level
 }
 
 /**
+ * @tc.number: GetStringByIdList_0100
+ * @tc.name: test GetStringByIdList with permission denied
+ * @tc.desc: test GetStringByIdList when IsSystemApp check fails
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0100, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0200
+ * @tc.name: test GetStringByIdList with empty resIdList
+ * @tc.desc: test GetStringByIdList with empty resIdList
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0200, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList;
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+    EXPECT_TRUE(labelList.empty());
+}
+
+
+/**
  * @tc.number: GetSandboxHapModuleInfo_0100
  * @tc.name: test GetSandboxHapModuleInfo
  * @tc.desc: 1.GetSandboxHapModuleInfo
