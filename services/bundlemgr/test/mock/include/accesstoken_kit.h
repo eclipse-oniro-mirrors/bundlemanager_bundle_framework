@@ -72,10 +72,12 @@ public:
     static int32_t GetHapBaseInfoByUid(int32_t uid, HapBaseInfo& info);
     static int32_t GetCachePolicyBySessionId(int32_t sessionId, const std::string& bundleName,
         BundlePolicyInfo& bundlePolicyInfo);
+    static int32_t RefreshTokenStatus(const Identity& identity, ReservedType type);
 };
 
 void SetCachePolicyBySessionIdForTest(const BundlePolicyInfo& bundlePolicyInfo);
 void SetCachePolicyBySessionIdRetForTest(int32_t ret);
+void SetRefreshTokenStatusRetForTest(int32_t ret);
 void SetPrepareHapIdentityRetForTest(int32_t ret);
 void SetDeleteIdentityRetForTest(int32_t ret);
 } // namespace AccessToken

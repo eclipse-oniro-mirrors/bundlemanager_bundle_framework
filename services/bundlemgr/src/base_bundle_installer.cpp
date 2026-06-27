@@ -306,6 +306,26 @@ ErrCode BaseBundleInstaller::InstallBundle(
     sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
+    if (result != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON && result != ERR_OK
+        && dataMgr_ && !bundleName_.empty()) {
+        InnerBundleInfo bundleInfo;
+        if (dataMgr_->FetchInnerBundleInfo(bundleName_, bundleInfo)) {
+            auto bundleUserInfos = bundleInfo.GetInnerBundleUserInfos();
+            bool refresh = false;
+            for (const auto &userInfo : bundleUserInfos) {
+                if (userInfo.second.accessTokenId == 0) {
+                    continue;
+                }
+                refresh = BundlePermissionMgr::RefreshTokenStatus(userInfo.second.accessTokenIdEx,
+                    userInfo.second.uid) == ERR_OK;
+            }
+            if (refresh) {
+                ResetInstallProperties();
+                uid = Constants::INVALID_UID;
+                result = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
+            }
+        }
+    }
     if (result == Security::AccessToken::AccessTokenError::ERR_BUNDLE_ALREADY_EXIST) {
         // if bundleName is not empty, delete the access token id and try to install again
         if (!bundleName_.empty()) {
@@ -8537,8 +8557,9 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             continue;
         }
         Security::AccessToken::HapInfoCheckResult checkResult;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, userId, checkResult,
-            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, userDebugGrant, sessionId_) != ERR_OK) {
+        auto ret = BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, userId, checkResult,
+            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, userDebugGrant, sessionId_);
+        if (ret != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;

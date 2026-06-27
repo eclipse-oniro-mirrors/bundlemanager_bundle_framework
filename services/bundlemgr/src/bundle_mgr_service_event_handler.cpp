@@ -2320,10 +2320,6 @@ void BMSEventHandler::ExecuteMigrationWithRetry(const std::shared_ptr<BundleData
                             failedUidList.emplace_back(item.uidList[k]);
                         }
                     }
-                    if (!successFlags[origIdx]) {
-                        successFlags[origIdx] = true;
-                        --remaining;
-                    }
                 }
             }
         }
