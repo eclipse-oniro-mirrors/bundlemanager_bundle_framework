@@ -365,5 +365,14 @@ int32_t BundlePermissionMgr::UpdateAppPermission(InnerBundleInfo &innerBundleInf
 {
     return ERR_OK;
 }
+
+int32_t BundlePermissionMgr::RefreshTokenStatus(const uint64_t &tokenIdEx, const int32_t &uid,
+    Security::AccessToken::ReservedType type)
+{
+    Security::AccessToken::Identity identity;
+    identity.tokenId = tokenIdEx;
+    identity.uid = uid;
+    return Security::AccessToken::AccessTokenKit::RefreshTokenStatus(identity, type);
+}
 }
 }

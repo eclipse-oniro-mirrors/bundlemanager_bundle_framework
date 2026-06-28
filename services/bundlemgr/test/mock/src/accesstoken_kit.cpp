@@ -394,6 +394,13 @@ void SetCachePolicyBySessionIdRetForTest(int32_t ret)
     g_cachePolicyBySessionIdRet = ret;
 }
 
+static int32_t g_refreshTokenStatusRet = -1;
+
+void SetRefreshTokenStatusRetForTest(int32_t ret)
+{
+    g_refreshTokenStatusRet = ret;
+}
+
 void SetPrepareHapIdentityRetForTest(int32_t ret)
 {
     g_prepareHapIdentityRet = ret;
@@ -409,6 +416,11 @@ int32_t AccessTokenKit::GetCachePolicyBySessionId(int32_t sessionId, const std::
 {
     bundlePolicyInfo = g_bundlePolicyInfo;
     return g_cachePolicyBySessionIdRet;
+}
+
+int32_t AccessTokenKit::RefreshTokenStatus(const Identity& identity, ReservedType type)
+{
+    return g_refreshTokenStatusRet;
 }
 }
 }

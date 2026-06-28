@@ -150,6 +150,9 @@ public:
 
     static bool CheckUserFromShell(int32_t userId);
 
+    static int32_t RefreshTokenStatus(const uint64_t &tokenIdEx, const int32_t &uid,
+        Security::AccessToken::ReservedType type = Security::AccessToken::ReservedType::NONE);
+
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(
         const InnerBundleInfo &innerBundleInfo);
