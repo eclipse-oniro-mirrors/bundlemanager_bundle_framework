@@ -4210,6 +4210,7 @@ HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0300, Function | SmallTes
     dataMgr->bundleInfos_["test.clean.bundle"] = info;
     UninstallBundleInfo uninstInfo;
     UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
     uninstInfo.userInfos[std::to_string(TEST_U100)] = dui;
     EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.clean.bundle", uninstInfo));
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
@@ -4235,6 +4236,7 @@ HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0400, Function | SmallTes
     dataMgr->AddUserId(TEST_U100);
     UninstallBundleInfo uninstInfo;
     UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
     uninstInfo.userInfos[std::to_string(TEST_U100)] = dui;
     EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.nonexist.bundle", uninstInfo));
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
@@ -4263,6 +4265,7 @@ HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0500, Function | SmallTes
     dataMgr->AddUserId(TEST_U100);
     UninstallBundleInfo uninstInfo;
     UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
     std::string cloneKey = std::to_string(TEST_U100) + "_1";
     uninstInfo.userInfos[cloneKey] = dui;
     EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.clone.bundle", uninstInfo));
@@ -4301,6 +4304,7 @@ HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0600, Function | SmallTes
     dataMgr->bundleInfos_["test.clone.installed"] = info;
     UninstallBundleInfo uninstInfo;
     UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
     std::string cloneKey = std::to_string(TEST_U100) + "_1";
     uninstInfo.userInfos[cloneKey] = dui;
     EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.clone.installed", uninstInfo));
@@ -4334,6 +4338,7 @@ HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0700, Function | SmallTes
     dataMgr->bundleInfos_["test.del.bundle"] = info;
     UninstallBundleInfo delInfo;
     UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
     delInfo.userInfos[std::to_string(TEST_U100)] = dui;
     EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.del.bundle", delInfo));
     // Add uninstall record for a non-existent bundle → should be KEPT (legitimate uninstall)

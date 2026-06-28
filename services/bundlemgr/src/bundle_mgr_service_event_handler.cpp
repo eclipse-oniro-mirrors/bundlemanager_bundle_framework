@@ -2080,12 +2080,9 @@ void BMSEventHandler::CleanUninstallBundleInfo()
     for (const auto &[bundleName, uninstallInfo] : uninstallBundleInfos) {
         for (const auto &[key, userInfo] : uninstallInfo.userInfos) {
             size_t separatorPos = key.find('_');
-            int32_t userId;
+            int32_t userId = static_cast<int32_t>(userInfo.uid / Constants::BASE_USER_RANGE);
             int32_t appIndex = 0;
-            if (separatorPos == std::string::npos) {
-                userId = static_cast<int32_t>(std::stoi(key));
-            } else {
-                userId = static_cast<int32_t>(std::stoi(key.substr(0, separatorPos)));
+            if (separatorPos != std::string::npos) {
                 appIndex = static_cast<int32_t>(std::stoi(key.substr(separatorPos + 1)));
             }
             if (dataMgr->CheckBundleExist(bundleName, userId, appIndex) == ERR_OK) {
