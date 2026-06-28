@@ -2083,7 +2083,7 @@ void BMSEventHandler::CleanUninstallBundleInfo()
             int32_t userId = static_cast<int32_t>(userInfo.uid / Constants::BASE_USER_RANGE);
             int32_t appIndex = 0;
             if (separatorPos != std::string::npos) {
-                appIndex = static_cast<int32_t>(OHOS::StrToInt(key.substr(separatorPos + 1)));
+                OHOS::StrToInt(key.substr(separatorPos + 1), appIndex);
             }
             if (dataMgr->CheckBundleExist(bundleName, userId, appIndex) == ERR_OK) {
                 if (appIndex == 0) {
