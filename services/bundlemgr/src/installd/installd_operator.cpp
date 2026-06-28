@@ -223,10 +223,22 @@ struct DirSizeData {
     uint64_t totalSize = 0;
     bool overflow = false;
     const std::string *dirPath;
+    std::unordered_map<std::string, uint64_t> *cache = nullptr;
+    std::vector<uint64_t> acc;
+    // --- interruptible timeout support (Phase 1 walk must be bounded) ---
+    bool timedOut = false;       // set when this walk was aborted by the deadline
+    uint64_t entryCounter = 0;   // the clock is checked every CHECK_TIMEOUT_INTERVAL entries
 };
 
 // Thread-local storage for callback data to ensure thread safety
 static thread_local DirSizeData *g_dirSizeData = nullptr;
+
+static thread_local size_t g_dirSizeCacheHitCount = 0;
+static thread_local size_t g_dirSizeCacheMissCount = 0;
+
+static thread_local bool g_dirSizeHasDeadline = false;
+static thread_local std::chrono::steady_clock::time_point g_dirSizeDeadline{};
+static thread_local bool g_dirSizeTimedOut = false;
 
 /**
  * @brief RAII guard for managing thread-local DirSizeData pointer
@@ -244,8 +256,24 @@ private:
     DirSizeData *data_;
 };
 
+// RAII: clears g_dirSizeHasDeadline on every return path so a deadline can never leak to a later
+// GetLargestFiles/GetLargestDirs call on the same thread. The caller sets g_dirSizeDeadline first,
+// then constructs this guard (which sets g_dirSizeHasDeadline = true).
+class DirSizeDeadlineGuard {
+public:
+    DirSizeDeadlineGuard()
+    {
+        g_dirSizeHasDeadline = true;
+        g_dirSizeTimedOut = false;
+    }
+
+    ~DirSizeDeadlineGuard() { g_dirSizeHasDeadline = false; }
+};
+
 constexpr int32_t MAX_FTW_DEPTH = 1000;  // Maximum directory traversal depth to prevent stack overflow
 constexpr uint64_t MAX_DIRECTORY_SIZE = UINT64_MAX - 1024ULL * 1024ULL * 1024ULL;  // 1GB less than max
+// Check the deadline every N callback invocations (avoids a clock syscall per entry).
+constexpr uint64_t CHECK_TIMEOUT_INTERVAL = 512;
 
 /**
  * @brief Callback function for nftw to calculate directory size
@@ -263,6 +291,20 @@ static int32_t CalculateDirSizeCallback(const char *path, const struct stat *sb,
         return 1;  // Stop traversal on error
     }
 
+    // Interruptible timeout: every CHECK_TIMEOUT_INTERVAL entries, check the deadline. nftw stops
+    // on a non-zero return; directories already completed (FTW_DP) are already cached with correct
+    // totals, and the in-progress subtree is deliberately left uncached (no partial/dirty entry).
+    if (g_dirSizeHasDeadline && (++data->entryCounter % CHECK_TIMEOUT_INTERVAL) == 0) {
+        if (std::chrono::steady_clock::now() > g_dirSizeDeadline) {
+            data->timedOut = true;
+            g_dirSizeTimedOut = true;
+            LOG_W(BMS_TAG_INSTALLD,
+                "CalculateDirSizeCallback: deadline reached, aborting walk near %{public}s",
+                InstalldOperator::AnonymizePath(path).c_str());
+            return 1;
+        }
+    }
+
     // Check depth to prevent stack overflow
     if (ftwbuf->level > MAX_FTW_DEPTH) {
         LOG_W(BMS_TAG_INSTALLD, "CalculateDirSizeCallback: directory too deep, level: %{public}d, path: %{public}s",
@@ -270,7 +312,17 @@ static int32_t CalculateDirSizeCallback(const char *path, const struct stat *sb,
         return 0;  // Continue processing other files
     }
 
+    // Keep the per-level accumulator stack deep enough (fold-up sizing, O(1) per entry).
+    auto &acc = data->acc;
+    if (static_cast<size_t>(ftwbuf->level) >= acc.size()) {
+        acc.resize(static_cast<size_t>(ftwbuf->level) + 1, 0);
+    }
+
     if (typeflag == FTW_F) {
+        // Skip anomalous negative-size entries (defensive; also keeps the overflow subtraction safe).
+        if (sb->st_size < 0) {
+            return 0;
+        }
         // Check for overflow before adding
         if (data->totalSize > MAX_DIRECTORY_SIZE - sb->st_size) {
             LOG_W(BMS_TAG_INSTALLD, "CalculateDirSizeCallback: size overflow for %{public}s",
@@ -280,6 +332,21 @@ static int32_t CalculateDirSizeCallback(const char *path, const struct stat *sb,
         }
         // Only count regular files
         data->totalSize += sb->st_size;
+        // Attribute this file to its owning directory (parent level) for per-directory caching.
+        acc[static_cast<size_t>(ftwbuf->level) - 1] += sb->st_size;
+    } else if (typeflag == FTW_DP) {
+        // Post-order: the directory's subtree is fully traversed, so acc[level] is its total.
+        // Cache every directory's subtree total, then fold it up into the parent directory.
+        uint64_t dirTotal = acc[static_cast<size_t>(ftwbuf->level)];
+        if (data->cache != nullptr) {
+            (*data->cache)[path] = dirTotal;
+            LOG_D(BMS_TAG_INSTALLD, "ScanAppDataSize CACHE-INSERT %{public}s = %{public}" PRIu64,
+                InstalldOperator::AnonymizePath(path).c_str(), dirTotal);
+        }
+        if (ftwbuf->level > 0) {
+            acc[static_cast<size_t>(ftwbuf->level) - 1] += dirTotal;
+        }
+        acc[static_cast<size_t>(ftwbuf->level)] = 0;
     }
 
     return 0;  // Continue traversal
@@ -297,11 +364,22 @@ static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
     // Check cache first
     auto it = dirSizeCache.find(dirPath);
     if (it != dirSizeCache.end()) {
+        ++g_dirSizeCacheHitCount;
         LOG_D(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: cache hit for %{public}s, size: %{public}" PRIu64,
             dirPath.c_str(), it->second);
         return it->second;
     }
 
+    ++g_dirSizeCacheMissCount;
+    // Defensive: if the deadline already passed, do not start an expensive walk. In the current
+    // flow this is belt-and-suspenders (the between-top-dirs check + cache-direct fallback already
+    // prevent wind-down misses), but it bounds any future miss-during-wind-down without a ramp-up.
+    if (g_dirSizeHasDeadline && std::chrono::steady_clock::now() > g_dirSizeDeadline) {
+        g_dirSizeTimedOut = true;
+        LOG_W(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: deadline reached, skip walk for %{public}s",
+            InstalldOperator::AnonymizePath(dirPath).c_str());
+        return 0;
+    }
     LOG_D(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: cache miss for %{public}s, calculating...",
         dirPath.c_str());
 
@@ -311,15 +389,22 @@ static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
             dirPath.c_str());
         return 0;
     }
-    // Prepare callback data
-    DirSizeData data = {0, false, &dirPath};
+    // Prepare callback data. cache ptr lets the callback record every directory's subtree total,
+    // not only the root's, so subsequent per-directory lookups hit the cache.
+    DirSizeData data;
+    data.dirPath = &dirPath;
+    data.cache = &dirSizeCache;
     // Set thread-local data for callback access
     g_dirSizeData = &data;
     // Use RAII guard to ensure thread-local data is cleared when going out of scope
     DirSizeDataGuard guard(&data);
-    // Use nftw with FTW_PHYSICAL (don't follow symlinks) and FTW_MOUNT (don't cross filesystem boundaries)
-    // The third parameter is the maximum number of open file descriptors
-    int32_t ret = nftw(dirPath.c_str(), CalculateDirSizeCallback, 10, FTW_PHYS | FTW_MOUNT);
+    int32_t ret = nftw(dirPath.c_str(), CalculateDirSizeCallback, 10, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+    if (data.timedOut) {
+        LOG_W(BMS_TAG_INSTALLD,
+            "CalculateDirectorySizeWithCache: timed out (partial) for %{public}s",
+            InstalldOperator::AnonymizePath(dirPath).c_str());
+        return 0;
+    }
     if (ret != 0 && !data.overflow) {
         LOG_W(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: nftw failed for %{public}s, errno: %{public}d",
             dirPath.c_str(), errno);
@@ -4170,14 +4255,14 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
         return true;
     }
 
-    // Sort by size in descending order
-    std::sort(itemSizes.begin(), itemSizes.end(),
+    // Top 3 largest items by size. partial_sort is O(N log 3) vs O(N log N) for a full sort;
+    // only the first `count` elements are consumed, so leaving the tail unordered is fine.
+    size_t count = std::min(static_cast<size_t>(3), itemSizes.size());
+    std::partial_sort(itemSizes.begin(), itemSizes.begin() + count, itemSizes.end(),
         [](const ItemSize &a, const ItemSize &b) {
             return a.size > b.size;
         });
 
-    // Get top 3 largest items and add to result
-    size_t count = std::min(static_cast<size_t>(3), itemSizes.size());
     largestPathsWithSize.clear();
     for (size_t i = 0; i < count; ++i) {
         largestPathsWithSize.emplace_back(itemSizes[i].path, itemSizes[i].size);
@@ -4222,6 +4307,13 @@ static bool GetLargestDirsExtendedWithCache(const std::vector<std::string> &dirP
 
     // Process each path (file or directory)
     for (const auto &inputPath : dirPaths) {
+        // Interruptible timeout: don't start a new (possibly huge) top dir past the deadline.
+        if (g_dirSizeHasDeadline && std::chrono::steady_clock::now() > g_dirSizeDeadline) {
+            g_dirSizeTimedOut = true;
+            LOG_W(BMS_TAG_INSTALLD,
+                "GetLargestDirsExtendedWithCache: deadline reached, stop scanning remaining top dirs");
+            break;
+        }
         if (inputPath.empty() || inputPath.size() > ServiceConstants::PATH_MAX_SIZE) {
             LOG_W(BMS_TAG_INSTALLD, "GetLargestDirs: invalid path, skipping");
             continue;
@@ -4269,14 +4361,14 @@ static bool GetLargestDirsExtendedWithCache(const std::vector<std::string> &dirP
         return true;
     }
 
-    // Sort by size in descending order
-    std::sort(pathSizes.begin(), pathSizes.end(),
+    // Top 3 largest items by size. partial_sort is O(N log 3) vs O(N log N) for a full sort;
+    // only the first `count` elements are consumed, so leaving the tail unordered is fine.
+    size_t count = std::min(static_cast<size_t>(3), pathSizes.size());
+    std::partial_sort(pathSizes.begin(), pathSizes.begin() + count, pathSizes.end(),
         [](const PathSize &a, const PathSize &b) {
             return a.size > b.size;
         });
 
-    // Get top 3 largest items (files or directories) and add to result
-    size_t count = std::min(static_cast<size_t>(3), pathSizes.size());
     largestDirsWithSize.clear();
     for (size_t i = 0; i < count; ++i) {
         largestDirsWithSize.emplace_back(pathSizes[i].path, pathSizes[i].size);
@@ -4294,6 +4386,49 @@ bool InstalldOperator::GetLargestDirs(const std::vector<std::string> &dirPaths,
     std::unordered_map<std::string, uint64_t> dirSizeCache;
     dirSizeCache.reserve(100);  // Reserve space for typical directory structure
     return GetLargestDirsExtendedWithCache(dirPaths, largestDirsWithSize, dirSizeCache);
+}
+
+// Timeout fallback: how many of the largest cached directories to emit directly from the cache.
+constexpr size_t CACHE_DIRECT_TOP_N = 20;
+
+// Pick the top-N largest directories directly from the size cache using a bounded min-heap
+// (O(topN) memory — no full copy of the cache, so a huge cache cannot cause a memory spike in the
+// timeout fallback). Used ONLY when Phase 1 was truncated by the deadline, so that every
+// fully-walked directory is printable — including subdirectories inside a top dir whose walk was
+// aborted mid-way (those subdirs were cached with correct totals by the fold, but the normal
+// top-3-of-input BFS would miss them).
+static void BuildTopNFromCache(const std::unordered_map<std::string, uint64_t> &dirSizeCache,
+    std::vector<std::pair<std::string, uint64_t>> &result, size_t topN)
+{
+    result.clear();
+    if (topN == 0 || dirSizeCache.empty()) {
+        return;
+    }
+
+    using Entry = std::pair<std::string, uint64_t>;
+    // "greater by size" => the heap front is the SMALLEST kept entry, so it can be dropped when full.
+    auto sizeGreater = [](const Entry &a, const Entry &b) { return a.second > b.second; };
+    std::vector<Entry> heap;
+    heap.reserve(topN);
+
+    for (const auto &entry : dirSizeCache) {
+        if (heap.size() < topN) {
+            heap.push_back(entry);
+            std::push_heap(heap.begin(), heap.end(), sizeGreater);
+        } else if (entry.second > heap.front().second) {
+            // Replace the current smallest kept entry with this larger one (no size growth).
+            std::pop_heap(heap.begin(), heap.end(), sizeGreater);
+            heap.back() = entry;
+            std::push_heap(heap.begin(), heap.end(), sizeGreater);
+        }
+        // else: entry is not larger than the current top-N minimum; skip without copying.
+    }
+
+    result.reserve(heap.size());
+    for (const auto &e : heap) {
+        result.push_back(e);
+    }
+    std::sort(result.begin(), result.end(), sizeGreater);  // descending by size
 }
 
 bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &dirPaths,
@@ -4325,6 +4460,10 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
     std::unordered_map<std::string, uint64_t> dirSizeCache;
     dirSizeCache.reserve(1000);  // Reserve space for typical directory tree
 
+    // Reset per-call cache statistics so the final LOG_I reflects only this invocation.
+    g_dirSizeCacheHitCount = 0;
+    g_dirSizeCacheMissCount = 0;
+
     // Helper lambda to check timeout
     auto isTimeout = [&startTime, MAX_SCAN_TIME_MS]() -> bool {
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -4332,11 +4471,46 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
         return elapsed > MAX_SCAN_TIME_MS;
     };
 
+    // Final sort + statistics log, shared by the normal path and the timeout fallback so the
+    // output format and the final LOG_I are identical in both cases.
+    auto finalizeResults = [&]() {
+        if (!resultPathsWithSize.empty()) {
+            std::sort(resultPathsWithSize.begin(), resultPathsWithSize.end(),
+                [](const std::pair<std::string, uint64_t> &a,
+                    const std::pair<std::string, uint64_t> &b) {
+                    return a.second > b.second;  // Descending order by size
+                });
+        }
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - startTime).count();
+        size_t totalLookups = g_dirSizeCacheHitCount + g_dirSizeCacheMissCount;
+        size_t hitRate = (totalLookups == 0) ? 0 : (g_dirSizeCacheHitCount * 100) / totalLookups;
+        LOG_I(BMS_TAG_INSTALLD, "ScanAppDataSize success, total items: %{public}zu, cache entries: %{public}zu, "
+            "hit: %{public}zu, miss: %{public}zu, hit-rate: %{public}zu pct, time: %{public}lld ms",
+            resultPathsWithSize.size(), dirSizeCache.size(),
+            g_dirSizeCacheHitCount, g_dirSizeCacheMissCount, hitRate, static_cast<long long>(elapsed));
+    };
+
+    // Interruptible Phase 1: bound the full-tree walk to the whole budget. The timeout fallback is
+    // pure in-memory (cache-direct + sort), so no time reserve is needed.
+    g_dirSizeDeadline = startTime + std::chrono::milliseconds(MAX_SCAN_TIME_MS);
+    DirSizeDeadlineGuard deadlineGuard;  // clears g_dirSizeHasDeadline on any return path
+
     // Step 1: Get top 3 largest directories from input paths
     std::vector<std::pair<std::string, uint64_t>> largestDirs;
     if (!GetLargestDirsExtendedWithCache(dirPaths, largestDirs, dirSizeCache)) {
         LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: GetLargestDirsExtendedWithCache failed");
         return false;
+    }
+
+    const bool phase1Truncated = g_dirSizeTimedOut;
+    if (phase1Truncated) {
+        BuildTopNFromCache(dirSizeCache, resultPathsWithSize, CACHE_DIRECT_TOP_N);
+        LOG_W(BMS_TAG_INSTALLD,
+            "GetLargestFilesRecursive: Phase 1 timed out, emitted %{public}zu items from cache",
+            resultPathsWithSize.size());
+        finalizeResults();
+        return true;
     }
 
     if (largestDirs.empty()) {
@@ -4482,22 +4656,8 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
             finalFilePath.c_str(), finalFileSize);
     }
 
-    // Sort all results by size in descending order for better user experience
-    if (!resultPathsWithSize.empty()) {
-        std::sort(resultPathsWithSize.begin(), resultPathsWithSize.end(),
-            [](const std::pair<std::string, uint64_t> &a,
-                const std::pair<std::string, uint64_t> &b) {
-                return a.second > b.second;  // Descending order by size
-            });
-        LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: sorted %{public}zu items by size",
-            resultPathsWithSize.size());
-    }
-
-    // Log cache statistics for performance monitoring
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now() - startTime).count();
-    LOG_I(BMS_TAG_INSTALLD, "success, total items: %{public}zu, cache entries: %{public}zu, time: %{public}lld ms",
-        resultPathsWithSize.size(), dirSizeCache.size(), static_cast<long long>(elapsed));
+    // Sort + emit the final cache-statistics LOG_I (shared with the timeout fallback path).
+    finalizeResults();
 
     return true;
 }
