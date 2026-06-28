@@ -446,8 +446,8 @@ void BMSEventHandler::BundleRebootStartEvent()
         UpdateAllPrivilegeCapability();
     }
 #endif
+    CleanUninstallBundleInfo();
     if (IsSystemUpgrade()) {
-        CleanUninstallBundleInfo();
         ProcessAccessTokenMigration();
         EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
         OnBundleRebootStart();
@@ -2079,13 +2079,21 @@ void BMSEventHandler::CleanUninstallBundleInfo()
     }
     for (const auto &[bundleName, uninstallInfo] : uninstallBundleInfos) {
         for (const auto &[key, userInfo] : uninstallInfo.userInfos) {
-            size_t separatorPos = key.find('_');
-            int32_t userId = static_cast<int32_t>(userInfo.uid / Constants::BASE_USER_RANGE);
+            auto underscorePos = key.find(Constants::FILE_UNDERLINE);
+            int32_t userId = 0;
             int32_t appIndex = 0;
-            if (separatorPos != std::string::npos) {
-                OHOS::StrToInt(key.substr(separatorPos + 1), appIndex);
+            if (underscorePos != std::string::npos) {
+                if (!OHOS::StrToInt(key.substr(0, underscorePos), userId)) {
+                    continue;
+                }
+                OHOS::StrToInt(key.substr(underscorePos + 1), appIndex);
+            } else {
+                if (!OHOS::StrToInt(key, userId) || userId == -3) {
+                    continue;
+                }
             }
             if (dataMgr->CheckBundleExist(bundleName, userId, appIndex) == ERR_OK) {
+                APP_LOGW("CleanUninstallBundleInfo %{public}s", bundleName.c_str());
                 if (appIndex == 0) {
                     (void)dataMgr->DeleteUninstallBundleInfo(bundleName, userId);
                 } else {
