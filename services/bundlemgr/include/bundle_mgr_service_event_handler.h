@@ -597,6 +597,7 @@ private:
     void InnerProcessCheckRecoverableApplicationInfo();
     void ProcessCheckInstallSource();
     void InnerProcessCheckInstallSource();
+    void CleanUninstallBundleInfo();
     void ProcessAccessTokenMigration();
     bool InnerProcessAccessTokenMigration();
     void BuildMigrationData(const std::shared_ptr<BundleDataMgr> &dataMgr,
