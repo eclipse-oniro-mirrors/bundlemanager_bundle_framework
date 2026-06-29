@@ -5338,12 +5338,12 @@ ErrCode BundleMgrHost::HandleGetAllLocalPluginInfoForSelf(MessageParcel &data, M
     std::vector<PluginBundleInfo> pluginBundleInfos;
     auto ret = GetAllLocalPluginInfoForSelf(pluginBundleInfos);
     if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write failed");
+        APP_LOGE("write int32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
         if (!WriteVectorToParcelIntelligent(pluginBundleInfos, reply)) {
-            APP_LOGE("write failed");
+            APP_LOGE("write vector failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
