@@ -4154,4 +4154,209 @@ HWTEST_F(BmsEventHandlerTest, RegisterOobeAgreeTermsEvent_0200, Function | Small
     handler->RegisterOobeAgreeTermsEvent();
     EXPECT_TRUE(g_mockSubscribeCalled);
 }
+// ============================================================================
+// CleanUninstallBundleInfo test cases
+// ============================================================================
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0100
+ * @tc.name: CleanUninstallBundleInfo dataMgr is null
+ * @tc.desc: DataMgr is nullptr → returns early without crash
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0100, Function | SmallTest | Level0)
+{
+    auto bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedDataMgr = bms->dataMgr_;
+    bms->dataMgr_ = nullptr;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_NO_THROW(handler->CleanUninstallBundleInfo());
+    bms->dataMgr_ = savedDataMgr;
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0200
+ * @tc.name: CleanUninstallBundleInfo empty uninstall list
+ * @tc.desc: No uninstall records → completes without errors
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0200, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_NO_THROW(handler->CleanUninstallBundleInfo());
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0300
+ * @tc.name: CleanUninstallBundleInfo non-clone bundle exists
+ * @tc.desc: Uninstall record (appIndex=0) exists and bundle IS installed → record IS deleted (stale data)
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0300, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->AddUserId(TEST_U100);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test.clean.bundle";
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_U100;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_["test.clean.bundle"] = info;
+    UninstallBundleInfo uninstInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
+    uninstInfo.userInfos[std::to_string(TEST_U100)] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.clean.bundle", uninstInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // Bundle exists → record should be deleted (stale uninstall data)
+    UninstallBundleInfo result;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo("test.clean.bundle", result));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0400
+ * @tc.name: CleanUninstallBundleInfo non-clone bundle not exist
+ * @tc.desc: Uninstall record (appIndex=0) exists but bundle is NOT installed → record is KEPT (legitimate uninstall)
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0400, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->AddUserId(TEST_U100);
+    UninstallBundleInfo uninstInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
+    uninstInfo.userInfos[std::to_string(TEST_U100)] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.nonexist.bundle", uninstInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // Bundle not exist → record should be kept (legitimate uninstall data)
+    UninstallBundleInfo result;
+    EXPECT_TRUE(dataMgr->GetUninstallBundleInfo("test.nonexist.bundle", result));
+    EXPECT_EQ(result.userInfos.size(), 1);
+    // Clean up
+    dataMgr->DeleteUninstallBundleInfo("test.nonexist.bundle", TEST_U100);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0500
+ * @tc.name: CleanUninstallBundleInfo clone bundle not exist
+ * @tc.desc: Clone uninstall record (appIndex>0) exists but bundle is NOT installed → record is KEPT
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0500, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->AddUserId(TEST_U100);
+    UninstallBundleInfo uninstInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
+    std::string cloneKey = std::to_string(TEST_U100) + "_1";
+    uninstInfo.userInfos[cloneKey] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.clone.bundle", uninstInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // Bundle not exist → record should be kept
+    UninstallBundleInfo result;
+    EXPECT_TRUE(dataMgr->GetUninstallBundleInfo("test.clone.bundle", result));
+    EXPECT_EQ(result.userInfos.size(), 1);
+    // Clean up
+    dataMgr->DeleteUninstallCloneBundleInfo("test.clone.bundle", TEST_U100, 1);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0600
+ * @tc.name: CleanUninstallBundleInfo clone bundle exists
+ * @tc.desc: Clone uninstall record (appIndex>0) exists and bundle with clone IS installed → record IS deleted (stale data)
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0600, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->AddUserId(TEST_U100);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test.clone.installed";
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_U100;
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_["test.clone.installed"] = info;
+    UninstallBundleInfo uninstInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
+    std::string cloneKey = std::to_string(TEST_U100) + "_1";
+    uninstInfo.userInfos[cloneKey] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.clone.installed", uninstInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // Bundle with clone exists → record should be deleted (stale data)
+    UninstallBundleInfo result;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo("test.clone.installed", result));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0700
+ * @tc.name: CleanUninstallBundleInfo mixed records
+ * @tc.desc: Multiple records — only stale ones (bundle still exists) are cleaned
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0700, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->AddUserId(TEST_U100);
+    // Add one installed bundle → its uninstall record should be DELETED (stale)
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test.del.bundle";
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_U100;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_["test.del.bundle"] = info;
+    UninstallBundleInfo delInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
+    delInfo.userInfos[std::to_string(TEST_U100)] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.del.bundle", delInfo));
+    // Add uninstall record for a non-existent bundle → should be KEPT (legitimate uninstall)
+    UninstallBundleInfo keepInfo;
+    keepInfo.userInfos[std::to_string(TEST_U100)] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.keep.bundle", keepInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // stale record (bundle exists) is deleted
+    UninstallBundleInfo result;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo("test.del.bundle", result));
+    // legitimate uninstall record (bundle doesn't exist) is kept
+    EXPECT_TRUE(dataMgr->GetUninstallBundleInfo("test.keep.bundle", result));
+    EXPECT_EQ(result.userInfos.size(), 1);
+    // Clean up
+    dataMgr->DeleteUninstallBundleInfo("test.keep.bundle", TEST_U100);
+    dataMgr->bundleInfos_.clear();
+}
+
 } // OHOS

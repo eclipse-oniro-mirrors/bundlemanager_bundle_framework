@@ -446,6 +446,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         UpdateAllPrivilegeCapability();
     }
 #endif
+    CleanUninstallBundleInfo();
     if (IsSystemUpgrade()) {
         ProcessAccessTokenMigration();
         EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
@@ -2060,6 +2061,46 @@ void BMSEventHandler::InnerProcessCheckInstallSource()
         if (!dataMgr->UpdateInnerBundleInfo(innerBundleInfo)) {
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "update installSorce UpdateInnerBundleInfo fail -n %{public}s",
                 preInstallBundleInfo.GetBundleName().c_str());
+        }
+    }
+}
+
+void BMSEventHandler::CleanUninstallBundleInfo()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("CleanUninstallBundleInfo dataMgr is null");
+        return;
+    }
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    if (!dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos)) {
+        APP_LOGE("CleanUninstallBundleInfo GetAllUninstallBundleInfo failed");
+        return;
+    }
+    for (const auto &[bundleName, uninstallInfo] : uninstallBundleInfos) {
+        for (const auto &[key, userInfo] : uninstallInfo.userInfos) {
+            auto underscorePos = key.find(Constants::FILE_UNDERLINE);
+            int32_t userId = 0;
+            int32_t appIndex = 0;
+            if (underscorePos != std::string::npos) {
+                if (!OHOS::StrToInt(key.substr(0, underscorePos), userId)) {
+                    continue;
+                }
+                OHOS::StrToInt(key.substr(underscorePos + 1), appIndex);
+            } else {
+                if (!OHOS::StrToInt(key, userId) || userId == -3) {
+                    continue;
+                }
+            }
+            if (dataMgr->CheckBundleExist(bundleName, userId, appIndex) == ERR_OK) {
+                APP_LOGW("CleanUninstallBundleInfo %{public}s", bundleName.c_str());
+                if (appIndex == 0) {
+                    (void)dataMgr->DeleteUninstallBundleInfo(bundleName, userId);
+                } else {
+                    (void)dataMgr->DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex);
+                }
+                BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, appIndex);
+            }
         }
     }
 }
