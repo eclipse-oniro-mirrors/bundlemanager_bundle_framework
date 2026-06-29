@@ -1103,5 +1103,25 @@ HWTEST_F(BmsHapModuleInfoTest, GetCloneMaxCount_0001, Function | SmallTest | Lev
     int32_t maxCount = BundleFileUtil::GetCloneMaxCount();
     EXPECT_TRUE(maxCount >= CLONE_APP_INDEX_MAX_DEFAULT);
 }
+
+/**
+ * @tc.number: IsExistFile_0100
+ * @tc.name: test IsExistFile with empty path
+ * @tc.desc: empty filePath → returns false
+ */
+HWTEST_F(BmsHapModuleInfoTest, IsExistFile_0100, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(BundleFileUtil::IsExistFile(""));
+}
+
+/**
+ * @tc.number: IsExistDir_0200
+ * @tc.name: test IsExistDir with empty path
+ * @tc.desc: empty dirPath → returns false
+ */
+HWTEST_F(BmsHapModuleInfoTest, IsExistDir_0200, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(BundleFileUtil::IsExistDir(""));
+}
 }
 }

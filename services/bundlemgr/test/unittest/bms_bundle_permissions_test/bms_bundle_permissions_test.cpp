@@ -1728,4 +1728,20 @@ HWTEST_F(BmsBundlePermissionsTest, InnerBundleInfo_GetRequestPermissions_0300, F
     auto perms = info.GetRequestPermissions();
     EXPECT_TRUE(perms.empty());
 }
+
+/**
+ * @tc.number: BundlePermissions_AddPermission_0100
+ * @tc.name: AddPermission with empty permission name
+ * @tc.desc: 1. permission name is empty
+ *           2. AddPermission returns early without adding
+ */
+HWTEST_F(BmsBundlePermissionsTest, BundlePermissions_AddPermission_0100, Function | SmallTest | Level1)
+{
+    BundlePermissions permissions;
+    RequestPermission permission;
+    permission.name = "";
+    permissions.AddPermission(permission);
+    EXPECT_TRUE(permissions.simplePermissions.empty());
+    EXPECT_TRUE(permissions.complexPermissions.empty());
+}
 }  // namespace OHOS

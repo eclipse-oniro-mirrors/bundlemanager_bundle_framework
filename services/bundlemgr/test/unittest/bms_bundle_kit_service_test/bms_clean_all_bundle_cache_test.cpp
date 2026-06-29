@@ -1186,4 +1186,19 @@ HWTEST_F(BmsCleanAllBundleCacheTest, TryMarkCleaning_0100, Function | SmallTest 
     EXPECT_FALSE(ret);
     BundleCacheMgr::MarkCleaningDone();
 }
+
+/**
+ * @tc.number: TryMarkCleaning_0200
+ * @tc.name: test duplicate TryMarkCleaning for same bundle
+ * @tc.desc: second TryMarkCleaning for same key → returns false
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, TryMarkCleaning_0200, Function | SmallTest | Level1)
+{
+    BundleCacheMgr::MarkCleaningDone();
+    auto ret = BundleCacheMgr::TryMarkCleaning(BUNDLE_NAME_TEST, DEFAULT_USERID, DEFAULT_APP_INDEX);
+    EXPECT_TRUE(ret);
+    ret = BundleCacheMgr::TryMarkCleaning(BUNDLE_NAME_TEST, DEFAULT_USERID, DEFAULT_APP_INDEX);
+    EXPECT_FALSE(ret);
+    BundleCacheMgr::MarkCleaningDone(BUNDLE_NAME_TEST, DEFAULT_USERID, DEFAULT_APP_INDEX);
+}
 }

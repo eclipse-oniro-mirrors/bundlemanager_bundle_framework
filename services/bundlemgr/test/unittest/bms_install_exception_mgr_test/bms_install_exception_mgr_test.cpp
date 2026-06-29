@@ -899,5 +899,22 @@ HWTEST_F(BmsInstallExceptionMgrTest, baseBundleInstallerCodePathTest_0008, TestS
     ASSERT_NE(mgr, nullptr);
     mgr->DeleteBundleExceptionInfo(BUNDLE_NAME);
 }
+
+/**
+ * @tc.number: HandleBundleExceptionInfo_UnknownStatus_0100
+ * @tc.name: test HandleBundleExceptionInfo with unknown status
+ * @tc.desc: 1. installExceptionInfo status is unknown
+ *           2. default branch is taken without crash
+ */
+HWTEST_F(BmsInstallExceptionMgrTest, HandleBundleExceptionInfo_UnknownStatus_0100, TestSize.Level1)
+{
+    auto mgr = DelayedSingleton<InstallExceptionMgr>::GetInstance();
+    ASSERT_NE(mgr, nullptr);
+    InstallExceptionInfo info;
+    info.status = static_cast<InstallRenameExceptionStatus>(999);
+    info.versionCode = 1000;
+    mgr->HandleBundleExceptionInfo(BUNDLE_NAME, info);
+    EXPECT_NE(mgr->installExceptionMgr_, nullptr);
+}
 } //AppExecFwk
 } // OHOS

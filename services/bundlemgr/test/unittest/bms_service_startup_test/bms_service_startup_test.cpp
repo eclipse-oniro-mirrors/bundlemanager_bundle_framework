@@ -24,6 +24,9 @@
 #include "bms_extension_client.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
+#include "event_report.h"
+#include "oobe_preload_uninstall_mgr.h"
+#include "pre_install_bundle_info.h"
 #include "status_receiver_proxy.h"
 #include "installd/installd_permission_mgr.h"
 
@@ -54,6 +57,7 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+    void InitBundleMgrServiceForTest();
 private:
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
@@ -71,6 +75,13 @@ void BmsServiceStartupTest::TearDownTestCase()
 
 void BmsServiceStartupTest::SetUp()
 {
+    bundleMgrService_->InitBmsParam();
+    bundleMgrService_->InitPreInstallExceptionMgr();
+}
+
+void BmsServiceStartupTest::InitBundleMgrServiceForTest()
+{
+    bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
     bundleMgrService_->InitBmsParam();
     bundleMgrService_->InitPreInstallExceptionMgr();
 }
@@ -1988,5 +1999,204 @@ HWTEST_F(BmsServiceStartupTest, VerifyCallingPermission_0100, Function | SmallTe
     int32_t uid = 2465;
     auto ret = mgr.VerifyCallingPermission(uid);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: PreInstallExceptionMgr_0008
+ * @tc.name: test SavePreInstallExceptionSharedBundlePath
+ * @tc.desc: 1. empty path early return
+ *           2. save and duplicate save
+ */
+HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0008, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    ASSERT_NE(bundleMgrService_, nullptr);
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    ASSERT_NE(preInstallExceptionMgr, nullptr);
+
+    preInstallExceptionMgr->ClearAll();
+    preInstallExceptionMgr->SavePreInstallExceptionSharedBundlePath("");
+    EXPECT_TRUE(preInstallExceptionMgr->exceptionSharedBundlePaths_.empty());
+
+    const std::string sharedPath = "/data/test/shared_bundle";
+    preInstallExceptionMgr->SavePreInstallExceptionSharedBundlePath(sharedPath);
+    EXPECT_EQ(preInstallExceptionMgr->exceptionSharedBundlePaths_.count(sharedPath), 1U);
+
+    preInstallExceptionMgr->SavePreInstallExceptionSharedBundlePath(sharedPath);
+    EXPECT_EQ(preInstallExceptionMgr->exceptionSharedBundlePaths_.size(), 1U);
+
+    preInstallExceptionMgr->DeletePreInstallExceptionSharedBundlePath(sharedPath);
+    EXPECT_TRUE(preInstallExceptionMgr->exceptionSharedBundlePaths_.empty());
+    preInstallExceptionMgr->ClearAll();
+}
+
+/**
+ * @tc.number: PreInstallExceptionMgr_0009
+ * @tc.name: test LoadPreInstallExceptionInfosFromDb with invalid json
+ * @tc.desc: 1. save invalid json to bms param
+ *           2. LoadPreInstallExceptionInfosFromDb returns false
+ */
+HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0009, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    ASSERT_NE(bundleMgrService_, nullptr);
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    ASSERT_NE(preInstallExceptionMgr, nullptr);
+    auto bmsPara = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsPara, nullptr);
+
+    preInstallExceptionMgr->ClearAll();
+    bmsPara->SaveBmsParam("PreInstallExceptionMgr", "invalid json");
+    bool ret = preInstallExceptionMgr->LoadPreInstallExceptionInfosFromDb();
+    EXPECT_FALSE(ret);
+    bmsPara->DeleteBmsParam("PreInstallExceptionMgr");
+}
+
+/**
+ * @tc.number: EventReport_ProcessIsIntercepted_0100
+ * @tc.name: test ProcessIsIntercepted with intercepted error code
+ * @tc.desc: 1. errCode is in INTERCEPTED_ERROR_CODE_SET
+ *           2. isIntercepted is set to true
+ */
+HWTEST_F(BmsServiceStartupTest, EventReport_ProcessIsIntercepted_0100, Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.errCode = ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+    EventInfo result = EventReport::ProcessIsIntercepted(eventInfo);
+    EXPECT_TRUE(result.isIntercepted);
+}
+
+/**
+ * @tc.number: EventReport_ProcessIsIntercepted_0200
+ * @tc.name: test ProcessIsIntercepted with non-intercepted error code
+ * @tc.desc: 1. errCode is not in INTERCEPTED_ERROR_CODE_SET
+ *           2. isIntercepted remains unchanged
+ */
+HWTEST_F(BmsServiceStartupTest, EventReport_ProcessIsIntercepted_0200, Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.errCode = ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    eventInfo.isIntercepted = false;
+    EventInfo result = EventReport::ProcessIsIntercepted(eventInfo);
+    EXPECT_FALSE(result.isIntercepted);
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_AddPendingBundle_0100
+ * @tc.name: test AddPendingBundle with invalid params
+ * @tc.desc: empty bundleName or negative userId → returns false
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_AddPendingBundle_0100, Function | SmallTest | Level0)
+{
+    OobePreloadUninstallMgr mgr;
+    EXPECT_FALSE(mgr.AddPendingBundle("", 100));
+    EXPECT_FALSE(mgr.AddPendingBundle(BUNDLE_TEMP_NAME, -1));
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_RemovePendingBundle_0100
+ * @tc.name: test RemovePendingBundle bundle not exist
+ * @tc.desc: bundle not in pending list → returns true
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_RemovePendingBundle_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+    OobePreloadUninstallMgr mgr;
+    EXPECT_TRUE(mgr.RemovePendingBundle("com.example.not.exist", 100));
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_GetPendingBundles_0100
+ * @tc.name: test GetPendingBundles with invalid json
+ * @tc.desc: invalid json in bms param → returns empty map
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_GetPendingBundles_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES", "invalid json");
+    OobePreloadUninstallMgr mgr;
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_TRUE(pending.empty());
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_AddRemovePendingBundle_0100
+ * @tc.name: test AddPendingBundle and RemovePendingBundle round trip
+ * @tc.desc: add then remove pending bundle successfully
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_AddRemovePendingBundle_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    OobePreloadUninstallMgr mgr;
+    const std::string bundleName = "com.example.oobe.pending";
+    const int32_t userId = 100;
+    EXPECT_TRUE(mgr.AddPendingBundle(bundleName, userId));
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_NE(pending.find(bundleName), pending.end());
+    EXPECT_TRUE(mgr.RemovePendingBundle(bundleName, userId));
+    pending = mgr.GetPendingBundles();
+    EXPECT_EQ(pending.find(bundleName), pending.end());
+}
+
+/**
+ * @tc.number: PreInstallBundleInfo_FromJson_0100
+ * @tc.name: test PreInstallBundleInfo FromJson missing bundleName
+ * @tc.desc: required bundleName missing → parse fails
+ */
+HWTEST_F(BmsServiceStartupTest, PreInstallBundleInfo_FromJson_0100, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo info;
+    nlohmann::json jsonObject;
+    jsonObject["versionCode"] = 1;
+    auto ret = info.FromJson(jsonObject);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PreInstallBundleInfo_ToString_0100
+ * @tc.name: test PreInstallBundleInfo ToString round trip fields
+ * @tc.desc: ToString contains bundleName after set
+ */
+HWTEST_F(BmsServiceStartupTest, PreInstallBundleInfo_ToString_0100, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo info;
+    info.SetBundleName(BUNDLE_TEMP_NAME);
+    info.SetVersionCode(100);
+    std::string jsonStr = info.ToString();
+    EXPECT_NE(jsonStr.find(BUNDLE_TEMP_NAME), std::string::npos);
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_AddPendingBundle_0200
+ * @tc.name: test AddPendingBundle bmsParam null
+ * @tc.desc: bmsParam is nullptr → LoadPendingBundlesLocked fails → returns false
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_AddPendingBundle_0200, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    OobePreloadUninstallMgr mgr;
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedBmsParam = bundleMgrService->bmsParam_;
+    bundleMgrService->bmsParam_ = nullptr;
+    EXPECT_FALSE(mgr.AddPendingBundle(BUNDLE_TEMP_NAME, 100));
+    bundleMgrService->bmsParam_ = savedBmsParam;
+}
+
+/**
+ * @tc.number: PreInstallBundleInfo_CalculateHapTotalSize_0100
+ * @tc.name: test CalculateHapTotalSize with empty bundlePaths
+ * @tc.desc: empty bundlePaths → hapTotalSize remains 0
+ */
+HWTEST_F(BmsServiceStartupTest, PreInstallBundleInfo_CalculateHapTotalSize_0100, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo info;
+    info.CalculateHapTotalSize();
+    EXPECT_EQ(info.GetHapTotalSize(), 0);
 }
 } // OHOS

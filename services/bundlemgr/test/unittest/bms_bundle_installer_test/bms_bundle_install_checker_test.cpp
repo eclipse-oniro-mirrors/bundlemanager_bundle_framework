@@ -589,6 +589,26 @@ HWTEST_F(BmsBundleInstallCheckerTest, BundleInstallCheckerTest_0035, TestSize.Le
 }
 
 /**
+ * @tc.number: BundleInstallCheckerTest_0036
+ * @tc.name: test CheckAppDistributionType not in whitelist
+ * @tc.desc: 1. distribution type is not in bms whitelist
+ *           2. return ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, BundleInstallCheckerTest_0036, TestSize.Level2)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBmsParam();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    EXPECT_TRUE(bmsParam->SaveBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, "1"));
+
+    BundleInstallChecker bundleInstallChecker;
+    auto ret = bundleInstallChecker.CheckAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE);
+    EXPECT_EQ(ret, ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL);
+
+    EXPECT_TRUE(bmsParam->SaveBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, ""));
+}
+
+/**
  * @tc.number: CheckAppLabel_0001
  * @tc.name: test the start function of CheckAppLabel
  * @tc.desc: 1. BundleInstallChecker

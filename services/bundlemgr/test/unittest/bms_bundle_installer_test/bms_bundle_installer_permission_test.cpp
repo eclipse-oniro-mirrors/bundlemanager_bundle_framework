@@ -44,6 +44,7 @@
 #include "bundle_sandbox_installer.h"
 #include "directory_ex.h"
 #include "install_param.h"
+#include "bundle_constants.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
@@ -57,6 +58,9 @@ using namespace testing::ext;
 using namespace std::chrono_literals;
 using namespace OHOS::AppExecFwk;
 using OHOS::DelayedSingleton;
+
+void SetSystemAppForTest(bool value);
+void SetVerifyCallingPermissionForTestFalse(bool value);
 
 namespace OHOS {
 namespace {
@@ -1341,5 +1345,36 @@ HWTEST_F(BmsBundleInstallerPermissionTest, InnerBundleInfo_0100, Function | Smal
     innerBundleInfo2.SetDelayedAging(isDelayAging);
     innerBundleInfo1 = innerBundleInfo2;
     EXPECT_TRUE(innerBundleInfo1.GetDelayedAging());
+}
+
+/**
+ * @tc.number: UninstallNewPreinstalledAppsHost_0100
+ * @tc.name: test UninstallNewPreinstalledApps of BundleInstallerHost
+ * @tc.desc: 1. bundleNames size exceeds MAX_UNINSTALL_PREINSTALLED_APP_NUM
+ *           2. return ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR
+ */
+HWTEST_F(BmsBundleInstallerPermissionTest, UninstallNewPreinstalledAppsHost_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost installerHost;
+    std::vector<std::string> bundleNames(Constants::MAX_UNINSTALL_PREINSTALLED_APP_NUM + 1, "com.example.test");
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTestFalse(true);
+    ErrCode ret = installerHost.UninstallNewPreinstalledApps(bundleNames);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: UninstallNewPreinstalledAppsHost_0200
+ * @tc.name: test UninstallNewPreinstalledApps of BundleInstallerHost
+ * @tc.desc: 1. non-system app calling system api
+ *           2. return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED
+ */
+HWTEST_F(BmsBundleInstallerPermissionTest, UninstallNewPreinstalledAppsHost_0200, Function | SmallTest | Level0)
+{
+    BundleInstallerHost installerHost;
+    std::vector<std::string> bundleNames = {"com.example.test"};
+    SetSystemAppForTest(false);
+    ErrCode ret = installerHost.UninstallNewPreinstalledApps(bundleNames);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 } // OHOS
