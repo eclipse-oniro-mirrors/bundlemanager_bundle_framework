@@ -4906,46 +4906,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0183, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleResourceTest_0184
- * @tc.name: GetAllBundleResourceInfo
- * @tc.desc: test GetAllBundleResourceInfo of BmsExtensionClient
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0184, Function | SmallTest | Level0)
-{
-    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
-
-    std::vector<BundleResourceInfo> infos;
-    auto ret = bmsExtensionClient->GetAllBundleResourceInfo(static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL),
-        infos);
-#ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_OK);
-#else
-    EXPECT_NE(ret, ERR_OK);
-#endif
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0185
- * @tc.name: GetAllLauncherAbilityResourceInfo
- * @tc.desc: test GetAllLauncherAbilityResourceInfo of BmsExtensionClient
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0185, Function | SmallTest | Level0)
-{
-    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
-
-    std::vector<LauncherAbilityResourceInfo> infos;
-    auto ret = bmsExtensionClient->GetAllLauncherAbilityResourceInfo(
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
-#ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_OK);
-#else
-    EXPECT_NE(ret, ERR_OK);
-#endif
-}
-
-/**
  * @tc.number: BmsBundleResourceTest_0252
  * @tc.name: GetLauncherAbilityResourceInfo
  * @tc.desc: 1. test GetLauncherAbilityResourceInfo

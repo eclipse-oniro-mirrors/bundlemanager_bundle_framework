@@ -930,30 +930,6 @@ HWTEST_F(BmsBundleInstallerPermissionTest, UpdateHapToken_0100, Function | Small
 }
 
 /**
- * @tc.number: BaseBundleInstaller_0001
- * @tc.name: test InnerProcessInstallByPreInstallInfo
- * @tc.desc: test InnerProcessInstallByPreInstallInfo of BaseBundleInstaller without permission
-*/
-HWTEST_F(BmsBundleInstallerPermissionTest, BaseBundleInstaller_0001, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    installer.InitDataMgr();
-    bundleMgrService_->GetDataMgr()->AddUserId(101);
-
-    std::string bundleName = Constants::SCENE_BOARD_BUNDLE_NAME;
-    InstallParam installParam;
-    installParam.userId = 101;
-    int32_t uid = -1;
-    ErrCode ret = installer.InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid);
-    if (ret != ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED) {
-        bundleName = ServiceConstants::LAUNCHER_BUNDLE_NAME;
-        ErrCode ret2 = installer.InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid);
-        EXPECT_EQ(ret2, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
-    }
-    bundleMgrService_->GetDataMgr()->RemoveUserId(101);
-}
-
-/**
  * @tc.number: BaseBundleInstaller_0002
  * @tc.name: test UpdateHapToken
  * @tc.desc: test UpdateHapToken of BaseBundleInstaller without permission

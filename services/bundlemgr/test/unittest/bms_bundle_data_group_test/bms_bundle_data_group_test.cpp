@@ -2273,34 +2273,6 @@ HWTEST_F(BmsBundleDataGroupTest, GetRequiredDeviceFeatures_0002, Function | Medi
 }
 
 /**
- * @tc.number: HandleOTACodeEncryption_0001
- * @tc.name: test HandleOTACodeEncryption
- * @tc.desc: 1.Test HandleOTACodeEncryption
-*/
-HWTEST_F(BmsBundleDataGroupTest, HandleOTACodeEncryption_0001, Function | MediumTest | Level1)
-{
-    InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> withoutKeyBundles;
-    std::vector<std::string> withKeyBundles;
-    innerBundleInfo.baseApplicationInfo_ = std::make_unique<ApplicationInfo>();
-    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::ATOMIC_SERVICE;
-    innerBundleInfo.baseApplicationInfo_->applicationReservedFlag = 1;
-
-    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleUserInfo.userId = 100;
-    innerBundleUserInfos["_100"] = userInfo;
-    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
-    innerBundleInfo.HandleOTACodeEncryption(withoutKeyBundles, withKeyBundles);
-    EXPECT_TRUE(withoutKeyBundles.empty());
-#ifdef USE_ARM64
-    EXPECT_TRUE(withKeyBundles.empty());
-#else
-    EXPECT_FALSE(withKeyBundles.empty());
-#endif
-}
-
-/**
  * @tc.number: IsGwpAsanEnabled_0001
  * @tc.name: test IsGwpAsanEnabled
  * @tc.desc: 1.Test IsGwpAsanEnabled

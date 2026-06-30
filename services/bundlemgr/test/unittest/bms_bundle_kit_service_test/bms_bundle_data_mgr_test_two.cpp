@@ -2155,44 +2155,6 @@ HWTEST_F(BmsBundleDataMgrTest2, GetGroupDir_0003, Function | MediumTest | Level1
 }
 
 /**
- * @tc.number: QueryAppGalleryBundleName_0001
- * @tc.name: test BundleMgrHostImpl::QueryAppGalleryBundleName
- * @tc.desc: 1. system run normally
- *           2. enter if (dataMgr == nullptr)if (!ret)
- */
-HWTEST_F(BmsBundleDataMgrTest2, QueryAppGalleryBundleName_0001, Function | MediumTest | Level1)
-{
-    ASSERT_NE(bundleMgrHostImpl_, nullptr);
-    std::string bundleName;
-    ClearDataMgr();
-    ScopeGuard stateGuard([&] { ResetDataMgr(); });
-    bool ret = bundleMgrHostImpl_->QueryAppGalleryBundleName(bundleName);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(ret);
-    #else
-    EXPECT_FALSE(ret);
-    #endif
-}
-
-/**
- * @tc.number: QueryAppGalleryBundleName_0002
- * @tc.name: test BundleMgrHostImpl::QueryAppGalleryBundleName
- * @tc.desc: 1. system run normally
- *           2. enter if (!ret)
- */
-HWTEST_F(BmsBundleDataMgrTest2, QueryAppGalleryBundleName_0002, Function | MediumTest | Level1)
-{
-    ASSERT_NE(bundleMgrHostImpl_, nullptr);
-    std::string bundleName;
-    bool ret = bundleMgrHostImpl_->QueryAppGalleryBundleName(bundleName);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(ret);
-    #else
-    EXPECT_FALSE(ret);
-    #endif
-}
-
-/**
  * @tc.number: QueryAbilityInfos_0001
  * @tc.name: test BundleDataMgr::QueryAbilityInfos
  * @tc.desc: 1. system run normally

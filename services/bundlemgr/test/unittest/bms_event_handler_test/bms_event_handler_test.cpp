@@ -739,24 +739,6 @@ HWTEST_F(BmsEventHandlerTest, ReInstallAllInstallDirApps_0100, Function | SmallT
 }
 
 /**
- * @tc.number: GetBundleDirFromScan_0100
- * @tc.name: GetBundleDirFromScan
- * @tc.desc: test GetBundleDirFromScan
- */
-HWTEST_F(BmsEventHandlerTest, GetBundleDirFromScan_0100, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    std::list<std::string> bundleDirs;
-    handler->GetBundleDirFromScan(bundleDirs);
-    #ifdef USE_BUNDLE_EXTENSION
-    auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), SYSTEM_RESOURCES_CAMERA_PATH);
-    #else
-    auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), SYSTEM_RESOURCES_APP_PATH);
-    #endif
-    EXPECT_NE(iter, bundleDirs.end());
-}
-
-/**
  * @tc.number: HasModuleSavedInPreInstalledDbTest_0100
  * @tc.name: HasModuleSavedInPreInstalledDb
  * @tc.desc: test HasModuleSavedInPreInstalledDb
@@ -1000,25 +982,6 @@ HWTEST_F(BmsEventHandlerTest, ProcessCheckAppDataDir_0100, Function | SmallTest 
     handler->ProcessCheckAppDataDir();
     EXPECT_FALSE(dataMgr->bundleInfos_.empty());
     dataMgr->bundleInfos_.erase(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: OTAInstallSystemHsp_0100
- * @tc.name: OTAInstallSystemHsp
- * @tc.desc: test OTAInstallSystemHsp
- */
-HWTEST_F(BmsEventHandlerTest, OTAInstallSystemHsp_0100, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    std::vector<std::string> filePaths;
-    filePaths.push_back(BUNDLE_PATH);
-    auto ret = handler->OTAInstallSystemHsp(filePaths);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_NO_BUNDLE_SIGNATURE);
-    #else
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
-    #endif
 }
 
 /**

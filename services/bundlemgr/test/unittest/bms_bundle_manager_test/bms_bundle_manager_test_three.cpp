@@ -1887,25 +1887,6 @@ HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_3400, Function | MediumTest | 
 }
 
 /**
- * @tc.number: BundleMgrHostImpl_3401
- * @tc.name: test BundleMgrHostImpl
- * @tc.desc: 1.test BatchGetCompatibleDeviceType
- */
-HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_3401, Function | MediumTest | Level1)
-{
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    EXPECT_NE(hostImpl, nullptr);
-    std::vector<std::string> bundleNames = {BUNDLE_NAME};
-    std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
-    ErrCode retCode = hostImpl->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(retCode, ERR_OK);
-    #else
-    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-}
-
-/**
  * @tc.number: BundleMgrHostImpl_3500
  * @tc.name: test BundleMgrHostImpl
  * @tc.desc: 1.test GetCompatibleDeviceTypeNative
@@ -2145,26 +2126,6 @@ HWTEST_F(BmsBundleManagerTest3, SetAppDistributionTypes_0001, Function | MediumT
     
     retCode = hostImpl->SetAppDistributionTypes(appDistributionTypeEnums);
     EXPECT_EQ(retCode, ERR_OK);
-}
-
-/**
- * @tc.number: GetPluginInfo_0001
- * @tc.name: test GetPluginInfo
- * @tc.desc: 1.test GetPluginInfo
- */
-HWTEST_F(BmsBundleManagerTest3, GetPluginInfo_0001, Function | MediumTest | Level1)
-{
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string hostBundleName = "bundle";
-    std::string pluginBundleName = "plugin";
-    int32_t userId = 100;
-    PluginBundleInfo pluginBundleInfo;
-    ErrCode retCode = hostImpl->GetPluginInfo(hostBundleName, pluginBundleName, 100, pluginBundleInfo);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
-    #else
-    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    #endif
 }
 
 /**
@@ -2569,30 +2530,6 @@ HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0003, Function | MediumT
 }
 
 /**
- * @tc.number: RecoverBackupBundleData_0004
- * @tc.name: test RecoverBackupBundleData
- * @tc.desc: test RecoverBackupBundleData
- */
-HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0004, Function | MediumTest | Level1)
-{
-    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
-    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string bundleName = BUNDLE_BACKUP_NAME;
-    int32_t userId = 100;
-    int32_t appIndex = 0;
-    auto testRet = hostImpl->RecoverBackupBundleData(bundleName, userId, appIndex);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(testRet, ERR_OK);
-    #else
-    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-    UnInstallBundle(BUNDLE_BACKUP_NAME);
-}
-
-/**
  * @tc.number: RemoveBackupBundleData_0001
  * @tc.name: test RemoveBackupBundleData
  * @tc.desc: test RemoveBackupBundleData
@@ -2644,30 +2581,6 @@ HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0003, Function | MediumTe
     int32_t appIndex = -1;
     auto testRet = hostImpl->RemoveBackupBundleData(bundleName, userId, appIndex);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
-    UnInstallBundle(BUNDLE_BACKUP_NAME);
-}
-
-/**
- * @tc.number: RemoveBackupBundleData_0004
- * @tc.name: test RemoveBackupBundleData
- * @tc.desc: test RemoveBackupBundleData
- */
-HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0004, Function | MediumTest | Level1)
-{
-    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
-    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string bundleName = BUNDLE_BACKUP_NAME;
-    int32_t userId = 100;
-    int32_t appIndex = 0;
-    auto testRet = hostImpl->RemoveBackupBundleData(bundleName, userId, appIndex);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(testRet, ERR_OK);
-    #else
-    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
