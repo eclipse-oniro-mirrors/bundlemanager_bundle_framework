@@ -55,7 +55,9 @@ ohos_shared_library("skill_manager_common") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "libuv:uv",
     "napi:ace_napi",
+    "node:node_header_notice",
     "runtime_core:ani",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -110,7 +112,9 @@ ohos_shared_library("skillmanager") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "libuv:uv",
     "napi:ace_napi",
+    "node:node_header_notice",
     "samgr:samgr_proxy",
   ]
 

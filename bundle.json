@@ -78,6 +78,7 @@
                 "libxml2",
                 "libuv",
                 "napi",
+                "node",
                 "openssl",
                 "os_account",
                 "power_manager",

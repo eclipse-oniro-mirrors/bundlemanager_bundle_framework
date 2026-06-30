@@ -58,6 +58,7 @@ ohos_shared_library("defaultappmanager") {
     "ipc:ipc_core",
     "libuv:uv",
     "napi:ace_napi",
+    "node:node_header_notice",
     "samgr:samgr_proxy",
   ]
   if (bundle_framework_default_app) {
