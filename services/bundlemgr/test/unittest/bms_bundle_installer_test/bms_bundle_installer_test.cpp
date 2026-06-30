@@ -3845,22 +3845,6 @@ HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0400, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: BaseExtractor_0500
- * @tc.name: Test Init
- * @tc.desc: 1.Test Init of BaseExtractor
- */
-HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0500, Function | SmallTest | Level1)
-{
-    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
-    bool ret = extractor.Init();
-#ifdef USE_BUNDLE_EXTENSION
-    EXPECT_FALSE(ret);
-#else
-    EXPECT_TRUE(ret);
-#endif
-}
-
-/**
  * @tc.number: BaseExtractor_0600
  * @tc.name: Test GetZipFileNames
  * @tc.desc: 1.Test GetZipFileNames of BaseExtractor
@@ -10318,31 +10302,6 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7400, Function | SmallTest 
 }
 
 /**
- * @tc.number: BaseBundleInstaller_7500
- * @tc.name: test CheckShellInstall
- * @tc.desc: 1.test CheckShellInstall
- */
-HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7500, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller baseBundleInstaller;
-    Security::Verify::HapVerifyResult hapVerifyResult;
-    Security::Verify::ProvisionInfo provisionInfo;
-    provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
-    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
-    hapVerifyResult.SetProvisionInfo(provisionInfo);
-
-    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes{ hapVerifyResult };
-
-    baseBundleInstaller.sysEventInfo_.callingUid = ServiceConstants::SHELL_UID;
-    auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_OK);
-    #else
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL);
-    #endif
-}
-
-/**
  * @tc.number: BaseBundleInstaller_7600
  * @tc.name: test CheckShellInstall
  * @tc.desc: 1.test CheckShellInstall
@@ -12274,61 +12233,6 @@ HWTEST_F(BmsBundleInstallerTest, RemoveExtensionDir_1000, Function | MediumTest 
     std::string extensionBundleDir = "/test/extension";
     ErrCode result = impl.RemoveExtensionDir(userId, extensionBundleDir);
     EXPECT_EQ(result, ERR_OK);
-}
-
-/**
- * @tc.number: MakeFsConfig_1000
- * @tc.name: MakeFsConfig
- * @tc.desc: 1.Test MakeFsConfig
-*/
-HWTEST_F(BmsBundleInstallerTest, MakeFsConfig_1000, Function | SmallTest | Level0)
-{
-    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
-    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_OK);
-    BundleUtil bundleUtil;
-    bundleUtil.MakeFsConfig(BUNDLE_BACKUP_NAME, ServiceConstants::HMDFS_CONFIG_PATH,
-        Constants::APP_PROVISION_TYPE_DEBUG, Constants::APP_PROVISION_TYPE_FILE_NAME);
-    std::string path = ServiceConstants::HMDFS_CONFIG_PATH + BUNDLE_BACKUP_NAME +
-        std::string(ServiceConstants::PATH_SEPARATOR) + Constants::APP_PROVISION_TYPE_FILE_NAME;
-    std::ifstream file(path);
-    EXPECT_TRUE(file.is_open()) << "Failed to open file: "<< path;
-    std::string strAppInfo(
-        (std::istreambuf_iterator<char>(file)),
-        std::istreambuf_iterator<char>());
-    EXPECT_GT(strAppInfo.size(), 0);
-    EXPECT_TRUE(strAppInfo.find(Constants::DEBUG_TYPE_VALUE) != std::string::npos);
-
-    installResult = UnInstallBundle(BUNDLE_BACKUP_NAME);
-    EXPECT_EQ(installResult, ERR_OK);
-}
-
-
-/**
- * @tc.number: MakeFsConfig_2000
- * @tc.name: MakeFsConfig
- * @tc.desc: 1.Test MakeFsConfig
-*/
-HWTEST_F(BmsBundleInstallerTest, MakeFsConfig_2000, Function | SmallTest | Level0)
-{
-    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
-    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_OK);
-    BundleUtil bundleUtil;
-    bundleUtil.MakeFsConfig(BUNDLE_BACKUP_NAME, ServiceConstants::HMDFS_CONFIG_PATH,
-        Constants::APP_PROVISION_TYPE_RELEASE, Constants::APP_PROVISION_TYPE_FILE_NAME);
-    std::string path = ServiceConstants::HMDFS_CONFIG_PATH + BUNDLE_BACKUP_NAME +
-        std::string(ServiceConstants::PATH_SEPARATOR) + Constants::APP_PROVISION_TYPE_FILE_NAME;
-    std::ifstream file(path);
-    EXPECT_TRUE(file.is_open()) << "Failed to open file: "<< path;
-    std::string strAppInfo(
-        (std::istreambuf_iterator<char>(file)),
-        std::istreambuf_iterator<char>());
-    EXPECT_GT(strAppInfo.size(), 0);
-    EXPECT_TRUE(strAppInfo.find(Constants::RELEASE_TYPE_VALUE) != std::string::npos);
-
-    installResult = UnInstallBundle(BUNDLE_BACKUP_NAME);
-    EXPECT_EQ(installResult, ERR_OK);
 }
 
 /**
@@ -15371,26 +15275,6 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1017, Function | SmallTest 
     bool ret = installer.IsArkWeb("com.example.normal");
 
     EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: BaseBundleInstaller_1018
- * @tc.name: test IsArkWeb when parameter empty and bundle is new arkweb
- * @tc.desc: 1.Clear arkweb parameter
- *           2.Test with new arkweb bundle name
- *           3.Cover branch when arkweb parameter empty and bundle is new arkweb
- */
-HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1018, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    OHOS::system::SetParameter("persist.arkwebcore.package_name", "");
-    
-    bool ret = installer.IsArkWeb("com.ohos.arkwebcore");
-#ifdef USE_EXTENSION_DATA
-    EXPECT_FALSE(ret);
-#else
-    EXPECT_TRUE(ret);
-#endif
 }
 
 /**

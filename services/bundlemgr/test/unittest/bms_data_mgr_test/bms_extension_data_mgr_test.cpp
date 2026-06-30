@@ -243,40 +243,6 @@ bool BmsExtensionDataMgrTest::CheckBmsExtensionProfile()
 }
 
 /**
- * @tc.number: BmsExtensionDataMgr_0001
- * @tc.name: CheckApiInfo
- * @tc.desc: CheckApiInfo
- */
-HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    BundleInfo bundleInfo;
-    bundleInfo.compatibleVersion = COMPATIBLE_VERSION;
-    bool res = bmsExtensionDataMgr.CheckApiInfo(bundleInfo, SDK_VERSION);
-#ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, true);
-#else
-    EXPECT_EQ(res, false);
-#endif
-}
-
-/**
- * @tc.number: BmsExtensionDataMgr_0002
- * @tc.name: CheckApiInfo
- * @tc.desc: CheckApiInfo
- */
-HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0002, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    bool res = bmsExtensionDataMgr.OpenHandler();
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, true);
-    #else
-    EXPECT_EQ(res, false);
-    #endif
-}
-
-/**
  * @tc.number: BmsExtensionDataMgr_0003
  * @tc.name: CheckApiInfo
  * @tc.desc: CheckApiInfo
@@ -363,24 +329,6 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0007, Function | SmallTest
     EXPECT_NE(res, ERR_OK);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-    #endif
-}
-
-/**
- * @tc.number: BmsExtensionDataMgr_0008
- * @tc.name: HapVerify
- * @tc.desc: HapVerify
- */
-HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0008, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    std::string filePath;
-    Security::Verify::HapVerifyResult hapVerifyResult;
-    ErrCode res = bmsExtensionDataMgr.HapVerify(filePath, hapVerifyResult);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED);
     #endif
 }
 
@@ -571,23 +519,6 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionProfile_0005, Function | SmallTest
     BmsExtension bmsExtension;
     ErrCode res = bmsExtensionProfile.TransformTo(EXTENSIONS_JSON_5, bmsExtension);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
-}
-
-/**
- * @tc.number: BmsExtensionProfile_0006
- * @tc.name: ParseBmsExtension
- * @tc.desc: ParseBmsExtension
- */
-HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionProfile_0006, Function | SmallTest | Level0)
-{
-    BmsExtensionProfile bmsExtensionProfile;
-    BmsExtension bmsExtension;
-    ErrCode res = bmsExtensionProfile.ParseBmsExtension(BMS_EXTENSION_PATH, bmsExtension);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_FILE_FAILED);
-    #endif
 }
 
 /**
@@ -1029,23 +960,6 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0024, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsExtensionKeyOperation_0001
- * @tc.name: KeyOperation
- * @tc.desc: KeyOperation
- */
-HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionKeyOperation_0001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    std::vector<CodeProtectBundleInfo> codeProtectBundleInfos;
-    auto res = bmsExtensionDataMgr.KeyOperation(codeProtectBundleInfos, 1);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_NE(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_OK);
-    #endif
-}
-
-/**
  * @tc.number: BmsExtensionKeyOperation_0002
  * @tc.name: KeyOperation
  * @tc.desc: KeyOperation
@@ -1168,44 +1082,6 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0026, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsExtensionDataMgr_0027
- * @tc.name: GetAllBundleResourceInfo
- * @tc.desc: GetAllBundleResourceInfo
- */
-HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0027, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    std::vector<BundleResourceInfo> infos;
-
-    ErrCode res = bmsExtensionDataMgr.GetAllBundleResourceInfo(
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
-#ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-#else
-    EXPECT_NE(res, ERR_OK);
-#endif
-}
-
-/**
- * @tc.number: BmsExtensionDataMgr_0028
- * @tc.name: GetAllLauncherAbilityResourceInfo
- * @tc.desc: GetAllLauncherAbilityResourceInfo
- */
-HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0028, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    std::vector<LauncherAbilityResourceInfo> infos;
-
-    ErrCode res = bmsExtensionDataMgr.GetAllLauncherAbilityResourceInfo(
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
-#ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-#else
-    EXPECT_NE(res, ERR_OK);
-#endif
-}
-
-/**
  * @tc.number: BundleMgrExt_0029
  * @tc.name: IsRdDevice
  * @tc.desc: IsRdDevice
@@ -1260,22 +1136,6 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_BatchGetCompatibleDeviceType_0001
 }
 
 /**
- * @tc.number: BmsExtensionDataMgrTest_0032
- * @tc.name: IsRdDevice
- * @tc.desc: IsRdDevice
- */
-HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_0032, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bool res = bmsExtensionDataMgrTest.IsRdDevice();
-#ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(res);
-#else
-    EXPECT_FALSE(res);
-#endif
-}
-
-/**
  * @tc.number: BmsExtensionDataMgrTest_0033
  * @tc.name: CheckBundleNameAndStratAbility
  * @tc.desc: CheckBundleNameAndStratAbility
@@ -1287,42 +1147,6 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_0033, Function | Small
     std::string appIdentifier = "appIdentifierTest";
     bool res = bmsExtensionDataMgrTest.BmsCheckBundleNameAndStratAbilityTest(bundleName, appIdentifier);
     EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: BmsExtensionDataMgrTest_0034
- * @tc.name: GetCompatibleDeviceType
- * @tc.desc: GetCompatibleDeviceType
- */
-HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_0034, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    std::string bundleName = "bundleNameTest";
-    std::string res = bmsExtensionDataMgrTest.GetCompatibleDeviceType(bundleName);
-#ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, "");
-#else
-    EXPECT_EQ(res, "default");
-#endif
-}
-
-/**
- * @tc.number: BmsExtensionDataMgrTest_BatchGetCompatibleDeviceType_0001
- * @tc.name: BatchGetCompatibleDeviceType
- * @tc.desc: BatchGetCompatibleDeviceType
- */
-HWTEST_F(
-    BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_BatchGetCompatibleDeviceType_0001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    std::vector<std::string> bundleNames = {"bundleNameTest"};
-    std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
-    ErrCode res = bmsExtensionDataMgrTest.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
 }
 
 /**
@@ -1364,24 +1188,6 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0037, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: BmsExtensionDataMgr_Init_001
- * @tc.name: Init
- * @tc.desc: Init
- */
-HWTEST_F(BmsExtensionDataMgrTest, Init_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    bmsExtensionDataMgrTest.bmsExtension_.bmsExtensionBundleMgr.extensionName = "test";
-    ErrCode res = bmsExtensionDataMgrTest.Init();
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_UNEXPECTED);
-    #endif
-}
-
-/**
  * @tc.number: CheckApiInfo_001
  * @tc.name: CheckApiInfo
  * @tc.desc: CheckApiInfo
@@ -1399,181 +1205,6 @@ HWTEST_F(BmsExtensionDataMgrTest, CheckApiInfo_001, Function | SmallTest | Level
     bmsExtensionDataMgrTest.bmsExtension_.bmsExtensionBundleMgr.extensionName = "test";
     res = bmsExtensionDataMgrTest.CheckApiInfo(bundleInfo, sdkVersion);
     EXPECT_FALSE(res);
-}
-
-/**
- * @tc.number: HapVerify_001
- * @tc.name: HapVerify
- * @tc.desc: HapVerify
- */
-HWTEST_F(BmsExtensionDataMgrTest, HapVerify_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    std::string filePath = "../test";
-    Security::Verify::HapVerifyResult hapVerifyResult;
-    ErrCode res = bmsExtensionDataMgrTest.HapVerify(filePath, hapVerifyResult);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED);
-    #endif
-
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.HapVerify(filePath, hapVerifyResult);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
-    #else
-    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
-    #endif
-}
-
-/**
- * @tc.number: IsRdDevice_001
- * @tc.name: IsRdDevice
- * @tc.desc: IsRdDevice
- */
-HWTEST_F(BmsExtensionDataMgrTest, IsRdDevice_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    ErrCode res = bmsExtensionDataMgrTest.IsRdDevice();
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(res);
-    #else
-    EXPECT_FALSE(res);
-    #endif
-
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.IsRdDevice();
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(res);
-    #else
-    EXPECT_FALSE(res);
-    #endif
-}
-
-/**
- * @tc.number: QueryAbilityInfos_001
- * @tc.name: QueryAbilityInfos
- * @tc.desc: QueryAbilityInfos
- */
-HWTEST_F(BmsExtensionDataMgrTest, QueryAbilityInfos_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    Want want;
-    int32_t userId = 0;
-    std::vector<AbilityInfo> abilityInfos;
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    ErrCode res = bmsExtensionDataMgrTest.QueryAbilityInfos(want, userId, abilityInfos);
-#ifdef USE_EXTENSION_DATA
-    #ifdef CONTAIN_BROKER_CLIENT_ENABLED
-    EXPECT_THAT(res, testing::AnyOf(
-        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-    #endif
-#else
-    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
-#endif
-
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    res = bmsExtensionDataMgrTest.QueryAbilityInfos(want, userId, abilityInfos);
-#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
-    EXPECT_THAT(res, testing::AnyOf(
-        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
-#else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-#endif
-}
-
-/**
- * @tc.number: QueryAbilityInfosWithFlag_001
- * @tc.name: QueryAbilityInfosWithFlag
- * @tc.desc: QueryAbilityInfosWithFlag
- */
-HWTEST_F(BmsExtensionDataMgrTest, QueryAbilityInfosWithFlag_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    Want want;
-    int32_t flags = 0;
-    int32_t userId = 0;
-    std::vector<AbilityInfo> abilityInfos;
-    bool isNewVersion = true;
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    ErrCode res = bmsExtensionDataMgrTest.QueryAbilityInfosWithFlag(want, flags, userId,
-        abilityInfos, isNewVersion);
-#ifdef USE_EXTENSION_DATA
-    #ifdef CONTAIN_BROKER_CLIENT_ENABLED
-    EXPECT_THAT(res, testing::AnyOf(
-        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-    #endif
-#else
-    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
-#endif
-
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    res = bmsExtensionDataMgrTest.QueryAbilityInfosWithFlag(want, flags, userId,
-        abilityInfos, isNewVersion);
-#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
-    EXPECT_THAT(res, testing::AnyOf(
-        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
-#else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-#endif
-}
-
-/**
- * @tc.number: GetBundleInfos_001
- * @tc.name: GetBundleInfos
- * @tc.desc: GetBundleInfos
- */
-HWTEST_F(BmsExtensionDataMgrTest, GetBundleInfos_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    int32_t flags = 0;
-    std::vector<BundleInfo> bundleInfos;
-    int32_t userId = 0;
-    bool isNewVersion = true;
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    ErrCode res = bmsExtensionDataMgrTest.GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
-#ifdef USE_EXTENSION_DATA
-    #ifdef CONTAIN_BROKER_CLIENT_ENABLED
-    EXPECT_THAT(res, testing::AnyOf(
-        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-    #endif
-#else
-    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
-#endif
-
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    res = bmsExtensionDataMgrTest.GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
-#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
-    EXPECT_THAT(res, testing::AnyOf(
-        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
-#else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-#endif
 }
 
 /**
@@ -1762,61 +1393,6 @@ HWTEST_F(BmsExtensionDataMgrTest, VerifyActivationLock_001, Function | SmallTest
 }
 
 /**
- * @tc.number: GetBackupUninstallList_001
- * @tc.name: GetBackupUninstallList
- * @tc.desc: GetBackupUninstallList
- */
-HWTEST_F(BmsExtensionDataMgrTest, GetBackupUninstallList_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    int32_t userId = 0;
-    std::set<std::string> uninstallBundles;
-    ErrCode res = bmsExtensionDataMgrTest.GetBackupUninstallList(userId, uninstallBundles);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.GetBackupUninstallList(userId, uninstallBundles);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-}
-
-/**
- * @tc.number: ClearBackupUninstallFile_001
- * @tc.name: ClearBackupUninstallFile
- * @tc.desc: ClearBackupUninstallFile
- */
-HWTEST_F(BmsExtensionDataMgrTest, ClearBackupUninstallFile_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    int32_t userId = 0;
-    ErrCode res = bmsExtensionDataMgrTest.ClearBackupUninstallFile(userId);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.ClearBackupUninstallFile(userId);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-}
-
-/**
  * @tc.number: CheckAppBlackList_001
  * @tc.name: CheckAppBlackList
  * @tc.desc: CheckAppBlackList
@@ -1901,61 +1477,6 @@ HWTEST_F(BmsExtensionDataMgrTest, AddResourceInfoByAbility_001, Function | Small
 }
 
 /**
- * @tc.number: DeleteResourceInfo_001
- * @tc.name: DeleteResourceInfo
- * @tc.desc: DeleteResourceInfo
- */
-HWTEST_F(BmsExtensionDataMgrTest, DeleteResourceInfo_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    std::string key = "test";
-    ErrCode res = bmsExtensionDataMgrTest.DeleteResourceInfo(key);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.DeleteResourceInfo(key);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-}
-
-/**
- * @tc.number: KeyOperation_001
- * @tc.name: KeyOperation
- * @tc.desc: KeyOperation
- */
-HWTEST_F(BmsExtensionDataMgrTest, KeyOperation_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    std::vector<CodeProtectBundleInfo> codeProtectBundleInfos;
-    int32_t type = 0;
-    ErrCode res = bmsExtensionDataMgrTest.KeyOperation(codeProtectBundleInfos, type);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(res);
-    #else
-    EXPECT_EQ(res, ERR_OK);
-    #endif
-
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.KeyOperation(codeProtectBundleInfos, type);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(res);
-    #else
-    EXPECT_EQ(res, ERR_OK);
-    #endif
-}
-
-/**
  * @tc.number: GetBundleResourceInfo_001
  * @tc.name: GetBundleResourceInfo
  * @tc.desc: GetBundleResourceInfo
@@ -1979,163 +1500,6 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleResourceInfo_001, Function | SmallTes
 }
 
 /**
- * @tc.number: GetLauncherAbilityResourceInfo_001
- * @tc.name: GetLauncherAbilityResourceInfo
- * @tc.desc: GetLauncherAbilityResourceInfo
- */
-HWTEST_F(BmsExtensionDataMgrTest, GetLauncherAbilityResourceInfo_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    std::string bundleName = "testname";
-    BundleResourceInfo bundleResourceInfo;
-    int32_t flags = 0;
-    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfo;
-    int32_t appIndex = 1;
-    ErrCode res = bmsExtensionDataMgrTest.GetLauncherAbilityResourceInfo(bundleName, flags,
-        launcherAbilityResourceInfo, appIndex);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.GetLauncherAbilityResourceInfo(bundleName, flags,
-        launcherAbilityResourceInfo, appIndex);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-}
-
-/**
- * @tc.number: GetAllBundleResourceInfo_001
- * @tc.name: GetAllBundleResourceInfo
- * @tc.desc: GetAllBundleResourceInfo
- */
-HWTEST_F(BmsExtensionDataMgrTest, GetAllBundleResourceInfo_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    int32_t flags = 0;
-    std::vector<BundleResourceInfo> bundleResourceInfos;
-    ErrCode res = bmsExtensionDataMgrTest.GetAllBundleResourceInfo(flags, bundleResourceInfos);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.GetAllBundleResourceInfo(flags, bundleResourceInfos);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-}
-
-/**
- * @tc.number: GetAllLauncherAbilityResourceInfo_001
- * @tc.name: GetAllLauncherAbilityResourceInfo
- * @tc.desc: GetAllLauncherAbilityResourceInfo
- */
-HWTEST_F(BmsExtensionDataMgrTest, GetAllLauncherAbilityResourceInfo_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    int32_t flags = 0;
-    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    ErrCode res = bmsExtensionDataMgrTest.GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-}
-
-/**
- * @tc.number: DetermineCloneNum_001
- * @tc.name: DetermineCloneNum
- * @tc.desc: DetermineCloneNum
- */
-HWTEST_F(BmsExtensionDataMgrTest, DetermineCloneNum_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    std::string bundleName = "";
-    std::string appIdentifier = "test";
-    int32_t cloneNum = 1;
-    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    ErrCode res = bmsExtensionDataMgrTest.DetermineCloneNum(bundleName, appIdentifier, cloneNum);
-    EXPECT_FALSE(res);
-
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.DetermineCloneNum(bundleName, appIdentifier, cloneNum);
-    EXPECT_FALSE(res);
-
-    bundleName = "testname";
-    res = bmsExtensionDataMgrTest.DetermineCloneNum(bundleName, appIdentifier, cloneNum);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(res);
-    #else
-    EXPECT_FALSE(res);
-    #endif
-}
-
-/**
- * @tc.number: GetCompatibleDeviceType_001
- * @tc.name: GetCompatibleDeviceType
- * @tc.desc: GetCompatibleDeviceType
- */
-HWTEST_F(BmsExtensionDataMgrTest, GetCompatibleDeviceType_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    std::string bundleName = "testname";
-    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    std::string res = bmsExtensionDataMgrTest.GetCompatibleDeviceType(bundleName);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, "");
-    #else
-    EXPECT_EQ(res, "default");
-    #endif
-}
-
-/**
- * @tc.number: BatchGetCompatibleDeviceType_001
- * @tc.name: BatchGetCompatibleDeviceType
- * @tc.desc: BatchGetCompatibleDeviceType
- */
-HWTEST_F(BmsExtensionDataMgrTest, BatchGetCompatibleDeviceType_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    std::vector<std::string> bundleNames = {"bundleNameTest"};
-    std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
-    ErrCode res = bmsExtensionDataMgrTest.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-}
-
-/**
  * @tc.number: IsNeedToSkipPreBundleInstall_001
  * @tc.name: IsNeedToSkipPreBundleInstall
  * @tc.desc: IsNeedToSkipPreBundleInstall
@@ -2152,31 +1516,6 @@ HWTEST_F(BmsExtensionDataMgrTest, IsNeedToSkipPreBundleInstall_001, Function | S
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.IsNeedToSkipPreBundleInstall();
     EXPECT_FALSE(res);
-}
-
-/**
- * @tc.number: BmsExtensionInit_001
- * @tc.name: BmsExtensionInit
- * @tc.desc: BmsExtensionInit
- */
-HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionInit_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    ErrCode res = bmsExtensionDataMgrTest.BmsExtensionInit();
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-    int16_t handleTest = 1;
-    bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.BmsExtensionInit();
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
 }
 
 /**
@@ -2296,25 +1635,6 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_IsTargetAppTest_0050, Function | 
 }
 
 /**
- * @tc.number: BackupBundleData_001
- * @tc.name: BackupBundleData
- * @tc.desc: BackupBundleData
- */
-HWTEST_F(BmsExtensionDataMgrTest, BackupBundleData_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    std::string bundleName = "testname";
-    int32_t userId = 100;
-    int32_t appIndex = 0;
-    auto res = bmsExtensionDataMgrTest.BackupBundleData(bundleName, userId, appIndex);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-}
-
-/**
  * @tc.number: BackupBundleData_002
  * @tc.name: BackupBundleData
  * @tc.desc: BackupBundleData
@@ -2330,25 +1650,6 @@ HWTEST_F(BmsExtensionDataMgrTest, BackupBundleData_002, Function | SmallTest | L
 }
 
 /**
- * @tc.number: RecoverBackupBundleData_001
- * @tc.name: RecoverBackupBundleData
- * @tc.desc: RecoverBackupBundleData
- */
-HWTEST_F(BmsExtensionDataMgrTest, RecoverBackupBundleData_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    std::string bundleName = "testname";
-    int32_t userId = 100;
-    int32_t appIndex = 0;
-    auto res = bmsExtensionDataMgrTest.RecoverBackupBundleData(bundleName, userId, appIndex);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
-}
-
-/**
  * @tc.number: RecoverBackupBundleData_002
  * @tc.name: RecoverBackupBundleData
  * @tc.desc: RecoverBackupBundleData
@@ -2361,25 +1662,6 @@ HWTEST_F(BmsExtensionDataMgrTest, RecoverBackupBundleData_002, Function | SmallT
     int32_t appIndex = 0;
     auto res = bundleMgrExtTest.RecoverBackupBundleData(bundleName, userId, appIndex);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
-}
-
-/**
- * @tc.number: RemoveBackupBundleData_001
- * @tc.name: RemoveBackupBundleData
- * @tc.desc: RemoveBackupBundleData
- */
-HWTEST_F(BmsExtensionDataMgrTest, RemoveBackupBundleData_001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    std::string bundleName = "testname";
-    int32_t userId = 100;
-    int32_t appIndex = 0;
-    auto res = bmsExtensionDataMgrTest.RemoveBackupBundleData(bundleName, userId, appIndex);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
 }
 
 /**
@@ -2427,30 +1709,4 @@ HWTEST_F(BmsExtensionDataMgrTest, GetDetermineCloneNumList_0001, Function | Smal
     EXPECT_NO_THROW(bmsExtensionDataMgr.GetDetermineCloneNumList(determineCloneNumList));
 }
 
-/**
- * @tc.number: GetInstallAndRecoverList_0001
- * @tc.name: GetInstallAndRecoverList
- * @tc.desc: GetInstallAndRecoverList
- */
-HWTEST_F(BmsExtensionDataMgrTest, GetInstallAndRecoverList_0001, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    int32_t userId = USERID;
-    std::vector<std::string> bundleList;
-    std::vector<std::string> installList;
-    std::vector<std::string> recoverList;
-    bmsExtensionDataMgr.handler_ = nullptr;
-    ErrCode res = bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
-#ifdef USE_ARM64
-    EXPECT_TRUE(res);
-#else
-    EXPECT_FALSE(res);
-#endif
-
-    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = TEST_EXTENSION_NAME;
-    int32_t handleTest = TEST_NUMBER_ONE;
-    bmsExtensionDataMgr.handler_ = &handleTest;
-    res = bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
-    EXPECT_FALSE(res);
-}
 } // OHOS

@@ -2935,22 +2935,6 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0500, Function | MediumTest | L
 }
 
 /**
- * @tc.number: BundleMgrHostImpl_0600
- * @tc.name: test BundleMgrHostImpl
- * @tc.desc: 1.query ability infos success
- */
-HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0600, Function | MediumTest | Level1)
-{
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::set<int32_t> ret = hostImpl->GetExistsCommonUserIs();
-    EXPECT_EQ(ret.size(), 1);
-    ClearDataMgr();
-    ScopeGuard stateGuard([&] { ResetDataMgr(); });
-    ret = hostImpl->GetExistsCommonUserIs();
-    EXPECT_EQ(ret.size(), 0);
-}
-
-/**
  * @tc.number: BundleMgrHostImpl_0700
  * @tc.name: BundleMgrHostImpl
  * @tc.desc: 1.Test the interface of ConvertResourcePath

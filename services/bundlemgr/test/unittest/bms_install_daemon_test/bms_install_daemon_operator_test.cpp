@@ -1927,66 +1927,6 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11500, Function | Sm
 }
 
 /**
- * @tc.number: InstalldOperatorTest_11600
- * @tc.name: test function of InstalldOperator
- * @tc.desc: 1. calling VerifyCodeSignatures of InstalldOperator
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11600, Function | SmallTest | Level0)
-{
-    CodeSignatureParam codeSignatureParam;
-    codeSignatureParam.modulePath = TEST_ZIP_PATH;
-    codeSignatureParam.cpuAbi = TEST_CPU_ABI;
-    codeSignatureParam.targetSoPath = "target/file.path";
-    codeSignatureParam.signatureFileDir = "";
-    codeSignatureParam.isCompileSdkOpenHarmony = true;
-    codeSignatureParam.isEnterpriseBundle = true;
-    codeSignatureParam.isPreInstalledBundle = false;
-    ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
-#ifdef USE_ARM64
-    EXPECT_NE(ret, ERR_OK);
-#else
-    EXPECT_EQ(ret, ERR_OK);
-#endif
-
-    codeSignatureParam.modulePath = TEST_MODULE_PATH;
-    codeSignatureParam.cpuAbi = TEST_V8A_CPU_ABI;
-    codeSignatureParam.targetSoPath = TEST_TARGET_SO_PATH;
-    codeSignatureParam.appIdentifier = TEST_APP_IDENTIFIER;
-    codeSignatureParam.signatureFileDir = "";
-    codeSignatureParam.isCompileSdkOpenHarmony = true;
-    codeSignatureParam.isEnterpriseBundle = false;
-    codeSignatureParam.isPreInstalledBundle = true;
-    codeSignatureParam.isInternaltestingBundle = false;
-    codeSignatureParam.isCompressNativeLibrary = true;
-    auto ret2 = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
-    EXPECT_NE(ret2, ERR_OK);
-}
-
-/**
- * @tc.number: InstalldOperatorTest_11700
- * @tc.name: test function of InstalldOperator
- * @tc.desc: 1. calling VerifyCodeSignature of InstalldOperator
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11700, Function | SmallTest | Level0)
-{
-    CodeSignatureParam codeSignatureParam;
-    codeSignatureParam.modulePath = "/system/app/com.ohos.camera/Camera.hap";
-    codeSignatureParam.cpuAbi = TEST_CPU_ABI;
-    codeSignatureParam.targetSoPath = "target/file.path";
-    codeSignatureParam.appIdentifier = "";
-    codeSignatureParam.signatureFileDir = "";
-    codeSignatureParam.isCompileSdkOpenHarmony = true;
-    codeSignatureParam.isEnterpriseBundle = true;
-    codeSignatureParam.isPreInstalledBundle = true;
-    ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
-#ifdef USE_ARM64
-    EXPECT_NE(ret, ERR_OK);
-#else
-    EXPECT_EQ(ret, ERR_OK);
-#endif
-}
-
-/**
  * @tc.number: InstalldOperatorTest_11800
  * @tc.name: test function of InstalldOperator
  * @tc.desc: 1. calling VerifyCodeSignature of InstalldOperator

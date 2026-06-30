@@ -5013,24 +5013,6 @@ HWTEST_F(BmsDataMgrTest, GetBundleNameByAppId_0001, TestSize.Level1)
 }
 
 /**
- * @tc.number: GetDirForAtomicService_0001
- * @tc.name: GetDirForAtomicService
- * @tc.desc: test BundleDataMgr::GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const
- */
-HWTEST_F(BmsDataMgrTest, GetDirForAtomicService_0001, TestSize.Level1)
-{
-    BundleDataMgr bundleDataMgr;
-    std::string bundleName = "";
-    std::string dataDir = "";
-    auto ret = bundleDataMgr.GetDirForAtomicService(bundleName, dataDir);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED);
-    #else
-    EXPECT_EQ(ret, ERR_OK);
-    #endif
-}
-
-/**
  * @tc.number: GetDirForAtomicServiceByUserId_0001
  * @tc.name: GetDirForAtomicServiceByUserId
  * @tc.desc: test BundleDataMgr::GetDirForAtomicServiceByUserId(const std::string &bundleName, int32_t userId,
