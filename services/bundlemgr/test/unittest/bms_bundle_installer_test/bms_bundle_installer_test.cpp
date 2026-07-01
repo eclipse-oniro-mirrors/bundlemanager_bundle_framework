@@ -3063,10 +3063,14 @@ HWTEST_F(BmsBundleInstallerTest, ProcessBundleUpdateStatus_0300, Function | Smal
     newInfo.baseApplicationInfo_->singleton = false;
     newInfo.baseApplicationInfo_->bundleName = "com.ohos.formrenderservice";
     newInfo.currentPackage_ = MODULE_NAME;
+    newInfo.SetIsPreInstallApp(false);
     bool isReplace = false;
     bool killProcess = false;
-
     auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
+
+    newInfo.SetIsPreInstallApp(true);
+    res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
     EXPECT_NE(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
     EXPECT_EQ(installer.singletonState_, BaseBundleInstaller::SingletonState::SINGLETON_TO_NON);
 }
@@ -3085,10 +3089,14 @@ HWTEST_F(BmsBundleInstallerTest, ProcessBundleUpdateStatus_0400, Function | Smal
     newInfo.baseApplicationInfo_->singleton = true;
     newInfo.baseApplicationInfo_->bundleName = "com.ohos.formrenderservice";
     newInfo.currentPackage_ = MODULE_NAME;
+    newInfo.SetIsPreInstallApp(false);
     bool isReplace = false;
     bool killProcess = false;
-
     auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
+
+    newInfo.SetIsPreInstallApp(true);
+    res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
     EXPECT_NE(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
     EXPECT_EQ(installer.singletonState_, BaseBundleInstaller::SingletonState::NON_TO_SINGLETON);
 }
