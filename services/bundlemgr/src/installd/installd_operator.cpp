@@ -122,6 +122,13 @@ static constexpr int32_t PERMISSION_DENIED = 13;
 static constexpr int32_t RESULT_OK = 0;
 static constexpr int32_t CMDLINE_MAX_BUF_LEN = 4096;
 static constexpr int32_t MAX_APP_IDENTIFIER_LENGTH = 256;
+// Upper bound for the whole SKILL.md file. The file is read line-by-line via
+// std::getline before any per-line cap applies, so without a size gate a
+// crafted multi-MB SKILL.md (e.g. a description line without a newline, or a
+// huge frontmatter with millions of lines) could OOM installd (SA 511).
+// 64 MiB rejects weaponized inputs while staying well above any realistic
+// skill metadata document.
+static constexpr int64_t MAX_SKILL_MD_FILE_SIZE = 64 * 1024 * 1024;
 static constexpr int16_t INSTALLS_UID = 3060;
 static constexpr int16_t MODE_BASE = 07777;
 static constexpr int8_t KEY_ID_STEP = 2;
@@ -1043,6 +1050,24 @@ ErrCode InstalldOperator::ParseSkillMd(const std::string &skillMdPath,
     std::string &name, std::string &description)
 {
     LOG_D(BMS_TAG_INSTALLD, "parsing %{public}s", skillMdPath.c_str());
+
+    // Reject oversized inputs before opening/reading. SKILL.md is read line by
+    // line via std::getline, which has no inherent size cap; a crafted HSP can
+    // embed a multi-MB file to exhaust installd memory. stat() is a single
+    // metadata read and does not depend on attacker-controlled contents.
+    struct stat fileStat = {};
+    if (stat(skillMdPath.c_str(), &fileStat) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "stat %{public}s failed, errno:%{public}d",
+            skillMdPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    if (fileStat.st_size > MAX_SKILL_MD_FILE_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "SKILL.md too large, size=%{public}lld, max=%{public}lld, rejecting",
+            static_cast<long long>(fileStat.st_size),
+            static_cast<long long>(MAX_SKILL_MD_FILE_SIZE));
+        return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+    }
 
     // Read SKILL.md frontmatter only. Supported example:
     // \xEF\xBB\xBF---
