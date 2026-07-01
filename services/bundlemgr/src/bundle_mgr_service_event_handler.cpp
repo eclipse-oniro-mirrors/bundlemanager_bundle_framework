@@ -2092,7 +2092,8 @@ void BMSEventHandler::CleanUninstallBundleInfo()
                     continue;
                 }
             }
-            if (dataMgr->CheckBundleExist(bundleName, userId, appIndex) == ERR_OK) {
+            if (dataMgr->CheckBundleExist(bundleName, userId, appIndex) == ERR_OK ||
+                !dataMgr->HasUserId(userId) || userId <= Constants::U1) {
                 APP_LOGW("CleanUninstallBundleInfo %{public}s", bundleName.c_str());
                 if (appIndex == 0) {
                     (void)dataMgr->DeleteUninstallBundleInfo(bundleName, userId);

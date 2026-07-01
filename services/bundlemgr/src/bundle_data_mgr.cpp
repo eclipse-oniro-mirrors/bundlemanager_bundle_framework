@@ -13087,6 +13087,16 @@ void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
                 continue;
             }
             int32_t bundleId = userInfo.uid - userId * Constants::BASE_USER_RANGE;
+            if (bundleId < Constants::BASE_APP_UID || bundleId > Constants::MAX_APP_UID) {
+                APP_LOGW("invalid bundleId: %{public}d", bundleId);
+                continue;
+            }
+            {
+                std::shared_lock<std::shared_mutex> lock(uidMapMutex_);
+                if (uidMap_.find(bundleId) != uidMap_.end()) {
+                    continue;
+                }
+            }
 
             std::string bundleName;
             if (appIndex > 0) {
