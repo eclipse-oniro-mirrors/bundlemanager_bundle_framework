@@ -41,6 +41,7 @@ using namespace OHOS::Security;
 namespace OHOS {
 namespace {
 const std::string INSTALL_PATH = "/data/test/resource/bms/install_bundle/first_right.hap";
+constexpr int32_t UNKNOWN_CODE = 99999;
 } // namespace
 class BmsBundleHapVerifyTest : public testing::Test {
 public:
@@ -193,5 +194,43 @@ HWTEST_F(BmsBundleHapVerifyTest, HapVerify_0200, Function | SmallTest | Level0)
     Security::Verify::HapVerifyResult result;
     auto res = BundleVerifyMgr::HapVerify(INSTALL_PATH, result, true);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: ConvertHapVerifyResultCode_0100
+ * @tc.name: test ConvertHapVerifyResultCode with unknown code
+ * @tc.desc: 1. hap verify result code is not in map
+ *           2. return signature verification failure
+ */
+HWTEST_F(BmsBundleHapVerifyTest, ConvertHapVerifyResultCode_0100, Function | SmallTest | Level0)
+{
+    ErrCode ret = BundleVerifyMgr::ConvertHapVerifyResultCode(UNKNOWN_CODE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+}
+
+/**
+ * @tc.number: EnableDebug_0200
+ * @tc.name: test EnableDebug when already in debug mode
+ * @tc.desc: 1. isDebug_ is already true
+ *           2. EnableDebug returns early without changing state
+ */
+HWTEST_F(BmsBundleHapVerifyTest, EnableDebug_0200, Function | SmallTest | Level0)
+{
+    BundleVerifyMgr::isDebug_ = true;
+    BundleVerifyMgr::EnableDebug();
+    EXPECT_TRUE(BundleVerifyMgr::isDebug_);
+}
+
+/**
+ * @tc.number: DisableDebug_0200
+ * @tc.name: test DisableDebug when not in debug mode
+ * @tc.desc: 1. isDebug_ is false
+ *           2. DisableDebug returns early
+ */
+HWTEST_F(BmsBundleHapVerifyTest, DisableDebug_0200, Function | SmallTest | Level0)
+{
+    BundleVerifyMgr::isDebug_ = false;
+    BundleVerifyMgr::DisableDebug();
+    EXPECT_FALSE(BundleVerifyMgr::isDebug_);
 }
 } // OHOS

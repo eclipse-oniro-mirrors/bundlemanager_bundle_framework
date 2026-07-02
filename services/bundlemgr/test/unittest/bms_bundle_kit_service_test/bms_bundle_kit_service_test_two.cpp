@@ -12411,4 +12411,17 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundlePartialCacheAutomatic_0400, Functio
         cleanCacheInfo, beforeCleanedSize, afterCleanedSize);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
+
+/**
+ * @tc.number: VerifySystemApi_0100
+ * @tc.name: test VerifySystemApi of BundleMgrHostImpl
+ * @tc.desc: 1. call VerifySystemApi directly
+ *           2. verify return value matches mock permission state
+ */
+HWTEST_F(BmsBundleKitServiceTest, VerifySystemApi_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    EXPECT_TRUE(hostImpl->VerifySystemApi());
+}
 }

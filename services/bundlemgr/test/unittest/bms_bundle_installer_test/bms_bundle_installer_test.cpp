@@ -38,6 +38,7 @@
 #include "app_service_fwk/app_service_fwk_installer.h"
 #include "bundle_file_util.h"
 #include "bundle_info.h"
+#include "bundle_installer.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
@@ -190,6 +191,7 @@ const std::string PLUGIN_CODE_PATH_DIR_OLD = "/data/test/plugin_old";
 const int32_t TEST_U100 = 100;
 const int32_t TEST_U1 = 1;
 const int32_t MAX_WAITING_TIME = 600;
+constexpr int32_t INVALID_TEST_USERID = 99999;
 constexpr const char* MULTIUSER_INSTALL_THIRD_PRELOAD_APP = "const.bms.multiUserInstallThirdPreloadApp";
 const int32_t TEST_ERROR_APP_INDEX = 1001;
 const int32_t TEST_LENGTH = 1;
@@ -19228,5 +19230,75 @@ HWTEST_F(BmsBundleInstallerTest, RemoveDataPreloadHapFiles_0200, Function | Smal
 
     OHOS::system::SetParameter(ServiceConstants::KEEP_DATA_PRELOAD_HAP, originalValue);
     dataMgr->DeletePreInstallBundleInfo(bundleName, preInfo);
+}
+
+/**
+ * @tc.number: UninstallNewPreinstalledApps_0100
+ * @tc.name: test UninstallNewPreinstalledApps with empty bundleNames
+ * @tc.desc: 1. bundleNames is empty
+ *           2. return ERR_OK
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallNewPreinstalledApps_0100, Function | SmallTest | Level0)
+{
+    BundleInstaller installer(0, nullptr);
+    std::vector<std::string> bundleNames;
+    ErrCode ret = installer.UninstallNewPreinstalledApps(bundleNames, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallNewPreinstalledApps_0200
+ * @tc.name: test UninstallNewPreinstalledApps with invalid userId
+ * @tc.desc: 1. userId does not exist in dataMgr
+ *           2. return ERR_APPEXECFWK_USER_NOT_EXIST
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallNewPreinstalledApps_0200, Function | SmallTest | Level0)
+{
+    BundleInstaller installer(0, nullptr);
+    std::vector<std::string> bundleNames = {"com.example.test"};
+    ErrCode ret = installer.UninstallNewPreinstalledApps(bundleNames, INVALID_TEST_USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CheckCanInstallPreBundle_0100
+ * @tc.name: test CheckCanInstallPreBundle with force-uninstalled user
+ * @tc.desc: 1. preinstall bundle has force-uninstalled user
+ *           2. CheckCanInstallPreBundle returns false for that user
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckCanInstallPreBundle_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string bundleName = "com.test.check.prebundle";
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(bundleName);
+    preInstallBundleInfo.AddForceUnisntalledUser(USERID);
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo));
+
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    EXPECT_FALSE(installer.CheckCanInstallPreBundle(bundleName, USERID));
+    EXPECT_TRUE(installer.CheckCanInstallPreBundle(bundleName, ADD_NEW_USERID));
+
+    dataMgr->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+}
+
+/**
+ * @tc.number: UninstallBundleInfo_FromJson_0100
+ * @tc.name: test UninstallBundleInfo json serialization
+ * @tc.desc: to_json/from_json preserves appId field
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallBundleInfo_FromJson_0100, TestSize.Level1)
+{
+    UninstallBundleInfo info;
+    info.appId = "com.test.uninstall.appId";
+    info.bundleType = BundleType::APP;
+    nlohmann::json jsonObject;
+    to_json(jsonObject, info);
+    UninstallBundleInfo parsedInfo;
+    from_json(jsonObject, parsedInfo);
+    EXPECT_EQ(parsedInfo.appId, info.appId);
+    EXPECT_EQ(parsedInfo.bundleType, info.bundleType);
 }
 } // OHOS

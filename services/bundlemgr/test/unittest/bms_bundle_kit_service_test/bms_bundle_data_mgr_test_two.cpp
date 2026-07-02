@@ -1530,6 +1530,38 @@ HWTEST_F(BmsBundleDataMgrTest2, PreBundleProfile_2200, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: PreBundleProfile_2300
+ * @tc.name: test TransformToAppList with non-object array element
+ * @tc.desc: 1. app_list element is not json object
+ *           2. return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest2, PreBundleProfile_2300, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    nlohmann::json jsonBuf = R"({"app_list": ["not_object"]})"_json;
+    std::set<PreScanInfo> scanInfos;
+    std::set<PreScanInfo> scanDemandInfos;
+    ErrCode res = preBundleProfile.TransformToAppList(jsonBuf, scanInfos, scanDemandInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PreBundleProfile_2400
+ * @tc.name: test TransformTo with missing app_dir in install_list
+ * @tc.desc: 1. install_list item has no app_dir
+ *           2. item is skipped and result remains ERR_OK
+ */
+HWTEST_F(BmsBundleDataMgrTest2, PreBundleProfile_2400, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    nlohmann::json jsonBuf = R"({"install_list": [{"removable": true}]})"_json;
+    std::set<PreScanInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformTo(jsonBuf, scanInfos);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_TRUE(scanInfos.empty());
+}
+
+/**
  * @tc.number: SetExtNameOrMIMEToApp_0001
  * @tc.name: SetExtNameOrMIMEToApp
  * @tc.desc: 1. SetMimeTypeToApp
@@ -2554,6 +2586,162 @@ HWTEST_F(BmsBundleDataMgrTest2, BundleUserMgrHostImpl_0006, Function | SmallTest
     auto res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, MULTI_USERID, false,
     preInstallBundleInfos);
     EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0007
+ * @tc.name: test OnCreateNewUser installer null
+ * @tc.desc: installer is nullptr → ERR_APPEXECFWK_NULL_PTR
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BundleUserMgrHostImpl_0007, Function | SmallTest | Level1)
+{
+    auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
+    DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
+    ScopeGuard stateGuard([&] {
+        DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
+    });
+    int32_t userId = 101;
+    auto res = bundleUserMgrHostImpl_->OnCreateNewUser(userId, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0008
+ * @tc.name: test OnCreateNewUser dataMgr null
+ * @tc.desc: DataMgr is nullptr → ERR_APPEXECFWK_NULL_PTR
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BundleUserMgrHostImpl_0008, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    int32_t userId = 101;
+    auto res = bundleUserMgrHostImpl_->OnCreateNewUser(userId, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0009
+ * @tc.name: test ProcessRemoveUser installer null
+ * @tc.desc: installer is nullptr → ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BundleUserMgrHostImpl_0009, Function | SmallTest | Level1)
+{
+    int32_t userId = 888;
+    GetBundleDataMgr()->AddUserId(userId);
+    auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
+    DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
+    ScopeGuard stateGuard([&] {
+        DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
+        GetBundleDataMgr()->RemoveUserId(userId);
+    });
+    auto res = bundleUserMgrHostImpl_->ProcessRemoveUser(userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0010
+ * @tc.name: test ProcessRemoveUser user not exist
+ * @tc.desc: userId not exist → ERR_APPEXECFWK_USER_NOT_EXIST
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BundleUserMgrHostImpl_0010, Function | SmallTest | Level1)
+{
+    int32_t userId = 999999;
+    auto res = bundleUserMgrHostImpl_->ProcessRemoveUser(userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0011
+ * @tc.name: test ProcessRemoveUser dataMgr null
+ * @tc.desc: DataMgr is nullptr → ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BundleUserMgrHostImpl_0011, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    auto res = bundleUserMgrHostImpl_->ProcessRemoveUser(101);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0012
+ * @tc.name: test CheckInitialUser dataMgr null
+ * @tc.desc: DataMgr is nullptr → ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BundleUserMgrHostImpl_0012, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    auto res = bundleUserMgrHostImpl_->CheckInitialUser();
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0013
+ * @tc.name: test DeleteReSignCert installer null
+ * @tc.desc: installer is nullptr → returns false
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BundleUserMgrHostImpl_0013, Function | SmallTest | Level1)
+{
+    auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
+    DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
+    ScopeGuard stateGuard([&] {
+        DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
+    });
+    EXPECT_FALSE(bundleUserMgrHostImpl_->DeleteReSignCert(USERID));
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0014
+ * @tc.name: test CheckCriticalAppAreInstalled userId below START_USERID
+ * @tc.desc: userId < START_USERID → ERR_OK without checking apps
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BundleUserMgrHostImpl_0014, Function | SmallTest | Level1)
+{
+    std::set<PreInstallBundleInfo> preInfos;
+    auto res = bundleUserMgrHostImpl_->CheckCriticalAppAreInstalled(Constants::DEFAULT_USERID, preInfos);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0015
+ * @tc.name: test CheckCriticalAppAreInstalled dataMgr null
+ * @tc.desc: DataMgr is nullptr → ERR_APPEXECFWK_NULL_PTR
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BundleUserMgrHostImpl_0015, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    std::set<PreInstallBundleInfo> preInfos;
+    auto res = bundleUserMgrHostImpl_->CheckCriticalAppAreInstalled(Constants::START_USERID, preInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0016
+ * @tc.name: test ProcessUninstallSkills dataMgr null
+ * @tc.desc: DataMgr is nullptr → returns false
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BundleUserMgrHostImpl_0016, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    EXPECT_FALSE(bundleUserMgrHostImpl_->ProcessUninstallSkills(USERID));
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0017
+ * @tc.name: test ProcessRemoveUser no bundles for user
+ * @tc.desc: GetBundleInfos returns false → early cleanup path → ERR_OK
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BundleUserMgrHostImpl_0017, Function | SmallTest | Level1)
+{
+    int32_t userId = 7777;
+    GetBundleDataMgr()->AddUserId(userId);
+    ASSERT_TRUE(GetBundleDataMgr()->HasUserId(userId));
+    auto res = bundleUserMgrHostImpl_->ProcessRemoveUser(userId);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_FALSE(GetBundleDataMgr()->HasUserId(userId));
 }
 
 /**

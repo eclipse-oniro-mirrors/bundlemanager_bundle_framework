@@ -1472,6 +1472,23 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0050, Func
 }
 
 /**
+ * @tc.number: SetDefaultApplication_0060
+ * @tc.name: test SetDefaultApplication dataMgr null
+ * @tc.desc: non-empty element but DataMgr is nullptr → ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplication_0060, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, ABILITY_NAME, MODULE_NAME);
+    want.SetElement(elementName);
+    auto res = impl.SetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
  * @tc.number: IsDefaultApplication_0080
  * @tc.name: test IsDefaultApplication
  * @tc.desc: 1.when type > TYPE_MAX_SIZE, isDefaultApp = false;
@@ -1539,6 +1556,26 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, HandleUninstallBundle_1000, Function | Smal
     bool res =
         DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfo(userId, TEST_UTD_ID, currentElement);
     EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: SetDefaultApplicationInternalForCustom_0100
+ * @tc.name: test SetDefaultApplicationInternalForCustom db write failed
+ * @tc.desc: rdbDataManager is nullptr → SetDefaultApplicationInfo failed → ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationInternalForCustom_0100, Function | SmallTest | Level1)
+{
+    Element element;
+    element.bundleName = BUNDLE_NAME;
+    auto mockDb = std::make_shared<DefaultAppRdb>();
+    ASSERT_NE(mockDb, nullptr);
+    mockDb->rdbDataManager_ = nullptr;
+    auto savedDb = DefaultAppMgr::GetInstance().defaultAppDb_;
+    DefaultAppMgr::GetInstance().defaultAppDb_ = mockDb;
+    ScopeGuard stateGuard([&] { DefaultAppMgr::GetInstance().defaultAppDb_ = savedDb; });
+    auto ret = DefaultAppMgr::GetInstance().SetDefaultApplicationInternalForCustom(
+        USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, element);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**

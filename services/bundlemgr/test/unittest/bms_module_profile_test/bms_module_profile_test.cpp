@@ -254,5 +254,25 @@ HWTEST_F(BmsModuleProfileTest, ProcessLibrarySupportDirectory_009, Function | Sm
     EXPECT_EQ(result[2], "libs/subC");
 }
 
+/**
+ * @tc.number: BmsModuleProfileTest_ProcessLibrarySupportDirectory_010
+ * @tc.name: Test ProcessLibrarySupportDirectory when currentPackage not in innerModuleInfos
+ * @tc.desc: When currentPackage does not match any module, should return ERR_OK without updating module
+ */
+HWTEST_F(BmsModuleProfileTest, ProcessLibrarySupportDirectory_010, Function | SmallTest | Level0)
+{
+    std::map<std::string, std::vector<std::string>> librarySupportDirectoryMap;
+    librarySupportDirectoryMap[CPU_ABI] = {NORMAL_DIR};
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetCurrentModulePackage("unknown_package");
+    InnerModuleInfo innerModuleInfo;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_PACKAGE, innerModuleInfo);
+    innerBundleInfo.SetCpuAbi(CPU_ABI);
+
+    ErrCode ret = ProcessLibrarySupportDirectory(librarySupportDirectoryMap, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(innerBundleInfo.innerModuleInfos_.at(MODULE_PACKAGE).librarySupportDirectory.empty());
+}
+
 }  // namespace
 }  // namespace OHOS
