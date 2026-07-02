@@ -1637,10 +1637,24 @@ private:
     bool ParseUserKey(const std::string &userKey, int32_t &userId, int32_t &appIndex) const;
 
 private:
+    enum class SkillQueryAccessLevel {
+        ALL,
+        SYSTEM_AND_PUBLIC,
+        PUBLIC_ONLY,
+    };
+
     ErrCode FindSkillInfoFromAllBundles(const std::string &skillName, uint32_t flags,
-        int32_t requestUserId, SkillInfo &skillInfo);
+        int32_t requestUserId, const std::string &callingBundleName, bool isPrivilegedCaller,
+        SkillInfo &skillInfo);
+    ErrCode GetSkillInfoForSpecialUser(const std::string &bundleName, int32_t &userId) const;
+
     static void GetSkillInfoWithFlags(const InnerBundleInfo &info, const InnerModuleInfo &moduleInfo,
         const SkillProfile &profile, uint32_t flags, SkillInfo &skillInfo);
+    static void CollectVisibleSkillInfosFromBundle(const InnerBundleInfo &info, SkillQueryAccessLevel accessLevel,
+        uint32_t flags, std::vector<SkillInfo> &skillInfos);
+    static SkillQueryAccessLevel GetSkillQueryAccessLevel(const std::string &targetBundleName,
+        const std::string &callingBundleName, bool isPrivilegedCaller);
+    static bool IsSkillVisibleForQuery(const SkillProfile &profile, SkillQueryAccessLevel accessLevel);
 
     bool initialUserFlag_ = false;
     mutable std::mutex stateMutex_;

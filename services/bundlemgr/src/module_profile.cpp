@@ -234,6 +234,8 @@ struct Ability {
 struct SkillProfile {
     std::string name;
     std::string abilityName;
+    std::string version;
+    std::string visibility = Profile::SKILL_PROFILE_VISIBILITY_SYSTEM;
     std::vector<std::string> srcEntries;
     std::vector<std::string> permissions;
 };
@@ -498,6 +500,18 @@ void from_json(const nlohmann::json &jsonObject, SkillProfile &skillProfile)
         jsonObjectEnd,
         SKILL_PROFILE_ABILITY_NAME,
         skillProfile.abilityName,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_VERSION,
+        skillProfile.version,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_VISIBILITY,
+        skillProfile.visibility,
         false,
         g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
@@ -3026,8 +3040,10 @@ bool ToInnerBundleInfo(
         skill.name = skillProfile.name;
         skill.abilityName = skillProfile.abilityName.empty() ?
             innerModuleInfo.mainAbility : skillProfile.abilityName;
+        skill.version = skillProfile.version;
         skill.srcEntries = skillProfile.srcEntries;
         skill.permissions = skillProfile.permissions;
+        skill.visibility = skillProfile.visibility;
         innerModuleInfo.skillProfiles.emplace_back(skill);
     }
 

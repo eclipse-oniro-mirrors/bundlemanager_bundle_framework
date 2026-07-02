@@ -14770,16 +14770,42 @@ std::vector<std::string> BundleDataMgr::GetAllowListenBundleNames(
     return bundleNames;
 }
 
+BundleDataMgr::SkillQueryAccessLevel BundleDataMgr::GetSkillQueryAccessLevel(
+    const std::string &targetBundleName, const std::string &callingBundleName, bool isPrivilegedCaller)
+{
+    if (!targetBundleName.empty() && targetBundleName == callingBundleName) {
+        return SkillQueryAccessLevel::ALL;
+    }
+    if (isPrivilegedCaller) {
+        return SkillQueryAccessLevel::SYSTEM_AND_PUBLIC;
+    }
+    return SkillQueryAccessLevel::PUBLIC_ONLY;
+}
+
+bool BundleDataMgr::IsSkillVisibleForQuery(const SkillProfile &profile, SkillQueryAccessLevel accessLevel)
+{
+    if (accessLevel == SkillQueryAccessLevel::ALL) {
+        return true;
+    }
+    if (profile.visibility == Profile::SKILL_PROFILE_VISIBILITY_PUBLIC) {
+        return true;
+    }
+    return accessLevel == SkillQueryAccessLevel::SYSTEM_AND_PUBLIC &&
+        profile.visibility == Profile::SKILL_PROFILE_VISIBILITY_SYSTEM;
+}
+
 ErrCode BundleDataMgr::FindSkillInfoFromAllBundles(const std::string &skillName, uint32_t flags,
-    int32_t requestUserId, SkillInfo &skillInfo)
+    int32_t requestUserId, const std::string &callingBundleName, bool isPrivilegedCaller, SkillInfo &skillInfo)
 {
     for (const auto &[bundleName, info] : bundleInfos_) {
         if (!info.HasInnerBundleUserInfo(requestUserId)) {
             continue;
         }
+        SkillQueryAccessLevel accessLevel = GetSkillQueryAccessLevel(bundleName, callingBundleName,
+            isPrivilegedCaller);
         for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
             for (const auto &profile : moduleInfo.skillProfiles) {
-                if (profile.name == skillName) {
+                if (profile.name == skillName && IsSkillVisibleForQuery(profile, accessLevel)) {
                     GetSkillInfoWithFlags(info, moduleInfo, profile, flags, skillInfo);
                     return ERR_OK;
                 }
@@ -14788,6 +14814,20 @@ ErrCode BundleDataMgr::FindSkillInfoFromAllBundles(const std::string &skillName,
     }
     APP_LOGE("skill not found in all bundles, skillName:%{public}s", skillName.c_str());
     return ERR_BUNDLE_MANAGER_SKILL_INFO_NOT_EXIST;
+}
+
+ErrCode BundleDataMgr::GetSkillInfoForSpecialUser(const std::string &bundleName, int32_t &userId) const
+{
+    if (userId != Constants::ANY_USERID && userId != Constants::ALL_USERID) {
+        return ERR_OK;
+    }
+    std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+    if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
+        APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+    return ERR_OK;
 }
 
 void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
@@ -14802,9 +14842,12 @@ void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
     skillInfo.hapPath = moduleInfo.hapPath;
     skillInfo.abilityName = profile.abilityName;
     skillInfo.skillPath = std::string(ServiceConstants::SKILL_FILE_PATH) + ServiceConstants::PATH_SEPARATOR +
-        skillInfo.bundleName + ServiceConstants::PATH_SEPARATOR + skillInfo.moduleName + ServiceConstants::PATH_SEPARATOR +
-        ServiceConstants::SKILL_DIR + ServiceConstants::PATH_SEPARATOR + skillInfo.skillName;
+        skillInfo.bundleName + ServiceConstants::PATH_SEPARATOR + skillInfo.moduleName +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::SKILL_DIR + ServiceConstants::PATH_SEPARATOR +
+        skillInfo.skillName;
     skillInfo.versionCode = info.GetVersionCode();
+    skillInfo.version = profile.version;
+    skillInfo.visibility = profile.visibility;
 
     if ((flags & static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_SRC_ENTRIES)) ==
         static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_SRC_ENTRIES)) {
@@ -14825,6 +14868,21 @@ void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
             skillInfo.bundleName, skillInfo.moduleName, skillInfo.skillName, description);
         if (ret == ERR_OK) {
             skillInfo.description = description;
+        }
+    }
+}
+
+void BundleDataMgr::CollectVisibleSkillInfosFromBundle(const InnerBundleInfo &info,
+    SkillQueryAccessLevel accessLevel, uint32_t flags, std::vector<SkillInfo> &skillInfos)
+{
+    for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
+        for (const auto &profile : moduleInfo.skillProfiles) {
+            if (!IsSkillVisibleForQuery(profile, accessLevel)) {
+                continue;
+            }
+            SkillInfo skillInfo;
+            GetSkillInfoWithFlags(info, moduleInfo, profile, flags, skillInfo);
+            skillInfos.emplace_back(std::move(skillInfo));
         }
     }
 }
@@ -14912,22 +14970,23 @@ ErrCode BundleDataMgr::GetSkillInfo(const std::string &bundleName, const std::st
 {
     APP_LOGD("get skill info, bundleName:%{public}s, moduleName:%{public}s, skillName:%{public}s, flags:%{public}u",
         bundleName.c_str(), moduleName.c_str(), skillName.c_str(), flags);
-    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID) {
-        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
-            APP_LOGE("no userInfos for bundle:%{public}s", bundleName.c_str());
-            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-        }
-        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+    ErrCode err = GetSkillInfoForSpecialUser(bundleName, userId);
+    if (err != ERR_OK) {
+        return err;
     }
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
+    std::string callingBundleName;
+    (void)GetNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+    bool isPrivilegedCaller = BundlePermissionMgr::IsSystemApp() || BundlePermissionMgr::IsNativeTokenType();
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     if (bundleName.empty() && moduleName.empty()) {
-        return FindSkillInfoFromAllBundles(skillName, flags, requestUserId, skillInfo);
+        return FindSkillInfoFromAllBundles(skillName, flags, requestUserId, callingBundleName,
+            isPrivilegedCaller, skillInfo);
     }
+    SkillQueryAccessLevel accessLevel = GetSkillQueryAccessLevel(bundleName, callingBundleName, isPrivilegedCaller);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("bundleName:%{public}s not found", bundleName.c_str());
@@ -14945,7 +15004,7 @@ ErrCode BundleDataMgr::GetSkillInfo(const std::string &bundleName, const std::st
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
     for (const auto &profile : moduleInfo->skillProfiles) {
-        if (profile.name == skillName) {
+        if (profile.name == skillName && IsSkillVisibleForQuery(profile, accessLevel)) {
             GetSkillInfoWithFlags(info, moduleInfo.value(), profile, flags, skillInfo);
             break;
         }
@@ -14974,6 +15033,10 @@ ErrCode BundleDataMgr::GetSkillInfos(const std::string &bundleName, uint32_t fla
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
+    std::string callingBundleName;
+    (void)GetNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+    bool isPrivilegedCaller = BundlePermissionMgr::IsSystemApp() || BundlePermissionMgr::IsNativeTokenType();
+    SkillQueryAccessLevel accessLevel = GetSkillQueryAccessLevel(bundleName, callingBundleName, isPrivilegedCaller);
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
@@ -14986,13 +15049,7 @@ ErrCode BundleDataMgr::GetSkillInfos(const std::string &bundleName, uint32_t fla
         APP_LOGE("bundle %{public}s is not installed for user %{public}d", bundleName.c_str(), requestUserId);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
-        for (const auto &profile : moduleInfo.skillProfiles) {
-            SkillInfo skillInfo;
-            GetSkillInfoWithFlags(info, moduleInfo, profile, flags, skillInfo);
-            skillInfos.emplace_back(std::move(skillInfo));
-        }
-    }
+    CollectVisibleSkillInfosFromBundle(info, accessLevel, flags, skillInfos);
     return ERR_OK;
 }
 
@@ -15004,19 +15061,18 @@ ErrCode BundleDataMgr::GetAllSkillInfos(uint32_t flags, int32_t userId,
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
+    std::string callingBundleName;
+    (void)GetNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+    bool isPrivilegedCaller = BundlePermissionMgr::IsSystemApp() || BundlePermissionMgr::IsNativeTokenType();
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &[bundleName, info] : bundleInfos_) {
         int32_t responseUserId = info.GetResponseUserId(requestUserId);
         if (responseUserId == Constants::INVALID_USERID) {
             continue;
         }
-        for (const auto &[moduleName, moduleInfo] : info.GetInnerModuleInfos()) {
-            for (const auto &profile : moduleInfo.skillProfiles) {
-                SkillInfo skillInfo;
-                GetSkillInfoWithFlags(info, moduleInfo, profile, flags, skillInfo);
-                skillInfos.emplace_back(std::move(skillInfo));
-            }
-        }
+        SkillQueryAccessLevel accessLevel = GetSkillQueryAccessLevel(bundleName, callingBundleName,
+            isPrivilegedCaller);
+        CollectVisibleSkillInfosFromBundle(info, accessLevel, flags, skillInfos);
     }
     return ERR_OK;
 }

@@ -299,7 +299,10 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     "${services_path}/bundlemgr/src/driver_install_ext.cpp",
   ]
 
-  sources += [ "bms_install_daemon_operator_test.cpp" ]
+  sources += [
+    "bms_install_daemon_operator_test.cpp",
+    "bms_install_daemon_skill_extract_test.cpp",
+  ]
 
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
