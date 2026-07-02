@@ -3825,6 +3825,110 @@ HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0200, Function | MediumTest | L
     EXPECT_TRUE(labelList.empty());
 }
 
+/**
+ * @tc.number: GetStringByIdList_0300
+ * @tc.name: test GetStringByIdList with empty bundleName
+ * @tc.desc: test GetStringByIdList when bundleName is empty
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0300, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        "", MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0400
+ * @tc.name: test GetStringByIdList with empty moduleName
+ * @tc.desc: test GetStringByIdList when moduleName is empty
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0400, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, "", resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0500
+ * @tc.name: test GetStringByIdList with resIdList exceeding max size
+ * @tc.desc: test GetStringByIdList when resIdList size exceeds MAX_RES_ID_LIST_SIZE
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0500, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList;
+    for (int32_t i = 0; i < 1001; ++i) {
+        resIdList.push_back(i);
+    }
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0700
+ * @tc.name: test GetStringByIdList with localeInfo parameter
+ * @tc.desc: test GetStringByIdList with non-empty localeInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0600, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "en_US");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0800
+ * @tc.name: test GetStringByIdList with large resIdList but within limit
+ * @tc.desc: test GetStringByIdList when resIdList size equals MAX_RES_ID_LIST_SIZE
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0700, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList;
+    for (int32_t i = 0; i < 1000; ++i) {
+        resIdList.push_back(i);
+    }
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0900
+ * @tc.name: test GetStringByIdList with different userId
+ * @tc.desc: test GetStringByIdList with Constants::DEFAULT_USERID
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0800, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, Constants::DEFAULT_USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_1000
+ * @tc.name: test GetStringByIdList with invalid userId
+ * @tc.desc: test GetStringByIdList with Constants::INVALID_USERID
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0900, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, Constants::INVALID_USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
 
 /**
  * @tc.number: GetSandboxHapModuleInfo_0100
