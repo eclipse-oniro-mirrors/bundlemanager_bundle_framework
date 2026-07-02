@@ -319,7 +319,11 @@ ErrCode BundleInstallChecker::CheckHapsSignInfoAndInitSession(
     if (signRet != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS
         // confit for succesing check
         && signRet != Security::AccessToken::AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED) {
-        LOG_E(BMS_TAG_INSTALLER, "CheckHapSignInfo failed, err=%{public}d", signRet);
+        LOG_E(BMS_TAG_INSTALLER, "CheckHapSignInfo failed, signRet=%{public}d errorCode=%{public}d",
+            signRet, resultInfo.errorCode);
+        if (resultInfo.errorCode == ERR_OK) {
+            return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
+        }
         return BundleVerifyMgr::ConvertHapVerifyResultCode(resultInfo.errorCode);
     }
     LOG_I(BMS_TAG_INSTALLER, "CheckHapSignInfo success, sessionId=%{public}d", sessionId);
