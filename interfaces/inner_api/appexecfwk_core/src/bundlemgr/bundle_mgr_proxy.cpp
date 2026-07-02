@@ -36,6 +36,7 @@
 #include "bundle_constants.h"
 #include "bundle_distribution_type.h"
 #include "bundle_file_util.h"
+#include "bundle_mgr_host.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_proxy.h"
 #endif
@@ -58,6 +59,7 @@ constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // allow ma
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
 constexpr int64_t GET_BUNDLE_FOR_SELF_CACHE_TIME = 800; // 800ms
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
+constexpr int16_t MAX_RES_ID_LIST_SIZE = 1000;
 static std::atomic<bool> g_cacheAble = true;
 static std::once_flag g_cacheStopFlag;
 
@@ -3993,6 +3995,57 @@ std::string BundleMgrProxy::GetStringById(const std::string &bundleName, const s
         return Constants::EMPTY_STRING;
     }
     return reply.ReadString();
+}
+
+ErrCode BundleMgrProxy::GetStringByIdList(const std::string &bundleName,
+    const std::string &moduleName, const std::vector<uint32_t> &resIdList, std::vector<std::string> &labelList,
+    int32_t userId, const std::string &localeInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bundleName.empty() || moduleName.empty() || resIdList.empty() || resIdList.size() > MAX_RES_ID_LIST_SIZE) {
+        APP_LOGE("fail to GetStringByIdList due to params empty or resIdList size "
+            "%{public}zu exceeds max limit %{public}d", resIdList.size(), MAX_RES_ID_LIST_SIZE);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    APP_LOGD("GetStringByIdList bundleName: %{public}s, moduleName: %{public}s, resIdList.size: %{public}zu",
+        bundleName.c_str(), moduleName.c_str(), resIdList.size());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetStringByIdList due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName) || !data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetStringByIdList due to write bundleName or moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUInt32Vector(resIdList) || !data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetStringByIdList due to write resIdList or userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(localeInfo)) {
+        APP_LOGE("fail to GetStringByIdList due to write localeInfo fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_STRING_BY_ID_LIST, data, reply)) {
+        APP_LOGE("fail to GetStringByIdList from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("GetStringByIdList failed with err %{public}d", ret);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    std::vector<StringParcelable> labelListParcelable;
+    ret = InnerGetVectorFromParcelIntelligent<StringParcelable>(reply, labelListParcelable);
+    if (ret != ERR_OK) {
+        APP_LOGE("fail to GetStringByIdList due to read labelList fail");
+        return ret;
+    }
+    for (const auto &sp : labelListParcelable) {
+        labelList.emplace_back(sp.value);
+    }
+    return ERR_OK;
 }
 
 std::string BundleMgrProxy::GetIconById(

@@ -37,6 +37,25 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+bool StringParcelable::ReadFromParcel(Parcel &parcel)
+{
+    value = parcel.ReadString();
+    return !value.empty();
+}
+
+bool StringParcelable::Marshalling(Parcel &parcel) const
+{
+    return parcel.WriteString(value);
+}
+
+StringParcelable *StringParcelable::Unmarshalling(Parcel &parcel)
+{
+    auto *info = new (std::nothrow) StringParcelable();
+    if (info != nullptr) {
+        info->ReadFromParcel(parcel);
+    }
+    return info;
+}
 namespace {
 const int32_t MAX_LIMIT_SIZE = 100;
 const int8_t ASHMEM_LEN = 16;
@@ -47,6 +66,7 @@ constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 const int16_t MAX_STATUS_VECTOR_NUM = 1000;
 constexpr int16_t MAX_BATCH_QUERY_ABILITY_SIZE = 1000;
 constexpr int16_t MAX_GET_FOR_UIDS_SIZE = 1000;
+constexpr int16_t MAX_RES_ID_LIST_SIZE = 1000;
 constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // max allow 1 GB resource size
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
 const std::string BUNDLE_MANAGER_ASHMEM_NAME = "bundleManagerAshemeName";
@@ -822,6 +842,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_LOCAL_PLUGIN_INFO_FOR_SELF):
             errCode = HandleGetAllLocalPluginInfoForSelf(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_STRING_BY_ID_LIST):
+            errCode = this->HandleGetStringByIdList(data, reply);
             break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
@@ -5346,6 +5369,49 @@ ErrCode BundleMgrHost::HandleGetAllLocalPluginInfoForSelf(MessageParcel &data, M
             APP_LOGE("write vector failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetStringByIdList(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    std::vector<uint32_t> resIdList;
+    if (!data.ReadUInt32Vector(&resIdList)) {
+        APP_LOGE("fail to read resIdList");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (resIdList.size() > MAX_RES_ID_LIST_SIZE) {
+        APP_LOGE("resIdList size %{public}zu exceeds max limit!", resIdList.size());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    std::string localeInfo = data.ReadString();
+    if (bundleName.empty() || moduleName.empty() || resIdList.empty()) {
+        APP_LOGW("fail to GetStringByIdList due to params empty");
+        if (!reply.WriteInt32(ERR_INVALID_VALUE)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        return ERR_INVALID_VALUE;
+    }
+    std::vector<std::string> labelList;
+    auto ret = GetStringByIdList(bundleName, moduleName, resIdList, labelList, userId, localeInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    std::vector<StringParcelable> labelListParcelable;
+    for (const auto &str : labelList) {
+        StringParcelable sp;
+        sp.value = str;
+        labelListParcelable.emplace_back(std::move(sp));
+    }
+    if (!WriteVectorToParcelIntelligent(labelListParcelable, reply)) {
+        APP_LOGE("write labelList failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

@@ -129,6 +129,13 @@ namespace OHOS {
         uint32_t resId = fdp.ConsumeIntegral<uint32_t>();
         std::string localeInfo = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         bundleMgrProxy.GetStringById(bundleName, moduleName, resId, userId, localeInfo);
+        std::vector<uint32_t> resIdList;
+        size_t resIdListSize = fdp.ConsumeIntegralInRange<size_t>(0, ARRAY_MAX_LENGTH);
+        for (size_t i = 0; i < resIdListSize; ++i) {
+            resIdList.emplace_back(fdp.ConsumeIntegral<uint32_t>());
+        }
+        std::vector<std::string> labelList;
+        bundleMgrProxy.GetStringByIdList(bundleName, moduleName, resIdList, labelList, userId, localeInfo);
         uint32_t density = fdp.ConsumeIntegral<uint32_t>();
         bundleMgrProxy.GetIconById(bundleName, moduleName, resId, density, userId);
         bundleMgrProxy.GetSandboxAbilityInfo(want, appIndex, flag, userId, abilityInfo);

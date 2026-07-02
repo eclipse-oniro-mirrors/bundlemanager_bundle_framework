@@ -8455,6 +8455,37 @@ std::string BundleDataMgr::GetStringById(const std::string &bundleName, const st
 #endif
 }
 
+ErrCode BundleDataMgr::GetStringByIdList(const std::string &bundleName, const std::string &moduleName,
+    const std::vector<uint32_t> &resIdList, std::vector<std::string> &labelList, int32_t userId, 
+    const std::string &localeInfo)
+{
+    APP_LOGD("GetStringByIdList: %{public}s , %{public}s, resIdList.size: %{public}zu",
+        bundleName.c_str(), moduleName.c_str(), resIdList.size());
+#ifdef GLOBAL_RESMGR_ENABLE
+    std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
+        GetResourceManager(bundleName, moduleName, userId);
+    if (resourceManager == nullptr) {
+        APP_LOGW("InitResourceManager failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    for (uint32_t resId : resIdList) {
+        std::string label;
+        OHOS::Global::Resource::RState errValue = resourceManager->GetStringById(resId, label);
+        if (errValue != OHOS::Global::Resource::RState::SUCCESS) {
+            APP_LOGW("GetStringById failed, bundleName:%{public}s, id:%{public}d", bundleName.c_str(), resId);
+            continue;
+        }
+        labelList.emplace_back(label);
+    }
+
+    return ERR_OK;
+#else
+    APP_LOGW("GLOBAL_RESMGR_ENABLE is false");
+    return ERR_OK;
+#endif
+}
+
 std::string BundleDataMgr::GetIconById(
     const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
 {
