@@ -644,7 +644,7 @@ bool BundleInstallerHost::Uninstall(
         LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return false;
     }
-    bool verifyResult = VerifyUninstallPermission(true);
+    auto verifyResult = VerifyUninstallPermission(true);
     if (verifyResult != ERR_OK) {
         if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
             !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
@@ -716,7 +716,7 @@ bool BundleInstallerHost::Uninstall(const UninstallParam &uninstallParam,
         LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return false;
     }
-    bool verifyResult = VerifyUninstallPermission(false);
+    auto verifyResult = VerifyUninstallPermission(false);
     if (verifyResult != ERR_OK) {
         if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
             !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
