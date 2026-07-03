@@ -135,6 +135,7 @@ private:
     DeployQuickFixResult deployQuickFixResult_;
     bool isReplace_ = false;
     bool isCheckDebugApp_ = false;
+    Security::Verify::HapVerifyResult verifyRes_;
 
 #define CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(errcode)                           \
     do {                                                                           \
