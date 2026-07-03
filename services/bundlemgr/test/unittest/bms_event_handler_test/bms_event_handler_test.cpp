@@ -4391,6 +4391,61 @@ HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0700, Function | SmallTes
 }
 
 /**
+ * @tc.number: CleanUninstallBundleInfo_0800
+ * @tc.name: CleanUninstallBundleInfo userId not exist
+ * @tc.desc: Uninstall record exists for a userId that is NOT in multiUserIdsSet_
+ *           → record IS deleted even though bundle doesn't exist (orphaned user data)
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0800, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    // Do NOT call AddUserId — userId 200 is unknown
+    UninstallBundleInfo uninstInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = 200 * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
+    uninstInfo.userInfos[std::to_string(200)] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.orphan.user", uninstInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // userId 200 not exist → record should be deleted (orphaned user data)
+    UninstallBundleInfo result;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo("test.orphan.user", result));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0900
+ * @tc.name: CleanUninstallBundleInfo userId is U1 or below
+ * @tc.desc: Uninstall record exists for userId <= 1 (system user), bundle does NOT exist,
+ *           but userId IS in multiUserIdsSet_ → record IS deleted (userId <= U1 is always cleaned)
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0900, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->AddUserId(TEST_U1);
+    // Add uninstall record for userId=1 without installing the bundle
+    UninstallBundleInfo uninstInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = TEST_U1 * Constants::BASE_USER_RANGE;
+    uninstInfo.userInfos[std::to_string(TEST_U1)] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.uid.one", uninstInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // userId=1 <= U1 → record should be deleted even though bundle doesn't exist and userId is known
+    UninstallBundleInfo result;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo("test.uid.one", result));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
  * @tc.number: CheckOtaFlag_0100
  * @tc.name: CheckOtaFlag success
  * @tc.desc: OTA flag set → returns true and result is true
@@ -4949,4 +5004,5 @@ HWTEST_F(BmsEventHandlerTest, ExecuteMigrationWithRetry_0500, Function | SmallTe
     EXPECT_FALSE(successFlags[0]);
     AccessToken::SetMigrateInstalledBundlesRetForTest(0);
 }
+
 } // OHOS
