@@ -117,6 +117,7 @@ enum class DirType : uint8_t {
 };
 constexpr int32_t CONTENT_EDIT = 2;
 constexpr int32_t UNMOUNT_DIS_SHARE_TIMEOUT_MS = 3000;
+constexpr int64_t BLOCK_SIZE = 512;
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -4049,6 +4050,15 @@ ErrCode InstalldHostImpl::ExtractSkillsPackage(const SkillsPackageParam &param,
     return InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
 }
 
+int64_t InstalldHostImpl::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    return InstalldOperator::GetCacheDiskUsageFromPath(paths, timeoutMs);
+}
+
 void InstalldHostImpl::GetFilesAndSortByLastModifiedTime(const std::vector<std::string> &paths,
     std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> &fileTimePairs)
 {
@@ -4084,6 +4094,16 @@ void InstalldHostImpl::GetFilesAndSortByLastModifiedTime(const std::vector<std::
         });
 }
 
+int64_t InstalldHostImpl::GetFileSize(const std::string &filePath)
+{
+    struct stat fileInfo = { 0 };
+    if (stat(filePath.c_str(), &fileInfo) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "call stat error:%{public}d", errno);
+        return 0;
+    }
+    return fileInfo.st_blocks * BLOCK_SIZE;
+}
+
 ErrCode InstalldHostImpl::DeleteOldCacheFiles(
     const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
 {
@@ -4099,21 +4119,21 @@ ErrCode InstalldHostImpl::DeleteOldCacheFiles(
     for (const auto &file : fileTimePairs) {
         std::error_code ec;
         const auto &filePath = file.first;
-        if (std::filesystem::is_directory(filePath, ec)) {
-            std::filesystem::remove(filePath, ec);
-        } else {
-            uint64_t fileSize = std::filesystem::file_size(filePath, ec);
-            if (ec || !std::filesystem::remove(filePath, ec)) {
-                continue;
-            }
-            cleanedSize += fileSize;
+        uint64_t fileSize = GetFileSize(filePath);
+        if (!std::filesystem::remove(filePath, ec)) {
+            continue;
         }
+        cleanedSize += static_cast<uint64_t>(fileSize);
 
         auto parentPath = filePath.parent_path();
         while (std::find(paths.begin(), paths.end(), parentPath) == paths.end()) {
             if (std::filesystem::is_directory(parentPath, ec) &&
                 std::filesystem::is_empty(parentPath, ec)) {
-                std::filesystem::remove(parentPath, ec);
+                auto dirSize = GetFileSize(parentPath);
+                if (!std::filesystem::remove(parentPath, ec)) {
+                    break;
+                }
+                cleanedSize += static_cast<uint64_t>(dirSize);
                 parentPath = parentPath.parent_path();
             } else {
                 break;

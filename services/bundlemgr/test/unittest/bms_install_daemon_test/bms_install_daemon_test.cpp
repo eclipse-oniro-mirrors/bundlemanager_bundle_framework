@@ -2806,7 +2806,7 @@ HWTEST_F(BmsInstallDaemonTest, DeleteOldCacheFiles_Normal_0200, Function | Small
     int32_t fd = creat("/data/test/temp/test/filename.txt", 0777);
     ASSERT_NE(fd, -1);
     std::vector<std::string> paths = {"/data/test/temp"};
-    uint64_t cacheSize = 999;
+    uint64_t cacheSize = UINT64_MAX;
     uint64_t cleanedSize = 0;
     ret = hostImpl.DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
     EXPECT_EQ(ret, ERR_OK);
