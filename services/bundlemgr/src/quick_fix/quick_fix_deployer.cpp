@@ -208,6 +208,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployStart(
         LOG_E(BMS_TAG_DEFAULT, "error: appQuickFix hapVerifyRes is empty");
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
+    verifyRes_ = hapVerifyRes[0];
     const auto &provisionInfo = hapVerifyRes[0].GetProvisionInfo();
     const AppQuickFix &appQuickFix = infos.begin()->second;
     // check with installed bundle, signature info, bundleName, versionCode
@@ -941,6 +942,8 @@ void QuickFixDeployer::PrepareCodeSignatureParam(const AppQuickFix &appQuickFix,
     if (!isDebug_ || bundleInfo.applicationInfo.appProvisionType != Constants::APP_PROVISION_TYPE_DEBUG) {
         codeSignatureParam.targetSoPath = "";
     }
+    BundleInstallChecker checker;
+    checker.ProcessCodeSignatureParam(0, verifyRes_, codeSignatureParam);
 }
 
 ErrCode QuickFixDeployer::VerifyCodeSignatureForHqf(
