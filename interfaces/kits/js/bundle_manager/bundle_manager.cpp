@@ -5192,10 +5192,6 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
             APP_LOGD("GetBundleInfo param from cache");
             NAPI_CALL(env,
                 napi_get_reference_value(env, item->second, &nBundleInfo));
-            auto endTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now().time_since_epoch()).count();
-            HistogramUtil::ReportHistogramTimes("AbilityKit.bundleManager.getBundleInfoForSelfSync",
-                static_cast<int32_t>(endTime - startTime));
             return nBundleInfo;
         }
     }

@@ -207,11 +207,6 @@ static ani_object GetBundleInfoForSelfNative(ani_env* env, ani_int aniBundleFlag
         std::shared_lock<std::shared_mutex> lock(g_aniCacheMutex);
         auto item = g_aniCache.find(query);
         if (item != g_aniCache.end()) {
-            auto endTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now().time_since_epoch()).count();
-            HistogramUtil::ReportHistogramTimes(
-                isSync ? HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF_SYNC : HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF,
-                static_cast<int32_t>(endTime - startTime));
             return reinterpret_cast<ani_object>(item->second);
         }
     }
