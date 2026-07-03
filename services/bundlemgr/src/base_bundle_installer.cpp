@@ -4602,7 +4602,10 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     // data clone install no need to extract res files
     if (!supportDataCloneInstall_) {
         ExtractResourceFiles(info, modulePath);
-        result = ExtractResFileDir(modulePath);
+        auto needFakeDecompression =
+            BundleUtil::IsSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive());
+        auto isSystemApp = info.IsSystemApp();
+        result = ExtractResFileDir(modulePath, needFakeDecompression, isSystemApp);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to ExtractResFileDir, error is %{public}d", result);
             return result;
@@ -4920,7 +4923,8 @@ void BaseBundleInstaller::RemoveNPAPIPluginDir()
     LOG_D(BMS_TAG_INSTALLER, "RemoveNPAPIPluginDir end successfully for bundle %{public}s", bundleName_.c_str());
 }
 
-ErrCode BaseBundleInstaller::ExtractResFileDir(const std::string &modulePath) const
+ErrCode BaseBundleInstaller::ExtractResFileDir(
+    const std::string &modulePath, const bool needFakeDecompression, const bool isSystemApp) const
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractResFileDir begin");
     ExtractParam extractParam;
@@ -4929,6 +4933,9 @@ ErrCode BaseBundleInstaller::ExtractResFileDir(const std::string &modulePath) co
     extractParam.targetPath = modulePath + ServiceConstants::PATH_SEPARATOR + ServiceConstants::RES_FILE_PATH;
     LOG_D(BMS_TAG_INSTALLER, "ExtractResFileDir targetPath: %{public}s", extractParam.targetPath.c_str());
     extractParam.extractFileType = ExtractFileType::RES_FILE;
+    //only uncompressed resfile support fake decompression
+    extractParam.needFakeDecompression = needFakeDecompression;
+    extractParam.isSystemApp = isSystemApp;
     ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "ExtractResFileDir ExtractFiles failed, error is %{public}d", ret);
@@ -5640,7 +5647,16 @@ ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info, con
     const std::string &targetSoPath, const std::string &cpuAbi)
 {
     LOG_D(BMS_TAG_INSTALLER, "extract module to %{public}s", modulePath.c_str());
-    auto result = InstalldClient::GetInstance()->ExtractModuleFiles(modulePath_, modulePath, targetSoPath, cpuAbi);
+    auto needFakeDecompression = info.IsFakeDecompressionEnable() &&
+                                 BundleUtil::IsSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive());
+    auto isSystemApp = info.IsSystemApp();
+    LOG_D(BMS_TAG_INSTALLER,
+        "ExtractModuleFiles,targetSoPath:%{public}s modulePath:%{public}s needFakeDecompression:%{public}d",
+        targetSoPath.c_str(),
+        modulePath.c_str(),
+        needFakeDecompression);
+    auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
+        modulePath_, modulePath, targetSoPath, cpuAbi, needFakeDecompression, isSystemApp);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "extract module files failed, error is %{public}d", result);
         return result;

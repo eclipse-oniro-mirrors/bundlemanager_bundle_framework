@@ -4958,6 +4958,18 @@ bool InnerBundleInfo::IsCompressNativeLibs(const std::string &moduleName) const
     return moduleInfo->compressNativeLibs;
 }
 
+bool InnerBundleInfo::IsFakeDecompressionEnable() const
+{
+    auto moduleName = GetCurModuleName();
+    auto moduleInfo = GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo) {
+        APP_LOGE("Get moduleInfo(%{public}s) failed", moduleName.c_str());
+        return false;
+    }
+    // only compressNativeLibs=false and extractNativeLibs=true need fake decompression
+    return !moduleInfo->isSoStoredCompressed && moduleInfo->extractNativeLibs;
+}
+
 void InnerBundleInfo::SetNativeLibraryFileNames(const std::string &moduleName,
     const std::vector<std::string> &fileNames)
 {

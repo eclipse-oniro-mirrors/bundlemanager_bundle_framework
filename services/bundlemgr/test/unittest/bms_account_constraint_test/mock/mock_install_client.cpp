@@ -51,7 +51,8 @@ ErrCode InstalldClient::CreateBundleDir(
 }
 
 ErrCode InstalldClient::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+    const bool isSystemApp)
 {
     return 0;
 }

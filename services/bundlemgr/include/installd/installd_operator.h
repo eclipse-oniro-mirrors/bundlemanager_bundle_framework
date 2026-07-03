@@ -114,7 +114,7 @@ public:
      * @return Returns true if the package extracted successfully; returns false otherwise.
      */
     static bool ExtractFiles(const std::string &sourcePath, const std::string &targetSoPath,
-        const std::string &cpuAbi);
+        const std::string &cpuAbi, const bool needFakeDecompression, const bool isSystemApp);
 
     static bool IsNativeSo(const std::string &entryName, const std::string &cpuAbi);
 
@@ -125,6 +125,9 @@ public:
         const BundleExtractor &extractor,
         const std::string &entryName,
         const ExtractParam &param);
+    static bool ChangeModeFile(const ExtractParam &param, const std::string &path);
+    static bool FakeDecompression(const BundleExtractor &extractor, const std::string &entryName,
+        const ExtractParam &param, const std::string &targetPath);
     static void ExtractTargetHnpFile(
         const BundleExtractor &extractor,
         const std::string &entryName,

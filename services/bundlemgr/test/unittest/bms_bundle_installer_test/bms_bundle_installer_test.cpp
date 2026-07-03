@@ -3393,16 +3393,16 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0100, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0200, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    auto ret = impl.ExtractModuleFiles("", "", TEST_STRING, TEST_STRING);
+    auto ret = impl.ExtractModuleFiles("", "", TEST_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING);
+    ret = impl.ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.ExtractModuleFiles(TEST_STRING, "", TEST_STRING, TEST_STRING);
+    ret = impl.ExtractModuleFiles(TEST_STRING, "", TEST_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.ExtractModuleFiles("wrong", TEST_STRING, "wrong", "wrong");
+    ret = impl.ExtractModuleFiles("wrong", TEST_STRING, "wrong", "wrong", false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -16987,7 +16987,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModuleFiles_0100, Function | SmallTest |
     std::string srcModulePath =
         BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + MODULE_NAME + ServiceConstants::INSTALL_FILE_SUFFIX;
     std::string targetPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + BUNDLE_NAME;
-    auto ret = impl.ExtractModuleFiles(srcModulePath, targetPath, TEST_EMPTY_STRING, TEST_STRING);
+    auto ret = impl.ExtractModuleFiles(srcModulePath, targetPath, TEST_EMPTY_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_OK);
 }
 

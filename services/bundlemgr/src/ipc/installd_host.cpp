@@ -415,8 +415,10 @@ bool InstalldHost::HandleExtractModuleFiles(MessageParcel &data, MessageParcel &
     std::string targetPath = Str16ToStr8(data.ReadString16());
     std::string targetSoPath = Str16ToStr8(data.ReadString16());
     std::string cpuAbi = Str16ToStr8(data.ReadString16());
-    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "ExtractModuleFiles %{public}s", targetPath.c_str());
-    ErrCode result = ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
+    bool needFakeDecompression = data.ReadBool();
+    bool isSystemApp = data.ReadBool();
+    ErrCode result =
+        ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi, needFakeDecompression, isSystemApp);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
