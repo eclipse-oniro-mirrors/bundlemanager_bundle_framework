@@ -63,6 +63,11 @@ export interface AppCloneIdentity {
   readonly appIndex: int;
 }
 
+export interface AppClonePreference {
+  mode: bundleManager.AppClonePreferenceMode;
+  appIndex?: int;
+}
+
 export interface DynamicIconInfo {
   readonly bundleName: string;
   readonly moduleName: string;

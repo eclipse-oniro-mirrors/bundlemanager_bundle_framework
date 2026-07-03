@@ -191,6 +191,9 @@ constexpr const char* ERROR_MSG_DESTINATION_PATH_ACCESS_FAILED =
 constexpr const char* ERROR_MSG_DATA_MIGRATION_COPY_FAILED =
     "System error occurred during copy execution.";
 constexpr const char* ERROR_MSG_SKILL_NOT_EXIST = "The specified skillName is not found.";
+constexpr const char* ERROR_MSG_APP_CLONE_NOT_EXIST = "The application has not created any app clone.";
+constexpr const char* ERROR_MSG_APP_CLONE_PREFERENCE_NOT_EXIST =
+    "The specified bundle not found app clone preference.";
 constexpr const char* ERR_MSG_ERROR_ALTERNATE_ICON_SET_ERROR = "Failed to set the alternate icon.";
 constexpr const char* ERR_MSG_INVALID_ALTERNATE_ICON_NAME =
     "The alternateIconName must match the name field under alternateIcons in the app.json5 file.";
@@ -299,6 +302,8 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_DESTINATION_PATH_ACCESS_FAILED, ERROR_MSG_DESTINATION_PATH_ACCESS_FAILED},
     { ERROR_DATA_MIGRATION_COPY_FAILED, ERROR_MSG_DATA_MIGRATION_COPY_FAILED},
     { ERROR_SKILL_NOT_EXIST, ERROR_MSG_SKILL_NOT_EXIST},
+    { ERROR_APP_CLONE_NOT_EXIST, ERROR_MSG_APP_CLONE_NOT_EXIST},
+    { ERROR_APP_CLONE_PREFERENCE_NOT_EXIST, ERROR_MSG_APP_CLONE_PREFERENCE_NOT_EXIST},
     { ERROR_INVALID_ALTERNATE_ICON_NAME, ERR_MSG_INVALID_ALTERNATE_ICON_NAME},
     { ERROR_NO_ALTERNATE_ICON_ENABLED, ERR_MSG_ERROR_NO_ALTERNATE_ICON_ENABLED},
     { ERROR_SET_ALTERNATE_ICON, ERR_MSG_ERROR_ALTERNATE_ICON_SET_ERROR},

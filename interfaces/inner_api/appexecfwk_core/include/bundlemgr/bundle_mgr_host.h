@@ -969,6 +969,10 @@ private:
 
     ErrCode HandleGetCliSandboxAppIndexes(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAppClonePreference(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleSetAppClonePreference(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetLaunchWant(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageParcel &data, MessageParcel &reply);

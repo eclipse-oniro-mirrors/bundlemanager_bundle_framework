@@ -137,6 +137,7 @@ bool BundleMgrService::Init()
     CHECK_INIT_RESULT(InitBundleInstaller(), "Init bundleInstaller fail");
     CHECK_INIT_RESULT(InitLocalPluginInstaller(), "Init local plugin installer fail");
     InitBundleDataMgr();
+    appClonePreferenceDataMgr_ = std::make_shared<AppClonePreferenceDataMgr>();
     APP_LOGI_NOFUNC("BundleMgrService InitOobePreloadUninstallMgr");
     InitOobePreloadUninstallMgr();
     CHECK_INIT_RESULT(InitBundleUserMgr(), "Init bundleUserMgr fail");
@@ -423,6 +424,11 @@ void BundleMgrService::RegisterDataMgr(std::shared_ptr<BundleDataMgr> dataMgrImp
 const std::shared_ptr<BundleDataMgr> BundleMgrService::GetDataMgr() const
 {
     return dataMgr_;
+}
+
+const std::shared_ptr<AppClonePreferenceDataMgr> BundleMgrService::GetAppClonePreferenceDataMgr() const
+{
+    return appClonePreferenceDataMgr_;
 }
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL

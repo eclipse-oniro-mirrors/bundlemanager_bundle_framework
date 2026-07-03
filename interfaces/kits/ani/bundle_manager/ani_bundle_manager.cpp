@@ -498,6 +498,75 @@ static ani_object QueryAbilityInfoSyncNative(ani_env* env,
     return aniAbilityInfos;
 }
 
+static ani_object GetAppClonePreferenceNative(ani_env* env, ani_string aniBundleName)
+{
+    APP_LOGD("ani GetAppClonePreference called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE_NOFUNC("parse bundleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE_NOFUNC("bundleName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return nullptr;
+    }
+    AppClonePreference preference;
+    ErrCode ret = BundleManagerHelper::InnerGetAppClonePreference(bundleName, preference);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("InnerGetAppClonePreference failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, ret, GET_APP_CLONE_PREFERENCE,
+            Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES);
+        return nullptr;
+    }
+    ani_object result = CommonFunAni::ConvertAppClonePreference(env, preference);
+    if (result == nullptr) {
+        APP_LOGE_NOFUNC("ConvertAppClonePreference failed after successful get for %{public}s", bundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_APP_CLONE_PREFERENCE,
+            Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES);
+        return nullptr;
+    }
+    return result;
+}
+
+static ani_boolean SetAppClonePreferenceNative(ani_env* env, ani_string aniBundleName, ani_object aniPreference)
+{
+    APP_LOGD("ani SetAppClonePreference called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE_NOFUNC("parse bundleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return ANI_FALSE;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE_NOFUNC("bundleName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return ANI_FALSE;
+    }
+    AppClonePreference preference;
+    if (!CommonFunAni::ParseAppClonePreference(env, aniPreference, preference)) {
+        APP_LOGE_NOFUNC("parse preference failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, "preference", TYPE_OBJECT);
+        return ANI_FALSE;
+    }
+    int32_t modeValue = static_cast<int32_t>(preference.mode);
+    if (modeValue < static_cast<int32_t>(AppClonePreferenceMode::ALWAYS_ASK) ||
+        modeValue > static_cast<int32_t>(AppClonePreferenceMode::CLONE_APP)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference preference mode out of range: %{public}d", modeValue);
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_APP_CLONE_PREFERENCE_MODE_INVALID_ERROR);
+        return ANI_FALSE;
+    }
+    ErrCode ret = BundleManagerHelper::InnerSetAppClonePreference(bundleName, preference);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("InnerSetAppClonePreference failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, ret, SET_APP_CLONE_PREFERENCE,
+            Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES);
+        return ANI_FALSE;
+    }
+    return ANI_TRUE;
+}
+
 static ani_object GetAppCloneIdentityNative(ani_env* env, ani_int aniUid)
 {
     APP_LOGD("ani GetAppCloneIdentity called");
@@ -2541,6 +2610,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(QueryAbilityInfoSyncNative) },
         ani_native_function { "getAppCloneIdentityNative", nullptr,
             reinterpret_cast<void*>(GetAppCloneIdentityNative) },
+        ani_native_function { "getAppClonePreferenceNative", nullptr,
+            reinterpret_cast<void*>(GetAppClonePreferenceNative) },
+        ani_native_function { "setAppClonePreferenceNative", nullptr,
+            reinterpret_cast<void*>(SetAppClonePreferenceNative) },
         ani_native_function { "getAbilityLabelNative", nullptr, reinterpret_cast<void*>(GetAbilityLabelNative) },
         ani_native_function { "getApplicationLabelNative", nullptr, reinterpret_cast<void*>(GetApplicationLabelNative) },
         ani_native_function { "getLaunchWantForBundleNative", nullptr,

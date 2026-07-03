@@ -136,6 +136,8 @@ constexpr const char* SANDBOX_DATA_DIR = "sandboxDataDir";
 constexpr const char* ERR_MSG_LAUNCH_WANT_INVALID = "The launch want is not found.";
 constexpr const char* PARAM_BUNDLENAME_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter bundleName is empty";
+constexpr const char* PARAM_APP_CLONE_PREFERENCE_MODE_INVALID_ERROR =
+    "BusinessError 401: Parameter error. parameter preference mode is invalid";
 constexpr const char* PARAM_MODULENAME_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter moduleName is empty";
 constexpr const char* PARAM_ABILITYNAME_EMPTY_ERROR =
@@ -168,6 +170,8 @@ constexpr const char* GET_ALL_INSTALL_INFO = "getAllBundleInstallInfo";
 constexpr const char* SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
 constexpr const char* GET_SIGNATURE_INFO = "GetSignatureInfo";
 constexpr const char* GET_ALL_APP_CLONE_BUNDLE_INFO = "GetAllAppCloneBundleInfo";
+constexpr const char* GET_APP_CLONE_PREFERENCE = "GetAppClonePreference";
+constexpr const char* SET_APP_CLONE_PREFERENCE = "SetAppClonePreference";
 constexpr const char* GET_BUNDLE_ARCHIVE_INFO_SYNC = "GetBundleArchiveInfoSync";
 constexpr const char* GET_PROFILE_BY_EXTENSION_ABILITY_SYNC = "GetProfileByExtensionAbilitySync";
 constexpr const char* GET_PROFILE_BY_ABILITY_SYNC = "GetProfileByAbilitySync";

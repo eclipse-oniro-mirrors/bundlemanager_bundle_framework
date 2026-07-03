@@ -381,6 +381,34 @@ ErrCode BundleManagerHelper::InnerGetAllAppCloneBundleInfo(
     return SUCCESS;
 }
 
+ErrCode BundleManagerHelper::InnerGetAppClonePreference(
+    const std::string& bundleName, AppClonePreference& preference)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode ret = iBundleMgr->GetAppClonePreference(bundleName, userId, preference);
+    APP_LOGD("GetAppClonePreference ErrCode: %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerSetAppClonePreference(
+    const std::string& bundleName, const AppClonePreference& preference)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode ret = iBundleMgr->SetAppClonePreference(bundleName, userId, preference);
+    APP_LOGD("SetAppClonePreference ErrCode: %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 ErrCode BundleManagerHelper::InnerGetAllSharedBundleInfo(std::vector<SharedBundleInfo>& sharedBundles)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();

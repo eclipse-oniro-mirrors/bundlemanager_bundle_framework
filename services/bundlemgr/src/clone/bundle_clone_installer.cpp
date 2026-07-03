@@ -19,6 +19,7 @@
 
 #include "ability_manager_helper.h"
 #include "account_helper.h"
+#include "app_clone_preference_data_mgr.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_update_selinux_mgr.h"
 #include "bundle_file_util.h"
@@ -103,12 +104,13 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
         result == ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID ||
         result == ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_CLONED) &&
         DeleteUninstalledCloneData(bundleName, userId, appIndex)) {
+        HandleAppClonePreferenceOnUninstall(bundleName, userId, appIndex);
         DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId, appIndex);
         SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, userId, appIndex,
             false, false, InstallScene::NORMAL, ERR_OK);
         return ERR_OK;
     }
-    
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     if (result == ERR_OK) {
         if (!sync) {
@@ -116,6 +118,9 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
         }
     }
 #endif
+    if (result == ERR_OK) {
+        HandleAppClonePreferenceOnUninstall(bundleName, userId, appIndex);
+    }
     NotifyBundleEvents installRes = {
         .type = NotifyType::UNINSTALL_BUNDLE,
         .resultCode = result,
@@ -642,6 +647,18 @@ ErrCode BundleCloneInstaller::GetDataMgr()
         }
     }
     return ERR_OK;
+}
+
+void BundleCloneInstaller::HandleAppClonePreferenceOnUninstall(const std::string &bundleName,
+    int32_t userId, int32_t appIndex)
+{
+    auto appClonePrefDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetAppClonePreferenceDataMgr();
+    if (appClonePrefDataMgr == nullptr) {
+        APP_LOGW_NOFUNC("AppClonePreferenceDataMgr is null, skip preference cleanup");
+        return;
+    }
+    appClonePrefDataMgr->HandleAppCloneUninstalled(bundleName, userId, appIndex);
+    APP_LOGI_NOFUNC("handled app clone preference after clone %{public}d uninstall", appIndex);
 }
 
 void BundleCloneInstaller::SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,

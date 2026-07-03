@@ -215,6 +215,9 @@ protected:
     bool IsEnterpriseForAllUser(const InstallParam &installParam, const std::string &bundleName);
 
 private:
+    // Delete the (bundleName, userId) preference row when the main app is uninstalled.
+    // No-op when AppClonePreferenceDataMgr is unavailable (e.g. test env); logs the skip.
+    void RemoveAppClonePreference(const std::string &bundleName, int32_t userId);
     /**
      * @brief The real procedure for system and normal bundle install.
      * @param bundlePath Indicates the path for storing the HAP file of the application
