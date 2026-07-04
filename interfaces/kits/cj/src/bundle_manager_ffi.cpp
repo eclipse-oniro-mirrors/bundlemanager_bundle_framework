@@ -37,10 +37,15 @@ namespace BundleManager {
 std::vector<std::string> CharPtrToVector(char** charPtr, int32_t size)
 {
     std::vector<std::string> result;
+    if (charPtr == nullptr) {
+        return result;
+    }
     for (int32_t i = 0; i < size; i++) {
-        if (charPtr != nullptr) {
-            result.push_back(std::string(charPtr[i]));
+        if (charPtr[i] == nullptr) {
+            APP_LOGE("CharPtrToVector: charPtr[%{public}d] is nullptr", i);
+            continue;
         }
+        result.push_back(std::string(charPtr[i]));
     }
     return result;
 }
