@@ -122,6 +122,10 @@ bool Zip(const ZipParams &params, const OPTIONS &options)
 {
     const std::vector<std::pair<FilePath, FilePath>> *filesToAdd = &params.GetFilesTozip();
     std::vector<std::pair<FilePath, FilePath>> allRelativeFiles;
+    if (params.SrcDir().empty()) {
+        APP_LOGE("Zip params srcDir is empty");
+        return false;
+    }
     FilePath srcDir = params.SrcDir().front();
     FilePath paramPath = FilePathEndIsSeparator(srcDir);
     if (filesToAdd->empty()) {
@@ -208,7 +212,7 @@ int32_t Zip(const std::string &srcPath, const std::string &destPath, const OPTIO
     if (srcDir.Value().size() == 0 || FilePath::HasRelativePathBaseOnAPIVersion(srcPath)) {
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
-    if (destFile.Value().size() == 0 || FilePath::HasRelativePathBaseOnAPIVersion(destPath)) {
+    if (destFile.Value().size() < ZIP.size() || FilePath::HasRelativePathBaseOnAPIVersion(destPath)) {
         return ERR_ZLIB_DEST_FILE_DISABLED;
     }
 
@@ -244,6 +248,10 @@ ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir
                 }
             } else {
                 std::unique_ptr<WriterDelegate> writer = writerFactory(destDir, entryPath);
+                if (writer == nullptr) {
+                    APP_LOGE("writer is nullptr");
+                    return ERR_ZLIB_DEST_FILE_DISABLED;
+                }
                 if (!writer->PrepareOutput()) {
                     APP_LOGE("PrepareOutput err");
                     return ERR_ZLIB_DEST_FILE_DISABLED;
@@ -380,6 +388,10 @@ bool Zips(const ZipParams& params, const OPTIONS& options)
     const std::vector<std::pair<FilePath, FilePath>>* filesToAdd = &params.GetFilesTozip();
     std::vector<std::pair<FilePath, FilePath>> allRelativeFiles;
     std::vector<FilePath> srcFiles = params.SrcDir();
+    if (srcFiles.empty()) {
+        APP_LOGE("Zips params srcFiles is empty");
+        return false;
+    }
     if (filesToAdd->empty()) {
         filesToAdd = &allRelativeFiles;
         GetZipsAllRelativeFiles(params, allRelativeFiles, srcFiles);

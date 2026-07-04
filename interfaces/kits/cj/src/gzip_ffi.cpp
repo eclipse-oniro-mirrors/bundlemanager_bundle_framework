@@ -85,6 +85,7 @@ int32_t CjGZipEntity::Close(int32_t* errCode)
         APP_LOGE("gzclose return failed, code: %{public}d", ret);
         *errCode = ZlibBusinessError(ret);
     }
+    gzs = nullptr;
     return ret;
 }
 
