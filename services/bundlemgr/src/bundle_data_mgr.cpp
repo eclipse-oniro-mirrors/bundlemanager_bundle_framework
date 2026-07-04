@@ -8358,7 +8358,8 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
             extensionAbilityInfo.applicationInfo);
         return true;
     }
-    LOG_NOFUNC_W(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUri (%{public}s) failed", convertUri.c_str());
+    LOG_NOFUNC_W(BMS_TAG_QUERY, "QueryExtensionAbilityInfoByUri %{public}s %{public}d failed",
+        convertUri.c_str(), userId);
     return false;
 }
 
