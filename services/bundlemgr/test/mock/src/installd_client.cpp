@@ -744,5 +744,14 @@ ErrCode InstalldClient::DeleteOldCacheFiles(
     }
     return CallService(&IInstalld::DeleteOldCacheFiles, paths, cacheSize, cleanedSize);
 }
+
+int64_t InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs)
+{
+    if (paths.empty()) {
+        APP_LOGE("paths is empty");
+        return 0;
+    }
+    return CallService(&IInstalld::GetCacheDiskUsageFromPath, paths, timeoutMs);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

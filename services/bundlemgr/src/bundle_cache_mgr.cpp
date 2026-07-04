@@ -125,13 +125,7 @@ void BundleCacheMgr::GetBundleCacheSizeByAppIndex(const std::string &bundleName,
     int32_t appIndex, const std::vector<std::string> &moduleNames, uint64_t &cacheStat)
 {
     std::vector<std::string> cachePaths = GetBundleCachePath(bundleName, userId, appIndex, moduleNames);
-    int64_t cacheSize = 0;
-    ErrCode ret = InstalldClient::GetInstance()->GetDiskUsageFromPath(
-        cachePaths, bundleName, BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE, cacheSize);
-    if (ret != ERR_OK) {
-        APP_LOGW_NOFUNC("BundleCache failed for %{public}s", bundleName.c_str());
-        return;
-    }
+    int64_t cacheSize = InstalldClient::GetInstance()->GetCacheDiskUsageFromPath(cachePaths);
     LOG_NOFUNC_D(BMS_TAG_INSTALLER, "BundleCache stat: %{public}" PRId64 " bundlename: %{public}s",
         cacheSize, bundleName.c_str());
     cacheStat += static_cast<uint64_t>(cacheSize);

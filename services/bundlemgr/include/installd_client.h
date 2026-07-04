@@ -367,6 +367,8 @@ public:
      */
     ErrCode DeleteOldCacheFiles(const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize);
 
+    int64_t GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs = -1);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

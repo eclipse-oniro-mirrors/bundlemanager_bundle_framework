@@ -364,6 +364,8 @@ public:
     virtual ErrCode DeleteOldCacheFiles(
         const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize) override;
 
+    virtual int64_t GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs = -1) override;
+
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

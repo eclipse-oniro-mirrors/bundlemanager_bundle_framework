@@ -318,6 +318,8 @@ private:
      * @return Returns true if called successfully; returns false otherwise.
      */
     bool HandleDeleteOldCacheFiles(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleGetCacheDiskUsageFromPath(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

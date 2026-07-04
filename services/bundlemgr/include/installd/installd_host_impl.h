@@ -360,6 +360,8 @@ public:
     virtual ErrCode DeleteOldCacheFiles(
         const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize) override;
 
+    virtual int64_t GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs = -1) override;
+
 private:
     std::string GetExtensionConfigPath() const;
     /**
@@ -417,6 +419,8 @@ private:
     ErrCode GetResolvedApl(CreateDirParam &createDirParam);
     void GetFilesAndSortByLastModifiedTime(const std::vector<std::string> &paths,
         std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> &fileTimePairs);
+
+    int64_t GetFileSize(const std::string &filePath);
 
     std::map<int32_t, SessionProvisionInfo> sessionProvisionCache_;
     std::mutex sessionProvisionCacheMutex_;

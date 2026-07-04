@@ -651,6 +651,11 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual int64_t GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs = -1)
+    {
+        return 0;
+    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \
