@@ -1641,13 +1641,6 @@ ErrCode BundleInstallerHost::CreateCliSandboxApp(const std::string &creatorBundl
         finalCreatorBundleName = envCreatorBundleName;
     }
 
-    int32_t finalResult = BundlePermissionMgr::VerifyPermission(
-        finalCreatorBundleName, Constants::PERMISSION_MANAGE_SANDBOX_BUNDLE, userId);
-    if (finalResult != Constants::PERMISSION_GRANTED) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "creator %{public}s does not have permission", finalCreatorBundleName.c_str());
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
-    }
-
     auto installer = std::make_shared<BundleCliSandboxInstaller>();
     return installer->CreateCliSandboxApp(finalCreatorBundleName, bundleName, userId, appIndex);
 }
