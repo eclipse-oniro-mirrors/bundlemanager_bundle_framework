@@ -4224,7 +4224,8 @@ bool BundleMgrHostImpl::GetAbilityInfo(
 bool BundleMgrHostImpl::ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo)
 {
-    APP_LOGD("start ImplicitQueryInfoByPriority, flags : %{public}d, userId : %{public}d", flags, userId);
+    APP_LOGI_NOFUNC("ImplicitQueryInfoByPriority %{public}d %{public}d %{public}s",
+        flags, userId, want.GetAction().c_str());
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGD("non-system app calling system api");
@@ -6143,7 +6144,8 @@ ErrCode BundleMgrHostImpl::GetDeveloperIds(const std::string &appDistributionTyp
 ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, const bool &state,
     bool isNeedSendNotify)
 {
-    APP_LOGD("start SwitchUninstallState, bundleName : %{public}s, state : %{public}d", bundleName.c_str(), state);
+    APP_LOGI_NOFUNC("SwitchUninstallState %{public}s %{public}d %{public}d",
+        bundleName.c_str(), state, IPCSkeleton::GetCallingPid());
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -6199,7 +6201,8 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
 ErrCode BundleMgrHostImpl::SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
     int32_t userId)
 {
-    APP_LOGI("start SwitchUninstallStateByUserId %{public}s %{public}d %{public}d", bundleName.c_str(), state, userId);
+    APP_LOGI_NOFUNC("SwitchUninstallStateByUserId %{public}s %{public}d %{public}d %{public}d",
+        bundleName.c_str(), state, userId, IPCSkeleton::GetCallingPid());
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
