@@ -2076,7 +2076,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllBundleInfoByDeveloperId_0100, Function |
     std::string developerId;
     std::vector<BundleInfo> bundleInfos;
     ErrCode ret = hostImpl->GetAllBundleInfoByDeveloperId(developerId, bundleInfos, DEFAULT_USERID);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_DEVELOPERID);
 }
 
 /**

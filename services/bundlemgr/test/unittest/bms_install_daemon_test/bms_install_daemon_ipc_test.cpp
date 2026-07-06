@@ -1524,7 +1524,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7900, Function | SmallTest |
 {
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
-    
+
     std::vector<std::string> paths;
     uint64_t cacheSize = 0;
     uint64_t cleanedSize;
@@ -1541,7 +1541,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_8000, Function | SmallTest |
 {
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
-    
+
     auto ret = mkdir("/data/test/temp", 0777);
     ASSERT_EQ(ret, 0);
     std::vector<std::string> paths = {"/data/test/temp"};
@@ -1549,6 +1549,8 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_8000, Function | SmallTest |
     uint64_t cleanedSize;
     ret = proxy->DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
     EXPECT_EQ(ret, ERR_OK);
+    std::error_code ec;
+    std::filesystem::remove_all("/data/test/temp", ec);
 }
 
 /**
@@ -1566,6 +1568,26 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_8100, Function | SmallTest |
     uint64_t cleanedSize;
     auto ret = proxy->DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SERVICE_DIED);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_8200
+ * @tc.name: test Marshalling function of DeleteOldCacheFiles
+ * @tc.desc: 1. calling DeleteOldCacheFiles of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_8200, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = mkdir("/data/test/temp", 0777);
+    ASSERT_EQ(ret, 0);
+    std::vector<std::string> paths = {"/data/test/temp"};
+    int64_t statSize = 0;
+    ret = proxy->GetCacheDiskUsageFromPath(paths, statSize);
+    EXPECT_EQ(ret, ERR_OK);
+    std::error_code ec;
+    std::filesystem::remove_all("/data/test/temp", ec);
 }
 
 /**

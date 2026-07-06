@@ -506,6 +506,7 @@ public:
         const std::string &bundleName, const BundleDirScene &scene);
     static bool IsValidPathByGetDiskUsageFromPathScene(
         const std::string &path, const std::string &bundleName, const BundleDirScene &scene);
+    static bool IsValidPathByGetCacheDiskUsageFromPath(const std::string &path);
     static bool IsValidPathByGetFileStatScene(const std::string &file, const BundleDirScene &scene);
     static bool IsValidPathByHashFiles(const std::string &file);
     static bool IsValidPathByMigrateData(

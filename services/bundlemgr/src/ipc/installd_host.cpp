@@ -1666,11 +1666,10 @@ bool InstalldHost::HandleGetCacheDiskUsageFromPath(MessageParcel &data, MessageP
         cachePaths.emplace_back(path);
     }
     int64_t timeoutMs = data.ReadInt64();
-    int64_t statSize = GetCacheDiskUsageFromPath(cachePaths, timeoutMs);
-    if (!reply.WriteInt64(statSize)) {
-        LOG_E(BMS_TAG_INSTALLD, "HandleGetCacheDiskUsageFromPath write failed");
-        return false;
-    }
+    int64_t statSize = 0;
+    auto result = GetCacheDiskUsageFromPath(cachePaths, statSize, timeoutMs);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int64, reply, statSize);
     return true;
 }
 }  // namespace AppExecFwk

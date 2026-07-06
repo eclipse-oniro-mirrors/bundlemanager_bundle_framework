@@ -483,9 +483,10 @@ ErrCode InstalldHostImpl::DeleteOldCacheFiles(
     return ERR_OK;
 }
 
-int64_t InstalldHostImpl::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs)
+ErrCode InstalldHostImpl::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths,
+    int64_t &statSize, int64_t timeoutMs)
 {
-    return 0;
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

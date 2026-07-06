@@ -1051,6 +1051,37 @@ HWTEST_F(BmsInstalldHostTest, HandleDeleteOldCacheFiles_0300, Function | SmallTe
 }
 
 /**
+ * @tc.number: HandleGetCacheDiskUsageFromPath_0100
+ * @tc.name: test HandleGetCacheDiskUsageFromPath
+ * @tc.desc: 1.HandleGetCacheDiskUsageFromPath test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleGetCacheDiskUsageFromPath_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleGetCacheDiskUsageFromPath(data, reply);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: HandleGetCacheDiskUsageFromPath_0200
+ * @tc.name: test HandleGetCacheDiskUsageFromPath
+ * @tc.desc: 1.HandleGetCacheDiskUsageFromPath test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleGetCacheDiskUsageFromPath_0200, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    data.WriteUint32(1);
+    data.WriteString("/data/test");
+    data.WriteInt64(-1);
+    MessageParcel reply;
+    bool res = installdHost.HandleGetCacheDiskUsageFromPath(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleCheckExternalSourcePluginSwitch_0100
  * @tc.name: test HandleCheckExternalSourcePluginSwitch
  * @tc.desc: 1.HandleCheckExternalSourcePluginSwitch test

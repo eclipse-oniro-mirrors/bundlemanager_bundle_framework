@@ -1680,7 +1680,8 @@ ErrCode InstalldProxy::DeleteOldCacheFiles(
     return ERR_OK;
 }
 
-int64_t InstalldProxy::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs)
+ErrCode InstalldProxy::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths,
+    int64_t &statSize, int64_t timeoutMs)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -1703,7 +1704,13 @@ int64_t InstalldProxy::GetCacheDiskUsageFromPath(const std::vector<std::string> 
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC, WAIT_TIME);
-    return TransactInstalldCmd(InstalldInterfaceCode::GET_CACHE_DISK_USAGE_FROM_PATH, data, reply, option);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_CACHE_DISK_USAGE_FROM_PATH, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
+        return ret;
+    }
+    statSize = reply.ReadInt64();
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

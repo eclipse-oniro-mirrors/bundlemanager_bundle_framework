@@ -2132,6 +2132,25 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeleteOldCacheFiles_0100, 
 }
 
 /**
+ * @tc.number: BmsInstalldClientTest_GetCacheDiskUsageFromPath_0100
+ * @tc.name: DeleteOldCacheFiles
+ * @tc.desc: Test client-side validation for empty paths.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetCacheDiskUsageFromPath_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_DeleteOldCacheFiles_0100 start";
+    std::vector<std::string> paths;
+    int64_t statSize = 0;
+    ErrCode result = installClient_->GetCacheDiskUsageFromPath(paths, statSize);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    paths.push_back("/data/app/el2/100/base/com.example.test/cache");
+    result = installClient_->GetCacheDiskUsageFromPath(paths, statSize);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_DeleteOldCacheFiles_0100 end";
+}
+
+/**
  * @tc.number: BmsInstalldClientTest_CheckExternalSourcePluginSwitch_0100
  * @tc.name: CheckExternalSourcePluginSwitch
  */

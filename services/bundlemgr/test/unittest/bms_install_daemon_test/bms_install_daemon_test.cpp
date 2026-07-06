@@ -2818,4 +2818,23 @@ HWTEST_F(BmsInstallDaemonTest, DeleteOldCacheFiles_Normal_0200, Function | Small
     EXPECT_TRUE(std::filesystem::is_empty("/data/test/temp", ec));
     std::filesystem::remove_all("/data/test/temp", ec);
 }
+
+/**
+ * @tc.number: GetCacheDiskUsageFromPath_Normal_0100
+ * @tc.name: test GetCacheDiskUsageFromPath invalid paths
+ * @tc.desc: 1. test GetCacheDiskUsageFromPath with invalid paths
+*/
+HWTEST_F(BmsInstallDaemonTest, GetCacheDiskUsageFromPath_Normal_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    auto ret = mkdir("/data/app/cache", 0777);
+    ASSERT_EQ(ret, 0);
+    std::vector<std::string> paths = {"/data/app/cache"};
+    int64_t statSize = 0;
+    ret = hostImpl.GetCacheDiskUsageFromPath(paths, statSize);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(statSize, 0);
+    std::error_code ec;
+    std::filesystem::remove_all("/data/app/cache", ec);
+}
 } // OHOS
