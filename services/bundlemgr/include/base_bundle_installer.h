@@ -877,12 +877,9 @@ private:
     void UpdateDeveloperIdAndOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
-    ErrCode DeleteShaderCache(const std::string &bundleName) const;
     void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
     ErrCode CleanArkStartupCache(const std::string &bundleName) const;
-    void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteCloudShader(const std::string &bundleName) const;
     ErrCode DeleteEl1ShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
         const std::string &bundleName, int32_t userId) const;

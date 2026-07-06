@@ -2431,9 +2431,6 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             BundleCacheMgr::MarkCleaningDone(bundleName, userId, appIndex);
         });
         std::vector<std::string> caches = rootDir;
-        std::string shaderCachePath;
-        shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
-        caches.push_back(shaderCachePath);
         bool succeed = true;
         if (!caches.empty()) {
             for (const auto& cache : caches) {
