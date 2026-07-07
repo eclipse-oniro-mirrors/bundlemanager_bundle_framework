@@ -118,6 +118,7 @@ private:
     int32_t sessionId_ = 0;
     uint32_t versionCode_ = 0;
     int64_t startTime_ = 0;
+    bool isSoNeedFakeDecompression_ = false;
     std::string bundleName_;
     std::string bundleMsg_;
     std::string appIdentifier_;

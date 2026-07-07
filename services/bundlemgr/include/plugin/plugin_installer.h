@@ -71,6 +71,7 @@ public:
 private:
     bool isPluginExist_ = false;
     bool isLocalPluginInstall_ = false;
+    bool isSoFakeDecompression_ = false;
     bool isDebug_ = false;
     bool isCompressNativeLibs_ = true;
     bool sessionCommitted_ = false;
