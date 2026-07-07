@@ -1521,7 +1521,7 @@ private:
         const ElementName &element, int32_t flags, int32_t userId) const;
     void GetCloneAbilityInfosV9(std::vector<AbilityInfo> &abilityInfos,
         const ElementName &element, int32_t flags, int32_t userId) const;
-    ErrCode ExplicitQueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
+    bool ExplicitQueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
         int32_t appIndex, AbilityInfo &abilityInfo) const;
     ErrCode ExplicitQueryCloneAbilityInfoV9(const ElementName &element, int32_t flags, int32_t userId,
         int32_t appIndex, AbilityInfo &abilityInfo) const;
