@@ -636,9 +636,14 @@ ohos_shared_library("installs") {
   cflags = [
     "-Os",
     "-fstack-protector-strong",
+    "-fvisibility=hidden",
+    "-fdata-sections",
+    "-ffunction-sections",
   ]
 
   cflags_cc = cflags
+
+  ldflags = [ "-Wl,--gc-sections" ]
 
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
