@@ -875,35 +875,34 @@ CArrDataItem ConvertArrDataItem(const std::map<std::string, std::string>& data)
         return dataItems;
     }
     CDataItem *retValue = reinterpret_cast<CDataItem *>
-                                        (malloc(sizeof(CDataItem) * dataItems.size));
-    if (retValue != nullptr) {
-        int i = 0;
-        for (auto it = data.begin(); it != data.end(); ++it) {
-            retValue[i].key = MallocCString(it->first);
-            if (retValue[i].key == nullptr) {
-                APP_LOGE("ConvertArrDataItem MallocCString key failed at index %{public}d", i);
-                dataItems.head = retValue;
-                dataItems.size = i;
-                FreeCArrDataItem(dataItems);
-                return {nullptr, 0};
-            }
-            retValue[i].value = MallocCString(it->second);
-            if (retValue[i].value == nullptr) {
-                APP_LOGE("ConvertArrDataItem MallocCString value failed at index %{public}d", i);
-                free(retValue[i].key);
-                retValue[i].key = nullptr;
-                dataItems.head = retValue;
-                dataItems.size = i;
-                FreeCArrDataItem(dataItems);
-                return {nullptr, 0};
-            }
-            i = i + 1;
-        }
-        dataItems.head = retValue;
-    } else {
+                                    (malloc(sizeof(CDataItem) * dataItems.size));
+    if (retValue == nullptr) {
         APP_LOGE("ConvertArrDataItem malloc failed");
         return dataItems;
     }
+    int i = 0;
+    for (auto it = data.begin(); it != data.end(); ++it) {
+        retValue[i].key = MallocCString(it->first);
+        if (retValue[i].key == nullptr) {
+            APP_LOGE("ConvertArrDataItem MallocCString key failed at index %{public}d", i);
+            dataItems.head = retValue;
+            dataItems.size = i;
+            FreeCArrDataItem(dataItems);
+            return {nullptr, 0};
+        }
+        retValue[i].value = MallocCString(it->second);
+        if (retValue[i].value == nullptr) {
+            APP_LOGE("ConvertArrDataItem MallocCString value failed at index %{public}d", i);
+            free(retValue[i].key);
+            retValue[i].key = nullptr;
+            dataItems.head = retValue;
+            dataItems.size = i;
+            FreeCArrDataItem(dataItems);
+            return {nullptr, 0};
+        }
+        i = i + 1;
+    }
+    dataItems.head = retValue;
     return dataItems;
 }
 

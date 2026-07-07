@@ -248,12 +248,8 @@ ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir
                 }
             } else {
                 std::unique_ptr<WriterDelegate> writer = writerFactory(destDir, entryPath);
-                if (writer == nullptr) {
-                    APP_LOGE("writer is nullptr");
-                    return ERR_ZLIB_DEST_FILE_DISABLED;
-                }
-                if (!writer->PrepareOutput()) {
-                    APP_LOGE("PrepareOutput err");
+                if (writer == nullptr || !writer->PrepareOutput()) {
+                    APP_LOGE("writer is nullptr or PrepareOutput err");
                     return ERR_ZLIB_DEST_FILE_DISABLED;
                 }
                 if (!reader.ExtractCurrentEntry(writer.get(), std::numeric_limits<uint64_t>::max())) {
