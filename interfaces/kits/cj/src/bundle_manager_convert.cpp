@@ -865,6 +865,22 @@ void FreeCArrRetDependency(CArrRetDependency& dep)
     dep.size = 0;
 }
 
+void FreeCArrDataItem(CArrDataItem& dataItems)
+{
+    if (dataItems.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < dataItems.size; i++) {
+        free(dataItems.head[i].key);
+        dataItems.head[i].key = nullptr;
+        free(dataItems.head[i].value);
+        dataItems.head[i].value = nullptr;
+    }
+    free(dataItems.head);
+    dataItems.head = nullptr;
+    dataItems.size = 0;
+}
+
 CArrDataItem ConvertArrDataItem(const std::map<std::string, std::string>& data)
 {
     CArrDataItem dataItems;
@@ -904,22 +920,6 @@ CArrDataItem ConvertArrDataItem(const std::map<std::string, std::string>& data)
     }
     dataItems.head = retValue;
     return dataItems;
-}
-
-void FreeCArrDataItem(CArrDataItem& dataItems)
-{
-    if (dataItems.head == nullptr) {
-        return;
-    }
-    for (int64_t i = 0; i < dataItems.size; i++) {
-        free(dataItems.head[i].key);
-        dataItems.head[i].key = nullptr;
-        free(dataItems.head[i].value);
-        dataItems.head[i].value = nullptr;
-    }
-    free(dataItems.head);
-    dataItems.head = nullptr;
-    dataItems.size = 0;
 }
 
 CRouterItem ConvertRouterItem(const AppExecFwk::RouterItem& router)
