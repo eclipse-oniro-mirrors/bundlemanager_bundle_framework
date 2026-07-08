@@ -307,7 +307,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
     sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
-    if (result != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON && result != ERR_OK
+    if (result == Security::AccessToken::AccessTokenError::ERR_UID_NOT_EXIST
         && dataMgr_ && !bundleName_.empty()) {
         InnerBundleInfo bundleInfo;
         if (dataMgr_->FetchInnerBundleInfo(bundleName_, bundleInfo)) {
@@ -323,7 +323,10 @@ ErrCode BaseBundleInstaller::InstallBundle(
             if (refresh) {
                 ResetInstallProperties();
                 uid = Constants::INVALID_UID;
-                result = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
+                auto retryResult = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
+                if (retryResult == ERR_OK) {
+                    result = retryResult;
+                }
             }
         }
     }
@@ -2156,7 +2159,6 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         RollBack(info.second, oldInfo);
     }
     // need delete definePermissions and requestPermissions
-    UpdateHapToken(preInfo.GetAppType() != oldInfo.GetAppType(), oldInfo);
     if (isHnpInstalled_) {
         RollbackHnpInstall(bundleName_, oldInfo.GetUsers());
     }
@@ -4098,23 +4100,30 @@ void BaseBundleInstaller::ParseSizeFromProvision(
 
 ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
 {
-    if (dataMgr_ == nullptr) {
-        LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
-        return ERR_APPEXECFWK_NULL_PTR;
-    }
     InnerBundleUserInfo newInnerBundleUserInfo;
     if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed",
             info.GetBundleName().c_str(), userId_);
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
+    return CreateBundleDataDir(info, newInnerBundleUserInfo);
+}
+
+ErrCode BaseBundleInstaller::CreateBundleDataDir(
+    InnerBundleInfo &info, const InnerBundleUserInfo &innerBundleUserInfo) const
+{
+    if (dataMgr_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    int32_t userId = innerBundleUserInfo.bundleUserInfo.userId;
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
         Constants::APP_PROVISION_TYPE_FILE_NAME);
     CreateDirParam createDirParam;
     createDirParam.bundleName = info.GetBundleName();
-    createDirParam.userId = userId_;
-    createDirParam.uid = newInnerBundleUserInfo.uid;
-    createDirParam.gid = newInnerBundleUserInfo.uid;
+    createDirParam.userId = userId;
+    createDirParam.uid = innerBundleUserInfo.uid;
+    createDirParam.gid = innerBundleUserInfo.uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
@@ -4123,27 +4132,27 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         // if user is not activated, access el2-el4 may return ok but dir cannot be created
-        if (AccountHelper::IsOsAccountVerified(userId_)) {
+        if (AccountHelper::IsOsAccountVerified(userId)) {
             LOG_E(BMS_TAG_INSTALLER, "fail to create bundle data dir, error is %{public}d", result);
             return result;
         } else {
-            LOG_W(BMS_TAG_INSTALLER, "user %{public}d is not activated", userId_);
+            LOG_W(BMS_TAG_INSTALLER, "user %{public}d is not activated", userId);
         }
     }
     std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE + info.GetBundleName();
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + info.GetBundleName();
     if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
-        PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir,
+        PrepareBundleDirQuota(info.GetBundleName(), innerBundleUserInfo.uid, bundleDataDir,
             ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET);
     } else {
-        PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir, 0);
+        PrepareBundleDirQuota(info.GetBundleName(), innerBundleUserInfo.uid, bundleDataDir, 0);
     }
     if (info.GetIsNewVersion()) {
         int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
             GetIntParameter(BMS_KEY_SHELL_UID, ServiceConstants::SHELL_UID) :
-            newInnerBundleUserInfo.uid;
+            innerBundleUserInfo.uid;
         result = CreateArkProfile(
-            info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, gid);
+            info.GetBundleName(), userId, innerBundleUserInfo.uid, gid);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to create ark profile, error is %{public}d", result);
             return result;
@@ -4159,7 +4168,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     std::string dataBaseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
         ServiceConstants::DATABASE + info.GetBundleName();
     info.SetAppDataBaseDir(dataBaseDir);
-    info.AddInnerBundleUserInfo(newInnerBundleUserInfo);
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
     return ERR_OK;
 }
 
@@ -8565,7 +8574,23 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         Security::AccessToken::HapInfoCheckResult checkResult;
         auto ret = BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, userId, checkResult,
             verifyRes_.GetProvisionInfo().appServiceCapabilities, false, userDebugGrant, sessionId_);
-        if (ret != ERR_OK) {
+        if (ret == ERR_APPEXECFWK_INSTALL_UID_CHANGED) {
+            InnerBundleUserInfo updatedUserInfo;
+            if (!newInfo.GetInnerBundleUserInfo(userId, updatedUserInfo)) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+                    "get updated user info failed after uid changed %{public}s", bundleName_.c_str());
+                return ERR_APPEXECFWK_INSTALL_UID_CHANGED;
+            }
+            auto createRet = CreateBundleDataDir(newInfo, updatedUserInfo);
+            if (createRet != ERR_OK) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLER, "CreateBundleDataDir after uid changed failed %{public}s",
+                    bundleName_.c_str());
+                return createRet;
+            }
+            needUpdate = true;
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateBundleDataDir after uid changed success %{public}s",
+                bundleName_.c_str());
+        } else if (ret != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -8579,8 +8604,35 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             Security::AccessToken::AccessTokenIDEx cloneAccessTokenIdEx;
             cloneAccessTokenIdEx.tokenIDEx = cloneInfoPair.second.accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
-            if (BundlePermissionMgr::UpdateHapToken(cloneAccessTokenIdEx, newInfo, userId, checkResult,
-                verifyRes_.GetProvisionInfo().appServiceCapabilities, false, false, sessionId_) != ERR_OK) {
+            auto cloneRet = BundlePermissionMgr::UpdateHapToken(cloneAccessTokenIdEx, newInfo, userId, checkResult,
+                verifyRes_.GetProvisionInfo().appServiceCapabilities, false, false, sessionId_,
+                cloneInfoPair.second.appIndex);
+            if (cloneRet == ERR_APPEXECFWK_INSTALL_UID_CHANGED) {
+                InnerBundleUserInfo updatedUserInfo;
+                if (!newInfo.GetInnerBundleUserInfo(userId, updatedUserInfo)) {
+                    LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+                        "get updated user info failed after uid changed %{public}s", bundleName_.c_str());
+                    return ERR_APPEXECFWK_INSTALL_UID_CHANGED;
+                }
+                int32_t cloneUid = updatedUserInfo.uid;
+                auto cloneKey = std::to_string(cloneInfoPair.second.appIndex);
+                auto cloneIter = updatedUserInfo.cloneInfos.find(cloneKey);
+                if (cloneIter != updatedUserInfo.cloneInfos.end()) {
+                    cloneUid = cloneIter->second.uid;
+                }
+                std::shared_ptr<BundleCloneInstaller> cloneInstaller =
+                    std::make_shared<BundleCloneInstaller>();
+                auto createRet = cloneInstaller->CreateCloneDataDir(
+                    newInfo, userId, cloneUid, cloneInfoPair.second.appIndex);
+                if (createRet != ERR_OK) {
+                    LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+                        "CreateCloneDataDir after uid changed failed %{public}s", bundleName_.c_str());
+                    return createRet;
+                }
+                needUpdate = true;
+                LOG_NOFUNC_I(BMS_TAG_INSTALLER,
+                    "CreateCloneDataDir after uid changed success %{public}s", bundleName_.c_str());
+            } else if (cloneRet != ERR_OK) {
                 LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
                 SetVerifyPermissionResult(checkResult);
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;

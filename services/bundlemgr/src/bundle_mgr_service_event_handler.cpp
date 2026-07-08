@@ -109,6 +109,7 @@ const std::vector<std::string> FINGERPRINTS = {
     "const.comp.hl.product_base_version.real"
 };
 constexpr const char* OTA_FLAG = "otaFlag";
+constexpr const char* ACCESS_TOKEN_MIGRATION_COUNT = "accessTokenMigrationCount";
 // pre bundle profile
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
 constexpr const char* MODULE_UPDATE_PRODUCT_SUFFIX = "/etc/app/module_update";
@@ -150,6 +151,7 @@ constexpr const char* OTA_SHARED_HSP_TASK = "OTA_SHARED_HSP_TASK";
 constexpr const char* OTA_PREINSTALL_BUNDLE_TASK = "OTA_PREINSTALL_BUNDLE_TASK";
 constexpr const char* OTA_PATCH_BUNDLE_TASK = "OTA_PATCH_BUNDLE_TASK";
 constexpr int64_t SCAN_TIMEOUT_MS = 5 * 60 * 1000;
+constexpr int32_t ACCESS_TOKEN_MIGRATED = 1;
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> onDemandInstallList_;
@@ -409,7 +411,10 @@ bool BMSEventHandler::LoadInstallInfosFromDb()
 void BMSEventHandler::BundleBootStartEvent()
 {
     Security::AccessToken::AccessTokenKit::FinishMigration();
-    UpdateOtaFlag(OTAFlag::PROCESS_ACCESS_TOKEN_MIGRATION);
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara != nullptr) {
+        bmsPara->SaveBmsParam(ACCESS_TOKEN_MIGRATION_COUNT, std::to_string(ACCESS_TOKEN_MIGRATED));
+    }
     EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
     OnBundleBootStart(Constants::DEFAULT_USERID);
     InstalldClient::GetInstance()->ResetBmsDBSecurity();
@@ -633,7 +638,10 @@ bool BMSEventHandler::AnalyzeUserData(
 ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
 {
     Security::AccessToken::AccessTokenKit::FinishMigration();
-    UpdateOtaFlag(OTAFlag::PROCESS_ACCESS_TOKEN_MIGRATION);
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara != nullptr) {
+        bmsPara->SaveBmsParam(ACCESS_TOKEN_MIGRATION_COUNT, std::to_string(ACCESS_TOKEN_MIGRATED));
+    }
     ReInstallSystemHspAndSharedBundles();
     // First, reinstall all preInstall app from preInstall dir
     std::vector<std::string> preInstallDirs;
@@ -1858,17 +1866,25 @@ void BMSEventHandler::CleanUninstallBundleInfo()
 
 void BMSEventHandler::ProcessAccessTokenMigration()
 {
-    bool hasMigrated = false;
-    CheckOtaFlag(OTAFlag::PROCESS_ACCESS_TOKEN_MIGRATION, hasMigrated);
-    if (hasMigrated) {
-        LOG_I(BMS_TAG_DEFAULT, "Not need to migrate access_token due to has migrated");
-        Security::AccessToken::AccessTokenKit::FinishMigration();
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "bmsPara is nullptr");
         return;
+    }
+    std::string val;
+    int32_t count = 0;
+    if (bmsPara->GetBmsParam(ACCESS_TOKEN_MIGRATION_COUNT, val) && OHOS::StrToInt(val, count)) {
+        if (count >= ACCESS_TOKEN_MIGRATED) {
+            LOG_I(BMS_TAG_DEFAULT, "Not need to migrate access_token due to has migrated");
+            Security::AccessToken::AccessTokenKit::FinishMigration();
+            return;
+        }
     }
     LOG_I(BMS_TAG_DEFAULT, "Need to migrate access_token");
     bool allMigrated = InnerProcessAccessTokenMigration();
     if (allMigrated) {
-        UpdateOtaFlag(OTAFlag::PROCESS_ACCESS_TOKEN_MIGRATION);
+        int32_t newCount = (count < 0 || count >= INT32_MAX) ? ACCESS_TOKEN_MIGRATED : count + 1;
+        bmsPara->SaveBmsParam(ACCESS_TOKEN_MIGRATION_COUNT, std::to_string(newCount));
     }
 }
 
@@ -1918,9 +1934,6 @@ void BMSEventHandler::BuildMigrationData(
     for (const auto &bundleName : bundleNames) {
         InnerBundleInfo info;
         if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
-            continue;
-        }
-        if (info.IsBundleCheckBySpm()) {
             continue;
         }
         auto &m = migratedMap[bundleName];
@@ -1976,9 +1989,6 @@ void BMSEventHandler::BuildMigrationData(
         }
     }
     for (const auto &[bn, ui] : uninstallBundleInfos) {
-        if (ui.checkBySpm) {
-            continue;
-        }
         auto existingIt = migratedMap.find(bn);
         Security::AccessToken::MigratedInfo m;
         if (existingIt != migratedMap.end()) {
@@ -2168,6 +2178,8 @@ void BMSEventHandler::ExecuteMigrationWithRetry(const std::shared_ptr<BundleData
                     it->second.accessTokenIdEx = newTokenIdEx;
                 }
             }
+            BundlePermissionMgr::UpdateAppPermission(info, update.userId,
+                Security::AccessToken::TYPE_INSTALL);
             dataMgr->UpdateInnerBundleInfo(info);
             LOG_I(BMS_TAG_DEFAULT,
                 "Updated token: bundle=%{public}s userId=%{public}d appIndex=%{public}d tokenId=%{public}u",
@@ -2192,13 +2204,13 @@ void BMSEventHandler::MarkMigratedBundles(
         if (successBundleNames.find(bundleName) == successBundleNames.end()) {
             continue;
         }
+        dataMgr->UpdateUninstallBundleCheckBySpm(bundleName, true);
         InnerBundleInfo info;
         if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
             continue;
         }
         info.SetBundleCheckBySpm(true);
         dataMgr->UpdateInnerBundleInfo(info);
-        dataMgr->UpdateUninstallBundleCheckBySpm(bundleName, true);
     }
 }
 
