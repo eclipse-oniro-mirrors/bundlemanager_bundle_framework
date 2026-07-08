@@ -1921,5 +1921,274 @@ HWTEST_F(BmsBundleMgrProxyTest, CleanBundlePartialCacheAutomatic_0100, Function 
     res = bundleMgrProxy.CleanBundlePartialCacheAutomatic(cleanCacheInfo, beforeCleanedSize, afterCleanedSize);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
 }
+
+/**
+ * @tc.number: QuerySandboxCloneAbilityInfo_0100
+ * @tc.name: test the QuerySandboxCloneAbilityInfo
+ * @tc.desc: 1. creatorBundleName is empty
+ *           2. test QuerySandboxCloneAbilityInfo
+ */
+HWTEST_F(BmsBundleMgrProxyTest, QuerySandboxCloneAbilityInfo_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string creatorBundleName = "";
+    ElementName element;
+    element.SetBundleName("com.example.bundle");
+    element.SetAbilityName("MainAbility");
+    int32_t flags = 1;
+    int32_t appIndex = 2000;
+    AbilityInfo abilityInfo;
+    auto res = bundleMgrProxy.QuerySandboxCloneAbilityInfo(
+        creatorBundleName, element, flags, appIndex, abilityInfo, 100);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_CREATOR_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: QuerySandboxCloneAbilityInfo_0200
+ * @tc.name: test the QuerySandboxCloneAbilityInfo
+ * @tc.desc: 1. appIndex below CLI_SANDBOX_APP_INDEX_MIN
+ *           2. test QuerySandboxCloneAbilityInfo
+ */
+HWTEST_F(BmsBundleMgrProxyTest, QuerySandboxCloneAbilityInfo_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string creatorBundleName = "com.example.creator";
+    ElementName element;
+    element.SetBundleName("com.example.bundle");
+    element.SetAbilityName("MainAbility");
+    int32_t flags = 1;
+    int32_t appIndex = 100;
+    AbilityInfo abilityInfo;
+    auto res = bundleMgrProxy.QuerySandboxCloneAbilityInfo(
+        creatorBundleName, element, flags, appIndex, abilityInfo, 100);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_APP_INDEX);
+}
+
+/**
+ * @tc.number: QuerySandboxCloneAbilityInfo_0201
+ * @tc.name: test the QuerySandboxCloneAbilityInfo
+ * @tc.desc: 1. element bundleName is empty (creatorBundleName valid)
+ *           2. test QuerySandboxCloneAbilityInfo returns param error
+ */
+HWTEST_F(BmsBundleMgrProxyTest, QuerySandboxCloneAbilityInfo_0201, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string creatorBundleName = "com.example.creator";
+    ElementName element;
+    element.SetAbilityName("MainAbility"); // bundleName left empty
+    int32_t flags = 1;
+    int32_t appIndex = 2000;
+    AbilityInfo abilityInfo;
+    auto res = bundleMgrProxy.QuerySandboxCloneAbilityInfo(
+        creatorBundleName, element, flags, appIndex, abilityInfo, 100);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_QUERY_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: QuerySandboxCloneAbilityInfo_0202
+ * @tc.name: test the QuerySandboxCloneAbilityInfo
+ * @tc.desc: 1. element abilityName is empty (creatorBundleName valid)
+ *           2. test QuerySandboxCloneAbilityInfo returns param error
+ */
+HWTEST_F(BmsBundleMgrProxyTest, QuerySandboxCloneAbilityInfo_0202, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string creatorBundleName = "com.example.creator";
+    ElementName element;
+    element.SetBundleName("com.example.bundle"); // abilityName left empty
+    int32_t flags = 1;
+    int32_t appIndex = 2000;
+    AbilityInfo abilityInfo;
+    auto res = bundleMgrProxy.QuerySandboxCloneAbilityInfo(
+        creatorBundleName, element, flags, appIndex, abilityInfo, 100);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_QUERY_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: QuerySandboxCloneAbilityInfo_0300
+ * @tc.name: test the QuerySandboxCloneAbilityInfo
+ * @tc.desc: 1. appIndex above CLI_SANDBOX_APP_INDEX_MAX
+ *           2. test QuerySandboxCloneAbilityInfo
+ */
+HWTEST_F(BmsBundleMgrProxyTest, QuerySandboxCloneAbilityInfo_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string creatorBundleName = "com.example.creator";
+    ElementName element;
+    element.SetBundleName("com.example.bundle");
+    element.SetAbilityName("MainAbility");
+    int32_t flags = 1;
+    int32_t appIndex = 3001;
+    AbilityInfo abilityInfo;
+    auto res = bundleMgrProxy.QuerySandboxCloneAbilityInfo(
+        creatorBundleName, element, flags, appIndex, abilityInfo, 100);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_APP_INDEX);
+}
+
+/**
+ * @tc.number: QuerySandboxCloneAbilityInfo_0400
+ * @tc.name: test the QuerySandboxCloneAbilityInfo
+ * @tc.desc: 1. valid params but remote object unavailable
+ *           2. test QuerySandboxCloneAbilityInfo
+ */
+HWTEST_F(BmsBundleMgrProxyTest, QuerySandboxCloneAbilityInfo_0400, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string creatorBundleName = "com.example.creator";
+    ElementName element;
+    element.SetBundleName("com.example.bundle");
+    element.SetAbilityName("MainAbility");
+    int32_t flags = 1;
+    int32_t appIndex = 2000;
+    AbilityInfo abilityInfo;
+    auto res = bundleMgrProxy.QuerySandboxCloneAbilityInfo(
+        creatorBundleName, element, flags, appIndex, abilityInfo, 100);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetCliSandboxAppIndexes_0100
+ * @tc.name: test the GetCliSandboxAppIndexes
+ * @tc.desc: 1. remote object unavailable
+ *           2. test GetCliSandboxAppIndexes
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetCliSandboxAppIndexes_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "com.example.bundle";
+    std::vector<int32_t> appIndexes;
+    auto res = bundleMgrProxy.GetCliSandboxAppIndexes(bundleName, appIndexes, 100);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetStringByIdListProxy_0100
+ * @tc.name: test the GetStringByIdList
+ * @tc.desc: 1. bundleName is empty
+ *           2. test GetStringByIdList returns internal error
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetStringByIdListProxy_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "";
+    std::string moduleName = "module";
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    int32_t userId = 100;
+    std::string localeInfo = "";
+    auto res = bundleMgrProxy.GetStringByIdList(bundleName, moduleName, resIdList, labelList, userId, localeInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetStringByIdListProxy_0200
+ * @tc.name: test the GetStringByIdList
+ * @tc.desc: 1. moduleName is empty
+ *           2. test GetStringByIdList returns internal error
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetStringByIdListProxy_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "bundle";
+    std::string moduleName = "";
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    int32_t userId = 100;
+    std::string localeInfo = "";
+    auto res = bundleMgrProxy.GetStringByIdList(bundleName, moduleName, resIdList, labelList, userId, localeInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetStringByIdListProxy_0300
+ * @tc.name: test the GetStringByIdList
+ * @tc.desc: 1. resIdList is empty
+ *           2. test GetStringByIdList returns internal error
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetStringByIdListProxy_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "bundle";
+    std::string moduleName = "module";
+    std::vector<uint32_t> resIdList;
+    std::vector<std::string> labelList;
+    int32_t userId = 100;
+    std::string localeInfo = "";
+    auto res = bundleMgrProxy.GetStringByIdList(bundleName, moduleName, resIdList, labelList, userId, localeInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetStringByIdListProxy_0400
+ * @tc.name: test the GetStringByIdList
+ * @tc.desc: 1. resIdList size exceeds MAX_RES_ID_LIST_SIZE
+ *           2. test GetStringByIdList returns internal error
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetStringByIdListProxy_0400, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "bundle";
+    std::string moduleName = "module";
+    std::vector<uint32_t> resIdList;
+    for (int32_t i = 0; i < 1001; ++i) {
+        resIdList.push_back(i);
+    }
+    std::vector<std::string> labelList;
+    int32_t userId = 100;
+    std::string localeInfo = "";
+    auto res = bundleMgrProxy.GetStringByIdList(bundleName, moduleName, resIdList, labelList, userId, localeInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetStringByIdListProxy_0500
+ * @tc.name: test the GetStringByIdList
+ * @tc.desc: 1. remote object is nullptr
+ *           2. test GetStringByIdList returns parcel error
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetStringByIdListProxy_0500, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "bundle";
+    std::string moduleName = "module";
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    int32_t userId = 100;
+    std::string localeInfo = "";
+    auto res = bundleMgrProxy.GetStringByIdList(bundleName, moduleName, resIdList, labelList, userId, localeInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetStringByIdListProxy_0600
+ * @tc.name: test the GetStringByIdList
+ * @tc.desc: 1. all params valid but remote object unavailable
+ *           2. test GetStringByIdList returns parcel error
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetStringByIdListProxy_0600, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "bundle";
+    std::string moduleName = "module";
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    int32_t userId = 100;
+    std::string localeInfo = "en_US";
+    auto res = bundleMgrProxy.GetStringByIdList(bundleName, moduleName, resIdList, labelList, userId, localeInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
 }
 }

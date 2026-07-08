@@ -77,6 +77,7 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
+    "dfs_service:libdecompress",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",

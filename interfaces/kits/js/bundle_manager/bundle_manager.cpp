@@ -4049,6 +4049,18 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ENTRY_MODULE), &nGetBundleInfoWithEntryModule));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_ENTRY_MODULE",
         nGetBundleInfoWithEntryModule));
+
+    napi_value nGetBundleInfoWithCommonClone;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_COMMON_CLONE), &nGetBundleInfoWithCommonClone));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_COMMON_CLONE",
+        nGetBundleInfoWithCommonClone));
+
+    napi_value nGetBundleInfoWithSandboxClone;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SANDBOX_CLONE), &nGetBundleInfoWithSandboxClone));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_SANDBOX_CLONE",
+        nGetBundleInfoWithSandboxClone));
 }
 
 static ErrCode InnerGetBundleInfo(const std::string &bundleName, int32_t flags,
@@ -5180,10 +5192,6 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
             APP_LOGD("GetBundleInfo param from cache");
             NAPI_CALL(env,
                 napi_get_reference_value(env, item->second, &nBundleInfo));
-            auto endTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now().time_since_epoch()).count();
-            HistogramUtil::ReportHistogramTimes("AbilityKit.bundleManager.getBundleInfoForSelfSync",
-                static_cast<int32_t>(endTime - startTime));
             return nBundleInfo;
         }
     }
@@ -5943,6 +5951,241 @@ napi_value GetAllAppCloneBundleInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
+namespace {
+constexpr const char* PREFERENCE_MODE = "mode";
+constexpr const char* PREFERENCE_INDEX = "appIndex";
+}  // namespace
+
+bool ParseAppClonePreference(napi_env env, napi_value value, AppClonePreference& preference)
+{
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, value, &valueType), false);
+    if (valueType != napi_object) {
+        APP_LOGE_NOFUNC("preference is not object");
+        return false;
+    }
+    napi_value modeProp = nullptr;
+    napi_get_named_property(env, value, PREFERENCE_MODE, &modeProp);
+    napi_valuetype modeType;
+    napi_typeof(env, modeProp, &modeType);
+    if (modeType != napi_number) {
+        APP_LOGE_NOFUNC("preference mode must be number");
+        return false;
+    }
+    int32_t modeValue = 0;
+    napi_get_value_int32(env, modeProp, &modeValue);
+    preference.mode = static_cast<AppClonePreferenceMode>(modeValue);
+    preference.appIndex = 0;
+    if (preference.mode != AppClonePreferenceMode::CLONE_APP) {
+        return true;
+    }
+    napi_value idxProp = nullptr;
+    napi_get_named_property(env, value, PREFERENCE_INDEX, &idxProp);
+    napi_valuetype idxType;
+    napi_typeof(env, idxProp, &idxType);
+    if (idxType != napi_number) {
+        APP_LOGE_NOFUNC("preference index must be number for CLONE_APP");
+        return false;
+    }
+    napi_get_value_int32(env, idxProp, &preference.appIndex);
+    return true;
+}
+
+napi_value ConvertAppClonePreferenceToNapi(napi_env env, const AppClonePreference& preference)
+{
+    napi_value result = nullptr;
+    napi_status status = napi_create_object(env, &result);
+    if (status != napi_ok) {
+        APP_LOGE_NOFUNC("napi_create_object failed %{public}d", status);
+        return nullptr;
+    }
+    napi_value modeValue = nullptr;
+    status = napi_create_int32(env, static_cast<int32_t>(preference.mode), &modeValue);
+    if (status != napi_ok) {
+        APP_LOGE_NOFUNC("napi_create_int32 mode failed %{public}d", status);
+        return nullptr;
+    }
+    status = napi_set_named_property(env, result, PREFERENCE_MODE, modeValue);
+    if (status != napi_ok) {
+        APP_LOGE_NOFUNC("napi_set_named_property mode failed %{public}d", status);
+        return nullptr;
+    }
+    if (preference.mode == AppClonePreferenceMode::CLONE_APP) {
+        napi_value idxValue = nullptr;
+        status = napi_create_int32(env, preference.appIndex, &idxValue);
+        if (status != napi_ok) {
+            APP_LOGE_NOFUNC("napi_create_int32 index failed %{public}d", status);
+            return nullptr;
+        }
+        status = napi_set_named_property(env, result, PREFERENCE_INDEX, idxValue);
+        if (status != napi_ok) {
+            APP_LOGE_NOFUNC("napi_set_named_property index failed %{public}d", status);
+            return nullptr;
+        }
+    }
+    return result;
+}
+
+void GetAppClonePreferenceExec(napi_env env, void *data)
+{
+    AppClonePreferenceCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<AppClonePreferenceCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE_NOFUNC("GetAppClonePreferenceExec asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = BundleManagerHelper::InnerGetAppClonePreference(
+        asyncCallbackInfo->bundleName, asyncCallbackInfo->resultPreference);
+}
+
+void GetAppClonePreferenceComplete(napi_env env, napi_status status, void *data)
+{
+    AppClonePreferenceCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<AppClonePreferenceCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE_NOFUNC("GetAppClonePreferenceComplete asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<AppClonePreferenceCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        result[ARGS_POS_ONE] = ConvertAppClonePreferenceToNapi(env, asyncCallbackInfo->resultPreference);
+        if (result[ARGS_POS_ONE] == nullptr) {
+            APP_LOGE_NOFUNC("GetAppClonePreference convert failed, report service exception");
+            asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
+            result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+                GET_APP_CLONE_PREFERENCE, Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES);
+            result[ARGS_POS_ONE] = nullptr;
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        }
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_APP_CLONE_PREFERENCE, Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES);
+    }
+    CommonFunc::NapiReturnDeferred<AppClonePreferenceCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetAppClonePreference(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetAppClonePreference call");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE_NOFUNC("GetAppClonePreference param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<AppClonePreferenceCallbackInfo> asyncCallbackInfo =
+        std::make_unique<AppClonePreferenceCallbackInfo>(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGW_NOFUNC("GetAppClonePreference asyncCallbackInfo is null");
+        return nullptr;
+    }
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
+        APP_LOGE_NOFUNC("GetAppClonePreference parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (asyncCallbackInfo->bundleName.empty()) {
+        APP_LOGE_NOFUNC("GetAppClonePreference bundleName is empty");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return nullptr;
+    }
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, args[ARGS_POS_ONE], &valueType);
+    if (valueType == napi_function) {
+        napi_create_reference(env, args[ARGS_POS_ONE], 1, &asyncCallbackInfo->callback);
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<AppClonePreferenceCallbackInfo>(
+        env, asyncCallbackInfo.get(), GET_APP_CLONE_PREFERENCE,
+        GetAppClonePreferenceExec, GetAppClonePreferenceComplete);
+    asyncCallbackInfo.release();
+    APP_LOGD("call GetAppClonePreference done");
+    return promise;
+}
+
+void SetAppClonePreferenceExec(napi_env env, void *data)
+{
+    AppClonePreferenceCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<AppClonePreferenceCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE_NOFUNC("SetAppClonePreferenceExec asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = BundleManagerHelper::InnerSetAppClonePreference(
+        asyncCallbackInfo->bundleName, asyncCallbackInfo->preference);
+}
+
+void SetAppClonePreferenceComplete(napi_env env, napi_status status, void *data)
+{
+    AppClonePreferenceCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<AppClonePreferenceCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE_NOFUNC("SetAppClonePreferenceComplete asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<AppClonePreferenceCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ONE]));
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            SET_APP_CLONE_PREFERENCE, Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES);
+    }
+    CommonFunc::NapiReturnDeferred<AppClonePreferenceCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value SetAppClonePreference(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI SetAppClonePreference call");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<AppClonePreferenceCallbackInfo> asyncCallbackInfo =
+        std::make_unique<AppClonePreferenceCallbackInfo>(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGW_NOFUNC("SetAppClonePreference asyncCallbackInfo is null");
+        return nullptr;
+    }
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (asyncCallbackInfo->bundleName.empty()) {
+        APP_LOGE_NOFUNC("SetAppClonePreference bundleName is empty");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return nullptr;
+    }
+    if (!ParseAppClonePreference(env, args[ARGS_POS_ONE], asyncCallbackInfo->preference)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference parse preference failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, "preference", TYPE_OBJECT);
+        return nullptr;
+    }
+    int32_t modeValue = static_cast<int32_t>(asyncCallbackInfo->preference.mode);
+    if (modeValue < static_cast<int32_t>(AppClonePreferenceMode::ALWAYS_ASK) ||
+        modeValue > static_cast<int32_t>(AppClonePreferenceMode::CLONE_APP)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference preference mode out of range: %{public}d", modeValue);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_APP_CLONE_PREFERENCE_MODE_INVALID_ERROR);
+        return nullptr;
+    }
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, args[ARGS_POS_TWO], &valueType);
+    if (valueType == napi_function) {
+        napi_create_reference(env, args[ARGS_POS_TWO], 1, &asyncCallbackInfo->callback);
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<AppClonePreferenceCallbackInfo>(
+        env, asyncCallbackInfo.get(), SET_APP_CLONE_PREFERENCE,
+        SetAppClonePreferenceExec, SetAppClonePreferenceComplete);
+    asyncCallbackInfo.release();
+    APP_LOGD("call SetAppClonePreference done");
+    return promise;
+}
+
 void CreateMultiAppModeTypeObject(napi_env env, napi_value value)
 {
     napi_value nUnspecified;
@@ -5959,6 +6202,24 @@ void CreateMultiAppModeTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(MultiAppModeType::APP_CLONE),
         &nAppClone));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, APP_CLONE, nAppClone));
+}
+
+void CreateAppClonePreferenceModeObject(napi_env env, napi_value value)
+{
+    napi_value nAlwaysAsk;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AppClonePreferenceMode::ALWAYS_ASK),
+        &nAlwaysAsk));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ALWAYS_ASK", nAlwaysAsk));
+
+    napi_value nMain;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AppClonePreferenceMode::MAIN_APP),
+        &nMain));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "MAIN_APP", nMain));
+
+    napi_value nClone;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AppClonePreferenceMode::CLONE_APP),
+        &nClone));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CLONE_APP", nClone));
 }
 
 void MigrateDataExec(napi_env env, void *data)

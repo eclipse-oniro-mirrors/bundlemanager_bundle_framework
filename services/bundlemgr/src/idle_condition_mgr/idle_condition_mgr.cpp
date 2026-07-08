@@ -321,6 +321,9 @@ bool IdleConditionMgr::SetIsScanActive()
 
 void IdleConditionMgr::TryStartRelabel()
 {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
+        return;
+    }
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     if (!CheckRelabelConditions(currentUserId)) {
         APP_LOGI_NOFUNC("Refresh conditions not met");
@@ -433,6 +436,9 @@ bool IdleConditionMgr::CheckScanConditions(const int32_t userId)
 
 void IdleConditionMgr::TryStartScanAppData()
 {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, false)) {
+        return;
+    }
     if (!scanFeatureEnabled_.load()) {
         return;
     }

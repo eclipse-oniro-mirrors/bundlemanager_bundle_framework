@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 #include "bundle_installer_proxy.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "bundle_constants.h"
 #include "bundle_multiuser_installer.h"
 #include "plugin_installer.h"
 
@@ -175,11 +176,8 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0003, Function
 {
     PluginInstaller installer;
     std::string hspPath;
-    std::string appIdentifier;
-    bool isEnterpriseBundle = true;
     bool isCompileSdkOpenHarmony = true;
-    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, appIdentifier, isEnterpriseBundle,
-        isCompileSdkOpenHarmony);
+    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, isCompileSdkOpenHarmony);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -343,5 +341,33 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, BaseBundleInstaller_0011, Func
     std::string bundleName;
     ErrCode ret = installer.ProcessBundleUnInstallNative(info, userId, bundleName, "entry");
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ProcessBundleInstall_EmptyBundleName_0100
+ * @tc.name: test ProcessBundleInstall with empty bundleName
+ * @tc.desc: 1. bundleName is empty
+ *           2. return ERR_APPEXECFWK_INSTALL_PARAM_ERROR
+ */
+HWTEST_F(
+    BmsBundleMultiuserInstallPermissionTest, ProcessBundleInstall_EmptyBundleName_0100, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    ErrCode ret = installer.ProcessBundleInstall("", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ProcessBundleInstall_InvalidUserId_0100
+ * @tc.name: test ProcessBundleInstall with invalid userId
+ * @tc.desc: 1. userId <= DEFAULT_USERID
+ *           2. return ERR_BUNDLE_MANAGER_INVALID_USER_ID
+ */
+HWTEST_F(
+    BmsBundleMultiuserInstallPermissionTest, ProcessBundleInstall_InvalidUserId_0100, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    ErrCode ret = installer.ProcessBundleInstall(BUNDLE_NAME, Constants::DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
 } // OHOS

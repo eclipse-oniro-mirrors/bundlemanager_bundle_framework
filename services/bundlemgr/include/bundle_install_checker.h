@@ -41,6 +41,7 @@ struct InstallCheckParam {
     // is shell token
     bool isCallByShell = false;
     bool isInstalledForAllUser = false;
+    bool isCheckDebugApp = false;
     // status of install bundle permission
     PermissionStatus installBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // status of install enterprise bundle permission
@@ -268,9 +269,12 @@ public:
         const Security::Verify::HapVerifyResult &hapVerifyResult,
         CodeSignatureParam &codeSignatureParam);
 
+    bool CheckIsDebugAppProvisionType(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
     static ErrCode ParseProfileDataToProvisionInfo(
         const Security::AccessToken::ProfileData &profileData,
         Security::Verify::ProvisionInfo &provisionInfo);
+    void HandleExtensionPermission(InnerBundleInfo &info);
 
 private:
 

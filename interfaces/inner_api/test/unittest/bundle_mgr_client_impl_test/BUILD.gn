@@ -97,6 +97,7 @@ ohos_unittest("BundleMgrClientImplTest") {
     "jsoncpp:jsoncpp",
     "libuv:uv",
     "napi:ace_napi",
+    "node:node_header_notice",
     "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

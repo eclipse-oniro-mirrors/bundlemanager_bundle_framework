@@ -386,6 +386,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_OLD_CACHE_FILES):
             result = HandleDeleteOldCacheFiles(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_CACHE_DISK_USAGE_FROM_PATH):
+            result = HandleGetCacheDiskUsageFromPath(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -415,8 +418,10 @@ bool InstalldHost::HandleExtractModuleFiles(MessageParcel &data, MessageParcel &
     std::string targetPath = Str16ToStr8(data.ReadString16());
     std::string targetSoPath = Str16ToStr8(data.ReadString16());
     std::string cpuAbi = Str16ToStr8(data.ReadString16());
-    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "ExtractModuleFiles %{public}s", targetPath.c_str());
-    ErrCode result = ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
+    bool needFakeDecompression = data.ReadBool();
+    bool isSystemApp = data.ReadBool();
+    ErrCode result =
+        ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi, needFakeDecompression, isSystemApp);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1643,6 +1648,29 @@ bool InstalldHost::HandleDeleteOldCacheFiles(MessageParcel &data, MessageParcel 
     ErrCode result = DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Uint64, reply, cleanedSize);
+    return true;
+}
+
+bool InstalldHost::HandleGetCacheDiskUsageFromPath(MessageParcel &data, MessageParcel &reply)
+{
+    auto cachePathSize = data.ReadUint32();
+    if (cachePathSize == 0 || cachePathSize > Constants::MAX_CACHE_DIR_SIZE) {
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    std::vector<std::string> cachePaths;
+    cachePaths.reserve(cachePathSize);
+    for (uint32_t i = 0; i < cachePathSize; i++) {
+        std::string path;
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, data, path);
+        cachePaths.emplace_back(path);
+    }
+    int64_t timeoutMs = data.ReadInt64();
+    int64_t statSize = GetCacheDiskUsageFromPath(cachePaths, timeoutMs);
+    if (!reply.WriteInt64(statSize)) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleGetCacheDiskUsageFromPath write failed");
+        return false;
+    }
     return true;
 }
 }  // namespace AppExecFwk

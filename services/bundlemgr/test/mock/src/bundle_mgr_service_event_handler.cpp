@@ -403,6 +403,20 @@ void BMSEventHandler::ProcessRebootBundle() {}
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool& result)
 {
+    result = false;
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        return true;
+    }
+    std::string val;
+    if (!bmsPara->GetBmsParam("otaFlag", val)) {
+        return true;
+    }
+    int32_t valInt = 0;
+    if (!OHOS::StrToInt(val, valInt)) {
+        return true;
+    }
+    result = static_cast<uint32_t>(flag) & static_cast<uint32_t>(valInt);
     return true;
 }
 
@@ -426,14 +440,6 @@ void BMSEventHandler::InnerProcessCheckAppLogDir() {}
 void BMSEventHandler::ProcessCheckAppFileManagerDir() {}
 
 void BMSEventHandler::InnerProcessCheckAppFileManagerDir() {}
-
-void BMSEventHandler::ProcessCheckShaderCacheDir() {}
-
-void BMSEventHandler::InnerProcessCheckShaderCacheDir() {}
-
-void BMSEventHandler::ProcessCheckCloudShaderDir() {}
-
-void BMSEventHandler::InnerProcessCheckCloudShaderDir() {}
 
 void BMSEventHandler::ProcessNewBackupDir() {}
 

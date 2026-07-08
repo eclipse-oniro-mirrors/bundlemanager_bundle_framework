@@ -335,6 +335,7 @@ struct EventInfo {
         utd.clear();
         funcIdList.clear();
         uidList.clear();
+        largeFiles.clear();
         userIdList.clear();
         appIndexList.clear();
         callingUidList.clear();
@@ -352,7 +353,6 @@ struct EventInfo {
         shortcutIds.clear();
         isAbcCompressed = false;
         odid.clear();
-        largeFiles.clear();
     }
 };
 

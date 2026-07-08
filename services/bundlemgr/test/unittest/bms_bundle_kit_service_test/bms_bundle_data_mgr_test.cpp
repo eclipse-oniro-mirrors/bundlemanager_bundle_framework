@@ -3797,6 +3797,140 @@ HWTEST_F(BmsBundleDataMgrTest, GetStringById_0100, Function | MediumTest | Level
 }
 
 /**
+ * @tc.number: GetStringByIdList_0100
+ * @tc.name: test GetStringByIdList with permission denied
+ * @tc.desc: test GetStringByIdList when IsSystemApp check fails
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0100, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0200
+ * @tc.name: test GetStringByIdList with empty resIdList
+ * @tc.desc: test GetStringByIdList with empty resIdList
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0200, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList;
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+    EXPECT_TRUE(labelList.empty());
+}
+
+/**
+ * @tc.number: GetStringByIdList_0300
+ * @tc.name: test GetStringByIdList with empty bundleName
+ * @tc.desc: test GetStringByIdList when bundleName is empty
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0300, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        "", MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0400
+ * @tc.name: test GetStringByIdList with empty moduleName
+ * @tc.desc: test GetStringByIdList when moduleName is empty
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0400, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, "", resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0500
+ * @tc.name: test GetStringByIdList with resIdList exceeding max size
+ * @tc.desc: test GetStringByIdList when resIdList size exceeds MAX_RES_ID_LIST_SIZE
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0500, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList;
+    for (int32_t i = 0; i < 1001; ++i) {
+        resIdList.push_back(i);
+    }
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0700
+ * @tc.name: test GetStringByIdList with localeInfo parameter
+ * @tc.desc: test GetStringByIdList with non-empty localeInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0600, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "en_US");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0800
+ * @tc.name: test GetStringByIdList with large resIdList but within limit
+ * @tc.desc: test GetStringByIdList when resIdList size equals MAX_RES_ID_LIST_SIZE
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0700, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList;
+    for (int32_t i = 0; i < 1000; ++i) {
+        resIdList.push_back(i);
+    }
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0900
+ * @tc.name: test GetStringByIdList with different userId
+ * @tc.desc: test GetStringByIdList with Constants::DEFAULT_USERID
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0800, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, Constants::DEFAULT_USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_1000
+ * @tc.name: test GetStringByIdList with invalid userId
+ * @tc.desc: test GetStringByIdList with Constants::INVALID_USERID
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0900, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, Constants::INVALID_USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+
+/**
  * @tc.number: GetSandboxHapModuleInfo_0100
  * @tc.name: test GetSandboxHapModuleInfo
  * @tc.desc: 1.GetSandboxHapModuleInfo
@@ -4042,6 +4176,122 @@ HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0700, Functio
     dataMgr->preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInfo);
     std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
     EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_DESCRIPTION));
+    dataMgr->preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInfo);
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_0800
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test Branch C: has U1 user info, no DEFAULT_USERID, no userId -> not recoverable
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0800, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInfo;
+    preInfo.SetRemovable(false);
+    preInfo.SetBundleName(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    preInfo.SetBundleType(BundleType::APP);
+    dataMgr->preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInfo);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
+    EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    dataMgr->preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInfo);
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_0900
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test Branch C: no user info at all -> recoverable
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0900, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInfo;
+    preInfo.SetRemovable(false);
+    preInfo.SetBundleName(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    preInfo.SetBundleType(BundleType::APP);
+    dataMgr->preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInfo);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
+    EXPECT_TRUE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    dataMgr->preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInfo);
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_1000
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test Branch C: has U1 and DEFAULT_USERID user info, no userId -> not recoverable
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_1000, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInfo;
+    preInfo.SetRemovable(false);
+    preInfo.SetBundleName(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    preInfo.SetBundleType(BundleType::APP);
+    dataMgr->preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInfo);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    InnerBundleUserInfo innerBundleUserInfoU1;
+    innerBundleUserInfoU1.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfoU1.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfoU1);
+    InnerBundleUserInfo innerBundleUserInfoDefault;
+    innerBundleUserInfoDefault.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    innerBundleUserInfoDefault.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfoDefault);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
+    EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    dataMgr->preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInfo);
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_1100
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test Branch C: has U1 user info and userId info, no DEFAULT_USERID -> not recoverable
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_1100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInfo;
+    preInfo.SetRemovable(false);
+    preInfo.SetBundleName(BUNDLE_NAME_FOR_TEST_U1ENABLE);
+    preInfo.SetBundleType(BundleType::APP);
+    dataMgr->preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInfo);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    InnerBundleUserInfo innerBundleUserInfoU1;
+    innerBundleUserInfoU1.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfoU1.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfoU1);
+    InnerBundleUserInfo innerBundleUserInfo100;
+    innerBundleUserInfo100.bundleUserInfo.userId = TEST_U100;
+    innerBundleUserInfo100.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo100);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
+    EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_FOR_TEST_U1ENABLE);
     dataMgr->preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInfo);
 }
 
@@ -6972,9 +7222,16 @@ HWTEST_F(BmsBundleDataMgrTest, ProcessUninstallBundle_1000, Function | SmallTest
 {
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
+    std::cout << "uninstallBundleInfos.size() = " << uninstallBundleInfos.size() << std::endl;
+    for (const auto& uninstallBundleInfo : uninstallBundleInfos) {
+        std::cout << "clear uninstallBundleInfo db = " << uninstallBundleInfo.first << std::endl;
+        dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(uninstallBundleInfo.first);
+    }
     std::vector<BundleOptionInfo> bundleOptionInfos;
     bool result = dataMgr->ProcessUninstallBundle(bundleOptionInfos);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
 }
 
 /**
@@ -7720,5 +7977,22 @@ HWTEST_F(BmsBundleDataMgrTest, HandleCleanBundlePartialCacheAutomatic_0100, Func
     data.WriteParcelable(&cacheInfo);
     auto ret = localBundleMgrHost->HandleCleanBundlePartialCacheAutomatic(data, reply);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+ /**
+ * @tc.number: HandleGetLocalPluginInstaller_0100
+ * @tc.name: HandleGetLocalPluginInstaller
+ * @tc.desc: test BundleMgrHostHandleGetLocalPluginInstaller(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, HandleGetLocalPluginInstaller_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    auto ret = localBundleMgrHost->HandleGetLocalPluginInstaller(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_HOST_INSTALLER_FAILED);
 }
 } // OHOS

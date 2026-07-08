@@ -64,7 +64,8 @@ public:
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
     virtual ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-        const std::string &targetSoPath, const std::string &cpuAbi)
+        const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+        const bool isSystemApp)
     {
         return ERR_OK;
     }
@@ -649,6 +650,11 @@ public:
         const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
     {
         return ERR_OK;
+    }
+
+    virtual int64_t GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs = -1)
+    {
+        return 0;
     }
 };
 

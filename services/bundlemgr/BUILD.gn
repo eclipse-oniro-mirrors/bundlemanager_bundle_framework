@@ -19,6 +19,7 @@ config("bundlemgr_common_config") {
   include_dirs = [
     "include",
     "include/aot",
+    "include/app_clone_preference",
     "include/app_disable_forbidden",
     "include/app_provision_info",
     "include/app_service_fwk",
@@ -325,7 +326,7 @@ ohos_shared_library("libbms") {
     defines += [ "BUILD_VARIANT_USER" ]
   }
 
-  configs = [ 
+  configs = [
     ":bundlemgr_common_config",
     "${core_path}:bundlemgr_ipc_public_config",
   ]
@@ -368,6 +369,7 @@ ohos_shared_library("libbms") {
     "appverify:libhapverify",
     "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
+    "dfs_service:libdecompress",
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
     "hilog:libhilog",
@@ -654,7 +656,9 @@ ohos_shared_library("installs") {
     "appspawn:hnpapi",
     "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
     "dfs_service:distributed_file_daemon_kit_inner",
+    "dfs_service:libdecompress",
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
     "hilog:libhilog",
@@ -704,6 +708,10 @@ ohos_shared_library("installs") {
 
   if (bundle_framework_bss_enable) {
     defines += [ "SECURITY_PRIVACY_SERVER_ENABLE" ]
+  }
+
+  if (is_emulator) {
+    defines += [ "X86_EMULATOR_MODE" ]
   }
 
   install_enable = true

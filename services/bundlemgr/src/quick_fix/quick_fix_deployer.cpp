@@ -30,8 +30,8 @@ constexpr const char* PATCH_DIR = "patch/";
 }
 
 QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths, bool isDebug,
-    const std::string &targetPath, bool isReplace) : patchPaths_(bundleFilePaths), isDebug_(isDebug),
-    targetPath_(targetPath), isReplace_(isReplace)
+    const std::string &targetPath, bool isReplace, bool isCheckDebugApp) : patchPaths_(bundleFilePaths),
+    isDebug_(isDebug), targetPath_(targetPath), isReplace_(isReplace), isCheckDebugApp_(isCheckDebugApp)
 {}
 
 ErrCode QuickFixDeployer::Execute()
@@ -130,6 +130,11 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
     ret = GetBundleInfo(appQuickFix.bundleName, bundleInfo);
     CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
 
+    if (isCheckDebugApp_ && bundleInfo.applicationInfo.appProvisionType != Constants::APP_PROVISION_TYPE_DEBUG) {
+        LOG_E(BMS_TAG_DEFAULT, "only debug bundle can deploy quick fix");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
+    }
+
     // check resources/rawfile whether valid
     ret = CheckHqfResourceIsValid(bundleFilePaths, bundleInfo);
     CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
@@ -203,6 +208,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployStart(
         LOG_E(BMS_TAG_DEFAULT, "error: appQuickFix hapVerifyRes is empty");
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
+    verifyRes_ = hapVerifyRes[0];
     const auto &provisionInfo = hapVerifyRes[0].GetProvisionInfo();
     const AppQuickFix &appQuickFix = infos.begin()->second;
     // check with installed bundle, signature info, bundleName, versionCode
@@ -936,6 +942,8 @@ void QuickFixDeployer::PrepareCodeSignatureParam(const AppQuickFix &appQuickFix,
     if (!isDebug_ || bundleInfo.applicationInfo.appProvisionType != Constants::APP_PROVISION_TYPE_DEBUG) {
         codeSignatureParam.targetSoPath = "";
     }
+    BundleInstallChecker checker;
+    checker.ProcessCodeSignatureParam(0, verifyRes_, codeSignatureParam);
 }
 
 ErrCode QuickFixDeployer::VerifyCodeSignatureForHqf(

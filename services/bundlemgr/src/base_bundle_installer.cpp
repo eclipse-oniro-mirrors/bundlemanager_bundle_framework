@@ -44,6 +44,7 @@
 #include "ability_manager_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
+#include "app_clone_preference_data_mgr.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_update_selinux_mgr.h"
 #include "bundle_cli_sandbox_installer.h"
@@ -110,6 +111,7 @@ constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
 constexpr const char* LIBS_TMP = "libs+tmp";
 constexpr const char* PRIVILEGE_ALLOW_HDC_INSTALL = "AllowHdcInstall";
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
+constexpr int32_t KEEP_DATA_PRELOAD_ENABLED = 1;
 
 bool IsSupportedAppSkillBundleType(BundleType bundleType)
 {
@@ -305,6 +307,29 @@ ErrCode BaseBundleInstaller::InstallBundle(
     sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
+    if (result == Security::AccessToken::AccessTokenError::ERR_UID_NOT_EXIST
+        && dataMgr_ && !bundleName_.empty()) {
+        InnerBundleInfo bundleInfo;
+        if (dataMgr_->FetchInnerBundleInfo(bundleName_, bundleInfo)) {
+            auto bundleUserInfos = bundleInfo.GetInnerBundleUserInfos();
+            bool refresh = false;
+            for (const auto &userInfo : bundleUserInfos) {
+                if (userInfo.second.accessTokenId == 0) {
+                    continue;
+                }
+                refresh = BundlePermissionMgr::RefreshTokenStatus(userInfo.second.accessTokenIdEx,
+                    userInfo.second.uid) == ERR_OK;
+            }
+            if (refresh) {
+                ResetInstallProperties();
+                uid = Constants::INVALID_UID;
+                auto retryResult = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
+                if (retryResult == ERR_OK) {
+                    result = retryResult;
+                }
+            }
+        }
+    }
     if (result == Security::AccessToken::AccessTokenError::ERR_BUNDLE_ALREADY_EXIST) {
         // if bundleName is not empty, delete the access token id and try to install again
         if (!bundleName_.empty()) {
@@ -2134,7 +2159,6 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         RollBack(info.second, oldInfo);
     }
     // need delete definePermissions and requestPermissions
-    UpdateHapToken(preInfo.GetAppType() != oldInfo.GetAppType(), oldInfo);
     if (isHnpInstalled_) {
         RollbackHnpInstall(bundleName_, oldInfo.GetUsers());
     }
@@ -2351,6 +2375,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     auto cliSandboxInstaller = std::make_shared<BundleCliSandboxInstaller>();
     cliSandboxInstaller->DestroyAllCliSandboxApps(bundleName, userId_);
 
+    RemoveAppClonePreference(bundleName, userId_);
+
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
     if (appControlMgr != nullptr) {
@@ -2466,11 +2492,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     result = DeleteArkProfile(bundleName, userId_);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to removeArkProfile, error is %{public}d", result);
-    }
-
-    result = DeleteShaderCache(bundleName);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "fail to DeleteShaderCache, error is %{public}d", result);
     }
 
     DeleteUseLessSharefilesForDefaultUser(bundleName, userId_);
@@ -3295,11 +3316,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     }
 
     if (oldInfo.IsSingleton() != newInfo.IsSingleton()) {
-        if ((oldInfo.IsSingleton() && !newInfo.IsSingleton()) && newInfo.IsPreInstallApp()
-            && AllowSingletonChange(newInfo.GetBundleName())) {
+        if (!newInfo.IsSingleton() && newInfo.IsPreInstallApp() &&
+            AllowSingletonChange(newInfo.GetBundleName())) {
             singletonState_ = SingletonState::SINGLETON_TO_NON;
-        } else if ((!oldInfo.IsSingleton() && newInfo.IsSingleton()) && newInfo.IsPreInstallApp()
-            && AllowSingletonChange(newInfo.GetBundleName())) {
+        } else if (newInfo.IsSingleton() && newInfo.IsPreInstallApp() &&
+            AllowSingletonChange(newInfo.GetBundleName())) {
             singletonState_ = SingletonState::NON_TO_SINGLETON;
         } else {
             LOG_E(BMS_TAG_INSTALLER, "Singleton not allow changed");
@@ -4079,23 +4100,30 @@ void BaseBundleInstaller::ParseSizeFromProvision(
 
 ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
 {
-    if (dataMgr_ == nullptr) {
-        LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
-        return ERR_APPEXECFWK_NULL_PTR;
-    }
     InnerBundleUserInfo newInnerBundleUserInfo;
     if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed",
             info.GetBundleName().c_str(), userId_);
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
+    return CreateBundleDataDir(info, newInnerBundleUserInfo);
+}
+
+ErrCode BaseBundleInstaller::CreateBundleDataDir(
+    InnerBundleInfo &info, const InnerBundleUserInfo &innerBundleUserInfo) const
+{
+    if (dataMgr_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    int32_t userId = innerBundleUserInfo.bundleUserInfo.userId;
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
         Constants::APP_PROVISION_TYPE_FILE_NAME);
     CreateDirParam createDirParam;
     createDirParam.bundleName = info.GetBundleName();
-    createDirParam.userId = userId_;
-    createDirParam.uid = newInnerBundleUserInfo.uid;
-    createDirParam.gid = newInnerBundleUserInfo.uid;
+    createDirParam.userId = userId;
+    createDirParam.uid = innerBundleUserInfo.uid;
+    createDirParam.gid = innerBundleUserInfo.uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
@@ -4104,42 +4132,32 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         // if user is not activated, access el2-el4 may return ok but dir cannot be created
-        if (AccountHelper::IsOsAccountVerified(userId_)) {
+        if (AccountHelper::IsOsAccountVerified(userId)) {
             LOG_E(BMS_TAG_INSTALLER, "fail to create bundle data dir, error is %{public}d", result);
             return result;
         } else {
-            LOG_W(BMS_TAG_INSTALLER, "user %{public}d is not activated", userId_);
+            LOG_W(BMS_TAG_INSTALLER, "user %{public}d is not activated", userId);
         }
     }
     std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE + info.GetBundleName();
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + info.GetBundleName();
     if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
-        PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir,
+        PrepareBundleDirQuota(info.GetBundleName(), innerBundleUserInfo.uid, bundleDataDir,
             ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET);
     } else {
-        PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir, 0);
+        PrepareBundleDirQuota(info.GetBundleName(), innerBundleUserInfo.uid, bundleDataDir, 0);
     }
     if (info.GetIsNewVersion()) {
         int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
             GetIntParameter(BMS_KEY_SHELL_UID, ServiceConstants::SHELL_UID) :
-            newInnerBundleUserInfo.uid;
+            innerBundleUserInfo.uid;
         result = CreateArkProfile(
-            info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, gid);
+            info.GetBundleName(), userId, innerBundleUserInfo.uid, gid);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to create ark profile, error is %{public}d", result);
             return result;
         }
     }
-
-    result = CreateShaderCache(info.GetBundleName(), createDirParam.uid, createDirParam.gid);
-    if (result != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "fail to create shader cache, error is %{public}d", result);
-    }
-
-    if (userId_ == Constants::START_USERID) {
-        CreateCloudShader(info.GetBundleName(), createDirParam.uid, createDirParam.gid);
-    }
-
     // create asan log directory when asanEnabled is true
     // In update condition, delete asan log directory when asanEnabled is false if directory is exist
     if ((result = ProcessAsanDirectory(info)) != ERR_OK) {
@@ -4150,7 +4168,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     std::string dataBaseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
         ServiceConstants::DATABASE + info.GetBundleName();
     info.SetAppDataBaseDir(dataBaseDir);
-    info.AddInnerBundleUserInfo(newInnerBundleUserInfo);
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
     return ERR_OK;
 }
 
@@ -4531,10 +4549,16 @@ bool BaseBundleInstaller::RemoveDataPreloadHapFiles(const std::string &bundleNam
     auto preinstalledAppPath = preInstallBundleInfo.GetBundlePaths().front();
     LOG_D(BMS_TAG_INSTALLER, "preinstalledAppPath %{public}s", preinstalledAppPath.c_str());
     if (IsDataPreloadHap(preinstalledAppPath)) {
-        std::filesystem::path apFilePath(preinstalledAppPath);
-        std::string delDir = apFilePath.parent_path().string();
-        if (InstalldClient::GetInstance()->RemoveDir(delDir, BundleDirScene::REMOVE_PRELOAD_APP_DIR) != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "removeDir failed :%{public}s", delDir.c_str());
+        bool keepHap =
+            OHOS::system::GetIntParameter<int32_t>(ServiceConstants::KEEP_DATA_PRELOAD_HAP, 0) == KEEP_DATA_PRELOAD_ENABLED;
+        if (!keepHap) {
+            std::filesystem::path apFilePath(preinstalledAppPath);
+            std::string delDir = apFilePath.parent_path().string();
+            if (InstalldClient::GetInstance()->RemoveDir(delDir, BundleDirScene::REMOVE_PRELOAD_APP_DIR) != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "removeDir failed :%{public}s", delDir.c_str());
+            }
+        } else {
+            LOG_I(BMS_TAG_INSTALLER, "keep data preload hap for %{public}s", bundleName.c_str());
         }
         if (!dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
             LOG_E(BMS_TAG_INSTALLER, "deletePreInfoInDb bundle %{public}s failed", bundleName.c_str());
@@ -4572,7 +4596,10 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     // data clone install no need to extract res files
     if (!supportDataCloneInstall_) {
         ExtractResourceFiles(info, modulePath);
-        result = ExtractResFileDir(modulePath);
+        auto needFakeDecompression =
+            BundleUtil::IsSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive());
+        auto isSystemApp = info.IsSystemApp();
+        result = ExtractResFileDir(modulePath, needFakeDecompression, isSystemApp);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to ExtractResFileDir, error is %{public}d", result);
             return result;
@@ -4890,7 +4917,8 @@ void BaseBundleInstaller::RemoveNPAPIPluginDir()
     LOG_D(BMS_TAG_INSTALLER, "RemoveNPAPIPluginDir end successfully for bundle %{public}s", bundleName_.c_str());
 }
 
-ErrCode BaseBundleInstaller::ExtractResFileDir(const std::string &modulePath) const
+ErrCode BaseBundleInstaller::ExtractResFileDir(
+    const std::string &modulePath, const bool needFakeDecompression, const bool isSystemApp) const
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractResFileDir begin");
     ExtractParam extractParam;
@@ -4899,6 +4927,9 @@ ErrCode BaseBundleInstaller::ExtractResFileDir(const std::string &modulePath) co
     extractParam.targetPath = modulePath + ServiceConstants::PATH_SEPARATOR + ServiceConstants::RES_FILE_PATH;
     LOG_D(BMS_TAG_INSTALLER, "ExtractResFileDir targetPath: %{public}s", extractParam.targetPath.c_str());
     extractParam.extractFileType = ExtractFileType::RES_FILE;
+    //only uncompressed resfile support fake decompression
+    extractParam.needFakeDecompression = needFakeDecompression;
+    extractParam.isSystemApp = isSystemApp;
     ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "ExtractResFileDir ExtractFiles failed, error is %{public}d", ret);
@@ -5610,7 +5641,16 @@ ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info, con
     const std::string &targetSoPath, const std::string &cpuAbi)
 {
     LOG_D(BMS_TAG_INSTALLER, "extract module to %{public}s", modulePath.c_str());
-    auto result = InstalldClient::GetInstance()->ExtractModuleFiles(modulePath_, modulePath, targetSoPath, cpuAbi);
+    auto needFakeDecompression = info.IsFakeDecompressionEnable() &&
+                                 BundleUtil::IsSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive());
+    auto isSystemApp = info.IsSystemApp();
+    LOG_D(BMS_TAG_INSTALLER,
+        "ExtractModuleFiles,targetSoPath:%{public}s modulePath:%{public}s needFakeDecompression:%{public}d",
+        targetSoPath.c_str(),
+        modulePath.c_str(),
+        needFakeDecompression);
+    auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
+        modulePath_, modulePath, targetSoPath, cpuAbi, needFakeDecompression, isSystemApp);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "extract module files failed, error is %{public}d", result);
         return result;
@@ -6216,11 +6256,23 @@ ErrCode BaseBundleInstaller::CheckInstallPermission(const InstallParam &installP
         installParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installInternaltestingBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        installParam.installUpdateSelfBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
-        !bundleInstallChecker_->VaildInstallPermission(installParam, hapVerifyRes)) {
-        // need vaild permission
-        LOG_E(BMS_TAG_INSTALLER, "install permission denied");
-        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        installParam.installUpdateSelfBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS)) {
+        if (!bundleInstallChecker_->VaildInstallPermission(installParam, hapVerifyRes)) {
+            // check third-party app install provision type
+            if (installParam.isCheckDebugApp && bundleInstallChecker_->CheckIsDebugAppProvisionType(hapVerifyRes)) {
+                LOG_I(BMS_TAG_INSTALLER, "check debug app provision type success");
+                return ERR_OK;
+            }
+            // need vaild permission
+            LOG_E(BMS_TAG_INSTALLER, "install permission denied");
+            return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        }
+    } else {
+        // check third-party app install provision type
+        if (installParam.isCheckDebugApp && !bundleInstallChecker_->CheckIsDebugAppProvisionType(hapVerifyRes)) {
+            LOG_E(BMS_TAG_INSTALLER, "install permission denied");
+            return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        }
     }
     return ERR_OK;
 }
@@ -8520,8 +8572,25 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             continue;
         }
         Security::AccessToken::HapInfoCheckResult checkResult;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, userId, checkResult,
-            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, userDebugGrant, sessionId_) != ERR_OK) {
+        auto ret = BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, userId, checkResult,
+            verifyRes_.GetProvisionInfo().appServiceCapabilities, false, userDebugGrant, sessionId_);
+        if (ret == ERR_APPEXECFWK_INSTALL_UID_CHANGED) {
+            InnerBundleUserInfo updatedUserInfo;
+            if (!newInfo.GetInnerBundleUserInfo(userId, updatedUserInfo)) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+                    "get updated user info failed after uid changed %{public}s", bundleName_.c_str());
+                return ERR_APPEXECFWK_INSTALL_UID_CHANGED;
+            }
+            auto createRet = CreateBundleDataDir(newInfo, updatedUserInfo);
+            if (createRet != ERR_OK) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLER, "CreateBundleDataDir after uid changed failed %{public}s",
+                    bundleName_.c_str());
+                return createRet;
+            }
+            needUpdate = true;
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateBundleDataDir after uid changed success %{public}s",
+                bundleName_.c_str());
+        } else if (ret != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -8535,8 +8604,35 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             Security::AccessToken::AccessTokenIDEx cloneAccessTokenIdEx;
             cloneAccessTokenIdEx.tokenIDEx = cloneInfoPair.second.accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
-            if (BundlePermissionMgr::UpdateHapToken(cloneAccessTokenIdEx, newInfo, userId, checkResult,
-                verifyRes_.GetProvisionInfo().appServiceCapabilities, false, false, sessionId_) != ERR_OK) {
+            auto cloneRet = BundlePermissionMgr::UpdateHapToken(cloneAccessTokenIdEx, newInfo, userId, checkResult,
+                verifyRes_.GetProvisionInfo().appServiceCapabilities, false, false, sessionId_,
+                cloneInfoPair.second.appIndex);
+            if (cloneRet == ERR_APPEXECFWK_INSTALL_UID_CHANGED) {
+                InnerBundleUserInfo updatedUserInfo;
+                if (!newInfo.GetInnerBundleUserInfo(userId, updatedUserInfo)) {
+                    LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+                        "get updated user info failed after uid changed %{public}s", bundleName_.c_str());
+                    return ERR_APPEXECFWK_INSTALL_UID_CHANGED;
+                }
+                int32_t cloneUid = updatedUserInfo.uid;
+                auto cloneKey = std::to_string(cloneInfoPair.second.appIndex);
+                auto cloneIter = updatedUserInfo.cloneInfos.find(cloneKey);
+                if (cloneIter != updatedUserInfo.cloneInfos.end()) {
+                    cloneUid = cloneIter->second.uid;
+                }
+                std::shared_ptr<BundleCloneInstaller> cloneInstaller =
+                    std::make_shared<BundleCloneInstaller>();
+                auto createRet = cloneInstaller->CreateCloneDataDir(
+                    newInfo, userId, cloneUid, cloneInfoPair.second.appIndex);
+                if (createRet != ERR_OK) {
+                    LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+                        "CreateCloneDataDir after uid changed failed %{public}s", bundleName_.c_str());
+                    return createRet;
+                }
+                needUpdate = true;
+                LOG_NOFUNC_I(BMS_TAG_INSTALLER,
+                    "CreateCloneDataDir after uid changed success %{public}s", bundleName_.c_str());
+            } else if (cloneRet != ERR_OK) {
                 LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
                 SetVerifyPermissionResult(checkResult);
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -8818,26 +8914,6 @@ ErrCode BaseBundleInstaller::RollbackHmpCommonInfo(const std::string &bundleName
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const
-{
-    std::string shaderCachePath;
-    shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
-    LOG_D(BMS_TAG_INSTALLER, "CreateShaderCache %{public}s", shaderCachePath.c_str());
-    CreateDirParam createDirParam;
-    createDirParam.bundleName = bundleName;
-    createDirParam.bundleDirScene = BundleDirScene::SHADER_CACHE_DIR;
-    return InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, uid, gid, createDirParam);
-}
-
-ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) const
-{
-    std::string shaderCachePath;
-    shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
-    LOG_D(BMS_TAG_INSTALLER, "DeleteShaderCache %{public}s", shaderCachePath.c_str());
-    return InstalldClient::GetInstance()->RemoveDir(
-        shaderCachePath, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR, bundleName);
-}
-
 void BaseBundleInstaller::DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName,
     int32_t userId) const
 {
@@ -8861,9 +8937,6 @@ ErrCode BaseBundleInstaller::CleanShaderCache(const InnerBundleInfo &oldInfo,
 {
     LOG_D(BMS_TAG_INSTALLER, "start for -n:%{public}s -u:%{public}d", bundleName.c_str(), userId);
     std::vector<std::string> dirs;
-    std::string shaderCachePath = ServiceConstants::SHADER_CACHE_PATH + bundleName;
-    dirs.emplace_back(shaderCachePath);
-
     std::vector<int32_t> allAppIndexes = {0};
     std::vector<int32_t> cloneAppIndexes = dataMgr_->GetCloneAppIndexesByInnerBundleInfo(oldInfo, userId);
     allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
@@ -8872,9 +8945,6 @@ ErrCode BaseBundleInstaller::CleanShaderCache(const InnerBundleInfo &oldInfo,
         if (appIndex != 0) {
             cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
         }
-        std::string el1ShaderCachePath = ServiceConstants::NEW_SHADER_CACHE_PATH + cloneBundleName;
-        el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId));
-        dirs.emplace_back(el1ShaderCachePath);
 
         // clean shader cache in /system_optimize
         std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
@@ -8918,35 +8988,6 @@ ErrCode BaseBundleInstaller::CleanArkStartupCache(const std::string &bundleName)
     return ERR_OK;
 }
 
-void BaseBundleInstaller::CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const
-{
-    const std::string cloudShaderOwner = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
-    if (cloudShaderOwner.empty() || (bundleName != cloudShaderOwner)) {
-        return;
-    }
-
-    constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
-    CreateDirParam createDirParam;
-    createDirParam.bundleDirScene = BundleDirScene::CLOUD_SHADER_DIR;
-    ErrCode result =
-        InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_PATH, mode, uid, gid, createDirParam);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "Mkdir %{public}s failed, error is %{public}d",
-            ServiceConstants::CLOUD_SHADER_PATH, result);
-        return;
-    }
-
-    constexpr int32_t commonMode = (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    createDirParam.bundleDirScene = BundleDirScene::CLOUD_SHADER_COMMON_DIR;
-    result = InstalldClient::GetInstance()->Mkdir(
-        ServiceConstants::CLOUD_SHADER_COMMON_PATH, commonMode, uid, gid, createDirParam);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "Mkdir %{public}s failed, error is %{public}d",
-            ServiceConstants::CLOUD_SHADER_COMMON_PATH, result);
-        return;
-    }
-}
-
 ErrCode BaseBundleInstaller::DeleteCloudShader(const std::string &bundleName) const
 {
     std::string newShaderCloudPath;
@@ -8969,10 +9010,7 @@ ErrCode BaseBundleInstaller::DeleteEl1ShaderAndArkStartupCache(const InnerBundle
         if (appIndex != 0) {
             cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
         }
-        std::string el1ShaderCachePath = ServiceConstants::NEW_SHADER_CACHE_PATH + cloneBundleName;
-        el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId));
-        dirs.emplace_back(el1ShaderCachePath);
-        
+
         // Remove shader cache in /system_optimize
         std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
             cloneBundleName;
@@ -9207,6 +9245,19 @@ bool BaseBundleInstaller::IsEnterpriseForAllUser(const InstallParam &installPara
     }
     LOG_W(BMS_TAG_INSTALLER, "app not exist: %{public}s", bundleName.c_str());
     return false;
+}
+
+void BaseBundleInstaller::RemoveAppClonePreference(const std::string &bundleName, int32_t userId)
+{
+    auto appClonePrefDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetAppClonePreferenceDataMgr();
+    if (appClonePrefDataMgr == nullptr) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "AppClonePreferenceDataMgr is null, skip preference cleanup");
+        return;
+    }
+    appClonePrefDataMgr->DeleteAppClonePreference(bundleName, userId);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER,
+        "deleted app clone preference for %{public}s in userId %{public}d on main app uninstall",
+        bundleName.c_str(), userId);
 }
 
 bool BaseBundleInstaller::SetDisposedRuleWhenBundleUpdateStart(

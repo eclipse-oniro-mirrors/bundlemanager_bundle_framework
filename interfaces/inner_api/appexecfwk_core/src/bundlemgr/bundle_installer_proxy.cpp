@@ -1172,24 +1172,39 @@ ErrCode BundleInstallerProxy::UninstallNewPreinstalledApps(const std::vector<std
     return reply.ReadInt32();
 }
 
-ErrCode BundleInstallerProxy::CreateCliSandboxApp(const std::string &callerBundleName,
-    const std::string &bundleName, int32_t userId, int32_t &appIndex)
+ErrCode BundleInstallerProxy::CreateCliSandboxApp(const std::string &creatorBundleName,
+    const std::string &envCreatorBundleName, const std::string &bundleName,
+    int32_t userId, int32_t &appIndex)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
 
+    if (envCreatorBundleName.empty()) {
+        APP_LOGE_NOFUNC("proxy envCreatorBundleName is empty");
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_ENV_CREATOR_BUNDLE_NAME;
+    }
+
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_BUNDLE_NAME;
+    }
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMS_TAG_INSTALLER, "failed to CreateCliSandboxApp due to write MessageParcel fail");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "failed to CreateCliSandboxApp due to write MessageParcel fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteString16(Str8ToStr16(callerBundleName))) {
-        LOG_E(BMS_TAG_INSTALLER, "failed to CreateCliSandboxApp due to write callerBundleName fail");
+    if (!data.WriteString16(Str8ToStr16(creatorBundleName))) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "failed to CreateCliSandboxApp due to write creatorBundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(envCreatorBundleName))) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "failed to CreateCliSandboxApp due to write envCreatorBundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString16(Str8ToStr16(bundleName))) {
-        LOG_E(BMS_TAG_INSTALLER, "failed to CreateCliSandboxApp due to write bundleName fail");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "failed to CreateCliSandboxApp due to write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
@@ -1200,7 +1215,7 @@ ErrCode BundleInstallerProxy::CreateCliSandboxApp(const std::string &callerBundl
     auto ret = SendInstallRequestWithErrCode(
         BundleInstallerInterfaceCode::CREATE_CLI_SANDBOX_APP, data, reply, option);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "CreateCliSandboxApp failed due to send request fail");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "CreateCliSandboxApp failed due to send request fail");
         return ret;
     }
 

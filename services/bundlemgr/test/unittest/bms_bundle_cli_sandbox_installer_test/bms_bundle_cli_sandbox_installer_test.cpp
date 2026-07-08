@@ -117,7 +117,7 @@ void BmsBundleCliSandboxInstallerTest::SetBundleInfoWithSandbox(const std::strin
     sandboxInfo.appIndex = appIndex;
     sandboxInfo.uid = TEST_UID;
     sandboxInfo.accessTokenId = TEST_ACCESS_TOKEN_ID;
-    sandboxInfo.callerBundleNames = callerNames;
+    sandboxInfo.creatorBundleNames = callerNames;
     userInfo.sandboxInfos[InnerBundleUserInfo::AppIndexToKey(appIndex)] = sandboxInfo;
 
     InnerBundleInfo innerBundleInfo;
@@ -125,6 +125,7 @@ void BmsBundleCliSandboxInstallerTest::SetBundleInfoWithSandbox(const std::strin
     appInfo.bundleName = bundleName;
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
     innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    innerBundleInfo.UpdateDeveloperId("testId");
 
     dataMgr->bundleInfos_[bundleName] = innerBundleInfo;
 }
@@ -289,13 +290,14 @@ HWTEST_F(BmsBundleCliSandboxInstallerTest, BmsBundleCliSandboxInstallerTest_0800
     EXPECT_EQ(installer_->ProcessDestroyCliSandbox(
         CREATOR_BUNDLE_NAME, "", BUNDLE_NAME, USER_ID, VALID_APP_INDEX, false),
         ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INVALID_CREATOR_BUNDLE_NAME);
+    DeleteBundle(BUNDLE_NAME);
 }
 
 /**
  * @tc.number: BmsBundleCliSandboxInstallerTest_0900
  * @tc.name: ProcessDestroyCliSandbox
- * @tc.desc: Test ProcessDestroyCliSandbox caller check - caller not in callerBundleNames
- *           Permission is not granted, so actualCaller is envCallerBundleName which is not in the list
+ * @tc.desc: Test ProcessDestroyCliSandbox caller check - PERMISSION_MANAGE_SANDBOX_BUNDLE
+ *           is not granted, so permission denied is returned before callerBundleNames lookup.
  */
 HWTEST_F(BmsBundleCliSandboxInstallerTest, BmsBundleCliSandboxInstallerTest_0900, TestSize.Level1)
 {
@@ -306,13 +308,13 @@ HWTEST_F(BmsBundleCliSandboxInstallerTest, BmsBundleCliSandboxInstallerTest_0900
     SetBundleInfoWithSandbox(BUNDLE_NAME, USER_ID, VALID_APP_INDEX, {CREATOR_BUNDLE_NAME});
     installer_->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(installer_->dataMgr_, nullptr);
-    // Permission not granted => actualCaller = envCallerBundleName = OTHER_CALLER
-    // OTHER_CALLER is not in callerBundleNames => invalid caller
+    // Permission not granted => PERMISSION_MANAGE_SANDBOX_BUNDLE check fails first
     g_testVerifyPermission = -1;
     EXPECT_EQ(installer_->ProcessDestroyCliSandbox(
         CREATOR_BUNDLE_NAME, OTHER_CALLER, BUNDLE_NAME, USER_ID, VALID_APP_INDEX, false),
-        ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INVALID_CREATOR_BUNDLE_NAME);
+        ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     g_testVerifyPermission = 0;
+    DeleteBundle(BUNDLE_NAME);
 }
 
 /**
@@ -337,6 +339,7 @@ HWTEST_F(BmsBundleCliSandboxInstallerTest, BmsBundleCliSandboxInstallerTest_1000
     EXPECT_EQ(installer_->ProcessDestroyCliSandbox(
         OTHER_CALLER, ENV_CALLER_BUNDLE_NAME, BUNDLE_NAME, USER_ID, VALID_APP_INDEX, false),
         ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INVALID_CREATOR_BUNDLE_NAME);
+    DeleteBundle(BUNDLE_NAME);
 }
 
 /**
@@ -361,6 +364,7 @@ HWTEST_F(BmsBundleCliSandboxInstallerTest, BmsBundleCliSandboxInstallerTest_1100
     EXPECT_EQ(installer_->ProcessDestroyCliSandbox(
         "", "", BUNDLE_NAME, USER_ID, VALID_APP_INDEX, true),
         ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INTERNAL_ERROR);
+    DeleteBundle(BUNDLE_NAME);
 }
 
 /**
@@ -391,6 +395,7 @@ HWTEST_F(BmsBundleCliSandboxInstallerTest, BmsBundleCliSandboxInstallerTest_1200
     EXPECT_EQ(installer_->uid_, TEST_UID);
     EXPECT_EQ(installer_->accessTokenId_, TEST_ACCESS_TOKEN_ID);
     EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INTERNAL_ERROR);
+    DeleteBundle(BUNDLE_NAME);
 }
 
 /**
@@ -422,13 +427,15 @@ HWTEST_F(BmsBundleCliSandboxInstallerTest, BmsBundleCliSandboxInstallerTest_1300
     EXPECT_EQ(installer_->accessTokenId_, TEST_ACCESS_TOKEN_ID);
     // RemoveCliSandboxBundle fails due to null storage
     EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INTERNAL_ERROR);
+    DeleteBundle(BUNDLE_NAME);
 }
 
 /**
  * @tc.number: BmsBundleCliSandboxInstallerTest_1400
  * @tc.name: ProcessDestroyCliSandbox
- * @tc.desc: Test ProcessDestroyCliSandbox with caller check passing - permission not granted
- *           so actualCaller = envCallerBundleName which IS in callerBundleNames
+ * @tc.desc: Test ProcessDestroyCliSandbox - permission not granted so actualCaller is
+ *           envCallerBundleName. Even though it IS in callerBundleNames, the
+ *           PERMISSION_MANAGE_SANDBOX_BUNDLE check denies access first.
  */
 HWTEST_F(BmsBundleCliSandboxInstallerTest, BmsBundleCliSandboxInstallerTest_1400, TestSize.Level1)
 {
@@ -442,18 +449,14 @@ HWTEST_F(BmsBundleCliSandboxInstallerTest, BmsBundleCliSandboxInstallerTest_1400
     ASSERT_NE(dataMgr, nullptr);
     installer_->dataMgr_ = dataMgr;
 
-    // Set dataStorage_ to nullptr to trigger RemoveCliSandboxBundle failure
-    dataMgr->dataStorage_ = nullptr;
-
-    // Permission not granted => actualCaller = envCallerBundleName = ENV_CALLER_BUNDLE_NAME
-    // ENV_CALLER_BUNDLE_NAME is in callerBundleNames => caller check passes
+    // Permission not granted => PERMISSION_MANAGE_SANDBOX_BUNDLE check denies access
+    // before reaching the callerBundleNames lookup; uid_/accessTokenId_ stay unset.
     g_testVerifyPermission = -1;
     auto res = installer_->ProcessDestroyCliSandbox(
         CREATOR_BUNDLE_NAME, ENV_CALLER_BUNDLE_NAME, BUNDLE_NAME, USER_ID, VALID_APP_INDEX, false);
-    EXPECT_EQ(installer_->uid_, TEST_UID);
-    EXPECT_EQ(installer_->accessTokenId_, TEST_ACCESS_TOKEN_ID);
-    EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     g_testVerifyPermission = 0;
+    DeleteBundle(BUNDLE_NAME);
 }
 
 /**
@@ -510,6 +513,7 @@ HWTEST_F(BmsBundleCliSandboxInstallerTest, BmsBundleCliSandboxInstallerTest_1700
     EXPECT_EQ(installer_->accessTokenId_, 0u);
     EXPECT_EQ(installer_->appId_, "");
     EXPECT_EQ(installer_->appIdentifier_, "");
+    DeleteBundle(BUNDLE_NAME);
 }
 
 /**
@@ -663,5 +667,174 @@ HWTEST_F(BmsBundleCliSandboxInstallerTest, DestroyAllCliSandboxApps_0600, TestSi
     auto result = installer_->DestroyAllCliSandboxApps(BUNDLE_NAME, 999);
     EXPECT_EQ(result, ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_USER_NOT_EXIST);
     UnsetBundleDataMgr();
+}
+
+/**
+ * @tc.number: CreateCliSandboxApp_0100
+ * @tc.name: CreateCliSandboxApp - Empty creatorBundleName
+ * @tc.desc: Test CreateCliSandboxApp when creatorBundleName is empty
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, CreateCliSandboxApp_0100, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    int32_t appIndex = 0;
+    EXPECT_EQ(installer_->CreateCliSandboxApp("", BUNDLE_NAME, USER_ID, appIndex),
+        ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_CREATOR_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: CreateCliSandboxApp_0200
+ * @tc.name: CreateCliSandboxApp - Empty bundleName
+ * @tc.desc: Test CreateCliSandboxApp when bundleName is empty
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, CreateCliSandboxApp_0200, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    int32_t appIndex = 0;
+    EXPECT_EQ(installer_->CreateCliSandboxApp(CREATOR_BUNDLE_NAME, "", USER_ID, appIndex),
+        ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ProcessCreateCliSandbox_0100
+ * @tc.name: ProcessCreateCliSandbox - DataMgr unavailable
+ * @tc.desc: Test ProcessCreateCliSandbox when DataMgr is null
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, ProcessCreateCliSandbox_0100, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    UnsetBundleDataMgr();
+    installer_->dataMgr_ = nullptr;
+    int32_t appIndex = 0;
+    EXPECT_EQ(installer_->ProcessCreateCliSandbox(
+        CREATOR_BUNDLE_NAME, BUNDLE_NAME, USER_ID, appIndex),
+        ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: ProcessCreateCliSandbox_0200
+ * @tc.name: ProcessCreateCliSandbox - Bundle not installed
+ * @tc.desc: Test ProcessCreateCliSandbox when target bundle not installed
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, ProcessCreateCliSandbox_0200, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    SetUserIdToDataMgr(USER_ID);
+    installer_->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(installer_->dataMgr_, nullptr);
+    int32_t appIndex = 0;
+    EXPECT_EQ(installer_->ProcessCreateCliSandbox(
+        CREATOR_BUNDLE_NAME, BUNDLE_NAME, USER_ID, appIndex),
+        ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_APP_NOT_EXISTED);
+    DeleteBundle(BUNDLE_NAME);
+    UnsetBundleDataMgr();
+}
+
+/**
+ * @tc.number: ProcessCreateCliSandbox_0300
+ * @tc.name: ProcessCreateCliSandbox - User not exist
+ * @tc.desc: Test ProcessCreateCliSandbox when userId not exist in dataMgr
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, ProcessCreateCliSandbox_0300, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    installer_->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(installer_->dataMgr_, nullptr);
+
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    info.AddInnerBundleUserInfo(userInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_[BUNDLE_NAME] = info;
+
+    int32_t appIndex = 0;
+    EXPECT_EQ(installer_->ProcessCreateCliSandbox(
+        CREATOR_BUNDLE_NAME, BUNDLE_NAME, USER_ID, appIndex),
+        ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_USER_NOT_EXIST);
+
+    DeleteBundle(BUNDLE_NAME);
+    UnsetBundleDataMgr();
+}
+
+/**
+ * @tc.number: ProcessCreateCliSandbox_0400
+ * @tc.name: ProcessCreateCliSandbox - Creator not installed
+ * @tc.desc: Test ProcessCreateCliSandbox when creator bundle is not installed for the user
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, ProcessCreateCliSandbox_0400, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    SetUserIdToDataMgr(USER_ID);
+    installer_->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(installer_->dataMgr_, nullptr);
+
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    info.AddInnerBundleUserInfo(userInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_[BUNDLE_NAME] = info;
+
+    int32_t appIndex = 0;
+    // creator not in bundleInfos_
+    EXPECT_EQ(installer_->ProcessCreateCliSandbox(
+        CREATOR_BUNDLE_NAME, BUNDLE_NAME, USER_ID, appIndex),
+        ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_CREATOR_NOT_INSTALLED);
+
+    DeleteBundle(BUNDLE_NAME);
+    UnsetBundleDataMgr();
+}
+
+/**
+ * @tc.number: ProcessCreateCliSandbox_0500
+ * @tc.name: ProcessCreateCliSandbox - Creator has no PERMISSION_MANAGE_SANDBOX_BUNDLE
+ * @tc.desc: Test ProcessCreateCliSandbox when creator is installed for the user
+ *           but does not hold PERMISSION_MANAGE_SANDBOX_BUNDLE permission.
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, ProcessCreateCliSandbox_0500, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    ScopeGuard guard([this] {
+        g_testVerifyPermission = 0;
+        UnsetBundleDataMgr();
+    });
+    SetUserIdToDataMgr(USER_ID);
+    installer_->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(installer_->dataMgr_, nullptr);
+
+    auto addBundleWithUser = [](const std::string &bundleName) {
+        InnerBundleInfo info;
+        ApplicationInfo appInfo;
+        appInfo.bundleName = bundleName;
+        info.SetBaseApplicationInfo(appInfo);
+        InnerBundleUserInfo userInfo;
+        userInfo.bundleName = bundleName;
+        userInfo.bundleUserInfo.userId = USER_ID;
+        info.AddInnerBundleUserInfo(userInfo);
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_[bundleName] = info;
+    };
+    addBundleWithUser(BUNDLE_NAME);
+    addBundleWithUser(CREATOR_BUNDLE_NAME);
+
+    // creator installed but permission not granted
+    g_testVerifyPermission = -1;
+    int32_t appIndex = 0;
+    EXPECT_EQ(installer_->ProcessCreateCliSandbox(
+        CREATOR_BUNDLE_NAME, BUNDLE_NAME, USER_ID, appIndex),
+        ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    DeleteBundle(BUNDLE_NAME);
+    DeleteBundle(CREATOR_BUNDLE_NAME);
 }
 } // namespace OHOS

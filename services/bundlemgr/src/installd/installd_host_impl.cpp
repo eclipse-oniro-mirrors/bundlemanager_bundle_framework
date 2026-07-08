@@ -117,6 +117,7 @@ enum class DirType : uint8_t {
 };
 constexpr int32_t CONTENT_EDIT = 2;
 constexpr int32_t UNMOUNT_DIS_SHARE_TIMEOUT_MS = 3000;
+constexpr int64_t BLOCK_SIZE = 512;
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -238,7 +239,8 @@ ErrCode InstalldHostImpl::CreateBundleDir(
 }
 
 ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+    const bool isSystemApp)
 {
     LOG_D(BMS_TAG_INSTALLD, "ExtractModuleFiles extract original src %{public}s and target src %{public}s",
         srcModulePath.c_str(), targetPath.c_str());
@@ -263,7 +265,7 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
         LOG_E(BMS_TAG_INSTALLD, "create target dir %{public}s failed, errno:%{public}d", targetPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
-    if (!InstalldOperator::ExtractFiles(srcModulePath, targetSoPath, cpuAbi)) {
+    if (!InstalldOperator::ExtractFiles(srcModulePath, targetSoPath, cpuAbi, needFakeDecompression, isSystemApp)) {
         LOG_E(BMS_TAG_INSTALLD, "extract %{public}s to %{public}s failed errno:%{public}d",
             srcModulePath.c_str(), targetPath.c_str(), errno);
         InstalldOperator::DeleteDir(targetPath);
@@ -737,18 +739,8 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(
         if (bundleName.empty()) {
             return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
         }
-        std::string bundleNameOri = bundleName;
-        int32_t appIdx = 0;
-        if (!BundleCloneCommonHelper::ParseCloneDataDir(bundleName, bundleNameOri, appIdx)) {
-            size_t pos = bundleName.rfind(Constants::FILE_UNDERLINE);
-            if (pos == std::string::npos) {
-                LOG_D(BMS_TAG_INSTALLD, "sandbox map contains invalid element");
-                bundleNameOri = bundleName;
-            } else if (OHOS::StrToInt(bundleName.substr(0, pos), appIdx)) {
-                APP_LOGD("sandbox name %{public}s", bundleName.c_str());
-                bundleNameOri = bundleName.substr(pos + 1);
-            }
-        }
+        std::string bundleNameOri;
+        InstalldOperator::IsValidBundleNameWithOriBundle(bundleName, bundleNameOri);
         ret = Security::AccessToken::AccessTokenKit::GetHapSignInfo(bundleNameOri, bundleInfoList);
         if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             LOG_E(BMS_TAG_INSTALLD, "GetHapSignInfo fallback failed bundleName=%{public}s, ret=%{public}d",
@@ -798,6 +790,7 @@ ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(
     info.isEnterpriseResigned = provisionInfo.isEnterpriseResigned;
     info.appIdentifier = provisionInfo.bundleInfo.appIdentifier;
     info.profileBlockLength = static_cast<uint32_t>(provisionInfo.profileBlockLength);
+    info.appServiceCapabilities = provisionInfo.appServiceCapabilities;
     if (provisionInfo.profileBlock != nullptr && provisionInfo.profileBlockLength > 0) {
         info.profileBlock.reset(new(std::nothrow) unsigned char[provisionInfo.profileBlockLength]);
         if (info.profileBlock != nullptr) {
@@ -872,11 +865,13 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         }
     }
     CreateDirParam localParam = createDirParam;
+#ifndef X86_EMULATOR_MODE
     ErrCode aplRet = GetResolvedApl(localParam);
     if (aplRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "GetResolvedApl failed: %{public}d", aplRet);
         return aplRet;
     }
+#endif
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
         createDirParam.isDlpSandbox, createDirParam.dlpType, false);
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
@@ -904,17 +899,6 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         AclSetDir(createDirParam.debug, bundleDataDir, true, true);
         InstalldOperator::RmvDeleteDfx(bundleDataDir);
         if (el == ServiceConstants::BUNDLE_EL[0]) {
-            std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-            el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1,
-                std::to_string(createDirParam.userId));
-            if (access(el1ShaderCachePath.c_str(), F_OK) == 0) {
-                el1ShaderCachePath = el1ShaderCachePath + createDirParam.bundleName;
-                if (!InstalldOperator::MkOwnerDir(el1ShaderCachePath, ServiceConstants::NEW_SHADER_CACHE_MODE,
-                    createDirParam.uid, ServiceConstants::NEW_SHADER_CACHE_GID)) {
-                        LOG_W(BMS_TAG_INSTALLER, "fail to Mkdir el1ShaderCachePath, errno: %{public}d", errno);
-                }
-            }
-
             // create shadercache in /system_optimize
             std::string systemOptimizeShaderCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
             systemOptimizeShaderCachePath = systemOptimizeShaderCachePath.replace(
@@ -1055,11 +1039,13 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithEl(const CreateDirParam &create
     }
     std::string el = ServiceConstants::BUNDLE_EL[index];
     CreateDirParam localParam = createDirParam;
+#ifndef X86_EMULATOR_MODE
     ErrCode aplRet = GetResolvedApl(localParam);
     if (aplRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "GetResolvedApl failed: %{public}d", aplRet);
         return aplRet;
     }
+#endif
     std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::BASE;
     if (access(bundleDataDir.c_str(), F_OK) != 0) {
         LOG_W(BMS_TAG_INSTALLD, "Base directory %{public}s does not existed, bundleName:%{public}s",
@@ -1227,10 +1213,13 @@ ErrCode InstalldHostImpl::CreateExtensionDir(const CreateDirParam &createDirPara
         return ERR_OK;
     }
     CreateDirParam localParam = createDirParam;
+#ifndef X86_EMULATOR_MODE
     ErrCode aplRet = GetResolvedApl(localParam);
     if (aplRet != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "GetResolvedApl failed: %{public}d", aplRet);
         return aplRet;
     }
+#endif
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
         createDirParam.isDlpSandbox, createDirParam.dlpType, true);
     LOG_I(BMS_TAG_INSTALLD, "CreateExtensionDir parent dir %{public}s for bundle %{public}s, hapFlags:%{public}d",
@@ -1702,7 +1691,7 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
             }
         }
     }
-    return InstalldOperator::GetDiskUsageFromPath(cachePaths);
+    return InstalldOperator::GetCacheDiskUsageFromPath(cachePaths);
 }
 
 ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
@@ -2021,11 +2010,13 @@ ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool 
         }
     }
     CreateDirParam localParam = createDirParam;
+#ifndef X86_EMULATOR_MODE
     ErrCode aplRet = GetResolvedApl(localParam);
     if (aplRet != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "GetResolvedApl failed: %{public}d", aplRet);
         return aplRet;
     }
+#endif
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp,
         createDirParam.debug, createDirParam.isDlpSandbox, createDirParam.dlpType, isExtensionDir);
     ErrCode res = ERR_OK;
@@ -2753,6 +2744,10 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
             static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_MDM));
         localParam.isInternaltestingBundle = (info.distributionType ==
             static_cast<int32_t>(Security::Verify::AppDistType::INTERNALTESTING));
+        if (localParam.isPlugin) {
+            LOG_D(BMS_TAG_INSTALLD, "obtain sign info for plugin");
+            InstalldOperator::ObtainSignInfoForPlugin(info.appServiceCapabilities, localParam.pluginId);
+        }
         if (info.profileBlock != nullptr && info.profileBlockLength > 0) {
             auto tmpProfilePtr = std::make_unique<unsigned char[]>(info.profileBlockLength);
             if (tmpProfilePtr == nullptr) {
@@ -2809,11 +2804,8 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
                 localParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
         } else if (localParam.isPlugin) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for plugin");
-            std::string appIdentifier;
-            std::string pluginId;
-            InstalldOperator::ObtainSignInfoForPlugin(localParam.modulePath, appIdentifier, pluginId);
-            ret = codeSignHelper->EnforceCodeSignForAppWithPluginId(appIdentifier,
-                pluginId, localParam.modulePath, entryMap, fileType, codeSignFlag);
+            ret = codeSignHelper->EnforceCodeSignForAppWithPluginId(localParam.appIdentifier,
+                localParam.pluginId, localParam.modulePath, entryMap, fileType, codeSignFlag);
         } else {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for non-enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForApp(
@@ -3329,15 +3321,6 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
         if (el == ServiceConstants::BUNDLE_EL[0]) {
-            std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-            el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1,
-                std::to_string(userId));
-            el1ShaderCachePath = el1ShaderCachePath + bundleName;
-            if (!InstalldOperator::DeleteDir(el1ShaderCachePath)) {
-                LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d",
-                    el1ShaderCachePath.c_str(), errno);
-                return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
-            }
             // remove shadercache in /system_optimize
             std::string systemOptimizeShaderCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
             systemOptimizeShaderCachePath = systemOptimizeShaderCachePath.replace(
@@ -4048,6 +4031,15 @@ ErrCode InstalldHostImpl::ExtractSkillsPackage(const SkillsPackageParam &param,
     return InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
 }
 
+int64_t InstalldHostImpl::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    return InstalldOperator::GetCacheDiskUsageFromPath(paths, timeoutMs);
+}
+
 void InstalldHostImpl::GetFilesAndSortByLastModifiedTime(const std::vector<std::string> &paths,
     std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> &fileTimePairs)
 {
@@ -4083,6 +4075,16 @@ void InstalldHostImpl::GetFilesAndSortByLastModifiedTime(const std::vector<std::
         });
 }
 
+int64_t InstalldHostImpl::GetFileSize(const std::string &filePath)
+{
+    struct stat fileInfo = { 0 };
+    if (stat(filePath.c_str(), &fileInfo) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "call stat error:%{public}d", errno);
+        return 0;
+    }
+    return fileInfo.st_blocks * BLOCK_SIZE;
+}
+
 ErrCode InstalldHostImpl::DeleteOldCacheFiles(
     const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
 {
@@ -4098,21 +4100,21 @@ ErrCode InstalldHostImpl::DeleteOldCacheFiles(
     for (const auto &file : fileTimePairs) {
         std::error_code ec;
         const auto &filePath = file.first;
-        if (std::filesystem::is_directory(filePath, ec)) {
-            std::filesystem::remove(filePath, ec);
-        } else {
-            uint64_t fileSize = std::filesystem::file_size(filePath, ec);
-            if (ec || !std::filesystem::remove(filePath, ec)) {
-                continue;
-            }
-            cleanedSize += fileSize;
+        uint64_t fileSize = GetFileSize(filePath);
+        if (!std::filesystem::remove(filePath, ec)) {
+            continue;
         }
+        cleanedSize += static_cast<uint64_t>(fileSize);
 
         auto parentPath = filePath.parent_path();
         while (std::find(paths.begin(), paths.end(), parentPath) == paths.end()) {
             if (std::filesystem::is_directory(parentPath, ec) &&
                 std::filesystem::is_empty(parentPath, ec)) {
-                std::filesystem::remove(parentPath, ec);
+                auto dirSize = GetFileSize(parentPath);
+                if (!std::filesystem::remove(parentPath, ec)) {
+                    break;
+                }
+                cleanedSize += static_cast<uint64_t>(dirSize);
                 parentPath = parentPath.parent_path();
             } else {
                 break;

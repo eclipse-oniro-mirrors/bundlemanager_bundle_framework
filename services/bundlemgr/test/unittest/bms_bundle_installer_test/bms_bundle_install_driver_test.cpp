@@ -28,6 +28,7 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "driver_installer.h"
+#include "driver_install_ext.h"
 #include "directory_ex.h"
 #include "install_param.h"
 #include "installd/installd_service.h"
@@ -2172,5 +2173,34 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7900, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     OHOS::system::RemoveParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS);
     OHOS::system::RemoveParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE);
+}
+
+/**
+ * @tc.number: DriverInstallExt_IsExtSpaceEnable_0100
+ * @tc.name: test IsExtSpaceEnable when ext space is disabled
+ * @tc.desc: 1. enterprise space parameter is not true
+ *           2. IsExtSpaceEnable returns false
+ */
+HWTEST_F(BmsDriverInstallerTest, DriverInstallExt_IsExtSpaceEnable_0100, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(PARAM_EXT_SPACE, EXT_SPACE_DISABLE);
+    DriverInstallExtHandler handler;
+    EXPECT_FALSE(handler.IsExtSpaceEnable());
+    EXPECT_FALSE(handler.OpenDriverInstallHandler());
+}
+
+/**
+ * @tc.number: DriverInstallExt_GetDriverExecuteExtPaths_0100
+ * @tc.name: test GetDriverExecuteExtPaths when function pointer is null
+ * @tc.desc: 1. getDriverExecuteExtPathsFunc_ is nullptr
+ *           2. paths remains empty without crash
+ */
+HWTEST_F(BmsDriverInstallerTest, DriverInstallExt_GetDriverExecuteExtPaths_0100, Function | SmallTest | Level0)
+{
+    DriverInstallExtHandler handler;
+    handler.getDriverExecuteExtPathsFunc_ = nullptr;
+    std::vector<std::string> paths;
+    handler.GetDriverExecuteExtPaths(paths);
+    EXPECT_TRUE(paths.empty());
 }
 } // OHOS

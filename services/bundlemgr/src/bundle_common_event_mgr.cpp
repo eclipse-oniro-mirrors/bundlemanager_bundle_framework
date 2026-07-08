@@ -47,6 +47,7 @@ constexpr const char* UID = "uid";
 constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
 constexpr const char* BUNDLE_RESOURCE_CHANGE_TYPE = "bundleResourceChangeType";
 constexpr const char* APP_INDEX = "appIndex";
+constexpr const char* SANDBOX_CREATOR_BUNDLE_NAME = "sandboxCreatorBundleName";
 constexpr const char* TYPE = "type";
 constexpr const char* RESULT_CODE = "resultCode";
 constexpr const char* KEEP_DATA = "keepData";
@@ -362,6 +363,37 @@ ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
         APP_LOGE("PublishCommonEvent failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+    return ERR_OK;
+}
+
+ErrCode BundleCommonEventMgr::NotifyCliSandboxAppStatus(const NotifyBundleEvents &event,
+    const std::string &action)
+{
+    APP_LOGI("NotifyCliSandboxAppStatus bundle:%{public}s appIndex:%{public}d creator:%{public}s",
+        event.bundleName.c_str(), event.appIndex, event.sandboxCreatorBundleName.c_str());
+    OHOS::AAFwk::Want want;
+    want.SetAction(action);
+    ElementName element;
+    element.SetBundleName(event.bundleName);
+    want.SetElement(element);
+    want.SetParam(Constants::USER_ID, event.userId);
+    want.SetParam(APP_INDEX, event.appIndex);
+    want.SetParam(UID, event.uid);
+    want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(event.accessTokenId));
+    want.SetParam(APP_ID, event.appId);
+    want.SetParam(APP_IDENTIFIER, event.appIdentifier);
+    want.SetParam(APP_DISTRIBUTION_TYPE, event.appDistributionType);
+    want.SetParam(SANDBOX_CREATOR_BUNDLE_NAME, event.sandboxCreatorBundleName);
+
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
+    publishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed for cli sandbox bundle:%{public}s appIndex:%{public}d",
+            event.bundleName.c_str(), event.appIndex);
     }
     IPCSkeleton::SetCallingIdentity(identity);
     return ERR_OK;

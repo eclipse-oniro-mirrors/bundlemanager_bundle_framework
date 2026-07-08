@@ -44,14 +44,16 @@ ErrCode InstalldClient::CreateBundleDir(
 }
 
 ErrCode InstalldClient::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+    const bool isSystemApp)
 {
     if (srcModulePath.empty() || targetPath.empty()) {
         APP_LOGE("src module path or target path is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::ExtractModuleFiles, srcModulePath, targetPath, targetSoPath, cpuAbi);
+    return CallService(&IInstalld::ExtractModuleFiles, srcModulePath, targetPath, targetSoPath, cpuAbi,
+        needFakeDecompression, isSystemApp);
 }
 
 ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
@@ -828,6 +830,15 @@ ErrCode InstalldClient::DeleteOldCacheFiles(
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::DeleteOldCacheFiles, paths, cacheSize, cleanedSize);
+}
+
+int64_t InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs)
+{
+    if (paths.empty()) {
+        APP_LOGE("paths is empty");
+        return 0;
+    }
+    return CallService(&IInstalld::GetCacheDiskUsageFromPath, paths, timeoutMs);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

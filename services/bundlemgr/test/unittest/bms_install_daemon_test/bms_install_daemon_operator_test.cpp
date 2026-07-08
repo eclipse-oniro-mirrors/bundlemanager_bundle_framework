@@ -228,7 +228,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_0700, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_0800, Function | SmallTest | Level0)
 {
     std::string path;
-    auto ret = InstalldOperator::ExtractFiles(path, TEST_STRING, TEST_STRING);
+    auto ret = InstalldOperator::ExtractFiles(path, TEST_STRING, TEST_STRING, false, false);
     EXPECT_FALSE(ret);
 }
 
@@ -682,6 +682,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3500, Function | Sma
     path.push_back(OVER_MAX_PATH_SIZE);
     auto ret = InstalldOperator::GetDiskUsageFromPath(path);
     EXPECT_EQ(ret, 0);
+    ret = InstalldOperator::GetCacheDiskUsageFromPath(path);
+    EXPECT_EQ(ret, 0);
 }
 
 /**
@@ -697,6 +699,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3600, Function | Sma
     path.push_back("");
     auto ret = InstalldOperator::GetDiskUsageFromPath(path);
     EXPECT_EQ(ret, 0);
+    ret = InstalldOperator::GetCacheDiskUsageFromPath(path);
+    EXPECT_EQ(ret, 0);
 }
 
 /**
@@ -711,6 +715,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3610, Function | Sma
     std::vector<std::string> path;
     path.push_back("/data/app/el2/100/base/test");
     auto ret = InstalldOperator::GetDiskUsageFromPath(path, 1);
+    EXPECT_EQ(ret, 0);
+    ret = InstalldOperator::GetCacheDiskUsageFromPath(path);
     EXPECT_EQ(ret, 0);
 }
 

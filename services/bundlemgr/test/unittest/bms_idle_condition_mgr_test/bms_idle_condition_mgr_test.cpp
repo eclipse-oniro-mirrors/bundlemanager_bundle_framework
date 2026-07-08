@@ -67,7 +67,10 @@ void BmsIdleConditionMgrTest::SetUp()
 {}
 
 void BmsIdleConditionMgrTest::TearDown()
-{}
+{
+    OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "false");
+}
 
 /**
  * @tc.number: CheckRelabelConditions_0100
@@ -171,6 +174,7 @@ HWTEST_F(BmsIdleConditionMgrTest, TryStartRelabel_0100, Function | SmallTest | L
 {
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
+    OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "true");
 
     idleMgr->userUnlockedMap_[100] = true;
     idleMgr->screenLocked_ = true;
@@ -1175,6 +1179,7 @@ HWTEST_F(BmsIdleConditionMgrTest, TryStartRelabel_0200, Function | SmallTest | L
 {
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
+    OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "true");
 
     // Function can be called, just verify no crash
     idleMgr->TryStartRelabel();
@@ -1191,6 +1196,7 @@ HWTEST_F(BmsIdleConditionMgrTest, TryStartRelabel_0300, Function | SmallTest | L
 {
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
+    OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "true");
 
     idleMgr->featureEnabled_ = false;
     idleMgr->userUnlockedMap_[100] = true;
@@ -1213,6 +1219,7 @@ HWTEST_F(BmsIdleConditionMgrTest, TryStartRelabel_0400, Function | SmallTest | L
 {
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
+    OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "true");
 
     idleMgr->featureEnabled_ = true;
     idleMgr->userUnlockedMap_[100] = true;
@@ -1893,10 +1900,10 @@ HWTEST_F(BmsIdleConditionMgrTest, TryStartScanAppData_0100, Function | SmallTest
 {
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "true");
 
     idleMgr->scanFeatureEnabled_ = false;
     idleMgr->isScanActive_ = false;
-    // scanFeature disabled: TryStartScanAppData returns at first check, no thread spawned.
     idleMgr->TryStartScanAppData();
     EXPECT_FALSE(idleMgr->isScanActive_);
 }
@@ -1911,6 +1918,7 @@ HWTEST_F(BmsIdleConditionMgrTest, TryStartScanAppData_0200, Function | SmallTest
 {
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "true");
 
     idleMgr->scanFeatureEnabled_ = true;
     idleMgr->userUnlockedMap_.clear();

@@ -2718,4 +2718,32 @@ HWTEST_F(BmsSandboxAppTest, ProcessBundleShareFiles_1200, Function | SmallTest |
 
     ClearDataMgr();
 }
+
+/**
+ * @tc.number: GetSandboxAppInfo_0300
+ * @tc.name: test GetSandboxAppInfo with invalid userId
+ * @tc.desc: 1. userId < DEFAULT_USERID
+ *           2. return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR
+ */
+HWTEST_F(BmsSandboxAppTest, GetSandboxAppInfo_0300, Function | SmallTest | Level0)
+{
+    BundleSandboxDataMgr dataMgr;
+    InnerBundleInfo info;
+    int32_t userId = Constants::DEFAULT_USERID - 1;
+    ErrCode ret = dataMgr.GetSandboxAppInfo(TEST_BUNDLE_NAME, 1, userId, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeleteSandboxAppIndex_0200
+ * @tc.name: test DeleteSandboxAppIndex when bundle not registered
+ * @tc.desc: 1. bundleName not in sandboxAppIndexMap_
+ *           2. return false
+ */
+HWTEST_F(BmsSandboxAppTest, DeleteSandboxAppIndex_0200, Function | SmallTest | Level0)
+{
+    BundleSandboxDataMgr dataMgr;
+    bool ret = dataMgr.DeleteSandboxAppIndex("com.example.not.exist", 1);
+    EXPECT_FALSE(ret);
+}
 } // OHOS

@@ -16,8 +16,11 @@
 #include "quick_fix_manager_host_impl.h"
 
 #include "app_log_tag_wrapper.h"
+#include "bundle_data_mgr.h"
+#include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -32,15 +35,8 @@ QuickFixManagerHostImpl::~QuickFixManagerHostImpl()
     LOG_D(BMS_TAG_DEFAULT, "destroy QuickFixManagerHostImpl");
 }
 
-ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
-    const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug, const std::string &targetPath,
-    bool isReplace)
+ErrCode QuickFixManagerHostImpl::VerifyDeployQuickFixPermission()
 {
-    LOG_I(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::DeployQuickFix start");
-    if (bundleFilePaths.empty() || (statusCallback == nullptr)) {
-        LOG_E(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::DeployQuickFix wrong parms");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
-    }
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_DEFAULT, "non-system app is not allowed call this function");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -50,6 +46,27 @@ ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &
         LOG_E(BMS_TAG_DEFAULT, "verify install permission failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
     }
+    return ERR_OK;
+}
+
+ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
+    const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug, const std::string &targetPath,
+    bool isReplace, bool isCheckDebugApp)
+{
+    LOG_I(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::DeployQuickFix start");
+    if (bundleFilePaths.empty() || (statusCallback == nullptr)) {
+        LOG_E(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::DeployQuickFix wrong parms");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+    }
+    auto verifyResult = VerifyDeployQuickFixPermission();
+    if (verifyResult != ERR_OK) {
+        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+            LOG_E(BMS_TAG_DEFAULT, "verify install permission failed");
+            return verifyResult;
+        }
+        isCheckDebugApp = true;
+    }
 
     std::vector<std::string> securityFilePaths;
     ErrCode result = CopyHqfToSecurityDir(bundleFilePaths, securityFilePaths);
@@ -57,7 +74,8 @@ ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &
         LOG_E(BMS_TAG_DEFAULT, "copy file to secure dir failed %{public}d", result);
         return result;
     }
-    return quickFixMgr_->DeployQuickFix(securityFilePaths, statusCallback, isDebug, targetPath, isReplace);
+    return quickFixMgr_->DeployQuickFix(securityFilePaths, statusCallback, isDebug, targetPath, isReplace,
+        isCheckDebugApp);
 }
 
 ErrCode QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName, bool enable,
@@ -81,14 +99,8 @@ ErrCode QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName, b
     return quickFixMgr_->SwitchQuickFix(bundleName, enable, statusCallback);
 }
 
-ErrCode QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
-    const sptr<IQuickFixStatusCallback> &statusCallback)
+ErrCode QuickFixManagerHostImpl::VerifyDeleteQuickFixPermission()
 {
-    LOG_I(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::DeleteQuickFix start");
-    if (bundleName.empty() || (statusCallback == nullptr)) {
-        LOG_E(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::DeleteQuickFix wrong parms");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
-    }
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_DEFAULT, "non-system app is not allowed call this function");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -98,13 +110,50 @@ ErrCode QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
         LOG_E(BMS_TAG_DEFAULT, "verify install permission failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
     }
+    return ERR_OK;
+}
+
+ErrCode QuickFixManagerHostImpl::CheckIsDebugAppProvisionType(const std::string &bundleName)
+{
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "null dataMgr");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    bool isDebuggable = false;
+    dataMgr->IsDebuggableApplication(bundleName, isDebuggable);
+    if (!isDebuggable) {
+        LOG_E(BMS_TAG_INSTALLER, "only debug bundle can delete quick fix");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
+    }
+    return ERR_OK;
+}
+
+ErrCode QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
+    const sptr<IQuickFixStatusCallback> &statusCallback)
+{
+    LOG_I(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::DeleteQuickFix start");
+    if (bundleName.empty() || (statusCallback == nullptr)) {
+        LOG_E(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::DeleteQuickFix wrong parms");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+    }
+    auto verifyResult = VerifyDeleteQuickFixPermission();
+    if (verifyResult != ERR_OK) {
+        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+            return verifyResult;
+        }
+        auto checkDebugResult = CheckIsDebugAppProvisionType(bundleName);
+        if (checkDebugResult != ERR_OK) {
+            return checkDebugResult;
+        }
+    }
 
     return quickFixMgr_->DeleteQuickFix(bundleName, statusCallback);
 }
 
-ErrCode QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
+ErrCode QuickFixManagerHostImpl::VerifyCreateFdPermission()
 {
-    LOG_D(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::CreateFd start");
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_DEFAULT, "non-system app is not allowed call this function");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -113,6 +162,19 @@ ErrCode QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
         LOG_E(BMS_TAG_DEFAULT, "verify install permission failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
+    }
+    return ERR_OK;
+}
+
+ErrCode QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
+{
+    LOG_D(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::CreateFd start");
+    auto verifyResult = VerifyCreateFdPermission();
+    if (verifyResult != ERR_OK) {
+        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+            return verifyResult;
+        }
     }
     if (!BundleUtil::CheckFileType(fileName, ServiceConstants::QUICK_FIX_FILE_SUFFIX)) {
         LOG_E(BMS_TAG_DEFAULT, "not quick fix file");

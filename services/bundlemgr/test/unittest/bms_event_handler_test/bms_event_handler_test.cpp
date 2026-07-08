@@ -22,6 +22,7 @@
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
+#include "parameter/parameter.h"
 #include "bundle_permission_mgr.h"
 #include "common_event_data.h"
 #include "common_event_manager.h"
@@ -85,9 +86,10 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+    void InitBundleMgrServiceForTest();
+    void InitBundleDataMgrForTest();
+    void CleanupBmsParamTestState();
     bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId);
-    bool CheckShaderCachePathExist(const std::string &bundleName,
-        const int32_t appIndex, const int32_t &userId) const;
 
 private:
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
@@ -107,8 +109,33 @@ void BmsEventHandlerTest::TearDownTestCase()
 void BmsEventHandlerTest::SetUp()
 {}
 
+void BmsEventHandlerTest::InitBundleMgrServiceForTest()
+{
+    bundleMgrService_->InitBmsParam();
+}
+
+void BmsEventHandlerTest::InitBundleDataMgrForTest()
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+}
+
+void BmsEventHandlerTest::CleanupBmsParamTestState()
+{
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsParam != nullptr) {
+        bmsParam->DeleteBmsParam("otaFlag");
+        bmsParam->DeleteBmsParam("fingerprint");
+    }
+}
+
 void BmsEventHandlerTest::TearDown()
-{}
+{
+    CleanupBmsParamTestState();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr != nullptr) {
+        dataMgr->bundleInfos_.clear();
+    }
+}
 
 bool BmsEventHandlerTest::CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId)
 {
@@ -120,27 +147,6 @@ bool BmsEventHandlerTest::CreateBundleDataDir(const BundleInfo &bundleInfo, int3
     UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(userId);
     return UpdateAppDataMgr::CreateBundleDataDir(bundleInfo, userId, ServiceConstants::DIR_EL2);
 }
-
-bool BmsEventHandlerTest::CheckShaderCachePathExist(const std::string &bundleName,
-    const int32_t appIndex, const int32_t &userId) const
-{
-    bool isExist = false;
-    std::string cloneBundleName = bundleName;
-    if (appIndex != 0) {
-        cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
-    }
-    std::string newShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-    newShaderCachePath = newShaderCachePath.replace(newShaderCachePath.find("%"), 1, std::to_string(userId));
-    newShaderCachePath = newShaderCachePath + cloneBundleName;
-    if (access(newShaderCachePath.c_str(), F_OK) == 0) {
-        isExist = true;
-    } else {
-        LOG_E(BMS_TAG_INSTALLD, "%{public}s can not access, errno: %{public}d",
-            newShaderCachePath.c_str(), errno);
-    }
-    return isExist;
-}
-
 
 /**
  * @tc.number: BeforeBmsStart_0100
@@ -2252,172 +2258,6 @@ HWTEST_F(BmsEventHandlerTest, CheckEl5Dir_0001, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: BundleCloneEl1ShaderCacheLocal_0100
- * @tc.name: CheckBundleCloneEl1ShaderCacheLocal
- * @tc.desc: test CheckBundleCloneEl1ShaderCacheLocal and CleanBundleCloneEl1ShaderCacheLocal
- */
-HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0100, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
-    // test first time mkdir with invalid uid
-    setuid(Constants::FOUNDATION_UID);
-    handler->CheckBundleCloneEl1ShaderCacheLocal(TEST_SHADER_CACHE_NAME_ONE,
-        1, Constants::DEFAULT_USERID, Constants::INVALID_UID);
-    bool isExist = CheckShaderCachePathExist(TEST_SHADER_CACHE_NAME_ONE, 1, Constants::START_USERID);
-    EXPECT_FALSE(isExist) << "test1: mkdir shader cache succeed: " << TEST_SHADER_CACHE_NAME_ONE;
-    setuid(Constants::ROOT_UID);
-}
-
-/**
- * @tc.number: BundleCloneEl1ShaderCacheLocal_0200
- * @tc.name: CheckBundleCloneEl1ShaderCacheLocal
- * @tc.desc: test CheckBundleCloneEl1ShaderCacheLocal and CleanBundleCloneEl1ShaderCacheLocal
- */
-HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0200, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
-    // test first time mkdir with no permission uid
-    setuid(Constants::ROOT_UID);
-    handler->CheckBundleCloneEl1ShaderCacheLocal(TEST_SHADER_CACHE_NAME_ONE,
-        1, Constants::START_USERID, TEST_UID);
-    bool isExist = CheckShaderCachePathExist(TEST_SHADER_CACHE_NAME_ONE, 1, Constants::START_USERID);
-    EXPECT_FALSE(isExist) << "test2: mkdir shader cache succeed: " << TEST_SHADER_CACHE_NAME_ONE;
-}
-
-/**
- * @tc.number: BundleCloneEl1ShaderCacheLocal_0300
- * @tc.name: CheckBundleCloneEl1ShaderCacheLocal
- * @tc.desc: test CheckBundleCloneEl1ShaderCacheLocal and CleanBundleCloneEl1ShaderCacheLocal
- */
-HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0300, Function | SmallTest | Level0)
-{
-    std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1,
-        std::to_string(Constants::START_USERID));
-    ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
-    setuid(Constants::FOUNDATION_UID);
-    EXPECT_TRUE(OHOS::ForceCreateDirectory(el1ShaderCachePath));
-
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
-    // test first time mkdir shadercache
-    setuid(Constants::FOUNDATION_UID);
-    handler->CheckBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME,
-        0, Constants::START_USERID, TEST_UID);
-    bool isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_TRUE(isExist) << "the shader cache path does not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
-    // test shader cache already exist and mkdir second time
-    handler->CheckBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME,
-        0, Constants::START_USERID, TEST_UID);
-    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_TRUE(isExist) << "the shader cache path second time mkdir failed: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
-    setuid(Constants::ROOT_UID);
-}
-
-/**
- * @tc.number: BundleCloneEl1ShaderCacheLocal_0400
- * @tc.name: CheckBundleCloneEl1ShaderCacheLocal
- * @tc.desc: test CheckBundleCloneEl1ShaderCacheLocal and CleanBundleCloneEl1ShaderCacheLocal
- */
-HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0400, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
-    // test CleanBundleCloneEl1ShaderCacheLocal
-    setuid(Constants::ROOT_UID);
-    handler->CleanBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
-    bool isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_TRUE(isExist) << "the shader cache path was deleted: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
-
-    setuid(Constants::FOUNDATION_UID);
-    handler->CleanBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
-    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_TRUE(isExist) << "the shader cache path was deleted: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
-
-    // test for invalid app index
-    handler->CleanBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME, 1, Constants::START_USERID);
-    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 1, Constants::START_USERID);
-    EXPECT_FALSE(isExist) << "the shader cache path was deleted: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
-    setuid(Constants::ROOT_UID);
-}
-
-/**
- * @tc.number: BundleEl1ShaderCacheLocal_0100
- * @tc.name: CheckAllBundleEl1ShaderCacheLocal and CleanAllBundleEl1ShaderCacheLocal
- * @tc.desc: test CheckAllBundleEl1ShaderCacheLocal and CleanAllBundleEl1ShaderCacheLocal
- */
-HWTEST_F(BmsEventHandlerTest, BundleEl1ShaderCacheLocal_0100, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    dataMgr->AddUserId(Constants::START_USERID);
-
-    InnerBundleInfo innerBundleInfo;
-    // set application
-    ApplicationInfo applicationInfo;
-    applicationInfo.bundleName = BUNDLE_NAME;
-    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
-
-    // set innerBundleUserInfo
-    InnerBundleUserInfo innerBundleUserInfo;
-    innerBundleUserInfo.bundleName = BUNDLE_NAME;
-    innerBundleUserInfo.bundleUserInfo.enabled = true;
-    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
-    innerBundleUserInfo.uid = TEST_UID;
-    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
-
-    // set cloneinfo
-    InnerBundleCloneInfo cloneInfo;
-    cloneInfo.userId = Constants::START_USERID;
-    cloneInfo.uid = 1001;
-    cloneInfo.appIndex = 1;
-    cloneInfo.accessTokenId = 20000;
-    ErrCode r1 = innerBundleInfo.AddCloneBundle(cloneInfo);
-    EXPECT_EQ(r1, ERR_OK);
-    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
-
-    // mkdir /data/app/el1/100/shader_cache
-    std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1,
-        std::to_string(Constants::START_USERID));
-    setuid(Constants::FOUNDATION_UID);
-    ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
-    EXPECT_TRUE(OHOS::ForceCreateDirectory(el1ShaderCachePath));
-
-    setuid(Constants::FOUNDATION_UID);
-    // test CheckAllBundleEl1ShaderCacheLocal succeed
-    handler->CheckAllBundleEl1ShaderCacheLocal();
-    bool isExist = CheckShaderCachePathExist(BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_TRUE(isExist) << "the shader cache path not exist: " << BUNDLE_NAME;
-
-    // test CleanAllBundleEl1ShaderCacheLocal succeed
-    handler->CleanAllBundleEl1ShaderCacheLocal();
-    isExist = CheckShaderCachePathExist(BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_TRUE(isExist) << "the shader cache path not exist: " << BUNDLE_NAME;
-
-    // test when shader cache path no exist
-    ErrCode removeRet = AppExecFwk::InstalldClient::GetInstance()->RemoveDir(
-        el1ShaderCachePath, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, BUNDLE_NAME);
-    EXPECT_EQ(removeRet, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    handler->CheckAllBundleEl1ShaderCacheLocal();
-    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_TRUE(isExist) << "the shader cache path exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
-
-    handler->CleanAllBundleEl1ShaderCacheLocal();
-    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_TRUE(isExist) << "the shader cache path not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
-    setuid(Constants::ROOT_UID);
-}
-
-/**
  * @tc.number: CleanAllBundleEl1ArkStartupCacheLocal_0100
  * @tc.name: CleanAllBundleEl1ArkStartupCacheLocal
  * @tc.desc: test CleanAllBundleEl1ArkStartupCacheLocal
@@ -3642,39 +3482,74 @@ namespace AccessToken {
 /**
  * @tc.number: ProcessAccessTokenMigration_0100
  * @tc.name: ProcessAccessTokenMigration already migrated
- * @tc.desc: OTA flag already set → calls FinishMigration and returns early
+ * @tc.desc: migration count >= 1 → calls FinishMigration and returns early
  */
 HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0100, Function | SmallTest | Level0)
 {
     auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
     ASSERT_NE(bmsParam, nullptr);
-    // Set OTA flag to include PROCESS_ACCESS_TOKEN_MIGRATION bit (0x02000000)
-    bmsParam->SaveBmsParam("otaFlag", std::to_string(static_cast<int32_t>(0x02000000)));
+    bmsParam->SaveBmsParam("accessTokenMigrationCount", "1");
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     handler->ProcessAccessTokenMigration();
-    // Verify OTA flag unchanged (already migrated, no UpdateOtaFlag called)
     std::string val;
-    bmsParam->GetBmsParam("otaFlag", val);
-    EXPECT_EQ(val, std::to_string(static_cast<int32_t>(0x02000000)));
+    bmsParam->GetBmsParam("accessTokenMigrationCount", val);
+    EXPECT_EQ(val, "1");
 }
 
 /**
  * @tc.number: ProcessAccessTokenMigration_0200
  * @tc.name: ProcessAccessTokenMigration not migrated
- * @tc.desc: OTA flag not set → calls InnerProcessAccessTokenMigration and sets flag
+ * @tc.desc: migration count is 0 → calls InnerProcessAccessTokenMigration and increments count
  */
 HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0200, Function | SmallTest | Level0)
 {
     auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
     ASSERT_NE(bmsParam, nullptr);
-    bmsParam->SaveBmsParam("otaFlag", "0");
+    bmsParam->SaveBmsParam("accessTokenMigrationCount", "0");
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     handler->ProcessAccessTokenMigration();
     std::string val;
-    bmsParam->GetBmsParam("otaFlag", val);
+    bmsParam->GetBmsParam("accessTokenMigrationCount", val);
     EXPECT_NE(val, "0");
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0300
+ * @tc.name: ProcessAccessTokenMigration already migrated with large count
+ * @tc.desc: migration count is INT32_MAX → count >= 1, treated as already migrated, value unchanged
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0300, Function | SmallTest | Level0)
+{
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    auto intMaxStr = std::to_string(INT32_MAX);
+    bmsParam->SaveBmsParam("accessTokenMigrationCount", intMaxStr);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->ProcessAccessTokenMigration();
+    std::string val;
+    bmsParam->GetBmsParam("accessTokenMigrationCount", val);
+    EXPECT_EQ(val, intMaxStr);
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0400
+ * @tc.name: ProcessAccessTokenMigration count is negative
+ * @tc.desc: migration count < 0 → overflow protection resets to 1
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0400, Function | SmallTest | Level0)
+{
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("accessTokenMigrationCount", "-1");
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->ProcessAccessTokenMigration();
+    std::string val;
+    bmsParam->GetBmsParam("accessTokenMigrationCount", val);
+    EXPECT_EQ(val, "1");
 }
 
 // ============================================================================
@@ -3865,10 +3740,12 @@ HWTEST_F(BmsEventHandlerTest, ExecuteMigrationWithRetry_0100, Function | SmallTe
  * @tc.number: ExecuteMigrationWithRetry_0200
  * @tc.name: ExecuteMigrationWithRetry UID duplicated
  * @tc.desc: MigrateInstalledBundles returns ERR_MIGRATION_UID_DUPLICATED →
- *           marked as success and flagged for reporting
+ *           successFlags remain false, failure recorded for reporting
  */
 HWTEST_F(BmsEventHandlerTest, ExecuteMigrationWithRetry_0200, Function | SmallTest | Level0)
 {
+    AccessToken::SetMigrateInstalledBundlesRetForTest(0);
+    AccessToken::SetMigrateResultsForTest({});
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
     dataMgr->bundleInfos_.clear();
@@ -3895,7 +3772,7 @@ HWTEST_F(BmsEventHandlerTest, ExecuteMigrationWithRetry_0200, Function | SmallTe
     handler->ExecuteMigrationWithRetry(dataMgr, migratedList, oldTokenIdExList,
         successFlags);
     EXPECT_EQ(successFlags.size(), 1);
-    EXPECT_TRUE(successFlags[0]); // UID duplicated is treated as success
+    EXPECT_FALSE(successFlags[0]);
     AccessToken::SetMigrateInstalledBundlesRetForTest(0);
     AccessToken::SetMigrateResultsForTest({});
 }
@@ -4154,4 +4031,824 @@ HWTEST_F(BmsEventHandlerTest, RegisterOobeAgreeTermsEvent_0200, Function | Small
     handler->RegisterOobeAgreeTermsEvent();
     EXPECT_TRUE(g_mockSubscribeCalled);
 }
+// ============================================================================
+// CleanUninstallBundleInfo test cases
+// ============================================================================
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0100
+ * @tc.name: CleanUninstallBundleInfo dataMgr is null
+ * @tc.desc: DataMgr is nullptr → returns early without crash
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0100, Function | SmallTest | Level0)
+{
+    auto bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedDataMgr = bms->dataMgr_;
+    bms->dataMgr_ = nullptr;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_NO_THROW(handler->CleanUninstallBundleInfo());
+    bms->dataMgr_ = savedDataMgr;
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0200
+ * @tc.name: CleanUninstallBundleInfo empty uninstall list
+ * @tc.desc: No uninstall records → completes without errors
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0200, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_NO_THROW(handler->CleanUninstallBundleInfo());
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0300
+ * @tc.name: CleanUninstallBundleInfo non-clone bundle exists
+ * @tc.desc: Uninstall record (appIndex=0) exists and bundle IS installed → record IS deleted (stale data)
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0300, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->AddUserId(TEST_U100);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test.clean.bundle";
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_U100;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_["test.clean.bundle"] = info;
+    UninstallBundleInfo uninstInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
+    uninstInfo.userInfos[std::to_string(TEST_U100)] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.clean.bundle", uninstInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // Bundle exists → record should be deleted (stale uninstall data)
+    UninstallBundleInfo result;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo("test.clean.bundle", result));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0400
+ * @tc.name: CleanUninstallBundleInfo non-clone bundle not exist
+ * @tc.desc: Uninstall record (appIndex=0) exists but bundle is NOT installed → record is KEPT (legitimate uninstall)
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0400, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->AddUserId(TEST_U100);
+    UninstallBundleInfo uninstInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
+    uninstInfo.userInfos[std::to_string(TEST_U100)] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.nonexist.bundle", uninstInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // Bundle not exist → record should be kept (legitimate uninstall data)
+    UninstallBundleInfo result;
+    EXPECT_TRUE(dataMgr->GetUninstallBundleInfo("test.nonexist.bundle", result));
+    EXPECT_EQ(result.userInfos.size(), 1);
+    // Clean up
+    dataMgr->DeleteUninstallBundleInfo("test.nonexist.bundle", TEST_U100);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0500
+ * @tc.name: CleanUninstallBundleInfo clone bundle not exist
+ * @tc.desc: Clone uninstall record (appIndex>0) exists but bundle is NOT installed → record is KEPT
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0500, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->AddUserId(TEST_U100);
+    UninstallBundleInfo uninstInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
+    std::string cloneKey = std::to_string(TEST_U100) + "_1";
+    uninstInfo.userInfos[cloneKey] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.clone.bundle", uninstInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // Bundle not exist → record should be kept
+    UninstallBundleInfo result;
+    EXPECT_TRUE(dataMgr->GetUninstallBundleInfo("test.clone.bundle", result));
+    EXPECT_EQ(result.userInfos.size(), 1);
+    // Clean up
+    dataMgr->DeleteUninstallCloneBundleInfo("test.clone.bundle", TEST_U100, 1);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0600
+ * @tc.name: CleanUninstallBundleInfo clone bundle exists
+ * @tc.desc: Clone uninstall record (appIndex>0) exists and bundle with clone IS installed → record IS deleted (stale data)
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0600, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->AddUserId(TEST_U100);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test.clone.installed";
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_U100;
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_["test.clone.installed"] = info;
+    UninstallBundleInfo uninstInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
+    std::string cloneKey = std::to_string(TEST_U100) + "_1";
+    uninstInfo.userInfos[cloneKey] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.clone.installed", uninstInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // Bundle with clone exists → record should be deleted (stale data)
+    UninstallBundleInfo result;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo("test.clone.installed", result));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0700
+ * @tc.name: CleanUninstallBundleInfo mixed records
+ * @tc.desc: Multiple records — only stale ones (bundle still exists) are cleaned
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0700, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->AddUserId(TEST_U100);
+    // Add one installed bundle → its uninstall record should be DELETED (stale)
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test.del.bundle";
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = TEST_U100;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_["test.del.bundle"] = info;
+    UninstallBundleInfo delInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = TEST_U100 * Constants::BASE_USER_RANGE;
+    delInfo.userInfos[std::to_string(TEST_U100)] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.del.bundle", delInfo));
+    // Add uninstall record for a non-existent bundle → should be KEPT (legitimate uninstall)
+    UninstallBundleInfo keepInfo;
+    keepInfo.userInfos[std::to_string(TEST_U100)] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.keep.bundle", keepInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // stale record (bundle exists) is deleted
+    UninstallBundleInfo result;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo("test.del.bundle", result));
+    // legitimate uninstall record (bundle doesn't exist) is kept
+    EXPECT_TRUE(dataMgr->GetUninstallBundleInfo("test.keep.bundle", result));
+    EXPECT_EQ(result.userInfos.size(), 1);
+    // Clean up
+    dataMgr->DeleteUninstallBundleInfo("test.keep.bundle", TEST_U100);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0800
+ * @tc.name: CleanUninstallBundleInfo userId not exist
+ * @tc.desc: Uninstall record exists for a userId that is NOT in multiUserIdsSet_
+ *           → record IS deleted even though bundle doesn't exist (orphaned user data)
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0800, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    // Do NOT call AddUserId — userId 200 is unknown
+    UninstallBundleInfo uninstInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = 200 * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
+    uninstInfo.userInfos[std::to_string(200)] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.orphan.user", uninstInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // userId 200 not exist → record should be deleted (orphaned user data)
+    UninstallBundleInfo result;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo("test.orphan.user", result));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CleanUninstallBundleInfo_0900
+ * @tc.name: CleanUninstallBundleInfo userId is U1 or below
+ * @tc.desc: Uninstall record exists for userId <= 1 (system user), bundle does NOT exist,
+ *           but userId IS in multiUserIdsSet_ → record IS deleted (userId <= U1 is always cleaned)
+ */
+HWTEST_F(BmsEventHandlerTest, CleanUninstallBundleInfo_0900, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->AddUserId(TEST_U1);
+    // Add uninstall record for userId=1 without installing the bundle
+    UninstallBundleInfo uninstInfo;
+    UninstallDataUserInfo dui;
+    dui.uid = TEST_U1 * Constants::BASE_USER_RANGE;
+    uninstInfo.userInfos[std::to_string(TEST_U1)] = dui;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo("test.uid.one", uninstInfo));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->CleanUninstallBundleInfo();
+    // userId=1 <= U1 → record should be deleted even though bundle doesn't exist and userId is known
+    UninstallBundleInfo result;
+    EXPECT_FALSE(dataMgr->GetUninstallBundleInfo("test.uid.one", result));
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CheckOtaFlag_0100
+ * @tc.name: CheckOtaFlag success
+ * @tc.desc: OTA flag set → returns true and result is true
+ */
+HWTEST_F(BmsEventHandlerTest, CheckOtaFlag_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("otaFlag", std::to_string(static_cast<int32_t>(OTAFlag::CHECK_ELDIR)));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    bool checkResult = false;
+    EXPECT_TRUE(handler->CheckOtaFlag(OTAFlag::CHECK_ELDIR, checkResult));
+    EXPECT_TRUE(checkResult);
+    bmsParam->DeleteBmsParam("otaFlag");
+}
+
+/**
+ * @tc.number: CheckOtaFlag_0200
+ * @tc.name: CheckOtaFlag param not found
+ * @tc.desc: GetBmsParam failed → returns false
+ */
+HWTEST_F(BmsEventHandlerTest, CheckOtaFlag_0200, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam("otaFlag");
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    bool checkResult = true;
+    EXPECT_FALSE(handler->CheckOtaFlag(OTAFlag::CHECK_ELDIR, checkResult));
+}
+
+/**
+ * @tc.number: CheckOtaFlag_0300
+ * @tc.name: CheckOtaFlag invalid value
+ * @tc.desc: otaFlag is not a number → returns false
+ */
+HWTEST_F(BmsEventHandlerTest, CheckOtaFlag_0300, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("otaFlag", "invalid_value");
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    bool checkResult = true;
+    EXPECT_FALSE(handler->CheckOtaFlag(OTAFlag::CHECK_ELDIR, checkResult));
+    bmsParam->DeleteBmsParam("otaFlag");
+}
+
+/**
+ * @tc.number: UpdateOtaFlag_0100
+ * @tc.name: UpdateOtaFlag no existing flag
+ * @tc.desc: No existing otaFlag → saves new flag directly
+ */
+HWTEST_F(BmsEventHandlerTest, UpdateOtaFlag_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam("otaFlag");
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_TRUE(handler->UpdateOtaFlag(OTAFlag::CHECK_LOG_DIR));
+    std::string val;
+    EXPECT_TRUE(bmsParam->GetBmsParam("otaFlag", val));
+    EXPECT_EQ(val, std::to_string(static_cast<int32_t>(OTAFlag::CHECK_LOG_DIR)));
+    bmsParam->DeleteBmsParam("otaFlag");
+}
+
+/**
+ * @tc.number: UpdateOtaFlag_0200
+ * @tc.name: UpdateOtaFlag merge with existing
+ * @tc.desc: Existing otaFlag → OR merge with new flag
+ */
+HWTEST_F(BmsEventHandlerTest, UpdateOtaFlag_0200, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("otaFlag", std::to_string(static_cast<int32_t>(OTAFlag::CHECK_ELDIR)));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_TRUE(handler->UpdateOtaFlag(OTAFlag::CHECK_LOG_DIR));
+    std::string val;
+    EXPECT_TRUE(bmsParam->GetBmsParam("otaFlag", val));
+    int32_t valInt = 0;
+    EXPECT_TRUE(StrToInt(val, valInt));
+    EXPECT_TRUE(static_cast<uint32_t>(valInt) &
+        static_cast<uint32_t>(OTAFlag::CHECK_ELDIR));
+    EXPECT_TRUE(static_cast<uint32_t>(valInt) &
+        static_cast<uint32_t>(OTAFlag::CHECK_LOG_DIR));
+    bmsParam->DeleteBmsParam("otaFlag");
+}
+
+/**
+ * @tc.number: UpdateOtaFlag_0300
+ * @tc.name: UpdateOtaFlag invalid existing value
+ * @tc.desc: Existing otaFlag is invalid → saves new flag directly
+ */
+HWTEST_F(BmsEventHandlerTest, UpdateOtaFlag_0300, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("otaFlag", "not_a_number");
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_TRUE(handler->UpdateOtaFlag(OTAFlag::CHECK_LOG_DIR));
+    std::string val;
+    EXPECT_TRUE(bmsParam->GetBmsParam("otaFlag", val));
+    EXPECT_EQ(val, std::to_string(static_cast<int32_t>(OTAFlag::CHECK_LOG_DIR)));
+    bmsParam->DeleteBmsParam("otaFlag");
+}
+
+/**
+ * @tc.number: CheckHapPaths_0100
+ * @tc.name: CheckHapPaths filter invalid suffix
+ * @tc.desc: Only .hap and .hsp paths should be kept
+ */
+HWTEST_F(BmsEventHandlerTest, CheckHapPaths_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<std::string> hapPaths = {
+        "/data/app/test/entry.hap",
+        "/data/app/test/module.hsp",
+        "/data/app/test/readme.txt",
+        "/data/app/test/config.json"
+    };
+    auto result = handler->CheckHapPaths(hapPaths);
+    EXPECT_EQ(result.size(), 2);
+    EXPECT_EQ(result[0], "/data/app/test/entry.hap");
+    EXPECT_EQ(result[1], "/data/app/test/module.hsp");
+}
+
+/**
+ * @tc.number: ObtainRealPath_0100
+ * @tc.name: ObtainRealPath single path
+ * @tc.desc: Single path list → returned as-is
+ */
+HWTEST_F(BmsEventHandlerTest, ObtainRealPath_0100, Function | SmallTest | Level0)
+{
+    std::vector<std::string> paths = {"/system/app/test/entry.hap"};
+    auto result = BMSEventHandler::ObtainRealPath(paths);
+    EXPECT_EQ(result.size(), 1);
+    EXPECT_EQ(result[0], paths[0]);
+}
+
+/**
+ * @tc.number: ObtainRealPath_0200
+ * @tc.name: ObtainRealPath multiple paths
+ * @tc.desc: Multiple paths → resolve real paths when available
+ */
+HWTEST_F(BmsEventHandlerTest, ObtainRealPath_0200, Function | SmallTest | Level0)
+{
+    std::vector<std::string> paths = {
+        "/system/app/test/entry.hap",
+        "/system/app/test/module.hsp"
+    };
+    auto result = BMSEventHandler::ObtainRealPath(paths);
+    EXPECT_EQ(result.size(), 2);
+}
+
+/**
+ * @tc.number: CollectInstallInfos_0100
+ * @tc.name: CollectInstallInfos new bundle
+ * @tc.desc: First bundle info → emplaced into installInfos
+ */
+HWTEST_F(BmsEventHandlerTest, CollectInstallInfos_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "com.collect.test";
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    info.InsertInnerModuleInfo("entry", moduleInfo);
+    info.SetCurrentModulePackage("entry");
+    std::unordered_map<std::string, InnerBundleInfo> hapInfos;
+    hapInfos.emplace("entry", info);
+    std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
+    handler->CollectInstallInfos(hapInfos, installInfos);
+    EXPECT_EQ(installInfos.size(), 1);
+    EXPECT_EQ(installInfos["com.collect.test"].size(), 1);
+}
+
+/**
+ * @tc.number: CollectInstallInfos_0200
+ * @tc.name: CollectInstallInfos skip lower version
+ * @tc.desc: Lower version module → skipped
+ */
+HWTEST_F(BmsEventHandlerTest, CollectInstallInfos_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    InnerBundleInfo infoHigh;
+    infoHigh.baseApplicationInfo_->bundleName = "com.collect.version";
+    infoHigh.baseBundleInfo_->versionCode = 200;
+    InnerModuleInfo moduleHigh;
+    moduleHigh.moduleName = "entry";
+    infoHigh.InsertInnerModuleInfo("entry", moduleHigh);
+    infoHigh.SetCurrentModulePackage("entry");
+    InnerBundleInfo infoLow;
+    infoLow.baseApplicationInfo_->bundleName = "com.collect.version";
+    infoLow.baseBundleInfo_->versionCode = 100;
+    InnerModuleInfo moduleLow;
+    moduleLow.moduleName = "feature";
+    infoLow.InsertInnerModuleInfo("feature", moduleLow);
+    infoLow.SetCurrentModulePackage("feature");
+    std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
+    {
+        std::unordered_map<std::string, InnerBundleInfo> hapInfosHigh;
+        hapInfosHigh.emplace("high", infoHigh);
+        handler->CollectInstallInfos(hapInfosHigh, installInfos);
+    }
+    {
+        std::unordered_map<std::string, InnerBundleInfo> hapInfosLow;
+        hapInfosLow.emplace("low", infoLow);
+        handler->CollectInstallInfos(hapInfosLow, installInfos);
+    }
+    EXPECT_EQ(installInfos.size(), 1);
+    EXPECT_EQ(installInfos["com.collect.version"].size(), 1);
+    EXPECT_EQ(installInfos["com.collect.version"][0].GetVersionCode(), 200);
+}
+
+/**
+ * @tc.number: CollectInstallInfos_0300
+ * @tc.name: CollectInstallInfos add new module
+ * @tc.desc: Same bundle with different module → both added
+ */
+HWTEST_F(BmsEventHandlerTest, CollectInstallInfos_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    InnerBundleInfo infoEntry;
+    infoEntry.baseApplicationInfo_->bundleName = "com.collect.multi";
+    infoEntry.baseBundleInfo_->versionCode = 100;
+    InnerModuleInfo moduleEntry;
+    moduleEntry.moduleName = "entry";
+    infoEntry.InsertInnerModuleInfo("entry", moduleEntry);
+    infoEntry.SetCurrentModulePackage("entry");
+    InnerBundleInfo infoFeature;
+    infoFeature.baseApplicationInfo_->bundleName = "com.collect.multi";
+    infoFeature.baseBundleInfo_->versionCode = 100;
+    InnerModuleInfo moduleFeature;
+    moduleFeature.moduleName = "feature";
+    infoFeature.InsertInnerModuleInfo("feature", moduleFeature);
+    infoFeature.SetCurrentModulePackage("feature");
+    std::unordered_map<std::string, InnerBundleInfo> hapInfos;
+    hapInfos.emplace("entry", infoEntry);
+    hapInfos.emplace("feature", infoFeature);
+    std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
+    handler->CollectInstallInfos(hapInfos, installInfos);
+    EXPECT_EQ(installInfos.size(), 1);
+    EXPECT_EQ(installInfos["com.collect.multi"].size(), 2);
+}
+
+/**
+ * @tc.number: GetPreInstallRootDirList_0100
+ * @tc.name: GetPreInstallRootDirList
+ * @tc.desc: Default pre-install root dir should be included
+ */
+HWTEST_F(BmsEventHandlerTest, GetPreInstallRootDirList_0100, Function | SmallTest | Level0)
+{
+    std::vector<std::string> rootDirList;
+    BMSEventHandler::GetPreInstallRootDirList(rootDirList);
+    EXPECT_FALSE(rootDirList.empty());
+    EXPECT_NE(std::find(rootDirList.begin(), rootDirList.end(), "/system"), rootDirList.end());
+}
+
+/**
+ * @tc.number: ConvertApplicationFlagToInstallSource_0400
+ * @tc.name: ConvertApplicationFlagToInstallSource unknown flag
+ * @tc.desc: Unknown application flag → returns empty string
+ */
+HWTEST_F(BmsEventHandlerTest, ConvertApplicationFlagToInstallSource_0400, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::string installSource = handler->ConvertApplicationFlagToInstallSource(0);
+    EXPECT_TRUE(installSource.empty());
+}
+
+/**
+ * @tc.number: ProcessCheckAppDataDir_0200
+ * @tc.name: ProcessCheckAppDataDir already checked
+ * @tc.desc: CHECK_ELDIR flag already set → early return without error
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessCheckAppDataDir_0200, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("otaFlag", std::to_string(static_cast<int32_t>(OTAFlag::CHECK_ELDIR)));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_NO_THROW(handler->ProcessCheckAppDataDir());
+    bmsParam->DeleteBmsParam("otaFlag");
+}
+
+/**
+ * @tc.number: PrepareBundleDirQuota_0200
+ * @tc.name: PrepareBundleDirQuota zero limit
+ * @tc.desc: limitSize is 0 → SendToStorageQuota with 0
+ */
+HWTEST_F(BmsEventHandlerTest, PrepareBundleDirQuota_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_NO_THROW(handler->PrepareBundleDirQuota("com.quota.test", TEST_UID, "/data/test", 0));
+}
+
+/**
+ * @tc.number: ParseSizeFromProvision_0100
+ * @tc.name: ParseSizeFromProvision no provision info
+ * @tc.desc: GetAppProvisionInfo failed → sizeMb unchanged
+ */
+HWTEST_F(BmsEventHandlerTest, ParseSizeFromProvision_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    int32_t sizeMb = 1024;
+    handler->ParseSizeFromProvision("non.existent.bundle", TEST_UID, sizeMb);
+    EXPECT_EQ(sizeMb, 1024);
+}
+
+/**
+ * @tc.number: RefreshQuotaForAllUid_0100
+ * @tc.name: RefreshQuotaForAllUid
+ * @tc.desc: Refresh quota for bundles in dataMgr
+ */
+HWTEST_F(BmsEventHandlerTest, RefreshQuotaForAllUid_0100, Function | SmallTest | Level0)
+{
+    InitBundleDataMgrForTest();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "com.refresh.quota";
+    info.baseApplicationInfo_->bundleType = BundleType::ATOMIC_SERVICE;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = TEST_UID;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_["com.refresh.quota"] = info;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_NO_THROW(handler->RefreshQuotaForAllUid());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: NeedProcessOtaNewPreloadInstall_0200
+ * @tc.name: NeedProcessOtaNewPreloadInstall whitelist match
+ * @tc.desc: bundleName in whitelist → returns true
+ */
+HWTEST_F(BmsEventHandlerTest, NeedProcessOtaNewPreloadInstall_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->otaNewInstallEnable_ = true;
+    handler->otaNewInstallWhitelist_.insert(BUNDLE_TEST_NAME);
+    bool ret = handler->NeedProcessOtaNewPreloadInstall(BUNDLE_TEST_NAME, BUNDLE_TEST_PATH);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: NeedProcessOtaNewPreloadInstall_0300
+ * @tc.name: NeedProcessOtaNewPreloadInstall not in whitelist
+ * @tc.desc: bundleName not in whitelist → returns false
+ */
+HWTEST_F(BmsEventHandlerTest, NeedProcessOtaNewPreloadInstall_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->otaNewInstallEnable_ = false;
+    handler->otaNewInstallWhitelist_.clear();
+    bool ret = handler->NeedProcessOtaNewPreloadInstall(BUNDLE_TEST_NAME, BUNDLE_TEST_PATH);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InnerMultiProcessBundleInstall_0300
+ * @tc.name: InnerMultiProcessBundleInstall empty map
+ * @tc.desc: Empty needInstallMap → returns true
+ */
+HWTEST_F(BmsEventHandlerTest, InnerMultiProcessBundleInstall_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMap;
+    bool ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsSystemUpgrade_0100
+ * @tc.name: IsSystemUpgrade test upgrade flag
+ * @tc.desc: persist.bms.test-upgrade is true → IsSystemUpgrade returns true
+ */
+HWTEST_F(BmsEventHandlerTest, IsSystemUpgrade_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    CleanupBmsParamTestState();
+    SetBMSMockParameter("true", 1);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_TRUE(handler->IsSystemUpgrade());
+    SetBMSMockParameter("", 0);
+}
+
+/**
+ * @tc.number: IsSystemFingerprintChanged_0100
+ * @tc.name: IsSystemFingerprintChanged
+ * @tc.desc: Old and current fingerprint differ → returns true
+ */
+HWTEST_F(BmsEventHandlerTest, IsSystemFingerprintChanged_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("fingerprint", "old_fingerprint_value");
+    SetBMSMockParameter("new_fingerprint_value", 1);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_TRUE(handler->IsSystemFingerprintChanged());
+    SetBMSMockParameter("", 0);
+    bmsParam->DeleteBmsParam("fingerprint");
+}
+
+/**
+ * @tc.number: SaveSystemFingerprint_0100
+ * @tc.name: SaveSystemFingerprint
+ * @tc.desc: Save current system fingerprint to bms param
+ */
+HWTEST_F(BmsEventHandlerTest, SaveSystemFingerprint_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam("fingerprint");
+    SetBMSMockParameter("saved_fp", 1);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->SaveSystemFingerprint();
+    std::string savedFp;
+    EXPECT_TRUE(bmsParam->GetBmsParam("fingerprint", savedFp));
+    EXPECT_FALSE(savedFp.empty());
+    SetBMSMockParameter("", 0);
+    bmsParam->DeleteBmsParam("fingerprint");
+}
+
+/**
+ * @tc.number: GetCurSystemFingerprint_0100
+ * @tc.name: GetCurSystemFingerprint
+ * @tc.desc: Get concatenated system fingerprint from parameters
+ */
+HWTEST_F(BmsEventHandlerTest, GetCurSystemFingerprint_0100, Function | SmallTest | Level0)
+{
+    SetBMSMockParameter("fp_part", 1);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::string fp = handler->GetCurSystemFingerprint();
+    EXPECT_FALSE(fp.empty());
+    SetBMSMockParameter("", 0);
+}
+
+/**
+ * @tc.number: GetOldSystemFingerprint_0100
+ * @tc.name: GetOldSystemFingerprint
+ * @tc.desc: Get saved fingerprint from bms param
+ */
+HWTEST_F(BmsEventHandlerTest, GetOldSystemFingerprint_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("fingerprint", "stored_old_fp");
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_EQ(handler->GetOldSystemFingerprint(), "stored_old_fp");
+    bmsParam->DeleteBmsParam("fingerprint");
+}
+
+/**
+ * @tc.number: BuildMigrationData_0500
+ * @tc.name: BuildMigrationData with clone info
+ * @tc.desc: Bundle with clone user info → clone entries in MigratedInfo
+ */
+HWTEST_F(BmsEventHandlerTest, BuildMigrationData_0500, Function | SmallTest | Level0)
+{
+    InitBundleDataMgrForTest();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test.clone.migrate";
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.uid = 20000001;
+    userInfo.accessTokenId = 100;
+    userInfo.accessTokenIdEx = 100;
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.uid = 20000002;
+    cloneInfo.accessTokenId = 200;
+    cloneInfo.accessTokenIdEx = 200;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_["test.clone.migrate"] = info;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<std::string> bundleNames = {"test.clone.migrate"};
+    std::unordered_map<std::string, InnerBundleInfo> sandboxMap;
+    std::map<std::string, UninstallBundleInfo> uninstallInfos;
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenIdExList;
+    handler->BuildMigrationData(dataMgr, bundleNames, sandboxMap, uninstallInfos,
+        migratedList, oldTokenIdExList);
+    EXPECT_EQ(migratedList.size(), 1);
+    EXPECT_EQ(migratedList[0].uidList.size(), 2);
+    EXPECT_EQ(migratedList[0].hapBaseInfoList.size(), 2);
+    EXPECT_EQ(migratedList[0].hapBaseInfoList[1].instIndex, 1);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ExecuteMigrationWithRetry_0500
+ * @tc.name: ExecuteMigrationWithRetry batch failed
+ * @tc.desc: MigrateInstalledBundles returns error → successFlags remain false
+ */
+HWTEST_F(BmsEventHandlerTest, ExecuteMigrationWithRetry_0500, Function | SmallTest | Level0)
+{
+    InitBundleDataMgrForTest();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::vector<Security::AccessToken::MigratedInfo> migratedList;
+    Security::AccessToken::MigratedInfo m;
+    m.bundleName = "test.batch.fail";
+    m.uidList.push_back(20000001);
+    m.hapBaseInfoList.push_back({100, "test.batch.fail", 0});
+    m.reservedTypeList.push_back(Security::AccessToken::ReservedType::NONE);
+    migratedList.push_back(m);
+    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenIdExList;
+    oldTokenIdExList.push_back({});
+    AccessToken::SetMigrateInstalledBundlesRetForTest(-1);
+    std::vector<bool> successFlags;
+    handler->ExecuteMigrationWithRetry(dataMgr, migratedList, oldTokenIdExList, successFlags);
+    EXPECT_EQ(successFlags.size(), 1);
+    EXPECT_FALSE(successFlags[0]);
+    AccessToken::SetMigrateInstalledBundlesRetForTest(0);
+}
+
 } // OHOS

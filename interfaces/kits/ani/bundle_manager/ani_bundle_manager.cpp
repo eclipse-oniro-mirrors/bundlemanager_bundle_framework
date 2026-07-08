@@ -207,11 +207,6 @@ static ani_object GetBundleInfoForSelfNative(ani_env* env, ani_int aniBundleFlag
         std::shared_lock<std::shared_mutex> lock(g_aniCacheMutex);
         auto item = g_aniCache.find(query);
         if (item != g_aniCache.end()) {
-            auto endTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now().time_since_epoch()).count();
-            HistogramUtil::ReportHistogramTimes(
-                isSync ? HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF_SYNC : HISTOGRAM_GET_BUNDLE_INFO_FOR_SELF,
-                static_cast<int32_t>(endTime - startTime));
             return reinterpret_cast<ani_object>(item->second);
         }
     }
@@ -501,6 +496,75 @@ static ani_object QueryAbilityInfoSyncNative(ani_env* env,
         CommonFunAni::ConvertAniArray(env, abilityInfos, CommonFunAni::ConvertAbilityInfo);
     CheckInfoCache(env, query, want, abilityInfos, aniAbilityInfos);
     return aniAbilityInfos;
+}
+
+static ani_object GetAppClonePreferenceNative(ani_env* env, ani_string aniBundleName)
+{
+    APP_LOGD("ani GetAppClonePreference called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE_NOFUNC("parse bundleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE_NOFUNC("bundleName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return nullptr;
+    }
+    AppClonePreference preference;
+    ErrCode ret = BundleManagerHelper::InnerGetAppClonePreference(bundleName, preference);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("InnerGetAppClonePreference failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, ret, GET_APP_CLONE_PREFERENCE,
+            Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES);
+        return nullptr;
+    }
+    ani_object result = CommonFunAni::ConvertAppClonePreference(env, preference);
+    if (result == nullptr) {
+        APP_LOGE_NOFUNC("ConvertAppClonePreference failed after successful get for %{public}s", bundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_APP_CLONE_PREFERENCE,
+            Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES);
+        return nullptr;
+    }
+    return result;
+}
+
+static ani_boolean SetAppClonePreferenceNative(ani_env* env, ani_string aniBundleName, ani_object aniPreference)
+{
+    APP_LOGD("ani SetAppClonePreference called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE_NOFUNC("parse bundleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return ANI_FALSE;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE_NOFUNC("bundleName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return ANI_FALSE;
+    }
+    AppClonePreference preference;
+    if (!CommonFunAni::ParseAppClonePreference(env, aniPreference, preference)) {
+        APP_LOGE_NOFUNC("parse preference failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, "preference", TYPE_OBJECT);
+        return ANI_FALSE;
+    }
+    int32_t modeValue = static_cast<int32_t>(preference.mode);
+    if (modeValue < static_cast<int32_t>(AppClonePreferenceMode::ALWAYS_ASK) ||
+        modeValue > static_cast<int32_t>(AppClonePreferenceMode::CLONE_APP)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference preference mode out of range: %{public}d", modeValue);
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_APP_CLONE_PREFERENCE_MODE_INVALID_ERROR);
+        return ANI_FALSE;
+    }
+    ErrCode ret = BundleManagerHelper::InnerSetAppClonePreference(bundleName, preference);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("InnerSetAppClonePreference failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, ret, SET_APP_CLONE_PREFERENCE,
+            Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES);
+        return ANI_FALSE;
+    }
+    return ANI_TRUE;
 }
 
 static ani_object GetAppCloneIdentityNative(ani_env* env, ani_int aniUid)
@@ -2235,7 +2299,10 @@ static ani_string GetSandboxDataDir(ani_env* env, ani_string aniBundleName, ani_
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    if (aniAppIndex < Constants::MAIN_APP_INDEX || aniAppIndex > BundleFileUtil::GetCloneMaxCount()) {
+    bool isValidCloneAppIndex = (aniAppIndex >= Constants::MAIN_APP_INDEX &&
+        aniAppIndex <= BundleFileUtil::GetCloneMaxCount()) ||
+        (aniAppIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && aniAppIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX);
+    if (!isValidCloneAppIndex) {
         APP_LOGE("appIndex: %{public}d not in valid range", aniAppIndex);
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, Constants::APP_INDEX, TYPE_NUMBER);
         return nullptr;
@@ -2543,6 +2610,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(QueryAbilityInfoSyncNative) },
         ani_native_function { "getAppCloneIdentityNative", nullptr,
             reinterpret_cast<void*>(GetAppCloneIdentityNative) },
+        ani_native_function { "getAppClonePreferenceNative", nullptr,
+            reinterpret_cast<void*>(GetAppClonePreferenceNative) },
+        ani_native_function { "setAppClonePreferenceNative", nullptr,
+            reinterpret_cast<void*>(SetAppClonePreferenceNative) },
         ani_native_function { "getAbilityLabelNative", nullptr, reinterpret_cast<void*>(GetAbilityLabelNative) },
         ani_native_function { "getApplicationLabelNative", nullptr, reinterpret_cast<void*>(GetApplicationLabelNative) },
         ani_native_function { "getLaunchWantForBundleNative", nullptr,

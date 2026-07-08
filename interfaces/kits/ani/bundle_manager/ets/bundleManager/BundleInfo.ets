@@ -35,6 +35,7 @@ export interface BundleInfo {
   readonly appIndex: int;
   readonly firstInstallTime?: long;
   readonly buildVersion?: string;
+  readonly sandboxCreatorBundleName?: string;
 }
 
 export interface ReqPermissionDetail {
@@ -60,6 +61,11 @@ export interface SignatureInfo {
 export interface AppCloneIdentity {
   readonly bundleName: string;
   readonly appIndex: int;
+}
+
+export interface AppClonePreference {
+  mode: bundleManager.AppClonePreferenceMode;
+  appIndex?: int;
 }
 
 export interface DynamicIconInfo {

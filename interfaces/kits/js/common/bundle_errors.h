@@ -118,6 +118,10 @@ constexpr ErrCode ERROR_PLUGIN_NOT_FOUND = 17700092;
 //skill errCode
 constexpr ErrCode ERROR_SKILL_NOT_EXIST = 17700093;
 
+// app clone preference errCode
+constexpr ErrCode ERROR_APP_CLONE_NOT_EXIST = 17700094;
+constexpr ErrCode ERROR_APP_CLONE_PREFERENCE_NOT_EXIST = 17700095;
+
 // bundle service exception
 constexpr ErrCode ERROR_BUNDLE_SERVICE_EXCEPTION = 17700101;
 

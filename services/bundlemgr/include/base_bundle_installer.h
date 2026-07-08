@@ -215,6 +215,9 @@ protected:
     bool IsEnterpriseForAllUser(const InstallParam &installParam, const std::string &bundleName);
 
 private:
+    // Delete the (bundleName, userId) preference row when the main app is uninstalled.
+    // No-op when AppClonePreferenceDataMgr is unavailable (e.g. test env); logs the skip.
+    void RemoveAppClonePreference(const std::string &bundleName, int32_t userId);
     /**
      * @brief The real procedure for system and normal bundle install.
      * @param bundlePath Indicates the path for storing the HAP file of the application
@@ -567,6 +570,7 @@ private:
 
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
+    ErrCode CreateBundleDataDir(InnerBundleInfo &info, const InnerBundleUserInfo &innerBundleUserInfo) const;
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info, bool async) const;
     ErrCode RemoveBundleDataDir(
         const InnerBundleInfo &info, bool forException = false, const bool async = false);
@@ -747,7 +751,8 @@ private:
         const std::string &srcHapPath, const std::string &realHapPath);
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
-    ErrCode ExtractResFileDir(const std::string &modulePath) const;
+    ErrCode ExtractResFileDir(
+        const std::string &modulePath, const bool needFakeDecompression, const bool isSystemApp) const;
     ErrCode ProcessAppSkills(InnerBundleInfo &info);
     ErrCode FinalizeAppSkills(const InnerBundleInfo &info);
     ErrCode CommitAppSkills(const InnerBundleInfo &info);
@@ -873,12 +878,9 @@ private:
     void UpdateDeveloperIdAndOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
-    ErrCode DeleteShaderCache(const std::string &bundleName) const;
     void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
     ErrCode CleanArkStartupCache(const std::string &bundleName) const;
-    void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteCloudShader(const std::string &bundleName) const;
     ErrCode DeleteEl1ShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
         const std::string &bundleName, int32_t userId) const;

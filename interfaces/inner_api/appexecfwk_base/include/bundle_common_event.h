@@ -20,6 +20,8 @@ namespace OHOS {
 namespace AppExecFwk {
 constexpr const char* COMMON_EVENT_SANDBOX_PACKAGE_ADDED = "usual.event.SANDBOX_PACKAGE_ADDED";
 constexpr const char* COMMON_EVENT_SANDBOX_PACKAGE_REMOVED = "usual.event.SANDBOX_PACKAGE_REMOVED";
+constexpr const char* COMMON_EVENT_SANDBOX_BUNDLE_ADDED = "usual.event.SANDBOX_BUNDLE_ADDED";
+constexpr const char* COMMON_EVENT_SANDBOX_BUNDLE_REMOVED = "usual.event.SANDBOX_BUNDLE_REMOVED";
 constexpr const char* COMMON_EVENT_BUNDLE_SCAN_FINISHED = "usual.event.BUNDLE_SCAN_FINISHED";
 constexpr const char* OVERLAY_ADD_ACTION = "usual.event.OVERLAY_PACKAGE_ADDED";
 constexpr const char* OVERLAY_CHANGED_ACTION = "usual.event.OVERLAY_PACKAGE_CHANGED";

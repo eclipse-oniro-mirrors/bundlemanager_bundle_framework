@@ -166,8 +166,9 @@ public:
 
     virtual ErrCode UninstallNewPreinstalledApps(const std::vector<std::string> &bundleNames) override;
 
-    virtual ErrCode CreateCliSandboxApp(const std::string &callerBundleName,
-        const std::string &bundleName, int32_t userId, int32_t &appIndex) override;
+    virtual ErrCode CreateCliSandboxApp(const std::string &creatorBundleName,
+        const std::string &envCreatorBundleName, const std::string &bundleName,
+        int32_t userId, int32_t &appIndex) override;
 
     virtual ErrCode DestroyCliSandboxApp(const std::string &creatorBundleName,
         const std::string &envCallerBundleName, const std::string &bundleName,
@@ -267,11 +268,16 @@ private:
 private:
     InstallParam CheckInstallParam(const InstallParam &installParam);
     bool CheckInstallDowngradeParam(const InstallParam &installParam);
-    bool IsPermissionVaild(const InstallParam &installParam, InstallParam &installParam2);
+    bool IsPermissionValid(const InstallParam &installParam, InstallParam &installParam2);
     bool CheckUninstallDisposedRule(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isKeepData,
         const std::string &modulePackage = "");
     ErrCode InnerAddEnterpriseResignCert(
         const std::string &certAlias, const std::string &certContent, int32_t userId);
+    ErrCode VerifyInstallPermission();
+    ErrCode VerifyUninstallPermission(bool isCheckSdkVersion);
+    ErrCode VerifyCreateStreamInstallerPermission(const InstallParam &installParam, InstallParam &verifiedInstallParam);
+    bool VerifyDestoryBundleStreamInstallerPermission();
+    ErrCode CheckIsDebugAppProvisionType(const std::string &bundleName, int32_t userId);
     std::atomic<uint32_t> streamInstallerIds_ = 0;
     std::mutex streamInstallMutex_;
     std::shared_mutex enterpriseCertMutex_;

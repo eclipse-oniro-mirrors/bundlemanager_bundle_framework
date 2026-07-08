@@ -31,6 +31,8 @@ constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_FLAG = "@ohos.bundle.bundle
 constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_TYPE = "@ohos.bundle.bundleManager.bundleManager.BundleType";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_MULTI_APP_MODE_TYPE =
     "@ohos.bundle.bundleManager.bundleManager.MultiAppModeType";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_APP_CLONE_PREFERENCE_MODE =
+    "@ohos.bundle.bundleManager.bundleManager.AppClonePreferenceMode";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_DISPLAY_ORIENTATION =
     "@ohos.bundle.bundleManager.bundleManager.DisplayOrientation";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_LAUNCH_TYPE = "@ohos.bundle.bundleManager.bundleManager.LaunchType";
@@ -132,8 +134,10 @@ private:
         GET_BUNDLE_INFO_EXCLUDE_CLONE = 0x00004000,
         GET_BUNDLE_INFO_WITH_CLOUD_KIT = 0x00008000,
         GET_BUNDLE_INFO_WITH_ENTRY_MODULE = 0x00010000,
+        GET_BUNDLE_INFO_WITH_COMMON_CLONE = 0x00080000,
+        GET_BUNDLE_INFO_WITH_SANDBOX_CLONE = 0x00100000,
     } */
-    static constexpr std::array<int, 17> Array_BundleManager_BundleFlag = {
+    static constexpr std::array<int, 19> Array_BundleManager_BundleFlag = {
         0x00000000,
         0x00000001,
         0x00000002,
@@ -151,6 +155,8 @@ private:
         0x00004000,
         0x00008000,
         0x00010000,
+        0x00080000,
+        0x00100000,
     };
     /* bundleManager.ExtensionAbilityType
     enum ExtensionAbilityType {
@@ -339,6 +345,19 @@ public:
     static inline ani_enum_item EnumNativeToETS_BundleManager_MultiAppModeType(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_MULTI_APP_MODE_TYPE, value, 0);
+    }
+
+    /* bundleManager.AppClonePreferenceMode
+    enum AppClonePreferenceMode {
+        ALWAYS_ASK = 0,
+        MAIN_APP = 1,
+        CLONE_APP = 2,
+    } */
+    static inline ani_enum_item EnumNativeToETS_BundleManager_AppClonePreferenceMode(ani_env* env,
+        const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APP_CLONE_PREFERENCE_MODE,
+            value, 0);
     }
 
     /* bundleManager.DisplayOrientation

@@ -43,7 +43,10 @@ constexpr const char* CLASSNAME_USED_SCENE_INNER = "bundleManager.BundleInfoInne
 constexpr const char* CLASSNAME_SIGNATURE_INFO = "bundleManager.BundleInfo.SignatureInfo";
 constexpr const char* CLASSNAME_SIGNATURE_INFO_INNER = "bundleManager.BundleInfoInner.SignatureInfoInner";
 constexpr const char* CLASSNAME_APP_CLONE_IDENTITY_INNER = "bundleManager.BundleInfoInner.AppCloneIdentityInner";
+constexpr const char* CLASSNAME_APP_CLONE_PREFERENCE_INNER = "bundleManager.BundleInfoInner.AppClonePreferenceInner";
 constexpr const char* CLASSNAME_DYNAMIC_ICON_INFO_INNER = "bundleManager.BundleInfoInner.DynamicIconInfoInner";
+constexpr const char* APP_CLONE_PREFERENCE_FIELD_MODE = "mode";
+constexpr const char* APP_CLONE_PREFERENCE_FIELD_INDEX = "appIndex";
 constexpr const char* CLASSNAME_ALTERNATE_ICON_INFO_INNER = "bundleManager.BundleInfoInner.AlternateIconInfoInner";
 constexpr const char* CLASSNAME_PERMISSION_DEF_INNER = "bundleManager.PermissionDefInner.PermissionDefInner";
 constexpr const char* CLASSNAME_SHARED_BUNDLE_INFO_INNER = "bundleManager.SharedBundleInfoInner.SharedBundleInfoInner";
@@ -168,6 +171,7 @@ static std::map<std::string, ANIClassCacheItem> g_aniClassCache = {
     { CLASSNAME_METADATA_INNER, { } },
     { CLASSNAME_RESOURCE_INNER, { } },
     { CLASSNAME_MULTI_APP_MODE_INNER, { } },
+    { CLASSNAME_APP_CLONE_PREFERENCE_INNER, { } },
     { CLASSNAME_HAP_MODULE_INFO_INNER, { } },
     { CLASSNAME_ABILITY_INFO_INNER, { } },
     { CLASSNAME_SKILL_INNER, { } },
@@ -441,6 +445,10 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     ani_string buildVersion = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleInfo.buildVersion, buildVersion));
 
+    // sandboxCreatorBundleName: string
+    ani_string sandboxCreatorBundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleInfo.sandboxCreatorBundleName, sandboxCreatorBundleName));
+
     ani_value args[] = {
         { .r = name },
         { .r = vendor },
@@ -459,6 +467,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         { .i = bundleInfo.appIndex },
         { .r = firstInstallTime },
         { .r = buildVersion },
+        { .r = sandboxCreatorBundleName },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
@@ -478,6 +487,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         .AddInt()                                   // appIndex: int
         .AddClass(CommonFunAniNS::CLASSNAME_LONG)   // firstInstallTime?: long
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // buildVersion?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // sandboxCreatorBundleName?: string
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_INFO_INNER, ctorSig, args);
 }
@@ -1652,6 +1662,62 @@ ani_object CommonFunAni::ConvertAppCloneIdentity(ani_env* env, const std::string
         .AddInt()                                   // appIndex: int
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_APP_CLONE_IDENTITY_INNER, ctorSig, args);
+}
+
+ani_object CommonFunAni::ConvertAppClonePreference(ani_env* env, const AppClonePreference& preference)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_enum_item modeItem = EnumUtils::EnumNativeToETS_BundleManager_AppClonePreferenceMode(
+        env, static_cast<int32_t>(preference.mode));
+    RETURN_NULL_IF_NULL(modeItem);
+
+    if (preference.mode == AppClonePreferenceMode::CLONE_APP) {
+        ani_value args[] = {
+            { .r = modeItem },
+            { .i = preference.appIndex },
+        };
+        static const std::string ctorSig = SignatureBuilder()
+            .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APP_CLONE_PREFERENCE_MODE)  // mode
+            .AddInt()                                                                       // appIndex: int
+            .BuildSignatureDescriptor();
+        return CreateNewObjectByClassV2(env, CLASSNAME_APP_CLONE_PREFERENCE_INNER, ctorSig, args);
+    }
+
+    ani_value args[] = {
+        { .r = modeItem },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APP_CLONE_PREFERENCE_MODE)  // mode
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_APP_CLONE_PREFERENCE_INNER, ctorSig, args);
+}
+
+bool CommonFunAni::ParseAppClonePreference(ani_env* env, ani_object object, AppClonePreference& preference)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_enum_item modeItem = nullptr;
+    if (!CallGetterOptional(env, object, APP_CLONE_PREFERENCE_FIELD_MODE, &modeItem)) {
+        APP_LOGE_NOFUNC("Parse mode failed");
+        return false;
+    }
+    if (!EnumUtils::EnumETSToNative(env, modeItem, preference.mode)) {
+        APP_LOGE_NOFUNC("EnumETSToNative mode failed");
+        return false;
+    }
+    preference.appIndex = 0;
+    if (preference.mode != AppClonePreferenceMode::CLONE_APP) {
+        return true;
+    }
+    ani_int appIdx = 0;
+    if (!CallGetterOptional(env, object, APP_CLONE_PREFERENCE_FIELD_INDEX, &appIdx)) {
+        APP_LOGE_NOFUNC("Parse index for CLONE_APP failed");
+        return false;
+    }
+    preference.appIndex = appIdx;
+    return true;
 }
 
 ani_object CommonFunAni::ConvertPermissionDef(ani_env* env, const PermissionDef& permissionDef)

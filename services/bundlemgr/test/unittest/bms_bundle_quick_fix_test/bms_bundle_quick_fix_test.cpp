@@ -6510,4 +6510,52 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_CheckReplaceMode_0100, Function
     ErrCode ret = deployer->CheckReplaceMode(appQuickFix, bundleInfo);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: VerifyDeployQuickFixPermission_0100
+ * @tc.name: test VerifyDeployQuickFixPermission
+ * @tc.desc: 1. Test VerifyDeployQuickFixPermission
+ */
+HWTEST_F(BmsBundleQuickFixTest, VerifyDeployQuickFixPermission_0100, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl hostImpl;
+    auto ret = hostImpl.VerifyDeployQuickFixPermission();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: VerifyDeleteQuickFixPermission_0100
+ * @tc.name: test VerifyDeleteQuickFixPermission
+ * @tc.desc: 1. Test VerifyDeleteQuickFixPermission
+ */
+HWTEST_F(BmsBundleQuickFixTest, VerifyDeleteQuickFixPermission_0100, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl hostImpl;
+    auto ret = hostImpl.VerifyDeleteQuickFixPermission();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckIsDebugAppProvisionType_0100
+ * @tc.name: test CheckIsDebugAppProvisionType
+ * @tc.desc: 1. Test CheckIsDebugAppProvisionType
+ */
+HWTEST_F(BmsBundleQuickFixTest, CheckIsDebugAppProvisionType_0100, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl hostImpl;
+    auto ret = hostImpl.CheckIsDebugAppProvisionType(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: VerifyCreateFdPermission_0100
+ * @tc.name: test VerifyCreateFdPermission
+ * @tc.desc: 1. Test VerifyCreateFdPermission
+ */
+HWTEST_F(BmsBundleQuickFixTest, VerifyCreateFdPermission_0100, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl hostImpl;
+    auto ret = hostImpl.VerifyCreateFdPermission();
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

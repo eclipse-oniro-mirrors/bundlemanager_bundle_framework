@@ -16,8 +16,8 @@
 import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { HapModuleInfo, RouterItem } from 'bundleManager.HapModuleInfo';
 import bundleManager from '@ohos.bundle.bundleManager';
-import { BundleInfo, ReqPermissionDetail, UsedScene, SignatureInfo, AppCloneIdentity, DynamicIconInfo,
-  AlternateIconInfo, BundleOptions} from 'bundleManager.BundleInfo';
+import { BundleInfo, ReqPermissionDetail, UsedScene, SignatureInfo, AppCloneIdentity, AppClonePreference,
+  DynamicIconInfo, AlternateIconInfo, BundleOptions} from 'bundleManager.BundleInfo';
 import { ApplicationInfoInner } from './ApplicationInfoInner';
 
 export class BundleInfoInner implements BundleInfo {
@@ -38,6 +38,7 @@ export class BundleInfoInner implements BundleInfo {
   readonly appIndex: int;
   readonly firstInstallTime?: long;
   readonly buildVersion?: string | undefined;
+  readonly sandboxCreatorBundleName?: string | undefined;
 
   constructor() { }
   constructor(name: string,
@@ -56,7 +57,8 @@ export class BundleInfoInner implements BundleInfo {
     routerMap: Array<RouterItem>,
     appIndex: int,
     firstInstallTime?: long,
-    buildVersion?: string) {
+    buildVersion?: string,
+    sandboxCreatorBundleName?: string) {
       this.name = name;
       this.vendor = vendor;
       this.versionCode = versionCode;
@@ -74,6 +76,7 @@ export class BundleInfoInner implements BundleInfo {
       this.appIndex = appIndex;
       this.firstInstallTime = firstInstallTime;
       this.buildVersion = buildVersion;
+      this.sandboxCreatorBundleName = sandboxCreatorBundleName;
   }
   constructor(name: string, hapModulesInfo: Array<HapModuleInfo>) {
       this.name = name;
@@ -131,6 +134,20 @@ export class AppCloneIdentityInner implements AppCloneIdentity {
   constructor() { }
   constructor(bundleName: string, appIndex: int) {
     this.bundleName = bundleName;
+    this.appIndex = appIndex;
+  }
+}
+
+export class AppClonePreferenceInner implements AppClonePreference {
+  mode: bundleManager.AppClonePreferenceMode = bundleManager.AppClonePreferenceMode.ALWAYS_ASK;
+  appIndex?: int;
+
+  constructor() { }
+  constructor(mode: bundleManager.AppClonePreferenceMode) {
+    this.mode = mode;
+  }
+  constructor(mode: bundleManager.AppClonePreferenceMode, appIndex: int) {
+    this.mode = mode;
     this.appIndex = appIndex;
   }
 }

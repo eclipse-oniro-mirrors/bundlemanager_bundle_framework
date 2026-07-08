@@ -27,6 +27,13 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct StringParcelable : public Parcelable {
+    std::string value;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static StringParcelable *Unmarshalling(Parcel &parcel);
+};
 class BundleMgrHost : public IRemoteStub<IBundleMgr> {
 public:
     BundleMgrHost();
@@ -818,6 +825,8 @@ private:
 
     ErrCode HandleGetAllAppInstallExtendedInfo(MessageParcel &data, MessageParcel &reply);
     
+    ErrCode HandleGetStringByIdList(MessageParcel &data, MessageParcel &reply);
+    
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     ErrCode HandleGetDefaultAppProxy(MessageParcel &data, MessageParcel &reply);
 #endif
@@ -948,6 +957,8 @@ private:
 
     ErrCode HandleQueryCloneAbilityInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleQuerySandboxCloneAbilityInfo(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetCloneBundleInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetCloneBundleInfoExt(MessageParcel &data, MessageParcel &reply);
@@ -955,6 +966,12 @@ private:
     ErrCode HandleGetMainAndCloneBundleInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetCloneAppIndexes(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetCliSandboxAppIndexes(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetAppClonePreference(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleSetAppClonePreference(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetLaunchWant(MessageParcel &data, MessageParcel &reply);
 

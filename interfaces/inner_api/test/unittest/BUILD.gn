@@ -26,6 +26,8 @@ group("unittest") {
     "bundle_status_callback_proxy_test:BundleStatusCallbackProxyTest",
     "clean_cache_callback_proxy_test:CleanCacheCallbackProxyTest",
     "clone_param_test:CloneParamTest",
+    "install_param_test:InstallParamTest",
+    "local_plugin_installer_proxy_test:LocalPluginInstallerProxyTest",
     "process_cache_callback_proxy_test:ProcessCacheCallbackProxyTest",
   ]
 }

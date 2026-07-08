@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "appexecfwk_errors.h"
 #include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_stream_installer_host_impl.h"
 #include "bundle_stream_installer_proxy.h"
@@ -2802,5 +2803,116 @@ HWTEST_F(BmsBundleInstallerIPCTest, HandleGetTopNLargestItemsInAppDataDir_0001, 
     InstalldHost installdHost;
     int res = installdHost.HandleGetTopNLargestItemsInAppDataDir(datas, reply);
     EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: CreateCliSandboxApp_0100
+ * @tc.name: test CreateCliSandboxApp
+ * @tc.desc: 1. envCreatorBundleName is empty
+ *           2. test CreateCliSandboxApp of BundleInstallerHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, CreateCliSandboxApp_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost installerHost;
+    std::string creatorBundleName = "com.example.creator";
+    std::string envCreatorBundleName = "";
+    std::string bundleName = "com.example.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto res = installerHost.CreateCliSandboxApp(
+        creatorBundleName, envCreatorBundleName, bundleName, userId, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_ENV_CREATOR_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: CreateCliSandboxApp_0200
+ * @tc.name: test CreateCliSandboxApp
+ * @tc.desc: 1. bundleName is empty
+ *           2. test CreateCliSandboxApp of BundleInstallerHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, CreateCliSandboxApp_0200, Function | SmallTest | Level0)
+{
+    BundleInstallerHost installerHost;
+    std::string creatorBundleName = "com.example.creator";
+    std::string envCreatorBundleName = "com.example.envcreator";
+    std::string bundleName = "";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto res = installerHost.CreateCliSandboxApp(
+        creatorBundleName, envCreatorBundleName, bundleName, userId, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: HandleCreateCliSandboxApp_0100
+ * @tc.name: test HandleCreateCliSandboxApp
+ * @tc.desc: 1. envCreatorBundleName is empty (parcel carries creatorBundleName, envCreatorBundleName, bundleName)
+ *           2. test HandleCreateCliSandboxApp of BundleInstallerHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleCreateCliSandboxApp_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost installerHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString16(Str8ToStr16("com.example.creator"));
+    data.WriteString16(Str8ToStr16(""));
+    data.WriteString16(Str8ToStr16("com.example.bundle"));
+    data.WriteInt32(100);
+    installerHost.HandleCreateCliSandboxApp(data, reply);
+    ErrCode code = reply.ReadInt32();
+    EXPECT_EQ(code, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_ENV_CREATOR_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: HandleCreateCliSandboxApp_0200
+ * @tc.name: test HandleCreateCliSandboxApp
+ * @tc.desc: 1. bundleName is empty
+ *           2. test HandleCreateCliSandboxApp of BundleInstallerHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleCreateCliSandboxApp_0200, Function | SmallTest | Level0)
+{
+    BundleInstallerHost installerHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString16(Str8ToStr16("com.example.creator"));
+    data.WriteString16(Str8ToStr16("com.example.envcreator"));
+    data.WriteString16(Str8ToStr16(""));
+    data.WriteInt32(100);
+    installerHost.HandleCreateCliSandboxApp(data, reply);
+    ErrCode code = reply.ReadInt32();
+    EXPECT_EQ(code, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: HandleUninstallNewPreinstalledApps_0100
+ * @tc.name: test HandleUninstallNewPreinstalledApps
+ * @tc.desc: 1. parcel read bundle names failed
+ *           2. return ERR_APPEXECFWK_PARCEL_ERROR
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleUninstallNewPreinstalledApps_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost installerHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteBuffer(DATA, DATA_SIZE);
+    data.RewindRead(0);
+    installerHost.HandleUninstallNewPreinstalledApps(data, reply);
+    ErrCode code = reply.ReadInt32();
+    EXPECT_EQ(code, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: CheckInstallParam_0100
+ * @tc.name: test CheckInstallParam with specified userId
+ * @tc.desc: 1. installParam userId is not UNSPECIFIED_USERID
+ *           2. return original installParam
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, CheckInstallParam_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost installerHost;
+    InstallParam installParam;
+    installParam.userId = 100;
+    InstallParam ret = installerHost.CheckInstallParam(installParam);
+    EXPECT_EQ(ret.userId, 100);
 }
 } // OHOS

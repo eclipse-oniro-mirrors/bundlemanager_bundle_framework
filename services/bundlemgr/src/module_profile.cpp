@@ -234,6 +234,8 @@ struct Ability {
 struct SkillProfile {
     std::string name;
     std::string abilityName;
+    std::string version;
+    std::string visibility = Profile::SKILL_PROFILE_VISIBILITY_SYSTEM;
     std::vector<std::string> srcEntries;
     std::vector<std::string> permissions;
 };
@@ -334,6 +336,7 @@ struct Module {
     bool installationFree = false;
     bool isLibIsolated = false;
     bool compressNativeLibs = true;
+    bool isSoStoredCompressed = false;
     bool extractNativeLibs = true;
     bool hasInsightIntent = false;
     bool deduplicateHar = false;
@@ -498,6 +501,18 @@ void from_json(const nlohmann::json &jsonObject, SkillProfile &skillProfile)
         jsonObjectEnd,
         SKILL_PROFILE_ABILITY_NAME,
         skillProfile.abilityName,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_VERSION,
+        skillProfile.version,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_VISIBILITY,
+        skillProfile.visibility,
         false,
         g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
@@ -1830,6 +1845,12 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         g_parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
+        MODULE_COMPRESS_NATIVE_LIBS,
+        module.isSoStoredCompressed,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
         MODULE_EXTRACT_NATIVE_LIBS,
         module.extractNativeLibs,
         false,
@@ -2727,7 +2748,7 @@ void ToExtensionInfo(
     extensionInfo.labelId = extension.labelId;
     extensionInfo.description = extension.description;
     extensionInfo.descriptionId = extension.descriptionId;
-    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
+    if (transformParam.isSystemApp) {
         extensionInfo.readPermission = extension.readPermission;
         extensionInfo.writePermission = extension.writePermission;
     }
@@ -2861,6 +2882,8 @@ bool ToInnerModuleInfo(
     innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
     innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs || moduleJson.module.extractNativeLibs;
+    innerModuleInfo.isSoStoredCompressed = moduleJson.module.isSoStoredCompressed;
+    innerModuleInfo.extractNativeLibs = moduleJson.module.extractNativeLibs;
     innerModuleInfo.fileContextMenu = moduleJson.module.fileContextMenu;
     innerModuleInfo.easyGo = moduleJson.module.easyGo;
     innerModuleInfo.shareFiles = moduleJson.module.shareFiles;
@@ -3026,8 +3049,10 @@ bool ToInnerBundleInfo(
         skill.name = skillProfile.name;
         skill.abilityName = skillProfile.abilityName.empty() ?
             innerModuleInfo.mainAbility : skillProfile.abilityName;
+        skill.version = skillProfile.version;
         skill.srcEntries = skillProfile.srcEntries;
         skill.permissions = skillProfile.permissions;
+        skill.visibility = skillProfile.visibility;
         innerModuleInfo.skillProfiles.emplace_back(skill);
     }
 

@@ -350,7 +350,13 @@ ErrCode ExtendResourceManagerHostImpl::RemoveExtResource(
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
-
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    auto &mutex = dataMgr->GetBundleMutex(bundleName);
+    std::lock_guard lock {mutex};
     std::vector<ExtendResourceInfo> extendResourceInfos;
     ErrCode ret = CheckModuleExist(bundleName, moduleNames, extendResourceInfos);
     CHECK_RESULT(ret, "Check mpdule exist failed %{public}d");
@@ -988,9 +994,6 @@ bool ExtendResourceManagerHostImpl::IsNeedUpdateBundleResourceInfo(
 
 bool ExtendResourceManagerHostImpl::CheckAcrossUserPermission(const int32_t userId)
 {
-    if (userId == Constants::UNSPECIFIED_USERID) {
-        return true;
-    }
     // sa no need to check across user permission
     if (BundlePermissionMgr::IsNativeTokenType()) {
         return true;

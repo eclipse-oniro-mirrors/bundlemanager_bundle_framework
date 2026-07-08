@@ -54,6 +54,12 @@ ani_object ConvertSkillInfo(ani_env* env, const SkillInfo& skillInfo)
     ani_string skillPath = nullptr;
     RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, skillInfo.skillPath, skillPath));
 
+    ani_string version = nullptr;
+    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, skillInfo.version, version));
+
+    ani_string visibility = nullptr;
+    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, skillInfo.visibility, visibility));
+
     ani_string abilityName = nullptr;
     RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, skillInfo.abilityName, abilityName));
 
@@ -81,6 +87,8 @@ ani_object ConvertSkillInfo(ani_env* env, const SkillInfo& skillInfo)
         { .r = hapPath },
         { .r = skillPath },
         { .l = static_cast<ani_long>(skillInfo.versionCode) },
+        { .r = version },
+        { .r = visibility },
         { .r = abilityName },
         { .r = description },
         { .r = srcEntriesArray },
@@ -96,6 +104,8 @@ ani_object ConvertSkillInfo(ani_env* env, const SkillInfo& skillInfo)
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // hapPath: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // skillPath: string
         .AddLong()                                    // versionCode: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // version: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // visibility: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // abilityName: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING)   // description: string
         .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)    // srcEntries: Array<string>

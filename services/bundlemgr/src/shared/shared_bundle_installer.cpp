@@ -52,6 +52,7 @@ ErrCode SharedBundleInstaller::ParseFiles()
     checkParam.installInternaltestingBundlePermissionStatus =
         installParam_.installInternaltestingBundlePermissionStatus;
     checkParam.isCallByShell = installParam_.isCallByShell;
+    checkParam.isCheckDebugApp = installParam_.isCheckDebugApp;
 
     for (const auto &path : installParam_.sharedBundleDirPaths) {
         auto installer = std::make_shared<InnerSharedBundleInstaller>(path);

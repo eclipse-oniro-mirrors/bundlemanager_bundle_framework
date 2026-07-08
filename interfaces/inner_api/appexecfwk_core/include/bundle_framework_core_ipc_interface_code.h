@@ -264,6 +264,11 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_MAIN_AND_CLONE_BUNDLE_INFO = 238,
     GET_ALL_LOCAL_PLUGIN_INFO_FOR_SELF = 239,
     AUTO_CLEAN_PARTIAL_CACHE = 240,
+    QUERY_SANDBOX_CLONE_ABILITY_INFO = 241,
+    GET_CLI_SANDBOX_APP_INDEXES = 242,
+    GET_STRING_BY_ID_LIST = 243,
+    GET_APP_CLONE_PREFERENCE = 244,
+    SET_APP_CLONE_PREFERENCE = 245,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

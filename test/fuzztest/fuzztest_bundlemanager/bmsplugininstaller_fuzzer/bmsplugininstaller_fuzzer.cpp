@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -87,9 +87,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     installer.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi,
         bundlePath, signatureFilePath, isPreInstalledBundle);
     std::string appIdentifier = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    bool isEnterpriseBundle = fdp.ConsumeBool();
     bool isCompileSdkOpenHarmony = fdp.ConsumeBool();
-    installer.VerifyCodeSignatureForHsp(bundlePath, appIdentifier, isEnterpriseBundle, isCompileSdkOpenHarmony);
+    installer.VerifyCodeSignatureForHsp(bundlePath, isCompileSdkOpenHarmony);
 
     installer.CheckPluginId(hostBundleName);
     installer.pluginIds_ = pluginFilePaths;

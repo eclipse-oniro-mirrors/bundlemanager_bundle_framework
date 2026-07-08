@@ -167,7 +167,6 @@ constexpr const char* PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB = "ohos.permission.SU
 constexpr const char* PERMISSION_MANAGE_STORAGE = "ohos.permission.atomicService.MANAGE_STORAGE";
 constexpr const char* PERMISSION_MANAGE_AGING = "ohos.permission.atomicService.MANAGE_AGING";
 constexpr const char* PERMISSION_SUPPORT_LOCAL_PLUGIN = "ohos.permission.kernel.SUPPORT_LOCAL_PLUGIN";
-constexpr const char* PERMISSION_CLI_MANAGE_WEB_SANDBOX = "ohos.permission.CLI_MANAGE_WEB_SANDBOX";
 
 constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
 constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
@@ -235,6 +234,7 @@ constexpr const char* BMS_RELABEL_PARAM = "const.bms.relabel";
 constexpr const char* BMS_SCAN_APP_DATA_PARAM = "const.bms.scan_app_data";
 constexpr const char* SCAN_APP_DATA_TEST_PARAM = "persist.bms.test.scan_app_data";
 constexpr const char* HAP_BIN_INSTALL_ENABLE = "const.bms.bin_install";
+constexpr const char* KEEP_DATA_PRELOAD_HAP = "const.vendor.atcmd.cust_preload_flag";
 constexpr const char* ENABLE_HMOS_SERVICE_BROKER = "persist.hmos_fusion_mgr.ctl.support_hmos";
 constexpr const char* ENABLE_FUSION = "persist.win_service_broker.ctl.bms_vm_enable";
 //extResource
@@ -254,16 +254,14 @@ constexpr const char* BMS_TRUE = "true";
 // cli sandbox application
 constexpr int32_t CLI_SANDBOX_APP_INDEX_MIN = 2000;
 constexpr int32_t CLI_SANDBOX_APP_INDEX_MAX = 3000;
+constexpr int32_t CLI_SANDBOX_MAX_COUNT_PER_CREATOR = 5;
 // shader
-constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
-constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
-constexpr const char* CLOUD_SHADER_COMMON_PATH = "/data/local/shader_cache/cloud/common";
 constexpr const char* CLOUD_SHADER_OWNER = "const.appgallery.shaderowner.bundlename";
 
 // new shader
 constexpr int16_t NEW_SHADER_CACHE_MODE = 02771;
 constexpr int16_t NEW_SHADER_CACHE_GID = 3099;
-constexpr const char* NEW_SHADER_CACHE_PATH = "/data/app/el1/%/shader_cache/";
+
 constexpr const char* NEW_CLOUD_SHADER_PATH = "/data/app/el1/public/shader_cache/cloud/";
 
 // shader cache dir in /system_optimize

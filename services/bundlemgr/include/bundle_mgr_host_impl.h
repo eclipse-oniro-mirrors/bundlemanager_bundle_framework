@@ -1081,6 +1081,11 @@ public:
     virtual sptr<IQuickFixManager> GetQuickFixManagerProxy() override;
     virtual std::string GetStringById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, int32_t userId, const std::string &localeInfo) override;
+
+    virtual ErrCode GetStringByIdList(const std::string &bundleName, const std::string &moduleName,
+        const std::vector<uint32_t> &resIdList, std::vector<std::string> &labelList,
+        int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING) override;
+
     virtual std::string GetIconById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, uint32_t density, int32_t userId) override;
     virtual ErrCode SetDebugMode(bool isDebug) override;
@@ -1209,6 +1214,10 @@ public:
     virtual ErrCode QueryCloneAbilityInfo(const ElementName &element,
         int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId) override;
 
+    virtual ErrCode QuerySandboxCloneAbilityInfo(const std::string &creatorBundleName,
+        const ElementName &element, int32_t flags, int32_t appIndex,
+        AbilityInfo &abilityInfo, int32_t userId) override;
+
     virtual ErrCode GetCloneBundleInfo(const std::string &bundleName, int32_t flags, int32_t appIndex,
         BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
@@ -1220,6 +1229,15 @@ public:
 
     virtual ErrCode GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual ErrCode GetCliSandboxAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual ErrCode GetAppClonePreference(const std::string &bundleName,
+        int32_t userId, AppClonePreference &preference) override;
+
+    virtual ErrCode SetAppClonePreference(const std::string &bundleName,
+        int32_t userId, const AppClonePreference &preference) override;
 
     virtual ErrCode GetLaunchWant(Want &want) override;
 
@@ -1438,6 +1456,9 @@ private:
 
     ErrCode CheckCallingUid();
     ErrCode IsAppRunning(const std::string &bundleName, const int32_t userId);
+    ErrCode CheckIsDebugAppProvisionType(const std::string& bundleName, bool isAllBundle);
+    bool VerifyCleanBundleCacheFilesPermission(const std::string &bundleName, int32_t appIndex, bool &isCheckDebugApp);
+    bool VerifyCleanBundleDataFilesPermission(bool &isCheckDebugApp);
 
     // Frequency limit for GetTopNLargestItemsInAppDataDir
     std::mutex lastSuccessCallTimeMutex_;

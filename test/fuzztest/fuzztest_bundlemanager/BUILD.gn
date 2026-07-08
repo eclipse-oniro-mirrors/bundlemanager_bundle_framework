@@ -171,6 +171,7 @@ group("bundlemanagerfuzztest") {
     "bmsbundleresourcehelpersecond_fuzzer:BmsBundleResourceHelperSecondFuzzTest",
     "bmsremoteabilityinfo_fuzzer:BMSRemoteAbilityInfoFuzzTest",
     "bmsshortcutvisibledatastoragerdb_fuzzer:BMSShortcutVisibleDataStorageRdbFuzzTest",
+    "bmsskillmanagerhost_fuzzer:BMSSkillManagerHostFuzzTest",
     "bmssendcallback_fuzzer:BMSSendCallbackFuzzTest",
     "bmssetdisposedstatus_fuzzer:BMSSetDisposedStatusFuzzTest",
     "bmsshortcutdatastoragerdb_fuzzer:BMSShortCutDataStorageRdbFuzzTest",

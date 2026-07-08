@@ -120,8 +120,10 @@ void BmsSkillBundleDataMgrTest::MockInstallBundleWithSkill(const std::string &bu
     SkillProfile profile;
     profile.name = skillName;
     profile.abilityName = abilityName;
+    profile.version = "1.0.0";
     profile.srcEntries = {"src/main.js"};
     profile.permissions = {"ohos.permission.READ"};
+    profile.visibility = Profile::SKILL_PROFILE_VISIBILITY_PUBLIC;
     moduleInfo.skillProfiles.emplace_back(profile);
 
     InnerAbilityInfo innerAbilityInfo;
@@ -281,6 +283,8 @@ HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0004, TestSize.Level1)
     EXPECT_EQ(skillInfo.skillType, SkillType::APP_SKILL);
     EXPECT_EQ(skillInfo.abilityName, ABILITY_NAME_TEST);
     EXPECT_EQ(skillInfo.versionCode, static_cast<uint32_t>(1));
+    EXPECT_EQ(skillInfo.version, "1.0.0");
+    EXPECT_EQ(skillInfo.visibility, Profile::SKILL_PROFILE_VISIBILITY_PUBLIC);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -400,12 +404,14 @@ HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0010, TestSize.Level1)
     SkillProfile profile1;
     profile1.name = SKILL_NAME_TEST;
     profile1.abilityName = ABILITY_NAME_TEST;
+    profile1.version = "1.0.0";
     profile1.srcEntries = {"src1.js"};
     profiles.emplace_back(profile1);
 
     SkillProfile profile2;
     profile2.name = SKILL_NAME_TEST2;
     profile2.abilityName = "SecondAbility";
+    profile2.version = "2.0.0";
     profile2.permissions = {"ohos.permission.WRITE"};
     profiles.emplace_back(profile2);
 
@@ -419,7 +425,9 @@ HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0010, TestSize.Level1)
     ASSERT_EQ(ret, ERR_OK);
     EXPECT_EQ(skillInfos.size(), static_cast<size_t>(2));
     EXPECT_EQ(skillInfos[0].skillName, SKILL_NAME_TEST);
+    EXPECT_EQ(skillInfos[0].version, "1.0.0");
     EXPECT_EQ(skillInfos[1].skillName, SKILL_NAME_TEST2);
+    EXPECT_EQ(skillInfos[1].version, "2.0.0");
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -652,5 +660,199 @@ HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0020, TestSize.Level1)
     std::vector<SkillInfo> skillInfos;
     auto ret = dataMgr->GetSkillInfosForSelf(0, USERID, skillInfos);
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SkillBundleDataMgr_0021
+ * @tc.name: IsSkillVisibleForQuery with all access level
+ * @tc.desc: Test all visibility values are visible when query access level is ALL
+ */
+HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0021, TestSize.Level1)
+{
+    SkillProfile publicProfile;
+    publicProfile.visibility = Profile::SKILL_PROFILE_VISIBILITY_PUBLIC;
+    SkillProfile systemProfile;
+    systemProfile.visibility = Profile::SKILL_PROFILE_VISIBILITY_SYSTEM;
+    SkillProfile privateProfile;
+    privateProfile.visibility = "private";
+    SkillProfile unknownProfile;
+    unknownProfile.visibility = "unknown";
+
+    auto accessLevel = BundleDataMgr::SkillQueryAccessLevel::ALL;
+    EXPECT_TRUE(BundleDataMgr::IsSkillVisibleForQuery(publicProfile, accessLevel));
+    EXPECT_TRUE(BundleDataMgr::IsSkillVisibleForQuery(systemProfile, accessLevel));
+    EXPECT_TRUE(BundleDataMgr::IsSkillVisibleForQuery(privateProfile, accessLevel));
+    EXPECT_TRUE(BundleDataMgr::IsSkillVisibleForQuery(unknownProfile, accessLevel));
+}
+
+/**
+ * @tc.number: SkillBundleDataMgr_0022
+ * @tc.name: IsSkillVisibleForQuery with system and public access level
+ * @tc.desc: Test only system and public skill profiles are visible for privileged callers
+ */
+HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0022, TestSize.Level1)
+{
+    SkillProfile publicProfile;
+    publicProfile.visibility = Profile::SKILL_PROFILE_VISIBILITY_PUBLIC;
+    SkillProfile systemProfile;
+    systemProfile.visibility = Profile::SKILL_PROFILE_VISIBILITY_SYSTEM;
+    SkillProfile privateProfile;
+    privateProfile.visibility = "private";
+    SkillProfile unknownProfile;
+    unknownProfile.visibility = "unknown";
+
+    auto accessLevel = BundleDataMgr::SkillQueryAccessLevel::SYSTEM_AND_PUBLIC;
+    EXPECT_TRUE(BundleDataMgr::IsSkillVisibleForQuery(publicProfile, accessLevel));
+    EXPECT_TRUE(BundleDataMgr::IsSkillVisibleForQuery(systemProfile, accessLevel));
+    EXPECT_FALSE(BundleDataMgr::IsSkillVisibleForQuery(privateProfile, accessLevel));
+    EXPECT_FALSE(BundleDataMgr::IsSkillVisibleForQuery(unknownProfile, accessLevel));
+}
+
+/**
+ * @tc.number: SkillBundleDataMgr_0023
+ * @tc.name: IsSkillVisibleForQuery with public only access level
+ * @tc.desc: Test only public skill profiles are visible for non-privileged callers
+ */
+HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0023, TestSize.Level1)
+{
+    SkillProfile publicProfile;
+    publicProfile.visibility = Profile::SKILL_PROFILE_VISIBILITY_PUBLIC;
+    SkillProfile systemProfile;
+    systemProfile.visibility = Profile::SKILL_PROFILE_VISIBILITY_SYSTEM;
+    SkillProfile privateProfile;
+    privateProfile.visibility = "private";
+    SkillProfile unknownProfile;
+    unknownProfile.visibility = "unknown";
+
+    auto accessLevel = BundleDataMgr::SkillQueryAccessLevel::PUBLIC_ONLY;
+    EXPECT_TRUE(BundleDataMgr::IsSkillVisibleForQuery(publicProfile, accessLevel));
+    EXPECT_FALSE(BundleDataMgr::IsSkillVisibleForQuery(systemProfile, accessLevel));
+    EXPECT_FALSE(BundleDataMgr::IsSkillVisibleForQuery(privateProfile, accessLevel));
+    EXPECT_FALSE(BundleDataMgr::IsSkillVisibleForQuery(unknownProfile, accessLevel));
+}
+
+/**
+ * @tc.number: SkillBundleDataMgr_0024
+ * @tc.name: GetSkillQueryAccessLevel with self query
+ * @tc.desc: Test self query can access all skill profile visibility values
+ */
+HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0024, TestSize.Level1)
+{
+    auto accessLevel = BundleDataMgr::GetSkillQueryAccessLevel(BUNDLE_NAME_TEST, BUNDLE_NAME_TEST, false);
+
+    EXPECT_EQ(accessLevel, BundleDataMgr::SkillQueryAccessLevel::ALL);
+}
+
+/**
+ * @tc.number: SkillBundleDataMgr_0025
+ * @tc.name: GetSkillQueryAccessLevel with privileged caller
+ * @tc.desc: Test privileged callers can access system and public skill profile visibility values
+ */
+HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0025, TestSize.Level1)
+{
+    auto accessLevel = BundleDataMgr::GetSkillQueryAccessLevel(BUNDLE_NAME_TEST, BUNDLE_NAME_TEST2, true);
+
+    EXPECT_EQ(accessLevel, BundleDataMgr::SkillQueryAccessLevel::SYSTEM_AND_PUBLIC);
+}
+
+/**
+ * @tc.number: SkillBundleDataMgr_0026
+ * @tc.name: GetSkillQueryAccessLevel with non-privileged caller
+ * @tc.desc: Test non-privileged callers can access public skill profile visibility values only
+ */
+HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0026, TestSize.Level1)
+{
+    auto accessLevel = BundleDataMgr::GetSkillQueryAccessLevel(BUNDLE_NAME_TEST, BUNDLE_NAME_TEST2, false);
+
+    EXPECT_EQ(accessLevel, BundleDataMgr::SkillQueryAccessLevel::PUBLIC_ONLY);
+}
+
+/**
+ * @tc.number: SkillBundleDataMgr_0027
+ * @tc.name: FindSkillInfoFromAllBundles with self bundle
+ * @tc.desc: Test self bundle can access private skill profiles in all-bundle query path
+ */
+HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0027, TestSize.Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+
+    SkillProfile privateProfile;
+    privateProfile.name = "selfPrivateSkill";
+    privateProfile.abilityName = ABILITY_NAME_TEST;
+    privateProfile.visibility = "private";
+    MockInstallBundleWithSkills(BUNDLE_NAME_TEST, MODULE_NAME_ENTRY, {privateProfile});
+
+    SkillInfo skillInfo;
+    auto ret = dataMgr->FindSkillInfoFromAllBundles(privateProfile.name, 0, USERID,
+        BUNDLE_NAME_TEST, false, skillInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(skillInfo.bundleName, BUNDLE_NAME_TEST);
+    EXPECT_EQ(skillInfo.skillName, privateProfile.name);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: SkillBundleDataMgr_0028
+ * @tc.name: FindSkillInfoFromAllBundles with non-privileged caller
+ * @tc.desc: Test non-privileged caller cannot access private skill profiles from other bundles
+ */
+HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0028, TestSize.Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST2);
+
+    SkillProfile privateProfile;
+    privateProfile.name = "otherPrivateSkill";
+    privateProfile.abilityName = ABILITY_NAME_TEST;
+    privateProfile.visibility = "private";
+    MockInstallBundleWithSkills(BUNDLE_NAME_TEST2, MODULE_NAME_ENTRY, {privateProfile});
+
+    SkillInfo skillInfo;
+    auto ret = dataMgr->FindSkillInfoFromAllBundles(privateProfile.name, 0, USERID,
+        BUNDLE_NAME_TEST, false, skillInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SKILL_INFO_NOT_EXIST);
+    EXPECT_TRUE(skillInfo.skillName.empty());
+
+    MockUninstallBundle(BUNDLE_NAME_TEST2);
+}
+
+/**
+ * @tc.number: SkillBundleDataMgr_0029
+ * @tc.name: FindSkillInfoFromAllBundles with privileged caller
+ * @tc.desc: Test privileged caller can access system skill profiles from other bundles
+ */
+HWTEST_F(BmsSkillBundleDataMgrTest, SkillBundleDataMgr_0029, TestSize.Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST2);
+
+    SkillProfile systemProfile;
+    systemProfile.name = "otherSystemSkill";
+    systemProfile.abilityName = ABILITY_NAME_TEST;
+    systemProfile.visibility = Profile::SKILL_PROFILE_VISIBILITY_SYSTEM;
+    MockInstallBundleWithSkills(BUNDLE_NAME_TEST2, MODULE_NAME_ENTRY, {systemProfile});
+
+    SkillInfo nonPrivilegedSkillInfo;
+    auto ret = dataMgr->FindSkillInfoFromAllBundles(systemProfile.name, 0, USERID,
+        BUNDLE_NAME_TEST, false, nonPrivilegedSkillInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SKILL_INFO_NOT_EXIST);
+    EXPECT_TRUE(nonPrivilegedSkillInfo.skillName.empty());
+
+    SkillInfo privilegedSkillInfo;
+    ret = dataMgr->FindSkillInfoFromAllBundles(systemProfile.name, 0, USERID,
+        BUNDLE_NAME_TEST, true, privilegedSkillInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(privilegedSkillInfo.bundleName, BUNDLE_NAME_TEST2);
+    EXPECT_EQ(privilegedSkillInfo.skillName, systemProfile.name);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST2);
 }
 } // namespace OHOS

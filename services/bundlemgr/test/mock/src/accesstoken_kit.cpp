@@ -35,6 +35,8 @@ int32_t g_errCode = 0;
 // Cache for sessionId and trustedBundleInfo
 static std::map<int32_t, std::vector<TrustedBundleInfo>> g_signInfoCache;
 static std::atomic<int32_t> g_nextSessionId{1};
+static int32_t g_prepareHapIdentityRet = 0;
+static int32_t g_deleteIdentityRet = 0;
 
 void SetAccessTokenIDForTest(unsigned int value)
 {
@@ -267,12 +269,29 @@ int32_t AccessTokenKit::PrepareHapIdentity(
     identity.tokenId = 1;
     std::lock_guard<std::mutex> lock(g_mockUidMutex);
     g_mockUidToBundleMap[identity.uid] = {info.bundleName, info.instIndex};
-    return 0;
+    int32_t ret = g_prepareHapIdentityRet;
+    g_prepareHapIdentityRet = 0;
+    return ret;
 }
 
-int32_t AccessTokenKit::UpdateHapPolicy(int32_t sessionId, int32_t tokenId, const BundlePolicy& policy)
+static int32_t g_updateHapPolicyRet = 0;
+static int32_t g_updateHapPolicyUid = 0;
+
+void SetUpdateHapPolicyRetForTest(int32_t ret, int32_t newUid)
 {
-    return 0;
+    g_updateHapPolicyRet = ret;
+    g_updateHapPolicyUid = newUid;
+}
+
+int32_t AccessTokenKit::UpdateHapPolicy(int32_t sessionId, int32_t tokenId, const BundlePolicy& policy, int32_t& uid)
+{
+    if (g_updateHapPolicyUid != 0) {
+        uid = g_updateHapPolicyUid;
+    }
+    int32_t ret = g_updateHapPolicyRet;
+    g_updateHapPolicyRet = 0;
+    g_updateHapPolicyUid = 0;
+    return ret;
 }
 
 int32_t AccessTokenKit::FinishInstall(int32_t sessionId, bool isSuccess,
@@ -284,7 +303,9 @@ int32_t AccessTokenKit::FinishInstall(int32_t sessionId, bool isSuccess,
 int32_t AccessTokenKit::DeleteIdentity(
     AccessTokenID tokenID, const std::string& bundleName, ReservedType type)
 {
-    return 0;
+    int32_t ret = g_deleteIdentityRet;
+    g_deleteIdentityRet = 0;
+    return ret;
 }
 
 int32_t g_migrateInstalledBundlesRet = 0;
@@ -388,11 +409,33 @@ void SetCachePolicyBySessionIdRetForTest(int32_t ret)
     g_cachePolicyBySessionIdRet = ret;
 }
 
+static int32_t g_refreshTokenStatusRet = -1;
+
+void SetRefreshTokenStatusRetForTest(int32_t ret)
+{
+    g_refreshTokenStatusRet = ret;
+}
+
+void SetPrepareHapIdentityRetForTest(int32_t ret)
+{
+    g_prepareHapIdentityRet = ret;
+}
+
+void SetDeleteIdentityRetForTest(int32_t ret)
+{
+    g_deleteIdentityRet = ret;
+}
+
 int32_t AccessTokenKit::GetCachePolicyBySessionId(int32_t sessionId, const std::string& bundleName,
     BundlePolicyInfo& bundlePolicyInfo)
 {
     bundlePolicyInfo = g_bundlePolicyInfo;
     return g_cachePolicyBySessionIdRet;
+}
+
+int32_t AccessTokenKit::RefreshTokenStatus(const Identity& identity, ReservedType type)
+{
+    return g_refreshTokenStatusRet;
 }
 }
 }

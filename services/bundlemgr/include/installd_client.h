@@ -52,7 +52,8 @@ public:
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
     ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-        const std::string &targetSoPath, const std::string &cpuAbi);
+        const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+        const bool isSystemApp);
     /**
      * @brief Rename the module directory from temporaily path to the real path.
      * @param oldPath Indicates the old path name.
@@ -365,6 +366,8 @@ public:
      * @return Returns ERR_OK if delete old cache files successfully; returns error code otherwise.
      */
     ErrCode DeleteOldCacheFiles(const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize);
+
+    int64_t GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs = -1);
 
 private:
     sptr<IInstalld> GetInstalldProxy();

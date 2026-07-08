@@ -1899,31 +1899,6 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0017, Function | SmallTest 
 }
 
 /**
- * @tc.number: BaseBundleInstaller_0018
- * @tc.name: test ProcessBundleUpdateStatus
- * @tc.desc: 1.ProcessBundleUpdateStatus
- */
-HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0018, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    installer.dataMgr_ = GetBundleDataMgr();
-
-    InnerBundleInfo oldInfo;
-    oldInfo.baseApplicationInfo_->singleton = false;
-
-    InnerBundleInfo newInfo;
-    newInfo.currentPackage_ = "entry";
-    newInfo.baseApplicationInfo_->singleton = true;
-    newInfo.baseBundleInfo_->isPreInstallApp = false;
-    newInfo.baseApplicationInfo_->bundleName = "com.ohos.sceneboard";
-
-    bool isReplace = false;
-    bool killProcess = false;
-    auto ret = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
-}
-
-/**
  * @tc.number: BaseBundleInstaller_0019
  * @tc.name: test ProcessBundleUpdateStatus
  * @tc.desc: 1.ProcessBundleUpdateStatus
@@ -2798,6 +2773,223 @@ HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0041, Function | MediumTest | L
     
     // Verify HasInputMethodExtension returns false (no INPUTMETHOD extensions)
     EXPECT_FALSE(innerBundleInfo.HasInputMethodExtension());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0042
+ * @tc.name: test GetApplicationInfoAdaptCliSandbox
+ * @tc.desc: 1.Test GetApplicationInfoAdaptCliSandbox when appIndex exists in sandboxInfos
+*/
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0042, Function | MediumTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::map<std::string, InnerCliSandboxInfo> sandboxInfos;
+    InnerCliSandboxInfo sandboxInfo;
+    int32_t appIndex = Constants::CLI_SANDBOX_APP_INDEX_MIN;
+    sandboxInfo.appIndex = appIndex;
+    sandboxInfo.uid = 2002000;
+    sandboxInfo.accessTokenId = 12345;
+    sandboxInfo.accessTokenIdEx = 67890;
+    sandboxInfos.insert(std::make_pair(InnerBundleUserInfo::AppIndexToKey(appIndex), sandboxInfo));
+    innerBundleUserInfo.sandboxInfos = sandboxInfos;
+
+    ApplicationInfo appInfo;
+    auto ret = bundleInfo.GetApplicationInfoAdaptCliSandbox(innerBundleUserInfo, appIndex, appInfo);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(appInfo.appIndex, appIndex);
+    EXPECT_EQ(appInfo.uid, 2002000);
+    EXPECT_EQ(appInfo.accessTokenId, static_cast<uint32_t>(12345));
+    EXPECT_EQ(appInfo.accessTokenIdEx, static_cast<uint64_t>(67890));
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0043
+ * @tc.name: test GetApplicationInfoAdaptCliSandbox
+ * @tc.desc: 1.Test GetApplicationInfoAdaptCliSandbox when appIndex does not exist in sandboxInfos
+*/
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0043, Function | MediumTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    int32_t appIndex = Constants::CLI_SANDBOX_APP_INDEX_MIN;
+    ApplicationInfo appInfo;
+    auto ret = bundleInfo.GetApplicationInfoAdaptCliSandbox(innerBundleUserInfo, appIndex, appInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0044
+ * @tc.name: test GetBundleInfoAdaptCliSandbox
+ * @tc.desc: 1.Test GetBundleInfoAdaptCliSandbox when appIndex exists in sandboxInfos
+*/
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0044, Function | MediumTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::map<std::string, InnerCliSandboxInfo> sandboxInfos;
+    InnerCliSandboxInfo sandboxInfo;
+    int32_t appIndex = Constants::CLI_SANDBOX_APP_INDEX_MIN;
+    sandboxInfo.appIndex = appIndex;
+    sandboxInfo.uid = 2002000;
+    sandboxInfo.installTime = 1000;
+    sandboxInfo.gids.push_back(2000);
+    sandboxInfo.creatorBundleNames.push_back("com.example.creator");
+    sandboxInfos.insert(std::make_pair(InnerBundleUserInfo::AppIndexToKey(appIndex), sandboxInfo));
+    innerBundleUserInfo.sandboxInfos = sandboxInfos;
+    innerBundleUserInfo.firstInstallTime = 500;
+    innerBundleUserInfo.updateTime = 800;
+
+    BundleInfo info;
+    auto ret = bundleInfo.GetBundleInfoAdaptCliSandbox(innerBundleUserInfo, appIndex, info);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(info.appIndex, appIndex);
+    EXPECT_EQ(info.uid, 2002000);
+    EXPECT_EQ(info.gid, 2000);
+    EXPECT_EQ(info.firstInstallTime, 500);
+    EXPECT_EQ(info.updateTime, 800);
+    EXPECT_EQ(info.installTime, 1000);
+    EXPECT_EQ(info.sandboxCreatorBundleName, "com.example.creator");
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0045
+ * @tc.name: test GetBundleInfoAdaptCliSandbox
+ * @tc.desc: 1.Test GetBundleInfoAdaptCliSandbox when appIndex does not exist in sandboxInfos
+*/
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0045, Function | MediumTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    int32_t appIndex = Constants::CLI_SANDBOX_APP_INDEX_MIN;
+    BundleInfo info;
+    auto ret = bundleInfo.GetBundleInfoAdaptCliSandbox(innerBundleUserInfo, appIndex, info);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0046
+ * @tc.name: test IsCliSandboxCreator
+ * @tc.desc: 1.Test IsCliSandboxCreator when creatorBundleName exists in creatorBundleNames
+*/
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0046, Function | MediumTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::map<std::string, InnerCliSandboxInfo> sandboxInfos;
+    InnerCliSandboxInfo sandboxInfo;
+    int32_t userId = 100;
+    int32_t appIndex = Constants::CLI_SANDBOX_APP_INDEX_MIN;
+    sandboxInfo.creatorBundleNames.push_back("com.example.creator");
+    sandboxInfos.insert(std::make_pair(InnerBundleUserInfo::AppIndexToKey(appIndex), sandboxInfo));
+    innerBundleUserInfo.sandboxInfos = sandboxInfos;
+    bundleInfo.innerBundleUserInfos_.insert(
+        std::make_pair("_" + std::to_string(userId), innerBundleUserInfo));
+
+    auto ret = bundleInfo.IsCliSandboxCreator(userId, appIndex, "com.example.creator");
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0047
+ * @tc.name: test IsCliSandboxCreator
+ * @tc.desc: 1.Test IsCliSandboxCreator when user does not exist
+*/
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0047, Function | MediumTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    int32_t userId = 100;
+    int32_t appIndex = Constants::CLI_SANDBOX_APP_INDEX_MIN;
+    auto ret = bundleInfo.IsCliSandboxCreator(userId, appIndex, "com.example.creator");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0048
+ * @tc.name: test IsCliSandboxCreator
+ * @tc.desc: 1.Test IsCliSandboxCreator when sandbox not exist or creator not in creatorBundleNames
+*/
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0048, Function | MediumTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::map<std::string, InnerCliSandboxInfo> sandboxInfos;
+    InnerCliSandboxInfo sandboxInfo;
+    int32_t userId = 100;
+    int32_t appIndex = Constants::CLI_SANDBOX_APP_INDEX_MIN;
+    sandboxInfo.creatorBundleNames.push_back("com.example.creator");
+    sandboxInfos.insert(std::make_pair(InnerBundleUserInfo::AppIndexToKey(appIndex), sandboxInfo));
+    innerBundleUserInfo.sandboxInfos = sandboxInfos;
+    bundleInfo.innerBundleUserInfos_.insert(
+        std::make_pair("_" + std::to_string(userId), innerBundleUserInfo));
+
+    // sandbox appIndex not existed
+    EXPECT_EQ(bundleInfo.IsCliSandboxCreator(userId, appIndex + 1, "com.example.creator"), false);
+    // creator not in creatorBundleNames
+    EXPECT_EQ(bundleInfo.IsCliSandboxCreator(userId, appIndex, "com.example.other"), false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0049
+ * @tc.name: test GetBundleInfoForCliSandbox
+ * @tc.desc: 1.Test GetBundleInfoForCliSandbox when userId not found
+*/
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0049, Function | MediumTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    int32_t userId = 100;
+    int32_t appIndex = Constants::CLI_SANDBOX_APP_INDEX_MIN;
+    BundleInfo info;
+    auto ret = bundleInfo.GetBundleInfoForCliSandbox(0, info, userId, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0050
+ * @tc.name: test GetBundleInfoForCliSandbox
+ * @tc.desc: 1.Test GetBundleInfoForCliSandbox when sandbox appIndex does not exist
+*/
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0050, Function | MediumTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    int32_t userId = 100;
+    int32_t appIndex = Constants::CLI_SANDBOX_APP_INDEX_MIN;
+    bundleInfo.innerBundleUserInfos_.insert(
+        std::make_pair("_" + std::to_string(userId), innerBundleUserInfo));
+
+    BundleInfo info;
+    auto ret = bundleInfo.GetBundleInfoForCliSandbox(0, info, userId, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLI_SANDBOX_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0051
+ * @tc.name: test GetBundleInfoForCliSandbox
+ * @tc.desc: 1.Test GetBundleInfoForCliSandbox when sandbox exists
+*/
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0051, Function | MediumTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::map<std::string, InnerCliSandboxInfo> sandboxInfos;
+    InnerCliSandboxInfo sandboxInfo;
+    int32_t userId = 100;
+    int32_t appIndex = Constants::CLI_SANDBOX_APP_INDEX_MIN;
+    sandboxInfo.appIndex = appIndex;
+    sandboxInfo.uid = 2002000;
+    sandboxInfo.creatorBundleNames.push_back("com.example.creator");
+    sandboxInfos.insert(std::make_pair(InnerBundleUserInfo::AppIndexToKey(appIndex), sandboxInfo));
+    innerBundleUserInfo.sandboxInfos = sandboxInfos;
+    bundleInfo.innerBundleUserInfos_.insert(
+        std::make_pair("_" + std::to_string(userId), innerBundleUserInfo));
+
+    BundleInfo info;
+    auto ret = bundleInfo.GetBundleInfoForCliSandbox(0, info, userId, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(info.appIndex, appIndex);
+    EXPECT_EQ(info.uid, 2002000);
+    EXPECT_EQ(info.sandboxCreatorBundleName, "com.example.creator");
 }
 
 } // OHOS

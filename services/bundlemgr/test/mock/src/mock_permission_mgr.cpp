@@ -291,7 +291,7 @@ int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, cons
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
     InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
     const std::string &appServiceCapabilities, bool dataRefresh,
-    const bool isDebugGrant, int32_t sessionId)
+    const bool isDebugGrant, int32_t sessionId, int32_t appIndex)
 {
     return ERR_OK;
 }
@@ -343,9 +343,11 @@ int32_t BundlePermissionMgr::PrepareHapIdentity(
 int32_t BundlePermissionMgr::UpdateHapPolicy(
     int32_t sessionId,
     int32_t tokenId,
-    const InnerBundleInfo &innerBundleInfo,
+    InnerBundleInfo &innerBundleInfo,
+    int32_t userId,
     bool isDebugGrant,
-    const std::string &appServiceCapabilities)
+    const std::string &appServiceCapabilities,
+    int32_t appIndex)
 {
     return ERR_OK;
 }
@@ -364,6 +366,15 @@ int32_t BundlePermissionMgr::UpdateAppPermission(InnerBundleInfo &innerBundleInf
     Security::AccessToken::InstallTypeEnum installType)
 {
     return ERR_OK;
+}
+
+int32_t BundlePermissionMgr::RefreshTokenStatus(const uint64_t &tokenIdEx, const int32_t &uid,
+    Security::AccessToken::ReservedType type)
+{
+    Security::AccessToken::Identity identity;
+    identity.tokenId = tokenIdEx;
+    identity.uid = uid;
+    return Security::AccessToken::AccessTokenKit::RefreshTokenStatus(identity, type);
 }
 }
 }

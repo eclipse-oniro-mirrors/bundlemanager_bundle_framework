@@ -50,9 +50,9 @@ enum OTAFlag : uint32_t {
     CHECK_ELDIR = 0x00000001,
     CHECK_LOG_DIR = 0x00000010,
     CHECK_FILE_MANAGER_DIR = 0x00000100,
-    CHECK_SHADER_CAHCE_DIR = 0x00000200,
+    CHECK_SHADER_CAHCE_DIR = 0x00000200,  // deprecated: no longer used
     CHECK_PREINSTALL_DATA = 0x00000400,
-    CHECK_CLOUD_SHADER_DIR = 0x00000800,
+    CHECK_CLOUD_SHADER_DIR = 0x00000800,  // deprecated: no longer used
     CHECK_BACK_UP_DIR = 0x00001000,
     CHECK_RECOVERABLE_APPLICATION_INFO = 0x00002000,
     CHECK_INSTALL_SOURCE = 0x00004000,
@@ -586,17 +586,13 @@ private:
     void InnerProcessCheckAppFileManagerDir();
     void ProcessCheckPreinstallData();
     void InnerProcessCheckPreinstallData();
-    void ProcessCheckShaderCacheDir();
-    void InnerProcessCheckShaderCacheDir();
     void ProcessCheckSystemOptimizeShaderCacheDir();
-    void ProcessCheckCloudShaderDir();
-    void InnerProcessCheckCloudShaderDir();
-    void InnerProcessCheckCloudShaderCommonDir(const int32_t uid, const int32_t gid);
     void ProcessNewBackupDir();
     void ProcessCheckRecoverableApplicationInfo();
     void InnerProcessCheckRecoverableApplicationInfo();
     void ProcessCheckInstallSource();
     void InnerProcessCheckInstallSource();
+    void CleanUninstallBundleInfo();
     void ProcessAccessTokenMigration();
     bool InnerProcessAccessTokenMigration();
     void BuildMigrationData(const std::shared_ptr<BundleDataMgr> &dataMgr,
@@ -742,16 +738,10 @@ private:
     void static ProcessCheckAppEl1DirTask();
     // check el2 data dir for all userids's bundleinfos
     void CheckAndCreateShareFilesSubDataDirs();
-    void CleanAllBundleShaderCache() const;
     void CleanTempDir() const;
     bool CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo);
     void CheckBundleProvisionInfo();
-    void CheckBundleCloneEl1ShaderCacheLocal(const std::string &bundleName,
-        int32_t appIndex, int32_t userId, int32_t uid);
-    void CheckAllBundleEl1ShaderCacheLocal();
-    void CleanBundleCloneEl1ShaderCacheLocal(const std::string &bundleName,
-        int32_t appIndex, int32_t userId);
-    void CleanAllBundleEl1ShaderCacheLocal();
+
     void InnerProcessBootCheckOnDemandBundle();
     void ProcessRebootCheckOnDemandBundle();
     bool ParseOnDemandHapFiles(const std::string &hapFilePath,

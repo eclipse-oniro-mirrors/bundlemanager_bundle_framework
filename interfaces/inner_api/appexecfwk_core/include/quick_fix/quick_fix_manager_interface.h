@@ -31,7 +31,7 @@ public:
 
     virtual ErrCode DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
         const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug = false, const std::string &targetPath = "",
-        bool isReplace = false)
+        bool isReplace = false, bool isCheckDebugApp = false)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

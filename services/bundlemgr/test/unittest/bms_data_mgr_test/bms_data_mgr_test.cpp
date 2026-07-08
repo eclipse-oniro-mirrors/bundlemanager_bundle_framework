@@ -1098,6 +1098,39 @@ HWTEST_F(BmsDataMgrTest, BundleStateStorage_0200, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: BundleStateStorage_0300
+ * @tc.name: test LoadAllBundleStateDataFromJson with invalid key
+ * @tc.desc: 1. json key cannot be parsed to bundleName and userId
+ *           2. return false because infos is empty
+ */
+HWTEST_F(BmsDataMgrTest, BundleStateStorage_0300, Function | SmallTest | Level0)
+{
+    BundleStateStorage bundleStateStorage;
+    nlohmann::json jsonObject = nlohmann::json::object({
+        {"invalidkey", nlohmann::json::object({{"enabled", true}, {"userId", USERID}})}
+    });
+    std::map<std::string, std::map<int32_t, BundleUserInfo>> infos;
+    bool ret = bundleStateStorage.LoadAllBundleStateDataFromJson(jsonObject, infos);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: BundleStateStorage_0400
+ * @tc.name: test LoadAllBundleStateDataFromJson with discarded json
+ * @tc.desc: 1. json is discarded
+ *           2. return false
+ */
+HWTEST_F(BmsDataMgrTest, BundleStateStorage_0400, Function | SmallTest | Level0)
+{
+    BundleStateStorage bundleStateStorage;
+    nlohmann::json jsonObject = nlohmann::json::parse("{invalid", nullptr, false);
+    std::map<std::string, std::map<int32_t, BundleUserInfo>> infos;
+    bool ret = bundleStateStorage.LoadAllBundleStateDataFromJson(jsonObject, infos);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: AbilityManager_0100
  * @tc.name: Test GetBundleStateStorage, a param is error
  * @tc.desc: 1.Test the GetBundleStateStorage of BundleStateStorage
@@ -8131,22 +8164,26 @@ HWTEST_F(BmsDataMgrTest, RemoveUninstalledBundleinfos_0001, Function | MediumTes
     BundleDataMgr bundleDataMgr;
     std::string bundleName = "com.ohos.test";
     std::string bundleName2 = "com.ohos.test2";
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    bundleDataMgr.GetAllUninstallBundleInfo(uninstallBundleInfos);
+    std::cout << "uninstallBundleInfos.size() = " << uninstallBundleInfos.size() << std::endl;
+    for (const auto& uninstallBundleInfo : uninstallBundleInfos) {
+        std::cout << "clear uninstallBundleInfo db = " << uninstallBundleInfo.first << std::endl;
+        bundleDataMgr.uninstallDataMgr_->DeleteUninstallBundleInfo(uninstallBundleInfo.first);
+    }
     int32_t userId = 100;
-    bool ret = bundleDataMgr.RemoveUninstalledBundleinfos(userId);
-    userId = 101;
-    ret = bundleDataMgr.RemoveUninstalledBundleinfos(userId);
     UninstallBundleInfo uninstallBundleInfo;
     UninstallDataUserInfo uninstallDataUserInfo;
     uninstallBundleInfo.userInfos.emplace("101", uninstallDataUserInfo);
     EXPECT_NE(bundleDataMgr.uninstallDataMgr_, nullptr);
     bundleDataMgr.uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
     bundleDataMgr.uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName2, uninstallBundleInfo);
-    ret = bundleDataMgr.RemoveUninstalledBundleinfos(userId);
+    bool ret = bundleDataMgr.RemoveUninstalledBundleinfos(userId);
     EXPECT_TRUE(ret);
     bundleDataMgr.uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName);
     bundleDataMgr.uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName2);
     ret = bundleDataMgr.RemoveUninstalledBundleinfos(userId);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
     bundleDataMgr.uninstallDataMgr_ = nullptr;
     ret = bundleDataMgr.RemoveUninstalledBundleinfos(userId);
     EXPECT_FALSE(ret);
@@ -12318,9 +12355,16 @@ HWTEST_F(BmsDataMgrTest, ProcessIdleInfo_0001, Function | SmallTest | Level1)
 
     dataMgr->bundleInfos_.clear();
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
+    std::cout << "uninstallBundleInfos.size() = " << uninstallBundleInfos.size() << std::endl;
+    for (const auto& uninstallBundleInfo : uninstallBundleInfos) {
+        std::cout << "clear uninstallBundleInfo db = " << uninstallBundleInfo.first << std::endl;
+        dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(uninstallBundleInfo.first);
+    }
 
     auto ret = dataMgr->ProcessIdleInfo();
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -13316,5 +13360,117 @@ HWTEST_F(BmsDataMgrTest, GetCliSandboxAppIndexesByInnerBundleInfo_0600, Function
     auto ret = bundleDataMgr.GetCliSandboxAppIndexesByInnerBundleInfo(bundleInfo, USERID);
     EXPECT_FALSE(ret.empty());
     EXPECT_EQ(ret.size(), 2);
+}
+
+/**
+ * @tc.number: GetAllLocalPluginInfoForSelf_0001
+ * @tc.name: GetAllLocalPluginInfoForSelf
+ * @tc.desc: test GetAllLocalPluginInfoForSelf
+ */
+HWTEST_F(BmsDataMgrTest, GetAllLocalPluginInfoForSelf_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = bundleDataMgr.GetAllLocalPluginInfoForSelf(pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetAllLocalPluginInfoForSelf_0002
+ * @tc.name: GetAllLocalPluginInfoForSelf
+ * @tc.desc: test GetAllLocalPluginInfoForSelf
+ */
+HWTEST_F(BmsDataMgrTest, GetAllLocalPluginInfoForSelf_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsNewVersion(false);
+    bundleDataMgr.bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = bundleDataMgr.GetAllLocalPluginInfoForSelf(pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: ResetBundleStateData_0100
+ * @tc.name: test ResetBundleStateData
+ * @tc.desc: 1. set bundle user state to disabled with disabled abilities
+ *           2. ResetBundleStateData resets all bundle user states
+ */
+HWTEST_F(BmsDataMgrTest, ResetBundleStateData_0100, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo = CreateDefaultInnerBundleInfo(BUNDLE_NAME, USERID);
+    for (auto &userInfoItem : innerBundleInfo.innerBundleUserInfos_) {
+        userInfoItem.second.bundleUserInfo.enabled = false;
+        userInfoItem.second.bundleUserInfo.disabledAbilities.push_back("MainAbility");
+    }
+    bundleDataMgr.bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    bundleDataMgr.ResetBundleStateData();
+
+    for (const auto &userInfoItem : bundleDataMgr.bundleInfos_.at(BUNDLE_NAME).innerBundleUserInfos_) {
+        EXPECT_TRUE(userInfoItem.second.bundleUserInfo.enabled);
+        EXPECT_TRUE(userInfoItem.second.bundleUserInfo.disabledAbilities.empty());
+    }
+}
+
+/**
+ * @tc.number: RemoveDuplicateName_0100
+ * @tc.name: test RemoveDuplicateName
+ * @tc.desc: 1. permissions contain duplicate entries
+ *           2. RemoveDuplicateName removes duplicates
+ */
+HWTEST_F(BmsDataMgrTest, RemoveDuplicateName_0100, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    std::vector<std::string> permissions = {"perm.a", "perm.b", "perm.a", "perm.c", "perm.b"};
+    innerBundleInfo.RemoveDuplicateName(permissions);
+    ASSERT_EQ(permissions.size(), 3U);
+    EXPECT_EQ(permissions[0], "perm.a");
+    EXPECT_EQ(permissions[1], "perm.b");
+    EXPECT_EQ(permissions[2], "perm.c");
+}
+
+/**
+ * @tc.number: ResetPrivilegeCapability_0100
+ * @tc.name: test ResetPrivilegeCapability for system app
+ * @tc.desc: 1. system app resets privilege fields
+ *           2. allowAppRunWhenDeviceFirstLocked remains true for system app
+ */
+HWTEST_F(BmsDataMgrTest, ResetPrivilegeCapability_0100, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo = CreateDefaultInnerBundleInfo(BUNDLE_NAME, USERID);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    appInfo.isSystemApp = true;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    innerBundleInfo.SetKeepAlive(true);
+    innerBundleInfo.SetAllowAppRunWhenDeviceFirstLocked(false);
+
+    innerBundleInfo.ResetPrivilegeCapability();
+
+    EXPECT_FALSE(innerBundleInfo.baseApplicationInfo_->keepAlive);
+    EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->allowAppRunWhenDeviceFirstLocked);
+}
+
+/**
+ * @tc.number: ResetPrivilegeCapability_0200
+ * @tc.name: test ResetPrivilegeCapability for non-system app
+ * @tc.desc: 1. non-system app resets privilege fields
+ *           2. allowAppRunWhenDeviceFirstLocked remains false
+ */
+HWTEST_F(BmsDataMgrTest, ResetPrivilegeCapability_0200, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo = CreateDefaultInnerBundleInfo(BUNDLE_NAME, USERID);
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME;
+    appInfo.isSystemApp = false;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    innerBundleInfo.SetAllowAppRunWhenDeviceFirstLocked(true);
+
+    innerBundleInfo.ResetPrivilegeCapability();
+
+    EXPECT_FALSE(innerBundleInfo.baseApplicationInfo_->allowAppRunWhenDeviceFirstLocked);
 }
 } // OHOS

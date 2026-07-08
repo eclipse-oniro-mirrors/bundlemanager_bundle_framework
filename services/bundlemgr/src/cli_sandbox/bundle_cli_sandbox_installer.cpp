@@ -21,6 +21,7 @@
 #include "ability_manager_helper.h"
 #include "account_helper.h"
 #include "bundle_app_spawn_client.h"
+#include "bundle_common_event.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_file_util.h"
 #include "bundle_mgr_service.h"
@@ -58,22 +59,27 @@ BundleCliSandboxInstaller::~BundleCliSandboxInstaller()
     APP_LOGD("bundle cli sandbox installer instance is destroyed");
 }
 
-ErrCode BundleCliSandboxInstaller::CreateCliSandboxApp(const std::string &callerBundleName,
+ErrCode BundleCliSandboxInstaller::CreateCliSandboxApp(const std::string &creatorBundleName,
     const std::string &bundleName, int32_t userId, int32_t &appIndex)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    APP_LOGD("CreateCliSandboxApp %{public}s begin, caller: %{public}s",
-        bundleName.c_str(), callerBundleName.c_str());
+    APP_LOGI_NOFUNC("CreateCliSandboxApp %{public}s begin, caller: %{public}s",
+        bundleName.c_str(), creatorBundleName.c_str());
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     startTime_ = BundleUtil::GetCurrentTimeMs();
 
-    if (callerBundleName.empty()) {
-        APP_LOGE("callerBundleName is empty");
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    if (creatorBundleName.empty()) {
+        APP_LOGE("creatorBundleName is empty");
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_CREATOR_BUNDLE_NAME;
     }
 
-    ErrCode result = ProcessCreateCliSandbox(callerBundleName, bundleName, userId, appIndex);
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_BUNDLE_NAME;
+    }
+
+    ErrCode result = ProcessCreateCliSandbox(creatorBundleName, bundleName, userId, appIndex);
 
     NotifyBundleEvents installRes = {
         .type = NotifyType::INSTALL,
@@ -81,30 +87,30 @@ ErrCode BundleCliSandboxInstaller::CreateCliSandboxApp(const std::string &caller
         .accessTokenId = accessTokenId_,
         .uid = uid_,
         .appIndex = appIndex,
+        .userId = userId,
         .bundleName = bundleName,
         .appId = appId_,
         .appIdentifier = appIdentifier_,
         .appDistributionType = appDistributionType_,
+        .sandboxCreatorBundleName = creatorBundleName,
         .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (result == ERR_OK) {
+        commonEventMgr->NotifyCliSandboxAppStatus(installRes, COMMON_EVENT_SANDBOX_BUNDLE_ADDED);
+    }
 
     ResetInstallProperties();
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
     return result;
 }
 
-ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &callerBundleName,
+ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &creatorBundleName,
     const std::string &bundleName, int32_t userId, int32_t &appIndex)
 {
-    if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty");
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
-    }
     if (GetDataMgr() != ERR_OK) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
     std::lock_guard<std::mutex> guard(gCliSandboxInstallerMutex);
@@ -114,7 +120,7 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &ca
     bool isExist = dataMgr_->FetchInnerBundleInfo(bundleName, info);
     if (!isExist) {
         APP_LOGE("bundle %{public}s not installed", bundleName.c_str());
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_APP_NOT_EXISTED;
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_APP_NOT_EXISTED;
     }
     isBundleCrossAppSharedConfig_ = info.IsBundleCrossAppSharedConfig();
     appDistributionType_ = info.GetAppDistributionType();
@@ -122,37 +128,63 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &ca
     // 2. check userId
     if (userId < Constants::DEFAULT_USERID) {
         APP_LOGE("userId(%{public}d) invalid", userId);
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_USER_NOT_EXIST;
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_USER_NOT_EXIST;
     }
     if (!dataMgr_->HasUserId(userId)) {
         APP_LOGE("user %{public}d not exist", userId);
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_USER_NOT_EXIST;
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_USER_NOT_EXIST;
     }
 
     // 3. check whether original application installed for this user
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGE("bundle %{public}s not installed for user %{public}d", bundleName.c_str(), userId);
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID;
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID;
     }
 
-    // 4. generate new appIndex
+    // 4. check whether creator application installed for this user
+    InnerBundleInfo creatorInfo;
+    InnerBundleUserInfo creatorUserInfo;
+    if (!dataMgr_->FetchInnerBundleInfo(creatorBundleName, creatorInfo) ||
+        !creatorInfo.GetInnerBundleUserInfo(userId, creatorUserInfo)) {
+        APP_LOGE("creator %{public}s not installed for user %{public}d", creatorBundleName.c_str(), userId);
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_CREATOR_NOT_INSTALLED;
+    }
+
+    // 5. check creator's PERMISSION_MANAGE_SANDBOX_BUNDLE permission
+    int32_t permissionResult = BundlePermissionMgr::VerifyPermission(
+        creatorBundleName, Constants::PERMISSION_MANAGE_SANDBOX_BUNDLE, userId);
+    if (permissionResult != Constants::PERMISSION_GRANTED) {
+        APP_LOGE("creator %{public}s does not have permission to create cli sandbox app",
+            creatorBundleName.c_str());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    // 6. check creator's sandbox count limit
+    int32_t creatorCount = dataMgr_->GetCliSandboxCountByCreator(bundleName, userId, creatorBundleName);
+    if (creatorCount >= ServiceConstants::CLI_SANDBOX_MAX_COUNT_PER_CREATOR) {
+        APP_LOGE("creator %{public}s has reached max sandbox count %{public}d for bundle %{public}s",
+            creatorBundleName.c_str(), ServiceConstants::CLI_SANDBOX_MAX_COUNT_PER_CREATOR, bundleName.c_str());
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_OUT_OF_LIMIT_PER_CREATOR;
+    }
+
+    // 7. generate new appIndex
     appIndex = ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN;
     while (userInfo.sandboxInfos.find(InnerBundleUserInfo::AppIndexToKey(appIndex)) != userInfo.sandboxInfos.end()) {
         appIndex++;
     }
     if (appIndex > ServiceConstants::CLI_SANDBOX_APP_INDEX_MAX) {
         APP_LOGE("no available appIndex in range 2000-3000");
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_OUT_OF_LIMIT;
     }
 
-    // 5. HMDFS config
+    // 8. HMDFS config
     int32_t uid = 0;
     std::vector<int32_t> gids;
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH,
         info.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
 
-    // 6. create access token
+    // 9. create access token
     info.SetAppIndex(appIndex);
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
     AppProvisionInfo appProvisionInfo;
@@ -162,7 +194,7 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &ca
     if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx,
         appProvisionInfo.appServiceCapabilities, false, sessionId_) != ERR_OK) {
         APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_GRANT_PERMISSION_FAILED;
     }
 
     sessionCommitted_ = false;
@@ -178,12 +210,12 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &ca
 
     uid = info.GetUid(userId);
     if (uid == Constants::INVALID_UID) {
-        APP_LOGE("InitHapToken returned invalid uid for bundle:%{public}s", bundleName.c_str());
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
+        APP_LOGE_NOFUNC("InitHapToken returned invalid uid for bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
     gids.emplace_back(uid);
 
-    // 7. create data directory
+    // 10. create data directory
     ScopeGuard createDataDirGuard([&] {
         RemoveSandboxDataDir(bundleName, userId, appIndex, true);
     });
@@ -193,7 +225,7 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &ca
         return result;
     }
 
-    // 8. build InnerCliSandboxInfo
+    // 11. build InnerCliSandboxInfo
     InnerCliSandboxInfo sandboxInfo;
     sandboxInfo.userId = userId;
     sandboxInfo.appIndex = appIndex;
@@ -203,9 +235,9 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &ca
     sandboxInfo.gids = gids;
     sandboxInfo.sandboxType = SandboxIsolationType::FullIsolation;
     sandboxInfo.installTime = BundleUtil::GetCurrentTimeMs();
-    sandboxInfo.callerBundleNames.push_back(callerBundleName);
+    sandboxInfo.creatorBundleNames.push_back(creatorBundleName);
 
-    // 9. save to data manager
+    // 12. save to data manager
     ScopeGuard addSandboxGuard([&] {
         dataMgr_->RemoveCliSandboxBundle(bundleName, userId, appIndex);
     });
@@ -365,24 +397,6 @@ ErrCode BundleCliSandboxInstaller::DestroyCliSandboxApp(const std::string &creat
 
     ErrCode result = ProcessDestroyCliSandbox(creatorBundleName, envCallerBundleName,
         bundleName, userId, appIndex, skipCallerCheck);
-
-    NotifyBundleEvents uninstallRes = {
-        .type = NotifyType::UNINSTALL_BUNDLE,
-        .resultCode = result,
-        .accessTokenId = accessTokenId_,
-        .uid = uid_,
-        .appIndex = appIndex,
-        .bundleName = bundleName,
-        .appId = appId_,
-        .appIdentifier = appIdentifier_,
-        .appDistributionType = appDistributionType_,
-        .keepData = false,
-        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-    };
-    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    // todo send common event
-
     ResetInstallProperties();
     PerfProfile::GetInstance().SetBundleUninstallEndTime(GetTickCount());
     return result;
@@ -432,15 +446,21 @@ ErrCode BundleCliSandboxInstaller::ProcessDestroyCliSandbox(const std::string &c
         return ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_APP_INDEX_NOT_FOUND;
     }
 
-    // Check if creatorBundleName is in the callerBundleNames list
+    // Check if creatorBundleName is in the creatorBundleNames list
     if (!skipCallerCheck) {
         std::string actualCreatorBundleName = GetActualCreatorBundleName(creatorBundleName, envCallerBundleName,
             userId);
         if (actualCreatorBundleName.empty()) {
             return ERR_APPEXECFWK_CLI_SANDBOX_UNINSTALL_INVALID_CREATOR_BUNDLE_NAME;
         }
-        // todo verify actualCreatorBundleName permission
-        auto &callerNames = it->second.callerBundleNames;
+        int32_t permissionResult = BundlePermissionMgr::VerifyPermission(actualCreatorBundleName,
+            Constants::PERMISSION_MANAGE_SANDBOX_BUNDLE, userId);
+        if (permissionResult != Constants::PERMISSION_GRANTED) {
+            APP_LOGE("%{public}s does not have permission to destroy cli sandbox app",
+                actualCreatorBundleName.c_str());
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
+        auto &callerNames = it->second.creatorBundleNames;
         if (std::find(callerNames.begin(), callerNames.end(), actualCreatorBundleName) == callerNames.end()) {
             APP_LOGE("caller %{public}s is not allowed to destroy sandbox %{public}s appIndex:%{public}d",
                 actualCreatorBundleName.c_str(), bundleName.c_str(), appIndex);
@@ -482,6 +502,24 @@ ErrCode BundleCliSandboxInstaller::ProcessDestroyCliSandbox(const std::string &c
     }
     UninstallDebugAppSandbox(bundleName, uid_, appIndex, info);
     APP_LOGI("DestroyCliSandboxApp %{public}s appIndex:%{public}d successfully", bundleName.c_str(), appIndex);
+    // Send event
+    NotifyBundleEvents uninstallRes = {
+        .type = NotifyType::UNINSTALL_BUNDLE,
+        .resultCode = ERR_OK,
+        .accessTokenId = accessTokenId_,
+        .uid = uid_,
+        .appIndex = appIndex,
+        .userId = userId,
+        .bundleName = bundleName,
+        .appId = appId_,
+        .appIdentifier = appIdentifier_,
+        .appDistributionType = appDistributionType_,
+        .sandboxCreatorBundleName = it->second.creatorBundleNames.empty()
+            ? Constants::EMPTY_STRING : it->second.creatorBundleNames.front(),
+        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+    };
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyCliSandboxAppStatus(uninstallRes, COMMON_EVENT_SANDBOX_BUNDLE_REMOVED);
     return ERR_OK;
 }
 
@@ -515,7 +553,7 @@ std::string BundleCliSandboxInstaller::GetActualCreatorBundleName(
     }
 
     int32_t permissionResult = BundlePermissionMgr::VerifyPermission(envCallerBundleName,
-        ServiceConstants::PERMISSION_CLI_MANAGE_WEB_SANDBOX, userId);
+        Constants::PERMISSION_CLI_MANAGE_WEB_SANDBOX, userId);
     if (permissionResult == Constants::PERMISSION_GRANTED) {
         APP_LOGD("Env bundle %{public}s has permission, use creator bundle: %{public}s",
             envCallerBundleName.c_str(), creatorBundleName.c_str());

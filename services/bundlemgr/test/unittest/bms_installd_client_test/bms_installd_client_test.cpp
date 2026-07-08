@@ -133,7 +133,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractModuleFiles_0100, T
     std::string targetPath = TARGET_PATH;
     std::string targetSoPath = TARGET_SO_PATH;
     std::string cpuAbi = CPU_ABI;
-    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
+    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi, false, false);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0100 end";
 }
@@ -150,7 +150,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractModuleFiles_0200, T
     std::string targetPath = EMPTY_STRING;
     std::string targetSoPath = TARGET_SO_PATH;
     std::string cpuAbi = CPU_ABI;
-    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
+    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi, false, false);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0200 end";
 }
@@ -167,9 +167,9 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractModuleFiles_0300, T
     std::string targetPath = TARGET_PATH;
     std::string targetSoPath = TARGET_SO_PATH;
     std::string cpuAbi = CPU_ABI;
-    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
+    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi, false, false);
     EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractModuleFiles,
-    srcModulePath, targetPath, targetSoPath, cpuAbi));
+    srcModulePath, targetPath, targetSoPath, cpuAbi, false, false));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0300 end";
 }
 
@@ -2129,6 +2129,37 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeleteOldCacheFiles_0100, 
     result = installClient_->DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_DeleteOldCacheFiles_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CheckExternalSourcePluginSwitch_0100
+ * @tc.name: CheckExternalSourcePluginSwitch
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CheckExternalSourcePluginSwitch_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CheckExternalSourcePluginSwitch_0100 start";
+    int32_t outSwitchStatus = 0;
+    ErrCode result = installClient_->CheckExternalSourcePluginSwitch(outSwitchStatus);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+
+    outSwitchStatus = 1;
+    result = installClient_->CheckExternalSourcePluginSwitch(outSwitchStatus);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CheckExternalSourcePluginSwitch_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CheckHspPluginCertValidity_0100
+ * @tc.name: CheckHspPluginCertValidity
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CheckHspPluginCertValidity_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CheckHspPluginCertValidity_0100 start";
+    std::string bundleName = "testBundle";
+    int32_t sessionId = 0;
+    ErrCode result = installClient_->CheckHspPluginCertValidity(bundleName, sessionId);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_CheckHspPluginCertValidity_0100 end";
 }
 } // namespace AppExecFwk
 } // namespace OHOS

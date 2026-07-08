@@ -52,7 +52,9 @@ ohos_shared_library("app_detail_ability") {
     "hilog:libhilog",
     "ipc:ipc_napi",
     "ipc:ipc_single",
+    "libuv:uv",
     "napi:ace_napi",
+    "node:node_header_notice",
   ]
   relative_install_dir = "appdetailability"
   subsystem_name = "bundlemanager"

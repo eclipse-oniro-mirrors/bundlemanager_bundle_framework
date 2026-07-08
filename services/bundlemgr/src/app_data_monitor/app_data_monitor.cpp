@@ -37,7 +37,7 @@ namespace AppExecFwk {
 
 AppDataMonitor::AppDataMonitor()
 {
-    APP_LOGI("ScanSystemAppSize AppDataMonitor created");
+    APP_LOGI_NOFUNC("ScanSystemAppSize AppDataMonitor created");
 }
 
 bool AppDataMonitor::IsScanning() const
@@ -53,7 +53,7 @@ bool AppDataMonitor::IsInCooldown() const
     auto now = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - lastScanTime_).count();
     if (elapsed < COOLDOWN_SECONDS) {
-        APP_LOGI("ScanSystemAppSize scan in cooldown, elapsed=%{public}llds, need=%{public}llds",
+        APP_LOGI_NOFUNC("ScanSystemAppSize scan in cooldown, elapsed=%{public}llds, need=%{public}llds",
             static_cast<long long>(elapsed), static_cast<long long>(COOLDOWN_SECONDS));
         return true;
     }
@@ -63,7 +63,7 @@ bool AppDataMonitor::IsInCooldown() const
 void AppDataMonitor::StartScan(int32_t userId)
 {
     if (isScanning_.exchange(true)) {
-        APP_LOGI("ScanSystemAppSize scan already in progress");
+        APP_LOGI_NOFUNC("ScanSystemAppSize scan already in progress");
         return;
     }
     auto self = shared_from_this();
@@ -78,23 +78,23 @@ void AppDataMonitor::StartScan(int32_t userId)
         return;
     }
     if (testMode) {
-        APP_LOGI("ScanSystemAppSize scan test mode active, bypassing cooldown");
+        APP_LOGI_NOFUNC("ScanSystemAppSize scan test mode active, bypassing cooldown");
     }
     if (stopRequested_.load()) {
-        APP_LOGI("ScanSystemAppSize scan aborted, stop requested before start");
+        APP_LOGI_NOFUNC("ScanSystemAppSize scan aborted, stop requested before start");
         return;
     }
-    APP_LOGI("ScanSystemAppSize start scanning system app data, userId=%{public}d", userId);
+    APP_LOGI_NOFUNC("ScanSystemAppSize start scanning system app data, userId=%{public}d", userId);
 
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("ScanSystemAppSize GetDataMgr is null");
+        APP_LOGE_NOFUNC("ScanSystemAppSize GetDataMgr is null");
         lastScanTime_ = std::chrono::steady_clock::now();
         return;
     }
     auto systemApps = dataMgr->GetSystemAppNames(userId);
     if (systemApps.empty()) {
-        APP_LOGI("ScanSystemAppSize no system apps found");
+        APP_LOGI_NOFUNC("ScanSystemAppSize no system apps found");
         lastScanTime_ = std::chrono::steady_clock::now();
         return;
     }
@@ -108,12 +108,12 @@ void AppDataMonitor::StartScan(int32_t userId)
     ScanLargeApps(userId, sortedApps);
 
     lastScanTime_ = std::chrono::steady_clock::now();
-    APP_LOGI("ScanSystemAppSize scan completed, next scan allowed after 72h");
+    APP_LOGI_NOFUNC("ScanSystemAppSize scan completed, next scan allowed after 72h");
 }
 
 void AppDataMonitor::StopScan(const std::string &reason)
 {
-    APP_LOGI("ScanSystemAppSize scan stop requested, reason: %{public}s", reason.c_str());
+    APP_LOGI_NOFUNC("ScanSystemAppSize scan stop requested, reason: %{public}s", reason.c_str());
     stopRequested_ = true;
 }
 
@@ -125,17 +125,18 @@ bool AppDataMonitor::GetAndSortAppDataSize(int32_t userId,
     std::vector<BundleStorageStats> bundleStats;
     ErrCode ret = dataMgr->BatchGetBundleStats(bundleNames, userId, bundleStats);
     if (ret != ERR_OK) {
-        APP_LOGE("ScanSystemAppSize BatchGetBundleStats failed, ret=%{public}d", ret);
+        APP_LOGE_NOFUNC("ScanSystemAppSize BatchGetBundleStats failed, ret=%{public}d", ret);
         return false;
     }
 
     for (const auto &stat : bundleStats) {
         if (stat.errCode != ERR_OK) {
-            APP_LOGW("ScanSystemAppSize skip %{public}s, errCode=%{public}d", stat.bundleName.c_str(), stat.errCode);
+            APP_LOGW_NOFUNC("ScanSystemAppSize skip %{public}s, errCode=%{public}d",
+                stat.bundleName.c_str(), stat.errCode);
             continue;
         }
         if (static_cast<int32_t>(stat.bundleStats.size()) <= BUNDLE_DATA_SIZE_INDEX) {
-            APP_LOGW("ScanSystemAppSize skip %{public}s, bundleStats size too small", stat.bundleName.c_str());
+            APP_LOGW_NOFUNC("ScanSystemAppSize skip %{public}s, bundleStats size too small", stat.bundleName.c_str());
             continue;
         }
         sortedApps.emplace_back(stat.bundleName, stat.bundleStats[BUNDLE_DATA_SIZE_INDEX]);
@@ -155,21 +156,21 @@ void AppDataMonitor::ScanLargeApps(int32_t userId,
     constexpr int32_t baseAppIndex = 0;
     for (const auto &[bundleName, dataSize] : sortedApps) {
         if (stopRequested_.load()) {
-            APP_LOGI("ScanSystemAppSize scan interrupted, bundle=%{public}s", bundleName.c_str());
+            APP_LOGI_NOFUNC("ScanSystemAppSize scan interrupted, bundle=%{public}s", bundleName.c_str());
             return;
         }
 
         if (dataSize < LARGE_APP_THRESHOLD) {
-            APP_LOGI("ScanSystemAppSize remaining apps all below 1GB threshold, stop scanning");
+            APP_LOGI_NOFUNC("ScanSystemAppSize remaining apps all below 1GB threshold, stop scanning");
             return;
         }
 
-        APP_LOGI("ScanSystemAppSize scanning large app: %{public}s, dataSize=%{public}lld",
+        APP_LOGI_NOFUNC("ScanSystemAppSize scanning large app: %{public}s, dataSize=%{public}lld",
             bundleName.c_str(), static_cast<long long>(dataSize));
 
         auto installdClient = InstalldClient::GetInstance();
         if (installdClient == nullptr) {
-            APP_LOGE("ScanSystemAppSize InstalldClient is null, abort scan");
+            APP_LOGE_NOFUNC("ScanSystemAppSize InstalldClient is null, abort scan");
             return;
         }
 
@@ -177,7 +178,7 @@ void AppDataMonitor::ScanLargeApps(int32_t userId,
         ErrCode ret = installdClient->GetTopNLargestItemsInAppDataDir(
             bundleName, baseAppIndex, userId, GET_TOP_N_TIMEOUT, largestItems);
         if (ret != ERR_OK) {
-            APP_LOGW("ScanSystemAppSize GetTopNLargestItemsInAppDataDir failed for %{public}s, ret=%{public}d",
+            APP_LOGW_NOFUNC("ScanSystemAppSize GetTopNLargestItemsInAppDataDir failed for %{public}s, ret=%{public}d",
                 bundleName.c_str(), ret);
             continue;
         }
@@ -187,19 +188,19 @@ void AppDataMonitor::ScanLargeApps(int32_t userId,
         // largest ones; stop and skip the rest.
         ++reportedCountInScan_;
         if (reportedCountInScan_ >= MAX_REPORT_COUNT_PER_SCAN) {
-            APP_LOGI("ScanSystemAppSize reached per-scan report cap %{public}d, skip remaining apps",
+            APP_LOGI_NOFUNC("ScanSystemAppSize reached per-scan report cap %{public}d, skip remaining apps",
                 MAX_REPORT_COUNT_PER_SCAN);
             return;
         }
     }
-    APP_LOGI("ScanSystemAppSize all large apps scanned");
+    APP_LOGI_NOFUNC("ScanSystemAppSize all large apps scanned");
 }
 
 void AppDataMonitor::ReportLargeFilesEvent(const std::string &bundleName,
     int32_t userId, int32_t appIndex, const std::string &largestItems)
 {
-    APP_LOGI("ScanSystemAppSize reporting large files: bundle=%{public}s, userId=%{public}d, appIndex=%{public}d",
-        bundleName.c_str(), userId, appIndex);
+    APP_LOGI_NOFUNC("ScanSystemAppSize reporting large files: bundle=%{public}s, "
+        "userId=%{public}d, appIndex=%{public}d", bundleName.c_str(), userId, appIndex);
     // Fast path: installd always emits valid compact JSON. If it already fits the HiSysEvent STRING
     // ceiling, send it verbatim and skip parse/sort/re-dump entirely; only oversized payloads pay
     // for truncation. Sanitization stays in TruncateLargeFilesJson for the over-limit branch and
@@ -222,7 +223,7 @@ void AppDataMonitor::TruncateLargeFilesJson(const std::string &input, std::strin
     nlohmann::json parsed = nlohmann::json::parse(input, nullptr, false, true);
     if (parsed.is_discarded() || !parsed.is_object() ||
         !parsed.contains("items") || !parsed["items"].is_array()) {
-        APP_LOGW("ScanSystemAppSize largestItems is empty/not {\"items\":[...]}, fallback to empty");
+        APP_LOGW_NOFUNC("ScanSystemAppSize largestItems is empty/not {\"items\":[...]}, fallback to empty");
         output = EMPTY_ITEMS;
         return;
     }

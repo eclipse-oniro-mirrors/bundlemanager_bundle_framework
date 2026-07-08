@@ -4233,6 +4233,62 @@ HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGidFromUninstallInfo_CloneApp_0200,
 }
 
 /**
+ * @tc.number: RestoreUidAndGidFromUninstallInfo_0300
+ * @tc.name: RestoreUidAndGidFromUninstallInfo with invalid bundleId
+ * @tc.desc: uid passes IsValidAppUid but userKey parses userId=0 causing bundleId out of range →
+ *           entry should be skipped without crash
+ */
+HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGidFromUninstallInfo_0300, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    UninstallBundleInfo uninstallBundleInfo;
+    // uid is valid for userId=100 (bundleId in range), but userKey says userId=0
+    // so bundleId = uid - 0 * BASE_USER_RANGE = uid, which exceeds MAX_APP_UID
+    UninstallDataUserInfo userInfo;
+    userInfo.uid = 100 * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
+    uninstallBundleInfo.userInfos["0"] = userInfo;
+
+    auto ret = bundleDataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME_TEST, uninstallBundleInfo);
+    ASSERT_TRUE(ret);
+
+    EXPECT_NO_THROW(bundleDataMgr->RestoreUidAndGidFromUninstallInfo());
+
+    bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, 0);
+}
+
+/**
+ * @tc.number: RestoreUidAndGidFromUninstallInfo_0400
+ * @tc.name: RestoreUidAndGidFromUninstallInfo bundleId already in uidMap_
+ * @tc.desc: bundleId already exists in uidMap_ → MakeFsConfig and UpdateUidMap are skipped for this entry
+ */
+HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGidFromUninstallInfo_0400, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t userId = 100;
+    int32_t testUid = userId * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
+    // Pre-populate uidMap_ with the same bundleId that the uninstall info would compute
+    bundleDataMgr->UpdateUidMap(testUid, BUNDLE_NAME_TEST, 0);
+
+    UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo userInfo;
+    userInfo.uid = testUid;
+    uninstallBundleInfo.userInfos[std::to_string(userId)] = userInfo;
+
+    auto ret = bundleDataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME_TEST, uninstallBundleInfo);
+    ASSERT_TRUE(ret);
+
+    EXPECT_NO_THROW(bundleDataMgr->RestoreUidAndGidFromUninstallInfo());
+
+    bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, userId);
+}
+
+/**
  * @tc.number: ParseUserKey_0100
  * @tc.name: test ParseUserKey
  * @tc.desc: 1.system run normally

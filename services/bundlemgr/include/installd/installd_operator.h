@@ -52,6 +52,7 @@ struct SessionProvisionInfo {
     uint32_t profileBlockLength = 0;
     std::shared_ptr<unsigned char[]> profileBlock;
     std::string distributionCertificate;
+    std::string appServiceCapabilities;
 };
 
 class InstalldOperator {
@@ -113,7 +114,7 @@ public:
      * @return Returns true if the package extracted successfully; returns false otherwise.
      */
     static bool ExtractFiles(const std::string &sourcePath, const std::string &targetSoPath,
-        const std::string &cpuAbi);
+        const std::string &cpuAbi, const bool needFakeDecompression, const bool isSystemApp);
 
     static bool IsNativeSo(const std::string &entryName, const std::string &cpuAbi);
 
@@ -124,6 +125,9 @@ public:
         const BundleExtractor &extractor,
         const std::string &entryName,
         const ExtractParam &param);
+    static bool ChangeModeFile(const ExtractParam &param, const std::string &path);
+    static bool FakeDecompression(const BundleExtractor &extractor, const std::string &entryName,
+        const ExtractParam &param, const std::string &targetPath);
     static void ExtractTargetHnpFile(
         const BundleExtractor &extractor,
         const std::string &entryName,
@@ -275,6 +279,8 @@ public:
      */
     static int64_t GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t timeoutMs = -1);
 
+    static int64_t GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs = -1);
+
     static bool InitialiseQuotaMounts();
 
     static int64_t GetDiskUsageFromQuota(const int32_t uid);
@@ -416,6 +422,7 @@ public:
     static ErrCode DeleteCertAndRemoveKey(const std::string &path);
 
     static bool IsValidBundleName(const std::string &bundleName);
+    static bool IsValidBundleNameWithOriBundle(const std::string &bundleName, std::string &oriBundleName);
 
     static bool IsValidUserId(const int32_t userId);
 
@@ -431,8 +438,7 @@ public:
 
     static bool IsValidUuid(const std::string &uuid);
 
-    static bool ObtainSignInfoForPlugin(
-        const std::string &filePath, std::string &appIdentifier, std::string &pluginId);
+    static bool ObtainSignInfoForPlugin(const std::string &appServiceCapabilities, std::string &pluginId);
 
     /**
      * @brief Recursively find largest files/directories up to 6 levels, then drill down to largest file.

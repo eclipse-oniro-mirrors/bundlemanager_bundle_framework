@@ -319,7 +319,11 @@ ErrCode BundleInstallChecker::CheckHapsSignInfoAndInitSession(
     if (signRet != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS
         // confit for succesing check
         && signRet != Security::AccessToken::AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED) {
-        LOG_E(BMS_TAG_INSTALLER, "CheckHapSignInfo failed, err=%{public}d", signRet);
+        LOG_E(BMS_TAG_INSTALLER, "CheckHapSignInfo failed, signRet=%{public}d errorCode=%{public}d",
+            signRet, resultInfo.errorCode);
+        if (resultInfo.errorCode == ERR_OK) {
+            return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
+        }
         return BundleVerifyMgr::ConvertHapVerifyResultCode(resultInfo.errorCode);
     }
     LOG_I(BMS_TAG_INSTALLER, "CheckHapSignInfo success, sessionId=%{public}d", sessionId);
@@ -328,7 +332,11 @@ ErrCode BundleInstallChecker::CheckHapsSignInfoAndInitSession(
         Security::Verify::ProvisionInfo provisionInfo;
         ErrCode parseRet = ParseProfileDataToProvisionInfo(info.profileData, provisionInfo);
         if (parseRet != ERR_OK) {
+#ifndef X86_EMULATOR_MODE
             return parseRet;
+#else
+            provisionInfo.appId = Constants::EMPTY_STRING;
+#endif
         }
 
         if (!CheckEnterpriseResign(provisionInfo, userId)) {
@@ -469,6 +477,19 @@ bool BundleInstallChecker::CheckProvisionInfoIsValid(
     return !isInvalid;
 }
 
+bool BundleInstallChecker::CheckIsDebugAppProvisionType(
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        if (provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
+            LOG_E(BMS_TAG_INSTALLER, "app provision type is not debug");
+            return false;
+        }
+    }
+    return true;
+}
+
 bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installParam,
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
 {
@@ -573,6 +594,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 
         newInfo.SetIsPreInstallApp(checkParam.isPreInstallApp);
         result = ParseBundleInfo(bundlePaths[i], newInfo, packInfo);
+        HandleExtensionPermission(newInfo);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "bundle parse failed %{public}d", result);
             return result;
@@ -697,11 +719,22 @@ ErrCode BundleInstallChecker::CheckInstallPermission(const InstallCheckParam &ch
         checkParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         checkParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         checkParam.installInternaltestingBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        checkParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
-        !VaildInstallPermissionForShare(checkParam, hapVerifyRes)) {
-        // need vaild permission
-        LOG_E(BMS_TAG_INSTALLER, "install permission denied");
-        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        checkParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS)) {
+        if (!VaildInstallPermissionForShare(checkParam, hapVerifyRes)) {
+            // check third-party app install provision type
+            if (checkParam.isCheckDebugApp && CheckIsDebugAppProvisionType(hapVerifyRes)) {
+                LOG_I(BMS_TAG_INSTALLER, "check debug app provision type success");
+                return ERR_OK;
+            }
+            LOG_E(BMS_TAG_INSTALLER, "install permission denied");
+            return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        }
+    } else {
+        // check third-party app install provision type
+        if (checkParam.isCheckDebugApp && !CheckIsDebugAppProvisionType(hapVerifyRes)) {
+            LOG_E(BMS_TAG_INSTALLER, "install permission denied");
+            return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        }
     }
     return ERR_OK;
 }
@@ -2353,5 +2386,21 @@ ErrCode BundleInstallChecker::CalculateInstallInodes(std::unordered_map<std::str
     return BundleUtil::CheckOrphanNodeUseRateIsSufficient() ? ERR_OK : ERR_APPEXECFWK_INSTALL_INODE_INSUFFICIENT;
 }
 
+void BundleInstallChecker::HandleExtensionPermission(InnerBundleInfo &info)
+{
+    if (info.GetAppType() != Constants::AppType::SYSTEM_APP || info.IsPreInstallApp()) {
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (dataMgr == nullptr || dataMgr->GetPreInstallBundleInfo(info.GetBundleName(), preInstallBundleInfo)) {
+        APP_LOGE_NOFUNC("dataMgr is null or is pre app");
+        return;
+    }
+    for (auto &innerExtensionInfo : info.FetchInnerExtensionInfos()) {
+        innerExtensionInfo.second.readPermission.clear();
+        innerExtensionInfo.second.writePermission.clear();
+    }
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

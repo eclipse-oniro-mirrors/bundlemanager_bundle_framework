@@ -960,6 +960,10 @@ public:
     std::string GetStringById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, int32_t userId, const std::string &localeInfo);
 
+    ErrCode GetStringByIdList(const std::string &bundleName, const std::string &moduleName,
+        const std::vector<uint32_t> &resIdList, std::vector<std::string> &labelList,
+        int32_t userId, const std::string &localeInfo);
+
     std::string GetIconById(
         const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId);
     void UpdateRemovable(const std::string &bundleName, bool removable);
@@ -1183,7 +1187,9 @@ public:
     ErrCode AddCliSandboxBundle(const std::string &bundleName, const InnerCliSandboxInfo &sandboxInfo);
     ErrCode RemoveCliSandboxBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex);
     ErrCode AddCallerToCliSandbox(const std::string &bundleName, int32_t userId,
-        int32_t appIndex, const std::string &callerBundleName);
+        int32_t appIndex, const std::string &creatorBundleName);
+    ErrCode QuerySandboxCloneAbilityInfo(const std::string &creatorBundleName, const ElementName &element,
+        int32_t flags, int32_t userId, int32_t appIndex, AbilityInfo &abilityInfo) const;
     ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
         AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex = 0) const;
     ErrCode GetBundleNameAndIndex(const int32_t uid, std::string &bundleName, int32_t &appIndex) const;
@@ -1207,6 +1213,10 @@ public:
      * @return Returns the vector of CLI sandbox app indexes.
      */
     std::vector<int32_t> GetCliSandboxAppIndexes(const std::string &bundleName, int32_t userId) const;
+    ErrCode GetCliSandboxBundleInfo(const std::string &bundleName, int32_t flags, int32_t appIndex,
+        BundleInfo &bundleInfo, int32_t userId) const;
+    int32_t GetCliSandboxCountByCreator(const std::string &bundleName, int32_t userId,
+        const std::string &creatorBundleName) const;
 
     ErrCode ExplicitQueryExtensionInfoV9(const Want &want, int32_t flags, int32_t userId,
         ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
@@ -1512,7 +1522,7 @@ private:
         const ElementName &element, int32_t flags, int32_t userId) const;
     void GetCloneAbilityInfosV9(std::vector<AbilityInfo> &abilityInfos,
         const ElementName &element, int32_t flags, int32_t userId) const;
-    ErrCode ExplicitQueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
+    bool ExplicitQueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
         int32_t appIndex, AbilityInfo &abilityInfo) const;
     ErrCode ExplicitQueryCloneAbilityInfoV9(const ElementName &element, int32_t flags, int32_t userId,
         int32_t appIndex, AbilityInfo &abilityInfo) const;
@@ -1632,10 +1642,24 @@ private:
     bool ParseUserKey(const std::string &userKey, int32_t &userId, int32_t &appIndex) const;
 
 private:
+    enum class SkillQueryAccessLevel {
+        ALL,
+        SYSTEM_AND_PUBLIC,
+        PUBLIC_ONLY,
+    };
+
     ErrCode FindSkillInfoFromAllBundles(const std::string &skillName, uint32_t flags,
-        int32_t requestUserId, SkillInfo &skillInfo);
+        int32_t requestUserId, const std::string &callingBundleName, bool isPrivilegedCaller,
+        SkillInfo &skillInfo);
+    ErrCode GetSkillInfoForSpecialUser(const std::string &bundleName, int32_t &userId) const;
+
     static void GetSkillInfoWithFlags(const InnerBundleInfo &info, const InnerModuleInfo &moduleInfo,
         const SkillProfile &profile, uint32_t flags, SkillInfo &skillInfo);
+    static void CollectVisibleSkillInfosFromBundle(const InnerBundleInfo &info, SkillQueryAccessLevel accessLevel,
+        uint32_t flags, std::vector<SkillInfo> &skillInfos);
+    static SkillQueryAccessLevel GetSkillQueryAccessLevel(const std::string &targetBundleName,
+        const std::string &callingBundleName, bool isPrivilegedCaller);
+    static bool IsSkillVisibleForQuery(const SkillProfile &profile, SkillQueryAccessLevel accessLevel);
 
     bool initialUserFlag_ = false;
     mutable std::mutex stateMutex_;

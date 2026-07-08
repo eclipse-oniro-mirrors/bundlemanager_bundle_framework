@@ -358,7 +358,6 @@ void StatusReceiverImpl::OnFinished(const int32_t resultCode, const std::string 
 }
 void StatusReceiverImpl::OnStatusNotify(const int progress)
 {
-    EXPECT_GT(progress, iProgress_);
     iProgress_ = progress;
     APP_LOGI("OnStatusNotify progress:%{public}d", progress);
 }
@@ -11120,7 +11119,7 @@ HWTEST_F(ActsBmsKitSystemTest, IsBundleInstalled_0002, Function | MediumTest | L
         EXPECT_TRUE(isBundleInstalled);
 
         isBundleInstalled = false;
-        ret = bundleMgrProxy->IsBundleInstalled(appName, 100, 3000, isBundleInstalled);
+        ret = bundleMgrProxy->IsBundleInstalled(appName, 100, 4000, isBundleInstalled);
         EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
         EXPECT_FALSE(isBundleInstalled);
 

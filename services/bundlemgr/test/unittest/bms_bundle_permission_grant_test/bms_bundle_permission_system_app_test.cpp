@@ -25,6 +25,7 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_stream_installer_host_impl.h"
 #include "bundle_verify_mgr.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
@@ -3911,5 +3912,598 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest,
     ExtensionAbilityInfo extensionAbilityInfo;
     bool ret = bundleMgrHostImpl_->QueryExtensionAbilityInfoByUriOptimal(HAP_FILE_PATH, USERID, extensionAbilityInfo);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: VerifyInstallPermission_0100
+ * @tc.name: test VerifyInstallPermission
+ * @tc.desc: 1. Test VerifyInstallPermission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, VerifyInstallPermission_0100, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingBundleSdkVersionForTestFalse(false);
+    auto ret = bundleInstallerHost_->VerifyInstallPermission();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingBundleSdkVersionForTestFalse(false);
+    SetIsSelfCalling(true);
+    ret = bundleInstallerHost_->VerifyInstallPermission();
+    EXPECT_EQ(ret, ERR_OK);
+
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingBundleSdkVersionForTestFalse(true);
+    SetIsSelfCalling(true);
+    ret = bundleInstallerHost_->VerifyInstallPermission();
+    EXPECT_EQ(ret, ERR_OK);
+
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingBundleSdkVersionForTestFalse(true);
+    SetIsSelfCalling(true);
+    ret = bundleInstallerHost_->VerifyInstallPermission();
+    EXPECT_EQ(ret, ERR_OK);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: Install_0100
+ * @tc.name: test Install of BundleInstallerHost
+ * @tc.desc: 1. Test Install
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Install_0100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    bundleInstallerHost_->Init();
+    SetUserFromShellForTest(true);
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingBundleSdkVersionForTestFalse(false);
+    SetVerifyCallingPermissionForTest(false);
+    bool ret = bundleInstallerHost_->Install(HAP_FILE_PATH, installParam, receiver);
+    EXPECT_FALSE(ret);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: VerifyUninstallPermission_0100
+ * @tc.name: test VerifyUninstallPermission of BundleInstallerHost
+ * @tc.desc: 1. Test VerifyUninstallPermission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, VerifyUninstallPermission_0100, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingBundleSdkVersionForTestFalse(false);
+    auto ret = bundleInstallerHost_->VerifyUninstallPermission(false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    SetVerifyCallingBundleSdkVersionForTestFalse(true);
+    SetIsSelfCalling(true);
+    ret = bundleInstallerHost_->VerifyUninstallPermission(false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    SetVerifyCallingBundleSdkVersionForTestFalse(false);
+    ret = bundleInstallerHost_->VerifyUninstallPermission(true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    SetVerifyCallingBundleSdkVersionForTestFalse(true);
+    SetVerifyUninstallPermission(false);
+    ret = bundleInstallerHost_->VerifyUninstallPermission(true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED);
+
+    SetVerifyUninstallPermission(true);
+    ret = bundleInstallerHost_->VerifyUninstallPermission(true);
+    EXPECT_EQ(ret, ERR_OK);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CheckIsDebugAppProvisionType_0100
+ * @tc.name: test CheckIsDebugAppProvisionType of BundleInstallerHost
+ * @tc.desc: 1. Test CheckIsDebugAppProvisionType
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CheckIsDebugAppProvisionType_0100, Function | SmallTest | Level0)
+{
+    auto ret = bundleInstallerHost_->CheckIsDebugAppProvisionType(BUNDLE_NAME, Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+
+    ret = bundleInstallerHost_->CheckIsDebugAppProvisionType(BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+}
+
+/**
+ * @tc.number: Uninstall_0100
+ * @tc.name: test Uninstall of BundleInstallerHost
+ * @tc.desc: 1. Test Uninstall
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Uninstall_0100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    bundleInstallerHost_->Init();
+    SetUserFromShellForTest(true);
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingBundleSdkVersionForTestFalse(false);
+    SetVerifyCallingPermissionForTest(false);
+    auto ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, receiver);
+    EXPECT_FALSE(ret);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: Uninstall_0200
+ * @tc.name: test Uninstall of BundleInstallerHost
+ * @tc.desc: 1. Test Uninstall
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, Uninstall_0200, Function | SmallTest | Level0)
+{
+    UninstallParam uninstallParam;
+    sptr<IStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    bundleInstallerHost_->Init();
+    SetUserFromShellForTest(true);
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingBundleSdkVersionForTestFalse(false);
+    SetVerifyCallingPermissionForTest(false);
+    auto ret = bundleInstallerHost_->Uninstall(uninstallParam, receiver);
+    EXPECT_FALSE(ret);
+
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ret = bundleInstallerHost_->Uninstall(uninstallParam, receiver);
+    EXPECT_TRUE(ret);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: VerifyCreateStreamInstallerPermission_0100
+ * @tc.name: test VerifyCreateStreamInstallerPermission of BundleInstallerHost
+ * @tc.desc: 1. Test VerifyCreateStreamInstallerPermission
+ */
+HWTEST_F(
+    BmsBundlePermissionSyetemAppFalseTest, VerifyCreateStreamInstallerPermission_0100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    InstallParam verifiedInstallParam;
+    SetSystemAppFalseForTest(false);
+    auto ret = bundleInstallerHost_->VerifyCreateStreamInstallerPermission(installParam, verifiedInstallParam);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    ret = bundleInstallerHost_->VerifyCreateStreamInstallerPermission(installParam, verifiedInstallParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+    SetVerifyCallingPermissionForTest(true);
+    ret = bundleInstallerHost_->VerifyCreateStreamInstallerPermission(installParam, verifiedInstallParam);
+    EXPECT_EQ(ret, ERR_OK);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CreateStreamInstaller_0100
+ * @tc.name: test CreateStreamInstaller of BundleInstallerHost
+ * @tc.desc: 1. Test CreateStreamInstaller
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateStreamInstaller_0100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    std::vector<std::string> originHapPaths;
+    bundleInstallerHost_->Init();
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingPermissionForTest(false);
+    sptr<IBundleStreamInstaller> ret =
+        bundleInstallerHost_->CreateStreamInstaller(installParam, receiver, originHapPaths);
+    EXPECT_EQ(ret, nullptr);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: VerifyDestoryBundleStreamInstallerPermission_0100
+ * @tc.name: test VerifyDestoryBundleStreamInstallerPermission of BundleInstallerHost
+ * @tc.desc: 1. Test VerifyDestoryBundleStreamInstallerPermission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, VerifyDestoryBundleStreamInstallerPermission_0100,
+    Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    auto ret = bundleInstallerHost_->VerifyDestoryBundleStreamInstallerPermission();
+    EXPECT_FALSE(ret);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    SetIsSelfCalling(false);
+    ret = bundleInstallerHost_->VerifyDestoryBundleStreamInstallerPermission();
+    EXPECT_FALSE(ret);
+    SetIsSelfCalling(true);
+    SetVerifyCallingPermissionForTest(true);
+    ret = bundleInstallerHost_->VerifyDestoryBundleStreamInstallerPermission();
+    EXPECT_TRUE(ret);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: DestoryBundleStreamInstaller_0100
+ * @tc.name: test DestoryBundleStreamInstaller of BundleInstallerHost
+ * @tc.desc: 1. Test DestoryBundleStreamInstaller
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, DestoryBundleStreamInstaller_0100, Function | SmallTest | Level0)
+{
+    uint32_t streamInstallerId = 0;
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingPermissionForTest(false);
+    auto ret = bundleInstallerHost_->DestoryBundleStreamInstaller(streamInstallerId);
+    EXPECT_FALSE(ret);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CheckInstallDowngradeParam_0100
+ * @tc.name: test CheckInstallDowngradeParam of BundleInstallerHost
+ * @tc.desc: 1. Test CheckInstallDowngradeParam
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CheckInstallDowngradeParam_0100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "true";
+    SetVerifyCallingPermissionForTest(false);
+    auto ret = bundleInstallerHost_->CheckInstallDowngradeParam(installParam);
+    EXPECT_FALSE(ret);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: VerifyCleanBundleCacheFilesPermission_0100
+ * @tc.name: test VerifyCleanBundleCacheFilesPermission of BundleMgrHostImpl
+ * @tc.desc: 1. Test VerifyCleanBundleCacheFilesPermission
+ */
+HWTEST_F(
+    BmsBundlePermissionSyetemAppFalseTest, VerifyCleanBundleCacheFilesPermission_0100, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingPermissionForTest(false);
+    bool isCheckDebugApp = false;
+    auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    auto ret = bundleMgrHostImpl_->VerifyCleanBundleCacheFilesPermission(BUNDLE_NAME, APP_INDEX, isCheckDebugApp);
+    EXPECT_FALSE(ret);
+
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ret = bundleMgrHostImpl_->VerifyCleanBundleCacheFilesPermission(BUNDLE_NAME, APP_INDEX, isCheckDebugApp);
+    EXPECT_TRUE(ret);
+
+    SetVerifyCallingPermissionForTest(false);
+    ret = bundleMgrHostImpl_->VerifyCleanBundleCacheFilesPermission(BUNDLE_NAME, APP_INDEX, isCheckDebugApp);
+    EXPECT_TRUE(ret);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    ret = bundleMgrHostImpl_->VerifyCleanBundleCacheFilesPermission(BUNDLE_NAME, APP_INDEX, isCheckDebugApp);
+    EXPECT_TRUE(ret);
+
+    SetSystemAppFalseForTest(false);
+    ret = bundleMgrHostImpl_->VerifyCleanBundleCacheFilesPermission(BUNDLE_NAME, APP_INDEX, isCheckDebugApp);
+    EXPECT_FALSE(ret);
+
+    SetVerifyCallingPermissionForTest(true);
+    ret = bundleMgrHostImpl_->VerifyCleanBundleCacheFilesPermission(BUNDLE_NAME, APP_INDEX, isCheckDebugApp);
+    EXPECT_TRUE(ret);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    ret = bundleMgrHostImpl_->VerifyCleanBundleCacheFilesPermission(BUNDLE_NAME, APP_INDEX, isCheckDebugApp);
+    EXPECT_FALSE(ret);
+    if (isDeveloperMode) {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    } else {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    }
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CleanBundleCacheFiles_0100
+ * @tc.name: test CleanBundleCacheFiles of BundleMgrHostImpl
+ * @tc.desc: 1. Test CleanBundleCacheFiles
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CleanBundleCacheFiles_0100, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
+    auto ret = bundleMgrHostImpl_->CleanBundleCacheFiles(BUNDLE_NAME, cleanCache, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    SetVerifyCallingPermissionForTest(false);
+    ret = bundleMgrHostImpl_->CleanBundleCacheFiles(BUNDLE_NAME, cleanCache, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    SetSystemAppFalseForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    ret = bundleMgrHostImpl_->CleanBundleCacheFiles(BUNDLE_NAME, cleanCache, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    ret = bundleMgrHostImpl_->CleanBundleCacheFiles(BUNDLE_NAME, cleanCache, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    SetVerifyCallingPermissionForTest(true);
+    SetUserFromShellForTest(false);
+    ret = bundleMgrHostImpl_->CleanBundleCacheFiles(BUNDLE_NAME, cleanCache, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    SetSystemAppFalseForTest(false);
+    ret = bundleMgrHostImpl_->CleanBundleCacheFiles(BUNDLE_NAME, cleanCache, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    if (isDeveloperMode) {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    } else {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    }
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: VerifyCleanBundleDataFilesPermission_0100
+ * @tc.name: test VerifyCleanBundleDataFilesPermission of BundleMgrHostImpl
+ * @tc.desc: 1. Test VerifyCleanBundleDataFilesPermission
+ */
+HWTEST_F(
+    BmsBundlePermissionSyetemAppFalseTest, VerifyCleanBundleDataFilesPermission_0100, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingPermissionForTest(false);
+    bool isCheckDebugApp = false;
+    auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    auto ret = bundleMgrHostImpl_->VerifyCleanBundleDataFilesPermission(isCheckDebugApp);
+    EXPECT_FALSE(ret);
+
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ret = bundleMgrHostImpl_->VerifyCleanBundleDataFilesPermission(isCheckDebugApp);
+    EXPECT_TRUE(ret);
+
+    SetVerifyCallingPermissionForTest(false);
+    ret = bundleMgrHostImpl_->VerifyCleanBundleDataFilesPermission(isCheckDebugApp);
+    EXPECT_FALSE(ret);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    ret = bundleMgrHostImpl_->VerifyCleanBundleDataFilesPermission(isCheckDebugApp);
+    EXPECT_FALSE(ret);
+
+    SetSystemAppFalseForTest(false);
+    ret = bundleMgrHostImpl_->VerifyCleanBundleDataFilesPermission(isCheckDebugApp);
+    EXPECT_FALSE(ret);
+
+    SetVerifyCallingPermissionForTest(true);
+    ret = bundleMgrHostImpl_->VerifyCleanBundleDataFilesPermission(isCheckDebugApp);
+    EXPECT_TRUE(ret);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    ret = bundleMgrHostImpl_->VerifyCleanBundleDataFilesPermission(isCheckDebugApp);
+    EXPECT_FALSE(ret);
+    if (isDeveloperMode) {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    } else {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    }
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CleanBundleDataFiles_0100
+ * @tc.name: test CleanBundleDataFiles of BundleMgrHostImpl
+ * @tc.desc: 1. Test CleanBundleDataFiles
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CleanBundleDataFiles_0100, Function | SmallTest | Level0)
+{
+    SetSystemAppFalseForTest(false);
+    auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    auto ret = bundleMgrHostImpl_->CleanBundleDataFiles(BUNDLE_NAME);
+    EXPECT_FALSE(ret);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    SetVerifyCallingPermissionForTest(false);
+    ret = bundleMgrHostImpl_->CleanBundleDataFiles(BUNDLE_NAME);
+    EXPECT_FALSE(ret);
+
+    SetSystemAppFalseForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    ret = bundleMgrHostImpl_->CleanBundleDataFiles(BUNDLE_NAME);
+    EXPECT_FALSE(ret);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    ret = bundleMgrHostImpl_->CleanBundleDataFiles(BUNDLE_NAME);
+    EXPECT_FALSE(ret);
+
+    SetVerifyCallingPermissionForTest(true);
+    SetUserFromShellForTest(false);
+    ret = bundleMgrHostImpl_->CleanBundleDataFiles(BUNDLE_NAME);
+    EXPECT_FALSE(ret);
+
+    SetSystemAppFalseForTest(false);
+    ret = bundleMgrHostImpl_->CleanBundleDataFiles(BUNDLE_NAME);
+    EXPECT_FALSE(ret);
+    if (isDeveloperMode) {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    } else {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    }
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CheckIsDebugAppProvisionType_0200
+ * @tc.name: test CheckIsDebugAppProvisionType of BundleMgrHostImpl
+ * @tc.desc: 1. Test CheckIsDebugAppProvisionType
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CheckIsDebugAppProvisionType_0200, Function | SmallTest | Level0)
+{
+    auto ret = bundleMgrHostImpl_->CheckIsDebugAppProvisionType(BUNDLE_NAME, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    ret = bundleMgrHostImpl_->CheckIsDebugAppProvisionType(BUNDLE_NAME, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CompileProcessAOT_0100
+ * @tc.name: test CompileProcessAOT of BundleMgrHostImpl
+ * @tc.desc: 1. Test CompileProcessAOT
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CompileProcessAOT_0100, Function | SmallTest | Level0)
+{
+    std::string compileMode = "testCompileMode";
+    std::vector<std::string> compileResults;
+    SetVerifyCallingPermissionForTest(true);
+    auto ret = bundleMgrHostImpl_->CompileProcessAOT(BUNDLE_NAME, compileMode, true, compileResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+
+    auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    SetVerifyCallingPermissionForTest(false);
+    ret = bundleMgrHostImpl_->CompileProcessAOT(BUNDLE_NAME, compileMode, true, compileResults);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    ret = bundleMgrHostImpl_->CompileProcessAOT(BUNDLE_NAME, compileMode, true, compileResults);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    if (isDeveloperMode) {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    } else {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    }
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CompileReset_0100
+ * @tc.name: test CompileReset of BundleMgrHostImpl
+ * @tc.desc: 1. Test CompileReset
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CompileReset_0100, Function | SmallTest | Level0)
+{
+    SetVerifyCallingPermissionForTest(true);
+    auto ret = bundleMgrHostImpl_->CompileReset(BUNDLE_NAME, true);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    SetVerifyCallingPermissionForTest(false);
+    ret = bundleMgrHostImpl_->CompileReset(BUNDLE_NAME, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    ret = bundleMgrHostImpl_->CompileReset(BUNDLE_NAME, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    if (isDeveloperMode) {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    } else {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    }
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: VerifyCreateStreamPermission_0100
+ * @tc.name: test VerifyCreateStreamPermission of BundleStreamInstallerHostImpl
+ * @tc.desc: 1. Test VerifyCreateStreamPermission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, VerifyCreateStreamPermission_0100, Function | SmallTest | Level0)
+{
+    BundleStreamInstallerHostImpl installerHostImpl(0, 0);
+    SetVerifyCallingPermissionForTest(false);
+    auto ret = installerHostImpl.VerifyCreateStreamPermission();
+    EXPECT_FALSE(ret);
+
+    SetVerifyCallingPermissionForTest(true);
+    ret = installerHostImpl.VerifyCreateStreamPermission();
+    EXPECT_TRUE(ret);
+
+    SetVerifyCallingPermissionForTest(false);
+    auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    ret = installerHostImpl.VerifyCreateStreamPermission();
+    EXPECT_FALSE(ret);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    ret = installerHostImpl.VerifyCreateStreamPermission();
+    EXPECT_FALSE(ret);
+
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    ret = installerHostImpl.VerifyCreateStreamPermission();
+    EXPECT_TRUE(ret);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    ret = installerHostImpl.VerifyCreateStreamPermission();
+    EXPECT_TRUE(ret);
+    if (isDeveloperMode) {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    } else {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    }
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CreateStream_0100
+ * @tc.name: test CreateStream of BundleStreamInstallerHostImpl
+ * @tc.desc: 1. Test CreateStream
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateStream_0100, Function | SmallTest | Level0)
+{
+    BundleStreamInstallerHostImpl installerHostImpl(0, 0);
+    std::string bundleName;
+    auto ret = installerHostImpl.CreateStream(bundleName);
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+
+    SetVerifyCallingPermissionForTest(false);
+    ret = installerHostImpl.CreateStream(bundleName);
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CreateSharedBundleStream_0100
+ * @tc.name: test CreateSharedBundleStream of BundleStreamInstallerHostImpl
+ * @tc.desc: 1. Test CreateSharedBundleStream
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CreateSharedBundleStream_0100, Function | SmallTest | Level0)
+{
+    BundleStreamInstallerHostImpl installerHostImpl(0, 0);
+    SetVerifyCallingPermissionForTest(false);
+    auto ret = installerHostImpl.CreateSharedBundleStream(BUNDLE_NAME, APP_INDEX);
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+
+    SetVerifyCallingPermissionForTest(true);
+    ret = installerHostImpl.CreateSharedBundleStream(BUNDLE_NAME, APP_INDEX);
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+
+    SetVerifyCallingPermissionForTest(false);
+    auto isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    ret = installerHostImpl.CreateSharedBundleStream(BUNDLE_NAME, APP_INDEX);
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    ret = installerHostImpl.CreateSharedBundleStream(BUNDLE_NAME, APP_INDEX);
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    ret = installerHostImpl.CreateSharedBundleStream(BUNDLE_NAME, APP_INDEX);
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+
+    OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    ret = installerHostImpl.CreateSharedBundleStream(BUNDLE_NAME, APP_INDEX);
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+
+    if (isDeveloperMode) {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true");
+    } else {
+        OHOS::system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false");
+    }
+    ResetTestValues();
 }
 } // OHOS

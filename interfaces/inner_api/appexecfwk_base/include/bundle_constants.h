@@ -105,6 +105,8 @@ constexpr const char* PERMISSION_RUN_DYN_CODE = "ohos.permission.RUN_DYN_CODE";
 constexpr const char* PERMISSION_ACCESS_DYNAMIC_ICON = "ohos.permission.ACCESS_DYNAMIC_ICON";
 constexpr const char* PERMISSION_START_SHORTCUT = "ohos.permission.START_SHORTCUT";
 constexpr const char* PERMISSION_INSTALL_CLONE_BUNDLE = "ohos.permission.INSTALL_CLONE_BUNDLE";
+constexpr const char* PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES =
+    "ohos.permission.MANAGE_CLONE_BUNDLE_PREFERENCES";
 constexpr const char* PERMISSION_MANAGER_SHORTCUT = "ohos.permission.MANAGE_SHORTCUTS";
 constexpr const char* PERMISSION_ACCESS_APP_INSTALL_DIR = "ohos.permission.ACCESS_APP_INSTALL_DIR";
 constexpr const char* PERMISSION_GET_SIGNATURE_INFO = "ohos.permission.GET_SIGNATURE_INFO";
@@ -123,6 +125,7 @@ constexpr const char* PERMISSION_MANAGE_SKILL_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS
     "ohos.permission.MANAGE_SKILL_PRIVILEGE or ohos.permission.MANAGE_SKILL or "
     "((ohos.permission.MANAGE_SKILL_PRIVILEGE or ohos.permission.MANAGE_SKILL) "
     "and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
+constexpr const char* PERMISSION_ALLOW_USE_BM = "ohos.permission.ALLOW_USE_BM";
 constexpr const char* REAL_SKILL_PATH_PREFIX = "/data/app/el1/skills/public";
 constexpr const char* SANDBOX_SKILL_PATH_PREFIX = "/data/skills";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
@@ -131,10 +134,10 @@ constexpr const char* PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOU
 constexpr const char* PERMISSION_ENTERPRISE_GET_INSTALLED_BUNDLE_LIST =
     "ohos.permission.ENTERPRISE_GET_INSTALLED_BUNDLE_LIST";
 constexpr const char* PERMISSION_ACCESS_STARTUPGUIDE = "ohos.permission.ACCESS_STARTUPGUIDE";
-constexpr const char* PERMISSION_SUPPORT_SANDBOX_BUNDLE =
-    "ohos.permission.SUPPORT_SANDBOX_BUNDLE";
-constexpr const char* PERMISSION_MANAGER_SANDBOX_BUNDLE =
-    "ohos.permission.MANAGER_SANDBOX_BUNDLE";
+constexpr const char* PERMISSION_MANAGE_SANDBOX_BUNDLE =
+    "ohos.permission.MANAGE_SANDBOX_BUNDLE";
+constexpr const char* PERMISSION_CLI_MANAGE_WEB_SANDBOX =
+    "ohos.permission.CLI_MANAGE_WEB_SANDBOX";
 
 enum class AppType {
     SYSTEM_APP = 0,

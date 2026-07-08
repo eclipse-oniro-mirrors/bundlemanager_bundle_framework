@@ -72,7 +72,6 @@ private:
     bool isPluginExist_ = false;
     bool isLocalPluginInstall_ = false;
     bool isDebug_ = false;
-    bool isEnterpriseBundle_ = false;
     bool isCompressNativeLibs_ = true;
     bool sessionCommitted_ = false;
     int32_t sessionId_ = 0;
@@ -82,7 +81,6 @@ private:
     std::string bundleNameWithTime_;
     std::string signatureFileDir_;
     std::string nativeLibraryPath_;
-    std::string appIdentifier_;
     std::string compileSdkType_;
     std::string cpuAbi_;
     std::string soPath_;
@@ -135,8 +133,7 @@ private:
         InnerBundleInfo &newInfo);
     ErrCode VerifyCodeSignatureForNativeFiles(const std::string &bundlePath, const std::string &cpuAbi,
         const std::string &targetSoPath, const std::string &signatureFileDir, bool isPreInstalledBundle) const;
-    ErrCode VerifyCodeSignatureForHsp(const std::string &hspPath, const std::string &appIdentifier,
-        bool isEnterpriseBundle, bool isCompileSdkOpenHarmony) const;
+    ErrCode VerifyCodeSignatureForHsp(const std::string &hspPath, bool isCompileSdkOpenHarmony) const;
     bool ParsePluginId(const std::string &appServiceCapabilities, std::vector<std::string> &pluginIds);
     void RemoveOldInstallDir(const std::string &hostBundleName);
     void UninstallRollBack(const std::string &hostBundleName);
@@ -145,7 +142,6 @@ private:
         const std::vector<std::string> &inBundlePaths, std::vector<std::string> &parsedPaths);
     void NotifyPluginEvents(const NotifyType &type, int32_t uid);
     std::string GetModuleNames();
-    std::string JoinPluginId() const;
     void UpdateRouterInfoForPlugin(const std::string &hostBundleName, const InnerBundleInfo &pluginInfo);
     void DeleteRouterInfoForPlugin(const std::string &hostBundleName);
     void SendPluginCommonEvent(const std::string &hostBundleName, const std::string &pluginBundleName,

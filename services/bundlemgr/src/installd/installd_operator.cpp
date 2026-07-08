@@ -49,7 +49,9 @@
 #include "bundle_file_util.h"
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
+#include "decompress.h"
 #include "directory_ex.h"
+#include "directory_ex_inner.h"
 #include "driver_install_ext.h"
 #include "el5_filekey_manager_error.h"
 #include "el5_filekey_manager_kit.h"
@@ -84,11 +86,17 @@ struct SoFileInfo {
     }
 };
 namespace {
+static bool IsSkillScriptsRelativePath(const std::string &relativePath)
+{
+    std::string normalizedPath = relativePath;
+    std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
+    return normalizedPath == "scripts" || normalizedPath.find("scripts/") == 0;
+}
 constexpr const char* PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 constexpr const char* PREFIX_LIBS_PATH = "/libs/";
 constexpr const char* PREFIX_TARGET_PATH = "/print_service/";
 constexpr const char* HQF_DIR_PREFIX = "patch_";
-constexpr const char* HQF_PATCH_PATH = "/patch/";
+constexpr const char* HQF_PATCH_PATH = "/patch";
 constexpr const char* VERIFY_FILE_PATH = "/abcs/";
 constexpr const char* VERIFY_FILE_SUFFIX = ".abc";
 constexpr const char* APP_EL1_PATH = "/data/app/el1/";
@@ -121,6 +129,13 @@ static constexpr int32_t PERMISSION_DENIED = 13;
 static constexpr int32_t RESULT_OK = 0;
 static constexpr int32_t CMDLINE_MAX_BUF_LEN = 4096;
 static constexpr int32_t MAX_APP_IDENTIFIER_LENGTH = 256;
+// Upper bound for the whole SKILL.md file. The file is read line-by-line via
+// std::getline before any per-line cap applies, so without a size gate a
+// crafted multi-MB SKILL.md (e.g. a description line without a newline, or a
+// huge frontmatter with millions of lines) could OOM installd (SA 511).
+// 64 MiB rejects weaponized inputs while staying well above any realistic
+// skill metadata document.
+static constexpr int64_t MAX_SKILL_MD_FILE_SIZE = 64 * 1024 * 1024;
 static constexpr int16_t INSTALLS_UID = 3060;
 static constexpr int16_t MODE_BASE = 07777;
 static constexpr int8_t KEY_ID_STEP = 2;
@@ -170,7 +185,7 @@ static const std::map<BundleDirScene, std::vector<std::string>> ALLOWED_PATH_PRE
         "/data/service/el1/public/for-all-app"}},
     {BundleDirScene::EXTRACT_FILES, {"/data/app/el1", "/data/service/el1/public", "/storage/media"}},
     {BundleDirScene::VERIFY_CODE_SIGNATURE, {"/data/app/el1/bundle", "/data/app/el1/skills"}},
-    {BundleDirScene::CLEAN_BUNDLE_DATA_DIR, {"/data/app", "/data/local/shader_cache", "/data/service"}},
+    {BundleDirScene::CLEAN_BUNDLE_DATA_DIR, {"/data/app", "/data/service"}},
     {BundleDirScene::CHANGE_BMS_FILE_STAT, { "/data/service/el1/public/bms/bundle_manager_service/app_install"}},
     {BundleDirScene::GET_BUNDLE_CACHE_PATH,
         { "/data/app/el1", "/data/app/el2", "/data/app/el3", "/data/app/el4", "/data/app/el5"}},
@@ -222,10 +237,22 @@ struct DirSizeData {
     uint64_t totalSize = 0;
     bool overflow = false;
     const std::string *dirPath;
+    std::unordered_map<std::string, uint64_t> *cache = nullptr;
+    std::vector<uint64_t> acc;
+    // --- interruptible timeout support (Phase 1 walk must be bounded) ---
+    bool timedOut = false;       // set when this walk was aborted by the deadline
+    uint64_t entryCounter = 0;   // the clock is checked every CHECK_TIMEOUT_INTERVAL entries
 };
 
 // Thread-local storage for callback data to ensure thread safety
 static thread_local DirSizeData *g_dirSizeData = nullptr;
+
+static thread_local size_t g_dirSizeCacheHitCount = 0;
+static thread_local size_t g_dirSizeCacheMissCount = 0;
+
+static thread_local bool g_dirSizeHasDeadline = false;
+static thread_local std::chrono::steady_clock::time_point g_dirSizeDeadline{};
+static thread_local bool g_dirSizeTimedOut = false;
 
 /**
  * @brief RAII guard for managing thread-local DirSizeData pointer
@@ -238,13 +265,82 @@ public:
     {
         g_dirSizeData = nullptr;
     }
+    DirSizeDataGuard(const DirSizeDataGuard&) = delete;
+    DirSizeDataGuard& operator=(const DirSizeDataGuard&) = delete;
 
 private:
     DirSizeData *data_;
 };
 
+// RAII: clears g_dirSizeHasDeadline on every return path so a deadline can never leak to a later
+// GetLargestFiles/GetLargestDirs call on the same thread. The caller sets g_dirSizeDeadline first,
+// then constructs this guard (which sets g_dirSizeHasDeadline = true).
+class DirSizeDeadlineGuard {
+public:
+    DirSizeDeadlineGuard()
+    {
+        g_dirSizeHasDeadline = true;
+        g_dirSizeTimedOut = false;
+    }
+
+    ~DirSizeDeadlineGuard() { g_dirSizeHasDeadline = false; }
+    DirSizeDeadlineGuard(const DirSizeDeadlineGuard&) = delete;
+    DirSizeDeadlineGuard& operator=(const DirSizeDeadlineGuard&) = delete;
+};
+
 constexpr int32_t MAX_FTW_DEPTH = 1000;  // Maximum directory traversal depth to prevent stack overflow
 constexpr uint64_t MAX_DIRECTORY_SIZE = UINT64_MAX - 1024ULL * 1024ULL * 1024ULL;  // 1GB less than max
+// Check the deadline every N callback invocations (avoids a clock syscall per entry).
+constexpr uint64_t CHECK_TIMEOUT_INTERVAL = 512;
+
+/**
+ * @brief Accumulate one nftw entry into DirSizeData (file size summing / directory fold-up)
+ * @param data Walk state: total size, overflow flag, per-level accumulator, optional cache
+ * @param path The current file/directory path
+ * @param sb Stat buffer containing file information
+ * @param typeflag Type of file (FTW_F, FTW_D, etc.)
+ * @param ftwbuf Structure containing walk information including depth
+ * @return Returns 0 to continue, non-zero to stop traversal
+ */
+static int32_t AccumulateEntry(DirSizeData *data, const char *path, const struct stat *sb, int typeflag,
+    struct FTW *ftwbuf)
+{
+    // Keep the per-level accumulator stack deep enough (fold-up sizing, O(1) per entry).
+    auto &acc = data->acc;
+    if (static_cast<size_t>(ftwbuf->level) >= acc.size()) {
+        acc.resize(static_cast<size_t>(ftwbuf->level) + 1, 0);
+    }
+
+    if (typeflag == FTW_F) {
+        if (sb->st_size < 0) {
+            return 0;
+        }
+        // Check for overflow before adding
+        if (data->totalSize > MAX_DIRECTORY_SIZE - sb->st_size) {
+            LOG_W(BMS_TAG_INSTALLD, "CalculateDirSizeCallback: size overflow for %{public}s",
+                data->dirPath->c_str());
+            data->overflow = true;
+            return 1;  // Stop traversal
+        }
+        data->totalSize += sb->st_size;
+        if (ftwbuf->level > 0) {
+            acc[static_cast<size_t>(ftwbuf->level) - 1] += sb->st_size;
+        }
+    } else if (typeflag == FTW_DP) {
+        uint64_t dirTotal = acc[static_cast<size_t>(ftwbuf->level)];
+        if (data->cache != nullptr) {
+            (*data->cache)[path] = dirTotal;
+            LOG_D(BMS_TAG_INSTALLD, "ScanAppDataSize CACHE-INSERT %{public}s = %{public}" PRIu64,
+                InstalldOperator::AnonymizePath(path).c_str(), dirTotal);
+        }
+        if (ftwbuf->level > 0) {
+            acc[static_cast<size_t>(ftwbuf->level) - 1] += dirTotal;
+        }
+        acc[static_cast<size_t>(ftwbuf->level)] = 0;
+    }
+
+    return 0;  // Continue traversal
+}
 
 /**
  * @brief Callback function for nftw to calculate directory size
@@ -261,27 +357,24 @@ static int32_t CalculateDirSizeCallback(const char *path, const struct stat *sb,
     if (data == nullptr) {
         return 1;  // Stop traversal on error
     }
+    if (g_dirSizeHasDeadline && (++data->entryCounter % CHECK_TIMEOUT_INTERVAL) == 0) {
+        if (std::chrono::steady_clock::now() > g_dirSizeDeadline) {
+            data->timedOut = true;
+            g_dirSizeTimedOut = true;
+            LOG_W(BMS_TAG_INSTALLD,
+                "CalculateDirSizeCallback: deadline reached, aborting walk near %{public}s",
+                InstalldOperator::AnonymizePath(path).c_str());
+            return 1;
+        }
+    }
 
-    // Check depth to prevent stack overflow
     if (ftwbuf->level > MAX_FTW_DEPTH) {
         LOG_W(BMS_TAG_INSTALLD, "CalculateDirSizeCallback: directory too deep, level: %{public}d, path: %{public}s",
             ftwbuf->level, path);
         return 0;  // Continue processing other files
     }
 
-    if (typeflag == FTW_F) {
-        // Check for overflow before adding
-        if (data->totalSize > MAX_DIRECTORY_SIZE - sb->st_size) {
-            LOG_W(BMS_TAG_INSTALLD, "CalculateDirSizeCallback: size overflow for %{public}s",
-                data->dirPath->c_str());
-            data->overflow = true;
-            return 1;  // Stop traversal
-        }
-        // Only count regular files
-        data->totalSize += sb->st_size;
-    }
-
-    return 0;  // Continue traversal
+    return AccumulateEntry(data, path, sb, typeflag, ftwbuf);
 }
 
 /**
@@ -296,11 +389,28 @@ static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
     // Check cache first
     auto it = dirSizeCache.find(dirPath);
     if (it != dirSizeCache.end()) {
+        ++g_dirSizeCacheHitCount;
         LOG_D(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: cache hit for %{public}s, size: %{public}" PRIu64,
             dirPath.c_str(), it->second);
         return it->second;
     }
 
+    struct stat rootStat;
+    if (stat(dirPath.c_str(), &rootStat) != 0 || !S_ISDIR(rootStat.st_mode)) {
+        return 0;
+    }
+
+    ++g_dirSizeCacheMissCount;
+
+    // Defensive: if the deadline already passed, do not start an expensive walk. In the current
+    // flow this is belt-and-suspenders (the between-top-dirs check + cache-direct fallback already
+    // prevent wind-down misses), but it bounds any future miss-during-wind-down without a ramp-up.
+    if (g_dirSizeHasDeadline && std::chrono::steady_clock::now() > g_dirSizeDeadline) {
+        g_dirSizeTimedOut = true;
+        LOG_W(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: deadline reached, skip walk for %{public}s",
+            InstalldOperator::AnonymizePath(dirPath).c_str());
+        return 0;
+    }
     LOG_D(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: cache miss for %{public}s, calculating...",
         dirPath.c_str());
 
@@ -310,15 +420,22 @@ static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
             dirPath.c_str());
         return 0;
     }
-    // Prepare callback data
-    DirSizeData data = {0, false, &dirPath};
+    // Prepare callback data. cache ptr lets the callback record every directory's subtree total,
+    // not only the root's, so subsequent per-directory lookups hit the cache.
+    DirSizeData data;
+    data.dirPath = &dirPath;
+    data.cache = &dirSizeCache;
     // Set thread-local data for callback access
     g_dirSizeData = &data;
     // Use RAII guard to ensure thread-local data is cleared when going out of scope
     DirSizeDataGuard guard(&data);
-    // Use nftw with FTW_PHYSICAL (don't follow symlinks) and FTW_MOUNT (don't cross filesystem boundaries)
-    // The third parameter is the maximum number of open file descriptors
-    int32_t ret = nftw(dirPath.c_str(), CalculateDirSizeCallback, 10, FTW_PHYS | FTW_MOUNT);
+    int32_t ret = nftw(dirPath.c_str(), CalculateDirSizeCallback, 10, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
+    if (data.timedOut) {
+        LOG_W(BMS_TAG_INSTALLD,
+            "CalculateDirectorySizeWithCache: timed out (partial) for %{public}s",
+            InstalldOperator::AnonymizePath(dirPath).c_str());
+        return 0;
+    }
     if (ret != 0 && !data.overflow) {
         LOG_W(BMS_TAG_INSTALLD, "CalculateDirectorySizeWithCache: nftw failed for %{public}s, errno: %{public}d",
             dirPath.c_str(), errno);
@@ -561,7 +678,7 @@ std::string InstalldOperator::GetSameLevelTmpPath(const std::string &path)
 }
 
 bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::string &targetSoPath,
-    const std::string &cpuAbi)
+    const std::string &cpuAbi, const bool needFakeDecompression, const bool isSystemApp)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles start");
     if (targetSoPath.empty()) {
@@ -584,22 +701,27 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
         LOG_D(BMS_TAG_INSTALLD, "ExtractFiles no so files to extract");
         return true;
     }
-    bool extractSoResult = true;
+    std::atomic<bool> extractSoResult(true);
     std::vector<ffrt::dependence> handles;
     for_each(soEntryFiles.begin(), soEntryFiles.end(),
-        [&extractor, &targetSoPath, &cpuAbi, &handles, &extractSoResult](const auto &entry) {
-        ExtractParam param;
-        param.targetPath = targetSoPath;
-        param.cpuAbi = cpuAbi;
-        param.extractFileType = ExtractFileType::SO;
-        ffrt::task_handle handle = ffrt::submit_h([&extractor, entry, param, &extractSoResult] () {
-            LOG_D(BMS_TAG_INSTALLD, "Extracting file %{private}s", entry.c_str());
-            if (!ExtractTargetFile(extractor, entry, param)) {
-                extractSoResult = false;
-            }
-            }, {}, {});
-        handles.push_back(std::move(handle));
-    });
+        [&extractor, &targetSoPath, &cpuAbi, &handles, &extractSoResult, &sourcePath, &needFakeDecompression,
+            &isSystemApp](const auto &entry) {
+            ExtractParam param;
+            param.srcPath = sourcePath;
+            param.targetPath = targetSoPath;
+            param.cpuAbi = cpuAbi;
+            param.extractFileType = ExtractFileType::SO;
+            param.needFakeDecompression = needFakeDecompression;
+            param.isSystemApp = isSystemApp;
+            ffrt::task_handle handle = ffrt::submit_h(
+                [&extractor, entry, param, &extractSoResult]() {
+                    LOG_D(BMS_TAG_INSTALLD, "Extracting file %{private}s", entry.c_str());
+                    if (!ExtractTargetFile(extractor, entry, param)) {
+                        extractSoResult = false;
+                    }
+                }, {}, {});
+            handles.push_back(std::move(handle));
+        });
     ffrt::wait(handles);
 
     LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles end");
@@ -983,6 +1105,10 @@ bool InstalldOperator::ExtractSkillFromHsp(
         if (fileName.find(skillPrefix) == 0) {
             // Calculate relative path and target file path
             std::string relativePath = fileName.substr(skillPrefix.length());
+            if (IsSkillScriptsRelativePath(relativePath)) {
+                LOG_D(BMS_TAG_INSTALLD, "skip skill scripts entry %{public}s", fileName.c_str());
+                continue;
+            }
             std::string targetFilePath = targetPath + "/" + relativePath;
 
             // Create parent directory if needed
@@ -1042,6 +1168,24 @@ ErrCode InstalldOperator::ParseSkillMd(const std::string &skillMdPath,
     std::string &name, std::string &description)
 {
     LOG_D(BMS_TAG_INSTALLD, "parsing %{public}s", skillMdPath.c_str());
+
+    // Reject oversized inputs before opening/reading. SKILL.md is read line by
+    // line via std::getline, which has no inherent size cap; a crafted HSP can
+    // embed a multi-MB file to exhaust installd memory. stat() is a single
+    // metadata read and does not depend on attacker-controlled contents.
+    struct stat fileStat = {};
+    if (stat(skillMdPath.c_str(), &fileStat) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "stat %{public}s failed, errno:%{public}d",
+            skillMdPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    if (fileStat.st_size > MAX_SKILL_MD_FILE_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "SKILL.md too large, size=%{public}lld, max=%{public}lld, rejecting",
+            static_cast<long long>(fileStat.st_size),
+            static_cast<long long>(MAX_SKILL_MD_FILE_SIZE));
+        return ERR_APPEXECFWK_INSTALL_PARSE_FAILED;
+    }
 
     // Read SKILL.md frontmatter only. Supported example:
     // \xEF\xBB\xBF---
@@ -1155,6 +1299,47 @@ ErrCode InstalldOperator::ParseSkillMd(const std::string &skillMdPath,
 
     return ERR_OK;
 }
+bool InstalldOperator::ChangeModeFile(const ExtractParam &param, const std::string &path)
+{
+    mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    if (param.extractFileType == ExtractFileType::AP) {
+        struct stat buf = {};
+        if (stat(param.targetPath.c_str(), &buf) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "fail to stat errno:%{public}d", errno);
+            return false;
+        }
+        ChangeFileAttr(path, buf.st_uid, buf.st_gid);
+        mode = (buf.st_uid == buf.st_gid) ? (S_IRUSR | S_IWUSR) : (S_IRUSR | S_IWUSR | S_IRGRP);
+    }
+    if (!OHOS::ChangeModeFile(path, mode)) {
+        LOG_W(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
+    }
+    return true;
+}
+
+bool InstalldOperator::FakeDecompression(const BundleExtractor &extractor, const std::string &entryName,
+    const ExtractParam &param, const std::string &targetPath)
+{
+    uint32_t offset = 0;
+    uint32_t length = 0;
+    if (!extractor.GetFileInfo(entryName, offset, length)) {
+        LOG_E(BMS_TAG_INSTALLD, "GetFileInfo failed, retry entryName : %{public}s", entryName.c_str());
+        return false;
+    }
+    if (!FileManagement::Decompress::CreateInnerFile(param.srcPath, targetPath, offset, length, param.isSystemApp)) {
+        LOG_E(BMS_TAG_INSTALLD,
+            "CreateInnerFile failed, retry entryName : %{public}s srcPath:%{public}s targetPath:%{public}s "
+            "offset:%{public}d length:%{public}d",
+            entryName.c_str(),
+            param.srcPath.c_str(),
+            targetPath.c_str(),
+            offset,
+            length);
+        return false;
+    }
+    ChangeModeFile(param, targetPath);
+    return true;
+}
 
 bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,
     const ExtractParam &param)
@@ -1192,24 +1377,33 @@ bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     if (param.needRemoveOld && IsExistFile(path) && !OHOS::RemoveFile(path)) {
         LOG_W(BMS_TAG_INSTALLD, "remove file %{public}s failed", path.c_str());
     }
+    LOG_D(BMS_TAG_INSTALLD,
+        "entryName:%{public}s srcPath:%{public}s targetPath:%{public}s, needFakeDecompression:%{public}d, "
+        "extractFileType:%{public}d",
+        entryName.c_str(),
+        param.srcPath.c_str(),
+        path.c_str(),
+        param.needFakeDecompression,
+        param.extractFileType);
+    if (param.needFakeDecompression &&
+        (param.extractFileType == ExtractFileType::SO || param.extractFileType == ExtractFileType::RES_FILE) &&
+        InstalldOperator::FakeDecompression(extractor, entryName, param, path)) {
+        LOG_I(BMS_TAG_INSTALLD,
+            "FakeDecompression success,entryName:%{public}s srcPath:%{public}s targetPath:%{public}s",
+            entryName.c_str(),
+            param.srcPath.c_str(),
+            path.c_str());
+        return true;
+    }
+
     if (!extractor.ExtractFile(entryName, path)) {
         if (!extractor.ExtractFile(entryName, path)) {
             LOG_E(BMS_TAG_INSTALLD, "extract file failed, retry entryName : %{public}s", entryName.c_str());
             return false;
         }
     }
-    mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-    if (param.extractFileType == ExtractFileType::AP) {
-        struct stat buf = {};
-        if (stat(param.targetPath.c_str(), &buf) != 0) {
-            LOG_E(BMS_TAG_INSTALLD, "fail to stat errno:%{public}d", errno);
-            return false;
-        }
-        ChangeFileAttr(path, buf.st_uid, buf.st_gid);
-        mode = (buf.st_uid == buf.st_gid) ? (S_IRUSR | S_IWUSR) : (S_IRUSR | S_IWUSR | S_IRGRP);
-    }
-    if (!OHOS::ChangeModeFile(path, mode)) {
-        LOG_W(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
+    if (!ChangeModeFile(param, path)) {
+        return false;
     }
     if (param.extractFileType == ExtractFileType::NPAPI_PLUGIN) {
         return FsyncNpapiPluginFile(path);
@@ -1685,9 +1879,9 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
         return 0;
     }
     std::string filePath = tmpPath;
-    uint64_t size = GetFolderSize(filePath);
+    uint64_t size = OHOS::GetFolderDiskUsage(filePath);
     if (size > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
-        LOG_E(BMS_TAG_INSTALLD, "GetFolderSize overflow:%{public}s", filePath.c_str());
+        LOG_E(BMS_TAG_INSTALLD, "GetFolderDiskUsage overflow:%{public}s", filePath.c_str());
         return 0;
     } else {
         return static_cast<int64_t>(size);
@@ -1751,6 +1945,35 @@ int64_t InstalldOperator::GetDiskUsageFromPath(const std::vector<std::string> &p
             fileSize, st.c_str());
     }
     return fileSize;
+}
+
+int64_t InstalldOperator::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs)
+{
+    auto startTime = std::chrono::steady_clock::now();
+    int64_t totalSize = 0;
+    for (auto &path : paths) {
+        // check timeout
+        if (timeoutMs > 0) {
+            auto currentTime = std::chrono::steady_clock::now();
+            auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime);
+            auto elapsedMs = std::abs(elapsedTime.count());
+            if (elapsedMs >= timeoutMs) {
+                LOG_W(BMS_TAG_INSTALLD, "timeout, return totalSize:%{public}" PRId64, totalSize);
+                return totalSize;
+            }
+        }
+        int64_t diskSize = GetDiskUsage(path);
+        int64_t tmpSize = 0;
+        if (diskSize > 0) {
+            int64_t fileSize = BundleUtil::GetFileSize(path);
+            tmpSize = (diskSize > fileSize) ? (diskSize - fileSize) : 0;
+        }
+        totalSize += tmpSize;
+        LOG_D(BMS_TAG_INSTALLD, "totalSize:%{public} " PRId64 "diskSize:%{public} " PRId64
+            " tmpSize:%{public} " PRId64 " from: %{public}s",
+            totalSize, diskSize, tmpSize, path.c_str());
+    }
+    return totalSize;
 }
 
 bool InstalldOperator::InitialiseQuotaMounts()
@@ -3761,53 +3984,62 @@ bool InstalldOperator::ReadCert(const std::string &path, std::vector<unsigned ch
     return true;
 }
 
-bool InstalldOperator::IsValidBundleName(const std::string &bundleName)
+bool InstalldOperator::IsValidBundleNameWithOriBundle(const std::string &bundleName, std::string &oriBundleName)
 {
     if (bundleName.empty() || !IsFileNameValid(bundleName)) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s", bundleName.c_str());
+        oriBundleName = bundleName;
         return false;
     }
     // clone bundleName: +clone-<appIndex>+<bundleName>
-    std::string tempBundleName = bundleName;
+    oriBundleName = bundleName;
     if (bundleName.find(ServiceConstants::CLONE_PREFIX) == 0) {
-        tempBundleName = bundleName.substr(strlen(ServiceConstants::CLONE_PREFIX));
-        size_t plusPos = tempBundleName.find(ServiceConstants::PLUS_SIGN);
+        oriBundleName = bundleName.substr(strlen(ServiceConstants::CLONE_PREFIX));
+        size_t plusPos = oriBundleName.find(ServiceConstants::PLUS_SIGN);
         if (plusPos == std::string::npos) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid clone bundle name -n %{public}s", bundleName.c_str());
+            oriBundleName = bundleName;
             return false;
         }
         int32_t appIndex = 0;
-        if (!OHOS::StrToInt(tempBundleName.substr(0, plusPos), appIndex)) {
+        if (!OHOS::StrToInt(oriBundleName.substr(0, plusPos), appIndex)) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLD, "StrToInt failed -n %{public}s", bundleName.c_str());
+            oriBundleName = bundleName;
             return false;
         }
-        tempBundleName = tempBundleName.substr(plusPos + 1);
+        oriBundleName = oriBundleName.substr(plusPos + 1);
     }
     // sanbox bundleName: <appIndex>_<bundleName>
     auto pos = bundleName.find(Constants::FILE_UNDERLINE);
     if (pos != std::string::npos) {
         int32_t appIndex = 0;
         if (OHOS::StrToInt(bundleName.substr(0, pos), appIndex)) {
-            tempBundleName = bundleName.substr(pos + 1);
+            oriBundleName = bundleName.substr(pos + 1);
         }
     }
     // for normal bundleName
-    if (tempBundleName.size() < Constants::MIN_BUNDLE_NAME || tempBundleName.size() > Constants::MAX_BUNDLE_NAME) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name size -n %{public}s", tempBundleName.c_str());
+    if (oriBundleName.size() < Constants::MIN_BUNDLE_NAME || oriBundleName.size() > Constants::MAX_BUNDLE_NAME) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name size -n %{public}s", oriBundleName.c_str());
         return false;
     }
-    char head = tempBundleName.at(0);
+    char head = oriBundleName.at(0);
     if (!isalpha(head)) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s isalpha false", tempBundleName.c_str());
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s isalpha false", oriBundleName.c_str());
         return false;
     }
-    for (const auto &c : tempBundleName) {
+    for (const auto &c : oriBundleName) {
         if (!isalnum(static_cast<unsigned char>(c)) && (c != '.') && (c != '_')) {
-            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s isalnum false", tempBundleName.c_str());
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "invalid name -n %{public}s isalnum false", oriBundleName.c_str());
             return false;
         }
     }
     return true;
+}
+
+bool InstalldOperator::IsValidBundleName(const std::string &bundleName)
+{
+    std::string oriBundleName;
+    return IsValidBundleNameWithOriBundle(bundleName, oriBundleName);
 }
 
 bool InstalldOperator::IsValidUserId(const int32_t userId)
@@ -4021,17 +4253,10 @@ bool InstalldOperator::ParsePluginId(const std::string &appServiceCapabilities,
     return false;
 }
 
-bool InstalldOperator::ObtainSignInfoForPlugin(
-    const std::string &filePath, std::string &appIdentifier, std::string &pluginId)
+bool InstalldOperator::ObtainSignInfoForPlugin(const std::string &appServiceCapabilities, std::string &pluginId)
 {
-    Security::Verify::HapVerifyResult hapVerifyResult;
-    ErrCode errCode = HapVerify(filePath, hapVerifyResult);
-    if (errCode != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "HapVerify failed, errCode: %{public}d", errCode);
-        return false;
-    }
     std::vector<std::string> pluginIds;
-    if (!ParsePluginId(hapVerifyResult.GetProvisionInfo().appServiceCapabilities, pluginIds)) {
+    if (!ParsePluginId(appServiceCapabilities, pluginIds)) {
         APP_LOGE("parse plugin id failed");
         return false;
     }
@@ -4043,11 +4268,6 @@ bool InstalldOperator::ObtainSignInfoForPlugin(
         oss << pluginIds[i];
     }
     pluginId = oss.str();
-    if (hapVerifyResult.GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) {
-        appIdentifier = DEBUG_APP_IDENTIFIER;
-    } else {
-        appIdentifier = hapVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier;
-    }
     return true;
 }
 
@@ -4056,7 +4276,8 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
     std::vector<std::pair<std::string, uint64_t>> &largestPathsWithSize,
     std::unordered_map<std::string, uint64_t> &dirSizeCache)
 {
-    LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesWithCache start, dirPath: %{public}s", dirPath.c_str());
+    LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesWithCache start, dirPath: %{public}s",
+        InstalldOperator::AnonymizePath(dirPath).c_str());
 
     if (dirPath.empty() || dirPath.size() > ServiceConstants::PATH_MAX_SIZE) {
         LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: invalid path");
@@ -4065,7 +4286,8 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
 
     std::string realPath = "";
     if (!PathToRealPath(dirPath, realPath)) {
-        LOG_E(BMS_TAG_INSTALLD, "path is not real path, dirPath: %{public}s", dirPath.c_str());
+        LOG_E(BMS_TAG_INSTALLD, "path is not real path, dirPath: %{public}s",
+            InstalldOperator::AnonymizePath(dirPath).c_str());
         return false;
     }
 
@@ -4073,12 +4295,13 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
     struct stat statBuf;
     if (stat(realPath.c_str(), &statBuf) != 0) {
         LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: stat failed, path: %{public}s, errno: %{public}d",
-            realPath.c_str(), errno);
+            InstalldOperator::AnonymizePath(realPath).c_str(), errno);
         return false;
     }
 
     if (!S_ISDIR(statBuf.st_mode)) {
-        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: path is not a directory: %{public}s", realPath.c_str());
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: path is not a directory: %{public}s",
+            InstalldOperator::AnonymizePath(realPath).c_str());
         return false;
     }
 
@@ -4095,7 +4318,7 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
     DIR *dir = opendir(realPath.c_str());
     if (dir == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "GetLargestFiles: opendir failed, path: %{public}s, errno: %{public}d",
-            realPath.c_str(), errno);
+            InstalldOperator::AnonymizePath(realPath).c_str(), errno);
         return false;
     }
     DirGuard dirGuard(dir);  // RAII wrapper to ensure cleanup
@@ -4116,7 +4339,7 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
         struct stat itemStat;
         if (lstat(itemPath.c_str(), &itemStat) != 0) {
             LOG_W(BMS_TAG_INSTALLD, "GetLargestFiles: lstat failed for %{public}s, errno: %{public}d",
-                itemPath.c_str(), errno);
+                InstalldOperator::AnonymizePath(itemPath).c_str(), errno);
             continue;
         }
 
@@ -4132,7 +4355,7 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
 
         itemSizes.emplace_back(itemPath, itemSize);
         LOG_D(BMS_TAG_INSTALLD, "GetLargestFiles: item: %{public}s, size: %{public}" PRIu64,
-            itemPath.c_str(), itemSize);
+            InstalldOperator::AnonymizePath(itemPath).c_str(), itemSize);
     }
 
     // DirGuard will automatically close dir when going out of scope
@@ -4143,19 +4366,19 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
         return true;
     }
 
-    // Sort by size in descending order
-    std::sort(itemSizes.begin(), itemSizes.end(),
+    // Top 3 largest items by size. partial_sort is O(N log 3) vs O(N log N) for a full sort;
+    // only the first `count` elements are consumed, so leaving the tail unordered is fine.
+    size_t count = std::min(static_cast<size_t>(3), itemSizes.size());
+    std::partial_sort(itemSizes.begin(), itemSizes.begin() + count, itemSizes.end(),
         [](const ItemSize &a, const ItemSize &b) {
             return a.size > b.size;
         });
 
-    // Get top 3 largest items and add to result
-    size_t count = std::min(static_cast<size_t>(3), itemSizes.size());
     largestPathsWithSize.clear();
     for (size_t i = 0; i < count; ++i) {
         largestPathsWithSize.emplace_back(itemSizes[i].path, itemSizes[i].size);
-        LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: %{public}zu. path: %{public}s, size: %{public}" PRIu64,
-            i + 1, itemSizes[i].path.c_str(), itemSizes[i].size);
+        LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: %{public}zu. path: %{public}s, size: %{public}" PRIu64,
+            i + 1, InstalldOperator::AnonymizePath(itemSizes[i].path).c_str(), itemSizes[i].size);
     }
 
     LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesWithCache success, found %{public}zu items", largestPathsWithSize.size());
@@ -4195,6 +4418,13 @@ static bool GetLargestDirsExtendedWithCache(const std::vector<std::string> &dirP
 
     // Process each path (file or directory)
     for (const auto &inputPath : dirPaths) {
+        // Interruptible timeout: don't start a new (possibly huge) top dir past the deadline.
+        if (g_dirSizeHasDeadline && std::chrono::steady_clock::now() > g_dirSizeDeadline) {
+            g_dirSizeTimedOut = true;
+            LOG_W(BMS_TAG_INSTALLD,
+                "GetLargestDirsExtendedWithCache: deadline reached, stop scanning remaining top dirs");
+            break;
+        }
         if (inputPath.empty() || inputPath.size() > ServiceConstants::PATH_MAX_SIZE) {
             LOG_W(BMS_TAG_INSTALLD, "GetLargestDirs: invalid path, skipping");
             continue;
@@ -4242,14 +4472,14 @@ static bool GetLargestDirsExtendedWithCache(const std::vector<std::string> &dirP
         return true;
     }
 
-    // Sort by size in descending order
-    std::sort(pathSizes.begin(), pathSizes.end(),
+    // Top 3 largest items by size. partial_sort is O(N log 3) vs O(N log N) for a full sort;
+    // only the first `count` elements are consumed, so leaving the tail unordered is fine.
+    size_t count = std::min(static_cast<size_t>(3), pathSizes.size());
+    std::partial_sort(pathSizes.begin(), pathSizes.begin() + count, pathSizes.end(),
         [](const PathSize &a, const PathSize &b) {
             return a.size > b.size;
         });
 
-    // Get top 3 largest items (files or directories) and add to result
-    size_t count = std::min(static_cast<size_t>(3), pathSizes.size());
     largestDirsWithSize.clear();
     for (size_t i = 0; i < count; ++i) {
         largestDirsWithSize.emplace_back(pathSizes[i].path, pathSizes[i].size);
@@ -4267,6 +4497,49 @@ bool InstalldOperator::GetLargestDirs(const std::vector<std::string> &dirPaths,
     std::unordered_map<std::string, uint64_t> dirSizeCache;
     dirSizeCache.reserve(100);  // Reserve space for typical directory structure
     return GetLargestDirsExtendedWithCache(dirPaths, largestDirsWithSize, dirSizeCache);
+}
+
+// Timeout fallback: how many of the largest cached directories to emit directly from the cache.
+constexpr size_t CACHE_DIRECT_TOP_N = 20;
+
+// Pick the top-N largest directories directly from the size cache using a bounded min-heap
+// (O(topN) memory — no full copy of the cache, so a huge cache cannot cause a memory spike in the
+// timeout fallback). Used ONLY when Phase 1 was truncated by the deadline, so that every
+// fully-walked directory is printable — including subdirectories inside a top dir whose walk was
+// aborted mid-way (those subdirs were cached with correct totals by the fold, but the normal
+// top-3-of-input BFS would miss them).
+static void BuildTopNFromCache(const std::unordered_map<std::string, uint64_t> &dirSizeCache,
+    std::vector<std::pair<std::string, uint64_t>> &result, size_t topN)
+{
+    result.clear();
+    if (topN == 0 || dirSizeCache.empty()) {
+        return;
+    }
+
+    using Entry = std::pair<std::string, uint64_t>;
+    // "greater by size" => the heap front is the SMALLEST kept entry, so it can be dropped when full.
+    auto sizeGreater = [](const Entry &a, const Entry &b) { return a.second > b.second; };
+    std::vector<Entry> heap;
+    heap.reserve(topN);
+
+    for (const auto &entry : dirSizeCache) {
+        if (heap.size() < topN) {
+            heap.push_back(entry);
+            std::push_heap(heap.begin(), heap.end(), sizeGreater);
+        } else if (entry.second > heap.front().second) {
+            // Replace the current smallest kept entry with this larger one (no size growth).
+            std::pop_heap(heap.begin(), heap.end(), sizeGreater);
+            heap.back() = entry;
+            std::push_heap(heap.begin(), heap.end(), sizeGreater);
+        }
+        // else: entry is not larger than the current top-N minimum; skip without copying.
+    }
+
+    result.reserve(heap.size());
+    for (const auto &e : heap) {
+        result.push_back(e);
+    }
+    std::sort(result.begin(), result.end(), sizeGreater);  // descending by size
 }
 
 bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &dirPaths,
@@ -4298,6 +4571,10 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
     std::unordered_map<std::string, uint64_t> dirSizeCache;
     dirSizeCache.reserve(1000);  // Reserve space for typical directory tree
 
+    // Reset per-call cache statistics so the final LOG_I reflects only this invocation.
+    g_dirSizeCacheHitCount = 0;
+    g_dirSizeCacheMissCount = 0;
+
     // Helper lambda to check timeout
     auto isTimeout = [&startTime, MAX_SCAN_TIME_MS]() -> bool {
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -4305,11 +4582,46 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
         return elapsed > MAX_SCAN_TIME_MS;
     };
 
+    // Final sort + statistics log, shared by the normal path and the timeout fallback so the
+    // output format and the final LOG_I are identical in both cases.
+    auto finalizeResults = [&]() {
+        if (!resultPathsWithSize.empty()) {
+            std::sort(resultPathsWithSize.begin(), resultPathsWithSize.end(),
+                [](const std::pair<std::string, uint64_t> &a,
+                    const std::pair<std::string, uint64_t> &b) {
+                    return a.second > b.second;  // Descending order by size
+                });
+        }
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - startTime).count();
+        size_t totalLookups = g_dirSizeCacheHitCount + g_dirSizeCacheMissCount;
+        size_t hitRate = (totalLookups == 0) ? 0 : (g_dirSizeCacheHitCount * 100) / totalLookups;
+        LOG_I(BMS_TAG_INSTALLD, "ScanAppDataSize success, total items: %{public}zu, cache entries: %{public}zu, "
+            "hit: %{public}zu, miss: %{public}zu, hit-rate: %{public}zu pct, time: %{public}lld ms",
+            resultPathsWithSize.size(), dirSizeCache.size(),
+            g_dirSizeCacheHitCount, g_dirSizeCacheMissCount, hitRate, static_cast<long long>(elapsed));
+    };
+
+    // Interruptible Phase 1: bound the full-tree walk to the whole budget. The timeout fallback is
+    // pure in-memory (cache-direct + sort), so no time reserve is needed.
+    g_dirSizeDeadline = startTime + std::chrono::milliseconds(MAX_SCAN_TIME_MS);
+    DirSizeDeadlineGuard deadlineGuard;  // clears g_dirSizeHasDeadline on any return path
+
     // Step 1: Get top 3 largest directories from input paths
     std::vector<std::pair<std::string, uint64_t>> largestDirs;
     if (!GetLargestDirsExtendedWithCache(dirPaths, largestDirs, dirSizeCache)) {
         LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: GetLargestDirsExtendedWithCache failed");
         return false;
+    }
+
+    const bool phase1Truncated = g_dirSizeTimedOut;
+    if (phase1Truncated) {
+        BuildTopNFromCache(dirSizeCache, resultPathsWithSize, CACHE_DIRECT_TOP_N);
+        LOG_W(BMS_TAG_INSTALLD,
+            "GetLargestFilesRecursive: Phase 1 timed out, emitted %{public}zu items from cache",
+            resultPathsWithSize.size());
+        finalizeResults();
+        return true;
     }
 
     if (largestDirs.empty()) {
@@ -4455,22 +4767,8 @@ bool InstalldOperator::GetLargestFilesRecursive(const std::vector<std::string> &
             finalFilePath.c_str(), finalFileSize);
     }
 
-    // Sort all results by size in descending order for better user experience
-    if (!resultPathsWithSize.empty()) {
-        std::sort(resultPathsWithSize.begin(), resultPathsWithSize.end(),
-            [](const std::pair<std::string, uint64_t> &a,
-                const std::pair<std::string, uint64_t> &b) {
-                return a.second > b.second;  // Descending order by size
-            });
-        LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesRecursive: sorted %{public}zu items by size",
-            resultPathsWithSize.size());
-    }
-
-    // Log cache statistics for performance monitoring
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now() - startTime).count();
-    LOG_I(BMS_TAG_INSTALLD, "success, total items: %{public}zu, cache entries: %{public}zu, time: %{public}lld ms",
-        resultPathsWithSize.size(), dirSizeCache.size(), static_cast<long long>(elapsed));
+    // Sort + emit the final cache-statistics LOG_I (shared with the timeout fallback path).
+    finalizeResults();
 
     return true;
 }
@@ -4524,10 +4822,6 @@ bool InstalldOperator::GetBundleDataDirPaths(const std::string &bundleName, cons
     el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
         std::to_string(userId));
     dataDirPaths.push_back(el1ArkStartupCachePath);
-    // /data/app/el1/<userId>/shader_cache/<bundleName>
-    std::string el1ShaderCachePath = ServiceConstants::NEW_SHADER_CACHE_PATH + bundleNameDir;
-    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId));
-    dataDirPaths.emplace_back(el1ShaderCachePath);
     // service
     std::string servicePath = std::string("/data/service/el1/") + std::to_string(userId) +
         std::string("/backup/bundles/") + bundleNameDir;
@@ -4692,17 +4986,12 @@ bool InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
             return StartsWith(path, APP_EL1_PATH) && IsContainsPathPart(path, SYSTEM_OPTIMIZE_DIR) &&
                    IsContainsBundleName(path, bundleName) &&
                    IsContainsPathPart(path, ServiceConstants::ARK_STARTUP_CACHE_DIR);
-        case BundleDirScene::SHADER_CACHE_DIR:
-            return StartsWith(path, ServiceConstants::SHADER_CACHE_PATH) && IsContainsBundleName(path, bundleName);
         case BundleDirScene::SCREEN_LOCK_FILE_BASE_DIR:
             return StartsWith(path, ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) &&
                    IsContainsPathPart(path, ServiceConstants::BASE) && IsContainsBundleName(path, bundleName);
         case BundleDirScene::SCREEN_LOCK_FILE_DATA_BASE_DIR:
             return StartsWith(path, ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) &&
                    IsContainsPathPart(path, ServiceConstants::DATABASE) && IsContainsBundleName(path, bundleName);
-        case BundleDirScene::EL1_SHADER_CACHE_DIR:
-            return StartsWith(path, APP_EL1_PATH) && IsContainsPathPart(path, ServiceConstants::SHADER_CACHE_SUBDIR) &&
-                   IsContainsBundleName(path, bundleName);
         case BundleDirScene::EL1_SYSTEM_OPTIMIZE_SHADER_CACHE_DIR:
             return StartsWith(path, APP_EL1_PATH) && IsContainsPathPart(path, SYSTEM_OPTIMIZE_DIR) &&
                    IsContainsBundleName(path, bundleName) &&
@@ -4728,10 +5017,6 @@ bool InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
 bool InstalldOperator::IsValidPathByMkDirSceneNoBundleName(const BundleDirScene &scene, const std::string &path)
 {
     switch (scene) {
-        case BundleDirScene::CLOUD_SHADER_DIR:
-            return StartsWith(path, ServiceConstants::CLOUD_SHADER_PATH);
-        case BundleDirScene::CLOUD_SHADER_COMMON_DIR:
-            return StartsWith(path, ServiceConstants::CLOUD_SHADER_COMMON_PATH);
         case BundleDirScene::SERVICE_BMS_GALLERY_DOWNLOAD_DIR:
             return StartsWith(
                 path, std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH);
@@ -5046,8 +5331,6 @@ bool InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
         case BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR:
             return StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, SYSTEM_OPTIMIZE_DIR) &&
                    IsContainsPathPart(dir, ServiceConstants::ARK_STARTUP_CACHE_DIR);
-        case BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR:
-            return StartsWith(dir, ServiceConstants::SHADER_CACHE_PATH);
         case BundleDirScene::REMOVE_SHARE_FILE_DIR:
             return StartsWith(dir, APP_EL2_PATH) && IsContainsPathPart(dir, ServiceConstants::SHAREFILES);
         case BundleDirScene::REMOVE_CLOUD_SHADER_CACHE_DIR:
@@ -5134,7 +5417,6 @@ bool InstalldOperator::IsValidPathByRemoveDirScene(
         case BundleDirScene::REMOVE_BUNDLE_LIB_DIR:
             return IsValidPathByRemoveDirSceneNeedBundleNamePartOne(dir, bundleName, scene);
         case BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR:
-        case BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR:
         case BundleDirScene::REMOVE_SHARE_FILE_DIR:
         case BundleDirScene::REMOVE_CLOUD_SHADER_CACHE_DIR:
         case BundleDirScene::REMOVE_BUNDLE_PLUGIN_DIR:
@@ -5449,8 +5731,7 @@ bool InstalldOperator::IsValidPathByCleanBundleDirsScene(const std::string &dir,
 
     switch (scene) {
         case BundleDirScene::CLEAN_SHADER_CACHE_DIR:
-            return (StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, ServiceConstants::SHADER_CACHE_SUBDIR)) ||
-                   StartsWith(dir, ServiceConstants::SHADER_CACHE_PATH);
+            return (StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, ServiceConstants::SHADER_CACHE_SUBDIR));
         case BundleDirScene::CLEAN_ARK_STARTUP_CACHE_DIR:
             return StartsWith(dir, APP_EL1_PATH) && IsContainsPathPart(dir, SYSTEM_OPTIMIZE_DIR) &&
                    IsContainsPathPart(dir, ServiceConstants::ARK_STARTUP_CACHE_DIR);

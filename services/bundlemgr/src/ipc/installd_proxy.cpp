@@ -175,7 +175,8 @@ ErrCode InstalldProxy::CreateBundleDir(
 }
 
 ErrCode InstalldProxy::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+    const bool isSystemApp)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -183,6 +184,8 @@ ErrCode InstalldProxy::ExtractModuleFiles(const std::string &srcModulePath, cons
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetPath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetSoPath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
+    INSTALLD_PARCEL_WRITE(data, Bool, needFakeDecompression);
+    INSTALLD_PARCEL_WRITE(data, Bool, isSystemApp);
 
     MessageParcel reply;
     MessageOption option;
@@ -1675,6 +1678,32 @@ ErrCode InstalldProxy::DeleteOldCacheFiles(
     }
     cleanedSize = reply.ReadUint64();
     return ERR_OK;
+}
+
+int64_t InstalldProxy::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (paths.size() > Constants::MAX_CACHE_DIR_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD, "paths size invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!data.WriteUint32(paths.size())) {
+        LOG_E(BMS_TAG_INSTALLD, "failed: write paths count fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (size_t i = 0; i < paths.size(); i++) {
+        if (!data.WriteString(paths[i])) {
+            LOG_E(BMS_TAG_INSTALLD, "WriteParcelable paths:[%{public}s] failed",
+                paths[i].c_str());
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    INSTALLD_PARCEL_WRITE(data, Int64, timeoutMs);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC, WAIT_TIME);
+    return TransactInstalldCmd(InstalldInterfaceCode::GET_CACHE_DISK_USAGE_FROM_PATH, data, reply, option);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

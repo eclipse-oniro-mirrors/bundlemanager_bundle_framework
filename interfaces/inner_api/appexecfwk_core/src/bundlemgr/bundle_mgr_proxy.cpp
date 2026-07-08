@@ -36,6 +36,7 @@
 #include "bundle_constants.h"
 #include "bundle_distribution_type.h"
 #include "bundle_file_util.h"
+#include "bundle_mgr_host.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_proxy.h"
 #endif
@@ -58,6 +59,7 @@ constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // allow ma
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
 constexpr int64_t GET_BUNDLE_FOR_SELF_CACHE_TIME = 800; // 800ms
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
+constexpr int16_t MAX_RES_ID_LIST_SIZE = 1000;
 static std::atomic<bool> g_cacheAble = true;
 static std::once_flag g_cacheStopFlag;
 
@@ -3995,6 +3997,57 @@ std::string BundleMgrProxy::GetStringById(const std::string &bundleName, const s
     return reply.ReadString();
 }
 
+ErrCode BundleMgrProxy::GetStringByIdList(const std::string &bundleName,
+    const std::string &moduleName, const std::vector<uint32_t> &resIdList, std::vector<std::string> &labelList,
+    int32_t userId, const std::string &localeInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bundleName.empty() || moduleName.empty() || resIdList.empty() || resIdList.size() > MAX_RES_ID_LIST_SIZE) {
+        APP_LOGE("fail to GetStringByIdList due to params empty or resIdList size "
+            "%{public}zu exceeds max limit %{public}d", resIdList.size(), MAX_RES_ID_LIST_SIZE);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    APP_LOGD("GetStringByIdList bundleName: %{public}s, moduleName: %{public}s, resIdList.size: %{public}zu",
+        bundleName.c_str(), moduleName.c_str(), resIdList.size());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetStringByIdList due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName) || !data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetStringByIdList due to write bundleName or moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUInt32Vector(resIdList) || !data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetStringByIdList due to write resIdList or userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(localeInfo)) {
+        APP_LOGE("fail to GetStringByIdList due to write localeInfo fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_STRING_BY_ID_LIST, data, reply)) {
+        APP_LOGE("fail to GetStringByIdList from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("GetStringByIdList failed with err %{public}d", ret);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    std::vector<StringParcelable> labelListParcelable;
+    ret = InnerGetVectorFromParcelIntelligent<StringParcelable>(reply, labelListParcelable);
+    if (ret != ERR_OK) {
+        APP_LOGE("fail to GetStringByIdList due to read labelList fail");
+        return ret;
+    }
+    for (const auto &sp : labelListParcelable) {
+        labelList.emplace_back(sp.value);
+    }
+    return ERR_OK;
+}
+
 std::string BundleMgrProxy::GetIconById(
     const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
 {
@@ -6099,6 +6152,61 @@ ErrCode BundleMgrProxy::QueryCloneAbilityInfo(const ElementName &element,
         BundleMgrInterfaceCode::GET_CLONE_ABILITY_INFO, data, abilityInfo);
 }
 
+ErrCode BundleMgrProxy::QuerySandboxCloneAbilityInfo(const std::string &creatorBundleName,
+    const ElementName &element, int32_t flags, int32_t appIndex,
+    AbilityInfo &abilityInfo, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (creatorBundleName.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "proxy query creatorBundleName is empty");
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_CREATOR_BUNDLE_NAME;
+    }
+
+    std::string bundleName = element.GetBundleName();
+    std::string abilityName = element.GetAbilityName();
+    if (bundleName.empty() || abilityName.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "QuerySandboxCloneAbilityInfo invalid params");
+        return ERR_APPEXECFWK_CLI_SANDBOX_QUERY_PARAM_ERROR;
+    }
+
+    if (appIndex < Constants::CLI_SANDBOX_APP_INDEX_MIN || appIndex > Constants::CLI_SANDBOX_APP_INDEX_MAX) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "proxy query appIndex %{public}d is not in cli sandbox range", appIndex);
+        return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_APP_INDEX;
+    }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY, "write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(creatorBundleName)) {
+        LOG_E(BMS_TAG_QUERY, "write creatorBundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&element)) {
+        LOG_E(BMS_TAG_QUERY, "write element fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(element.GetModuleName())) {
+        LOG_E(BMS_TAG_QUERY, "write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        LOG_E(BMS_TAG_QUERY, "write flags failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_QUERY, "write appIndex failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_QUERY, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<AbilityInfo>(
+        BundleMgrInterfaceCode::QUERY_SANDBOX_CLONE_ABILITY_INFO, data, abilityInfo);
+}
+
 ErrCode BundleMgrProxy::GetCloneBundleInfo(const std::string &bundleName, int32_t flags, int32_t appIndex,
     BundleInfo &bundleInfo, int32_t userId)
 {
@@ -6218,6 +6326,94 @@ ErrCode BundleMgrProxy::GetCloneAppIndexes(const std::string &bundleName, std::v
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ret;
+}
+
+ErrCode BundleMgrProxy::GetCliSandboxAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
+    int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to GetCliSandboxAppIndexes of %{public}s", bundleName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetCliSandboxAppIndexes due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("failed to GetCliSandboxAppIndexes due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetCliSandboxAppIndexes due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_CLI_SANDBOX_APP_INDEXES, data, reply)) {
+        APP_LOGE("fail to GetCliSandboxAppIndexes from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if (!reply.ReadInt32Vector(&appIndexes)) {
+        APP_LOGE("fail to GetCliSandboxAppIndexes from reply");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ret;
+}
+
+ErrCode BundleMgrProxy::GetAppClonePreference(const std::string &bundleName,
+    int32_t userId, AppClonePreference &preference)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to GetAppClonePreference of %{public}s", bundleName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("GetAppClonePreference fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE_NOFUNC("GetAppClonePreference fail to write bundleName");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE_NOFUNC("GetAppClonePreference fail to write userId");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<AppClonePreference>(
+        BundleMgrInterfaceCode::GET_APP_CLONE_PREFERENCE, data, preference);
+}
+
+ErrCode BundleMgrProxy::SetAppClonePreference(const std::string &bundleName,
+    int32_t userId, const AppClonePreference &preference)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to SetAppClonePreference of %{public}s", bundleName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("SetAppClonePreference fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference fail to write bundleName");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference fail to write userId");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&preference)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference fail to write preference");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ErrCode ret = SendTransactCmdWithErrCode(BundleMgrInterfaceCode::SET_APP_CLONE_PREFERENCE, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("SetAppClonePreference SendTransactCmd fail %{public}d", ret);
+        return ret;
+    }
+    return reply.ReadInt32();
 }
 
 ErrCode BundleMgrProxy::GetLaunchWant(Want &want)

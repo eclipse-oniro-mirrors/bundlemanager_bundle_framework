@@ -331,26 +331,82 @@ ErrCode BundleManagerHelper::InnerGetAllAppCloneBundleInfo(
     if (ret != ERR_OK && ret != ERR_BUNDLE_MANAGER_APPLICATION_DISABLED && ret != ERR_BUNDLE_MANAGER_BUNDLE_DISABLED) {
         return CommonFunc::ConvertErrCode(ret);
     }
+
+    bool hasSandboxFlag = static_cast<uint32_t>(bundleFlags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SANDBOX_CLONE);
+    bool hasCommonFlag = static_cast<uint32_t>(bundleFlags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_COMMON_CLONE);
+    bool queryClone = !hasSandboxFlag || hasCommonFlag;
+    bool querySandbox = hasSandboxFlag;
+
     // handle clone apps
-    std::vector<int32_t> appIndexes;
-    ErrCode getCloneIndexesRet = iBundleMgr->GetCloneAppIndexes(bundleName, appIndexes, userId);
-    if (getCloneIndexesRet != ERR_OK) {
-        if (ret == ERR_OK) {
-            return SUCCESS;
+    if (queryClone) {
+        std::vector<int32_t> appIndexes;
+        ErrCode getCloneIndexesRet = iBundleMgr->GetCloneAppIndexes(bundleName, appIndexes, userId);
+        if (getCloneIndexesRet != ERR_OK) {
+            if (!querySandbox) {
+                if (ret == ERR_OK) {
+                    return SUCCESS;
+                }
+                return CommonFunc::ConvertErrCode(ret);
+            }
         }
-        return CommonFunc::ConvertErrCode(ret);
-    }
-    for (int32_t appIndex : appIndexes) {
-        BundleInfo bundleInfo;
-        ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, appIndex, bundleInfo, userId);
-        if (ret == ERR_OK) {
-            bundleInfos.emplace_back(bundleInfo);
+        for (int32_t appIndex : appIndexes) {
+            BundleInfo bundleInfo;
+            ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, appIndex, bundleInfo, userId);
+            if (ret == ERR_OK) {
+                bundleInfos.emplace_back(bundleInfo);
+            }
         }
     }
+
+    // handle CLI sandbox apps
+    if (querySandbox) {
+        std::vector<int32_t> sandboxIndexes;
+        ErrCode getSandboxIndexesRet = iBundleMgr->GetCliSandboxAppIndexes(bundleName, sandboxIndexes, userId);
+        if (getSandboxIndexesRet == ERR_OK) {
+            for (int32_t appIndex : sandboxIndexes) {
+                BundleInfo bundleInfo;
+                ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, appIndex, bundleInfo, userId);
+                if (ret == ERR_OK) {
+                    bundleInfos.emplace_back(bundleInfo);
+                }
+            }
+        }
+    }
+
     if (bundleInfos.empty()) {
         return ERROR_BUNDLE_IS_DISABLED;
     }
     return SUCCESS;
+}
+
+ErrCode BundleManagerHelper::InnerGetAppClonePreference(
+    const std::string& bundleName, AppClonePreference& preference)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode ret = iBundleMgr->GetAppClonePreference(bundleName, userId, preference);
+    APP_LOGD("GetAppClonePreference ErrCode: %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerSetAppClonePreference(
+    const std::string& bundleName, const AppClonePreference& preference)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode ret = iBundleMgr->SetAppClonePreference(bundleName, userId, preference);
+    APP_LOGD("SetAppClonePreference ErrCode: %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
 }
 
 ErrCode BundleManagerHelper::InnerGetAllSharedBundleInfo(std::vector<SharedBundleInfo>& sharedBundles)

@@ -188,7 +188,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_0200, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->ExtractModuleFiles(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING);
+    auto ret = proxy->ExtractModuleFiles(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_OK);
 }
 
