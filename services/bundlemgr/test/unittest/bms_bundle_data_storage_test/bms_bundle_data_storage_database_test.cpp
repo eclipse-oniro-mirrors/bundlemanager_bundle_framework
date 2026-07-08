@@ -4803,6 +4803,31 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7700, Function | Medi
 }
 
 /**
+ * @tc.number: InnerBundleInfo_7703
+ * @tc.name: Test GetApplicationEnabledV9 with CLI sandbox appIndex at max boundary
+ * @tc.desc: 1.Set sandboxInfo at appIndex=3000 (CLI_SANDBOX_APP_INDEX_MAX)
+ *           2.GetApplicationEnabledV9 with appIndex=3000 returns ERR_OK
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7703, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    bool isEnabled = false;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.enabled = false;
+    InnerCliSandboxInfo sandboxInfo;
+    const int32_t boundaryAppIndex = 3000;
+    userInfo.sandboxInfos.try_emplace(
+        InnerBundleUserInfo::AppIndexToKey(boundaryAppIndex), sandboxInfo);
+    std::string key = BUNDLE_NAME + std::string("_") + std::to_string(userId);
+    info.innerBundleUserInfos_.try_emplace(key, userInfo);
+    auto ret = info.GetApplicationEnabledV9(userId, isEnabled, boundaryAppIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(isEnabled);
+}
+
+/**
  * @tc.number: InnerBundleInfo_7800
  * @tc.name: Test InsertInnerSharedModuleInfo
  * @tc.desc: Test the InsertInnerSharedModuleInfo of InnerBundleInfo

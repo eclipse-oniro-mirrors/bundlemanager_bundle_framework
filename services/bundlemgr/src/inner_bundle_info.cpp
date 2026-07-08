@@ -2408,6 +2408,15 @@ ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled
         PrintSetEnabledInfo(isEnabled, userId, appIndex, innerBundleUserInfoPtr->bundleName,
             iter->second.setEnabledCaller);
         return ERR_OK;
+    } else if (appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX) {
+        const std::map<std::string, InnerCliSandboxInfo>& sandboxInfos = innerBundleUserInfoPtr->sandboxInfos;
+        std::string key = InnerBundleUserInfo::AppIndexToKey(appIndex);
+        auto iter = sandboxInfos.find(key);
+        if (iter == sandboxInfos.end()) {
+            return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+        }
+        isEnabled = true;
+        return ERR_OK;
     } else {
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
