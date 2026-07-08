@@ -3482,39 +3482,74 @@ namespace AccessToken {
 /**
  * @tc.number: ProcessAccessTokenMigration_0100
  * @tc.name: ProcessAccessTokenMigration already migrated
- * @tc.desc: OTA flag already set → calls FinishMigration and returns early
+ * @tc.desc: migration count >= 1 → calls FinishMigration and returns early
  */
 HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0100, Function | SmallTest | Level0)
 {
     auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
     ASSERT_NE(bmsParam, nullptr);
-    // Set OTA flag to include PROCESS_ACCESS_TOKEN_MIGRATION bit (0x02000000)
-    bmsParam->SaveBmsParam("otaFlag", std::to_string(static_cast<int32_t>(0x02000000)));
+    bmsParam->SaveBmsParam("accessTokenMigrationCount", "1");
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     handler->ProcessAccessTokenMigration();
-    // Verify OTA flag unchanged (already migrated, no UpdateOtaFlag called)
     std::string val;
-    bmsParam->GetBmsParam("otaFlag", val);
-    EXPECT_EQ(val, std::to_string(static_cast<int32_t>(0x02000000)));
+    bmsParam->GetBmsParam("accessTokenMigrationCount", val);
+    EXPECT_EQ(val, "1");
 }
 
 /**
  * @tc.number: ProcessAccessTokenMigration_0200
  * @tc.name: ProcessAccessTokenMigration not migrated
- * @tc.desc: OTA flag not set → calls InnerProcessAccessTokenMigration and sets flag
+ * @tc.desc: migration count is 0 → calls InnerProcessAccessTokenMigration and increments count
  */
 HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0200, Function | SmallTest | Level0)
 {
     auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
     ASSERT_NE(bmsParam, nullptr);
-    bmsParam->SaveBmsParam("otaFlag", "0");
+    bmsParam->SaveBmsParam("accessTokenMigrationCount", "0");
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     handler->ProcessAccessTokenMigration();
     std::string val;
-    bmsParam->GetBmsParam("otaFlag", val);
+    bmsParam->GetBmsParam("accessTokenMigrationCount", val);
     EXPECT_NE(val, "0");
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0300
+ * @tc.name: ProcessAccessTokenMigration already migrated with large count
+ * @tc.desc: migration count is INT32_MAX → count >= 1, treated as already migrated, value unchanged
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0300, Function | SmallTest | Level0)
+{
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    auto intMaxStr = std::to_string(INT32_MAX);
+    bmsParam->SaveBmsParam("accessTokenMigrationCount", intMaxStr);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->ProcessAccessTokenMigration();
+    std::string val;
+    bmsParam->GetBmsParam("accessTokenMigrationCount", val);
+    EXPECT_EQ(val, intMaxStr);
+}
+
+/**
+ * @tc.number: ProcessAccessTokenMigration_0400
+ * @tc.name: ProcessAccessTokenMigration count is negative
+ * @tc.desc: migration count < 0 → overflow protection resets to 1
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAccessTokenMigration_0400, Function | SmallTest | Level0)
+{
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("accessTokenMigrationCount", "-1");
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->ProcessAccessTokenMigration();
+    std::string val;
+    bmsParam->GetBmsParam("accessTokenMigrationCount", val);
+    EXPECT_EQ(val, "1");
 }
 
 // ============================================================================

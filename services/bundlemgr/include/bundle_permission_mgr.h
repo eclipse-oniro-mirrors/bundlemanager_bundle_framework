@@ -81,7 +81,8 @@ public:
     static int32_t UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
         InnerBundleInfo &innerBundleInfo, int32_t userId,
         Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
-        bool dataRefresh = false, const bool isDebugGrant = false, int32_t sessionId = 0);
+        bool dataRefresh = false, const bool isDebugGrant = false, int32_t sessionId = 0,
+        int32_t appIndex = 0);
 
     static int32_t CheckHapPermissionInfo(int32_t sessionId, Security::AccessToken::InstallTypeEnum type,
         Security::AccessToken::HapInfoCheckResult &checkResult);
@@ -184,9 +185,11 @@ private:
     static int32_t UpdateHapPolicy(
         int32_t sessionId,
         int32_t tokenId,
-        const InnerBundleInfo &innerBundleInfo,
+        InnerBundleInfo &innerBundleInfo,
+        int32_t userId,
         bool isDebugGrant,
-        const std::string &appServiceCapabilities);
+        const std::string &appServiceCapabilities,
+        int32_t appIndex = 0);
 
     static void ConvertPermissionDef(const Security::AccessToken::PermissionDef &permDef,
         PermissionDef &permissionDef);

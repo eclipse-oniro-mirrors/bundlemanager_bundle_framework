@@ -706,6 +706,8 @@ enum {
     ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_APP_INDEX_EXISTED = 8522736,
     ERR_APPEXECFWK_CLI_SANDBOX_NOT_EXISTED = 8522737,
     ERR_APPEXECFWK_CLI_SANDBOX_QUERY_PARAM_ERROR = 8522738,
+    // uid changed during UpdateHapPolicy, caller should recreate bundle data dir
+    ERR_APPEXECFWK_INSTALL_UID_CHANGED = 8522739,
 };
 
 // Error code for Hidump

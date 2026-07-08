@@ -56,9 +56,9 @@ public:
     ErrCode UninstallAllCloneApps(const std::string &bundleName, bool sync, bool isKeepData,
         int32_t userId = Constants::INVALID_USERID);
 
-private:
     ErrCode CreateCloneDataDir(
         InnerBundleInfo &info, const int32_t userId, const int32_t &uid, const int32_t &appIndex) const;
+private:
     ErrCode RemoveCloneDataDir(const std::string bundleName, int32_t userId, int32_t appIndex, bool sync);
     bool DeleteUninstalledCloneData(const std::string &bundleName, int32_t userId, int32_t appIndex);
     void CreateEl5Dir(InnerBundleInfo &info, const int32_t userId, const int32_t uid, const int32_t appIndex);

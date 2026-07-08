@@ -274,9 +274,24 @@ int32_t AccessTokenKit::PrepareHapIdentity(
     return ret;
 }
 
-int32_t AccessTokenKit::UpdateHapPolicy(int32_t sessionId, int32_t tokenId, const BundlePolicy& policy)
+static int32_t g_updateHapPolicyRet = 0;
+static int32_t g_updateHapPolicyUid = 0;
+
+void SetUpdateHapPolicyRetForTest(int32_t ret, int32_t newUid)
 {
-    return 0;
+    g_updateHapPolicyRet = ret;
+    g_updateHapPolicyUid = newUid;
+}
+
+int32_t AccessTokenKit::UpdateHapPolicy(int32_t sessionId, int32_t tokenId, const BundlePolicy& policy, int32_t& uid)
+{
+    if (g_updateHapPolicyUid != 0) {
+        uid = g_updateHapPolicyUid;
+    }
+    int32_t ret = g_updateHapPolicyRet;
+    g_updateHapPolicyRet = 0;
+    g_updateHapPolicyUid = 0;
+    return ret;
 }
 
 int32_t AccessTokenKit::FinishInstall(int32_t sessionId, bool isSuccess,

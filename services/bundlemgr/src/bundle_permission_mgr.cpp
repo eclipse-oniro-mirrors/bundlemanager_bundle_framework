@@ -802,6 +802,15 @@ int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, cons
         ret = PrepareHapIdentity(innerBundleInfo, userId, dlpType, isDebugGrant,
             appServiceCapabilities, sessionId, identity);
     }
+    if (sessionId == 0 && ret == Security::AccessToken::AccessTokenError::ERR_BUNDLE_NOT_EXIST) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT,
+            "ERR_BUNDLE_NOT_EXIST bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+        int32_t updateRet = UpdateAppPermission(innerBundleInfo, userId, Security::AccessToken::TYPE_INSTALL);
+        if (updateRet == ERR_OK) {
+            ret = PrepareHapIdentity(innerBundleInfo, userId, dlpType, isDebugGrant,
+                appServiceCapabilities, sessionId, identity);
+        }
+    }
     if (sessionId == 0 && ret == Security::AccessToken::AccessTokenError::ERR_TOKENID_HAS_EXISTED) {
         Security::AccessToken::AccessTokenID tokenId =
             Security::AccessToken::AccessTokenKit::GetHapTokenID(
@@ -857,13 +866,14 @@ int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, cons
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
     InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
-    const std::string &appServiceCapabilities, bool dataRefresh, const bool isDebugGrant, int32_t sessionId)
+    const std::string &appServiceCapabilities, bool dataRefresh, const bool isDebugGrant, int32_t sessionId,
+    int32_t appIndex)
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "start UpdateHapToken -n %{public}s -t: %{public}s -g: %{public}d",
         innerBundleInfo.GetBundleName().c_str(), innerBundleInfo.GetAppProvisionType().c_str(), isDebugGrant);
 
     int32_t ret = UpdateHapPolicy(sessionId, tokenIdeEx.tokenIdExStruct.tokenID,
-        innerBundleInfo, isDebugGrant, appServiceCapabilities);
+        innerBundleInfo, userId, isDebugGrant, appServiceCapabilities, appIndex);
     if (ret == ERR_OK) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "UpdateHapToken success");
         return ERR_OK;
@@ -873,7 +883,7 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
         ret == Security::AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED) {
         // try again for transient errors
         ret = UpdateHapPolicy(sessionId, tokenIdeEx.tokenIdExStruct.tokenID,
-            innerBundleInfo, isDebugGrant, appServiceCapabilities);
+            innerBundleInfo, userId, isDebugGrant, appServiceCapabilities, appIndex);
         if (ret == ERR_OK) {
             LOG_NOFUNC_I(BMS_TAG_DEFAULT, "UpdateHapToken success after retry");
             return ERR_OK;
@@ -1019,21 +1029,79 @@ int32_t BundlePermissionMgr::PrepareHapIdentity(
 int32_t BundlePermissionMgr::UpdateHapPolicy(
     int32_t sessionId,
     int32_t tokenId,
-    const InnerBundleInfo &innerBundleInfo,
+    InnerBundleInfo &innerBundleInfo,
+    int32_t userId,
     bool isDebugGrant,
-    const std::string &appServiceCapabilities)
+    const std::string &appServiceCapabilities,
+    int32_t appIndex)
 {
-    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "UpdateHapPolicy -n %{public}s -s %{public}d -t %{public}x",
-        innerBundleInfo.GetBundleName().c_str(), sessionId, tokenId);
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "UpdateHapPolicy -n %{public}s -s %{public}d -t %{public}x -a %{public}d",
+        innerBundleInfo.GetBundleName().c_str(), sessionId, tokenId, appIndex);
 
     Security::AccessToken::BundlePolicy bundlePolicy = CreateBundlePolicy(innerBundleInfo, isDebugGrant, 0);
 
-    int32_t ret = Security::AccessToken::AccessTokenKit::UpdateHapPolicy(sessionId, tokenId, bundlePolicy);
+    InnerBundleUserInfo curUserInfo;
+    int32_t uid = Constants::INVALID_UID;
+    bool hasUserInfo = innerBundleInfo.GetInnerBundleUserInfo(userId, curUserInfo);
+    if (hasUserInfo) {
+        if (appIndex > 0) {
+            auto cloneKey = std::to_string(appIndex);
+            auto cloneIter = curUserInfo.cloneInfos.find(cloneKey);
+            if (cloneIter != curUserInfo.cloneInfos.end() && cloneIter->second.uid != Constants::INVALID_UID) {
+                uid = cloneIter->second.uid;
+            }
+        } else if (curUserInfo.uid != Constants::INVALID_UID) {
+            uid = curUserInfo.uid;
+        }
+    }
+
+    int32_t ret = Security::AccessToken::AccessTokenKit::UpdateHapPolicy(sessionId, tokenId, bundlePolicy, uid);
     if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_E(BMS_TAG_DEFAULT, "UpdateHapPolicy failed, bundleName:%{public}s errCode:%{public}d",
             innerBundleInfo.GetBundleName().c_str(), ret);
         return ret;
     }
+
+    if (hasUserInfo && uid != Constants::INVALID_UID) {
+        bool uidChanged = false;
+        int32_t oldUid = Constants::INVALID_UID;
+        if (appIndex > 0) {
+            auto cloneKey = std::to_string(appIndex);
+            auto cloneIter = curUserInfo.cloneInfos.find(cloneKey);
+            if (cloneIter != curUserInfo.cloneInfos.end()) {
+                oldUid = cloneIter->second.uid;
+                uidChanged = (uid != oldUid);
+                if (uidChanged) {
+                    cloneIter->second.uid = uid;
+                }
+            }
+        } else {
+            oldUid = curUserInfo.uid;
+            uidChanged = (uid != oldUid);
+            if (uidChanged) {
+                curUserInfo.uid = uid;
+                curUserInfo.gids.clear();
+                curUserInfo.gids.emplace_back(uid);
+            }
+        }
+        if (uidChanged) {
+            LOG_I(BMS_TAG_DEFAULT,
+                "uid changed from %{public}d to %{public}d, bundleName:%{public}s, appIndex:%{public}d",
+                oldUid, uid, innerBundleInfo.GetBundleName().c_str(), appIndex);
+            innerBundleInfo.AddInnerBundleUserInfo(curUserInfo);
+            auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+            if (dataMgr != nullptr) {
+                dataMgr->UpdateUidMap(uid, innerBundleInfo.GetBundleName(), appIndex);
+            }
+            int32_t bundleId = uid - userId * Constants::BASE_USER_RANGE;
+            BundleUtil::MakeFsConfig(innerBundleInfo.GetBundleName(), bundleId,
+                ServiceConstants::HMDFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(innerBundleInfo.GetBundleName(), bundleId,
+                ServiceConstants::SHAREFS_CONFIG_PATH);
+            return ERR_APPEXECFWK_INSTALL_UID_CHANGED;
+        }
+    }
+
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "UpdateHapPolicy success");
     return ERR_OK;
 }
