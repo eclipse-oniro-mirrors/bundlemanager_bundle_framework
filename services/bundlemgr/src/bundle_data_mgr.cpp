@@ -3021,7 +3021,7 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
     }
     auto ret = GetInnerBundleInfoWithBundleFlagsV9(appName, flag, innerBundleInfo, requestUserId, appIndex);
     if (ret != ERR_OK) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetApplicationInfoV9 failed -n:%{public}s -u:%{public}d -i:%{public}d",
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetInnerBundleInfoWithBundleFlagsV9 failed -n:%{public}s -u:%{public}d -i:%{public}d",
             appName.c_str(), requestUserId, appIndex);
         return ret;
     }
@@ -3541,7 +3541,11 @@ ErrCode BundleDataMgr::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInf
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     int32_t userId = uid / Constants::BASE_USER_RANGE;
-    innerBundleInfo->GetBundleInfoV9(flags, bundleInfo, userId, appIndex);
+    if (appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX) {
+        innerBundleInfo->GetBundleInfoForCliSandbox(flags, bundleInfo, userId, appIndex);
+    } else {
+        innerBundleInfo->GetBundleInfoV9(flags, bundleInfo, userId, appIndex);
+    }
     ProcessCertificate(bundleInfo, innerBundleInfo->GetBundleName(), flags);
     ProcessBundleMenu(bundleInfo, flags, true);
     ProcessBundleRouterMap(bundleInfo, flags, userId);
