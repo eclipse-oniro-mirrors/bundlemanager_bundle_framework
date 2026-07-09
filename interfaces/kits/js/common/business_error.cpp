@@ -131,7 +131,7 @@ napi_value BusinessError::CreateNewCommonError(
 
 napi_value BusinessError::CreateInstallError(
     napi_env env, int32_t err, int32_t innerCode,
-    const std::string &functionName, const std::string &permissionName)
+    const std::string &functionName, const std::string &permissionName, bool needSplice)
 {
     std::string errMessage = BusinessErrorNS::ERR_MSG_BUSINESS_ERROR;
     auto iter = errMessage.find("$");
@@ -143,7 +143,9 @@ napi_value BusinessError::CreateInstallError(
     if (errMap.find(err) != errMap.end()) {
         errMessage += errMap[err];
     }
-    errMessage += "[" + std::to_string(innerCode) + "]";
+    if (needSplice) {
+        errMessage += "[" + std::to_string(innerCode) + "]";
+    }
     iter = errMessage.find("$");
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, functionName);

@@ -40,7 +40,7 @@ static napi_value CreateNewCommonError(napi_env env, int32_t err,
 
 static napi_value CreateInstallError(
     napi_env env, int32_t err, int32_t innerCode,
-    const std::string &functionName, const std::string &permissionName);
+    const std::string &functionName, const std::string &permissionName, bool needSplice = true);
 
 static napi_value CreateError(napi_env env, int32_t err, const std::string &msg);
 
