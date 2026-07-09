@@ -4597,13 +4597,16 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     if (!supportDataCloneInstall_) {
         ExtractResourceFiles(info, modulePath);
         auto needFakeDecompression =
-            BundleUtil::IsSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive());
+            BundleUtil::IsSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive(), info.GetCurModuleName(),
+                info.GetTargetVersion(), info.GetCompatibleVersion());
         auto isSystemApp = info.IsSystemApp();
         result = ExtractResFileDir(modulePath, needFakeDecompression, isSystemApp);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to ExtractResFileDir, error is %{public}d", result);
             return result;
         }
+        sysEventInfo_.isResourceFileFakeDecompression = sysEventInfo_.isResourceFileFakeDecompression ||
+            needFakeDecompression;
     }
 
     if (auto hnpPackageInfos = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
@@ -5642,7 +5645,8 @@ ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info, con
 {
     LOG_D(BMS_TAG_INSTALLER, "extract module to %{public}s", modulePath.c_str());
     auto needFakeDecompression = info.IsFakeDecompressionEnable() &&
-                                 BundleUtil::IsSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive());
+                                 BundleUtil::IsSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive(),
+                                     info.GetCurModuleName(), info.GetTargetVersion(), info.GetCompatibleVersion());
     auto isSystemApp = info.IsSystemApp();
     LOG_D(BMS_TAG_INSTALLER,
         "ExtractModuleFiles,targetSoPath:%{public}s modulePath:%{public}s needFakeDecompression:%{public}d",
@@ -5655,6 +5659,7 @@ ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info, con
         LOG_E(BMS_TAG_INSTALLER, "extract module files failed, error is %{public}d", result);
         return result;
     }
+    sysEventInfo_.isSoFakeDecompression = sysEventInfo_.isSoFakeDecompression || needFakeDecompression;
 
     return ERR_OK;
 }

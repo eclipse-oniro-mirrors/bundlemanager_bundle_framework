@@ -113,6 +113,8 @@ const char* EVENT_PARAM_ODID = "ODID";
 const char* EVENT_PARAM_APPLICATION_INFO_SIZE = "APPLICATION_INFO_SIZE";
 const char* EVENT_PARAM_NPAPI_PLUGIN_STATUS = "NPAPI_PLUGIN_STATUS";
 const char* EVENT_PARAM_SKILL_COUNT = "SKILL_COUNT";
+const char* EVENT_PARAM_IS_RESOURCE_FILE_FAKE_DECOMPRESSION = "IS_RES_FILE_FAKE_DECOMPRESSION";
+const char* EVENT_PARAM_IS_SO_FAKE_DECOMPRESSION = "IS_SO_FAKE_DECOMPRESSION";
 
 // API and SDK version
 const char* EVENT_PARAM_MIN_API_VERSION = "MIN_API_VERSION";
@@ -555,7 +557,9 @@ void InnerEventReport::InnerSendBundleInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_ODID, eventInfo.odid,
         EVENT_PARAM_APPLICATION_INFO_SIZE, eventInfo.applicationInfoSize,
         EVENT_PARAM_NPAPI_PLUGIN_STATUS, eventInfo.npapiPluginStatus,
-        EVENT_PARAM_SKILL_COUNT, eventInfo.skillCount);
+        EVENT_PARAM_SKILL_COUNT, eventInfo.skillCount,
+        EVENT_PARAM_IS_SO_FAKE_DECOMPRESSION, eventInfo.isSoFakeDecompression,
+        EVENT_PARAM_IS_RESOURCE_FILE_FAKE_DECOMPRESSION, eventInfo.isResourceFileFakeDecompression);
 }
 
 void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
@@ -617,7 +621,9 @@ void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
         EVENT_PARAM_ODID, eventInfo.odid,
         EVENT_PARAM_APPLICATION_INFO_SIZE, eventInfo.applicationInfoSize,
         EVENT_PARAM_NPAPI_PLUGIN_STATUS, eventInfo.npapiPluginStatus,
-        EVENT_PARAM_SKILL_COUNT, eventInfo.skillCount);
+        EVENT_PARAM_SKILL_COUNT, eventInfo.skillCount,
+        EVENT_PARAM_IS_SO_FAKE_DECOMPRESSION, eventInfo.isSoFakeDecompression,
+        EVENT_PARAM_IS_RESOURCE_FILE_FAKE_DECOMPRESSION, eventInfo.isResourceFileFakeDecompression);
 }
 
 void InnerEventReport::InnerSendPreBundleRecoverEvent(const EventInfo& eventInfo)

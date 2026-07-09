@@ -260,7 +260,8 @@ public:
     static std::vector<std::string> FileTypeNormalize(const std::string &fileType);
     static std::string Sha256File(const std::string& filePath);
     static ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias);
-    static bool IsSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive);
+    static bool IsSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive,
+        const std::string& moduleName, const uint32_t targetVersion, const uint32_t minApiVersion);
     /**
      * @brief Decompress zip file to dir and collect file paths.
      * @param zipFilePath Indicates the zip file path.

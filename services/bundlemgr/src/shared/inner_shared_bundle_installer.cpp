@@ -233,6 +233,7 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
     auto &mtx = dataMgr->GetBundleMutex(bundleName_);
     std::lock_guard lock {mtx};
     result = CheckWithInstalledInfo();
+    isSoFakeDecompression_ = false;
     CHECK_RESULT(result, "CheckWithInstalledInfo failed %{public}d");
     AddAppProvisionInfo(bundleName_, hapVerifyResults_[0].GetProvisionInfo());
     for (auto &item : parsedBundles_) {
@@ -338,6 +339,7 @@ void InnerSharedBundleInstaller::SendBundleSystemEvent(const EventInfo &eventTem
     eventInfo.bundleName = bundleName_;
     eventInfo.versionCode = newBundleInfo_.GetBaseBundleInfo().versionCode;
     eventInfo.callingUid = IPCSkeleton::GetCallingUid();
+    eventInfo.isSoFakeDecompression = isSoFakeDecompression_;
     GetInstallEventInfo(eventInfo);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr != nullptr) {
@@ -815,11 +817,13 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
         APP_LOGD("tempSoPath=%{public}s,cpuAbi=%{public}s, bundlePath=%{public}s",
             tempSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
         auto needFakeDecompression = newInfo.IsFakeDecompressionEnable() &&
-            BundleUtil::IsSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive());
+            BundleUtil::IsSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(),
+                newInfo.GetCurModuleName(), newInfo.GetTargetVersion(), newInfo.GetCompatibleVersion());
         auto isSystemApp = newInfo.IsSystemApp();
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
             bundlePath, moduleDir, tempSoPath, cpuAbi, needFakeDecompression, isSystemApp);
         CHECK_RESULT(result, "extract module files failed %{public}d");
+        isSoFakeDecompression_ = isSoFakeDecompression_ || needFakeDecompression;
         // verify hap or hsp code signature for compressed so files
         result = VerifyCodeSignatureForNativeFiles(
             bundlePath, cpuAbi, tempSoPath, signatureFileDir_, newInfo.IsPreInstallApp());

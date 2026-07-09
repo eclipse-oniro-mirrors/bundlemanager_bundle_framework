@@ -579,7 +579,8 @@ ErrCode PluginInstaller::ProcessNativeLibrary(
             soPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
         auto needFakeDecompression =
             newInfo.IsFakeDecompressionEnable() &&
-            BundleUtil::IsSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive());
+            BundleUtil::IsSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(),
+                newInfo.GetCurModuleName(), newInfo.GetTargetVersion(), newInfo.GetCompatibleVersion());
         auto isSystemApp = newInfo.IsSystemApp();
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
             bundlePath, moduleDir, soPath, cpuAbi, needFakeDecompression, isSystemApp);

@@ -1659,7 +1659,8 @@ bool BundleUtil::IsVmEnabled()
     return false;
 }
 
-bool BundleUtil::IsSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive)
+bool BundleUtil::IsSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive,
+    const std::string& moduleName, const uint32_t targetVersion, const uint32_t minApiVersion)
 {
     if (!FileManagement::Decompress::GetSystemFeature()) {
         APP_LOGD("device not support FakeDecompression");
@@ -1667,6 +1668,12 @@ bool BundleUtil::IsSupportFakeDecompression(const std::string &bundleName, const
     }
     if (!FileManagement::Decompress::CheckBundleSupported(bundleName, isKeepAlive)) {
         APP_LOGI("not support FakeDecompression:%{public}s %{public}d", bundleName.c_str(), isKeepAlive);
+        return false;
+    }
+    if (!FileManagement::Decompress::CheckModuleApiVersionSupported(
+        moduleName, targetVersion, minApiVersion)) {
+        APP_LOGI("CheckModuleApiVersionSupported fail:%{public}s %{public}d %{public}d", moduleName.c_str(),
+            targetVersion, minApiVersion);
         return false;
     }
     return true;
