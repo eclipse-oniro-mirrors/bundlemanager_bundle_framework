@@ -466,6 +466,10 @@ ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<std::string> &bundl
         APP_LOGE("fail to BatchGetBundleInfo due to params empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("fail to BatchGetBundleInfo due to too many bundleNames");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     for (size_t i = 0; i < bundleNames.size(); i++) {
         APP_LOGD("begin to get bundle info of %{public}s", bundleNames[i].c_str());
         if (bundleNames[i].empty()) {
@@ -1443,6 +1447,10 @@ ErrCode BundleMgrProxy::BatchQueryAbilityInfos(
     const std::vector<Want> &wants, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (wants.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("failed to BatchQueryAbilityInfos due to too many wants");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write interfaceToken failed");
@@ -3812,6 +3820,10 @@ ErrCode BundleMgrProxy::BatchGetBundleStats(const std::vector<std::string> &bund
     std::vector<BundleStorageStats> &bundleStats)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("fail to BatchGetBundleStats due to too many bundles");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("failed to BatchGetBundleStats due to write MessageParcel fail");
@@ -4338,6 +4350,10 @@ ErrCode BundleMgrProxy::GetMediaDataFromAshMem(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t ashMemSize = ashMem->GetAshmemSize();
+    if (ashMemSize <= 0 || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY_OF_ASHMEM)) {
+        APP_LOGE("invalid ashmem size: %{public}d", ashMemSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     int32_t offset = 0;
     const uint8_t* ashDataPtr = reinterpret_cast<const uint8_t*>(ashMem->ReadFromAshmem(ashMemSize, offset));
     if (ashDataPtr == nullptr) {
@@ -4723,13 +4739,17 @@ ErrCode BundleMgrProxy::BatchGetSpecifiedDistributionType(const std::vector<std:
         APP_LOGE("fail to batchGetSpecifiedDistributionType due to params empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
+    if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("fail to BatchGetSpecifiedDistributionType due to too many bundleNames");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to BatchGetBundleInfo due to write InterfaceToken fail");
+        APP_LOGE("fail to BatchGetSpecifiedDistributionType due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(static_cast<int32_t>(bundleNames.size()))) {
-        APP_LOGE("fail to BatchGetBundleInfo due to write bundle name count fail");
+        APP_LOGE("fail to BatchGetSpecifiedDistributionType due to write bundle name count fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     for (size_t i = 0; i < bundleNames.size(); i++) {
@@ -4779,6 +4799,10 @@ ErrCode BundleMgrProxy::BatchGetAdditionalInfo(const std::vector<std::string> &b
     if (bundleNames.empty()) {
         APP_LOGE("fail to batchGetAdditionalInfo due to params empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("fail to BatchGetAdditionalInfo due to too many bundleNames");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -6012,7 +6036,7 @@ ErrCode BundleMgrProxy::InnerGetBigString(MessageParcel &reply, std::string &res
         APP_LOGE("Fail read raw data length %{public}zu", dataSize);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    result = data;
+    result = std::string(data, dataSize);
     APP_LOGD("InnerGetBigString success");
     return ERR_OK;
 }
@@ -7312,14 +7336,14 @@ ErrCode BundleMgrProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void *&dat
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t ashMemSize = ashMem->GetAshmemSize();
+    if ((ashMemSize <= 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY_OF_ASHMEM)) {
+        APP_LOGE("failed due to wrong size: %{public}d", ashMemSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     int32_t offset = 0;
     const void* ashDataPtr = ashMem->ReadFromAshmem(ashMemSize, offset);
     if (ashDataPtr == nullptr) {
         APP_LOGE("ashDataPtr is nullptr");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY_OF_ASHMEM)) {
-        APP_LOGE("failed due to wrong size");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     data = malloc(ashMemSize);

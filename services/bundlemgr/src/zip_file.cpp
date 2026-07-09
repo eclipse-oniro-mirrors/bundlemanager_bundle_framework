@@ -91,7 +91,9 @@ bool ZipFile::CheckEndDir(const EndDir &endDir) const
         APP_LOGE("endDir.commentLen != 0");
         return false;
     }
-    if ((endDir.offset + endDir.sizeOfCentralDir + lenEndDir) > fileLength_) {
+    if (endDir.sizeOfCentralDir > fileLength_ ||
+        endDir.offset > fileLength_ - endDir.sizeOfCentralDir ||
+        lenEndDir > fileLength_ - endDir.offset - endDir.sizeOfCentralDir) {
         APP_LOGE("(endDir.offset + endDir.sizeOfCentralDir + lenEndDir) > fileLength_");
         return false;
     }
@@ -341,7 +343,7 @@ bool ZipFile::CheckDataDescInternal(const ZipEntry &zipEntry, const LocalHeader 
 
     if (localHeader.flags & FLAG_DATA_DESC) {  // use data desc
         DataDesc dataDesc;
-        auto descPos = zipEntry.localHeaderOffset + GetLocalHeaderSize(localHeader.nameSize, localHeader.extraSize);
+        uint64_t descPos = zipEntry.localHeaderOffset + GetLocalHeaderSize(localHeader.nameSize, localHeader.extraSize);
         descPos += fileStartPos_ + zipEntry.compressedSize;
 
         if (fseek(file, descPos, SEEK_SET) != 0) {
@@ -484,8 +486,7 @@ bool ZipFile::UnzipWithStore(const ZipEntry &zipEntry, const uint16_t extraSize,
 
     uint32_t remainSize = zipEntry.compressedSize;
     std::string readBuffer;
-    readBuffer.reserve(UNZIP_BUF_OUT_LEN);
-    readBuffer.resize(UNZIP_BUF_OUT_LEN - 1);
+    readBuffer.resize(UNZIP_BUF_OUT_LEN);
     while (remainSize > 0) {
         size_t readBytes;
         size_t readLen = (remainSize > UNZIP_BUF_OUT_LEN) ? UNZIP_BUF_OUT_LEN : remainSize;

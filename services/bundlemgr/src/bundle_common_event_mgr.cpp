@@ -139,8 +139,11 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     // trigger the status callback for status listening
     if ((dataMgr != nullptr) && (installResult.type != NotifyType::START_INSTALL)) {
         auto &callbackMutex = dataMgr->GetStatusCallbackMutex();
-        std::shared_lock<std::shared_mutex> lock(callbackMutex);
-        auto callbackList = dataMgr->GetCallBackList();
+        std::vector<sptr<IBundleStatusCallback>> callbackList;
+        {
+            std::shared_lock<std::shared_mutex> lock(callbackMutex);
+            callbackList = dataMgr->GetCallBackList();
+        }
         for (const auto& callback : callbackList) {
             int32_t callbackUserId = callback->GetUserId();
             if (callbackUserId != Constants::UNSPECIFIED_USERID && callbackUserId != publishUserId) {
@@ -787,15 +790,15 @@ void BundleCommonEventMgr::ProcessEventQueue()
 void BundleCommonEventMgr::NotifySetDisposedRuleAsync(
     const std::string &appId, int32_t userId, const std::string &data, int32_t appIndex)
 {
-    SubmitEventAsync([this, appId, userId, data, appIndex]() {
-        NotifySetDisposedRule(appId, userId, data, appIndex);
+    SubmitEventAsync([self = shared_from_this(), appId, userId, data, appIndex]() {
+        self->NotifySetDisposedRule(appId, userId, data, appIndex);
     });
 }
 
 void BundleCommonEventMgr::NotifyDeleteDisposedRuleAsync(const std::string &appId, int32_t userId, int32_t appIndex)
 {
-    SubmitEventAsync([this, appId, userId, appIndex]() {
-        NotifyDeleteDisposedRule(appId, userId, appIndex);
+    SubmitEventAsync([self = shared_from_this(), appId, userId, appIndex]() {
+        self->NotifyDeleteDisposedRule(appId, userId, appIndex);
     });
 }
 
@@ -804,8 +807,8 @@ void BundleCommonEventMgr::PublishCommonEventForEnterpriseAsync(
     const int32_t publishUserId,
     const EventFwk::CommonEventData &commonData)
 {
-    SubmitEventAsync([this, bundleName, publishUserId, commonData]() {
-        PublishCommonEventForEnterprise(bundleName, publishUserId, commonData);
+    SubmitEventAsync([self = shared_from_this(), bundleName, publishUserId, commonData]() {
+        self->PublishCommonEventForEnterprise(bundleName, publishUserId, commonData);
     });
 }
 } // AppExecFwk
