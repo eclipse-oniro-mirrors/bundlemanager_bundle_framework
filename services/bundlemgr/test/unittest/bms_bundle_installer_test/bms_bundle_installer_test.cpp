@@ -206,6 +206,8 @@ const std::string REMOVE_PRELOAD_TEST_BUNDLE = "com.example.remove.preload.test"
 const std::string DATA_PRELOAD_HAP_PATH = "/data/preload/app/com.example.test/entry.hap";
 const int32_t TEST_EL5_USERID = 2000;
 const std::string PLUGIN_NAME = "com.example.pluginTest1";
+const std::string TEST_RENAME_PATH = "/data/app/el2/100/sharefiles/test";
+const std::string TEST_RENAME_PATH_NEW = "/data/app/el2/100/sharefiles/test_new";
 enum {
     BMS_BROKER_ERR_UNINSTALL_FAILED = 8585218,
 };
@@ -14938,9 +14940,24 @@ HWTEST_F(BmsBundleInstallerTest, RenameFile_0100, Function | SmallTest | Level0)
     std::string oldPath = TEST_EMPTY_STRING;
     std::string newPath = TEST_EMPTY_STRING;
     auto ret = impl.RenameFile(oldPath, newPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    oldPath = TEST_RENAME_PATH;
+    ret = impl.RenameFile(oldPath, newPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    oldPath = TEST_EMPTY_STRING;
+    newPath = TEST_RENAME_PATH;
+    ret = impl.RenameFile(oldPath, newPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    oldPath = TEST_RENAME_PATH;
+    newPath = TEST_RENAME_PATH_NEW;
+    ret = impl.RenameFile(oldPath, newPath);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
-    oldPath = TEST_STRING;
-    newPath = TEST_STRING;
+
+    oldPath = TEST_RENAME_PATH;
+    newPath = TEST_RENAME_PATH;
     ret = impl.RenameFile(oldPath, newPath);
     EXPECT_EQ(ret, ERR_OK);
 }

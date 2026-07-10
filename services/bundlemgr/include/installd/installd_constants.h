@@ -135,6 +135,7 @@ enum class BundleDirScene : int32_t {
     REMOVE_SKILL_BUNDLE_DIR = 531,
     REMOVE_VERIFY_FILE = 532,
     REMOVE_NPAPI_PLUGIN_DIR = 533,
+    REMOVE_SANDBOX_DIR = 534,
 
     // ChangeFileStat scenes
     CHANGE_BMS_FILE_STAT = 601,
@@ -169,6 +170,8 @@ enum class BundleDirScene : int32_t {
     CLEAN_SHADER_CACHE_DIR = 1901,
     CLEAN_ARK_STARTUP_CACHE_DIR = 1902,
     CLEAN_EL1_CACHE_DIR = 1903,
+    // RenameFile scenes
+    RENAME_FILE = 2001,
 };
 
 const std::unordered_map<int32_t, int32_t> CODE_SIGNATURE_ERR_MAP = {
