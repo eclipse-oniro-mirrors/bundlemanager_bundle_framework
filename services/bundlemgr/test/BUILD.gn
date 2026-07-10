@@ -59,6 +59,7 @@ group("unittest") {
       "unittest/bms_app_clone_preference_parcel_test:unittest",
       "unittest/bms_app_clone_preference_storage_test:unittest",
       "unittest/bms_app_control_proxy_test:unittest",
+      "unittest/bms_app_data_monitor_test:unittest",
       "unittest/bms_bundle_accesstokenid_test:unittest",
       "unittest/bms_bundle_aot_test:unittest",
       "unittest/bms_bundle_app_control_test:unittest",

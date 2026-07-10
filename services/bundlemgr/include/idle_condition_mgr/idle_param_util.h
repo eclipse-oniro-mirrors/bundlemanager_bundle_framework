@@ -24,6 +24,7 @@ namespace AppExecFwk {
 class IdleParamUtil {
 public:
     static bool IsRelabelFeatureDisabled();
+    static bool IsAppDataScanDisabled();
 private:
     static std::string GetHigherVersionPath();
     static std::vector<int32_t> GetVersionNums(const std::string& filePath);

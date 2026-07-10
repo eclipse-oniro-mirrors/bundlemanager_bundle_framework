@@ -21,6 +21,7 @@
 #include <filesystem>
 
 #define private public
+#include "app_data_monitor/app_data_monitor.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_installer_manager.h"
@@ -66,7 +67,10 @@ void BmsIdleConditionMgrTest::SetUp()
 {}
 
 void BmsIdleConditionMgrTest::TearDown()
-{}
+{
+    OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "false");
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "false");
+}
 
 /**
  * @tc.number: CheckRelabelConditions_0100
@@ -170,6 +174,7 @@ HWTEST_F(BmsIdleConditionMgrTest, TryStartRelabel_0100, Function | SmallTest | L
 {
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
+    OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "true");
 
     idleMgr->userUnlockedMap_[100] = true;
     idleMgr->screenLocked_ = true;
@@ -1174,6 +1179,7 @@ HWTEST_F(BmsIdleConditionMgrTest, TryStartRelabel_0200, Function | SmallTest | L
 {
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
+    OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "true");
 
     // Function can be called, just verify no crash
     idleMgr->TryStartRelabel();
@@ -1190,6 +1196,7 @@ HWTEST_F(BmsIdleConditionMgrTest, TryStartRelabel_0300, Function | SmallTest | L
 {
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
+    OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "true");
 
     idleMgr->featureEnabled_ = false;
     idleMgr->userUnlockedMap_[100] = true;
@@ -1212,6 +1219,7 @@ HWTEST_F(BmsIdleConditionMgrTest, TryStartRelabel_0400, Function | SmallTest | L
 {
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
+    OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "true");
 
     idleMgr->featureEnabled_ = true;
     idleMgr->userUnlockedMap_[100] = true;
@@ -1684,5 +1692,335 @@ HWTEST_F(BmsIdleConditionMgrTest, OnConfigChanged_0100, Function | SmallTest | L
 
     idleMgr->OnConfigChanged();
     // Just verify no crash - the result depends on IdleParamUtil::IsRelabelFeatureDisabled
+}
+
+/**
+ * @tc.number: SetIsScanActive_0100
+ * @tc.name: Test SetIsScanActive when already active
+ * @tc.desc: 1. isScanActive_ is already true
+ *           2. Should return false, then false->true returns true
+ */
+HWTEST_F(BmsIdleConditionMgrTest, SetIsScanActive_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->isScanActive_ = true;
+    EXPECT_FALSE(idleMgr->SetIsScanActive());
+
+    idleMgr->isScanActive_ = false;
+    EXPECT_TRUE(idleMgr->SetIsScanActive());
+    idleMgr->isScanActive_ = false;
+}
+
+/**
+ * @tc.number: CheckScanConditions_0100
+ * @tc.name: CheckScanConditions when userUnlocked is false
+ * @tc.desc: 1. userUnlocked = false, others satisfied
+ *           2. Should return false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckScanConditions_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_.clear();
+    idleMgr->screenLocked_ = true;
+    idleMgr->powerConnected_ = true;
+    idleMgr->batterySatisfied_ = true;
+    idleMgr->isRelabeling_ = false;
+    g_taskCounter.store(0);
+
+    EXPECT_FALSE(idleMgr->CheckScanConditions(999));
+}
+
+/**
+ * @tc.number: CheckScanConditions_0200
+ * @tc.name: CheckScanConditions when screenLocked_ is false
+ * @tc.desc: 1. screenLocked_ = false, others satisfied
+ *           2. Should return false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckScanConditions_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_[100] = true;
+    idleMgr->screenLocked_ = false;
+    idleMgr->powerConnected_ = true;
+    idleMgr->batterySatisfied_ = true;
+    idleMgr->isRelabeling_ = false;
+    g_taskCounter.store(0);
+
+    EXPECT_FALSE(idleMgr->CheckScanConditions(100));
+}
+
+/**
+ * @tc.number: CheckScanConditions_0300
+ * @tc.name: CheckScanConditions when powerConnected_ is false
+ * @tc.desc: 1. powerConnected_ = false, others satisfied
+ *           2. Should return false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckScanConditions_0300, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_[100] = true;
+    idleMgr->screenLocked_ = true;
+    idleMgr->powerConnected_ = false;
+    idleMgr->batterySatisfied_ = true;
+    idleMgr->isRelabeling_ = false;
+    g_taskCounter.store(0);
+
+    EXPECT_FALSE(idleMgr->CheckScanConditions(100));
+}
+
+/**
+ * @tc.number: CheckScanConditions_0400
+ * @tc.name: CheckScanConditions when batterySatisfied_ is false
+ * @tc.desc: 1. batterySatisfied_ = false, others satisfied
+ *           2. Should return false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckScanConditions_0400, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_[100] = true;
+    idleMgr->screenLocked_ = true;
+    idleMgr->powerConnected_ = true;
+    idleMgr->batterySatisfied_ = false;
+    idleMgr->isRelabeling_ = false;
+    g_taskCounter.store(0);
+
+    EXPECT_FALSE(idleMgr->CheckScanConditions(100));
+}
+
+/**
+ * @tc.number: CheckScanConditions_0500
+ * @tc.name: CheckScanConditions when g_taskCounter > 0
+ * @tc.desc: 1. g_taskCounter > 0, others satisfied
+ *           2. Should return false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckScanConditions_0500, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_[100] = true;
+    idleMgr->screenLocked_ = true;
+    idleMgr->powerConnected_ = true;
+    idleMgr->batterySatisfied_ = true;
+    idleMgr->isRelabeling_ = false;
+    g_taskCounter.store(1);
+
+    EXPECT_FALSE(idleMgr->CheckScanConditions(100));
+    g_taskCounter.store(0);
+}
+
+/**
+ * @tc.number: CheckScanConditions_0600
+ * @tc.name: CheckScanConditions when isRelabeling_ is true
+ * @tc.desc: 1. isRelabeling_ = true, others satisfied
+ *           2. Should return false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckScanConditions_0600, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_[100] = true;
+    idleMgr->screenLocked_ = true;
+    idleMgr->powerConnected_ = true;
+    idleMgr->batterySatisfied_ = true;
+    idleMgr->isRelabeling_ = true;
+    g_taskCounter.store(0);
+
+    EXPECT_FALSE(idleMgr->CheckScanConditions(100));
+    idleMgr->isRelabeling_ = false;
+}
+
+/**
+ * @tc.number: CheckScanConditions_0700
+ * @tc.name: CheckScanConditions when monitor is already scanning
+ * @tc.desc: 1. monitor->IsScanning() = true, others satisfied
+ *           2. Should return false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckScanConditions_0700, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_[100] = true;
+    idleMgr->screenLocked_ = true;
+    idleMgr->powerConnected_ = true;
+    idleMgr->batterySatisfied_ = true;
+    idleMgr->isRelabeling_ = false;
+    g_taskCounter.store(0);
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+    monitor->isScanning_.store(true);
+
+    EXPECT_FALSE(idleMgr->CheckScanConditions(100));
+    monitor->isScanning_.store(false);
+}
+
+/**
+ * @tc.number: CheckScanConditions_0800
+ * @tc.name: CheckScanConditions when all conditions met
+ * @tc.desc: 1. all conditions satisfied and monitor not scanning
+ *           2. Should return true
+ */
+HWTEST_F(BmsIdleConditionMgrTest, CheckScanConditions_0800, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    idleMgr->userUnlockedMap_[100] = true;
+    idleMgr->screenLocked_ = true;
+    idleMgr->powerConnected_ = true;
+    idleMgr->batterySatisfied_ = true;
+    idleMgr->isRelabeling_ = false;
+    g_taskCounter.store(0);
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+    monitor->isScanning_.store(false);
+
+    EXPECT_TRUE(idleMgr->CheckScanConditions(100));
+}
+
+/**
+ * @tc.number: TryStartScanAppData_0100
+ * @tc.name: TryStartScanAppData when scanFeatureEnabled_ is false
+ * @tc.desc: 1. scanFeatureEnabled_ = false
+ *           2. Should return early, isScanActive_ stays false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanAppData_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "true");
+
+    idleMgr->scanFeatureEnabled_ = false;
+    idleMgr->isScanActive_ = false;
+    idleMgr->TryStartScanAppData();
+    EXPECT_FALSE(idleMgr->isScanActive_);
+}
+
+/**
+ * @tc.number: TryStartScanAppData_0200
+ * @tc.name: TryStartScanAppData when scan conditions not met
+ * @tc.desc: 1. scanFeatureEnabled_ = true, userUnlocked = false
+ *           2. Should return early, isScanActive_ stays false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, TryStartScanAppData_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "true");
+
+    idleMgr->scanFeatureEnabled_ = true;
+    idleMgr->userUnlockedMap_.clear();
+    idleMgr->isScanActive_ = false;
+    // conditions not met: TryStartScanAppData returns before SetIsScanActive, no thread spawned.
+    idleMgr->TryStartScanAppData();
+    EXPECT_FALSE(idleMgr->isScanActive_);
+}
+
+/**
+ * @tc.number: InterruptScanAppData_0100
+ * @tc.name: InterruptScanAppData when no scan active
+ * @tc.desc: 1. isScanActive_ = false
+ *           2. Should return early without forwarding to monitor
+ */
+HWTEST_F(BmsIdleConditionMgrTest, InterruptScanAppData_0100, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+    monitor->stopRequested_.store(false);
+
+    idleMgr->isScanActive_ = false;
+    idleMgr->InterruptScanAppData("InterruptScanAppData_0100");
+
+    EXPECT_FALSE(idleMgr->isScanActive_);
+    EXPECT_FALSE(monitor->stopRequested_.load());
+}
+
+/**
+ * @tc.number: InterruptScanAppData_0200
+ * @tc.name: InterruptScanAppData when scan active forwards to monitor StopScan
+ * @tc.desc: 1. isScanActive_ = true
+ *           2. Should call monitor->StopScan, setting stopRequested_ to true
+ */
+HWTEST_F(BmsIdleConditionMgrTest, InterruptScanAppData_0200, Function | SmallTest | Level0)
+{
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    ASSERT_NE(idleMgr, nullptr);
+
+    auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
+    ASSERT_NE(monitor, nullptr);
+    monitor->stopRequested_.store(false);
+
+    idleMgr->isScanActive_ = true;
+    idleMgr->InterruptScanAppData("InterruptScanAppData_0200");
+
+    EXPECT_TRUE(monitor->stopRequested_.load());
+    idleMgr->isScanActive_ = false;
+}
+
+/**
+ * @tc.number: IdleParamUtil_IsAppDataScanDisabled_0200
+ * @tc.name: Test IsAppDataScanDisabled with app_data_scan_feature_off
+ * @tc.desc: 1. switch_off_list contains app_data_scan_feature_off
+ *           2. Should return true
+ */
+HWTEST_F(BmsIdleConditionMgrTest, IdleParamUtil_IsAppDataScanDisabled_0200, Function | SmallTest | Level0)
+{
+    std::string versionPath = "/data/service/el1/public/update/param_service/install/system/etc/SwitchOffList/";
+    std::filesystem::create_directories(versionPath);
+
+    std::string versionFile = versionPath + "version.txt";
+    std::ofstream vFile(versionFile);
+    vFile << "version=999.0.0.0";
+    vFile.close();
+
+    std::string switchOffFile = versionPath + "switch_off_list";
+    std::ofstream sFile(switchOffFile);
+    sFile << "app_data_scan_feature_off" << std::endl;
+    sFile.close();
+
+    EXPECT_TRUE(IdleParamUtil::IsAppDataScanDisabled());
+
+    std::filesystem::remove_all(versionPath);
+}
+
+/**
+ * @tc.number: IdleParamUtil_IsAppDataScanDisabled_0300
+ * @tc.name: Test IsAppDataScanDisabled without app_data_scan_feature_off
+ * @tc.desc: 1. switch_off_list does not contain the switch
+ *           2. Should return false
+ */
+HWTEST_F(BmsIdleConditionMgrTest, IdleParamUtil_IsAppDataScanDisabled_0300, Function | SmallTest | Level0)
+{
+    std::string versionPath = "/data/service/el1/public/update/param_service/install/system/etc/SwitchOffList/";
+    std::filesystem::create_directories(versionPath);
+
+    std::string versionFile = versionPath + "version.txt";
+    std::ofstream vFile(versionFile);
+    vFile << "version=999.0.0.0";
+    vFile.close();
+
+    std::string switchOffFile = versionPath + "switch_off_list";
+    std::ofstream sFile(switchOffFile);
+    sFile << "other_feature_off" << std::endl;
+    sFile.close();
+
+    EXPECT_FALSE(IdleParamUtil::IsAppDataScanDisabled());
+
+    std::filesystem::remove_all(versionPath);
 }
 } // namespace OHOS

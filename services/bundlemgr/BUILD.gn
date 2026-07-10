@@ -40,6 +40,7 @@ config("bundlemgr_common_config") {
     "include/extend_resource",
     "include/first_install_data_mgr",
     "include/idle_condition_mgr",
+    "include/app_data_monitor",
     "include/uninstall_data_mgr",
     "include/overlay",
     "include/quick_fix",

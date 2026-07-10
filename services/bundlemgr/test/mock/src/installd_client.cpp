@@ -16,7 +16,9 @@
 #include "installd_client.h"
 
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
 #include "installd_death_recipient.h"
+#include "parameters.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
 
@@ -721,6 +723,15 @@ ErrCode InstalldClient::GetTopNLargestItemsInAppDataDir(const std::string &bundl
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    // Opt-in test seam: only bms_app_data_monitor_test sets persist.bms.test.scan_app_data. When it
+    // is on, return a fixed sample payload so the monitor's report path (per-scan report cap
+    // counting + LARGE_FILES truncation) becomes reachable in unit tests. Every other test target
+    // leaves it off and keeps observing the original CallService-failure behaviour.
+    if (OHOS::system::GetBoolParameter(ServiceConstants::SCAN_APP_DATA_TEST_PARAM, false)) {
+        largestItems = R"({"items":[{"path":"/data/app/el2/100/base/com.test/largest/a","size":2147483648},)"
+            R"({"path":"/data/app/el2/100/base/com.test/largest/b","size":1073741824}]})";
+        return ERR_OK;
     }
     return CallService(&IInstalld::GetTopNLargestItemsInAppDataDir, bundleName, appIndex, userId, timeout,
         largestItems);

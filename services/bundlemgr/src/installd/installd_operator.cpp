@@ -271,6 +271,8 @@ public:
     {
         g_dirSizeData = nullptr;
     }
+    DirSizeDataGuard(const DirSizeDataGuard&) = delete;
+    DirSizeDataGuard& operator=(const DirSizeDataGuard&) = delete;
 
 private:
     DirSizeData *data_;
@@ -288,12 +290,63 @@ public:
     }
 
     ~DirSizeDeadlineGuard() { g_dirSizeHasDeadline = false; }
+    DirSizeDeadlineGuard(const DirSizeDeadlineGuard&) = delete;
+    DirSizeDeadlineGuard& operator=(const DirSizeDeadlineGuard&) = delete;
 };
 
 constexpr int32_t MAX_FTW_DEPTH = 1000;  // Maximum directory traversal depth to prevent stack overflow
 constexpr uint64_t MAX_DIRECTORY_SIZE = UINT64_MAX - 1024ULL * 1024ULL * 1024ULL;  // 1GB less than max
 // Check the deadline every N callback invocations (avoids a clock syscall per entry).
 constexpr uint64_t CHECK_TIMEOUT_INTERVAL = 512;
+
+/**
+ * @brief Accumulate one nftw entry into DirSizeData (file size summing / directory fold-up)
+ * @param data Walk state: total size, overflow flag, per-level accumulator, optional cache
+ * @param path The current file/directory path
+ * @param sb Stat buffer containing file information
+ * @param typeflag Type of file (FTW_F, FTW_D, etc.)
+ * @param ftwbuf Structure containing walk information including depth
+ * @return Returns 0 to continue, non-zero to stop traversal
+ */
+static int32_t AccumulateEntry(DirSizeData *data, const char *path, const struct stat *sb, int typeflag,
+    struct FTW *ftwbuf)
+{
+    // Keep the per-level accumulator stack deep enough (fold-up sizing, O(1) per entry).
+    auto &acc = data->acc;
+    if (static_cast<size_t>(ftwbuf->level) >= acc.size()) {
+        acc.resize(static_cast<size_t>(ftwbuf->level) + 1, 0);
+    }
+
+    if (typeflag == FTW_F) {
+        if (sb->st_size < 0) {
+            return 0;
+        }
+        // Check for overflow before adding
+        if (data->totalSize > MAX_DIRECTORY_SIZE - sb->st_size) {
+            LOG_W(BMS_TAG_INSTALLD, "CalculateDirSizeCallback: size overflow for %{public}s",
+                data->dirPath->c_str());
+            data->overflow = true;
+            return 1;  // Stop traversal
+        }
+        data->totalSize += sb->st_size;
+        if (ftwbuf->level > 0) {
+            acc[static_cast<size_t>(ftwbuf->level) - 1] += sb->st_size;
+        }
+    } else if (typeflag == FTW_DP) {
+        uint64_t dirTotal = acc[static_cast<size_t>(ftwbuf->level)];
+        if (data->cache != nullptr) {
+            (*data->cache)[path] = dirTotal;
+            LOG_D(BMS_TAG_INSTALLD, "ScanAppDataSize CACHE-INSERT %{public}s = %{public}" PRIu64,
+                InstalldOperator::AnonymizePath(path).c_str(), dirTotal);
+        }
+        if (ftwbuf->level > 0) {
+            acc[static_cast<size_t>(ftwbuf->level) - 1] += dirTotal;
+        }
+        acc[static_cast<size_t>(ftwbuf->level)] = 0;
+    }
+
+    return 0;  // Continue traversal
+}
 
 /**
  * @brief Callback function for nftw to calculate directory size
@@ -310,10 +363,6 @@ static int32_t CalculateDirSizeCallback(const char *path, const struct stat *sb,
     if (data == nullptr) {
         return 1;  // Stop traversal on error
     }
-
-    // Interruptible timeout: every CHECK_TIMEOUT_INTERVAL entries, check the deadline. nftw stops
-    // on a non-zero return; directories already completed (FTW_DP) are already cached with correct
-    // totals, and the in-progress subtree is deliberately left uncached (no partial/dirty entry).
     if (g_dirSizeHasDeadline && (++data->entryCounter % CHECK_TIMEOUT_INTERVAL) == 0) {
         if (std::chrono::steady_clock::now() > g_dirSizeDeadline) {
             data->timedOut = true;
@@ -325,51 +374,13 @@ static int32_t CalculateDirSizeCallback(const char *path, const struct stat *sb,
         }
     }
 
-    // Check depth to prevent stack overflow
     if (ftwbuf->level > MAX_FTW_DEPTH) {
         LOG_W(BMS_TAG_INSTALLD, "CalculateDirSizeCallback: directory too deep, level: %{public}d, path: %{public}s",
             ftwbuf->level, path);
         return 0;  // Continue processing other files
     }
 
-    // Keep the per-level accumulator stack deep enough (fold-up sizing, O(1) per entry).
-    auto &acc = data->acc;
-    if (static_cast<size_t>(ftwbuf->level) >= acc.size()) {
-        acc.resize(static_cast<size_t>(ftwbuf->level) + 1, 0);
-    }
-
-    if (typeflag == FTW_F) {
-        // Skip anomalous negative-size entries (defensive; also keeps the overflow subtraction safe).
-        if (sb->st_size < 0) {
-            return 0;
-        }
-        // Check for overflow before adding
-        if (data->totalSize > MAX_DIRECTORY_SIZE - sb->st_size) {
-            LOG_W(BMS_TAG_INSTALLD, "CalculateDirSizeCallback: size overflow for %{public}s",
-                data->dirPath->c_str());
-            data->overflow = true;
-            return 1;  // Stop traversal
-        }
-        // Only count regular files
-        data->totalSize += sb->st_size;
-        // Attribute this file to its owning directory (parent level) for per-directory caching.
-        acc[static_cast<size_t>(ftwbuf->level) - 1] += sb->st_size;
-    } else if (typeflag == FTW_DP) {
-        // Post-order: the directory's subtree is fully traversed, so acc[level] is its total.
-        // Cache every directory's subtree total, then fold it up into the parent directory.
-        uint64_t dirTotal = acc[static_cast<size_t>(ftwbuf->level)];
-        if (data->cache != nullptr) {
-            (*data->cache)[path] = dirTotal;
-            LOG_D(BMS_TAG_INSTALLD, "ScanAppDataSize CACHE-INSERT %{public}s = %{public}" PRIu64,
-                InstalldOperator::AnonymizePath(path).c_str(), dirTotal);
-        }
-        if (ftwbuf->level > 0) {
-            acc[static_cast<size_t>(ftwbuf->level) - 1] += dirTotal;
-        }
-        acc[static_cast<size_t>(ftwbuf->level)] = 0;
-    }
-
-    return 0;  // Continue traversal
+    return AccumulateEntry(data, path, sb, typeflag, ftwbuf);
 }
 
 /**
@@ -390,7 +401,13 @@ static uint64_t CalculateDirectorySizeWithCache(const std::string &dirPath,
         return it->second;
     }
 
+    struct stat rootStat;
+    if (stat(dirPath.c_str(), &rootStat) != 0 || !S_ISDIR(rootStat.st_mode)) {
+        return 0;
+    }
+
     ++g_dirSizeCacheMissCount;
+
     // Defensive: if the deadline already passed, do not start an expensive walk. In the current
     // flow this is belt-and-suspenders (the between-top-dirs check + cache-direct fallback already
     // prevent wind-down misses), but it bounds any future miss-during-wind-down without a ramp-up.
@@ -4265,7 +4282,8 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
     std::vector<std::pair<std::string, uint64_t>> &largestPathsWithSize,
     std::unordered_map<std::string, uint64_t> &dirSizeCache)
 {
-    LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesWithCache start, dirPath: %{public}s", dirPath.c_str());
+    LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesWithCache start, dirPath: %{public}s",
+        InstalldOperator::AnonymizePath(dirPath).c_str());
 
     if (dirPath.empty() || dirPath.size() > ServiceConstants::PATH_MAX_SIZE) {
         LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: invalid path");
@@ -4274,7 +4292,8 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
 
     std::string realPath = "";
     if (!PathToRealPath(dirPath, realPath)) {
-        LOG_E(BMS_TAG_INSTALLD, "path is not real path, dirPath: %{public}s", dirPath.c_str());
+        LOG_E(BMS_TAG_INSTALLD, "path is not real path, dirPath: %{public}s",
+            InstalldOperator::AnonymizePath(dirPath).c_str());
         return false;
     }
 
@@ -4282,12 +4301,13 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
     struct stat statBuf;
     if (stat(realPath.c_str(), &statBuf) != 0) {
         LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: stat failed, path: %{public}s, errno: %{public}d",
-            realPath.c_str(), errno);
+            InstalldOperator::AnonymizePath(realPath).c_str(), errno);
         return false;
     }
 
     if (!S_ISDIR(statBuf.st_mode)) {
-        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: path is not a directory: %{public}s", realPath.c_str());
+        LOG_E(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: path is not a directory: %{public}s",
+            InstalldOperator::AnonymizePath(realPath).c_str());
         return false;
     }
 
@@ -4304,7 +4324,7 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
     DIR *dir = opendir(realPath.c_str());
     if (dir == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "GetLargestFiles: opendir failed, path: %{public}s, errno: %{public}d",
-            realPath.c_str(), errno);
+            InstalldOperator::AnonymizePath(realPath).c_str(), errno);
         return false;
     }
     DirGuard dirGuard(dir);  // RAII wrapper to ensure cleanup
@@ -4325,7 +4345,7 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
         struct stat itemStat;
         if (lstat(itemPath.c_str(), &itemStat) != 0) {
             LOG_W(BMS_TAG_INSTALLD, "GetLargestFiles: lstat failed for %{public}s, errno: %{public}d",
-                itemPath.c_str(), errno);
+                InstalldOperator::AnonymizePath(itemPath).c_str(), errno);
             continue;
         }
 
@@ -4341,7 +4361,7 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
 
         itemSizes.emplace_back(itemPath, itemSize);
         LOG_D(BMS_TAG_INSTALLD, "GetLargestFiles: item: %{public}s, size: %{public}" PRIu64,
-            itemPath.c_str(), itemSize);
+            InstalldOperator::AnonymizePath(itemPath).c_str(), itemSize);
     }
 
     // DirGuard will automatically close dir when going out of scope
@@ -4363,8 +4383,8 @@ static bool GetLargestFilesWithCache(const std::string &dirPath,
     largestPathsWithSize.clear();
     for (size_t i = 0; i < count; ++i) {
         largestPathsWithSize.emplace_back(itemSizes[i].path, itemSizes[i].size);
-        LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: %{public}zu. path: %{public}s, size: %{public}" PRIu64,
-            i + 1, itemSizes[i].path.c_str(), itemSizes[i].size);
+        LOG_D(BMS_TAG_INSTALLD, "GetLargestFilesWithCache: %{public}zu. path: %{public}s, size: %{public}" PRIu64,
+            i + 1, InstalldOperator::AnonymizePath(itemSizes[i].path).c_str(), itemSizes[i].size);
     }
 
     LOG_I(BMS_TAG_INSTALLD, "GetLargestFilesWithCache success, found %{public}zu items", largestPathsWithSize.size());

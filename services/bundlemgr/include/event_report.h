@@ -64,6 +64,7 @@ enum class BMSEventType : uint8_t {
     APP_STATUS_CHANGE,
     HIGH_RISK_EVENT,
     BUNDLE_LOCAL_PLUGIN_OPERATION,
+    BUNDLE_LARGE_FILES_MONITOR,
 };
 
 enum class BundleEventType : uint8_t {
@@ -279,6 +280,7 @@ struct EventInfo {
     std::string odid;
     std::vector<uint64_t> fileSize;
     std::vector<uint64_t> partitionSize;
+    std::string largeFiles;
 
     void Reset()
     {
@@ -337,6 +339,7 @@ struct EventInfo {
         utd.clear();
         funcIdList.clear();
         uidList.clear();
+        largeFiles.clear();
         userIdList.clear();
         appIndexList.clear();
         callingUidList.clear();
@@ -528,6 +531,9 @@ public:
         int32_t userId, const std::vector<std::string> &path);
 
     static void SendScanTimeoutEvent(HighRiskOperationType operation, int64_t startTime, int64_t endTime);
+
+    static void SendLargeFilesMonitorEvent(const std::string &bundleName,
+        int32_t userId, int32_t appIndex, const std::string &largeFiles);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
