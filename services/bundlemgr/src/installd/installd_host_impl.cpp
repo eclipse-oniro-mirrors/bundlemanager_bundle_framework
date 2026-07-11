@@ -381,7 +381,7 @@ ErrCode InstalldHostImpl::PendSignAOT(const std::string &anFileName, const std::
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (!InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::PEND_SIGN_AOT, anFileName)) {
-        LOG_E(BMS_TAG_INSTALLD, "anFileName %{public}s not in allowed prefix", anFileName.c_str());
+        LOG_E(BMS_TAG_INSTALLD, "anFileName %{public}s not in allowed prefix ", anFileName.c_str());
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::EndsWith(anFileName, ServiceConstants::AN_SUFFIX)) {
