@@ -1882,6 +1882,11 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "cloudStructuredDataSyncEnabled",
         nCloudStructuredDataSyncEnabled));
 
+    napi_value nIsSupportMultiCard;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.isSupportMultiCard, &nIsSupportMultiCard));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "isSupportMultiCard",
+        nIsSupportMultiCard));
+
     napi_value nFlags;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.applicationFlags, &nFlags));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, FLAGS, nFlags));

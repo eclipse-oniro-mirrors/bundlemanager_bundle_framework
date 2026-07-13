@@ -292,6 +292,7 @@ struct App {
     bool ubsanEnabled = false;
     bool cloudFileSyncEnabled = false;
     bool cloudStructuredDataSyncEnabled = false;
+    bool isSupportMultiCard = false;
     bool profileable = false;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
@@ -1539,6 +1540,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         g_parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
+        APP_SUPPORT_MULTI_CARD,
+        app.isSupportMultiCard,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
         APP_UBSAN_ENABLED,
         app.ubsanEnabled,
         false,
@@ -2563,6 +2570,7 @@ bool ToApplicationInfo(
     }
     applicationInfo.cloudFileSyncEnabled = app.cloudFileSyncEnabled;
     applicationInfo.cloudStructuredDataSyncEnabled = app.cloudStructuredDataSyncEnabled;
+    applicationInfo.isSupportMultiCard = app.isSupportMultiCard;
     applicationInfo.allowListenBundleChangedEvent = app.allowListenBundleChangedEvent;
     return true;
 }

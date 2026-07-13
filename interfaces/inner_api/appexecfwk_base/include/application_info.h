@@ -252,6 +252,7 @@ struct ApplicationInfo : public Parcelable {
     bool needAppDetail = false;
     bool cloudFileSyncEnabled = false;
     bool cloudStructuredDataSyncEnabled = false;
+    bool isSupportMultiCard = false;
 
     bool hwasanEnabled = false;
     bool ubsanEnabled = false;
