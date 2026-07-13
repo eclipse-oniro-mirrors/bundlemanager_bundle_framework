@@ -30,7 +30,7 @@ struct CodeSignatureParam : public Parcelable {
     bool isInternaltestingBundle = false;
     bool isCompressNativeLibrary = true;
     bool isPlugin = false;
-    bool isLocalHspPlugin = false;
+    bool isDeveloperDistribution = false;
     std::string bundleName;
     std::string modulePath;
     std::string cpuAbi;
@@ -40,7 +40,6 @@ struct CodeSignatureParam : public Parcelable {
     std::string pluginId;
     uint32_t profileBlockLength = 0;
     std::shared_ptr<unsigned char[]> profileBlock;
-    int32_t sessionId = 0;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);

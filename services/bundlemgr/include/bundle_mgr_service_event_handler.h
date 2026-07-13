@@ -29,7 +29,6 @@
 #include "common_event_support.h"
 #include "pre_install_bundle_info.h"
 #include "pre_install_exception_mgr.h"
-#include "hap_token_info.h"
 #include "pre_scan_info.h"
 #include "nlohmann/json.hpp"
 
@@ -66,7 +65,6 @@ enum OTAFlag : uint32_t {
     UPDATE_EXTENSION_DIRS_SELINUX_APL = 0x00400000,
     ADD_IDLE_INFO = 0x00800000,
     UPDATE_ALTERNATE_ICONS = 0x01000000,
-    PROCESS_ACCESS_TOKEN_MIGRATION = 0x02000000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -592,23 +590,6 @@ private:
     void InnerProcessCheckRecoverableApplicationInfo();
     void ProcessCheckInstallSource();
     void InnerProcessCheckInstallSource();
-    void CleanUninstallBundleInfo();
-    void ProcessAccessTokenMigration();
-    bool InnerProcessAccessTokenMigration();
-    void BuildMigrationData(const std::shared_ptr<BundleDataMgr> &dataMgr,
-        const std::vector<std::string> &bundleNames,
-        const std::unordered_map<std::string, InnerBundleInfo> &sandboxMap,
-        const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
-        std::vector<Security::AccessToken::MigratedInfo> &migratedList,
-        std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> &oldTokenIdExList);
-    void ExecuteMigrationWithRetry(const std::shared_ptr<BundleDataMgr> &dataMgr,
-        std::vector<Security::AccessToken::MigratedInfo> &migratedList,
-        std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> &oldTokenIdExList,
-        std::vector<bool> &successFlags);
-    void MarkMigratedBundles(const std::shared_ptr<BundleDataMgr> &dataMgr,
-        const std::vector<std::string> &bundleNames,
-        const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
-        const std::vector<bool> &successFlags);
     std::string ConvertApplicationFlagToInstallSource(int32_t flag);
 
     bool InnerProcessUninstallForExistPreBundle(const BundleInfo &installedInfo);

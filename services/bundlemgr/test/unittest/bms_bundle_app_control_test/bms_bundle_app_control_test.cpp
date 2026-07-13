@@ -5223,14 +5223,13 @@ HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0100, Function | SmallTest | Le
     impl->GetCallerByUid(3057, callerName);
     EXPECT_EQ(callerName, "edm");
 
-    int32_t testUid = 100 * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
     BundleUserInfo bundleUserInfo;
     bundleUserInfo.userId = 100;
 
     InnerBundleUserInfo userInfo;
     userInfo.bundleUserInfo = bundleUserInfo;
     userInfo.bundleName = BUNDLE_NAME;
-    userInfo.uid = testUid;
+    impl->dataMgr_->GenerateUidAndGid(userInfo);
 
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
@@ -5238,10 +5237,9 @@ HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0100, Function | SmallTest | Le
     innerBundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
 
     impl->dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
-    impl->dataMgr_->UpdateUidMap(testUid, BUNDLE_NAME, 0);
     ScopeGuard bundleInfoGuard([&] { impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME); });
 
-    impl->GetCallerByUid(testUid, callerName);
+    impl->GetCallerByUid(userInfo.uid, callerName);
     EXPECT_EQ(callerName, BUNDLE_NAME);
 }
 
@@ -5256,7 +5254,6 @@ HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0200, Function | SmallTest | Le
     ASSERT_NE(impl, nullptr);
     ASSERT_NE(impl->dataMgr_, nullptr);
 
-    int32_t testUid = 100 * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
     BundleUserInfo bundleUserInfo;
     bundleUserInfo.userId = 100;
 
@@ -5264,11 +5261,11 @@ HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0200, Function | SmallTest | Le
     InnerBundleUserInfo userInfo;
     userInfo.bundleUserInfo = bundleUserInfo;
     userInfo.bundleName = cloneBundleName;
-    userInfo.uid = testUid;
+    impl->dataMgr_->GenerateUidAndGid(userInfo);
 
     InnerBundleCloneInfo cloneInfo;
     cloneInfo.appIndex = 1;
-    cloneInfo.uid = testUid;
+    cloneInfo.uid = userInfo.uid;
     userInfo.cloneInfos["1"] = cloneInfo;
 
     InnerBundleInfo innerBundleInfo;
@@ -5277,11 +5274,10 @@ HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0200, Function | SmallTest | Le
     innerBundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
 
     impl->dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
-    impl->dataMgr_->UpdateUidMap(testUid, BUNDLE_NAME, 1);
     ScopeGuard bundleInfoGuard([&] { impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME); });
 
     std::string callerName;
-    impl->GetCallerByUid(testUid, callerName);
+    impl->GetCallerByUid(userInfo.uid, callerName);
     EXPECT_EQ(callerName, CLONE_CALLER_NAME);
 }
 

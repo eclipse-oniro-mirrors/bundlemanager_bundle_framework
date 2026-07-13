@@ -14,7 +14,6 @@
  */
 
 #include "bundle_permission_mgr.h"
-#include <mutex>
 
 bool g_isSystemApp = true;
 bool g_isNativeTokenType = true;
@@ -139,13 +138,6 @@ void ResetTestValues()
 }
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
-int32_t g_updateAppPermissionRet = 0;
-
-void SetUpdateAppPermissionRetForTest(int32_t value)
-{
-    g_updateAppPermissionRet = value;
-}
-
 namespace AppExecFwk {
 using namespace Security::AccessToken;
 
@@ -206,8 +198,7 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, con
 {
     return false;
 }
-int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId,
-	    const std::string &bundleName, Security::AccessToken::ReservedType type)
+int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId, bool isTokenReserved)
 {
     return -1;
 }
@@ -216,8 +207,7 @@ bool BundlePermissionMgr::VerifyAcrossUserPermission(int userId)
     return false;
 }
 #else
-int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId,
-	    const std::string &bundleName, Security::AccessToken::ReservedType type)
+int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId, bool isTokenReserved)
 {
     return 0;
 }
@@ -316,12 +306,6 @@ void BundlePermissionMgr::UnInit()
 
 int32_t BundlePermissionMgr::VerifyPermission(const std::string &bundleName, const std::string &permissionName,
     const int32_t userId)
-{
-    return g_testVerifyPermission;
-}
-
-int32_t BundlePermissionMgr::VerifyPermissionByInstall(const std::string &bundleName,
-    const std::string &permissionName, int32_t sessionId)
 {
     return g_testVerifyPermission;
 }
@@ -478,47 +462,34 @@ Security::AccessToken::HapInfoParams CreateHapInfoParams(const InnerBundleInfo &
 }
 
 #ifdef BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE
-int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, const int32_t userId,
+int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-    const std::string &appServiceCapabilities,
-    const bool isDebugGrant, int32_t &sessionId)
+    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
+    const bool isDebugGrant)
 {
     return -1;
 }
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-    InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
+    const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
     const std::string &appServiceCapabilities, bool dataRefresh,
-    const bool isDebugGrant, int32_t sessionId, int32_t appIndex)
+    const bool isDebugGrant)
 {
     return -1;
 }
 #else
-int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, const int32_t userId,
+int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-    const std::string &appServiceCapabilities,
-    const bool isDebugGrant, int32_t &sessionId)
+    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
+    const bool isDebugGrant)
 {
-    Security::AccessToken::Identity identity;
-    int32_t ret = PrepareHapIdentity(innerBundleInfo, userId, dlpType, isDebugGrant,
-        appServiceCapabilities, sessionId, identity);
-    if (ret != 0 || identity.uid <= 0) {
-        return -1;
-    }
-    InnerBundleUserInfo newUserInfo;
-    newUserInfo.uid = identity.uid;
-    newUserInfo.gids.emplace_back(identity.uid);
-    newUserInfo.bundleUserInfo.userId = userId;
-    newUserInfo.bundleName = innerBundleInfo.GetBundleName();
-    innerBundleInfo.AddInnerBundleUserInfo(newUserInfo);
-    tokenIdeEx.tokenIdExStruct.tokenID = identity.tokenId;
     return 0;
 }
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-    InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
+    const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
     const std::string &appServiceCapabilities, bool dataRefresh,
-    const bool isDebugGrant, int32_t sessionId, int32_t appIndex)
+    const bool isDebugGrant)
 {
     return 0;
 }
@@ -526,95 +497,6 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
 std::string BundlePermissionMgr::GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult)
 {
     return "";
-}
-Security::AccessToken::BundlePolicy BundlePermissionMgr::CreateBundlePolicy(
-    const InnerBundleInfo &innerBundleInfo, const bool isDebugGrant, int32_t dlpType)
-{
-    Security::AccessToken::BundlePolicy policy;
-    return policy;
-}
-
-Security::AccessToken::HapBaseInfo BundlePermissionMgr::CreateHapBaseInfo(
-    const InnerBundleInfo &innerBundleInfo, const int32_t userId)
-{
-    Security::AccessToken::HapBaseInfo hapBaseInfo;
-    hapBaseInfo.userID = userId;
-    hapBaseInfo.bundleName = innerBundleInfo.GetBundleName();
-    hapBaseInfo.instIndex = innerBundleInfo.GetAppIndex();
-    return hapBaseInfo;
-}
-
-int32_t BundlePermissionMgr::PrepareHapIdentity(
-    const InnerBundleInfo &innerBundleInfo,
-    int32_t userId, int32_t dlpType, bool isDebugGrant,
-    const std::string &appServiceCapabilities,
-    int32_t &sessionId,
-    Security::AccessToken::Identity &identity)
-{
-    static constexpr int32_t MOCK_BASE_APP_UID = 10000;
-    static constexpr int32_t MOCK_BASE_USER_RANGE = 200000;
-    static std::mutex mockMutex;
-    static std::map<std::pair<std::string, int32_t>, int32_t> mockBundleIdMap;  // {bundleName, appIndex} -> bundleId
-    static int32_t mockNextBundleId = MOCK_BASE_APP_UID;
-
-    std::string bundleName = innerBundleInfo.GetBundleName();
-    int32_t appIndex = innerBundleInfo.GetAppIndex();
-    int32_t bundleId;
-    {
-        std::lock_guard<std::mutex> lock(mockMutex);
-        auto key = std::make_pair(bundleName, appIndex);
-        auto iter = mockBundleIdMap.find(key);
-        if (iter != mockBundleIdMap.end()) {
-            bundleId = iter->second;
-        } else {
-            bundleId = mockNextBundleId++;
-            mockBundleIdMap[key] = bundleId;
-        }
-    }
-    identity.uid = userId * MOCK_BASE_USER_RANGE + bundleId;
-    identity.tokenId = 1;
-    return 0;
-}
-
-int32_t BundlePermissionMgr::UpdateHapPolicy(
-    int32_t sessionId,
-    int32_t tokenId,
-    InnerBundleInfo &innerBundleInfo,
-    int32_t userId,
-    bool isDebugGrant,
-    const std::string &appServiceCapabilities,
-    int32_t appIndex)
-{
-    return 0;
-}
-
-int32_t BundlePermissionMgr::UpdateAppPermission(InnerBundleInfo &innerBundleInfo, int32_t userId,
-    Security::AccessToken::InstallTypeEnum installType)
-{
-    return g_updateAppPermissionRet;
-}
-
-int32_t BundlePermissionMgr::CheckHapPermissionInfo(int32_t sessionId,
-    Security::AccessToken::InstallTypeEnum type, Security::AccessToken::HapInfoCheckResult &checkResult)
-{
-    return 0;
-}
-
-int32_t BundlePermissionMgr::FinishHapInstall(
-    int32_t sessionId,
-    bool isSuccess,
-    const std::map<std::string, std::string> &modulePathMap)
-{
-    return 0;
-}
-
-int32_t BundlePermissionMgr::RefreshTokenStatus(const uint64_t &tokenIdEx, const int32_t &uid,
-    Security::AccessToken::ReservedType type)
-{
-    Security::AccessToken::Identity identity;
-    identity.tokenId = tokenIdEx;
-    identity.uid = uid;
-    return Security::AccessToken::AccessTokenKit::RefreshTokenStatus(identity, type);
 }
 } // AppExecFwk
 } // OHOS

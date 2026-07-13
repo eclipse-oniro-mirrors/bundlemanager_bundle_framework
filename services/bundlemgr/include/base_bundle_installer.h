@@ -29,6 +29,7 @@
 #include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
 #include "event_report.h"
+#include "hap_token_info.h"
 #include "install_param.h"
 #include "installer_bundle_tmp_info.h"
 #include "quick_fix/appqf_info.h"
@@ -397,7 +398,17 @@ private:
      * @return Returns ERR_OK if the syscap satisfy; returns error code otherwise.
      */
     ErrCode CheckSysCap(const std::vector<std::string> &bundlePaths);
-
+    /**
+     * @brief Check signature info of multiple haps.
+     * @param bundlePaths Indicates the file paths of all HAP packages.
+     * @param installParam Indicates the install parameters.
+     * @param hapVerifyRes Indicates the signature info.
+     * @return Returns ERR_OK if the every hap has signature info and all haps have same signature info.
+     */
+    ErrCode CheckMultipleHapsSignInfo(
+        const std::vector<std::string> &bundlePaths,
+        const InstallParam &installParam,
+        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     /**
      * @brief To parse hap files and to obtain innerBundleInfo of each hap.
      * @param bundlePaths Indicates the file paths of all HAP packages.
@@ -570,7 +581,6 @@ private:
 
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
-    ErrCode CreateBundleDataDir(InnerBundleInfo &info, const InnerBundleUserInfo &innerBundleUserInfo) const;
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info, bool async) const;
     ErrCode RemoveBundleDataDir(
         const InnerBundleInfo &info, bool forException = false, const bool async = false);
@@ -980,7 +990,7 @@ private:
         const InnerBundleInfo &oldBundleInfo, ErrCode &result);
 
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
-        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, InnerBundleInfo &innerBundleInfo,
+        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
         const bool isDebugGrant = false);
     void UpdateKillApplicationProcess(const InnerBundleInfo &innerBundleInfo);
     std::string GetAssetAccessGroups(const std::string &bundleName);
@@ -1061,9 +1071,6 @@ private:
     uint32_t oldApplicationReservedFlag_ = 0;
 
     int32_t userId_ = Constants::INVALID_USERID;
-    int32_t sessionId_ = 0;
-    bool sessionCommitted_ = false;
-    std::map<std::string, std::string> modulePathMap_;
     int32_t overlayType_ = NON_OVERLAY_TYPE;
     int32_t atomicServiceModuleUpgrade_ = 0;
     SingletonState singletonState_ = SingletonState::DEFAULT;
@@ -1109,7 +1116,6 @@ private:
     EventInfo sysEventInfo_;
     NpapiPluginStatus npapiPluginStatus_ = NpapiPluginStatus::STATUS_NOT_APPLICABLE;
     Security::Verify::HapVerifyResult verifyRes_;
-    std::vector<RequestPermission> aggregatedRequestPermissions_;
     InstallerBundleTempInfo tempInfo_;
     // indicates whether the application has been restored to the preinstall
     bool isPreBundleRecovered_ = false;

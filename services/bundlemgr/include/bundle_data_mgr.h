@@ -155,6 +155,7 @@ public:
      * @param innerBundleUserInfo Indicates the InnerBundleUserInfo object.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
+    ErrCode GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInfo);
     /**
      * @brief Recycle uid and gid .
      * @param info Indicates the InnerBundleInfo object.
@@ -976,7 +977,6 @@ public:
     bool IsSystemHsp(const std::string &bundleName);
 
     bool UpdateUninstallBundleInfo(const std::string &bundleName, const UninstallBundleInfo &uninstallBundleInfo);
-    bool UpdateUninstallBundleCheckBySpm(const std::string &bundleName, bool checkBySpm);
     bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo) const;
     bool GetUninstallBundleInfoWithUserAndAppIndex(const std::string &bundleName,
         int32_t userId, int32_t appIndex) const;
@@ -1193,9 +1193,6 @@ public:
         AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex = 0) const;
     ErrCode GetBundleNameAndIndex(const int32_t uid, std::string &bundleName, int32_t &appIndex) const;
     ErrCode GetBundleNameAndIndexForUid(const int32_t uid, std::string &bundleName, int32_t &appIndex) const;
-    void UpdateUidMap(int32_t uid, const std::string &bundleName, int32_t appIndex);
-    void RemoveUidFromMap(int32_t uid);
-    void RemoveUidFromMap(const InnerBundleInfo &info, int32_t userId);
 
     ErrCode QueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
         int32_t appIndex, AbilityInfo &abilityInfo) const;
@@ -1406,7 +1403,6 @@ private:
      * @return Returns true if install state is UPDATING_START or UNINSTALL_START; returns false otherwise.
      */
     bool IsDisableState(const InstallState state) const;
-    bool IsValidAppUid(const int32_t uid) const;
     /**
      * @brief Delete bundle info if InstallState is not INSTALL_FAIL.
      * @param bundleName Indicates the bundle Names.
@@ -1439,6 +1435,7 @@ private:
         int32_t appIndex = 0) const;
     ErrCode ExplicitQueryAbilityInfoV9(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
         int32_t appIndex = 0) const;
+    ErrCode GenerateBundleId(const std::string &bundleName, int32_t &bundleId);
     int32_t GetUserIdByUid(int32_t uid) const;
     bool GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
     ErrCode GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
@@ -1564,7 +1561,7 @@ private:
     void RemoveOverlayInfoAndConnection(const InnerBundleInfo &innerBundleInfo, const std::string &bundleName);
     ErrCode FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerBundleInfo, const std::string &moduleName,
         const std::string &abilityName, AbilityInfo &abilityInfo) const;
-    void RestoreSandboxUidAndGid();
+    void RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap);
     bool IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode ProcessBundleMenu(BundleInfo& bundleInfo, int32_t flag, bool clearData) const;
     bool MatchShare(const Want &want, const std::vector<Skill> &skills) const;
@@ -1661,12 +1658,14 @@ private:
     static bool IsSkillVisibleForQuery(const SkillProfile &profile, SkillQueryAccessLevel accessLevel);
 
     bool initialUserFlag_ = false;
+    int32_t baseAppUid_ = Constants::BASE_APP_UID;
     mutable std::mutex stateMutex_;
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex hspBundleNameMutex_;
     mutable std::mutex pluginCallbackMutex_;
     mutable std::mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleInfoMutex_;
+    mutable std::shared_mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
     mutable std::shared_mutex bundleMutex_;
     mutable std::shared_mutex installingBundleNamesMutex_;
@@ -1687,14 +1686,14 @@ private:
     std::vector<sptr<IBundleEventCallback>> eventCallbackList_;
     // using for locking by bundleName
     std::unordered_map<std::string, std::mutex> bundleMutexMap_;
+    // using for generating bundleId
+    // key:bundleId
+    // value:bundleName
+    std::map<int32_t, std::string> bundleIdMap_;
     // all installed bundles
     // key:bundleName
     // value:innerbundleInfo
     std::map<std::string, InnerBundleInfo> bundleInfos_;
-    // bundleId -> {bundleName, appIndex} for fast lookup without AT service IPC
-    // bundleId = uid - userId * BASE_USER_RANGE, same bundleName+appIndex across users share one entry
-    mutable std::shared_mutex uidMapMutex_;
-    std::unordered_map<int32_t, std::pair<std::string, int32_t>> uidMap_;
     // key:bundle name
     std::map<std::string, InstallState> installStates_;
     // current-status:previous-statue pair

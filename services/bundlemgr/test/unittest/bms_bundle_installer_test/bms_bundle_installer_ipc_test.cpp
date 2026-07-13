@@ -1113,7 +1113,7 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_2800, Function | SmallTe
     MessageOption option;
     InstalldHost installdHost;
     int res = installdHost.OnRemoteRequest(code, datas, reply, option);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**

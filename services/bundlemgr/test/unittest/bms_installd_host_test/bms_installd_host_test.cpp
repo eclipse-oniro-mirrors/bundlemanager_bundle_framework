@@ -673,7 +673,7 @@ HWTEST_F(BmsInstalldHostTest, HandDeliverySignProfile_0100, Function | SmallTest
     MessageParcel data;
     MessageParcel reply;
     bool res = installdHost.HandDeliverySignProfile(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**

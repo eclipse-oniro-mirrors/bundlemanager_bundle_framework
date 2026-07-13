@@ -32,7 +32,6 @@
 #include <sys/xattr.h>
 #include <unistd.h>
 
-#include "accesstoken_kit.h"
 #include "aot/aot_executor.h"
 #include "app_log_tag_wrapper.h"
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
@@ -66,10 +65,8 @@
 #include "interfaces/hap_verify.h"
 #include "ipc/verify_bin_param.h"
 #include "parameters.h"
-#include "securec.h"
 #include "inner_bundle_clone_common.h"
 #include "policycoreutils.h"
-#include "provision/provision_verify.h"
 #include "storage_acl.h"
 
 namespace OHOS {
@@ -82,7 +79,6 @@ const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/preferences",
     "/haps"
 };
-constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
 constexpr const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1 = "/data/service/el1/%/backup/bundles/";
@@ -714,131 +710,6 @@ ErrCode InstalldHostImpl::AclSetExtensionDirs(bool debug, const std::string &par
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::QueryProvisionInfoBySessionId(
-    int32_t sessionId, const std::string &bundleName, SessionProvisionInfo &info)
-{
-    if (sessionId == 0) {
-        return ERR_OK;
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(sessionProvisionCacheMutex_);
-        auto cacheIt = sessionProvisionCache_.find(sessionId);
-        if (cacheIt != sessionProvisionCache_.end()) {
-            info = cacheIt->second;
-            return ERR_OK;
-        }
-    }
-
-    std::vector<Security::AccessToken::TrustedBundleInfo> bundleInfoList;
-    int32_t ret = Security::AccessToken::AccessTokenKit::GetCacheSignInfoBySessionId(
-        sessionId, bundleInfoList);
-    if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_E(BMS_TAG_INSTALLD, "GetCacheSignInfoBySessionId failed sessionId=%{public}d, ret=%{public}d",
-            sessionId, ret);
-        if (bundleName.empty()) {
-            return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
-        }
-        std::string bundleNameOri;
-        InstalldOperator::IsValidBundleNameWithOriBundle(bundleName, bundleNameOri);
-        ret = Security::AccessToken::AccessTokenKit::GetHapSignInfo(bundleNameOri, bundleInfoList);
-        if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-            LOG_E(BMS_TAG_INSTALLD, "GetHapSignInfo fallback failed bundleName=%{public}s, ret=%{public}d",
-                bundleNameOri.c_str(), ret);
-            return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
-        }
-    }
-
-    if (bundleInfoList.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "bundleInfoList empty for sessionId=%{public}d", sessionId);
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    const auto &profileData = bundleInfoList[0].profileData;
-    Security::Verify::ProvisionInfo provisionInfo;
-    Security::Verify::AppProvisionVerifyResult parseRet =
-        Security::Verify::ParseProvision(profileData.provisionRaw, provisionInfo);
-    if (parseRet != Security::Verify::PROVISION_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "ParseProvision failed for sessionId=%{public}d", sessionId);
-        return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
-    }
-
-    if (!profileData.appId.empty()) {
-        provisionInfo.appId = profileData.appId;
-    }
-    if (!profileData.fingerprint.empty()) {
-        provisionInfo.fingerprint = profileData.fingerprint;
-    }
-    if (!profileData.organization.empty()) {
-        provisionInfo.organization = profileData.organization;
-    }
-    provisionInfo.isOpenHarmony = profileData.isOpenHarmony;
-    provisionInfo.isEnterpriseResigned = profileData.isEnterpriseResigned;
-    provisionInfo.profileBlockLength = profileData.profileBlockLength;
-    if (!profileData.profileBlock.empty()) {
-        provisionInfo.profileBlock.reset(new(std::nothrow) unsigned char[profileData.profileBlock.size()]);
-        if (provisionInfo.profileBlock != nullptr) {
-            std::copy(profileData.profileBlock.begin(), profileData.profileBlock.end(),
-                provisionInfo.profileBlock.get());
-        }
-    }
-
-    info.bundleName = provisionInfo.bundleInfo.bundleName;
-    info.apl = provisionInfo.bundleInfo.apl.empty() ? ServiceConstants::APL_NORMAL : provisionInfo.bundleInfo.apl;
-    info.distributionType = static_cast<int32_t>(provisionInfo.distributionType);
-    info.provisionType = static_cast<int32_t>(provisionInfo.type);
-    info.isEnterpriseResigned = provisionInfo.isEnterpriseResigned;
-    info.appIdentifier = provisionInfo.bundleInfo.appIdentifier;
-    info.profileBlockLength = static_cast<uint32_t>(provisionInfo.profileBlockLength);
-    info.appServiceCapabilities = provisionInfo.appServiceCapabilities;
-    if (provisionInfo.profileBlock != nullptr && provisionInfo.profileBlockLength > 0) {
-        info.profileBlock.reset(new(std::nothrow) unsigned char[provisionInfo.profileBlockLength]);
-        if (info.profileBlock != nullptr) {
-            std::copy(provisionInfo.profileBlock.get(),
-                provisionInfo.profileBlock.get() + provisionInfo.profileBlockLength,
-                info.profileBlock.get());
-        }
-    }
-    info.distributionCertificate = provisionInfo.bundleInfo.distributionCertificate;
-
-    {
-        std::lock_guard<std::mutex> lock(sessionProvisionCacheMutex_);
-        sessionProvisionCache_[sessionId] = info;
-    }
-    LOG_D(BMS_TAG_INSTALLD, "QueryProvisionInfoBySessionId success, sessionId=%{public}d", sessionId);
-    return ERR_OK;
-}
-
-ErrCode InstalldHostImpl::ClearSessionProvisionCache(int32_t sessionId)
-{
-    std::lock_guard<std::mutex> lock(sessionProvisionCacheMutex_);
-    sessionProvisionCache_.erase(sessionId);
-    LOG_D(BMS_TAG_INSTALLD, "ClearSessionProvisionCache sessionId=%{public}d", sessionId);
-    return ERR_OK;
-}
-
-ErrCode InstalldHostImpl::GetResolvedApl(CreateDirParam &createDirParam)
-{
-    if (createDirParam.sessionId == 0) {
-        return ERR_OK;
-    }
-
-    SessionProvisionInfo info;
-    ErrCode ret = QueryProvisionInfoBySessionId(createDirParam.sessionId, createDirParam.bundleName, info);
-    if (ret != ERR_OK) {
-        return ret;
-    }
-
-    if (info.apl != createDirParam.apl) {
-        LOG_E(BMS_TAG_INSTALLD, "APL mismatch: IPC=%{public}s, AT=%{public}s",
-            createDirParam.apl.c_str(), info.apl.c_str());
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    createDirParam.apl = info.apl;
-    return ERR_OK;
-}
-
 ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
     const std::string bundleName = createDirParam.bundleName;
@@ -864,14 +735,6 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
         }
     }
-    CreateDirParam localParam = createDirParam;
-#ifndef X86_EMULATOR_MODE
-    ErrCode aplRet = GetResolvedApl(localParam);
-    if (aplRet != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "GetResolvedApl failed: %{public}d", aplRet);
-        return aplRet;
-    }
-#endif
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
         createDirParam.isDlpSandbox, createDirParam.dlpType, false);
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
@@ -933,7 +796,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             CreateSharefilesDataDirEl2(createDirParam);
         }
         ErrCode ret = SetDirApl(
-            bundleDataDir, createDirParam.bundleName, localParam.apl, hapFlags, createDirParam.uid);
+            bundleDataDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
             return ret;
@@ -949,7 +812,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         }
         AclSetDir(createDirParam.debug, databaseDir, false, true);
         InstalldOperator::RmvDeleteDfx(databaseDir);
-        ret = SetDirApl(databaseDir, createDirParam.bundleName, localParam.apl, hapFlags, createDirParam.uid);
+        ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
             return ret;
@@ -978,14 +841,14 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir,
         DirType::DIR_EL2);
     ErrCode ret = SetDirApl(
-        bundleBackupDir, createDirParam.bundleName, localParam.apl, hapFlags, createDirParam.uid);
+        bundleBackupDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
     }
 
     CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir,
         DirType::DIR_EL1);
-    ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, localParam.apl, hapFlags, createDirParam.uid);
+    ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir DIR_EL1 SetDirApl failed, errno is %{public}d", ret);
     }
@@ -993,7 +856,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     std::string newBundleBackupDir;
     CreateNewBackupExtHomeDir(createDirParam.bundleName,
         createDirParam.userId, createDirParam.uid, newBundleBackupDir, DirType::DIR_EL2);
-    ret = SetDirApl(newBundleBackupDir, createDirParam.bundleName, localParam.apl,
+    ret = SetDirApl(newBundleBackupDir, createDirParam.bundleName, createDirParam.apl,
         createDirParam.isPreInstallApp, createDirParam.debug, createDirParam.uid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
@@ -1001,7 +864,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
 
     CreateNewBackupExtHomeDir(createDirParam.bundleName,
         createDirParam.userId, createDirParam.uid, newBundleBackupDir, DirType::DIR_EL1);
-    ret = SetDirApl(newBundleBackupDir, createDirParam.bundleName, localParam.apl,
+    ret = SetDirApl(newBundleBackupDir, createDirParam.bundleName, createDirParam.apl,
         createDirParam.isPreInstallApp, createDirParam.debug, createDirParam.uid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir DIR_EL1 SetDirApl failed: %{public}d", ret);
@@ -1038,14 +901,6 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithEl(const CreateDirParam &create
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     std::string el = ServiceConstants::BUNDLE_EL[index];
-    CreateDirParam localParam = createDirParam;
-#ifndef X86_EMULATOR_MODE
-    ErrCode aplRet = GetResolvedApl(localParam);
-    if (aplRet != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "GetResolvedApl failed: %{public}d", aplRet);
-        return aplRet;
-    }
-#endif
     std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::BASE;
     if (access(bundleDataDir.c_str(), F_OK) != 0) {
         LOG_W(BMS_TAG_INSTALLD, "Base directory %{public}s does not existed, bundleName:%{public}s",
@@ -1212,14 +1067,6 @@ ErrCode InstalldHostImpl::CreateExtensionDir(const CreateDirParam &createDirPara
     if (createDirParam.extensionDirs.empty()) {
         return ERR_OK;
     }
-    CreateDirParam localParam = createDirParam;
-#ifndef X86_EMULATOR_MODE
-    ErrCode aplRet = GetResolvedApl(localParam);
-    if (aplRet != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "GetResolvedApl failed: %{public}d", aplRet);
-        return aplRet;
-    }
-#endif
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
         createDirParam.isDlpSandbox, createDirParam.dlpType, true);
     LOG_I(BMS_TAG_INSTALLD, "CreateExtensionDir parent dir %{public}s for bundle %{public}s, hapFlags:%{public}d",
@@ -1238,7 +1085,7 @@ ErrCode InstalldHostImpl::CreateExtensionDir(const CreateDirParam &createDirPara
             continue;
         }
         auto ret = SetDirApl(
-            extensionDir, createDirParam.bundleName, localParam.apl, hapFlags, createDirParam.uid);
+            extensionDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "dir %{public}s SetDirApl failed", extensionDir.c_str());
             return ret;
@@ -2009,14 +1856,6 @@ ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool 
             return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
         }
     }
-    CreateDirParam localParam = createDirParam;
-#ifndef X86_EMULATOR_MODE
-    ErrCode aplRet = GetResolvedApl(localParam);
-    if (aplRet != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "GetResolvedApl failed: %{public}d", aplRet);
-        return aplRet;
-    }
-#endif
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp,
         createDirParam.debug, createDirParam.isDlpSandbox, createDirParam.dlpType, isExtensionDir);
     ErrCode res = ERR_OK;
@@ -2026,13 +1865,13 @@ ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool 
             std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId);
             std::string elBaseExtensionDir = bundleDataDir + ServiceConstants::BASE + dir;
             auto ret = SetDirApl(elBaseExtensionDir, createDirParam.bundleName,
-                localParam.apl, hapFlags, createDirParam.uid);
+                createDirParam.apl, hapFlags, createDirParam.uid);
             if (ret != ERR_OK) {
                 res = ret;
             }
             std::string elDatabaseExtensionDir = bundleDataDir + ServiceConstants::DATABASE + dir;
             ret = SetDirApl(elDatabaseExtensionDir, createDirParam.bundleName,
-                localParam.apl, hapFlags, createDirParam.uid);
+                createDirParam.apl, hapFlags, createDirParam.uid);
             if (ret != ERR_OK) {
                 res = ret;
             }
@@ -2484,6 +2323,10 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSign
     }
 
     LOG_D(BMS_TAG_INSTALLD, "code sign param is %{public}s", codeSignatureParam.ToString().c_str());
+    if (!InstalldOperator::IsValidBundleName(codeSignatureParam.bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function VerifyCodeSignature with invalid bundleName");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
     if (!InstalldOperator::IsFileNameValid(codeSignatureParam.modulePath)) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function VerifyCodeSignature with invalid modulePath");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -2500,50 +2343,7 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSign
             codeSignatureParam.profileBlockLength);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-
-    // SPM mode: assemble provisionInfo-derived fields from access_token
-    CodeSignatureParam localParam = codeSignatureParam;
-    SessionProvisionInfo info;
-    ErrCode queryRet = QueryProvisionInfoBySessionId(codeSignatureParam.sessionId,
-        codeSignatureParam.bundleName, info);
-    if (queryRet != ERR_OK) {
-        return queryRet;
-    }
-    if (!info.bundleName.empty()) {
-        localParam.bundleName = info.bundleName;
-        localParam.isEnterpriseResigned = info.isEnterpriseResigned;
-        localParam.appIdentifier = (info.provisionType ==
-            static_cast<int32_t>(Security::Verify::ProvisionType::DEBUG)) ?
-            DEBUG_APP_IDENTIFIER : info.appIdentifier;
-        localParam.isEnterpriseBundle = (info.distributionType ==
-            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE) ||
-            info.distributionType ==
-            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_NORMAL) ||
-            info.distributionType ==
-            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_MDM));
-        localParam.isInternaltestingBundle = (info.distributionType ==
-            static_cast<int32_t>(Security::Verify::AppDistType::INTERNALTESTING));
-        if (info.profileBlock != nullptr && info.profileBlockLength > 0) {
-            auto tmpProfilePtr = std::make_unique<unsigned char[]>(info.profileBlockLength);
-            if (tmpProfilePtr == nullptr) {
-                LOG_E(BMS_TAG_INSTALLD, "allocate profileBlock failed");
-                return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-            }
-            if (memcpy_s(tmpProfilePtr.get(), info.profileBlockLength,
-                info.profileBlock.get(), info.profileBlockLength) != 0) {
-                LOG_E(BMS_TAG_INSTALLD, "memcpy_s profileBlock failed");
-                return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-            }
-            localParam.profileBlockLength = info.profileBlockLength;
-            localParam.profileBlock = std::move(tmpProfilePtr);
-        }
-    }
-    if (!InstalldOperator::IsValidBundleName(localParam.bundleName)) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function VerifyCodeSignature with invalid bundleName");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    ErrCode ret = InstalldOperator::VerifyCodeSignature(localParam);
+    ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "verify code signature failed: %{public}d", ret);
         return ret;
@@ -2721,100 +2521,59 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-
-    // SPM mode: assemble provisionInfo-derived fields from access_token
-    CodeSignatureParam localParam = codeSignatureParam;
-    SessionProvisionInfo info;
-    ErrCode queryRet = QueryProvisionInfoBySessionId(codeSignatureParam.sessionId,
-        codeSignatureParam.bundleName, info);
-    if (queryRet != ERR_OK) {
-        return queryRet;
-    }
-    if (!info.bundleName.empty()) {
-        localParam.bundleName = info.bundleName;
-        localParam.isEnterpriseResigned = info.isEnterpriseResigned;
-        localParam.appIdentifier = (info.provisionType ==
-            static_cast<int32_t>(Security::Verify::ProvisionType::DEBUG)) ?
-            DEBUG_APP_IDENTIFIER : info.appIdentifier;
-        localParam.isEnterpriseBundle = (info.distributionType ==
-            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE) ||
-            info.distributionType ==
-            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_NORMAL) ||
-            info.distributionType ==
-            static_cast<int32_t>(Security::Verify::AppDistType::ENTERPRISE_MDM));
-        localParam.isInternaltestingBundle = (info.distributionType ==
-            static_cast<int32_t>(Security::Verify::AppDistType::INTERNALTESTING));
-        if (localParam.isPlugin) {
-            LOG_D(BMS_TAG_INSTALLD, "obtain sign info for plugin");
-            InstalldOperator::ObtainSignInfoForPlugin(info.appServiceCapabilities, localParam.pluginId);
-        }
-        if (info.profileBlock != nullptr && info.profileBlockLength > 0) {
-            auto tmpProfilePtr = std::make_unique<unsigned char[]>(info.profileBlockLength);
-            if (tmpProfilePtr == nullptr) {
-                LOG_E(BMS_TAG_INSTALLD, "allocate profileBlock failed");
-                return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-            }
-            if (memcpy_s(tmpProfilePtr.get(), info.profileBlockLength,
-                info.profileBlock.get(), info.profileBlockLength) != 0) {
-                LOG_E(BMS_TAG_INSTALLD, "memcpy_s profileBlock failed");
-                return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-            }
-            localParam.profileBlockLength = info.profileBlockLength;
-            localParam.profileBlock = std::move(tmpProfilePtr);
-        }
-    }
-
     ErrCode ret = ERR_OK;
-    if (localParam.isCompileSdkOpenHarmony && !Security::CodeSign::CodeSignUtils::IsSupportOHCodeSign()) {
+    if (codeSignatureParam.isCompileSdkOpenHarmony && !Security::CodeSign::CodeSignUtils::IsSupportOHCodeSign()) {
         LOG_D(BMS_TAG_INSTALLD, "code signature is not supported");
         return ret;
     }
     Security::CodeSign::EntryMap entryMap;
-    if ((ret = PrepareEntryMap(localParam, entryMap)) != ERR_OK) {
+    if ((ret = PrepareEntryMap(codeSignatureParam, entryMap)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "prepare entry map failed");
         return ret;
     }
     uint32_t codeSignFlag = 0;
-    if (!localParam.isCompressNativeLibrary) {
+    if (!codeSignatureParam.isCompressNativeLibrary) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_UNCOMPRESSED_NATIVE_LIBS;
     }
-    if (localParam.isEnterpriseResigned) {
+    if (codeSignatureParam.isEnterpriseResigned) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_ENTERPRISE_RESIGN;
     }
-    if (localParam.isLocalHspPlugin) {
+    if (codeSignatureParam.isDeveloperDistribution) {
         codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_LOCAL_HSP_PLUGIN;
     }
-    if (localParam.signatureFileDir.empty()) {
+    if (codeSignatureParam.signatureFileDir.empty()) {
         std::shared_ptr<CodeSignHelper> codeSignHelper = std::make_shared<CodeSignHelper>();
-        Security::CodeSign::FileType fileType = localParam.isPreInstalledBundle ?
+        Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?
             FILE_ENTRY_ONLY : FILE_ALL;
-        if (localParam.isEnterpriseBundle) {
+        if (codeSignatureParam.isEnterpriseBundle) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for enterprise bundle");
             Security::CodeSign::ByteBuffer byteBuffer;
-            byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(localParam.profileBlock.get()),
-                localParam.profileBlockLength);
+            byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(codeSignatureParam.profileBlock.get()),
+                codeSignatureParam.profileBlockLength);
             ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(
-                localParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
-        } else if (localParam.isInternaltestingBundle) {
+                codeSignatureParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
+        } else if (codeSignatureParam.isInternaltestingBundle) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for internaltesting bundle");
             Security::CodeSign::ByteBuffer byteBuffer;
-            byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(localParam.profileBlock.get()),
-                localParam.profileBlockLength);
+            byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(codeSignatureParam.profileBlock.get()),
+                codeSignatureParam.profileBlockLength);
             ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(
-                localParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
-        } else if (localParam.isPlugin) {
+                codeSignatureParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
+        } else if (codeSignatureParam.isPlugin) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for plugin");
-            ret = codeSignHelper->EnforceCodeSignForAppWithPluginId(localParam.appIdentifier,
-                localParam.pluginId, localParam.modulePath, entryMap, fileType, codeSignFlag);
+            std::string pluginId;
+            InstalldOperator::ObtainSignInfoForPlugin(codeSignatureParam.modulePath, pluginId);
+            ret = codeSignHelper->EnforceCodeSignForAppWithPluginId(codeSignatureParam.appIdentifier,
+                pluginId, codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
         } else {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for non-enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForApp(
-                localParam.modulePath, entryMap, fileType, codeSignFlag);
+                codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
         }
-        LOG_I(BMS_TAG_INSTALLD, "Verify code signature %{public}s", localParam.modulePath.c_str());
+        LOG_I(BMS_TAG_INSTALLD, "Verify code signature %{public}s", codeSignatureParam.modulePath.c_str());
     } else {
-        LOG_D(BMS_TAG_INSTALLD, "Verify code signature with: %{public}s", localParam.signatureFileDir.c_str());
-        ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, localParam.signatureFileDir);
+        LOG_D(BMS_TAG_INSTALLD, "Verify code signature with: %{public}s", codeSignatureParam.signatureFileDir.c_str());
+        ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
     }
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "hap or hsp code signature failed due to %{public}d", ret);
@@ -2829,40 +2588,37 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int32_t sessionId)
+ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+    const unsigned char *profileBlock)
 {
 #if defined(CODE_SIGNATURE_ENABLE)
-    LOG_I(BMS_TAG_INSTALLD, "start, sessionId=%{public}d", sessionId);
+    LOG_I(BMS_TAG_INSTALLD, "start");
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
 
-    // Query all needed data from access_token via sessionId
-    SessionProvisionInfo info;
-    ErrCode queryRet = QueryProvisionInfoBySessionId(sessionId, bundleName, info);
-    if (queryRet != ERR_OK) {
-        return queryRet;
-    }
-    if (info.bundleName.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "bundleName not found in AT for sessionId=%{public}d", sessionId);
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    if (info.profileBlock == nullptr || info.profileBlockLength == 0) {
-        LOG_E(BMS_TAG_INSTALLD, "profileBlock not found in AT for sessionId=%{public}d", sessionId);
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    if (info.profileBlockLength > static_cast<uint32_t>(ServiceConstants::MAX_PROFILE_BLOCK_LENGTH)) {
-        LOG_E(BMS_TAG_INSTALLD, "profileBlockLength exceeds max: %{public}u", info.profileBlockLength);
+    if (!InstalldOperator::IsValidBundleName(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function DeliverySignProfile with invalid bundleName");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    LOG_D(BMS_TAG_INSTALLD, "delivery profile of bundle %{public}s, profile size %{public}u",
-        info.bundleName.c_str(), info.profileBlockLength);
+    if (profileBlockLength <= 0 || profileBlockLength > ServiceConstants::MAX_PROFILE_BLOCK_LENGTH) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function DeliverySignProfile with invalid profileBlockLength: %{public}d",
+            profileBlockLength);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (profileBlock == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function DeliverySignProfile with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "delivery profile of bundle %{public}s and profile size is %{public}d", bundleName.c_str(),
+        profileBlockLength);
     Security::CodeSign::ByteBuffer byteBuffer;
-    byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(info.profileBlock.get()),
-        static_cast<int32_t>(info.profileBlockLength));
-    ErrCode ret = Security::CodeSign::CodeSignUtils::EnableKeyInProfile(info.bundleName, byteBuffer);
+    byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(profileBlock), profileBlockLength);
+    ErrCode ret = Security::CodeSign::CodeSignUtils::EnableKeyInProfile(bundleName, byteBuffer);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "delivery code sign profile failed due to error %{public}d", ret);
         return ERR_BUNDLE_MANAGER_CODE_SIGNATURE_DELIVERY_FILE_FAILED;
@@ -3793,7 +3549,7 @@ ErrCode InstalldHostImpl::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
         verifyBinParam.bundleName.c_str(), verifyBinParam.appIdentifier.c_str());
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
     auto result = BinarySecurityWrapper::GetInstance().ProcessHapBinInstall(verifyBinParam.bundleName,
-        verifyBinParam.appIdentifier, verifyBinParam.userId, verifyBinParam.sessionId, infos);
+        verifyBinParam.appIdentifier, verifyBinParam.userId, infos);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "ProcessHapBinInstall failed %{public}d", result);
         return ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION;
@@ -3831,28 +3587,7 @@ ErrCode InstalldHostImpl::CheckHspPluginCertValidity(const std::string &bundleNa
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 #ifdef SECURITY_PRIVACY_SERVER_ENABLE
-    SessionProvisionInfo info;
-    ErrCode queryRet = QueryProvisionInfoBySessionId(sessionId, bundleName, info);
-    if (queryRet != ERR_OK) {
-        return queryRet;
-    }
-    Security::Verify::HspPlugin hspPluginInfo;
-    if (info.provisionType == Security::Verify::ProvisionType::DEBUG) {
-        LOG_E(BMS_TAG_INSTALLD, "Debug provision session, do not need check hsp plugin cert validity");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    } else {
-        hspPluginInfo.certType = Security::Verify::BinaryCertType::Binary_RELEASE;
-    }
-    auto ret = Security::Verify::ParseHspPluginInfo(info.distributionCertificate, hspPluginInfo);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "ParseHspPluginInfo failed %{public}d", ret);
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    ret = BinarySecurityWrapper::GetInstance().CheckHspPluginCertValidity(hspPluginInfo);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "CheckHspPluginCertValidity failed %{public}d", ret);
-        return ERR_APPEXECFWK_PLUGIN_CERT_REVOKED;
-    }
+   
 #else
     LOG_E(BMS_TAG_INSTALLD, "SECURITY_PRIVACY_SERVER_ENABLE is disabled");
     return ERR_APPEXECFWK_PLUGIN_PRIVACY_SERVER_DISABLED;

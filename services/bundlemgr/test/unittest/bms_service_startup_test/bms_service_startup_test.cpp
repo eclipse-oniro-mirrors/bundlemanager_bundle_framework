@@ -36,12 +36,6 @@ using namespace OHOS::Security;
 using OHOS::DelayedSingleton;
 
 namespace OHOS {
-namespace Security {
-namespace AccessToken {
-void SetUpdateHapPolicyRetForTest(int32_t ret, int32_t newUid);
-}
-}
-
 namespace {
 const int32_t WAIT_TIME = 2; // init mocked bms
 const int32_t TOKENID = 100;
@@ -522,53 +516,6 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0400, Function | SmallTest |
 }
 
 /**
- * @tc.number: BundlePermissionMgr_VerifyPermissionByInstall_0100
- * @tc.name: test VerifyPermissionByInstall permission granted
- * @tc.desc: 1.GetCachePolicyBySessionId returns success with matching permission, expect PERMISSION_GRANTED
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_VerifyPermissionByInstall_0100, Function | SmallTest | Level0)
-{
-    Security::AccessToken::BundlePolicyInfo policyInfo;
-    policyInfo.reqPermissions.push_back("ohos.permission.test");
-    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(Security::AccessToken::AccessTokenKitRet::RET_SUCCESS);
-    int32_t ret = BundlePermissionMgr::VerifyPermissionByInstall(
-        "com.test.bundle", "ohos.permission.test", 1);
-    EXPECT_EQ(ret, Security::AccessToken::PermissionState::PERMISSION_GRANTED);
-}
-
-/**
- * @tc.number: BundlePermissionMgr_VerifyPermissionByInstall_0200
- * @tc.name: test VerifyPermissionByInstall permission denied
- * @tc.desc: 1.GetCachePolicyBySessionId returns success but permission not in reqPermissions, expect PERMISSION_DENIED
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_VerifyPermissionByInstall_0200, Function | SmallTest | Level0)
-{
-    Security::AccessToken::BundlePolicyInfo policyInfo;
-    policyInfo.reqPermissions.push_back("ohos.permission.other");
-    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(Security::AccessToken::AccessTokenKitRet::RET_SUCCESS);
-    int32_t ret = BundlePermissionMgr::VerifyPermissionByInstall(
-        "com.test.bundle", "ohos.permission.test", 1);
-    EXPECT_EQ(ret, Security::AccessToken::PermissionState::PERMISSION_DENIED);
-}
-
-/**
- * @tc.number: BundlePermissionMgr_VerifyPermissionByInstall_0300
- * @tc.name: test VerifyPermissionByInstall GetCachePolicyBySessionId failed
- * @tc.desc: 1.GetCachePolicyBySessionId returns failure, expect PERMISSION_DENIED
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_VerifyPermissionByInstall_0300, Function | SmallTest | Level0)
-{
-    Security::AccessToken::BundlePolicyInfo policyInfo;
-    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(Security::AccessToken::AccessTokenKitRet::RET_FAILED);
-    int32_t ret = BundlePermissionMgr::VerifyPermissionByInstall(
-        "com.test.bundle", "ohos.permission.test", 1);
-    EXPECT_EQ(ret, Security::AccessToken::PermissionState::PERMISSION_DENIED);
-}
-
-/**
  * @tc.number: BundlePermissionMgr_0500
  * @tc.name: test CheckPermissionInDefaultPermissions
  * @tc.desc: 1.test CheckPermissionInDefaultPermissions of BundlePermissionMgr
@@ -799,76 +746,9 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1700, Function | SmallTest |
     Security::AccessToken::AccessTokenIDEx tokenIdeEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
 
-    int32_t sessionId = 0;
-    ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType, tokenIdeEx, "{}", false, sessionId);
-    EXPECT_EQ(checkResult.permCheckResult.permissionName, "");
+    ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType, tokenIdeEx, checkResult, "{}");
+    EXPECT_EQ(checkResult.permCheckResult.permissionName, "test");
     EXPECT_EQ(ret, false);
-}
-
-/**
- * @tc.number: BundlePermissionMgr_InitHapToken_0200
- * @tc.name: test InitHapToken with ERR_TOKENID_HAS_EXISTED
- * @tc.desc: 1.When PrepareHapIdentity returns ERR_TOKENID_HAS_EXISTED and sessionId=0,
- *           2.delete the reserved data token and retry, expect success
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_InitHapToken_0200, Function | SmallTest | Level0)
-{
-    BundlePermissionMgr::Init();
-    InnerBundleInfo innerBundleInfo;
-    int32_t userId = 0;
-    int32_t dlpType = 0;
-    Security::AccessToken::AccessTokenIDEx tokenIdeEx;
-
-    int32_t sessionId = 0;
-    Security::AccessToken::SetPrepareHapIdentityRetForTest(
-        Security::AccessToken::AccessTokenError::ERR_TOKENID_HAS_EXISTED);
-    int32_t ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType,
-        tokenIdeEx, "{}", false, sessionId);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
- * @tc.number: BundlePermissionMgr_InitHapToken_0300
- * @tc.name: test InitHapToken skip cleanup when sessionId is not zero
- * @tc.desc: 1.When sessionId is not 0, skip the ERR_TOKENID_HAS_EXISTED cleanup path
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_InitHapToken_0300, Function | SmallTest | Level0)
-{
-    BundlePermissionMgr::Init();
-    InnerBundleInfo innerBundleInfo;
-    int32_t userId = 0;
-    int32_t dlpType = 0;
-    Security::AccessToken::AccessTokenIDEx tokenIdeEx;
-
-    int32_t sessionId = 1;
-    Security::AccessToken::SetPrepareHapIdentityRetForTest(
-        Security::AccessToken::AccessTokenError::ERR_TOKENID_HAS_EXISTED);
-    int32_t ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType,
-        tokenIdeEx, "{}", false, sessionId);
-    EXPECT_NE(ret, ERR_OK);
-}
-
-/**
- * @tc.number: BundlePermissionMgr_InitHapToken_0400
- * @tc.name: test InitHapToken delete reserved data failed
- * @tc.desc: 1.When DeleteAccessTokenId fails, do not retry PrepareHapIdentity
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_InitHapToken_0400, Function | SmallTest | Level0)
-{
-    BundlePermissionMgr::Init();
-    InnerBundleInfo innerBundleInfo;
-    int32_t userId = 0;
-    int32_t dlpType = 0;
-    Security::AccessToken::AccessTokenIDEx tokenIdeEx;
-
-    int32_t sessionId = 0;
-    Security::AccessToken::SetPrepareHapIdentityRetForTest(
-        Security::AccessToken::AccessTokenError::ERR_TOKENID_HAS_EXISTED);
-    Security::AccessToken::SetDeleteIdentityRetForTest(
-        Security::AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL);
-    int32_t ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType,
-        tokenIdeEx, "{}", false, sessionId);
-    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -883,8 +763,8 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1800, Function | SmallTest |
     InnerBundleInfo innerBundleInfo;
     Security::AccessToken::AccessTokenIDEx tokenIdeEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
-    ret = BundlePermissionMgr::UpdateHapToken(tokenIdeEx, innerBundleInfo, userId, checkResult, "{}", false, false, 0);
-    EXPECT_EQ(checkResult.permCheckResult.permissionName, "");
+    ret = BundlePermissionMgr::UpdateHapToken(tokenIdeEx, innerBundleInfo, userId, checkResult, "{}");
+    EXPECT_EQ(checkResult.permCheckResult.permissionName, "test");
     EXPECT_EQ(ret, false);
 }
 
@@ -1110,7 +990,7 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3400, Function | SmallTest |
     int32_t ret = BundlePermissionMgr::Init();
     EXPECT_EQ(ret, true);
     AccessToken::AccessTokenID tokenId = 100;
-    int32_t result = BundlePermissionMgr::DeleteAccessTokenId(tokenId, "testBundle");
+    int32_t result = BundlePermissionMgr::DeleteAccessTokenId(tokenId, false);
     EXPECT_EQ(result, 0);
 }
 
@@ -1213,114 +1093,6 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_4000, Function | SmallTest |
     EXPECT_EQ(permFull.size(), 1);
     EXPECT_EQ(permFull[0].permissionName, "name");
     EXPECT_EQ(permFull[0].feature, "requiredFeature");
-}
-
-/**
- * @tc.number: BundlePermissionMgr_4100
- * @tc.name: test UpdateHapPolicy main app uid unchanged
- * @tc.desc: appIndex=0, uid stays the same → returns ERR_OK
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_4100, Function | SmallTest | Level0)
-{
-    int32_t ret = BundlePermissionMgr::Init();
-    EXPECT_EQ(ret, true);
-    Security::AccessToken::SetUpdateHapPolicyRetForTest(
-        Security::AccessToken::AccessTokenKitRet::RET_SUCCESS);
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.baseApplicationInfo_->bundleName = "com.test.bundle.uid";
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleName = "com.test.bundle.uid";
-    userInfo.bundleUserInfo.userId = 100;
-    userInfo.uid = 20010001;
-    userInfo.gids.emplace_back(20010001);
-    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
-    ret = BundlePermissionMgr::UpdateHapPolicy(0, 0, innerBundleInfo, 100, false, "");
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
- * @tc.number: BundlePermissionMgr_4200
- * @tc.name: test UpdateHapPolicy main app uid changed
- * @tc.desc: appIndex=0, uid changes → returns ERR_APPEXECFWK_INSTALL_UID_CHANGED and updates uid
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_4200, Function | SmallTest | Level0)
-{
-    int32_t ret = BundlePermissionMgr::Init();
-    EXPECT_EQ(ret, true);
-    Security::AccessToken::SetUpdateHapPolicyRetForTest(
-        Security::AccessToken::AccessTokenKitRet::RET_SUCCESS, 20010002);
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.baseApplicationInfo_->bundleName = "com.test.bundle.uidchg";
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleName = "com.test.bundle.uidchg";
-    userInfo.bundleUserInfo.userId = 100;
-    userInfo.uid = 20010001;
-    userInfo.gids.emplace_back(20010001);
-    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
-    ret = BundlePermissionMgr::UpdateHapPolicy(0, 0, innerBundleInfo, 100, false, "");
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_UID_CHANGED);
-    InnerBundleUserInfo updatedUserInfo;
-    innerBundleInfo.GetInnerBundleUserInfo(100, updatedUserInfo);
-    EXPECT_EQ(updatedUserInfo.uid, 20010002);
-    EXPECT_EQ(updatedUserInfo.gids.size(), 1);
-    EXPECT_EQ(updatedUserInfo.gids[0], 20010002);
-}
-
-/**
- * @tc.number: BundlePermissionMgr_4300
- * @tc.name: test UpdateHapPolicy clone app uid changed
- * @tc.desc: appIndex>0, clone uid changes → returns ERR_APPEXECFWK_INSTALL_UID_CHANGED,
- *           main uid is not affected
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_4300, Function | SmallTest | Level0)
-{
-    int32_t ret = BundlePermissionMgr::Init();
-    EXPECT_EQ(ret, true);
-    Security::AccessToken::SetUpdateHapPolicyRetForTest(
-        Security::AccessToken::AccessTokenKitRet::RET_SUCCESS, 20010003);
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.baseApplicationInfo_->bundleName = "com.test.bundle.cloneuid";
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleName = "com.test.bundle.cloneuid";
-    userInfo.bundleUserInfo.userId = 100;
-    userInfo.uid = 20010001;
-    userInfo.gids.emplace_back(20010001);
-    InnerBundleCloneInfo cloneInfo;
-    cloneInfo.uid = 20010002;
-    cloneInfo.appIndex = 1;
-    cloneInfo.userId = 100;
-    userInfo.cloneInfos["1"] = cloneInfo;
-    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
-    ret = BundlePermissionMgr::UpdateHapPolicy(0, 0, innerBundleInfo, 100, false, "", 1);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_UID_CHANGED);
-    InnerBundleUserInfo updatedUserInfo;
-    innerBundleInfo.GetInnerBundleUserInfo(100, updatedUserInfo);
-    EXPECT_EQ(updatedUserInfo.uid, 20010001); // main uid unchanged
-    auto cloneIter = updatedUserInfo.cloneInfos.find("1");
-    ASSERT_NE(cloneIter, updatedUserInfo.cloneInfos.end());
-    EXPECT_EQ(cloneIter->second.uid, 20010003); // clone uid updated
-}
-
-/**
- * @tc.number: BundlePermissionMgr_4400
- * @tc.name: test UpdateHapPolicy access token error
- * @tc.desc: AccessTokenKit returns error → error propagated
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_4400, Function | SmallTest | Level0)
-{
-    int32_t ret = BundlePermissionMgr::Init();
-    EXPECT_EQ(ret, true);
-    Security::AccessToken::SetUpdateHapPolicyRetForTest(-1);
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.baseApplicationInfo_->bundleName = "com.test.bundle.err";
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleName = "com.test.bundle.err";
-    userInfo.bundleUserInfo.userId = 100;
-    userInfo.uid = 20010001;
-    userInfo.gids.emplace_back(20010001);
-    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
-    ret = BundlePermissionMgr::UpdateHapPolicy(0, 0, innerBundleInfo, 100, false, "");
-    EXPECT_EQ(ret, -1);
 }
 
 /**

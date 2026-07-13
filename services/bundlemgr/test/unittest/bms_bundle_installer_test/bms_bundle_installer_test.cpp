@@ -75,10 +75,6 @@ using namespace OHOS::AppExecFwk;
 using OHOS::DelayedSingleton;
 
 namespace OHOS {
-namespace Security::AccessToken {
-    void SetCachePolicyBySessionIdForTest(const BundlePolicyInfo& bundlePolicyInfo);
-    void SetCachePolicyBySessionIdRetForTest(int32_t ret);
-}
 namespace {
 const std::string SYSTEMFIEID_NAME = "com.query.test";
 const std::string SYSTEMFIEID_BUNDLE = "system_module.hap";
@@ -154,7 +150,7 @@ const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.exa
 const std::string BUNDLE_NAME_TEST = "bundleNameTest";
 const std::string BUNDLE_NAME_TEST1 = "bundleNameTest1";
 const std::string DEVICE_ID = "PHONE-001";
-const std::string TEST_CPU_ABI = "arm64-v8a";
+const std::string TEST_CPU_ABI = "arm64";
 constexpr const char* BMS_SERVICE_PATH = "/data/service";
 const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 const std::string DATA_EL2_SHAREFILES_PATH = "/data/app/el2/100/sharefiles/";
@@ -5908,11 +5904,11 @@ HWTEST_F(BmsBundleInstallerTest, ProcessModuleUpdate_0020, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0010, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
-    installer.userId_ = -999;
+    installer.userId_ = ServiceConstants::NOT_EXIST_USERID;
     InnerBundleInfo info;
     installer.InitDataMgr();
     ErrCode res = installer.CreateBundleDataDir(info);
-    EXPECT_EQ(res, ERR_APPEXECFWK_USER_NOT_EXIST);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY);
 }
 
 /**
@@ -5942,13 +5938,15 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest 
     dataMgr->bundleInfos_.clear();
     bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::INSTALL_START);
     bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME_TEST, info);
+    ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
     
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
+    EXPECT_EQ(ret3, ERR_OK);
 
     BaseBundleInstaller installer;
     installer.InitDataMgr();
-    installer.userId_ = -999;
+    installer.userId_ = ServiceConstants::NOT_EXIST_USERID;
     ErrCode res = installer.CreateBundleDataDir(info);
     EXPECT_NE(res, ERR_OK);
 
@@ -9623,7 +9621,8 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0410, Function | SmallTest | L
     ScopeGuard callingBundleInfoGuard([&] { dataMgr->bundleInfos_.erase("com.example.caller"); });
 
     // Map UID to calling bundle name
-    dataMgr->UpdateUidMap(20011111, "com.example.caller", 0);
+    dataMgr->bundleIdMap_[11111] = "com.example.caller";
+    ScopeGuard bundleIdGuard([&] { dataMgr->bundleIdMap_.erase(11111); });
 
     BaseBundleInstaller installer;
     installer.userId_ = USERID;
@@ -11622,8 +11621,11 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0025, Function | MediumTest | L
 {
     PluginInstaller installer;
     std::string hspPath;
+    std::string appIdentifier;
+    bool isEnterpriseBundle = true;
     bool isCompileSdkOpenHarmony = true;
-    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, isCompileSdkOpenHarmony);
+    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, appIdentifier, isEnterpriseBundle,
+        isCompileSdkOpenHarmony);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED);
 }
 
@@ -11673,7 +11675,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0028, Function | MediumTest | L
     hapVerifyResult.SetProvisionInfo(info);
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults{ hapVerifyResult };
     auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
 }
 
 /**
@@ -11695,7 +11697,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0029, Function | MediumTest | L
     hapVerifyResult.SetProvisionInfo(info);
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults{ hapVerifyResult };
     auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -15017,6 +15019,44 @@ HWTEST_F(BmsBundleInstallerTest, VerifyCodeSignatureForHap_0100, Function | Smal
     codeSignatureParam.bundleName = "com.example.test";
     ErrCode ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    codeSignatureParam.modulePath = TEST_ERROR_STRING;
+    codeSignatureParam.isEnterpriseBundle = true;
+    ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_ERR_PROFILE);
+    codeSignatureParam.isEnterpriseBundle = false;
+    codeSignatureParam.isInternaltestingBundle = true;
+    ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_ERR_PROFILE);
+    codeSignatureParam.isInternaltestingBundle = false;
+    codeSignatureParam.isPlugin = true;
+    ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_PATH_INVALID);
+    codeSignatureParam.signatureFileDir = TEST_ERROR_STRING;
+    ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeliverySignProfile_0100
+ * @tc.name: test DeliverySignProfile
+ * @tc.desc: test DeliverySignProfile of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, DeliverySignProfile_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string bundleName = TEST_EMPTY_STRING;
+    int32_t profileBlockLength = ZERO_CODE;
+    const unsigned char* profileBlock = new unsigned char[0];
+    ErrCode ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    bundleName = TEST_ERROR_STRING;
+    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, nullptr);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    profileBlockLength = TEST_LENGTH;
+    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_CODE_SIGNATURE_DELIVERY_FILE_FAILED);
 }
 
 /**
@@ -17189,16 +17229,12 @@ HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0010, Function | SmallT
     BaseBundleInstaller installer;
     installer.bundleName_ = "com.example.test";
     installer.userId_ = USERID;
-
+    
     // scenario 1: modulePath not exist, ExtractFiles will fail
     installer.modulePath_ = RESOURCE_ROOT_PATH + INVALID_BUNDLE;
-    Security::AccessToken::BundlePolicyInfo policyInfo;
-    policyInfo.reqPermissions.push_back(ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB);
-    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(0);
     installer.ExtractNPAPIPluginFiles(installer.modulePath_);
     EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_EXTRACT_FAILED);
-
+    
     // scenario 2: empty modulePath, InstalldClient::ExtractFiles will fail
     installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
     installer.modulePath_ = "";
@@ -17216,11 +17252,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0020, Function | SmallT
     BaseBundleInstaller installer;
     installer.bundleName_ = "com.example.test.npapi";
     installer.modulePath_ = "";
-    Security::AccessToken::BundlePolicyInfo policyInfo;
-    policyInfo.reqPermissions.push_back(ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB);
-    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(0);
-
+    
     // scenario 1: userId = 0, empty modulePath leads to STATUS_EXTRACT_FAILED
     installer.userId_ = 0;
     installer.ExtractNPAPIPluginFiles(installer.modulePath_);
@@ -17249,11 +17281,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0030, Function | SmallT
     BaseBundleInstaller installer;
     installer.userId_ = USERID;
     installer.modulePath_ = "";
-    Security::AccessToken::BundlePolicyInfo policyInfo;
-    policyInfo.reqPermissions.push_back(ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB);
-    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(0);
-
+    
     // scenario 1: empty bundleName, empty modulePath leads to STATUS_EXTRACT_FAILED
     installer.bundleName_ = "";
     installer.ExtractNPAPIPluginFiles(installer.modulePath_);
@@ -18841,7 +18869,7 @@ HWTEST_F(BmsBundleInstallerTest, UninstallLocalPlugin_0002, Function | SmallTest
     InnerBundleInfo info;
     info.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
     PluginBundleInfo pluginInfo;
-    pluginInfo.isDeveloperDistribution = true;
+    pluginInfo.appInfo.appDistributionType = Constants::APP_DISTRIBUTION_TYPE_DEVELOPER;
     info.pluginBundleInfos_.emplace(PLUGIN_NAME, pluginInfo);
     std::string key = TEST_BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
     InnerBundleUserInfo userInfo;
@@ -18852,32 +18880,6 @@ HWTEST_F(BmsBundleInstallerTest, UninstallLocalPlugin_0002, Function | SmallTest
     ErrCode ret = installer.UninstallLocalPlugin(TEST_BUNDLE_NAME, PLUGIN_NAME, pluginParam, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR);
     dataMgr->bundleInfos_.erase(TEST_BUNDLE_NAME);
-}
-
-/**
- * @tc.number: CheckPluginDistribution_0001
- * @tc.name: test CheckPluginDistribution mismatch
- * @tc.desc: Verify CheckPluginDistribution returns ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW
- */
-HWTEST_F(BmsBundleInstallerTest, CheckPluginDistribution_0001, Function | SmallTest | Level0)
-{
-    PluginInstaller installer;
-    installer.isLocalPluginInstall_ = true;
-    ErrCode ret = installer.CheckPluginDistribution(false);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW);
-}
-
-/**
- * @tc.number: CheckPluginDistribution_0002
- * @tc.name: test CheckPluginDistribution match
- * @tc.desc: Verify CheckPluginDistribution returns ERR_OK
- */
-HWTEST_F(BmsBundleInstallerTest, CheckPluginDistribution_0002, Function | SmallTest | Level0)
-{
-    PluginInstaller installer;
-    installer.isLocalPluginInstall_ = true;
-    ErrCode ret = installer.CheckPluginDistribution(true);
-    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -18927,7 +18929,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckDistributionTypeForUpdate_0001, Function |
 {
     PluginInstaller installer;
     installer.isLocalPluginInstall_ = true;
-    installer.oldPluginInfo_.isDeveloperDistribution = false;
+    installer.oldPluginInfo_.appInfo.appDistributionType = Constants::APP_DISTRIBUTION_TYPE_DEVELOPER;
     EXPECT_FALSE(installer.CheckDistributionTypeForUpdate());
 }
 

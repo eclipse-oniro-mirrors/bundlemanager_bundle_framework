@@ -24,11 +24,5 @@ bool BundlePermissionMgr::GetRequestPermissionStates(
     APP_LOGI("[cz] mock GetRequestPermissionStates");
     return false;
 }
-
-int32_t BundlePermissionMgr::RefreshTokenStatus(const uint64_t &tokenIdEx, const int32_t &uid,
-    Security::AccessToken::ReservedType type)
-{
-    return -1;
-}
 } // namespace AppExecFwk
 } // namespace OHOS

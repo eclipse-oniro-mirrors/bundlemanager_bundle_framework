@@ -247,42 +247,30 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     InnerBundleUserInfo tmpUserInfo;
     tmpUserInfo.bundleName = cloneBundleName;
     tmpUserInfo.bundleUserInfo.userId = userId;
-    int32_t uid = 0;
+    dataMgr->GenerateUidAndGid(tmpUserInfo);
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
         Constants::APP_PROVISION_TYPE_FILE_NAME);
+    int32_t uid = tmpUserInfo.uid;
 
     // 4. generate the accesstoken id and inherit original permissions
     info.SetAppIndex(appIndex);
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
+    Security::AccessToken::HapInfoCheckResult checkResult;
     AppProvisionInfo appProvisionInfo;
     if (dataMgr->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
         APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
     }
     if (!RecoverHapToken(userId, appIndex, newTokenIdEx, info, appProvisionInfo.appServiceCapabilities)) {
-        if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx,
-            appProvisionInfo.appServiceCapabilities, false, sessionId_) != ERR_OK) {
-            APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
+        if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult,
+            appProvisionInfo.appServiceCapabilities) != ERR_OK) {
+            auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+            APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
     }
-    sessionCommitted_ = false;
-    ScopeGuard sessionGuard([&] {
-        if (!sessionCommitted_ && sessionId_ != 0) {
-            BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
-        }
-    });
     ScopeGuard applyAccessTokenGuard([&] {
-        BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID, bundleName);
-        dataMgr_->RemoveUidFromMap(uid);
+        BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID);
     });
-
-    uid = info.GetUid(userId);
-    if (uid == Constants::INVALID_UID) {
-        APP_LOGE("InitHapToken returned invalid uid for bundle:%{public}s", bundleName.c_str());
-        return ERR_APPEXECFWK_CLONE_INSTALL_INTERNAL_ERROR;
-    }
-    tmpUserInfo.gids.clear();
-    tmpUserInfo.gids.emplace_back(uid);
 
     InnerBundleCloneInfo attr = {
         .userId = userId,
@@ -344,10 +332,6 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     createCloneDataDirGuard.Dismiss();
     addCloneBundleGuard.Dismiss();
     createEl5DirGuard.Dismiss();
-    if (!sessionCommitted_ && sessionId_ != 0) {
-        BundlePermissionMgr::FinishHapInstall(sessionId_, true, {});
-        sessionCommitted_ = true;
-    }
     APP_LOGI("InstallCloneApp %{public}s appIndex:%{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
 }
@@ -420,24 +404,19 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         }
         RemoveEl5Dir(userInfo, userId, appIndex);
 
-        if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_, bundleName) !=
+        if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             APP_LOGE("delete AT failed clone");
         }
-        dataMgr_->RemoveUidFromMap(uid_);
         DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId, appIndex);
     } else {
         isKeepData_ = true;
-        BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_, bundleName,
-            Security::AccessToken::ReservedType::RESERVED_DATA);
-        dataMgr_->RemoveUidFromMap(uid_);
         UninstallBundleInfo uninstallBundleInfo;
         uninstallBundleInfo.appId = appId_;
         uninstallBundleInfo.appIdentifier = appIdentifier_;
         uninstallBundleInfo.appProvisionType = info.GetAppProvisionType();
         uninstallBundleInfo.bundleType = info.GetApplicationBundleType();
         info.GetModuleNames(uninstallBundleInfo.moduleNames);
-        uninstallBundleInfo.checkBySpm = true;
         std::string key = std::to_string(userId) + "_" + std::to_string(appIndex);
         uninstallBundleInfo.userInfos[key].uid = uid_;
         uninstallBundleInfo.userInfos[key].gids = it->second.gids;
@@ -490,9 +469,6 @@ bool BundleCloneInstaller::DeleteUninstalledCloneData(const std::string &bundleN
         APP_LOGE("the cloneInfo is not found");
         return false;
     }
-    BundlePermissionMgr::DeleteAccessTokenId(it->second.accessTokenId, bundleName,
-        Security::AccessToken::ReservedType::NONE);
-    dataMgr_->RemoveUidFromMap(it->second.uid);
     if (RemoveCloneDataDir(bundleName, userId, appIndex, false) != ERR_OK) {
         APP_LOGW("RemoveCloneDataDir failed");
     }
@@ -557,7 +533,6 @@ ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
-    createDirParam.sessionId = sessionId_;
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         // if user is not activated, access el2-el4 may return ok but dir cannot be created
@@ -722,8 +697,6 @@ void BundleCloneInstaller::ResetInstallProperties()
     isKeepData_ = false;
     existBeforeKeepDataApp_ = false;
     appDistributionType_.clear();
-    sessionId_ = 0;
-    sessionCommitted_ = false;
 }
 
 std::string BundleCloneInstaller::GetAssetAccessGroups(const std::string &bundleName)
@@ -766,7 +739,7 @@ std::string BundleCloneInstaller::GetDeveloperId(const std::string &bundleName)
 }
 
 bool BundleCloneInstaller::RecoverHapToken(int32_t userId, int32_t appIndex,
-    Security::AccessToken::AccessTokenIDEx &accessTokenIdEx, InnerBundleInfo &innerBundleInfo,
+    Security::AccessToken::AccessTokenIDEx &accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
     const std::string &appServiceCapabilities)
 {
     if (GetDataMgr() != ERR_OK) {
@@ -789,12 +762,13 @@ bool BundleCloneInstaller::RecoverHapToken(int32_t userId, int32_t appIndex,
         accessTokenIdEx.tokenIdExStruct.tokenID =
             uninstallBundleInfo.userInfos.at(key).accessTokenId;
         accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(key).accessTokenIdEx;
-        if (BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, 0, accessTokenIdEx,
-            appServiceCapabilities, false, sessionId_) == ERR_OK) {
+        Security::AccessToken::HapInfoCheckResult checkResult;
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId,
+            checkResult, appServiceCapabilities) == ERR_OK) {
             return true;
         } else {
-            APP_LOGE("bundleName:%{public}s InitHapToken failed in RecoverHapToken",
-                bundleName.c_str());
+            auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+            APP_LOGE("bundleName:%{public}s UpdateHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
         }
     }
     return false;

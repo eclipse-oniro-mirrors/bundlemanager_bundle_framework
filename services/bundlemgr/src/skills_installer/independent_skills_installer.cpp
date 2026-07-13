@@ -15,8 +15,6 @@
 
 #include "independent_skills_installer.h"
 
-#include <map>
-
 #include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
@@ -144,12 +142,6 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
-    sessionCommitted_ = false;
-    ScopeGuard sessionGuard([&] {
-        if (!sessionCommitted_ && sessionId_ != 0) {
-            BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
-        }
-    });
     result = CheckAndParseFiles(hspPaths, installParam, newInfos);
     CHECK_SKILLS_RESULT(result, "CheckAndParseFiles failed %{public}d");
     auto &mtx = dataMgr_->GetBundleMutex(bundleName_);
@@ -190,25 +182,6 @@ ErrCode IndependentSkillsInstaller::ProcessInstall(
     }
     PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, hspPaths,
         newInfos.begin()->second.GetVersionCode(), AppPatchType::SERVICE_FWK, installParam.isPatch);
-    if (!sessionCommitted_ && sessionId_ != 0) {
-        std::map<std::string, std::string> modulePathMap;
-        for (const auto &[hapPath, info] : newInfos) {
-            std::string modulePackage = info.GetCurrentModulePackage();
-            if (modulePackage.empty()) {
-                continue;
-            }
-            std::string finalPath = info.GetModuleHapPath(modulePackage);
-            if (!finalPath.empty()) {
-                modulePathMap[hapPath] = finalPath;
-            }
-        }
-        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, true, modulePathMap);
-        if (finishRet != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "FinishHapInstall failed, errCode:%{public}d", finishRet);
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
-        sessionCommitted_ = true;
-    }
     // check mark install finish
     result = MarkInstallFinish();
     if (result != ERR_OK) {
@@ -300,9 +273,8 @@ ErrCode IndependentSkillsInstaller::CheckAndParseFiles(
 
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
-    userId_ = installParam.userId;
-    result = bundleInstallChecker_->CheckHapsSignInfoAndInitSession(
-        checkedHspPaths, hapVerifyResults, checkParam.isPreInstallApp, sessionId_, userId_);
+    result = bundleInstallChecker_->CheckMultipleHapsSignInfo(
+        checkedHspPaths, hapVerifyResults);
     CHECK_SKILLS_RESULT(result, "Hsp files check signature info failed %{public}d");
 
     result = bundleInstallChecker_->ParseHapFiles(
@@ -566,12 +538,14 @@ ErrCode IndependentSkillsInstaller::SaveBundleInfoToStorage()
         LOG_E(BMS_TAG_INSTALLER, "UpdateBundleInstallState failed");
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
+    // init hapToken
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
-    ErrCode result = BundlePermissionMgr::CheckHapPermissionInfo(
-        sessionId_, Security::AccessToken::TYPE_INSTALL, checkResult);
+    ErrCode result = BundlePermissionMgr::InitHapToken(newInnerBundleInfo_, userId_, 0, accessTokenIdEx, checkResult,
+        verifyRes_.GetProvisionInfo().appServiceCapabilities, false);
     if (result != ERR_OK) {
         auto msg = BundlePermissionMgr::GetCheckResultMsg(checkResult);
-        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s CheckHapPermissionInfo failed msg %{public}s, err %{public}d",
+        LOG_E(BMS_TAG_INSTALLER, "skills %{public}s init hapToken failed msg %{public}s, err %{public}d",
             bundleName_.c_str(), msg.c_str(), result);
         return result;
     }
@@ -596,10 +570,13 @@ ErrCode IndependentSkillsInstaller::VerifyCodeSignatureForHsp(
     codeSignatureParam.bundleName = bundleName_;
     codeSignatureParam.targetSoPath = "";
     codeSignatureParam.cpuAbi = "";
+    codeSignatureParam.appIdentifier = (verifyRes_.GetProvisionInfo().type ==
+        Security::Verify::ProvisionType::DEBUG) ? DEBUG_APP_IDENTIFIER : appIdentifier_;
     codeSignatureParam.signatureFileDir = "";
+    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.isPreInstalledBundle = false;
-    bundleInstallChecker_->ProcessCodeSignatureParam(sessionId_, verifyRes_, codeSignatureParam);
+    bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
@@ -635,9 +612,10 @@ ErrCode IndependentSkillsInstaller::UpdateSkillsPackage(
             LOG_E(BMS_TAG_INSTALLER, "UninstallLowerVersion failed %{public}d, can not rollback", result);
         }
     }
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
-    result = BundlePermissionMgr::CheckHapPermissionInfo(
-        sessionId_, Security::AccessToken::TYPE_REPLACE, checkResult);
+    result = BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, oldInfo, userId_, checkResult,
+        verifyRes_.GetProvisionInfo().appServiceCapabilities, false, false);
     if (result != ERR_OK) {
         auto msg = BundlePermissionMgr::GetCheckResultMsg(checkResult);
         LOG_E(BMS_TAG_INSTALLER, "skills %{public}s CheckHapPermissionInfo failed msg %{public}s, err %{public}d",
@@ -986,8 +964,12 @@ ErrCode IndependentSkillsInstaller::DeliveryProfileToCodeSign(
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
         provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
-        // SPM mode: installd queries profileBlock via sessionId
-        return InstalldClient::GetInstance()->DeliverySignProfile(bundleName_, sessionId_);
+        if (provisionInfo.profileBlockLength == 0 || provisionInfo.profileBlock == nullptr) {
+            LOG_E(BMS_TAG_INSTALLER, "invalid sign profile");
+            return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+        }
+        return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
+            provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
     }
     return ERR_OK;
 }
@@ -1241,9 +1223,6 @@ void IndependentSkillsInstaller::ResetProperties()
     bundleName_ = "";
     skillCount_ = 0;
     needDeleteSkillsPackageInfo_.clear();
-    toDeleteTempHspPath_.clear();
-    sessionId_ = 0;
-    sessionCommitted_ = false;
 }
 
 void IndependentSkillsInstaller::RemoveOldSkillsPath()

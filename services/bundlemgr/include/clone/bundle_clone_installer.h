@@ -56,9 +56,9 @@ public:
     ErrCode UninstallAllCloneApps(const std::string &bundleName, bool sync, bool isKeepData,
         int32_t userId = Constants::INVALID_USERID);
 
+private:
     ErrCode CreateCloneDataDir(
         InnerBundleInfo &info, const int32_t userId, const int32_t &uid, const int32_t &appIndex) const;
-private:
     ErrCode RemoveCloneDataDir(const std::string bundleName, int32_t userId, int32_t appIndex, bool sync);
     bool DeleteUninstalledCloneData(const std::string &bundleName, int32_t userId, int32_t appIndex);
     void CreateEl5Dir(InnerBundleInfo &info, const int32_t userId, const int32_t uid, const int32_t appIndex);
@@ -81,7 +81,7 @@ private:
     std::string GetAssetAccessGroups(const std::string &bundleName);
     std::string GetDeveloperId(const std::string &bundleName);
     bool RecoverHapToken(int32_t userId, int32_t appIndex, Security::AccessToken::AccessTokenIDEx &accessTokenIdEx,
-        InnerBundleInfo &innerBundleInfo, const std::string &appServiceCapabilities);
+        const InnerBundleInfo &innerBundleInfo, const std::string &appServiceCapabilities);
     bool DeleteUninstallCloneBundleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
     void StopRelable(const InnerBundleInfo &info, int32_t uid);
     ErrCode ProcessBundleShareFiles(const InnerBundleInfo &info, const std::string &cloneBundleName,
@@ -102,8 +102,6 @@ private:
     int64_t startTime_ = 0;
     bool existBeforeKeepDataApp_ = false;
     std::string appDistributionType_;
-    int32_t sessionId_ = 0;
-    bool sessionCommitted_ = false;
 };
 } // AppExecFwk
 } // OHOS
