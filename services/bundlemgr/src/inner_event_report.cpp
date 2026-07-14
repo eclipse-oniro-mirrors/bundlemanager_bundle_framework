@@ -30,6 +30,7 @@ constexpr const char* BUNDLE_CLEAN_CACHE_EXCEPTION = "BUNDLE_CLEAN_CACHE_EXCEPTI
 
 constexpr const char* BOOT_SCAN_START = "BOOT_SCAN_START";
 constexpr const char* BOOT_SCAN_END = "BOOT_SCAN_END";
+constexpr const char* BUNDLE_LOCAL_PLUGIN_OPERATION = "BUNDLE_LOCAL_PLUGIN_OPERATION";
 constexpr const char* BUNDLE_INSTALL = "BUNDLE_INSTALL";
 constexpr const char* BUNDLE_UNINSTALL = "BUNDLE_UNINSTALL";
 constexpr const char* BUNDLE_UPDATE = "BUNDLE_UPDATE";
@@ -172,6 +173,11 @@ const char* EVENT_PARAM_BUNDLE_NAME_LIST = "BUNDLE_NAME_LIST";
 const char* EVENT_PARAM_CALLING_UID_LIST = "CALLING_UID_LIST";
 const char* EVENT_PARAM_CALLING_BUNDLE_NAME_LIST = "CALLING_BUNDLE_NAME_LIST";
 const char* EVENT_PARAM_CALLING_APP_ID_LIST = "CALLING_APP_ID_LIST";
+const char* EVENT_PARAM_LOCAL_PLUGIN_USERID_LIST = "USERID_LIST";
+const char* EVENT_PARAM_HOST_BUNDLE_NAME_LIST = "HOST_BUNDLE_NAME_LIST";
+const char* EVENT_PARAM_ACTION_TYPE_LIST = "ACTION_TYPE_LIST";
+const char* EVENT_PARAM_FILE_PATH_LIST = "FILE_PATH_LIST";
+const char* EVENT_PARAM_ERROR_CODE_LIST = "ERROR_CODE_LIST";
 
 const InstallScene INSTALL_SCENE_STR_MAP_KEY[] = {
     InstallScene::NORMAL,
@@ -375,6 +381,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::HIGH_RISK_EVENT,
             [](const EventInfo& eventInfo) {
                 InnerSendHighRiskEvent(eventInfo);
+            } },
+        { BMSEventType::BUNDLE_LOCAL_PLUGIN_OPERATION,
+            [](const EventInfo& eventInfo) {
+                InnerSendLocalPluginOperationEvent(eventInfo);
             } },
     };
 
@@ -948,5 +958,17 @@ void InnerEventReport::InnerSendHighRiskEvent(const EventInfo& eventInfo)
         EVENT_PARAM_END_TIME, eventInfo.endTime);
 }
 
+void InnerEventReport::InnerSendLocalPluginOperationEvent(const EventInfo& eventInfo)
+{
+    InnerSystemEventWrite(
+        BUNDLE_LOCAL_PLUGIN_OPERATION,
+        HiSysEventType::STATISTIC,
+        EVENT_PARAM_LOCAL_PLUGIN_USERID_LIST, eventInfo.userIdList,
+        EVENT_PARAM_HOST_BUNDLE_NAME_LIST, eventInfo.hostBundleNameList,
+        EVENT_PARAM_BUNDLE_NAME_LIST, eventInfo.bundleNameList,
+        EVENT_PARAM_ACTION_TYPE_LIST, eventInfo.actionTypeList,
+        EVENT_PARAM_FILE_PATH_LIST, eventInfo.filePath,
+        EVENT_PARAM_ERROR_CODE_LIST, eventInfo.errorCodeList);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

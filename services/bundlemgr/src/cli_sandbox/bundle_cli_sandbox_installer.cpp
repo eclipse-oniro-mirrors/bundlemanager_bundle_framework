@@ -191,21 +191,15 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
         APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
     }
-    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx,
-        appProvisionInfo.appServiceCapabilities, false, sessionId_) != ERR_OK) {
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult,
+        appProvisionInfo.appServiceCapabilities) != ERR_OK) {
         APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
         return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_GRANT_PERMISSION_FAILED;
     }
 
-    sessionCommitted_ = false;
-    ScopeGuard sessionGuard([&] {
-        if (!sessionCommitted_ && sessionId_ != 0) {
-            BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
-        }
-    });
     ScopeGuard applyAccessTokenGuard([&] {
-        BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID, bundleName);
-        dataMgr_->RemoveUidFromMap(uid);
+        BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID);
     });
 
     uid = info.GetUid(userId);
@@ -258,10 +252,6 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     createDataDirGuard.Dismiss();
     addSandboxGuard.Dismiss();
     createEl5DirGuard.Dismiss();
-    if (!sessionCommitted_ && sessionId_ != 0) {
-        BundlePermissionMgr::FinishHapInstall(sessionId_, true, {});
-        sessionCommitted_ = true;
-    }
 
     uid_ = uid;
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
@@ -286,7 +276,6 @@ ErrCode BundleCliSandboxInstaller::CreateSandboxDataDir(InnerBundleInfo &info,
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
-    createDirParam.sessionId = sessionId_;
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         if (AccountHelper::IsOsAccountVerified(userId)) {
@@ -380,8 +369,6 @@ void BundleCliSandboxInstaller::ResetInstallProperties()
     appIdentifier_.clear();
     isBundleCrossAppSharedConfig_ = false;
     appDistributionType_.clear();
-    sessionId_ = 0;
-    sessionCommitted_ = false;
 }
 
 ErrCode BundleCliSandboxInstaller::DestroyCliSandboxApp(const std::string &creatorBundleName,
@@ -496,7 +483,7 @@ ErrCode BundleCliSandboxInstaller::ProcessDestroyCliSandbox(const std::string &c
         APP_LOGW("RemoveSandboxDataDir failed");
     }
     RemoveEl5Dir(bundleName, userId, appIndex);
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_, bundleName) !=
+    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete AT failed sandbox");
     }

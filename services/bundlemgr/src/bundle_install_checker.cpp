@@ -18,8 +18,6 @@
 #include <sys/stat.h>
 #include <sys/statfs.h>
 
-#include "access_token_error.h"
-#include "accesstoken_kit.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_extractor.h"
 #include "bundle_file_util.h"
@@ -30,7 +28,6 @@
 #include "parameter.h"
 #include "parameters.h"
 #include "privilege_extension_ability_type.h"
-#include "provision/provision_verify.h"
 #include "scope_guard.h"
 #include "securec.h"
 #include "systemcapability.h"
@@ -260,123 +257,11 @@ ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundle
     return result;
 }
 
-ErrCode BundleInstallChecker::ParseProfileDataToProvisionInfo(
-    const Security::AccessToken::ProfileData &profileData,
-    Security::Verify::ProvisionInfo &provisionInfo)
-{
-    Security::Verify::AppProvisionVerifyResult parseRet =
-        Security::Verify::ParseProvision(profileData.provisionRaw, provisionInfo);
-    if (parseRet != Security::Verify::PROVISION_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "ParseProvision failed");
-        return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
-    }
-
-    if (!profileData.appId.empty()) {
-        provisionInfo.appId = profileData.appId;
-    }
-    if (!profileData.fingerprint.empty()) {
-        provisionInfo.fingerprint = profileData.fingerprint;
-    }
-    if (!profileData.organization.empty()) {
-        provisionInfo.organization = profileData.organization;
-    }
-    provisionInfo.isOpenHarmony = profileData.isOpenHarmony;
-    provisionInfo.isEnterpriseResigned = profileData.isEnterpriseResigned;
-    provisionInfo.profileBlockLength = profileData.profileBlockLength;
-    if (!profileData.profileBlock.empty()) {
-        provisionInfo.profileBlock.reset(new(std::nothrow) unsigned char[profileData.profileBlock.size()]);
-        if (provisionInfo.profileBlock != nullptr) {
-            std::copy(profileData.profileBlock.begin(), profileData.profileBlock.end(),
-                provisionInfo.profileBlock.get());
-        }
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleInstallChecker::CheckHapsSignInfoAndInitSession(
-    const std::vector<std::string> &bundlePaths,
-    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes,
-    bool isPreInstallApp,
-    int32_t &sessionId,
-    int32_t userId)
-{
-    LOG_D(BMS_TAG_INSTALLER, "Check multiple haps signInfo via access_token");
-    if (bundlePaths.empty()) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "check sign failed paths empty");
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
-    }
-
-    userId = userId < Constants::DEFAULT_USERID ? AccountHelper::GetUserIdByCallerType() : userId;
-    sessionId = 0;
-    Security::AccessToken::BundleHapList hapList;
-    hapList.hapPaths = bundlePaths;
-    hapList.isPreInstalled = isPreInstallApp;
-    hapList.userId = userId;
-    std::vector<Security::AccessToken::TrustedBundleInfo> trustedBundleInfo;
-    Security::AccessToken::HapVerifyResultInfo resultInfo;
-    int32_t signRet = Security::AccessToken::AccessTokenKit::CheckHapSignInfo(
-        hapList, sessionId, trustedBundleInfo, resultInfo);
-    if (signRet != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS
-        // confit for succesing check
-        && signRet != Security::AccessToken::AccessTokenError::ERR_CHECK_MULTIPLE_HAP_FAILED) {
-        LOG_E(BMS_TAG_INSTALLER, "CheckHapSignInfo failed, signRet=%{public}d errorCode=%{public}d",
-            signRet, resultInfo.errorCode);
-        if (resultInfo.errorCode == ERR_OK) {
-            return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
-        }
-        return BundleVerifyMgr::ConvertHapVerifyResultCode(resultInfo.errorCode);
-    }
-    LOG_I(BMS_TAG_INSTALLER, "CheckHapSignInfo success, sessionId=%{public}d", sessionId);
-
-    for (const auto &info : trustedBundleInfo) {
-        Security::Verify::ProvisionInfo provisionInfo;
-        ErrCode parseRet = ParseProfileDataToProvisionInfo(info.profileData, provisionInfo);
-        if (parseRet != ERR_OK) {
-#ifndef X86_EMULATOR_MODE
-            return parseRet;
-#else
-            provisionInfo.appId = Constants::EMPTY_STRING;
-#endif
-        }
-
-        if (!CheckEnterpriseResign(provisionInfo, userId)) {
-            LOG_E(BMS_TAG_INSTALLER, "enterprise resign check failed");
-            return ERR_APPEXECFWK_INSTALL_FAILED_APP_SOURCE_NOT_TRUESTED;
-        }
-
-        Security::Verify::HapVerifyResult hapVerifyResult;
-        hapVerifyResult.SetProvisionInfo(provisionInfo);
-        hapVerifyRes.emplace_back(hapVerifyResult);
-    }
-
-    if (hapVerifyRes.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "no sign info in the all haps");
-        return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
-    }
-
-    if (!CheckProvisionInfoIsValid(hapVerifyRes)) {
-#ifndef X86_EMULATOR_MODE
-        LOG_E(BMS_TAG_INSTALLER, "CheckProvisionInfoIsValid failed");
-        return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
-#else
-        // on emulator if check signature failed clear appid
-        for (auto &verifyRes : hapVerifyRes) {
-            Security::Verify::ProvisionInfo provisionInfo = verifyRes.GetProvisionInfo();
-            provisionInfo.appId = Constants::EMPTY_STRING;
-            verifyRes.SetProvisionInfo(provisionInfo);
-        }
-#endif
-    }
-
-    LOG_D(BMS_TAG_INSTALLER, "finish check multiple haps signInfo");
-    return ERR_OK;
-}
-
 ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     const std::vector<std::string> &bundlePaths,
     std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes, bool readFile, int32_t userId)
 {
-    LOG_D(BMS_TAG_INSTALLER, "Check multiple haps signInfo (legacy)");
+    LOG_D(BMS_TAG_INSTALLER, "Check multiple haps signInfo");
     if (bundlePaths.empty()) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "check sign failed paths empty");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
@@ -384,7 +269,8 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     userId = userId < Constants::DEFAULT_USERID ? AccountHelper::GetUserIdByCallerType() : userId;
     for (const std::string &bundlePath : bundlePaths) {
         Security::Verify::HapVerifyResult hapVerifyResult;
-        ErrCode verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult, readFile, userId);
+        ErrCode verifyRes = ERR_OK;
+        verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult, readFile, userId);
 #ifndef X86_EMULATOR_MODE
         if (verifyRes != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "hap file verify failed, bundlePath: %{public}s", bundlePath.c_str());
@@ -416,7 +302,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         }
 #endif
     }
-    LOG_D(BMS_TAG_INSTALLER, "finish check multiple haps signInfo (legacy)");
+    LOG_D(BMS_TAG_INSTALLER, "finish check multiple haps signInfo");
     return ERR_OK;
 }
 
@@ -2194,15 +2080,9 @@ bool BundleInstallChecker::CheckInternaltestingBundle(Security::Verify::HapVerif
 }
 
 void BundleInstallChecker::ProcessCodeSignatureParam(
-    int32_t sessionId,
     const Security::Verify::HapVerifyResult &hapVerifyResult,
     CodeSignatureParam &codeSignatureParam)
 {
-    codeSignatureParam.sessionId = sessionId;
-    // When sessionId != 0, provisionInfo-derived fields are assembled by installd via access_token
-    if (sessionId != 0) {
-        return;
-    }
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyResult.GetProvisionInfo();
     codeSignatureParam.isEnterpriseResigned = provisionInfo.isEnterpriseResigned;
     if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||

@@ -190,6 +190,10 @@ BundleDataMgr::BundleDataMgr()
     routerStorage_ = std::make_shared<RouterDataStorageRdb>();
     uninstallDataMgr_ = std::make_shared<UninstallDataMgrStorageRdb>();
     firstInstallDataMgr_ = std::make_shared<FirstInstallDataMgrStorageRdb>();
+    baseAppUid_ = system::GetIntParameter<int32_t>("const.product.baseappid", Constants::BASE_APP_UID);
+    if (baseAppUid_ < Constants::BASE_APP_UID || baseAppUid_ >= MAX_APP_UID) {
+        baseAppUid_ = Constants::BASE_APP_UID;
+    }
     APP_LOGI("BundleDataMgr instance is created");
 }
 
@@ -246,7 +250,7 @@ bool BundleDataMgr::LoadDataFromPersistentStorage()
 
     SetInitialUserFlag(true);
 
-    RestoreSandboxUidAndGid();
+    RestoreSandboxUidAndGid(bundleIdMap_);
     return true;
 }
 
@@ -602,20 +606,6 @@ bool BundleDataMgr::UpdateUninstallBundleInfo(const std::string &bundleName,
     return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
 }
 
-bool BundleDataMgr::UpdateUninstallBundleCheckBySpm(const std::string &bundleName, bool checkBySpm)
-{
-    if (uninstallDataMgr_ == nullptr) {
-        APP_LOGE("rdbDataManager is null");
-        return false;
-    }
-    UninstallBundleInfo info;
-    if (!uninstallDataMgr_->GetUninstallBundleInfo(bundleName, info)) {
-        return false;
-    }
-    info.checkBySpm = checkBySpm;
-    return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, info);
-}
-
 bool BundleDataMgr::GetUninstallBundleInfo(const std::string &bundleName,
     UninstallBundleInfo &uninstallBundleInfo) const
 {
@@ -838,7 +828,6 @@ ErrCode BundleDataMgr::AddInnerBundleUserInfo(
     std::lock_guard<std::mutex> stateLock(stateMutex_);
     auto& info = bundleInfos_.at(bundleName);
     info.AddInnerBundleUserInfo(newUserInfo);
-    info.SetBundleCheckBySpm(true);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     ErrCode ret = dataStorage_->SaveStorageBundleInfoWithCode(info);
     if (ret != ERR_OK) {
@@ -4583,80 +4572,57 @@ ErrCode BundleDataMgr::GetBundleNameAndIndexForUid(const int32_t uid, std::strin
     return ERR_OK;
 }
 
-bool BundleDataMgr::IsValidAppUid(const int32_t uid) const
-{
-    int32_t userId = GetUserIdByUid(uid);
-    int32_t bundleId = uid - userId * Constants::BASE_USER_RANGE;
-    if (bundleId >= Constants::BASE_APP_UID && bundleId <= Constants::MAX_APP_UID) {
-        return true;
-    }
-    return false;
-}
-
 ErrCode BundleDataMgr::GetBundleNameAndIndex(const int32_t uid, std::string &bundleName,
     int32_t &appIndex) const
 {
-    APP_LOGD("lookup uid %{public}d", uid);
-
-    if (!IsValidAppUid(uid)) {
-        APP_LOGD("uid %{public}d is not a valid app uid", uid);
+    if (uid < Constants::BASE_APP_UID) {
+        APP_LOGD("the uid(%{public}d) is not an application", uid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    int32_t userId = GetUserIdByUid(uid);
+    int32_t bundleId = uid - userId * Constants::BASE_USER_RANGE;
+    if (bundleId < 0) {
+        APP_LOGD("the uid(%{public}d) is not an application", uid);
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
 
-    // 1. Check local uidMap_ first (keyed by bundleId = uid - userId * BASE_USER_RANGE)
-    {
-        int32_t bundleId = uid - GetUserIdByUid(uid) * Constants::BASE_USER_RANGE;
-        std::shared_lock<std::shared_mutex> lock(uidMapMutex_);
-        auto iter = uidMap_.find(bundleId);
-        if (iter != uidMap_.end()) {
-            bundleName = iter->second.first;
-            appIndex = iter->second.second;
-            APP_LOGD("uid %{public}d bundleId %{public}d -> bundleName %{public}s appIndex %{public}d (local map)",
-                uid, bundleId, bundleName.c_str(), appIndex);
+    std::shared_lock<std::shared_mutex> bundleIdLock(bundleIdMapMutex_);
+    auto bundleIdIter = bundleIdMap_.find(bundleId);
+    if (bundleIdIter == bundleIdMap_.end()) {
+        APP_LOGD("bundleId %{public}d is not existed", bundleId);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    std::string keyName = bundleIdIter->second;
+    if (keyName.empty()) {
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    // bundleName, sandbox_app: \d+_w+, clone_app: \d+clone_w+, others
+    if (isdigit(keyName[0])) {
+        size_t pos = keyName.find_first_not_of("0123456789");
+        if (pos == std::string::npos) {
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
+        }
+        std::string index = keyName.substr(0, pos);
+        if (!OHOS::StrToInt(index, appIndex)) {
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
+        }
+
+        auto clonePos = keyName.find(CLONE_BUNDLE_PREFIX);
+        if (clonePos != std::string::npos && clonePos == pos) {
+            bundleName = keyName.substr(clonePos + strlen(CLONE_BUNDLE_PREFIX));
+            return ERR_OK;
+        }
+
+        auto sandboxPos = keyName.find(Constants::FILE_UNDERLINE);
+        if (sandboxPos != std::string::npos && sandboxPos == pos) {
+            bundleName = keyName.substr(sandboxPos + strlen(Constants::FILE_UNDERLINE));
             return ERR_OK;
         }
     }
 
-    // 2. Try AT service
-    Security::AccessToken::HapBaseInfo hapBaseInfo;
-    int32_t ret = Security::AccessToken::AccessTokenKit::GetHapBaseInfoByUid(uid, hapBaseInfo);
-    if (ret == Security::AccessToken::AccessTokenKitRet::RET_SUCCESS && !hapBaseInfo.bundleName.empty()) {
-        bundleName = hapBaseInfo.bundleName;
-        appIndex = hapBaseInfo.instIndex;
-        APP_LOGD("uid %{public}d -> bundleName %{public}s appIndex %{public}d (spm)",
-            uid, bundleName.c_str(), appIndex);
-        return ERR_OK;
-    }
-
-    APP_LOGD("uid %{public}d not found in uidMap or AT service", uid);
-    return ERR_BUNDLE_MANAGER_INVALID_UID;
-}
-
-void BundleDataMgr::UpdateUidMap(int32_t uid, const std::string &bundleName, int32_t appIndex)
-{
-    if (!IsValidAppUid(uid) || bundleName.empty()) {
-        return;
-    }
-    int32_t bundleId = uid - GetUserIdByUid(uid) * Constants::BASE_USER_RANGE;
-    std::unique_lock<std::shared_mutex> lock(uidMapMutex_);
-    uidMap_[bundleId] = {bundleName, appIndex};
-    APP_LOGD("uidMap_ updated: uid %{public}d bundleId %{public}d -> %{public}s/%{public}d",
-        uid, bundleId, bundleName.c_str(), appIndex);
-}
-
-void BundleDataMgr::RemoveUidFromMap(int32_t uid)
-{
-    if (!IsValidAppUid(uid)) {
-        return;
-    }
-    int32_t bundleId = uid - GetUserIdByUid(uid) * Constants::BASE_USER_RANGE;
-    std::unique_lock<std::shared_mutex> lock(uidMapMutex_);
-    uidMap_.erase(bundleId);
-}
-
-void BundleDataMgr::RemoveUidFromMap(const InnerBundleInfo &info, int32_t userId)
-{
-    RemoveUidFromMap(info.GetUid(userId));
+    bundleName = keyName;
+    appIndex = 0;
+    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::GetInnerBundleInfoNoLock(const std::string bundleName, const int32_t uid,
@@ -4681,59 +4647,39 @@ ErrCode BundleDataMgr::GetInnerBundleInfoNoLock(const std::string bundleName, co
 ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerBundleInfo& innerBundleInfo,
     int32_t &appIndex) const
 {
-    APP_LOGD("lookup uid %{public}d", uid);
-
-    if (!IsValidAppUid(uid)) {
-        APP_LOGD("uid %{public}d is not a valid app uid", uid);
+    if (uid < Constants::BASE_APP_UID) {
+        APP_LOGD("the uid(%{public}d) is not an application", uid);
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
+    int32_t userId = GetUserIdByUid(uid);
+    int32_t bundleId = uid - userId * Constants::BASE_USER_RANGE;
 
-    // 1. Check local uidMap_ first (keyed by bundleId = uid - userId * BASE_USER_RANGE)
+    std::string keyName;
     {
-        int32_t bundleId = uid - GetUserIdByUid(uid) * Constants::BASE_USER_RANGE;
-        std::string cachedBundleName;
-        int32_t cachedAppIndex = 0;
-        bool found = false;
-        {
-            std::shared_lock<std::shared_mutex> mapLock(uidMapMutex_);
-            auto iter = uidMap_.find(bundleId);
-            if (iter != uidMap_.end()) {
-                cachedBundleName = iter->second.first;
-                cachedAppIndex = iter->second.second;
-                found = true;
-            }
+        std::shared_lock<std::shared_mutex> bundleIdLock(bundleIdMapMutex_);
+        auto bundleIdIter = bundleIdMap_.find(bundleId);
+        if (bundleIdIter == bundleIdMap_.end()) {
+            APP_LOGW_NOFUNC("uid %{public}d is not existed", uid);
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
-        if (found) {
-            std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-            auto bundleInfoIter = bundleInfos_.find(cachedBundleName);
-            if (bundleInfoIter != bundleInfos_.end()) {
-                innerBundleInfo = bundleInfoIter->second;
-                appIndex = cachedAppIndex;
-                APP_LOGD("uid %{public}d bundleId %{public}d -> bundleName %{public}s appIndex %{public}d (local map)",
-                    uid, bundleId, cachedBundleName.c_str(), appIndex);
-                return ERR_OK;
-            }
-        }
+        keyName = bundleIdIter->second;
+    }
+    std::string bundleName = keyName;
+    GetBundleNameAndIndexByName(keyName, bundleName, appIndex);
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto bundleInfoIter = bundleInfos_.find(bundleName);
+    if (bundleInfoIter == bundleInfos_.end()) {
+        APP_LOGE("bundleName %{public}s is not existed in bundleInfos_", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    int32_t oriUid = bundleInfoIter->second.GetUid(userId, appIndex);
+    if (oriUid == uid) {
+        innerBundleInfo = bundleInfoIter->second;
+        return ERR_OK;
     }
 
-    // 2. Try AT service
-    Security::AccessToken::HapBaseInfo hapBaseInfo;
-    int32_t ret = Security::AccessToken::AccessTokenKit::GetHapBaseInfoByUid(uid, hapBaseInfo);
-    if (ret == Security::AccessToken::AccessTokenKitRet::RET_SUCCESS && !hapBaseInfo.bundleName.empty()) {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        auto bundleInfoIter = bundleInfos_.find(hapBaseInfo.bundleName);
-        if (bundleInfoIter != bundleInfos_.end()) {
-            innerBundleInfo = bundleInfoIter->second;
-            appIndex = hapBaseInfo.instIndex;
-            APP_LOGD("uid %{public}d -> bundleName %{public}s appIndex %{public}d (spm)",
-                uid, hapBaseInfo.bundleName.c_str(), appIndex);
-            return ERR_OK;
-        }
-        APP_LOGW("bundleName %{public}s from spm not in bundleInfos_",
-            hapBaseInfo.bundleName.c_str());
-    }
-
-    APP_LOGD("uid %{public}d not found in uidMap or AT service", uid);
+    APP_LOGW("bn %{public}s uid %{public}d oriUid %{public}d ", bundleName.c_str(), uid, oriUid);
     return ERR_BUNDLE_MANAGER_INVALID_UID;
 }
 
@@ -6411,6 +6357,64 @@ bool BundleDataMgr::UnregisterBundleStatusCallback()
     return true;
 }
 
+ErrCode BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInfo)
+{
+    if (innerBundleUserInfo.bundleName.empty()) {
+        APP_LOGW("bundleName is null");
+        return ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY;
+    }
+
+    int32_t bundleId = INVALID_BUNDLEID;
+    ErrCode ret = GenerateBundleId(innerBundleUserInfo.bundleName, bundleId);
+    if (ret != ERR_OK) {
+        APP_LOGW("Generate bundleId failed, bundleName: %{public}s", innerBundleUserInfo.bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER;
+    }
+
+    innerBundleUserInfo.uid = innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE
+        + bundleId % Constants::BASE_USER_RANGE;
+    innerBundleUserInfo.gids.emplace_back(innerBundleUserInfo.uid);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bundleId)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+    if (bundleIdMap_.empty()) {
+        APP_LOGD("first app install");
+        bundleId = baseAppUid_;
+        bundleIdMap_.emplace(bundleId, bundleName);
+        return ERR_OK;
+    }
+
+    for (const auto &innerBundleId : bundleIdMap_) {
+        if (innerBundleId.second == bundleName) {
+            bundleId = innerBundleId.first;
+            return ERR_OK;
+        }
+    }
+    if (bundleIdMap_.rbegin()->first == MAX_APP_UID) {
+        for (int32_t i = baseAppUid_; i < bundleIdMap_.rbegin()->first; ++i) {
+            if (bundleIdMap_.find(i) == bundleIdMap_.end()) {
+                APP_LOGD("the %{public}d app install bundleName:%{public}s", i, bundleName.c_str());
+                bundleId = i;
+                bundleIdMap_.emplace(bundleId, bundleName);
+                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
+                return ERR_OK;
+            }
+        }
+        APP_LOGW("the bundleId exceeding the maximum value, bundleName:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER;
+    }
+
+    bundleId = bundleIdMap_.rbegin()->first + 1;
+    bundleIdMap_.emplace(bundleId, bundleName);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::SetModuleUpgradeFlag(const std::string &bundleName,
     const std::string &moduleName, const int32_t upgradeFlag)
 {
@@ -6462,22 +6466,21 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
     }
 
     auto innerBundleUserInfo = userInfos.begin()->second;
+    int32_t bundleId = innerBundleUserInfo.uid -
+        innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
+    std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+    auto infoItem = bundleIdMap_.find(bundleId);
+    if (infoItem == bundleIdMap_.end()) {
+        return;
+    }
+
     UninstallBundleInfo uninstallBundleInfo;
     if (GetUninstallBundleInfo(info.GetBundleName(), uninstallBundleInfo)) {
         return;
     }
+    bundleIdMap_.erase(bundleId);
     BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH);
     BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::SHAREFS_CONFIG_PATH);
-    for (const auto &[key, ui] : userInfos) {
-        if (ui.uid > 0) {
-            RemoveUidFromMap(ui.uid);
-        }
-        for (const auto &[cloneIndex, cloneInfo] : ui.cloneInfos) {
-            if (cloneInfo.uid > 0) {
-                RemoveUidFromMap(cloneInfo.uid);
-            }
-        }
-    }
 }
 
 bool BundleDataMgr::RestoreUidAndGid()
@@ -6491,12 +6494,18 @@ bool BundleDataMgr::RestoreUidAndGid()
                 onlyInsertOne = true;
                 int32_t bundleId = innerBundleUserInfo.uid -
                     innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
+                std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+                auto item = bundleIdMap_.find(bundleId);
+                if (item == bundleIdMap_.end()) {
+                    bundleIdMap_.emplace(bundleId, innerBundleUserInfo.bundleName);
+                } else {
+                    bundleIdMap_[bundleId] = innerBundleUserInfo.bundleName;
+                }
                 BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId,
                     ServiceConstants::SHAREFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH,
                     info.second.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
-                UpdateUidMap(innerBundleUserInfo.uid, info.second.GetBundleName(), info.second.GetAppIndex());
             }
             // appClone
             std::string bundleName = info.second.GetBundleName();
@@ -6506,12 +6515,18 @@ bool BundleDataMgr::RestoreUidAndGid()
                 int32_t bundleId = cloneInfo.uid - cloneInfo.userId * Constants::BASE_USER_RANGE;
                 std::string cloneBundleName =
                     BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, cloneInfo.appIndex);
+                std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+                auto item = bundleIdMap_.find(bundleId);
+                if (item == bundleIdMap_.end()) {
+                    bundleIdMap_.emplace(bundleId, cloneBundleName);
+                } else {
+                    bundleIdMap_[bundleId] = cloneBundleName;
+                }
                 BundleUtil::MakeFsConfig(cloneBundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(cloneBundleName, bundleId,
                     ServiceConstants::SHAREFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH,
                     info.second.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
-                UpdateUidMap(cloneInfo.uid, bundleName, cloneInfo.appIndex);
             }
             // cli sandbox
             const auto &cliSandboxInfos = innerBundleUserInfo.sandboxInfos;
@@ -6525,7 +6540,6 @@ bool BundleDataMgr::RestoreUidAndGid()
                     ServiceConstants::SHAREFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH,
                     info.second.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
-                UpdateUidMap(cliInfo.uid, bundleName, cliInfo.appIndex);
             }
         }
     }
@@ -6533,19 +6547,11 @@ bool BundleDataMgr::RestoreUidAndGid()
     return true;
 }
 
-void BundleDataMgr::RestoreSandboxUidAndGid()
+void BundleDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap)
 {
     if (sandboxAppHelper_ != nullptr) {
-        sandboxAppHelper_->RestoreSandboxUidAndGid();
-        auto sandboxMap = sandboxAppHelper_->GetSandboxAppInfoMap();
-        for (const auto &[key, info] : sandboxMap) {
-            int32_t sandboxAppIndex = info.GetAppIndex();
-            for (const auto &[uk, ui] : info.GetInnerBundleUserInfos()) {
-                if (ui.uid > 0) {
-                    UpdateUidMap(ui.uid, info.GetBundleName(), sandboxAppIndex);
-                }
-            }
-        }
+        std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+        sandboxAppHelper_->RestoreSandboxUidAndGid(bundleIdMap);
     }
 }
 
@@ -11715,7 +11721,6 @@ ErrCode BundleDataMgr::AddCloneBundle(const std::string &bundleName, const Inner
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     InnerBundleInfo &innerBundleInfo = infoItem->second;
-    innerBundleInfo.SetBundleCheckBySpm(true);
     ErrCode res = innerBundleInfo.AddCloneBundle(attr);
     if (res != ERR_OK) {
         APP_LOGE("innerBundleInfo addCloneBundleInfo fail");
@@ -13086,10 +13091,12 @@ ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &
 
 void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
 {
+    std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
     std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
     if (!GetAllUninstallBundleInfo(uninstallBundleInfos)) {
         return;
     }
+    std::map<int32_t, std::string> uninstallBundleIdMap;
     for (const auto &info : uninstallBundleInfos) {
         if (info.second.userInfos.empty()) {
             continue;
@@ -13105,20 +13112,10 @@ void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
                 continue;
             }
 
-            if (!IsValidAppUid(userInfo.uid)) {
-                APP_LOGW("invalid uid: %{public}d", userInfo.uid);
-                continue;
-            }
             int32_t bundleId = userInfo.uid - userId * Constants::BASE_USER_RANGE;
-            if (bundleId < Constants::BASE_APP_UID || bundleId > Constants::MAX_APP_UID) {
+            if (bundleId < Constants::BASE_APP_UID || bundleId >= MAX_APP_UID) {
                 APP_LOGW("invalid bundleId: %{public}d", bundleId);
                 continue;
-            }
-            {
-                std::shared_lock<std::shared_mutex> lock(uidMapMutex_);
-                if (uidMap_.find(bundleId) != uidMap_.end()) {
-                    continue;
-                }
             }
 
             std::string bundleName;
@@ -13128,12 +13125,18 @@ void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
                 bundleName = info.first;
             }
 
-            BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
-            BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
-            BundleUtil::MakeFsConfig(info.first, ServiceConstants::HMDFS_CONFIG_PATH,
-                info.second.appProvisionType, Constants::APP_PROVISION_TYPE_FILE_NAME);
-            UpdateUidMap(userInfo.uid, info.first, appIndex);
+            auto item = bundleIdMap_.find(bundleId);
+            if (item == bundleIdMap_.end()) {
+                uninstallBundleIdMap.emplace(bundleId, bundleName);
+                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(info.first, ServiceConstants::HMDFS_CONFIG_PATH,
+                    info.second.appProvisionType, Constants::APP_PROVISION_TYPE_FILE_NAME);
+            }
         }
+    }
+    for (const auto &item : uninstallBundleIdMap) {
+        bundleIdMap_.emplace(item.first, item.second);
     }
 }
 

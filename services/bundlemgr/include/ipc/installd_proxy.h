@@ -282,11 +282,10 @@ public:
 
     virtual ErrCode VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam) override;
 
-    virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t sessionId = 0) override;
+    virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+        const unsigned char *profileBlock) override;
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
-
-    virtual ErrCode ClearSessionProvisionCache(int32_t sessionId) override;
 
     virtual ErrCode AddCertAndEnableKey(const std::string &certPath, const std::string &certContent) override;
 

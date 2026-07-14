@@ -3441,8 +3441,14 @@ HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGidFromUninstallInfo_0100, Function
     ASSERT_TRUE(ret);
 
     bundleDataMgr->RestoreUidAndGidFromUninstallInfo();
+    auto bundleId = TEST_MAX_UID - USERID * Constants::BASE_USER_RANGE;
+    ret = bundleDataMgr->bundleIdMap_.find(bundleId) != bundleDataMgr->bundleIdMap_.end();
+    EXPECT_TRUE(ret);
+    auto restoreBundleName = bundleDataMgr->bundleIdMap_.at(bundleId);
+    EXPECT_EQ(restoreBundleName, BUNDLE_NAME_TEST);
     EXPECT_TRUE(BundleFileUtil::IsExistDir(ServiceConstants::HMDFS_CONFIG_PATH + BUNDLE_NAME_TEST));
     bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, USERID);
+    bundleDataMgr->bundleIdMap_.erase(bundleId);
 }
 
 /**
@@ -3989,6 +3995,46 @@ HWTEST_F(BmsBundleDataMgrTest3, HandleHandleSetShortcutsEnabled_0001, Function |
 }
 
 /**
+ * @tc.number: GenerateBundleId_0100
+ * @tc.name: GenerateBundleId
+ * @tc.desc: test GenerateBundleId
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GenerateBundleId_0100, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+
+    int32_t bundleId = 0;
+    std::string bundleName = BUNDLE_TEST1;
+    int32_t uid = bundleDataMgr->baseAppUid_;
+    // bundleIdMap is empty
+    auto ret = bundleDataMgr->GenerateBundleId(bundleName, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // bundle exist
+    ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST1, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleId, uid);
+
+    // bundle not exist
+    ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST2, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleId, uid + 1);
+
+    bundleDataMgr->bundleIdMap_.emplace(MAX_APP_UID, BUNDLE_TEST3);
+    ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST4, bundleId);
+    EXPECT_EQ(bundleId, uid + 2);
+
+    for (int i = uid + 3; i <= MAX_APP_UID; ++i) {
+        std::string tempBundleName = std::string("bundleName_") + std::to_string(i);
+        bundleDataMgr->bundleIdMap_.emplace(i, tempBundleName);
+    }
+    ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST5, bundleId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER);
+}
+
+/**
  * @tc.number: LauncherService_0100
  * @tc.name: GetShortcutInfoByAppIndex bundle not exist
  * @tc.desc: Should return bundle not exist error
@@ -4192,8 +4238,31 @@ HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGidFromUninstallInfo_CloneApp_0100,
 
     bundleDataMgr->RestoreUidAndGidFromUninstallInfo();
 
+    for (auto &item : bundleDataMgr->bundleIdMap_) {
+        APP_LOGE("bmsTag bundleIdMap:%{public}d.", item.first);
+    }
+
+    auto mainBundleId = TEST_NORMAL_UID - USERID * Constants::BASE_USER_RANGE;
+    auto mainIter = bundleDataMgr->bundleIdMap_.find(mainBundleId);
+    EXPECT_TRUE(mainIter != bundleDataMgr->bundleIdMap_.end());
+    if (mainIter != bundleDataMgr->bundleIdMap_.end()) {
+        EXPECT_EQ(mainIter->second, BUNDLE_NAME_TEST);
+    }
+
+    auto cloneBundleId = (TEST_NORMAL_UID + 1) - USERID * Constants::BASE_USER_RANGE;
+    auto cloneIter = bundleDataMgr->bundleIdMap_.find(cloneBundleId);
+    EXPECT_TRUE(cloneIter != bundleDataMgr->bundleIdMap_.end());
+    if (cloneIter != bundleDataMgr->bundleIdMap_.end()) {
+        std::string expectedCloneName = BundleCloneCommonHelper::GetCloneBundleIdKey(BUNDLE_NAME_TEST, 1);
+        EXPECT_EQ(cloneIter->second, expectedCloneName);
+    }
+
     bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, USERID);
     bundleDataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME_TEST, USERID, 1);
+    bundleDataMgr->bundleIdMap_.erase(mainBundleId);
+    if (cloneIter != bundleDataMgr->bundleIdMap_.end()) {
+        bundleDataMgr->bundleIdMap_.erase(cloneBundleId);
+    }
 }
 
 /**
@@ -4226,66 +4295,23 @@ HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGidFromUninstallInfo_CloneApp_0200,
     ASSERT_TRUE(ret);
 
     bundleDataMgr->RestoreUidAndGidFromUninstallInfo();
+    for (auto &item : bundleDataMgr->bundleIdMap_) {
+        APP_LOGE("bmsTag bundleIdMap:%{public}d.", item.first);
+    }
+
+    EXPECT_TRUE(bundleDataMgr->bundleIdMap_.find(TEST_NORMAL_UID - USERID * Constants::BASE_USER_RANGE) !=
+                  bundleDataMgr->bundleIdMap_.end());
+    EXPECT_TRUE(bundleDataMgr->bundleIdMap_.find((TEST_NORMAL_UID + 1) - USERID * Constants::BASE_USER_RANGE) !=
+                  bundleDataMgr->bundleIdMap_.end());
+    EXPECT_TRUE(bundleDataMgr->bundleIdMap_.find((TEST_NORMAL_UID + 2) - USERID * Constants::BASE_USER_RANGE) !=
+                  bundleDataMgr->bundleIdMap_.end());
 
     bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, USERID);
     bundleDataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME_TEST, USERID, 1);
     bundleDataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME_TEST, USERID, 2);
-}
-
-/**
- * @tc.number: RestoreUidAndGidFromUninstallInfo_0300
- * @tc.name: RestoreUidAndGidFromUninstallInfo with invalid bundleId
- * @tc.desc: uid passes IsValidAppUid but userKey parses userId=0 causing bundleId out of range →
- *           entry should be skipped without crash
- */
-HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGidFromUninstallInfo_0300, Function | SmallTest | Level1)
-{
-    ResetDataMgr();
-    auto bundleDataMgr = GetBundleDataMgr();
-    ASSERT_NE(bundleDataMgr, nullptr);
-
-    UninstallBundleInfo uninstallBundleInfo;
-    // uid is valid for userId=100 (bundleId in range), but userKey says userId=0
-    // so bundleId = uid - 0 * BASE_USER_RANGE = uid, which exceeds MAX_APP_UID
-    UninstallDataUserInfo userInfo;
-    userInfo.uid = 100 * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
-    uninstallBundleInfo.userInfos["0"] = userInfo;
-
-    auto ret = bundleDataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME_TEST, uninstallBundleInfo);
-    ASSERT_TRUE(ret);
-
-    EXPECT_NO_THROW(bundleDataMgr->RestoreUidAndGidFromUninstallInfo());
-
-    bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, 0);
-}
-
-/**
- * @tc.number: RestoreUidAndGidFromUninstallInfo_0400
- * @tc.name: RestoreUidAndGidFromUninstallInfo bundleId already in uidMap_
- * @tc.desc: bundleId already exists in uidMap_ → MakeFsConfig and UpdateUidMap are skipped for this entry
- */
-HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGidFromUninstallInfo_0400, Function | SmallTest | Level1)
-{
-    ResetDataMgr();
-    auto bundleDataMgr = GetBundleDataMgr();
-    ASSERT_NE(bundleDataMgr, nullptr);
-
-    int32_t userId = 100;
-    int32_t testUid = userId * Constants::BASE_USER_RANGE + Constants::BASE_APP_UID;
-    // Pre-populate uidMap_ with the same bundleId that the uninstall info would compute
-    bundleDataMgr->UpdateUidMap(testUid, BUNDLE_NAME_TEST, 0);
-
-    UninstallBundleInfo uninstallBundleInfo;
-    UninstallDataUserInfo userInfo;
-    userInfo.uid = testUid;
-    uninstallBundleInfo.userInfos[std::to_string(userId)] = userInfo;
-
-    auto ret = bundleDataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME_TEST, uninstallBundleInfo);
-    ASSERT_TRUE(ret);
-
-    EXPECT_NO_THROW(bundleDataMgr->RestoreUidAndGidFromUninstallInfo());
-
-    bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, userId);
+    bundleDataMgr->bundleIdMap_.erase(TEST_NORMAL_UID - USERID * Constants::BASE_USER_RANGE);
+    bundleDataMgr->bundleIdMap_.erase((TEST_NORMAL_UID + 1) - USERID * Constants::BASE_USER_RANGE);
+    bundleDataMgr->bundleIdMap_.erase((TEST_NORMAL_UID + 2) - USERID * Constants::BASE_USER_RANGE);
 }
 
 /**

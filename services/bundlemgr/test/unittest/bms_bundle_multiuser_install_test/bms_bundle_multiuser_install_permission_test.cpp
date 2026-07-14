@@ -176,8 +176,11 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0003, Function
 {
     PluginInstaller installer;
     std::string hspPath;
+    std::string appIdentifier;
+    bool isEnterpriseBundle = true;
     bool isCompileSdkOpenHarmony = true;
-    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, isCompileSdkOpenHarmony);
+    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, appIdentifier, isEnterpriseBundle,
+        isCompileSdkOpenHarmony);
     EXPECT_EQ(ret, ERR_OK);
 }
 

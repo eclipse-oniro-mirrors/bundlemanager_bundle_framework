@@ -197,18 +197,6 @@ HWTEST_F(BmsBundleHapVerifyTest, HapVerify_0200, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: ConvertHapVerifyResultCode_0100
- * @tc.name: test ConvertHapVerifyResultCode with unknown code
- * @tc.desc: 1. hap verify result code is not in map
- *           2. return signature verification failure
- */
-HWTEST_F(BmsBundleHapVerifyTest, ConvertHapVerifyResultCode_0100, Function | SmallTest | Level0)
-{
-    ErrCode ret = BundleVerifyMgr::ConvertHapVerifyResultCode(UNKNOWN_CODE);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
-}
-
-/**
  * @tc.number: EnableDebug_0200
  * @tc.name: test EnableDebug when already in debug mode
  * @tc.desc: 1. isDebug_ is already true

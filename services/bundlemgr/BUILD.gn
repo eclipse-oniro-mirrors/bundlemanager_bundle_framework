@@ -656,7 +656,6 @@ ohos_shared_library("installs") {
 
   external_deps = [
     "access_token:el5_filekey_manager_sdk",
-    "access_token:libaccesstoken_sdk",
     "app_file_service:remote_file_share_native",
     "appspawn:hnpapi",
     "appverify:libhapverify",
@@ -713,10 +712,6 @@ ohos_shared_library("installs") {
 
   if (bundle_framework_bss_enable) {
     defines += [ "SECURITY_PRIVACY_SERVER_ENABLE" ]
-  }
-
-  if (is_emulator) {
-    defines += [ "X86_EMULATOR_MODE" ]
   }
 
   install_enable = true

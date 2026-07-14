@@ -287,9 +287,6 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_SIGN_PROFILE):
             result = this->HandRemoveSignProfile(data, reply);
             break;
-        case static_cast<uint32_t>(InstalldInterfaceCode::CLEAR_SESSION_PROVISION_CACHE):
-            result = this->HandClearSessionProvisionCache(data, reply);
-            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::ADD_CERT_AND_ENABLE_KEY):
             result = this->HandleAddCertAndEnableKey(data, reply);
             break;
@@ -1235,8 +1232,23 @@ bool InstalldHost::HandVerifyCodeSignatureForHap(MessageParcel &data, MessagePar
 bool InstalldHost::HandDeliverySignProfile(MessageParcel &data, MessageParcel &reply)
 {
     std::string bundleName = Str16ToStr8(data.ReadString16());
-    int32_t sessionId = data.ReadInt32();
-    ErrCode result = DeliverySignProfile(bundleName, sessionId);
+    int32_t profileBlockLength = data.ReadInt32();
+    if (profileBlockLength <= 0 || profileBlockLength > Constants::MAX_PARCEL_CAPACITY) {
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    auto dataInfo = data.ReadRawData(profileBlockLength);
+    if (!dataInfo) {
+        LOG_E(BMS_TAG_INSTALLD, "readRawData failed");
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    const unsigned char *profileBlock = reinterpret_cast<const unsigned char *>(dataInfo);
+    if (profileBlock == nullptr) {
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    ErrCode result = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1246,15 +1258,6 @@ bool InstalldHost::HandRemoveSignProfile(MessageParcel &data, MessageParcel &rep
     std::string bundleName = Str16ToStr8(data.ReadString16());
 
     ErrCode result = RemoveSignProfile(bundleName);
-    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    return true;
-}
-
-bool InstalldHost::HandClearSessionProvisionCache(MessageParcel &data, MessageParcel &reply)
-{
-    int32_t sessionId = data.ReadInt32();
-
-    ErrCode result = ClearSessionProvisionCache(sessionId);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

@@ -16,16 +16,13 @@
 #include "inner_shared_bundle_installer.h"
 
 #include <fcntl.h>
-#include <map>
 
 #include "aot/aot_handler.h"
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
-#include "bundle_permission_mgr.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "patch_data_mgr.h"
-#include "scope_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -76,14 +73,7 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
         APP_LOGD("hap syscap check failed %{public}d", result);
     }
     // verify signature info for all haps
-    sessionCommitted_ = false;
-    ScopeGuard sessionGuard([&] {
-        if (!sessionCommitted_ && sessionId_ != 0) {
-            BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
-        }
-    });
-    result = bundleInstallChecker_->CheckHapsSignInfoAndInitSession(
-        bundlePaths, hapVerifyResults_, checkParam.isPreInstallApp, sessionId_, Constants::INVALID_USERID);
+    result = bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyResults_);
     CHECK_RESULT(result, "hap files check signature info failed %{public}d");
 
     // parse bundle infos
@@ -135,7 +125,6 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     compileSdkType_ = parsedBundles_.empty() ? COMPILE_SDK_TYPE_OPEN_HARMONY :
         (parsedBundles_.begin()->second).GetBaseApplicationInfo().compileSdkType;
 
-    sessionGuard.Dismiss();
     return CheckWithInstalledInfo();
 }
 
@@ -259,14 +248,6 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
     PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, {parsedBundles_.begin()->first},
         newBundleInfo_.GetBaseBundleInfo().versionCode, AppPatchType::SHARED_BUNDLES, installParam.isPatch);
     // check mark install finish
-    if (!sessionCommitted_ && sessionId_ != 0) {
-        int32_t finishRet = BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
-        if (finishRet != ERR_OK) {
-            APP_LOGE("FinishHapInstall failed, errCode:%{public}d", finishRet);
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
-        sessionCommitted_ = true;
-    }
     result = MarkInstallFinish();
     if (result != ERR_OK) {
         APP_LOGE("mark install finish failed %{public}d", result);
@@ -856,10 +837,12 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForNativeFiles(const std:
     codeSignatureParam.cpuAbi = cpuAbi;
     codeSignatureParam.targetSoPath = targetSoPath;
     codeSignatureParam.signatureFileDir = signatureFileDir;
+    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
+    codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
     codeSignatureParam.isCompressNativeLibrary = isCompressNativeLibs_;
-    bundleInstallChecker_->ProcessCodeSignatureParam(sessionId_, verifyRes_, codeSignatureParam);
+    bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
@@ -873,10 +856,12 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForHsp(const std::string 
     codeSignatureParam.modulePath = tempHspPath;
     codeSignatureParam.cpuAbi = cpuAbi_;
     codeSignatureParam.targetSoPath = tempSoPath_;
+    codeSignatureParam.appIdentifier = appIdentifier;
     codeSignatureParam.signatureFileDir = signatureFileDir_;
+    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle;
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle_;
-    bundleInstallChecker_->ProcessCodeSignatureParam(sessionId_, verifyRes_, codeSignatureParam);
+    bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
@@ -898,8 +883,12 @@ ErrCode InnerSharedBundleInstaller::DeliveryProfileToCodeSign(
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
         provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
-        // SPM mode: installd queries profileBlock via sessionId
-        return InstalldClient::GetInstance()->DeliverySignProfile(bundleName_, sessionId_);
+        if (provisionInfo.profileBlockLength == 0 || provisionInfo.profileBlock == nullptr) {
+            APP_LOGE("invalid sign profile");
+            return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+        }
+        return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
+            provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
     }
     return ERR_OK;
 }
@@ -921,7 +910,6 @@ ErrCode InnerSharedBundleInstaller::MarkInstallFinish()
         APP_LOGE("mark finish failed, -n %{public}s not exist", bundleName_.c_str());
         return ERR_APPEXECFWK_FETCH_BUNDLE_ERROR;
     }
-    info.SetBundleCheckBySpm(true);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
     if (!dataMgr->UpdateInnerBundleInfo(info, true)) {

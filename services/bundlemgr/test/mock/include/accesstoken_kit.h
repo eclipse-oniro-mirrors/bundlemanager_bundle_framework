@@ -50,37 +50,7 @@ public:
     static int32_t UpdateHapToken(AccessTokenIDEx& tokenIdEx, const UpdateHapInfoParams& info,
         const HapPolicyParams& policy, HapInfoCheckResult& checkResult);
     static int GetHapTokenInfo(AccessTokenID tokenID, HapTokenInfo& hapTokenInfoRes);
-    static int32_t GetCacheSignInfoBySessionId(
-        int32_t sessionId, std::vector<TrustedBundleInfo>& bundleInfo);
-    static int32_t CheckHapPermissionInfo(
-        int32_t sessionId, InstallTypeEnum type, HapInfoCheckResult& result);
-    static int32_t PrepareHapIdentity(
-        int32_t& sessionId, const HapBaseInfo& info, const BundlePolicy& policy, Identity& identity);
-    static int32_t UpdateHapPolicy(int32_t sessionId, int32_t tokenId, const BundlePolicy& policy, int32_t& uid);
-    static int32_t FinishInstall(int32_t sessionId, bool isSuccess,
-        const std::map<std::string, std::string>& modulePathMap);
-    static int32_t DeleteIdentity(
-        AccessTokenID tokenID, const std::string& bundleName, ReservedType type);
-    static int32_t MigrateInstalledBundles(const std::vector<MigratedInfo>& migratedInfoList,
-        std::vector<BundleMigrateResult>& results);
-    static int32_t FinishMigration();
-    static int32_t CheckHapSignInfo(const BundleHapList& hapList, int32_t& sessionId,
-        std::vector<TrustedBundleInfo>& trustedBundleInfo,
-        HapVerifyResultInfo& resultInfo);
-    static int32_t GetHapSignInfo(const std::string& bundleName,
-        std::vector<TrustedBundleInfo>& trustedBundleInfo);
-    static int32_t GetHapBaseInfoByUid(int32_t uid, HapBaseInfo& info);
-    static int32_t GetCachePolicyBySessionId(int32_t sessionId, const std::string& bundleName,
-        BundlePolicyInfo& bundlePolicyInfo);
-    static int32_t RefreshTokenStatus(const Identity& identity, ReservedType type);
 };
-
-void SetCachePolicyBySessionIdForTest(const BundlePolicyInfo& bundlePolicyInfo);
-void SetCachePolicyBySessionIdRetForTest(int32_t ret);
-void SetRefreshTokenStatusRetForTest(int32_t ret);
-void SetPrepareHapIdentityRetForTest(int32_t ret);
-void SetDeleteIdentityRetForTest(int32_t ret);
-void SetUpdateHapPolicyRetForTest(int32_t ret, int32_t newUid = 0);
 } // namespace AccessToken
 } // namespace Security
 } // namespace OHOS

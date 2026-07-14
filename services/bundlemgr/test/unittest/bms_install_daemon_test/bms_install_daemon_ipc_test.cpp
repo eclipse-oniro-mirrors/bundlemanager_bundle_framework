@@ -858,10 +858,11 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3900, Function | SmallTest |
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
 
-    auto ret = installdProxy->DeliverySignProfile(TEST_STRING, 0);
+    unsigned char *profileBlock;
+    auto ret = installdProxy->DeliverySignProfile(TEST_STRING, DATA_LENGTH, profileBlock);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = installdProxy->DeliverySignProfile(TEST_STRING, 0);
+    ret = installdProxy->DeliverySignProfile(TEST_STRING, MAX_PARCEL_CAPACITY, profileBlock);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -946,6 +947,21 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4400, Function | SmallTest |
     EXPECT_EQ(ret, ERR_OK);
 }
 
+/**
+ * @tc.number: InstalldProxyTest_4500
+ * @tc.name: test function of DeliverySignProfile
+ * @tc.desc: 1. calling DeliverySignProfile of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4500, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    int32_t profileBlockLength = 1;
+    unsigned char *profileBlock = new unsigned char[1];
+    auto ret = proxy->DeliverySignProfile(TEST_STRING, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_OK);
+}
 
 /**
  * @tc.number: InstalldProxyTest_4600

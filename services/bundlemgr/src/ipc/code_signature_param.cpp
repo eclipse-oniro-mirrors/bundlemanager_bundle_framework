@@ -33,7 +33,7 @@ constexpr const char* CODE_SIGNATURE_TARGET_SO_PATH = "targetSoPath";
 constexpr const char* CODE_SIGNATURE_SIGNATURE_FILE_PATH = "signatureFileDir";
 constexpr const char* CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE = "isEnterpriseBundle";
 constexpr const char* CODE_SIGNATURE_IS_ENTERPRISE_RESIGNED = "isEnterpriseResigned";
-constexpr const char* CODE_SIGNATURE_IS_LOCAL_HSP_PLUGIN = "isLocalHspPlugin";
+constexpr const char* CODE_SIGNATURE_IS_DEVELOPER_DISTRIBUTION = "isDeveloperDistribution";
 constexpr const char* CODE_SIGNATURE_APP_IDENTIFIER = "appIdentifier";
 constexpr const char* CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE = "isPreInstalledBundle";
 constexpr const char* CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY = "isCompileSdkOpenHarmony";
@@ -51,7 +51,7 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
     signatureFileDir = Str16ToStr8(parcel.ReadString16());
     isEnterpriseBundle = parcel.ReadBool();
     isEnterpriseResigned = parcel.ReadBool();
-    isLocalHspPlugin = parcel.ReadBool();
+    isDeveloperDistribution = parcel.ReadBool();
     appIdentifier = Str16ToStr8(parcel.ReadString16());
     isPreInstalledBundle = parcel.ReadBool();
     isCompileSdkOpenHarmony = parcel.ReadBool();
@@ -77,7 +77,6 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
         }
         profileBlock = std::move(tempProfilePtr);
     }
-    sessionId = parcel.ReadInt32();
     return true;
 }
 
@@ -90,7 +89,7 @@ bool CodeSignatureParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(signatureFileDir));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEnterpriseBundle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEnterpriseResigned);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isLocalHspPlugin);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDeveloperDistribution);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPreInstalledBundle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isCompileSdkOpenHarmony);
@@ -104,7 +103,6 @@ bool CodeSignatureParam::Marshalling(Parcel &parcel) const
             return false;
         }
     }
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sessionId);
     return true;
 }
 
@@ -129,7 +127,7 @@ std::string CodeSignatureParam::ToString() const
         { CODE_SIGNATURE_SIGNATURE_FILE_PATH, signatureFileDir },
         { CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE, isEnterpriseBundle },
         { CODE_SIGNATURE_IS_ENTERPRISE_RESIGNED, isEnterpriseResigned },
-        { CODE_SIGNATURE_IS_LOCAL_HSP_PLUGIN, isLocalHspPlugin },
+        { CODE_SIGNATURE_IS_DEVELOPER_DISTRIBUTION, isDeveloperDistribution },
         { CODE_SIGNATURE_APP_IDENTIFIER, appIdentifier },
         { CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE, isPreInstalledBundle },
         { CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY, isCompileSdkOpenHarmony },

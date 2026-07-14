@@ -519,12 +519,13 @@ ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &code
     return CallService(&IInstalld::VerifyCodeSignatureForHap, codeSignatureParam);
 }
 
-ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t sessionId)
+ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+    const unsigned char *profileBlock)
 {
-    if (sessionId == 0) {
+    if (bundleName.empty() || profileBlock == nullptr) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::DeliverySignProfile, bundleName, sessionId);
+    return CallService(&IInstalld::DeliverySignProfile, bundleName, profileBlockLength, profileBlock);
 }
 
 ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
@@ -737,15 +738,6 @@ ErrCode InstalldClient::GetTopNLargestItemsInAppDataDir(const std::string &bundl
         largestItems);
 }
 
-void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject>& remoteObject) {}
-
-void InstalldClient::OnLoadSystemAbilityFail() {}
-
-ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
-{
-    return ERR_OK;
-}
-
 ErrCode InstalldClient::DeleteOldCacheFiles(
     const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
 {
@@ -764,5 +756,9 @@ int64_t InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string>
     }
     return CallService(&IInstalld::GetCacheDiskUsageFromPath, paths, timeoutMs);
 }
+
+void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject>& remoteObject) {}
+
+void InstalldClient::OnLoadSystemAbilityFail() {}
 }  // namespace AppExecFwk
 }  // namespace OHOS
