@@ -25,6 +25,7 @@
 #include <unistd.h>
 
 #include "ipc_types.h"
+#include "message_option.h"
 #include "parcel.h"
 #include "string_ex.h"
 #include "parcel_macro.h"
@@ -752,6 +753,108 @@ HWTEST_F(BundleMgrProxyTest, SetBundleFirstLaunch_0200, Function | MediumTest | 
     bool isBundleFirstLaunched = true;
     ErrCode ret = bundleMgrProxy.SetBundleFirstLaunch(bundleName, userId, appIndex, isBundleFirstLaunched);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
+}
+
+/**
+ * @tc.number: BundleMgrProxy_SendTransactCmdWithOption_0100
+ * @tc.name: test SendTransactCmd overload with MessageOption
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify the TF_IMAGE option overload returns false when remote is null
+ */
+HWTEST_F(BundleMgrProxyTest, BundleMgrProxy_SendTransactCmdWithOption_0100, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
+    auto ret = bundleMgrProxy.SendTransactCmd(BundleMgrInterfaceCode::GET_ODID, data, reply, option);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrProxy_SendTransactCmdWithErrCodeWithOption_0100
+ * @tc.name: test SendTransactCmdWithErrCode overload with MessageOption
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify the TF_IMAGE option overload returns ERR_APPEXECFWK_NULL_PTR when remote is null
+ */
+HWTEST_F(BundleMgrProxyTest, BundleMgrProxy_SendTransactCmdWithErrCodeWithOption_0100, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
+    auto ret = bundleMgrProxy.SendTransactCmdWithErrCode(BundleMgrInterfaceCode::GET_ODID, data, reply, option);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BundleMgrProxy_GetParcelableInfoWithErrCodeWithOption_0100
+ * @tc.name: test GetParcelableInfoWithErrCode overload with MessageOption
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. GetDependentBundleInfo exercises the TF_IMAGE option overload
+ *           3. verify it returns ERR_APPEXECFWK_PARCEL_ERROR when remote is null
+ */
+HWTEST_F(BundleMgrProxyTest, BundleMgrProxy_GetParcelableInfoWithErrCodeWithOption_0100, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "com.example.test";
+    BundleInfo bundleInfo;
+    auto ret = bundleMgrProxy.GetDependentBundleInfo(bundleName, bundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrProxy_GetParcelableInfosWithErrCodeWithOption_0100
+ * @tc.name: test GetParcelableInfosWithErrCode overload with MessageOption
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. GetBaseSharedBundleInfos exercises the TF_IMAGE option overload
+ *           3. verify it returns ERR_APPEXECFWK_PARCEL_ERROR when remote is null
+ */
+HWTEST_F(BundleMgrProxyTest, BundleMgrProxy_GetParcelableInfosWithErrCodeWithOption_0100, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "com.example.test";
+    std::vector<BaseSharedBundleInfo> baseSharedBundleInfos;
+    auto ret = bundleMgrProxy.GetBaseSharedBundleInfos(bundleName, baseSharedBundleInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrProxy_GetParcelInfoIntelligentWithOption_0100
+ * @tc.name: test GetParcelInfoIntelligent overload with MessageOption
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. GetBundleInfoForSelf exercises the TF_IMAGE option overload
+ *           3. verify it returns ERR_APPEXECFWK_NULL_PTR when remote is null
+ */
+HWTEST_F(BundleMgrProxyTest, BundleMgrProxy_GetParcelInfoIntelligentWithOption_0100, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    int32_t flags = 0;
+    BundleInfo bundleInfo;
+    auto ret = bundleMgrProxy.GetBundleInfoForSelf(flags, bundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BundleMgrProxy_GetBigStringWithOption_0100
+ * @tc.name: test GetBigString overload with MessageOption
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify the TF_IMAGE option overload returns ERR_APPEXECFWK_PARCEL_ERROR when remote is null
+ */
+HWTEST_F(BundleMgrProxyTest, BundleMgrProxy_GetBigStringWithOption_0100, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    MessageParcel data;
+    std::string profile;
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
+    auto ret = bundleMgrProxy.GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE, data, profile, option);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 } // AppExecFwk
 } // OHOS
