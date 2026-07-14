@@ -59,18 +59,19 @@ ErrCode AppClonePreferenceDataMgr::GetAppClonePreference(const std::string &bund
             bundleName.c_str(), userId);
         return ERR_BUNDLE_MANAGER_APP_CLONE_PREFERENCE_NOT_EXIST;
     }
-    // Dirty data cleanup: CLONE preference but the clone no longer exists
     if (preference.mode == AppClonePreferenceMode::CLONE_APP) {
         auto existingAppIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
         if (std::find(existingAppIndexes.begin(), existingAppIndexes.end(),
             preference.appIndex) == existingAppIndexes.end()) {
-            APP_LOGW_NOFUNC("GetAppClonePreference preferred clone %{public}d no longer exists, delete dirty record",
+            APP_LOGW_NOFUNC("GetAppClonePreference preferred clone %{public}d no longer exists, reset to ALWAYS_ASK",
                 preference.appIndex);
-            if (!storage_->Delete(bundleName, userId)) {
-                APP_LOGE_NOFUNC("GetAppClonePreference storage Delete failed for bundle %{public}s userId %{public}d",
-                    bundleName.c_str(), userId);
+            AppClonePreference alwaysAsk;
+            if (!storage_->InsertOrReplace(bundleName, userId, alwaysAsk)) {
+                APP_LOGE_NOFUNC("GetAppClonePreference storage InsertOrReplace failed for bundle %{public}s "
+                    "userId %{public}d", bundleName.c_str(), userId);
+                return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
             }
-            return ERR_BUNDLE_MANAGER_APP_CLONE_PREFERENCE_NOT_EXIST;
+            preference = alwaysAsk;
         }
     }
     return ERR_OK;
