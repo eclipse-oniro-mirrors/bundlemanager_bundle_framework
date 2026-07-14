@@ -77,7 +77,8 @@ bool BundleMgrProxyNative::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf due to write flag fail");
         return false;
     }
-    if (!GetParcelInfoIntelligent<BundleInfo>(GET_BUNDLE_INFO_FOR_SELF_NATIVE, data, bundleInfo)) {
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
+    if (!GetParcelInfoIntelligent<BundleInfo>(GET_BUNDLE_INFO_FOR_SELF_NATIVE, data, bundleInfo, option)) {
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf from server");
         return false;
     }
@@ -94,7 +95,8 @@ bool BundleMgrProxyNative::GetCompatibleDeviceTypeNative(std::string &deviceType
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(GET_COMPATIBLED_DEVICE_TYPE_NATIVE, data, reply)) {
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
+    if (!SendTransactCmd(GET_COMPATIBLED_DEVICE_TYPE_NATIVE, data, reply, option)) {
         return false;
     }
     int32_t res = reply.ReadInt32();
@@ -129,6 +131,22 @@ bool BundleMgrProxyNative::SendTransactCmd(uint32_t code, MessageParcel &data, M
 {
     MessageOption option(MessageOption::TF_SYNC);
 
+    sptr<IRemoteObject> remote = GetBmsProxy();
+    if (remote == nullptr) {
+        APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
+        return false;
+    }
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    if (result != NO_ERROR) {
+        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
+        return false;
+    }
+    return true;
+}
+
+bool BundleMgrProxyNative::SendTransactCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
+    MessageOption &option)
+{
     sptr<IRemoteObject> remote = GetBmsProxy();
     if (remote == nullptr) {
         APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
@@ -268,6 +286,42 @@ bool BundleMgrProxyNative::GetParcelInfoIntelligent(uint32_t code, MessageParcel
 {
     MessageParcel reply;
     if (!SendTransactCmd(code, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return false;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGD("reply ErrCode: %{public}d", ret);
+        return false;
+    }
+    size_t dataSize = reply.ReadUint32();
+    void *buffer = nullptr;
+    if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
+        APP_LOGE("GetData failed dataSize : %{public}zu", dataSize);
+        return false;
+    }
+
+    MessageParcel tmpParcel;
+    if (!tmpParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        APP_LOGE("ParseFrom failed");
+        return false;
+    }
+
+    std::unique_ptr<T> info(tmpParcel.ReadParcelable<T>());
+    if (info == nullptr) {
+        APP_LOGE("ReadParcelable failed");
+        return false;
+    }
+    parcelInfo = *info;
+    return true;
+}
+
+template<typename T>
+bool BundleMgrProxyNative::GetParcelInfoIntelligent(uint32_t code, MessageParcel &data, T &parcelInfo,
+    MessageOption &option)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply, option)) {
         APP_LOGE("SendTransactCmd failed");
         return false;
     }

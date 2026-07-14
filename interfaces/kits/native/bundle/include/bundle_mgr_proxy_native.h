@@ -56,6 +56,7 @@ private:
     template <typename T>
     bool GetParcelableInfo(uint32_t code, MessageParcel &data, T &parcelableInfo);
     bool SendTransactCmd(uint32_t code, MessageParcel &data, MessageParcel &reply);
+    bool SendTransactCmd(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
     template<typename T>
     ErrCode GetVectorFromParcelIntelligentWithErrCode(uint32_t code, MessageParcel &data,
         std::vector<T> &parcelableInfos);
@@ -64,6 +65,8 @@ private:
     ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, void *&data);
     template<typename T>
     bool GetParcelInfoIntelligent(uint32_t code, MessageParcel &data, T &parcelInfo);
+    template<typename T>
+    bool GetParcelInfoIntelligent(uint32_t code, MessageParcel &data, T &parcelInfo, MessageOption &option);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
