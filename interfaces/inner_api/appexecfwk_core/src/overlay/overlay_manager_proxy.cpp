@@ -149,8 +149,9 @@ ErrCode OverlayManagerProxy::GetTargetOverlayModuleInfo(const std::string &targe
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
     return GetParcelableInfosWithErrCode<OverlayModuleInfo>(
-        OverlayManagerInterfaceCode::GET_TARGET_OVERLAY_MODULE_INFOS, data, overlayModuleInfos);
+        OverlayManagerInterfaceCode::GET_TARGET_OVERLAY_MODULE_INFOS, data, overlayModuleInfos, option);
 }
 
 ErrCode OverlayManagerProxy::GetOverlayModuleInfoByBundleName(const std::string &bundleName,
@@ -389,10 +390,54 @@ ErrCode OverlayManagerProxy::GetParcelableInfosWithErrCode(
     return res;
 }
 
+template<typename T>
+ErrCode OverlayManagerProxy::GetParcelableInfosWithErrCode(
+    OverlayManagerInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos, MessageOption &option)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply, option)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    ErrCode res = reply.ReadInt32();
+    if (res == ERR_OK) {
+        int32_t infoSize = reply.ReadInt32();
+        CONTAINER_SECURITY_VERIFY(reply, infoSize, &parcelableInfos);
+        for (int32_t i = 0; i < infoSize; i++) {
+            std::unique_ptr<T> info(reply.ReadParcelable<T>());
+            if (info == nullptr) {
+                APP_LOGE("Read Parcelable infos failed");
+                return ERR_APPEXECFWK_PARCEL_ERROR;
+            }
+            parcelableInfos.emplace_back(*info);
+        }
+        APP_LOGD("get parcelable infos success");
+    }
+    APP_LOGD("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
+    return res;
+}
+
 bool OverlayManagerProxy::SendTransactCmd(OverlayManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
 
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("fail send transact cmd %{public}hhu due to remote object", code);
+        return false;
+    }
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    if (result != NO_ERROR) {
+        APP_LOGE("receive error code %{public}d in transact cmd %{public}hhu", result, code);
+        return false;
+    }
+    return true;
+}
+
+bool OverlayManagerProxy::SendTransactCmd(OverlayManagerInterfaceCode code, MessageParcel &data,
+    MessageParcel &reply, MessageOption &option)
+{
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         APP_LOGE("fail send transact cmd %{public}hhu due to remote object", code);
