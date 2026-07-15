@@ -330,6 +330,11 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(CROSS_APP_SHARED_CONFIG, installResult.crossAppSharedConfig);
     want.SetParam(IS_RECOVER, installResult.isRecover);
     want.SetParam(CHANGE_TYPE, static_cast<int32_t>(installResult.changeType));
+    // === DUAL_MODE: Extended event fields for dual-mode apps ===
+    want.SetParam("APP_CATEGORY", installResult.appCategory);
+    want.SetParam("CURRENT_MODE", installResult.currentMode);
+    want.SetParam("IS_SHARED_SANDBOX", installResult.isSharedSandbox);
+    // === DUAL_MODE END ===
     for (const auto &item : installResult.metadataConfigInfos) {
             want.SetParam(item.first, item.second);
     }

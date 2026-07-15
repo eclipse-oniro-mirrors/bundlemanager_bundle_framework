@@ -1695,6 +1695,13 @@ private:
     // key:bundleName
     // value:innerbundleInfo
     std::map<std::string, InnerBundleInfo> bundleInfos_;
+    // === DUAL_MODE: Apps not queryable in current mode ===
+    // Secondary mode: category 7 apps (stored in DB with +clone-10000+ prefix, loaded as original bundleName)
+    // Primary mode: category 7 apps (stored with original bundleName, but not queryable)
+    // key:bundleName (original, without prefix)
+    // value:innerbundleInfo
+    std::map<std::string, InnerBundleInfo> tempBundleInfos_;
+    // === DUAL_MODE END ===
     // key:bundle name
     std::map<std::string, InstallState> installStates_;
     // current-status:previous-statue pair

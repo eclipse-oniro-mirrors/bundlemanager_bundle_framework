@@ -63,6 +63,18 @@ enum class BundleType {
     SKILL = 5,
 };
 
+// Application category for dual-mode (PC/PAD) scenarios.
+// Values are powers of two to support bitwise-or combination.
+enum class AppCategory : uint32_t {
+    APP_CATEGORY_UNSPECIFIED = 0,        // Unspecified application category (default)
+    APP_CATEGORY_PAD_ONLY = 1 << 0,      // PAD-exclusive application category
+    APP_CATEGORY_PC_ONLY = 1 << 1,       // PC-exclusive application category
+    APP_CATEGORY_PAD_SUPPORT_PC = 1 << 2, // PAD app supports installation on PC
+    APP_CATEGORY_PC_SUPPORT_PAD = 1 << 3, // PC app supports installation on PAD
+    APP_CATEGORY_SAME_PACKAGE = 1 << 4,   // Same bundle name and package body
+    APP_CATEGORY_DIFF_PACKAGE = 1 << 5,   // Same bundle name, different package body
+};
+
 enum class CompatiblePolicy {
     NORMAL = 0,
     BACKWARD_COMPATIBILITY = 1,
@@ -372,6 +384,9 @@ struct ApplicationInfo : public Parcelable {
     AppPreloadPhase appPreloadPhase = AppPreloadPhase::DEFAULT;
     std::string appSignType = Constants::APP_SIGN_TYPE_NONE;
     std::vector<std::string> allowListenBundleChangedEvent;
+
+    // application category for dual-mode (PC/PAD), default UNSPECIFIED
+    uint32_t appCategory = static_cast<uint32_t>(AppCategory::APP_CATEGORY_UNSPECIFIED);
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

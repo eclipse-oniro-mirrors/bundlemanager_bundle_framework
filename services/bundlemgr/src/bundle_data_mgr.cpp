@@ -34,6 +34,8 @@
 #include "bms_update_selinux_mgr.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_storage_rdb.h"
+#include "bundle_service_constants.h"
+#include "dual_mode_helper.h"
 #include "preinstall_data_storage_rdb.h"
 #include "hap_token_info.h"
 #include "bundle_event_callback_death_recipient.h"
@@ -226,6 +228,90 @@ bool BundleDataMgr::LoadDataFromPersistentStorage()
         APP_LOGW("LoadAllData failed");
         return false;
     }
+
+    // === DUAL_MODE: Classify apps by mode and category ===
+    // Step 3.5: After LoadAllData, before using bundleInfos_
+    // Separate apps into bundleInfos_ (queryable) and tempBundleInfos_ (not queryable in current mode)
+    if (!DualModeHelper::GetSysMode().empty()) {
+        APP_LOGI("Dual mode: starting classification, total apps=%{public}zu", bundleInfos_.size());
+
+        std::string sysMode = DualModeHelper::GetSysMode();
+        bool isSecondaryMode = DualModeHelper::IsSecondaryMode();
+
+        // Build flag for current mode
+        int32_t modeFlag = static_cast<int32_t>(AppCategory::APP_CATEGORY_UNSPECIFIED);
+        if (sysMode == ServiceConstants::DUAL_MODE_PC) {
+            modeFlag = static_cast<int32_t>(AppCategory::APP_CATEGORY_UNSPECIFIED) |
+                      static_cast<int32_t>(AppCategory::APP_CATEGORY_PC_ONLY) |
+                      static_cast<int32_t>(AppCategory::APP_CATEGORY_PAD_SUPPORT_PC) |
+                      static_cast<int32_t>(AppCategory::APP_CATEGORY_SAME_PACKAGE) |
+                      static_cast<int32_t>(AppCategory::APP_CATEGORY_DIFF_PACKAGE);
+        } else if (sysMode == ServiceConstants::DUAL_MODE_PAD) {
+            modeFlag = static_cast<int32_t>(AppCategory::APP_CATEGORY_UNSPECIFIED) |
+                      static_cast<int32_t>(AppCategory::APP_CATEGORY_PAD_ONLY) |
+                      static_cast<int32_t>(AppCategory::APP_CATEGORY_PC_SUPPORT_PAD) |
+                      static_cast<int32_t>(AppCategory::APP_CATEGORY_SAME_PACKAGE) |
+                      static_cast<int32_t>(AppCategory::APP_CATEGORY_DIFF_PACKAGE);
+        }
+
+        // Iterate through all loaded apps to classify
+        for (auto it = bundleInfos_.begin(); it != bundleInfos_.end(); ) {
+            const std::string &dbKey = it->first;
+            InnerBundleInfo &innerBundleInfo = it->second;
+            int32_t appCategory = innerBundleInfo.GetBaseApplicationInfo().appCategory;
+
+            std::string originalBundleName;
+            bool isDualModeCloneKey = DualModeHelper::ParseDualModeBundleName(dbKey, originalBundleName);
+
+            // Handle category 7 apps (same bundle name, different package)
+            if (DualModeHelper::IsDiffPackageCategory(appCategory)) {
+                if (isSecondaryMode && isDualModeCloneKey) {
+                    // Secondary mode: category 7 apps with prefix should be queryable
+                    // Remove prefix and move to bundleInfos_ with original name
+                    APP_LOGI("Dual mode: secondary mode - category 7 app moved to queryable: %{public}s",
+                             originalBundleName.c_str());
+                    tempBundleInfos_[originalBundleName] = innerBundleInfo;
+                    it = bundleInfos_.erase(it);
+                    continue;
+                } else if (!isSecondaryMode && isDualModeCloneKey) {
+                    // Primary mode: category 7 apps with prefix should NOT be queryable
+                    // Move to tempBundleInfos_ with original name
+                    APP_LOGI("Dual mode: primary mode - category 7 app moved to non-queryable: %{public}s",
+                             originalBundleName.c_str());
+                    tempBundleInfos_[originalBundleName] = innerBundleInfo;
+                    it = bundleInfos_.erase(it);
+                    continue;
+                } else if (!isDualModeCloneKey) {
+                    // Category 7 app without prefix - shouldn't happen, but handle defensively
+                    APP_LOGW("Dual mode: category 7 app without prefix detected: %{public}s", dbKey.c_str());
+                }
+            }
+
+            // Handle non-category 7 apps based on mode flag
+            if (!DualModeHelper::IsDiffPackageCategory(appCategory)) {
+                if ((appCategory & modeFlag) != 0) {
+                    // App belongs to current mode - keep in bundleInfos_
+                    APP_LOGD("Dual mode: app belongs to current mode: %{public}s, category=%{public}d",
+                             dbKey.c_str(), appCategory);
+                } else {
+                    // App doesn't belong to current mode - move to tempBundleInfos_
+                    APP_LOGI("Dual mode: app moved to non-queryable: %{public}s, category=%{public}d",
+                             dbKey.c_str(), appCategory);
+                    tempBundleInfos_[dbKey] = innerBundleInfo;
+                    it = bundleInfos_.erase(it);
+                    continue;
+                }
+            }
+
+            ++it;
+        }
+
+        APP_LOGI("Dual mode: classification complete - queryable=%{public}zu, non-queryable=%{public}zu",
+                 bundleInfos_.size(), tempBundleInfos_.size());
+    } else {
+        APP_LOGI("Dual mode: no mode set, all apps are queryable");
+    }
+    // === DUAL MODE END ===
 
     if (bundleInfos_.empty()) {
         APP_LOGW("persistent data is empty");

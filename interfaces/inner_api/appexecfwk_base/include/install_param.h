@@ -70,6 +70,8 @@ struct InstallParam : public Parcelable {
     bool allUser = false;
     bool isPatch = false;
     bool isDataPreloadHap = false;
+    // application category for dual-mode (PC/PAD), default UNSPECIFIED
+    uint32_t appCategory = static_cast<uint32_t>(AppCategory::APP_CATEGORY_UNSPECIFIED);
     // allow patch app downgrade install
     bool allowPatchDowngrade = false;
     bool isCheckDebugApp = false;

@@ -250,6 +250,13 @@ constexpr int32_t CLONE_APP_INDEX_MIN = 1;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 constexpr const char* CLONE_PREFIX = "+clone-";
 constexpr const char* BMS_PARA_CLONE_IS_KEEP_DATA = "ohos.bms.param.clone.isKeepData";
+// dual mode (PC/PAD) application
+constexpr int32_t DUAL_MODE_CLONE_APP_INDEX = 10000;
+constexpr const char* DUAL_MODE_SYS_PARAM_KEY = "persist.sys.mode";
+constexpr const char* DUAL_MODE_PC = "pcmode";
+constexpr const char* DUAL_MODE_PAD = "padmode";
+constexpr const char* DUAL_MODE_DEVICE_TABLET = "tablet";
+constexpr const char* DUAL_MODE_DEVICE_2IN1 = "2in1";
 constexpr const char* BMS_TRUE = "true";
 // cli sandbox application
 constexpr int32_t CLI_SANDBOX_APP_INDEX_MIN = 2000;

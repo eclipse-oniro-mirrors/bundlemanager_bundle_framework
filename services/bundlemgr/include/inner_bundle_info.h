@@ -508,6 +508,22 @@ public:
         *baseApplicationInfo_ = applicationInfo;
     }
     /**
+     * @brief Set application category for dual-mode scenarios.
+     * @param appCategory Indicates the application category.
+     */
+    void SetAppCategory(uint32_t appCategory)
+    {
+        baseApplicationInfo_->appCategory = appCategory;
+    }
+    /**
+     * @brief Get application category for dual-mode scenarios.
+     * @return Return the application category value.
+     */
+    uint32_t GetAppCategory() const
+    {
+        return baseApplicationInfo_->appCategory;
+    }
+    /**
      * @brief Update baseApplicationInfo.
      * @param applicationInfo Indicates the ApplicationInfo object.
      * @param isEntry Indicates the isEntry.

@@ -215,6 +215,25 @@ protected:
 
     bool IsEnterpriseForAllUser(const InstallParam &installParam, const std::string &bundleName);
 
+    /**
+     * @brief Get the effective bundle name for directory and DB key operations.
+     * @return Returns dualModeBundleName_ if set (secondary mode category 7), otherwise bundleName_.
+     */
+    const std::string& GetEffectiveBundleName() const;
+
+    /**
+     * @brief Get the effective bundle name for directory and DB key operations with InnerBundleInfo.
+     * @param bundleInfo The InnerBundleInfo reference for fallback.
+     * @return Returns dualModeBundleName_ if set (secondary mode category 7), otherwise bundleInfo.GetBundleName().
+     */
+    std::string GetEffectiveBundleName(const InnerBundleInfo &bundleInfo) const;
+
+    /**
+     * @brief Get the original bundle name for InnerBundleInfo storage and queries.
+     * @return Returns the original bundleName_ (never prefixed).
+     */
+    const std::string& GetOriginalBundleName() const;
+
 private:
     // Delete the (bundleName, userId) preference row when the main app is uninstalled.
     // No-op when AppClonePreferenceDataMgr is unavailable (e.g. test env); logs the skip.
@@ -1076,7 +1095,8 @@ private:
     SingletonState singletonState_ = SingletonState::DEFAULT;
     BundleType bundleType_ = BundleType::APP;
     Security::AccessToken::AccessTokenID callerToken_ = 0;
-    std::string bundleName_;
+    std::string bundleName_;           // original bundle name (for InnerBundleInfo storage, queries)
+    std::string dualModeBundleName_;   // dual-mode bundle name with prefix (for directories, DB keys) - only used for secondary mode category 7
     std::string modulePath_;
     std::string baseDataPath_;
     std::string modulePackage_;
