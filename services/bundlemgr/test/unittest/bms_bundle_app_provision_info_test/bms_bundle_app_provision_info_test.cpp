@@ -1109,6 +1109,41 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0850, Fun
 }
 
 /**
+ * @tc.number: InnerSharedBundleInstallerTest_0870
+ * @tc.name: test ObtainHspFileAndSignatureFilePath with .hsp in directory name (substring bypass)
+ * @tc.desc: 1.Verify paths with .hsp only in directory name are rejected by EndWith check
+ *           2.Verify paths ending with .hsp are still accepted
+ *           3.Verify paths ending with .sig are still accepted
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0870, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+
+    // Test 1: .hsp in directory name only should be rejected
+    std::vector<std::string> inBundlePaths = {"/data/evil.hsp_dir/payload.bin"};
+    auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ONLY_HSP_OR_SIG_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR);
+
+    // Test 2: .hsp as suffix is still valid
+    bundlePaths.clear();
+    signatureFilePath.clear();
+    inBundlePaths = {HSP_FILE_PATH1};
+    ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(static_cast<int>(bundlePaths.size()), 1);
+
+    // Test 3: .sig as suffix is valid in multi-file path
+    bundlePaths.clear();
+    signatureFilePath.clear();
+    inBundlePaths = {HSP_FILE_PATH1, "test.sig"};
+    ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(signatureFilePath, "test.sig");
+}
+
+/**
  * @tc.number: InnerSharedBundleInstallerTest_0900
  * @tc.name: test the start function of ObtainTempSoPath
  * @tc.desc: 1.Test ObtainTempSoPath
