@@ -1987,7 +1987,7 @@ ErrCode BundleInstallChecker::CheckDeveloperMode(
     if (!hasDebugBundle) {
         return ERR_OK;
     }
-    if (system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, true)) {
+    if (system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
         return ERR_OK;
     }
     if (BundlePermissionMgr::VerifyPermissionByCallingTokenId(

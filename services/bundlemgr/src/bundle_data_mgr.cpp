@@ -6277,6 +6277,7 @@ bool BundleDataMgr::RegisterBundleStatusCallback(const sptr<IBundleStatusCallbac
             return false;
         }
         bundleStatusCallback->AsObject()->AddDeathRecipient(deathRecipient);
+        callbackDeathRecipientMap_[bundleStatusCallback->AsObject()] = deathRecipient;
     }
     return true;
 }
@@ -6300,6 +6301,7 @@ bool BundleDataMgr::RegisterBundleEventCallback(const sptr<IBundleEventCallback>
             return false;
         }
         bundleEventCallback->AsObject()->AddDeathRecipient(deathRecipient);
+        eventCallbackDeathRecipientMap_[bundleEventCallback->AsObject()] = deathRecipient;
     }
     eventCallbackList_.emplace_back(bundleEventCallback);
     return true;
@@ -6313,6 +6315,14 @@ bool BundleDataMgr::UnregisterBundleEventCallback(const sptr<IBundleEventCallbac
         return false;
     }
     std::lock_guard lock(eventCallbackMutex_);
+    auto remoteObject = bundleEventCallback->AsObject();
+    if (remoteObject != nullptr) {
+        auto it = eventCallbackDeathRecipientMap_.find(remoteObject);
+        if (it != eventCallbackDeathRecipientMap_.end()) {
+            remoteObject->RemoveDeathRecipient(it->second);
+            eventCallbackDeathRecipientMap_.erase(it);
+        }
+    }
     eventCallbackList_.erase(std::remove_if(eventCallbackList_.begin(), eventCallbackList_.end(),
         [&bundleEventCallback](const sptr<IBundleEventCallback> &callback) {
             return callback->AsObject() == bundleEventCallback->AsObject();
@@ -6341,6 +6351,14 @@ bool BundleDataMgr::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> 
 {
     APP_LOGD("ClearBundleStatusCallback %{public}s", bundleStatusCallback->GetBundleName().c_str());
     std::unique_lock<std::shared_mutex> lock(callbackMutex_);
+    auto remoteObject = bundleStatusCallback->AsObject();
+    if (remoteObject != nullptr) {
+        auto it = callbackDeathRecipientMap_.find(remoteObject);
+        if (it != callbackDeathRecipientMap_.end()) {
+            remoteObject->RemoveDeathRecipient(it->second);
+            callbackDeathRecipientMap_.erase(it);
+        }
+    }
     callbackList_.erase(std::remove_if(callbackList_.begin(),
         callbackList_.end(),
         [&](const sptr<IBundleStatusCallback> &callback) {
@@ -6353,6 +6371,16 @@ bool BundleDataMgr::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> 
 bool BundleDataMgr::UnregisterBundleStatusCallback()
 {
     std::unique_lock<std::shared_mutex> lock(callbackMutex_);
+    for (const auto &callback : callbackList_) {
+        if (callback != nullptr && callback->AsObject() != nullptr) {
+            auto remoteObject = callback->AsObject();
+            auto it = callbackDeathRecipientMap_.find(remoteObject);
+            if (it != callbackDeathRecipientMap_.end()) {
+                remoteObject->RemoveDeathRecipient(it->second);
+            }
+        }
+    }
+    callbackDeathRecipientMap_.clear();
     callbackList_.clear();
     return true;
 }
@@ -13519,6 +13547,7 @@ ErrCode BundleDataMgr::RegisterPluginEventCallback(const sptr<IBundleEventCallba
             return ERR_APPEXECFWK_NULL_PTR;
         }
         pluginEventCallback->AsObject()->AddDeathRecipient(deathRecipient);
+        pluginCallbackDeathRecipientMap_[pluginEventCallback->AsObject()] = deathRecipient;
     }
 
     auto &callbackList = pluginCallbackMap_[callingBundleName];
@@ -13539,6 +13568,14 @@ ErrCode BundleDataMgr::UnregisterPluginEventCallback(const sptr<IBundleEventCall
         return ERR_APPEXECFWK_NULL_PTR;
     }
     std::lock_guard lock(pluginCallbackMutex_);
+    auto remoteObject = pluginEventCallback->AsObject();
+    if (remoteObject != nullptr) {
+        auto it = pluginCallbackDeathRecipientMap_.find(remoteObject);
+        if (it != pluginCallbackDeathRecipientMap_.end()) {
+            remoteObject->RemoveDeathRecipient(it->second);
+            pluginCallbackDeathRecipientMap_.erase(it);
+        }
+    }
     auto iter = pluginCallbackMap_.find(callingBundleName);
     if (iter != pluginCallbackMap_.end()) {
         auto &callbackList = iter->second;
