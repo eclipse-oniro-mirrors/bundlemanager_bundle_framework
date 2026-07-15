@@ -708,7 +708,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     appPreloadPhase = static_cast<AppPreloadPhase>(parcel.ReadUint8());
     appSignType = Str16ToStr8(parcel.ReadString16());
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, &allowListenBundleChangedEvent);
-    isSupportMultiCard = parcel.ReadBool();
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSupportMultiCard);
     return true;
 }
 
