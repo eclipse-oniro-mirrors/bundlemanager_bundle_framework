@@ -99,22 +99,35 @@ ErrCode BundleBackupMgr::OnRestore(MessageParcel& data, MessageParcel& reply)
 
 ErrCode BundleBackupMgr::SaveToFile(const std::string& config)
 {
-    (void)remove(BACKUP_FILE_PATH);
-    FILE* fp = fopen(BACKUP_FILE_PATH, "w");
+    // 1. Create and write to temporary file
+    FILE* fp = fopen(BACKUP_TEMP_FILE_PATH, "w");
     if (!fp) {
-        APP_LOGE("Save config file: %{public}s, fopen() failed", BACKUP_FILE_PATH);
+        APP_LOGE("Save config temp file: %{public}s, fopen() failed", BACKUP_TEMP_FILE_PATH);
         return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
+
+    // 2. Write configuration content
     int32_t ret = static_cast<int32_t>(fwrite(config.c_str(), 1, config.length(), fp));
     if (ret != (int32_t)config.length()) {
-        APP_LOGE("Save config file: %{public}s, fwrite %{public}d failed", BACKUP_FILE_PATH, ret);
+        APP_LOGE("Save config temp file: %{public}s, fwrite %{public}d failed", BACKUP_TEMP_FILE_PATH, ret);
         (void)fclose(fp);
+        (void)remove(BACKUP_TEMP_FILE_PATH);  // Clean up temporary file
         return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
+
+    // 3. Ensure data is flushed to disk
     (void)fflush(fp);
     (void)fsync(fileno(fp));
     (void)fclose(fp);
-    APP_LOGI("Save config file %{public}zu", config.size());
+
+    // 4. Atomically replace old file
+    if (rename(BACKUP_TEMP_FILE_PATH, BACKUP_FILE_PATH) != 0) {
+        APP_LOGE("Rename temp file to target failed, errno: %{public}d", errno);
+        (void)remove(BACKUP_TEMP_FILE_PATH);  // Clean up temporary file
+        return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
+    }
+
+    APP_LOGI("Save config file %{public}zu successfully (atomic write)", config.size());
     return ERR_OK;
 }
 

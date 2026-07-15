@@ -1987,7 +1987,7 @@ ErrCode BundleInstallChecker::CheckDeveloperMode(
     if (!hasDebugBundle) {
         return ERR_OK;
     }
-    if (system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, true)) {
+    if (system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
         return ERR_OK;
     }
     if (BundlePermissionMgr::VerifyPermissionByCallingTokenId(
@@ -2215,7 +2215,7 @@ ErrCode BundleInstallChecker::CalculateInstallInodes(std::unordered_map<std::str
 {
     LOG_D(BMS_TAG_INSTALLER, "CalculateInstallInodes start");
 
-    uint32_t totalRequiredInodes = 0;
+    uint64_t totalRequiredInodes = 0;
     for (auto &infoPair : infos) {
         const std::string &bundlePath = infoPair.first;
         const InnerBundleInfo &innerBundleInfo = infoPair.second;
@@ -2247,9 +2247,9 @@ ErrCode BundleInstallChecker::CalculateInstallInodes(std::unordered_map<std::str
         + LEAST_FREE_INODE;
 
     LOG_D(BMS_TAG_INSTALLER,
-        "Inode check: totalRequired=%{public}u, withSafetyFactor=%{public}llu, "
+        "Inode check: totalRequired=%{public}llu, withSafetyFactor=%{public}llu, "
         "systemAvailable=%{public}llu, systemTotal=%{public}llu",
-        totalRequiredInodes,
+        static_cast<unsigned long long>(totalRequiredInodes),
         static_cast<unsigned long long>(requiredInodesWithSafety),
         static_cast<unsigned long long>(stat.f_ffree),
         static_cast<unsigned long long>(stat.f_files));

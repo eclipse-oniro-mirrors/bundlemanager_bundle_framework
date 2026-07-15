@@ -37,6 +37,7 @@ private:
     ErrCode LoadFromFile(int32_t fd, std::string& config);
 
     const char* BACKUP_FILE_PATH = "/data/service/el1/public/bms/bundle_manager_service/backup_config.conf";
+    const char* BACKUP_TEMP_FILE_PATH = "/data/service/el1/public/bms/bundle_manager_service/backup_config.conf.tmp";
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
