@@ -1493,6 +1493,11 @@ bool BundleMgrHostImpl::QueryAbilityInfoByUri(
 
 bool BundleMgrHostImpl::QueryKeepAliveBundleInfos(std::vector<BundleInfo> &bundleInfos)
 {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
+        return true;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
@@ -1762,6 +1767,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     if (InstalldClient::GetInstance()->CopyFile(hapRealPath, tempHapFile,
         BundleDirScene::COPY_HAP_TO_TEMP_PATH) != ERR_OK) {
         APP_LOGE("GetBundleArchiveInfo copy hap file failed");
+        BundleUtil::DeleteDir(tempHapPath);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (BundleUtil::CheckFileType(tempHapFile, ServiceConstants::APP_FILE_SUFFIX)) {
@@ -1771,6 +1777,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     auto ret = BundleUtil::CheckFilePath(tempHapFile, realPath);
     if (ret != ERR_OK) {
         APP_LOGE("CheckFilePath failed");
+        BundleUtil::DeleteDir(tempHapPath);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     InnerBundleInfo info;
@@ -3701,6 +3708,10 @@ ErrCode BundleMgrHostImpl::GetShortcutInfoV9(const std::string &bundleName,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        APP_LOGE("verify permission across local account failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -6027,6 +6038,10 @@ ErrCode BundleMgrHostImpl::CanOpenLink(
 ErrCode BundleMgrHostImpl::GetOdid(std::string &odid)
 {
     APP_LOGD("start GetOdid");
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
