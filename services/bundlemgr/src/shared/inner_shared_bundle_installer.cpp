@@ -647,8 +647,8 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
         return ERR_OK;
     }
     for (const auto &path : inBundlePaths) {
-        if ((path.find(ServiceConstants::HSP_FILE_SUFFIX) == std::string::npos) &&
-            (path.find(ServiceConstants::CODE_SIGNATURE_FILE_SUFFIX) == std::string::npos)) {
+        if (!BundleUtil::EndWith(path, ServiceConstants::HSP_FILE_SUFFIX) &&
+            !BundleUtil::EndWith(path, ServiceConstants::CODE_SIGNATURE_FILE_SUFFIX)) {
             APP_LOGE("only hsp or sig file can be contained in shared bundle dir");
             return ERR_APPEXECFWK_INSTALL_ONLY_HSP_OR_SIG_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR;
         }
