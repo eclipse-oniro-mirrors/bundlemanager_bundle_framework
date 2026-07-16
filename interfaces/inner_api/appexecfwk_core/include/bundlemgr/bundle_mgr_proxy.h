@@ -1339,6 +1339,8 @@ public:
 
     virtual ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
 
+    virtual ErrCode UpdateDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
+
     virtual ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) override;
 
     /**

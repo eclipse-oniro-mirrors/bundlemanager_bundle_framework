@@ -153,6 +153,8 @@ constexpr const char* ERR_MSG_APP_NOT_SUPPORTED_MULTI_TYPE =
     "The app does not support the creation of an appClone instance.";
 constexpr const char* ERR_MSG_SHORTCUT_ID_ILLEGAL =
     "The specified shortcut id is illegal.";
+constexpr const char* ERR_MSG_SHORTCUT_NOT_EXIST =
+    "The specified shortcut to be updated is not found.";
 constexpr const char* ERR_MSG_INSTALL_FAILED_INCONSISTENT_SIGNATURE =
     "Failed to install the HAP because an application with the same bundle name "
     "but different signature information exists on the device.";
@@ -283,6 +285,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_APPLICATION_UNINSTALL, ERROR_MSG_LOCKED_APPLICATION_UNINSTALL },
     { ERROR_APP_NOT_SUPPORTED_MULTI_TYPE, ERR_MSG_APP_NOT_SUPPORTED_MULTI_TYPE },
     { ERROR_SHORTCUT_ID_ILLEGAL_ERROR, ERR_MSG_SHORTCUT_ID_ILLEGAL },
+    { ERROR_SHORTCUT_MANAGER_NOT_EXIST, ERR_MSG_SHORTCUT_NOT_EXIST },
     { ERROR_INSTALL_FAILED_INCONSISTENT_SIGNATURE, ERR_MSG_INSTALL_FAILED_INCONSISTENT_SIGNATURE },
     { ERROR_INVALID_UNINSTALL_RULE, ERR_MSG_INVALID_UNINSTALL_RULE },
     { ERROR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL, ERR_MSG_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL },

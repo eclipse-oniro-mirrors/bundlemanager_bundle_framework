@@ -44,6 +44,8 @@ public:
     bool BatchInsert(int64_t &outInsertNum, const std::vector<NativeRdb::ValuesBucket> &valuesBuckets);
     bool UpdateData(const NativeRdb::ValuesBucket &valuesBucket,
         const NativeRdb::AbsRdbPredicates &absRdbPredicates);
+    bool UpdateData(const NativeRdb::ValuesBucket &valuesBucket,
+        const NativeRdb::AbsRdbPredicates &absRdbPredicates, int32_t &changedRows);
     bool DeleteData(const NativeRdb::AbsRdbPredicates &absRdbPredicates);
     std::shared_ptr<NativeRdb::ResultSet> QueryData(
         const NativeRdb::AbsRdbPredicates &absRdbPredicates);

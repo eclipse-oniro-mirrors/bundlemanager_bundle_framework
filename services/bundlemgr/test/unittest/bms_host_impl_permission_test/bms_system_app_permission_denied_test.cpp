@@ -652,6 +652,21 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0035, TestSize.Leve
 }
 
 /**
+ * @tc.number: BundleMgrHostImpl_0058
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: UpdateDesktopShortcutInfo SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0058, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    ShortcutInfo shortcutInfo;
+    int32_t userId = 0;
+    auto ret = localBundleMgrHostImpl->UpdateDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
  * @tc.number: BundleMgrHostImpl_0036
  * @tc.name: BmsSystemAppPermissionDeniedTest
  * @tc.desc: GetAllDesktopShortcutInfo SystemAppPermission Denied

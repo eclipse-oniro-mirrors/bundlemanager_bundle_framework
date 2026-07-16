@@ -6847,6 +6847,36 @@ ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcu
     return res;
 }
 
+ErrCode BundleMgrHostImpl::UpdateDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE_NOFUNC("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MANAGER_SHORTCUT)) {
+        APP_LOGE_NOFUNC("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        APP_LOGE_NOFUNC("verify permission across local account failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    ErrCode res = dataMgr->UpdateDesktopShortcutInfo(shortcutInfo, userId);
+    EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::UPDATE, userId, shortcutInfo.bundleName,
+        shortcutInfo.appIndex, shortcutInfo.id, IPCSkeleton::GetCallingUid(), res);
+    if (res != ERR_OK) {
+        APP_LOGE_NOFUNC("UpdateDesktopShortcutInfo failed");
+        return res;
+    }
+    return res;
+}
+
 ErrCode BundleMgrHostImpl::GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {

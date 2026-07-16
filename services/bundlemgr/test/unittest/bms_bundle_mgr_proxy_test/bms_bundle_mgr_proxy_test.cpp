@@ -1379,6 +1379,25 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAllShortcutInfoForSelf_0100, Function | Mediu
 }
 
 /**
+ * @tc.number: UpdateDesktopShortcutInfoProxy_0001
+ * @tc.name: test the UpdateDesktopShortcutInfo
+ * @tc.desc: test UpdateDesktopShortcutInfo proxy IPC serialization with null remote
+ */
+HWTEST_F(BmsBundleMgrProxyTest, UpdateDesktopShortcutInfoProxy_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.id = "id_test_update";
+    shortcutInfo.bundleName = "com.ohos.hello";
+    shortcutInfo.appIndex = 0;
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.UpdateDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_NE(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
+}
+
+/**
  * @tc.number: GreatOrEqualTargetAPIVersion_0100
  * @tc.name: test the GreatOrEqualTargetAPIVersion
  * @tc.desc: 1. system running normally

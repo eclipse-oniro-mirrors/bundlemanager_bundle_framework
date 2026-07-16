@@ -31,6 +31,7 @@ static napi_value ShortcutManagerExport(napi_env env, napi_value exports)
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("addDesktopShortcutInfo", AddDesktopShortcutInfo),
         DECLARE_NAPI_FUNCTION("deleteDesktopShortcutInfo", DeleteDesktopShortcutInfo),
+        DECLARE_NAPI_FUNCTION("updateDesktopShortcutInfo", UpdateDesktopShortcutInfo),
         DECLARE_NAPI_FUNCTION("getAllDesktopShortcutInfo", GetAllDesktopShortcutInfo),
         DECLARE_NAPI_FUNCTION("setShortcutVisibleForSelf", SetShortcutVisibleForSelf),
         DECLARE_NAPI_FUNCTION("getAllShortcutInfoForSelf", GetAllShortcutInfoForSelf),

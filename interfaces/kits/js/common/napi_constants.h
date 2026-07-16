@@ -246,6 +246,7 @@ constexpr const char* GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO = "GetAllUninstalle
 // shortcut_manager
 constexpr const char* ADD_DESKTOP_SHORTCUT_INFO = "AddDesktopShortcutInfo";
 constexpr const char* DELETE_DESKTOP_SHORTCUT_INFO = "DeleteDesktopShortcutInfo";
+constexpr const char* UPDATE_DESKTOP_SHORTCUT_INFO = "UpdateDesktopShortcutInfo";
 constexpr const char* GET_ALL_DESKTOP_SHORTCUT_INFO = "GetAllDesktopShortcutInfo";
 constexpr const char* SET_SHORTCUT_VISIBLE = "SetShortcutVisibleForSelf";
 constexpr const char* GET_ALL_SHORTCUT_INFO_FOR_SELF = "GetAllShortcutInfoForSelf";

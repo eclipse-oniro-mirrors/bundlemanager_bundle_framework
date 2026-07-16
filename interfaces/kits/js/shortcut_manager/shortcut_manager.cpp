@@ -192,6 +192,89 @@ napi_value DeleteDesktopShortcutInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
+static ErrCode InnerUpdateDesktopShortcutInfo(const OHOS::AppExecFwk::ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE_NOFUNC("Can not get iBundleMgr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    return iBundleMgr->UpdateDesktopShortcutInfo(shortcutInfo, userId);
+}
+
+void UpdateDesktopShortcutInfoExec(napi_env env, void *data)
+{
+    UpdateDesktopShortcutInfoCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<UpdateDesktopShortcutInfoCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE_NOFUNC("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err =
+        InnerUpdateDesktopShortcutInfo(asyncCallbackInfo->shortcutInfo, asyncCallbackInfo->userId);
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
+}
+
+void UpdateDesktopShortcutInfoComplete(napi_env env, napi_status status, void *data)
+{
+    UpdateDesktopShortcutInfoCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<UpdateDesktopShortcutInfoCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE_NOFUNC("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<UpdateDesktopShortcutInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_ONE] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+    } else {
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, UPDATE_DESKTOP_SHORTCUT_INFO,
+            PERMISSION_DYNAMIC_SHORTCUT_INFO);
+    }
+    CommonFunc::NapiReturnDeferred<UpdateDesktopShortcutInfoCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value UpdateDesktopShortcutInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGI_NOFUNC("Napi begin UpdateDesktopShortcutInfo");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE_NOFUNC("Args init is error");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    UpdateDesktopShortcutInfoCallbackInfo *asyncCallbackInfo =
+        new (std::nothrow) UpdateDesktopShortcutInfoCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE_NOFUNC("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<UpdateDesktopShortcutInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (args.GetArgc() == ARGS_SIZE_TWO) {
+        if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo) ||
+            !CommonFunc::CheckShortcutInfo(asyncCallbackInfo->shortcutInfo)) {
+            APP_LOGE_NOFUNC("ParseShortCutInfo is error");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
+            return nullptr;
+        }
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], asyncCallbackInfo->userId)) {
+            APP_LOGE_NOFUNC("Parse userId is error");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+            return nullptr;
+        }
+    } else {
+        APP_LOGE_NOFUNC("Parameter is invalid");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<UpdateDesktopShortcutInfoCallbackInfo>(env, asyncCallbackInfo,
+        "UpdateDesktopShortcutInfo", UpdateDesktopShortcutInfoExec, UpdateDesktopShortcutInfoComplete);
+    callbackPtr.release();
+    APP_LOGI_NOFUNC("Call UpdateDesktopShortcutInfo done");
+    return promise;
+}
+
 static ErrCode InnerGetAllDesktopShortcutInfo(
     int32_t userId, std::vector<OHOS::AppExecFwk::ShortcutInfo> &shortcutInfos)
 {

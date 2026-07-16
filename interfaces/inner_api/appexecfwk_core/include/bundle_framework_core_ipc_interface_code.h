@@ -269,6 +269,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_STRING_BY_ID_LIST = 243,
     GET_APP_CLONE_PREFERENCE = 244,
     SET_APP_CLONE_PREFERENCE = 245,
+    UPDATE_DESKTOP_SHORTCUT_INFO = 246,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

@@ -3030,6 +3030,159 @@ HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0004, Function | MediumTest | Le
 }
 
 /**
+ * @tc.number: UpdateDesktopShortcutInfo_0001
+ * @tc.name: UpdateDesktopShortcutInfo
+ * @tc.desc: test StorageRdb UpdateDesktopShortcutInfo normal/not-exist/null-rdb paths via changedRows
+ */
+HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    bool isIdIllegal = false;
+    bool ret = shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+    EXPECT_TRUE(ret);
+    int32_t changedRows = 0;
+    ret = shortcutDataStorageRdb->UpdateDesktopShortcutInfo(shortcutInfo, USERID, changedRows);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(changedRows, 1);
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_TRUE(ret);
+    changedRows = -1;
+    ret = shortcutDataStorageRdb->UpdateDesktopShortcutInfo(shortcutInfo, USERID, changedRows);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(changedRows, 0);
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+    changedRows = -1;
+    ret = shortcutDataStorageRdb->UpdateDesktopShortcutInfo(shortcutInfo, USERID, changedRows);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(changedRows, 0);
+}
+
+/**
+ * @tc.number: UpdateDesktopShortcutInfo_0002
+ * @tc.name: UpdateDesktopShortcutInfo
+ * @tc.desc: test UpdateDesktopShortcutInfo with invalid userId
+ */
+HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    int32_t userId = 10;
+    auto ret = bundleDataMgr.UpdateDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.UpdateDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: UpdateDesktopShortcutInfo_0003
+ * @tc.name: UpdateDesktopShortcutInfo
+ * @tc.desc: test UpdateDesktopShortcutInfo with non-existent bundleName returns ERR_SHORTCUT_MANAGER_SHORTCUT_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0003, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    bundleDataMgr.AddUserId(USERID);
+    auto ret = bundleDataMgr.UpdateDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_NE(ret, ERR_OK);
+    EXPECT_NE(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: UpdateDesktopShortcutInfo_0004
+ * @tc.name: UpdateDesktopShortcutInfo
+ * @tc.desc: test UpdateDesktopShortcutInfo with a disabled bundle returns ERR_BUNDLE_MANAGER_APPLICATION_DISABLED
+ */
+HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0004, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(USERID);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleUserInfo userInfo;
+    userInfo.userId = USERID;
+    userInfo.enabled = false;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo = userInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    auto ret = bundleDataMgr.UpdateDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
+    bundleDataMgr.bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: UpdateDesktopShortcutInfo_0005
+ * @tc.name: UpdateDesktopShortcutInfo
+ * @tc.desc: test UpdateDesktopShortcutInfo returns ERR_SHORTCUT_MANAGER_INTERNAL_ERROR when storage update fails
+ */
+HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0005, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(USERID);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    auto innerBundleInfo = CreateAddDynamicShortcutInfosInnerBundleInfo(shortcutInfo);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    auto storage = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(storage, nullptr);
+    storage->rdbDataManager_ = nullptr;
+    bundleDataMgr.shortcutStorage_ = storage;
+    auto ret = bundleDataMgr.UpdateDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(ret, ERR_SHORTCUT_MANAGER_INTERNAL_ERROR);
+    bundleDataMgr.bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: UpdateDesktopShortcutInfo_0006
+ * @tc.name: UpdateDesktopShortcutInfo
+ * @tc.desc: test UpdateDesktopShortcutInfo returns ERR_SHORTCUT_MANAGER_SHORTCUT_NOT_EXIST when shortcut absent
+ */
+HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0006, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(USERID);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    auto innerBundleInfo = CreateAddDynamicShortcutInfosInnerBundleInfo(shortcutInfo);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    ASSERT_NE(bundleDataMgr.shortcutStorage_, nullptr);
+    bundleDataMgr.shortcutStorage_->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    auto ret = bundleDataMgr.UpdateDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(ret, ERR_SHORTCUT_MANAGER_SHORTCUT_NOT_EXIST);
+    bundleDataMgr.bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: UpdateDesktopShortcutInfo_0007
+ * @tc.name: UpdateDesktopShortcutInfo
+ * @tc.desc: test UpdateDesktopShortcutInfo succeeds (ERR_OK) when the shortcut already exists in storage
+ */
+HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0007, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(USERID);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    auto innerBundleInfo = CreateAddDynamicShortcutInfosInnerBundleInfo(shortcutInfo);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    ASSERT_NE(bundleDataMgr.shortcutStorage_, nullptr);
+    bool isIdIllegal = false;
+    ASSERT_TRUE(bundleDataMgr.shortcutStorage_->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal));
+    auto ret = bundleDataMgr.UpdateDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(bundleDataMgr.shortcutStorage_->DeleteDesktopShortcutInfo(shortcutInfo, USERID));
+    bundleDataMgr.bundleInfos_.clear();
+}
+
+/**
  * @tc.number: DeleteDesktopShortcutInfo_0001
  * @tc.name: DeleteDesktopShortcutInfo
  * @tc.desc: test DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
@@ -7233,11 +7386,11 @@ HWTEST_F(BmsDataMgrTest, GenerateUuid_0001, TestSize.Level1)
 }
 
 /**
- * @tc.number: UpdateDesktopShortcutInfo_0001
+ * @tc.number: UpdateDesktopShortcutInfoByBundle_0001
  * @tc.name: UpdateDesktopShortcutInfo
  * @tc.desc: test UpdateDesktopShortcutInfo
  */
-HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0001, Function | MediumTest | Level1)
+HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfoByBundle_0001, Function | MediumTest | Level1)
 {
     std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
     ASSERT_NE(shortcutDataStorageRdb, nullptr);

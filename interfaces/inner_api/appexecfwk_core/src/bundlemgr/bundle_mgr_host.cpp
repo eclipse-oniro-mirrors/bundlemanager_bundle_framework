@@ -685,6 +685,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::DELETE_DESKTOP_SHORTCUT_INFO):
             errCode = this->HandleDeleteDesktopShortcutInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::UPDATE_DESKTOP_SHORTCUT_INFO):
+            errCode = this->HandleUpdateDesktopShortcutInfo(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_DESKTOP_SHORTCUT_INFO):
             errCode = this->HandleGetAllDesktopShortcutInfo(data, reply);
             break;
@@ -5179,6 +5182,24 @@ ErrCode BundleMgrHost::HandleDeleteDesktopShortcutInfo(MessageParcel &data, Mess
     ret = DeleteDesktopShortcutInfo(shortcutInfo, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleUpdateDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    ShortcutInfo shortcutInfo;
+    auto ret = ReadParcelInfoIntelligent(data, shortcutInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("Read ParcelInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    ret = UpdateDesktopShortcutInfo(shortcutInfo, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE_NOFUNC("Write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

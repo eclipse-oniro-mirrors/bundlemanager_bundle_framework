@@ -1248,6 +1248,7 @@ public:
 
     ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
     ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
+    ErrCode UpdateDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
     ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos);
     ErrCode DeleteDesktopShortcutInfo(const std::string &bundleName);
     ErrCode DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);

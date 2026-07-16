@@ -40,6 +40,13 @@ struct DeleteDesktopShortcutInfoCallbackInfo : public BaseCallbackInfo {
     OHOS::AppExecFwk::ShortcutInfo shortcutInfo;
 };
 
+struct UpdateDesktopShortcutInfoCallbackInfo : public BaseCallbackInfo {
+    explicit UpdateDesktopShortcutInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    int32_t userId = 0;
+    int32_t errCode = 0;
+    OHOS::AppExecFwk::ShortcutInfo shortcutInfo;
+};
+
 struct GetAllDesktopShortcutInfoCallbackInfo : public BaseCallbackInfo {
     explicit GetAllDesktopShortcutInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     int32_t userId = 0;
@@ -80,6 +87,7 @@ struct SetShortcutsEnabledCallbackInfo : public BaseCallbackInfo {
 
 napi_value AddDesktopShortcutInfo(napi_env env, napi_callback_info info);
 napi_value DeleteDesktopShortcutInfo(napi_env env, napi_callback_info info);
+napi_value UpdateDesktopShortcutInfo(napi_env env, napi_callback_info info);
 napi_value GetAllDesktopShortcutInfo(napi_env env, napi_callback_info info);
 napi_value SetShortcutVisibleForSelf(napi_env env, napi_callback_info info);
 napi_value GetAllShortcutInfoForSelf(napi_env env, napi_callback_info info);
