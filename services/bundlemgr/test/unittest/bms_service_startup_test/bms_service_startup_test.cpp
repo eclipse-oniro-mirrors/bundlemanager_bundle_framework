@@ -2142,6 +2142,94 @@ HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_GetPendingBundles_0100, 
 }
 
 /**
+ * @tc.number: OobePreloadUninstallMgr_GetPendingBundles_0200
+ * @tc.name: test LoadPendingBundlesLocked with non-object json
+ * @tc.desc: value is a valid bare JSON string → GetPendingBundles returns empty without crash
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_GetPendingBundles_0200, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES", "\"tampered_string_value\"");
+    OobePreloadUninstallMgr mgr;
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_TRUE(pending.empty());
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_GetPendingBundles_0300
+ * @tc.name: test LoadPendingBundlesLocked with non-array map values
+ * @tc.desc: value is a JSON object with string values instead of int arrays → returns empty without crash
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_GetPendingBundles_0300, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES",
+        "{\"com.example.app\": \"not_an_array\"}");
+    OobePreloadUninstallMgr mgr;
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_TRUE(pending.empty());
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_GetPendingBundles_0400
+ * @tc.name: test LoadPendingBundlesLocked with json array
+ * @tc.desc: value is a valid JSON array → returns empty without crash
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_GetPendingBundles_0400, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES", "[1, 2, 3]");
+    OobePreloadUninstallMgr mgr;
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_TRUE(pending.empty());
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_GetPendingBundles_0500
+ * @tc.name: test LoadPendingBundlesLocked with mixed-type map values
+ * @tc.desc: one valid array entry mixed with a non-array entry → rejected entirely, returns empty
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_GetPendingBundles_0500, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES",
+        "{\"com.example.ok\": [100], \"com.example.bad\": \"not_array\"}");
+    OobePreloadUninstallMgr mgr;
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_TRUE(pending.empty());
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_GetPendingBundles_0600
+ * @tc.name: test LoadPendingBundlesLocked with array of non-number items
+ * @tc.desc: array values contain string elements → rejected, returns empty
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_GetPendingBundles_0600, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES",
+        "{\"com.example.app\": [\"str1\", \"str2\"]}");
+    OobePreloadUninstallMgr mgr;
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_TRUE(pending.empty());
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+}
+
+/**
  * @tc.number: OobePreloadUninstallMgr_AddRemovePendingBundle_0100
  * @tc.name: test AddPendingBundle and RemovePendingBundle round trip
  * @tc.desc: add then remove pending bundle successfully
