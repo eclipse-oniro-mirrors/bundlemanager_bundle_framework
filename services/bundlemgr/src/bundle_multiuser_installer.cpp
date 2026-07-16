@@ -128,6 +128,9 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
+    auto &mtx = dataMgr_->GetBundleMutex(bundleName);
+    std::lock_guard<std::mutex> lock(mtx);
+
     // 1. check whether original application installed or not
     ScopeGuard bundleEnabledGuard([&] { dataMgr_->EnableBundle(bundleName); });
     InnerBundleInfo info;
