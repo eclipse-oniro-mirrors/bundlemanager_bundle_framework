@@ -1762,12 +1762,12 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         APP_LOGE("GetBundleArchiveInfo make temp dir failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    ScopeGuard tempHapPathGuard([tempHapPath] { BundleUtil::DeleteDir(tempHapPath); });
     std::string hapName = hapFilePath.substr(hapFilePath.find_last_of("//") + 1);
     std::string tempHapFile = tempHapPath + ServiceConstants::PATH_SEPARATOR + hapName;
     if (InstalldClient::GetInstance()->CopyFile(hapRealPath, tempHapFile,
         BundleDirScene::COPY_HAP_TO_TEMP_PATH) != ERR_OK) {
         APP_LOGE("GetBundleArchiveInfo copy hap file failed");
-        BundleUtil::DeleteDir(tempHapPath);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (BundleUtil::CheckFileType(tempHapFile, ServiceConstants::APP_FILE_SUFFIX)) {
@@ -1777,7 +1777,6 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     auto ret = BundleUtil::CheckFilePath(tempHapFile, realPath);
     if (ret != ERR_OK) {
         APP_LOGE("CheckFilePath failed");
-        BundleUtil::DeleteDir(tempHapPath);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     InnerBundleInfo info;
@@ -1786,11 +1785,9 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     ret = bundleParser.Parse(realPath, info, isAbcCompressed);
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
-        BundleUtil::DeleteDir(tempHapPath);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     SetProvisionInfoToInnerBundleInfo(realPath, info);
-    BundleUtil::DeleteDir(tempHapPath);
     if (fromV9) {
         info.GetBundleInfoV9(flags, bundleInfo, ServiceConstants::NOT_EXIST_USERID);
     } else {
