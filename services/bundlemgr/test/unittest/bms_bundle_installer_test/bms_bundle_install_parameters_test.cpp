@@ -2724,6 +2724,77 @@ HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0500, Function | SmallT
 }
 
 /**
+ * @tc.number: IsFileNameValid_0600
+ * @tc.name: test IsFileNameValid rejects paths starting with dot
+ * @tc.desc: 1. test "." ".." "./foo" ".hidden" all return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0600, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("."));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(".."));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("./foo"));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(".hidden"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0700
+ * @tc.name: test IsFileNameValid rejects double-slash traversal
+ * @tc.desc: 1. test "//.." patterns return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0700, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("foo//..bar"));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("/data//../etc"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0800
+ * @tc.name: test IsFileNameValid rejects backslash
+ * @tc.desc: 1. test paths containing '\\' return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0800, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("..\\"));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("C:\\windows\\path"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0900
+ * @tc.name: test IsFileNameValid rejects embedded NULL byte
+ * @tc.desc: 1. test paths containing '\\0' return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0900, Function | SmallTest | Level0)
+{
+    std::string pathWithNull("foo/bar", 8); // "foo/bar" + embedded \0
+    pathWithNull[3] = '\0';
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(pathWithNull));
+}
+
+/**
+ * @tc.number: IsFileNameValid_1000
+ * @tc.name: test IsFileNameValid rejects control characters
+ * @tc.desc: 1. test paths containing bytes < 0x20 return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_1000, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(std::string("test\x01", 5)));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(std::string("test\x1F", 5)));
+}
+
+/**
+ * @tc.number: IsFileNameValid_1100
+ * @tc.name: test IsFileNameValid accepts valid complex path (regression)
+ * @tc.desc: 1. test normal valid paths still return true
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_1100, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::IsFileNameValid("com.example.app"));
+    EXPECT_TRUE(InstalldOperator::IsFileNameValid("/data/app/el1/bundle/public/com.example.test"));
+    EXPECT_TRUE(InstalldOperator::IsFileNameValid("base.hap"));
+    EXPECT_TRUE(InstalldOperator::IsFileNameValid("test_file.txt"));
+}
+
+/**
  * @tc.number: CreateBundleDataDir_0100
  * @tc.name: test CreateBundleDataDir with invalid bundleName (empty string)
  * @tc.desc: 1. test empty bundleName should return param error (line 564-565)

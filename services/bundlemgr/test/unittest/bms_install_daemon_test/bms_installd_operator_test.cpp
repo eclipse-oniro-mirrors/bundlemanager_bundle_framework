@@ -2849,6 +2849,41 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidCertPath_0200, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: IsValidCertPath_0300
+ * @tc.name: test IsValidCertPath rejects traversal patterns
+ * @tc.desc: 1. test cert paths with ".." traversal patterns are rejected
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidCertPath_0300, Function | SmallTest | Level0)
+{
+    std::string certPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::ENTERPRISE_CERT_PATH + "../test.cer";
+    auto ret = InstalldOperator::IsValidCertPath(certPath);
+    EXPECT_FALSE(ret);
+
+    certPath = std::string(ServiceConstants::HAP_COPY_PATH) + ".." +
+        ServiceConstants::ENTERPRISE_CERT_PATH + "test.cer";
+    ret = InstalldOperator::IsValidCertPath(certPath);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsValidCertPath_0400
+ * @tc.name: test IsValidCertPath rejects non-.cer suffix and wrong prefix
+ * @tc.desc: 1. test cert paths outside cert dir or wrong suffix are rejected
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidCertPath_0400, Function | SmallTest | Level0)
+{
+    std::string certPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::ENTERPRISE_CERT_PATH + "test" + ServiceConstants::HSP_FILE_SUFFIX;
+    auto ret = InstalldOperator::IsValidCertPath(certPath);
+    EXPECT_FALSE(ret);
+
+    certPath = std::string("/data/evil") + ServiceConstants::CER_SUFFIX;
+    ret = InstalldOperator::IsValidCertPath(certPath);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: IsValidPathByCopyDirScene_0100
  * @tc.name: test IsValidPathByCopyDirScene
  * @tc.desc: test IsValidPathByCopyDirScene of InstalldOperator

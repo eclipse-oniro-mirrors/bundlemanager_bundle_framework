@@ -638,6 +638,18 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3200, Function | Sma
 }
 
 /**
+ * @tc.number: InstalldOperatorTest_3210
+ * @tc.name: test RenameDir with malformed newPath
+ * @tc.desc: 1. oldPath with '/' but non-existent, newPath without '/' should return false
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3210, Function | SmallTest | Level0)
+{
+    // oldPath has dir separator but doesn't exist, newPath has no separator
+    bool ret = InstalldOperator::RenameDir("/data/nonexistent_path_xy", "noSlashNewPath");
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: InstalldOperatorTest_3300
  * @tc.name: test function of InstalldOperator
  * @tc.desc: 1. calling RenameFile of InstalldOperator
@@ -2699,6 +2711,58 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15600, Function | Sm
     std::string emptyCertFilePath = "";
     std::string certContent = "test cert content";
     bool ret = InstalldOperator::WriteCertToFile(emptyCertFilePath, certContent);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15610
+ * @tc.name: test WriteCertToFile rejects empty certContent
+ * @tc.desc: 1. empty certContent should return false
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15610, Function | SmallTest | Level0)
+{
+    std::string certFilePath = "/data/test/cert.cer";
+    std::string emptyCertContent = "";
+    bool ret = InstalldOperator::WriteCertToFile(certFilePath, emptyCertContent);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15620
+ * @tc.name: test WriteCertToFile rejects non-X.509 content
+ * @tc.desc: 1. content without PEM/DER header should return false
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15620, Function | SmallTest | Level0)
+{
+    std::string certFilePath = "/data/test/cert.cer";
+    std::string invalidContent = "this is not a certificate";
+    bool ret = InstalldOperator::WriteCertToFile(certFilePath, invalidContent);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15630
+ * @tc.name: test WriteCertToFile rejects content too short
+ * @tc.desc: 1. content shorter than PEM header should return false
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15630, Function | SmallTest | Level0)
+{
+    std::string certFilePath = "/data/test/cert.cer";
+    std::string shortContent = "short";
+    bool ret = InstalldOperator::WriteCertToFile(certFilePath, shortContent);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15640
+ * @tc.name: test WriteCertToFile with valid PEM header but non-existent path
+ * @tc.desc: 1. valid PEM content should pass header check, fail on file open
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15640, Function | SmallTest | Level0)
+{
+    std::string certFilePath = "/data/test/nonexistent_dir/cert.cer";
+    std::string pemContent = "-----BEGIN CERTIFICATE-----\nMIIBxTCCAWugAwIBAgIUK0\n-----END CERTIFICATE-----";
+    bool ret = InstalldOperator::WriteCertToFile(certFilePath, pemContent);
     EXPECT_FALSE(ret);
 }
 

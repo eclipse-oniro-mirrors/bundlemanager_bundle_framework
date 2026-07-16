@@ -1544,11 +1544,27 @@ bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &
         return false;
     }
 
-    if (!(IsValidCodePath(realOldPath) && IsValidCodePath(newPath))) {
+    std::string realNewPath;
+    if (!PathToRealPath(newPath, realNewPath)) {
+        auto slashPos = newPath.rfind(ServiceConstants::PATH_SEPARATOR);
+        if (slashPos == std::string::npos) {
+            LOG_E(BMS_TAG_INSTALLD, "newPath has no directory separator");
+            return false;
+        }
+        std::string parentDir = newPath.substr(0, slashPos);
+        std::string realParentDir;
+        if (!PathToRealPath(parentDir, realParentDir)) {
+            LOG_E(BMS_TAG_INSTALLD, "realpath for newPath parent dir failed");
+            return false;
+        }
+        realNewPath = realParentDir + newPath.substr(slashPos);
+    }
+
+    if (!(IsValidCodePath(realOldPath) && IsValidCodePath(realNewPath))) {
         LOG_E(BMS_TAG_INSTALLD, "IsValidCodePath failed");
         return false;
     }
-    return RenameFile(realOldPath, newPath);
+    return RenameFile(realOldPath, realNewPath);
 }
 
 std::string InstalldOperator::GetPathDir(const std::string &path)
@@ -3737,9 +3753,26 @@ bool InstalldOperator::WriteCertToFile(const std::string &certFilePath, const st
         LOG_E(BMS_TAG_INSTALLD, "certFilePath is empty");
         return false;
     }
+    if (certContent.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "certContent is empty");
+        return false;
+    }
+    // validate X.509 PEM or DER header before writing to disk
+    const std::string pemHeader = "-----BEGIN CERTIFICATE-----";
+    if (certContent.size() < pemHeader.size()) {
+        LOG_E(BMS_TAG_INSTALLD, "certContent too short for valid certificate");
+        return false;
+    }
+    bool isPem = (certContent.compare(0, pemHeader.size(), pemHeader) == 0);
+    bool isDer = (static_cast<uint8_t>(certContent[0]) == 0x30);
+    if (!isPem && !isDer) {
+        LOG_E(BMS_TAG_INSTALLD, "certContent is not a valid X.509 certificate (PEM/DER)");
+        return false;
+    }
 
     std::string tmpPath = certFilePath + ".tmp";
-    int fd = open(tmpPath.c_str(), O_CREAT | O_TRUNC | O_WRONLY | O_UNCACHE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    int fd = open(tmpPath.c_str(), O_CREAT | O_TRUNC | O_WRONLY | O_UNCACHE | O_NOFOLLOW,
+        S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd < 0) {
         LOG_E(BMS_TAG_INSTALLD, "open tmp cert file failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
         return false;
@@ -3840,9 +3873,24 @@ bool InstalldOperator::IsFileNameValid(const std::string &fileName)
     if (fileName.empty()) {
         return false;
     }
-    if (fileName.find("../") != std::string::npos
-        || fileName.find("/..") != std::string::npos) {
+    if (fileName[0] == '.') {
         return false;
+    }
+    if (fileName.find("../") != std::string::npos
+        || fileName.find("/..") != std::string::npos
+        || fileName.find("//..") != std::string::npos) {
+        return false;
+    }
+    if (fileName.find('\\') != std::string::npos) {
+        return false;
+    }
+    if (fileName.find('\0') != std::string::npos) {
+        return false;
+    }
+    for (char c : fileName) {
+        if (static_cast<unsigned char>(c) < 0x20) {
+            return false;
+        }
     }
     return true;
 }
@@ -5547,9 +5595,29 @@ bool InstalldOperator::IsValidCertPath(const std::string& certPath)
         LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
         return false;
     }
-    return StartsWith(certPath,
-        std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH) &&
-        EndsWith(certPath, ServiceConstants::CER_SUFFIX);
+    auto slashPos = certPath.rfind('/');
+    if (slashPos == std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "certPath has no directory separator");
+        return false;
+    }
+    std::string parentDir = certPath.substr(0, slashPos);
+    std::string fileName = certPath.substr(slashPos);
+    std::string realParentDir;
+    std::string realPath;
+    if (PathToRealPath(parentDir, realParentDir)) {
+        realPath = realParentDir + fileName;
+    } else {
+        realPath = certPath;
+    }
+
+    std::string certDir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH;
+    std::string realCertDir;
+    if (PathToRealPath(certDir, realCertDir)) {
+        return StartsWith(realPath, realCertDir) &&
+            EndsWith(realPath, ServiceConstants::CER_SUFFIX);
+    }
+    return StartsWith(realPath, certDir) &&
+        EndsWith(realPath, ServiceConstants::CER_SUFFIX);
 }
 
 bool InstalldOperator::IsValidPathByCopyDirScene(const std::string &sourceDir, const std::string &destinationDir,
