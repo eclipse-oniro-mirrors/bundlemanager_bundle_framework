@@ -1064,7 +1064,7 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
     if (!abilityInfoResult) {
         std::vector<ExtensionAbilityInfo> extensionInfos;
         abilityInfoResult = bundleDataMgr_->QueryExtensionAbilityInfos(want, flags, userId, extensionInfos);
-        if (abilityInfoResult && moduleName.empty()) {
+        if (abilityInfoResult && moduleName.empty() && !extensionInfos.empty()) {
             moduleName = extensionInfos[0].moduleName;
         }
     } else {
