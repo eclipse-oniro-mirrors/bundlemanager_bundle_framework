@@ -151,6 +151,7 @@ const char* APPLICATION_ALTERNATE_ICON_MODULE_NAME = "curAlternateIconModuleName
 const char* APPLICATION_HWASAN_ENABLED = "hwasanEnabled";
 const char* APPLICATION_CLOUD_FILE_SYNC_ENABLED = "cloudFileSyncEnabled";
 const char* APPLICATION_CLOUD_STRUCTURED_DATA_SYNC_ENABLED = "cloudStructuredDataSyncEnabled";
+const char* APPLICATION_SUPPORT_MULTI_CARD = "isSupportMultiCard";
 const char* APPLICATION_APPLICATION_FLAGS = "applicationFlags";
 const char* APPLICATION_ALLOW_MULTI_PROCESS = "allowMultiProcess";
 const char* APPLICATION_UBSAN_ENABLED = "ubsanEnabled";
@@ -707,6 +708,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     appPreloadPhase = static_cast<AppPreloadPhase>(parcel.ReadUint8());
     appSignType = Str16ToStr8(parcel.ReadString16());
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, &allowListenBundleChangedEvent);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSupportMultiCard);
     return true;
 }
 
@@ -907,6 +909,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(appPreloadPhase));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appSignType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, allowListenBundleChangedEvent);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSupportMultiCard);
     return true;
 }
 
@@ -1178,7 +1181,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_START_MODE, applicationInfo.startMode},
         {APPLICATION_APP_PRELOAD_PHASE, applicationInfo.appPreloadPhase},
         {APPLICATION_APP_SIGN_TYPE, applicationInfo.appSignType},
-        {APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT, applicationInfo.allowListenBundleChangedEvent}
+        {APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT, applicationInfo.allowListenBundleChangedEvent},
+        {APPLICATION_SUPPORT_MULTI_CARD, applicationInfo.isSupportMultiCard}
     };
 }
 
@@ -1421,6 +1425,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd,
         APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT,
         applicationInfo.allowListenBundleChangedEvent, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_SUPPORT_MULTI_CARD,
+        applicationInfo.isSupportMultiCard, false, parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error : %{public}d", parseResult);
     }
