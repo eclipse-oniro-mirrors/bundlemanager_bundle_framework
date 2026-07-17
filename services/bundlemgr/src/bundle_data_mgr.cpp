@@ -10365,6 +10365,10 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
             break;
         }
     }
+    if (uniqueIdSet.find(uniqueId) != uniqueIdSet.end()) {
+        APP_LOGE_NOFUNC("uniqueId is full");
+        return;
+    }
 
     int32_t uid = userId * Constants::BASE_USER_RANGE + uniqueId + DATA_GROUP_UID_OFFSET;
     dataGroupInfo.uid = uid;

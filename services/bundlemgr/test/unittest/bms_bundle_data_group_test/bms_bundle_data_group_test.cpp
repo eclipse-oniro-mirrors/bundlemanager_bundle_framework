@@ -56,6 +56,7 @@ constexpr int32_t TEST_GROUP_INDEX_TWO = 2;
 constexpr int32_t TEST_GROUP_INDEX_THREE = 3;
 constexpr int32_t TEST_GROUP_INDEX_FORE = 4;
 const int32_t WAIT_TIME = 2;
+constexpr int32_t DATA_GROUP_INDEX_START = 1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 }  // namespace
 
@@ -664,6 +665,37 @@ HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupUuidAndUid_0010, Function | Sm
         EXPECT_NE(dataGroupInfo.uid, 0);
         EXPECT_EQ(dataGroupInfo.uid, dataGroupInfo.gid);
         EXPECT_NE(dataGroupInfo.uuid, "");
+    }
+}
+
+/**
+ * @tc.number: GenerateDataGroupUuidAndUid_0020
+ * @tc.name: test GenerateDataGroupUuidAndUid when uniqueIdSet is full
+ * @tc.desc: 1. GenerateDataGroupUuidAndUid with all available IDs occupied
+ *          2. Verify function returns early without modifying dataGroupInfo
+ */
+HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupUuidAndUid_0020, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uid = 0;
+        dataGroupInfo.gid = 0;
+        dataGroupInfo.uuid = "";
+        std::unordered_set<int32_t> uniqueIdSet;
+        // Fill all available IDs (from DATA_GROUP_INDEX_START to DATA_GROUP_UID_OFFSET - 1)
+        for (int32_t i = DATA_GROUP_INDEX_START; i < DATA_GROUP_UID_OFFSET; i++) {
+            uniqueIdSet.insert(i);
+        }
+        dataMgr->GenerateDataGroupUuidAndUid(dataGroupInfo, USERID, uniqueIdSet);
+
+        // When uniqueIdSet is full, function should return early
+        EXPECT_EQ(dataGroupInfo.uid, 0);
+        EXPECT_EQ(dataGroupInfo.gid, 0);
+        EXPECT_EQ(dataGroupInfo.uuid, "");
     }
 }
 
