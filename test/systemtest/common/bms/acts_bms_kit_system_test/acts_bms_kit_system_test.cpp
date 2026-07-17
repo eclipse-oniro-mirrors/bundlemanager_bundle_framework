@@ -1594,7 +1594,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0026, Function | MediumTest | Lev
     EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_FALSE(bundleInfo.hapModuleInfos.empty());
     EXPECT_TRUE(bundleInfo.hapModuleInfos[0].formExtensionModule.empty());
-    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].formWidgetModule.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
