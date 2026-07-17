@@ -31,6 +31,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES = "OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES";
+constexpr const char* OOBE_PENDING_BUNDLE_MAP = "OOBE_PENDING_BUNDLE_MAP";
 }
 
 OobePreloadUninstallMgr::OobePreloadUninstallMgr()
@@ -51,9 +52,20 @@ bool OobePreloadUninstallMgr::LoadPendingBundlesLocked(PendingBundleUserIds &pen
         pendingBundles.clear();
         return true;
     }
+    nlohmann::json jsonObject = nlohmann::json::parse(value.c_str(), nullptr, false, true);
+    if (jsonObject.is_discarded() || !jsonObject.is_object()) {
+        APP_LOGE("parse pending bundles json failed or not an object");
+        return false;
+    }
+    int32_t parseResult = ERR_OK;
+    nlohmann::json wrapper;
+    wrapper[OOBE_PENDING_BUNDLE_MAP] = std::move(jsonObject);
     std::map<std::string, std::vector<int32_t>> pendingBundleMap;
-    if (!ParseInfoFromJsonStr(value.c_str(), pendingBundleMap)) {
-        APP_LOGE("ParseInfoFromJsonStr failed");
+    GetMapValueIfFindKey<std::map<std::string, std::vector<int32_t>>>(
+        wrapper, wrapper.end(), OOBE_PENDING_BUNDLE_MAP, pendingBundleMap,
+        false, parseResult, JsonType::ARRAY, ArrayType::NUMBER);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("GetMapValueIfFindKey failed");
         return false;
     }
     PendingBundleUserIds tempPendingBundles;
