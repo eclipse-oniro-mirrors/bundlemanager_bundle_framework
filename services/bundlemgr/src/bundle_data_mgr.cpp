@@ -826,7 +826,7 @@ ErrCode BundleDataMgr::AddInnerBundleUserInfo(
     }
 
     std::lock_guard<std::mutex> stateLock(stateMutex_);
-    auto& info = bundleInfos_.at(bundleName);
+    InnerBundleInfo info = infoItem->second;
     info.AddInnerBundleUserInfo(newUserInfo);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     ErrCode ret = dataStorage_->SaveStorageBundleInfoWithCode(info);
@@ -834,6 +834,7 @@ ErrCode BundleDataMgr::AddInnerBundleUserInfo(
         APP_LOGW("update storage failed bundle:%{public}s, errcode:%{public}d", bundleName.c_str(), ret);
         return ret;
     }
+    infoItem->second = info;
     return ERR_OK;
 }
 
@@ -849,13 +850,14 @@ bool BundleDataMgr::RemoveInnerBundleUserInfo(
     }
 
     std::lock_guard<std::mutex> stateLock(stateMutex_);
-    auto& info = bundleInfos_.at(bundleName);
+    InnerBundleInfo info = infoItem->second;
     info.RemoveInnerBundleUserInfo(userId);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     if (!dataStorage_->SaveStorageBundleInfo(info)) {
         APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
         return false;
     }
+    infoItem->second = info;
 
     bundleStateStorage_->DeleteBundleState(bundleName, userId);
     return true;
