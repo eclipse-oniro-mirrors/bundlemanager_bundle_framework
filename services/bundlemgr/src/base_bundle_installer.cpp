@@ -4471,8 +4471,7 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     if (!supportDataCloneInstall_) {
         ExtractResourceFiles(info, modulePath);
         auto needFakeDecompression =
-            BundleUtil::IsSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive(), info.GetCurModuleName(),
-                info.GetTargetVersion(), info.GetCompatibleVersion());
+            BundleUtil::IsResFileSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive());
         auto isSystemApp = info.IsSystemApp();
         result = ExtractResFileDir(modulePath, needFakeDecompression, isSystemApp);
         if (result != ERR_OK) {
@@ -5519,8 +5518,8 @@ ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info, con
 {
     LOG_D(BMS_TAG_INSTALLER, "extract module to %{public}s", modulePath.c_str());
     auto needFakeDecompression = info.IsFakeDecompressionEnable() &&
-                                 BundleUtil::IsSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive(),
-                                     info.GetCurModuleName(), info.GetTargetVersion(), info.GetCompatibleVersion());
+                                 BundleUtil::IsSoSupportFakeDecompression(info.GetBundleName(), info.GetIsKeepAlive(),
+                                     modulePath_);
     auto isSystemApp = info.IsSystemApp();
     LOG_D(BMS_TAG_INSTALLER,
         "ExtractModuleFiles,targetSoPath:%{public}s modulePath:%{public}s needFakeDecompression:%{public}d",
