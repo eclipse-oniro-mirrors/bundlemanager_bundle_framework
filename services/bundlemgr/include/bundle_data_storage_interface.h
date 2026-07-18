@@ -51,8 +51,6 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     virtual bool DeleteStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) = 0;
-
-    virtual bool ResetKvStore() = 0;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

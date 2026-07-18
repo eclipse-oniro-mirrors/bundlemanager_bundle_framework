@@ -249,10 +249,5 @@ bool BundleDataStorageRdb::DeleteStorageBundleInfo(const InnerBundleInfo &innerB
     APP_LOGD("DeleteStorageBundleInfo %{public}d", ret);
     return ret;
 }
-
-bool BundleDataStorageRdb::ResetKvStore()
-{
-    return true;
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

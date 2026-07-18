@@ -303,20 +303,6 @@ HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0500, Function | SmallTest 
 }
 
 /**
- * @tc.number: BundleDataStorageRdb_0600
- * @tc.name: ResetKvStore
- * @tc.desc: 1.ResetKvStore
- * @tc.require: issueI56W8B
- */
-HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0600, Function | SmallTest | Level1)
-{
-    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
-    ASSERT_NE(dataStorage, nullptr);
-    bool ret = dataStorage->ResetKvStore();
-    EXPECT_TRUE(ret);
-}
-
-/**
  * @tc.number: BundleDataStorageRdb_0700
  * @tc.name: SaveStorageBundleInfo
  * @tc.desc: 1.SaveStorageBundleInfo
