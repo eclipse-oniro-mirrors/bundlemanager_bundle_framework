@@ -99,21 +99,32 @@ ErrCode BundleBackupMgr::OnRestore(MessageParcel& data, MessageParcel& reply)
 
 ErrCode BundleBackupMgr::SaveToFile(const std::string& config)
 {
-    (void)remove(BACKUP_FILE_PATH);
-    FILE* fp = fopen(BACKUP_FILE_PATH, "w");
+    std::string tempFilePath = std::string(BACKUP_FILE_PATH) + ".tmp";
+
+    FILE* fp = fopen(tempFilePath.c_str(), "w");
     if (!fp) {
-        APP_LOGE("Save config file: %{public}s, fopen() failed", BACKUP_FILE_PATH);
+        APP_LOGE("Save config file: %{public}s, fopen() failed", tempFilePath.c_str());
         return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
+
     int32_t ret = static_cast<int32_t>(fwrite(config.c_str(), 1, config.length(), fp));
     if (ret != (int32_t)config.length()) {
-        APP_LOGE("Save config file: %{public}s, fwrite %{public}d failed", BACKUP_FILE_PATH, ret);
+        APP_LOGE("Save config file: %{public}s, fwrite %{public}d failed", tempFilePath.c_str(), ret);
         (void)fclose(fp);
+        (void)remove(tempFilePath.c_str());
         return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
+
     (void)fflush(fp);
     (void)fsync(fileno(fp));
     (void)fclose(fp);
+
+    if (rename(tempFilePath.c_str(), BACKUP_FILE_PATH) != 0) {
+        APP_LOGE("Rename temp file to %{public}s failed, errno: %{public}d", BACKUP_FILE_PATH, errno);
+        (void)remove(tempFilePath.c_str());
+        return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
+    }
+
     APP_LOGI("Save config file %{public}zu", config.size());
     return ERR_OK;
 }

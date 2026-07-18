@@ -1706,6 +1706,10 @@ private:
     std::map<std::string, std::vector<sptr<IBundleEventCallback>>> pluginCallbackMap_;
     // using for bundle status
     std::unordered_map<std::string, std::set<int32_t>> installingBundleNames_;
+    // death recipient maps
+    std::map<sptr<IRemoteObject>, sptr<IRemoteObject::DeathRecipient>> callbackDeathRecipientMap_;
+    std::map<sptr<IRemoteObject>, sptr<IRemoteObject::DeathRecipient>> eventCallbackDeathRecipientMap_;
+    std::map<sptr<IRemoteObject>, sptr<IRemoteObject::DeathRecipient>> pluginCallbackDeathRecipientMap_;
 
     static bool HasAppLinkingFlag(uint32_t flags);
     static bool HasOnlySharedModules(const InnerBundleInfo &innerBundleInfo);
