@@ -377,17 +377,22 @@ void BundleDataMgr::ClassifyDualModeAppsNoLock()
                 continue;
             }
 
-            // Move from temp to bundleInfos_
+            // Move from temp to bundleInfos_. When bundleInfos_ already holds an entry under
+            // the same original name, swap the two so the temp entry (clone) becomes visible in
+            // bundleInfos_ and the existing entry (primary) stays hidden in tempBundleInfos_.
+            // Use a local copy: `it` aliases tempBundleInfos_[originalName], so writing through
+            // that key would clobber it->second before it is written back to bundleInfos_.
+            // Keep the swapped primary in tempBundleInfos_ (do NOT erase) so it stays hidden.
             auto existingIt = bundleInfos_.find(originalName);
             if (existingIt != bundleInfos_.end()) {
-                // Swap: replace bundleInfos_ content with temp content
-                // Move existing content to temp, then insert temp content to bundleInfos_
+                InnerBundleInfo tempInfo = it->second;
                 tempBundleInfos_[originalName] = existingIt->second;
+                bundleInfos_[originalName] = tempInfo;
+                ++it;
+            } else {
+                bundleInfos_[originalName] = it->second;
+                it = tempBundleInfos_.erase(it);
             }
-            // Insert temp content to bundleInfos_
-            bundleInfos_[originalName] = it->second;
-            // Erase current element and move to next
-            it = tempBundleInfos_.erase(it);
         }
     }
 
