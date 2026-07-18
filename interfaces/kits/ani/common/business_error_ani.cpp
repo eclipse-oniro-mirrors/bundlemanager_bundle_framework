@@ -137,13 +137,13 @@ void BusinessErrorAni::ThrowCommonNewError(ani_env *env, int32_t err,
 }
 
 void BusinessErrorAni::ThrowInstallError(ani_env *env, int32_t err, int32_t innerCode,
-    const std::string &parameter, const std::string &type)
+    const std::string &parameter, const std::string &type, bool needSplice)
 {
     if (env == nullptr) {
         APP_LOGE("err is nullptr");
         return;
     }
-    ani_object error = CreateInstallError(env, err, innerCode, parameter, type);
+    ani_object error = CreateInstallError(env, err, innerCode, parameter, type, needSplice);
     ThrowError(env, error);
 }
 
@@ -218,7 +218,7 @@ ani_object BusinessErrorAni::CreateNewCommonError(
 }
 
 ani_object BusinessErrorAni::CreateInstallError(ani_env *env, int32_t err, int32_t innerCode,
-    const std::string &functionName, const std::string &permissionName)
+    const std::string &functionName, const std::string &permissionName, bool needSplice)
 {
     if (env == nullptr) {
         APP_LOGE("err is nullptr");
@@ -234,7 +234,9 @@ ani_object BusinessErrorAni::CreateInstallError(ani_env *env, int32_t err, int32
     if (errMap.find(err) != errMap.end()) {
         errMessage += errMap[err];
     }
-    errMessage += "[" + std::to_string(innerCode) + "]";
+    if (needSplice) {
+        errMessage += "[" + std::to_string(innerCode) + "]";
+    }
     iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, functionName);

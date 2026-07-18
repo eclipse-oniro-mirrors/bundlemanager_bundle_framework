@@ -439,10 +439,12 @@ static void AniInstallPreexistingApp(ani_env* env, [[maybe_unused]] ani_object i
     if (aniUserId == Constants::UNSPECIFIED_USERID) {
         aniUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
-    ErrCode result = CommonFunc::ConvertErrCode(InstallerHelper::InnerInstallPreexistingApp(bundleName, aniUserId));
+    ErrCode result = InstallerHelper::InnerInstallPreexistingApp(bundleName, aniUserId);
+    int32_t innerCode = static_cast<int32_t>(result);
+    result = CommonFunc::ConvertErrCode(result);
     if (result != SUCCESS) {
-        BusinessErrorAni::ThrowCommonError(env, result,
-            INSTALL_PREEXISTING_APP, Constants::PERMISSION_INSTALL_BUNDLE);
+        BusinessErrorAni::ThrowInstallError(env, result, innerCode,
+            INSTALL_PREEXISTING_APP, Constants::PERMISSION_INSTALL_BUNDLE, false);
     }
 }
 
