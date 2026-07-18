@@ -171,21 +171,19 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
     }
     std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
     dataMgr->GetBundleCacheInfos(userId, validBundles, true);
-    if (!validBundles.empty()) {
-        auto getAllBundleCache = [validBundles, userId, processCacheCallback, startTime]() {
-            uint64_t cacheStat = 0;
-            APP_LOGI("thread for GetBundleCacheSize start");
-            GetBundleCacheSize(validBundles, userId, cacheStat);
-            processCacheCallback->OnGetAllBundleCacheFinished(cacheStat);
-            auto endTime = BundleUtil::GetCurrentTimeMs();
-            auto elapsedTime = endTime - startTime;
-            if (elapsedTime >= CACHE_TIMEOUT_MS) {
-                ReportCacheTimeOutEvent(HighRiskOperationType::GET_ALL_BUNDLE_CACHE_STAT_TIMEOUT,
-                    userId, startTime, endTime);
-            }
-        };
-        std::thread(getAllBundleCache).detach();
-    }
+    auto getAllBundleCache = [validBundles, userId, processCacheCallback, startTime]() {
+        uint64_t cacheStat = 0;
+        APP_LOGI("thread for GetBundleCacheSize start");
+        GetBundleCacheSize(validBundles, userId, cacheStat);
+        processCacheCallback->OnGetAllBundleCacheFinished(cacheStat);
+        auto endTime = BundleUtil::GetCurrentTimeMs();
+        auto elapsedTime = endTime - startTime;
+        if (elapsedTime >= CACHE_TIMEOUT_MS) {
+            ReportCacheTimeOutEvent(HighRiskOperationType::GET_ALL_BUNDLE_CACHE_STAT_TIMEOUT,
+                userId, startTime, endTime);
+        }
+    };
+    std::thread(getAllBundleCache).detach();
     APP_LOGI("GetAllBundleCacheStat succeed");
     return ERR_OK;
 }

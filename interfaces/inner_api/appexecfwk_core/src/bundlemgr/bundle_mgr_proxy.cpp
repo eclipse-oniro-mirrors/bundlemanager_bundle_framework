@@ -69,7 +69,6 @@ enum class AllBundleCacheSizeState : uint8_t {
 };
 std::shared_mutex g_cacheCallbackMutex;
 std::vector<sptr<IProcessCacheCallback>> g_bundleCacheCallBackList;
-std::shared_mutex g_cacheCallstateMutex;
 AllBundleCacheSizeState g_getAllBundleCacheSizeState = AllBundleCacheSizeState::GET_END;
 
 bool GetData(void *&buffer, size_t size, const void *data)
@@ -7008,46 +7007,44 @@ ErrCode BundleMgrProxy::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
     APP_LOGI("GetAllBundleCacheStat start");
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (processCacheCallback == nullptr) {
-        APP_LOGE("fail to CleanBundleCacheFiles due to params error");
+        APP_LOGE("fail to GetAllBundleCacheStat due to params error");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     ErrCode ret = ERR_OK;
-    std::unique_lock<std::shared_mutex> stateLock1(g_cacheCallstateMutex);
-    if (g_getAllBundleCacheSizeState == AllBundleCacheSizeState::GET_END) {
-        // set state GET_START
-        g_getAllBundleCacheSizeState = AllBundleCacheSizeState::GET_START;
-        stateLock1.unlock();
-        APP_LOGI("start first time");
-        uint64_t cacheSize = 0;
-        ret = GetAllBundleCacheStatExec(processCacheCallback);
-        if (ret == ERR_OK) {
-            cacheSize = processCacheCallback->GetCacheStat();
-            APP_LOGD("exec first time end, size: %{public}" PRIu64, cacheSize);
+    bool isFirstCaller = false;
+    {
+        std::unique_lock<std::shared_mutex> lock(g_cacheCallbackMutex);
+        if (g_getAllBundleCacheSizeState == AllBundleCacheSizeState::GET_END) {
+            g_getAllBundleCacheSizeState = AllBundleCacheSizeState::GET_START;
+            isFirstCaller = true;
+        } else {
+            g_bundleCacheCallBackList.emplace_back(processCacheCallback);
         }
-        std::unique_lock<std::shared_mutex> callBackListLock(g_cacheCallbackMutex);
-        if (!g_bundleCacheCallBackList.empty()) {
-            int count = 0;
-            // finish current callback
-            processCacheCallback->OnGetAllBundleCacheFinished(cacheSize);
-            // finish other callback
-            for (const auto& callback : g_bundleCacheCallBackList) {
-                count++;
-                callback->OnGetAllBundleCacheFinished(cacheSize);
-                APP_LOGD("exec count: %{public}d callback end", count);
-            }
-            g_bundleCacheCallBackList.clear();
-        }
-        callBackListLock.unlock();
-
-        std::unique_lock<std::shared_mutex> stateLock2(g_cacheCallstateMutex);
-        g_getAllBundleCacheSizeState = AllBundleCacheSizeState::GET_END;
-        stateLock2.unlock();
-    } else {
-        stateLock1.unlock();
-        std::unique_lock<std::shared_mutex> callBackListLock2(g_cacheCallbackMutex);
-        g_bundleCacheCallBackList.emplace_back(processCacheCallback);
-        callBackListLock2.unlock();
+    }
+    if (!isFirstCaller) {
         APP_LOGD("add new callback");
+        return ERR_OK;
+    }
+    APP_LOGI("start first time");
+    uint64_t cacheSize = 0;
+    ret = GetAllBundleCacheStatExec(processCacheCallback);
+    if (ret == ERR_OK) {
+        cacheSize = processCacheCallback->GetCacheStat();
+        APP_LOGD("exec first time end, size: %{public}" PRIu64, cacheSize);
+    }
+    // Take ownership of pending waiters and reopen the state atomically, so a
+    // newcomer either joins this batch or becomes the next FirstCaller; never stranded.
+    std::vector<sptr<IProcessCacheCallback>> waiters;
+    {
+        std::unique_lock<std::shared_mutex> lock(g_cacheCallbackMutex);
+        waiters.swap(g_bundleCacheCallBackList);
+        g_getAllBundleCacheSizeState = AllBundleCacheSizeState::GET_END;
+    }
+    // Notify outside the lock
+    processCacheCallback->OnGetAllBundleCacheFinished(cacheSize);
+    for (const auto& callback : waiters) {
+        callback->OnGetAllBundleCacheFinished(cacheSize);
+        APP_LOGD("exec callback");
     }
     return ret;
 }
