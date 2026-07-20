@@ -135,6 +135,7 @@ enum class BundleDirScene : int32_t {
     REMOVE_SKILL_BUNDLE_DIR = 531,
     REMOVE_VERIFY_FILE = 532,
     REMOVE_NPAPI_PLUGIN_DIR = 533,
+    REMOVE_SANDBOX_DIR = 534,
 
     // ChangeFileStat scenes
     CHANGE_BMS_FILE_STAT = 601,

@@ -192,6 +192,9 @@ static const std::map<BundleDirScene, std::vector<std::string>> ALLOWED_PATH_PRE
     {BundleDirScene::SCAN_DIR, { "/data/app/el1" }},
     {BundleDirScene::OBTAIN_QUICK_FIX_FILE_DIR, { "/data/app/el1/bundle/public"}},
     {BundleDirScene::HASH_SO_FILE, { "/data/app/el1/bundle/public"}},
+    {BundleDirScene::REMOVE_SANDBOX_DIR,
+        { "/data/app/el1/", "/data/app/el2/", "/data/app/el3/", "/data/app/el4/", "/data/app/el5/",
+            "/data/service/el1/", "/data/service/el2/" }},
 };
 
 static const std::set<std::string> ALLOWED_APL = {
@@ -5388,6 +5391,8 @@ bool InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(const std::string
                        StartsWith(dir, APP_EL4_PATH)) &&
                    (IsContainsPathPart(dir, ServiceConstants::BASE) ||
                        IsContainsPathPart(dir, ServiceConstants::DATABASE));
+        case BundleDirScene::REMOVE_SANDBOX_DIR:
+            return IsValidPathByBundleDirScene(BundleDirScene::REMOVE_SANDBOX_DIR, dir);
         default:
             return false;
     }
@@ -5435,6 +5440,7 @@ bool InstalldOperator::IsValidPathByRemoveDirScene(
         case BundleDirScene::REMOVE_QUICK_FIX_FILE:
         case BundleDirScene::REMOVE_SECURITY_QUICK_FIX_DIR:
         case BundleDirScene::REMOVE_SANDBOX_DATA_DIR:
+        case BundleDirScene::REMOVE_SANDBOX_DIR:
             return IsValidPathByRemoveDirSceneNoBundleName(dir, scene);
         default:
             return false;
