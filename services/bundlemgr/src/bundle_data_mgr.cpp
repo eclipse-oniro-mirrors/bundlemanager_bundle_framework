@@ -158,6 +158,7 @@ constexpr int8_t INVALID_BUNDLEID = -1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 constexpr int32_t MAX_APP_UID = 65535;
 constexpr int8_t ONLY_ONE_USER = 1;
+constexpr const char* LAST_ALLOCATED_BUNDLE_ID_KEY = "lastAllocatedBundleId";
 constexpr unsigned int OTA_CODE_ENCRYPTION_TIMEOUT = 4 * 60;
 const std::string FUNCATION_HANDLE_OTA_CODE_ENCRYPTION = "BundleDataMgr::HandleOTACodeEncryption()";
 const std::string BUNDLE_NAME = "BUNDLE_NAME";
@@ -194,6 +195,7 @@ BundleDataMgr::BundleDataMgr()
     if (baseAppUid_ < Constants::BASE_APP_UID || baseAppUid_ >= MAX_APP_UID) {
         baseAppUid_ = Constants::BASE_APP_UID;
     }
+    lastAllocatedBundleId_ = baseAppUid_;
     APP_LOGI("BundleDataMgr instance is created");
 }
 
@@ -6384,6 +6386,8 @@ ErrCode BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &
         APP_LOGD("first app install");
         bundleId = baseAppUid_;
         bundleIdMap_.emplace(bundleId, bundleName);
+        lastAllocatedBundleId_ = bundleId;
+        SaveLastAllocatedBundleId();
         return ERR_OK;
     }
 
@@ -6393,26 +6397,38 @@ ErrCode BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &
             return ERR_OK;
         }
     }
-    if (bundleIdMap_.rbegin()->first == MAX_APP_UID) {
-        for (int32_t i = baseAppUid_; i < bundleIdMap_.rbegin()->first; ++i) {
-            if (bundleIdMap_.find(i) == bundleIdMap_.end()) {
-                APP_LOGD("the %{public}d app install bundleName:%{public}s", i, bundleName.c_str());
-                bundleId = i;
-                bundleIdMap_.emplace(bundleId, bundleName);
-                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
-                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
-                return ERR_OK;
-            }
-        }
-        APP_LOGW("the bundleId exceeding the maximum value, bundleName:%{public}s", bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER;
-    }
 
-    bundleId = bundleIdMap_.rbegin()->first + 1;
-    bundleIdMap_.emplace(bundleId, bundleName);
-    BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
-    BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
-    return ERR_OK;
+    // Cursor-based allocation: start from lastAllocated+1 to avoid
+    // immediately reusing a bundleId that was just freed by uninstall.
+    // - Normal: cursor==max, next slot is naturally free
+    // - After uninstall: cursor > max, skipping the just-freed hole
+    // - Full map: wraps around to find the first free slot
+    int32_t start = lastAllocatedBundleId_;
+    int32_t cursor = start;
+    do {
+        cursor = (cursor >= MAX_APP_UID) ? baseAppUid_ : cursor + 1;
+        if (bundleIdMap_.find(cursor) == bundleIdMap_.end()) {
+            APP_LOGD("the %{public}d app install bundleName:%{public}s", cursor, bundleName.c_str());
+            bundleId = cursor;
+            bundleIdMap_.emplace(bundleId, bundleName);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
+            lastAllocatedBundleId_ = bundleId;
+            SaveLastAllocatedBundleId();
+            return ERR_OK;
+        }
+    } while (cursor != start);
+
+    APP_LOGW("the bundleId exceeding the maximum value, bundleName:%{public}s", bundleName.c_str());
+    return ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER;
+}
+
+void BundleDataMgr::SaveLastAllocatedBundleId()
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara != nullptr) {
+        bmsPara->SaveBmsParam(LAST_ALLOCATED_BUNDLE_ID_KEY, std::to_string(lastAllocatedBundleId_));
+    }
 }
 
 ErrCode BundleDataMgr::SetModuleUpgradeFlag(const std::string &bundleName,
@@ -6542,6 +6558,30 @@ bool BundleDataMgr::RestoreUidAndGid()
                     info.second.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
             }
         }
+    }
+    // Restore persisted cursor from BmsParam to survive reboot.
+    // Always attempt to read the persisted value regardless of map fullness.
+    // Example: after uninstalling bundleId 10001 (cursor persisted as 10001),
+    // map shrinks to {10000}. On reboot, if we fall back to max(map)==10000,
+    // the next allocation would immediately reuse 10001 — defeating the purpose.
+    bool restored = false;
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara != nullptr) {
+        std::string val;
+        if (bmsPara->GetBmsParam(LAST_ALLOCATED_BUNDLE_ID_KEY, val)) {
+            int32_t persisted = 0;
+            if (OHOS::StrToInt(val, persisted)
+                && persisted >= baseAppUid_ && persisted < MAX_APP_UID) {
+                lastAllocatedBundleId_ = persisted;
+                restored = true;
+            } else {
+                APP_LOGW("lastAllocatedBundleId value invalid, ignored: %{public}s", val.c_str());
+            }
+        }
+    }
+    // Fallback: use max key from restored bundleIdMap_
+    if (!restored && !bundleIdMap_.empty()) {
+        lastAllocatedBundleId_ = bundleIdMap_.rbegin()->first;
     }
     RestoreUidAndGidFromUninstallInfo();
     return true;
