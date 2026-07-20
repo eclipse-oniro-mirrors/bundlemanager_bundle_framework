@@ -116,9 +116,6 @@ const std::vector<int32_t> PACKINFO_FLAGS = {
     BundlePackFlag::GET_MODULE_SUMMARY,
 };
 
-thread_local std::mutex g_permissionsCallbackMutex;
-thread_local std::mutex g_anyPermissionsCallbackMutex;
-
 struct PermissionsKey {
     napi_ref callback = 0;
     std::vector<int32_t> uids;
