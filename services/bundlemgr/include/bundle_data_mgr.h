@@ -1438,6 +1438,7 @@ private:
     ErrCode ExplicitQueryAbilityInfoV9(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
         int32_t appIndex = 0) const;
     ErrCode GenerateBundleId(const std::string &bundleName, int32_t &bundleId);
+    void SaveLastAllocatedBundleId();
     int32_t GetUserIdByUid(int32_t uid) const;
     bool GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
     ErrCode GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
@@ -1661,6 +1662,7 @@ private:
 
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
+    int32_t lastAllocatedBundleId_ = Constants::BASE_APP_UID;  // monotonic cursor to avoid immediate reuse of freed ids
     mutable std::mutex stateMutex_;
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex hspBundleNameMutex_;

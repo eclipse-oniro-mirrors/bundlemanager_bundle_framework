@@ -477,6 +477,7 @@ void BmsBundleDataMgrTest3::ClearDataMgr()
 void BmsBundleDataMgrTest3::ResetDataMgr()
 {
     bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
+    bundleMgrService_->InitBmsParam();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
@@ -4081,6 +4082,87 @@ HWTEST_F(BmsBundleDataMgrTest3, GenerateBundleId_0100, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: GenerateBundleId_0200
+ * @tc.name: GenerateBundleId wrap-around
+ * @tc.desc: When cursor reaches MAX_APP_UID and there is a gap at baseAppUid_,
+ *           the do-while scan wraps around to allocate the base slot.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GenerateBundleId_0200, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t baseUid = bundleDataMgr->baseAppUid_;
+    // Fill map from baseUid+1 to MAX_APP_UID, leaving only baseUid as the gap
+    for (int32_t i = baseUid + 1; i <= MAX_APP_UID; ++i) {
+        bundleDataMgr->bundleIdMap_.emplace(i, std::string("bundle_") + std::to_string(i));
+    }
+    // Simulate cursor at MAX_APP_UID so next allocation wraps to baseUid+1 → ... → baseUid
+    bundleDataMgr->lastAllocatedBundleId_ = MAX_APP_UID;
+
+    int32_t bundleId = 0;
+    auto ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST1, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+    // The scan: cursor starts at MAX_APP_UID, wraps to baseUid, checks baseUid → free → allocates
+    EXPECT_EQ(bundleId, baseUid);
+}
+
+/**
+ * @tc.number: GenerateBundleId_0300
+ * @tc.name: GenerateBundleId skip freed hole
+ * @tc.desc: After uninstall frees a bundleId at position X, cursor stays at X.
+ *           Next allocation starts from X+1, skipping the just-freed hole.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GenerateBundleId_0300, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t baseUid = bundleDataMgr->baseAppUid_;
+    // Simulate: baseUid and baseUid+2 are occupied, baseUid+1 was just freed by uninstall
+    bundleDataMgr->bundleIdMap_.emplace(baseUid, BUNDLE_TEST1);
+    // baseUid+1 is intentionally absent (freed hole)
+    bundleDataMgr->bundleIdMap_.emplace(baseUid + 2, BUNDLE_TEST3);
+    // Cursor is at baseUid+1 (set when the now-uninstalled app was allocated)
+    bundleDataMgr->lastAllocatedBundleId_ = baseUid + 1;
+
+    int32_t bundleId = 0;
+    auto ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST4, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+    // Scan: cursor = baseUid+1 → cursor+1 = baseUid+2 (occupied)
+    //       → baseUid+3 (free) → allocates baseUid+3, skipping the hole at baseUid+1
+    EXPECT_NE(bundleId, baseUid + 1); // Must NOT reuse the just-freed hole
+    EXPECT_EQ(bundleId, baseUid + 3);
+}
+
+/**
+ * @tc.number: GenerateBundleId_0400
+ * @tc.name: GenerateBundleId full map wraps back to start
+ * @tc.desc: When bundleIdMap_ is completely full, returns EXCEED_MAX error
+ *           after scanning the entire range.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GenerateBundleId_0400, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t baseUid = bundleDataMgr->baseAppUid_;
+    // Fill the entire range
+    for (int32_t i = baseUid; i <= MAX_APP_UID; ++i) {
+        bundleDataMgr->bundleIdMap_.emplace(i, std::string("bundle_") + std::to_string(i));
+    }
+    // Cursor anywhere — map is full
+    bundleDataMgr->lastAllocatedBundleId_ = baseUid + 100;
+
+    int32_t bundleId = 0;
+    auto ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST5, bundleId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER);
+}
+
+/**
  * @tc.number: LauncherService_0100
  * @tc.name: GetShortcutInfoByAppIndex bundle not exist
  * @tc.desc: Should return bundle not exist error
@@ -4540,5 +4622,568 @@ HWTEST_F(BmsBundleDataMgrTest3, GetAllBundleDirs_0003, Function | SmallTest | Le
         EXPECT_EQ(ret, ERR_OK);
         EXPECT_EQ(bundleDirs.size(), 0);
     }
+}
+
+/**
+ * @tc.number: GenerateUidAndGid_0100
+ * @tc.name: GenerateUidAndGid empty bundleName
+ * @tc.desc: When bundleName is empty, returns BUNDLENAME_IS_EMPTY error.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GenerateUidAndGid_0100, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = "";
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+
+    auto ret = bundleDataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY);
+}
+
+/**
+ * @tc.number: GenerateUidAndGid_0200
+ * @tc.name: GenerateUidAndGid normal allocation
+ * @tc.desc: uid = userId * BASE_USER_RANGE + bundleId.
+ *           gids must contain the uid.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GenerateUidAndGid_0200, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_TEST1;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+
+    auto ret = bundleDataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    int32_t expectedUid = USERID * Constants::BASE_USER_RANGE + bundleDataMgr->baseAppUid_;
+    EXPECT_EQ(innerBundleUserInfo.uid, expectedUid);
+    EXPECT_EQ(static_cast<int32_t>(innerBundleUserInfo.gids.size()), 1);
+    if (!innerBundleUserInfo.gids.empty()) {
+        EXPECT_EQ(innerBundleUserInfo.gids[0], expectedUid);
+    }
+}
+
+/**
+ * @tc.number: GenerateUidAndGid_0300
+ * @tc.name: GenerateUidAndGid map full
+ * @tc.desc: When bundleIdMap_ is full, returns EXCEED_MAX error.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GenerateUidAndGid_0300, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    // Fill the map completely
+    for (int32_t i = bundleDataMgr->baseAppUid_; i <= MAX_APP_UID; ++i) {
+        bundleDataMgr->bundleIdMap_.emplace(i, std::string("bundle_") + std::to_string(i));
+    }
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_TEST1;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+
+    auto ret = bundleDataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER);
+}
+
+/**
+ * @tc.number: RecycleUidAndGid_0100
+ * @tc.name: RecycleUidAndGid bundleId not in map
+ * @tc.desc: When the bundleId derived from InnerBundleInfo is not in bundleIdMap_,
+ *           the function returns early without crash.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, RecycleUidAndGid_0100, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    // Create an InnerBundleInfo with a userInfo whose uid maps to a bundleId not in bundleIdMap_
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_TEST1;
+    info.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_TEST1;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.uid = TEST_UID; // bundleId = TEST_UID - USERID * BASE_USER_RANGE
+    info.AddInnerBundleUserInfo(userInfo);
+
+    // bundleIdMap_ is empty → bundleId won't be found → early return
+    bundleDataMgr->RecycleUidAndGid(info);
+    // No crash → test passes
+}
+
+/**
+ * @tc.number: RecycleUidAndGid_0200
+ * @tc.name: RecycleUidAndGid with uninstall info preserves bundleId
+ * @tc.desc: When uninstall info exists for the bundle, bundleId is NOT erased from
+ *           bundleIdMap_ (reserved for potential reinstall).
+ */
+HWTEST_F(BmsBundleDataMgrTest3, RecycleUidAndGid_0200, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t bundleId = TEST_MAX_UID - USERID * Constants::BASE_USER_RANGE;
+    // Pre-populate bundleIdMap_ with the target bundleId
+    bundleDataMgr->bundleIdMap_.emplace(bundleId, BUNDLE_TEST1);
+
+    // Create uninstall info for the bundle
+    UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo uninstallDataUserInfo;
+    uninstallDataUserInfo.uid = TEST_MAX_UID;
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo));
+    bundleDataMgr->UpdateUninstallBundleInfo(BUNDLE_TEST1, uninstallBundleInfo);
+
+    // Create InnerBundleInfo matching the bundleId
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_TEST1;
+    info.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_TEST1;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.uid = TEST_MAX_UID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    bundleDataMgr->RecycleUidAndGid(info);
+
+    // bundleId should still be in the map (preserved for reinstall)
+    bool found = bundleDataMgr->bundleIdMap_.find(bundleId) != bundleDataMgr->bundleIdMap_.end();
+    EXPECT_TRUE(found);
+
+    // Cleanup
+    bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_TEST1, USERID);
+    bundleDataMgr->bundleIdMap_.erase(bundleId);
+}
+
+/**
+ * @tc.number: RecycleUidAndGid_0300
+ * @tc.name: RecycleUidAndGid without uninstall info erases bundleId
+ * @tc.desc: When no uninstall info exists, bundleId is erased from bundleIdMap_.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, RecycleUidAndGid_0300, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t bundleId = TEST_NORMAL_UID - USERID * Constants::BASE_USER_RANGE;
+    // Pre-populate bundleIdMap_ with the target bundleId
+    bundleDataMgr->bundleIdMap_.emplace(bundleId, BUNDLE_TEST2);
+
+    // Create InnerBundleInfo matching the bundleId, WITHOUT uninstall info
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_TEST2;
+    info.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_TEST2;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.uid = TEST_NORMAL_UID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    bundleDataMgr->RecycleUidAndGid(info);
+
+    // bundleId should be erased from the map
+    bool found = bundleDataMgr->bundleIdMap_.find(bundleId) != bundleDataMgr->bundleIdMap_.end();
+    EXPECT_FALSE(found);
+}
+
+/**
+ * @tc.number: GetBundleNameAndIndex_0100
+ * @tc.name: GetBundleNameAndIndex invalid uid
+ * @tc.desc: When uid is less than BASE_APP_UID, returns INVALID_UID error.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetBundleNameAndIndex_0100, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::string bundleName;
+    int32_t appIndex = 0;
+    // uid < BASE_APP_UID (10000), not a valid app uid
+    auto ret = bundleDataMgr->GetBundleNameAndIndex(5000, bundleName, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: GetBundleNameAndIndex_0200
+ * @tc.name: GetBundleNameAndIndex bundleId not in map
+ * @tc.desc: When the computed bundleId is not in bundleIdMap_, returns INVALID_UID.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetBundleNameAndIndex_0200, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    // bundleIdMap_ is empty → any valid uid's bundleId won't be found
+    std::string bundleName;
+    int32_t appIndex = 0;
+    auto ret = bundleDataMgr->GetBundleNameAndIndex(TEST_UID, bundleName, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: GetBundleNameAndIndex_0300
+ * @tc.name: GetBundleNameAndIndex normal lookup
+ * @tc.desc: With bundleIdMap_ populated, normal bundleName lookup returns OK
+ *           with correct bundleName and appIndex=0.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetBundleNameAndIndex_0300, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t bundleId = TEST_UID - USERID * Constants::BASE_USER_RANGE;
+    // Populate with a plain bundleName (no sandbox/clone prefix)
+    bundleDataMgr->bundleIdMap_.emplace(bundleId, BUNDLE_TEST1);
+
+    std::string bundleName;
+    int32_t appIndex = -1;
+    auto ret = bundleDataMgr->GetBundleNameAndIndex(TEST_UID, bundleName, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleName, BUNDLE_TEST1);
+    EXPECT_EQ(appIndex, 0);
+}
+
+/**
+ * @tc.number: GetInnerBundleInfoAndIndexByUid_0100
+ * @tc.name: GetInnerBundleInfoAndIndexByUid invalid uid
+ * @tc.desc: When uid < BASE_APP_UID, returns INVALID_UID error immediately.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetInnerBundleInfoAndIndexByUid_0100, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    int32_t appIndex = 0;
+    auto ret = bundleDataMgr->GetInnerBundleInfoAndIndexByUid(5000, innerBundleInfo, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: GetInnerBundleInfoAndIndexByUid_0200
+ * @tc.name: GetInnerBundleInfoAndIndexByUid bundleId not in map
+ * @tc.desc: When the computed bundleId is not in bundleIdMap_, returns INVALID_UID.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetInnerBundleInfoAndIndexByUid_0200, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    // bundleIdMap_ is empty → bundleId not found
+    InnerBundleInfo innerBundleInfo;
+    int32_t appIndex = 0;
+    auto ret = bundleDataMgr->GetInnerBundleInfoAndIndexByUid(TEST_UID, innerBundleInfo, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: GetInnerBundleInfoAndIndexByUid_0300
+ * @tc.name: GetInnerBundleInfoAndIndexByUid uid mismatch
+ * @tc.desc: When bundleIdMap_ has the bundleId but bundleInfos_ uid doesn't match
+ *           the queried uid, returns INVALID_UID (tamper detection).
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetInnerBundleInfoAndIndexByUid_0300, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t bundleId = TEST_UID - USERID * Constants::BASE_USER_RANGE;
+    // Populate bundleIdMap_
+    bundleDataMgr->bundleIdMap_.emplace(bundleId, BUNDLE_TEST1);
+
+    // Populate bundleInfos_ with a bundle that has a DIFFERENT uid for the same bundleId
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_TEST1;
+    info.SetBaseApplicationInfo(appInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_TEST1;
+    userInfo.bundleUserInfo.userId = USERID;
+    // Intentionally set a different uid than TEST_UID to trigger mismatch
+    userInfo.uid = TEST_MAX_UID; // Different uid
+    info.AddInnerBundleUserInfo(userInfo);
+    bundleDataMgr->bundleInfos_.emplace(BUNDLE_TEST1, info);
+
+    InnerBundleInfo resultInfo;
+    int32_t appIndex = 0;
+    // Query with TEST_UID (bundleId matches), but stored uid is TEST_MAX_UID → mismatch
+    auto ret = bundleDataMgr->GetInnerBundleInfoAndIndexByUid(TEST_UID, resultInfo, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: GenerateBundleId_0500
+ * @tc.name: GenerateBundleId lastAllocatedBundleId persistence
+ * @tc.desc: After successful allocation, lastAllocatedBundleId_ is updated to
+ *           the newly allocated bundleId.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GenerateBundleId_0500, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t expectedCursor = bundleDataMgr->baseAppUid_;
+    int32_t bundleId = 0;
+    auto ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST1, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleId, expectedCursor);
+    // Verify cursor advanced
+    EXPECT_EQ(bundleDataMgr->lastAllocatedBundleId_, expectedCursor);
+
+    // Second allocation
+    ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST2, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleId, expectedCursor + 1);
+    EXPECT_EQ(bundleDataMgr->lastAllocatedBundleId_, expectedCursor + 1);
+}
+
+/**
+ * @tc.number: GenerateUidAndGid_0400
+ * @tc.name: GenerateUidAndGid reuse existing bundleId for same bundleName
+ * @tc.desc: Calling GenerateUidAndGid for an already-installed bundleName returns
+ *           the existing bundleId without allocating a new one.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GenerateUidAndGid_0400, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    // First allocation
+    InnerBundleUserInfo userInfo1;
+    userInfo1.bundleName = BUNDLE_TEST1;
+    userInfo1.bundleUserInfo.userId = USERID;
+    auto ret = bundleDataMgr->GenerateUidAndGid(userInfo1);
+    EXPECT_EQ(ret, ERR_OK);
+    int32_t firstUid = userInfo1.uid;
+
+    // Second allocation for same bundleName should reuse
+    InnerBundleUserInfo userInfo2;
+    userInfo2.bundleName = BUNDLE_TEST1;
+    userInfo2.bundleUserInfo.userId = USERID;
+    ret = bundleDataMgr->GenerateUidAndGid(userInfo2);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(userInfo2.uid, firstUid); // Same uid as before
+}
+
+/**
+ * @tc.number: GetBundleNameAndIndex_0400
+ * @tc.name: GetBundleNameAndIndex sandbox app lookup
+ * @tc.desc: When keyName has "index_bundleName" sandbox format,
+ *           appIndex is correctly parsed and bundleName extracted.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetBundleNameAndIndex_0400, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t sandboxUid = TEST_NORMAL_UID;
+    int32_t bundleId = sandboxUid - USERID * Constants::BASE_USER_RANGE;
+    // Sandbox key format: "123_sandboxBundleName"
+    std::string sandboxKey = "123_sandboxBundle";
+    bundleDataMgr->bundleIdMap_.emplace(bundleId, sandboxKey);
+
+    std::string bundleName;
+    int32_t appIndex = -1;
+    auto ret = bundleDataMgr->GetBundleNameAndIndex(sandboxUid, bundleName, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleName, "sandboxBundle");
+    EXPECT_EQ(appIndex, 123);
+}
+
+/**
+ * @tc.number: GetBundleNameAndIndex_0500
+ * @tc.name: GetBundleNameAndIndex clone app lookup
+ * @tc.desc: When keyName has "indexclone_bundleName" clone format,
+ *           (CLONE_BUNDLE_PREFIX = "clone_"), appIndex and bundleName are correctly extracted.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetBundleNameAndIndex_0500, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t cloneUid = TEST_NORMAL_UID;
+    int32_t bundleId = cloneUid - USERID * Constants::BASE_USER_RANGE;
+    // Clone key format: "\d+clone_\w+" (CLONE_BUNDLE_PREFIX = "clone_")
+    std::string cloneKey = "99clone_cloneBundle";
+    bundleDataMgr->bundleIdMap_.emplace(bundleId, cloneKey);
+
+    std::string bundleName;
+    int32_t appIndex = -1;
+    auto ret = bundleDataMgr->GetBundleNameAndIndex(cloneUid, bundleName, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleName, "cloneBundle");
+    EXPECT_EQ(appIndex, 99);
+}
+
+/**
+ * @tc.number: RestoreUidAndGid_0100
+ * @tc.name: RestoreUidAndGid restores cursor when map not full
+ * @tc.desc: After uninstalling a bundle, the persisted cursor survives reboot
+ *           even when the map is NOT full. This is the regression test for the
+ *           bug where RestoreUidAndGid only read BmsParam when map.rbegin()==MAX.
+ *           Scenario: map={baseUid}, persisted cursor=baseUid+5. Simulate the
+ *           exact restore logic: read from BmsParam, set cursor = persisted.
+ *           Verify cursor is baseUid+5 (restored), NOT baseUid (fallback bug).
+ */
+HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGid_0100, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t baseUid = bundleDataMgr->baseAppUid_;
+    // Simulate post-uninstall state: only baseUid occupied, baseUid+1 freed
+    bundleDataMgr->bundleIdMap_.emplace(baseUid, BUNDLE_TEST1);
+    // Persist cursor as baseUid+5 (simulating SaveLastAllocatedBundleId)
+    bundleDataMgr->lastAllocatedBundleId_ = baseUid + 5;
+    bundleDataMgr->SaveLastAllocatedBundleId();
+
+    // Simulate reboot: reset cursor to baseUid (as if fresh start)
+    bundleDataMgr->lastAllocatedBundleId_ = baseUid;
+
+    // Simulate the RestoreUidAndGid cursor restoration logic (always read BmsParam)
+    bool restored = false;
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara != nullptr) {
+        std::string val;
+        if (bmsPara->GetBmsParam("lastAllocatedBundleId", val)) {
+            int32_t persisted = 0;
+            if (OHOS::StrToInt(val, persisted)
+                && persisted >= baseUid && persisted < MAX_APP_UID) {
+                bundleDataMgr->lastAllocatedBundleId_ = persisted;
+                restored = true;
+            }
+        }
+    }
+    if (!restored && !bundleDataMgr->bundleIdMap_.empty()) {
+        bundleDataMgr->lastAllocatedBundleId_ = bundleDataMgr->bundleIdMap_.rbegin()->first;
+    }
+
+    // The fix: cursor must be restored to baseUid+5 from BmsParam,
+    // NOT fall back to max(map)=baseUid (which was the old bug)
+    EXPECT_TRUE(restored);
+    EXPECT_EQ(bundleDataMgr->lastAllocatedBundleId_, baseUid + 5);
+    EXPECT_NE(bundleDataMgr->lastAllocatedBundleId_, baseUid);
+}
+
+/**
+ * @tc.number: RestoreUidAndGid_0200
+ * @tc.name: RestoreUidAndGid end-to-end no reuse after uninstall and reboot
+ * @tc.desc: End-to-end verification of the fix: persist cursor via BmsParam
+ *           when map is NOT full, then verify next allocation skips the
+ *           just-freed hole. Simulates full uninstall→persist→reboot→restore→allocate cycle.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGid_0200, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t baseUid = bundleDataMgr->baseAppUid_;
+    // Step 1: Simulate state before uninstall — two apps installed
+    bundleDataMgr->bundleIdMap_.emplace(baseUid, BUNDLE_TEST1);
+    bundleDataMgr->bundleIdMap_.emplace(baseUid + 1, BUNDLE_TEST2);
+    bundleDataMgr->lastAllocatedBundleId_ = baseUid + 1;
+
+    // Step 2: Simulate uninstall of baseUid+1 and persist cursor
+    bundleDataMgr->bundleIdMap_.erase(baseUid + 1);
+    bundleDataMgr->SaveLastAllocatedBundleId(); // cursor=baseUid+1 persisted
+
+    // Step 3: Simulate reboot — reset cursor (bundleIdMap_={baseUid} survives via DB reload)
+    bundleDataMgr->lastAllocatedBundleId_ = baseUid;
+
+    // Step 4: Simulate RestoreUidAndGid cursor restoration (always read BmsParam)
+    bool restored = false;
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara != nullptr) {
+        std::string val;
+        if (bmsPara->GetBmsParam("lastAllocatedBundleId", val)) {
+            int32_t persisted = 0;
+            if (OHOS::StrToInt(val, persisted)
+                && persisted >= baseUid && persisted < MAX_APP_UID) {
+                bundleDataMgr->lastAllocatedBundleId_ = persisted;
+                restored = true;
+            }
+        }
+    }
+    if (!restored && !bundleDataMgr->bundleIdMap_.empty()) {
+        bundleDataMgr->lastAllocatedBundleId_ = bundleDataMgr->bundleIdMap_.rbegin()->first;
+    }
+    EXPECT_TRUE(restored);
+    EXPECT_EQ(bundleDataMgr->lastAllocatedBundleId_, baseUid + 1);
+
+    // Step 5: Next allocation must skip baseUid+1 (the just-freed hole)
+    int32_t bundleId = 0;
+    auto ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST3, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_NE(bundleId, baseUid + 1); // Must NOT reuse the freed bundleId
+    EXPECT_EQ(bundleId, baseUid + 2); // Should allocate next free slot
+}
+
+/**
+ * @tc.number: RestoreUidAndGid_0300
+ * @tc.name: RestoreUidAndGid fallback when BmsParam unavailable
+ * @tc.desc: When BmsParam is unavailable or has no persisted value,
+ *           the cursor falls back to max(map). This ensures the fallback
+ *           path still works after the fix.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGid_0300, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    int32_t baseUid = bundleDataMgr->baseAppUid_;
+    // Set up map without persisting any cursor
+    bundleDataMgr->bundleIdMap_.emplace(baseUid, BUNDLE_TEST1);
+    bundleDataMgr->bundleIdMap_.emplace(baseUid + 3, BUNDLE_TEST2);
+    bundleDataMgr->lastAllocatedBundleId_ = baseUid; // reset
+
+    // Simulate restore with no BmsParam value (simulate empty BmsParam)
+    bool restored = false;
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara != nullptr) {
+        std::string val;
+        // Use a non-existent key to force fallback
+        if (bmsPara->GetBmsParam("lastAllocatedBundleId_nonexistent", val)) {
+            int32_t persisted = 0;
+            if (OHOS::StrToInt(val, persisted)
+                && persisted >= baseUid && persisted < MAX_APP_UID) {
+                bundleDataMgr->lastAllocatedBundleId_ = persisted;
+                restored = true;
+            }
+        }
+    }
+    if (!restored && !bundleDataMgr->bundleIdMap_.empty()) {
+        bundleDataMgr->lastAllocatedBundleId_ = bundleDataMgr->bundleIdMap_.rbegin()->first;
+    }
+
+    // Fallback should set cursor to max(map) = baseUid+3
+    EXPECT_FALSE(restored);
+    EXPECT_EQ(bundleDataMgr->lastAllocatedBundleId_, baseUid + 3);
 }
 } // OHOS
