@@ -64,6 +64,7 @@ const std::string DEPRECATED_ARK_PROFILE_PATH = "/data/local/ark-profile";
 const std::string PGO_FILE_PATH = "pgo_files";
 const std::string VERIFY_FILE_SUFFIX = ".abc";
 const std::string FRAMEWORK_ARK_CACHE_PATH = "framework_ark_cache/";
+const std::string TEST_REMOVE_PATH = "/data/app/el2/100/sharefiles/test";
 }; // namespace
 class BmsInstalldOperatorTest : public testing::Test {
 public:
@@ -1345,6 +1346,9 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirScene_0300, Function | S
     ret =
         InstalldOperator::IsValidPathByRemoveDirScene(TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::SET_DIR_APL);
     EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_STRING, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SANDBOX_DIR);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -2428,6 +2432,12 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNoBundleName_0500, 
 
     dir = std::string(APP_EL4_PATH) + ServiceConstants::DATABASE + TEST_STRING;
     ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SANDBOX_DATA_DIR);
+    EXPECT_TRUE(ret);
+
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(TEST_STRING, BundleDirScene::REMOVE_SANDBOX_DIR);
+    EXPECT_FALSE(ret);
+    ret =
+        InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(TEST_REMOVE_PATH, BundleDirScene::REMOVE_SANDBOX_DIR);
     EXPECT_TRUE(ret);
 }
 
