@@ -5128,6 +5128,109 @@ HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRuleCache_0200, Function |
 }
 
 /**
+ * @tc.number: GetAppRunningControlRuleCache_0300
+ * @tc.name: Test GetAppRunningControlRuleCache with controlWant by AppControlManager
+ * @tc.desc: 1.SetAppRunningControlRuleCache with controlWant
+ *           2.GetAppRunningControlRuleCache returns true and deep-copies controlWant
+ *           3.Cached entry retains its own controlWant
+ */
+HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRuleCache_0300, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->appRunningControlRuleResult_.clear();
+    AppRunningControlRuleResult ruleParam;
+    ruleParam.controlMessage = CONTROL_MESSAGE;
+    ruleParam.controlWant = std::make_shared<Want>();
+    ruleParam.controlWant->SetParam("testKey", std::string("testValue"));
+    std::string key = APPID + std::string("_") + std::to_string(USERID);
+    appControlManager->SetAppRunningControlRuleCache(key, ruleParam);
+    AppRunningControlRuleResult rule;
+    auto ret = appControlManager->GetAppRunningControlRuleCache(key, rule);
+    EXPECT_TRUE(ret);
+    EXPECT_NE(rule.controlWant, nullptr);
+    EXPECT_NE(rule.controlWant.get(), ruleParam.controlWant.get())
+        << "controlWant should be a deep copy, not the same pointer";
+    EXPECT_EQ(rule.controlMessage, CONTROL_MESSAGE);
+    appControlManager->appRunningControlRuleResult_.clear();
+}
+
+/**
+ * @tc.number: GetAppRunningControlRuleCache_0400
+ * @tc.name: Test GetAppRunningControlRuleCache twice with controlWant for deep copy independence
+ * @tc.desc: 1.SetAppRunningControlRuleCache with controlWant
+ *           2.GetAppRunningControlRuleCache twice, both return independent deep copies
+ */
+HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRuleCache_0400, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->appRunningControlRuleResult_.clear();
+    AppRunningControlRuleResult ruleParam;
+    ruleParam.controlMessage = CONTROL_MESSAGE;
+    ruleParam.controlWant = std::make_shared<Want>();
+    std::string key = APPID + std::string("_") + std::to_string(USERID);
+    appControlManager->SetAppRunningControlRuleCache(key, ruleParam);
+    AppRunningControlRuleResult rule1;
+    auto ret1 = appControlManager->GetAppRunningControlRuleCache(key, rule1);
+    EXPECT_TRUE(ret1);
+    EXPECT_NE(rule1.controlWant, nullptr);
+    AppRunningControlRuleResult rule2;
+    auto ret2 = appControlManager->GetAppRunningControlRuleCache(key, rule2);
+    EXPECT_TRUE(ret2);
+    EXPECT_NE(rule2.controlWant, nullptr);
+    EXPECT_NE(rule1.controlWant.get(), rule2.controlWant.get())
+        << "Each call should produce an independent deep copy of controlWant";
+    appControlManager->appRunningControlRuleResult_.clear();
+}
+
+/**
+ * @tc.number: GetAppRunningControlRuleCache_0500
+ * @tc.name: Test GetAppRunningControlRuleCache with controlWant as nullptr in cache
+ * @tc.desc: 1.SetAppRunningControlRuleCache with controlWant=nullptr
+ *           2.GetAppRunningControlRuleCache returns true, rule.controlWant remains nullptr
+ */
+HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRuleCache_0500, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->appRunningControlRuleResult_.clear();
+    AppRunningControlRuleResult ruleParam;
+    ruleParam.controlMessage = CONTROL_MESSAGE;
+    ruleParam.controlWant = nullptr;
+    std::string key = APPID + std::string("_") + std::to_string(USERID);
+    appControlManager->SetAppRunningControlRuleCache(key, ruleParam);
+    AppRunningControlRuleResult rule;
+    auto ret = appControlManager->GetAppRunningControlRuleCache(key, rule);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(rule.controlWant, nullptr);
+    EXPECT_EQ(rule.controlMessage, CONTROL_MESSAGE);
+    appControlManager->appRunningControlRuleResult_.clear();
+}
+
+/**
+ * @tc.number: GetAppRunningControlRuleCache_0600
+ * @tc.name: Test GetAppRunningControlRuleCache after cache clear
+ * @tc.desc: 1.SetAppRunningControlRuleCache
+ *           2.Clear cache
+ *           3.GetAppRunningControlRuleCache returns false
+ */
+HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRuleCache_0600, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->appRunningControlRuleResult_.clear();
+    AppRunningControlRuleResult ruleParam;
+    ruleParam.controlMessage = CONTROL_MESSAGE;
+    std::string key = APPID + std::string("_") + std::to_string(USERID);
+    appControlManager->SetAppRunningControlRuleCache(key, ruleParam);
+    appControlManager->appRunningControlRuleResult_.clear();
+    AppRunningControlRuleResult rule;
+    auto ret = appControlManager->GetAppRunningControlRuleCache(key, rule);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: DeleteAppRunningControlRuleCache_0200
  * @tc.name: Test DeleteAppRunningControlRuleCache by AppControlManager
  * @tc.desc: 1.DeleteAppRunningControlRuleCache test
