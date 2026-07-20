@@ -1493,11 +1493,6 @@ bool BundleMgrHostImpl::QueryAbilityInfoByUri(
 
 bool BundleMgrHostImpl::QueryKeepAliveBundleInfos(std::vector<BundleInfo> &bundleInfos)
 {
-    if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
-        return true;
-    }
     auto dataMgr = GetDataMgrFromService();
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
@@ -3705,10 +3700,6 @@ ErrCode BundleMgrHostImpl::GetShortcutInfoV9(const std::string &bundleName,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify permission failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
-    }
-    if (!CheckAcrossUserPermission(userId)) {
-        APP_LOGE("verify permission across local account failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -6035,10 +6026,6 @@ ErrCode BundleMgrHostImpl::CanOpenLink(
 ErrCode BundleMgrHostImpl::GetOdid(std::string &odid)
 {
     APP_LOGD("start GetOdid");
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("Verify permission failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
-    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
