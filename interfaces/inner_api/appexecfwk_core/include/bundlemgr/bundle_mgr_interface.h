@@ -1962,6 +1962,11 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode UpdateDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;

@@ -769,6 +769,21 @@ HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0043, TestS
 }
 
 /**
+ * @tc.number: BundleMgrHostImpl_0086
+ * @tc.name: VerifyCallingPermissionsForAllDeniedTest
+ * @tc.desc: UpdateDesktopShortcutInfo VerifyCallingPermissionsForAll denied
+ */
+HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0086, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    ShortcutInfo shortcutInfo;
+    int32_t userId = 0;
+    auto ret = localBundleMgrHostImpl->UpdateDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: BundleMgrHostImpl_0044
  * @tc.name: VerifyCallingPermissionsForAllDeniedTest
  * @tc.desc: GetAllDesktopShortcutInfo VerifyCallingPermissionsForAll denied

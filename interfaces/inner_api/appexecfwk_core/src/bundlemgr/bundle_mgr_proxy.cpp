@@ -6822,6 +6822,31 @@ ErrCode BundleMgrProxy::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutIn
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::UpdateDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("UpdateDesktopShortcutInfo write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = WriteParcelInfoIntelligent(shortcutInfo, data);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("UpdateDesktopShortcutInfo write ParcelInfo fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE_NOFUNC("UpdateDesktopShortcutInfo write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::UPDATE_DESKTOP_SHORTCUT_INFO, data, reply)) {
+        APP_LOGE_NOFUNC("SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

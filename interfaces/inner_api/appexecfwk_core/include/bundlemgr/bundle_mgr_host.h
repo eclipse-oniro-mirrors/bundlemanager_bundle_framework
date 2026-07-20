@@ -991,6 +991,8 @@ private:
 
     ErrCode HandleDeleteDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleUpdateDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetAllDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleUpdateAppEncryptedStatus(MessageParcel &data, MessageParcel &reply);

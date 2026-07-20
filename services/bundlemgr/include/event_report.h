@@ -27,6 +27,7 @@ namespace AppExecFwk {
 namespace DesktopShortcutOperation {
     constexpr const char* ADD = "ADD";
     constexpr const char* DELETE = "DEL";
+    constexpr const char* UPDATE = "UPDATE";
 }
 enum class BMSEventType : uint8_t {
     UNKNOW = 0,

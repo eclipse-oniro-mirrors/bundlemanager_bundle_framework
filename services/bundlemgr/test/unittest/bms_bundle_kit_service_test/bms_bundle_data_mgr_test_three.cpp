@@ -2531,6 +2531,52 @@ HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostHandleDeleteDesktopShortcutInfo_000
 }
 
 /**
+ * @tc.number: BundleMgrHostHandleUpdateDesktopShortcutInfo_0001
+ * @tc.name: BundleMgrHostHandleUpdateDesktopShortcutInfo_0001
+ * ShortcutInfo
+ * @tc.desc: test HandleUpdateDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply) with empty parcel
+ */
+HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostHandleUpdateDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest3::InitShortcutInfo();
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    auto ret = localBundleMgrHost->HandleUpdateDesktopShortcutInfo(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostHandleUpdateDesktopShortcutInfo_0002
+ * @tc.name: BundleMgrHostHandleUpdateDesktopShortcutInfo_0002
+ * ShortcutInfo
+ * @tc.desc: test HandleUpdateDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply) with valid parcel
+ */
+HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostHandleUpdateDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest3::InitShortcutInfo();
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    Parcel tmpParcel;
+    ASSERT_TRUE(tmpParcel.WriteParcelable(&shortcutInfo));
+    size_t dataSize = tmpParcel.GetDataSize();
+    ASSERT_TRUE(data.WriteUint32(dataSize));
+    ASSERT_TRUE(data.WriteRawData(reinterpret_cast<uint8_t *>(tmpParcel.GetData()), dataSize));
+    int32_t userId = 100;
+    ASSERT_TRUE(data.WriteInt32(userId));
+
+    auto ret = localBundleMgrHost->HandleUpdateDesktopShortcutInfo(data, reply);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(reply.ReadInt32(), ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
  * @tc.number: TriggerFallbackEvent_0001
  * @tc.name: TriggerFallbackEvent_0001
  * @tc.desc: test TriggerFallbackEvent_0001

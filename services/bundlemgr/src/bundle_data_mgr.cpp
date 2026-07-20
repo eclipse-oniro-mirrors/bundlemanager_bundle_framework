@@ -12747,6 +12747,42 @@ ErrCode BundleDataMgr::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInf
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::UpdateDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGW_NOFUNC("Input invalid userid, userId:%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    bool isEnabled = false;
+    ErrCode ret = IsApplicationEnabled(shortcutInfo.bundleName, shortcutInfo.appIndex, isEnabled, userId);
+    if (ret != ERR_OK) {
+        APP_LOGI_NOFUNC(
+            "IsApplicationEnabled ret:%{public}d, bundleName:%{public}s, appIndex:%{public}d, userId:%{public}d",
+            ret, shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
+        return ret;
+    }
+    if (!isEnabled) {
+        APP_LOGI_NOFUNC("BundleName: %{public}s is disabled, appIndex:%{public}d, userId:%{public}d",
+            shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+    }
+    int32_t changedRows = 0;
+    if (!shortcutStorage_->UpdateDesktopShortcutInfo(shortcutInfo, userId, changedRows)) {
+        APP_LOGE_NOFUNC("UpdateDesktopShortcutInfo failed, bundleName:%{public}s, id:%{public}s",
+            shortcutInfo.bundleName.c_str(), shortcutInfo.id.c_str());
+        return ERR_SHORTCUT_MANAGER_INTERNAL_ERROR;
+    }
+    if (changedRows == 0) {
+        APP_LOGI_NOFUNC("Shortcut not exist, bundleName:%{public}s, id:%{public}s, userId:%{public}d",
+            shortcutInfo.bundleName.c_str(), shortcutInfo.id.c_str(), userId);
+        return ERR_SHORTCUT_MANAGER_SHORTCUT_NOT_EXIST;
+    }
+    APP_LOGI_NOFUNC("UpdateDesktopShortcutInfo -n %{public}s -i %{public}d, -u %{public}d",
+        shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
 {
     int32_t requestUserId = GetUserId(userId);

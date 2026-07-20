@@ -7229,6 +7229,31 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAcrossUserPermission_0500, Function | Sma
 }
 
 /**
+ * @tc.number: UpdateDesktopShortcutInfoAcrossUser_0100
+ * @tc.name: test UpdateDesktopShortcutInfo not blocked for legitimate cross-user caller
+ * @tc.desc: 1. caller is system app, MANAGE_SHORTCUT granted, non-native token
+ *           2. target userId (100) differs from calling uid's user (0) and is not UNSPECIFIED_USERID
+ *           3. with INTERACT_ACROSS_LOCAL_ACCOUNTS granted, CheckAcrossUserPermission returns true
+ *           4. method must pass the across-user gate and reach the data layer without being denied
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateDesktopShortcutInfoAcrossUser_0100, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetVerifyCallingPermissionForTest(true); // grants both MANAGE_SHORTCUT and INTERACT_ACROSS_LOCAL_ACCOUNTS
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ShortcutInfo shortcutInfo;
+    int32_t userId = 100; // differs from GetUserIdByCallingUid() (0); not UNSPECIFIED_USERID (-2)
+    ErrCode ret = hostImpl->UpdateDesktopShortcutInfo(shortcutInfo, userId);
+
+    // Cross-user caller with proper permission must pass the across-user gate.
+    EXPECT_NE(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
  * @tc.number: PluginBundleInfoTest
  * @tc.name: PluginBundleInfoTest to_json and from_json branch cover
  * @tc.desc: 1.Test to_json and from_json
