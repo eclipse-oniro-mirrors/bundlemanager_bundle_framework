@@ -508,6 +508,22 @@ public:
         *baseApplicationInfo_ = applicationInfo;
     }
     /**
+     * @brief Set application category for dual-mode scenarios.
+     * @param appCategory Indicates the application category.
+     */
+    void SetAppCategory(AppCategory appCategory)
+    {
+        baseApplicationInfo_->appCategory = appCategory;
+    }
+    /**
+     * @brief Get application category for dual-mode scenarios.
+     * @return Return the application category value.
+     */
+    AppCategory GetAppCategory() const
+    {
+        return baseApplicationInfo_->appCategory;
+    }
+    /**
      * @brief Update baseApplicationInfo.
      * @param applicationInfo Indicates the ApplicationInfo object.
      * @param isEntry Indicates the isEntry.
@@ -2488,6 +2504,14 @@ public:
     {
         return isDelayAging_;
     }
+    void SetDualModeCloneApp(bool isDualModeCloneApp)
+    {
+        isDualModeCloneApp_ = isDualModeCloneApp;
+    }
+    bool IsDualModeCloneApp() const
+    {
+        return isDualModeCloneApp_;
+    }
     bool isAbilityNameExist(const std::string &moduleName, const std::string &abilityName) const;
     bool GetPluginBundleInfoByName(
         const int32_t userId, const std::string pluginBundleName, PluginBundleInfo &pluginBundleInfo) const;
@@ -2539,6 +2563,9 @@ private:
 
     // atomicservice Service Delay Aging
     bool isDelayAging_ = false;
+
+    // Dual-mode: true if installed as secondary-mode category-7 app (DB key + dir prefixed).
+    bool isDualModeCloneApp_ = false;
     
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
     int32_t appIndex_ = Constants::INITIAL_APP_INDEX;
