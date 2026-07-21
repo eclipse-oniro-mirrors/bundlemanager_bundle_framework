@@ -116,6 +116,7 @@ void BmsBundleAccessTokenIdTest::SetUpTestCase()
 void BmsBundleAccessTokenIdTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    sleep(1);
 }
 
 void BmsBundleAccessTokenIdTest::SetUp()
