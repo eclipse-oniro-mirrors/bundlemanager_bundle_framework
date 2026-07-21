@@ -491,7 +491,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForException(const std::string &bundleNa
         Security::Verify::HapVerifyResult hapVerifyResult;
         BundleVerifyMgr::HapVerify(hapPath, hapVerifyResult);
         Security::Verify::ProvisionInfo provision =  hapVerifyResult.GetProvisionInfo();
-        APP_LOGD("developerCert:%{public}s", provision.developerCert.c_str());
+        APP_LOGD("developerCert:%{private}s", provision.developerCert.c_str());
         bundleInfoForException.hapHashValueAndDevelopCerts[i].developCert = provision.developerCert;
     }
     
