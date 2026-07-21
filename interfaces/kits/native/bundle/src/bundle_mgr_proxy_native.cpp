@@ -258,14 +258,14 @@ ErrCode BundleMgrProxyNative::GetParcelInfoFromAshMem(MessageParcel &reply, void
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t ashMemSize = ashMem->GetAshmemSize();
+    if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY)) {
+        APP_LOGE("failed due to wrong size");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     int32_t offset = 0;
     const void* ashDataPtr = ashMem->ReadFromAshmem(ashMemSize, offset);
     if (ashDataPtr == nullptr) {
         APP_LOGE("ashDataPtr is nullptr");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY)) {
-        APP_LOGE("failed due to wrong size");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     data = malloc(ashMemSize);

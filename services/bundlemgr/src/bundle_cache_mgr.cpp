@@ -157,6 +157,10 @@ ErrCode BundleCacheMgr::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
 ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)
 {
     APP_LOGI("start");
+    if (processCacheCallback == nullptr) {
+        APP_LOGE("GetAllBundleCacheStat processCacheCallback is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     const int64_t startTime = BundleUtil::GetCurrentTimeMs();
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -227,6 +231,10 @@ ErrCode BundleCacheMgr::CleanBundleCache(const std::vector<std::tuple<std::strin
 ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
 {
     APP_LOGI("start");
+    if (processCacheCallback == nullptr) {
+        APP_LOGE("processCacheCallback is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     const int64_t startTime = BundleUtil::GetCurrentTimeMs();
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -257,6 +265,8 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
             }
         };
         std::thread(CleanAllBundleCache).detach();
+    } else {
+        processCacheCallback->OnCleanAllBundleCacheFinished(ERR_OK);
     }
     return ERR_OK;
 }

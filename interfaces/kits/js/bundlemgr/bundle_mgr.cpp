@@ -175,6 +175,7 @@ static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr()
             auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
             if (bundleMgr == nullptr) {
                 APP_LOGE("GetBundleMgr iface_cast get null");
+                return nullptr;
             }
             bundleMgr_ = bundleMgr;
             bundleMgr_->AsObject()->AddDeathRecipient(bundleMgrDeathRecipient);

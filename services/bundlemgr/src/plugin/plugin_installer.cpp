@@ -907,6 +907,10 @@ ErrCode PluginInstaller::CreatePluginDir(const std::string &hostBundleName, std:
 
 bool PluginInstaller::CheckAppIdentifier() const
 {
+    if (parsedBundles_.empty()) {
+        APP_LOGE("parsedBundles is empty");
+        return false;
+    }
     auto &newInfo = parsedBundles_.begin()->second;
     if (!newInfo.GetAppIdentifier().empty() &&
         !oldPluginInfo_.appIdentifier.empty() &&
