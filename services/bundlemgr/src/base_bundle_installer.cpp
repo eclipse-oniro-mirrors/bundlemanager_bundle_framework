@@ -331,13 +331,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_
         };
-        // === DUAL_MODE: Fill extended event fields ===
-        if (DualModeHelper::IsDualModeDevice()) {
-            installRes.appCategory = installParam.appCategory;
-            installRes.currentMode = DualModeHelper::GetSysMode();
-            installRes.isSharedSandbox = !DualModeHelper::NeedDualModeHandle(installParam.appCategory);
-        }
-        // === DUAL_MODE END ===
+        FillDualModeEventFields(installParam, installRes);
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (installParam.allUser || IsDriverForAllUser(bundleName_) ||
             IsEnterpriseForAllUser(installParam, bundleName_)) {
@@ -396,13 +390,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .isInstallByBundleName = true,
         };
-        // === DUAL_MODE: Fill extended event fields ===
-        if (DualModeHelper::IsDualModeDevice()) {
-            installRes.appCategory = installParam.appCategory;
-            installRes.currentMode = DualModeHelper::GetSysMode();
-            installRes.isSharedSandbox = !DualModeHelper::NeedDualModeHandle(installParam.appCategory);
-        }
-        // === DUAL_MODE END ===
+        FillDualModeEventFields(installParam, installRes);
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
@@ -457,12 +445,7 @@ ErrCode BaseBundleInstaller::Recover(
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .isRecover = true,
         };
-        // === DUAL_MODE: Fill extended event fields ===
-        if (DualModeHelper::IsDualModeDevice()) {
-            installRes.appCategory = installParam.appCategory;
-            installRes.currentMode = DualModeHelper::GetSysMode();
-            installRes.isSharedSandbox = !DualModeHelper::NeedDualModeHandle(installParam.appCategory);
-        }
+        FillDualModeEventFields(installParam, installRes);
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
@@ -5696,6 +5679,18 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     SetDualModeAppInfo(installParam, infos);
 
     return ret;
+}
+
+void BaseBundleInstaller::FillDualModeEventFields(const InstallParam &installParam,
+    NotifyBundleEvents &installRes)
+{
+    // === DUAL_MODE: Fill extended event fields ===
+    if (DualModeHelper::IsDualModeDevice()) {
+        installRes.appCategory = installParam.appCategory;
+        installRes.currentMode = DualModeHelper::GetSysMode();
+        installRes.isSharedSandbox = !DualModeHelper::NeedDualModeHandle(installParam.appCategory);
+    }
+    // === DUAL_MODE END ===
 }
 
 void BaseBundleInstaller::InitDualModeBundleName(const InstallParam &installParam)

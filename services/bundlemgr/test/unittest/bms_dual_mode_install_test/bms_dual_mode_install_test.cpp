@@ -148,7 +148,7 @@ HWTEST_F(BmsDualModeInstallTest, IsDiffPackageCategory_0200, Function | SmallTes
 {
     auto combo = static_cast<AppCategory>(
         static_cast<uint32_t>(AppCategory::APP_CATEGORY_DIFF_PACKAGE) |
-        static_cast<uint32_t>(AppCategory::APP_CATEGORY_PAD_ONLY));
+        static_cast<uint32_t>(AppCategory::APP_CATEGORY_TABLET_ONLY));
     EXPECT_TRUE(DualModeHelper::IsDiffPackageCategory(combo));
 }
 
@@ -159,7 +159,7 @@ HWTEST_F(BmsDualModeInstallTest, IsDiffPackageCategory_0300, Function | SmallTes
 
 HWTEST_F(BmsDualModeInstallTest, IsDiffPackageCategory_0400, Function | SmallTest | Level0)
 {
-    EXPECT_FALSE(DualModeHelper::IsDiffPackageCategory(AppCategory::APP_CATEGORY_PAD_ONLY));
+    EXPECT_FALSE(DualModeHelper::IsDiffPackageCategory(AppCategory::APP_CATEGORY_TABLET_ONLY));
 }
 
 // ====================== DualModeHelper::NeedDualModeHandle ======================
@@ -173,7 +173,7 @@ HWTEST_F(BmsDualModeInstallTest, NeedDualModeHandle_0100, Function | SmallTest |
 HWTEST_F(BmsDualModeInstallTest, NeedDualModeHandle_0200, Function | SmallTest | Level0)
 {
     EnableSecondaryMode();
-    EXPECT_FALSE(DualModeHelper::NeedDualModeHandle(AppCategory::APP_CATEGORY_PAD_ONLY));
+    EXPECT_FALSE(DualModeHelper::NeedDualModeHandle(AppCategory::APP_CATEGORY_TABLET_ONLY));
 }
 
 HWTEST_F(BmsDualModeInstallTest, NeedDualModeHandle_0300, Function | SmallTest | Level0)
@@ -317,7 +317,7 @@ HWTEST_F(BmsDualModeInstallTest, InitDualModeBundleName_0300, Function | SmallTe
     installer.bundleName_ = BUNDLE_NAME;
     installer.dualModeBundleName_ = "stale";
     InstallParam installParam;
-    installParam.appCategory = AppCategory::APP_CATEGORY_PAD_ONLY;
+    installParam.appCategory = AppCategory::APP_CATEGORY_TABLET_ONLY;
     installer.InitDualModeBundleName(installParam);
     EXPECT_TRUE(installer.dualModeBundleName_.empty());
 }
@@ -371,10 +371,10 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0400, Function | SmallTest |
     std::unordered_map<std::string, InnerBundleInfo> infos;
     infos[BUNDLE_NAME] = InnerBundleInfo();
     InstallParam installParam;
-    installParam.appCategory = AppCategory::APP_CATEGORY_PAD_ONLY;
+    installParam.appCategory = AppCategory::APP_CATEGORY_TABLET_ONLY;
     installer.SetDualModeAppInfo(installParam, infos);
     EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
-    EXPECT_EQ(infos[BUNDLE_NAME].GetAppCategory(), AppCategory::APP_CATEGORY_PAD_ONLY);
+    EXPECT_EQ(infos[BUNDLE_NAME].GetAppCategory(), AppCategory::APP_CATEGORY_TABLET_ONLY);
 }
 
 // ====================== BaseBundleInstaller::CheckDualModeCategoryConsistency ======================
@@ -388,7 +388,7 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0100, Function
     InnerBundleInfo oldInfo;
     oldInfo.SetAppCategory(AppCategory::APP_CATEGORY_DIFF_PACKAGE);
     InstallParam installParam;
-    installParam.appCategory = AppCategory::APP_CATEGORY_PAD_ONLY;
+    installParam.appCategory = AppCategory::APP_CATEGORY_TABLET_ONLY;
     EXPECT_EQ(installer.CheckDualModeCategoryConsistency(oldInfo, installParam), OHOS::ERR_OK);
 }
 
@@ -401,7 +401,7 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0200, Function
     InnerBundleInfo oldInfo;
     oldInfo.SetAppCategory(AppCategory::APP_CATEGORY_DIFF_PACKAGE);
     InstallParam installParam;
-    installParam.appCategory = AppCategory::APP_CATEGORY_PAD_ONLY;
+    installParam.appCategory = AppCategory::APP_CATEGORY_TABLET_ONLY;
     EXPECT_EQ(installer.CheckDualModeCategoryConsistency(oldInfo, installParam), OHOS::ERR_OK);
 }
 
@@ -414,7 +414,7 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0300, Function
     InnerBundleInfo oldInfo;
     oldInfo.SetAppCategory(AppCategory::APP_CATEGORY_DIFF_PACKAGE);
     InstallParam installParam;
-    installParam.appCategory = AppCategory::APP_CATEGORY_PAD_ONLY;
+    installParam.appCategory = AppCategory::APP_CATEGORY_TABLET_ONLY;
     EXPECT_EQ(installer.CheckDualModeCategoryConsistency(oldInfo, installParam),
         OHOS::ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
@@ -439,9 +439,9 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0500, Function
     BaseBundleInstaller installer;
     installer.isAppExist_ = true;
     InnerBundleInfo oldInfo;
-    oldInfo.SetAppCategory(AppCategory::APP_CATEGORY_PAD_ONLY);
+    oldInfo.SetAppCategory(AppCategory::APP_CATEGORY_TABLET_ONLY);
     InstallParam installParam;
-    installParam.appCategory = AppCategory::APP_CATEGORY_PC_ONLY;
+    installParam.appCategory = AppCategory::APP_CATEGORY_2IN1_ONLY;
     EXPECT_EQ(installer.CheckDualModeCategoryConsistency(oldInfo, installParam), OHOS::ERR_OK);
 }
 
@@ -504,7 +504,7 @@ HWTEST_F(BmsDualModeInstallTest, ClassifyDualModeAppsNoLock_0400, Function | Sma
     dataMgr->bundleInfos_.clear();
     dataMgr->tempBundleInfos_.clear();
     InnerBundleInfo normal;
-    normal.SetAppCategory(AppCategory::APP_CATEGORY_PAD_ONLY);
+    normal.SetAppCategory(AppCategory::APP_CATEGORY_TABLET_ONLY);
     dataMgr->bundleInfos_[BUNDLE_NAME] = normal;
     dataMgr->ClassifyDualModeAppsNoLock();
     EXPECT_EQ(dataMgr->bundleInfos_.count(BUNDLE_NAME), 1u);
@@ -712,7 +712,7 @@ HWTEST_F(BmsDualModeInstallTest, AppCategory_Parcel_0200, Function | SmallTest |
     OHOS::MessageParcel parcel;
     ApplicationInfo src;
     src.appCategory = static_cast<AppCategory>(
-        static_cast<uint32_t>(AppCategory::APP_CATEGORY_PAD_ONLY) |
+        static_cast<uint32_t>(AppCategory::APP_CATEGORY_TABLET_ONLY) |
         static_cast<uint32_t>(AppCategory::APP_CATEGORY_DIFF_PACKAGE));
     ASSERT_TRUE(src.Marshalling(parcel));
     ApplicationInfo dst;
@@ -742,5 +742,127 @@ HWTEST_F(BmsDualModeInstallTest, AppCategory_LegacyDefault_0100, Function | Smal
     from_json(legacyJson, dst);
     EXPECT_EQ(dst.appCategory, AppCategory::APP_CATEGORY_UNSPECIFIED);
     EXPECT_EQ(static_cast<uint32_t>(dst.appCategory), 0u);
+}
+
+// ====================== BundleDataStorageRdb::TransformStrToInfo (TransResult self-heal branch) =====
+// TransResult is an anonymous-namespace free function driven (multi-threaded) by the private
+// TransformStrToInfo. Its 74-78 branch marks a record for self-heal rewrite when the DB key differs
+// from bundleName AND the key is not a dual-mode clone key:
+//   if (key != bundleName && !DualModeHelper::IsDualModeCloneKey(key)) needUpdateInfos.emplace_back(...)
+// needUpdateInfos feeds UpdateDataBase, which writes the bundleName key into the real RDB. We drive
+// the branch via TransformStrToInfo (exposed by #define private public) with a crafted datas map and
+// tell the true/false branches apart by that RDB side effect. InstallMark is forced to INSTALL_FINISH
+// so records skip the exception-handling path (default UNKNOWN_STATUS would otherwise change the
+// resulting infos key and add unrelated side effects). Each case cleans up the keys it touches.
+
+static std::string MakeTransResultInfoJson(const std::string &bundleName)
+{
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = bundleName;
+    info.SetInstallMark(bundleName, "", InstallExceptionStatus::INSTALL_FINISH);
+    return info.ToString();
+}
+
+HWTEST_F(BmsDualModeInstallTest, TransformStrToInfo_SelfHeal_0100, Function | SmallTest | Level0)
+{
+    // DB key != bundleName and NOT a dual-mode clone key -> branch fires: record marked for
+    // self-heal rewrite, UpdateDataBase writes the bundleName key into the RDB.
+    std::shared_ptr<BundleDataMgr> dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto storage = std::static_pointer_cast<BundleDataStorageRdb>(dataMgr->dataStorage_);
+    ASSERT_NE(storage, nullptr);
+    const std::string key = "com.test.trans.selfheal.stale";
+    const std::string bundleName = "com.test.trans.selfheal.real";
+    std::map<std::string, std::string> datas;
+    datas[key] = MakeTransResultInfoJson(bundleName);
+    std::map<std::string, InnerBundleInfo> infos;
+    storage->TransformStrToInfo(datas, infos);
+    // record still loaded under the original DB key, with the JSON bundleName preserved
+    EXPECT_EQ(infos.count(key), 1u);
+    EXPECT_EQ(infos[key].GetBundleName(), bundleName);
+    // self-heal side effect: bundleName key rewritten into the RDB
+    std::string value;
+    EXPECT_TRUE(storage->rdbDataManager_->QueryData(bundleName, value));
+    storage->rdbDataManager_->DeleteData(bundleName);  // cleanup
+}
+
+HWTEST_F(BmsDualModeInstallTest, TransformStrToInfo_KeyEqualsBundleName_0200, Function | SmallTest | Level0)
+{
+    // DB key == bundleName -> short-circuits at the first operand, branch does NOT fire: no
+    // self-heal rewrite and no RDB write.
+    std::shared_ptr<BundleDataMgr> dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto storage = std::static_pointer_cast<BundleDataStorageRdb>(dataMgr->dataStorage_);
+    ASSERT_NE(storage, nullptr);
+    const std::string key = "com.test.trans.normal";
+    std::map<std::string, std::string> datas;
+    datas[key] = MakeTransResultInfoJson(key);
+    std::map<std::string, InnerBundleInfo> infos;
+    storage->TransformStrToInfo(datas, infos);
+    EXPECT_EQ(infos.count(key), 1u);
+    EXPECT_EQ(infos[key].GetBundleName(), key);
+    // no self-heal: nothing written under bundleName (== key) since input never reached the RDB
+    std::string value;
+    EXPECT_FALSE(storage->rdbDataManager_->QueryData(key, value));
+}
+
+HWTEST_F(BmsDualModeInstallTest, TransformStrToInfo_DualModeCloneKey_0300, Function | SmallTest | Level0)
+{
+    // DB key is a dual-mode clone key (+clone-10000+name), differs from bundleName but is exempt
+    // from self-healing -> branch does NOT fire: no RDB write.
+    std::shared_ptr<BundleDataMgr> dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto storage = std::static_pointer_cast<BundleDataStorageRdb>(dataMgr->dataStorage_);
+    ASSERT_NE(storage, nullptr);
+    const std::string bundleName = "com.test.trans.clone";
+    const std::string key = DualModeHelper::GetDualModeBundleName(bundleName);
+    ASSERT_TRUE(DualModeHelper::IsDualModeCloneKey(key));
+    std::map<std::string, std::string> datas;
+    datas[key] = MakeTransResultInfoJson(bundleName);
+    std::map<std::string, InnerBundleInfo> infos;
+    storage->TransformStrToInfo(datas, infos);
+    EXPECT_EQ(infos.count(key), 1u);
+    EXPECT_EQ(infos[key].GetBundleName(), bundleName);
+    // no self-heal: bundleName key not rewritten into the RDB
+    std::string value;
+    EXPECT_FALSE(storage->rdbDataManager_->QueryData(bundleName, value));
+}
+
+// ====================== BaseBundleInstaller::FillDualModeEventFields ======================
+// Single branch: extended fields are filled only on a dual-mode device. Cover both arms via the
+// DualModeHelper cache (no system parameter): true -> appCategory / currentMode / isSharedSandbox
+// populated; false -> pre-set fields left untouched. BaseBundleInstaller is default-constructed and
+// the private method is reached through #define private public.
+
+HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0100, Function | SmallTest | Level0)
+{
+    // dual-mode device (cachedMode_ non-empty) -> branch fires, extended fields populated
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.appCategory = AppCategory::APP_CATEGORY_DIFF_PACKAGE;
+    NotifyBundleEvents installRes;
+    installer.FillDualModeEventFields(installParam, installRes);
+    EXPECT_EQ(installRes.appCategory, AppCategory::APP_CATEGORY_DIFF_PACKAGE);
+    EXPECT_EQ(installRes.currentMode, DualModeHelper::GetSysMode());
+    // secondary mode + category 7 => NeedDualModeHandle true => shared sandbox disabled
+    EXPECT_FALSE(installRes.isSharedSandbox);
+}
+
+HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0200, Function | SmallTest | Level0)
+{
+    // non-dual-mode device (cachedMode_ empty) -> branch skipped, pre-set markers preserved
+    SetDualModeCache("", "");
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.appCategory = AppCategory::APP_CATEGORY_TABLET_ONLY;
+    NotifyBundleEvents installRes;
+    installRes.appCategory = AppCategory::APP_CATEGORY_2IN1_ONLY;  // non-default marker
+    installRes.currentMode = "marker";
+    installRes.isSharedSandbox = false;  // flip default true to prove it is not rewritten
+    installer.FillDualModeEventFields(installParam, installRes);
+    EXPECT_EQ(installRes.appCategory, AppCategory::APP_CATEGORY_2IN1_ONLY);
+    EXPECT_EQ(installRes.currentMode, "marker");
+    EXPECT_FALSE(installRes.isSharedSandbox);
 }
 } // OHOS

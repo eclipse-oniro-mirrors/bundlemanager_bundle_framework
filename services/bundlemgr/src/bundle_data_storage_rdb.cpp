@@ -75,9 +75,6 @@ void TransResult(const std::string &key, const std::string &jsonStr, ThreadResul
         result.needUpdateInfos.emplace_back(key, innerBundleInfo);
         APP_LOGD("Self-heal: marking key=%{public}s for rewrite (diff from bundleName=%{public}s)",
                   key.c_str(), bundleName.c_str());
-    } else if (key != bundleName && DualModeHelper::IsDualModeCloneKey(key)) {
-        APP_LOGD("Self-heal: skipping dual-mode clone key=%{public}s (prefix expected, no rewrite needed)",
-                  key.c_str());
     }
     // === DUAL_MODE END ===
 }

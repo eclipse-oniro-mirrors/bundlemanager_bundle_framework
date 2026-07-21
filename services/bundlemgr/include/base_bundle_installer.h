@@ -584,6 +584,9 @@ private:
      */
     ErrCode CreateBundleUserData(InnerBundleInfo &innerBundleInfo);
     void AddBundleStatus(const NotifyBundleEvents &installRes);
+    // Fill dual-mode extended fields (appCategory / currentMode / isSharedSandbox) on a notify event
+    // when running on a dual-mode device; no-op otherwise. Shared by install / update / recover paths.
+    void FillDualModeEventFields(const InstallParam &installParam, NotifyBundleEvents &installRes);
     ErrCode CheckInstallationFree(const InnerBundleInfo &innerBundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
