@@ -219,6 +219,7 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/bms_extension/bms_extension_client.cpp",
   "${services_path}/bundlemgr/src/bms_key_event_mgr.cpp",
   "${services_path}/bundlemgr/src/bms_param.cpp",
+  "${services_path}/bundlemgr/src/dual_mode_helper.cpp",
   "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
   "${services_path}/bundlemgr/src/bundle_cache_mgr.cpp",
   "${services_path}/bundlemgr/src/bundle_backup/bundle_backup_service.cpp",

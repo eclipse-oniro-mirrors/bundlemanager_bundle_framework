@@ -21,6 +21,8 @@
 
 #include "app_log_tag_wrapper.h"
 #include "bundle_exception_handler.h"
+#include "bundle_service_constants.h"
+#include "dual_mode_helper.h"
 #include "event_report.h"
 
 namespace OHOS {
@@ -62,11 +64,22 @@ void TransResult(const std::string &key, const std::string &jsonStr, ThreadResul
         result.needExceptionHandle.push_back(innerBundleInfo);
     }
     // Store in thread-local results
-    result.validInfos.emplace(bundleName, innerBundleInfo);
+    // Dual-mode: keep DB original key (may be prefixed +clone-10000+) so primary/secondary
+    // same-name records do not collapse during load; classification de-prefixes later.
+    result.validInfos.emplace(key, innerBundleInfo);
     // This avoids the need to traverse a map later to find the mapping
-    if (key != bundleName) {
+    // === DUAL_MODE: Skip self-heal for dual-mode clone keys ===
+    // Dual-mode clone keys (e.g., +clone-10000+com.example.app) are intentionally different
+    // from bundleName (com.example.app) and should not trigger self-healing rewrite
+    if (key != bundleName && !DualModeHelper::IsDualModeCloneKey(key)) {
         result.needUpdateInfos.emplace_back(key, innerBundleInfo);
+        APP_LOGD("Self-heal: marking key=%{public}s for rewrite (diff from bundleName=%{public}s)",
+                  key.c_str(), bundleName.c_str());
+    } else if (key != bundleName && DualModeHelper::IsDualModeCloneKey(key)) {
+        APP_LOGD("Self-heal: skipping dual-mode clone key=%{public}s (prefix expected, no rewrite needed)",
+                  key.c_str());
     }
+    // === DUAL_MODE END ===
 }
 
 void ProcessRsult(ThreadResult &result, std::shared_ptr<BundleExceptionHandler> &handler,
@@ -193,6 +206,14 @@ void BundleDataStorageRdb::UpdateDataBase(std::map<std::string, InnerBundleInfo>
     }
 
     for (const auto& item : infos) {
+        // === DUAL_MODE: Skip deleting dual-mode clone keys ===
+        // Dual-mode clone keys should not be deleted during self-healing rewrite
+        if (DualModeHelper::IsDualModeCloneKey(item.first)) {
+            APP_LOGD("Self-heal: skipping delete of dual-mode clone key=%{public}s", item.first.c_str());
+            continue;
+        }
+        // === DUAL_MODE END ===
+
         if (SaveStorageBundleInfo(item.second)) {
             rdbDataManager_->DeleteData(item.first);
         }
@@ -214,8 +235,11 @@ bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBun
         LOG_NOFUNC_E(BMS_TAG_COMMON, "err: empty str");
         return false;
     }
-    bool ret = rdbDataManager_->InsertData(
-        innerBundleInfo.GetBundleName(), value);
+    // Dual-mode: secondary-mode clone apps are stored under a prefixed key (+clone-10000+name).
+    std::string storageKey = innerBundleInfo.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(innerBundleInfo.GetBundleName())
+        : innerBundleInfo.GetBundleName();
+    bool ret = rdbDataManager_->InsertData(storageKey, value);
     return ret;
 }
 
@@ -233,8 +257,11 @@ ErrCode BundleDataStorageRdb::SaveStorageBundleInfoWithCode(const InnerBundleInf
         LOG_NOFUNC_E(BMS_TAG_COMMON, "err: empty str");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    return rdbDataManager_->InsertDataWithCode(
-        innerBundleInfo.GetBundleName(), value);
+    // Dual-mode: secondary-mode clone apps are stored under a prefixed key (+clone-10000+name).
+    std::string storageKey = innerBundleInfo.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(innerBundleInfo.GetBundleName())
+        : innerBundleInfo.GetBundleName();
+    return rdbDataManager_->InsertDataWithCode(storageKey, value);
 }
 
 
@@ -245,7 +272,11 @@ bool BundleDataStorageRdb::DeleteStorageBundleInfo(const InnerBundleInfo &innerB
         return false;
     }
 
-    bool ret = rdbDataManager_->DeleteData(innerBundleInfo.GetBundleName());
+    // Dual-mode: secondary-mode clone apps are stored under a prefixed key (+clone-10000+name).
+    std::string storageKey = innerBundleInfo.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(innerBundleInfo.GetBundleName())
+        : innerBundleInfo.GetBundleName();
+    bool ret = rdbDataManager_->DeleteData(storageKey);
     APP_LOGD("DeleteStorageBundleInfo %{public}d", ret);
     return ret;
 }

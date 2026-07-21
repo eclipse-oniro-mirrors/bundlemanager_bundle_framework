@@ -95,6 +95,11 @@ struct NotifyBundleEvents {
     bool isInstallByBundleName = false;
     std::map<std::string, std::string> metadataConfigInfos;
     std::vector<std::string> allowListenBundles;
+    // === DUAL_MODE: Extended fields for dual-mode app events ===
+    AppCategory appCategory = AppCategory::APP_CATEGORY_UNSPECIFIED;  // Application category
+    std::string currentMode = "";  // Current system mode (pcmode/padmode/empty)
+    bool isSharedSandbox = true;  // Whether app uses shared sandbox
+    // === DUAL_MODE END ===
 
     void SetMetadataConfigInfos(const std::map<std::string, std::string>& configs)
     {

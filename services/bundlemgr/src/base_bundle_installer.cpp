@@ -57,6 +57,7 @@
 #include "data_clone_install_helper.h"
 #include "datetime_ex.h"
 #include "driver_installer.h"
+#include "dual_mode_helper.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "install_exception_mgr.h"
@@ -330,6 +331,13 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_
         };
+        // === DUAL_MODE: Fill extended event fields ===
+        if (DualModeHelper::IsDualModeDevice()) {
+            installRes.appCategory = installParam.appCategory;
+            installRes.currentMode = DualModeHelper::GetSysMode();
+            installRes.isSharedSandbox = !DualModeHelper::NeedDualModeHandle(installParam.appCategory);
+        }
+        // === DUAL_MODE END ===
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (installParam.allUser || IsDriverForAllUser(bundleName_) ||
             IsEnterpriseForAllUser(installParam, bundleName_)) {
@@ -388,6 +396,13 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .isInstallByBundleName = true,
         };
+        // === DUAL_MODE: Fill extended event fields ===
+        if (DualModeHelper::IsDualModeDevice()) {
+            installRes.appCategory = installParam.appCategory;
+            installRes.currentMode = DualModeHelper::GetSysMode();
+            installRes.isSharedSandbox = !DualModeHelper::NeedDualModeHandle(installParam.appCategory);
+        }
+        // === DUAL_MODE END ===
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
@@ -442,6 +457,12 @@ ErrCode BaseBundleInstaller::Recover(
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .isRecover = true,
         };
+        // === DUAL_MODE: Fill extended event fields ===
+        if (DualModeHelper::IsDualModeDevice()) {
+            installRes.appCategory = installParam.appCategory;
+            installRes.currentMode = DualModeHelper::GetSysMode();
+            installRes.isSharedSandbox = !DualModeHelper::NeedDualModeHandle(installParam.appCategory);
+        }
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
@@ -1051,6 +1072,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     }
     SetOldAppIsEncrypted(oldInfo);
 
+    // DUAL_MODE: category-7 <-> non-category-7 transitions are not allowed on update.
+    CHECK_RESULT(CheckDualModeCategoryConsistency(oldInfo, installParam),
+        "Dual mode category consistency check failed %{public}d");
+
     KillRelatedProcessIfArkWeb(installParam.isOTA);
     ErrCode result = ERR_OK;
     result = CheckAppService(newInfos.begin()->second, oldInfo, isAppExist_);
@@ -1269,7 +1294,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             RemoveBundleUserData(oldInfo, installParam);
         }
     });
-    (void)InnerProcessCodePathCreateNewDir(bundleName_, isFeatureNeedUninstall_);
+    (void)InnerProcessCodePathCreateNewDir(GetEffectiveBundleName(), isFeatureNeedUninstall_);
 
     // update haps
     for (; it != newInfos.end(); ++it) {
@@ -1730,6 +1755,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "verisoncode or bundleName is different in all haps %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_VERSION_AND_BUNDLENAME_CHECKED);  // ---- 35%
 
+    // === DUAL_MODE: set bundle name prefix for secondary mode category 7 apps ===
+    InitDualModeBundleName(installParam);
+
     result = CheckSpaceIsolation(installParam, newInfos);
     CHECK_RESULT(result, "check space isolation failed:%{public}d");
 
@@ -1803,7 +1831,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     (void)SetDisposedRuleWhenBundleUpdateStart(newInfos, oldInfo, installParam.isPreInstallApp);
     // when bundle update end, bms need delete disposed rule.
     ScopeGuard deleteDisposedRuleGuard([&] { (void)DeleteDisposedRuleWhenBundleUpdateEnd(oldInfo); });
-    ScopeGuard codePathGuard([&] { RollbackCodePath(bundleName_, isFeatureNeedUninstall_); });
+    ScopeGuard codePathGuard([&] { RollbackCodePath(GetEffectiveBundleName(), isFeatureNeedUninstall_); });
     result = InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     PrintDataStat();
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
@@ -1848,7 +1876,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
             VerifyCodeSignatureForHap(newInfos, preinstalledAppPath, preinstalledAppPath);
         }
     }
-    result = ProcessBundleCodePath(newInfos, oldInfo, bundleName_,
+    result = ProcessBundleCodePath(newInfos, oldInfo, GetEffectiveBundleName(),
         isFeatureNeedUninstall_, installParam.copyHapToInstallPath);
     CHECK_RESULT_WITH_ROLLBACK(result, "final process code path failed %{public}d", newInfos, oldInfo);
 
@@ -1946,7 +1974,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     (void)DeleteAppGalleryHapFromTempPath();
     DeleteUninstallBundleInfo(bundleName_);
     codePathGuard.Dismiss();
-    ProcessOldCodePath(bundleName_, isFeatureNeedUninstall_);
+    ProcessOldCodePath(GetEffectiveBundleName(), isFeatureNeedUninstall_);
     // create data group dir
     CreateDataGroupDirs(hapVerifyResults, oldInfo);
     // process ark startup cache
@@ -3764,7 +3792,8 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
         auto userId = userInfo.bundleUserInfo.userId;
         createDirParam.userId = userId;
         createDirParam.uid = userInfo.uid;
-        ErrCode userRet = SetDirApl(createDirParam, info.GetBundleName());
+        std::string effectiveBundleName = GetEffectiveBundleName(info);
+        ErrCode userRet = SetDirApl(createDirParam, effectiveBundleName);
         if (userRet != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER,
                 "fail to SetDirApl bundle dir, userId %{public}d, error is %{public}d", userId, userRet);
@@ -3873,10 +3902,12 @@ ErrCode BaseBundleInstaller::CreateBundleAndDataDir(InnerBundleInfo &info) const
 
 ErrCode BaseBundleInstaller::CreateBundleCodeDir(InnerBundleInfo &info) const
 {
-    auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_;
+    std::string effectiveBundleName = GetEffectiveBundleName(info);
+    auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + effectiveBundleName;
     LOG_D(BMS_TAG_INSTALLER, "create bundle dir %{public}s", appCodePath.c_str());
     ErrCode result =
-        InstalldClient::GetInstance()->CreateBundleDir(bundleName_, BundleDirScene::BUNDLE_CODE_DIR, appCodePath);
+        InstalldClient::GetInstance()->CreateBundleDir(effectiveBundleName, BundleDirScene::BUNDLE_CODE_DIR,
+            appCodePath);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to create bundle dir, error is %{public}d", result);
         return result;
@@ -3990,15 +4021,25 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
             info.GetBundleName().c_str(), userId_);
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
+    // dual-mode: compute the effective (prefixed) bundle name once and reuse it below for uid
+    // generation, fs config, directory creation, quota, ark profile and database dir.
+    std::string effectiveBundleName = GetEffectiveBundleName(info);
+    // === DUAL_MODE: secondary-mode apps derive an independent uid from the prefixed name
+    // (a distinct bundleId in bundleIdMap_). Restore the original bundleName afterwards so the
+    // prefixed name is NOT persisted into userInfo (only the uid is). effectiveBundleName equals
+    // the original name in primary mode, so the assignment is a no-op there.
+    std::string originalBundleName = newInnerBundleUserInfo.bundleName;
+    newInnerBundleUserInfo.bundleName = effectiveBundleName;
     ErrCode ret = dataMgr_->GenerateUidAndGid(newInnerBundleUserInfo);
+    newInnerBundleUserInfo.bundleName = originalBundleName;
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to generate uid and gid");
         return ret;
     }
-    BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
-        Constants::APP_PROVISION_TYPE_FILE_NAME);
+    BundleUtil::MakeFsConfig(effectiveBundleName, ServiceConstants::HMDFS_CONFIG_PATH,
+        info.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
     CreateDirParam createDirParam;
-    createDirParam.bundleName = info.GetBundleName();
+    createDirParam.bundleName = effectiveBundleName;  // dual-mode: use prefixed name for directories
     createDirParam.userId = userId_;
     createDirParam.uid = newInnerBundleUserInfo.uid;
     createDirParam.gid = newInnerBundleUserInfo.uid;
@@ -4017,19 +4058,19 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         }
     }
     std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE + info.GetBundleName();
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE + effectiveBundleName;
     if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
-        PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir,
+        PrepareBundleDirQuota(effectiveBundleName, newInnerBundleUserInfo.uid, bundleDataDir,
             ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET);
     } else {
-        PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir, 0);
+        PrepareBundleDirQuota(effectiveBundleName, newInnerBundleUserInfo.uid, bundleDataDir, 0);
     }
     if (info.GetIsNewVersion()) {
         int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
             GetIntParameter(BMS_KEY_SHELL_UID, ServiceConstants::SHELL_UID) :
             newInnerBundleUserInfo.uid;
         result = CreateArkProfile(
-            info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, gid);
+            effectiveBundleName, userId_, newInnerBundleUserInfo.uid, gid);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to create ark profile, error is %{public}d", result);
             return result;
@@ -4044,7 +4085,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     }
 
     std::string dataBaseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
-        ServiceConstants::DATABASE + info.GetBundleName();
+        ServiceConstants::DATABASE + effectiveBundleName;
     info.SetAppDataBaseDir(dataBaseDir);
     info.AddInnerBundleUserInfo(newInnerBundleUserInfo);
     return ERR_OK;
@@ -4108,7 +4149,7 @@ void BaseBundleInstaller::CreateEl5AndSetPolicy(InnerBundleInfo &info, bool with
     }
     std::vector<CreateDirParam> params;
     CreateDirParam el5Param;
-    el5Param.bundleName = info.GetBundleName();
+    el5Param.bundleName = GetEffectiveBundleName(info);
     el5Param.userId = userId_;
     el5Param.uid = info.GetUid(userId_);
     el5Param.apl = info.GetAppPrivilegeLevel();
@@ -4450,7 +4491,8 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     // need remove modulePath, make sure the directory is empty
-    if (InstalldClient::GetInstance()->RemoveDir(modulePath, BundleDirScene::REMOVE_MODULE_DIR, info.GetBundleName()) !=
+    std::string effectiveBundleName = GetEffectiveBundleName(info);
+    if (InstalldClient::GetInstance()->RemoveDir(modulePath, BundleDirScene::REMOVE_MODULE_DIR, effectiveBundleName) !=
         ERR_OK) {
         APP_LOGW("remove dir %{public}s failed", modulePath.c_str());
     }
@@ -4460,7 +4502,7 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     result = ExtractArkNativeFile(info, modulePath);
     CHECK_RESULT(result, "fail to extractArkNativeFile, error is %{public}d");
     if (info.GetIsNewVersion()) {
-        result = CopyPgoFileToArkProfileDir(modulePackage_, modulePath_, info.GetBundleName(), userId_);
+        result = CopyPgoFileToArkProfileDir(modulePackage_, modulePath_, effectiveBundleName, userId_);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to CopyPgoFileToArkProfileDir, error is %{public}d", result);
             return result;
@@ -5446,17 +5488,20 @@ void BaseBundleInstaller::RemoveEmptyDirs(const std::unordered_map<std::string, 
 {
     for (const auto &item : infos) {
         const InnerBundleInfo &info = item.second;
+        // dual-mode: code dir is created under the prefixed name (CreateBundleCodeDir), so empty-dir
+        // cleanup must target the same prefixed path (and the +new- rotate dir inherits it too).
+        std::string effectiveBundleName = GetEffectiveBundleName(info);
         std::string moduleDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR;
         if (isBundleUpdate) {
             moduleDir += ServiceConstants::BUNDLE_NEW_CODE_DIR;
         }
-        moduleDir += info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + info.GetCurrentModulePackage();
+        moduleDir += effectiveBundleName + ServiceConstants::PATH_SEPARATOR + info.GetCurrentModulePackage();
         bool isDirEmpty = false;
         InstalldClient::GetInstance()->IsDirEmpty(moduleDir, isDirEmpty);
         if (isDirEmpty) {
             LOG_D(BMS_TAG_INSTALLER, "remove empty dir : %{public}s", moduleDir.c_str());
             InstalldClient::GetInstance()->RemoveDir(
-                moduleDir, BundleDirScene::REMOVE_MODULE_DIR, info.GetBundleName());
+                moduleDir, BundleDirScene::REMOVE_MODULE_DIR, effectiveBundleName);
         }
     }
 }
@@ -5480,15 +5525,22 @@ ErrCode BaseBundleInstaller::RemoveModuleAndDataDir(
     const InnerBundleInfo &info, const std::string &modulePackage, int32_t userId, bool isKeepData) const
 {
     LOG_D(BMS_TAG_INSTALLER, "RemoveModuleAndDataDir with package name %{public}s", modulePackage.c_str());
+    // dual-mode: module/hap paths are already prefixed in info (CreateBundleCodeDir stores the prefixed
+    // appCodePath), so align the bundleName identifier too. Use IsDualModeCloneApp() rather than
+    // dualModeBundleName_ because this runs in both update (2740) and uninstall (6597) flows, where
+    // the member may be unset on the uninstall installer instance.
+    std::string effectiveBundleName = info.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(info.GetBundleName())
+        : info.GetBundleName();
     auto moduleDir = info.GetModuleDir(modulePackage);
-    auto result = RemoveModuleDir(moduleDir, info.GetBundleName());
+    auto result = RemoveModuleDir(moduleDir, effectiveBundleName);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove module dir, error is %{public}d", result);
         return result;
     }
 
     // remove hap
-    result = RemoveModuleDir(GetHapPath(info, info.GetModuleName(modulePackage)), info.GetBundleName());
+    result = RemoveModuleDir(GetHapPath(info, info.GetModuleName(modulePackage)), effectiveBundleName);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove module hap, error is %{public}d", result);
         return result;
@@ -5639,7 +5691,59 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     bundleAppIdentifier_ = hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     SetAppDistributionType(infos);
     UpdateExtensionSandboxInfo(infos, hapVerifyRes);
+
+    // Set appCategory + isDualModeCloneApp from installParam to InnerBundleInfo for dual-mode devices.
+    SetDualModeAppInfo(installParam, infos);
+
     return ret;
+}
+
+void BaseBundleInstaller::InitDualModeBundleName(const InstallParam &installParam)
+{
+    // === DUAL_MODE: Handle bundle name prefix for secondary mode category 7 apps ===
+    // Set dualModeBundleName_ early so that GetEffectiveBundleName() works correctly
+    // in all subsequent operations (CreateBundleCodeDir, RenameModuleDir, etc.)
+    if (DualModeHelper::NeedDualModeHandle(installParam.appCategory)) {
+        dualModeBundleName_ = DualModeHelper::GetDualModeBundleName(bundleName_);
+        LOG_I(BMS_TAG_INSTALLER, "Dual mode install: original=%{public}s -> prefixed=%{public}s",
+            bundleName_.c_str(), dualModeBundleName_.c_str());
+    } else {
+        dualModeBundleName_.clear();
+    }
+}
+
+void BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam,
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    if (!DualModeHelper::IsDualModeDevice() || infos.empty()) {
+        return;
+    }
+    bool isCloneApp = DualModeHelper::NeedDualModeHandle(installParam.appCategory);
+    for (auto &infoPair : infos) {
+        InnerBundleInfo &info = infoPair.second;
+        info.SetAppCategory(installParam.appCategory);
+        if (isCloneApp) {
+            info.SetDualModeCloneApp(true);
+        }
+        LOG_D(BMS_TAG_INSTALLER, "Dual mode: set appCategory=%{public}u isCloneApp=%{public}d for bundle=%{public}s",
+            installParam.appCategory, isCloneApp, info.GetBundleName().c_str());
+    }
+}
+
+ErrCode BaseBundleInstaller::CheckDualModeCategoryConsistency(const InnerBundleInfo &oldInfo,
+    const InstallParam &installParam)
+{
+    if (!DualModeHelper::IsDualModeDevice() || !isAppExist_) {
+        return ERR_OK;
+    }
+    bool oldIsCategory7 = DualModeHelper::IsDiffPackageCategory(oldInfo.GetAppCategory());
+    bool newIsCategory7 = DualModeHelper::IsDiffPackageCategory(installParam.appCategory);
+    // Category 7 <-> non-category 7 transitions are not allowed
+    if (oldIsCategory7 != newIsCategory7) {
+        APP_LOGE("Dual mode: cannot change between category 7 and non-category 7 apps");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    return ERR_OK;
 }
 
 ErrCode BaseBundleInstaller::CheckArkTSMode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
@@ -5730,7 +5834,7 @@ void BaseBundleInstaller::CreateExtensionDataDir(InnerBundleInfo &info) const
         return;
     }
     CreateDirParam createDirParam;
-    createDirParam.bundleName = info.GetBundleName();
+    createDirParam.bundleName = GetEffectiveBundleName(info);  // dual-mode: use prefixed name for directories
     createDirParam.userId = userId_;
     createDirParam.uid = newInnerBundleUserInfo.uid;
     createDirParam.gid = newInnerBundleUserInfo.uid;
@@ -7075,6 +7179,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     signatureFileMap_.clear();
     hapPathRecords_.clear();
     uninstallBundleAppId_.clear();
+    dualModeBundleName_.clear();
     isModuleUpdate_ = false;
     isEntryInstalled_ = false;
     isHnpInstalled_ = false;
@@ -7370,12 +7475,14 @@ ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, 
             int32_t gid = (newInfo.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
                 GetIntParameter(BMS_KEY_SHELL_UID, ServiceConstants::SHELL_UID) :
                 oldInfo.GetUid(userId);
+            // Use effective bundle name (considering dual-mode prefix if applicable)
+            const std::string &effectiveBundleName = GetEffectiveBundleName();
             ErrCode result = newInfo.GetIsNewVersion() ?
-                CreateArkProfile(bundleName_, userId, oldInfo.GetUid(userId), gid) :
-                DeleteArkProfile(bundleName_, userId);
+                CreateArkProfile(effectiveBundleName, userId, oldInfo.GetUid(userId), gid) :
+                DeleteArkProfile(effectiveBundleName, userId);
             if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s CheckArkProfileDir failed, result:%{public}d",
-                    bundleName_.c_str(), result);
+                    effectiveBundleName.c_str(), result);
                 return result;
             }
         }
@@ -7389,9 +7496,9 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
         LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    const std::string bundleName = info.GetBundleName();
+    std::string effectiveBundleName = GetEffectiveBundleName(info);
     const std::string asanLogDir = std::string(ServiceConstants::BUNDLE_ASAN_LOG_DIR) + ServiceConstants::PATH_SEPARATOR
-        + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR + bundleName
+        + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR + effectiveBundleName
         + ServiceConstants::PATH_SEPARATOR + LOG;
     bool dirExist = false;
     ErrCode errCode = InstalldClient::GetInstance()->IsExistDir(asanLogDir, dirExist);
@@ -7405,20 +7512,20 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
         InnerBundleUserInfo newInnerBundleUserInfo;
         if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
             LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed",
-                info.GetBundleName().c_str(), userId_);
+                effectiveBundleName.c_str(), userId_);
             return ERR_APPEXECFWK_USER_NOT_EXIST;
         }
-
+        newInnerBundleUserInfo.bundleName = effectiveBundleName;
         errCode = dataMgr_->GenerateUidAndGid(newInnerBundleUserInfo);
         if (errCode != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to generate uid and gid");
             return errCode;
         }
-        BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
+        BundleUtil::MakeFsConfig(effectiveBundleName, ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
             Constants::APP_PROVISION_TYPE_FILE_NAME);
         mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
         CreateDirParam createDirParam;
-        createDirParam.bundleName = bundleName;
+        createDirParam.bundleName = effectiveBundleName;
         createDirParam.bundleDirScene = BundleDirScene::ASAN_LOG_DIR;
         if ((errCode = InstalldClient::GetInstance()->Mkdir(asanLogDir, mode,
             newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid, createDirParam)) != ERR_OK) {
@@ -7638,10 +7745,13 @@ void BaseBundleInstaller::ProcessOldNativeLibraryPath(const std::unordered_map<s
             }
         }
     }
-    std::string oldLibPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_ +
-        ServiceConstants::PATH_SEPARATOR + ServiceConstants::LIBS;
-    if (InstalldClient::GetInstance()->RemoveDir(oldLibPath, BundleDirScene::REMOVE_BUNDLE_LIB_DIR, bundleName_) !=
-        ERR_OK) {
+    // dual-mode: old libs live under the prefixed code dir (CreateBundleCodeDir), so clean up the
+    // prefixed path; GetEffectiveBundleName() equals bundleName_ in primary mode.
+    const std::string &effectiveBundleName = GetEffectiveBundleName();
+    std::string oldLibPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        effectiveBundleName + ServiceConstants::PATH_SEPARATOR + ServiceConstants::LIBS;
+    if (InstalldClient::GetInstance()->RemoveDir(oldLibPath, BundleDirScene::REMOVE_BUNDLE_LIB_DIR,
+        effectiveBundleName) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "bundleNmae: %{public}s remove old libs dir failed", bundleName_.c_str());
     }
 }
@@ -7883,8 +7993,10 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
     }
 
     if (isFeatureNeedUninstall_) {
+        // dual-mode: +new- rotate dir is under the prefixed code dir, so use the effective name.
+        // (hapPath itself is already prefixed via info.GetAppCodePath().)
         return std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-            std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + info.GetBundleName() +
+            std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + GetEffectiveBundleName(info) +
             hapPath.substr(posOfPathSep);
     }
     std::string tempDir = hapPath.substr(0, posOfPathSep + 1) + info.GetCurrentModulePackage();
@@ -8063,7 +8175,9 @@ ErrCode BaseBundleInstaller::FinalProcessHapAndSoForBundleUpdate(
         LOG_E(BMS_TAG_INSTALLER, "infos are empty");
         return ERR_OK;
     }
-    std::string bundleName = infos.begin()->second.GetBundleName();
+    // dual-mode: bundleName drives code-dir/so-dir paths and identifiers below; use the effective
+    // (prefixed) name so libs/so dirs align with the prefixed code dir (CreateBundleCodeDir).
+    std::string bundleName = GetEffectiveBundleName(infos.begin()->second);
     ErrCode result = ERR_OK;
     if (needCopyHapToInstallPath) {
         // move hap file from temp dir to real installation dir
@@ -8132,7 +8246,9 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "no hap info to process");
         return ERR_OK;
     }
-    std::string bundleName = infos.begin()->second.GetBundleName();
+    // dual-mode: bundleName/bundleCodePathName drive code-dir/so-dir paths below; use the effective
+    // (prefixed) name to align with the prefixed code dir (CreateBundleCodeDir).
+    std::string bundleName = GetEffectiveBundleName();
     std::string bundleCodePathName = isBundleUpdate ?
         (std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName) : bundleName;
     if (needDeleteOldLibraryPath) {
@@ -8365,10 +8481,13 @@ ErrCode BaseBundleInstaller::RemoveProfileFromCodeSign(const std::string &bundle
 
 void BaseBundleInstaller::DeleteOldNativeLibraryPath() const
 {
-    std::string oldLibPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_ +
-        ServiceConstants::PATH_SEPARATOR + ServiceConstants::LIBS;
-    if (InstalldClient::GetInstance()->RemoveDir(oldLibPath, BundleDirScene::REMOVE_BUNDLE_LIB_DIR, bundleName_) !=
-        ERR_OK) {
+    // dual-mode: old libs live under the prefixed code dir (CreateBundleCodeDir), so clean up the
+    // prefixed path; GetEffectiveBundleName() equals bundleName_ in primary mode.
+    const std::string &effectiveBundleName = GetEffectiveBundleName();
+    std::string oldLibPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        effectiveBundleName + ServiceConstants::PATH_SEPARATOR + ServiceConstants::LIBS;
+    if (InstalldClient::GetInstance()->RemoveDir(oldLibPath, BundleDirScene::REMOVE_BUNDLE_LIB_DIR,
+        effectiveBundleName) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "bundleNmae: %{public}s remove old libs dir failed", bundleName_.c_str());
     }
 }
@@ -8377,8 +8496,11 @@ void BaseBundleInstaller::RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &inn
     const bool isBundleUpdate) const
 {
     LOG_D(BMS_TAG_INSTALLER, "start");
+    // dual-mode: temp so path is under the prefixed code dir (CreateBundleCodeDir), so use the
+    // effective (prefixed) name for both the path and the RemoveDir identifier.
+    std::string effectiveBundleName = GetEffectiveBundleName(innerBundleInfo);
     std::string bundleCodePathName = isBundleUpdate ? (std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) +
-        innerBundleInfo.GetBundleName()) : innerBundleInfo.GetBundleName();
+        effectiveBundleName) : effectiveBundleName;
     std::string tempDir;
     tempDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
         .append(bundleCodePathName).append(ServiceConstants::PATH_SEPARATOR)
@@ -8389,7 +8511,7 @@ void BaseBundleInstaller::RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &inn
         LOG_W(BMS_TAG_INSTALLER, "IsDirEmpty failed");
     }
     if (isDirEmpty && (InstalldClient::GetInstance()->RemoveDir(
-        tempDir, BundleDirScene::REMOVE_MODULE_DIR, innerBundleInfo.GetBundleName())) != ERR_OK) {
+        tempDir, BundleDirScene::REMOVE_MODULE_DIR, effectiveBundleName)) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "remove tmp so path:%{public}s failed", tempDir.c_str());
     }
     LOG_D(BMS_TAG_INSTALLER, "end");
@@ -9587,8 +9709,10 @@ std::string BaseBundleInstaller::GetModulePath(
     const InnerBundleInfo &info, const bool isBundleUpdate, const bool isModuleUpdate)
 {
     if (isBundleUpdate) {
+        // dual-mode: +new- rotate dir is under the prefixed code dir, so use the effective name.
+        // (other branches use info.GetAppCodePath() which is already prefixed.)
         return std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-            std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + info.GetBundleName() +
+            std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + GetEffectiveBundleName(info) +
             ServiceConstants::PATH_SEPARATOR + info.GetCurrentModulePackage();
     }
     if (isModuleUpdate) {
@@ -9870,14 +9994,17 @@ void BaseBundleInstaller::InnerProcessTargetSoPath(const InnerBundleInfo &info, 
         nativeLibraryPath = info.GetCurrentModulePackage() + ServiceConstants::TMP_SUFFIX +
             ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
     }
+    // dual-mode: target so path is under the prefixed code dir (CreateBundleCodeDir), so use the
+    // effective (prefixed) name for both the +new- rotate dir and the normal code dir.
+    std::string effectiveBundleName = GetEffectiveBundleName(info);
     if (isBundleUpdate) {
         targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
-            .append(ServiceConstants::BUNDLE_NEW_CODE_DIR).append(info.GetBundleName())
+            .append(ServiceConstants::BUNDLE_NEW_CODE_DIR).append(effectiveBundleName)
             .append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath)
             .append(ServiceConstants::PATH_SEPARATOR);
     } else {
         targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
-            .append(info.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath)
+            .append(effectiveBundleName).append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath)
             .append(ServiceConstants::PATH_SEPARATOR);
     }
 }
@@ -9911,7 +10038,10 @@ ErrCode BaseBundleInstaller::RecoverOnDemandInstallBundle(const std::string &bun
 
 bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
 {
-    auto extProfileDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_
+    // dual-mode: ext profile dir is under the prefixed code dir (CreateBundleCodeDir), so use the
+    // effective (prefixed) name; equals bundleName_ in primary mode.
+    const std::string &effectiveBundleName = GetEffectiveBundleName();
+    auto extProfileDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + effectiveBundleName
         + ServiceConstants::PATH_SEPARATOR + ServiceConstants::EXT_PROFILE;
     std::string targetPath = extProfileDir + ServiceConstants::PATH_SEPARATOR + ServiceConstants::MANIFEST_JSON;
     auto iter = installParam.parameters.find(ServiceConstants::ENTERPRISE_MANIFEST);
@@ -9919,7 +10049,7 @@ bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
         bool isExtProfileExist = false;
         InstalldClient::GetInstance()->IsExistDir(extProfileDir, isExtProfileExist);
         if (isExtProfileExist) {
-            if (RemoveModuleDir(targetPath, bundleName_) != ERR_OK) {
+            if (RemoveModuleDir(targetPath, effectiveBundleName) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "fail to delete ext profile file, error is %{public}d", errno);
                 return false;
             }
@@ -9928,7 +10058,7 @@ bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
     }
     LOG_I(BMS_TAG_INSTALLER, "create ext profile dir %{public}s", extProfileDir.c_str());
     ErrCode result =
-        InstalldClient::GetInstance()->CreateBundleDir(bundleName_, BundleDirScene::EXTEND_PROFILE_DIR, extProfileDir);
+        InstalldClient::GetInstance()->CreateBundleDir(effectiveBundleName, BundleDirScene::EXTEND_PROFILE_DIR, extProfileDir);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to create ext profile dir, error is %{public}d", result);
         return false;
@@ -10100,5 +10230,21 @@ void BaseBundleInstaller::NotifyBundleCallback(const NotifyType &type, int32_t u
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyPluginEvents(event, dataMgr_, true);
 }
+
+const std::string& BaseBundleInstaller::GetEffectiveBundleName() const
+{
+    return dualModeBundleName_.empty() ? bundleName_ : dualModeBundleName_;
+}
+
+std::string BaseBundleInstaller::GetEffectiveBundleName(const InnerBundleInfo &bundleInfo) const
+{
+    // If dual-mode bundle name is set, use it as priority
+    if (!dualModeBundleName_.empty()) {
+        return dualModeBundleName_;
+    }
+    // Otherwise, use bundle name from InnerBundleInfo as authoritative source
+    return bundleInfo.GetBundleName();
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
