@@ -63,6 +63,18 @@ enum class BundleType {
     SKILL = 5,
 };
 
+// Application category for dual-mode (2IN1/TABLET) scenarios.
+// Values are powers of two to support bitwise-or combination.
+enum class AppCategory : uint32_t {
+    APP_CATEGORY_UNSPECIFIED = 0,        // Unspecified application category (default)
+    APP_CATEGORY_TABLET_ONLY = 1 << 0,      // TABLET-exclusive application category
+    APP_CATEGORY_2IN1_ONLY = 1 << 1,       // 2IN1-exclusive application category
+    APP_CATEGORY_TABLET_SUPPORT_2IN1 = 1 << 2, // TABLET app supports installation on 2IN1
+    APP_CATEGORY_2IN1_SUPPORT_TABLET = 1 << 3, // 2IN1 app supports installation on TABLET
+    APP_CATEGORY_SAME_PACKAGE = 1 << 4,   // Same bundle name and package body
+    APP_CATEGORY_DIFF_PACKAGE = 1 << 5,   // Same bundle name, different package body
+};
+
 enum class CompatiblePolicy {
     NORMAL = 0,
     BACKWARD_COMPATIBILITY = 1,
@@ -373,6 +385,9 @@ struct ApplicationInfo : public Parcelable {
     AppPreloadPhase appPreloadPhase = AppPreloadPhase::DEFAULT;
     std::string appSignType = Constants::APP_SIGN_TYPE_NONE;
     std::vector<std::string> allowListenBundleChangedEvent;
+
+    // application category for dual-mode (2IN1/TABLET), default UNSPECIFIED
+    AppCategory appCategory = AppCategory::APP_CATEGORY_UNSPECIFIED;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

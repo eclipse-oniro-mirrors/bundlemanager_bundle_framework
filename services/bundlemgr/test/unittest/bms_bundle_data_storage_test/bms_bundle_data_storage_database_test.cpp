@@ -1536,6 +1536,7 @@ protected:
                 "startMode":1,
                 "appPreloadPhase":0,
                 "appSignType": "none",
+                "appCategory": 1,
                 "allowListenBundleChangedEvent": []
             },
             "baseBundleInfo": {
