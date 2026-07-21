@@ -17,6 +17,7 @@
 
 #include <cinttypes>
 #include <dirent.h>
+#include <dlfcn.h>
 #include <fcntl.h>
 #include <fstream>
 #include <random>
@@ -49,6 +50,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+#if defined(CODE_ENCRYPTION_ENABLE)
+std::mutex BundleUtil::encryptionMutex_;
+void* BundleUtil::encryptionHandle_ = nullptr;
+CheckSoEncryptedFunc BundleUtil::checkSoEncryptedFunc_ = nullptr;
+#endif
 namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
 constexpr int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
@@ -86,6 +92,12 @@ constexpr const char PACK_INFO[] = "pack.info";
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
 constexpr const int32_t ZIP_MAX_PATH = 256;
 constexpr const int32_t ZIP_BUF_SIZE = 8192;
+#if defined(CODE_ENCRYPTION_ENABLE)
+constexpr const char LIB_CODE_CRYPTO_SO_PATH[] = "system/lib/libcode_crypto_metadata_process_utils.z.so";
+constexpr const char LIB64_CODE_CRYPTO_SO_PATH[] = "system/lib64/libcode_crypto_metadata_process_utils.z.so";
+constexpr const char CHECK_SO_ENCRYPTED_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15CodeCryptoUtils23"
+    "HasEncryptedSoLibrariesERKNSt3__h12basic_stringIcNS3_11char_traitsIcEENS3_9allocatorIcEEEERb";
+#endif
 
 std::string GetRenameInstallPrefixTag(const std::string &filePath)
 {
@@ -1659,8 +1671,82 @@ bool BundleUtil::IsVmEnabled()
     return false;
 }
 
-bool BundleUtil::IsSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive,
-    const std::string& moduleName, const uint32_t targetVersion, const uint32_t minApiVersion)
+#if defined(CODE_ENCRYPTION_ENABLE)
+bool BundleUtil::OpenEncryptionHandle()
+{
+    std::lock_guard<std::mutex> lock(encryptionMutex_);
+    if (encryptionHandle_ != nullptr && checkSoEncryptedFunc_ != nullptr) {
+        return true;
+    }
+
+    encryptionHandle_ = dlopen(LIB64_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
+    if (encryptionHandle_ == nullptr) {
+        APP_LOGW("open encrypt lib64 failed %{public}s", dlerror());
+        encryptionHandle_ = dlopen(LIB_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
+    }
+    if (encryptionHandle_ == nullptr) {
+        APP_LOGE("open encrypt lib failed %{public}s", dlerror());
+        return false;
+    }
+    checkSoEncryptedFunc_ =
+        reinterpret_cast<CheckSoEncryptedFunc>(dlsym(encryptionHandle_, CHECK_SO_ENCRYPTED_FUNCTION_NAME));
+    if (checkSoEncryptedFunc_ == nullptr) {
+        APP_LOGE("dlsym encrypt err:%{public}s", dlerror());
+        dlclose(encryptionHandle_);
+        encryptionHandle_ = nullptr;
+        return false;
+    }
+    return true;
+}
+
+bool BundleUtil::CallSoEncryptedFunc(const std::string &hapPath, bool &isSoEncrypted)
+{
+    if (!OpenEncryptionHandle()) {
+        APP_LOGE("OpenEncryptionHandle error");
+    }
+
+    if (!checkSoEncryptedFunc_) {
+        APP_LOGE("checkSoEncryptedFunc_ null");
+        return false;
+    }
+
+    int32_t funcCallRes = checkSoEncryptedFunc_(hapPath, isSoEncrypted);
+    if (funcCallRes != 0) {
+        APP_LOGE("checkSoEncryptedFunc_ error:%{public}d hapPath:%{public}s", funcCallRes, hapPath.c_str());
+        return false;
+    }
+    return true;
+}
+#endif
+
+bool BundleUtil::IsSoSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive,
+    const std::string &hapPath)
+{
+    if (!FakeDecompressionCommonCheck(bundleName, isKeepAlive)) {
+        return false;
+    }
+#if defined(CODE_ENCRYPTION_ENABLE)
+    bool isSoEncrypted = false;
+    if (!CallSoEncryptedFunc(hapPath, isSoEncrypted)) {
+        APP_LOGE("CallSoEncryptedFunc error");
+        return false;
+    }
+
+    if (isSoEncrypted) {
+        APP_LOGI("so encrypted hapPath:%{public}s", hapPath.c_str());
+        return false;
+    }
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool BundleUtil::IsResFileSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive)
+{
+    return FakeDecompressionCommonCheck(bundleName, isKeepAlive);
+}
+bool BundleUtil::FakeDecompressionCommonCheck(const std::string &bundleName, const bool isKeepAlive)
 {
     if (!FileManagement::Decompress::GetSystemFeature()) {
         APP_LOGD("device not support FakeDecompression");
@@ -1668,12 +1754,6 @@ bool BundleUtil::IsSupportFakeDecompression(const std::string &bundleName, const
     }
     if (!FileManagement::Decompress::CheckBundleSupported(bundleName, isKeepAlive)) {
         APP_LOGI("not support FakeDecompression:%{public}s %{public}d", bundleName.c_str(), isKeepAlive);
-        return false;
-    }
-    if (!FileManagement::Decompress::CheckModuleApiVersionSupported(
-        moduleName, targetVersion, minApiVersion)) {
-        APP_LOGI("CheckModuleApiVersionSupported fail:%{public}s %{public}d %{public}d", moduleName.c_str(),
-            targetVersion, minApiVersion);
         return false;
     }
     return true;

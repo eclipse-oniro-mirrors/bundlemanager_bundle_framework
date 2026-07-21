@@ -38,6 +38,9 @@ enum class DirType : uint8_t {
     EXT_PROFILE_DIR = 6,
     UNKNOWN
 };
+#if defined(CODE_ENCRYPTION_ENABLE)
+using CheckSoEncryptedFunc = int32_t (*)(const std::string &, bool &);
+#endif
 
 class BundleUtil {
 public:
@@ -260,8 +263,10 @@ public:
     static std::vector<std::string> FileTypeNormalize(const std::string &fileType);
     static std::string Sha256File(const std::string& filePath);
     static ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias);
-    static bool IsSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive,
-        const std::string& moduleName, const uint32_t targetVersion, const uint32_t minApiVersion);
+    static bool IsSoSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive,
+                                                const std::string &hapPath);
+    static bool IsResFileSupportFakeDecompression(const std::string &bundleName, const bool isKeepAlive);
+    static bool FakeDecompressionCommonCheck(const std::string &bundleName, const bool isKeepAlive);
     /**
      * @brief Decompress zip file to dir and collect file paths.
      * @param zipFilePath Indicates the zip file path.
@@ -281,6 +286,13 @@ private:
     static std::mutex g_mutex;
     static std::recursive_mutex configXmlMutex_;
     static std::recursive_mutex whiteListXmlMutex_;
+#if defined(CODE_ENCRYPTION_ENABLE)
+    static std::mutex encryptionMutex_;
+    static void *encryptionHandle_;
+    static CheckSoEncryptedFunc checkSoEncryptedFunc_;
+    static bool OpenEncryptionHandle();
+    static bool CallSoEncryptedFunc(const std::string &hapPath, bool &isSoEncrypted);
+#endif
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

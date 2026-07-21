@@ -326,6 +326,10 @@ ohos_shared_library("libbms") {
     defines += [ "BUILD_VARIANT_USER" ]
   }
 
+  if (code_encryption_enable) {
+    defines += [ "CODE_ENCRYPTION_ENABLE" ]
+  }
+
   configs = [
     ":bundlemgr_common_config",
     "${core_path}:bundlemgr_ipc_public_config",

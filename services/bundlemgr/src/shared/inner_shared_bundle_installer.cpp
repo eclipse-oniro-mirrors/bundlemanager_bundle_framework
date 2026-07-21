@@ -798,8 +798,7 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
         APP_LOGD("tempSoPath=%{public}s,cpuAbi=%{public}s, bundlePath=%{public}s",
             tempSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
         auto needFakeDecompression = newInfo.IsFakeDecompressionEnable() &&
-            BundleUtil::IsSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(),
-                newInfo.GetCurModuleName(), newInfo.GetTargetVersion(), newInfo.GetCompatibleVersion());
+            BundleUtil::IsSoSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(), bundlePath);
         auto isSystemApp = newInfo.IsSystemApp();
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
             bundlePath, moduleDir, tempSoPath, cpuAbi, needFakeDecompression, isSystemApp);

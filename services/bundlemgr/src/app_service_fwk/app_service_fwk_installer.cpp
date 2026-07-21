@@ -711,8 +711,7 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
             versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;
         auto needFakeDecompression =
             newInfo.IsFakeDecompressionEnable() &&
-            BundleUtil::IsSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(),
-                newInfo.GetCurModuleName(), newInfo.GetTargetVersion(), newInfo.GetCompatibleVersion());
+            BundleUtil::IsSoSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(), bundlePath);
         auto isSystemApp = newInfo.IsSystemApp();
         APP_LOGI_NOFUNC("TempSoPath %{public}s cpuAbi %{public}s needFakeDecompression:%{public}d",
             tempSoPath.c_str(), cpuAbi_.c_str(), needFakeDecompression);
