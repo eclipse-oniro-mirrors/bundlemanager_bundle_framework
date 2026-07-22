@@ -16,20 +16,35 @@
 #ifndef BUNDLE_FRAMEWORK_INTERFACES_KITS_ANI_ZLIB_CALLBACK_INFO_H
 #define BUNDLE_FRAMEWORK_INTERFACES_KITS_ANI_ZLIB_CALLBACK_INFO_H
 
+#include <mutex>
+#include <string>
+
 #include "zlib_callback_info_base.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class ANIZlibCallbackInfo : public LIBZIP::ZlibCallbackInfoBase {
 public:
+    struct Result {
+        ErrCode errCode;
+        std::string detailMessage;
+    };
+
     ANIZlibCallbackInfo() = default;
-    virtual ~ANIZlibCallbackInfo() = default;
-    virtual void OnZipUnZipFinish(ErrCode result)
+    ~ANIZlibCallbackInfo() override = default;
+    void OnZipUnZipFinish(ErrCode result) override
     {
         std::lock_guard<std::mutex> lock(mutex_);
         result_ = result;
+        detailMessage_.clear();
     }
-    virtual void DoTask(const OHOS::AppExecFwk::InnerEvent::Callback& task)
+    void OnZipUnZipFinish(ErrCode result, const std::string &detailMessage) override
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        result_ = result;
+        detailMessage_ = detailMessage;
+    }
+    void DoTask(const OHOS::AppExecFwk::InnerEvent::Callback& task) override
     {
         task();
     }
@@ -41,8 +56,15 @@ public:
         return result_;
     }
 
+    inline Result GetDetailedResult()
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return { result_, detailMessage_ };
+    }
+
 private:
     ErrCode result_ = SUCCESS;
+    std::string detailMessage_;
     std::mutex mutex_;
 };
 } // namespace AppExecFwk

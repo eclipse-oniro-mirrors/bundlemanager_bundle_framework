@@ -18,14 +18,22 @@
 #include "bundle_errors.h"
 #include "event_handler.h"
 
+#include <string>
+
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
+std::string BuildBusinessErrorMessage(int32_t err, const std::string &detailMessage);
+
 class ZlibCallbackInfoBase {
 public:
     ZlibCallbackInfoBase() = default;
     virtual ~ZlibCallbackInfoBase() = default;
     virtual void OnZipUnZipFinish(ErrCode result) = 0;
+    virtual void OnZipUnZipFinish(ErrCode result, const std::string &)
+    {
+        OnZipUnZipFinish(result);
+    }
     virtual void DoTask(const OHOS::AppExecFwk::InnerEvent::Callback& task) = 0;
 };
 }  // namespace LIBZIP

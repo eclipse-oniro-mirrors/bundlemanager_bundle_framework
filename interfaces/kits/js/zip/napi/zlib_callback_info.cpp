@@ -16,8 +16,8 @@
 #include "zlib_callback_info.h"
 
 #include "app_log_wrapper.h"
-#include "common_func.h"
 #include "business_error.h"
+#include "common_func.h"
 #include "node_api.h"
 
 namespace OHOS {
@@ -80,8 +80,9 @@ int32_t ZlibCallbackInfo::ExecuteWork(AsyncCallbackInfo* asyncCallbackInfo)
             if (asyncCallbackInfo->callbackResult == ERR_OK) {
                 CHKRV_SCOPE(asyncCallbackInfo->env, napi_get_null(asyncCallbackInfo->env, &result[0]), scope);
             } else {
-                result[0] = BusinessError::CreateCommonError(asyncCallbackInfo->env,
-                    asyncCallbackInfo->callbackResult, "");
+                result[0] = BusinessError::CreateError(asyncCallbackInfo->env,
+                    asyncCallbackInfo->callbackResult, BuildBusinessErrorMessage(asyncCallbackInfo->callbackResult,
+                        asyncCallbackInfo->detailMessage));
             }
         } else {
             napi_create_int32(asyncCallbackInfo->env, asyncCallbackInfo->callbackResult, &result[0]);
@@ -114,6 +115,11 @@ int32_t ZlibCallbackInfo::ExecuteWork(AsyncCallbackInfo* asyncCallbackInfo)
 
 void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
 {
+    OnZipUnZipFinish(result, "");
+}
+
+void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result, const std::string &detailMessage)
+{
     APP_LOGI_NOFUNC("finish %{public}d", result);
     std::lock_guard<std::mutex> lock(validMutex_);
     if (!valid_) {
@@ -135,6 +141,7 @@ void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
         .deferred = deferred_,
         .isCallBack = isCallBack_,
         .callbackResult = err,
+        .detailMessage = detailMessage,
         .deliverErrcode = deliverErrcode_,
         .data = this,
     };

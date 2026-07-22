@@ -18,7 +18,7 @@ module_output_path = "bundle_framework/bundle_framework"
 
 config("module_private_config") {
   visibility = [ ":*" ]
-  include_dirs = []
+  include_dirs = [ "${kits_path}/ani/zlib" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
