@@ -154,10 +154,12 @@ static void DecompressFileNative(ani_env* env, ani_string aniInFile, ani_string 
 
     auto zlibCallbackInfo = std::make_shared<ANIZlibCallbackInfo>();
     LIBZIP::Unzip(inFile, outFile, options, zlibCallbackInfo);
-    const int32_t errCode = CommonFunc::ConvertErrCode(zlibCallbackInfo->GetResult());
+    auto result = zlibCallbackInfo->GetDetailedResult();
+    const int32_t errCode = CommonFunc::ConvertErrCode(result.errCode);
     if (errCode != ERR_OK) {
         APP_LOGE("decompressFileNative failed, ret %{public}d", errCode);
-        BusinessErrorAni::ThrowCommonError(env, errCode, "", "");
+        BusinessErrorAni::ThrowError(
+            env, errCode, LIBZIP::BuildBusinessErrorMessage(errCode, result.detailMessage));
     }
 }
 
