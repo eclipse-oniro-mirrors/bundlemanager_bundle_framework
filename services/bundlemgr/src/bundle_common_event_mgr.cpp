@@ -76,6 +76,9 @@ constexpr const char* CHANGED_SKILLS = "changed";
 constexpr const char* REMOVED_SKILLS = "removed";
 constexpr const char* CHANGE_TYPE = "changeType";
 constexpr int32_t CONTROL_API_VERSION = 25;
+constexpr const char* APP_CATEGORY = "appCategory";
+constexpr const char* CURRENT_MODE = "currentMode";
+constexpr const char* IS_SHARED_SANDBOX = "isSharedSandbox";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -333,6 +336,9 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(CROSS_APP_SHARED_CONFIG, installResult.crossAppSharedConfig);
     want.SetParam(IS_RECOVER, installResult.isRecover);
     want.SetParam(CHANGE_TYPE, static_cast<int32_t>(installResult.changeType));
+    want.SetParam(APP_CATEGORY, static_cast<int32_t>(installResult.appCategory));
+    want.SetParam(CURRENT_MODE, installResult.currentMode);
+    want.SetParam(IS_SHARED_SANDBOX, installResult.isSharedSandbox);
     for (const auto &item : installResult.metadataConfigInfos) {
             want.SetParam(item.first, item.second);
     }

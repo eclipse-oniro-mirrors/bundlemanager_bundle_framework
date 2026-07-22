@@ -102,6 +102,13 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool LoadDataFromPersistentStorage();
+
+    /**
+     * @brief Classify dual-mode apps into queryable and non-queryable based on current mode.
+     * This function should be called after RestoreUidAndGid() to ensure proper classification.
+     * Note: This function does not lock bundleInfoMutex_, caller must hold the lock.
+     */
+    void ClassifyDualModeAppsNoLock();
     /**
      * @brief Update internal state for whole bundle.
      * @param bundleName Indicates the bundle name.
@@ -1698,6 +1705,13 @@ private:
     // key:bundleName
     // value:innerbundleInfo
     std::map<std::string, InnerBundleInfo> bundleInfos_;
+    // === DUAL_MODE: Apps not queryable in current mode ===
+    // Secondary mode: category 7 apps (stored in DB with +clone-10000+ prefix, loaded as original bundleName)
+    // Primary mode: category 7 apps (stored with original bundleName, but not queryable)
+    // key:bundleName (original, without prefix)
+    // value:innerbundleInfo
+    std::map<std::string, InnerBundleInfo> tempBundleInfos_;
+    // === DUAL_MODE END ===
     // key:bundle name
     std::map<std::string, InstallState> installStates_;
     // current-status:previous-statue pair

@@ -22,6 +22,7 @@
 #include "bundle_service_constants.h"
 #include "bundle_constants.h"
 #include "installd_client.h"
+#include "dual_mode_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -163,7 +164,14 @@ ErrCode InstallExceptionMgr::InnerProcessNewToRealPath(const std::string &bundle
 {
     InnerBundleInfo bundleInfo;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if ((dataMgr != nullptr) && (!dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo))) {
+    // dual-mode: the incoming bundleName may be the prefixed clone name; FetchInnerBundleInfo keys
+    // on the original name, so parse it back first. Directory ops below keep the incoming (possibly
+    // prefixed) bundleName since those dirs are already prefixed.
+    std::string originalName = bundleName;
+    if (DualModeHelper::IsDualModeCloneKey(bundleName)) {
+        DualModeHelper::ParseDualModeBundleName(bundleName, originalName);
+    }
+    if ((dataMgr != nullptr) && (!dataMgr->FetchInnerBundleInfo(originalName, bundleInfo))) {
         LOG_NOFUNC_W(BMS_TAG_INSTALLER, " exception mgr bundle %{public}s not exist", bundleName.c_str());
         // for bundle already uninstalled, need to delete +new- dir
         std::string newPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +

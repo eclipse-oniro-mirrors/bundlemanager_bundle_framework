@@ -215,6 +215,19 @@ protected:
 
     bool IsEnterpriseForAllUser(const InstallParam &installParam, const std::string &bundleName);
 
+    /**
+     * @brief Get the effective bundle name for directory and DB key operations.
+     * @return Returns dualModeBundleName_ if set (secondary mode category 7), otherwise bundleName_.
+     */
+    const std::string& GetEffectiveBundleName() const;
+
+    /**
+     * @brief Get the effective bundle name for directory and DB key operations with InnerBundleInfo.
+     * @param bundleInfo The InnerBundleInfo reference for fallback.
+     * @return Returns dualModeBundleName_ if set (secondary mode category 7), otherwise bundleInfo.GetBundleName().
+     */
+    std::string GetEffectiveBundleName(const InnerBundleInfo &bundleInfo) const;
+
 private:
     // Delete the (bundleName, userId) preference row when the main app is uninstalled.
     // No-op when AppClonePreferenceDataMgr is unavailable (e.g. test env); logs the skip.
@@ -571,6 +584,9 @@ private:
      */
     ErrCode CreateBundleUserData(InnerBundleInfo &innerBundleInfo);
     void AddBundleStatus(const NotifyBundleEvents &installRes);
+    // Fill dual-mode extended fields (appCategory / currentMode / isSharedSandbox) on a notify event
+    // when running on a dual-mode device; no-op otherwise. Shared by install / update / recover paths.
+    void FillDualModeEventFields(const InstallParam &installParam, NotifyBundleEvents &installRes);
     ErrCode CheckInstallationFree(const InnerBundleInfo &innerBundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
@@ -888,6 +904,10 @@ private:
     void UpdateDeveloperIdAndOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void SetDualModeAppInfo(const InstallParam &installParam,
+        std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode CheckDualModeCategoryConsistency(const InnerBundleInfo &oldInfo, const InstallParam &installParam);
+    void InitDualModeBundleName(const InstallParam &installParam);
     void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
     ErrCode CleanArkStartupCache(const std::string &bundleName) const;
@@ -1076,7 +1096,8 @@ private:
     SingletonState singletonState_ = SingletonState::DEFAULT;
     BundleType bundleType_ = BundleType::APP;
     Security::AccessToken::AccessTokenID callerToken_ = 0;
-    std::string bundleName_;
+    std::string bundleName_;           // original bundle name (for InnerBundleInfo storage, queries)
+    std::string dualModeBundleName_;   // dual-mode prefixed name (dirs/DB keys); secondary-mode category 7 only
     std::string modulePath_;
     std::string baseDataPath_;
     std::string modulePackage_;

@@ -26,6 +26,7 @@
 #include "bundle_memory_guard.h"
 #include "bundle_resource_helper.h"
 #include "datetime_ex.h"
+#include "dual_mode_helper.h"
 #include "el5_filekey_callback.h"
 #include "el5_filekey_manager_kit.h"
 #include "installd_client.h"
@@ -131,6 +132,7 @@ bool BundleMgrService::Init()
     CreateBmsServiceDir();
     APP_LOGI_NOFUNC("BundleMgrService InitBmsParam");
     InitBmsParam();
+    DualModeHelper::InitializeCache();
     APP_LOGI_NOFUNC("BundleMgrService InitPreInstallExceptionMgr");
     InitPreInstallExceptionMgr();
     CHECK_INIT_RESULT(InitBundleMgrHost(), "Init bundleMgr fail");

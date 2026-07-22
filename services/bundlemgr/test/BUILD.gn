@@ -117,6 +117,7 @@ group("unittest") {
       "unittest/bms_default_app_host_test:unittest",
       "unittest/bms_default_app_proxy_test:unittest",
       "unittest/bms_driver_installer_test:unittest",
+      "unittest/bms_dual_mode_install_test:unittest",
       "unittest/bms_dynamic_skills_test:unittest",
       "unittest/bms_event_handler_test:unittest",
       "unittest/bms_extend_resource_manager_test:unittest",

@@ -34,6 +34,8 @@
 #include "bms_update_selinux_mgr.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_storage_rdb.h"
+#include "bundle_service_constants.h"
+#include "dual_mode_helper.h"
 #include "preinstall_data_storage_rdb.h"
 #include "hap_token_info.h"
 #include "bundle_event_callback_death_recipient.h"
@@ -240,7 +242,14 @@ bool BundleDataMgr::LoadDataFromPersistentStorage()
         AddAppHspBundleName(item.second.GetApplicationBundleType(), item.first);
     }
 
+    // Restore uid and gid before dual mode classification
     RestoreUidAndGid();
+
+    // === DUAL_MODE: Classify apps by isDualModeCloneApp + current mode ===
+    // After RestoreUidAndGid, classify apps into queryable (bundleInfos_) and
+    // non-queryable (tempBundleInfos_) based on current mode.
+    ClassifyDualModeAppsNoLock();
+
     if (!bundleStateDbExist) {
         // Compatible old bundle status in kV db
         CompatibleOldBundleStateInKvDb();
@@ -307,6 +316,89 @@ void BundleDataMgr::ResetBundleStateData()
     for (auto& bundleInfoItem : bundleInfos_) {
         bundleInfoItem.second.ResetBundleState(Constants::ALL_USERID);
     }
+}
+
+void BundleDataMgr::ClassifyDualModeAppsNoLock()
+{
+    // === DUAL_MODE: Classify category 7 apps (APP_CATEGORY_DIFF_PACKAGE) based on current mode ===
+    // Primary mode: secondary-mode apps (prefixed) → tempBundleInfos_, primary-mode apps → bundleInfos_
+    // Secondary mode: primary-mode apps (non-prefixed) → tempBundleInfos_, secondary-mode apps (prefixed) → bundleInfos_
+    // Final result: both maps use original bundle name as key (no prefix)
+    // Note: Only category 7 apps need classification; other apps stay in bundleInfos_
+
+    // Early return if not a dual-mode device
+    if (!DualModeHelper::IsDualModeDevice()) {
+        APP_LOGD("Dual mode: not a dual-mode device, skip classification");
+        return;
+    }
+
+    bool isSecondaryMode = DualModeHelper::IsSecondaryMode();
+    APP_LOGI("Dual mode: classification start, total=%{public}zu, secondary=%{public}d",
+             bundleInfos_.size(), isSecondaryMode);
+
+    // Step 1: Move all prefixed apps to tempBundleInfos_ with original name as key
+    // Erase prefixed keys immediately during collection to avoid second pass
+    for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
+        const std::string &dbKey = it->first;
+        const InnerBundleInfo &innerBundleInfo = it->second;
+        AppCategory appCategory = innerBundleInfo.GetAppCategory();
+
+        // Only process category 7 (APP_CATEGORY_DIFF_PACKAGE) apps
+        if (!DualModeHelper::IsDiffPackageCategory(appCategory)) {
+            ++it;
+            continue;
+        }
+
+        // Move all prefixed apps to temp with original name as key
+        if (DualModeHelper::IsDualModeCloneKey(dbKey)) {
+            std::string originalName;
+            DualModeHelper::ParseDualModeBundleName(dbKey, originalName);
+            tempBundleInfos_[originalName] = it->second;
+            // Erase immediately and get next iterator
+            it = bundleInfos_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    // Step 2: Based on current mode, restore apps that should be visible
+    // Secondary mode: swap category7 apps from temp to bundleInfos_
+    // Primary mode: all apps stay in temp (already hidden)
+    if (isSecondaryMode) {
+        // Erase during traversal using erase return value for safe iteration
+        for (auto it = tempBundleInfos_.begin(); it != tempBundleInfos_.end();) {
+            const std::string &originalName = it->first;
+            const InnerBundleInfo &innerBundleInfo = it->second;
+            AppCategory appCategory = innerBundleInfo.GetAppCategory();
+
+            // Only process category 7 apps
+            if (!DualModeHelper::IsDiffPackageCategory(appCategory)) {
+                ++it;
+                continue;
+            }
+
+            // Move from temp to bundleInfos_. When bundleInfos_ already holds an entry under
+            // the same original name, swap the two so the temp entry (clone) becomes visible in
+            // bundleInfos_ and the existing entry (primary) stays hidden in tempBundleInfos_.
+            // Use a local copy: `it` aliases tempBundleInfos_[originalName], so writing through
+            // that key would clobber it->second before it is written back to bundleInfos_.
+            // Keep the swapped primary in tempBundleInfos_ (do NOT erase) so it stays hidden.
+            auto existingIt = bundleInfos_.find(originalName);
+            if (existingIt != bundleInfos_.end()) {
+                InnerBundleInfo tempInfo = it->second;
+                tempBundleInfos_[originalName] = existingIt->second;
+                bundleInfos_[originalName] = tempInfo;
+                ++it;
+            } else {
+                bundleInfos_[originalName] = it->second;
+                it = tempBundleInfos_.erase(it);
+            }
+        }
+    }
+
+    APP_LOGI("Dual mode: classification done - bundleInfos=%{public}zu, tempBundleInfos=%{public}zu",
+             bundleInfos_.size(), tempBundleInfos_.size());
+    // === DUAL_MODE END ===
 }
 
 bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
@@ -6540,17 +6632,24 @@ bool BundleDataMgr::RestoreUidAndGid()
                 onlyInsertOne = true;
                 int32_t bundleId = innerBundleUserInfo.uid -
                     innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
+                // === DUAL_MODE: secondary-mode clone apps must restore bundleIdMap_ and fs config
+                // with the prefixed name, matching what CreateBundleDataDir used at install time.
+                // Otherwise the same bundleId is remapped to the original name after reboot and
+                // diverges from the install-time fs config generated under the prefixed name.
+                std::string restoreName = info.second.IsDualModeCloneApp()
+                    ? DualModeHelper::GetDualModeBundleName(innerBundleUserInfo.bundleName)
+                    : innerBundleUserInfo.bundleName;
                 std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
                 auto item = bundleIdMap_.find(bundleId);
                 if (item == bundleIdMap_.end()) {
-                    bundleIdMap_.emplace(bundleId, innerBundleUserInfo.bundleName);
+                    bundleIdMap_.emplace(bundleId, restoreName);
                 } else {
-                    bundleIdMap_[bundleId] = innerBundleUserInfo.bundleName;
+                    bundleIdMap_[bundleId] = restoreName;
                 }
-                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
-                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId,
+                BundleUtil::MakeFsConfig(restoreName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(restoreName, bundleId,
                     ServiceConstants::SHAREFS_CONFIG_PATH);
-                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH,
+                BundleUtil::MakeFsConfig(restoreName, ServiceConstants::HMDFS_CONFIG_PATH,
                     info.second.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
             }
             // appClone
