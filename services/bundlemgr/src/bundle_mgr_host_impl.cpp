@@ -7912,11 +7912,6 @@ ErrCode BundleMgrHostImpl::GetBundleInstallStatus(const std::string &bundleName,
     BundleInstallStatus &bundleInstallStatus)
 {
     APP_LOGD("start GetBundleInstallStatus, bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
-
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
