@@ -5948,7 +5948,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest 
 
     BaseBundleInstaller installer;
     installer.InitDataMgr();
-    installer.userId_ = ServiceConstants::NOT_EXIST_USERID;
+    installer.userId_ = -10000;
     ErrCode res = installer.CreateBundleDataDir(info);
     EXPECT_NE(res, ERR_OK);
 
