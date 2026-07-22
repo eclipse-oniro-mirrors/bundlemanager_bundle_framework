@@ -3158,7 +3158,10 @@ ErrCode BundleMgrHostImpl::HandleKillProcess(const std::string &bundleName, int3
             return ERR_APPEXECFWK_NULL_PTR;
         }
         APP_LOGD("kill process, -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
-        if (appMgrClient->KillApplicationWithUserId(bundleName, userId, appIndex) != ERR_OK) {
+        std::string identity = IPCSkeleton::ResetCallingIdentity();
+        auto ret = appMgrClient->KillApplicationWithUserId(bundleName, userId, appIndex);
+        IPCSkeleton::SetCallingIdentity(identity);
+        if (ret != ERR_OK) {
             APP_LOGE("kill app process failed");
             return ERR_APPEXECFWK_KILL_PROCESS_FAILED;
         }
