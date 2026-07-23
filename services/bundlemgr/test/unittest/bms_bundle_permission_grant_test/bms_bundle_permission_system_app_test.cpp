@@ -59,6 +59,7 @@ void SetIsNativeTokenTypeOnlyForTest(bool value);
 namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "bundlName";
+const std::string TEST_BUNDLE_NAME = "com.test.HspBundleName";
 const std::string ABILITY_NAME = "abilityName";
 const std::string MOUDLE_NAME = "moduleName";
 const std::string APPID = "appId";
@@ -4004,10 +4005,13 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, VerifyUninstallPermission_0100, 
  */
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CheckIsDebugAppProvisionType_0100, Function | SmallTest | Level0)
 {
-    auto ret = bundleInstallerHost_->CheckIsDebugAppProvisionType(BUNDLE_NAME, Constants::UNSPECIFIED_USERID);
+    auto ret = bundleInstallerHost_->CheckIsDebugAppProvisionType(TEST_BUNDLE_NAME, Constants::UNSPECIFIED_USERID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 
-    ret = bundleInstallerHost_->CheckIsDebugAppProvisionType(BUNDLE_NAME, USERID);
+    ret = bundleInstallerHost_->CheckIsDebugAppProvisionType(TEST_BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+
+    ret = bundleInstallerHost_->CheckIsDebugAppProvisionType(TEST_BUNDLE_NAME, USERID, true);
     EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
 }
 
