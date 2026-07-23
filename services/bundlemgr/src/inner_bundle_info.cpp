@@ -1577,14 +1577,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             appFeature_,
             true,
             parseResult);
-        GetValueIfFindKey<std::map<std::string, std::vector<FormInfo>>>(jsonObject,
-            jsonObjectEnd,
-            MODULE_FORMS,
-            formInfos_,
-            JsonType::OBJECT,
-            true,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, MODULE_FORMS, mapPtr,
+                JsonType::ARRAY, ArrayType::OBJECT, true, parseResult);
+            if (mapPtr != nullptr) {
+                formInfos_ = mapPtr->get<std::map<std::string, std::vector<FormInfo>>>();
+            }
+        }
         GetValueIfFindKey<std::map<std::string, ShortcutInfo>>(jsonObject,
             jsonObjectEnd,
             MODULE_SHORTCUT,

@@ -50,6 +50,11 @@ public:
         const std::string &key, bool &data, bool isNecessary, int32_t &parseResult);
     static bool CheckArrayValueType(const nlohmann::json &value, ArrayType arrayType);
     static bool CheckMapValueType(const nlohmann::json &value, JsonType valueType, ArrayType arrayType);
+    static void GetMapObject(const nlohmann::json &jsonObject,
+        const nlohmann::detail::iter_impl<const nlohmann::json> &end,
+        const std::string &key, const nlohmann::json *&outPtr,
+        JsonType valueType, ArrayType arrayType,
+        bool isNecessary, int32_t &parseResult);
 };
 
 template<typename T, typename dataType>
