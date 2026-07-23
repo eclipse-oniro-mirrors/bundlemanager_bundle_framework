@@ -46,7 +46,7 @@ private:
     ErrCode RemoveDataDir(const std::string bundleName, int32_t userId);
     ErrCode GetDataMgr();
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
-        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, InnerBundleInfo &innerBundleInfo);
+        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
     void DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
     ErrCode ProcessBundleShareFiles(const InnerBundleInfo &info, const int32_t userId, uint32_t tokenId);
 
@@ -57,7 +57,6 @@ private:
     uint32_t accessTokenId_ = 0;
     std::string appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
     std::string moduleName_;
-    int32_t sessionId_ = 0;
 };
 } // AppExecFwk
 } // OHOS

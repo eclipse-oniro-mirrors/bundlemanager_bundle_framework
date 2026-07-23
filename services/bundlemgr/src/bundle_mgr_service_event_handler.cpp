@@ -18,7 +18,6 @@
 #include <sstream>
 #include <sys/stat.h>
 
-#include "access_token_error.h"
 #include "account_helper.h"
 #include "aot/aot_handler.h"
 #include "app_log_tag_wrapper.h"
@@ -408,8 +407,6 @@ bool BMSEventHandler::LoadInstallInfosFromDb()
 
 void BMSEventHandler::BundleBootStartEvent()
 {
-    Security::AccessToken::AccessTokenKit::FinishMigration();
-    UpdateOtaFlag(OTAFlag::PROCESS_ACCESS_TOKEN_MIGRATION);
     EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
     OnBundleBootStart(Constants::DEFAULT_USERID);
     InstalldClient::GetInstance()->ResetBmsDBSecurity();
@@ -419,9 +416,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_LOG_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_FILE_MANAGER_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA);
-    UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_SYSTEM_OPTIMIZE_SHADER_CAHCE_DIR);
-    UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_BACK_UP_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO);
     UpdateOtaFlag(OTAFlag::CHECK_INSTALL_SOURCE);
@@ -446,9 +441,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         UpdateAllPrivilegeCapability();
     }
 #endif
-    CleanUninstallBundleInfo();
     if (IsSystemUpgrade()) {
-        ProcessAccessTokenMigration();
         EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
         OnBundleRebootStart();
         HandlePreInstallException(false);
@@ -634,8 +627,6 @@ bool BMSEventHandler::AnalyzeUserData(
 
 ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
 {
-    Security::AccessToken::AccessTokenKit::FinishMigration();
-    UpdateOtaFlag(OTAFlag::PROCESS_ACCESS_TOKEN_MIGRATION);
     ReInstallSystemHspAndSharedBundles();
     // First, reinstall all preInstall app from preInstall dir
     std::vector<std::string> preInstallDirs;
@@ -1431,6 +1422,8 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootBundleUninstall();
     ProcessRebootAppServiceUninstall();
     ProcessRebootSkillsUninstall();
+    //refresh application permissions
+    ProcessUpdatePermissions();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
     ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
     XCollieHelper::ResumeFoundationWatchdog();
@@ -1443,9 +1436,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckAppFileManagerDir();
     ProcessCheckPreinstallData();
     ProcessCheckSystemOptimizeDir();
-    ProcessCheckShaderCacheDir();
     ProcessCheckSystemOptimizeShaderCacheDir();
-    ProcessCheckCloudShaderDir();
     ProcessNewBackupDir();
     CheckAndCreateShareFilesSubDataDirs();
     RefreshQuotaForAllUid();
@@ -1456,8 +1447,6 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessEmptyOdid();
     // Driver update may cause shader cache invalidity and need to be cleared
     CleanSystemOptimizeShaderCache();
-    CleanAllBundleShaderCache();
-    CleanAllBundleEl1ShaderCacheLocal();
     CleanAllBundleEl1ArkStartupCacheLocal();
     if (OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
         (void)ProcessIdleInfo();
@@ -1679,19 +1668,6 @@ void BMSEventHandler::InnerProcessCheckAppFileManagerDir()
     UpdateAppDataMgr::ProcessFileManagerDir(bundleInfos, Constants::U1);
 }
 
-void BMSEventHandler::ProcessCheckShaderCacheDir()
-{
-    bool checkShaderCache = false;
-    CheckOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR, checkShaderCache);
-    if (checkShaderCache) {
-        LOG_I(BMS_TAG_DEFAULT, "Not need to check shader cache dir due to has checked");
-        return;
-    }
-    LOG_I(BMS_TAG_DEFAULT, "Need to check shader cache dir");
-    InnerProcessCheckShaderCacheDir();
-    UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
-}
-
 void BMSEventHandler::ProcessCheckSystemOptimizeShaderCacheDir()
 {
     bool checkShaderCache = false;
@@ -1703,168 +1679,6 @@ void BMSEventHandler::ProcessCheckSystemOptimizeShaderCacheDir()
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Need to check system optimize shader cache dir");
     CheckSystemOptimizeShaderCache();
     UpdateOtaFlag(OTAFlag::CHECK_SYSTEM_OPTIMIZE_SHADER_CAHCE_DIR);
-}
-
-void BMSEventHandler::InnerProcessCheckShaderCacheDir()
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-        return;
-    }
-    std::vector<BundleInfo> bundleInfos;
-    ErrCode res = dataMgr->GetBundleInfosV9(
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfos, Constants::ALL_USERID);
-    if (res != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "GetAllBundleInfos failed");
-        return;
-    }
-    for (const auto &bundleInfo : bundleInfos) {
-        if (bundleInfo.name.empty()) {
-            continue;
-        }
-        std::string shaderCachePath;
-        shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleInfo.name);
-        CreateDirParam createDirParam;
-        createDirParam.bundleName = bundleInfo.name;
-        createDirParam.bundleDirScene = BundleDirScene::SHADER_CACHE_DIR;
-        ErrCode res = InstalldClient::GetInstance()->Mkdir(
-            shaderCachePath, S_IRWXU, bundleInfo.uid, bundleInfo.gid, createDirParam);
-        if (res != ERR_OK) {
-            LOG_W(BMS_TAG_DEFAULT, "create shader cache failed: %{public}s ", shaderCachePath.c_str());
-        }
-    }
-}
-
-void BMSEventHandler::CheckBundleCloneEl1ShaderCacheLocal(const std::string &bundleName,
-    int32_t appIndex, int32_t userId, int32_t uid)
-{
-    std::string cloneBundleName = bundleName;
-    if (appIndex != 0) {
-        cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName,
-            appIndex);
-    }
-    if (uid == Constants::INVALID_UID) {
-        LOG_W(BMS_TAG_DEFAULT, "invalid uid for: %{public}s", cloneBundleName.c_str());
-        return;
-    }
-    std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"),
-        1, std::to_string(userId));
-    el1ShaderCachePath = el1ShaderCachePath + cloneBundleName;
-    bool isExist = true;
-    ErrCode result = InstalldClient::GetInstance()->IsExistDir(el1ShaderCachePath, isExist);
-    if (result == ERR_OK && isExist) {
-        return;
-    }
-    CreateDirParam createDirParam;
-    createDirParam.bundleName = bundleName;
-    createDirParam.bundleDirScene = BundleDirScene::EL1_SHADER_CACHE_DIR;
-    result = InstalldClient::GetInstance()->Mkdir(el1ShaderCachePath,
-        ServiceConstants::NEW_SHADER_CACHE_MODE,
-        uid, ServiceConstants::NEW_SHADER_CACHE_GID, createDirParam);
-    if (result != ERR_OK) {
-        LOG_W(BMS_TAG_DEFAULT, "create new shadercache failed: %{public}s ", el1ShaderCachePath.c_str());
-    }
-}
-
-void BMSEventHandler::CheckAllBundleEl1ShaderCacheLocal()
-{
-    LOG_I(BMS_TAG_DEFAULT, "start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-        return;
-    }
-    std::set<int32_t> userIds = dataMgr->GetAllUser();
-    for (const auto &userId : userIds) {
-        std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-        el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"),
-            1, std::to_string(userId));
-        bool isExist = true;
-        ErrCode result = InstalldClient::GetInstance()->IsExistDir(el1ShaderCachePath, isExist);
-        if (result != ERR_OK || !isExist) {
-            LOG_W(BMS_TAG_DEFAULT, "shadercache not exist: %{public}s ", el1ShaderCachePath.c_str());
-            continue;
-        }
-        std::map<std::string, InnerBundleInfo> infos = dataMgr->GetAllInnerBundleInfos();
-        for (auto &infoPair : infos) {
-            auto &info = infoPair.second;
-            std::string bundleName = info.GetBundleName();
-            std::vector<int32_t> allAppIndexes = {0};
-            std::vector<int32_t> cloneAppIndexes = dataMgr->GetCloneAppIndexesByInnerBundleInfo(info, userId);
-            allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
-            for (int32_t appIndex: allAppIndexes) {
-                int32_t uid = info.GetUid(userId, appIndex);
-                CheckBundleCloneEl1ShaderCacheLocal(bundleName, appIndex, userId, uid);
-            }
-        }
-    }
-}
-
-void BMSEventHandler::CleanBundleCloneEl1ShaderCacheLocal(const std::string &bundleName,
-    int32_t appIndex, int32_t userId)
-{
-    std::string cloneBundleName = bundleName;
-    if (appIndex != 0) {
-        cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName,
-            appIndex);
-    }
-    std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"),
-        1, std::to_string(userId));
-    el1ShaderCachePath = el1ShaderCachePath + cloneBundleName;
-    ErrCode res = InstalldClient::GetInstance()->CleanBundleDataDir(el1ShaderCachePath, bundleName, userId);
-    if (res != ERR_OK) {
-        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "%{public}s clean shader cache fail %{public}d",
-            bundleName.c_str(), res);
-    }
-}
-
-void BMSEventHandler::CleanAllBundleEl1ShaderCacheLocal()
-{
-    LOG_I(BMS_TAG_DEFAULT, "start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-        return;
-    }
-    std::set<int32_t> userIds = dataMgr->GetAllUser();
-    for (const auto &userId : userIds) {
-        std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-        el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"),
-            1, std::to_string(userId));
-        bool isExist = true;
-        ErrCode result = InstalldClient::GetInstance()->IsExistDir(el1ShaderCachePath, isExist);
-        if (result != ERR_OK || !isExist) {
-            LOG_W(BMS_TAG_DEFAULT, "shadercache not exist: %{public}s ", el1ShaderCachePath.c_str());
-            continue;
-        }
-        std::map<std::string, InnerBundleInfo> infos = dataMgr->GetAllInnerBundleInfos();
-        for (auto &infoPair : infos) {
-            auto &info = infoPair.second;
-            std::string bundleName = info.GetBundleName();
-            std::vector<int32_t> allAppIndexes = {0};
-            std::vector<int32_t> cloneAppIndexes = dataMgr->GetCloneAppIndexesByInnerBundleInfo(info, userId);
-            allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
-            for (int32_t appIndex: allAppIndexes) {
-                CleanBundleCloneEl1ShaderCacheLocal(bundleName, appIndex, userId);
-            }
-        }
-    }
-}
-
-void BMSEventHandler::ProcessCheckCloudShaderDir()
-{
-    bool checkCloudShader = false;
-    CheckOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR, checkCloudShader);
-    if (checkCloudShader) {
-        LOG_D(BMS_TAG_DEFAULT, "Not need to check cloud shader cache dir due to has checked");
-        return;
-    }
-    LOG_D(BMS_TAG_DEFAULT, "Need to check cloud shader cache dir");
-    InnerProcessCheckCloudShaderDir();
-    UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
 }
 
 void BMSEventHandler::ProcessNewBackupDir()
@@ -1896,75 +1710,6 @@ void BMSEventHandler::ProcessNewBackupDir()
     }
     UpdateOtaFlag(OTAFlag::CHECK_BACK_UP_DIR);
 }
-
-void BMSEventHandler::InnerProcessCheckCloudShaderDir()
-{
-    bool cloudExist = true;
-    bool commonExist = true;
-    ErrCode result = InstalldClient::GetInstance()->IsExistDir(ServiceConstants::CLOUD_SHADER_PATH, cloudExist);
-    if (result != ERR_OK) {
-        LOG_W(BMS_TAG_DEFAULT, "IsExistDir failed, error is %{public}d", result);
-        return;
-    }
-    result = InstalldClient::GetInstance()->IsExistDir(ServiceConstants::CLOUD_SHADER_COMMON_PATH, commonExist);
-    if (result != ERR_OK) {
-        LOG_W(BMS_TAG_DEFAULT, "IsExistDir failed, error is %{public}d", result);
-        commonExist = false;
-    }
-    if (cloudExist && commonExist) {
-        LOG_D(BMS_TAG_DEFAULT, "CLOUD_SHADER_PATH and CLOUD_SHADER_COMMON_PATH existed");
-        return;
-    }
-    const std::string bundleName = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
-    if (bundleName.empty()) {
-        return;
-    }
-
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_W(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-        return;
-    }
-
-    BundleInfo info;
-    auto hasBundleInstalled = dataMgr->GetBundleInfo(
-        bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
-        info, Constants::ANY_USERID);
-    if (!hasBundleInstalled) {
-        LOG_D(BMS_TAG_DEFAULT, "Obtain bundleInfo failed, bundleName: %{public}s not exist", bundleName.c_str());
-        return;
-    }
-    if (!cloudExist) {
-        constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
-        CreateDirParam createDirParam;
-        createDirParam.bundleDirScene = BundleDirScene::CLOUD_SHADER_DIR;
-        result = InstalldClient::GetInstance()->Mkdir(
-            ServiceConstants::CLOUD_SHADER_PATH, mode, info.uid, info.gid, createDirParam);
-        if (result != ERR_OK) {
-            LOG_W(BMS_TAG_DEFAULT, "Mkdir CLOUD_SHADER_PATH failed, error is %{public}d", result);
-            return;
-        }
-    }
-    if (!commonExist) {
-        InnerProcessCheckCloudShaderCommonDir(info.uid, info.gid);
-    }
-    LOG_I(BMS_TAG_DEFAULT, "Create cloud shader cache result: %{public}d", result);
-}
-
-void BMSEventHandler::InnerProcessCheckCloudShaderCommonDir(const int32_t uid, const int32_t gid)
-{
-    constexpr int32_t commonMode = (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    CreateDirParam createDirParam;
-    createDirParam.bundleDirScene = BundleDirScene::CLOUD_SHADER_COMMON_DIR;
-    ErrCode result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_COMMON_PATH,
-        commonMode, uid, gid, createDirParam);
-    if (result != ERR_OK) {
-        LOG_W(BMS_TAG_DEFAULT, "Mkdir CLOUD_SHADER_COMMON_PATH failed, error is %{public}d", result);
-        return;
-    }
-    LOG_I(BMS_TAG_DEFAULT, "Create cloud shader cache result: %{public}d", result);
-}
-
 void BMSEventHandler::ProcessCheckRecoverableApplicationInfo()
 {
     bool hasCheck = false;
@@ -2062,393 +1807,6 @@ void BMSEventHandler::InnerProcessCheckInstallSource()
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "update installSorce UpdateInnerBundleInfo fail -n %{public}s",
                 preInstallBundleInfo.GetBundleName().c_str());
         }
-    }
-}
-
-void BMSEventHandler::CleanUninstallBundleInfo()
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("CleanUninstallBundleInfo dataMgr is null");
-        return;
-    }
-    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
-    if (!dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos)) {
-        APP_LOGE("CleanUninstallBundleInfo GetAllUninstallBundleInfo failed");
-        return;
-    }
-    for (const auto &[bundleName, uninstallInfo] : uninstallBundleInfos) {
-        for (const auto &[key, userInfo] : uninstallInfo.userInfos) {
-            auto underscorePos = key.find(Constants::FILE_UNDERLINE);
-            int32_t userId = 0;
-            int32_t appIndex = 0;
-            if (underscorePos != std::string::npos) {
-                if (!OHOS::StrToInt(key.substr(0, underscorePos), userId)) {
-                    continue;
-                }
-                OHOS::StrToInt(key.substr(underscorePos + 1), appIndex);
-            } else {
-                if (!OHOS::StrToInt(key, userId) || userId == -3) {
-                    continue;
-                }
-            }
-            if (dataMgr->CheckBundleExist(bundleName, userId, appIndex) == ERR_OK ||
-                !dataMgr->HasUserId(userId) || userId <= Constants::U1) {
-                APP_LOGW("CleanUninstallBundleInfo %{public}s", bundleName.c_str());
-                if (appIndex == 0) {
-                    (void)dataMgr->DeleteUninstallBundleInfo(bundleName, userId);
-                } else {
-                    (void)dataMgr->DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex);
-                }
-                BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, appIndex);
-            }
-        }
-    }
-}
-
-void BMSEventHandler::ProcessAccessTokenMigration()
-{
-    bool hasMigrated = false;
-    CheckOtaFlag(OTAFlag::PROCESS_ACCESS_TOKEN_MIGRATION, hasMigrated);
-    if (hasMigrated) {
-        LOG_I(BMS_TAG_DEFAULT, "Not need to migrate access_token due to has migrated");
-        Security::AccessToken::AccessTokenKit::FinishMigration();
-        return;
-    }
-    LOG_I(BMS_TAG_DEFAULT, "Need to migrate access_token");
-    bool allMigrated = InnerProcessAccessTokenMigration();
-    if (allMigrated) {
-        UpdateOtaFlag(OTAFlag::PROCESS_ACCESS_TOKEN_MIGRATION);
-    }
-}
-
-bool BMSEventHandler::InnerProcessAccessTokenMigration()
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-        return false;
-    }
-
-    auto bundleNames = dataMgr->GetAllBundleName();
-    auto sandboxHelper = dataMgr->GetSandboxAppHelper();
-    auto sandboxMap = (sandboxHelper != nullptr) ? sandboxHelper->GetSandboxAppInfoMap()
-        : std::unordered_map<std::string, InnerBundleInfo>();
-    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
-    dataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
-
-    // Step 1: Build MigratedInfo and collect old tokens
-    std::vector<Security::AccessToken::MigratedInfo> migratedList;
-    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenIdExList;
-    BuildMigrationData(dataMgr, bundleNames, sandboxMap, uninstallBundleInfos,
-        migratedList, oldTokenIdExList);
-
-    // Step 2: Execute batch migration with retry (includes token update and event report)
-    std::vector<bool> successFlags(migratedList.size(), false);
-    ExecuteMigrationWithRetry(dataMgr, migratedList, oldTokenIdExList, successFlags);
-
-    // Step 3: Mark checkBySpm on successfully migrated bundles
-    MarkMigratedBundles(dataMgr, bundleNames, migratedList, successFlags);
-
-    Security::AccessToken::AccessTokenKit::FinishMigration();
-    LOG_I(BMS_TAG_DEFAULT, "Access token migration completed");
-    return true;
-}
-
-void BMSEventHandler::BuildMigrationData(
-    const std::shared_ptr<BundleDataMgr> &dataMgr,
-    const std::vector<std::string> &bundleNames,
-    const std::unordered_map<std::string, InnerBundleInfo> &sandboxMap,
-    const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
-    std::vector<Security::AccessToken::MigratedInfo> &migratedList,
-    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> &oldTokenIdExList)
-{
-    std::map<std::string, Security::AccessToken::MigratedInfo> migratedMap;
-    std::map<std::string, std::vector<Security::AccessToken::AccessTokenIDEx>> oldTokenMap;
-    for (const auto &bundleName : bundleNames) {
-        InnerBundleInfo info;
-        if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
-            continue;
-        }
-        if (info.IsBundleCheckBySpm()) {
-            continue;
-        }
-        auto &m = migratedMap[bundleName];
-        m.bundleName = bundleName;
-        m.pathList.hapPaths = info.GetAllHapPaths();
-        m.pathList.isPreInstalled = info.IsPreInstallApp();
-        m.pathList.userId = Constants::UNSPECIFIED_USERID;
-        auto &oldTokens = oldTokenMap[bundleName];
-        for (const auto &[k, ui] : info.GetInnerBundleUserInfos()) {
-            int32_t userId = ui.bundleUserInfo.userId;
-            m.uidList.emplace_back(ui.uid);
-            m.hapBaseInfoList.emplace_back(
-                Security::AccessToken::HapBaseInfo{userId, bundleName, 0});
-            m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
-            oldTokens.emplace_back(Security::AccessToken::AccessTokenIDEx{ui.accessTokenIdEx});
-            for (const auto &[ck, ci] : ui.cloneInfos) {
-                int32_t appIndex = 0;
-                OHOS::StrToInt(ck, appIndex);
-                m.uidList.emplace_back(ci.uid);
-                m.hapBaseInfoList.emplace_back(
-                    Security::AccessToken::HapBaseInfo{userId, bundleName, appIndex});
-                m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
-                oldTokens.emplace_back(Security::AccessToken::AccessTokenIDEx{ci.accessTokenIdEx});
-            }
-        }
-    }
-    for (const auto &[key, info] : sandboxMap) {
-        std::string bn = info.GetBundleName();
-        int32_t sandboxAppIndex = 0;
-        auto pos = key.find(Constants::FILE_UNDERLINE);
-        if (pos != std::string::npos) {
-            OHOS::StrToInt(key.substr(0, pos), sandboxAppIndex);
-        }
-        auto it = migratedMap.find(bn);
-        if (it == migratedMap.end()) {
-            continue;
-        }
-        auto &m = it->second;
-        if (m.bundleName.empty()) {
-            m.bundleName = bn;
-            m.pathList.hapPaths = info.GetAllHapPaths();
-            m.pathList.isPreInstalled = info.IsPreInstallApp();
-            m.pathList.userId = Constants::UNSPECIFIED_USERID;
-        }
-        auto &oldTokens = oldTokenMap[bn];
-        for (const auto &[uk, ui] : info.GetInnerBundleUserInfos()) {
-            int32_t userId = ui.bundleUserInfo.userId;
-            m.uidList.emplace_back(ui.uid);
-            m.hapBaseInfoList.emplace_back(
-                Security::AccessToken::HapBaseInfo{userId, bn, sandboxAppIndex});
-            m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::NONE);
-            oldTokens.emplace_back(Security::AccessToken::AccessTokenIDEx{ui.accessTokenIdEx});
-        }
-    }
-    for (const auto &[bn, ui] : uninstallBundleInfos) {
-        if (ui.checkBySpm) {
-            continue;
-        }
-        auto existingIt = migratedMap.find(bn);
-        Security::AccessToken::MigratedInfo m;
-        if (existingIt != migratedMap.end()) {
-            m = std::move(existingIt->second);
-        } else {
-            m.bundleName = bn;
-        }
-        auto &oldTokens = oldTokenMap[bn];
-        for (const auto &[uidStr, dui] : ui.userInfos) {
-            int32_t userId = 0;
-            int32_t appIndex = 0;
-            auto underscorePos = uidStr.find(Constants::FILE_UNDERLINE);
-            if (underscorePos != std::string::npos) {
-                if (!OHOS::StrToInt(uidStr.substr(0, underscorePos), userId)) {
-                    continue;
-                }
-                OHOS::StrToInt(uidStr.substr(underscorePos + 1), appIndex);
-            } else {
-                if (!OHOS::StrToInt(uidStr, userId) || userId == -3) {
-                    continue;
-                }
-            }
-            m.uidList.emplace_back(dui.uid);
-            m.hapBaseInfoList.emplace_back(
-                Security::AccessToken::HapBaseInfo{userId, bn, appIndex});
-            m.reservedTypeList.emplace_back(Security::AccessToken::ReservedType::RESERVED_DATA);
-            oldTokens.emplace_back(Security::AccessToken::AccessTokenIDEx{dui.accessTokenIdEx});
-        }
-        migratedMap[bn] = std::move(m);
-    }
-    for (auto &[bn, m] : migratedMap) {
-        if (m.uidList.empty()) {
-            continue;
-        }
-        auto it = oldTokenMap.find(bn);
-        if (it != oldTokenMap.end()) {
-            oldTokenIdExList.emplace_back(std::move(it->second));
-        } else {
-            oldTokenIdExList.emplace_back(m.uidList.size(),
-                Security::AccessToken::AccessTokenIDEx{});
-        }
-        migratedList.emplace_back(std::move(m));
-    }
-}
-
-void BMSEventHandler::ExecuteMigrationWithRetry(const std::shared_ptr<BundleDataMgr> &dataMgr,
-    std::vector<Security::AccessToken::MigratedInfo> &migratedList,
-    std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> &oldTokenIdExList,
-    std::vector<bool> &successFlags)
-{
-    constexpr size_t BATCH_SIZE = 50;
-    constexpr int32_t MAX_RETRY_ROUNDS = 3;
-    successFlags.assign(migratedList.size(), false);
-    size_t remaining = migratedList.size();
-
-    struct TokenUpdateInfo {
-        std::string bundleName;
-        int32_t userId = 0;
-        int32_t appIndex = 0;
-        Security::AccessToken::AccessTokenIDEx tokenIdEx;
-    };
-    std::vector<TokenUpdateInfo> tokenUpdateList;
-    std::vector<Security::AccessToken::HapBaseInfo> failedHapList;
-    std::vector<int32_t> failedUidList;
-    std::vector<int32_t> failedErrCodeList;
-
-    for (int32_t round = 0; round < MAX_RETRY_ROUNDS && remaining > 0; ++round) {
-        if (round > 0) {
-            LOG_I(BMS_TAG_DEFAULT, "Migration retry round %{public}d, %{public}zu items remaining",
-                round, remaining);
-        }
-        std::vector<size_t> pendingIdx;
-        for (size_t i = 0; i < migratedList.size(); ++i) {
-            if (!successFlags[i]) {
-                pendingIdx.emplace_back(i);
-            }
-        }
-        for (size_t i = 0; i < pendingIdx.size(); i += BATCH_SIZE) {
-            size_t batchEnd = std::min(i + BATCH_SIZE, pendingIdx.size());
-            std::vector<Security::AccessToken::MigratedInfo> batch;
-            batch.reserve(batchEnd - i);
-            for (size_t j = i; j < batchEnd; ++j) {
-                batch.emplace_back(migratedList[pendingIdx[j]]);
-            }
-            std::vector<Security::AccessToken::BundleMigrateResult> results;
-            LOG_I(BMS_TAG_DEFAULT, "MigrateInstalledBundles batch %{public}zu items, round %{public}d",
-                batch.size(), round);
-            int32_t ret = Security::AccessToken::AccessTokenKit::MigrateInstalledBundles(
-                batch, results);
-            if (ret == Security::AccessToken::AccessTokenError::ERR_MIGRATION_COMPLETED) {
-                LOG_I(BMS_TAG_DEFAULT, "Migration already completed");
-                remaining = 0;
-                break;
-            }
-            if (ret != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-                LOG_E(BMS_TAG_DEFAULT, "MigrateInstalledBundles batch failed, err=%{public}d", ret);
-                continue;
-            }
-            for (size_t j = 0; j < results.size(); ++j) {
-                size_t origIdx = pendingIdx[i + j];
-                auto &result = results[j];
-                if (result.errcode == 0) {
-                    auto &item = migratedList[origIdx];
-                    for (size_t k = 0; k < result.tokenIdList.size() &&
-                        k < item.hapBaseInfoList.size() &&
-                        k < oldTokenIdExList[origIdx].size(); ++k) {
-                        auto &oldIdEx = oldTokenIdExList[origIdx][k];
-                        if (oldIdEx.tokenIdExStruct.tokenID != 0 &&
-                            oldIdEx.tokenIdExStruct.tokenID !=
-                            result.tokenIdList[k].tokenIdExStruct.tokenID) {
-                            tokenUpdateList.emplace_back(TokenUpdateInfo{
-                                item.hapBaseInfoList[k].bundleName,
-                                item.hapBaseInfoList[k].userID,
-                                item.hapBaseInfoList[k].instIndex,
-                                result.tokenIdList[k]});
-                        }
-                    }
-                    if (!successFlags[origIdx]) {
-                        successFlags[origIdx] = true;
-                        --remaining;
-                    }
-                } else {
-                    LOG_W(BMS_TAG_DEFAULT,
-                        "Migration failed: bundle=%{public}s err=%{public}d",
-                        migratedList[origIdx].bundleName.c_str(), result.errcode);
-                    auto &item = migratedList[origIdx];
-                    for (size_t k = 0; k < item.hapBaseInfoList.size(); ++k) {
-                        failedHapList.emplace_back(item.hapBaseInfoList[k]);
-                        failedErrCodeList.emplace_back(result.errcode);
-                        if (k < item.uidList.size()) {
-                            failedUidList.emplace_back(item.uidList[k]);
-                        }
-                    }
-                }
-            }
-        }
-        if (remaining == 0) {
-            break;
-        }
-    }
-
-    if (remaining > 0) {
-        LOG_W(BMS_TAG_DEFAULT,
-            "Migration incomplete: %{public}zu/%{public}zu items failed after %{public}d rounds",
-            remaining, migratedList.size(), MAX_RETRY_ROUNDS);
-    } else {
-        LOG_I(BMS_TAG_DEFAULT, "All %{public}zu migration items completed", migratedList.size());
-    }
-
-    // Report migration failed events via QUERY_BUNDLE_INFO
-    if (!failedHapList.empty()) {
-        EventInfo eventInfo;
-        for (size_t i = 0; i < failedHapList.size(); ++i) {
-            eventInfo.bundleNameList.emplace_back(failedHapList[i].bundleName);
-            eventInfo.userIdList.emplace_back(failedHapList[i].userID);
-            eventInfo.appIndexList.emplace_back(failedHapList[i].instIndex);
-        }
-        eventInfo.uidList = failedUidList;
-        eventInfo.errorCodeList = failedErrCodeList;
-        eventInfo.errCode = ERR_APPEXECFWK_ACCESS_TOKEN_MIGRATION_FAILED;
-        EventReport::SendSystemEvent(BMSEventType::QUERY_BUNDLE_INFO, eventInfo);
-    }
-
-    // Update accessToken for bundles whose token changed during migration
-    if (!tokenUpdateList.empty()) {
-        LOG_I(BMS_TAG_DEFAULT, "Updating accessToken for %{public}zu entries",
-            tokenUpdateList.size());
-        for (const auto &update : tokenUpdateList) {
-            InnerBundleInfo info;
-            if (!dataMgr->FetchInnerBundleInfo(update.bundleName, info)) {
-                continue;
-            }
-            InnerBundleUserInfo userInfo;
-            if (!info.GetInnerBundleUserInfo(update.userId, userInfo)) {
-                continue;
-            }
-            uint32_t newTokenId = update.tokenIdEx.tokenIdExStruct.tokenID;
-            uint64_t newTokenIdEx = update.tokenIdEx.tokenIDEx;
-            if (update.appIndex == 0) {
-                userInfo.accessTokenId = newTokenId;
-                userInfo.accessTokenIdEx = newTokenIdEx;
-                info.AddInnerBundleUserInfo(userInfo);
-            } else {
-                auto it = userInfo.cloneInfos.find(std::to_string(update.appIndex));
-                if (it != userInfo.cloneInfos.end()) {
-                    it->second.accessTokenId = newTokenId;
-                    it->second.accessTokenIdEx = newTokenIdEx;
-                }
-            }
-            dataMgr->UpdateInnerBundleInfo(info);
-            LOG_I(BMS_TAG_DEFAULT,
-                "Updated token: bundle=%{public}s userId=%{public}d appIndex=%{public}d tokenId=%{public}u",
-                update.bundleName.c_str(), update.userId, update.appIndex, newTokenId);
-        }
-    }
-}
-
-void BMSEventHandler::MarkMigratedBundles(
-    const std::shared_ptr<BundleDataMgr> &dataMgr,
-    const std::vector<std::string> &bundleNames,
-    const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
-    const std::vector<bool> &successFlags)
-{
-    std::set<std::string> successBundleNames;
-    for (size_t i = 0; i < migratedList.size(); ++i) {
-        if (successFlags[i]) {
-            successBundleNames.emplace(migratedList[i].bundleName);
-        }
-    }
-    for (const auto &bundleName : bundleNames) {
-        if (successBundleNames.find(bundleName) == successBundleNames.end()) {
-            continue;
-        }
-        InnerBundleInfo info;
-        if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
-            continue;
-        }
-        info.SetBundleCheckBySpm(true);
-        dataMgr->UpdateInnerBundleInfo(info);
-        dataMgr->UpdateUninstallBundleCheckBySpm(bundleName, true);
     }
 }
 
@@ -5273,33 +4631,21 @@ void BMSEventHandler::RemoveUnreservedSandbox() const
 void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath)
 {
     LOG_D(BMS_TAG_DEFAULT, "AddStockAppProvisionInfoByOTA bundleName: %{public}s", bundleName.c_str());
-    std::vector<Security::AccessToken::TrustedBundleInfo> trustedBundleInfo;
-    int32_t atRet = Security::AccessToken::AccessTokenKit::GetHapSignInfo(
-        bundleName, trustedBundleInfo);
-    if (atRet != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS || trustedBundleInfo.empty()) {
-        LOG_E(BMS_TAG_DEFAULT,
-            "GetHapSignInfo failed, bundleName: %{public}s, ret: %{public}d",
-            bundleName.c_str(), atRet);
-        return;
-    }
-
-    Security::Verify::ProvisionInfo provisionInfo;
-    ErrCode parseRet = BundleInstallChecker::ParseProfileDataToProvisionInfo(
-        trustedBundleInfo[0].profileData, provisionInfo);
-    if (parseRet != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT,
-            "ParseProfileDataToProvisionInfo failed, bundleName: %{public}s",
-            bundleName.c_str());
+    // parse profile info
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    auto ret = BundleVerifyMgr::ParseHapProfile(filePath, hapVerifyResult, true);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "BundleVerifyMgr::HapVerify failed, bundleName: %{public}s, errCode: %{public}d",
+            bundleName.c_str(), ret);
         return;
     }
 
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
         std::make_unique<BundleInstallChecker>();
-    AppProvisionInfo appProvisionInfo = bundleInstallChecker->ConvertToAppProvisionInfo(provisionInfo);
-    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
-        bundleName, appProvisionInfo)) {
-        LOG_E(BMS_TAG_DEFAULT, "AddAppProvisionInfo failed, bundleName:%{public}s",
-            bundleName.c_str());
+    AppProvisionInfo appProvisionInfo = bundleInstallChecker->ConvertToAppProvisionInfo(
+        hapVerifyResult.GetProvisionInfo());
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, appProvisionInfo)) {
+        LOG_E(BMS_TAG_DEFAULT, "AddAppProvisionInfo failed, bundleName:%{public}s", bundleName.c_str());
     }
 }
 
@@ -6085,33 +5431,6 @@ void BMSEventHandler::CheckAndCreateShareFilesSubDataDirs()
     LOG_D(BMS_TAG_DEFAULT, "end");
 }
 
-void BMSEventHandler::CleanAllBundleShaderCache() const
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-        return;
-    }
-    std::vector<BundleInfo> bundleInfos;
-    ErrCode res = dataMgr->GetBundleInfosV9(
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfos, Constants::ALL_USERID);
-    if (res != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "GetAllBundleInfos failed");
-        return;
-    }
-    for (const auto &bundleInfo : bundleInfos) {
-        if (bundleInfo.name.empty()) {
-            continue;
-        }
-        std::string shaderCachePath;
-        shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleInfo.name);
-        ErrCode res = InstalldClient::GetInstance()->CleanBundleDataDir(shaderCachePath, bundleInfo.name, 0);
-        if (res != ERR_OK) {
-            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s clean shader fail %{public}d", bundleInfo.name.c_str(), res);
-        }
-    }
-}
-
 bool BMSEventHandler::InnerProcessUninstallForExistPreBundle(const BundleInfo &installedInfo)
 {
     if (installedInfo.hapModuleInfos.empty()) {
@@ -6458,7 +5777,7 @@ void BMSEventHandler::ProcessUpdatePermissions()
             accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
             if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId, checkResult,
-                appProvisionInfo.appServiceCapabilities, true, false, 0) != ERR_OK) {
+                appProvisionInfo.appServiceCapabilities, true) != ERR_OK) {
                 LOG_W(BMS_TAG_DEFAULT, "UpdateHapToken failed %{public}s", bundleName.c_str());
                 updatePermissionsFlag = false;
             }

@@ -99,6 +99,7 @@ void BmsBundleVerifyManagerHostImplTest::SetDataMgrData()
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     int32_t userId = dataMgr->GetUserIdByUid(callingUid);
     int32_t bundleId = callingUid - userId * Constants::BASE_USER_RANGE;
+    dataMgr->bundleIdMap_.insert({bundleId, TEST_BUNDLE_NAME});
     InnerBundleInfo bundleInfo;
     bundleInfo.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
 
@@ -107,7 +108,6 @@ void BmsBundleVerifyManagerHostImplTest::SetDataMgrData()
     std::string userKey = TEST_BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(userId);
     bundleInfo.innerBundleUserInfos_.insert({userKey, innerBundleUserInfo});
     dataMgr->bundleInfos_.insert({TEST_BUNDLE_NAME, bundleInfo});
-    dataMgr->UpdateUidMap(callingUid, TEST_BUNDLE_NAME, 0);
 }
 
 /**
@@ -180,7 +180,7 @@ HWTEST_F(BmsBundleVerifyManagerHostImplTest, VerifyTest_0400, Function | SmallTe
     int32_t funcResult = 0;
     abcPaths.push_back(DATA_STORAGE_EL1_BUNDLE_ONE);
     impl.Verify(abcPaths, funcResult);
-    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED);
 }
 
 /**
@@ -212,6 +212,7 @@ HWTEST_F(BmsBundleVerifyManagerHostImplTest, VerifyTest_0600, Function | SmallTe
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     int32_t userId = dataMgr->GetUserIdByUid(callingUid);
     int32_t bundleId = callingUid - userId * Constants::BASE_USER_RANGE;
+    dataMgr->bundleIdMap_.insert({bundleId, TEST_BUNDLE_NAME});
     InnerBundleInfo bundleInfo;
     bundleInfo.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
 

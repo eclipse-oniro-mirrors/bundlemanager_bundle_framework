@@ -2856,6 +2856,25 @@ HWTEST_F(BmsBundleDataMgrTest, SetModuleRemovable_0200, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: GenerateUidAndGid_0100
+ * @tc.name: test GenerateUidAndGid
+ * @tc.desc: 1.system run normally
+ *           2.check GenerateUidAndGid failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, GenerateUidAndGid_0100, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo innerBundleUserInfo;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    GetBundleDataMgr()->bundleIdMap_.emplace(MAX_APP_UID, BUNDLE_TEST1);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY);
+}
+
+/**
  * @tc.number: GetAllFormsInfo_0100
  * @tc.name: test GetAllFormsInfo
  * @tc.desc: 1.system run normally
@@ -4737,9 +4756,9 @@ HWTEST_F(BmsBundleDataMgrTest, GetCallingInfo_0100, Function | SmallTest | Level
 
     dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
     dataMgr->AddInnerBundleInfo(bundleName, info);
-    dataMgr->UpdateUidMap(TEST_QUERY_EVENT_UID, bundleName, 0);
 
     int32_t testBundleId = TEST_QUERY_EVENT_BUNDLE_ID;
+    dataMgr->bundleIdMap_.insert(std::pair<int32_t, std::string>(testBundleId, bundleName));
     ret = bundleMgrHostImpl_->GetCallingInfo(callingUid, callingBundleName, callingAppId);
     EXPECT_EQ(ret, true);
     EXPECT_EQ(callingBundleName, bundleName);
@@ -4956,9 +4975,10 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleNameForUid_0100, Function | SmallTest | 
     dataMgr->AddInnerBundleInfo(bundleName, info);
 
     int32_t testBundleId = TEST_QUERY_EVENT_BUNDLE_ID2;
+    dataMgr->bundleIdMap_.insert(std::pair<int32_t, std::string>(testBundleId, bundleName));
 
     testRet = bundleMgrHostImpl_->GetBundleNameForUid(TEST_QUERY_EVENT_UID2, testResult);
-    EXPECT_FALSE(testRet);
+    EXPECT_TRUE(testRet);
 }
 
 /**
@@ -7255,7 +7275,7 @@ HWTEST_F(BmsBundleDataMgrTest, ProcessUninstallBundle_2000, Function | SmallTest
     std::vector<BundleOptionInfo> bundleOptionInfos;
     bool result = dataMgr->ProcessUninstallBundle(bundleOptionInfos);
     EXPECT_TRUE(result);
-    EXPECT_GE(bundleOptionInfos.size(), 1);
+    EXPECT_EQ(bundleOptionInfos.size(), 1);
     dataMgr->DeleteUninstallBundleInfo(bundleName, TEST_USERID);
     dataMgr->multiUserIdsSet_.erase(TEST_USERID);
 }

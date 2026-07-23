@@ -390,7 +390,8 @@ ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &code
     return ERR_OK;
 }
 
-ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t sessionId)
+ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+    const unsigned char *profileBlock)
 {
     return ERR_OK;
 }
@@ -529,11 +530,6 @@ ErrCode InstalldClient::ExtractSkillsPackage(const SkillsPackageParam &param,
 
 ErrCode InstalldClient::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
     const int32_t userId, const int32_t timeout, std::string &largestItems)
-{
-    return ERR_OK;
-}
-
-ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
 {
     return ERR_OK;
 }

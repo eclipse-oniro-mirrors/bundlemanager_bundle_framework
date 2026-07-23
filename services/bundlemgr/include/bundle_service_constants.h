@@ -253,16 +253,10 @@ constexpr const char* BMS_TRUE = "true";
 constexpr int32_t CLI_SANDBOX_APP_INDEX_MIN = 2000;
 constexpr int32_t CLI_SANDBOX_APP_INDEX_MAX = 3000;
 constexpr int32_t CLI_SANDBOX_MAX_COUNT_PER_CREATOR = 5;
-// shader
-constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
-constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
-constexpr const char* CLOUD_SHADER_COMMON_PATH = "/data/local/shader_cache/cloud/common";
-constexpr const char* CLOUD_SHADER_OWNER = "const.appgallery.shaderowner.bundlename";
-
 // new shader
 constexpr int16_t NEW_SHADER_CACHE_MODE = 02771;
 constexpr int16_t NEW_SHADER_CACHE_GID = 3099;
-constexpr const char* NEW_SHADER_CACHE_PATH = "/data/app/el1/%/shader_cache/";
+constexpr const char* CLOUD_SHADER_OWNER = "const.appgallery.shaderowner.bundlename";
 constexpr const char* NEW_CLOUD_SHADER_PATH = "/data/app/el1/public/shader_cache/cloud/";
 
 // shader cache dir in /system_optimize
@@ -403,7 +397,6 @@ enum StopReason {
     UPDATE,
     DELETE,
 };
-
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS

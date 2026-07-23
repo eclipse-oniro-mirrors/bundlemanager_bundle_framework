@@ -111,33 +111,24 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     }
     info.SetAppIndex(newAppIndex);
     info.SetIsSandbox(true);
-    info.SetBundleCheckBySpm(true);
 
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
+    Security::AccessToken::HapInfoCheckResult checkResult;
     AppProvisionInfo appProvisionInfo;
     if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
         APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
     }
-    if (BundlePermissionMgr::InitHapToken(info, userId_, dlpType, newTokenIdEx,
-        appProvisionInfo.appServiceCapabilities, false, sessionId_) != ERR_OK) {
-        APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
+    if (BundlePermissionMgr::InitHapToken(info, userId_, dlpType, newTokenIdEx, checkResult,
+        appProvisionInfo.appServiceCapabilities) != ERR_OK) {
+        auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+        APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName_.c_str(), result.c_str());
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
-    sessionCommitted_ = false;
-    ScopeGuard sessionGuard([&] {
-        if (!sessionCommitted_ && sessionId_ != 0) {
-            BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
-        }
-    });
 
     // 5. create data dir and generate uid and gid
     userInfo.bundleName = std::to_string(newAppIndex) + Constants::FILE_UNDERLINE + bundleName_;
     userInfo.gids.clear();
-    info.GetInnerBundleUserInfo(userId_, userInfo);
-    if (userInfo.uid == Constants::INVALID_UID) {
-        APP_LOGE("InitHapToken returned invalid uid for sandbox bundle:%{public}s", bundleName_.c_str());
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
+    dataMgr_->GenerateUidAndGid(userInfo);
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
         Constants::APP_PROVISION_TYPE_FILE_NAME);
     userInfo.bundleName = bundleName_;
@@ -175,11 +166,6 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     }
     sandboxAppGuard.Dismiss();
     dataMgr_->EnableBundle(bundleName_);
-
-    if (!sessionCommitted_ && sessionId_ != 0) {
-        BundlePermissionMgr::FinishHapInstall(sessionId_, true, {});
-        sessionCommitted_ = true;
-    }
 
     // 8. publish common event
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
@@ -244,11 +230,10 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
 
     // 5. delete accesstoken id and appIndex
     uint32_t accessTokenId = info.GetAccessTokenId(userId_);
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId, info.GetBundleName()) !=
+    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete accessToken failed");
     }
-    dataMgr_->RemoveUidFromMap(info, userId_);
 
 #ifdef BMS_ACCESSCONTROL_SANDBOX_MANAGER
     std::string sandboxKey = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
@@ -313,7 +298,6 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     createDirParam.isDlpSandbox = (appIndex > DLP_SANDBOX_APP_INDEX);
     createDirParam.dlpType = dlpType;
-    createDirParam.sessionId = sessionId_;
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         // if user is not activated, access el2-el4 may return ok but dir cannot be created
@@ -336,9 +320,7 @@ void BundleSandboxInstaller::SandboxAppRollBack(InnerBundleInfo &info, const int
     // when a sandbox is installed failed, some stuff, including uid, gid, appIndex,
     // accessToken Id and the data dir will be removed.
     APP_LOGI("SandboxAppRollBack begin");
-    BundlePermissionMgr::DeleteAccessTokenId(info.GetAccessTokenId(userId), info.GetBundleName(),
-        Security::AccessToken::ReservedType::NONE);
-    dataMgr_->RemoveUidFromMap(info, userId);
+    BundlePermissionMgr::DeleteAccessTokenId(info.GetAccessTokenId(userId));
     auto bundleName = info.GetBundleName();
     auto appIndex = info.GetAppIndex();
     if (sandboxDataMgr_ == nullptr) {

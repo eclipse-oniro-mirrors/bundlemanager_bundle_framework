@@ -427,14 +427,6 @@ void BMSEventHandler::ProcessCheckAppFileManagerDir() {}
 
 void BMSEventHandler::InnerProcessCheckAppFileManagerDir() {}
 
-void BMSEventHandler::ProcessCheckShaderCacheDir() {}
-
-void BMSEventHandler::InnerProcessCheckShaderCacheDir() {}
-
-void BMSEventHandler::ProcessCheckCloudShaderDir() {}
-
-void BMSEventHandler::InnerProcessCheckCloudShaderDir() {}
-
 void BMSEventHandler::ProcessNewBackupDir() {}
 
 bool BMSEventHandler::LoadAllPreInstallBundleInfos()
