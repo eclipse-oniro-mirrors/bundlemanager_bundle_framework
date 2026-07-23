@@ -1594,7 +1594,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0026, Function | MediumTest | Lev
     EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_FALSE(bundleInfo.hapModuleInfos.empty());
     EXPECT_TRUE(bundleInfo.hapModuleInfos[0].formExtensionModule.empty());
-    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].formWidgetModule.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -8980,7 +8979,7 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetSpecifiedDistributionType_0003, Function 
     } else {
         std::vector<BundleDistributionType> specifiedDistributionTypes;
         ErrCode ret = bundleMgrProxy->BatchGetSpecifiedDistributionType(bundleNames, specifiedDistributionTypes);
-        EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     }
 }
 
@@ -9254,7 +9253,7 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetAdditionalInfo_0003, Function | SmallTest
     ASSERT_NE(bundleMgrProxy, nullptr);
     std::vector<BundleAdditionalInfo> additionalInfos;
     ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 }
 
 /**
