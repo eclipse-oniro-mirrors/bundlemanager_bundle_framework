@@ -255,8 +255,6 @@ private:
 
     bool HandRemoveSignProfile(MessageParcel &data, MessageParcel &reply);
 
-    bool HandClearSessionProvisionCache(MessageParcel &data, MessageParcel &reply);
-
     bool HandleAddCertAndEnableKey(MessageParcel &data, MessageParcel &reply);
 
     bool HandleSetEncryptionDir(MessageParcel &data, MessageParcel &reply);

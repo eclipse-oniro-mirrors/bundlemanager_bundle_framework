@@ -30,8 +30,8 @@
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
 #endif
-#include "decompress.h"
 #include "directory_ex.h"
+#include "decompress.h"
 #include "elf.h"
 #include "hitrace_meter.h"
 #include "inner_bundle_clone_common.h"

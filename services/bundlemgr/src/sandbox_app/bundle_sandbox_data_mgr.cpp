@@ -340,7 +340,7 @@ bool BundleSandboxDataMgr::RestoreSandboxAppIndex(const std::string &bundleName,
     return true;
 }
 
-void BundleSandboxDataMgr::RestoreSandboxUidAndGid()
+void BundleSandboxDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap)
 {
     APP_LOGD("RestoreSandboxUidAndGid begin");
     std::unique_lock<std::shared_mutex> lock(sandboxAppMutex_);
@@ -349,6 +349,12 @@ void BundleSandboxDataMgr::RestoreSandboxUidAndGid()
             auto &innerBundleUserInfo = infoItem.second;
             int32_t bundleId = innerBundleUserInfo.uid -
                 innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
+            auto item = bundleIdMap.find(bundleId);
+            if (item == bundleIdMap.end()) {
+                bundleIdMap.emplace(bundleId, info.first);
+            } else {
+                bundleIdMap[bundleId] = info.first;
+            }
             BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
             BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
             BundleUtil::MakeFsConfig(info.first, ServiceConstants::HMDFS_CONFIG_PATH,

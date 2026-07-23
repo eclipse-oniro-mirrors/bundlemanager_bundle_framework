@@ -980,37 +980,6 @@ HWTEST_F(BmsEventHandlerUnLockedTest, ScanInstallDir_0100, Function | SmallTest 
 }
 
 /**
- * @tc.number: InnerProcessCheckCloudShaderCommonDir_0100
- * @tc.name: InnerProcessCheckCloudShaderCommonDir
- * @tc.desc: test InnerProcessCheckCloudShaderCommonDir
- */
-HWTEST_F(BmsEventHandlerUnLockedTest, InnerProcessCheckCloudShaderCommonDir_0100, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    EXPECT_NE(handler, nullptr);
-    int32_t uid = 1;
-    int32_t gid = 1;
-    BundleInfo bundleInfo;
-    HapModuleInfo hapModuleInfo;
-    hapModuleInfo.hapPath = Constants::BUNDLE_CODE_DIR;
-    bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
-    SetTestReturnValue({0, 1});
-    handler->InnerProcessCheckCloudShaderDir();
-    handler->InnerProcessCheckCloudShaderCommonDir(uid, gid);
-    bool ret = handler->CheckIsBundleUpdatedByHapPath(bundleInfo);
-    EXPECT_TRUE(ret);
-    hapModuleInfo.hapPath.clear();
-    bundleInfo.hapModuleInfos.clear();
-    bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
-    SetTestReturnValue({0, 0});
-    handler->InnerProcessCheckCloudShaderDir();
-    SetTestReturnValue({});
-    handler->InnerProcessCheckCloudShaderCommonDir(uid, gid);
-    ret = handler->CheckIsBundleUpdatedByHapPath(bundleInfo);
-    EXPECT_FALSE(ret);
-}
-
-/**
  * @tc.number: AnalyzeUserData_0200
  * @tc.name: AnalyzeUserData empty params
  * @tc.desc: Empty userDataDir or bundleName → returns false

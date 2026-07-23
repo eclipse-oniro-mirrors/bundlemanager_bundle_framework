@@ -480,17 +480,13 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t sessionId = 0)
+    virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+        const unsigned char *profileBlock)
     {
         return ERR_OK;
     }
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName)
-    {
-        return ERR_OK;
-    }
-
-    virtual ErrCode ClearSessionProvisionCache(int32_t sessionId)
     {
         return ERR_OK;
     }

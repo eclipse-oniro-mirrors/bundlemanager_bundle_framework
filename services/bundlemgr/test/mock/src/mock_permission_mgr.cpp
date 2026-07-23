@@ -116,8 +116,7 @@ Security::AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam
 }
 
 int32_t BundlePermissionMgr::DeleteAccessTokenId(
-    const Security::AccessToken::AccessTokenID tokenId, const std::string &bundleName,
-    Security::AccessToken::ReservedType type)
+    const Security::AccessToken::AccessTokenID tokenId, bool isTokenReserved)
 {
     return -1;
 }
@@ -161,12 +160,6 @@ bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &pe
 
 int32_t BundlePermissionMgr::VerifyPermission(
     const std::string &bundleName, const std::string &permissionName, const int32_t userId)
-{
-    return -1;
-}
-
-int32_t BundlePermissionMgr::VerifyPermissionByInstall(const std::string &bundleName,
-    const std::string &permissionName, int32_t sessionId)
 {
     return -1;
 }
@@ -280,18 +273,17 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
     return hapInfo;
 }
 
-int32_t BundlePermissionMgr::InitHapToken(InnerBundleInfo &innerBundleInfo, const int32_t userId,
-    const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-    const std::string &appServiceCapabilities,
-    const bool isDebugGrant, int32_t &sessionId)
+int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+    const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
+    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
+    const bool isDebugGrant)
 {
     return ERR_OK;
 }
 
-int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-    InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
-    const std::string &appServiceCapabilities, bool dataRefresh,
-    const bool isDebugGrant, int32_t sessionId)
+int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
+    const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
+    const std::string &appServiceCapabilities, bool dataRefresh, const bool isDebugGrant)
 {
     return ERR_OK;
 }
@@ -302,54 +294,6 @@ std::string BundlePermissionMgr::GetCheckResultMsg(const Security::AccessToken::
     return result;
 }
 
-int32_t BundlePermissionMgr::CheckHapPermissionInfo(int32_t sessionId,
-    Security::AccessToken::InstallTypeEnum type, Security::AccessToken::HapInfoCheckResult &checkResult)
-{
-    return ERR_OK;
-}
-
-int32_t BundlePermissionMgr::FinishHapInstall(
-    int32_t sessionId,
-    bool isSuccess,
-    const std::map<std::string, std::string> &modulePathMap)
-{
-    return ERR_OK;
-}
-
-Security::AccessToken::BundlePolicy BundlePermissionMgr::CreateBundlePolicy(
-    const InnerBundleInfo &innerBundleInfo, const bool isDebugGrant, int32_t dlpType)
-{
-    Security::AccessToken::BundlePolicy policy;
-    return policy;
-}
-
-Security::AccessToken::HapBaseInfo BundlePermissionMgr::CreateHapBaseInfo(
-    const InnerBundleInfo &innerBundleInfo, const int32_t userId)
-{
-    Security::AccessToken::HapBaseInfo hapBaseInfo;
-    return hapBaseInfo;
-}
-
-int32_t BundlePermissionMgr::PrepareHapIdentity(
-    const InnerBundleInfo &innerBundleInfo,
-    int32_t userId, int32_t dlpType, bool isDebugGrant,
-    const std::string &appServiceCapabilities,
-    int32_t &sessionId,
-    Security::AccessToken::Identity &identity)
-{
-    return ERR_OK;
-}
-
-int32_t BundlePermissionMgr::UpdateHapPolicy(
-    int32_t sessionId,
-    int32_t tokenId,
-    const InnerBundleInfo &innerBundleInfo,
-    bool isDebugGrant,
-    const std::string &appServiceCapabilities)
-{
-    return ERR_OK;
-}
-
 bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
 {
     return true;
@@ -358,21 +302,6 @@ bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
 bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
 {
     return true;
-}
-
-int32_t BundlePermissionMgr::UpdateAppPermission(InnerBundleInfo &innerBundleInfo, int32_t userId,
-    Security::AccessToken::InstallTypeEnum installType)
-{
-    return ERR_OK;
-}
-
-int32_t BundlePermissionMgr::RefreshTokenStatus(const uint64_t &tokenIdEx, const int32_t &uid,
-    Security::AccessToken::ReservedType type)
-{
-    Security::AccessToken::Identity identity;
-    identity.tokenId = tokenIdEx;
-    identity.uid = uid;
-    return Security::AccessToken::AccessTokenKit::RefreshTokenStatus(identity, type);
 }
 }
 }

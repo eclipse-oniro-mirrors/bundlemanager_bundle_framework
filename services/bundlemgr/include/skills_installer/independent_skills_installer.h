@@ -133,8 +133,6 @@ private:
     // used to rollback when update failed
     InnerBundleInfo oldInnerBundleInfo_;
     Security::Verify::HapVerifyResult verifyRes_;
-    bool sessionCommitted_ = false;
-    int32_t sessionId_ = 0;
     DISALLOW_COPY_AND_MOVE(IndependentSkillsInstaller);
 
 #define CHECK_SKILLS_RESULT(errcode, errmsg)                                              \

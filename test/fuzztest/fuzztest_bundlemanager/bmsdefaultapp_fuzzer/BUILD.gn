@@ -58,7 +58,6 @@ ohos_fuzztest("BMSDefaultAppFuzzTest") {
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
-    "access_token:libaccesstoken_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",

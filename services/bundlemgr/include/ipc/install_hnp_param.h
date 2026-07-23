@@ -29,7 +29,6 @@ struct InstallHnpParam : public Parcelable {
     std::string cpuAbi;
     std::string packageName;
     std::string appIdentifier;
-    int32_t sessionId;
     /**
     * vector of independentSign hnp path
     * type/package

@@ -111,11 +111,8 @@ private:
 
     bool versionUpgrade_ = false;
     bool moduleUpdate_ = false;
-    bool isAppExist_ = false;
     bool isEnterpriseBundle_ = false;
     bool isCompressNativeLibs_ = true;
-    bool sessionCommitted_ = false;
-    int32_t sessionId_ = 0;
     uint32_t versionCode_ = 0;
     int64_t startTime_ = 0;
     std::string bundleName_;

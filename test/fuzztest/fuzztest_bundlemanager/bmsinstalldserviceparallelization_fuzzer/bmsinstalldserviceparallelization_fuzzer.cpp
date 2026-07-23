@@ -175,8 +175,8 @@ extern "C" int FuzzIInstalldService(FuzzedDataProvider &provider)
             std::string targetPath = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
             std::string targetSoPath = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
             std::string cpuAbi = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-            OHOS::p_installdService->hostImpl_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi,
-                false, false);
+            OHOS::p_installdService->hostImpl_->ExtractModuleFiles(srcModulePath, targetPath,
+                targetSoPath, cpuAbi, false, false);
             break;
         }
         case IpcCode::EXTRACT_FILES: {

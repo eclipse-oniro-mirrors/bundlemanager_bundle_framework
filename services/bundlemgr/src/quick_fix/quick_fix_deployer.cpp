@@ -943,7 +943,7 @@ void QuickFixDeployer::PrepareCodeSignatureParam(const AppQuickFix &appQuickFix,
         codeSignatureParam.targetSoPath = "";
     }
     BundleInstallChecker checker;
-    checker.ProcessCodeSignatureParam(0, verifyRes_, codeSignatureParam);
+    checker.ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
 }
 
 ErrCode QuickFixDeployer::VerifyCodeSignatureForHqf(

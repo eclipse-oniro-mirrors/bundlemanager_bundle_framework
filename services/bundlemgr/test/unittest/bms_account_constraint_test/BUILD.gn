@@ -35,14 +35,12 @@ ohos_unittest("BmsAccountConstraintTest") {
   sources -= [
     "${services_path}/bundlemgr/src/account_helper.cpp",
     "${services_path}/bundlemgr/src/xml_util.cpp",
-    "${services_path}/bundlemgr/src/installd_client.cpp",
-    "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp",
+    "${services_path}/bundlemgr/src/installd_client.cpp"
   ]
   sources += [
     "${services_path}/bundlemgr/test/mock/src/xml_util.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_account_helper_constraint.cpp",
     "${services_path}/bundlemgr/test/unittest/bms_account_constraint_test/mock/mock_install_client.cpp",
-    "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp",
   ]
 
   sources += [ "bms_account_constraint_test.cpp" ]
@@ -66,9 +64,9 @@ ohos_unittest("BmsAccountConstraintTest") {
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
+    "dfs_service:libdecompress",
     "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
-    "dfs_service:libdecompress",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",

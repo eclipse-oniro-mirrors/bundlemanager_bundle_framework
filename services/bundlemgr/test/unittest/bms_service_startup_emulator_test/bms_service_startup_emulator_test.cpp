@@ -68,8 +68,7 @@ HWTEST_F(BmsServiceStartupEmulatorTest, EmulatorBundlePermissionMgrInitHapToken_
     Security::AccessToken::AccessTokenIDEx tokenIdeEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
 
-    int32_t sessionId = 0;
-    ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType, tokenIdeEx, "{}", false, sessionId);
+    ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType, tokenIdeEx, checkResult, "{}");
     EXPECT_NE(ret, 0);
 }
 
@@ -85,7 +84,7 @@ HWTEST_F(BmsServiceStartupEmulatorTest, EmulatorBundlePermissionMgrUpdateHapToke
     int32_t userId = 0;
     Security::AccessToken::AccessTokenIDEx tokenIdeEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
-    ret = BundlePermissionMgr::UpdateHapToken(tokenIdeEx, innerBundleInfo, userId, checkResult, "{}", false, false, 0);
+    ret = BundlePermissionMgr::UpdateHapToken(tokenIdeEx, innerBundleInfo, userId, checkResult, "{}");
     EXPECT_NE(ret, 0);
 }
 #endif // X86_EMULATOR_MODE

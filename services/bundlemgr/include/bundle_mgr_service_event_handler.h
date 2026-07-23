@@ -29,7 +29,6 @@
 #include "common_event_support.h"
 #include "pre_install_bundle_info.h"
 #include "pre_install_exception_mgr.h"
-#include "hap_token_info.h"
 #include "pre_scan_info.h"
 #include "nlohmann/json.hpp"
 
@@ -66,7 +65,6 @@ enum OTAFlag : uint32_t {
     UPDATE_EXTENSION_DIRS_SELINUX_APL = 0x00400000,
     ADD_IDLE_INFO = 0x00800000,
     UPDATE_ALTERNATE_ICONS = 0x01000000,
-    PROCESS_ACCESS_TOKEN_MIGRATION = 0x02000000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -586,34 +584,12 @@ private:
     void InnerProcessCheckAppFileManagerDir();
     void ProcessCheckPreinstallData();
     void InnerProcessCheckPreinstallData();
-    void ProcessCheckShaderCacheDir();
-    void InnerProcessCheckShaderCacheDir();
     void ProcessCheckSystemOptimizeShaderCacheDir();
-    void ProcessCheckCloudShaderDir();
-    void InnerProcessCheckCloudShaderDir();
-    void InnerProcessCheckCloudShaderCommonDir(const int32_t uid, const int32_t gid);
     void ProcessNewBackupDir();
     void ProcessCheckRecoverableApplicationInfo();
     void InnerProcessCheckRecoverableApplicationInfo();
     void ProcessCheckInstallSource();
     void InnerProcessCheckInstallSource();
-    void CleanUninstallBundleInfo();
-    void ProcessAccessTokenMigration();
-    bool InnerProcessAccessTokenMigration();
-    void BuildMigrationData(const std::shared_ptr<BundleDataMgr> &dataMgr,
-        const std::vector<std::string> &bundleNames,
-        const std::unordered_map<std::string, InnerBundleInfo> &sandboxMap,
-        const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
-        std::vector<Security::AccessToken::MigratedInfo> &migratedList,
-        std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> &oldTokenIdExList);
-    void ExecuteMigrationWithRetry(const std::shared_ptr<BundleDataMgr> &dataMgr,
-        std::vector<Security::AccessToken::MigratedInfo> &migratedList,
-        std::vector<std::vector<Security::AccessToken::AccessTokenIDEx>> &oldTokenIdExList,
-        std::vector<bool> &successFlags);
-    void MarkMigratedBundles(const std::shared_ptr<BundleDataMgr> &dataMgr,
-        const std::vector<std::string> &bundleNames,
-        const std::vector<Security::AccessToken::MigratedInfo> &migratedList,
-        const std::vector<bool> &successFlags);
     std::string ConvertApplicationFlagToInstallSource(int32_t flag);
 
     bool InnerProcessUninstallForExistPreBundle(const BundleInfo &installedInfo);
@@ -743,16 +719,9 @@ private:
     void static ProcessCheckAppEl1DirTask();
     // check el2 data dir for all userids's bundleinfos
     void CheckAndCreateShareFilesSubDataDirs();
-    void CleanAllBundleShaderCache() const;
     void CleanTempDir() const;
     bool CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo);
     void CheckBundleProvisionInfo();
-    void CheckBundleCloneEl1ShaderCacheLocal(const std::string &bundleName,
-        int32_t appIndex, int32_t userId, int32_t uid);
-    void CheckAllBundleEl1ShaderCacheLocal();
-    void CleanBundleCloneEl1ShaderCacheLocal(const std::string &bundleName,
-        int32_t appIndex, int32_t userId);
-    void CleanAllBundleEl1ShaderCacheLocal();
     void InnerProcessBootCheckOnDemandBundle();
     void ProcessRebootCheckOnDemandBundle();
     bool ParseOnDemandHapFiles(const std::string &hapFilePath,
