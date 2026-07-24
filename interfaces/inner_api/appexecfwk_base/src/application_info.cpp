@@ -1308,15 +1308,30 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.moduleSourceDirs, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     GetValueIfFindKey<std::vector<ModuleInfo>>(jsonObject, jsonObjectEnd, APPLICATION_MODULE_INFOS,
         applicationInfo.moduleInfos, JsonType::ARRAY, false, parseResult, ArrayType::OBJECT);
-    GetValueIfFindKey<std::map<std::string, std::vector<HnpPackage>>>(jsonObject, jsonObjectEnd,
-        APPLICATION_HNP_PACKAGES, applicationInfo.hnpPackages, JsonType::OBJECT, false,
-        parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, std::vector<CustomizeData>>>(jsonObject, jsonObjectEnd,
-        APPLICATION_META_DATA_CONFIG_JSON,
-        applicationInfo.metaData, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, std::vector<Metadata>>>(jsonObject, jsonObjectEnd,
-        APPLICATION_META_DATA_MODULE_JSON,
-        applicationInfo.metadata, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
+    {
+        const nlohmann::json *mapPtr = nullptr;
+        BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, APPLICATION_HNP_PACKAGES, mapPtr,
+            JsonType::ARRAY, ArrayType::OBJECT, false, parseResult);
+        if (mapPtr != nullptr) {
+            applicationInfo.hnpPackages = mapPtr->get<std::map<std::string, std::vector<HnpPackage>>>();
+        }
+    }
+    {
+        const nlohmann::json *mapPtr = nullptr;
+        BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, APPLICATION_META_DATA_CONFIG_JSON, mapPtr,
+            JsonType::ARRAY, ArrayType::OBJECT, false, parseResult);
+        if (mapPtr != nullptr) {
+            applicationInfo.metaData = mapPtr->get<std::map<std::string, std::vector<CustomizeData>>>();
+        }
+    }
+    {
+        const nlohmann::json *mapPtr = nullptr;
+        BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, APPLICATION_META_DATA_MODULE_JSON, mapPtr,
+            JsonType::ARRAY, ArrayType::OBJECT, false, parseResult);
+        if (mapPtr != nullptr) {
+            applicationInfo.metadata = mapPtr->get<std::map<std::string, std::vector<Metadata>>>();
+        }
+    }
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_FINGERPRINT,
         applicationInfo.fingerprint, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ICON,

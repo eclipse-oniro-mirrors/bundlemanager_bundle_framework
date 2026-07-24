@@ -74,8 +74,14 @@ void from_json(const nlohmann::json& jsonObject, UninstallBundleInfo& uninstallB
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::map<std::string, UninstallDataUserInfo>>(jsonObject, jsonObjectEnd, KEY_USER_INFOS,
-        uninstallBundleInfo.userInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
+    {
+        const nlohmann::json *mapPtr = nullptr;
+        BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, KEY_USER_INFOS, mapPtr,
+            JsonType::OBJECT, ArrayType::NOT_ARRAY, false, parseResult);
+        if (mapPtr != nullptr) {
+            uninstallBundleInfo.userInfos = mapPtr->get<std::map<std::string, UninstallDataUserInfo>>();
+        }
+    }
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, KEY_APP_ID,
         uninstallBundleInfo.appId, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, KEY_APP_IDENTIFIER,

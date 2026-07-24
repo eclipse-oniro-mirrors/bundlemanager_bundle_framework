@@ -53,14 +53,14 @@ int32_t DefaultAppData::FromJson(const nlohmann::json& jsonObject)
     const auto& jsonObjectEnd = jsonObject.end();
     std::lock_guard<std::mutex> lock(g_mutex);
     g_defaultAppJson = ERR_OK;
-    GetValueIfFindKey<std::map<std::string, Element>>(jsonObject,
-        jsonObjectEnd,
-        INFOS,
-        infos,
-        JsonType::OBJECT,
-        true,
-        g_defaultAppJson,
-        ArrayType::NOT_ARRAY);
+    {
+        const nlohmann::json *mapPtr = nullptr;
+        BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, INFOS, mapPtr,
+            JsonType::OBJECT, ArrayType::NOT_ARRAY, true, g_defaultAppJson);
+        if (mapPtr != nullptr) {
+            infos = mapPtr->get<std::map<std::string, Element>>();
+        }
+    }
     if (g_defaultAppJson != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "DefaultAppData FromJson failed, error code : %{public}d", g_defaultAppJson);
     }
