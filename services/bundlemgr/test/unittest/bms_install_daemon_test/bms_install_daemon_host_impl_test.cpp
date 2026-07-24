@@ -1859,4 +1859,20 @@ HWTEST_F(BmsInstallDaemonHostImplTest, DeleteOldCacheFiles_0100, Function | Smal
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
     EXPECT_EQ(cleanedSize, 0);
 }
+
+/**
+ * @tc.number: GetCacheDiskUsageFromPath_0100
+ * @tc.name: test GetCacheDiskUsageFromPath
+ * @tc.desc: 1. verify GetCacheDiskUsageFromPath when permission denied
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, GetCacheDiskUsageFromPath_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> paths;
+    int64_t statSize = 0;
+    auto ret = hostImpl->GetCacheDiskUsageFromPath(paths, statSize);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+    EXPECT_EQ(statSize, 0);
+}
 } // OHOS

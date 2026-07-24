@@ -2406,6 +2406,10 @@ ErrCode BundleMgrHostImpl::CleanBundlePartialCacheAutomatic(
     uint64_t cleanedSize = 0;
     ret = InstalldClient::GetInstance()->DeleteOldCacheFiles(cachePaths, needFreeSize, cleanedSize);
     afterCleanedSize = (cleanedSize >= beforeCleanedSize) ? 0 : beforeCleanedSize - cleanedSize;
+    if (afterCleanedSize > cacheThreshold) {
+        afterCleanedSize - 0;
+        BundleCacheMgr::GetBundleCacheSizeByAppIndex(bundleName, userId, appIndex, moduleNames, afterCleanedSize);
+    }
     return ret;
 }
 

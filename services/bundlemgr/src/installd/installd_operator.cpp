@@ -5728,6 +5728,16 @@ bool InstalldOperator::IsValidPathByGetDiskUsageFromPathScene(
     return false;
 }
 
+bool InstalldOperator::IsValidPathByGetCacheDiskUsageFromPath(const std::string &path)
+{
+    if (!IsFileNameValid(path)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path exist ../ or \\..");
+        return false;
+    }
+    return StartsWith(path, ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) &&
+        IsContainsPathPart(path, Constants::CACHE_DIR);
+}
+
 bool InstalldOperator::IsValidPathByGetFileStatScene(const std::string &file, const BundleDirScene &scene)
 {
     if (!IsFileNameValid(file)) {

@@ -828,13 +828,14 @@ ErrCode InstalldClient::DeleteOldCacheFiles(
     return CallService(&IInstalld::DeleteOldCacheFiles, paths, cacheSize, cleanedSize);
 }
 
-int64_t InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs)
+ErrCode InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths,
+    int64_t &statSize, int64_t timeoutMs)
 {
     if (paths.empty()) {
         APP_LOGE("paths is empty");
-        return 0;
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::GetCacheDiskUsageFromPath, paths, timeoutMs);
+    return CallService(&IInstalld::GetCacheDiskUsageFromPath, paths, statSize, timeoutMs);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
