@@ -6553,16 +6553,14 @@ ErrCode BundleMgrHostImpl::GetAppClonePreference(const std::string &bundleName,
 {
     APP_LOGD("start GetAppClonePreference bundleName = %{public}s, userId = %{public}d",
         bundleName.c_str(), userId);
-    if (IPCSkeleton::GetCallingUid() != Constants::FOUNDATION_UID) {
-        if (!BundlePermissionMgr::IsSystemApp()) {
-            APP_LOGE_NOFUNC("GetAppClonePreference non-system app calling system api");
-            return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-        }
-        if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
-            Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES)) {
-            APP_LOGE_NOFUNC("GetAppClonePreference verify permission failed");
-            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
-        }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE_NOFUNC("GetAppClonePreference non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
+        Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES)) {
+        APP_LOGE_NOFUNC("GetAppClonePreference verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto service = DelayedSingleton<BundleMgrService>::GetInstance();
     if (service == nullptr) {
