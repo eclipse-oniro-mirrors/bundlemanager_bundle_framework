@@ -609,13 +609,27 @@ ErrCode BundleInstallerHost::VerifyUninstallPermission(bool isCheckSdkVersion)
     return ERR_OK;
 }
 
-ErrCode BundleInstallerHost::CheckIsDebugAppProvisionType(const std::string &bundleName, int32_t userId)
+ErrCode BundleInstallerHost::CheckIsDebugAppProvisionType(const std::string &bundleName, int32_t userId, bool isHsp)
 {
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "null dataMgr");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
+
+    if (isHsp) {
+        InnerBundleInfo info;
+        if (!dataMgr->QueryInnerBundleInfo(bundleName, info)) {
+            LOG_E(BMS_TAG_INSTALLER, "not exist for bundle %{public}s", bundleName.c_str());
+            return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+        }
+        if (info.GetBaseApplicationInfo().appProvisionType != Constants::APP_PROVISION_TYPE_DEBUG) {
+            LOG_E(BMS_TAG_INSTALLER, "app provision type is not debug for bundle %{public}s", bundleName.c_str());
+            return ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED;
+        }
+        return ERR_OK;
+    }
+
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
@@ -723,7 +737,7 @@ bool BundleInstallerHost::Uninstall(const UninstallParam &uninstallParam,
             statusReceiver->OnFinished(verifyResult, "");
             return false;
         }
-        auto checkDebugResult = CheckIsDebugAppProvisionType(uninstallParam.bundleName, uninstallParam.userId);
+        auto checkDebugResult = CheckIsDebugAppProvisionType(uninstallParam.bundleName, uninstallParam.userId, true);
         if (checkDebugResult != ERR_OK) {
             statusReceiver->OnFinished(checkDebugResult, "");
             return false;
