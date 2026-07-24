@@ -600,6 +600,11 @@ ohos_shared_library("libbms") {
     defines += [ "BMS_ACCESSCONTROL_SANDBOX_MANAGER" ]
   }
 
+  if (enable_clone_for_account) {
+    sources += [ "${services_path}/bundlemgr/src/clone/clone_for_account_util.cpp" ]
+    defines += [ "BMS_ENABLE_CLONE_FOR_ACCOUNT" ]
+  }
+
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }
