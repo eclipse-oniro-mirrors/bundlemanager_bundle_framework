@@ -3847,8 +3847,15 @@ ErrCode InstalldHostImpl::DeleteOldCacheFiles(
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
 
+    std::vector<std::string> validPath;
+    for (auto& item : paths) {
+        if (InstalldOperator::IsValidPathByGetCacheDiskUsageFromPath(item)) {
+            validPath.emplace_back(item);
+        }
+    }
+
     std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> fileTimePairs;
-    GetFilesAndSortByLastModifiedTime(paths, fileTimePairs);
+    GetFilesAndSortByLastModifiedTime(validPath, fileTimePairs);
 
     cleanedSize = 0;
     for (const auto &file : fileTimePairs) {
