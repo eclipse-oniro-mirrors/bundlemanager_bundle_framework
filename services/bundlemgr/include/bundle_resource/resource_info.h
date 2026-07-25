@@ -43,7 +43,7 @@ public:
      * 2. bundleName/moduleName/abilityName
      */
     std::string GetKey() const;
-    // dual-mode (FEAT-20260715-001 ADR-24): key WITHOUT the "+clone-10000+" prefix, i.e. the
+    // dual-mode: key WITHOUT the "+clone-10000+" prefix, i.e. the
     // original bundleName-based key. Used by BundleResourceIconRdb, which does not isolate
     // dual-mode clone apps (only BundleResourceRdb is prefixed).
     std::string GetOriginalKey() const;
@@ -57,7 +57,7 @@ public:
     // for app clone
     int32_t appIndex_ = 0;
     int32_t extensionAbilityType_ = -1;
-    // dual-mode clone app (FEAT-20260715-001 ADR-24): when true, GetKey() prepends
+    // dual-mode clone app: when true, GetKey() prepends
     // "+clone-10000+" so the resource RDB key is isolated from the primary-mode same-name app.
     bool isDualModeCloneApp_ = false;
     // key

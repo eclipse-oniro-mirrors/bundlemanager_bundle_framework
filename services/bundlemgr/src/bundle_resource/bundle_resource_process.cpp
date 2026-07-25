@@ -96,7 +96,7 @@ bool BundleResourceProcess::GetAllResourceInfo(
             resourceInfosMap[bundleName] = resourceInfos;
         }
     }
-    // dual-mode (FEAT-20260715-001 ADR-24): process ALL apps in tempBundleInfos_ (the other-mode
+    // dual-mode: process ALL apps in tempBundleInfos_ (the other-mode
     // variants), including those that live ONLY in tempBundleInfos_ (e.g. primary-mode clone with
     // no primary variant installed — not reachable by iterating bundleInfos_ names). Same-name
     // apps across the two maps merge into one resourceInfosMap[bundleName] entry; each ResourceInfo
@@ -318,7 +318,7 @@ bool BundleResourceProcess::InnerGetResourceInfo(
             userId, appIndex);
         return false;
     }
-    // dual-mode (FEAT-20260715-001 ADR-24): mark every assembled ResourceInfo as a dual-mode
+    // dual-mode: mark every assembled ResourceInfo as a dual-mode
     // clone app so GetKey() prepends "+clone-10000+" and the RDB key is isolated from the
     // primary-mode same-name app. bundleName_ stays original; only the key is prefixed.
     if (innerBundleInfo.IsDualModeCloneApp()) {

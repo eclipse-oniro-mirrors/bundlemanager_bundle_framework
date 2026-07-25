@@ -428,7 +428,7 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
     std::unique_lock<std::shared_mutex> lck(bundleInfoMutex_);
     std::lock_guard<std::mutex> lock(stateMutex_);
     // Dual-mode: the caller passes the effective name (prefixed for clone apps); use it directly
-    // as the installStates_ key (design ADR-21 amendment, Review-14).
+    // as the installStates_ key.
     auto item = installStates_.find(bundleName);
     if (item == installStates_.end()) {
         if (state == InstallState::INSTALL_START) {
@@ -3877,7 +3877,7 @@ void BundleDataMgr::InsertRouterInfo(const InnerBundleInfo &innerBundleInfo)
         }
         routerInfoMap[hapIter->first] = routerMapString;
     }
-    // dual-mode: a clone app's router is stored under the prefixed effective name (ADR-20).
+    // dual-mode: a clone app's router is stored under the prefixed effective name.
     std::string bundleName = innerBundleInfo.IsDualModeCloneApp()
         ? DualModeHelper::GetDualModeBundleName(innerBundleInfo.GetBundleName())
         : innerBundleInfo.GetBundleName();
@@ -3976,7 +3976,7 @@ void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
         }
         FindRouterHapPath(infoItem->second, hapPathMap);
         versionCode = infoItem->second.GetVersionCode();
-        // dual-mode: a clone app's router is stored under the prefixed effective name (ADR-20).
+        // dual-mode: a clone app's router is stored under the prefixed effective name.
         if (infoItem->second.IsDualModeCloneApp()) {
             effectiveBundleName = DualModeHelper::GetDualModeBundleName(bundleName);
         }
@@ -4004,7 +4004,7 @@ void BundleDataMgr::UpdateRouterInfo(InnerBundleInfo &innerBundleInfo)
 {
     std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
     FindRouterHapPath(innerBundleInfo, hapPathMap);
-    // dual-mode: a clone app's router is stored under the prefixed effective name (ADR-20).
+    // dual-mode: a clone app's router is stored under the prefixed effective name.
     std::string bundleName = innerBundleInfo.IsDualModeCloneApp()
         ? DualModeHelper::GetDualModeBundleName(innerBundleInfo.GetBundleName())
         : innerBundleInfo.GetBundleName();
@@ -8997,7 +8997,7 @@ bool BundleDataMgr::FetchInnerBundleInfo(
 
 bool BundleDataMgr::FetchTempBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
 {
-    // dual-mode (FEAT-20260715-001 ADR-24): counterpart of a dual-mode same-name app lives in
+    // dual-mode: counterpart of a dual-mode same-name app lives in
     // tempBundleInfos_ (the non-current-mode variant). Mirrors FetchInnerBundleInfo.
     if (bundleName.empty()) {
         APP_LOGW("FetchTempBundleInfo bundleName is empty");
@@ -9437,8 +9437,8 @@ ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     // dual-mode: after ClassifyDualModeAppsNoLock both maps use the original name as key, and a clone
-    // app is marked by IsDualModeCloneApp; its provision is stored under the prefixed name (ADR-18),
-    // so derive the provision key from IsDualModeCloneApp (ADR-19).
+    // app is marked by IsDualModeCloneApp; its provision is stored under the prefixed name,
+    // so derive the provision key from IsDualModeCloneApp.
     std::string provisionKey = infoItem->second.IsDualModeCloneApp()
         ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
     if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
@@ -9791,7 +9791,7 @@ std::vector<std::string> BundleDataMgr::GetAllBundleName() const
 
 std::vector<std::string> BundleDataMgr::GetAllTempBundleName() const
 {
-    // dual-mode (FEAT-20260715-001 ADR-24): enumerate tempBundleInfos_ keys, mirroring
+    // dual-mode: enumerate tempBundleInfos_ keys, mirroring
     // GetAllBundleName. Used by resource refresh to process all dual-mode apps.
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     std::vector<std::string> bundleNames;
@@ -11654,7 +11654,7 @@ std::string BundleDataMgr::GenerateOdidNoLock(const std::string &developerId) co
     // which guards both bundleInfos_ and tempBundleInfos_. tempBundleInfos_ must also be
     // checked for dual-mode correctness: in secondary mode the primary-mode variant of a
     // category-7 app is moved there by ClassifyDualModeAppsNoLock, so cross-mode odid reuse
-    // (AC-16) is only achievable by looking in both maps.
+    // is only achievable by looking in both maps.
     auto findExistingOdid = [groupId](const std::map<std::string, InnerBundleInfo> &infos,
         const char *mapName) -> std::string {
         for (const auto &item : infos) {
@@ -15244,9 +15244,9 @@ void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
     uint32_t flags, SkillInfo &skillInfo)
 {
     skillInfo.bundleName = info.GetBundleName();
-    // dual-mode: skill files live under the effective (prefixed) dir per ADR-16; the RDB description key and the
+    // dual-mode: skill files live under the effective (prefixed) dir; the RDB description key and the
     // skill path use the effective name, while skillInfo.bundleName (Parcelable, returned to callers) keeps the
-    // original name per ADR-17.
+    // original name.
     std::string effectiveBundleName = info.IsDualModeCloneApp()
         ? DualModeHelper::GetDualModeBundleName(skillInfo.bundleName) : skillInfo.bundleName;
     skillInfo.moduleName = moduleInfo.moduleName;

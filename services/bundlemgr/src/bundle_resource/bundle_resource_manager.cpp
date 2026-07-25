@@ -63,7 +63,7 @@ BundleResourceManager::~BundleResourceManager()
 void BundleResourceManager::DeleteNotExistResourceInfo(
     const std::string &bundleName, const int32_t appIndex, const std::vector<ResourceInfo> &resourceInfos)
 {
-    // dual-mode (FEAT-20260715-001 ADR-24): distinguish whether the updating bundle is a dual-mode
+    // dual-mode: distinguish whether the updating bundle is a dual-mode
     // clone. Clone records are stored under the prefixed effective name, so query by it to find
     // them during update cleanup. isDualModeCloneApp_ is carried by resourceInfos (set in
     // InnerGetResourceInfo). Non-dual-mode apps (including existing app-clones):

@@ -112,8 +112,7 @@ public:
     /**
      * @brief Update internal state for whole bundle.
      *        Dual-mode: the caller passes the effective bundle name (prefixed for clone apps,
-     *        original name otherwise); it is used directly as the installStates_ key. See
-     *        design ADR-21 amendment (Review-14).
+     *        original name otherwise); it is used directly as the installStates_ key.
      * @param bundleName Indicates the effective bundle name (prefixed for clone apps).
      * @param state Indicates the install state to be set.
      * @return Returns true if this function is successfully called; returns false otherwise.
@@ -982,7 +981,7 @@ public:
         const std::string &bundleName, const ApplicationInfo &appInfo);
     bool FetchInnerBundleInfo(
         const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
-    // dual-mode (FEAT-20260715-001 ADR-24): fetch the other-mode counterpart of a dual-mode
+    // dual-mode: fetch the other-mode counterpart of a dual-mode
     // same-name app from tempBundleInfos_ (mirrors FetchInnerBundleInfo). Used by resource
     // refresh (language/theme) to rebuild both modes' resources.
     bool FetchTempBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
@@ -1083,7 +1082,7 @@ public:
     ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         int32_t triggerMode);
     std::vector<std::string> GetAllBundleName() const;
-    // dual-mode (FEAT-20260715-001 ADR-24): enumerate tempBundleInfos_ keys (the other-mode
+    // dual-mode: enumerate tempBundleInfos_ keys (the other-mode
     // variants), mirroring GetAllBundleName. Used by resource refresh to process ALL dual-mode
     // apps, including those that live only in tempBundleInfos_ (e.g. primary-mode clone with no
     // primary variant installed).

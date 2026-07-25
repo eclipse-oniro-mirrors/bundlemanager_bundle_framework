@@ -34,7 +34,7 @@ ResourceInfo::~ResourceInfo()
 
 std::string ResourceInfo::GetKey() const
 {
-    // dual-mode (ADR-24): wrap bundleName_ with "+clone-10000+" prefix so the RDB key is
+    // dual-mode: wrap bundleName_ with "+clone-10000+" prefix so the RDB key is
     // isolated from the primary-mode same-name app. bundleName_ itself stays original.
     std::string key = isDualModeCloneApp_
         ? DualModeHelper::GetDualModeBundleName(bundleName_) : bundleName_;
@@ -57,7 +57,7 @@ std::string ResourceInfo::GetKey() const
 
 std::string ResourceInfo::GetOriginalKey() const
 {
-    // dual-mode (ADR-24): same grammar as GetKey() but WITHOUT the "+clone-10000+" prefix.
+    // dual-mode: same grammar as GetKey() but WITHOUT the "+clone-10000+" prefix.
     // BundleResourceIconRdb keeps the original bundleName (no dual-mode isolation).
     std::string key = bundleName_;
     if (!abilityName_.empty()) {
@@ -76,7 +76,7 @@ std::string ResourceInfo::GetOriginalKey() const
 void ResourceInfo::ParseKey(const std::string &key)
 {
     isDualModeCloneApp_ = false;
-    // dual-mode (ADR-24): stored key may carry "+clone-10000+" prefix. Strip it first,
+    // dual-mode: stored key may carry "+clone-10000+" prefix. Strip it first,
     // because the prefix reuses '+' (EXTENSION_ABILITY_SEPARATOR) and would corrupt parsing.
     std::string parsedKey = key;
     if (DualModeHelper::IsDualModeCloneKey(key)) {

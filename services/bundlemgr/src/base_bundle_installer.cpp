@@ -3161,7 +3161,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     ScopeGuard bundleGuard([&] {
         RemoveBundleAndDataDir(info, dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
             Constants::INITIAL_APP_INDEX));
-        // dual-mode: skills dir uses the effective (prefixed) name for secondary-mode clone apps (ADR-16).
+        // dual-mode: skills dir uses the effective (prefixed) name for secondary-mode clone apps.
         RemoveAppSkillsDir(GetEffectiveBundleName(info));
     });
     std::string modulePath = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + modulePackage_;
@@ -3324,7 +3324,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
     }
 
     ScopeGuard moduleGuard([&] { RemoveModuleDir(modulePath, newInfo.GetBundleName()); });
-    // dual-mode: skills dir uses the effective (prefixed) name for secondary-mode clone apps (ADR-16).
+    // dual-mode: skills dir uses the effective (prefixed) name for secondary-mode clone apps.
     ScopeGuard skillGuard([&] {
         RemoveAppSkillsDir(GetEffectiveBundleName(newInfo), newInfo.GetCurModuleName());
     });
@@ -3428,7 +3428,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         LOG_E(BMS_TAG_INSTALLER, "Install Native failed");
         return result;
     }
-    // dual-mode: skills dir uses the effective (prefixed) name for secondary-mode clone apps (ADR-16).
+    // dual-mode: skills dir uses the effective (prefixed) name for secondary-mode clone apps.
     ScopeGuard skillGuard([&] {
         RemoveAppSkillsDir(GetEffectiveBundleName(newInfo), newInfo.GetCurModuleName(), true);
     });
@@ -4595,7 +4595,7 @@ ErrCode BaseBundleInstaller::ProcessAppSkills(InnerBundleInfo &info)
         extractModuleName.append(ServiceConstants::TMP_SUFFIX);
     }
     // dual-mode: skills dir uses the effective (prefixed) name for both rollback removal and extract
-    // landing, so secondary-mode skills land under the prefixed dir (ADR-16).
+    // landing, so secondary-mode skills land under the prefixed dir.
     std::string effectiveBundleName = GetEffectiveBundleName(info);
     ScopeGuard skillGuard([&] {
         RemoveAppSkillsDir(effectiveBundleName, moduleInfo.moduleName, isModuleUpdate_);
@@ -4642,7 +4642,7 @@ ErrCode BaseBundleInstaller::FinalizeAppSkills(const InnerBundleInfo &info)
         return ERR_OK;
     }
     // dual-mode: skills dir uses the effective (prefixed) name for removal, temp->real rename, and the
-    // RenameModuleDir identifier (must match the path segment for installd path validation, ADR-16).
+    // RenameModuleDir identifier (must match the path segment for installd path validation).
     std::string effectiveBundleName = GetEffectiveBundleName(info);
 
     auto skillInfoIter = moduleSkillInfoMap_.find(info.GetCurrentModulePackage());
@@ -5432,7 +5432,7 @@ ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info,
         return result;
     }
     // dual-mode: skills dir uses the effective (prefixed) name; GetEffectiveBundleName(info) is info-driven
-    // so it stays correct in the uninstall flow where dualModeBundleName_ is unset (ADR-16).
+    // so it stays correct in the uninstall flow where dualModeBundleName_ is unset.
     RemoveAppSkillsDir(GetEffectiveBundleName(info));
     return result;
 }
@@ -5548,7 +5548,7 @@ ErrCode BaseBundleInstaller::RemoveModuleAndDataDir(
     }
     std::string moduleName = info.GetModuleName(modulePackage);
     // dual-mode: reuse the effectiveBundleName computed above for both the skills dir and the
-    // DeleteSkillDescriptions key (data layer aligned to effective name per ADR-17).
+    // DeleteSkillDescriptions key (data layer aligned to effective name).
     RemoveAppSkillsDir(effectiveBundleName, moduleName);
     auto manager = SkillsDescriptionManager::GetInstance();
     if (manager != nullptr) {
@@ -10260,7 +10260,7 @@ std::string BaseBundleInstaller::GetEffectiveBundleName(const InnerBundleInfo &b
     }
     // Otherwise derive from the persisted clone-app flag: return the prefixed name for secondary-mode
     // clone apps so that cross-flow callers (uninstall/recover, where dualModeBundleName_ is unset on a
-    // fresh installer instance) also resolve to the isolated name instead of the original (ADR-16).
+    // fresh installer instance) also resolve to the isolated name instead of the original.
     return bundleInfo.IsDualModeCloneApp()
         ? DualModeHelper::GetDualModeBundleName(bundleInfo.GetBundleName())
         : bundleInfo.GetBundleName();
