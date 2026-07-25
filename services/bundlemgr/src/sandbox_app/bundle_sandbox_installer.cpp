@@ -169,9 +169,9 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
 
     // 8. publish common event
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    result = commonEventMgr->NotifySandboxAppStatus(info, userInfo.uid, userId_, SandboxInstallType::INSTALL);
-    if (result != ERR_OK) {
-        APP_LOGE("NotifySandboxAppStatus failed due to error : %{public}d", result);
+    ErrCode ret = commonEventMgr->NotifySandboxAppStatus(info, userInfo.uid, userId_, SandboxInstallType::INSTALL);
+    if (ret != ERR_OK) {
+        APP_LOGE("NotifySandboxAppStatus failed due to error : %{public}d", ret);
     }
 
     appIndex = newAppIndex;
