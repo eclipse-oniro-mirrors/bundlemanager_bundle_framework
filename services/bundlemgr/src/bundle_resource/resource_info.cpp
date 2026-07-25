@@ -15,6 +15,7 @@
 
 #include "resource_info.h"
 
+#include "dual_mode_helper.h"
 #include "json_util.h"
 
 namespace OHOS {
@@ -33,7 +34,10 @@ ResourceInfo::~ResourceInfo()
 
 std::string ResourceInfo::GetKey() const
 {
-    std::string key = bundleName_;
+    // dual-mode (ADR-24): wrap bundleName_ with "+clone-10000+" prefix so the RDB key is
+    // isolated from the primary-mode same-name app. bundleName_ itself stays original.
+    std::string key = isDualModeCloneApp_
+        ? DualModeHelper::GetDualModeBundleName(bundleName_) : bundleName_;
     /**
     * if moduleName and abilityName both empty, it represents bundle resource,
     * otherwise it represents launcher ability resource.
@@ -51,16 +55,45 @@ std::string ResourceInfo::GetKey() const
     return key;
 }
 
+std::string ResourceInfo::GetOriginalKey() const
+{
+    // dual-mode (ADR-24): same grammar as GetKey() but WITHOUT the "+clone-10000+" prefix.
+    // BundleResourceIconRdb keeps the original bundleName (no dual-mode isolation).
+    std::string key = bundleName_;
+    if (!abilityName_.empty()) {
+        key = moduleName_.empty() ? key : (key + SEPARATOR + moduleName_);
+        key = abilityName_.empty() ? key : (key + SEPARATOR + abilityName_);
+    }
+    if (appIndex_ > 0) {
+        key = std::to_string(appIndex_) + UNDER_LINE + key;
+    }
+    if (extensionAbilityType_ >= 0) {
+        key = key + EXTENSION_ABILITY_SEPARATOR + std::to_string(extensionAbilityType_);
+    }
+    return key;
+}
+
 void ResourceInfo::ParseKey(const std::string &key)
 {
-    std::string baseKey = key;
-    auto plusPos = key.find_last_of(EXTENSION_ABILITY_SEPARATOR);
+    isDualModeCloneApp_ = false;
+    // dual-mode (ADR-24): stored key may carry "+clone-10000+" prefix. Strip it first,
+    // because the prefix reuses '+' (EXTENSION_ABILITY_SEPARATOR) and would corrupt parsing.
+    std::string parsedKey = key;
+    if (DualModeHelper::IsDualModeCloneKey(key)) {
+        std::string original;
+        if (DualModeHelper::ParseDualModeBundleName(key, original)) {
+            isDualModeCloneApp_ = true;
+            parsedKey = original;
+        }
+    }
+    std::string baseKey = parsedKey;
+    auto plusPos = parsedKey.find_last_of(EXTENSION_ABILITY_SEPARATOR);
     if (plusPos != std::string::npos) {
-        std::string extensionTypeStr = key.substr(plusPos + 1);
+        std::string extensionTypeStr = parsedKey.substr(plusPos + 1);
         if (!OHOS::StrToInt(extensionTypeStr, extensionAbilityType_)) {
             extensionAbilityType_ = -1;
         }
-        baseKey = key.substr(0, plusPos);
+        baseKey = parsedKey.substr(0, plusPos);
     }
     auto firstPos = baseKey.find_first_of(SEPARATOR);
     if (firstPos == std::string::npos) {

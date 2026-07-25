@@ -64,16 +64,17 @@ bool BundleResourceIconRdb::AddResourceIconInfo(const int32_t userId, const Icon
         APP_LOGE("failed, bundleName is empty");
         return false;
     }
-    APP_LOGD("insert resource key:%{public}s", resourceInfo.GetKey().c_str());
+    APP_LOGD("insert resource key:%{public}s", resourceInfo.GetOriginalKey().c_str());
     NativeRdb::ValuesBucket valuesBucket;
-    valuesBucket.PutString(BundleResourceConstants::NAME, resourceInfo.GetKey());
+    valuesBucket.PutString(BundleResourceConstants::NAME, resourceInfo.GetOriginalKey());
     valuesBucket.PutInt(BundleResourceConstants::USER_ID, userId);
     valuesBucket.PutInt(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
     valuesBucket.PutString(BundleResourceConstants::ICON, resourceInfo.icon_);
     // used for layered icons
     valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, resourceInfo.foreground_);
     valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, resourceInfo.background_);
-    APP_LOGD("key:%{public}s foreground: %{public}zu, background: %{public}zu", resourceInfo.GetKey().c_str(),
+    APP_LOGD("key:%{public}s foreground: %{public}zu, background: %{public}zu",
+        resourceInfo.GetOriginalKey().c_str(),
         resourceInfo.foreground_.size(), resourceInfo.background_.size());
 
     return rdbDataManager_->InsertData(valuesBucket);
@@ -99,14 +100,14 @@ bool BundleResourceIconRdb::AddResourceIconInfos(const int32_t userId, const Ico
             continue;
         }
         NativeRdb::ValuesBucket valuesBucket;
-        valuesBucket.PutString(BundleResourceConstants::NAME, info.GetKey());
+        valuesBucket.PutString(BundleResourceConstants::NAME, info.GetOriginalKey());
         valuesBucket.PutInt(BundleResourceConstants::USER_ID, userId);
         valuesBucket.PutInt(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
         valuesBucket.PutString(BundleResourceConstants::ICON, info.icon_);
         // used for layered icons
         valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, info.foreground_);
         valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, info.background_);
-        APP_LOGD("key:%{public}s foreground: %{public}zu, background: %{public}zu", info.GetKey().c_str(),
+        APP_LOGD("key:%{public}s foreground: %{public}zu, background: %{public}zu", info.GetOriginalKey().c_str(),
             info.foreground_.size(), info.background_.size());
         valuesBuckets.emplace_back(valuesBucket);
     }

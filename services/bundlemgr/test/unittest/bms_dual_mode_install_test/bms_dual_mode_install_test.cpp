@@ -265,7 +265,7 @@ HWTEST_F(BmsDualModeInstallTest, GetEffectiveBundleName_0200, Function | SmallTe
 
 HWTEST_F(BmsDualModeInstallTest, GetEffectiveBundleName_0300, Function | SmallTest | Level0)
 {
-    // InnerBundleInfo overload, dualModeBundleName_ empty -> returns bundleInfo.GetBundleName()
+    // InnerBundleInfo overload, dualModeBundleName_ empty + non-clone -> returns original name
     BaseBundleInstaller installer;
     installer.dualModeBundleName_.clear();
     InnerBundleInfo info;
@@ -279,6 +279,19 @@ HWTEST_F(BmsDualModeInstallTest, GetEffectiveBundleName_0400, Function | SmallTe
     installer.dualModeBundleName_ = PREFIXED_NAME;
     InnerBundleInfo info;
     EXPECT_EQ(installer.GetEffectiveBundleName(info), PREFIXED_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetEffectiveBundleName_0500, Function | SmallTest | Level0)
+{
+    // InnerBundleInfo overload, dualModeBundleName_ empty + clone app -> returns prefixed name.
+    // This is the cross-flow (uninstall/recover) path where dualModeBundleName_ is unset on a fresh
+    // installer instance; the persisted IsDualModeCloneApp flag must still resolve to the isolated
+    // name instead of the original (ADR-16 helper contract change).
+    BaseBundleInstaller installer;
+    installer.dualModeBundleName_.clear();
+    InnerBundleInfo info = MakeCat7Info(true);  // APP_CATEGORY_DIFF_PACKAGE + IsDualModeCloneApp=true
+    EXPECT_EQ(installer.GetEffectiveBundleName(info), DualModeHelper::GetDualModeBundleName(info.GetBundleName()));
+    EXPECT_NE(installer.GetEffectiveBundleName(info), info.GetBundleName());
 }
 
 // ====================== BaseBundleInstaller::InitDualModeBundleName ======================
@@ -864,5 +877,271 @@ HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0200, Function | SmallT
     EXPECT_EQ(installRes.appCategory, AppCategory::APP_CATEGORY_2IN1_ONLY);
     EXPECT_EQ(installRes.currentMode, "marker");
     EXPECT_FALSE(installRes.isSharedSandbox);
+}
+
+// ====================== BundleDataMgr::GetSkillInfoWithFlags (ADR-17 / AC-23) ======================
+// skills description data layer: skillPath uses the effective (prefixed) name for clone apps so it
+// points at the isolated skill dir; skillInfo.bundleName (Parcelable) keeps the original name.
+// flags=0 skips the description (RDB) branch, so each case asserts only path/bundleName assignment.
+// The delete-path effective-name derivation is covered by GetEffectiveBundleName_0300~0500 above.
+
+HWTEST_F(BmsDualModeInstallTest, GetSkillInfoWithFlags_DualModeClone_0100, Function | SmallTest | Level0)
+{
+    // clone app: skillPath uses prefixed name; bundleName keeps original (Parcelable contract)
+    InnerBundleInfo info = MakeCat7Info(true);
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    SkillProfile profile;
+    profile.name = "skill1";
+    profile.abilityName = "MainAbility";
+    SkillInfo skillInfo;
+    BundleDataMgr::GetSkillInfoWithFlags(info, moduleInfo, profile, 0, skillInfo);
+    EXPECT_EQ(skillInfo.bundleName, BUNDLE_NAME);
+    EXPECT_NE(skillInfo.skillPath.find(PREFIXED_NAME), std::string::npos);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetSkillInfoWithFlags_Normal_0200, Function | SmallTest | Level0)
+{
+    // primary (non-clone): skillPath uses original name, no prefix; zero behavior change
+    InnerBundleInfo info = MakeCat7Info(false);
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    SkillProfile profile;
+    profile.name = "skill1";
+    profile.abilityName = "MainAbility";
+    SkillInfo skillInfo;
+    BundleDataMgr::GetSkillInfoWithFlags(info, moduleInfo, profile, 0, skillInfo);
+    EXPECT_EQ(skillInfo.bundleName, BUNDLE_NAME);
+    EXPECT_NE(skillInfo.skillPath.find(BUNDLE_NAME), std::string::npos);
+    EXPECT_EQ(skillInfo.skillPath.find(PREFIXED_NAME), std::string::npos);
+}
+
+// ====================== Router (ADR-20 / AC-26) ======================
+// Router insert/update pass the effective (prefixed) name for clone apps. A mock
+// IRouterDataStorage captures the bundleName handed downstream to assert the key, without needing
+// real hap/router.json files (FindRouterHapPath yields an empty map when no module routerMap is set).
+namespace {
+class MockRouterStorage : public IRouterDataStorage {
+public:
+    std::string insertedKey;
+    std::string updatedKey;
+    bool InsertRouterInfo(const std::string &bundleName,
+        const std::map<std::string, std::string> &, const uint32_t) override
+    {
+        insertedKey = bundleName;
+        return true;
+    }
+    bool UpdateRouterInfo(const std::string &bundleName,
+        const std::map<std::string, std::string> &, const uint32_t) override
+    {
+        updatedKey = bundleName;
+        return true;
+    }
+    bool GetRouterInfo(const std::string &, const std::string &,
+        const uint32_t, std::vector<RouterItem> &) override { return false; }
+    void GetAllBundleNames(std::set<std::string> &) override {}
+    bool DeleteRouterInfo(const std::string &) override { return true; }
+    bool DeleteRouterInfo(const std::string &, const std::string &) override { return true; }
+    bool DeleteRouterInfo(const std::string &, const std::string &, const uint32_t) override { return true; }
+    bool UpdateDB() override { return true; }
+};
+}  // namespace
+
+HWTEST_F(BmsDualModeInstallTest, InsertRouterInfo_DualModeClone_0100, Function | SmallTest | Level0)
+{
+    // clone app: InsertRouterInfo passes the prefixed name downstream (ADR-20)
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto mockStorage = std::make_shared<MockRouterStorage>();
+    dataMgr->routerStorage_ = mockStorage;
+    InnerBundleInfo cloneInfo = MakeCat7Info(true);
+    cloneInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    dataMgr->InsertRouterInfo(cloneInfo);
+    EXPECT_EQ(mockStorage->insertedKey, PREFIXED_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, InsertRouterInfo_Normal_0200, Function | SmallTest | Level0)
+{
+    // non-clone: InsertRouterInfo passes the original name; zero change
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto mockStorage = std::make_shared<MockRouterStorage>();
+    dataMgr->routerStorage_ = mockStorage;
+    InnerBundleInfo info = MakeCat7Info(false);
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    dataMgr->InsertRouterInfo(info);
+    EXPECT_EQ(mockStorage->insertedKey, BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, UpdateRouterInfo_ByBundleName_DualModeClone_0300, Function | SmallTest | Level0)
+{
+    // clone under original-name key (post ClassifyDualModeAppsNoLock): UpdateRouterInfo(original)
+    // finds the clone and passes the prefixed name downstream (ADR-20)
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto mockStorage = std::make_shared<MockRouterStorage>();
+    dataMgr->routerStorage_ = mockStorage;
+    InnerBundleInfo cloneInfo = MakeCat7Info(true);
+    cloneInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = cloneInfo;
+    dataMgr->UpdateRouterInfo(BUNDLE_NAME);
+    EXPECT_EQ(mockStorage->updatedKey, PREFIXED_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, UpdateRouterInfo_ByBundleName_Normal_0400, Function | SmallTest | Level0)
+{
+    // non-clone: UpdateRouterInfo(original) keeps the original name; zero change
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto mockStorage = std::make_shared<MockRouterStorage>();
+    dataMgr->routerStorage_ = mockStorage;
+    InnerBundleInfo info = MakeCat7Info(false);
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    dataMgr->UpdateRouterInfo(BUNDLE_NAME);
+    EXPECT_EQ(mockStorage->updatedKey, BUNDLE_NAME);
+}
+
+// ====================== BundleDataMgr::GenerateOdidNoLock (ADR-7 / AC-16) ======================
+// Cross-mode odid reuse relies on GenerateOdidNoLock scanning BOTH bundleInfos_ and tempBundleInfos_.
+// In secondary mode ClassifyDualModeAppsNoLock hides the primary-mode variant (same developerId) in
+// tempBundleInfos_ (AC-14); scanning only bundleInfos_ would miss it and generate a fresh odid for
+// the clone, breaking cross-mode odid consistency (AC-16).
+
+HWTEST_F(BmsDualModeInstallTest, GenerateOdid_ReuseFromTempBundleInfos_0100, Function | SmallTest | Level0)
+{
+    // AC-16: primary-mode variant sits in tempBundleInfos_ (hidden by classification); clone install
+    // for the same developerId must reuse its odid, not generate a new one.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+
+    const std::string developerId = "com.example.developer";
+    const std::string primaryOdid = "odid-from-primary";
+    InnerBundleInfo primaryInfo;
+    primaryInfo.UpdateOdid(developerId, primaryOdid);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = primaryInfo;
+
+    std::string odid;
+    dataMgr->GenerateOdid(developerId, odid);
+    EXPECT_EQ(odid, primaryOdid);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GenerateOdid_ReuseFromBundleInfos_0200, Function | SmallTest | Level0)
+{
+    // Regression: same-groupId odid already in bundleInfos_ is reused (pre-existing behavior).
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+
+    const std::string developerId = "com.example.developer";
+    const std::string existingOdid = "existing-odid";
+    InnerBundleInfo info;
+    info.UpdateOdid(developerId, existingOdid);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    std::string odid;
+    dataMgr->GenerateOdid(developerId, odid);
+    EXPECT_EQ(odid, existingOdid);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GenerateOdid_BothMapsBundleInfosFirst_0300, Function | SmallTest | Level0)
+{
+    // When both maps hold the groupId, bundleInfos_ wins (scanned first), preserving prior behavior.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+
+    const std::string developerId = "com.example.developer";
+    InnerBundleInfo cloneInfo;
+    cloneInfo.UpdateOdid(developerId, "odid-in-bundleinfos");
+    dataMgr->bundleInfos_[PREFIXED_NAME] = cloneInfo;
+    InnerBundleInfo primaryInfo;
+    primaryInfo.UpdateOdid(developerId, "odid-in-temp");
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = primaryInfo;
+
+    std::string odid;
+    dataMgr->GenerateOdid(developerId, odid);
+    EXPECT_EQ(odid, "odid-in-bundleinfos");
+}
+
+HWTEST_F(BmsDualModeInstallTest, GenerateOdid_NoMatchGenerateNew_0400, Function | SmallTest | Level0)
+{
+    // Neither map has the groupId -> a fresh uuid odid is generated.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+
+    std::string odid;
+    dataMgr->GenerateOdid("com.example.fresh", odid);
+    EXPECT_FALSE(odid.empty());
+}
+
+// ====================== BundleDataMgr::installStates_ state machine (ADR-21 amendment Review-14 / AC-27/28/32) ====
+// Callers pass the effective name (prefixed for clone apps, original otherwise); it is used directly
+// as the installStates_ key. The old GetInstallStateKey lookup and the INSTALL_START info overload
+// were removed (design ADR-21 amendment).
+
+HWTEST_F(BmsDualModeInstallTest, UpdateBundleInstallState_InstallStartClonePrefixed_0100, Function | SmallTest | Level0)
+{
+    // Fresh install of a clone app: caller passes the prefixed effective name; it becomes the state
+    // key directly, matching the post-restart installStates_ initialization (prefixed DB key).
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(PREFIXED_NAME, InstallState::INSTALL_START, false));
+    EXPECT_EQ(dataMgr->installStates_.count(PREFIXED_NAME), 1u);
+    EXPECT_EQ(dataMgr->installStates_[PREFIXED_NAME], InstallState::INSTALL_START);
+    EXPECT_EQ(dataMgr->installStates_.count(BUNDLE_NAME), 0u);
+}
+
+HWTEST_F(BmsDualModeInstallTest, UpdateBundleInstallState_InstallStartNonCloneOriginal_0200,
+    Function | SmallTest | Level0)
+{
+    // Non-clone fresh install: caller passes the original name; emplaces under the original name
+    // (AC-28 regression, zero change).
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START, false));
+    EXPECT_EQ(dataMgr->installStates_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->installStates_.count(PREFIXED_NAME), 0u);
+}
+
+HWTEST_F(BmsDualModeInstallTest, UpdateBundleInstallState_RestartUpdateClone_0300, Function | SmallTest | Level0)
+{
+    // AC-27 fix: after restart installStates_ is keyed by the prefixed name; the runtime update
+    // passes the prefixed effective name so UPDATING_START lands on the same key as INSTALL_SUCCESS
+    // (previously two truth sources mismatched and the transition returned false).
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->installStates_[PREFIXED_NAME] = InstallState::INSTALL_SUCCESS;
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(PREFIXED_NAME, InstallState::UPDATING_START));
+    EXPECT_EQ(dataMgr->installStates_[PREFIXED_NAME], InstallState::UPDATING_START);
+}
+
+HWTEST_F(BmsDualModeInstallTest, UpdateBundleInstallState_RollbackClone_0400, Function | SmallTest | Level0)
+{
+    // Rollback: caller passes the prefixed effective name; ROLL_BACK transitions on the prefixed key.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->installStates_[PREFIXED_NAME] = InstallState::UPDATING_START;
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(PREFIXED_NAME, InstallState::ROLL_BACK));
+    EXPECT_EQ(dataMgr->installStates_.count(PREFIXED_NAME), 1u);
+}
+
+HWTEST_F(BmsDualModeInstallTest, UpdateBundleInstallState_RestartNonCloneRegression_0500, Function | SmallTest | Level0)
+{
+    // AC-28 regression: non-clone uses the original name end-to-end, zero behavioral change.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->installStates_[BUNDLE_NAME] = InstallState::INSTALL_SUCCESS;
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_START));
+    EXPECT_EQ(dataMgr->installStates_[BUNDLE_NAME], InstallState::UPDATING_START);
+    EXPECT_EQ(dataMgr->installStates_.count(PREFIXED_NAME), 0u);
 }
 } // OHOS

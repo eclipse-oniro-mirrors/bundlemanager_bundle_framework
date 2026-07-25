@@ -397,6 +397,18 @@ void BundleDataMgr::ClassifyDualModeAppsNoLock()
                 it = tempBundleInfos_.erase(it);
             }
         }
+        // Secondary mode: category-7 primary variants (non-clone) still in bundleInfos_ have no
+        // clone counterpart in tempBundleInfos_ (so the swap pass above skipped them). They must
+        // be hidden in secondary mode — move them to tempBundleInfos_.
+        for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
+            if (DualModeHelper::IsDiffPackageCategory(it->second.GetAppCategory())
+                && !it->second.IsDualModeCloneApp()) {
+                tempBundleInfos_[it->first] = it->second;
+                it = bundleInfos_.erase(it);
+            } else {
+                ++it;
+            }
+        }
     }
 
     APP_LOGI("Dual mode: classification done - bundleInfos=%{public}zu, tempBundleInfos=%{public}zu",
@@ -415,6 +427,8 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
     // always keep lock bundleInfoMutex_ before locking stateMutex_ to avoid deadlock
     std::unique_lock<std::shared_mutex> lck(bundleInfoMutex_);
     std::lock_guard<std::mutex> lock(stateMutex_);
+    // Dual-mode: the caller passes the effective name (prefixed for clone apps); use it directly
+    // as the installStates_ key (design ADR-21 amendment, Review-14).
     auto item = installStates_.find(bundleName);
     if (item == installStates_.end()) {
         if (state == InstallState::INSTALL_START) {
@@ -433,7 +447,13 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
                 static_cast<int32_t>(previousState->second), static_cast<int32_t>(state));
             if (IsDeleteDataState(state)) {
                 installStates_.erase(item);
-                DeleteBundleInfo(bundleName, state, isKeepData);
+                // bundleInfos_ is keyed by the original name; the caller passes the effective name
+                // (prefixed for clone apps), so strip the prefix before deleting bundle info.
+                std::string originalName = bundleName;
+                if (DualModeHelper::IsDualModeCloneKey(bundleName)) {
+                    DualModeHelper::ParseDualModeBundleName(bundleName, originalName);
+                }
+                DeleteBundleInfo(originalName, state, isKeepData);
                 return true;
             }
             item->second = state;
@@ -461,7 +481,9 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
     }
 
     std::lock_guard<std::mutex> stateLock(stateMutex_);
-    auto statusItem = installStates_.find(bundleName);
+    std::string stateKey = info.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+    auto statusItem = installStates_.find(stateKey);
     if (statusItem == installStates_.end()) {
         APP_LOGW("save info fail, bundleName:%{public}s is not installed", bundleName.c_str());
         return false;
@@ -530,7 +552,9 @@ bool BundleDataMgr::AddNewModuleInfo(
         return false;
     }
     std::lock_guard<std::mutex> stateLock(stateMutex_);
-    auto statusItem = installStates_.find(bundleName);
+    std::string stateKey = oldInfo.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+    auto statusItem = installStates_.find(stateKey);
     if (statusItem == installStates_.end()) {
         APP_LOGW("save info fail, app:%{public}s is not updated", bundleName.c_str());
         return false;
@@ -608,7 +632,9 @@ bool BundleDataMgr::RemoveModuleInfo(
         return false;
     }
     std::lock_guard<std::mutex> stateLock(stateMutex_);
-    auto statusItem = installStates_.find(bundleName);
+    std::string stateKey = oldInfo.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+    auto statusItem = installStates_.find(stateKey);
     if (statusItem == installStates_.end()) {
         APP_LOGW("save info fail, app:%{public}s is not updated", bundleName.c_str());
         return false;
@@ -877,7 +903,9 @@ bool BundleDataMgr::RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundl
         return false;
     }
     std::lock_guard<std::mutex> stateLock(stateMutex_);
-    auto statusItem = installStates_.find(bundleName);
+    std::string stateKey = info.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+    auto statusItem = installStates_.find(stateKey);
     if (statusItem == installStates_.end()) {
         APP_LOGW("save info fail, app:%{public}s is not updated", bundleName.c_str());
         return false;
@@ -971,7 +999,9 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         return false;
     }
     std::lock_guard<std::mutex> stateLock(stateMutex_);
-    auto statusItem = installStates_.find(bundleName);
+    std::string stateKey = oldInfo.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+    auto statusItem = installStates_.find(stateKey);
     if (statusItem == installStates_.end()) {
         APP_LOGW("save info fail, app:%{public}s is not updated", bundleName.c_str());
         return false;
@@ -3847,7 +3877,10 @@ void BundleDataMgr::InsertRouterInfo(const InnerBundleInfo &innerBundleInfo)
         }
         routerInfoMap[hapIter->first] = routerMapString;
     }
-    std::string bundleName = innerBundleInfo.GetBundleName();
+    // dual-mode: a clone app's router is stored under the prefixed effective name (ADR-20).
+    std::string bundleName = innerBundleInfo.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(innerBundleInfo.GetBundleName())
+        : innerBundleInfo.GetBundleName();
     if (!routerStorage_->InsertRouterInfo(bundleName, routerInfoMap, innerBundleInfo.GetVersionCode())) {
         APP_LOGW("-n %{public}s insert router failed", bundleName.c_str());
     }
@@ -3933,6 +3966,7 @@ void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
     }
     std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
     uint32_t versionCode = 0;
+    std::string effectiveBundleName = bundleName;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
@@ -3942,8 +3976,12 @@ void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
         }
         FindRouterHapPath(infoItem->second, hapPathMap);
         versionCode = infoItem->second.GetVersionCode();
+        // dual-mode: a clone app's router is stored under the prefixed effective name (ADR-20).
+        if (infoItem->second.IsDualModeCloneApp()) {
+            effectiveBundleName = DualModeHelper::GetDualModeBundleName(bundleName);
+        }
     }
-    UpdateRouterInfo(bundleName, hapPathMap, versionCode);
+    UpdateRouterInfo(effectiveBundleName, hapPathMap, versionCode);
 }
 
 void BundleDataMgr::FindRouterHapPath(const InnerBundleInfo &innerBundleInfo,
@@ -3966,7 +4004,11 @@ void BundleDataMgr::UpdateRouterInfo(InnerBundleInfo &innerBundleInfo)
 {
     std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
     FindRouterHapPath(innerBundleInfo, hapPathMap);
-    UpdateRouterInfo(innerBundleInfo.GetBundleName(), hapPathMap, innerBundleInfo.GetVersionCode());
+    // dual-mode: a clone app's router is stored under the prefixed effective name (ADR-20).
+    std::string bundleName = innerBundleInfo.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(innerBundleInfo.GetBundleName())
+        : innerBundleInfo.GetBundleName();
+    UpdateRouterInfo(bundleName, hapPathMap, innerBundleInfo.GetVersionCode());
 }
 
 void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName,
@@ -8953,6 +8995,23 @@ bool BundleDataMgr::FetchInnerBundleInfo(
     return true;
 }
 
+bool BundleDataMgr::FetchTempBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
+{
+    // dual-mode (FEAT-20260715-001 ADR-24): counterpart of a dual-mode same-name app lives in
+    // tempBundleInfos_ (the non-current-mode variant). Mirrors FetchInnerBundleInfo.
+    if (bundleName.empty()) {
+        APP_LOGW("FetchTempBundleInfo bundleName is empty");
+        return false;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = tempBundleInfos_.find(bundleName);
+    if (infoItem == tempBundleInfos_.end()) {
+        return false;
+    }
+    innerBundleInfo = infoItem->second;
+    return true;
+}
+
 bool BundleDataMgr::IsHideDesktopIconForEvent(const std::string &bundleName) const
 {
     APP_LOGD("IsHideDesktopIconForEvent %{public}s", bundleName.c_str());
@@ -9377,13 +9436,18 @@ ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_
         APP_LOGW_NOFUNC("-n %{public}s not exist", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    // dual-mode: after ClassifyDualModeAppsNoLock both maps use the original name as key, and a clone
+    // app is marked by IsDualModeCloneApp; its provision is stored under the prefixed name (ADR-18),
+    // so derive the provision key from IsDualModeCloneApp (ADR-19).
+    std::string provisionKey = infoItem->second.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
     if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
         int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
         if (responseUserId == Constants::INVALID_USERID) {
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
-    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(bundleName, appProvisionInfo)) {
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(provisionKey, appProvisionInfo)) {
         APP_LOGW("bundleName:%{public}s GetAppProvisionInfo failed", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -9722,6 +9786,18 @@ std::vector<std::string> BundleDataMgr::GetAllBundleName() const
     std::transform(bundleInfos_.cbegin(), bundleInfos_.cend(), std::back_inserter(bundleNames), [](const auto &item) {
         return item.first;
     });
+    return bundleNames;
+}
+
+std::vector<std::string> BundleDataMgr::GetAllTempBundleName() const
+{
+    // dual-mode (FEAT-20260715-001 ADR-24): enumerate tempBundleInfos_ keys, mirroring
+    // GetAllBundleName. Used by resource refresh to process all dual-mode apps.
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::vector<std::string> bundleNames;
+    bundleNames.reserve(tempBundleInfos_.size());
+    std::transform(tempBundleInfos_.cbegin(), tempBundleInfos_.cend(),
+        std::back_inserter(bundleNames), [](const auto &item) { return item.first; });
     return bundleNames;
 }
 
@@ -11574,18 +11650,33 @@ std::string BundleDataMgr::GenerateOdidNoLock(const std::string &developerId) co
         return "";
     }
     std::string groupId = BundleUtil::ExtractGroupIdByDevelopId(developerId);
-    // Check if odid already exists in bundleInfos_ (caller must hold bundleInfoMutex_)
-    for (const auto &item : bundleInfos_) {
-        std::string developerIdExist;
-        std::string odidExist;
-        item.second.GetDeveloperidAndOdid(developerIdExist, odidExist);
-        std::string groupIdExist = BundleUtil::ExtractGroupIdByDevelopId(developerIdExist);
-        if (groupId == groupIdExist && !odidExist.empty()) {
-            // Found existing odid for this groupId
-            APP_LOGI_NOFUNC("found existing odid:%{private}s for groupId:%{public}s",
-                odidExist.c_str(), groupId.c_str());
-            return odidExist;
+    // Reuse existing odid for the same groupId. The caller must hold bundleInfoMutex_,
+    // which guards both bundleInfos_ and tempBundleInfos_. tempBundleInfos_ must also be
+    // checked for dual-mode correctness: in secondary mode the primary-mode variant of a
+    // category-7 app is moved there by ClassifyDualModeAppsNoLock, so cross-mode odid reuse
+    // (AC-16) is only achievable by looking in both maps.
+    auto findExistingOdid = [groupId](const std::map<std::string, InnerBundleInfo> &infos,
+        const char *mapName) -> std::string {
+        for (const auto &item : infos) {
+            std::string developerIdExist;
+            std::string odidExist;
+            item.second.GetDeveloperidAndOdid(developerIdExist, odidExist);
+            std::string groupIdExist = BundleUtil::ExtractGroupIdByDevelopId(developerIdExist);
+            if (groupId == groupIdExist && !odidExist.empty()) {
+                APP_LOGI_NOFUNC("found existing odid:%{private}s for groupId:%{public}s in %{public}s",
+                    odidExist.c_str(), groupId.c_str(), mapName);
+                return odidExist;
+            }
         }
+        return "";
+    };
+
+    std::string reused = findExistingOdid(bundleInfos_, "bundleInfos_");
+    if (reused.empty()) {
+        reused = findExistingOdid(tempBundleInfos_, "tempBundleInfos_");
+    }
+    if (!reused.empty()) {
+        return reused;
     }
 
     // No existing odid found, generate new one
@@ -15153,6 +15244,11 @@ void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
     uint32_t flags, SkillInfo &skillInfo)
 {
     skillInfo.bundleName = info.GetBundleName();
+    // dual-mode: skill files live under the effective (prefixed) dir per ADR-16; the RDB description key and the
+    // skill path use the effective name, while skillInfo.bundleName (Parcelable, returned to callers) keeps the
+    // original name per ADR-17.
+    std::string effectiveBundleName = info.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(skillInfo.bundleName) : skillInfo.bundleName;
     skillInfo.moduleName = moduleInfo.moduleName;
     skillInfo.skillName = profile.name;
     skillInfo.skillType = (info.GetApplicationBundleType() == BundleType::SKILL) ?
@@ -15160,7 +15256,7 @@ void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
     skillInfo.hapPath = moduleInfo.hapPath;
     skillInfo.abilityName = profile.abilityName;
     skillInfo.skillPath = std::string(ServiceConstants::SKILL_FILE_PATH) + ServiceConstants::PATH_SEPARATOR +
-        skillInfo.bundleName + ServiceConstants::PATH_SEPARATOR + skillInfo.moduleName +
+        effectiveBundleName + ServiceConstants::PATH_SEPARATOR + skillInfo.moduleName +
         ServiceConstants::PATH_SEPARATOR + ServiceConstants::SKILL_DIR + ServiceConstants::PATH_SEPARATOR +
         skillInfo.skillName;
     skillInfo.versionCode = info.GetVersionCode();
@@ -15183,7 +15279,7 @@ void BundleDataMgr::GetSkillInfoWithFlags(const InnerBundleInfo &info,
         static_cast<uint32_t>(SkillInfoFlag::GET_SKILL_INFO_WITH_DESCRIPTION)) {
         std::string description;
         auto ret = DelayedSingleton<SkillsDescriptionManager>::GetInstance()->GetSkillDescription(
-            skillInfo.bundleName, skillInfo.moduleName, skillInfo.skillName, description);
+            effectiveBundleName, skillInfo.moduleName, skillInfo.skillName, description);
         if (ret == ERR_OK) {
             skillInfo.description = description;
         }
