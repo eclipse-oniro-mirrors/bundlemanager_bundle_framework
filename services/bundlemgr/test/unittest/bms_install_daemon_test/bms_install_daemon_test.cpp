@@ -2873,22 +2873,22 @@ HWTEST_F(BmsInstallDaemonTest, DeleteOldCacheFiles_Normal_0100, Function | Small
 HWTEST_F(BmsInstallDaemonTest, DeleteOldCacheFiles_Normal_0200, Function | SmallTest | Level0)
 {
     InstalldHostImpl hostImpl;
-    auto ret = mkdir("/data/test/temp", 0777);
+    auto ret = mkdir("/data/app/cache", 0777);
     ASSERT_EQ(ret, 0);
-    ret = mkdir("/data/test/temp/test", 0777);
+    ret = mkdir("/data/app/cache/test", 0777);
     ASSERT_EQ(ret, 0);
-    ret = mkdir("/data/test/temp/test/test", 0777);
+    ret = mkdir("/data/app/cache/test/test", 0777);
     ASSERT_EQ(ret, 0);
-    int32_t fd = creat("/data/test/temp/test/filename.txt", 0777);
+    int32_t fd = creat("/data/app/cache/test/filename.txt", 0777);
     ASSERT_NE(fd, -1);
-    std::vector<std::string> paths = {"/data/test/temp"};
+    std::vector<std::string> paths = {"/data/app/cache"};
     uint64_t cacheSize = UINT64_MAX;
     uint64_t cleanedSize = 0;
     ret = hostImpl.DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
     EXPECT_EQ(ret, ERR_OK);
     std::error_code ec;
-    EXPECT_TRUE(std::filesystem::is_empty("/data/test/temp", ec));
-    std::filesystem::remove_all("/data/test/temp", ec);
+    EXPECT_TRUE(std::filesystem::is_empty("/data/app/cache", ec));
+    std::filesystem::remove_all("/data/app/cache", ec);
 }
 
 /**
