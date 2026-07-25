@@ -182,6 +182,11 @@ ohos_unittest("BmsDataMgrTest") {
     sources += overlay_installation
     defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
   }
+
+  if (enable_clone_for_account) {
+    sources += [ "${services_path}/bundlemgr/src/clone/clone_for_account_util.cpp" ]
+    defines += [ "BMS_ENABLE_CLONE_FOR_ACCOUNT" ]
+  }
 }
 
 ohos_unittest("BmsExtensionDataMgrTest") {
