@@ -5952,6 +5952,7 @@ napi_value GetAllAppCloneBundleInfo(napi_env env, napi_callback_info info)
 }
 
 namespace {
+constexpr const char* PREFERENCE = "preference";
 constexpr const char* PREFERENCE_MODE = "mode";
 constexpr const char* PREFERENCE_INDEX = "appIndex";
 }  // namespace
@@ -5962,6 +5963,7 @@ bool ParseAppClonePreference(napi_env env, napi_value value, AppClonePreference&
     NAPI_CALL_BASE(env, napi_typeof(env, value, &valueType), false);
     if (valueType != napi_object) {
         APP_LOGE_NOFUNC("preference is not object");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PREFERENCE, TYPE_OBJECT);
         return false;
     }
     napi_value modeProp = nullptr;
@@ -5970,6 +5972,7 @@ bool ParseAppClonePreference(napi_env env, napi_value value, AppClonePreference&
     napi_typeof(env, modeProp, &modeType);
     if (modeType != napi_number) {
         APP_LOGE_NOFUNC("preference mode must be number");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PREFERENCE_MODE, TYPE_NUMBER);
         return false;
     }
     int32_t modeValue = 0;
@@ -5985,6 +5988,7 @@ bool ParseAppClonePreference(napi_env env, napi_value value, AppClonePreference&
     napi_typeof(env, idxProp, &idxType);
     if (idxType != napi_number) {
         APP_LOGE_NOFUNC("preference index must be number for CLONE_APP");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PREFERENCE_INDEX, TYPE_NUMBER);
         return false;
     }
     napi_get_value_int32(env, idxProp, &preference.appIndex);
@@ -6163,7 +6167,6 @@ napi_value SetAppClonePreference(napi_env env, napi_callback_info info)
     }
     if (!ParseAppClonePreference(env, args[ARGS_POS_ONE], asyncCallbackInfo->preference)) {
         APP_LOGE_NOFUNC("SetAppClonePreference parse preference failed");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, "preference", TYPE_OBJECT);
         return nullptr;
     }
     int32_t modeValue = static_cast<int32_t>(asyncCallbackInfo->preference.mode);
