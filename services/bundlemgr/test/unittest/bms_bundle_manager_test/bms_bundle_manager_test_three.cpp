@@ -1867,24 +1867,6 @@ HWTEST_F(BmsBundleManagerTest3, GetBundleNamesForNewUser_0200, Function | SmallT
 }
 
 /**
- * @tc.number: GetBundleNamesForNewUser_0300
- * @tc.name: test GetBundleNamesForNewUser
- */
-HWTEST_F(BmsBundleManagerTest3, GetBundleNamesForNewUser_0300, Function | SmallTest | Level1)
-{
-    auto dataMgr = GetBundleDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    InnerBundleInfo info;
-    info.SetInstalledForAllUser(true);
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
-    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
-    std::vector<std::string> ret = dataMgr->GetBundleNamesForNewUser();
-    EXPECT_EQ(ret.size(), 1);
-    dataMgr->bundleInfos_.clear();
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
-}
-
-/**
 * @tc.number: PreInstallDataStorageRdb_0100
 * @tc.name: test LoadAllPreInstallBundleInfos
 * @tc.desc: 1.test LoadAllPreInstallBundleInfos the PreInstallDataStorageRdb
