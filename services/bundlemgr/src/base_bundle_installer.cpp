@@ -2054,11 +2054,11 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
             driverInstaller->RemoveDriverSoFile(info.second, "", false);
         }
         // remove profile from code signature
-        RemoveProfileFromCodeSign(bundleName_);
+        RemoveProfileFromCodeSign(GetEffectiveBundleName());
         // remove innerBundleInfo
-        RemoveInfo(bundleName_, "");
+        RemoveInfo(GetEffectiveBundleName(), "");
         if (isHnpInstalled_) {
-            RollbackHnpInstall(bundleName_, { userId_ });
+            RollbackHnpInstall(GetEffectiveBundleName(), { userId_ });
         }
         RemoveNPAPIPluginDir();
         return;
@@ -2075,7 +2075,7 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
     // need delete definePermissions and requestPermissions
     UpdateHapToken(preInfo.GetAppType() != oldInfo.GetAppType(), oldInfo);
     if (isHnpInstalled_) {
-        RollbackHnpInstall(bundleName_, oldInfo.GetUsers());
+        RollbackHnpInstall(GetEffectiveBundleName(), oldInfo.GetUsers());
     }
     LOG_D(BMS_TAG_INSTALLER, "finish rollback due to install failed");
 }
@@ -2090,7 +2090,7 @@ void BaseBundleInstaller::RollBack(const InnerBundleInfo &info, InnerBundleInfo 
             modulePackage + ServiceConstants::TMP_SUFFIX;
         RemoveModuleDir(createModulePath, info.GetBundleName());
         oldInfo.SetCurrentModulePackage(modulePackage);
-        RollBackModuleInfo(bundleName_, oldInfo);
+        RollBackModuleInfo(GetEffectiveBundleName(), oldInfo);
         // remove driver file of installed module
         driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(modulePackage), true);
     } else {
@@ -2098,7 +2098,7 @@ void BaseBundleInstaller::RollBack(const InnerBundleInfo &info, InnerBundleInfo 
         // remove driver file
         driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(modulePackage), false);
         // remove module info
-        RemoveInfo(bundleName_, modulePackage);
+        RemoveInfo(GetEffectiveBundleName(), modulePackage);
     }
 }
 
@@ -2139,7 +2139,7 @@ void BaseBundleInstaller::RemoveInfo(const std::string &bundleName, const std::s
         return;
     }
     if (packageName.empty()) {
-        dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UPDATING_FAIL);
+        dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UPDATING_FAIL);
     } else {
         InnerBundleInfo innerBundleInfo;
         bool isExist = false;
@@ -2147,8 +2147,8 @@ void BaseBundleInstaller::RemoveInfo(const std::string &bundleName, const std::s
             LOG_I(BMS_TAG_INSTALLER, "finish rollback due to install failed");
             return;
         }
-        dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(innerBundleInfo), InstallState::ROLL_BACK);
-        dataMgr_->RemoveModuleInfo(bundleName, packageName, innerBundleInfo);
+        dataMgr_->UpdateBundleInstallState(bundleName, InstallState::ROLL_BACK);
+        dataMgr_->RemoveModuleInfo(bundleName_, packageName, innerBundleInfo);
     }
     LOG_D(BMS_TAG_INSTALLER, "finish to remove innerBundleInfo due to rollback");
 }
@@ -2164,8 +2164,8 @@ void BaseBundleInstaller::RollBackModuleInfo(const std::string &bundleName, Inne
     if (!FetchInnerBundleInfo(innerBundleInfo, isExist) || !isExist) {
         return;
     }
-    dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(innerBundleInfo), InstallState::ROLL_BACK);
-    dataMgr_->UpdateInnerBundleInfo(bundleName, oldInfo, innerBundleInfo);
+    dataMgr_->UpdateBundleInstallState(bundleName, InstallState::ROLL_BACK);
+    dataMgr_->UpdateInnerBundleInfo(bundleName_, oldInfo, innerBundleInfo);
     LOG_D(BMS_TAG_INSTALLER, "finsih rollBackMoudleInfo due to rollback");
 }
 
@@ -2368,7 +2368,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
     dataMgr_->DisableBundle(bundleName);
 
-    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(oldInfo), InstallState::UNINSTALL_START)) {
+    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall already start");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
@@ -2423,8 +2423,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         quickFixDataMgr->DeleteInnerAppQuickFix(bundleName);
     }
 #endif
-    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(
-        GetEffectiveBundleName(oldInfo))) {
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed", bundleName.c_str());
     }
     LOG_D(BMS_TAG_INSTALLER, "finish to process %{public}s bundle uninstall", bundleName.c_str());
@@ -2595,12 +2594,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
 
-    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(oldInfo), InstallState::UNINSTALL_START)) {
+    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall already start");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
 
-    ScopeGuard stateGuard([&] { dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(oldInfo), InstallState::INSTALL_SUCCESS); });
+    ScopeGuard stateGuard([&] { dataMgr_->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS); });
 
     // reboot scan case will not kill the bundle
     if (installParam.GetKillProcess()) {
@@ -3128,7 +3127,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(info), InstallState::INSTALL_START, false)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::INSTALL_START)) {
         LOG_E(BMS_TAG_INSTALLER, "install already start");
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
@@ -3150,7 +3149,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     info.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::INSTALL_START);
 
     ScopeGuard stateGuard([&] {
-        dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(info), InstallState::INSTALL_FAIL, false);
+        dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::INSTALL_FAIL);
     });
     ErrCode result = CreateBundleAndDataDir(info);
     if (result != ERR_OK) {
@@ -3232,7 +3231,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     }
 
     LOG_D(BMS_TAG_INSTALLER, "%{public}s, %{public}s", newInfo.GetBundleName().c_str(), modulePackage_.c_str());
-    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(newInfo), InstallState::UPDATING_START, false)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UPDATING_START)) {
         LOG_E(BMS_TAG_INSTALLER, "update already start");
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
@@ -3328,7 +3327,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
     ScopeGuard skillGuard([&] {
         RemoveAppSkillsDir(GetEffectiveBundleName(newInfo), newInfo.GetCurModuleName());
     });
-    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(newInfo), InstallState::UPDATING_SUCCESS)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UPDATING_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "new moduleupdate state failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
@@ -3387,7 +3386,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
             // app versionCode equals to the old and do not need to update module
             // and only need to update userInfo
             newInfo.SetOnlyCreateBundleUser(true);
-            if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(newInfo), InstallState::UPDATING_SUCCESS)) {
+            if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UPDATING_SUCCESS)) {
                 LOG_E(BMS_TAG_INSTALLER, "update state failed");
                 return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
             }
@@ -3436,7 +3435,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     result = FinalizeAppSkills(newInfo);
     CHECK_RESULT(result, "finalize app skills failed %{public}d");
 
-    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(newInfo), InstallState::UPDATING_SUCCESS)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UPDATING_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "old module update state failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
@@ -6579,7 +6578,7 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
-    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(info), InstallState::UNINSTALL_START)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UNINSTALL_START)) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall already start");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
@@ -9107,8 +9106,8 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
     }
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, info, false)) {
         LOG_E(BMS_TAG_INSTALLER, "add bundle failed, -n:%{public}s", bundleName_.c_str());
-        dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(info), InstallState::UNINSTALL_START);
-        dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(info), InstallState::UNINSTALL_SUCCESS);
+        dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UNINSTALL_START);
+        dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UNINSTALL_SUCCESS);
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
     if (!dataMgr_->SaveInnerBundleInfo(info)) {

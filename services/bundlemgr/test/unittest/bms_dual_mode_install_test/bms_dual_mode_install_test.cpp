@@ -1418,4 +1418,42 @@ HWTEST_F(BmsDualModeInstallTest, UpdateBundleInstallState_RestartNonCloneRegress
     EXPECT_EQ(dataMgr->installStates_[BUNDLE_NAME], InstallState::UPDATING_START);
     EXPECT_EQ(dataMgr->installStates_.count(PREFIXED_NAME), 0u);
 }
+
+// ====================== BundleDataMgr::FetchTempBundleInfo ======================
+// dual-mode: the same-name counterpart of a dual-mode app lives in tempBundleInfos_
+// (the non-current-mode variant). Mirrors FetchInnerBundleInfo. Branches: empty name (false),
+// not found in tempBundleInfos_ (false), found (true + copy out param).
+
+HWTEST_F(BmsDualModeInstallTest, FetchTempBundleInfo_EmptyName_0100, Function | SmallTest | Level0)
+{
+    // bundleName empty -> early return false before the lock; out param left untouched.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo sentinel = MakeResourceInfo(true);
+    InnerBundleInfo out = sentinel;
+    EXPECT_FALSE(dataMgr->FetchTempBundleInfo("", out));
+    EXPECT_TRUE(out.IsDualModeCloneApp());  // unchanged, same as sentinel
+}
+
+HWTEST_F(BmsDualModeInstallTest, FetchTempBundleInfo_NotFound_0200, Function | SmallTest | Level0)
+{
+    // bundleName non-empty but absent from tempBundleInfos_ -> return false.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->tempBundleInfos_.clear();
+    InnerBundleInfo out;
+    EXPECT_FALSE(dataMgr->FetchTempBundleInfo(BUNDLE_NAME, out));
+}
+
+HWTEST_F(BmsDualModeInstallTest, FetchTempBundleInfo_FoundAssign_0300, Function | SmallTest | Level0)
+{
+    // tempBundleInfos_ holds the dual-mode same-name counterpart -> return true and copy it out.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeResourceInfo(true);  // clone variant lives in temp
+    InnerBundleInfo out;
+    EXPECT_TRUE(dataMgr->FetchTempBundleInfo(BUNDLE_NAME, out));
+    EXPECT_EQ(out.GetBundleName(), BUNDLE_NAME);
+    EXPECT_TRUE(out.IsDualModeCloneApp());
+}
 } // OHOS
