@@ -555,18 +555,22 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return false;
     }
+    InstallParam verifiedInstallParam = installParam;
     auto verifyResult = VerifyInstallPermission();
-    if (verifyResult != ERR_OK &&
-        (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM))) {
-        statusReceiver->OnFinished(verifyResult, "");
-        return false;
+    if (verifyResult != ERR_OK) {
+        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+            statusReceiver->OnFinished(verifyResult, "");
+            return false;
+        }
+        verifiedInstallParam.isCheckDebugApp = true;
     }
-    if (!CheckInstallDowngradeParam(installParam)) {
+
+    if (!CheckInstallDowngradeParam(verifiedInstallParam)) {
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    manager_->CreateInstallTask(bundleFilePaths, installParam, statusReceiver);
+    manager_->CreateInstallTask(bundleFilePaths, verifiedInstallParam, statusReceiver);
     return true;
 }
 
