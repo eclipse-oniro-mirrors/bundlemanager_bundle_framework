@@ -128,6 +128,11 @@
       <option name="push" value="test_bundle/versionUpdateTest/versionUpdateTest7.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
+  <target name="BmsBundleEnterpriseDeviceTest">
+    <preparer>
+      <option name="push" value="test_bundle/right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+    </preparer>
+  </target>
   <target name="BmsBundleOtaUpdateTest">
     <preparer>
       <option name="push" value="test_bundle/otaUpdateTestAppField.hap -> /data/test/resource/bms/install_bundle/" src="res"/>

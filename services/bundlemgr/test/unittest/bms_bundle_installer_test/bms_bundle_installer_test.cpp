@@ -899,61 +899,6 @@ HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0100, Function | Smal
 }
 
 /**
- * @tc.number: UninstallPreInstallBundle_0200
- * @tc.name: test unisntall  preinstall bundle
- * @tc.desc: 1.uninstall the hap
- *           2.query bundle is revoverable or not
- */
-HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0200, Function | SmallTest | Level0)
-{
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    bool result = InstallSystemBundle(bundleFile);
-    EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
-
-    // test GetForceUnisntalledUsers
-    PreInstallBundleInfo preInstallBundleInfo;
-    preInstallBundleInfo.SetBundleName(BUNDLE_NAME);
-    dataMgr->GetPreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
-    std::vector<int> forceUnisntallUsers = preInstallBundleInfo.GetForceUnisntalledUsers();
-    bool getForceUninstall = forceUnisntallUsers.empty();
-    EXPECT_TRUE(getForceUninstall);
-
-    // test ForceUnInstallBundle succeed
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
-    InstallParam installParam;
-    installParam.userId = USERID;
-    setuid(Constants::EDC_UID);
-    installParam.parameters.emplace(Constants::VERIFY_UNINSTALL_FORCED_KEY,
-        Constants::VERIFY_UNINSTALL_FORCED_VALUE);
-    ErrCode uninstallRes = MockForceUnInstallBundle(BUNDLE_NAME, installParam);
-    EXPECT_EQ(uninstallRes, ERR_OK);
-
-    // test forceuninstalluser in preinstallbundleinfo
-    preInstallBundleInfo.SetBundleName(BUNDLE_NAME);
-    dataMgr->GetPreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
-    bool isForceUninstall = preInstallBundleInfo.HasForceUninstalledUser(USERID);
-    EXPECT_TRUE(isForceUninstall);
-
-    // test GetRecoverablePreInstallBundleInfos
-    dataMgr->GetRecoverablePreInstallBundleInfos(USERID);
-
-    // test recover failed and succeed
-    ErrCode recoverRes = RecoverBundle(BUNDLE_NAME, installParam);
-    EXPECT_NE(recoverRes, ERR_OK);
-    preInstallBundleInfo.ClearForceUninstalledUsers();
-    dataMgr->SavePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
-    recoverRes = RecoverBundle(BUNDLE_NAME, installParam);
-    EXPECT_EQ(recoverRes, ERR_OK);
-    uninstallRes = MockForceUnInstallBundle(BUNDLE_NAME, installParam);
-    EXPECT_EQ(uninstallRes, ERR_OK);
-
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
-    ClearBundleInfo();
-}
-
-/**
  * @tc.number: UninstallPreInstallBundle_0300
  * @tc.name: test unisntall  preinstall bundle
  * @tc.desc: 1.uninstall the hap
@@ -985,47 +930,6 @@ HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0300, Function | Smal
     dataMgr->GetPreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
     isForceUninstall = preInstallBundleInfo.HasForceUninstalledUser(ADD_NEW_USERID);
     EXPECT_FALSE(isForceUninstall);
-    ClearBundleInfo();
-}
-
-/**
- * @tc.number: UninstallPreInstallBundle_0400
- * @tc.name: test the wrong system bundle file can't be installed
- * @tc.desc: 1.the system bundle file don't exists
- *           2.the system bundle can't be installed and the result is fail
- */
-HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0400, Function | SmallTest | Level0)
-{
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    bool result = InstallSystemBundle(bundleFile);
-    EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
-
-    InnerBundleUserInfo innerBundleUserInfo;
-    innerBundleUserInfo.bundleUserInfo.userId = ADD_NEW_USERID;
-    innerBundleUserInfo.bundleName = BUNDLE_NAME;
-    dataMgr->AddInnerBundleUserInfo(BUNDLE_NAME, innerBundleUserInfo);
-
-    // test multiuser force uninstall
-    InstallParam installParam;
-    installParam.userId = USERID;
-    setuid(Constants::EDC_UID);
-    installParam.parameters.emplace(Constants::VERIFY_UNINSTALL_FORCED_KEY,
-        Constants::VERIFY_UNINSTALL_FORCED_VALUE);
-    ErrCode res = MockForceUnInstallBundle(BUNDLE_NAME, installParam);
-    EXPECT_EQ(res, ERR_OK);
-
-    // test ClearForceUninstalledUsers and recover
-    PreInstallBundleInfo preInstallBundleInfo;
-    preInstallBundleInfo.SetBundleName(BUNDLE_NAME);
-    preInstallBundleInfo.ClearForceUninstalledUsers();
-    dataMgr->SavePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
-    res = RecoverBundle(BUNDLE_NAME, installParam);
-    EXPECT_EQ(res, ERR_OK);
-    dataMgr->RemoveInnerBundleUserInfo(BUNDLE_NAME, ADD_NEW_USERID);
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
     ClearBundleInfo();
 }
 
@@ -9865,38 +9769,6 @@ HWTEST_F(BmsBundleInstallerTest, GetDriverInstallUser_0100, Function | MediumTes
 }
 
 /**
- * @tc.number: IsEnterpriseForAllUser_0100
- * @tc.name: test IsEnterpriseForAllUser
- * @tc.desc: 1.Test IsEnterpriseForAllUser
-*/
-HWTEST_F(BmsBundleInstallerTest, IsEnterpriseForAllUser_0100, Function | MediumTest | Level1)
-{
-    InstallParam installParam;
-    BaseBundleInstaller installer;
-    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, ""));
-
-    installParam.parameters.emplace("ohos.bms.param.enterpriseForAllUser", "true");
-    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, ""));
-
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
-    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, ""));
-
-    installer.dataMgr_ = GetBundleDataMgr();
-    InnerBundleInfo info;
-    installer.dataMgr_->bundleInfos_.emplace("bundleName", info);
-    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, "bundleName"));
-
-    info.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM);
-    installer.dataMgr_->bundleInfos_["bundleName"] = info;
-    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, "bundleName"));
-
-    info.SetInstalledForAllUser(true);
-    installer.dataMgr_->bundleInfos_["bundleName"] = info;
-    EXPECT_TRUE(installer.IsEnterpriseForAllUser(installParam, "bundleName"));
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
-}
-
-/**
  * @tc.number: UtdHandler_0300
  * @tc.name: test UtdHandler
  * @tc.desc: 1.call GetUtdProfileFromHap, if exist utd.json5 then return content, otherwise return empty string
@@ -15570,115 +15442,6 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1009, Function | SmallTest 
         ErrCode ret = installer.RemoveModuleAndDataDir(info, modulePackage, userId, isKeepData);
         EXPECT_NE(ret, ERR_OK);
     }
-}
-
-/**
- * @tc.number: BaseBundleInstaller_1010
- * @tc.name: test IsAllowEnterPrise when both parameters are false
- * @tc.desc: 1.Set allowEnterpriseBundle to false
- *           2.Set isEnterpriseDevice to false
- *           3.Verify the return value of IsAllowEnterPrise under FF condition
- *           4.Cover branch path when (!A && !B)
- * @tc.type: Function
- */
-HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1010, Function | SmallTest | Level0)
-{
-    bool oldA = OHOS::system::GetBoolParameter(
-        ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, false);
-    bool oldB = OHOS::system::GetBoolParameter(
-        ServiceConstants::IS_ENTERPRISE_DEVICE, false);
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, "false");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
-
-    BaseBundleInstaller installer;
-
-    bool result = installer.IsAllowEnterPrise();
-    EXPECT_TRUE(result);
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE,
-        oldA ? "true" : "false");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE,
-        oldB ? "true" : "false");
-}
-
-
-/**
- * @tc.number: BaseBundleInstaller_1011
- * @tc.name: test IsAllowEnterPrise when allowEnterpriseBundle is true
- * @tc.desc: 1.Test IsAllowEnterPrise when allowEnterpriseBundle is true
- *           2.Test IsAllowEnterPrise when isEnterpriseDevice is false
- *           3.Cover branch !A is false and && short-circuit
- */
-HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1011, Function | SmallTest | Level0)
-{
-    bool oldA = OHOS::system::GetBoolParameter(
-        ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, false);
-    bool oldB = OHOS::system::GetBoolParameter(
-        ServiceConstants::IS_ENTERPRISE_DEVICE, false);
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, "true");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
-
-    BaseBundleInstaller installer;
-    EXPECT_TRUE(installer.IsAllowEnterPrise());
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE,
-        oldA ? "true" : "false");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE,
-        oldB ? "true" : "false");
-}
-
-/**
- * @tc.number: BaseBundleInstaller_1012
- * @tc.name: test IsAllowEnterPrise when isEnterpriseDevice is true
- * @tc.desc: 1.Test IsAllowEnterPrise when allowEnterpriseBundle is false
- *           2.Test IsAllowEnterPrise when isEnterpriseDevice is true
- *           3.Cover branch !B is false
- */
-HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1012, Function | SmallTest | Level0)
-{
-    bool oldA = OHOS::system::GetBoolParameter(
-        ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, false);
-    bool oldB = OHOS::system::GetBoolParameter(
-        ServiceConstants::IS_ENTERPRISE_DEVICE, false);
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, "false");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
-
-    BaseBundleInstaller installer;
-    EXPECT_TRUE(installer.IsAllowEnterPrise());
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE,
-        oldA ? "true" : "false");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE,
-        oldB ? "true" : "false");
-}
-
-/**
- * @tc.number: BaseBundleInstaller_1013
- * @tc.name: test IsAllowEnterPrise when both parameters are true
- * @tc.desc: 1.Test IsAllowEnterPrise when allowEnterpriseBundle is true
- *           2.Test IsAllowEnterPrise when isEnterpriseDevice is true
- *           3.Cover branch both parameters are true
- */
-HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1013, Function | SmallTest | Level0)
-{
-    bool oldA = OHOS::system::GetBoolParameter(
-        ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, false);
-    bool oldB = OHOS::system::GetBoolParameter(
-        ServiceConstants::IS_ENTERPRISE_DEVICE, false);
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, "true");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
-
-    BaseBundleInstaller installer;
-    EXPECT_TRUE(installer.IsAllowEnterPrise());
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE,
-        oldA ? "true" : "false");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE,
-        oldB ? "true" : "false");
 }
 
 /**
