@@ -31,7 +31,8 @@
             "bundle_framework_form_dimension_3_3",
             "bundle_framework_bss_enable",
             "bundle_framework_npapi_enable",
-            "bundle_framework_app_fwk_update_enable"
+            "bundle_framework_app_fwk_update_enable",
+            "bundle_framework_enable_clone_for_account"
         ],
         "hisysevent_config": [
             "//foundation/bundlemanager/bundle_framework/hisysevent.yaml",

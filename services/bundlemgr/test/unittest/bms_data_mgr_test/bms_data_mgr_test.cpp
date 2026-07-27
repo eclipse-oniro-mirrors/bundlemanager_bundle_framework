@@ -12013,6 +12013,52 @@ HWTEST_F(BmsDataMgrTest, GetUidByBundleName_0001, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: GetUidByBundleName_0200
+ * @tc.name: test GetUidByBundleName in car mode
+ * @tc.desc: 1. appIndex==MAIN_APP_INDEX(0): skip car mode, return main uid
+ *           2. appIndex==ALL_CLONE_APP_INDEX, main disabled, no clone: fall back to main uid
+ */
+HWTEST_F(BmsDataMgrTest, GetUidByBundleName_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.example.clone.app";
+    int32_t userId = -3;
+    int32_t mainUid = 10000;
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    ApplicationInfo appInfo;
+    appInfo.name = bundleName;
+    appInfo.bundleName = bundleName;
+
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.bundleUserInfo.userId = userId;
+    userInfo.bundleUserInfo.enabled = false;
+    userInfo.uid = mainUid;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_[bundleName] = innerBundleInfo;
+
+    // appIndex==MAIN_APP_INDEX(0): skip car mode logic, return main uid directly
+    int32_t ret = dataMgr->GetUidByBundleName(bundleName, userId, Constants::MAIN_APP_INDEX);
+    EXPECT_EQ(ret, mainUid);
+
+#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+    // appIndex==ALL_CLONE_APP_INDEX, main disabled, no clone: fall back to main uid
+    ret = dataMgr->GetUidByBundleName(bundleName, userId, Constants::ALL_CLONE_APP_INDEX);
+    EXPECT_EQ(ret, mainUid);
+#endif
+
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
  * @tc.number: HasOnlySharedModules_0001
  * @tc.name: test HasOnlySharedModules with empty modules
  * @tc.desc: 1. Construct InnerBundleInfo with no modules

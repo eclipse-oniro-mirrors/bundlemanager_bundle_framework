@@ -4148,7 +4148,11 @@ std::string BundleMgrHostImpl::GetAppType(const std::string &bundleName)
 
 int32_t BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int32_t userId)
 {
-    return GetUidByBundleName(bundleName, userId, 0);
+#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+    return GetUidByBundleName(bundleName, userId, Constants::ALL_CLONE_APP_INDEX);
+#else
+    return GetUidByBundleName(bundleName, userId, Constants::MAIN_APP_INDEX);
+#endif
 }
 
 int32_t BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int32_t userId, int32_t appIndex)
