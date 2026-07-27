@@ -2234,7 +2234,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->accessible = applicationInfo.accessible;
     baseApplicationInfo_->cloudFileSyncEnabled = applicationInfo.cloudFileSyncEnabled;
     baseApplicationInfo_->cloudStructuredDataSyncEnabled = applicationInfo.cloudStructuredDataSyncEnabled;
-    baseApplicationInfo_->isSupportMultiCard = applicationInfo.isSupportMultiCard;
 
     if (!baseApplicationInfo_->isSystemApp) {
         baseApplicationInfo_->isSystemApp = applicationInfo.isSystemApp;

@@ -1527,7 +1527,6 @@ protected:
                 "curAlternateIconModuleName":"",
                 "cloudFileSyncEnabled": false,
                 "cloudStructuredDataSyncEnabled": false,
-                "isSupportMultiCard": false,
                 "applicationFlags":1,
                 "installedForAllUser": false,
                 "isForceRotate": false,
