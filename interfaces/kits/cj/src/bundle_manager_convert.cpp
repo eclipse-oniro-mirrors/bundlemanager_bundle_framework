@@ -894,6 +894,7 @@ CArrDataItem ConvertArrDataItem(const std::map<std::string, std::string>& data)
                                     (malloc(sizeof(CDataItem) * dataItems.size));
     if (retValue == nullptr) {
         APP_LOGE("ConvertArrDataItem malloc failed");
+        dataItems.size = 0;
         return dataItems;
     }
     int i = 0;
