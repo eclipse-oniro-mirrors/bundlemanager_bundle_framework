@@ -170,7 +170,8 @@ int32_t CjZipEntity::DeflateInit2(CZStream* cStrm, DeflateInit2Param* param, int
 {
     if (zs != nullptr) {
         APP_LOGE("DeflateInit2: zs already initialized, call deflateEnd first");
-        deflateEnd(zs.get());
+        *errCode = ZlibBusinessError(Z_STREAM_ERROR);
+        return Z_STREAM_ERROR;
     }
     zs = std::make_unique<z_stream>();
     InitialZStream(cStrm);
@@ -210,7 +211,8 @@ int32_t CjZipEntity::InflateInit(CZStream* cStrm, int32_t* errCode)
 {
     if (zs != nullptr) {
         APP_LOGE("InflateInit: zs already initialized, call inflateEnd first");
-        inflateEnd(zs.get());
+        *errCode = ZlibBusinessError(Z_STREAM_ERROR);
+        return Z_STREAM_ERROR;
     }
     zs = std::make_unique<z_stream>();
     InitialZStream(cStrm);
@@ -227,7 +229,8 @@ int32_t CjZipEntity::InflateInit2(CZStream* cStrm, int32_t windowBits, int32_t* 
 {
     if (zs != nullptr) {
         APP_LOGE("InflateInit2: zs already initialized, call inflateEnd first");
-        inflateEnd(zs.get());
+        *errCode = ZlibBusinessError(Z_STREAM_ERROR);
+        return Z_STREAM_ERROR;
     }
     zs = std::make_unique<z_stream>();
     InitialZStream(cStrm);
