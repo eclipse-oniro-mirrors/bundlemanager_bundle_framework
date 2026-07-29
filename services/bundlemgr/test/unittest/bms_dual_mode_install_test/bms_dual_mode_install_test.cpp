@@ -37,6 +37,7 @@
 #include "install_param.h"
 #include "message_parcel.h"
 #include "nlohmann/json.hpp"
+#include "bundle_resource/bundle_resource_process.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -46,6 +47,7 @@ namespace {
 const std::string BUNDLE_NAME = "com.example.test";
 const std::string PREFIXED_NAME = "+clone-10000+" + BUNDLE_NAME;
 const std::string CLONE_APP_NAME = "+clone-1+" + BUNDLE_NAME;  // regular clone (appIndex 1..5), not dual-mode
+const int32_t TEST_USERID = 100;
 }  // namespace
 
 class BmsDualModeInstallTest : public testing::Test {
@@ -83,6 +85,48 @@ static InnerBundleInfo MakeCat7Info(bool isClone)
         info.SetDualModeCloneApp(true);
     }
     return info;
+}
+
+// Build an APP-type InnerBundleInfo (bundleName set) so GetBundleResourceInfo returns true without
+// a real hap (ConvertToBundleResourceInfo yields one bundle-level ResourceInfo; GetAbilityResourceInfos
+// returns empty for an info with no abilities). isClone drives the dual-mode flag carried onto each
+// ResourceInfo; type drives the SHARED/SKILL/APP_SERVICE_FWK skip branches; name="" drives
+// the GetBundleResourceInfo empty-name failure branch.
+static InnerBundleInfo MakeResourceInfo(bool isClone, BundleType type = BundleType::APP,
+    const std::string &name = BUNDLE_NAME)
+{
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = name;
+    appInfo.bundleType = type;
+    info.SetBaseApplicationInfo(appInfo);
+    if (isClone) {
+        info.SetDualModeCloneApp(true);
+    }
+    return info;
+}
+
+// APP_SERVICE_FWK bundle whose IsHsp() is true (single MODULE_TYPE_SHARED module) — exercises the
+// (APP_SERVICE_FWK && IsHsp) skip branch of GetAllResourceInfo.
+static InnerBundleInfo MakeHspAppServiceFwkInfo()
+{
+    InnerBundleInfo info = MakeResourceInfo(false, BundleType::APP_SERVICE_FWK);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_SHARED;
+    info.innerModuleInfos_["module1"] = moduleInfo;
+    return info;
+}
+
+// Build a fresh BundleDataMgr, register userId (so HasUserId is true) and install it into the global
+// BundleMgrService — which is where the static BundleResourceProcess::GetAllResourceInfo fetches its
+// dataMgr. Caller fills bundleInfos_/tempBundleInfos_ on the returned manager.
+static std::shared_ptr<BundleDataMgr> InstallTestDataMgr(int32_t userId)
+{
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->multiUserIdsSet_.insert(userId);
+    service->dataMgr_ = dataMgr;
+    return dataMgr;
 }
 
 // ====================== DualModeHelper::IsDualModeDevice ======================
@@ -265,7 +309,7 @@ HWTEST_F(BmsDualModeInstallTest, GetEffectiveBundleName_0200, Function | SmallTe
 
 HWTEST_F(BmsDualModeInstallTest, GetEffectiveBundleName_0300, Function | SmallTest | Level0)
 {
-    // InnerBundleInfo overload, dualModeBundleName_ empty -> returns bundleInfo.GetBundleName()
+    // InnerBundleInfo overload, dualModeBundleName_ empty + non-clone -> returns original name
     BaseBundleInstaller installer;
     installer.dualModeBundleName_.clear();
     InnerBundleInfo info;
@@ -279,6 +323,19 @@ HWTEST_F(BmsDualModeInstallTest, GetEffectiveBundleName_0400, Function | SmallTe
     installer.dualModeBundleName_ = PREFIXED_NAME;
     InnerBundleInfo info;
     EXPECT_EQ(installer.GetEffectiveBundleName(info), PREFIXED_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetEffectiveBundleName_0500, Function | SmallTest | Level0)
+{
+    // InnerBundleInfo overload, dualModeBundleName_ empty + clone app -> returns prefixed name.
+    // This is the cross-flow (uninstall/recover) path where dualModeBundleName_ is unset on a fresh
+    // installer instance; the persisted IsDualModeCloneApp flag must still resolve to the isolated
+    // name instead of the original.
+    BaseBundleInstaller installer;
+    installer.dualModeBundleName_.clear();
+    InnerBundleInfo info = MakeCat7Info(true);  // APP_CATEGORY_DIFF_PACKAGE + IsDualModeCloneApp=true
+    EXPECT_EQ(installer.GetEffectiveBundleName(info), DualModeHelper::GetDualModeBundleName(info.GetBundleName()));
+    EXPECT_NE(installer.GetEffectiveBundleName(info), info.GetBundleName());
 }
 
 // ====================== BaseBundleInstaller::InitDualModeBundleName ======================
@@ -525,6 +582,237 @@ HWTEST_F(BmsDualModeInstallTest, ClassifyDualModeAppsNoLock_0500, Function | Sma
     EXPECT_TRUE(dataMgr->tempBundleInfos_.empty());
 }
 
+HWTEST_F(BmsDualModeInstallTest, ClassifyDualModeAppsNoLock_0600, Function | SmallTest | Level0)
+{
+    // secondary mode: category-7 primary (original key, non-clone) with NO clone counterpart in
+    // tempBundleInfos_. The swap pass (bundle_data_mgr.cpp:386-395) skips it because there is no
+    // temp peer to swap with; the tail guard (:397-408) must hide it in tempBundleInfos_.
+    // Without that guard the primary would wrongly stay visible in secondary mode.
+    EnableSecondaryMode();
+    std::shared_ptr<BundleDataMgr> dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeCat7Info(false);  // primary only, no clone installed
+    dataMgr->ClassifyDualModeAppsNoLock();
+    EXPECT_TRUE(dataMgr->bundleInfos_.empty());  // primary hidden in secondary mode
+    ASSERT_EQ(dataMgr->tempBundleInfos_.count(BUNDLE_NAME), 1u);
+    EXPECT_FALSE(dataMgr->tempBundleInfos_[BUNDLE_NAME].IsDualModeCloneApp());  // the hidden primary
+}
+
+// ====================== ResourceInfo::GetOriginalKey (extensionAbilityType branch, resource_info.cpp:70-72) =====
+// GetOriginalKey mirrors GetKey()'s assembly (bundleName[/module/ability], optional "_index"
+// prefix, optional "+extensionType" suffix) but NEVER prepends the "+clone-10000+" clone prefix —
+// BundleResourceIconRdb keeps keys on the original bundleName. Cases focus on the
+// extensionAbilityType_ append (lines 70-72) and the no-prefix guarantee for clone apps.
+
+HWTEST_F(BmsDualModeInstallTest, ResourceInfo_GetOriginalKey_0100, Function | SmallTest | Level0)
+{
+    // Bundle-level key: bundleName only.
+    ResourceInfo info;
+    info.bundleName_ = BUNDLE_NAME;
+    EXPECT_EQ(info.GetOriginalKey(), BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, ResourceInfo_GetOriginalKey_0200, Function | SmallTest | Level0)
+{
+    // extensionAbilityType_ >= 0 branch (resource_info.cpp:70-72): appends "+" + type at the end.
+    ResourceInfo info;
+    info.bundleName_ = BUNDLE_NAME;
+    info.extensionAbilityType_ = 3;
+    EXPECT_EQ(info.GetOriginalKey(), BUNDLE_NAME + "+3");
+}
+
+HWTEST_F(BmsDualModeInstallTest, ResourceInfo_GetOriginalKey_0300, Function | SmallTest | Level0)
+{
+    // Core contract: a dual-mode clone app does NOT get the "+clone-10000+" prefix in GetOriginalKey,
+    // while GetKey() still isolates it. This is why BundleResourceIconRdb uses GetOriginalKey.
+    ResourceInfo info;
+    info.bundleName_ = BUNDLE_NAME;
+    info.isDualModeCloneApp_ = true;
+    EXPECT_EQ(info.GetOriginalKey(), BUNDLE_NAME);   // original name, no prefix
+    EXPECT_EQ(info.GetKey(), PREFIXED_NAME);         // GetKey still isolates the clone
+}
+
+HWTEST_F(BmsDualModeInstallTest, ResourceInfo_GetOriginalKey_0400, Function | SmallTest | Level0)
+{
+    // Full assembly with the extension suffix (lines 70-72): index_bundle/module/ability+type.
+    // Clone flag is set but ignored by GetOriginalKey, so no prefix is prepended.
+    ResourceInfo info;
+    info.bundleName_ = BUNDLE_NAME;
+    info.moduleName_ = "m";
+    info.abilityName_ = "a";
+    info.appIndex_ = 2;
+    info.extensionAbilityType_ = 5;
+    info.isDualModeCloneApp_ = true;
+    EXPECT_EQ(info.GetOriginalKey(), "2_" + BUNDLE_NAME + "/m/a+5");
+}
+
+// ====================== ResourceInfo::ParseKey (dual-mode clone-key strip branch, resource_info.cpp:82-88) ======
+// ParseKey reverses GetKey(): it first strips a leading "+clone-10000+" prefix (lines 82-88 —
+// reusing '+' would otherwise corrupt extension-type parsing), then splits "+extensionType",
+// "_index" and "/module/ability". Cases focus on the clone-prefix strip and isDualModeCloneApp_ latch.
+
+HWTEST_F(BmsDualModeInstallTest, ResourceInfo_ParseKey_0100, Function | SmallTest | Level0)
+{
+    // Dual-mode clone key (resource_info.cpp:82-88): prefix stripped, isDualModeCloneApp_ latched true.
+    ResourceInfo info;
+    info.ParseKey(PREFIXED_NAME);
+    EXPECT_TRUE(info.isDualModeCloneApp_);
+    EXPECT_EQ(info.bundleName_, BUNDLE_NAME);
+    EXPECT_EQ(info.extensionAbilityType_, -1);
+    EXPECT_EQ(info.appIndex_, 0);
+}
+
+HWTEST_F(BmsDualModeInstallTest, ResourceInfo_ParseKey_0200, Function | SmallTest | Level0)
+{
+    // Plain key (no "+clone-10000+" prefix): IsDualModeCloneKey guard is false, so the clone flag
+    // stays false and bundleName_ is parsed verbatim.
+    ResourceInfo info;
+    info.ParseKey(BUNDLE_NAME);
+    EXPECT_FALSE(info.isDualModeCloneApp_);
+    EXPECT_EQ(info.bundleName_, BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, ResourceInfo_ParseKey_0300, Function | SmallTest | Level0)
+{
+    // Trailing "+type" suffix is parsed as extensionAbilityType_ after the (absent) clone strip.
+    ResourceInfo info;
+    info.ParseKey(BUNDLE_NAME + "+3");
+    EXPECT_FALSE(info.isDualModeCloneApp_);
+    EXPECT_EQ(info.bundleName_, BUNDLE_NAME);
+    EXPECT_EQ(info.extensionAbilityType_, 3);
+}
+
+HWTEST_F(BmsDualModeInstallTest, ResourceInfo_ParseKey_0400, Function | SmallTest | Level0)
+{
+    // Composite key with module/ability: split on "/" into moduleName_/abilityName_.
+    ResourceInfo info;
+    info.ParseKey(BUNDLE_NAME + "/m/a");
+    EXPECT_FALSE(info.isDualModeCloneApp_);
+    EXPECT_EQ(info.bundleName_, BUNDLE_NAME);
+    EXPECT_EQ(info.moduleName_, "m");
+    EXPECT_EQ(info.abilityName_, "a");
+}
+
+// ====================== BundleResourceProcess::GetAllResourceInfo (allTempBundleNames) ======================
+// Drive the tempBundleInfos_ loop (bundle_resource_process.cpp:105-120) plus the joint-emptiness guard
+// (:75-78), userId guard (:69-72) and null-dataMgr guard (:65-68). GetBundleResourceInfo succeeds for
+// any non-empty bundleName with bundleType != SHARED/SKILL (no real hap needed), so the append /
+// same-name merge / clone-flag branches are all reachable. The FetchTempBundleInfo-fail branch (:107-109)
+// is defensive — the key comes from GetAllTempBundleName over the same map under the same lock, so it
+// cannot fail in a single-threaded test; left uncovered by design.
+
+HWTEST_F(BmsDualModeInstallTest, GetAllResourceInfo_0100, Function | SmallTest | Level0)
+{
+    // both bundleInfos_ and tempBundleInfos_ empty -> early return false (allTempBundleNames.empty()
+    // branch of the joint guard, :75-78)
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
+    EXPECT_FALSE(BundleResourceProcess::GetAllResourceInfo(TEST_USERID, resourceInfos));
+    EXPECT_TRUE(resourceInfos.empty());
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetAllResourceInfo_0200, Function | SmallTest | Level0)
+{
+    // userId not registered -> return false (:69-72); tempBundleInfos_ content never reached
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeResourceInfo(true);
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
+    EXPECT_FALSE(BundleResourceProcess::GetAllResourceInfo(TEST_USERID + 1, resourceInfos));
+    EXPECT_TRUE(resourceInfos.empty());
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetAllResourceInfo_0300, Function | SmallTest | Level0)
+{
+    // tempBundleInfos_ has a clone that exists ONLY in temp (no bundleInfos_ peer). The
+    // allTempBundleNames loop (:105-120) must reach it — iterating bundleInfos_ names would miss it
+    // Clone -> every ResourceInfo carries isDualModeCloneApp_=true so GetKey()
+    // yields the prefixed key.
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeResourceInfo(true);
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
+    EXPECT_TRUE(BundleResourceProcess::GetAllResourceInfo(TEST_USERID, resourceInfos));
+    ASSERT_EQ(resourceInfos.count(BUNDLE_NAME), 1u);
+    EXPECT_FALSE(resourceInfos[BUNDLE_NAME].empty());
+    EXPECT_TRUE(resourceInfos[BUNDLE_NAME].front().isDualModeCloneApp_);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetAllResourceInfo_0400, Function | SmallTest | Level0)
+{
+    // same-name merge: bundleInfos_[primary] + tempBundleInfos_[clone] both processed; the temp result
+    // is appended at the end of the same resourceInfosMap[bundleName] (:117-118). Each MakeResourceInfo
+    // yields exactly one bundle-level ResourceInfo, so the merged vector has size 2: primary first
+    // (bundleInfos_ loop), clone second (temp loop).
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = MakeResourceInfo(false);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeResourceInfo(true);
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
+    EXPECT_TRUE(BundleResourceProcess::GetAllResourceInfo(TEST_USERID, resourceInfos));
+    ASSERT_EQ(resourceInfos.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(resourceInfos[BUNDLE_NAME].size(), 2u);
+    EXPECT_FALSE(resourceInfos[BUNDLE_NAME].front().isDualModeCloneApp_);  // primary (bundleInfos_)
+    EXPECT_TRUE(resourceInfos[BUNDLE_NAME].back().isDualModeCloneApp_);   // clone (temp, appended)
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetAllResourceInfo_0500, Function | SmallTest | Level0)
+{
+    // temp entry BundleType::SHARED -> skipped by temp loop (:111-114), not added
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeResourceInfo(false, BundleType::SHARED);
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
+    EXPECT_TRUE(BundleResourceProcess::GetAllResourceInfo(TEST_USERID, resourceInfos));
+    EXPECT_EQ(resourceInfos.count(BUNDLE_NAME), 0u);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetAllResourceInfo_0600, Function | SmallTest | Level0)
+{
+    // temp entry BundleType::SKILL -> skipped by temp loop (:111-112), not added
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeResourceInfo(false, BundleType::SKILL);
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
+    EXPECT_TRUE(BundleResourceProcess::GetAllResourceInfo(TEST_USERID, resourceInfos));
+    EXPECT_EQ(resourceInfos.count(BUNDLE_NAME), 0u);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetAllResourceInfo_0700, Function | SmallTest | Level0)
+{
+    // temp entry APP_SERVICE_FWK && IsHsp() -> skipped by temp loop (:112); IsHsp() is true when every
+    // InnerModuleInfo is MODULE_TYPE_SHARED (inner_bundle_info.cpp:4698-4706).
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeHspAppServiceFwkInfo();
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
+    EXPECT_TRUE(BundleResourceProcess::GetAllResourceInfo(TEST_USERID, resourceInfos));
+    EXPECT_EQ(resourceInfos.count(BUNDLE_NAME), 0u);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetAllResourceInfo_0800, Function | SmallTest | Level0)
+{
+    // temp entry APP type but empty bundleName -> GetBundleResourceInfo fails (:45-48) ->
+    // InnerGetResourceInfo returns false -> not added (:116 guard). Key is non-empty so the entry is
+    // reached, but its ResourceInfo assembly fails.
+    auto dataMgr = InstallTestDataMgr(TEST_USERID);
+    dataMgr->tempBundleInfos_["empty-name"] = MakeResourceInfo(false, BundleType::APP, "");
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
+    EXPECT_TRUE(BundleResourceProcess::GetAllResourceInfo(TEST_USERID, resourceInfos));
+    EXPECT_TRUE(resourceInfos.empty());
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetAllResourceInfo_0900, Function | SmallTest | Level0)
+{
+    // dataMgr null -> return false (:65-68). Restore afterwards so later cases see a valid dataMgr.
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto saved = service->dataMgr_;
+    service->dataMgr_ = nullptr;
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
+    EXPECT_FALSE(BundleResourceProcess::GetAllResourceInfo(TEST_USERID, resourceInfos));
+    EXPECT_TRUE(resourceInfos.empty());
+    service->dataMgr_ = saved;
+}
+
 // ====================== BundlePermissionMgr::CreateHapInfoParams ======================
 // CreateHapInfoParams is static; exposed via #define private public. Verify the
 // IsDualModeCloneApp && GetAppIndex()==0 branch sets instIndex to DUAL_MODE_CLONE_APP_INDEX.
@@ -671,15 +959,15 @@ HWTEST_F(BmsDualModeInstallTest, DeleteStorageBundleInfo_Normal_0200, Function |
 }
 
 // ====================== ApplicationInfo.appCategory persistence contract ======================
-// Cover AC-1 / AC-2 / AC-18 — the AppCategory serialization contract that Review-1 FAIL-1 nearly
-// broke (enum bit value / default value drift). Default value is APP_CATEGORY_UNSPECIFIED (bit
+// AppCategory serialization contract (enum bit value / default value drift). Default value is
+// APP_CATEGORY_UNSPECIFIED (bit
 // value 0); the field must survive Parcel + JSON round trips and legacy (field-absent)
 // deserialization. Round-trip cases use non-default values (32 / 33) so a broken or no-op marshal
 // is caught instead of masked by default-in/default-out.
 
 HWTEST_F(BmsDualModeInstallTest, AppCategory_Default_0100, Function | SmallTest | Level0)
 {
-    // AC-2: ApplicationInfo default appCategory == UNSPECIFIED (bit value 0)
+    // ApplicationInfo default appCategory == UNSPECIFIED (bit value 0)
     ApplicationInfo appInfo;
     EXPECT_EQ(appInfo.appCategory, AppCategory::APP_CATEGORY_UNSPECIFIED);
     EXPECT_EQ(static_cast<uint32_t>(appInfo.appCategory), 0u);
@@ -687,7 +975,7 @@ HWTEST_F(BmsDualModeInstallTest, AppCategory_Default_0100, Function | SmallTest 
 
 HWTEST_F(BmsDualModeInstallTest, AppCategory_Default_0200, Function | SmallTest | Level0)
 {
-    // AC-2: InstallParam default appCategory == UNSPECIFIED (bit value 0)
+    // InstallParam default appCategory == UNSPECIFIED (bit value 0)
     InstallParam installParam;
     EXPECT_EQ(installParam.appCategory, AppCategory::APP_CATEGORY_UNSPECIFIED);
     EXPECT_EQ(static_cast<uint32_t>(installParam.appCategory), 0u);
@@ -695,7 +983,7 @@ HWTEST_F(BmsDualModeInstallTest, AppCategory_Default_0200, Function | SmallTest 
 
 HWTEST_F(BmsDualModeInstallTest, AppCategory_Parcel_0100, Function | SmallTest | Level0)
 {
-    // AC-1: category-7 boundary value (32) survives Parcel Marshalling/ReadFromParcel round trip
+    // category-7 boundary value (32) survives Parcel Marshalling/ReadFromParcel round trip
     OHOS::MessageParcel parcel;
     ApplicationInfo src;
     src.appCategory = AppCategory::APP_CATEGORY_DIFF_PACKAGE;
@@ -708,7 +996,7 @@ HWTEST_F(BmsDualModeInstallTest, AppCategory_Parcel_0100, Function | SmallTest |
 
 HWTEST_F(BmsDualModeInstallTest, AppCategory_Parcel_0200, Function | SmallTest | Level0)
 {
-    // AC-1: bitwise-or combo (PAD_ONLY | DIFF_PACKAGE = 1 | 32 = 33) survives Parcel round trip
+    // bitwise-or combo (PAD_ONLY | DIFF_PACKAGE = 1 | 32 = 33) survives Parcel round trip
     OHOS::MessageParcel parcel;
     ApplicationInfo src;
     src.appCategory = static_cast<AppCategory>(
@@ -722,7 +1010,7 @@ HWTEST_F(BmsDualModeInstallTest, AppCategory_Parcel_0200, Function | SmallTest |
 
 HWTEST_F(BmsDualModeInstallTest, AppCategory_JsonRoundTrip_0100, Function | SmallTest | Level0)
 {
-    // AC-1: category-7 value (32) survives to_json/from_json round trip
+    // category-7 value (32) survives to_json/from_json round trip
     ApplicationInfo src;
     src.appCategory = AppCategory::APP_CATEGORY_DIFF_PACKAGE;
     nlohmann::json jsonObject;
@@ -735,7 +1023,7 @@ HWTEST_F(BmsDualModeInstallTest, AppCategory_JsonRoundTrip_0100, Function | Smal
 
 HWTEST_F(BmsDualModeInstallTest, AppCategory_LegacyDefault_0100, Function | SmallTest | Level0)
 {
-    // AC-18: legacy stored JSON without an appCategory field deserializes to the default
+    // legacy stored JSON without an appCategory field deserializes to the default
     // UNSPECIFIED (0) — from_json's GetValueIfFindKey must not mutate the field when absent
     nlohmann::json legacyJson = {{"name", "com.test.legacy"}};  // intentionally no appCategory key
     ApplicationInfo dst;
@@ -864,5 +1152,308 @@ HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0200, Function | SmallT
     EXPECT_EQ(installRes.appCategory, AppCategory::APP_CATEGORY_2IN1_ONLY);
     EXPECT_EQ(installRes.currentMode, "marker");
     EXPECT_FALSE(installRes.isSharedSandbox);
+}
+
+// ====================== BundleDataMgr::GetSkillInfoWithFlags ======================
+// skills description data layer: skillPath uses the effective (prefixed) name for clone apps so it
+// points at the isolated skill dir; skillInfo.bundleName (Parcelable) keeps the original name.
+// flags=0 skips the description (RDB) branch, so each case asserts only path/bundleName assignment.
+// The delete-path effective-name derivation is covered by GetEffectiveBundleName_0300~0500 above.
+
+HWTEST_F(BmsDualModeInstallTest, GetSkillInfoWithFlags_DualModeClone_0100, Function | SmallTest | Level0)
+{
+    // clone app: skillPath uses prefixed name; bundleName keeps original (Parcelable contract)
+    InnerBundleInfo info = MakeCat7Info(true);
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    SkillProfile profile;
+    profile.name = "skill1";
+    profile.abilityName = "MainAbility";
+    SkillInfo skillInfo;
+    BundleDataMgr::GetSkillInfoWithFlags(info, moduleInfo, profile, 0, skillInfo);
+    EXPECT_EQ(skillInfo.bundleName, BUNDLE_NAME);
+    EXPECT_NE(skillInfo.skillPath.find(PREFIXED_NAME), std::string::npos);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GetSkillInfoWithFlags_Normal_0200, Function | SmallTest | Level0)
+{
+    // primary (non-clone): skillPath uses original name, no prefix; zero behavior change
+    InnerBundleInfo info = MakeCat7Info(false);
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = "entry";
+    SkillProfile profile;
+    profile.name = "skill1";
+    profile.abilityName = "MainAbility";
+    SkillInfo skillInfo;
+    BundleDataMgr::GetSkillInfoWithFlags(info, moduleInfo, profile, 0, skillInfo);
+    EXPECT_EQ(skillInfo.bundleName, BUNDLE_NAME);
+    EXPECT_NE(skillInfo.skillPath.find(BUNDLE_NAME), std::string::npos);
+    EXPECT_EQ(skillInfo.skillPath.find(PREFIXED_NAME), std::string::npos);
+}
+
+// ====================== Router ======================
+// Router insert/update pass the effective (prefixed) name for clone apps. A mock
+// IRouterDataStorage captures the bundleName handed downstream to assert the key, without needing
+// real hap/router.json files (FindRouterHapPath yields an empty map when no module routerMap is set).
+namespace {
+class MockRouterStorage : public IRouterDataStorage {
+public:
+    std::string insertedKey;
+    std::string updatedKey;
+    bool InsertRouterInfo(const std::string &bundleName,
+        const std::map<std::string, std::string> &, const uint32_t) override
+    {
+        insertedKey = bundleName;
+        return true;
+    }
+    bool UpdateRouterInfo(const std::string &bundleName,
+        const std::map<std::string, std::string> &, const uint32_t) override
+    {
+        updatedKey = bundleName;
+        return true;
+    }
+    bool GetRouterInfo(const std::string &, const std::string &,
+        const uint32_t, std::vector<RouterItem> &) override { return false; }
+    void GetAllBundleNames(std::set<std::string> &) override {}
+    bool DeleteRouterInfo(const std::string &) override { return true; }
+    bool DeleteRouterInfo(const std::string &, const std::string &) override { return true; }
+    bool DeleteRouterInfo(const std::string &, const std::string &, const uint32_t) override { return true; }
+    bool UpdateDB() override { return true; }
+};
+}  // namespace
+
+HWTEST_F(BmsDualModeInstallTest, InsertRouterInfo_DualModeClone_0100, Function | SmallTest | Level0)
+{
+    // clone app: InsertRouterInfo passes the prefixed name downstream
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto mockStorage = std::make_shared<MockRouterStorage>();
+    dataMgr->routerStorage_ = mockStorage;
+    InnerBundleInfo cloneInfo = MakeCat7Info(true);
+    cloneInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    dataMgr->InsertRouterInfo(cloneInfo);
+    EXPECT_EQ(mockStorage->insertedKey, PREFIXED_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, InsertRouterInfo_Normal_0200, Function | SmallTest | Level0)
+{
+    // non-clone: InsertRouterInfo passes the original name; zero change
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto mockStorage = std::make_shared<MockRouterStorage>();
+    dataMgr->routerStorage_ = mockStorage;
+    InnerBundleInfo info = MakeCat7Info(false);
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    dataMgr->InsertRouterInfo(info);
+    EXPECT_EQ(mockStorage->insertedKey, BUNDLE_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, UpdateRouterInfo_ByBundleName_DualModeClone_0300, Function | SmallTest | Level0)
+{
+    // clone under original-name key (post ClassifyDualModeAppsNoLock): UpdateRouterInfo(original)
+    // finds the clone and passes the prefixed name downstream
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto mockStorage = std::make_shared<MockRouterStorage>();
+    dataMgr->routerStorage_ = mockStorage;
+    InnerBundleInfo cloneInfo = MakeCat7Info(true);
+    cloneInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = cloneInfo;
+    dataMgr->UpdateRouterInfo(BUNDLE_NAME);
+    EXPECT_EQ(mockStorage->updatedKey, PREFIXED_NAME);
+}
+
+HWTEST_F(BmsDualModeInstallTest, UpdateRouterInfo_ByBundleName_Normal_0400, Function | SmallTest | Level0)
+{
+    // non-clone: UpdateRouterInfo(original) keeps the original name; zero change
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto mockStorage = std::make_shared<MockRouterStorage>();
+    dataMgr->routerStorage_ = mockStorage;
+    InnerBundleInfo info = MakeCat7Info(false);
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    dataMgr->UpdateRouterInfo(BUNDLE_NAME);
+    EXPECT_EQ(mockStorage->updatedKey, BUNDLE_NAME);
+}
+
+// ====================== BundleDataMgr::GenerateOdidNoLock ======================
+// Cross-mode odid reuse relies on GenerateOdidNoLock scanning BOTH bundleInfos_ and tempBundleInfos_.
+// In secondary mode ClassifyDualModeAppsNoLock hides the primary-mode variant (same developerId) in
+// tempBundleInfos_; scanning only bundleInfos_ would miss it and generate a fresh odid for
+// the clone, breaking cross-mode odid consistency.
+
+HWTEST_F(BmsDualModeInstallTest, GenerateOdid_ReuseFromTempBundleInfos_0100, Function | SmallTest | Level0)
+{
+    // primary-mode variant sits in tempBundleInfos_ (hidden by classification); clone install
+    // for the same developerId must reuse its odid, not generate a new one.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+
+    const std::string developerId = "com.example.developer";
+    const std::string primaryOdid = "odid-from-primary";
+    InnerBundleInfo primaryInfo;
+    primaryInfo.UpdateOdid(developerId, primaryOdid);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = primaryInfo;
+
+    std::string odid;
+    dataMgr->GenerateOdid(developerId, odid);
+    EXPECT_EQ(odid, primaryOdid);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GenerateOdid_ReuseFromBundleInfos_0200, Function | SmallTest | Level0)
+{
+    // Regression: same-groupId odid already in bundleInfos_ is reused (pre-existing behavior).
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+
+    const std::string developerId = "com.example.developer";
+    const std::string existingOdid = "existing-odid";
+    InnerBundleInfo info;
+    info.UpdateOdid(developerId, existingOdid);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    std::string odid;
+    dataMgr->GenerateOdid(developerId, odid);
+    EXPECT_EQ(odid, existingOdid);
+}
+
+HWTEST_F(BmsDualModeInstallTest, GenerateOdid_BothMapsBundleInfosFirst_0300, Function | SmallTest | Level0)
+{
+    // When both maps hold the groupId, bundleInfos_ wins (scanned first), preserving prior behavior.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+
+    const std::string developerId = "com.example.developer";
+    InnerBundleInfo cloneInfo;
+    cloneInfo.UpdateOdid(developerId, "odid-in-bundleinfos");
+    dataMgr->bundleInfos_[PREFIXED_NAME] = cloneInfo;
+    InnerBundleInfo primaryInfo;
+    primaryInfo.UpdateOdid(developerId, "odid-in-temp");
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = primaryInfo;
+
+    std::string odid;
+    dataMgr->GenerateOdid(developerId, odid);
+    EXPECT_EQ(odid, "odid-in-bundleinfos");
+}
+
+HWTEST_F(BmsDualModeInstallTest, GenerateOdid_NoMatchGenerateNew_0400, Function | SmallTest | Level0)
+{
+    // Neither map has the groupId -> a fresh uuid odid is generated.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->tempBundleInfos_.clear();
+
+    std::string odid;
+    dataMgr->GenerateOdid("com.example.fresh", odid);
+    EXPECT_FALSE(odid.empty());
+}
+
+// ====================== BundleDataMgr::installStates_ state machine ====
+// Callers pass the effective name (prefixed for clone apps, original otherwise); it is used directly
+// as the installStates_ key. The old GetInstallStateKey lookup and the INSTALL_START info overload
+// were removed.
+
+HWTEST_F(BmsDualModeInstallTest, UpdateBundleInstallState_InstallStartClonePrefixed_0100, Function | SmallTest | Level0)
+{
+    // Fresh install of a clone app: caller passes the prefixed effective name; it becomes the state
+    // key directly, matching the post-restart installStates_ initialization (prefixed DB key).
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(PREFIXED_NAME, InstallState::INSTALL_START, false));
+    EXPECT_EQ(dataMgr->installStates_.count(PREFIXED_NAME), 1u);
+    EXPECT_EQ(dataMgr->installStates_[PREFIXED_NAME], InstallState::INSTALL_START);
+    EXPECT_EQ(dataMgr->installStates_.count(BUNDLE_NAME), 0u);
+}
+
+HWTEST_F(BmsDualModeInstallTest, UpdateBundleInstallState_InstallStartNonCloneOriginal_0200,
+    Function | SmallTest | Level0)
+{
+    // Non-clone fresh install: caller passes the original name; emplaces under the original name.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START, false));
+    EXPECT_EQ(dataMgr->installStates_.count(BUNDLE_NAME), 1u);
+    EXPECT_EQ(dataMgr->installStates_.count(PREFIXED_NAME), 0u);
+}
+
+HWTEST_F(BmsDualModeInstallTest, UpdateBundleInstallState_RestartUpdateClone_0300, Function | SmallTest | Level0)
+{
+    // after restart installStates_ is keyed by the prefixed name; the runtime update
+    // passes the prefixed effective name so UPDATING_START lands on the same key as INSTALL_SUCCESS
+    // (previously two truth sources mismatched and the transition returned false).
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->installStates_[PREFIXED_NAME] = InstallState::INSTALL_SUCCESS;
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(PREFIXED_NAME, InstallState::UPDATING_START));
+    EXPECT_EQ(dataMgr->installStates_[PREFIXED_NAME], InstallState::UPDATING_START);
+}
+
+HWTEST_F(BmsDualModeInstallTest, UpdateBundleInstallState_RollbackClone_0400, Function | SmallTest | Level0)
+{
+    // Rollback: caller passes the prefixed effective name; ROLL_BACK transitions on the prefixed key.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->installStates_[PREFIXED_NAME] = InstallState::UPDATING_START;
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(PREFIXED_NAME, InstallState::ROLL_BACK));
+    EXPECT_EQ(dataMgr->installStates_.count(PREFIXED_NAME), 1u);
+}
+
+HWTEST_F(BmsDualModeInstallTest, UpdateBundleInstallState_RestartNonCloneRegression_0500, Function | SmallTest | Level0)
+{
+    // non-clone uses the original name end-to-end, zero behavioral change.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->installStates_[BUNDLE_NAME] = InstallState::INSTALL_SUCCESS;
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_START));
+    EXPECT_EQ(dataMgr->installStates_[BUNDLE_NAME], InstallState::UPDATING_START);
+    EXPECT_EQ(dataMgr->installStates_.count(PREFIXED_NAME), 0u);
+}
+
+// ====================== BundleDataMgr::FetchTempBundleInfo ======================
+// dual-mode: the same-name counterpart of a dual-mode app lives in tempBundleInfos_
+// (the non-current-mode variant). Mirrors FetchInnerBundleInfo. Branches: empty name (false),
+// not found in tempBundleInfos_ (false), found (true + copy out param).
+
+HWTEST_F(BmsDualModeInstallTest, FetchTempBundleInfo_EmptyName_0100, Function | SmallTest | Level0)
+{
+    // bundleName empty -> early return false before the lock; out param left untouched.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo sentinel = MakeResourceInfo(true);
+    InnerBundleInfo out = sentinel;
+    EXPECT_FALSE(dataMgr->FetchTempBundleInfo("", out));
+    EXPECT_TRUE(out.IsDualModeCloneApp());  // unchanged, same as sentinel
+}
+
+HWTEST_F(BmsDualModeInstallTest, FetchTempBundleInfo_NotFound_0200, Function | SmallTest | Level0)
+{
+    // bundleName non-empty but absent from tempBundleInfos_ -> return false.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->tempBundleInfos_.clear();
+    InnerBundleInfo out;
+    EXPECT_FALSE(dataMgr->FetchTempBundleInfo(BUNDLE_NAME, out));
+}
+
+HWTEST_F(BmsDualModeInstallTest, FetchTempBundleInfo_FoundAssign_0300, Function | SmallTest | Level0)
+{
+    // tempBundleInfos_ holds the dual-mode same-name counterpart -> return true and copy it out.
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeResourceInfo(true);  // clone variant lives in temp
+    InnerBundleInfo out;
+    EXPECT_TRUE(dataMgr->FetchTempBundleInfo(BUNDLE_NAME, out));
+    EXPECT_EQ(out.GetBundleName(), BUNDLE_NAME);
+    EXPECT_TRUE(out.IsDualModeCloneApp());
 }
 } // OHOS

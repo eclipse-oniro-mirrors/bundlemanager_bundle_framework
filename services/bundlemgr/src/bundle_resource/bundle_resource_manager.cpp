@@ -26,6 +26,7 @@
 #include "bundle_resource_theme_process.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
+#include "dual_mode_helper.h"
 #include "event_report.h"
 #include "hitrace_meter.h"
 #include "thread_pool.h"
@@ -62,9 +63,16 @@ BundleResourceManager::~BundleResourceManager()
 void BundleResourceManager::DeleteNotExistResourceInfo(
     const std::string &bundleName, const int32_t appIndex, const std::vector<ResourceInfo> &resourceInfos)
 {
+    // dual-mode: distinguish whether the updating bundle is a dual-mode
+    // clone. Clone records are stored under the prefixed effective name, so query by it to find
+    // them during update cleanup. isDualModeCloneApp_ is carried by resourceInfos (set in
+    // InnerGetResourceInfo). Non-dual-mode apps (including existing app-clones):
+    // isDualModeCloneApp_=false -> queryName=bundleName (existing behavior, zero regression).
+    std::string queryName = (!resourceInfos.empty() && resourceInfos[0].isDualModeCloneApp_)
+        ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
     // get current rdb resource
     std::vector<std::string> existResourceName;
-    if (bundleResourceRdb_->GetResourceNameByBundleName(bundleName, appIndex, existResourceName) &&
+    if (bundleResourceRdb_->GetResourceNameByBundleName(queryName, appIndex, existResourceName) &&
         !existResourceName.empty()) {
         for (const auto &key : existResourceName) {
             auto it = std::find_if(resourceInfos.begin(), resourceInfos.end(),

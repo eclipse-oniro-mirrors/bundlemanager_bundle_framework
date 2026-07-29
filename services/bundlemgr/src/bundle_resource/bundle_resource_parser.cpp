@@ -19,6 +19,7 @@
 #include "bundle_resource_image_info.h"
 #include "bundle_resource_drawable.h"
 #include "bundle_service_constants.h"
+#include "dual_mode_helper.h"
 #include "bundle_util.h"
 #include "json_util.h"
 
@@ -130,7 +131,15 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
         if ((index > 0) && !IsNeedToParseResourceInfo(resourceInfos[index], resourceInfos[0])) {
             continue;
         }
-        auto resourceManager = resourceManagerMap[resourceInfos[index].moduleName_];
+        // dual-mode: clone and primary category-7 apps share
+        // bundleName + moduleName but have different hapPath — key the ResourceManager cache by
+        // effective name (+moduleName) so the two package bodies don't reuse each other's manager.
+        std::string resMgrKey = resourceInfos[index].isDualModeCloneApp_
+            ? DualModeHelper::GetDualModeBundleName(resourceInfos[index].bundleName_)
+            : resourceInfos[index].bundleName_;
+        resMgrKey += "/";
+        resMgrKey += resourceInfos[index].moduleName_;
+        auto resourceManager = resourceManagerMap[resMgrKey];
         if (resourceManager == nullptr) {
             std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
             if (resConfig == nullptr) {
@@ -144,7 +153,7 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
             (void)BundleResourceConfiguration::InitResourceGlobalConfig(
                 resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, resourceManager,
                 resourceInfos[index].iconNeedParse_, resourceInfos[index].labelNeedParse_);
-            resourceManagerMap[resourceInfos[index].moduleName_] = resourceManager;
+            resourceManagerMap[resMgrKey] = resourceManager;
         }
 
         if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfos[index])) {
@@ -541,7 +550,15 @@ bool BundleResourceParser::ParseResourceInfosNoTheme(
         if ((index > 0) && !IsNeedToParseResourceInfo(resourceInfos[index], resourceInfos[0])) {
             continue;
         }
-        auto resourceManager = resourceManagerMap[resourceInfos[index].moduleName_];
+        // dual-mode: clone and primary category-7 apps share
+        // bundleName + moduleName but have different hapPath — key the ResourceManager cache by
+        // effective name (+moduleName) so the two package bodies don't reuse each other's manager.
+        std::string resMgrKey = resourceInfos[index].isDualModeCloneApp_
+            ? DualModeHelper::GetDualModeBundleName(resourceInfos[index].bundleName_)
+            : resourceInfos[index].bundleName_;
+        resMgrKey += "/";
+        resMgrKey += resourceInfos[index].moduleName_;
+        auto resourceManager = resourceManagerMap[resMgrKey];
         if (resourceManager == nullptr) {
             std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
             if (resConfig == nullptr) {
@@ -552,7 +569,7 @@ bool BundleResourceParser::ParseResourceInfosNoTheme(
                 std::shared_ptr<Global::Resource::ResourceManager>(Global::Resource::CreateResourceManager(
                     resourceInfos[index].bundleName_, resourceInfos[index].moduleName_,
                     resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, *resConfig, 0, userId));
-            resourceManagerMap[resourceInfos[index].moduleName_] = resourceManager;
+            resourceManagerMap[resMgrKey] = resourceManager;
             if (!BundleResourceConfiguration::InitResourceGlobalConfig(
                 resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, resourceManager,
                 resourceInfos[index].iconNeedParse_, resourceInfos[index].labelNeedParse_)) {
@@ -586,7 +603,15 @@ bool BundleResourceParser::ParseIconResourceInfosWithTheme(
     std::map<std::string, std::shared_ptr<Global::Resource::ResourceManager>> resourceManagerMap;
     size_t size = resourceInfos.size();
     for (size_t index = 0; index < size; ++index) {
-        auto resourceManager = resourceManagerMap[resourceInfos[index].moduleName_];
+        // dual-mode: clone and primary category-7 apps share
+        // bundleName + moduleName but have different hapPath — key the ResourceManager cache by
+        // effective name (+moduleName) so the two package bodies don't reuse each other's manager.
+        std::string resMgrKey = resourceInfos[index].isDualModeCloneApp_
+            ? DualModeHelper::GetDualModeBundleName(resourceInfos[index].bundleName_)
+            : resourceInfos[index].bundleName_;
+        resMgrKey += "/";
+        resMgrKey += resourceInfos[index].moduleName_;
+        auto resourceManager = resourceManagerMap[resMgrKey];
         if (resourceManager == nullptr) {
             std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
             if (resConfig == nullptr) {
@@ -597,7 +622,7 @@ bool BundleResourceParser::ParseIconResourceInfosWithTheme(
                 std::shared_ptr<Global::Resource::ResourceManager>(Global::Resource::CreateResourceManager(
                     resourceInfos[index].bundleName_, resourceInfos[index].moduleName_,
                     resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, *resConfig, 0, userId));
-            resourceManagerMap[resourceInfos[index].moduleName_] = resourceManager;
+            resourceManagerMap[resMgrKey] = resourceManager;
             // no add path when theme exist
             if (!BundleResourceConfiguration::InitResourceGlobalConfig(resourceManager)) {
                 APP_LOGW("InitResourceGlobalConfig failed, key:%{public}s", resourceInfos[index].GetKey().c_str());

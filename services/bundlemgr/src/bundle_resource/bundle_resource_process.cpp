@@ -21,6 +21,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_resource_parser.h"
+#include "dual_mode_helper.h"
 #include "json_util.h"
 
 namespace OHOS {
@@ -70,8 +71,9 @@ bool BundleResourceProcess::GetAllResourceInfo(
         return false;
     }
     std::vector<std::string> allBundleNames = dataMgr->GetAllBundleName();
-    if (allBundleNames.empty()) {
-        APP_LOGE("bundleInfos is empty");
+    std::vector<std::string> allTempBundleNames = dataMgr->GetAllTempBundleName();
+    if (allBundleNames.empty() && allTempBundleNames.empty()) {
+        APP_LOGE("bundleInfos and tempBundleInfos are empty");
         return false;
     }
 
@@ -92,6 +94,28 @@ bool BundleResourceProcess::GetAllResourceInfo(
             APP_LOGW("%{public}s resourceInfo empty", bundleName.c_str());
         } else {
             resourceInfosMap[bundleName] = resourceInfos;
+        }
+    }
+    // dual-mode: process ALL apps in tempBundleInfos_ (the other-mode
+    // variants), including those that live ONLY in tempBundleInfos_ (e.g. primary-mode clone with
+    // no primary variant installed — not reachable by iterating bundleInfos_ names). Same-name
+    // apps across the two maps merge into one resourceInfosMap[bundleName] entry; each ResourceInfo
+    // carries its own isDualModeCloneApp_ so GetKey() yields the correct key (clone -> prefixed,
+    // primary -> original). Non-dual-mode: tempBundleInfos_ empty, no-op (zero regression).
+    for (const auto &bundleName : allTempBundleNames) {
+        InnerBundleInfo tempInfo;
+        if (!dataMgr->FetchTempBundleInfo(bundleName, tempInfo)) {
+            continue;
+        }
+        auto bundleType = tempInfo.GetApplicationBundleType();
+        if (bundleType == BundleType::SHARED || bundleType == BundleType::SKILL ||
+            ((bundleType == BundleType::APP_SERVICE_FWK) && tempInfo.IsHsp())) {
+            continue;
+        }
+        std::vector<ResourceInfo> tempResourceInfos;
+        if (InnerGetResourceInfo(tempInfo, userId, tempResourceInfos) && !tempResourceInfos.empty()) {
+            resourceInfosMap[bundleName].insert(resourceInfosMap[bundleName].end(),
+                tempResourceInfos.begin(), tempResourceInfos.end());
         }
     }
     APP_LOGI("resourceInfosMap size: %{public}zu", resourceInfosMap.size());
@@ -293,6 +317,14 @@ bool BundleResourceProcess::InnerGetResourceInfo(
         APP_LOGE("-n %{public}s -u %{public}d -i %{public}d no resource", innerBundleInfo.GetBundleName().c_str(),
             userId, appIndex);
         return false;
+    }
+    // dual-mode: mark every assembled ResourceInfo as a dual-mode
+    // clone app so GetKey() prepends "+clone-10000+" and the RDB key is isolated from the
+    // primary-mode same-name app. bundleName_ stays original; only the key is prefixed.
+    if (innerBundleInfo.IsDualModeCloneApp()) {
+        for (auto &info : resourceInfos) {
+            info.isDualModeCloneApp_ = true;
+        }
     }
     if (needParseDynamic) {
         ResourceInfo dynamicResourceInfo;

@@ -111,7 +111,9 @@ public:
     void ClassifyDualModeAppsNoLock();
     /**
      * @brief Update internal state for whole bundle.
-     * @param bundleName Indicates the bundle name.
+     *        Dual-mode: the caller passes the effective bundle name (prefixed for clone apps,
+     *        original name otherwise); it is used directly as the installStates_ key.
+     * @param bundleName Indicates the effective bundle name (prefixed for clone apps).
      * @param state Indicates the install state to be set.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
@@ -979,6 +981,10 @@ public:
         const std::string &bundleName, const ApplicationInfo &appInfo);
     bool FetchInnerBundleInfo(
         const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
+    // dual-mode: fetch the other-mode counterpart of a dual-mode
+    // same-name app from tempBundleInfos_ (mirrors FetchInnerBundleInfo). Used by resource
+    // refresh (language/theme) to rebuild both modes' resources.
+    bool FetchTempBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
     bool IsHideDesktopIconForEvent(const std::string &bundleName) const;
     bool GetInnerBundleInfoUsers(const std::string &bundleName, std::set<int32_t> &userIds);
     bool IsSystemHsp(const std::string &bundleName);
@@ -1076,6 +1082,11 @@ public:
     ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         int32_t triggerMode);
     std::vector<std::string> GetAllBundleName() const;
+    // dual-mode: enumerate tempBundleInfos_ keys (the other-mode
+    // variants), mirroring GetAllBundleName. Used by resource refresh to process ALL dual-mode
+    // apps, including those that live only in tempBundleInfos_ (e.g. primary-mode clone with no
+    // primary variant installed).
+    std::vector<std::string> GetAllTempBundleName() const;
     std::vector<std::string> GetAllSystemHspCodePaths() const;
     std::vector<std::string> GetAllExtensionBundleNames(const std::vector<ExtensionAbilityType> &types) const;
     /**

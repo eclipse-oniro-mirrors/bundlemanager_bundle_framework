@@ -710,7 +710,7 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::UNINSTALL_START)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(info), InstallState::UNINSTALL_START)) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall start failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
@@ -729,7 +729,7 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
         LOG_E(BMS_TAG_INSTALLER, "remove hsp module by versionCode failed");
         return ERR_APPEXECFWK_RMV_HSP_BY_VERSION_ERROR;
     }
-    if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::INSTALL_SUCCESS)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(info), InstallState::INSTALL_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "update install success failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
@@ -1779,7 +1779,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     // this state should always be set when return
     ScopeGuard stateGuard([&] {
-        dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_SUCCESS);
+        dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::INSTALL_SUCCESS);
         dataMgr_->EnableBundle(bundleName_);
     });
 
@@ -1923,7 +1923,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     cacheInfo.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo);
     UpdateEncryptedStatus(oldInfo);
     GetInstallEventInfo(cacheInfo, sysEventInfo_);
-    AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
+    AddAppProvisionInfo(GetEffectiveBundleName(), hapVerifyResults[0].GetProvisionInfo(), installParam);
     UpdateRouterInfo();
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
@@ -2054,11 +2054,11 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
             driverInstaller->RemoveDriverSoFile(info.second, "", false);
         }
         // remove profile from code signature
-        RemoveProfileFromCodeSign(bundleName_);
+        RemoveProfileFromCodeSign(GetEffectiveBundleName());
         // remove innerBundleInfo
-        RemoveInfo(bundleName_, "");
+        RemoveInfo(GetEffectiveBundleName(), "");
         if (isHnpInstalled_) {
-            RollbackHnpInstall(bundleName_, { userId_ });
+            RollbackHnpInstall(GetEffectiveBundleName(), { userId_ });
         }
         RemoveNPAPIPluginDir();
         return;
@@ -2075,7 +2075,7 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
     // need delete definePermissions and requestPermissions
     UpdateHapToken(preInfo.GetAppType() != oldInfo.GetAppType(), oldInfo);
     if (isHnpInstalled_) {
-        RollbackHnpInstall(bundleName_, oldInfo.GetUsers());
+        RollbackHnpInstall(GetEffectiveBundleName(), oldInfo.GetUsers());
     }
     LOG_D(BMS_TAG_INSTALLER, "finish rollback due to install failed");
 }
@@ -2090,7 +2090,7 @@ void BaseBundleInstaller::RollBack(const InnerBundleInfo &info, InnerBundleInfo 
             modulePackage + ServiceConstants::TMP_SUFFIX;
         RemoveModuleDir(createModulePath, info.GetBundleName());
         oldInfo.SetCurrentModulePackage(modulePackage);
-        RollBackModuleInfo(bundleName_, oldInfo);
+        RollBackModuleInfo(GetEffectiveBundleName(), oldInfo);
         // remove driver file of installed module
         driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(modulePackage), true);
     } else {
@@ -2098,7 +2098,7 @@ void BaseBundleInstaller::RollBack(const InnerBundleInfo &info, InnerBundleInfo 
         // remove driver file
         driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(modulePackage), false);
         // remove module info
-        RemoveInfo(bundleName_, modulePackage);
+        RemoveInfo(GetEffectiveBundleName(), modulePackage);
     }
 }
 
@@ -2148,7 +2148,7 @@ void BaseBundleInstaller::RemoveInfo(const std::string &bundleName, const std::s
             return;
         }
         dataMgr_->UpdateBundleInstallState(bundleName, InstallState::ROLL_BACK);
-        dataMgr_->RemoveModuleInfo(bundleName, packageName, innerBundleInfo);
+        dataMgr_->RemoveModuleInfo(bundleName_, packageName, innerBundleInfo);
     }
     LOG_D(BMS_TAG_INSTALLER, "finish to remove innerBundleInfo due to rollback");
 }
@@ -2165,7 +2165,7 @@ void BaseBundleInstaller::RollBackModuleInfo(const std::string &bundleName, Inne
         return;
     }
     dataMgr_->UpdateBundleInstallState(bundleName, InstallState::ROLL_BACK);
-    dataMgr_->UpdateInnerBundleInfo(bundleName, oldInfo, innerBundleInfo);
+    dataMgr_->UpdateInnerBundleInfo(bundleName_, oldInfo, innerBundleInfo);
     LOG_D(BMS_TAG_INSTALLER, "finsih rollBackMoudleInfo due to rollback");
 }
 
@@ -2497,9 +2497,9 @@ void BaseBundleInstaller::DeleteRouterInfo(const InnerBundleInfo &info, const st
     }
     if (moduleName.empty()) {
         DeleteRouterInfoForPlugin(info);
-        dataMgr_->DeleteRouterInfo(info.GetBundleName());
+        dataMgr_->DeleteRouterInfo(GetEffectiveBundleName(info));
     } else {
-        dataMgr_->DeleteRouterInfo(info.GetBundleName(), moduleName);
+        dataMgr_->DeleteRouterInfo(GetEffectiveBundleName(info), moduleName);
     }
 }
 
@@ -2982,7 +2982,7 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, const InstallPa
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(),
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(info),
         InstallState::UNINSTALL_SUCCESS, installParam.isKeepData)) {
         LOG_E(BMS_TAG_INSTALLER, "delete inner info failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
@@ -3004,7 +3004,7 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, const InstallPa
     }
     auto manager = SkillsDescriptionManager::GetInstance();
     if (manager != nullptr) {
-        result = manager->DeleteSkillDescriptions(info.GetBundleName());
+        result = manager->DeleteSkillDescriptions(GetEffectiveBundleName(info));
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "delete app skills descriptions failed, bundle=%{public}s, ret=%{public}d",
                 info.GetBundleName().c_str(), result);
@@ -3127,7 +3127,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_START)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::INSTALL_START)) {
         LOG_E(BMS_TAG_INSTALLER, "install already start");
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
@@ -3148,7 +3148,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
 
     info.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::INSTALL_START);
 
-    ScopeGuard stateGuard([&] { dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_FAIL); });
+    ScopeGuard stateGuard([&] {
+        dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::INSTALL_FAIL);
+    });
     ErrCode result = CreateBundleAndDataDir(info);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "create bundle and data dir failed");
@@ -3158,7 +3160,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     ScopeGuard bundleGuard([&] {
         RemoveBundleAndDataDir(info, dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
             Constants::INITIAL_APP_INDEX));
-        RemoveAppSkillsDir(info.GetBundleName());
+        // dual-mode: skills dir uses the effective (prefixed) name for secondary-mode clone apps.
+        RemoveAppSkillsDir(GetEffectiveBundleName(info));
     });
     std::string modulePath = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + modulePackage_;
     result = ExtractModule(info, modulePath);
@@ -3228,7 +3231,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     }
 
     LOG_D(BMS_TAG_INSTALLER, "%{public}s, %{public}s", newInfo.GetBundleName().c_str(), modulePackage_.c_str());
-    if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_START)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UPDATING_START)) {
         LOG_E(BMS_TAG_INSTALLER, "update already start");
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
@@ -3320,8 +3323,11 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
     }
 
     ScopeGuard moduleGuard([&] { RemoveModuleDir(modulePath, newInfo.GetBundleName()); });
-    ScopeGuard skillGuard([&] { RemoveAppSkillsDir(newInfo.GetBundleName(), newInfo.GetCurModuleName()); });
-    if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
+    // dual-mode: skills dir uses the effective (prefixed) name for secondary-mode clone apps.
+    ScopeGuard skillGuard([&] {
+        RemoveAppSkillsDir(GetEffectiveBundleName(newInfo), newInfo.GetCurModuleName());
+    });
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UPDATING_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "new moduleupdate state failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
@@ -3380,7 +3386,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
             // app versionCode equals to the old and do not need to update module
             // and only need to update userInfo
             newInfo.SetOnlyCreateBundleUser(true);
-            if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
+            if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UPDATING_SUCCESS)) {
                 LOG_E(BMS_TAG_INSTALLER, "update state failed");
                 return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
             }
@@ -3421,12 +3427,15 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         LOG_E(BMS_TAG_INSTALLER, "Install Native failed");
         return result;
     }
-    ScopeGuard skillGuard([&] { RemoveAppSkillsDir(newInfo.GetBundleName(), newInfo.GetCurModuleName(), true); });
+    // dual-mode: skills dir uses the effective (prefixed) name for secondary-mode clone apps.
+    ScopeGuard skillGuard([&] {
+        RemoveAppSkillsDir(GetEffectiveBundleName(newInfo), newInfo.GetCurModuleName(), true);
+    });
 
     result = FinalizeAppSkills(newInfo);
     CHECK_RESULT(result, "finalize app skills failed %{public}d");
 
-    if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UPDATING_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "old module update state failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
@@ -4584,11 +4593,16 @@ ErrCode BaseBundleInstaller::ProcessAppSkills(InnerBundleInfo &info)
     if (isModuleUpdate_) {
         extractModuleName.append(ServiceConstants::TMP_SUFFIX);
     }
-    ScopeGuard skillGuard([&] { RemoveAppSkillsDir(info.GetBundleName(), moduleInfo.moduleName, isModuleUpdate_); });
+    // dual-mode: skills dir uses the effective (prefixed) name for both rollback removal and extract
+    // landing, so secondary-mode skills land under the prefixed dir.
+    std::string effectiveBundleName = GetEffectiveBundleName(info);
+    ScopeGuard skillGuard([&] {
+        RemoveAppSkillsDir(effectiveBundleName, moduleInfo.moduleName, isModuleUpdate_);
+    });
 
     std::vector<SkillsPackageInfo> validSkillInfoList;
     ErrCode result = SkillsInstallerUtil::ExtractSkillsPackage(
-        info.GetBundleName(), moduleInfo.moduleName, extractModuleName, modulePath_, skillNameList, validSkillInfoList);
+        effectiveBundleName, moduleInfo.moduleName, extractModuleName, modulePath_, skillNameList, validSkillInfoList);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "extract app skills failed, bundle=%{public}s, module=%{public}s, ret=%{public}d",
             info.GetBundleName().c_str(), moduleInfo.moduleName.c_str(), result);
@@ -4626,21 +4640,24 @@ ErrCode BaseBundleInstaller::FinalizeAppSkills(const InnerBundleInfo &info)
     if (!isModuleUpdate_) {
         return ERR_OK;
     }
+    // dual-mode: skills dir uses the effective (prefixed) name for removal, temp->real rename, and the
+    // RenameModuleDir identifier (must match the path segment for installd path validation).
+    std::string effectiveBundleName = GetEffectiveBundleName(info);
 
     auto skillInfoIter = moduleSkillInfoMap_.find(info.GetCurrentModulePackage());
     const bool hasValidSkills = skillInfoIter != moduleSkillInfoMap_.end() && !skillInfoIter->second.empty();
     if (!hasValidSkills) {
-        RemoveAppSkillsDir(info.GetBundleName(), moduleName, true);
-        RemoveAppSkillsDir(info.GetBundleName(), moduleName);
+        RemoveAppSkillsDir(effectiveBundleName, moduleName, true);
+        RemoveAppSkillsDir(effectiveBundleName, moduleName);
         return ERR_OK;
     }
 
     std::string tempModuleDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR +
-        info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + moduleName + ServiceConstants::TMP_SUFFIX;
+        effectiveBundleName + ServiceConstants::PATH_SEPARATOR + moduleName + ServiceConstants::TMP_SUFFIX;
     std::string realModuleDir = std::string(Constants::BASE_SKILL_DIR) + ServiceConstants::PATH_SEPARATOR +
-        info.GetBundleName() + ServiceConstants::PATH_SEPARATOR + moduleName;
+        effectiveBundleName + ServiceConstants::PATH_SEPARATOR + moduleName;
     return InstalldClient::GetInstance()->RenameModuleDir(
-        tempModuleDir, realModuleDir, info.GetBundleName(), BundleDirScene::BASE_SKILL_DIR);
+        tempModuleDir, realModuleDir, effectiveBundleName, BundleDirScene::BASE_SKILL_DIR);
 }
 
 ErrCode BaseBundleInstaller::CommitAppSkills(const InnerBundleInfo &info)
@@ -4662,7 +4679,7 @@ ErrCode BaseBundleInstaller::CommitAppSkills(const InnerBundleInfo &info)
         }
 
         const std::string &moduleName = moduleInfoIter->second.moduleName;
-        ErrCode result = manager->DeleteSkillDescriptions(info.GetBundleName(), moduleName);
+        ErrCode result = manager->DeleteSkillDescriptions(GetEffectiveBundleName(info), moduleName);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "delete old app skills description failed, bundle=%{public}s, "
                 "module=%{public}s, ret=%{public}d", info.GetBundleName().c_str(), moduleName.c_str(), result);
@@ -5413,7 +5430,9 @@ ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info,
         LOG_E(BMS_TAG_INSTALLER, "remove dir fail %{public}s error %{public}d", info.GetAppCodePath().c_str(), result);
         return result;
     }
-    RemoveAppSkillsDir(info.GetBundleName());
+    // dual-mode: skills dir uses the effective (prefixed) name; GetEffectiveBundleName(info) is info-driven
+    // so it stays correct in the uninstall flow where dualModeBundleName_ is unset.
+    RemoveAppSkillsDir(GetEffectiveBundleName(info));
     return result;
 }
 
@@ -5512,9 +5531,7 @@ ErrCode BaseBundleInstaller::RemoveModuleAndDataDir(
     // appCodePath), so align the bundleName identifier too. Use IsDualModeCloneApp() rather than
     // dualModeBundleName_ because this runs in both update (2740) and uninstall (6597) flows, where
     // the member may be unset on the uninstall installer instance.
-    std::string effectiveBundleName = info.IsDualModeCloneApp()
-        ? DualModeHelper::GetDualModeBundleName(info.GetBundleName())
-        : info.GetBundleName();
+    std::string effectiveBundleName = GetEffectiveBundleName(info);
     auto moduleDir = info.GetModuleDir(modulePackage);
     auto result = RemoveModuleDir(moduleDir, effectiveBundleName);
     if (result != ERR_OK) {
@@ -5529,10 +5546,12 @@ ErrCode BaseBundleInstaller::RemoveModuleAndDataDir(
         return result;
     }
     std::string moduleName = info.GetModuleName(modulePackage);
-    RemoveAppSkillsDir(info.GetBundleName(), moduleName);
+    // dual-mode: reuse the effectiveBundleName computed above for both the skills dir and the
+    // DeleteSkillDescriptions key (data layer aligned to effective name).
+    RemoveAppSkillsDir(effectiveBundleName, moduleName);
     auto manager = SkillsDescriptionManager::GetInstance();
     if (manager != nullptr) {
-        result = manager->DeleteSkillDescriptions(info.GetBundleName(), moduleName);
+        result = manager->DeleteSkillDescriptions(effectiveBundleName, moduleName);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "delete app skills descriptions failed, bundle=%{public}s, "
                 "module=%{public}s, ret=%{public}d", info.GetBundleName().c_str(), moduleName.c_str(), result);
@@ -6559,7 +6578,7 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
-    if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_START)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UNINSTALL_START)) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall already start");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
@@ -8831,11 +8850,11 @@ ErrCode BaseBundleInstaller::RollbackHmpCommonInfo(const std::string &bundleName
         LOG_W(BMS_TAG_INSTALLER, "rollback hmp bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
-    if (!dataMgr_->UpdateBundleInstallState(oldInfo.GetBundleName(), InstallState::UNINSTALL_START)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(oldInfo), InstallState::UNINSTALL_START)) {
         APP_LOGE("rollback hmp start uninstall failed");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    if (!dataMgr_->UpdateBundleInstallState(oldInfo.GetBundleName(), InstallState::UNINSTALL_SUCCESS)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(oldInfo), InstallState::UNINSTALL_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "rollback hmp delete inner info failed");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
@@ -8852,8 +8871,9 @@ ErrCode BaseBundleInstaller::RollbackHmpCommonInfo(const std::string &bundleName
         quickFixDataMgr->DeleteInnerAppQuickFix(oldInfo.GetBundleName());
     }
 #endif
-    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(oldInfo.GetBundleName())) {
-        LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed",
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(
+        GetEffectiveBundleName(oldInfo))) {
+        LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed.",
             oldInfo.GetBundleName().c_str());
     }
     DeleteRouterInfo(oldInfo);
@@ -9086,8 +9106,8 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
     }
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, info, false)) {
         LOG_E(BMS_TAG_INSTALLER, "add bundle failed, -n:%{public}s", bundleName_.c_str());
-        dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_START);
-        dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_SUCCESS);
+        dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UNINSTALL_START);
+        dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UNINSTALL_SUCCESS);
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
     if (!dataMgr_->SaveInnerBundleInfo(info)) {
@@ -10237,8 +10257,12 @@ std::string BaseBundleInstaller::GetEffectiveBundleName(const InnerBundleInfo &b
     if (!dualModeBundleName_.empty()) {
         return dualModeBundleName_;
     }
-    // Otherwise, use bundle name from InnerBundleInfo as authoritative source
-    return bundleInfo.GetBundleName();
+    // Otherwise derive from the persisted clone-app flag: return the prefixed name for secondary-mode
+    // clone apps so that cross-flow callers (uninstall/recover, where dualModeBundleName_ is unset on a
+    // fresh installer instance) also resolve to the isolated name instead of the original.
+    return bundleInfo.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(bundleInfo.GetBundleName())
+        : bundleInfo.GetBundleName();
 }
 
 }  // namespace AppExecFwk
