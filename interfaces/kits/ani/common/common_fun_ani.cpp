@@ -19,7 +19,9 @@
 
 #include "ani_signature_builder.h"
 #include "app_log_wrapper.h"
+#include "business_error_ani.h"
 #include "common_fun_ani.h"
+#include "napi_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -45,6 +47,7 @@ constexpr const char* CLASSNAME_SIGNATURE_INFO_INNER = "bundleManager.BundleInfo
 constexpr const char* CLASSNAME_APP_CLONE_IDENTITY_INNER = "bundleManager.BundleInfoInner.AppCloneIdentityInner";
 constexpr const char* CLASSNAME_APP_CLONE_PREFERENCE_INNER = "bundleManager.BundleInfoInner.AppClonePreferenceInner";
 constexpr const char* CLASSNAME_DYNAMIC_ICON_INFO_INNER = "bundleManager.BundleInfoInner.DynamicIconInfoInner";
+constexpr const char* APP_CLONE_PREFERENCE_PARAM = "preference";
 constexpr const char* APP_CLONE_PREFERENCE_FIELD_MODE = "mode";
 constexpr const char* APP_CLONE_PREFERENCE_FIELD_INDEX = "appIndex";
 constexpr const char* CLASSNAME_ALTERNATE_ICON_INFO_INNER = "bundleManager.BundleInfoInner.AlternateIconInfoInner";
@@ -1696,15 +1699,21 @@ ani_object CommonFunAni::ConvertAppClonePreference(ani_env* env, const AppCloneP
 bool CommonFunAni::ParseAppClonePreference(ani_env* env, ani_object object, AppClonePreference& preference)
 {
     RETURN_FALSE_IF_NULL(env);
-    RETURN_FALSE_IF_NULL(object);
+    if (object == nullptr) {
+        APP_LOGE_NOFUNC("preference is not object");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_CLONE_PREFERENCE_PARAM, TYPE_OBJECT);
+        return false;
+    }
 
     ani_enum_item modeItem = nullptr;
     if (!CallGetterOptional(env, object, APP_CLONE_PREFERENCE_FIELD_MODE, &modeItem)) {
         APP_LOGE_NOFUNC("Parse mode failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_CLONE_PREFERENCE_FIELD_MODE, TYPE_NUMBER);
         return false;
     }
     if (!EnumUtils::EnumETSToNative(env, modeItem, preference.mode)) {
         APP_LOGE_NOFUNC("EnumETSToNative mode failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_CLONE_PREFERENCE_FIELD_MODE, TYPE_NUMBER);
         return false;
     }
     preference.appIndex = 0;
@@ -1714,6 +1723,7 @@ bool CommonFunAni::ParseAppClonePreference(ani_env* env, ani_object object, AppC
     ani_int appIdx = 0;
     if (!CallGetterOptional(env, object, APP_CLONE_PREFERENCE_FIELD_INDEX, &appIdx)) {
         APP_LOGE_NOFUNC("Parse index for CLONE_APP failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_CLONE_PREFERENCE_FIELD_INDEX, TYPE_NUMBER);
         return false;
     }
     preference.appIndex = appIdx;

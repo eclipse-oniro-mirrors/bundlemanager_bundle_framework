@@ -547,7 +547,6 @@ static ani_boolean SetAppClonePreferenceNative(ani_env* env, ani_string aniBundl
     AppClonePreference preference;
     if (!CommonFunAni::ParseAppClonePreference(env, aniPreference, preference)) {
         APP_LOGE_NOFUNC("parse preference failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, "preference", TYPE_OBJECT);
         return ANI_FALSE;
     }
     int32_t modeValue = static_cast<int32_t>(preference.mode);
