@@ -3861,7 +3861,7 @@ ErrCode InstalldHostImpl::DeleteOldCacheFiles(
     for (const auto &file : fileTimePairs) {
         std::error_code ec;
         const auto &filePath = file.first;
-        uint64_t fileSize = GetFileSize(filePath);
+        int64_t fileSize = GetFileSize(filePath);
         if (!std::filesystem::remove(filePath, ec)) {
             continue;
         }

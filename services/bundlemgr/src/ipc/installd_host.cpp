@@ -1650,7 +1650,7 @@ bool InstalldHost::HandleDeleteOldCacheFiles(MessageParcel &data, MessageParcel 
     uint64_t cleanedSize = 0;
     ErrCode result = DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Uint64, reply, cleanedSize);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint64, reply, cleanedSize);
     return true;
 }
 
@@ -1672,7 +1672,7 @@ bool InstalldHost::HandleGetCacheDiskUsageFromPath(MessageParcel &data, MessageP
     int64_t statSize = 0;
     auto result = GetCacheDiskUsageFromPath(cachePaths, statSize, timeoutMs);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int64, reply, statSize);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, reply, statSize);
     return true;
 }
 }  // namespace AppExecFwk
