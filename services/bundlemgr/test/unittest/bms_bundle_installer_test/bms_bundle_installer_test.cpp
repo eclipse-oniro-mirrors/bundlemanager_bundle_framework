@@ -38,6 +38,7 @@
 #include "app_service_fwk/app_service_fwk_installer.h"
 #include "bundle_file_util.h"
 #include "bundle_info.h"
+#include "bundle_installer.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
@@ -74,10 +75,6 @@ using namespace OHOS::AppExecFwk;
 using OHOS::DelayedSingleton;
 
 namespace OHOS {
-namespace Security::AccessToken {
-    void SetCachePolicyBySessionIdForTest(const BundlePolicyInfo& bundlePolicyInfo);
-    void SetCachePolicyBySessionIdRetForTest(int32_t ret);
-}
 namespace {
 const std::string SYSTEMFIEID_NAME = "com.query.test";
 const std::string SYSTEMFIEID_BUNDLE = "system_module.hap";
@@ -153,7 +150,7 @@ const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.exa
 const std::string BUNDLE_NAME_TEST = "bundleNameTest";
 const std::string BUNDLE_NAME_TEST1 = "bundleNameTest1";
 const std::string DEVICE_ID = "PHONE-001";
-const std::string TEST_CPU_ABI = "arm64-v8a";
+const std::string TEST_CPU_ABI = "arm64";
 constexpr const char* BMS_SERVICE_PATH = "/data/service";
 const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 const std::string DATA_EL2_SHAREFILES_PATH = "/data/app/el2/100/sharefiles/";
@@ -190,6 +187,7 @@ const std::string PLUGIN_CODE_PATH_DIR_OLD = "/data/test/plugin_old";
 const int32_t TEST_U100 = 100;
 const int32_t TEST_U1 = 1;
 const int32_t MAX_WAITING_TIME = 600;
+constexpr int32_t INVALID_TEST_USERID = 99999;
 constexpr const char* MULTIUSER_INSTALL_THIRD_PRELOAD_APP = "const.bms.multiUserInstallThirdPreloadApp";
 const int32_t TEST_ERROR_APP_INDEX = 1001;
 const int32_t TEST_LENGTH = 1;
@@ -204,6 +202,8 @@ const std::string REMOVE_PRELOAD_TEST_BUNDLE = "com.example.remove.preload.test"
 const std::string DATA_PRELOAD_HAP_PATH = "/data/preload/app/com.example.test/entry.hap";
 const int32_t TEST_EL5_USERID = 2000;
 const std::string PLUGIN_NAME = "com.example.pluginTest1";
+const std::string TEST_RENAME_PATH = "/data/app/el2/100/sharefiles/test";
+const std::string TEST_RENAME_PATH_NEW = "/data/app/el2/100/sharefiles/test_new";
 enum {
     BMS_BROKER_ERR_UNINSTALL_FAILED = 8585218,
 };
@@ -371,8 +371,6 @@ public:
     void ClearBundleInfo();
     void ClearDataMgr();
     void ResetDataMgr();
-    bool CheckShaderCachePathExist(const std::string &bundleName,
-        const int32_t appIndex, const int32_t &userId) const;
     bool WriteToConfigFile(const std::string& bundleName) const;
     ErrCode MkdirIfNotExist(const std::string &bundleName, BundleDirScene scene, const std::string &dir) const;
     void GetExistedEntries(const std::string &filename,
@@ -734,26 +732,6 @@ void BmsBundleInstallerTest::ClearBundleInfo()
     EXPECT_TRUE(result) << "the bundle info in db clear fail: " << BUNDLE_NAME;
 }
 
-bool BmsBundleInstallerTest::CheckShaderCachePathExist(const std::string &bundleName,
-    const int32_t appIndex, const int32_t &userId) const
-{
-    bool isExist = false;
-    std::string cloneBundleName = bundleName;
-    if (appIndex != 0) {
-        cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
-    }
-    std::string newShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-    newShaderCachePath = newShaderCachePath.replace(newShaderCachePath.find("%"), 1, std::to_string(userId));
-    newShaderCachePath = newShaderCachePath + bundleName;
-    if (access(newShaderCachePath.c_str(), F_OK) == 0) {
-        isExist = true;
-    } else {
-        LOG_E(BMS_TAG_INSTALLD, "%{public}s can not access, errno: %{public}d",
-            newShaderCachePath.c_str(), errno);
-    }
-    return isExist;
-}
-
 void BmsBundleInstallerTest::GetExistedEntries(const std::string &filename,
     std::set<std::string> &existingEntries, std::vector<std::string> &allLines) const
 {
@@ -853,127 +831,6 @@ CreateDirParam BmsBundleInstallerTest::PrepareCreateDirParam(
 }
 
 /**
- * @tc.number: ShaderCache_0010
- * @tc.name: test the right system bundle file can be installed, clean shader cache
- * @tc.desc: 1.the system bundle shader cache path exist
- */
-HWTEST_F(BmsBundleInstallerTest, ShaderCache_0010, Function | SmallTest | Level0)
-{
-    // test for /data/app/el1/userid/shader_cache does not exist
-    std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1,
-        std::to_string(USERID));
-    ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
-    ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->RemoveDir(
-        el1ShaderCachePath, BundleDirScene::REMOVE_BUNDLE_CODE_DIR, BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    std::string bundleShaderCachePath = el1ShaderCachePath + BUNDLE_NAME;
-    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    bool result = InstallSystemBundle(bundleFile);
-    result = CheckShaderCachePathExist(BUNDLE_NAME, 0, USERID);
-    EXPECT_TRUE(result) << "the shader cache pathexist: " << bundleShaderCachePath;
-    ClearBundleInfo();
-}
-
-
-/**
- * @tc.number: ShaderCache_0020
- * @tc.name: test the right system bundle file can be installed, clean shader cache
- * @tc.desc: 1.the system bundle shader cache path exist
- */
-HWTEST_F(BmsBundleInstallerTest, ShaderCache_0020, Function | SmallTest | Level0)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    // test for /data/app/el1/userid/shader_cache exist
-    std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1,
-        std::to_string(USERID));
-    ErrCode ret = InstalldOperator::MkOwnerDir(el1ShaderCachePath, 0, 0, 0);
-    EXPECT_TRUE(ret);
-
-    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    bool result = InstallSystemBundle(bundleFile);
-    result = CheckShaderCachePathExist(BUNDLE_NAME, 0, USERID);
-    EXPECT_TRUE(result) << "the shader cache path does not exist: " << bundleFile;
-
-    InnerBundleInfo info;
-    dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, info);
-    BaseBundleInstaller installer;
-    installer.InitDataMgr();
-    // test CleanShaderCache succeed
-    ret = installer.CleanShaderCache(info, BUNDLE_NAME, USERID);
-    EXPECT_EQ(ret, ERR_OK);
-
-    // test CleanArkStartupCache succeed
-    ret = installer.CleanArkStartupCache(BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_OK);
-
-    // test DeleteShaderCache succeed
-    ret = installer.DeleteShaderCache(BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_OK);
-
-    // test DeleteShaderCache succeed
-    ret = installer.DeleteShaderCache(BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_OK);
-
-    // test DeleteEl1ShaderAndArkStartupCache succeed
-    ret = installer.DeleteEl1ShaderAndArkStartupCache(info, BUNDLE_NAME, USERID);
-    EXPECT_EQ(ret, ERR_OK);
-
-    // test DeleteCloudShader succeed
-    ret = installer.DeleteCloudShader(BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_OK);
-    ClearBundleInfo();
-}
-
-/**
- * @tc.number: ShaderCache_0030
- * @tc.name: test the right system bundle file can be installed, clean shader cache
- * @tc.desc: 1.the system bundle shader cache path exist
- */
-HWTEST_F(BmsBundleInstallerTest, ShaderCache_0030, Function | SmallTest | Level0)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    bool result = InstallSystemBundle(bundleFile);
-    result = CheckShaderCachePathExist(BUNDLE_NAME, 0, USERID);
-    EXPECT_TRUE(result) << "the shader cache path does not exist: " << bundleFile;
-
-    InnerBundleInfo info;
-    dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, info);
-    BaseBundleInstaller installer;
-    installer.InitDataMgr();
-    // test CleanShaderCache failed
-    StopInstalldService();
-    ErrCode ret = installer.CleanShaderCache(info, BUNDLE_NAME, USERID);
-    EXPECT_NE(ret, ERR_OK);
-
-    // test CleanArkStartupCache failed
-    StopInstalldService();
-    ret = installer.CleanArkStartupCache(BUNDLE_NAME);
-    EXPECT_NE(ret, ERR_OK);
-
-    // test DeleteShaderCache failed
-    StopInstalldService();
-    ret = installer.DeleteShaderCache(BUNDLE_NAME);
-    EXPECT_NE(ret, ERR_OK);
-
-    // test DeleteShaderCache failed
-    StopInstalldService();
-    ret = installer.DeleteShaderCache(BUNDLE_NAME);
-    EXPECT_NE(ret, ERR_OK);
-
-    // test DeleteEl1ShaderAndArkStartupCache failed
-    StopInstalldService();
-    ret = installer.DeleteEl1ShaderAndArkStartupCache(info, BUNDLE_NAME, USERID);
-    EXPECT_NE(ret, ERR_OK);
-
-    ClearBundleInfo();
-}
-
-/**
  * @tc.number: DeleteUseLessSharefilesForDefaultUser_0010
  * @tc.name: test DeleteUseLessSharefilesForDefaultUser
  * @tc.desc: 1.DeleteUseLessSharefilesForDefaultUser
@@ -1043,61 +900,6 @@ HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0100, Function | Smal
 }
 
 /**
- * @tc.number: UninstallPreInstallBundle_0200
- * @tc.name: test unisntall  preinstall bundle
- * @tc.desc: 1.uninstall the hap
- *           2.query bundle is revoverable or not
- */
-HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0200, Function | SmallTest | Level0)
-{
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    bool result = InstallSystemBundle(bundleFile);
-    EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
-
-    // test GetForceUnisntalledUsers
-    PreInstallBundleInfo preInstallBundleInfo;
-    preInstallBundleInfo.SetBundleName(BUNDLE_NAME);
-    dataMgr->GetPreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
-    std::vector<int> forceUnisntallUsers = preInstallBundleInfo.GetForceUnisntalledUsers();
-    bool getForceUninstall = forceUnisntallUsers.empty();
-    EXPECT_TRUE(getForceUninstall);
-
-    // test ForceUnInstallBundle succeed
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
-    InstallParam installParam;
-    installParam.userId = USERID;
-    setuid(Constants::EDC_UID);
-    installParam.parameters.emplace(Constants::VERIFY_UNINSTALL_FORCED_KEY,
-        Constants::VERIFY_UNINSTALL_FORCED_VALUE);
-    ErrCode uninstallRes = MockForceUnInstallBundle(BUNDLE_NAME, installParam);
-    EXPECT_EQ(uninstallRes, ERR_OK);
-
-    // test forceuninstalluser in preinstallbundleinfo
-    preInstallBundleInfo.SetBundleName(BUNDLE_NAME);
-    dataMgr->GetPreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
-    bool isForceUninstall = preInstallBundleInfo.HasForceUninstalledUser(USERID);
-    EXPECT_TRUE(isForceUninstall);
-
-    // test GetRecoverablePreInstallBundleInfos
-    dataMgr->GetRecoverablePreInstallBundleInfos(USERID);
-
-    // test recover failed and succeed
-    ErrCode recoverRes = RecoverBundle(BUNDLE_NAME, installParam);
-    EXPECT_NE(recoverRes, ERR_OK);
-    preInstallBundleInfo.ClearForceUninstalledUsers();
-    dataMgr->SavePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
-    recoverRes = RecoverBundle(BUNDLE_NAME, installParam);
-    EXPECT_EQ(recoverRes, ERR_OK);
-    uninstallRes = MockForceUnInstallBundle(BUNDLE_NAME, installParam);
-    EXPECT_EQ(uninstallRes, ERR_OK);
-
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
-    ClearBundleInfo();
-}
-
-/**
  * @tc.number: UninstallPreInstallBundle_0300
  * @tc.name: test unisntall  preinstall bundle
  * @tc.desc: 1.uninstall the hap
@@ -1129,47 +931,6 @@ HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0300, Function | Smal
     dataMgr->GetPreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
     isForceUninstall = preInstallBundleInfo.HasForceUninstalledUser(ADD_NEW_USERID);
     EXPECT_FALSE(isForceUninstall);
-    ClearBundleInfo();
-}
-
-/**
- * @tc.number: UninstallPreInstallBundle_0400
- * @tc.name: test the wrong system bundle file can't be installed
- * @tc.desc: 1.the system bundle file don't exists
- *           2.the system bundle can't be installed and the result is fail
- */
-HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0400, Function | SmallTest | Level0)
-{
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    bool result = InstallSystemBundle(bundleFile);
-    EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
-
-    InnerBundleUserInfo innerBundleUserInfo;
-    innerBundleUserInfo.bundleUserInfo.userId = ADD_NEW_USERID;
-    innerBundleUserInfo.bundleName = BUNDLE_NAME;
-    dataMgr->AddInnerBundleUserInfo(BUNDLE_NAME, innerBundleUserInfo);
-
-    // test multiuser force uninstall
-    InstallParam installParam;
-    installParam.userId = USERID;
-    setuid(Constants::EDC_UID);
-    installParam.parameters.emplace(Constants::VERIFY_UNINSTALL_FORCED_KEY,
-        Constants::VERIFY_UNINSTALL_FORCED_VALUE);
-    ErrCode res = MockForceUnInstallBundle(BUNDLE_NAME, installParam);
-    EXPECT_EQ(res, ERR_OK);
-
-    // test ClearForceUninstalledUsers and recover
-    PreInstallBundleInfo preInstallBundleInfo;
-    preInstallBundleInfo.SetBundleName(BUNDLE_NAME);
-    preInstallBundleInfo.ClearForceUninstalledUsers();
-    dataMgr->SavePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
-    res = RecoverBundle(BUNDLE_NAME, installParam);
-    EXPECT_EQ(res, ERR_OK);
-    dataMgr->RemoveInnerBundleUserInfo(BUNDLE_NAME, ADD_NEW_USERID);
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
     ClearBundleInfo();
 }
 
@@ -3063,10 +2824,14 @@ HWTEST_F(BmsBundleInstallerTest, ProcessBundleUpdateStatus_0300, Function | Smal
     newInfo.baseApplicationInfo_->singleton = false;
     newInfo.baseApplicationInfo_->bundleName = "com.ohos.formrenderservice";
     newInfo.currentPackage_ = MODULE_NAME;
+    newInfo.SetIsPreInstallApp(false);
     bool isReplace = false;
     bool killProcess = false;
-
     auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
+
+    newInfo.SetIsPreInstallApp(true);
+    res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
     EXPECT_NE(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
     EXPECT_EQ(installer.singletonState_, BaseBundleInstaller::SingletonState::SINGLETON_TO_NON);
 }
@@ -3085,10 +2850,14 @@ HWTEST_F(BmsBundleInstallerTest, ProcessBundleUpdateStatus_0400, Function | Smal
     newInfo.baseApplicationInfo_->singleton = true;
     newInfo.baseApplicationInfo_->bundleName = "com.ohos.formrenderservice";
     newInfo.currentPackage_ = MODULE_NAME;
+    newInfo.SetIsPreInstallApp(false);
     bool isReplace = false;
     bool killProcess = false;
-
     auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
+
+    newInfo.SetIsPreInstallApp(true);
+    res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
     EXPECT_NE(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
     EXPECT_EQ(installer.singletonState_, BaseBundleInstaller::SingletonState::NON_TO_SINGLETON);
 }
@@ -3383,16 +3152,16 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0100, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0200, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    auto ret = impl.ExtractModuleFiles("", "", TEST_STRING, TEST_STRING);
+    auto ret = impl.ExtractModuleFiles("", "", TEST_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING);
+    ret = impl.ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.ExtractModuleFiles(TEST_STRING, "", TEST_STRING, TEST_STRING);
+    ret = impl.ExtractModuleFiles(TEST_STRING, "", TEST_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.ExtractModuleFiles("wrong", TEST_STRING, "wrong", "wrong");
+    ret = impl.ExtractModuleFiles("wrong", TEST_STRING, "wrong", "wrong", false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -3718,18 +3487,8 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_2100, Function | SmallTest | L
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     std::string bundleName = "com.test.InstalldHostImpl_2100";
-    std::string shaderCachePath = ServiceConstants::SHADER_CACHE_PATH + bundleName;
-    CreateDirParam createDirParam;
-    createDirParam.bundleName = bundleName;
-    createDirParam.bundleDirScene = BundleDirScene::SHADER_CACHE_DIR;
-    ret = InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, ZERO_CODE, ZERO_CODE, createDirParam);
-    EXPECT_EQ(ret, ERR_OK);
-    dirs.emplace_back(shaderCachePath);
 
     std::string cloneBundleName = "+clone-1+com.test.InstalldHostImpl_2100";
-    std::string el1ShaderCachePath = ServiceConstants::NEW_SHADER_CACHE_PATH + cloneBundleName;
-    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(100));
-    dirs.emplace_back(el1ShaderCachePath);
 
     // clean shader cache in /system_optimize
     std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
@@ -6051,11 +5810,11 @@ HWTEST_F(BmsBundleInstallerTest, ProcessModuleUpdate_0020, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0010, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
-    installer.userId_ = -999;
+    installer.userId_ = ServiceConstants::NOT_EXIST_USERID;
     InnerBundleInfo info;
     installer.InitDataMgr();
     ErrCode res = installer.CreateBundleDataDir(info);
-    EXPECT_EQ(res, ERR_APPEXECFWK_USER_NOT_EXIST);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY);
 }
 
 /**
@@ -6085,13 +5844,15 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest 
     dataMgr->bundleInfos_.clear();
     bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::INSTALL_START);
     bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME_TEST, info);
+    ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
     
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
+    EXPECT_EQ(ret3, ERR_OK);
 
     BaseBundleInstaller installer;
     installer.InitDataMgr();
-    installer.userId_ = -999;
+    installer.userId_ = -10000;
     ErrCode res = installer.CreateBundleDataDir(info);
     EXPECT_NE(res, ERR_OK);
 
@@ -9766,7 +9527,8 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0410, Function | SmallTest | L
     ScopeGuard callingBundleInfoGuard([&] { dataMgr->bundleInfos_.erase("com.example.caller"); });
 
     // Map UID to calling bundle name
-    dataMgr->UpdateUidMap(20011111, "com.example.caller", 0);
+    dataMgr->bundleIdMap_[11111] = "com.example.caller";
+    ScopeGuard bundleIdGuard([&] { dataMgr->bundleIdMap_.erase(11111); });
 
     BaseBundleInstaller installer;
     installer.userId_ = USERID;
@@ -10078,38 +9840,6 @@ HWTEST_F(BmsBundleInstallerTest, GetDriverInstallUser_0100, Function | MediumTes
 
     EXPECT_EQ(installer.GetDriverInstallUser(BUNDLE_NAME_TEST), Constants::START_USERID);
     UnInstallBundle(SYSTEMFIEID_NAME);
-}
-
-/**
- * @tc.number: IsEnterpriseForAllUser_0100
- * @tc.name: test IsEnterpriseForAllUser
- * @tc.desc: 1.Test IsEnterpriseForAllUser
-*/
-HWTEST_F(BmsBundleInstallerTest, IsEnterpriseForAllUser_0100, Function | MediumTest | Level1)
-{
-    InstallParam installParam;
-    BaseBundleInstaller installer;
-    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, ""));
-
-    installParam.parameters.emplace("ohos.bms.param.enterpriseForAllUser", "true");
-    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, ""));
-
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
-    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, ""));
-
-    installer.dataMgr_ = GetBundleDataMgr();
-    InnerBundleInfo info;
-    installer.dataMgr_->bundleInfos_.emplace("bundleName", info);
-    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, "bundleName"));
-
-    info.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM);
-    installer.dataMgr_->bundleInfos_["bundleName"] = info;
-    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, "bundleName"));
-
-    info.SetInstalledForAllUser(true);
-    installer.dataMgr_->bundleInfos_["bundleName"] = info;
-    EXPECT_TRUE(installer.IsEnterpriseForAllUser(installParam, "bundleName"));
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
 }
 
 /**
@@ -11765,8 +11495,11 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0025, Function | MediumTest | L
 {
     PluginInstaller installer;
     std::string hspPath;
+    std::string appIdentifier;
+    bool isEnterpriseBundle = true;
     bool isCompileSdkOpenHarmony = true;
-    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, isCompileSdkOpenHarmony);
+    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, appIdentifier, isEnterpriseBundle,
+        isCompileSdkOpenHarmony);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED);
 }
 
@@ -11816,7 +11549,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0028, Function | MediumTest | L
     hapVerifyResult.SetProvisionInfo(info);
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults{ hapVerifyResult };
     auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
 }
 
 /**
@@ -11838,7 +11571,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0029, Function | MediumTest | L
     hapVerifyResult.SetProvisionInfo(info);
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults{ hapVerifyResult };
     auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -15081,9 +14814,24 @@ HWTEST_F(BmsBundleInstallerTest, RenameFile_0100, Function | SmallTest | Level0)
     std::string oldPath = TEST_EMPTY_STRING;
     std::string newPath = TEST_EMPTY_STRING;
     auto ret = impl.RenameFile(oldPath, newPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    oldPath = TEST_RENAME_PATH;
+    ret = impl.RenameFile(oldPath, newPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    oldPath = TEST_EMPTY_STRING;
+    newPath = TEST_RENAME_PATH;
+    ret = impl.RenameFile(oldPath, newPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    oldPath = TEST_RENAME_PATH;
+    newPath = TEST_RENAME_PATH_NEW;
+    ret = impl.RenameFile(oldPath, newPath);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
-    oldPath = TEST_STRING;
-    newPath = TEST_STRING;
+
+    oldPath = TEST_RENAME_PATH;
+    newPath = TEST_RENAME_PATH;
     ret = impl.RenameFile(oldPath, newPath);
     EXPECT_EQ(ret, ERR_OK);
 }
@@ -15160,6 +14908,44 @@ HWTEST_F(BmsBundleInstallerTest, VerifyCodeSignatureForHap_0100, Function | Smal
     codeSignatureParam.bundleName = "com.example.test";
     ErrCode ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    codeSignatureParam.modulePath = TEST_ERROR_STRING;
+    codeSignatureParam.isEnterpriseBundle = true;
+    ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_ERR_PROFILE);
+    codeSignatureParam.isEnterpriseBundle = false;
+    codeSignatureParam.isInternaltestingBundle = true;
+    ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_ERR_PROFILE);
+    codeSignatureParam.isInternaltestingBundle = false;
+    codeSignatureParam.isPlugin = true;
+    ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_PATH_INVALID);
+    codeSignatureParam.signatureFileDir = TEST_ERROR_STRING;
+    ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeliverySignProfile_0100
+ * @tc.name: test DeliverySignProfile
+ * @tc.desc: test DeliverySignProfile of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, DeliverySignProfile_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string bundleName = TEST_EMPTY_STRING;
+    int32_t profileBlockLength = ZERO_CODE;
+    const unsigned char* profileBlock = new unsigned char[0];
+    ErrCode ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    bundleName = TEST_ERROR_STRING;
+    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, nullptr);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    profileBlockLength = TEST_LENGTH;
+    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_CODE_SIGNATURE_DELIVERY_FILE_FAILED);
 }
 
 /**
@@ -15796,115 +15582,6 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1009, Function | SmallTest 
         ErrCode ret = installer.RemoveModuleAndDataDir(info, modulePackage, userId, isKeepData);
         EXPECT_NE(ret, ERR_OK);
     }
-}
-
-/**
- * @tc.number: BaseBundleInstaller_1010
- * @tc.name: test IsAllowEnterPrise when both parameters are false
- * @tc.desc: 1.Set allowEnterpriseBundle to false
- *           2.Set isEnterpriseDevice to false
- *           3.Verify the return value of IsAllowEnterPrise under FF condition
- *           4.Cover branch path when (!A && !B)
- * @tc.type: Function
- */
-HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1010, Function | SmallTest | Level0)
-{
-    bool oldA = OHOS::system::GetBoolParameter(
-        ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, false);
-    bool oldB = OHOS::system::GetBoolParameter(
-        ServiceConstants::IS_ENTERPRISE_DEVICE, false);
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, "false");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
-
-    BaseBundleInstaller installer;
-
-    bool result = installer.IsAllowEnterPrise();
-    EXPECT_TRUE(result);
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE,
-        oldA ? "true" : "false");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE,
-        oldB ? "true" : "false");
-}
-
-
-/**
- * @tc.number: BaseBundleInstaller_1011
- * @tc.name: test IsAllowEnterPrise when allowEnterpriseBundle is true
- * @tc.desc: 1.Test IsAllowEnterPrise when allowEnterpriseBundle is true
- *           2.Test IsAllowEnterPrise when isEnterpriseDevice is false
- *           3.Cover branch !A is false and && short-circuit
- */
-HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1011, Function | SmallTest | Level0)
-{
-    bool oldA = OHOS::system::GetBoolParameter(
-        ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, false);
-    bool oldB = OHOS::system::GetBoolParameter(
-        ServiceConstants::IS_ENTERPRISE_DEVICE, false);
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, "true");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
-
-    BaseBundleInstaller installer;
-    EXPECT_TRUE(installer.IsAllowEnterPrise());
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE,
-        oldA ? "true" : "false");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE,
-        oldB ? "true" : "false");
-}
-
-/**
- * @tc.number: BaseBundleInstaller_1012
- * @tc.name: test IsAllowEnterPrise when isEnterpriseDevice is true
- * @tc.desc: 1.Test IsAllowEnterPrise when allowEnterpriseBundle is false
- *           2.Test IsAllowEnterPrise when isEnterpriseDevice is true
- *           3.Cover branch !B is false
- */
-HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1012, Function | SmallTest | Level0)
-{
-    bool oldA = OHOS::system::GetBoolParameter(
-        ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, false);
-    bool oldB = OHOS::system::GetBoolParameter(
-        ServiceConstants::IS_ENTERPRISE_DEVICE, false);
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, "false");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
-
-    BaseBundleInstaller installer;
-    EXPECT_TRUE(installer.IsAllowEnterPrise());
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE,
-        oldA ? "true" : "false");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE,
-        oldB ? "true" : "false");
-}
-
-/**
- * @tc.number: BaseBundleInstaller_1013
- * @tc.name: test IsAllowEnterPrise when both parameters are true
- * @tc.desc: 1.Test IsAllowEnterPrise when allowEnterpriseBundle is true
- *           2.Test IsAllowEnterPrise when isEnterpriseDevice is true
- *           3.Cover branch both parameters are true
- */
-HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1013, Function | SmallTest | Level0)
-{
-    bool oldA = OHOS::system::GetBoolParameter(
-        ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, false);
-    bool oldB = OHOS::system::GetBoolParameter(
-        ServiceConstants::IS_ENTERPRISE_DEVICE, false);
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, "true");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
-
-    BaseBundleInstaller installer;
-    EXPECT_TRUE(installer.IsAllowEnterPrise());
-
-    OHOS::system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE,
-        oldA ? "true" : "false");
-    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE,
-        oldB ? "true" : "false");
 }
 
 /**
@@ -16977,7 +16654,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModuleFiles_0100, Function | SmallTest |
     std::string srcModulePath =
         BUNDLE_NAME + ServiceConstants::PATH_SEPARATOR + MODULE_NAME + ServiceConstants::INSTALL_FILE_SUFFIX;
     std::string targetPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + BUNDLE_NAME;
-    auto ret = impl.ExtractModuleFiles(srcModulePath, targetPath, TEST_EMPTY_STRING, TEST_STRING);
+    auto ret = impl.ExtractModuleFiles(srcModulePath, targetPath, TEST_EMPTY_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -17332,16 +17009,12 @@ HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0010, Function | SmallT
     BaseBundleInstaller installer;
     installer.bundleName_ = "com.example.test";
     installer.userId_ = USERID;
-
+    
     // scenario 1: modulePath not exist, ExtractFiles will fail
     installer.modulePath_ = RESOURCE_ROOT_PATH + INVALID_BUNDLE;
-    Security::AccessToken::BundlePolicyInfo policyInfo;
-    policyInfo.reqPermissions.push_back(ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB);
-    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(0);
     installer.ExtractNPAPIPluginFiles(installer.modulePath_);
     EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_EXTRACT_FAILED);
-
+    
     // scenario 2: empty modulePath, InstalldClient::ExtractFiles will fail
     installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
     installer.modulePath_ = "";
@@ -17359,11 +17032,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0020, Function | SmallT
     BaseBundleInstaller installer;
     installer.bundleName_ = "com.example.test.npapi";
     installer.modulePath_ = "";
-    Security::AccessToken::BundlePolicyInfo policyInfo;
-    policyInfo.reqPermissions.push_back(ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB);
-    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(0);
-
+    
     // scenario 1: userId = 0, empty modulePath leads to STATUS_EXTRACT_FAILED
     installer.userId_ = 0;
     installer.ExtractNPAPIPluginFiles(installer.modulePath_);
@@ -17392,11 +17061,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0030, Function | SmallT
     BaseBundleInstaller installer;
     installer.userId_ = USERID;
     installer.modulePath_ = "";
-    Security::AccessToken::BundlePolicyInfo policyInfo;
-    policyInfo.reqPermissions.push_back(ServiceConstants::PERMISSION_SUPPORT_NP_PLUGIN_FOR_WEB);
-    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(0);
-
+    
     // scenario 1: empty bundleName, empty modulePath leads to STATUS_EXTRACT_FAILED
     installer.bundleName_ = "";
     installer.ExtractNPAPIPluginFiles(installer.modulePath_);
@@ -18984,7 +18649,7 @@ HWTEST_F(BmsBundleInstallerTest, UninstallLocalPlugin_0002, Function | SmallTest
     InnerBundleInfo info;
     info.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
     PluginBundleInfo pluginInfo;
-    pluginInfo.isDeveloperDistribution = true;
+    pluginInfo.appInfo.appDistributionType = Constants::APP_DISTRIBUTION_TYPE_DEVELOPER;
     info.pluginBundleInfos_.emplace(PLUGIN_NAME, pluginInfo);
     std::string key = TEST_BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
     InnerBundleUserInfo userInfo;
@@ -18995,32 +18660,6 @@ HWTEST_F(BmsBundleInstallerTest, UninstallLocalPlugin_0002, Function | SmallTest
     ErrCode ret = installer.UninstallLocalPlugin(TEST_BUNDLE_NAME, PLUGIN_NAME, pluginParam, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR);
     dataMgr->bundleInfos_.erase(TEST_BUNDLE_NAME);
-}
-
-/**
- * @tc.number: CheckPluginDistribution_0001
- * @tc.name: test CheckPluginDistribution mismatch
- * @tc.desc: Verify CheckPluginDistribution returns ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW
- */
-HWTEST_F(BmsBundleInstallerTest, CheckPluginDistribution_0001, Function | SmallTest | Level0)
-{
-    PluginInstaller installer;
-    installer.isLocalPluginInstall_ = true;
-    ErrCode ret = installer.CheckPluginDistribution(false);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW);
-}
-
-/**
- * @tc.number: CheckPluginDistribution_0002
- * @tc.name: test CheckPluginDistribution match
- * @tc.desc: Verify CheckPluginDistribution returns ERR_OK
- */
-HWTEST_F(BmsBundleInstallerTest, CheckPluginDistribution_0002, Function | SmallTest | Level0)
-{
-    PluginInstaller installer;
-    installer.isLocalPluginInstall_ = true;
-    ErrCode ret = installer.CheckPluginDistribution(true);
-    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -19070,7 +18709,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckDistributionTypeForUpdate_0001, Function |
 {
     PluginInstaller installer;
     installer.isLocalPluginInstall_ = true;
-    installer.oldPluginInfo_.isDeveloperDistribution = false;
+    installer.oldPluginInfo_.appInfo.appDistributionType = Constants::APP_DISTRIBUTION_TYPE_DEVELOPER;
     EXPECT_FALSE(installer.CheckDistributionTypeForUpdate());
 }
 
@@ -19220,5 +18859,75 @@ HWTEST_F(BmsBundleInstallerTest, RemoveDataPreloadHapFiles_0200, Function | Smal
 
     OHOS::system::SetParameter(ServiceConstants::KEEP_DATA_PRELOAD_HAP, originalValue);
     dataMgr->DeletePreInstallBundleInfo(bundleName, preInfo);
+}
+
+/**
+ * @tc.number: UninstallNewPreinstalledApps_0100
+ * @tc.name: test UninstallNewPreinstalledApps with empty bundleNames
+ * @tc.desc: 1. bundleNames is empty
+ *           2. return ERR_OK
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallNewPreinstalledApps_0100, Function | SmallTest | Level0)
+{
+    BundleInstaller installer(0, nullptr);
+    std::vector<std::string> bundleNames;
+    ErrCode ret = installer.UninstallNewPreinstalledApps(bundleNames, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallNewPreinstalledApps_0200
+ * @tc.name: test UninstallNewPreinstalledApps with invalid userId
+ * @tc.desc: 1. userId does not exist in dataMgr
+ *           2. return ERR_APPEXECFWK_USER_NOT_EXIST
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallNewPreinstalledApps_0200, Function | SmallTest | Level0)
+{
+    BundleInstaller installer(0, nullptr);
+    std::vector<std::string> bundleNames = {"com.example.test"};
+    ErrCode ret = installer.UninstallNewPreinstalledApps(bundleNames, INVALID_TEST_USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CheckCanInstallPreBundle_0100
+ * @tc.name: test CheckCanInstallPreBundle with force-uninstalled user
+ * @tc.desc: 1. preinstall bundle has force-uninstalled user
+ *           2. CheckCanInstallPreBundle returns false for that user
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckCanInstallPreBundle_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string bundleName = "com.test.check.prebundle";
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(bundleName);
+    preInstallBundleInfo.AddForceUnisntalledUser(USERID);
+    EXPECT_TRUE(dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo));
+
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    EXPECT_FALSE(installer.CheckCanInstallPreBundle(bundleName, USERID));
+    EXPECT_TRUE(installer.CheckCanInstallPreBundle(bundleName, ADD_NEW_USERID));
+
+    dataMgr->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+}
+
+/**
+ * @tc.number: UninstallBundleInfo_FromJson_0100
+ * @tc.name: test UninstallBundleInfo json serialization
+ * @tc.desc: to_json/from_json preserves appId field
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallBundleInfo_FromJson_0100, TestSize.Level1)
+{
+    UninstallBundleInfo info;
+    info.appId = "com.test.uninstall.appId";
+    info.bundleType = BundleType::APP;
+    nlohmann::json jsonObject;
+    to_json(jsonObject, info);
+    UninstallBundleInfo parsedInfo;
+    from_json(jsonObject, parsedInfo);
+    EXPECT_EQ(parsedInfo.appId, info.appId);
+    EXPECT_EQ(parsedInfo.bundleType, info.bundleType);
 }
 } // OHOS

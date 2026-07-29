@@ -28,6 +28,8 @@ bool SkillInfo::ReadFromParcel(Parcel &parcel)
     hapPath = parcel.ReadString();
     skillPath = parcel.ReadString();
     versionCode = parcel.ReadUint32();
+    version = parcel.ReadString();
+    visibility = parcel.ReadString();
     abilityName = parcel.ReadString();
     description = parcel.ReadString();
 
@@ -63,6 +65,8 @@ bool SkillInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, hapPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, skillPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, version);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, visibility);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, abilityName);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, description);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, srcEntries.size());

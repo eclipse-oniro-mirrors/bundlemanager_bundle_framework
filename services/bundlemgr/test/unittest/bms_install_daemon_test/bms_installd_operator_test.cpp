@@ -64,6 +64,7 @@ const std::string DEPRECATED_ARK_PROFILE_PATH = "/data/local/ark-profile";
 const std::string PGO_FILE_PATH = "pgo_files";
 const std::string VERIFY_FILE_SUFFIX = ".abc";
 const std::string FRAMEWORK_ARK_CACHE_PATH = "framework_ark_cache/";
+const std::string TEST_REMOVE_PATH = "/data/app/el2/100/sharefiles/test";
 }; // namespace
 class BmsInstalldOperatorTest : public testing::Test {
 public:
@@ -536,16 +537,6 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByMkDirSceneNeedBundleName_0200, Fu
     ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
         BundleDirScene::EL1_ARK_STARTUP_CACHE_DIR, TEST_BUNDLE_NAME, path);
     EXPECT_TRUE(ret);
-
-    path = std::string(ServiceConstants::SHADER_CACHE_PATH) + TEST_STRING;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
-        BundleDirScene::SHADER_CACHE_DIR, TEST_BUNDLE_NAME, path);
-    EXPECT_FALSE(ret);
-
-    path = std::string(ServiceConstants::SHADER_CACHE_PATH) + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
-        BundleDirScene::SHADER_CACHE_DIR, TEST_BUNDLE_NAME, path);
-    EXPECT_TRUE(ret);
 }
 
 /**
@@ -569,16 +560,6 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByMkDirSceneNeedBundleName_0300, Fu
     path = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::DATABASE + TEST_BUNDLE_NAME;
     ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
         BundleDirScene::SCREEN_LOCK_FILE_DATA_BASE_DIR, TEST_BUNDLE_NAME, path);
-    EXPECT_TRUE(ret);
-
-    path = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
-        BundleDirScene::EL1_SHADER_CACHE_DIR, TEST_BUNDLE_NAME, path);
-    EXPECT_FALSE(ret);
-
-    path = std::string(APP_EL1_PATH) + ServiceConstants::SHADER_CACHE_SUBDIR + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(
-        BundleDirScene::EL1_SHADER_CACHE_DIR, TEST_BUNDLE_NAME, path);
     EXPECT_TRUE(ret);
 }
 
@@ -620,30 +601,6 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByMkDirSceneNeedBundleName_0400, Fu
 
     ret = InstalldOperator::IsValidPathByMkDirSceneNeedBundleName(BundleDirScene::SET_DIR_APL, TEST_BUNDLE_NAME, path);
     EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: IsValidPathByMkDirSceneNoBundleName_0100
- * @tc.name: test IsValidPathByMkDirSceneNoBundleName
- * @tc.desc: test IsValidPathByMkDirSceneNoBundleName of InstalldOperator
- */
-HWTEST_F(BmsInstalldOperatorTest, IsValidPathByMkDirSceneNoBundleName_0100, Function | SmallTest | Level0)
-{
-    std::string path = TEST_BUNDLE_PATCH + TEST_STRING;
-    auto ret = InstalldOperator::IsValidPathByMkDirSceneNoBundleName(BundleDirScene::CLOUD_SHADER_DIR, path);
-    EXPECT_FALSE(ret);
-
-    path = ServiceConstants::RELATIVE_PATH;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNoBundleName(BundleDirScene::CLOUD_SHADER_COMMON_DIR, path);
-    EXPECT_FALSE(ret);
-
-    path = std::string(ServiceConstants::CLOUD_SHADER_PATH) + TEST_STRING;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNoBundleName(BundleDirScene::CLOUD_SHADER_DIR, path);
-    EXPECT_TRUE(ret);
-
-    path = std::string(ServiceConstants::CLOUD_SHADER_COMMON_PATH) + TEST_STRING;
-    ret = InstalldOperator::IsValidPathByMkDirSceneNoBundleName(BundleDirScene::CLOUD_SHADER_COMMON_DIR, path);
-    EXPECT_TRUE(ret);
 }
 
 /**
@@ -1271,9 +1228,6 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirScene_0200, Function | S
         TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_ARK_START_UP_CACHE_DIR);
     EXPECT_FALSE(ret);
     ret = InstalldOperator::IsValidPathByRemoveDirScene(
-        TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR);
-    EXPECT_FALSE(ret);
-    ret = InstalldOperator::IsValidPathByRemoveDirScene(
         TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARE_FILE_DIR);
     EXPECT_FALSE(ret);
     ret = InstalldOperator::IsValidPathByRemoveDirScene(
@@ -1344,6 +1298,9 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirScene_0300, Function | S
     EXPECT_FALSE(ret);
     ret =
         InstalldOperator::IsValidPathByRemoveDirScene(TEST_BUNDLE_PATCH, TEST_BUNDLE_NAME, BundleDirScene::SET_DIR_APL);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsValidPathByRemoveDirScene(
+        TEST_STRING, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SANDBOX_DIR);
     EXPECT_FALSE(ret);
 }
 
@@ -2055,23 +2012,8 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartT
  */
 HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0200, Function | SmallTest | Level0)
 {
-    std::string dir = std::string(ServiceConstants::SHADER_CACHE_PATH) + TEST_STRING;
+    std::string dir = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
     auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
-        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR);
-    EXPECT_FALSE(ret);
-
-    dir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
-        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR);
-    EXPECT_FALSE(ret);
-
-    dir = std::string(ServiceConstants::SHADER_CACHE_PATH) + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
-        dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_LOCAL_SHADER_CACHE_DIR);
-    EXPECT_TRUE(ret);
-
-    dir = std::string(APP_EL1_PATH) + ServiceConstants::PATH_SEPARATOR + TEST_BUNDLE_NAME;
-    ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
         dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_SHARE_FILE_DIR);
     EXPECT_FALSE(ret);
 
@@ -2093,7 +2035,7 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartT
  */
 HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNeedBundleNamePartTwo_0300, Function | SmallTest | Level0)
 {
-    std::string dir = std::string(ServiceConstants::SHADER_CACHE_PATH) + TEST_BUNDLE_NAME;
+    std::string dir = std::string(ServiceConstants::HAP_COPY_PATH) + TEST_BUNDLE_NAME;
     auto ret = InstalldOperator::IsValidPathByRemoveDirSceneNeedBundleNamePartTwo(
         dir, TEST_BUNDLE_NAME, BundleDirScene::REMOVE_CLOUD_SHADER_CACHE_DIR);
     EXPECT_FALSE(ret);
@@ -2428,6 +2370,12 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByRemoveDirSceneNoBundleName_0500, 
 
     dir = std::string(APP_EL4_PATH) + ServiceConstants::DATABASE + TEST_STRING;
     ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(dir, BundleDirScene::REMOVE_SANDBOX_DATA_DIR);
+    EXPECT_TRUE(ret);
+
+    ret = InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(TEST_STRING, BundleDirScene::REMOVE_SANDBOX_DIR);
+    EXPECT_FALSE(ret);
+    ret =
+        InstalldOperator::IsValidPathByRemoveDirSceneNoBundleName(TEST_REMOVE_PATH, BundleDirScene::REMOVE_SANDBOX_DIR);
     EXPECT_TRUE(ret);
 }
 
@@ -2898,6 +2846,41 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidCertPath_0200, Function | SmallTest | L
                ServiceConstants::CER_SUFFIX;
     ret = InstalldOperator::IsValidCertPath(certPath);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsValidCertPath_0300
+ * @tc.name: test IsValidCertPath rejects traversal patterns
+ * @tc.desc: 1. test cert paths with ".." traversal patterns are rejected
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidCertPath_0300, Function | SmallTest | Level0)
+{
+    std::string certPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::ENTERPRISE_CERT_PATH + "../test.cer";
+    auto ret = InstalldOperator::IsValidCertPath(certPath);
+    EXPECT_FALSE(ret);
+
+    certPath = std::string(ServiceConstants::HAP_COPY_PATH) + ".." +
+        ServiceConstants::ENTERPRISE_CERT_PATH + "test.cer";
+    ret = InstalldOperator::IsValidCertPath(certPath);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsValidCertPath_0400
+ * @tc.name: test IsValidCertPath rejects non-.cer suffix and wrong prefix
+ * @tc.desc: 1. test cert paths outside cert dir or wrong suffix are rejected
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsValidCertPath_0400, Function | SmallTest | Level0)
+{
+    std::string certPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::ENTERPRISE_CERT_PATH + "test" + ServiceConstants::HSP_FILE_SUFFIX;
+    auto ret = InstalldOperator::IsValidCertPath(certPath);
+    EXPECT_FALSE(ret);
+
+    certPath = std::string("/data/evil") + ServiceConstants::CER_SUFFIX;
+    ret = InstalldOperator::IsValidCertPath(certPath);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -3585,10 +3568,6 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByCleanBundleDirsScene_0200, Functi
     EXPECT_FALSE(ret);
 
     dir = std::string(APP_EL1_PATH) + ServiceConstants::SHADER_CACHE_SUBDIR + bundleName;
-    ret = InstalldOperator::IsValidPathByCleanBundleDirsScene(dir, bundleName, BundleDirScene::CLEAN_SHADER_CACHE_DIR);
-    EXPECT_TRUE(ret);
-
-    dir = std::string(ServiceConstants::SHADER_CACHE_PATH) + bundleName;
     ret = InstalldOperator::IsValidPathByCleanBundleDirsScene(dir, bundleName, BundleDirScene::CLEAN_SHADER_CACHE_DIR);
     EXPECT_TRUE(ret);
 }

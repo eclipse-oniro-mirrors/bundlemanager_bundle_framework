@@ -1081,6 +1081,11 @@ public:
     virtual sptr<IQuickFixManager> GetQuickFixManagerProxy() override;
     virtual std::string GetStringById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, int32_t userId, const std::string &localeInfo) override;
+
+    virtual ErrCode GetStringByIdList(const std::string &bundleName, const std::string &moduleName,
+        const std::vector<uint32_t> &resIdList, std::vector<std::string> &labelList,
+        int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING) override;
+
     virtual std::string GetIconById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, uint32_t density, int32_t userId) override;
     virtual ErrCode SetDebugMode(bool isDebug) override;
@@ -1228,6 +1233,12 @@ public:
     virtual ErrCode GetCliSandboxAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
+    virtual ErrCode GetAppClonePreference(const std::string &bundleName,
+        int32_t userId, AppClonePreference &preference) override;
+
+    virtual ErrCode SetAppClonePreference(const std::string &bundleName,
+        int32_t userId, const AppClonePreference &preference) override;
+
     virtual ErrCode GetLaunchWant(Want &want) override;
 
     virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName, int32_t flags,
@@ -1253,6 +1264,8 @@ public:
     virtual ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
 
     virtual ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
+
+    virtual ErrCode UpdateDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
 
     virtual ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) override;
 

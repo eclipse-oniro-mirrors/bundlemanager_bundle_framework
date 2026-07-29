@@ -91,6 +91,10 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nMultiAppModeType));
     CreateMultiAppModeTypeObject(env, nMultiAppModeType);
 
+    napi_value nAppClonePreferenceMode = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nAppClonePreferenceMode));
+    CreateAppClonePreferenceModeObject(env, nAppClonePreferenceMode);
+
     napi_value nApplicationInfoFlag = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nApplicationInfoFlag));
     CreateApplicationInfoFlagObject(env, nApplicationInfoFlag);
@@ -176,8 +180,11 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getDeveloperIds", GetDeveloperIds),
         DECLARE_NAPI_FUNCTION("switchUninstallState", SwitchUninstallState),
         DECLARE_NAPI_PROPERTY("MultiAppModeType", nMultiAppModeType),
+        DECLARE_NAPI_PROPERTY("AppClonePreferenceMode", nAppClonePreferenceMode),
         DECLARE_NAPI_FUNCTION("getAppCloneBundleInfo", GetAppCloneBundleInfo),
         DECLARE_NAPI_FUNCTION("getAllAppCloneBundleInfo", GetAllAppCloneBundleInfo),
+        DECLARE_NAPI_FUNCTION("getAppClonePreference", GetAppClonePreference),
+        DECLARE_NAPI_FUNCTION("setAppClonePreference", SetAppClonePreference),
         DECLARE_NAPI_FUNCTION("getAppCloneIdentity", GetAppCloneIdentity),
         DECLARE_NAPI_FUNCTION("getAllPluginInfo", GetAllPluginInfo),
         DECLARE_NAPI_FUNCTION("getLaunchWant", GetLaunchWant),

@@ -31,6 +31,8 @@ constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_FLAG = "@ohos.bundle.bundle
 constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_TYPE = "@ohos.bundle.bundleManager.bundleManager.BundleType";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_MULTI_APP_MODE_TYPE =
     "@ohos.bundle.bundleManager.bundleManager.MultiAppModeType";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_APP_CLONE_PREFERENCE_MODE =
+    "@ohos.bundle.bundleManager.bundleManager.AppClonePreferenceMode";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_DISPLAY_ORIENTATION =
     "@ohos.bundle.bundleManager.bundleManager.DisplayOrientation";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_LAUNCH_TYPE = "@ohos.bundle.bundleManager.bundleManager.LaunchType";
@@ -343,6 +345,19 @@ public:
     static inline ani_enum_item EnumNativeToETS_BundleManager_MultiAppModeType(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_MULTI_APP_MODE_TYPE, value, 0);
+    }
+
+    /* bundleManager.AppClonePreferenceMode
+    enum AppClonePreferenceMode {
+        ALWAYS_ASK = 0,
+        MAIN_APP = 1,
+        CLONE_APP = 2,
+    } */
+    static inline ani_enum_item EnumNativeToETS_BundleManager_AppClonePreferenceMode(ani_env* env,
+        const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APP_CLONE_PREFERENCE_MODE,
+            value, 0);
     }
 
     /* bundleManager.DisplayOrientation

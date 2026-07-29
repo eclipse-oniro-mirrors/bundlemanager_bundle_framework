@@ -980,33 +980,97 @@ HWTEST_F(BmsEventHandlerUnLockedTest, ScanInstallDir_0100, Function | SmallTest 
 }
 
 /**
- * @tc.number: InnerProcessCheckCloudShaderCommonDir_0100
- * @tc.name: InnerProcessCheckCloudShaderCommonDir
- * @tc.desc: test InnerProcessCheckCloudShaderCommonDir
+ * @tc.number: AnalyzeUserData_0200
+ * @tc.name: AnalyzeUserData empty params
+ * @tc.desc: Empty userDataDir or bundleName → returns false
  */
-HWTEST_F(BmsEventHandlerUnLockedTest, InnerProcessCheckCloudShaderCommonDir_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsEventHandlerUnLockedTest, AnalyzeUserData_0200, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     EXPECT_NE(handler, nullptr);
-    int32_t uid = 1;
-    int32_t gid = 1;
-    BundleInfo bundleInfo;
-    HapModuleInfo hapModuleInfo;
-    hapModuleInfo.hapPath = Constants::BUNDLE_CODE_DIR;
-    bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
-    SetTestReturnValue({0, 1});
-    handler->InnerProcessCheckCloudShaderDir();
-    handler->InnerProcessCheckCloudShaderCommonDir(uid, gid);
-    bool ret = handler->CheckIsBundleUpdatedByHapPath(bundleInfo);
-    EXPECT_TRUE(ret);
-    hapModuleInfo.hapPath.clear();
-    bundleInfo.hapModuleInfos.clear();
-    bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
-    SetTestReturnValue({0, 0});
-    handler->InnerProcessCheckCloudShaderDir();
-    SetTestReturnValue({});
-    handler->InnerProcessCheckCloudShaderCommonDir(uid, gid);
-    ret = handler->CheckIsBundleUpdatedByHapPath(bundleInfo);
-    EXPECT_FALSE(ret);
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
+    EXPECT_FALSE(handler->AnalyzeUserData(100, "", "bundle.name", userMaps));
+    EXPECT_FALSE(handler->AnalyzeUserData(100, "/data/", "", userMaps));
+}
+
+/**
+ * @tc.number: GuardAgainstInstallInfosLossedStrategy_0100
+ * @tc.name: GuardAgainstInstallInfosLossedStrategy no user data
+ * @tc.desc: No user data scanned → returns NO_INSTALLED_DATA
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, GuardAgainstInstallInfosLossedStrategy_0100, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    SetVectorEmptyForTest(true);
+    ResultCode result = handler->GuardAgainstInstallInfosLossedStrategy();
+    EXPECT_EQ(result, ResultCode::NO_INSTALLED_DATA);
+}
+
+/**
+ * @tc.number: ProcessCheckAppLogDir_0100
+ * @tc.name: ProcessCheckAppLogDir already checked
+ * @tc.desc: CHECK_LOG_DIR flag set → early return
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, ProcessCheckAppLogDir_0100, Function | SmallTest | Level0)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBmsParam();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("otaFlag", std::to_string(static_cast<int32_t>(OTAFlag::CHECK_LOG_DIR)));
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    EXPECT_NO_THROW(handler->ProcessCheckAppLogDir());
+    bmsParam->DeleteBmsParam("otaFlag");
+}
+
+/**
+ * @tc.number: InnerProcessCheckAppDataDir_0200
+ * @tc.name: InnerProcessCheckAppDataDir DataMgr null
+ * @tc.desc: DataMgr is nullptr → early return
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, InnerProcessCheckAppDataDir_0200, Function | SmallTest | Level0)
+{
+    auto bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedDataMgr = bms->dataMgr_;
+    bms->dataMgr_ = nullptr;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    EXPECT_NO_THROW(handler->InnerProcessCheckAppDataDir());
+    bms->dataMgr_ = savedDataMgr;
+}
+
+/**
+ * @tc.number: CheckOtaFlag_NullBmsParam_0100
+ * @tc.name: CheckOtaFlag bmsParam null
+ * @tc.desc: bmsParam is nullptr → returns false
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, CheckOtaFlag_NullBmsParam_0100, Function | SmallTest | Level0)
+{
+    auto bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedBmsParam = bms->bmsParam_;
+    bms->bmsParam_ = nullptr;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    bool checkResult = true;
+    EXPECT_FALSE(handler->CheckOtaFlag(OTAFlag::CHECK_ELDIR, checkResult));
+    bms->bmsParam_ = savedBmsParam;
+}
+
+/**
+ * @tc.number: UpdateOtaFlag_NullBmsParam_0100
+ * @tc.name: UpdateOtaFlag bmsParam null
+ * @tc.desc: bmsParam is nullptr → returns false
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, UpdateOtaFlag_NullBmsParam_0100, Function | SmallTest | Level0)
+{
+    auto bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedBmsParam = bms->bmsParam_;
+    bms->bmsParam_ = nullptr;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_FALSE(handler->UpdateOtaFlag(OTAFlag::CHECK_LOG_DIR));
+    bms->bmsParam_ = savedBmsParam;
 }
 } // OHOS

@@ -96,6 +96,28 @@ bool ShortcutDataStorageRdb::DeleteDesktopShortcutInfo(const ShortcutInfo &short
     return ret;
 }
 
+bool ShortcutDataStorageRdb::UpdateDesktopShortcutInfo(
+    const ShortcutInfo &shortcutInfo, int32_t userId, int32_t &changedRows)
+{
+    changedRows = 0;
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE_NOFUNC("rdbDataManager is null");
+        return false;
+    }
+    nlohmann::json jsonObject;
+    to_json(jsonObject, shortcutInfo);
+    NativeRdb::ValuesBucket valuesBucket;
+    valuesBucket.PutString(SHORTCUT_INFO, jsonObject.dump());
+    NativeRdb::AbsRdbPredicates absRdbPredicates(SHORTCUT_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(BUNDLE_NAME, shortcutInfo.bundleName);
+    absRdbPredicates.EqualTo(SHORTCUT_ID, shortcutInfo.id);
+    absRdbPredicates.EqualTo(USER_ID, userId);
+    absRdbPredicates.EqualTo(APP_INDEX, shortcutInfo.appIndex);
+    bool ret = rdbDataManager_->UpdateData(valuesBucket, absRdbPredicates, changedRows);
+    APP_LOGI_NOFUNC("UpdateDesktopShortcutInfo %{public}d, changedRows:%{public}d", ret, changedRows);
+    return ret;
+}
+
 void ShortcutDataStorageRdb::GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
 {
     if (rdbDataManager_ == nullptr) {

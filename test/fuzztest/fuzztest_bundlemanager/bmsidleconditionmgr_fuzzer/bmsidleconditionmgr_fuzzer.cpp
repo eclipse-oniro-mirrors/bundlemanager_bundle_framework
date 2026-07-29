@@ -22,6 +22,8 @@
 #undef private
 #include "securec.h"
 #include "bms_fuzztest_util.h"
+#include "bundle_service_constants.h"
+#include "parameters.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
@@ -31,6 +33,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     int32_t userId = GenerateRandomUser(fdp);
+    OHOS::system::SetParameter(ServiceConstants::BMS_RELABEL_PARAM, "true");
+    OHOS::system::SetParameter(ServiceConstants::BMS_SCAN_APP_DATA_PARAM, "true");
     idleMgr->OnScreenLocked();
     idleMgr->OnScreenUnlocked();
     idleMgr->OnUserUnlocked(userId);

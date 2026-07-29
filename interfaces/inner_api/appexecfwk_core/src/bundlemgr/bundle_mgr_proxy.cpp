@@ -36,6 +36,7 @@
 #include "bundle_constants.h"
 #include "bundle_distribution_type.h"
 #include "bundle_file_util.h"
+#include "bundle_mgr_host.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_proxy.h"
 #endif
@@ -58,6 +59,7 @@ constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // allow ma
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
 constexpr int64_t GET_BUNDLE_FOR_SELF_CACHE_TIME = 800; // 800ms
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
+constexpr int16_t MAX_RES_ID_LIST_SIZE = 1000;
 static std::atomic<bool> g_cacheAble = true;
 static std::once_flag g_cacheStopFlag;
 
@@ -67,7 +69,6 @@ enum class AllBundleCacheSizeState : uint8_t {
 };
 std::shared_mutex g_cacheCallbackMutex;
 std::vector<sptr<IProcessCacheCallback>> g_bundleCacheCallBackList;
-std::shared_mutex g_cacheCallstateMutex;
 AllBundleCacheSizeState g_getAllBundleCacheSizeState = AllBundleCacheSizeState::GET_END;
 
 bool GetData(void *&buffer, size_t size, const void *data)
@@ -390,8 +391,9 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
     auto res = GetParcelInfoIntelligent<BundleInfo>(
-        BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo, option);
     if (res != ERR_OK) {
         LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoV9 fail -n %{public}s -u %{public}d -f %{public}d error: %{public}d",
             bundleName.c_str(), userId, flags, res);
@@ -463,6 +465,10 @@ ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<std::string> &bundl
         APP_LOGE("fail to BatchGetBundleInfo due to params empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("fail to BatchGetBundleInfo due to too many bundleNames");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     for (size_t i = 0; i < bundleNames.size(); i++) {
         APP_LOGD("begin to get bundle info of %{public}s", bundleNames[i].c_str());
         if (bundleNames[i].empty()) {
@@ -513,8 +519,9 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
     auto res = GetParcelInfoIntelligent<BundleInfo>(
-        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo, option);
     if (res != ERR_OK) {
         LOG_D(BMS_TAG_QUERY, "GetBundleInfoForSelf failed err:%{public}d", res);
         return res;
@@ -618,8 +625,9 @@ ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, Bu
         APP_LOGE("fail to GetDependentBundleInfo due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(
-        BundleMgrInterfaceCode::GET_DEPENDENT_BUNDLE_INFO, data, bundleInfo);
+        BundleMgrInterfaceCode::GET_DEPENDENT_BUNDLE_INFO, data, bundleInfo, option);
     if (res != ERR_OK) {
         APP_LOGW("GetDependentBundleInfo failed -n %{public}s code: %{public}d", bundleName.c_str(), res);
         return res;
@@ -1438,6 +1446,10 @@ ErrCode BundleMgrProxy::BatchQueryAbilityInfos(
     const std::vector<Want> &wants, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (wants.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("failed to BatchQueryAbilityInfos due to too many wants");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write interfaceToken failed");
@@ -1865,8 +1877,9 @@ bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleI
         return false;
     }
 
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
     if (GetParcelInfoIntelligent<HapModuleInfo>(
-        BundleMgrInterfaceCode::GET_HAP_MODULE_INFO, data, hapModuleInfo)!= ERR_OK) {
+        BundleMgrInterfaceCode::GET_HAP_MODULE_INFO, data, hapModuleInfo, option)!= ERR_OK) {
         APP_LOGE("fail to GetHapModuleInfo from server");
         return false;
     }
@@ -3806,6 +3819,10 @@ ErrCode BundleMgrProxy::BatchGetBundleStats(const std::vector<std::string> &bund
     std::vector<BundleStorageStats> &bundleStats)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("fail to BatchGetBundleStats due to too many bundles");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("failed to BatchGetBundleStats due to write MessageParcel fail");
@@ -3993,6 +4010,57 @@ std::string BundleMgrProxy::GetStringById(const std::string &bundleName, const s
         return Constants::EMPTY_STRING;
     }
     return reply.ReadString();
+}
+
+ErrCode BundleMgrProxy::GetStringByIdList(const std::string &bundleName,
+    const std::string &moduleName, const std::vector<uint32_t> &resIdList, std::vector<std::string> &labelList,
+    int32_t userId, const std::string &localeInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bundleName.empty() || moduleName.empty() || resIdList.empty() || resIdList.size() > MAX_RES_ID_LIST_SIZE) {
+        APP_LOGE("fail to GetStringByIdList due to params empty or resIdList size "
+            "%{public}zu exceeds max limit %{public}d", resIdList.size(), MAX_RES_ID_LIST_SIZE);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    APP_LOGD("GetStringByIdList bundleName: %{public}s, moduleName: %{public}s, resIdList.size: %{public}zu",
+        bundleName.c_str(), moduleName.c_str(), resIdList.size());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetStringByIdList due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName) || !data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetStringByIdList due to write bundleName or moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUInt32Vector(resIdList) || !data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetStringByIdList due to write resIdList or userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(localeInfo)) {
+        APP_LOGE("fail to GetStringByIdList due to write localeInfo fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_STRING_BY_ID_LIST, data, reply)) {
+        APP_LOGE("fail to GetStringByIdList from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("GetStringByIdList failed with err %{public}d", ret);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    std::vector<StringParcelable> labelListParcelable;
+    ret = InnerGetVectorFromParcelIntelligent<StringParcelable>(reply, labelListParcelable);
+    if (ret != ERR_OK) {
+        APP_LOGE("fail to GetStringByIdList due to read labelList fail");
+        return ret;
+    }
+    for (const auto &sp : labelListParcelable) {
+        labelList.emplace_back(sp.value);
+    }
+    return ERR_OK;
 }
 
 std::string BundleMgrProxy::GetIconById(
@@ -4402,7 +4470,8 @@ sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
         return nullptr;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_OVERLAY_MANAGER_PROXY, data, reply)) {
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_OVERLAY_MANAGER_PROXY, data, reply, option)) {
         return nullptr;
     }
 
@@ -4496,8 +4565,9 @@ ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,
         APP_LOGE("fail to GetBaseSharedBundleInfos due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
     return GetParcelableInfosWithErrCode<BaseSharedBundleInfo>(BundleMgrInterfaceCode::GET_BASE_SHARED_BUNDLE_INFOS,
-        data, baseSharedBundleInfos);
+        data, baseSharedBundleInfos, option);
 }
 
 ErrCode BundleMgrProxy::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles)
@@ -4664,13 +4734,17 @@ ErrCode BundleMgrProxy::BatchGetSpecifiedDistributionType(const std::vector<std:
         APP_LOGE("fail to batchGetSpecifiedDistributionType due to params empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
+    if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("fail to BatchGetSpecifiedDistributionType due to too many bundleNames");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to BatchGetBundleInfo due to write InterfaceToken fail");
+        APP_LOGE("fail to BatchGetSpecifiedDistributionType due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(static_cast<int32_t>(bundleNames.size()))) {
-        APP_LOGE("fail to BatchGetBundleInfo due to write bundle name count fail");
+        APP_LOGE("fail to BatchGetSpecifiedDistributionType due to write bundle name count fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     for (size_t i = 0; i < bundleNames.size(); i++) {
@@ -4720,6 +4794,10 @@ ErrCode BundleMgrProxy::BatchGetAdditionalInfo(const std::vector<std::string> &b
     if (bundleNames.empty()) {
         APP_LOGE("fail to batchGetAdditionalInfo due to params empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("fail to BatchGetAdditionalInfo due to too many bundleNames");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5068,7 +5146,8 @@ ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::strin
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE, data, profile);
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
+    return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE, data, profile, option);
 }
 
 sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
@@ -5288,7 +5367,8 @@ ErrCode BundleMgrProxy::GetOdid(std::string &odid)
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ODID, data, reply)) {
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ODID, data, reply, option)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     auto ret = reply.ReadInt32();
@@ -5412,6 +5492,30 @@ ErrCode BundleMgrProxy::GetParcelableInfoWithErrCodeReply(
     return res;
 }
 
+template <typename T>
+ErrCode BundleMgrProxy::GetParcelableInfoWithErrCode(
+    BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo, MessageOption &option)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply, option)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    ErrCode res = reply.ReadInt32();
+    if (res == ERR_OK) {
+        std::unique_ptr<T> info(reply.ReadParcelable<T>());
+        if (info == nullptr) {
+            APP_LOGE("readParcelableInfo failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        parcelableInfo = *info;
+    }
+
+    APP_LOGD("GetParcelableInfoWithErrCode ErrCode : %{public}d", res);
+    return res;
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfos(
     BundleMgrInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos)
@@ -5469,6 +5573,34 @@ ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(BundleMgrInterfaceCode cod
 }
 
 template<typename T>
+ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data,
+    std::vector<T> &parcelableInfos, MessageOption &option)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply, option)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    ErrCode res = reply.ReadInt32();
+    if (res == ERR_OK) {
+        int32_t infoSize = reply.ReadInt32();
+        CONTAINER_SECURITY_VERIFY(reply, infoSize, &parcelableInfos);
+        for (int32_t i = 0; i < infoSize; i++) {
+            std::unique_ptr<T> info(reply.ReadParcelable<T>());
+            if (info == nullptr) {
+                APP_LOGE("Read Parcelable infos failed");
+                return ERR_APPEXECFWK_PARCEL_ERROR;
+            }
+            parcelableInfos.emplace_back(*info);
+        }
+        APP_LOGD("get parcelable infos success");
+    }
+    APP_LOGD("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
+    return res;
+}
+
+template<typename T>
 ErrCode BundleMgrProxy::GetParcelInfoIntelligent(
     BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo)
 {
@@ -5481,6 +5613,43 @@ ErrCode BundleMgrProxy::GetParcelInfoIntelligentWithReply(
     BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply, T &parcelInfo)
 {
     ErrCode ret = SendTransactCmdWithErrCode(code, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE("SendTransactCmd failed");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGD("reply ErrCode: %{public}d", ret);
+        return ret;
+    }
+    size_t dataSize = reply.ReadUint32();
+    void *buffer = nullptr;
+    if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
+        APP_LOGE("GetData failed dataSize : %{public}zu", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel tmpParcel;
+    if (!tmpParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        APP_LOGE("ParseFrom failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    std::unique_ptr<T> info(tmpParcel.ReadParcelable<T>());
+    if (info == nullptr) {
+        APP_LOGE("ReadParcelable failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    parcelInfo = *info;
+    return ERR_OK;
+}
+
+template<typename T>
+ErrCode BundleMgrProxy::GetParcelInfoIntelligent(
+    BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo, MessageOption &option)
+{
+    MessageParcel reply;
+    ErrCode ret = SendTransactCmdWithErrCode(code, data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGE("SendTransactCmd failed");
         return ret;
@@ -5614,11 +5783,46 @@ bool BundleMgrProxy::SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel 
     return true;
 }
 
+bool BundleMgrProxy::SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply,
+    MessageOption &option)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("fail send transact cmd %{public}d due remote object", code);
+        return false;
+    }
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    if (result != NO_ERROR) {
+        APP_LOGE("error code %{public}d in transact cmd %{public}d", result, code);
+        return false;
+    }
+    return true;
+}
+
 ErrCode BundleMgrProxy::SendTransactCmdWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data,
     MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
 
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("fail send transact cmd %{public}d due remote object", code);
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    if (result != NO_ERROR) {
+        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
+        if (CoreConstants::IPC_ERR_MAP.find(result) != CoreConstants::IPC_ERR_MAP.end()) {
+            return CoreConstants::IPC_ERR_MAP.at(result);
+        }
+        return result;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::SendTransactCmdWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data,
+    MessageParcel &reply, MessageOption &option)
+{
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         APP_LOGE("fail send transact cmd %{public}d due remote object", code);
@@ -5799,6 +6003,22 @@ ErrCode BundleMgrProxy::GetBigString(BundleMgrInterfaceCode code, MessageParcel 
     return InnerGetBigString(reply, result);
 }
 
+ErrCode BundleMgrProxy::GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result,
+    MessageOption &option)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply, option)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGD("host reply err %{public}d", ret);
+        return ret;
+    }
+    return InnerGetBigString(reply, result);
+}
+
 ErrCode BundleMgrProxy::InnerGetBigString(MessageParcel &reply, std::string &result)
 {
     size_t dataSize = reply.ReadUint32();
@@ -5811,7 +6031,7 @@ ErrCode BundleMgrProxy::InnerGetBigString(MessageParcel &reply, std::string &res
         APP_LOGE("Fail read raw data length %{public}zu", dataSize);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    result = data;
+    result = std::string(data, dataSize);
     APP_LOGD("InnerGetBigString success");
     return ERR_OK;
 }
@@ -6310,6 +6530,59 @@ ErrCode BundleMgrProxy::GetCliSandboxAppIndexes(const std::string &bundleName, s
     return ret;
 }
 
+ErrCode BundleMgrProxy::GetAppClonePreference(const std::string &bundleName,
+    int32_t userId, AppClonePreference &preference)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to GetAppClonePreference of %{public}s", bundleName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("GetAppClonePreference fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE_NOFUNC("GetAppClonePreference fail to write bundleName");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE_NOFUNC("GetAppClonePreference fail to write userId");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<AppClonePreference>(
+        BundleMgrInterfaceCode::GET_APP_CLONE_PREFERENCE, data, preference);
+}
+
+ErrCode BundleMgrProxy::SetAppClonePreference(const std::string &bundleName,
+    int32_t userId, const AppClonePreference &preference)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to SetAppClonePreference of %{public}s", bundleName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("SetAppClonePreference fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference fail to write bundleName");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference fail to write userId");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&preference)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference fail to write preference");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ErrCode ret = SendTransactCmdWithErrCode(BundleMgrInterfaceCode::SET_APP_CLONE_PREFERENCE, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("SetAppClonePreference SendTransactCmd fail %{public}d", ret);
+        return ret;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::GetLaunchWant(Want &want)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -6549,6 +6822,31 @@ ErrCode BundleMgrProxy::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutIn
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::UpdateDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("UpdateDesktopShortcutInfo write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = WriteParcelInfoIntelligent(shortcutInfo, data);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("UpdateDesktopShortcutInfo write ParcelInfo fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE_NOFUNC("UpdateDesktopShortcutInfo write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::UPDATE_DESKTOP_SHORTCUT_INFO, data, reply)) {
+        APP_LOGE_NOFUNC("SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -6754,46 +7052,44 @@ ErrCode BundleMgrProxy::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
     APP_LOGI("GetAllBundleCacheStat start");
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (processCacheCallback == nullptr) {
-        APP_LOGE("fail to CleanBundleCacheFiles due to params error");
+        APP_LOGE("fail to GetAllBundleCacheStat due to params error");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     ErrCode ret = ERR_OK;
-    std::unique_lock<std::shared_mutex> stateLock1(g_cacheCallstateMutex);
-    if (g_getAllBundleCacheSizeState == AllBundleCacheSizeState::GET_END) {
-        // set state GET_START
-        g_getAllBundleCacheSizeState = AllBundleCacheSizeState::GET_START;
-        stateLock1.unlock();
-        APP_LOGI("start first time");
-        uint64_t cacheSize = 0;
-        ret = GetAllBundleCacheStatExec(processCacheCallback);
-        if (ret == ERR_OK) {
-            cacheSize = processCacheCallback->GetCacheStat();
-            APP_LOGD("exec first time end, size: %{public}" PRIu64, cacheSize);
+    bool isFirstCaller = false;
+    {
+        std::unique_lock<std::shared_mutex> lock(g_cacheCallbackMutex);
+        if (g_getAllBundleCacheSizeState == AllBundleCacheSizeState::GET_END) {
+            g_getAllBundleCacheSizeState = AllBundleCacheSizeState::GET_START;
+            isFirstCaller = true;
+        } else {
+            g_bundleCacheCallBackList.emplace_back(processCacheCallback);
         }
-        std::unique_lock<std::shared_mutex> callBackListLock(g_cacheCallbackMutex);
-        if (!g_bundleCacheCallBackList.empty()) {
-            int count = 0;
-            // finish current callback
-            processCacheCallback->OnGetAllBundleCacheFinished(cacheSize);
-            // finish other callback
-            for (const auto& callback : g_bundleCacheCallBackList) {
-                count++;
-                callback->OnGetAllBundleCacheFinished(cacheSize);
-                APP_LOGD("exec count: %{public}d callback end", count);
-            }
-            g_bundleCacheCallBackList.clear();
-        }
-        callBackListLock.unlock();
-
-        std::unique_lock<std::shared_mutex> stateLock2(g_cacheCallstateMutex);
-        g_getAllBundleCacheSizeState = AllBundleCacheSizeState::GET_END;
-        stateLock2.unlock();
-    } else {
-        stateLock1.unlock();
-        std::unique_lock<std::shared_mutex> callBackListLock2(g_cacheCallbackMutex);
-        g_bundleCacheCallBackList.emplace_back(processCacheCallback);
-        callBackListLock2.unlock();
+    }
+    if (!isFirstCaller) {
         APP_LOGD("add new callback");
+        return ERR_OK;
+    }
+    APP_LOGI("start first time");
+    uint64_t cacheSize = 0;
+    ret = GetAllBundleCacheStatExec(processCacheCallback);
+    if (ret == ERR_OK) {
+        cacheSize = processCacheCallback->GetCacheStat();
+        APP_LOGD("exec first time end, size: %{public}" PRIu64, cacheSize);
+    }
+    // Take ownership of pending waiters and reopen the state atomically, so a
+    // newcomer either joins this batch or becomes the next FirstCaller; never stranded.
+    std::vector<sptr<IProcessCacheCallback>> waiters;
+    {
+        std::unique_lock<std::shared_mutex> lock(g_cacheCallbackMutex);
+        waiters.swap(g_bundleCacheCallBackList);
+        g_getAllBundleCacheSizeState = AllBundleCacheSizeState::GET_END;
+    }
+    // Notify outside the lock
+    processCacheCallback->OnGetAllBundleCacheFinished(cacheSize);
+    for (const auto& callback : waiters) {
+        callback->OnGetAllBundleCacheFinished(cacheSize);
+        APP_LOGD("exec callback");
     }
     return ret;
 }
@@ -7058,14 +7354,14 @@ ErrCode BundleMgrProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void *&dat
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t ashMemSize = ashMem->GetAshmemSize();
+    if ((ashMemSize <= 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY_OF_ASHMEM)) {
+        APP_LOGE("failed due to wrong size: %{public}d", ashMemSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     int32_t offset = 0;
     const void* ashDataPtr = ashMem->ReadFromAshmem(ashMemSize, offset);
     if (ashDataPtr == nullptr) {
         APP_LOGE("ashDataPtr is nullptr");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY_OF_ASHMEM)) {
-        APP_LOGE("failed due to wrong size");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     data = malloc(ashMemSize);

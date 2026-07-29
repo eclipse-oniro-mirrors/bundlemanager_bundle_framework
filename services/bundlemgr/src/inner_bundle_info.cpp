@@ -147,7 +147,7 @@ constexpr const char* ODID = "odid";
 constexpr const char* UNINSTALL_STATE = "uninstallState";
 constexpr const char* PLUGIN_BUNDLE_INFOS = "pluginBundleInfos";
 constexpr const char* IS_DELAY_AGING = "isDelayAging";
-constexpr const char* CHECK_BY_SPM = "checkBySpm";
+constexpr const char* IS_DUAL_MODE_CLONE_APP = "isDualModeCloneApp";
 constexpr int8_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -176,6 +176,8 @@ constexpr const char* SKILL_PROFILE_NAME = "name";
 constexpr const char* SKILL_PROFILE_ABILITY_NAME = "abilityName";
 constexpr const char* SKILL_PROFILE_SRC_ENTRIES = "srcEntries";
 constexpr const char* SKILL_PROFILE_PERMISSIONS = "permissions";
+constexpr const char* SKILL_PROFILE_VERSION = "version";
+constexpr const char* SKILL_PROFILE_VISIBILITY = "visibility";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 constexpr const char* MODULE_BOOL_SET = "boolSet";
 constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
@@ -292,6 +294,12 @@ void from_json(const nlohmann::json &jsonObject, SkillProfile &skillProfile)
         skillProfile.abilityName,
         false,
         parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_VERSION,
+        skillProfile.version,
+        false,
+        parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         SKILL_PROFILE_SRC_ENTRIES,
@@ -308,6 +316,12 @@ void from_json(const nlohmann::json &jsonObject, SkillProfile &skillProfile)
         false,
         parseResult,
         ArrayType::STRING);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        SKILL_PROFILE_VISIBILITY,
+        skillProfile.visibility,
+        false,
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read SkillProfile from json error, error code : %{public}d", parseResult);
     }
@@ -318,8 +332,10 @@ void to_json(nlohmann::json &jsonObject, const SkillProfile &skillProfile)
     jsonObject = nlohmann::json {
         {SKILL_PROFILE_NAME, skillProfile.name},
         {SKILL_PROFILE_ABILITY_NAME, skillProfile.abilityName},
+        {SKILL_PROFILE_VERSION, skillProfile.version},
         {SKILL_PROFILE_SRC_ENTRIES, skillProfile.srcEntries},
-        {SKILL_PROFILE_PERMISSIONS, skillProfile.permissions}
+        {SKILL_PROFILE_PERMISSIONS, skillProfile.permissions},
+        {SKILL_PROFILE_VISIBILITY, skillProfile.visibility}
     };
 }
 
@@ -421,6 +437,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->mark_ = info.mark_;
     this->appIndex_ = info.appIndex_;
     this->isSandboxApp_ = info.isSandboxApp_;
+    this->isDualModeCloneApp_ = info.isDualModeCloneApp_;
     this->currentPackage_ = info.currentPackage_;
     this->onlyCreateBundleUser_ = info.onlyCreateBundleUser_;
     this->innerModuleInfos_ = info.innerModuleInfos_;
@@ -645,7 +662,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[ODID] = odid_;
     jsonObject[UNINSTALL_STATE] = uninstallState_;
     jsonObject[IS_DELAY_AGING] = isDelayAging_;
-    jsonObject[CHECK_BY_SPM] = checkBySpm_;
+    jsonObject[IS_DUAL_MODE_CLONE_APP] = isDualModeCloneApp_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -1499,53 +1516,53 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             true,
             parseResult,
             ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<std::map<std::string, InnerAbilityInfo>>(jsonObject,
-            jsonObjectEnd,
-            BASE_ABILITY_INFO,
-            baseAbilityInfos_,
-            JsonType::OBJECT,
-            true,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, BASE_ABILITY_INFO, mapPtr,
+                JsonType::OBJECT, ArrayType::NOT_ARRAY, true, parseResult);
+            if (mapPtr != nullptr) {
+                baseAbilityInfos_ = mapPtr->get<std::map<std::string, InnerAbilityInfo>>();
+            }
+        }
         std::map<std::string, std::vector<Skill>> oldSkillInfos;
-        GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
-            jsonObjectEnd,
-            SKILL_INFOS,
-            oldSkillInfos,
-            JsonType::OBJECT,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, SKILL_INFOS, mapPtr,
+                JsonType::ARRAY, ArrayType::OBJECT, false, parseResult);
+            if (mapPtr != nullptr) {
+                oldSkillInfos = mapPtr->get<std::map<std::string, std::vector<Skill>>>();
+            }
+        }
         for (auto &[key, skills] : oldSkillInfos) {
             auto it = baseAbilityInfos_.find(key);
             if (it != baseAbilityInfos_.end() && it->second.skills.empty()) {
                 it->second.skills = std::move(skills);
             }
         }
-        GetValueIfFindKey<std::map<std::string, InnerModuleInfo>>(jsonObject,
-            jsonObjectEnd,
-            INNER_MODULE_INFO,
-            innerModuleInfos_,
-            JsonType::OBJECT,
-            true,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<std::map<std::string, std::vector<InnerModuleInfo>>>(jsonObject,
-            jsonObjectEnd,
-            INNER_SHARED_MODULE_INFO,
-            innerSharedModuleInfos_,
-            JsonType::OBJECT,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
-            jsonObjectEnd,
-            DYNAMIC_SKILLS,
-            dynamicSkills_,
-            JsonType::OBJECT,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, INNER_MODULE_INFO, mapPtr,
+                JsonType::OBJECT, ArrayType::NOT_ARRAY, true, parseResult);
+            if (mapPtr != nullptr) {
+                innerModuleInfos_ = mapPtr->get<std::map<std::string, InnerModuleInfo>>();
+            }
+        }
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, INNER_SHARED_MODULE_INFO, mapPtr,
+                JsonType::ARRAY, ArrayType::OBJECT, false, parseResult);
+            if (mapPtr != nullptr) {
+                innerSharedModuleInfos_ = mapPtr->get<std::map<std::string, std::vector<InnerModuleInfo>>>();
+            }
+        }
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, DYNAMIC_SKILLS, mapPtr,
+                JsonType::ARRAY, ArrayType::OBJECT, false, parseResult);
+            if (mapPtr != nullptr) {
+                dynamicSkills_ = mapPtr->get<std::map<std::string, std::vector<Skill>>>();
+            }
+        }
         GetValueIfFindKey<int>(jsonObject,
             jsonObjectEnd,
             USER_ID,
@@ -1560,30 +1577,30 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             appFeature_,
             true,
             parseResult);
-        GetValueIfFindKey<std::map<std::string, std::vector<FormInfo>>>(jsonObject,
-            jsonObjectEnd,
-            MODULE_FORMS,
-            formInfos_,
-            JsonType::OBJECT,
-            true,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<std::map<std::string, ShortcutInfo>>(jsonObject,
-            jsonObjectEnd,
-            MODULE_SHORTCUT,
-            shortcutInfos_,
-            JsonType::OBJECT,
-            true,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<std::map<std::string, CommonEventInfo>>(jsonObject,
-            jsonObjectEnd,
-            MODULE_COMMON_EVENT,
-            commonEvents_,
-            JsonType::OBJECT,
-            true,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, MODULE_FORMS, mapPtr,
+                JsonType::ARRAY, ArrayType::OBJECT, true, parseResult);
+            if (mapPtr != nullptr) {
+                formInfos_ = mapPtr->get<std::map<std::string, std::vector<FormInfo>>>();
+            }
+        }
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, MODULE_SHORTCUT, mapPtr,
+                JsonType::OBJECT, ArrayType::NOT_ARRAY, true, parseResult);
+            if (mapPtr != nullptr) {
+                shortcutInfos_ = mapPtr->get<std::map<std::string, ShortcutInfo>>();
+            }
+        }
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, MODULE_COMMON_EVENT, mapPtr,
+                JsonType::OBJECT, ArrayType::NOT_ARRAY, true, parseResult);
+            if (mapPtr != nullptr) {
+                commonEvents_ = mapPtr->get<std::map<std::string, CommonEventInfo>>();
+            }
+        }
         GetValueIfFindKey<InstallMark>(jsonObject,
             jsonObjectEnd,
             INSTALL_MARK,
@@ -1593,14 +1610,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             parseResult,
             ArrayType::NOT_ARRAY);
         int32_t isOldVersion = ERR_OK;
-        GetValueIfFindKey<std::map<std::string, InnerBundleUserInfo>>(jsonObject,
-            jsonObjectEnd,
-            INNER_BUNDLE_USER_INFOS,
-            innerBundleUserInfos_,
-            JsonType::OBJECT,
-            true,
-            isOldVersion,
-            ArrayType::NOT_ARRAY);
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFOS, mapPtr,
+                JsonType::OBJECT, ArrayType::NOT_ARRAY, true, isOldVersion);
+            if (mapPtr != nullptr) {
+                innerBundleUserInfos_ = mapPtr->get<std::map<std::string, InnerBundleUserInfo>>();
+            }
+        }
         if (parseResult == ERR_OK && isOldVersion == ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) {
             // To be compatible with the old database,
             // if the old data does not have bundleUserInfos,
@@ -1613,37 +1630,37 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             isNewVersion_,
             false,
             parseResult);
-        GetValueIfFindKey<std::map<std::string, InnerExtensionInfo>>(jsonObject,
-            jsonObjectEnd,
-            BUNDLE_BASE_EXTENSION_INFOS,
-            baseExtensionInfos_,
-            JsonType::OBJECT,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, BUNDLE_BASE_EXTENSION_INFOS, mapPtr,
+                JsonType::OBJECT, ArrayType::NOT_ARRAY, false, parseResult);
+            if (mapPtr != nullptr) {
+                baseExtensionInfos_ = mapPtr->get<std::map<std::string, InnerExtensionInfo>>();
+            }
+        }
         std::map<std::string, std::vector<Skill>> oldExtensionSkillInfos;
-        GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
-            jsonObjectEnd,
-            BUNDLE_EXTENSION_SKILL_INFOS,
-            oldExtensionSkillInfos,
-            JsonType::OBJECT,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, BUNDLE_EXTENSION_SKILL_INFOS, mapPtr,
+                JsonType::ARRAY, ArrayType::OBJECT, false, parseResult);
+            if (mapPtr != nullptr) {
+                oldExtensionSkillInfos = mapPtr->get<std::map<std::string, std::vector<Skill>>>();
+            }
+        }
         for (auto &[key, skills] : oldExtensionSkillInfos) {
             auto it = baseExtensionInfos_.find(key);
             if (it != baseExtensionInfos_.end() && it->second.skills.empty()) {
                 it->second.skills = std::move(skills);
             }
         }
-        GetValueIfFindKey<std::map<std::string, ExtendResourceInfo>>(jsonObject,
-            jsonObjectEnd,
-            BUNDLE_EXTEND_RESOURCES,
-            extendResourceInfos_,
-            JsonType::OBJECT,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, BUNDLE_EXTEND_RESOURCES, mapPtr,
+                JsonType::OBJECT, ArrayType::NOT_ARRAY, false, parseResult);
+            if (mapPtr != nullptr) {
+                extendResourceInfos_ = mapPtr->get<std::map<std::string, ExtendResourceInfo>>();
+            }
+        }
         BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
             jsonObjectEnd,
             CUR_DYNAMIC_ICON_MODULE,
@@ -1704,22 +1721,22 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             false,
             parseResult,
             ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<std::unordered_map<std::string, std::vector<DataGroupInfo>>>(jsonObject,
-            jsonObjectEnd,
-            DATA_GROUP_INFOS,
-            dataGroupInfos_,
-            JsonType::OBJECT,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<std::unordered_map<std::string, PluginBundleInfo>>(jsonObject,
-            jsonObjectEnd,
-            PLUGIN_BUNDLE_INFOS,
-            pluginBundleInfos_,
-            JsonType::OBJECT,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, DATA_GROUP_INFOS, mapPtr,
+                JsonType::ARRAY, ArrayType::OBJECT, false, parseResult);
+            if (mapPtr != nullptr) {
+                dataGroupInfos_ = mapPtr->get<std::unordered_map<std::string, std::vector<DataGroupInfo>>>();
+            }
+        }
+        {
+            const nlohmann::json *mapPtr = nullptr;
+            BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, PLUGIN_BUNDLE_INFOS, mapPtr,
+                JsonType::OBJECT, ArrayType::NOT_ARRAY, false, parseResult);
+            if (mapPtr != nullptr) {
+                pluginBundleInfos_ = mapPtr->get<std::unordered_map<std::string, PluginBundleInfo>>();
+            }
+        }
         BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
             jsonObjectEnd,
             DEVELOPER_ID,
@@ -1746,8 +1763,8 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             parseResult);
         BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
             jsonObjectEnd,
-            CHECK_BY_SPM,
-            checkBySpm_,
+            IS_DUAL_MODE_CLONE_APP,
+            isDualModeCloneApp_,
             false,
             parseResult);
     if (parseResult != ERR_OK) {
@@ -2069,14 +2086,14 @@ bool InnerBundleInfo::ValidateDynamicSkills(const std::map<std::string, std::vec
     // validate from json
     int32_t ret = ERR_OK;
     std::map<std::string, std::vector<Skill>> tmpDynamicSkills;
-    GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
-        jsonObject.end(),
-        DYNAMIC_SKILLS,
-        tmpDynamicSkills,
-        JsonType::OBJECT,
-        false,
-        ret,
-        ArrayType::NOT_ARRAY);
+    {
+        const nlohmann::json *mapPtr = nullptr;
+        BMSJsonUtil::GetMapObject(jsonObject, jsonObject.end(), DYNAMIC_SKILLS, mapPtr,
+            JsonType::ARRAY, ArrayType::OBJECT, false, ret);
+        if (mapPtr != nullptr) {
+            tmpDynamicSkills = mapPtr->get<std::map<std::string, std::vector<Skill>>>();
+        }
+    }
     if (ret != ERR_OK) {
         APP_LOGE_NOFUNC("ValidateDynamicSkills error:%{public}d", ret);
         return false;
@@ -2391,6 +2408,15 @@ ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled
         isEnabled = iter->second.enabled;
         PrintSetEnabledInfo(isEnabled, userId, appIndex, innerBundleUserInfoPtr->bundleName,
             iter->second.setEnabledCaller);
+        return ERR_OK;
+    } else if (appIndex >= Constants::CLI_SANDBOX_APP_INDEX_MIN && appIndex <= Constants::CLI_SANDBOX_APP_INDEX_MAX) {
+        const std::map<std::string, InnerCliSandboxInfo>& sandboxInfos = innerBundleUserInfoPtr->sandboxInfos;
+        std::string key = InnerBundleUserInfo::AppIndexToKey(appIndex);
+        auto iter = sandboxInfos.find(key);
+        if (iter == sandboxInfos.end()) {
+            return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+        }
+        isEnabled = true;
         return ERR_OK;
     } else {
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
@@ -4940,6 +4966,18 @@ bool InnerBundleInfo::IsCompressNativeLibs(const std::string &moduleName) const
     }
 
     return moduleInfo->compressNativeLibs;
+}
+
+bool InnerBundleInfo::IsFakeDecompressionEnable() const
+{
+    auto moduleName = GetCurModuleName();
+    auto moduleInfo = GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo) {
+        APP_LOGE("Get moduleInfo(%{public}s) failed", moduleName.c_str());
+        return false;
+    }
+    // only compressNativeLibs=false and extractNativeLibs=true need fake decompression
+    return !moduleInfo->isSoStoredCompressed && moduleInfo->extractNativeLibs;
 }
 
 void InnerBundleInfo::SetNativeLibraryFileNames(const std::string &moduleName,

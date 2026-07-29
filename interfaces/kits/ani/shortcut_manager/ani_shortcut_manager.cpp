@@ -82,6 +82,31 @@ static void AniDeleteDesktopShortcutInfo(ani_env* env, ani_object info, ani_int 
     }
 }
 
+static void AniUpdateDesktopShortcutInfo(ani_env* env, ani_object info, ani_int aniUserId)
+{
+    APP_LOGI_NOFUNC("ani UpdateDesktopShortcutInfo called");
+    ShortcutInfo shortcutInfo;
+    if (!CommonFunAni::ParseShortcutInfo(env, info, shortcutInfo) ||
+        !CommonFunc::CheckShortcutInfo(shortcutInfo)) {
+        APP_LOGE_NOFUNC("Parse shortcutInfo err. userId:%{public}d", aniUserId);
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
+        return;
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE_NOFUNC("Can not get iBundleMgr");
+        BusinessErrorAni::ThrowError(env, ERR_APPEXECFWK_SERVICE_NOT_READY, UPDATE_DESKTOP_SHORTCUT_INFO);
+        return;
+    }
+    ErrCode ret = iBundleMgr->UpdateDesktopShortcutInfo(shortcutInfo, aniUserId);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("UpdateDesktopShortcutInfo failed ret:%{public}d,userId:%{public}d", ret, aniUserId);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+            UPDATE_DESKTOP_SHORTCUT_INFO, PERMISSION_DYNAMIC_SHORTCUT_INFO);
+    }
+}
+
 static ani_ref AniGetAllDesktopShortcutInfo(ani_env* env, ani_int aniUserId)
 {
     APP_LOGD("ani GetAllDesktopShortcutInfo called");
@@ -353,6 +378,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(AniAddDesktopShortcutInfo) },
         ani_native_function { "deleteDesktopShortcutInfoNative", nullptr,
             reinterpret_cast<void*>(AniDeleteDesktopShortcutInfo) },
+        ani_native_function { "updateDesktopShortcutInfoNative", nullptr,
+            reinterpret_cast<void*>(AniUpdateDesktopShortcutInfo) },
         ani_native_function { "getAllDesktopShortcutInfoNative", nullptr,
             reinterpret_cast<void*>(AniGetAllDesktopShortcutInfo) },
         ani_native_function { "setShortcutVisibleForSelfNative", nullptr,

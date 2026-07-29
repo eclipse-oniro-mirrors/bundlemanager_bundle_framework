@@ -602,4 +602,107 @@ HWTEST_F(BmsNewBundleDataDirMgrTest, ProcessOtaBundleDataDirEl5_0001, Function |
         EXPECT_TRUE(ret);
     }
 }
+
+/**
+ * @tc.number: LoadNewBundleDataDirInfosFromDb_0100
+ * @tc.name: LoadNewBundleDataDirInfosFromDb invalid json
+ * @tc.desc: invalid json in bms param → returns false
+ */
+HWTEST_F(BmsNewBundleDataDirMgrTest, LoadNewBundleDataDirInfosFromDb_0100, Function | SmallTest | Level1)
+{
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    ASSERT_NE(newBundleDirMgr, nullptr);
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsPara, nullptr);
+    newBundleDirMgr->hasInit_ = false;
+    bmsPara->SaveBmsParam("newBundleDataDirMgr", "invalid json");
+    EXPECT_FALSE(newBundleDirMgr->LoadNewBundleDataDirInfosFromDb());
+    bmsPara->DeleteBmsParam("newBundleDataDirMgr");
+    newBundleDirMgr->hasInit_ = false;
+}
+
+/**
+ * @tc.number: LoadNewBundleDataDirInfosFromDb_0200
+ * @tc.name: LoadNewBundleDataDirInfosFromDb bmsParam null
+ * @tc.desc: bmsPara is nullptr → returns false
+ */
+HWTEST_F(BmsNewBundleDataDirMgrTest, LoadNewBundleDataDirInfosFromDb_0200, Function | SmallTest | Level1)
+{
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    ASSERT_NE(newBundleDirMgr, nullptr);
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedBmsParam = bundleMgrService->bmsParam_;
+    bundleMgrService->bmsParam_ = nullptr;
+    newBundleDirMgr->hasInit_ = false;
+    EXPECT_FALSE(newBundleDirMgr->LoadNewBundleDataDirInfosFromDb());
+    bundleMgrService->bmsParam_ = savedBmsParam;
+}
+
+/**
+ * @tc.number: DeleteNewBundleDataDirInfosFromDb_0100
+ * @tc.name: DeleteNewBundleDataDirInfosFromDb bmsParam null
+ * @tc.desc: bmsPara is nullptr → returns false
+ */
+HWTEST_F(BmsNewBundleDataDirMgrTest, DeleteNewBundleDataDirInfosFromDb_0100, Function | SmallTest | Level1)
+{
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    ASSERT_NE(newBundleDirMgr, nullptr);
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedBmsParam = bundleMgrService->bmsParam_;
+    bundleMgrService->bmsParam_ = nullptr;
+    EXPECT_FALSE(newBundleDirMgr->DeleteNewBundleDataDirInfosFromDb());
+    bundleMgrService->bmsParam_ = savedBmsParam;
+}
+
+/**
+ * @tc.number: AddAllUserId_0200
+ * @tc.name: AddAllUserId skip userId below START_USERID
+ * @tc.desc: userId < START_USERID is skipped, no save needed → returns true
+ */
+HWTEST_F(BmsNewBundleDataDirMgrTest, AddAllUserId_0200, Function | SmallTest | Level1)
+{
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    ASSERT_NE(newBundleDirMgr, nullptr);
+    newBundleDirMgr->hasInit_ = true;
+    newBundleDirMgr->userIds_.clear();
+    std::set<int32_t> userIds;
+    userIds.insert(Constants::DEFAULT_USERID);
+    userIds.insert(Constants::START_USERID - 1);
+    EXPECT_TRUE(newBundleDirMgr->AddAllUserId(userIds));
+    EXPECT_TRUE(newBundleDirMgr->userIds_.empty());
+}
+
+/**
+ * @tc.number: AddAllUserId_0300
+ * @tc.name: AddAllUserId bmsParam null
+ * @tc.desc: needSave but bmsPara is nullptr → returns false
+ */
+HWTEST_F(BmsNewBundleDataDirMgrTest, AddAllUserId_0300, Function | SmallTest | Level1)
+{
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    ASSERT_NE(newBundleDirMgr, nullptr);
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedBmsParam = bundleMgrService->bmsParam_;
+    bundleMgrService->bmsParam_ = nullptr;
+    newBundleDirMgr->hasInit_ = true;
+    newBundleDirMgr->userIds_.clear();
+    std::set<int32_t> userIds;
+    userIds.insert(USER_ID);
+    EXPECT_FALSE(newBundleDirMgr->AddAllUserId(userIds));
+    bundleMgrService->bmsParam_ = savedBmsParam;
+}
+
+/**
+ * @tc.number: DeleteUserId_0200
+ * @tc.name: DeleteUserId user not in set
+ * @tc.desc: userId not found → returns true without db operation
+ */
+HWTEST_F(BmsNewBundleDataDirMgrTest, DeleteUserId_0200, Function | SmallTest | Level1)
+{
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    ASSERT_NE(newBundleDirMgr, nullptr);
+    newBundleDirMgr->hasInit_ = true;
+    newBundleDirMgr->userIds_.clear();
+    EXPECT_TRUE(newBundleDirMgr->DeleteUserId(USER_ID));
+}
 }

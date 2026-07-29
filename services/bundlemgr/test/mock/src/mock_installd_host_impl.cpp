@@ -36,7 +36,8 @@ ErrCode InstalldHostImpl::CreateBundleDir(
 }
 
 ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+    const bool isSystemApp)
 {
     return ERR_OK;
 }
@@ -330,7 +331,8 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int32_t sessionId)
+ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+    const unsigned char *profileBlock)
 {
     return ERR_OK;
 }
@@ -471,13 +473,14 @@ ErrCode InstalldHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bun
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ClearSessionProvisionCache(int32_t sessionId)
+ErrCode InstalldHostImpl::DeleteOldCacheFiles(
+    const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
 {
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::DeleteOldCacheFiles(
-    const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
+ErrCode InstalldHostImpl::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths,
+    int64_t &statSize, int64_t timeoutMs)
 {
     return ERR_OK;
 }

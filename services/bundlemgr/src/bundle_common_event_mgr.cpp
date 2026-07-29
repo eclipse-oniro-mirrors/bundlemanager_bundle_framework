@@ -76,6 +76,9 @@ constexpr const char* CHANGED_SKILLS = "changed";
 constexpr const char* REMOVED_SKILLS = "removed";
 constexpr const char* CHANGE_TYPE = "changeType";
 constexpr int32_t CONTROL_API_VERSION = 25;
+constexpr const char* APP_CATEGORY = "appCategory";
+constexpr const char* CURRENT_MODE = "currentMode";
+constexpr const char* IS_SHARED_SANDBOX = "isSharedSandbox";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -139,8 +142,11 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     // trigger the status callback for status listening
     if ((dataMgr != nullptr) && (installResult.type != NotifyType::START_INSTALL)) {
         auto &callbackMutex = dataMgr->GetStatusCallbackMutex();
-        std::shared_lock<std::shared_mutex> lock(callbackMutex);
-        auto callbackList = dataMgr->GetCallBackList();
+        std::vector<sptr<IBundleStatusCallback>> callbackList;
+        {
+            std::shared_lock<std::shared_mutex> lock(callbackMutex);
+            callbackList = dataMgr->GetCallBackList();
+        }
         for (const auto& callback : callbackList) {
             int32_t callbackUserId = callback->GetUserId();
             if (callbackUserId != Constants::UNSPECIFIED_USERID && callbackUserId != publishUserId) {
@@ -330,6 +336,9 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(CROSS_APP_SHARED_CONFIG, installResult.crossAppSharedConfig);
     want.SetParam(IS_RECOVER, installResult.isRecover);
     want.SetParam(CHANGE_TYPE, static_cast<int32_t>(installResult.changeType));
+    want.SetParam(APP_CATEGORY, static_cast<int32_t>(installResult.appCategory));
+    want.SetParam(CURRENT_MODE, installResult.currentMode);
+    want.SetParam(IS_SHARED_SANDBOX, installResult.isSharedSandbox);
     for (const auto &item : installResult.metadataConfigInfos) {
             want.SetParam(item.first, item.second);
     }
@@ -787,15 +796,15 @@ void BundleCommonEventMgr::ProcessEventQueue()
 void BundleCommonEventMgr::NotifySetDisposedRuleAsync(
     const std::string &appId, int32_t userId, const std::string &data, int32_t appIndex)
 {
-    SubmitEventAsync([this, appId, userId, data, appIndex]() {
-        NotifySetDisposedRule(appId, userId, data, appIndex);
+    SubmitEventAsync([self = shared_from_this(), appId, userId, data, appIndex]() {
+        self->NotifySetDisposedRule(appId, userId, data, appIndex);
     });
 }
 
 void BundleCommonEventMgr::NotifyDeleteDisposedRuleAsync(const std::string &appId, int32_t userId, int32_t appIndex)
 {
-    SubmitEventAsync([this, appId, userId, appIndex]() {
-        NotifyDeleteDisposedRule(appId, userId, appIndex);
+    SubmitEventAsync([self = shared_from_this(), appId, userId, appIndex]() {
+        self->NotifyDeleteDisposedRule(appId, userId, appIndex);
     });
 }
 
@@ -804,8 +813,8 @@ void BundleCommonEventMgr::PublishCommonEventForEnterpriseAsync(
     const int32_t publishUserId,
     const EventFwk::CommonEventData &commonData)
 {
-    SubmitEventAsync([this, bundleName, publishUserId, commonData]() {
-        PublishCommonEventForEnterprise(bundleName, publishUserId, commonData);
+    SubmitEventAsync([self = shared_from_this(), bundleName, publishUserId, commonData]() {
+        self->PublishCommonEventForEnterprise(bundleName, publishUserId, commonData);
     });
 }
 } // AppExecFwk

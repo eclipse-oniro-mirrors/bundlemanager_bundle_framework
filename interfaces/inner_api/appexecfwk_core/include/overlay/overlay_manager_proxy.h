@@ -63,7 +63,14 @@ private:
     ErrCode GetParcelableInfosWithErrCode(OverlayManagerInterfaceCode code, MessageParcel &data,
         std::vector<T> &parcelableInfos);
 
+    template<typename T>
+    ErrCode GetParcelableInfosWithErrCode(OverlayManagerInterfaceCode code, MessageParcel &data,
+        std::vector<T> &parcelableInfos, MessageOption &option);
+
     bool SendTransactCmd(OverlayManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+
+    bool SendTransactCmd(OverlayManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply,
+        MessageOption &option);
 
     static inline BrokerDelegator<OverlayManagerProxy> delegator_;
 };

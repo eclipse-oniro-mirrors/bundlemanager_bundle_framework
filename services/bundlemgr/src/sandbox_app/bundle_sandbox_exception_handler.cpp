@@ -20,7 +20,6 @@
 #include "account_helper.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_constants.h"
-#include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
@@ -107,13 +106,9 @@ void BundleSandboxExceptionHandler::RemoveTokenIdAndKeepSandboxDir(const std::st
             continue;
         }
         // delete accessToken id from ATM
-        if (BundlePermissionMgr::DeleteAccessTokenId(sandboxInfo.accessTokenId, sandboxInfo.bundleName) !=
+        if (BundlePermissionMgr::DeleteAccessTokenId(sandboxInfo.accessTokenId) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             APP_LOGE("delete accessToken failed");
-        }
-        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-        if (dataMgr != nullptr) {
-            dataMgr->RemoveUidFromMap(info, sandboxInfo.userId);
         }
         // send notification for uninstall sandbox bundle when reboot
         if (commonEventMgr != nullptr) {

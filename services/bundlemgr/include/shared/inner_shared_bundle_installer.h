@@ -133,8 +133,7 @@ private:
     bool isEnterpriseBundle_ = false;
     bool isPreInstalledBundle_ = false;
     bool isCompressNativeLibs_ = true;
-    bool sessionCommitted_ = false;
-    int32_t sessionId_ = 0;
+    bool isSoFakeDecompression_ = false;
     // the real path or the parent directory of hsp files to be installed.
     std::string sharedBundlePath_;
     std::string bundleName_;

@@ -37,7 +37,6 @@ constexpr const char* KEY_MODULE_PACKAGE = "package";
 constexpr const char* KEY_MODULE_SKILL_PROFILES = "skillProfiles";
 constexpr const char* KEY_MODULE_REQUEST_PERMISSIONS = "requestPermissions";
 constexpr const char* KEY_MODULE_REQ_PERMISSIONS = "reqPermissions";
-
 constexpr const char* KEY_MODULE_DEFINE_PERMISSIONS = "definePermissions";
 // skillProfile fields
 constexpr const char* KEY_SKILL_PROFILE_NAME = "name";

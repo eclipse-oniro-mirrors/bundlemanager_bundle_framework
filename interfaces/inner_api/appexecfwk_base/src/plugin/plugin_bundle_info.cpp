@@ -264,14 +264,14 @@ void from_json(const nlohmann::json &jsonObject, PluginBundleInfo &pluginBundleI
         pluginBundleInfo.nativeLibraryPath,
         false,
         parseResult);
-    GetValueIfFindKey<std::unordered_map<std::string, AbilityInfo>>(jsonObject,
-        jsonObjectEnd,
-        PLUGIN_BUNDLE_INFO_ABILITY_INFOS,
-        pluginBundleInfo.abilityInfos,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+    {
+        const nlohmann::json *mapPtr = nullptr;
+        BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, PLUGIN_BUNDLE_INFO_ABILITY_INFOS, mapPtr,
+            JsonType::OBJECT, ArrayType::NOT_ARRAY, false, parseResult);
+        if (mapPtr != nullptr) {
+            pluginBundleInfo.abilityInfos = mapPtr->get<std::unordered_map<std::string, AbilityInfo>>();
+        }
+    }
     GetValueIfFindKey<ApplicationInfo>(jsonObject,
         jsonObjectEnd,
         PLUGIN_BUNDLE_INFO_APPLICATION_INFO,
@@ -280,14 +280,14 @@ void from_json(const nlohmann::json &jsonObject, PluginBundleInfo &pluginBundleI
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::unordered_map<std::string, ExtensionAbilityInfo>>(jsonObject,
-        jsonObjectEnd,
-        PLUGIN_BUNDLE_INFO_EXTENSION_INFOS,
-        pluginBundleInfo.extensionInfos,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+    {
+        const nlohmann::json *mapPtr = nullptr;
+        BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd, PLUGIN_BUNDLE_INFO_EXTENSION_INFOS, mapPtr,
+            JsonType::OBJECT, ArrayType::NOT_ARRAY, false, parseResult);
+        if (mapPtr != nullptr) {
+            pluginBundleInfo.extensionInfos = mapPtr->get<std::unordered_map<std::string, ExtensionAbilityInfo>>();
+        }
+    }
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         PLUGIN_BUNDLE_INFO_IS_DEVELOPER_DISTRIBUTION,

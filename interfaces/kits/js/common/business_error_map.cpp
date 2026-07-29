@@ -153,6 +153,8 @@ constexpr const char* ERR_MSG_APP_NOT_SUPPORTED_MULTI_TYPE =
     "The app does not support the creation of an appClone instance.";
 constexpr const char* ERR_MSG_SHORTCUT_ID_ILLEGAL =
     "The specified shortcut id is illegal.";
+constexpr const char* ERR_MSG_SHORTCUT_NOT_EXIST =
+    "The specified shortcut to be updated is not found.";
 constexpr const char* ERR_MSG_INSTALL_FAILED_INCONSISTENT_SIGNATURE =
     "Failed to install the HAP because an application with the same bundle name "
     "but different signature information exists on the device.";
@@ -191,6 +193,9 @@ constexpr const char* ERROR_MSG_DESTINATION_PATH_ACCESS_FAILED =
 constexpr const char* ERROR_MSG_DATA_MIGRATION_COPY_FAILED =
     "System error occurred during copy execution.";
 constexpr const char* ERROR_MSG_SKILL_NOT_EXIST = "The specified skillName is not found.";
+constexpr const char* ERROR_MSG_APP_CLONE_NOT_EXIST = "The application has not created any app clone.";
+constexpr const char* ERROR_MSG_APP_CLONE_PREFERENCE_NOT_EXIST =
+    "The specified bundle not found app clone preference.";
 constexpr const char* ERR_MSG_ERROR_ALTERNATE_ICON_SET_ERROR = "Failed to set the alternate icon.";
 constexpr const char* ERR_MSG_INVALID_ALTERNATE_ICON_NAME =
     "The alternateIconName must match the name field under alternateIcons in the app.json5 file.";
@@ -280,6 +285,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_APPLICATION_UNINSTALL, ERROR_MSG_LOCKED_APPLICATION_UNINSTALL },
     { ERROR_APP_NOT_SUPPORTED_MULTI_TYPE, ERR_MSG_APP_NOT_SUPPORTED_MULTI_TYPE },
     { ERROR_SHORTCUT_ID_ILLEGAL_ERROR, ERR_MSG_SHORTCUT_ID_ILLEGAL },
+    { ERROR_SHORTCUT_MANAGER_NOT_EXIST, ERR_MSG_SHORTCUT_NOT_EXIST },
     { ERROR_INSTALL_FAILED_INCONSISTENT_SIGNATURE, ERR_MSG_INSTALL_FAILED_INCONSISTENT_SIGNATURE },
     { ERROR_INVALID_UNINSTALL_RULE, ERR_MSG_INVALID_UNINSTALL_RULE },
     { ERROR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL, ERR_MSG_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL },
@@ -299,6 +305,8 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_DESTINATION_PATH_ACCESS_FAILED, ERROR_MSG_DESTINATION_PATH_ACCESS_FAILED},
     { ERROR_DATA_MIGRATION_COPY_FAILED, ERROR_MSG_DATA_MIGRATION_COPY_FAILED},
     { ERROR_SKILL_NOT_EXIST, ERROR_MSG_SKILL_NOT_EXIST},
+    { ERROR_APP_CLONE_NOT_EXIST, ERROR_MSG_APP_CLONE_NOT_EXIST},
+    { ERROR_APP_CLONE_PREFERENCE_NOT_EXIST, ERROR_MSG_APP_CLONE_PREFERENCE_NOT_EXIST},
     { ERROR_INVALID_ALTERNATE_ICON_NAME, ERR_MSG_INVALID_ALTERNATE_ICON_NAME},
     { ERROR_NO_ALTERNATE_ICON_ENABLED, ERR_MSG_ERROR_NO_ALTERNATE_ICON_ENABLED},
     { ERROR_SET_ALTERNATE_ICON, ERR_MSG_ERROR_ALTERNATE_ICON_SET_ERROR},

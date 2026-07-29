@@ -36,7 +36,7 @@ public:
     static BinarySecurityWrapper& GetInstance();
 
     ErrCode ProcessHapBinInstall(const std::string &bundleName,
-        const std::string &appIdentifier, int32_t userId, int32_t sessionId,
+        const std::string &appIdentifier, int32_t userId,
         const std::vector<BinFileInfo> &binFileInfos);
 
     ErrCode RequestIndependentBinarySwitchAsync(int32_t &outSwitchStatus);
@@ -63,7 +63,7 @@ private:
     void ScheduleUnload();
 
     using ProcessHapBinInstallFunc = int32_t(*)(const std::string&, const std::string&,
-        int32_t, int32_t, const std::vector<BinFileInfo>&);
+        int32_t, const std::vector<BinFileInfo>&);
     using RequestIndependentBinarySwitchAsyncFunc = int32_t(*)(int32_t &);
     using CheckHspPluginCertValidityFunc = int32_t(*)(Security::Verify::HspPlugin &);
 

@@ -630,5 +630,187 @@ HWTEST_F(BundleInfoTest, CheckMapValueType_0200, Function | SmallTest | Level0)
     EXPECT_FALSE(BMSJsonUtil::CheckMapValueType(JSON_DATA.at("stringValue"), JsonType::ARRAY, ArrayType::OBJECT));
     EXPECT_FALSE(BMSJsonUtil::CheckMapValueType(JSON_DATA.at("emptyArray"), JsonType::ARRAY, ArrayType::OBJECT));
 }
+/**
+ * @tc.number: CheckMapValueType_0300
+ * @tc.name: CheckMapValueType_0300
+ * @tc.desc: test CheckMapValueType with JsonType::OBJECT
+ */
+HWTEST_F(BundleInfoTest, CheckMapValueType_0300, Function | SmallTest | Level0)
+{
+    nlohmann::json objVal = {{"name", "test"}};
+    EXPECT_TRUE(BMSJsonUtil::CheckMapValueType(objVal, JsonType::OBJECT, ArrayType::NOT_ARRAY));
+
+    nlohmann::json nullVal = nullptr;
+    EXPECT_FALSE(BMSJsonUtil::CheckMapValueType(nullVal, JsonType::OBJECT, ArrayType::NOT_ARRAY));
+
+    nlohmann::json strVal = "not_an_object";
+    EXPECT_FALSE(BMSJsonUtil::CheckMapValueType(strVal, JsonType::OBJECT, ArrayType::NOT_ARRAY));
+
+    nlohmann::json numVal = 123;
+    EXPECT_FALSE(BMSJsonUtil::CheckMapValueType(numVal, JsonType::OBJECT, ArrayType::NOT_ARRAY));
+
+    nlohmann::json boolVal = true;
+    EXPECT_FALSE(BMSJsonUtil::CheckMapValueType(boolVal, JsonType::OBJECT, ArrayType::NOT_ARRAY));
+}
+
+/**
+ * @tc.number: GetMapObject_0100
+ * @tc.name: GetMapObject_0100
+ * @tc.desc: test GetMapObject with struct value type (JsonType::OBJECT)
+ */
+HWTEST_F(BundleInfoTest, GetMapObject_0100, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObj;
+    jsonObj["abilities"] = {
+        {"key1", {{"name", "ability1"}, {"label", "Label1"}}},
+        {"key2", {{"name", "ability2"}, {"label", "Label2"}}}
+    };
+    int32_t parseResult = ERR_OK;
+    const nlohmann::json *mapPtr = nullptr;
+    BMSJsonUtil::GetMapObject(jsonObj, jsonObj.end(), "abilities", mapPtr,
+        JsonType::OBJECT, ArrayType::NOT_ARRAY, true, parseResult);
+    EXPECT_EQ(parseResult, ERR_OK);
+    EXPECT_NE(mapPtr, nullptr);
+    EXPECT_EQ(mapPtr->size(), 2u);
+}
+
+/**
+ * @tc.number: GetMapObject_0200
+ * @tc.name: GetMapObject_0200
+ * @tc.desc: test GetMapObject rejects null values (crash prevention)
+ */
+HWTEST_F(BundleInfoTest, GetMapObject_0200, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObj;
+    jsonObj["data"] = {{"key1", nullptr}, {"key2", {{"name", "ok"}}}};
+    int32_t parseResult = ERR_OK;
+    const nlohmann::json *mapPtr = nullptr;
+    BMSJsonUtil::GetMapObject(jsonObj, jsonObj.end(), "data", mapPtr,
+        JsonType::OBJECT, ArrayType::NOT_ARRAY, true, parseResult);
+    EXPECT_NE(parseResult, ERR_OK);
+    EXPECT_EQ(mapPtr, nullptr);
+}
+
+/**
+ * @tc.number: GetMapObject_0300
+ * @tc.name: GetMapObject_0300
+ * @tc.desc: test GetMapObject with missing key (necessary vs optional)
+ */
+HWTEST_F(BundleInfoTest, GetMapObject_0300, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObj = nlohmann::json::object();
+    int32_t parseResult = ERR_OK;
+    const nlohmann::json *mapPtr = nullptr;
+
+    // necessary key missing
+    BMSJsonUtil::GetMapObject(jsonObj, jsonObj.end(), "nonexistent", mapPtr,
+        JsonType::OBJECT, ArrayType::NOT_ARRAY, true, parseResult);
+    EXPECT_NE(parseResult, ERR_OK);
+    EXPECT_EQ(mapPtr, nullptr);
+
+    // optional key missing
+    parseResult = ERR_OK;
+    BMSJsonUtil::GetMapObject(jsonObj, jsonObj.end(), "nonexistent", mapPtr,
+        JsonType::OBJECT, ArrayType::NOT_ARRAY, false, parseResult);
+    EXPECT_EQ(parseResult, ERR_OK);
+    EXPECT_EQ(mapPtr, nullptr);
+}
+
+/**
+ * @tc.number: GetMapObject_0400
+ * @tc.name: GetMapObject_0400
+ * @tc.desc: test GetMapObject with vector value type (JsonType::ARRAY, ArrayType::OBJECT)
+ */
+HWTEST_F(BundleInfoTest, GetMapObject_0400, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObj;
+    nlohmann::json skillArr = nlohmann::json::array();
+    skillArr.push_back({{"name", "skill1"}});
+    skillArr.push_back({{"name", "skill2"}});
+    jsonObj["skills"] = {{"key1", skillArr}, {"key2", skillArr}};
+    int32_t parseResult = ERR_OK;
+    const nlohmann::json *mapPtr = nullptr;
+    BMSJsonUtil::GetMapObject(jsonObj, jsonObj.end(), "skills", mapPtr,
+        JsonType::ARRAY, ArrayType::OBJECT, true, parseResult);
+    EXPECT_EQ(parseResult, ERR_OK);
+    EXPECT_NE(mapPtr, nullptr);
+    EXPECT_EQ(mapPtr->size(), 2u);
+}
+
+/**
+ * @tc.number: GetMapObject_0500
+ * @tc.name: GetMapObject_0500
+ * @tc.desc: test GetMapObject with vector type rejects null elements
+ */
+HWTEST_F(BundleInfoTest, GetMapObject_0500, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObj;
+    nlohmann::json badArr = nlohmann::json::array();
+    badArr.push_back({{"name", "skill1"}});
+    badArr.push_back(nullptr);
+    jsonObj["skills"] = {{"key1", badArr}};
+    int32_t parseResult = ERR_OK;
+    const nlohmann::json *mapPtr = nullptr;
+    BMSJsonUtil::GetMapObject(jsonObj, jsonObj.end(), "skills", mapPtr,
+        JsonType::ARRAY, ArrayType::OBJECT, true, parseResult);
+    EXPECT_NE(parseResult, ERR_OK);
+    EXPECT_EQ(mapPtr, nullptr);
+}
+
+/**
+ * @tc.number: GetMapObject_0600
+ * @tc.name: GetMapObject_0600
+ * @tc.desc: test GetMapObject with non-object value
+ */
+HWTEST_F(BundleInfoTest, GetMapObject_0600, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObj;
+    jsonObj["data"] = "not_an_object";
+    int32_t parseResult = ERR_OK;
+    const nlohmann::json *mapPtr = nullptr;
+    BMSJsonUtil::GetMapObject(jsonObj, jsonObj.end(), "data", mapPtr,
+        JsonType::OBJECT, ArrayType::NOT_ARRAY, true, parseResult);
+    EXPECT_NE(parseResult, ERR_OK);
+    EXPECT_EQ(mapPtr, nullptr);
+}
+
+/**
+ * @tc.number: GetMapObject_0700
+ * @tc.name: GetMapObject_0700
+ * @tc.desc: test GetMapObject early-returns when parseResult already has error
+ */
+HWTEST_F(BundleInfoTest, GetMapObject_0700, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObj;
+    jsonObj["data"] = {{"key", {{"name", "test"}}}};
+    int32_t parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    const nlohmann::json *mapPtr = nullptr;
+    BMSJsonUtil::GetMapObject(jsonObj, jsonObj.end(), "data", mapPtr,
+        JsonType::OBJECT, ArrayType::NOT_ARRAY, true, parseResult);
+    EXPECT_EQ(mapPtr, nullptr);
+}
+
+/**
+ * @tc.number: GetMapObject_0800
+ * @tc.name: GetMapObject_0800
+ * @tc.desc: test GetMapObject roundtrip with get<T>
+ */
+HWTEST_F(BundleInfoTest, GetMapObject_0800, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObj;
+    jsonObj["items"] = {
+        {"a", {{"name", "itemA"}, {"label", "LabelA"}}},
+        {"b", {{"name", "itemB"}, {"label", "LabelB"}}}
+    };
+    int32_t parseResult = ERR_OK;
+    const nlohmann::json *mapPtr = nullptr;
+    BMSJsonUtil::GetMapObject(jsonObj, jsonObj.end(), "items", mapPtr,
+        JsonType::OBJECT, ArrayType::NOT_ARRAY, true, parseResult);
+    EXPECT_EQ(parseResult, ERR_OK);
+    ASSERT_NE(mapPtr, nullptr);
+    auto result = mapPtr->get<std::map<std::string, nlohmann::json>>();
+    EXPECT_EQ(result.size(), 2u);
+}
+
 } // AppExecFwk
 } // OHOS

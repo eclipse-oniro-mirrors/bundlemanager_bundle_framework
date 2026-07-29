@@ -105,6 +105,8 @@ constexpr const char* PERMISSION_RUN_DYN_CODE = "ohos.permission.RUN_DYN_CODE";
 constexpr const char* PERMISSION_ACCESS_DYNAMIC_ICON = "ohos.permission.ACCESS_DYNAMIC_ICON";
 constexpr const char* PERMISSION_START_SHORTCUT = "ohos.permission.START_SHORTCUT";
 constexpr const char* PERMISSION_INSTALL_CLONE_BUNDLE = "ohos.permission.INSTALL_CLONE_BUNDLE";
+constexpr const char* PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES =
+    "ohos.permission.MANAGE_CLONE_BUNDLE_PREFERENCES";
 constexpr const char* PERMISSION_MANAGER_SHORTCUT = "ohos.permission.MANAGE_SHORTCUTS";
 constexpr const char* PERMISSION_ACCESS_APP_INSTALL_DIR = "ohos.permission.ACCESS_APP_INSTALL_DIR";
 constexpr const char* PERMISSION_GET_SIGNATURE_INFO = "ohos.permission.GET_SIGNATURE_INFO";
@@ -169,7 +171,7 @@ constexpr const char* ENTITY_HOME = "entity.system.home";
 constexpr uint8_t MAX_BUNDLE_NAME = 128;
 constexpr uint8_t MIN_BUNDLE_NAME = 7;
 constexpr uint8_t MAX_JSON_ELEMENT_LENGTH = 255;
-constexpr uint16_t MAX_JSON_ARRAY_LENGTH = 1024;
+constexpr uint16_t MAX_JSON_ARRAY_LENGTH = 2048;
 
 constexpr uint16_t MAX_JSON_STRING_LENGTH = 4096;
 constexpr const char* UID = "uid";

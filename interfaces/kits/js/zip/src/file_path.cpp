@@ -423,7 +423,7 @@ bool FilePath::GetZipAllDirFiles(const std::string &path, std::vector<std::strin
 
 std::string FilePath::CheckDestDirTail()
 {
-    if (path_.substr(path_.size()-ZIP_SIZE, ZIP_SIZE) == ZIP) {
+    if (path_.size() >= ZIP_SIZE && path_.substr(path_.size()-ZIP_SIZE, ZIP_SIZE) == ZIP) {
         return path_;
     } else {
         return path_ + ZIP;

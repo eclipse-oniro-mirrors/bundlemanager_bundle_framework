@@ -20,6 +20,7 @@
 
 #include "appexecfwk_errors.h"
 #include "app_provision_info.h"
+#include "bundle_rdb_util.h"
 #include "rdb_data_manager.h"
 
 namespace OHOS {
@@ -42,14 +43,6 @@ private:
     bool ConvertToAppProvision(const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
         AppProvisionInfo &appProvisionInfo);
     std::shared_ptr<RdbDataManager> rdbDataManager_;
-
-#define CHECK_RDB_RESULT_RETURN_IF_FAIL(errcode, errmsg)                           \
-    do {                                                                           \
-        if ((errcode) != NativeRdb::E_OK) {                                          \
-            APP_LOGE(errmsg, errcode);                                             \
-            return false;                                                          \
-        }                                                                          \
-    } while (0)
 };
 } // namespace AppExecFwk
 } // namespace OHOS

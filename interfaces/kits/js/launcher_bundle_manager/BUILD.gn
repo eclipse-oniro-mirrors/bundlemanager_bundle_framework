@@ -15,6 +15,8 @@ import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
 ohos_shared_library("launcherbundlemanager_common") {
+  branch_protector_ret = "pac_ret"
+  
   sanitize = {
     boundary_sanitize = true
     cfi = true
@@ -58,7 +60,9 @@ ohos_shared_library("launcherbundlemanager_common") {
     "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "libuv:uv",
     "napi:ace_napi",
+    "node:node_header_notice",
     "samgr:samgr_proxy",
   ]
   subsystem_name = "bundlemanager"
@@ -125,7 +129,9 @@ ohos_shared_library("launcherbundlemanager") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "libuv:uv",
     "napi:ace_napi",
+    "node:node_header_notice",
     "samgr:samgr_proxy",
     "window_manager:libwm",
   ]

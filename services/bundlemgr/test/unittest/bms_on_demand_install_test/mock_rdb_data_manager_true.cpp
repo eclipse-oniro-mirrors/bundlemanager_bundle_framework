@@ -70,6 +70,13 @@ bool RdbDataManager::UpdateData(
     return true;
 }
 
+bool RdbDataManager::UpdateData(const NativeRdb::ValuesBucket &valuesBucket,
+    const NativeRdb::AbsRdbPredicates &absRdbPredicates, int32_t &changedRows)
+{
+    changedRows = 1;
+    return true;
+}
+
 bool RdbDataManager::DeleteData(const std::string &key)
 {
     return true;

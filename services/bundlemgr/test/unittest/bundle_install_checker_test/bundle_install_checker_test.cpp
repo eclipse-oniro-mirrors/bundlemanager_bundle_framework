@@ -1058,13 +1058,13 @@ HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0042, TestSize.Level
     BundleInstallChecker bundleInstallChecker;
     Security::Verify::HapVerifyResult hapVerifyResult;
     CodeSignatureParam codeSignatureParam;
-    bundleInstallChecker.ProcessCodeSignatureParam(0, hapVerifyResult, codeSignatureParam);
+    bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
     EXPECT_EQ(codeSignatureParam.profileBlockLength, 0);
 
     Security::Verify::ProvisionInfo provisionInfo;
     provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE;
     hapVerifyResult.SetProvisionInfo(provisionInfo);
-    bundleInstallChecker.ProcessCodeSignatureParam(0, hapVerifyResult, codeSignatureParam);
+    bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
     EXPECT_EQ(codeSignatureParam.profileBlockLength, 0);
     EXPECT_FALSE(codeSignatureParam.isEnterpriseResigned);
 
@@ -1075,26 +1075,26 @@ HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0042, TestSize.Level
     hapVerifyResult.SetProvisionInfo(provisionInfo);
     codeSignatureParam.profileBlockLength = 0;
     codeSignatureParam.isEnterpriseResigned = false;
-    bundleInstallChecker.ProcessCodeSignatureParam(0, hapVerifyResult, codeSignatureParam);
+    bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
     EXPECT_EQ(codeSignatureParam.profileBlockLength, 100);
     EXPECT_TRUE(codeSignatureParam.isEnterpriseResigned);
 
     provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_MDM;
     hapVerifyResult.SetProvisionInfo(provisionInfo);
     codeSignatureParam.profileBlockLength = 0;
-    bundleInstallChecker.ProcessCodeSignatureParam(0, hapVerifyResult, codeSignatureParam);
+    bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
     EXPECT_EQ(codeSignatureParam.profileBlockLength, 100);
 
     provisionInfo.distributionType = Security::Verify::AppDistType::INTERNALTESTING;
     hapVerifyResult.SetProvisionInfo(provisionInfo);
     codeSignatureParam.profileBlockLength = 0;
-    bundleInstallChecker.ProcessCodeSignatureParam(0, hapVerifyResult, codeSignatureParam);
+    bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
     EXPECT_EQ(codeSignatureParam.profileBlockLength, 100);
 
     provisionInfo.distributionType = Security::Verify::AppDistType::DEVELOPER;
     hapVerifyResult.SetProvisionInfo(provisionInfo);
     codeSignatureParam.profileBlockLength = 0;
-    bundleInstallChecker.ProcessCodeSignatureParam(0, hapVerifyResult, codeSignatureParam);
+    bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
     EXPECT_EQ(codeSignatureParam.profileBlockLength, 100);
 }
 

@@ -613,7 +613,7 @@ HWTEST_F(BmsPluginInstallerTest, VerifyCodeSignatureForNativeFiles_0002, Functio
 HWTEST_F(BmsPluginInstallerTest, VerifyCodeSignatureForHsp_0001, Function | SmallTest | Level0)
 {
     PluginInstaller installer;
-    ErrCode ret = installer.VerifyCodeSignatureForHsp("", false);
+    ErrCode ret = installer.VerifyCodeSignatureForHsp("", "", false, false);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED);
 }
 

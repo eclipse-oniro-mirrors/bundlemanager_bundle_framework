@@ -2076,7 +2076,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllBundleInfoByDeveloperId_0100, Function |
     std::string developerId;
     std::vector<BundleInfo> bundleInfos;
     ErrCode ret = hostImpl->GetAllBundleInfoByDeveloperId(developerId, bundleInfos, DEFAULT_USERID);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_DEVELOPERID);
 }
 
 /**
@@ -5615,6 +5615,34 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateSharedModuleInfo_001, Function | SmallTe
 }
 
 /**
+ * @tc.number: SetAppCategory_001
+ * @tc.name: test SetAppCategory and GetAppCategory
+ * @tc.desc: 1.system run normally
+ *           2.SetAppCategory and GetAppCategory
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetAppCategory_001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    EXPECT_EQ(innerBundleInfo.GetAppCategory(), AppCategory::APP_CATEGORY_UNSPECIFIED);
+    innerBundleInfo.SetAppCategory(AppCategory::APP_CATEGORY_DIFF_PACKAGE);
+    EXPECT_EQ(innerBundleInfo.GetAppCategory(), AppCategory::APP_CATEGORY_DIFF_PACKAGE);
+}
+
+/**
+ * @tc.number: SetDualModeCloneApp_001
+ * @tc.name: test SetDualModeCloneApp and IsDualModeCloneApp
+ * @tc.desc: 1.system run normally
+ *           2.SetDualModeCloneApp and IsDualModeCloneApp
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetDualModeCloneApp_001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    EXPECT_FALSE(innerBundleInfo.IsDualModeCloneApp());
+    innerBundleInfo.SetDualModeCloneApp(true);
+    EXPECT_TRUE(innerBundleInfo.IsDualModeCloneApp());
+}
+
+/**
  * @tc.number: GetLauncherAbilityByBundleName_0006
  * @tc.name: test get launcherAbility
  * @tc.desc: 1.system run normally
@@ -7225,6 +7253,31 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAcrossUserPermission_0500, Function | Sma
     bool result = hostImpl->CheckAcrossUserPermission(Constants::UNSPECIFIED_USERID);
 
     EXPECT_EQ(result, true);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: UpdateDesktopShortcutInfoAcrossUser_0100
+ * @tc.name: test UpdateDesktopShortcutInfo not blocked for legitimate cross-user caller
+ * @tc.desc: 1. caller is system app, MANAGE_SHORTCUT granted, non-native token
+ *           2. target userId (100) differs from calling uid's user (0) and is not UNSPECIFIED_USERID
+ *           3. with INTERACT_ACROSS_LOCAL_ACCOUNTS granted, CheckAcrossUserPermission returns true
+ *           4. method must pass the across-user gate and reach the data layer without being denied
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateDesktopShortcutInfoAcrossUser_0100, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(false);
+    SetVerifyCallingPermissionForTest(true); // grants both MANAGE_SHORTCUT and INTERACT_ACROSS_LOCAL_ACCOUNTS
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ShortcutInfo shortcutInfo;
+    int32_t userId = 100; // differs from GetUserIdByCallingUid() (0); not UNSPECIFIED_USERID (-2)
+    ErrCode ret = hostImpl->UpdateDesktopShortcutInfo(shortcutInfo, userId);
+
+    // Cross-user caller with proper permission must pass the across-user gate.
+    EXPECT_NE(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     ResetTestValues();
 }
 
@@ -12410,5 +12463,18 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundlePartialCacheAutomatic_0400, Functio
     auto ret = bundleMgrHostImpl_->CleanBundlePartialCacheAutomatic(
         cleanCacheInfo, beforeCleanedSize, afterCleanedSize);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: VerifySystemApi_0100
+ * @tc.name: test VerifySystemApi of BundleMgrHostImpl
+ * @tc.desc: 1. call VerifySystemApi directly
+ *           2. verify return value matches mock permission state
+ */
+HWTEST_F(BmsBundleKitServiceTest, VerifySystemApi_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    EXPECT_TRUE(hostImpl->VerifySystemApi());
 }
 }

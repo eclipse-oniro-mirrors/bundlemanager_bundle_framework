@@ -159,7 +159,7 @@ uint32_t BundleExtractor::GetExtractedFileInodes(bool isCompressNativeLibrary, b
     // Calculate inodes for each file that will be extracted
     for (const auto &entry : entryMap) {
         const std::string &fileName = entry.second.fileName;
-        uint32_t uncompressedSize = entry.second.uncompressedSize;
+        uint64_t uncompressedSize = entry.second.uncompressedSize;
 
         // Convert bytes to KB (round up)
         uint64_t fileSizeKb = (uncompressedSize + 1023) / 1024;

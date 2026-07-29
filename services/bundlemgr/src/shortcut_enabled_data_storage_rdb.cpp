@@ -139,6 +139,7 @@ void ShortcutEnabledDataStorageRdb::FilterShortcutInfosEnabled(
             APP_LOGE("GetString shortcutId failed");
             return;
         }
+        APP_LOGI_NOFUNC("FilterShortcutInfos disabled shortcutId: %{public}s", shortcutId.c_str());
         shortcutIdSet.insert(shortcutId);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
     shortcutInfos.erase(std::remove_if(shortcutInfos.begin(), shortcutInfos.end(),

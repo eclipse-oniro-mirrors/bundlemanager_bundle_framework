@@ -52,7 +52,8 @@ public:
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
     ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-        const std::string &targetSoPath, const std::string &cpuAbi);
+        const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+        const bool isSystemApp);
     /**
      * @brief Rename the module directory from temporaily path to the real path.
      * @param oldPath Indicates the old path name.
@@ -274,11 +275,10 @@ public:
     ErrCode ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
         const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid);
 
-    ErrCode DeliverySignProfile(const std::string &bundleName, int32_t sessionId = 0);
+    ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+        const unsigned char *profileBlock);
 
     ErrCode RemoveSignProfile(const std::string &bundleName);
-
-    ErrCode ClearSessionProvisionCache(int32_t sessionId);
 
     ErrCode AddCertAndEnableKey(const std::string &certPath, const std::string &certContent);
 
@@ -365,6 +365,8 @@ public:
      * @return Returns ERR_OK if delete old cache files successfully; returns error code otherwise.
      */
     ErrCode DeleteOldCacheFiles(const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize);
+
+    ErrCode GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t &statSize, int64_t timeoutMs = -1);
 
 private:
     sptr<IInstalld> GetInstalldProxy();

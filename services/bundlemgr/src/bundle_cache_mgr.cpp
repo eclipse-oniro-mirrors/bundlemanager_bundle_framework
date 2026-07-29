@@ -126,8 +126,7 @@ void BundleCacheMgr::GetBundleCacheSizeByAppIndex(const std::string &bundleName,
 {
     std::vector<std::string> cachePaths = GetBundleCachePath(bundleName, userId, appIndex, moduleNames);
     int64_t cacheSize = 0;
-    ErrCode ret = InstalldClient::GetInstance()->GetDiskUsageFromPath(
-        cachePaths, bundleName, BundleDirScene::GET_BUNDLE_CACHE_DISK_USAGE, cacheSize);
+    ErrCode ret = InstalldClient::GetInstance()->GetCacheDiskUsageFromPath(cachePaths, cacheSize);
     if (ret != ERR_OK) {
         APP_LOGW_NOFUNC("BundleCache failed for %{public}s", bundleName.c_str());
         return;
@@ -163,6 +162,10 @@ ErrCode BundleCacheMgr::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
 ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)
 {
     APP_LOGI("start");
+    if (processCacheCallback == nullptr) {
+        APP_LOGE("GetAllBundleCacheStat processCacheCallback is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     const int64_t startTime = BundleUtil::GetCurrentTimeMs();
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -177,21 +180,19 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
     }
     std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
     dataMgr->GetBundleCacheInfos(userId, validBundles, true);
-    if (!validBundles.empty()) {
-        auto getAllBundleCache = [validBundles, userId, processCacheCallback, startTime]() {
-            uint64_t cacheStat = 0;
-            APP_LOGI("thread for GetBundleCacheSize start");
-            GetBundleCacheSize(validBundles, userId, cacheStat);
-            processCacheCallback->OnGetAllBundleCacheFinished(cacheStat);
-            auto endTime = BundleUtil::GetCurrentTimeMs();
-            auto elapsedTime = endTime - startTime;
-            if (elapsedTime >= CACHE_TIMEOUT_MS) {
-                ReportCacheTimeOutEvent(HighRiskOperationType::GET_ALL_BUNDLE_CACHE_STAT_TIMEOUT,
-                    userId, startTime, endTime);
-            }
-        };
-        std::thread(getAllBundleCache).detach();
-    }
+    auto getAllBundleCache = [validBundles, userId, processCacheCallback, startTime]() {
+        uint64_t cacheStat = 0;
+        APP_LOGI("thread for GetBundleCacheSize start");
+        GetBundleCacheSize(validBundles, userId, cacheStat);
+        processCacheCallback->OnGetAllBundleCacheFinished(cacheStat);
+        auto endTime = BundleUtil::GetCurrentTimeMs();
+        auto elapsedTime = endTime - startTime;
+        if (elapsedTime >= CACHE_TIMEOUT_MS) {
+            ReportCacheTimeOutEvent(HighRiskOperationType::GET_ALL_BUNDLE_CACHE_STAT_TIMEOUT,
+                userId, startTime, endTime);
+        }
+    };
+    std::thread(getAllBundleCache).detach();
     APP_LOGI("GetAllBundleCacheStat succeed");
     return ERR_OK;
 }
@@ -235,6 +236,10 @@ ErrCode BundleCacheMgr::CleanBundleCache(const std::vector<std::tuple<std::strin
 ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
 {
     APP_LOGI("start");
+    if (processCacheCallback == nullptr) {
+        APP_LOGE("processCacheCallback is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     const int64_t startTime = BundleUtil::GetCurrentTimeMs();
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -265,6 +270,8 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
             }
         };
         std::thread(CleanAllBundleCache).detach();
+    } else {
+        processCacheCallback->OnCleanAllBundleCacheFinished(ERR_OK);
     }
     return ERR_OK;
 }

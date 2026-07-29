@@ -42,7 +42,6 @@ const std::string INVALID_BUNDLE_NAME_2 = "com/example/test";
 const std::string INVALID_BUNDLE_NAME_3 = "com/..example/test";
 const std::string INVALID_BUNDLE_NAME_4 = "com../example/test";
 const std::string INVALID_CLONE_BUNDLE_NAME = "+clone-1w+com.example.test";
-const std::string INVALID_CLONE_BUNDLE_NAME_NO_PLUS = "+clone-1com.example.test";
 const std::string INVALID_SANDBOX_BUNDLE_NAME = "1w_com.example.test";
 }  // namespace
 
@@ -216,95 +215,6 @@ HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValid_1300, Function |
 {
     bool result = InstalldOperator::IsValidBundleName(INVALID_BUNDLE_NAME_4);
     EXPECT_FALSE(result);
-}
-
-/**
- * @tc.number: CheckBundleNameIsValid_1400
- * @tc.name: test CheckBundleNameIsValid with clone prefix but no plus sign
- * @tc.desc: 1. test clone bundle name without plus sign should return false
- */
-HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValid_1400, Function | SmallTest | Level1)
-{
-    bool result = InstalldOperator::IsValidBundleName(INVALID_CLONE_BUNDLE_NAME_NO_PLUS);
-    EXPECT_FALSE(result);
-}
-
-/**
- * @tc.number: CheckBundleNameIsValidWithOriBundle_0100
- * @tc.name: test IsValidBundleNameWithOriBundle with normal name
- * @tc.desc: 1. test normal name returns original name unchanged
- */
-HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValidWithOriBundle_0100, Function | SmallTest | Level1)
-{
-    std::string oriBundleName;
-    bool result = InstalldOperator::IsValidBundleNameWithOriBundle(VALID_BUNDLE_NAME_1, oriBundleName);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(oriBundleName, VALID_BUNDLE_NAME_1);
-}
-
-/**
- * @tc.number: CheckBundleNameIsValidWithOriBundle_0200
- * @tc.name: test IsValidBundleNameWithOriBundle with clone name
- * @tc.desc: 1. test clone name extracts original bundle name
- */
-HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValidWithOriBundle_0200, Function | SmallTest | Level1)
-{
-    std::string oriBundleName;
-    bool result = InstalldOperator::IsValidBundleNameWithOriBundle(VALID_CLONE_BUNDLE_NAME, oriBundleName);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(oriBundleName, VALID_BUNDLE_NAME_1);
-}
-
-/**
- * @tc.number: CheckBundleNameIsValidWithOriBundle_0300
- * @tc.name: test IsValidBundleNameWithOriBundle with sandbox name
- * @tc.desc: 1. test sandbox name extracts original bundle name
- */
-HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValidWithOriBundle_0300, Function | SmallTest | Level1)
-{
-    std::string oriBundleName;
-    bool result = InstalldOperator::IsValidBundleNameWithOriBundle(VALID_SANDBOX_BUNDLE_NAME, oriBundleName);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(oriBundleName, VALID_BUNDLE_NAME_1);
-}
-
-/**
- * @tc.number: CheckBundleNameIsValidWithOriBundle_0400
- * @tc.name: test IsValidBundleNameWithOriBundle with invalid sandbox
- * @tc.desc: 1. test sandbox with non-numeric appIndex falls back to input
- */
-HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValidWithOriBundle_0400, Function | SmallTest | Level1)
-{
-    std::string oriBundleName;
-    bool result = InstalldOperator::IsValidBundleNameWithOriBundle(INVALID_SANDBOX_BUNDLE_NAME, oriBundleName);
-    EXPECT_FALSE(result);
-    EXPECT_EQ(oriBundleName, INVALID_SANDBOX_BUNDLE_NAME);
-}
-
-/**
- * @tc.number: CheckBundleNameIsValidWithOriBundle_0500
- * @tc.name: test IsValidBundleNameWithOriBundle with clone prefix but no plus sign
- * @tc.desc: 1. test clone without plus sign returns false and falls back to input
- */
-HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValidWithOriBundle_0500, Function | SmallTest | Level1)
-{
-    std::string oriBundleName;
-    bool result = InstalldOperator::IsValidBundleNameWithOriBundle(INVALID_CLONE_BUNDLE_NAME_NO_PLUS, oriBundleName);
-    EXPECT_FALSE(result);
-    EXPECT_EQ(oriBundleName, INVALID_CLONE_BUNDLE_NAME_NO_PLUS);
-}
-
-/**
- * @tc.number: CheckBundleNameIsValidWithOriBundle_0600
- * @tc.name: test IsValidBundleNameWithOriBundle with empty name
- * @tc.desc: 1. test empty name returns false and falls back to empty
- */
-HWTEST_F(BmsBundleInstallParametersTest, CheckBundleNameIsValidWithOriBundle_0600, Function | SmallTest | Level1)
-{
-    std::string oriBundleName;
-    bool result = InstalldOperator::IsValidBundleNameWithOriBundle(INVALID_BUNDLE_NAME_EMPTY, oriBundleName);
-    EXPECT_FALSE(result);
-    EXPECT_EQ(oriBundleName, INVALID_BUNDLE_NAME_EMPTY);
 }
 
 /**
@@ -2811,6 +2721,77 @@ HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0500, Function | SmallT
     std::string fileName = "dir1/../dir2/test.txt";
     bool result = InstalldOperator::IsFileNameValid(fileName);
     EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: IsFileNameValid_0600
+ * @tc.name: test IsFileNameValid rejects paths starting with dot
+ * @tc.desc: 1. test "." ".." "./foo" ".hidden" all return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0600, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("."));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(".."));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("./foo"));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(".hidden"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0700
+ * @tc.name: test IsFileNameValid rejects double-slash traversal
+ * @tc.desc: 1. test "//.." patterns return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0700, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("foo//..bar"));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("/data//../etc"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0800
+ * @tc.name: test IsFileNameValid rejects backslash
+ * @tc.desc: 1. test paths containing '\\' return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0800, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("..\\"));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("C:\\windows\\path"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0900
+ * @tc.name: test IsFileNameValid rejects embedded NULL byte
+ * @tc.desc: 1. test paths containing '\\0' return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0900, Function | SmallTest | Level0)
+{
+    std::string pathWithNull("foo/bar", 8); // "foo/bar" + embedded \0
+    pathWithNull[3] = '\0';
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(pathWithNull));
+}
+
+/**
+ * @tc.number: IsFileNameValid_1000
+ * @tc.name: test IsFileNameValid rejects control characters
+ * @tc.desc: 1. test paths containing bytes < 0x20 return false
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_1000, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(std::string("test\x01", 5)));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(std::string("test\x1F", 5)));
+}
+
+/**
+ * @tc.number: IsFileNameValid_1100
+ * @tc.name: test IsFileNameValid accepts valid complex path (regression)
+ * @tc.desc: 1. test normal valid paths still return true
+ */
+HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_1100, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::IsFileNameValid("com.example.app"));
+    EXPECT_TRUE(InstalldOperator::IsFileNameValid("/data/app/el1/bundle/public/com.example.test"));
+    EXPECT_TRUE(InstalldOperator::IsFileNameValid("base.hap"));
+    EXPECT_TRUE(InstalldOperator::IsFileNameValid("test_file.txt"));
 }
 
 /**

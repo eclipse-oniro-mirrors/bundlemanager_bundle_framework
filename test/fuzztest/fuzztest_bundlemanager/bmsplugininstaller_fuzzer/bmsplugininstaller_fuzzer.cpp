@@ -88,7 +88,9 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         bundlePath, signatureFilePath, isPreInstalledBundle);
     std::string appIdentifier = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     bool isCompileSdkOpenHarmony = fdp.ConsumeBool();
-    installer.VerifyCodeSignatureForHsp(bundlePath, isCompileSdkOpenHarmony);
+    bool isEnterpriseBundle = fdp.ConsumeBool();
+    installer.VerifyCodeSignatureForHsp(bundlePath, appIdentifier, isEnterpriseBundle,
+        isCompileSdkOpenHarmony);
 
     installer.CheckPluginId(hostBundleName);
     installer.pluginIds_ = pluginFilePaths;

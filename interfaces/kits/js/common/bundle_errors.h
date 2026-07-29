@@ -118,6 +118,10 @@ constexpr ErrCode ERROR_PLUGIN_NOT_FOUND = 17700092;
 //skill errCode
 constexpr ErrCode ERROR_SKILL_NOT_EXIST = 17700093;
 
+// app clone preference errCode
+constexpr ErrCode ERROR_APP_CLONE_NOT_EXIST = 17700094;
+constexpr ErrCode ERROR_APP_CLONE_PREFERENCE_NOT_EXIST = 17700095;
+
 // bundle service exception
 constexpr ErrCode ERROR_BUNDLE_SERVICE_EXCEPTION = 17700101;
 
@@ -143,6 +147,7 @@ constexpr ErrCode ERROR_SET_ABILITY_FILE_TYPES_FOR_SELF = 17700351;
 
 // dynamicShortcutInfo
 constexpr ErrCode ERROR_BUNDLENAME_APPINDEX_NOT_UNIQUE = 18100001;
+constexpr ErrCode ERROR_SHORTCUT_MANAGER_NOT_EXIST = 18100002;
 
 // zlib errCode
 constexpr ErrCode ERR_ZLIB_SRC_FILE_INVALID = 900001;

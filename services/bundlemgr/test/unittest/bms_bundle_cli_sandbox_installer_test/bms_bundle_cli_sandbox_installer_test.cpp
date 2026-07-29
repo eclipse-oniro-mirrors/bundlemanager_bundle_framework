@@ -794,4 +794,47 @@ HWTEST_F(BmsBundleCliSandboxInstallerTest, ProcessCreateCliSandbox_0400, TestSiz
     DeleteBundle(BUNDLE_NAME);
     UnsetBundleDataMgr();
 }
+
+/**
+ * @tc.number: ProcessCreateCliSandbox_0500
+ * @tc.name: ProcessCreateCliSandbox - Creator has no PERMISSION_MANAGE_SANDBOX_BUNDLE
+ * @tc.desc: Test ProcessCreateCliSandbox when creator is installed for the user
+ *           but does not hold PERMISSION_MANAGE_SANDBOX_BUNDLE permission.
+ */
+HWTEST_F(BmsBundleCliSandboxInstallerTest, ProcessCreateCliSandbox_0500, TestSize.Level1)
+{
+    ASSERT_NE(installer_, nullptr);
+    SetBundleDataMgr();
+    ScopeGuard guard([this] {
+        g_testVerifyPermission = 0;
+        UnsetBundleDataMgr();
+    });
+    SetUserIdToDataMgr(USER_ID);
+    installer_->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(installer_->dataMgr_, nullptr);
+
+    auto addBundleWithUser = [](const std::string &bundleName) {
+        InnerBundleInfo info;
+        ApplicationInfo appInfo;
+        appInfo.bundleName = bundleName;
+        info.SetBaseApplicationInfo(appInfo);
+        InnerBundleUserInfo userInfo;
+        userInfo.bundleName = bundleName;
+        userInfo.bundleUserInfo.userId = USER_ID;
+        info.AddInnerBundleUserInfo(userInfo);
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_[bundleName] = info;
+    };
+    addBundleWithUser(BUNDLE_NAME);
+    addBundleWithUser(CREATOR_BUNDLE_NAME);
+
+    // creator installed but permission not granted
+    g_testVerifyPermission = -1;
+    int32_t appIndex = 0;
+    EXPECT_EQ(installer_->ProcessCreateCliSandbox(
+        CREATOR_BUNDLE_NAME, BUNDLE_NAME, USER_ID, appIndex),
+        ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    DeleteBundle(BUNDLE_NAME);
+    DeleteBundle(CREATOR_BUNDLE_NAME);
+}
 } // namespace OHOS

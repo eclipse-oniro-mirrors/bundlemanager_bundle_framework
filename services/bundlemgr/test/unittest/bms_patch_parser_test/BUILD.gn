@@ -56,6 +56,7 @@ ohos_unittest("BmsPatchParserTest") {
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
+    "dfs_service:libdecompress",
     "ffrt:libffrt",
     "hilog:libhilog",
     "hitrace:hitrace_meter",

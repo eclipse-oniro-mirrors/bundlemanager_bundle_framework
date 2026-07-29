@@ -111,7 +111,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0200, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->ExtractModuleFiles(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING);
+    auto ret = hostImpl->ExtractModuleFiles(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -537,11 +537,11 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2800, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING);
+    auto ret = hostImpl->ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING, false, false);
     EXPECT_NE(ret, ERR_OK);
-    ret = hostImpl->ExtractModuleFiles(TEST_STRING, "", TEST_STRING, TEST_STRING);
+    ret = hostImpl->ExtractModuleFiles(TEST_STRING, "", TEST_STRING, TEST_STRING, false, false);
     EXPECT_NE(ret, ERR_OK);
-    ret = hostImpl->ExtractModuleFiles("", "", TEST_STRING, TEST_STRING);
+    ret = hostImpl->ExtractModuleFiles("", "", TEST_STRING, TEST_STRING, false, false);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -1107,7 +1107,9 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6000, Function | Sma
     ASSERT_NE(installdProxy, nullptr);
 
     std::string bundleName = "com.acts.example";
-    ErrCode ret = installdProxy->DeliverySignProfile(bundleName, 0);
+    int32_t  profileBlockLength = 0;
+    const unsigned char * profileBlock = new unsigned char[0];
+    ErrCode ret = installdProxy->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
     EXPECT_EQ(ret,  ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1289,8 +1291,11 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7200, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
     std::string bundleName = "com.example.test";
-    ErrCode res = hostImpl->DeliverySignProfile(bundleName, 0);
+    int32_t profileBlockLength = 1;
+    unsigned char *profileBlock = new unsigned char[1];
+    ErrCode res = hostImpl->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+    delete[] profileBlock;
 }
 
 /**
@@ -1853,5 +1858,21 @@ HWTEST_F(BmsInstallDaemonHostImplTest, DeleteOldCacheFiles_0100, Function | Smal
     auto ret = hostImpl->DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
     EXPECT_EQ(cleanedSize, 0);
+}
+
+/**
+ * @tc.number: GetCacheDiskUsageFromPath_0100
+ * @tc.name: test GetCacheDiskUsageFromPath
+ * @tc.desc: 1. verify GetCacheDiskUsageFromPath when permission denied
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, GetCacheDiskUsageFromPath_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> paths;
+    int64_t statSize = 0;
+    auto ret = hostImpl->GetCacheDiskUsageFromPath(paths, statSize);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+    EXPECT_EQ(statSize, 0);
 }
 } // OHOS

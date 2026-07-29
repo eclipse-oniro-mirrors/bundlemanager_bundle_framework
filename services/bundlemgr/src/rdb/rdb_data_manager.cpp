@@ -306,6 +306,14 @@ bool RdbDataManager::UpdateData(const std::string &key, const std::string &value
 bool RdbDataManager::UpdateData(
     const NativeRdb::ValuesBucket &valuesBucket, const NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
+    int32_t changedRows = -1;
+    return UpdateData(valuesBucket, absRdbPredicates, changedRows);
+}
+
+bool RdbDataManager::UpdateData(
+    const NativeRdb::ValuesBucket &valuesBucket, const NativeRdb::AbsRdbPredicates &absRdbPredicates,
+    int32_t &changedRows)
+{
     APP_LOGD("UpdateData start");
     ErrCode ret = ERR_OK;
     auto rdbStore = GetRdbStore(ret);
@@ -317,8 +325,8 @@ bool RdbDataManager::UpdateData(
         APP_LOGE("RdbStore table is invalid");
         return false;
     }
-    int32_t rowId = -1;
-    ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
+    changedRows = -1;
+    ret = rdbStore->Update(changedRows, valuesBucket, absRdbPredicates);
     return ret == NativeRdb::E_OK;
 }
 

@@ -88,12 +88,24 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
         innerBundleUserInfo.canUninstall, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_IS_BUNDLE_FIRST_LAUNCH,
         innerBundleUserInfo.isBundleFirstLaunched, false, parseResult);
-    GetValueIfFindKey<std::map<std::string, InnerBundleCloneInfo>>(jsonObject, jsonObjectEnd,
-        INNER_BUNDLE_USER_INFO_CLONE_INFOS,
-        innerBundleUserInfo.cloneInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, InnerCliSandboxInfo>>(jsonObject, jsonObjectEnd,
-        INNER_BUNDLE_USER_INFO_SANDBOX_INFOS,
-        innerBundleUserInfo.sandboxInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
+    {
+        const nlohmann::json *mapPtr = nullptr;
+        BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd,
+            INNER_BUNDLE_USER_INFO_CLONE_INFOS, mapPtr,
+            JsonType::OBJECT, ArrayType::NOT_ARRAY, false, parseResult);
+        if (mapPtr != nullptr) {
+            innerBundleUserInfo.cloneInfos = mapPtr->get<std::map<std::string, InnerBundleCloneInfo>>();
+        }
+    }
+    {
+        const nlohmann::json *mapPtr = nullptr;
+        BMSJsonUtil::GetMapObject(jsonObject, jsonObjectEnd,
+            INNER_BUNDLE_USER_INFO_SANDBOX_INFOS, mapPtr,
+            JsonType::OBJECT, ArrayType::NOT_ARRAY, false, parseResult);
+        if (mapPtr != nullptr) {
+            innerBundleUserInfo.sandboxInfos = mapPtr->get<std::map<std::string, InnerCliSandboxInfo>>();
+        }
+    }
     GetValueIfFindKey<std::unordered_set<std::string>>(jsonObject, jsonObjectEnd,
         INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET,
         innerBundleUserInfo.installedPluginSet, JsonType::ARRAY, false, parseResult, ArrayType::STRING);

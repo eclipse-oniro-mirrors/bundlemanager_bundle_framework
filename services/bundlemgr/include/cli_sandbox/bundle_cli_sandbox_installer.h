@@ -91,8 +91,6 @@ private:
     int64_t versionCode_ = 0;
     bool isBundleCrossAppSharedConfig_ = false;
     std::string appDistributionType_;
-    int32_t sessionId_ = 0;
-    bool sessionCommitted_ = false;
     int64_t startTime_ = 0;
 };
 } // namespace AppExecFwk

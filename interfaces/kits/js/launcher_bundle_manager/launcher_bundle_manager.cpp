@@ -300,6 +300,7 @@ void GetShortcutInfoComplete(napi_env env, napi_status status, void *data)
         napi_get_undefined(env, &result[ARGS_POS_ONE]);
     }
     CommonFunc::NapiReturnDeferred<GetShortcutInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+    APP_LOGI_NOFUNC("napi GetShortcutInfo complete");
 }
 
 napi_value GetShortcutInfo(napi_env env, napi_callback_info info)
@@ -568,6 +569,7 @@ static ErrCode InnerStartShortcutWithReason(const OHOS::AppExecFwk::ShortcutInfo
     want.SetParam(AAFwk::Want::PARM_LAUNCH_REASON_MESSAGE, startReason);
     want.SetParam(AAFwk::Want::PARAM_APP_CLONE_INDEX_KEY, shortcutInfo.appIndex);
     auto res = AAFwk::AbilityManagerClient::GetInstance()->StartShortcut(want, startOptions);
+    APP_LOGI_NOFUNC("call AbilityManagerClient StartShortcut result : %{public}d", res);
     auto it = START_SHORTCUT_RES_MAP.find(res);
     if (it == START_SHORTCUT_RES_MAP.end()) {
         APP_LOGE("call AbilityManagerClient StartShortcut failed, res : %{public}d", res);

@@ -1062,6 +1062,12 @@ public:
     virtual ErrCode GetCliSandboxAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
         int32_t userId) override;
 
+    virtual ErrCode GetAppClonePreference(const std::string &bundleName,
+        int32_t userId, AppClonePreference &preference) override;
+
+    virtual ErrCode SetAppClonePreference(const std::string &bundleName,
+        int32_t userId, const AppClonePreference &preference) override;
+
     virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName,
         int32_t flags, int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo, int32_t userId) override;
 
@@ -1098,6 +1104,10 @@ public:
 
     virtual std::string GetStringById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING) override;
+
+    virtual ErrCode GetStringByIdList(const std::string &bundleName, const std::string &moduleName,
+        const std::vector<uint32_t> &resIdList, std::vector<std::string> &labelList,
+        int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING) override;
 
     virtual std::string GetIconById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, uint32_t density, int32_t userId) override;
@@ -1329,6 +1339,8 @@ public:
 
     virtual ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
 
+    virtual ErrCode UpdateDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
+
     virtual ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) override;
 
     /**
@@ -1466,7 +1478,11 @@ private:
      * @return Returns true if message send successfully; returns false otherwise.
      */
     bool SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+    bool SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply,
+        MessageOption &option);
     ErrCode SendTransactCmdWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+    ErrCode SendTransactCmdWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply,
+        MessageOption &option);
     ErrCode SendTransactCmdWithLogErrCode(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Send a command message from the proxy object and  printf log.
@@ -1491,6 +1507,10 @@ private:
     ErrCode GetParcelableInfoWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo);
 
     template <typename T>
+    ErrCode GetParcelableInfoWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo,
+        MessageOption &option);
+
+    template <typename T>
     ErrCode GetParcelableInfoWithErrCodeReply(
         BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply, T &parcelableInfo);
 
@@ -1507,6 +1527,10 @@ private:
     template <typename T>
     ErrCode GetParcelableInfosWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data,
         std::vector<T> &parcelableInfos);
+
+    template <typename T>
+    ErrCode GetParcelableInfosWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data,
+        std::vector<T> &parcelableInfos, MessageOption &option);
 
     template<typename T>
     bool GetVectorFromParcelIntelligent(
@@ -1529,10 +1553,16 @@ private:
     ErrCode GetParcelInfoIntelligent(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo);
 
     template<typename T>
+    ErrCode GetParcelInfoIntelligent(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo,
+        MessageOption &option);
+
+    template<typename T>
     ErrCode GetParcelInfoIntelligentWithReply(BundleMgrInterfaceCode code, MessageParcel &data,
         MessageParcel &reply, T &parcelInfo);
 
     ErrCode GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result);
+
+    ErrCode GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result, MessageOption &option);
 
     ErrCode InnerGetBigString(MessageParcel &reply, std::string &result);
 

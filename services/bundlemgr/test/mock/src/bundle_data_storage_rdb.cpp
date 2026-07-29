@@ -58,11 +58,6 @@ bool BundleDataStorageRdb::DeleteStorageBundleInfo(const InnerBundleInfo &innerB
     return true;
 }
 
-bool BundleDataStorageRdb::ResetKvStore()
-{
-    return true;
-}
-
 void BundleDataStorageRdb::TransformStrToInfo(
     const std::map<std::string, std::string> &datas,
     std::map<std::string, InnerBundleInfo> &infos)

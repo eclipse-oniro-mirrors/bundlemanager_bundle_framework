@@ -348,5 +348,16 @@ void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& ev
     APP_LOGD("Hisysevent is disabled");
 #endif
 }
+
+void EventReport::SendLargeFilesMonitorEvent(const std::string &bundleName,
+    int32_t userId, int32_t appIndex, const std::string &largeFiles)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = bundleName;
+    eventInfo.userId = userId;
+    eventInfo.appIndex = appIndex;
+    eventInfo.largeFiles = largeFiles;
+    EventReport::SendSystemEvent(BMSEventType::BUNDLE_LARGE_FILES_MONITOR, eventInfo);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

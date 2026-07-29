@@ -116,9 +116,6 @@ const std::vector<int32_t> PACKINFO_FLAGS = {
     BundlePackFlag::GET_MODULE_SUMMARY,
 };
 
-thread_local std::mutex g_permissionsCallbackMutex;
-thread_local std::mutex g_anyPermissionsCallbackMutex;
-
 struct PermissionsKey {
     napi_ref callback = 0;
     std::vector<int32_t> uids;
@@ -178,6 +175,7 @@ static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr()
             auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
             if (bundleMgr == nullptr) {
                 APP_LOGE("GetBundleMgr iface_cast get null");
+                return nullptr;
             }
             bundleMgr_ = bundleMgr;
             bundleMgr_->AsObject()->AddDeathRecipient(bundleMgrDeathRecipient);

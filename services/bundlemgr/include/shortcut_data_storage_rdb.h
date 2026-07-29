@@ -36,6 +36,7 @@ public:
     bool GetAllTableDataToJson(nlohmann::json &jsonResult);
     bool UpdateAllShortcuts(nlohmann::json &jsonResult);
     bool UpdateDesktopShortcutInfo(const std::string &bundleName, const std::vector<ShortcutInfo> &shortcutInfos);
+    bool UpdateDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId, int32_t &changedRows);
 
 private:
     bool ShortcutIdVerification(const ShortcutInfo &shortcutInfo, int32_t userId);

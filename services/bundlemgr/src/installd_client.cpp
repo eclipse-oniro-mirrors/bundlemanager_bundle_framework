@@ -44,14 +44,16 @@ ErrCode InstalldClient::CreateBundleDir(
 }
 
 ErrCode InstalldClient::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+    const bool isSystemApp)
 {
     if (srcModulePath.empty() || targetPath.empty()) {
         APP_LOGE("src module path or target path is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::ExtractModuleFiles, srcModulePath, targetPath, targetSoPath, cpuAbi);
+    return CallService(&IInstalld::ExtractModuleFiles, srcModulePath, targetPath, targetSoPath, cpuAbi,
+        needFakeDecompression, isSystemApp);
 }
 
 ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
@@ -575,13 +577,14 @@ ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &code
     return CallService(&IInstalld::VerifyCodeSignatureForHap, codeSignatureParam);
 }
 
-ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t sessionId)
+ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+    const unsigned char *profileBlock)
 {
-    if (sessionId == 0) {
-        APP_LOGE("sessionId is 0, refused");
+    if (bundleName.empty() || profileBlock == nullptr) {
+        APP_LOGE("bundle name or profile block is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::DeliverySignProfile, bundleName, sessionId);
+    return CallService(&IInstalld::DeliverySignProfile, bundleName, profileBlockLength, profileBlock);
 }
 
 ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
@@ -591,11 +594,6 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::RemoveSignProfile, bundleName);
-}
-
-ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
-{
-    return CallService(&IInstalld::ClearSessionProvisionCache, sessionId);
 }
 
 ErrCode InstalldClient::AddCertAndEnableKey(const std::string &certPath, const std::string &certContent)
@@ -828,6 +826,16 @@ ErrCode InstalldClient::DeleteOldCacheFiles(
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::DeleteOldCacheFiles, paths, cacheSize, cleanedSize);
+}
+
+ErrCode InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths,
+    int64_t &statSize, int64_t timeoutMs)
+{
+    if (paths.empty()) {
+        APP_LOGE("paths is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::GetCacheDiskUsageFromPath, paths, statSize, timeoutMs);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

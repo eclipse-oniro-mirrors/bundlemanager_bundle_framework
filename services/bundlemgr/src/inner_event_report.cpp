@@ -30,6 +30,7 @@ constexpr const char* BUNDLE_CLEAN_CACHE_EXCEPTION = "BUNDLE_CLEAN_CACHE_EXCEPTI
 
 constexpr const char* BOOT_SCAN_START = "BOOT_SCAN_START";
 constexpr const char* BOOT_SCAN_END = "BOOT_SCAN_END";
+constexpr const char* BUNDLE_LOCAL_PLUGIN_OPERATION = "BUNDLE_LOCAL_PLUGIN_OPERATION";
 constexpr const char* BUNDLE_INSTALL = "BUNDLE_INSTALL";
 constexpr const char* BUNDLE_UNINSTALL = "BUNDLE_UNINSTALL";
 constexpr const char* BUNDLE_UPDATE = "BUNDLE_UPDATE";
@@ -48,6 +49,7 @@ constexpr const char* BMS_DISK_SPACE = "BMS_DISK_SPACE";
 constexpr const char* APP_CONTROL_RULE = "APP_CONTROL_RULE";
 constexpr const char* DB_ERROR = "DB_ERROR";
 constexpr const char* DEFAULT_APP = "DEFAULT_APP";
+constexpr const char* BUNDLE_LARGE_FILES_MONITOR_EVENT = "BUNDLE_LARGE_FILES_MONITOR_EVENT";
 constexpr const char* QUERY_BUNDLE_INFO = "QUERY_BUNDLE_INFO";
 constexpr const char* BUNDLE_DYNAMIC_SHORTCUTINFO = "BUNDLE_DYNAMIC_SHORTCUTINFO";
 constexpr const char* DESKTOP_SHORTCUT = "DESKTOP_SHORTCUT";
@@ -107,12 +109,15 @@ const char* COMPONENT_NAME_KEY = "COMPONENT_NAME";
 const char* PARTITION_NAME_KEY = "PARTITION_NAME";
 const char* REMAIN_PARTITION_SIZE_KEY = "REMAIN_PARTITION_SIZE";
 const char* USER_DATA_SIZE = "USER_DATA_SIZE";
+const char* EVENT_PARAM_LARGE_FILES = "LARGE_FILES";
 const char* EVENT_PARAM_IS_KEEPDATA = "IS_KEEPDATA";
 const char* EVENT_PARAM_DISABLE_FORBIDDEN = "DISABLE_FORBIDDEN";
 const char* EVENT_PARAM_ODID = "ODID";
 const char* EVENT_PARAM_APPLICATION_INFO_SIZE = "APPLICATION_INFO_SIZE";
 const char* EVENT_PARAM_NPAPI_PLUGIN_STATUS = "NPAPI_PLUGIN_STATUS";
 const char* EVENT_PARAM_SKILL_COUNT = "SKILL_COUNT";
+const char* EVENT_PARAM_IS_RESOURCE_FILE_FAKE_DECOMPRESSION = "IS_RES_FILE_FAKE_DECOMPRESSION";
+const char* EVENT_PARAM_IS_SO_FAKE_DECOMPRESSION = "IS_SO_FAKE_DECOMPRESSION";
 
 // API and SDK version
 const char* EVENT_PARAM_MIN_API_VERSION = "MIN_API_VERSION";
@@ -168,6 +173,11 @@ const char* EVENT_PARAM_BUNDLE_NAME_LIST = "BUNDLE_NAME_LIST";
 const char* EVENT_PARAM_CALLING_UID_LIST = "CALLING_UID_LIST";
 const char* EVENT_PARAM_CALLING_BUNDLE_NAME_LIST = "CALLING_BUNDLE_NAME_LIST";
 const char* EVENT_PARAM_CALLING_APP_ID_LIST = "CALLING_APP_ID_LIST";
+const char* EVENT_PARAM_LOCAL_PLUGIN_USERID_LIST = "USERID_LIST";
+const char* EVENT_PARAM_HOST_BUNDLE_NAME_LIST = "HOST_BUNDLE_NAME_LIST";
+const char* EVENT_PARAM_ACTION_TYPE_LIST = "ACTION_TYPE_LIST";
+const char* EVENT_PARAM_FILE_PATH_LIST = "FILE_PATH_LIST";
+const char* EVENT_PARAM_ERROR_CODE_LIST = "ERROR_CODE_LIST";
 
 const InstallScene INSTALL_SCENE_STR_MAP_KEY[] = {
     InstallScene::NORMAL,
@@ -348,6 +358,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
             [](const EventInfo& eventInfo) {
                 InnerSendDefaultAppEvent(eventInfo);
             } },
+        { BMSEventType::BUNDLE_LARGE_FILES_MONITOR,
+            [](const EventInfo& eventInfo) {
+                InnerSendLargeFilesMonitorEvent(eventInfo);
+            } },
         { BMSEventType::QUERY_BUNDLE_INFO,
             [](const EventInfo& eventInfo) {
                 InnerSendQueryBundleInfoEvent(eventInfo);
@@ -367,6 +381,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::HIGH_RISK_EVENT,
             [](const EventInfo& eventInfo) {
                 InnerSendHighRiskEvent(eventInfo);
+            } },
+        { BMSEventType::BUNDLE_LOCAL_PLUGIN_OPERATION,
+            [](const EventInfo& eventInfo) {
+                InnerSendLocalPluginOperationEvent(eventInfo);
             } },
     };
 
@@ -555,7 +573,9 @@ void InnerEventReport::InnerSendBundleInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_ODID, eventInfo.odid,
         EVENT_PARAM_APPLICATION_INFO_SIZE, eventInfo.applicationInfoSize,
         EVENT_PARAM_NPAPI_PLUGIN_STATUS, eventInfo.npapiPluginStatus,
-        EVENT_PARAM_SKILL_COUNT, eventInfo.skillCount);
+        EVENT_PARAM_SKILL_COUNT, eventInfo.skillCount,
+        EVENT_PARAM_IS_SO_FAKE_DECOMPRESSION, eventInfo.isSoFakeDecompression,
+        EVENT_PARAM_IS_RESOURCE_FILE_FAKE_DECOMPRESSION, eventInfo.isResourceFileFakeDecompression);
 }
 
 void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
@@ -617,7 +637,9 @@ void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
         EVENT_PARAM_ODID, eventInfo.odid,
         EVENT_PARAM_APPLICATION_INFO_SIZE, eventInfo.applicationInfoSize,
         EVENT_PARAM_NPAPI_PLUGIN_STATUS, eventInfo.npapiPluginStatus,
-        EVENT_PARAM_SKILL_COUNT, eventInfo.skillCount);
+        EVENT_PARAM_SKILL_COUNT, eventInfo.skillCount,
+        EVENT_PARAM_IS_SO_FAKE_DECOMPRESSION, eventInfo.isSoFakeDecompression,
+        EVENT_PARAM_IS_RESOURCE_FILE_FAKE_DECOMPRESSION, eventInfo.isResourceFileFakeDecompression);
 }
 
 void InnerEventReport::InnerSendPreBundleRecoverEvent(const EventInfo& eventInfo)
@@ -810,6 +832,17 @@ void InnerEventReport::InnerSendDefaultAppEvent(const EventInfo& eventInfo)
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
+void InnerEventReport::InnerSendLargeFilesMonitorEvent(const EventInfo& eventInfo)
+{
+    InnerSystemEventWrite(
+        BUNDLE_LARGE_FILES_MONITOR_EVENT,
+        HiSysEventType::STATISTIC,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_LARGE_FILES, eventInfo.largeFiles);
+}
+
 void InnerEventReport::InnerSendDataPartitionUsageEvent(const EventInfo& eventInfo)
 {
     HiSysEventWrite(
@@ -925,5 +958,17 @@ void InnerEventReport::InnerSendHighRiskEvent(const EventInfo& eventInfo)
         EVENT_PARAM_END_TIME, eventInfo.endTime);
 }
 
+void InnerEventReport::InnerSendLocalPluginOperationEvent(const EventInfo& eventInfo)
+{
+    InnerSystemEventWrite(
+        BUNDLE_LOCAL_PLUGIN_OPERATION,
+        HiSysEventType::STATISTIC,
+        EVENT_PARAM_LOCAL_PLUGIN_USERID_LIST, eventInfo.userIdList,
+        EVENT_PARAM_HOST_BUNDLE_NAME_LIST, eventInfo.hostBundleNameList,
+        EVENT_PARAM_BUNDLE_NAME_LIST, eventInfo.bundleNameList,
+        EVENT_PARAM_ACTION_TYPE_LIST, eventInfo.actionTypeList,
+        EVENT_PARAM_FILE_PATH_LIST, eventInfo.filePath,
+        EVENT_PARAM_ERROR_CODE_LIST, eventInfo.errorCodeList);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

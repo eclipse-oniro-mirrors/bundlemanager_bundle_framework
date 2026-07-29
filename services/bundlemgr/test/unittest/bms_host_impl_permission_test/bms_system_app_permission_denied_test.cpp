@@ -652,6 +652,21 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0035, TestSize.Leve
 }
 
 /**
+ * @tc.number: BundleMgrHostImpl_0058
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: UpdateDesktopShortcutInfo SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0058, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    ShortcutInfo shortcutInfo;
+    int32_t userId = 0;
+    auto ret = localBundleMgrHostImpl->UpdateDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
  * @tc.number: BundleMgrHostImpl_0036
  * @tc.name: BmsSystemAppPermissionDeniedTest
  * @tc.desc: GetAllDesktopShortcutInfo SystemAppPermission Denied
@@ -1226,5 +1241,40 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, IsApplicationDisableForbidden_0001, T
     auto ret = localBundleMgrHostImpl->IsApplicationDisableForbidden(bundleName, userId, appIndex, forbidden);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
     EXPECT_FALSE(forbidden);
+}
+
+/**
+ * @tc.number: GetAppClonePreference_0001
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetAppClonePreference SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, GetAppClonePreference_0001, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "com.example.clone_pref";
+    int32_t userId = 100;
+    AppClonePreference preference;
+    auto ret = localBundleMgrHostImpl->GetAppClonePreference(bundleName, userId, preference);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: SetAppClonePreference_0001
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: SetAppClonePreference SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, SetAppClonePreference_0001, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "com.example.clone_pref";
+    int32_t userId = 100;
+    AppClonePreference preference;
+    preference.mode = AppClonePreferenceMode::MAIN_APP;
+    auto ret = localBundleMgrHostImpl->SetAppClonePreference(bundleName, userId, preference);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 }  // namespace OHOS

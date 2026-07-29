@@ -589,6 +589,26 @@ HWTEST_F(BmsBundleInstallCheckerTest, BundleInstallCheckerTest_0035, TestSize.Le
 }
 
 /**
+ * @tc.number: BundleInstallCheckerTest_0036
+ * @tc.name: test CheckAppDistributionType not in whitelist
+ * @tc.desc: 1. distribution type is not in bms whitelist
+ *           2. return ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, BundleInstallCheckerTest_0036, TestSize.Level2)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBmsParam();
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    EXPECT_TRUE(bmsParam->SaveBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, "1"));
+
+    BundleInstallChecker bundleInstallChecker;
+    auto ret = bundleInstallChecker.CheckAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE);
+    EXPECT_EQ(ret, ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL);
+
+    EXPECT_TRUE(bmsParam->SaveBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, ""));
+}
+
+/**
  * @tc.number: CheckAppLabel_0001
  * @tc.name: test the start function of CheckAppLabel
  * @tc.desc: 1. BundleInstallChecker
@@ -755,16 +775,17 @@ HWTEST_F(BmsBundleInstallCheckerTest, GetCallingEventInfo_0003, Function | Small
     EXPECT_NE(baseBundleInstaller.dataMgr_, nullptr);
     bool ret1 = baseBundleInstaller.dataMgr_ ->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
     bool ret2 =  baseBundleInstaller.dataMgr_ ->AddInnerBundleInfo(BUNDLE_NAME, info);
-    baseBundleInstaller.dataMgr_->UpdateUidMap(TEST_UID, BUNDLE_NAME, 0);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
 
     EventInfo eventInfo;
     eventInfo.callingUid = TEST_UID;
 
+    baseBundleInstaller.dataMgr_->bundleIdMap_.insert(std::pair<int32_t, std::string>(TEST_BUNDLE_ID, BUNDLE_NAME));
     baseBundleInstaller.GetCallingEventInfo(eventInfo);
     EXPECT_EQ(eventInfo.callingBundleName, BUNDLE_NAME);
 
+    baseBundleInstaller.dataMgr_->bundleIdMap_.erase(TEST_BUNDLE_ID);
     baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
 

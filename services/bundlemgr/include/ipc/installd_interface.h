@@ -64,7 +64,8 @@ public:
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
     virtual ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-        const std::string &targetSoPath, const std::string &cpuAbi)
+        const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+        const bool isSystemApp)
     {
         return ERR_OK;
     }
@@ -479,17 +480,13 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t sessionId = 0)
+    virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+        const unsigned char *profileBlock)
     {
         return ERR_OK;
     }
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName)
-    {
-        return ERR_OK;
-    }
-
-    virtual ErrCode ClearSessionProvisionCache(int32_t sessionId)
     {
         return ERR_OK;
     }
@@ -647,6 +644,12 @@ public:
      */
     virtual ErrCode DeleteOldCacheFiles(
         const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode GetCacheDiskUsageFromPath(const std::vector<std::string> &paths,
+        int64_t &statSize, int64_t timeoutMs = -1)
     {
         return ERR_OK;
     }

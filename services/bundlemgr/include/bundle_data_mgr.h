@@ -102,6 +102,13 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool LoadDataFromPersistentStorage();
+
+    /**
+     * @brief Classify dual-mode apps into queryable and non-queryable based on current mode.
+     * This function should be called after RestoreUidAndGid() to ensure proper classification.
+     * Note: This function does not lock bundleInfoMutex_, caller must hold the lock.
+     */
+    void ClassifyDualModeAppsNoLock();
     /**
      * @brief Update internal state for whole bundle.
      * @param bundleName Indicates the bundle name.
@@ -155,6 +162,7 @@ public:
      * @param innerBundleUserInfo Indicates the InnerBundleUserInfo object.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
+    ErrCode GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInfo);
     /**
      * @brief Recycle uid and gid .
      * @param info Indicates the InnerBundleInfo object.
@@ -960,6 +968,10 @@ public:
     std::string GetStringById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, int32_t userId, const std::string &localeInfo);
 
+    ErrCode GetStringByIdList(const std::string &bundleName, const std::string &moduleName,
+        const std::vector<uint32_t> &resIdList, std::vector<std::string> &labelList,
+        int32_t userId, const std::string &localeInfo);
+
     std::string GetIconById(
         const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId);
     void UpdateRemovable(const std::string &bundleName, bool removable);
@@ -972,7 +984,6 @@ public:
     bool IsSystemHsp(const std::string &bundleName);
 
     bool UpdateUninstallBundleInfo(const std::string &bundleName, const UninstallBundleInfo &uninstallBundleInfo);
-    bool UpdateUninstallBundleCheckBySpm(const std::string &bundleName, bool checkBySpm);
     bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo) const;
     bool GetUninstallBundleInfoWithUserAndAppIndex(const std::string &bundleName,
         int32_t userId, int32_t appIndex) const;
@@ -1006,6 +1017,7 @@ public:
     ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
         AppProvisionInfo &appProvisionInfo);
     void GetBundleNameList(const int32_t userId, std::vector<std::string>& bundleNameList);
+    std::vector<std::string> GetSystemAppNames(int32_t userId) const;
     ErrCode GetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos);
     virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
         std::vector<Metadata> &provisionMetadatas) const;
@@ -1189,9 +1201,6 @@ public:
         AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex = 0) const;
     ErrCode GetBundleNameAndIndex(const int32_t uid, std::string &bundleName, int32_t &appIndex) const;
     ErrCode GetBundleNameAndIndexForUid(const int32_t uid, std::string &bundleName, int32_t &appIndex) const;
-    void UpdateUidMap(int32_t uid, const std::string &bundleName, int32_t appIndex);
-    void RemoveUidFromMap(int32_t uid);
-    void RemoveUidFromMap(const InnerBundleInfo &info, int32_t userId);
 
     ErrCode QueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
         int32_t appIndex, AbilityInfo &abilityInfo) const;
@@ -1246,6 +1255,7 @@ public:
 
     ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
     ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
+    ErrCode UpdateDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
     ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos);
     ErrCode DeleteDesktopShortcutInfo(const std::string &bundleName);
     ErrCode DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
@@ -1402,7 +1412,6 @@ private:
      * @return Returns true if install state is UPDATING_START or UNINSTALL_START; returns false otherwise.
      */
     bool IsDisableState(const InstallState state) const;
-    bool IsValidAppUid(const int32_t uid) const;
     /**
      * @brief Delete bundle info if InstallState is not INSTALL_FAIL.
      * @param bundleName Indicates the bundle Names.
@@ -1435,6 +1444,8 @@ private:
         int32_t appIndex = 0) const;
     ErrCode ExplicitQueryAbilityInfoV9(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
         int32_t appIndex = 0) const;
+    ErrCode GenerateBundleId(const std::string &bundleName, int32_t &bundleId);
+    void SaveLastAllocatedBundleId();
     int32_t GetUserIdByUid(int32_t uid) const;
     bool GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
     ErrCode GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
@@ -1517,7 +1528,7 @@ private:
         const ElementName &element, int32_t flags, int32_t userId) const;
     void GetCloneAbilityInfosV9(std::vector<AbilityInfo> &abilityInfos,
         const ElementName &element, int32_t flags, int32_t userId) const;
-    ErrCode ExplicitQueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
+    bool ExplicitQueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
         int32_t appIndex, AbilityInfo &abilityInfo) const;
     ErrCode ExplicitQueryCloneAbilityInfoV9(const ElementName &element, int32_t flags, int32_t userId,
         int32_t appIndex, AbilityInfo &abilityInfo) const;
@@ -1560,7 +1571,7 @@ private:
     void RemoveOverlayInfoAndConnection(const InnerBundleInfo &innerBundleInfo, const std::string &bundleName);
     ErrCode FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerBundleInfo, const std::string &moduleName,
         const std::string &abilityName, AbilityInfo &abilityInfo) const;
-    void RestoreSandboxUidAndGid();
+    void RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap);
     bool IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode ProcessBundleMenu(BundleInfo& bundleInfo, int32_t flag, bool clearData) const;
     bool MatchShare(const Want &want, const std::vector<Skill> &skills) const;
@@ -1637,18 +1648,35 @@ private:
     bool ParseUserKey(const std::string &userKey, int32_t &userId, int32_t &appIndex) const;
 
 private:
+    enum class SkillQueryAccessLevel {
+        ALL,
+        SYSTEM_AND_PUBLIC,
+        PUBLIC_ONLY,
+    };
+
     ErrCode FindSkillInfoFromAllBundles(const std::string &skillName, uint32_t flags,
-        int32_t requestUserId, SkillInfo &skillInfo);
+        int32_t requestUserId, const std::string &callingBundleName, bool isPrivilegedCaller,
+        SkillInfo &skillInfo);
+    ErrCode GetSkillInfoForSpecialUser(const std::string &bundleName, int32_t &userId) const;
+
     static void GetSkillInfoWithFlags(const InnerBundleInfo &info, const InnerModuleInfo &moduleInfo,
         const SkillProfile &profile, uint32_t flags, SkillInfo &skillInfo);
+    static void CollectVisibleSkillInfosFromBundle(const InnerBundleInfo &info, SkillQueryAccessLevel accessLevel,
+        uint32_t flags, std::vector<SkillInfo> &skillInfos);
+    static SkillQueryAccessLevel GetSkillQueryAccessLevel(const std::string &targetBundleName,
+        const std::string &callingBundleName, bool isPrivilegedCaller);
+    static bool IsSkillVisibleForQuery(const SkillProfile &profile, SkillQueryAccessLevel accessLevel);
 
     bool initialUserFlag_ = false;
+    int32_t baseAppUid_ = Constants::BASE_APP_UID;
+    int32_t lastAllocatedBundleId_ = Constants::BASE_APP_UID;  // monotonic cursor to avoid immediate reuse of freed ids
     mutable std::mutex stateMutex_;
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex hspBundleNameMutex_;
     mutable std::mutex pluginCallbackMutex_;
     mutable std::mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleInfoMutex_;
+    mutable std::shared_mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
     mutable std::shared_mutex bundleMutex_;
     mutable std::shared_mutex installingBundleNamesMutex_;
@@ -1669,14 +1697,21 @@ private:
     std::vector<sptr<IBundleEventCallback>> eventCallbackList_;
     // using for locking by bundleName
     std::unordered_map<std::string, std::mutex> bundleMutexMap_;
+    // using for generating bundleId
+    // key:bundleId
+    // value:bundleName
+    std::map<int32_t, std::string> bundleIdMap_;
     // all installed bundles
     // key:bundleName
     // value:innerbundleInfo
     std::map<std::string, InnerBundleInfo> bundleInfos_;
-    // bundleId -> {bundleName, appIndex} for fast lookup without AT service IPC
-    // bundleId = uid - userId * BASE_USER_RANGE, same bundleName+appIndex across users share one entry
-    mutable std::shared_mutex uidMapMutex_;
-    std::unordered_map<int32_t, std::pair<std::string, int32_t>> uidMap_;
+    // === DUAL_MODE: Apps not queryable in current mode ===
+    // Secondary mode: category 7 apps (stored in DB with +clone-10000+ prefix, loaded as original bundleName)
+    // Primary mode: category 7 apps (stored with original bundleName, but not queryable)
+    // key:bundleName (original, without prefix)
+    // value:innerbundleInfo
+    std::map<std::string, InnerBundleInfo> tempBundleInfos_;
+    // === DUAL_MODE END ===
     // key:bundle name
     std::map<std::string, InstallState> installStates_;
     // current-status:previous-statue pair
@@ -1688,6 +1723,10 @@ private:
     std::map<std::string, std::vector<sptr<IBundleEventCallback>>> pluginCallbackMap_;
     // using for bundle status
     std::unordered_map<std::string, std::set<int32_t>> installingBundleNames_;
+    // death recipient maps
+    std::map<sptr<IRemoteObject>, sptr<IRemoteObject::DeathRecipient>> callbackDeathRecipientMap_;
+    std::map<sptr<IRemoteObject>, sptr<IRemoteObject::DeathRecipient>> eventCallbackDeathRecipientMap_;
+    std::map<sptr<IRemoteObject>, sptr<IRemoteObject::DeathRecipient>> pluginCallbackDeathRecipientMap_;
 
     static bool HasAppLinkingFlag(uint32_t flags);
     static bool HasOnlySharedModules(const InnerBundleInfo &innerBundleInfo);

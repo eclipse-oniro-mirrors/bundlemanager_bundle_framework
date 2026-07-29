@@ -79,6 +79,7 @@ ohos_unittest("BmsExtendResourceManagerTest") {
     "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
+    "dfs_service:libdecompress",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",

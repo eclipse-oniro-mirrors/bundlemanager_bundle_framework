@@ -24,6 +24,9 @@
 #include "bms_extension_client.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
+#include "event_report.h"
+#include "oobe_preload_uninstall_mgr.h"
+#include "pre_install_bundle_info.h"
 #include "status_receiver_proxy.h"
 #include "installd/installd_permission_mgr.h"
 
@@ -54,6 +57,7 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+    void InitBundleMgrServiceForTest();
 private:
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
@@ -71,6 +75,13 @@ void BmsServiceStartupTest::TearDownTestCase()
 
 void BmsServiceStartupTest::SetUp()
 {
+    bundleMgrService_->InitBmsParam();
+    bundleMgrService_->InitPreInstallExceptionMgr();
+}
+
+void BmsServiceStartupTest::InitBundleMgrServiceForTest()
+{
+    bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
     bundleMgrService_->InitBmsParam();
     bundleMgrService_->InitPreInstallExceptionMgr();
 }
@@ -505,53 +516,6 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0400, Function | SmallTest |
 }
 
 /**
- * @tc.number: BundlePermissionMgr_VerifyPermissionByInstall_0100
- * @tc.name: test VerifyPermissionByInstall permission granted
- * @tc.desc: 1.GetCachePolicyBySessionId returns success with matching permission, expect PERMISSION_GRANTED
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_VerifyPermissionByInstall_0100, Function | SmallTest | Level0)
-{
-    Security::AccessToken::BundlePolicyInfo policyInfo;
-    policyInfo.reqPermissions.push_back("ohos.permission.test");
-    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(Security::AccessToken::AccessTokenKitRet::RET_SUCCESS);
-    int32_t ret = BundlePermissionMgr::VerifyPermissionByInstall(
-        "com.test.bundle", "ohos.permission.test", 1);
-    EXPECT_EQ(ret, Security::AccessToken::PermissionState::PERMISSION_GRANTED);
-}
-
-/**
- * @tc.number: BundlePermissionMgr_VerifyPermissionByInstall_0200
- * @tc.name: test VerifyPermissionByInstall permission denied
- * @tc.desc: 1.GetCachePolicyBySessionId returns success but permission not in reqPermissions, expect PERMISSION_DENIED
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_VerifyPermissionByInstall_0200, Function | SmallTest | Level0)
-{
-    Security::AccessToken::BundlePolicyInfo policyInfo;
-    policyInfo.reqPermissions.push_back("ohos.permission.other");
-    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(Security::AccessToken::AccessTokenKitRet::RET_SUCCESS);
-    int32_t ret = BundlePermissionMgr::VerifyPermissionByInstall(
-        "com.test.bundle", "ohos.permission.test", 1);
-    EXPECT_EQ(ret, Security::AccessToken::PermissionState::PERMISSION_DENIED);
-}
-
-/**
- * @tc.number: BundlePermissionMgr_VerifyPermissionByInstall_0300
- * @tc.name: test VerifyPermissionByInstall GetCachePolicyBySessionId failed
- * @tc.desc: 1.GetCachePolicyBySessionId returns failure, expect PERMISSION_DENIED
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_VerifyPermissionByInstall_0300, Function | SmallTest | Level0)
-{
-    Security::AccessToken::BundlePolicyInfo policyInfo;
-    Security::AccessToken::SetCachePolicyBySessionIdForTest(policyInfo);
-    Security::AccessToken::SetCachePolicyBySessionIdRetForTest(Security::AccessToken::AccessTokenKitRet::RET_FAILED);
-    int32_t ret = BundlePermissionMgr::VerifyPermissionByInstall(
-        "com.test.bundle", "ohos.permission.test", 1);
-    EXPECT_EQ(ret, Security::AccessToken::PermissionState::PERMISSION_DENIED);
-}
-
-/**
  * @tc.number: BundlePermissionMgr_0500
  * @tc.name: test CheckPermissionInDefaultPermissions
  * @tc.desc: 1.test CheckPermissionInDefaultPermissions of BundlePermissionMgr
@@ -782,76 +746,9 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1700, Function | SmallTest |
     Security::AccessToken::AccessTokenIDEx tokenIdeEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
 
-    int32_t sessionId = 0;
-    ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType, tokenIdeEx, "{}", false, sessionId);
-    EXPECT_EQ(checkResult.permCheckResult.permissionName, "");
+    ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType, tokenIdeEx, checkResult, "{}");
+    EXPECT_EQ(checkResult.permCheckResult.permissionName, "test");
     EXPECT_EQ(ret, false);
-}
-
-/**
- * @tc.number: BundlePermissionMgr_InitHapToken_0200
- * @tc.name: test InitHapToken with ERR_TOKENID_HAS_EXISTED
- * @tc.desc: 1.When PrepareHapIdentity returns ERR_TOKENID_HAS_EXISTED and sessionId=0,
- *           2.delete the reserved data token and retry, expect success
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_InitHapToken_0200, Function | SmallTest | Level0)
-{
-    BundlePermissionMgr::Init();
-    InnerBundleInfo innerBundleInfo;
-    int32_t userId = 0;
-    int32_t dlpType = 0;
-    Security::AccessToken::AccessTokenIDEx tokenIdeEx;
-
-    int32_t sessionId = 0;
-    Security::AccessToken::SetPrepareHapIdentityRetForTest(
-        Security::AccessToken::AccessTokenError::ERR_TOKENID_HAS_EXISTED);
-    int32_t ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType,
-        tokenIdeEx, "{}", false, sessionId);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
- * @tc.number: BundlePermissionMgr_InitHapToken_0300
- * @tc.name: test InitHapToken skip cleanup when sessionId is not zero
- * @tc.desc: 1.When sessionId is not 0, skip the ERR_TOKENID_HAS_EXISTED cleanup path
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_InitHapToken_0300, Function | SmallTest | Level0)
-{
-    BundlePermissionMgr::Init();
-    InnerBundleInfo innerBundleInfo;
-    int32_t userId = 0;
-    int32_t dlpType = 0;
-    Security::AccessToken::AccessTokenIDEx tokenIdeEx;
-
-    int32_t sessionId = 1;
-    Security::AccessToken::SetPrepareHapIdentityRetForTest(
-        Security::AccessToken::AccessTokenError::ERR_TOKENID_HAS_EXISTED);
-    int32_t ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType,
-        tokenIdeEx, "{}", false, sessionId);
-    EXPECT_NE(ret, ERR_OK);
-}
-
-/**
- * @tc.number: BundlePermissionMgr_InitHapToken_0400
- * @tc.name: test InitHapToken delete reserved data failed
- * @tc.desc: 1.When DeleteAccessTokenId fails, do not retry PrepareHapIdentity
- */
-HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_InitHapToken_0400, Function | SmallTest | Level0)
-{
-    BundlePermissionMgr::Init();
-    InnerBundleInfo innerBundleInfo;
-    int32_t userId = 0;
-    int32_t dlpType = 0;
-    Security::AccessToken::AccessTokenIDEx tokenIdeEx;
-
-    int32_t sessionId = 0;
-    Security::AccessToken::SetPrepareHapIdentityRetForTest(
-        Security::AccessToken::AccessTokenError::ERR_TOKENID_HAS_EXISTED);
-    Security::AccessToken::SetDeleteIdentityRetForTest(
-        Security::AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL);
-    int32_t ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType,
-        tokenIdeEx, "{}", false, sessionId);
-    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -866,8 +763,8 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1800, Function | SmallTest |
     InnerBundleInfo innerBundleInfo;
     Security::AccessToken::AccessTokenIDEx tokenIdeEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
-    ret = BundlePermissionMgr::UpdateHapToken(tokenIdeEx, innerBundleInfo, userId, checkResult, "{}", false, false, 0);
-    EXPECT_EQ(checkResult.permCheckResult.permissionName, "");
+    ret = BundlePermissionMgr::UpdateHapToken(tokenIdeEx, innerBundleInfo, userId, checkResult, "{}");
+    EXPECT_EQ(checkResult.permCheckResult.permissionName, "test");
     EXPECT_EQ(ret, false);
 }
 
@@ -1093,7 +990,7 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3400, Function | SmallTest |
     int32_t ret = BundlePermissionMgr::Init();
     EXPECT_EQ(ret, true);
     AccessToken::AccessTokenID tokenId = 100;
-    int32_t result = BundlePermissionMgr::DeleteAccessTokenId(tokenId, "testBundle");
+    int32_t result = BundlePermissionMgr::DeleteAccessTokenId(tokenId, false);
     EXPECT_EQ(result, 0);
 }
 
@@ -1212,6 +1109,136 @@ HWTEST_F(BmsServiceStartupTest, BundleStateStorage_0100, Function | SmallTest | 
     EXPECT_EQ(ret, false);
     ret = bundleStateStorage.SaveBundleStateStorage("com.ohos.tes1", userId, info);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleStateStorage_0200
+ * @tc.name: round-trip state storage with a bundleName containing underscores
+ * @tc.desc: Save / Get / LoadAll / Delete for a bundleName like
+ *           "com.example.my_test_app". Before the rfind fix, KeyToNameAndUserId
+ *           split the key on every '_' and silently dropped entries whose
+ *           bundleName contained an underscore, so LoadAllBundleStateData could
+ *           never return them.
+ */
+HWTEST_F(BmsServiceStartupTest, BundleStateStorage_0200, Function | SmallTest | Level0)
+{
+    BundleStateStorage bundleStateStorage;
+    bundleStateStorage.HasBundleUserInfoJsonDb();
+
+    const std::string bundleName = "com.example.my_test_app";
+    const int32_t userId = 100;
+    BundleUserInfo inInfo;
+    inInfo.enabled = false;
+    inInfo.userId = userId;
+    inInfo.setEnabledCaller = "unittest_caller";
+    inInfo.disabledAbilities = {"com.example.my_test_app.MainAbility"};
+
+    bool ret = bundleStateStorage.SaveBundleStateStorage(bundleName, userId, inInfo);
+    EXPECT_TRUE(ret);
+
+    BundleUserInfo outInfo;
+    ret = bundleStateStorage.GetBundleStateStorage(bundleName, userId, outInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(outInfo.enabled, inInfo.enabled);
+    EXPECT_EQ(outInfo.userId, inInfo.userId);
+    EXPECT_EQ(outInfo.setEnabledCaller, inInfo.setEnabledCaller);
+    EXPECT_EQ(outInfo.disabledAbilities.size(), inInfo.disabledAbilities.size());
+    if (!outInfo.disabledAbilities.empty()) {
+        EXPECT_EQ(outInfo.disabledAbilities[0], inInfo.disabledAbilities[0]);
+    }
+
+    std::map<std::string, std::map<int32_t, BundleUserInfo>> infos;
+    ret = bundleStateStorage.LoadAllBundleStateData(infos);
+    EXPECT_TRUE(ret);
+    auto it = infos.find(bundleName);
+    EXPECT_NE(it, infos.end());
+    if (it != infos.end()) {
+        EXPECT_NE(it->second.find(userId), it->second.end());
+    }
+
+    ret = bundleStateStorage.DeleteBundleState(bundleName, userId);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleStateStorage_0300
+ * @tc.name: round-trip state storage with a regular bundleName (no underscore)
+ * @tc.desc: Regression coverage for the rfind-based key parsing — the no-underscore
+ *           case must continue to parse correctly after the fix.
+ */
+HWTEST_F(BmsServiceStartupTest, BundleStateStorage_0300, Function | SmallTest | Level0)
+{
+    BundleStateStorage bundleStateStorage;
+    bundleStateStorage.HasBundleUserInfoJsonDb();
+
+    const std::string bundleName = "com.example.regularapp";
+    const int32_t userId = 101;
+    BundleUserInfo inInfo;
+    inInfo.enabled = false;
+    inInfo.userId = userId;
+    inInfo.setEnabledCaller = "unittest_caller";
+
+    bool ret = bundleStateStorage.SaveBundleStateStorage(bundleName, userId, inInfo);
+    EXPECT_TRUE(ret);
+
+    BundleUserInfo outInfo;
+    ret = bundleStateStorage.GetBundleStateStorage(bundleName, userId, outInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(outInfo.enabled, inInfo.enabled);
+    EXPECT_EQ(outInfo.userId, inInfo.userId);
+
+    std::map<std::string, std::map<int32_t, BundleUserInfo>> infos;
+    ret = bundleStateStorage.LoadAllBundleStateData(infos);
+    EXPECT_TRUE(ret);
+    auto it = infos.find(bundleName);
+    EXPECT_NE(it, infos.end());
+
+    ret = bundleStateStorage.DeleteBundleState(bundleName, userId);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleStateStorage_0400
+ * @tc.name: two underscore-containing bundleNames coexist under different userIds
+ * @tc.desc: Each (bundleName, userId) maps to a distinct key. Verify the parser
+ *           recovers both entries correctly when both names contain underscores
+ *           and one name is a prefix of the other.
+ */
+HWTEST_F(BmsServiceStartupTest, BundleStateStorage_0400, Function | SmallTest | Level0)
+{
+    BundleStateStorage bundleStateStorage;
+    bundleStateStorage.HasBundleUserInfoJsonDb();
+
+    const std::string bundleNameA = "com.example.my_test_app";
+    const std::string bundleNameB = "com.example.my_test_app_extra";
+    const int32_t userIdA = 100;
+    const int32_t userIdB = 100;
+    BundleUserInfo infoA;
+    infoA.enabled = false;
+    infoA.userId = userIdA;
+    infoA.setEnabledCaller = "callerA";
+    BundleUserInfo infoB;
+    infoB.enabled = true;
+    infoB.userId = userIdB;
+    infoB.setEnabledCaller = "callerB";
+
+    EXPECT_TRUE(bundleStateStorage.SaveBundleStateStorage(bundleNameA, userIdA, infoA));
+    EXPECT_TRUE(bundleStateStorage.SaveBundleStateStorage(bundleNameB, userIdB, infoB));
+
+    std::map<std::string, std::map<int32_t, BundleUserInfo>> infos;
+    EXPECT_TRUE(bundleStateStorage.LoadAllBundleStateData(infos));
+    EXPECT_NE(infos.find(bundleNameA), infos.end());
+    EXPECT_NE(infos.find(bundleNameB), infos.end());
+
+    BundleUserInfo outA;
+    EXPECT_TRUE(bundleStateStorage.GetBundleStateStorage(bundleNameA, userIdA, outA));
+    EXPECT_EQ(outA.setEnabledCaller, "callerA");
+    BundleUserInfo outB;
+    EXPECT_TRUE(bundleStateStorage.GetBundleStateStorage(bundleNameB, userIdB, outB));
+    EXPECT_EQ(outB.setEnabledCaller, "callerB");
+
+    EXPECT_TRUE(bundleStateStorage.DeleteBundleState(bundleNameA, userIdA));
+    EXPECT_TRUE(bundleStateStorage.DeleteBundleState(bundleNameB, userIdB));
 }
 
 /**
@@ -1988,5 +2015,292 @@ HWTEST_F(BmsServiceStartupTest, VerifyCallingPermission_0100, Function | SmallTe
     int32_t uid = 2465;
     auto ret = mgr.VerifyCallingPermission(uid);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: PreInstallExceptionMgr_0008
+ * @tc.name: test SavePreInstallExceptionSharedBundlePath
+ * @tc.desc: 1. empty path early return
+ *           2. save and duplicate save
+ */
+HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0008, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    ASSERT_NE(bundleMgrService_, nullptr);
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    ASSERT_NE(preInstallExceptionMgr, nullptr);
+
+    preInstallExceptionMgr->ClearAll();
+    preInstallExceptionMgr->SavePreInstallExceptionSharedBundlePath("");
+    EXPECT_TRUE(preInstallExceptionMgr->exceptionSharedBundlePaths_.empty());
+
+    const std::string sharedPath = "/data/test/shared_bundle";
+    preInstallExceptionMgr->SavePreInstallExceptionSharedBundlePath(sharedPath);
+    EXPECT_EQ(preInstallExceptionMgr->exceptionSharedBundlePaths_.count(sharedPath), 1U);
+
+    preInstallExceptionMgr->SavePreInstallExceptionSharedBundlePath(sharedPath);
+    EXPECT_EQ(preInstallExceptionMgr->exceptionSharedBundlePaths_.size(), 1U);
+
+    preInstallExceptionMgr->DeletePreInstallExceptionSharedBundlePath(sharedPath);
+    EXPECT_TRUE(preInstallExceptionMgr->exceptionSharedBundlePaths_.empty());
+    preInstallExceptionMgr->ClearAll();
+}
+
+/**
+ * @tc.number: PreInstallExceptionMgr_0009
+ * @tc.name: test LoadPreInstallExceptionInfosFromDb with invalid json
+ * @tc.desc: 1. save invalid json to bms param
+ *           2. LoadPreInstallExceptionInfosFromDb returns false
+ */
+HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0009, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    ASSERT_NE(bundleMgrService_, nullptr);
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    ASSERT_NE(preInstallExceptionMgr, nullptr);
+    auto bmsPara = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsPara, nullptr);
+
+    preInstallExceptionMgr->ClearAll();
+    bmsPara->SaveBmsParam("PreInstallExceptionMgr", "invalid json");
+    bool ret = preInstallExceptionMgr->LoadPreInstallExceptionInfosFromDb();
+    EXPECT_FALSE(ret);
+    bmsPara->DeleteBmsParam("PreInstallExceptionMgr");
+}
+
+/**
+ * @tc.number: EventReport_ProcessIsIntercepted_0100
+ * @tc.name: test ProcessIsIntercepted with intercepted error code
+ * @tc.desc: 1. errCode is in INTERCEPTED_ERROR_CODE_SET
+ *           2. isIntercepted is set to true
+ */
+HWTEST_F(BmsServiceStartupTest, EventReport_ProcessIsIntercepted_0100, Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.errCode = ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+    EventInfo result = EventReport::ProcessIsIntercepted(eventInfo);
+    EXPECT_TRUE(result.isIntercepted);
+}
+
+/**
+ * @tc.number: EventReport_ProcessIsIntercepted_0200
+ * @tc.name: test ProcessIsIntercepted with non-intercepted error code
+ * @tc.desc: 1. errCode is not in INTERCEPTED_ERROR_CODE_SET
+ *           2. isIntercepted remains unchanged
+ */
+HWTEST_F(BmsServiceStartupTest, EventReport_ProcessIsIntercepted_0200, Function | SmallTest | Level0)
+{
+    EventInfo eventInfo;
+    eventInfo.errCode = ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    eventInfo.isIntercepted = false;
+    EventInfo result = EventReport::ProcessIsIntercepted(eventInfo);
+    EXPECT_FALSE(result.isIntercepted);
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_AddPendingBundle_0100
+ * @tc.name: test AddPendingBundle with invalid params
+ * @tc.desc: empty bundleName or negative userId → returns false
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_AddPendingBundle_0100, Function | SmallTest | Level0)
+{
+    OobePreloadUninstallMgr mgr;
+    EXPECT_FALSE(mgr.AddPendingBundle("", 100));
+    EXPECT_FALSE(mgr.AddPendingBundle(BUNDLE_TEMP_NAME, -1));
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_RemovePendingBundle_0100
+ * @tc.name: test RemovePendingBundle bundle not exist
+ * @tc.desc: bundle not in pending list → returns true
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_RemovePendingBundle_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+    OobePreloadUninstallMgr mgr;
+    EXPECT_TRUE(mgr.RemovePendingBundle("com.example.not.exist", 100));
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_GetPendingBundles_0100
+ * @tc.name: test GetPendingBundles with invalid json
+ * @tc.desc: invalid json in bms param → returns empty map
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_GetPendingBundles_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES", "invalid json");
+    OobePreloadUninstallMgr mgr;
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_TRUE(pending.empty());
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_GetPendingBundles_0200
+ * @tc.name: test LoadPendingBundlesLocked with non-object json
+ * @tc.desc: value is a valid bare JSON string → GetPendingBundles returns empty without crash
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_GetPendingBundles_0200, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES", "\"tampered_string_value\"");
+    OobePreloadUninstallMgr mgr;
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_TRUE(pending.empty());
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_GetPendingBundles_0300
+ * @tc.name: test LoadPendingBundlesLocked with non-array map values
+ * @tc.desc: value is a JSON object with string values instead of int arrays → returns empty without crash
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_GetPendingBundles_0300, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES",
+        "{\"com.example.app\": \"not_an_array\"}");
+    OobePreloadUninstallMgr mgr;
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_TRUE(pending.empty());
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_GetPendingBundles_0400
+ * @tc.name: test LoadPendingBundlesLocked with json array
+ * @tc.desc: value is a valid JSON array → returns empty without crash
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_GetPendingBundles_0400, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES", "[1, 2, 3]");
+    OobePreloadUninstallMgr mgr;
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_TRUE(pending.empty());
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_GetPendingBundles_0500
+ * @tc.name: test LoadPendingBundlesLocked with mixed-type map values
+ * @tc.desc: one valid array entry mixed with a non-array entry → rejected entirely, returns empty
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_GetPendingBundles_0500, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES",
+        "{\"com.example.ok\": [100], \"com.example.bad\": \"not_array\"}");
+    OobePreloadUninstallMgr mgr;
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_TRUE(pending.empty());
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_GetPendingBundles_0600
+ * @tc.name: test LoadPendingBundlesLocked with array of non-number items
+ * @tc.desc: array values contain string elements → rejected, returns empty
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_GetPendingBundles_0600, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    auto bmsParam = bundleMgrService_->GetBmsParam();
+    ASSERT_NE(bmsParam, nullptr);
+    bmsParam->SaveBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES",
+        "{\"com.example.app\": [\"str1\", \"str2\"]}");
+    OobePreloadUninstallMgr mgr;
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_TRUE(pending.empty());
+    bmsParam->DeleteBmsParam("OOBE_PENDING_PRELOAD_UNINSTALL_BUNDLES");
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_AddRemovePendingBundle_0100
+ * @tc.name: test AddPendingBundle and RemovePendingBundle round trip
+ * @tc.desc: add then remove pending bundle successfully
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_AddRemovePendingBundle_0100, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    OobePreloadUninstallMgr mgr;
+    const std::string bundleName = "com.example.oobe.pending";
+    const int32_t userId = 100;
+    EXPECT_TRUE(mgr.AddPendingBundle(bundleName, userId));
+    auto pending = mgr.GetPendingBundles();
+    EXPECT_NE(pending.find(bundleName), pending.end());
+    EXPECT_TRUE(mgr.RemovePendingBundle(bundleName, userId));
+    pending = mgr.GetPendingBundles();
+    EXPECT_EQ(pending.find(bundleName), pending.end());
+}
+
+/**
+ * @tc.number: PreInstallBundleInfo_FromJson_0100
+ * @tc.name: test PreInstallBundleInfo FromJson missing bundleName
+ * @tc.desc: required bundleName missing → parse fails
+ */
+HWTEST_F(BmsServiceStartupTest, PreInstallBundleInfo_FromJson_0100, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo info;
+    nlohmann::json jsonObject;
+    jsonObject["versionCode"] = 1;
+    auto ret = info.FromJson(jsonObject);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PreInstallBundleInfo_ToString_0100
+ * @tc.name: test PreInstallBundleInfo ToString round trip fields
+ * @tc.desc: ToString contains bundleName after set
+ */
+HWTEST_F(BmsServiceStartupTest, PreInstallBundleInfo_ToString_0100, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo info;
+    info.SetBundleName(BUNDLE_TEMP_NAME);
+    info.SetVersionCode(100);
+    std::string jsonStr = info.ToString();
+    EXPECT_NE(jsonStr.find(BUNDLE_TEMP_NAME), std::string::npos);
+}
+
+/**
+ * @tc.number: OobePreloadUninstallMgr_AddPendingBundle_0200
+ * @tc.name: test AddPendingBundle bmsParam null
+ * @tc.desc: bmsParam is nullptr → LoadPendingBundlesLocked fails → returns false
+ */
+HWTEST_F(BmsServiceStartupTest, OobePreloadUninstallMgr_AddPendingBundle_0200, Function | SmallTest | Level0)
+{
+    InitBundleMgrServiceForTest();
+    OobePreloadUninstallMgr mgr;
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    auto savedBmsParam = bundleMgrService->bmsParam_;
+    bundleMgrService->bmsParam_ = nullptr;
+    EXPECT_FALSE(mgr.AddPendingBundle(BUNDLE_TEMP_NAME, 100));
+    bundleMgrService->bmsParam_ = savedBmsParam;
+}
+
+/**
+ * @tc.number: PreInstallBundleInfo_CalculateHapTotalSize_0100
+ * @tc.name: test CalculateHapTotalSize with empty bundlePaths
+ * @tc.desc: empty bundlePaths → hapTotalSize remains 0
+ */
+HWTEST_F(BmsServiceStartupTest, PreInstallBundleInfo_CalculateHapTotalSize_0100, Function | SmallTest | Level0)
+{
+    PreInstallBundleInfo info;
+    info.CalculateHapTotalSize();
+    EXPECT_EQ(info.GetHapTotalSize(), 0);
 }
 } // OHOS

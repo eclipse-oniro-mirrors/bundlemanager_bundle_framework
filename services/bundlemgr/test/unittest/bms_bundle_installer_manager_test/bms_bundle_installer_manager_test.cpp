@@ -258,5 +258,18 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_GetLocalPluginIn
     auto installer = hostImpl->GetLocalPluginInstaller();
     EXPECT_EQ(installer, nullptr);
 }
+
+/**
+ * @tc.number: BundleInstallerManagerTest_GetCurTaskNum_0001
+ * @tc.name: test GetCurTaskNum when thread pool is not started
+ * @tc.desc: 1. threadPool_ is nullptr
+ *           2. GetCurTaskNum returns 0
+ */
+HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_GetCurTaskNum_0001, TestSize.Level1)
+{
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>();
+    EXPECT_EQ(bundleInstallerManager->GetCurTaskNum(), 0U);
+    EXPECT_GT(bundleInstallerManager->GetThreadsNum(), 0);
+}
 }  // AppExecFwk
 }  // OHOS

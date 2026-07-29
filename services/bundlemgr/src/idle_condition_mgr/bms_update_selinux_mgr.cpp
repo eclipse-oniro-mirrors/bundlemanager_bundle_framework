@@ -109,6 +109,17 @@ ErrCode BmsUpdateSelinuxMgr::StartUpdateSelinuxLabel(const int32_t userId)
     return ERR_OK;
 }
 
+bool BmsUpdateSelinuxMgr::HasPendingBundles(const int32_t userId)
+{
+    std::vector<BundleOptionInfo> bundleOptionInfos;
+    ErrCode ret = idleManagerRdb_->GetAllBundle(userId, bundleOptionInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("for ScanSystemAppSize HasPendingBundles get failed -u %{public}d -err %{public}d", userId, ret);
+        return false;
+    }
+    return !bundleOptionInfos.empty();
+}
+
 ErrCode BmsUpdateSelinuxMgr::StopUpdateSelinuxLabel(const int32_t reason, const std::string stopReason)
 {
     if (needStop_.load()) {

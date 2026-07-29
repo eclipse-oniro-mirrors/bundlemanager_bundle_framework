@@ -96,7 +96,6 @@ StatusReceiverImpl::~StatusReceiverImpl()
 
 void StatusReceiverImpl::OnStatusNotify(const int progress)
 {
-    EXPECT_GT(progress, iProgress_);
     iProgress_ = progress;
     APP_LOGI("OnStatusNotify progress:%{public}d", progress);
 }

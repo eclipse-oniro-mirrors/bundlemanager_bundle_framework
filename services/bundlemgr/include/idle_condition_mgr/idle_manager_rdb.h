@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "bundle_option.h"
+#include "bundle_rdb_util.h"
 #include "rdb_data_manager.h"
 
 namespace OHOS {
@@ -36,14 +37,6 @@ private:
     bool ConvertToBundleOptionInfo(const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
         BundleOptionInfo &bundleOptionInfo);
     std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
-
-#define CHECK_RDB_RESULT_RETURN_IF_FAIL(errcode, errmsg)                           \
-    do {                                                                           \
-        if ((errcode) != NativeRdb::E_OK) {                                          \
-            APP_LOGE(errmsg, errcode);                                             \
-            return false;                                                          \
-        }                                                                          \
-    } while (0)
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

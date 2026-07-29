@@ -255,8 +255,6 @@ private:
 
     bool HandRemoveSignProfile(MessageParcel &data, MessageParcel &reply);
 
-    bool HandClearSessionProvisionCache(MessageParcel &data, MessageParcel &reply);
-
     bool HandleAddCertAndEnableKey(MessageParcel &data, MessageParcel &reply);
 
     bool HandleSetEncryptionDir(MessageParcel &data, MessageParcel &reply);
@@ -318,6 +316,8 @@ private:
      * @return Returns true if called successfully; returns false otherwise.
      */
     bool HandleDeleteOldCacheFiles(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleGetCacheDiskUsageFromPath(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

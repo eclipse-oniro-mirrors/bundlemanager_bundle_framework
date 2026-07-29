@@ -59,7 +59,8 @@ ErrCode InstalldClient::CreateBundleDir(
 }
 
 ErrCode InstalldClient::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+    const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+    const bool isSystemApp)
 {
     return 0;
 }
@@ -389,7 +390,8 @@ ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &code
     return ERR_OK;
 }
 
-ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t sessionId)
+ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+    const unsigned char *profileBlock)
 {
     return ERR_OK;
 }
@@ -532,13 +534,14 @@ ErrCode InstalldClient::GetTopNLargestItemsInAppDataDir(const std::string &bundl
     return ERR_OK;
 }
 
-ErrCode InstalldClient::ClearSessionProvisionCache(int32_t sessionId)
+ErrCode InstalldClient::DeleteOldCacheFiles(
+    const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
 {
     return ERR_OK;
 }
 
-ErrCode InstalldClient::DeleteOldCacheFiles(
-    const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
+ErrCode InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths,
+    int64_t &statSize, int64_t timeoutMs)
 {
     return ERR_OK;
 }

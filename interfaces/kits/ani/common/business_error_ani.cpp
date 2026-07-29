@@ -63,12 +63,12 @@ ani_object BusinessErrorAni::WrapError(ani_env *env, const std::string &msg)
         APP_LOGW("GetUndefined failed %{public}d", status);
     }
 
-    status = env->FindClass("std.core.Error", &cls);
+    status = env->FindClass("escompat.Error", &cls);
     if (status != ANI_OK) {
         APP_LOGE("FindClass err : %{public}d", status);
         return nullptr;
     }
-    status = env->Class_FindMethod(cls, "<ctor>", "C{std.core.String}C{std.core.ErrorOptions}:", &method);
+    status = env->Class_FindMethod(cls, "<ctor>", "C{std.core.String}C{escompat.ErrorOptions}:", &method);
     if (status != ANI_OK) {
         APP_LOGE("Class_FindMethod err : %{public}d", status);
         return nullptr;
@@ -95,7 +95,7 @@ ani_object BusinessErrorAni::CreateError(ani_env *env, int32_t code, const std::
         APP_LOGE("FindClass err : %{public}d", status);
         return nullptr;
     }
-    status = env->Class_FindMethod(cls, "<ctor>", "iC{std.core.Error}:", &method);
+    status = env->Class_FindMethod(cls, "<ctor>", "iC{escompat.Error}:", &method);
     if (status != ANI_OK) {
         APP_LOGE("Class_FindMethod err : %{public}d", status);
         return nullptr;
@@ -137,13 +137,13 @@ void BusinessErrorAni::ThrowCommonNewError(ani_env *env, int32_t err,
 }
 
 void BusinessErrorAni::ThrowInstallError(ani_env *env, int32_t err, int32_t innerCode,
-    const std::string &parameter, const std::string &type)
+    const std::string &parameter, const std::string &type, bool needSplice)
 {
     if (env == nullptr) {
         APP_LOGE("err is nullptr");
         return;
     }
-    ani_object error = CreateInstallError(env, err, innerCode, parameter, type);
+    ani_object error = CreateInstallError(env, err, innerCode, parameter, type, needSplice);
     ThrowError(env, error);
 }
 
@@ -218,7 +218,7 @@ ani_object BusinessErrorAni::CreateNewCommonError(
 }
 
 ani_object BusinessErrorAni::CreateInstallError(ani_env *env, int32_t err, int32_t innerCode,
-    const std::string &functionName, const std::string &permissionName)
+    const std::string &functionName, const std::string &permissionName, bool needSplice)
 {
     if (env == nullptr) {
         APP_LOGE("err is nullptr");
@@ -234,7 +234,9 @@ ani_object BusinessErrorAni::CreateInstallError(ani_env *env, int32_t err, int32
     if (errMap.find(err) != errMap.end()) {
         errMessage += errMap[err];
     }
-    errMessage += "[" + std::to_string(innerCode) + "]";
+    if (needSplice) {
+        errMessage += "[" + std::to_string(innerCode) + "]";
+    }
     iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, functionName);

@@ -354,6 +354,7 @@ private:
     const int32_t concurrency_ = sysconf(_SC_NPROCESSORS_ONLN);
     mutable std::vector<ffrt::mutex> mtxes_ = std::vector<ffrt::mutex> (concurrency_);
     std::vector<FILE *> files_;
+    mutable std::mutex checkCoherencyLocalHeaderInternalMutex_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

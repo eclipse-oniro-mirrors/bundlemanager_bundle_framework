@@ -48,7 +48,8 @@ public:
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
     virtual ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-        const std::string &targetSoPath, const std::string &cpuAbi) override;
+        const std::string &targetSoPath, const std::string &cpuAbi, const bool needFakeDecompression,
+        const bool isSystemApp) override;
     /**
      * @brief Extract the files.
      * @param extractParam Indicates the extractParam.
@@ -281,11 +282,10 @@ public:
 
     virtual ErrCode VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam) override;
 
-    virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t sessionId = 0) override;
+    virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+        const unsigned char *profileBlock) override;
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
-
-    virtual ErrCode ClearSessionProvisionCache(int32_t sessionId) override;
 
     virtual ErrCode AddCertAndEnableKey(const std::string &certPath, const std::string &certContent) override;
 
@@ -362,6 +362,9 @@ public:
      */
     virtual ErrCode DeleteOldCacheFiles(
         const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize) override;
+
+    virtual ErrCode GetCacheDiskUsageFromPath(const std::vector<std::string> &paths,
+        int64_t &statSize, int64_t timeoutMs = -1) override;
 
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,

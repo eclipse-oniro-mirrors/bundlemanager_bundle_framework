@@ -555,18 +555,22 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return false;
     }
+    InstallParam verifiedInstallParam = installParam;
     auto verifyResult = VerifyInstallPermission();
-    if (verifyResult != ERR_OK &&
-        (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM))) {
-        statusReceiver->OnFinished(verifyResult, "");
-        return false;
+    if (verifyResult != ERR_OK) {
+        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+            statusReceiver->OnFinished(verifyResult, "");
+            return false;
+        }
+        verifiedInstallParam.isCheckDebugApp = true;
     }
-    if (!CheckInstallDowngradeParam(installParam)) {
+
+    if (!CheckInstallDowngradeParam(verifiedInstallParam)) {
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    manager_->CreateInstallTask(bundleFilePaths, installParam, statusReceiver);
+    manager_->CreateInstallTask(bundleFilePaths, verifiedInstallParam, statusReceiver);
     return true;
 }
 
@@ -609,13 +613,27 @@ ErrCode BundleInstallerHost::VerifyUninstallPermission(bool isCheckSdkVersion)
     return ERR_OK;
 }
 
-ErrCode BundleInstallerHost::CheckIsDebugAppProvisionType(const std::string &bundleName, int32_t userId)
+ErrCode BundleInstallerHost::CheckIsDebugAppProvisionType(const std::string &bundleName, int32_t userId, bool isHsp)
 {
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "null dataMgr");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
+
+    if (isHsp) {
+        InnerBundleInfo info;
+        if (!dataMgr->QueryInnerBundleInfo(bundleName, info)) {
+            LOG_E(BMS_TAG_INSTALLER, "not exist for bundle %{public}s", bundleName.c_str());
+            return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+        }
+        if (info.GetBaseApplicationInfo().appProvisionType != Constants::APP_PROVISION_TYPE_DEBUG) {
+            LOG_E(BMS_TAG_INSTALLER, "app provision type is not debug for bundle %{public}s", bundleName.c_str());
+            return ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED;
+        }
+        return ERR_OK;
+    }
+
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
@@ -644,7 +662,7 @@ bool BundleInstallerHost::Uninstall(
         LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return false;
     }
-    bool verifyResult = VerifyUninstallPermission(true);
+    auto verifyResult = VerifyUninstallPermission(true);
     if (verifyResult != ERR_OK) {
         if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
             !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
@@ -716,14 +734,14 @@ bool BundleInstallerHost::Uninstall(const UninstallParam &uninstallParam,
         LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return false;
     }
-    bool verifyResult = VerifyUninstallPermission(false);
+    auto verifyResult = VerifyUninstallPermission(false);
     if (verifyResult != ERR_OK) {
         if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
             !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
             statusReceiver->OnFinished(verifyResult, "");
             return false;
         }
-        auto checkDebugResult = CheckIsDebugAppProvisionType(uninstallParam.bundleName, uninstallParam.userId);
+        auto checkDebugResult = CheckIsDebugAppProvisionType(uninstallParam.bundleName, uninstallParam.userId, true);
         if (checkDebugResult != ERR_OK) {
             statusReceiver->OnFinished(checkDebugResult, "");
             return false;
@@ -1639,13 +1657,6 @@ ErrCode BundleInstallerHost::CreateCliSandboxApp(const std::string &creatorBundl
     if (result != Constants::PERMISSION_GRANTED) {
         LOG_W(BMS_TAG_INSTALLER, "env creator %{public}s does not have permission", envCreatorBundleName.c_str());
         finalCreatorBundleName = envCreatorBundleName;
-    }
-
-    int32_t finalResult = BundlePermissionMgr::VerifyPermission(
-        finalCreatorBundleName, Constants::PERMISSION_MANAGE_SANDBOX_BUNDLE, userId);
-    if (finalResult != Constants::PERMISSION_GRANTED) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "creator %{public}s does not have permission", finalCreatorBundleName.c_str());
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
     auto installer = std::make_shared<BundleCliSandboxInstaller>();

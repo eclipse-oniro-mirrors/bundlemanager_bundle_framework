@@ -2319,4 +2319,35 @@ HWTEST_F(BmsExtendResourceManagerTest, IsDynamicIconModuleExist_0100, Function |
     auto res = impl.IsDynamicIconModuleExist(bundleName);
     EXPECT_FALSE(res);
 }
+
+/**
+* @tc.number: RemoveExtResource_0100
+* @tc.name:  test RemoveExtResource_0100
+* @tc.desc: Verify the function behavior when dataMgr is nullptr.
+*/
+HWTEST_F(BmsExtendResourceManagerTest, RemoveExtResource_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::vector<std::string> moduleNames;
+    moduleNames.push_back(TEST_MODULE);
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    auto ret = impl.RemoveExtResource(TEST_BUNDLE, moduleNames);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+    bundleMgrService_->RegisterDataMgr(savedDataMgr);
+}
+
+/**
+* @tc.number: RemoveExtResource_0200
+* @tc.name:  test RemoveExtResource_0200
+* @tc.desc: Verify the function behavior when dataMgr is not nullptr.
+*/
+HWTEST_F(BmsExtendResourceManagerTest, RemoveExtResource_0200, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::vector<std::string> moduleNames;
+    moduleNames.push_back(TEST_MODULE);
+    auto ret = impl.RemoveExtResource(TEST_BUNDLE, moduleNames);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
 } // OHOS

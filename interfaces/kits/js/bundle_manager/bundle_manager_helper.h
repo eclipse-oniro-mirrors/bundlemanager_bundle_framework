@@ -55,6 +55,10 @@ public:
         std::vector<PreinstalledApplicationInfo>& preinstalledApplicationInfos);
     static ErrCode InnerGetAllAppCloneBundleInfo(
         const std::string& bundleName, int32_t bundleFlags, int32_t userId, std::vector<BundleInfo>& bundleInfos);
+    static ErrCode InnerGetAppClonePreference(
+        const std::string& bundleName, AppClonePreference& preference);
+    static ErrCode InnerSetAppClonePreference(
+        const std::string& bundleName, const AppClonePreference& preference);
     static ErrCode InnerGetAllSharedBundleInfo(std::vector<SharedBundleInfo>& sharedBundles);
     static ErrCode InnerGetSharedBundleInfo(
         const std::string& bundleName, const std::string& moduleName, std::vector<SharedBundleInfo>& sharedBundles);

@@ -69,6 +69,7 @@ private:
     static void InnerSendAppDisableForbiddenEvent(const EventInfo& eventInfo);
     static void InnerSendHighRiskEvent(const EventInfo& eventInfo);
     static void InnerSendLocalPluginOperationEvent(const EventInfo& eventInfo);
+    static void InnerSendLargeFilesMonitorEvent(const EventInfo& eventInfo);
     template<typename... Types>
     static void InnerEventWrite(const std::string &eventName,
         HiSysEventType type, Types... keyValues);

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { BundleInfo, AppCloneIdentity, SignatureInfo, BundleOptions, DynamicIconInfo,
+import { BundleInfo, AppCloneIdentity, AppClonePreference, SignatureInfo, BundleOptions, DynamicIconInfo,
   AlternateIconInfo } from 'bundleManager.BundleInfo';
 import { AsyncCallback, BusinessError } from '@ohos.base';
 import { PreinstalledApplicationInfo, ApplicationInfo } from 'bundleManager.ApplicationInfo';
@@ -214,6 +214,12 @@ namespace bundleManager {
     APP_CLONE = 2,
   }
 
+  export enum AppClonePreferenceMode {
+    ALWAYS_ASK = 0,
+    MAIN_APP = 1,
+    CLONE_APP = 2,
+  }
+
   export enum ApplicationInfoFlag {
     FLAG_INSTALLED = 0x00000001,
     FLAG_OTHER_INSTALLED = 0x00000010,
@@ -250,6 +256,10 @@ namespace bundleManager {
   native function queryAbilityInfoSyncNative(want: Want, abilityFlags: int, userId: int, isSync: boolean): Array<AbilityInfo>;
 
   native function getAppCloneIdentityNative(uid: int): AppCloneIdentity;
+
+  native function getAppClonePreferenceNative(bundleName: string): AppClonePreference;
+
+  native function setAppClonePreferenceNative(bundleName: string, preference: AppClonePreference): void;
 
   native function getAbilityLabelNative(bundleName: string, moduleName: string, abilityName: string, isSync: boolean): string;
 
@@ -824,6 +834,40 @@ namespace bundleManager {
       p1.then((e: Any) => {
         let resultAppCloneIdentity: AppCloneIdentity = e as AppCloneIdentity;
         resolve(resultAppCloneIdentity);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAppClonePreference(bundleName: string): Promise<AppClonePreference> {
+    let p = new Promise<AppClonePreference>((
+      resolve: (appClonePreference: AppClonePreference) => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): AppClonePreference => {
+        return getAppClonePreferenceNative(bundleName);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let resultAppClonePreference: AppClonePreference = e as AppClonePreference;
+        resolve(resultAppClonePreference);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function setAppClonePreference(bundleName: string, appClonePreference: AppClonePreference): Promise<void> {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): void => {
+        return setAppClonePreferenceNative(bundleName, appClonePreference);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });

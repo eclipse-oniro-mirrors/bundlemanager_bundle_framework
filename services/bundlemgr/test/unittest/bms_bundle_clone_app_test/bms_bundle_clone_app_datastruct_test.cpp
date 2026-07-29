@@ -185,4 +185,38 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_BundleUserInfoJsonSerializer_0001,
     EXPECT_EQ(bundleCloneInfo.installTime, bundleCloneInfo2.installTime);
     EXPECT_EQ(bundleCloneInfo.uid, bundleCloneInfo2.uid);
 }
+
+/**
+ * @tc.number: InnerCliSandboxInfo_JsonSerializer_0100
+ * @tc.name: test InnerCliSandboxInfo to_json/from_json round trip
+ * @tc.desc: serialize and deserialize all fields correctly
+ */
+HWTEST_F(BmsBundleCloneAppDataStructTest, InnerCliSandboxInfo_JsonSerializer_0100, Function | SmallTest | Level1)
+{
+    InnerCliSandboxInfo info;
+    info.userId = 100;
+    info.appIndex = 1;
+    info.uid = 20001;
+    info.gids = {20001, 20002};
+    info.accessTokenId = 123456;
+    info.accessTokenIdEx = 789012345ULL;
+    info.installTime = 1700000000LL;
+    info.sandboxType = SandboxIsolationType::PartialIsolation;
+    info.creatorBundleNames = {"com.creator.app"};
+
+    nlohmann::json jsonObject;
+    to_json(jsonObject, info);
+
+    InnerCliSandboxInfo info2;
+    from_json(jsonObject, info2);
+    EXPECT_EQ(info2.userId, info.userId);
+    EXPECT_EQ(info2.appIndex, info.appIndex);
+    EXPECT_EQ(info2.uid, info.uid);
+    EXPECT_EQ(info2.gids, info.gids);
+    EXPECT_EQ(info2.accessTokenId, info.accessTokenId);
+    EXPECT_EQ(info2.accessTokenIdEx, info.accessTokenIdEx);
+    EXPECT_EQ(info2.installTime, info.installTime);
+    EXPECT_EQ(info2.sandboxType, info.sandboxType);
+    EXPECT_EQ(info2.creatorBundleNames, info.creatorBundleNames);
+}
 } // OHOS

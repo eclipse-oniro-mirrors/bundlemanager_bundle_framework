@@ -1113,7 +1113,7 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_2800, Function | SmallTe
     MessageOption option;
     InstalldHost installdHost;
     int res = installdHost.OnRemoteRequest(code, datas, reply, option);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -2881,5 +2881,38 @@ HWTEST_F(BmsBundleInstallerIPCTest, HandleCreateCliSandboxApp_0200, Function | S
     installerHost.HandleCreateCliSandboxApp(data, reply);
     ErrCode code = reply.ReadInt32();
     EXPECT_EQ(code, ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: HandleUninstallNewPreinstalledApps_0100
+ * @tc.name: test HandleUninstallNewPreinstalledApps
+ * @tc.desc: 1. parcel read bundle names failed
+ *           2. return ERR_APPEXECFWK_PARCEL_ERROR
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleUninstallNewPreinstalledApps_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost installerHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteBuffer(DATA, DATA_SIZE);
+    data.RewindRead(0);
+    installerHost.HandleUninstallNewPreinstalledApps(data, reply);
+    ErrCode code = reply.ReadInt32();
+    EXPECT_EQ(code, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: CheckInstallParam_0100
+ * @tc.name: test CheckInstallParam with specified userId
+ * @tc.desc: 1. installParam userId is not UNSPECIFIED_USERID
+ *           2. return original installParam
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, CheckInstallParam_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost installerHost;
+    InstallParam installParam;
+    installParam.userId = 100;
+    InstallParam ret = installerHost.CheckInstallParam(installParam);
+    EXPECT_EQ(ret.userId, 100);
 }
 } // OHOS

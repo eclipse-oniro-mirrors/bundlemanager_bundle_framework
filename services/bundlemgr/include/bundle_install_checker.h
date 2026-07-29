@@ -23,7 +23,6 @@
 
 #include "app_privilege_capability.h"
 #include "app_provision_info.h"
-#include "hap_token_info.h"
 #include "appexecfwk_errors.h"
 #include "bundle_pack_info.h"
 #include "bundle_verify_mgr.h"
@@ -69,34 +68,16 @@ public:
     ErrCode CheckSysCap(const std::vector<std::string> &bundlePaths);
 
     /**
-     * @brief Check signature info and init SPM session via access_token.
-     * @param bundlePaths Indicates the file paths of all HAP packages.
-     * @param hapVerifyRes Indicates the signature info.
-     * @param isPreInstallApp Indicates whether the app is pre-installed.
-     * @param sessionId Output parameter for the session ID allocated by access_token.
-     * @param userId Indicates the user ID for the installation.
-     * @return Returns ERR_OK if successful.
-     */
-    ErrCode CheckHapsSignInfoAndInitSession(
-        const std::vector<std::string> &bundlePaths,
-        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-        bool isPreInstallApp,
-        int32_t &sessionId,
-        int32_t userId);
-
-    /**
-     * @brief Check signature info of multiple haps (legacy, non-install flows).
+     * @brief Check signature info of multiple haps.
      * @param bundlePaths Indicates the file paths of all HAP packages.
      * @param hapVerifyRes Indicates the signature info.
      * @param readFile Indicates using READ or MMAP to get content of the file.
-     * @param userId Indicates the user ID.
-     * @return Returns ERR_OK if the every hap has signature info.
+     * @return Returns ERR_OK if the every hap has signature info and all haps have same signature info.
      */
     ErrCode CheckMultipleHapsSignInfo(
         const std::vector<std::string> &bundlePaths,
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-        bool readFile = false,
-        int32_t userId = Constants::INVALID_USERID);
+        bool readFile = false, int32_t userId = Constants::INVALID_USERID);
 
     /**
      * @brief To check the hap hash param.
@@ -264,16 +245,11 @@ public:
     static bool CheckSaneDriverIsolation(const Security::Verify::HapVerifyResult &hapVerifyResult, const int32_t userId,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
 
-    void ProcessCodeSignatureParam(
-        int32_t sessionId,
-        const Security::Verify::HapVerifyResult &hapVerifyResult,
+    void ProcessCodeSignatureParam(const Security::Verify::HapVerifyResult &hapVerifyResult,
         CodeSignatureParam &codeSignatureParam);
 
     bool CheckIsDebugAppProvisionType(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
-    static ErrCode ParseProfileDataToProvisionInfo(
-        const Security::AccessToken::ProfileData &profileData,
-        Security::Verify::ProvisionInfo &provisionInfo);
     void HandleExtensionPermission(InnerBundleInfo &info);
 
 private:

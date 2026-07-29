@@ -277,7 +277,7 @@ private:
     ErrCode VerifyUninstallPermission(bool isCheckSdkVersion);
     ErrCode VerifyCreateStreamInstallerPermission(const InstallParam &installParam, InstallParam &verifiedInstallParam);
     bool VerifyDestoryBundleStreamInstallerPermission();
-    ErrCode CheckIsDebugAppProvisionType(const std::string &bundleName, int32_t userId);
+    ErrCode CheckIsDebugAppProvisionType(const std::string &bundleName, int32_t userId, bool isHsp = false);
     std::atomic<uint32_t> streamInstallerIds_ = 0;
     std::mutex streamInstallMutex_;
     std::shared_mutex enterpriseCertMutex_;

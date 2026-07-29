@@ -20,7 +20,7 @@ namespace OHOS {
 using namespace IPC_SINGLE;
 #endif
 
-int32_t uid_ = 20010000;
+int32_t uid_ = 20000001;
 int32_t tokenId_ = 0;
 
 int32_t IPCSkeleton::GetCallingUid()

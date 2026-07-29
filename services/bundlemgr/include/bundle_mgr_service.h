@@ -32,6 +32,7 @@
 #include "bundle_distributed_manager.h"
 #endif
 #include "bundle_constants.h"
+#include "app_clone_preference_data_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_ext_host_impl.h"
@@ -86,6 +87,7 @@ public:
     bool IsServiceReady() const;
 
     const std::shared_ptr<BundleDataMgr> GetDataMgr() const;
+    const std::shared_ptr<AppClonePreferenceDataMgr> GetAppClonePreferenceDataMgr() const;
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     const std::shared_ptr<BundleAgingMgr> GetAgingMgr() const;
     /**
@@ -200,6 +202,7 @@ private:
     bool notifyBundleScanStatus = false;
     std::shared_ptr<BMSEventHandler> handler_;
     std::shared_ptr<BundleDataMgr> dataMgr_;
+    std::shared_ptr<AppClonePreferenceDataMgr> appClonePreferenceDataMgr_;
     std::shared_ptr<HidumpHelper> hidumpHelper_;
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     mutable std::mutex bundleConnectMutex_;

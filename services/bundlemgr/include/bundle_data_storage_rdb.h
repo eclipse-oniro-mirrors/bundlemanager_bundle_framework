@@ -32,7 +32,6 @@ public:
     bool LoadAllData(std::map<std::string, InnerBundleInfo> &infos) override;
     bool SaveStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) override;
     bool DeleteStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) override;
-    virtual bool ResetKvStore() override;
     ErrCode SaveStorageBundleInfoWithCode(const InnerBundleInfo &innerBundleInfo) override;
 
 private:

@@ -79,6 +79,8 @@ struct SkillProfile {
     std::string abilityName;
     std::vector<std::string> srcEntries;
     std::vector<std::string> permissions;
+    std::string version;
+    std::string visibility = Profile::SKILL_PROFILE_VISIBILITY_SYSTEM;
 };
 
 struct InnerModuleInfo {
@@ -88,6 +90,8 @@ struct InnerModuleInfo {
     bool isStageBasedModel = false;
     bool isLibIsolated = false;
     bool compressNativeLibs = true;
+    bool isSoStoredCompressed = false;
+    bool extractNativeLibs = true;
     bool isEncrypted = false;
     bool asanEnabled = false;
     bool gwpAsanEnabled = false;
@@ -502,6 +506,22 @@ public:
     void SetBaseApplicationInfo(const ApplicationInfo &applicationInfo)
     {
         *baseApplicationInfo_ = applicationInfo;
+    }
+    /**
+     * @brief Set application category for dual-mode scenarios.
+     * @param appCategory Indicates the application category.
+     */
+    void SetAppCategory(AppCategory appCategory)
+    {
+        baseApplicationInfo_->appCategory = appCategory;
+    }
+    /**
+     * @brief Get application category for dual-mode scenarios.
+     * @return Return the application category value.
+     */
+    AppCategory GetAppCategory() const
+    {
+        return baseApplicationInfo_->appCategory;
     }
     /**
      * @brief Update baseApplicationInfo.
@@ -1402,26 +1422,6 @@ public:
     bool IsPreInstallApp() const
     {
         return baseBundleInfo_->isPreInstallApp;
-    }
-    void SetBundleCheckBySpm(bool checked)
-    {
-        checkBySpm_ = checked;
-    }
-    bool IsBundleCheckBySpm() const
-    {
-        return checkBySpm_;
-    }
-    void SetAggregatedRequestPermissions(const std::vector<RequestPermission> &permissions)
-    {
-        aggregatedRequestPermissions_ = permissions;
-    }
-    void ClearAggregatedRequestPermissions()
-    {
-        aggregatedRequestPermissions_.clear();
-    }
-    const std::vector<RequestPermission> &GetAggregatedRequestPermissions() const
-    {
-        return aggregatedRequestPermissions_;
     }
     /**
      * @brief Get whether the bundle is a system app.
@@ -2504,11 +2504,20 @@ public:
     {
         return isDelayAging_;
     }
+    void SetDualModeCloneApp(bool isDualModeCloneApp)
+    {
+        isDualModeCloneApp_ = isDualModeCloneApp;
+    }
+    bool IsDualModeCloneApp() const
+    {
+        return isDualModeCloneApp_;
+    }
     bool isAbilityNameExist(const std::string &moduleName, const std::string &abilityName) const;
     bool GetPluginBundleInfoByName(
         const int32_t userId, const std::string pluginBundleName, PluginBundleInfo &pluginBundleInfo) const;
     bool HasKeepTokenIdMetadata() const;
 
+    bool IsFakeDecompressionEnable() const;
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(
@@ -2554,6 +2563,9 @@ private:
 
     // atomicservice Service Delay Aging
     bool isDelayAging_ = false;
+
+    // Dual-mode: true if installed as secondary-mode category-7 app (DB key + dir prefixed).
+    bool isDualModeCloneApp_ = false;
     
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
     int32_t appIndex_ = Constants::INITIAL_APP_INDEX;
@@ -2612,9 +2624,6 @@ private:
 
     // pluginBundleName -> pluginBundleInfo
     std::unordered_map<std::string, PluginBundleInfo> pluginBundleInfos_;
-    bool checkBySpm_ = false;  // migrated via access_token migration
-    // aggregated request permissions from all haps during install, not persisted
-    std::vector<RequestPermission> aggregatedRequestPermissions_;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

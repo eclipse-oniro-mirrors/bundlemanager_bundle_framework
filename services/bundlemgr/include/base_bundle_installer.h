@@ -29,6 +29,7 @@
 #include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
 #include "event_report.h"
+#include "hap_token_info.h"
 #include "install_param.h"
 #include "installer_bundle_tmp_info.h"
 #include "quick_fix/appqf_info.h"
@@ -214,7 +215,23 @@ protected:
 
     bool IsEnterpriseForAllUser(const InstallParam &installParam, const std::string &bundleName);
 
+    /**
+     * @brief Get the effective bundle name for directory and DB key operations.
+     * @return Returns dualModeBundleName_ if set (secondary mode category 7), otherwise bundleName_.
+     */
+    const std::string& GetEffectiveBundleName() const;
+
+    /**
+     * @brief Get the effective bundle name for directory and DB key operations with InnerBundleInfo.
+     * @param bundleInfo The InnerBundleInfo reference for fallback.
+     * @return Returns dualModeBundleName_ if set (secondary mode category 7), otherwise bundleInfo.GetBundleName().
+     */
+    std::string GetEffectiveBundleName(const InnerBundleInfo &bundleInfo) const;
+
 private:
+    // Delete the (bundleName, userId) preference row when the main app is uninstalled.
+    // No-op when AppClonePreferenceDataMgr is unavailable (e.g. test env); logs the skip.
+    void RemoveAppClonePreference(const std::string &bundleName, int32_t userId);
     /**
      * @brief The real procedure for system and normal bundle install.
      * @param bundlePath Indicates the path for storing the HAP file of the application
@@ -394,7 +411,17 @@ private:
      * @return Returns ERR_OK if the syscap satisfy; returns error code otherwise.
      */
     ErrCode CheckSysCap(const std::vector<std::string> &bundlePaths);
-
+    /**
+     * @brief Check signature info of multiple haps.
+     * @param bundlePaths Indicates the file paths of all HAP packages.
+     * @param installParam Indicates the install parameters.
+     * @param hapVerifyRes Indicates the signature info.
+     * @return Returns ERR_OK if the every hap has signature info and all haps have same signature info.
+     */
+    ErrCode CheckMultipleHapsSignInfo(
+        const std::vector<std::string> &bundlePaths,
+        const InstallParam &installParam,
+        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     /**
      * @brief To parse hap files and to obtain innerBundleInfo of each hap.
      * @param bundlePaths Indicates the file paths of all HAP packages.
@@ -557,6 +584,9 @@ private:
      */
     ErrCode CreateBundleUserData(InnerBundleInfo &innerBundleInfo);
     void AddBundleStatus(const NotifyBundleEvents &installRes);
+    // Fill dual-mode extended fields (appCategory / currentMode / isSharedSandbox) on a notify event
+    // when running on a dual-mode device; no-op otherwise. Shared by install / update / recover paths.
+    void FillDualModeEventFields(const InstallParam &installParam, NotifyBundleEvents &installRes);
     ErrCode CheckInstallationFree(const InnerBundleInfo &innerBundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
@@ -747,7 +777,8 @@ private:
         const std::string &srcHapPath, const std::string &realHapPath);
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
-    ErrCode ExtractResFileDir(const std::string &modulePath) const;
+    ErrCode ExtractResFileDir(
+        const std::string &modulePath, const bool needFakeDecompression, const bool isSystemApp) const;
     ErrCode ProcessAppSkills(InnerBundleInfo &info);
     ErrCode FinalizeAppSkills(const InnerBundleInfo &info);
     ErrCode CommitAppSkills(const InnerBundleInfo &info);
@@ -873,12 +904,13 @@ private:
     void UpdateDeveloperIdAndOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
-    ErrCode DeleteShaderCache(const std::string &bundleName) const;
+    void SetDualModeAppInfo(const InstallParam &installParam,
+        std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode CheckDualModeCategoryConsistency(const InnerBundleInfo &oldInfo, const InstallParam &installParam);
+    void InitDualModeBundleName(const InstallParam &installParam);
     void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
     ErrCode CleanArkStartupCache(const std::string &bundleName) const;
-    void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteCloudShader(const std::string &bundleName) const;
     ErrCode DeleteEl1ShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
         const std::string &bundleName, int32_t userId) const;
@@ -978,7 +1010,7 @@ private:
         const InnerBundleInfo &oldBundleInfo, ErrCode &result);
 
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
-        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, InnerBundleInfo &innerBundleInfo,
+        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
         const bool isDebugGrant = false);
     void UpdateKillApplicationProcess(const InnerBundleInfo &innerBundleInfo);
     std::string GetAssetAccessGroups(const std::string &bundleName);
@@ -1059,15 +1091,13 @@ private:
     uint32_t oldApplicationReservedFlag_ = 0;
 
     int32_t userId_ = Constants::INVALID_USERID;
-    int32_t sessionId_ = 0;
-    bool sessionCommitted_ = false;
-    std::map<std::string, std::string> modulePathMap_;
     int32_t overlayType_ = NON_OVERLAY_TYPE;
     int32_t atomicServiceModuleUpgrade_ = 0;
     SingletonState singletonState_ = SingletonState::DEFAULT;
     BundleType bundleType_ = BundleType::APP;
     Security::AccessToken::AccessTokenID callerToken_ = 0;
-    std::string bundleName_;
+    std::string bundleName_;           // original bundle name (for InnerBundleInfo storage, queries)
+    std::string dualModeBundleName_;   // dual-mode prefixed name (dirs/DB keys); secondary-mode category 7 only
     std::string modulePath_;
     std::string baseDataPath_;
     std::string modulePackage_;
@@ -1107,7 +1137,6 @@ private:
     EventInfo sysEventInfo_;
     NpapiPluginStatus npapiPluginStatus_ = NpapiPluginStatus::STATUS_NOT_APPLICABLE;
     Security::Verify::HapVerifyResult verifyRes_;
-    std::vector<RequestPermission> aggregatedRequestPermissions_;
     InstallerBundleTempInfo tempInfo_;
     // indicates whether the application has been restored to the preinstall
     bool isPreBundleRecovered_ = false;

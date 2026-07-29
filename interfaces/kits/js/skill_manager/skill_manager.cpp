@@ -33,6 +33,8 @@ constexpr const char* SKILL_NAME = "skillName";
 constexpr const char* SKILL_TYPE = "skillType";
 constexpr const char* SKILL_PATH = "skillPath";
 constexpr const char* VERSION_CODE = "versionCode";
+constexpr const char* VERSION = "version";
+constexpr const char* VISIBILITY = "visibility";
 constexpr const char* DESCRIPTION = "description";
 constexpr const char* SRC_ENTRIES = "srcEntries";
 constexpr const char* PERMISSIONS = "permissions";
@@ -84,6 +86,16 @@ static void ConvertSkillInfo(napi_env env, const SkillInfo &skillInfo, napi_valu
     napi_value nVersionCode;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(skillInfo.versionCode), &nVersionCode));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, VERSION_CODE, nVersionCode));
+
+    napi_value nVersion;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.version.c_str(),
+        NAPI_AUTO_LENGTH, &nVersion));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, VERSION, nVersion));
+
+    napi_value nVisibility;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.visibility.c_str(),
+        NAPI_AUTO_LENGTH, &nVisibility));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objSkillInfo, VISIBILITY, nVisibility));
 
     napi_value nAbilityName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillInfo.abilityName.c_str(),

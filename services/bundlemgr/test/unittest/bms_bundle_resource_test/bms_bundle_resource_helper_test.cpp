@@ -272,4 +272,20 @@ HWTEST_F(BmsBundleResourceHelperTest, AddCloneBundleResourceInfo_0010, Function 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
+
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+/**
+ * @tc.number: ParseBundleName_0100
+ * @tc.name: test ParseBundleName extracts bundleName from resource key
+ * @tc.desc: ParseKey-style key → returns bundleName prefix
+ */
+HWTEST_F(BmsBundleResourceHelperTest, ParseBundleName_0100, Function | SmallTest | Level0)
+{
+    std::string key = "com.example.bmsaccesstoken1/moduleName/abilityName";
+    EXPECT_EQ(BundleResourceHelper::ParseBundleName(key), "com.example.bmsaccesstoken1");
+
+    key = "com.example.onlybundle";
+    EXPECT_EQ(BundleResourceHelper::ParseBundleName(key), "com.example.onlybundle");
+}
+#endif
 }

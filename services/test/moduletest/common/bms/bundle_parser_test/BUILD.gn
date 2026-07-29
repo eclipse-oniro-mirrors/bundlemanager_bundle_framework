@@ -54,6 +54,7 @@ ohos_moduletest("BmsBundleParserModuleTest") {
     "ability_runtime:app_manager",
     "access_token:libaccesstoken_sdk",
     "appverify:libhapverify",
+    "dfs_service:libdecompress",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",

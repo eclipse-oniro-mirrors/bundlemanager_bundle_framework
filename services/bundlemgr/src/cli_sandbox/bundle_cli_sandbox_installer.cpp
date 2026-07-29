@@ -151,7 +151,16 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
         return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_CREATOR_NOT_INSTALLED;
     }
 
-    // 5. check creator's sandbox count limit
+    // 5. check creator's PERMISSION_MANAGE_SANDBOX_BUNDLE permission
+    int32_t permissionResult = BundlePermissionMgr::VerifyPermission(
+        creatorBundleName, Constants::PERMISSION_MANAGE_SANDBOX_BUNDLE, userId);
+    if (permissionResult != Constants::PERMISSION_GRANTED) {
+        APP_LOGE("creator %{public}s does not have permission to create cli sandbox app",
+            creatorBundleName.c_str());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    // 6. check creator's sandbox count limit
     int32_t creatorCount = dataMgr_->GetCliSandboxCountByCreator(bundleName, userId, creatorBundleName);
     if (creatorCount >= ServiceConstants::CLI_SANDBOX_MAX_COUNT_PER_CREATOR) {
         APP_LOGE("creator %{public}s has reached max sandbox count %{public}d for bundle %{public}s",
@@ -159,7 +168,7 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
         return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_OUT_OF_LIMIT_PER_CREATOR;
     }
 
-    // 6. generate new appIndex
+    // 7. generate new appIndex
     appIndex = ServiceConstants::CLI_SANDBOX_APP_INDEX_MIN;
     while (userInfo.sandboxInfos.find(InnerBundleUserInfo::AppIndexToKey(appIndex)) != userInfo.sandboxInfos.end()) {
         appIndex++;
@@ -169,34 +178,28 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
         return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_OUT_OF_LIMIT;
     }
 
-    // 7. HMDFS config
+    // 8. HMDFS config
     int32_t uid = 0;
     std::vector<int32_t> gids;
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH,
         info.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
 
-    // 8. create access token
+    // 9. create access token
     info.SetAppIndex(appIndex);
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
     AppProvisionInfo appProvisionInfo;
     if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
         APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
     }
-    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx,
-        appProvisionInfo.appServiceCapabilities, false, sessionId_) != ERR_OK) {
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult,
+        appProvisionInfo.appServiceCapabilities) != ERR_OK) {
         APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
         return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_GRANT_PERMISSION_FAILED;
     }
 
-    sessionCommitted_ = false;
-    ScopeGuard sessionGuard([&] {
-        if (!sessionCommitted_ && sessionId_ != 0) {
-            BundlePermissionMgr::FinishHapInstall(sessionId_, false, {});
-        }
-    });
     ScopeGuard applyAccessTokenGuard([&] {
-        BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID, bundleName);
-        dataMgr_->RemoveUidFromMap(uid);
+        BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID);
     });
 
     uid = info.GetUid(userId);
@@ -206,7 +209,7 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     }
     gids.emplace_back(uid);
 
-    // 9. create data directory
+    // 10. create data directory
     ScopeGuard createDataDirGuard([&] {
         RemoveSandboxDataDir(bundleName, userId, appIndex, true);
     });
@@ -216,7 +219,7 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
         return result;
     }
 
-    // 10. build InnerCliSandboxInfo
+    // 11. build InnerCliSandboxInfo
     InnerCliSandboxInfo sandboxInfo;
     sandboxInfo.userId = userId;
     sandboxInfo.appIndex = appIndex;
@@ -228,7 +231,7 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     sandboxInfo.installTime = BundleUtil::GetCurrentTimeMs();
     sandboxInfo.creatorBundleNames.push_back(creatorBundleName);
 
-    // 11. save to data manager
+    // 12. save to data manager
     ScopeGuard addSandboxGuard([&] {
         dataMgr_->RemoveCliSandboxBundle(bundleName, userId, appIndex);
     });
@@ -249,10 +252,6 @@ ErrCode BundleCliSandboxInstaller::ProcessCreateCliSandbox(const std::string &cr
     createDataDirGuard.Dismiss();
     addSandboxGuard.Dismiss();
     createEl5DirGuard.Dismiss();
-    if (!sessionCommitted_ && sessionId_ != 0) {
-        BundlePermissionMgr::FinishHapInstall(sessionId_, true, {});
-        sessionCommitted_ = true;
-    }
 
     uid_ = uid;
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
@@ -277,7 +276,6 @@ ErrCode BundleCliSandboxInstaller::CreateSandboxDataDir(InnerBundleInfo &info,
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
-    createDirParam.sessionId = sessionId_;
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         if (AccountHelper::IsOsAccountVerified(userId)) {
@@ -371,8 +369,6 @@ void BundleCliSandboxInstaller::ResetInstallProperties()
     appIdentifier_.clear();
     isBundleCrossAppSharedConfig_ = false;
     appDistributionType_.clear();
-    sessionId_ = 0;
-    sessionCommitted_ = false;
 }
 
 ErrCode BundleCliSandboxInstaller::DestroyCliSandboxApp(const std::string &creatorBundleName,
@@ -487,7 +483,7 @@ ErrCode BundleCliSandboxInstaller::ProcessDestroyCliSandbox(const std::string &c
         APP_LOGW("RemoveSandboxDataDir failed");
     }
     RemoveEl5Dir(bundleName, userId, appIndex);
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_, bundleName) !=
+    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete AT failed sandbox");
     }

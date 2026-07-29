@@ -94,6 +94,22 @@ bool BMSJsonUtil::CheckArrayValueType(const nlohmann::json &value, ArrayType arr
     }
 }
 
+// Validate a map value that is an array of objects (used by GetMapObject for vector-value maps).
+// Separate from CheckArrayValueType because the latter is called by GetMapValueIfFindKey
+// which deliberately rejects OBJECT as an unsupported arrayType.
+static bool CheckArrayOfObjects(const nlohmann::json &value)
+{
+    if (!value.is_array()) {
+        return false;
+    }
+    for (const auto &item : value) {
+        if (!item.is_object() || item.is_null()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool BMSJsonUtil::CheckMapValueType(const nlohmann::json &value, JsonType valueType, ArrayType arrayType)
 {
     switch (valueType) {
@@ -103,11 +119,55 @@ bool BMSJsonUtil::CheckMapValueType(const nlohmann::json &value, JsonType valueT
             return value.is_number();
         case JsonType::STRING:
             return value.is_string();
+        case JsonType::OBJECT:
+            return value.is_object() && !value.is_null() && !value.is_discarded();
         case JsonType::ARRAY:
             return CheckArrayValueType(value, arrayType);
         default:
             APP_LOGE("not support valueType: %{public}d", static_cast<int32_t>(valueType));
             return false;
+    }
+}
+
+void BMSJsonUtil::GetMapObject(const nlohmann::json &jsonObject,
+    const nlohmann::detail::iter_impl<const nlohmann::json> &end,
+    const std::string &key, const nlohmann::json *&outPtr,
+    JsonType valueType, ArrayType arrayType,
+    bool isNecessary, int32_t &parseResult)
+{
+    if (parseResult != ERR_OK) {
+        return;
+    }
+    auto iter = jsonObject.find(key);
+    if (iter != end) {
+        if (!iter->is_object()) {
+            APP_LOGE("type error %{public}s not map object", key.c_str());
+            parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+            return;
+        }
+        for (const auto &[mapKey, mapValue] : iter->items()) {
+            if (valueType == JsonType::ARRAY && arrayType == ArrayType::OBJECT) {
+                // vector-value map: use dedicated validator to avoid changing
+                // CheckArrayValueType which is shared with GetMapValueIfFindKey
+                if (!CheckArrayOfObjects(mapValue)) {
+                    APP_LOGE("type error %{public}s.%{public}s value not array of objects",
+                        key.c_str(), std::string(mapKey).c_str());
+                    parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+                    return;
+                }
+            } else if (!CheckMapValueType(mapValue, valueType, arrayType)) {
+                APP_LOGE("type error %{public}s.%{public}s value type mismatch",
+                    key.c_str(), std::string(mapKey).c_str());
+                parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+                return;
+            }
+        }
+        outPtr = &(*iter);
+        return;
+    }
+    if (isNecessary) {
+        APP_LOGE("profile prop %{public}s missing", key.c_str());
+        parseResult = ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP;
     }
 }
 }  // namespace AppExecFwk

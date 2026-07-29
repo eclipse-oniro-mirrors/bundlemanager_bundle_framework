@@ -21,6 +21,8 @@ export interface SkillInfo {
     readonly hapPath: string;
     readonly skillPath: string;
     readonly versionCode: long;
+    readonly version: string;
+    readonly visibility: string;
     readonly abilityName: string;
     readonly description: string;
     readonly srcEntries: Array<string>;

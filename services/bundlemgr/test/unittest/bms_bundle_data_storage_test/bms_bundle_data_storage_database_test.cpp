@@ -239,8 +239,10 @@ const nlohmann::json SKILL_PROFILE_JSON = R"(
 {
     "name":"testSkill",
     "abilityName":"TestAbility",
+    "version":"1.0.0",
     "srcEntries":["entry/src/main/ets/TestAbility.ts"],
-    "permissions":["ohos.permission.PERMISSION1"]
+    "permissions":["ohos.permission.PERMISSION1"],
+    "visibility":"public"
 })"_json;
 const nlohmann::json SKILL_PROFILES_ARRAY_JSON = R"(
 {
@@ -248,14 +250,18 @@ const nlohmann::json SKILL_PROFILES_ARRAY_JSON = R"(
         {
             "name":"skill1",
             "abilityName":"Ability1",
+            "version":"1.0.0",
             "srcEntries":["entry/src/main/ets/Ability1.ts"],
-            "permissions":["ohos.permission.PERMISSION1"]
+            "permissions":["ohos.permission.PERMISSION1"],
+            "visibility":"system"
         },
         {
             "name":"skill2",
             "abilityName":"Ability2",
+            "version":"2.0.0",
             "srcEntries":["entry/src/main/ets/Ability2.ts"],
-            "permissions":["ohos.permission.PERMISSION1", "ohos.permission.PERMISSION2"]
+            "permissions":["ohos.permission.PERMISSION1", "ohos.permission.PERMISSION2"],
+            "visibility":"public"
         }
     ]
 })"_json;
@@ -1529,6 +1535,7 @@ protected:
                 "startMode":1,
                 "appPreloadPhase":0,
                 "appSignType": "none",
+                "appCategory": 1,
                 "allowListenBundleChangedEvent": []
             },
             "baseBundleInfo": {
@@ -4797,6 +4804,31 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7700, Function | Medi
 }
 
 /**
+ * @tc.number: InnerBundleInfo_7703
+ * @tc.name: Test GetApplicationEnabledV9 with CLI sandbox appIndex at max boundary
+ * @tc.desc: 1.Set sandboxInfo at appIndex=3000 (CLI_SANDBOX_APP_INDEX_MAX)
+ *           2.GetApplicationEnabledV9 with appIndex=3000 returns ERR_OK
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7703, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    bool isEnabled = false;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.enabled = false;
+    InnerCliSandboxInfo sandboxInfo;
+    const int32_t boundaryAppIndex = 3000;
+    userInfo.sandboxInfos.try_emplace(
+        InnerBundleUserInfo::AppIndexToKey(boundaryAppIndex), sandboxInfo);
+    std::string key = BUNDLE_NAME + std::string("_") + std::to_string(userId);
+    info.innerBundleUserInfos_.try_emplace(key, userInfo);
+    auto ret = info.GetApplicationEnabledV9(userId, isEnabled, boundaryAppIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(isEnabled);
+}
+
+/**
  * @tc.number: InnerBundleInfo_7800
  * @tc.name: Test InsertInnerSharedModuleInfo
  * @tc.desc: Test the InsertInnerSharedModuleInfo of InnerBundleInfo
@@ -6850,10 +6882,12 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0001, Function | SmallTe
     from_json(SKILL_PROFILE_JSON, skillProfile);
     EXPECT_EQ(skillProfile.name, "testSkill");
     EXPECT_EQ(skillProfile.abilityName, "TestAbility");
+    EXPECT_EQ(skillProfile.version, "1.0.0");
     EXPECT_EQ(skillProfile.srcEntries.size(), 1);
     EXPECT_EQ(skillProfile.srcEntries[0], "entry/src/main/ets/TestAbility.ts");
     EXPECT_EQ(skillProfile.permissions.size(), 1);
     EXPECT_EQ(skillProfile.permissions[0], "ohos.permission.PERMISSION1");
+    EXPECT_EQ(skillProfile.visibility, Profile::SKILL_PROFILE_VISIBILITY_PUBLIC);
 }
 
 /**
@@ -6866,20 +6900,24 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0002, Function | SmallTe
     SkillProfile skillProfile;
     skillProfile.name = "testSkill";
     skillProfile.abilityName = "TestAbility";
+    skillProfile.version = "1.0.0";
     skillProfile.srcEntries = {"entry/src/main/ets/TestAbility.ts"};
     skillProfile.permissions = {"ohos.permission.PERMISSION1"};
+    skillProfile.visibility = Profile::SKILL_PROFILE_VISIBILITY_PUBLIC;
 
     nlohmann::json jsonObject;
     to_json(jsonObject, skillProfile);
 
     EXPECT_EQ(jsonObject["name"], "testSkill");
     EXPECT_EQ(jsonObject["abilityName"], "TestAbility");
+    EXPECT_EQ(jsonObject["version"], "1.0.0");
     EXPECT_EQ(jsonObject["srcEntries"].is_array(), true);
     EXPECT_EQ(jsonObject["srcEntries"].size(), 1);
     EXPECT_EQ(jsonObject["srcEntries"][0], "entry/src/main/ets/TestAbility.ts");
     EXPECT_EQ(jsonObject["permissions"].is_array(), true);
     EXPECT_EQ(jsonObject["permissions"].size(), 1);
     EXPECT_EQ(jsonObject["permissions"][0], "ohos.permission.PERMISSION1");
+    EXPECT_EQ(jsonObject["visibility"], Profile::SKILL_PROFILE_VISIBILITY_PUBLIC);
 }
 
 /**
@@ -6892,8 +6930,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0003, Function | SmallTe
     SkillProfile originalSkillProfile;
     originalSkillProfile.name = "skill1";
     originalSkillProfile.abilityName = "Ability1";
+    originalSkillProfile.version = "1.0.0";
     originalSkillProfile.srcEntries = {"entry/src/main/ets/Ability1.ts"};
     originalSkillProfile.permissions = {"ohos.permission.PERMISSION1"};
+    originalSkillProfile.visibility = Profile::SKILL_PROFILE_VISIBILITY_SYSTEM;
 
     // Serialize to JSON
     nlohmann::json jsonObject;
@@ -6906,10 +6946,12 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0003, Function | SmallTe
     // Verify the data matches
     EXPECT_EQ(deserializedSkillProfile.name, originalSkillProfile.name);
     EXPECT_EQ(deserializedSkillProfile.abilityName, originalSkillProfile.abilityName);
+    EXPECT_EQ(deserializedSkillProfile.version, originalSkillProfile.version);
     EXPECT_EQ(deserializedSkillProfile.srcEntries.size(), originalSkillProfile.srcEntries.size());
     EXPECT_EQ(deserializedSkillProfile.srcEntries[0], originalSkillProfile.srcEntries[0]);
     EXPECT_EQ(deserializedSkillProfile.permissions.size(), originalSkillProfile.permissions.size());
     EXPECT_EQ(deserializedSkillProfile.permissions[0], originalSkillProfile.permissions[0]);
+    EXPECT_EQ(deserializedSkillProfile.visibility, originalSkillProfile.visibility);
 }
 
 /**
@@ -6933,13 +6975,17 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0004, Function | SmallTe
     EXPECT_EQ(skillProfiles.size(), 2);
     EXPECT_EQ(skillProfiles[0].name, "skill1");
     EXPECT_EQ(skillProfiles[0].abilityName, "Ability1");
+    EXPECT_EQ(skillProfiles[0].version, "1.0.0");
     EXPECT_EQ(skillProfiles[0].srcEntries.size(), 1);
     EXPECT_EQ(skillProfiles[0].permissions.size(), 1);
+    EXPECT_EQ(skillProfiles[0].visibility, Profile::SKILL_PROFILE_VISIBILITY_SYSTEM);
 
     EXPECT_EQ(skillProfiles[1].name, "skill2");
     EXPECT_EQ(skillProfiles[1].abilityName, "Ability2");
+    EXPECT_EQ(skillProfiles[1].version, "2.0.0");
     EXPECT_EQ(skillProfiles[1].srcEntries.size(), 1);
     EXPECT_EQ(skillProfiles[1].permissions.size(), 2);
+    EXPECT_EQ(skillProfiles[1].visibility, Profile::SKILL_PROFILE_VISIBILITY_PUBLIC);
 }
 
 /**
@@ -6957,14 +7003,18 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0005, Function | SmallTe
     SkillProfile skillProfile1;
     skillProfile1.name = "skill1";
     skillProfile1.abilityName = "Ability1";
+    skillProfile1.version = "1.0.0";
     skillProfile1.srcEntries = {"entry/src/main/ets/Ability1.ts"};
     skillProfile1.permissions = {"ohos.permission.PERMISSION1"};
+    skillProfile1.visibility = Profile::SKILL_PROFILE_VISIBILITY_SYSTEM;
 
     SkillProfile skillProfile2;
     skillProfile2.name = "skill2";
     skillProfile2.abilityName = "Ability2";
+    skillProfile2.version = "2.0.0";
     skillProfile2.srcEntries = {"entry/src/main/ets/Ability2.ts"};
     skillProfile2.permissions = {"ohos.permission.PERMISSION1", "ohos.permission.PERMISSION2"};
+    skillProfile2.visibility = Profile::SKILL_PROFILE_VISIBILITY_PUBLIC;
 
     moduleInfo.skillProfiles = {skillProfile1, skillProfile2};
 
@@ -6978,6 +7028,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0005, Function | SmallTe
     EXPECT_EQ(jsonObject["skillProfiles"].size(), 2);
     EXPECT_EQ(jsonObject["skillProfiles"][0]["name"], "skill1");
     EXPECT_EQ(jsonObject["skillProfiles"][1]["name"], "skill2");
+    EXPECT_EQ(jsonObject["skillProfiles"][0]["version"], "1.0.0");
+    EXPECT_EQ(jsonObject["skillProfiles"][1]["version"], "2.0.0");
+    EXPECT_EQ(jsonObject["skillProfiles"][0]["visibility"], Profile::SKILL_PROFILE_VISIBILITY_SYSTEM);
+    EXPECT_EQ(jsonObject["skillProfiles"][1]["visibility"], Profile::SKILL_PROFILE_VISIBILITY_PUBLIC);
 }
 
 /**
@@ -6995,14 +7049,18 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0006, Function | SmallTe
             {
                 "name": "skill1",
                 "abilityName": "Ability1",
+                "version": "1.0.0",
                 "srcEntries": ["entry/src/main/ets/Ability1.ts"],
-                "permissions": ["ohos.permission.PERMISSION1"]
+                "permissions": ["ohos.permission.PERMISSION1"],
+                "visibility": "system"
             },
             {
                 "name": "skill2",
                 "abilityName": "Ability2",
+                "version": "2.0.0",
                 "srcEntries": ["entry/src/main/ets/Ability2.ts"],
-                "permissions": ["ohos.permission.PERMISSION1", "ohos.permission.PERMISSION2"]
+                "permissions": ["ohos.permission.PERMISSION1", "ohos.permission.PERMISSION2"],
+                "visibility": "public"
             }
         ]
     })"_json;
@@ -7015,9 +7073,39 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0006, Function | SmallTe
     EXPECT_EQ(moduleInfo.skillProfiles.size(), 2);
     EXPECT_EQ(moduleInfo.skillProfiles[0].name, "skill1");
     EXPECT_EQ(moduleInfo.skillProfiles[0].abilityName, "Ability1");
+    EXPECT_EQ(moduleInfo.skillProfiles[0].version, "1.0.0");
     EXPECT_EQ(moduleInfo.skillProfiles[1].name, "skill2");
     EXPECT_EQ(moduleInfo.skillProfiles[1].abilityName, "Ability2");
+    EXPECT_EQ(moduleInfo.skillProfiles[1].version, "2.0.0");
     EXPECT_EQ(moduleInfo.skillProfiles[1].permissions.size(), 2);
+    EXPECT_EQ(moduleInfo.skillProfiles[0].visibility, Profile::SKILL_PROFILE_VISIBILITY_SYSTEM);
+    EXPECT_EQ(moduleInfo.skillProfiles[1].visibility, Profile::SKILL_PROFILE_VISIBILITY_PUBLIC);
+}
+
+/**
+ * @tc.number: SkillProfile_0007
+ * @tc.name: Test SkillProfile default visibility
+ * @tc.desc: 1. Test SkillProfile visibility defaults to system when persisted JSON has no visibility field
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SkillProfile_0007, Function | SmallTest | Level1)
+{
+    nlohmann::json skillProfileJson = R"(
+    {
+        "name": "legacySkill",
+        "abilityName": "LegacyAbility",
+        "srcEntries": ["entry/src/main/ets/LegacyAbility.ts"],
+        "permissions": ["ohos.permission.PERMISSION1"]
+    })"_json;
+
+    SkillProfile skillProfile;
+    from_json(skillProfileJson, skillProfile);
+
+    EXPECT_EQ(skillProfile.name, "legacySkill");
+    EXPECT_EQ(skillProfile.abilityName, "LegacyAbility");
+    EXPECT_EQ(skillProfile.srcEntries.size(), 1);
+    EXPECT_EQ(skillProfile.permissions.size(), 1);
+    EXPECT_EQ(skillProfile.version, "");
+    EXPECT_EQ(skillProfile.visibility, Profile::SKILL_PROFILE_VISIBILITY_SYSTEM);
 }
 
 /**

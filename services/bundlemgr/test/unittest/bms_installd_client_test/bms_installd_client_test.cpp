@@ -133,7 +133,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractModuleFiles_0100, T
     std::string targetPath = TARGET_PATH;
     std::string targetSoPath = TARGET_SO_PATH;
     std::string cpuAbi = CPU_ABI;
-    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
+    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi, false, false);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0100 end";
 }
@@ -150,7 +150,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractModuleFiles_0200, T
     std::string targetPath = EMPTY_STRING;
     std::string targetSoPath = TARGET_SO_PATH;
     std::string cpuAbi = CPU_ABI;
-    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
+    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi, false, false);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0200 end";
 }
@@ -167,9 +167,9 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractModuleFiles_0300, T
     std::string targetPath = TARGET_PATH;
     std::string targetSoPath = TARGET_SO_PATH;
     std::string cpuAbi = CPU_ABI;
-    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
+    ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi, false, false);
     EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractModuleFiles,
-    srcModulePath, targetPath, targetSoPath, cpuAbi));
+    srcModulePath, targetPath, targetSoPath, cpuAbi, false, false));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0300 end";
 }
 
@@ -1520,8 +1520,10 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_VerifyCodeSignatureForHap_
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeliverySignProfile_0100, TestSize.Level1)
 {
     std::string bundleName;
+    int32_t profileBlockLength = 0;
+    unsigned char *profileBlock = new unsigned char[0];
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->DeliverySignProfile(bundleName, 0);
+    ErrCode result = installClient_->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1533,9 +1535,11 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeliverySignProfile_0100, 
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeliverySignProfile_0200, TestSize.Level1)
 {
     std::string bundleName = "bundleName";
+    int32_t profileBlockLength = 1;
+    unsigned char *profileBlock = new unsigned char[1];
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->DeliverySignProfile(bundleName, 0);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ErrCode result = installClient_->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 
 /**
@@ -2127,6 +2131,25 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeleteOldCacheFiles_0100, 
 
     paths.push_back("/data/app/el2/100/base/com.example.test/cache");
     result = installClient_->DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_DeleteOldCacheFiles_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_GetCacheDiskUsageFromPath_0100
+ * @tc.name: DeleteOldCacheFiles
+ * @tc.desc: Test client-side validation for empty paths.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetCacheDiskUsageFromPath_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_DeleteOldCacheFiles_0100 start";
+    std::vector<std::string> paths;
+    int64_t statSize = 0;
+    ErrCode result = installClient_->GetCacheDiskUsageFromPath(paths, statSize);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    paths.push_back("/data/app/el2/100/base/com.example.test/cache");
+    result = installClient_->GetCacheDiskUsageFromPath(paths, statSize);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_DeleteOldCacheFiles_0100 end";
 }

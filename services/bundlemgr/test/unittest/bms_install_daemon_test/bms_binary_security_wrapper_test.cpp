@@ -193,7 +193,7 @@ HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_007, Functio
     instance.handle_ = nullptr;
 
     std::vector<BinFileInfo> infos;
-    ErrCode ret = instance.ProcessHapBinInstall(TEST_BUNDLE_NAME, TEST_APP_IDENTIFIER, TEST_USER_ID, 0, infos);
+    ErrCode ret = instance.ProcessHapBinInstall(TEST_BUNDLE_NAME, TEST_APP_IDENTIFIER, TEST_USER_ID, infos);
 
     if (ret == ERR_OK) {
         EXPECT_NE(instance.handle_, nullptr);
@@ -221,7 +221,7 @@ HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_008, Functio
     info.path = TEST_BIN_FILE_PATH;
     infos.emplace_back(info);
 
-    ErrCode ret = instance.ProcessHapBinInstall(TEST_BUNDLE_NAME, TEST_APP_IDENTIFIER, TEST_USER_ID, 0, infos);
+    ErrCode ret = instance.ProcessHapBinInstall(TEST_BUNDLE_NAME, TEST_APP_IDENTIFIER, TEST_USER_ID, infos);
 
     if (ret == ERR_OK) {
         EXPECT_NE(instance.handle_, nullptr);
@@ -295,7 +295,7 @@ HWTEST_F(BmsBinarySecurityWrapperTest, BmsBinarySecurityWrapperTest_011, Functio
     info2.path = "/data/app/el1/bundle/public/com.ohos.test/bin/test2.so";
     infos.emplace_back(info2);
 
-    ErrCode ret = instance.ProcessHapBinInstall(TEST_BUNDLE_NAME, TEST_APP_IDENTIFIER, TEST_USER_ID, 0, infos);
+    ErrCode ret = instance.ProcessHapBinInstall(TEST_BUNDLE_NAME, TEST_APP_IDENTIFIER, TEST_USER_ID, infos);
 
     if (ret == ERR_OK) {
         EXPECT_NE(instance.handle_, nullptr);

@@ -30,17 +30,12 @@
 #include "directory_ex.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
-#include "bundle_permission_mgr.h"
 #include "mock_status_receiver.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
-
-namespace OHOS {
-void SetUpdateAppPermissionRetForTest(int32_t value);
-}  // namespace OHOS
 
 namespace OHOS {
 namespace {
@@ -415,48 +410,5 @@ HWTEST_F(BmsBundlePermissionTest, CheckBundlePermission_0200, Function | SmallTe
 
     installResult = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(installResult, ERR_OK);
-}
-
-/**
- * @tc.number: UpdateAppPermission_0100
- * @tc.name: test UpdateAppPermission
- * @tc.desc: test UpdateAppPermission returns ERR_OK by default
-*/
-HWTEST_F(BmsBundlePermissionTest, UpdateAppPermission_0100, Function | SmallTest | Level1)
-{
-    InnerBundleInfo innerBundleInfo;
-    int32_t ret = BundlePermissionMgr::UpdateAppPermission(innerBundleInfo, USERID,
-        Security::AccessToken::TYPE_REPLACE);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
- * @tc.number: UpdateAppPermission_0200
- * @tc.name: test UpdateAppPermission
- * @tc.desc: test UpdateAppPermission returns controlled error code
-*/
-HWTEST_F(BmsBundlePermissionTest, UpdateAppPermission_0200, Function | SmallTest | Level1)
-{
-    OHOS::SetUpdateAppPermissionRetForTest(ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
-    InnerBundleInfo innerBundleInfo;
-    int32_t ret = BundlePermissionMgr::UpdateAppPermission(innerBundleInfo, USERID,
-        Security::AccessToken::TYPE_REPLACE);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
-    OHOS::SetUpdateAppPermissionRetForTest(0);
-}
-
-/**
- * @tc.number: UpdateAppPermission_0300
- * @tc.name: test UpdateAppPermission
- * @tc.desc: test UpdateAppPermission returns incompatible signature error
-*/
-HWTEST_F(BmsBundlePermissionTest, UpdateAppPermission_0300, Function | SmallTest | Level1)
-{
-    OHOS::SetUpdateAppPermissionRetForTest(ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
-    InnerBundleInfo innerBundleInfo;
-    int32_t ret = BundlePermissionMgr::UpdateAppPermission(innerBundleInfo, USERID,
-        Security::AccessToken::TYPE_REPLACE);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
-    OHOS::SetUpdateAppPermissionRetForTest(0);
 }
 } // OHOS

@@ -188,7 +188,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_0200, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->ExtractModuleFiles(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING);
+    auto ret = proxy->ExtractModuleFiles(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -858,10 +858,11 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3900, Function | SmallTest |
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
 
-    auto ret = installdProxy->DeliverySignProfile(TEST_STRING, 0);
+    unsigned char *profileBlock;
+    auto ret = installdProxy->DeliverySignProfile(TEST_STRING, DATA_LENGTH, profileBlock);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = installdProxy->DeliverySignProfile(TEST_STRING, 0);
+    ret = installdProxy->DeliverySignProfile(TEST_STRING, MAX_PARCEL_CAPACITY, profileBlock);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -946,6 +947,21 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4400, Function | SmallTest |
     EXPECT_EQ(ret, ERR_OK);
 }
 
+/**
+ * @tc.number: InstalldProxyTest_4500
+ * @tc.name: test function of DeliverySignProfile
+ * @tc.desc: 1. calling DeliverySignProfile of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4500, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    int32_t profileBlockLength = 1;
+    unsigned char *profileBlock = new unsigned char[1];
+    auto ret = proxy->DeliverySignProfile(TEST_STRING, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_OK);
+}
 
 /**
  * @tc.number: InstalldProxyTest_4600
@@ -1524,7 +1540,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7900, Function | SmallTest |
 {
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
-    
+
     std::vector<std::string> paths;
     uint64_t cacheSize = 0;
     uint64_t cleanedSize;
@@ -1541,7 +1557,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_8000, Function | SmallTest |
 {
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
-    
+
     auto ret = mkdir("/data/test/temp", 0777);
     ASSERT_EQ(ret, 0);
     std::vector<std::string> paths = {"/data/test/temp"};
@@ -1549,6 +1565,8 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_8000, Function | SmallTest |
     uint64_t cleanedSize;
     ret = proxy->DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
     EXPECT_EQ(ret, ERR_OK);
+    std::error_code ec;
+    std::filesystem::remove_all("/data/test/temp", ec);
 }
 
 /**
@@ -1566,6 +1584,26 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_8100, Function | SmallTest |
     uint64_t cleanedSize;
     auto ret = proxy->DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SERVICE_DIED);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_8200
+ * @tc.name: test Marshalling function of DeleteOldCacheFiles
+ * @tc.desc: 1. calling DeleteOldCacheFiles of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_8200, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = mkdir("/data/test/temp", 0777);
+    ASSERT_EQ(ret, 0);
+    std::vector<std::string> paths = {"/data/test/temp"};
+    int64_t statSize = 0;
+    ret = proxy->GetCacheDiskUsageFromPath(paths, statSize);
+    EXPECT_EQ(ret, ERR_OK);
+    std::error_code ec;
+    std::filesystem::remove_all("/data/test/temp", ec);
 }
 
 /**

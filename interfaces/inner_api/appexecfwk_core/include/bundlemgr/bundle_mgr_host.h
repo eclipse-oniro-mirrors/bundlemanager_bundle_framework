@@ -27,6 +27,13 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct StringParcelable : public Parcelable {
+    std::string value;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static StringParcelable *Unmarshalling(Parcel &parcel);
+};
 class BundleMgrHost : public IRemoteStub<IBundleMgr> {
 public:
     BundleMgrHost();
@@ -818,6 +825,8 @@ private:
 
     ErrCode HandleGetAllAppInstallExtendedInfo(MessageParcel &data, MessageParcel &reply);
     
+    ErrCode HandleGetStringByIdList(MessageParcel &data, MessageParcel &reply);
+    
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     ErrCode HandleGetDefaultAppProxy(MessageParcel &data, MessageParcel &reply);
 #endif
@@ -960,6 +969,10 @@ private:
 
     ErrCode HandleGetCliSandboxAppIndexes(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAppClonePreference(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleSetAppClonePreference(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetLaunchWant(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageParcel &data, MessageParcel &reply);
@@ -977,6 +990,8 @@ private:
     ErrCode HandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleDeleteDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleUpdateDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAllDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 

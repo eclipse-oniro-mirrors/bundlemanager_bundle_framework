@@ -4724,6 +4724,86 @@ HWTEST_F(BmsBundleParserTest, BundleParser_2100, Function | MediumTest | Level1)
 }
 
 /**
+ * @tc.number: BundleParser_2110
+ * @tc.name: Test CheckRouterData with non-string value
+ * @tc.desc: Test the CheckRouterData of BundleParser when data value is not string
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_2110, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+    nlohmann::json data;
+    data["data"] = nlohmann::json::object({{"key1", 123}});
+    auto ret = bundleParser.CheckRouterData(data);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: TestParse_5510
+ * @tc.name: test parsing failed when version code is 0 in config.json
+ * @tc.desc: 1. version code is 0
+ *           2. TransformTo returns error
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_5510, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_3;
+    profileJson[BUNDLE_TYPE_APP][BUNDLE_APP_PROFILE_KEY_VERSION][BUNDLE_APP_PROFILE_KEY_CODE] = 0;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.number: TestParse_5520
+ * @tc.name: test parsing failed when moduleName contains comma in config.json
+ * @tc.desc: 1. moduleName contains comma
+ *           2. TransformTo returns error
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_5520, Function | SmallTest | Level1)
+{
+    nlohmann::json errorProfileJson = CONFIG_JSON;
+    errorProfileJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][
+        BUNDLE_MODULE_PROFILE_KEY_MODULE_NAME] = "entry,extra";
+    CheckProfileShortcut(errorProfileJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+}
+
+/**
+ * @tc.number: TestParse_5530
+ * @tc.name: test lite device app skips module name validation
+ * @tc.desc: 1. deviceType contains liteWearable
+ *           2. CheckModuleInfosIsValid returns true early
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_5530, Function | SmallTest | Level1)
+{
+    nlohmann::json profileJson = CONFIG_JSON;
+    profileJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_DEVICE_TYPE] =
+        nlohmann::json::array({"liteWearable"});
+    profileJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][
+        BUNDLE_MODULE_PROFILE_KEY_MODULE_NAME] = "invalid,name";
+    CheckProfileShortcut(profileJson, ERR_OK);
+}
+
+/**
+ * @tc.number: TestParse_3110
+ * @tc.name: test parsing failed when module name contains comma in module.json
+ * @tc.desc: 1. module name contains comma
+ *           2. TransformTo returns error
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_3110, Function | SmallTest | Level1)
+{
+    nlohmann::json moduleJson = MODULE_JSON;
+    moduleJson[BUNDLE_PROFILE_KEY_MODULE][PROFILE_KEY_NAME] = "entry,extra";
+    CheckProfileModule(moduleJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
+}
+
+/**
  * @tc.number: BundleParser_2200
  * @tc.name: Test ParsePreAppListConfig
  * @tc.desc: test the interface of BundleParser

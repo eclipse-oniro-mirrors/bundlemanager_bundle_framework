@@ -20,6 +20,7 @@
 #include "alternate_icon_info.h"
 #include "appexecfwk_errors.h"
 #include "application_info.h"
+#include "app_clone_preference.h"
 #include "app_install_extended_info.h"
 #include "app_provision_info.h"
 #include "bundle_additional_info.h"
@@ -1575,6 +1576,13 @@ public:
         return Constants::EMPTY_STRING;
     }
 
+    virtual ErrCode GetStringByIdList(const std::string &bundleName, const std::string &moduleName,
+        const std::vector<uint32_t> &resIdList, std::vector<std::string> &labelList,
+        int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING)
+    {
+        return ERR_OK;
+    }
+
     virtual std::string GetIconById(
         const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
     {
@@ -1900,6 +1908,18 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode GetAppClonePreference(const std::string &bundleName,
+        int32_t userId, AppClonePreference &preference)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode SetAppClonePreference(const std::string &bundleName,
+        int32_t userId, const AppClonePreference &preference)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual ErrCode GetLaunchWant(Want &want)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
@@ -1938,6 +1958,11 @@ public:
     }
 
     virtual ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode UpdateDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

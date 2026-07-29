@@ -471,6 +471,8 @@ HWTEST_F(BmsAgingTest, InitAgingRequest_0003, Function | SmallTest | Level0)
     int32_t bundleidtwo = 1001;
     dataMgr->AddUserId(1001);
     dataMgr->AddUserId(1002);
+    dataMgr->GenerateBundleId("app1", bundleidone);
+    dataMgr->GenerateBundleId("app2", bundleidtwo);
     dataMgr->AddInnerBundleInfo("app1", innerBundleInfoOne, false);
     dataMgr->AddInnerBundleInfo("app2", innerBundleInfoTwo, false);
     dataMgr->UpdateBundleInstallState("app1", InstallState::INSTALL_SUCCESS, false);

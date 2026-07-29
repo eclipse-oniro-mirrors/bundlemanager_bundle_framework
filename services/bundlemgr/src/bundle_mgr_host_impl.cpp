@@ -491,7 +491,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForException(const std::string &bundleNa
         Security::Verify::HapVerifyResult hapVerifyResult;
         BundleVerifyMgr::HapVerify(hapPath, hapVerifyResult);
         Security::Verify::ProvisionInfo provision =  hapVerifyResult.GetProvisionInfo();
-        APP_LOGD("developerCert:%{public}s", provision.developerCert.c_str());
+        APP_LOGD("developerCert:%{private}s", provision.developerCert.c_str());
         bundleInfoForException.hapHashValueAndDevelopCerts[i].developCert = provision.developerCert;
     }
     
@@ -1757,6 +1757,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         APP_LOGE("GetBundleArchiveInfo make temp dir failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    ScopeGuard tempHapPathGuard([tempHapPath] { BundleUtil::DeleteDir(tempHapPath); });
     std::string hapName = hapFilePath.substr(hapFilePath.find_last_of("//") + 1);
     std::string tempHapFile = tempHapPath + ServiceConstants::PATH_SEPARATOR + hapName;
     if (InstalldClient::GetInstance()->CopyFile(hapRealPath, tempHapFile,
@@ -1779,11 +1780,9 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     ret = bundleParser.Parse(realPath, info, isAbcCompressed);
     if (ret != ERR_OK) {
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
-        BundleUtil::DeleteDir(tempHapPath);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     SetProvisionInfoToInnerBundleInfo(realPath, info);
-    BundleUtil::DeleteDir(tempHapPath);
     if (fromV9) {
         info.GetBundleInfoV9(flags, bundleInfo, ServiceConstants::NOT_EXIST_USERID);
     } else {
@@ -2220,7 +2219,8 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     }
     APP_LOGI("start -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
+        (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM))) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -2406,6 +2406,10 @@ ErrCode BundleMgrHostImpl::CleanBundlePartialCacheAutomatic(
     uint64_t cleanedSize = 0;
     ret = InstalldClient::GetInstance()->DeleteOldCacheFiles(cachePaths, needFreeSize, cleanedSize);
     afterCleanedSize = (cleanedSize >= beforeCleanedSize) ? 0 : beforeCleanedSize - cleanedSize;
+    if (afterCleanedSize > cacheThreshold) {
+        afterCleanedSize - 0;
+        BundleCacheMgr::GetBundleCacheSizeByAppIndex(bundleName, userId, appIndex, moduleNames, afterCleanedSize);
+    }
     return ret;
 }
 
@@ -2430,9 +2434,6 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             BundleCacheMgr::MarkCleaningDone(bundleName, userId, appIndex);
         });
         std::vector<std::string> caches = rootDir;
-        std::string shaderCachePath;
-        shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
-        caches.push_back(shaderCachePath);
         bool succeed = true;
         if (!caches.empty()) {
             for (const auto& cache : caches) {
@@ -2517,16 +2518,16 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
 
 bool BundleMgrHostImpl::VerifyCleanBundleDataFilesPermission(bool &isCheckDebugApp)
 {
-    if (!(BundlePermissionMgr::IsSystemApp() &&
-        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE))) {
-        if (!OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) ||
-            !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
-            APP_LOGE("verify permission failed");
-            return false;
-        }
-        isCheckDebugApp = true;
+    if (BundlePermissionMgr::IsSystemApp() &&
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
+        return true;
     }
-    return true;
+    if (OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false) &&
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ALLOW_USE_BM)) {
+        isCheckDebugApp = true;
+        return true;
+    }
+    return false;
 }
 
 bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, const int userId,
@@ -2548,11 +2549,6 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     }
 
     (void)dataMgr->GetBundleNameForUid(callingUid, callingBundleName);
-    if (!BundlePermissionMgr::IsSystemApp() &&
-        !OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
-        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES system api denied");
-        return false;
-    }
     bool isCheckDebugApp = false;
     if (!VerifyCleanBundleDataFilesPermission(isCheckDebugApp)) {
         APP_LOGE("verify permission failed");
@@ -3165,7 +3161,10 @@ ErrCode BundleMgrHostImpl::HandleKillProcess(const std::string &bundleName, int3
             return ERR_APPEXECFWK_NULL_PTR;
         }
         APP_LOGD("kill process, -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
-        if (appMgrClient->KillApplicationWithUserId(bundleName, userId, appIndex) != ERR_OK) {
+        std::string identity = IPCSkeleton::ResetCallingIdentity();
+        auto ret = appMgrClient->KillApplicationWithUserId(bundleName, userId, appIndex);
+        IPCSkeleton::SetCallingIdentity(identity);
+        if (ret != ERR_OK) {
             APP_LOGE("kill app process failed");
             return ERR_APPEXECFWK_KILL_PROCESS_FAILED;
         }
@@ -4152,7 +4151,11 @@ std::string BundleMgrHostImpl::GetAppType(const std::string &bundleName)
 
 int32_t BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int32_t userId)
 {
-    return GetUidByBundleName(bundleName, userId, 0);
+#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+    return GetUidByBundleName(bundleName, userId, Constants::ALL_CLONE_APP_INDEX);
+#else
+    return GetUidByBundleName(bundleName, userId, Constants::MAIN_APP_INDEX);
+#endif
 }
 
 int32_t BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int32_t userId, int32_t appIndex)
@@ -4228,7 +4231,8 @@ bool BundleMgrHostImpl::GetAbilityInfo(
 bool BundleMgrHostImpl::ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo)
 {
-    APP_LOGD("start ImplicitQueryInfoByPriority, flags : %{public}d, userId : %{public}d", flags, userId);
+    APP_LOGI_NOFUNC("ImplicitQueryInfoByPriority %{public}d %{public}d %{public}s",
+        flags, userId, want.GetAction().c_str());
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGD("non-system app calling system api");
@@ -4695,6 +4699,28 @@ std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, cons
         return Constants::EMPTY_STRING;
     }
     return dataMgr->GetStringById(bundleName, moduleName, resId, userId, localeInfo);
+}
+
+ErrCode BundleMgrHostImpl::GetStringByIdList(const std::string &bundleName,
+    const std::string &moduleName, const std::vector<uint32_t> &resIdList, std::vector<std::string> &labelList,
+    int32_t userId, const std::string &localeInfo)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
+        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE("verify token type failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetStringByIdList(bundleName, moduleName, resIdList, labelList, userId, localeInfo);
 }
 
 std::string BundleMgrHostImpl::GetIconById(
@@ -6125,7 +6151,8 @@ ErrCode BundleMgrHostImpl::GetDeveloperIds(const std::string &appDistributionTyp
 ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, const bool &state,
     bool isNeedSendNotify)
 {
-    APP_LOGD("start SwitchUninstallState, bundleName : %{public}s, state : %{public}d", bundleName.c_str(), state);
+    APP_LOGI_NOFUNC("SwitchUninstallState %{public}s %{public}d %{public}d",
+        bundleName.c_str(), state, IPCSkeleton::GetCallingPid());
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -6181,7 +6208,8 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
 ErrCode BundleMgrHostImpl::SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
     int32_t userId)
 {
-    APP_LOGI("start SwitchUninstallStateByUserId %{public}s %{public}d %{public}d", bundleName.c_str(), state, userId);
+    APP_LOGI_NOFUNC("SwitchUninstallStateByUserId %{public}s %{public}d %{public}d %{public}d",
+        bundleName.c_str(), state, userId, IPCSkeleton::GetCallingPid());
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -6531,6 +6559,62 @@ ErrCode BundleMgrHostImpl::GetCliSandboxAppIndexes(const std::string &bundleName
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::GetAppClonePreference(const std::string &bundleName,
+    int32_t userId, AppClonePreference &preference)
+{
+    APP_LOGD("start GetAppClonePreference bundleName = %{public}s, userId = %{public}d",
+        bundleName.c_str(), userId);
+    if (IPCSkeleton::GetCallingUid() != Constants::FOUNDATION_UID) {
+        if (!BundlePermissionMgr::IsSystemApp()) {
+            APP_LOGE_NOFUNC("GetAppClonePreference non-system app calling system api");
+            return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        }
+        if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
+            Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES)) {
+            APP_LOGE_NOFUNC("GetAppClonePreference verify permission failed");
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
+    }
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (service == nullptr) {
+        APP_LOGE_NOFUNC("GetAppClonePreference BundleMgrService is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto prefDataMgr = service->GetAppClonePreferenceDataMgr();
+    if (prefDataMgr == nullptr) {
+        APP_LOGE_NOFUNC("GetAppClonePreference AppClonePreferenceDataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return prefDataMgr->GetAppClonePreference(bundleName, userId, preference);
+}
+
+ErrCode BundleMgrHostImpl::SetAppClonePreference(const std::string &bundleName,
+    int32_t userId, const AppClonePreference &preference)
+{
+    APP_LOGD("start SetAppClonePreference bundleName = %{public}s, userId = %{public}d",
+        bundleName.c_str(), userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE_NOFUNC("SetAppClonePreference non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
+        Constants::PERMISSION_MANAGE_CLONE_BUNDLE_PREFERENCES)) {
+        APP_LOGE_NOFUNC("SetAppClonePreference verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (service == nullptr) {
+        APP_LOGE_NOFUNC("SetAppClonePreference BundleMgrService is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto prefDataMgr = service->GetAppClonePreferenceDataMgr();
+    if (prefDataMgr == nullptr) {
+        APP_LOGE_NOFUNC("SetAppClonePreference AppClonePreferenceDataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return prefDataMgr->SetAppClonePreference(bundleName, userId, preference);
+}
+
 ErrCode BundleMgrHostImpl::GetLaunchWant(Want &want)
 {
     APP_LOGD("start GetLaunchWant");
@@ -6770,6 +6854,36 @@ ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcu
     ErrCode res = dataMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
     EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, userId, shortcutInfo.bundleName,
         shortcutInfo.appIndex, shortcutInfo.id, IPCSkeleton::GetCallingUid(), res);
+    return res;
+}
+
+ErrCode BundleMgrHostImpl::UpdateDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE_NOFUNC("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MANAGER_SHORTCUT)) {
+        APP_LOGE_NOFUNC("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        APP_LOGE_NOFUNC("verify permission across local account failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    ErrCode res = dataMgr->UpdateDesktopShortcutInfo(shortcutInfo, userId);
+    EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::UPDATE, userId, shortcutInfo.bundleName,
+        shortcutInfo.appIndex, shortcutInfo.id, IPCSkeleton::GetCallingUid(), res);
+    if (res != ERR_OK) {
+        APP_LOGE_NOFUNC("UpdateDesktopShortcutInfo failed");
+        return res;
+    }
     return res;
 }
 

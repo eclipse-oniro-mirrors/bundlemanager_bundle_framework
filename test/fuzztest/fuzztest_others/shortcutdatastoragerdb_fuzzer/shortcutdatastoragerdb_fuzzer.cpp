@@ -43,6 +43,8 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     shortcutInfo.isEnables = true;
     bool isIdIllegal = false;
     shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+    int32_t changedRows = 0;
+    shortcutDataStorageRdb->UpdateDesktopShortcutInfo(shortcutInfo, USERID, changedRows);
     shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
     std::vector<ShortcutInfo> shortcutInfos;
     shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, shortcutInfos);

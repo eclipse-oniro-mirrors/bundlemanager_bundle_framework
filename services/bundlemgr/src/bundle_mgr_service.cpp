@@ -26,6 +26,7 @@
 #include "bundle_memory_guard.h"
 #include "bundle_resource_helper.h"
 #include "datetime_ex.h"
+#include "dual_mode_helper.h"
 #include "el5_filekey_callback.h"
 #include "el5_filekey_manager_kit.h"
 #include "installd_client.h"
@@ -131,12 +132,14 @@ bool BundleMgrService::Init()
     CreateBmsServiceDir();
     APP_LOGI_NOFUNC("BundleMgrService InitBmsParam");
     InitBmsParam();
+    DualModeHelper::InitializeCache();
     APP_LOGI_NOFUNC("BundleMgrService InitPreInstallExceptionMgr");
     InitPreInstallExceptionMgr();
     CHECK_INIT_RESULT(InitBundleMgrHost(), "Init bundleMgr fail");
     CHECK_INIT_RESULT(InitBundleInstaller(), "Init bundleInstaller fail");
     CHECK_INIT_RESULT(InitLocalPluginInstaller(), "Init local plugin installer fail");
     InitBundleDataMgr();
+    appClonePreferenceDataMgr_ = std::make_shared<AppClonePreferenceDataMgr>();
     APP_LOGI_NOFUNC("BundleMgrService InitOobePreloadUninstallMgr");
     InitOobePreloadUninstallMgr();
     CHECK_INIT_RESULT(InitBundleUserMgr(), "Init bundleUserMgr fail");
@@ -423,6 +426,11 @@ void BundleMgrService::RegisterDataMgr(std::shared_ptr<BundleDataMgr> dataMgrImp
 const std::shared_ptr<BundleDataMgr> BundleMgrService::GetDataMgr() const
 {
     return dataMgr_;
+}
+
+const std::shared_ptr<AppClonePreferenceDataMgr> BundleMgrService::GetAppClonePreferenceDataMgr() const
+{
+    return appClonePreferenceDataMgr_;
 }
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL

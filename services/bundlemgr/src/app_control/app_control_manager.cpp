@@ -468,6 +468,16 @@ bool AppControlManager::GetAppRunningControlRuleCache(
     std::lock_guard<std::mutex> lock(appRunningControlMutex_);
     if (appRunningControlRuleResult_.find(key) != appRunningControlRuleResult_.end()) {
         controlRuleResult = appRunningControlRuleResult_[key];
+        if (controlRuleResult.controlWant != nullptr) {
+            Want *newWant = new (std::nothrow) Want(*(controlRuleResult.controlWant));
+            if (newWant != nullptr) {
+                controlRuleResult.controlWant = std::shared_ptr<Want>(newWant);
+            } else {
+                controlRuleResult.controlWant.reset();
+                LOG_W(BMS_TAG_DEFAULT, "copy Want failed: %{public}s", key.c_str());
+                return false;
+            }
+        }
         return true;
     }
     return false;

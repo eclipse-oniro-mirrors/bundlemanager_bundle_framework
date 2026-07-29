@@ -36,7 +36,6 @@ struct UninstallBundleInfo {
     std::vector<std::string> extensionDirs;
     std::vector<std::string> moduleNames;
     std::map<std::string, UninstallDataUserInfo> userInfos;
-    bool checkBySpm = false;  // migrated via access_token migration
 
     std::string ToString() const;
     void Init();

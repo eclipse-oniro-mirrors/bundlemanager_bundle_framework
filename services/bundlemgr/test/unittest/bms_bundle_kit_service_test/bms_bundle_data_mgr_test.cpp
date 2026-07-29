@@ -2856,6 +2856,25 @@ HWTEST_F(BmsBundleDataMgrTest, SetModuleRemovable_0200, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: GenerateUidAndGid_0100
+ * @tc.name: test GenerateUidAndGid
+ * @tc.desc: 1.system run normally
+ *           2.check GenerateUidAndGid failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, GenerateUidAndGid_0100, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo innerBundleUserInfo;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    GetBundleDataMgr()->bundleIdMap_.emplace(MAX_APP_UID, BUNDLE_TEST1);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY);
+}
+
+/**
  * @tc.number: GetAllFormsInfo_0100
  * @tc.name: test GetAllFormsInfo
  * @tc.desc: 1.system run normally
@@ -3797,6 +3816,140 @@ HWTEST_F(BmsBundleDataMgrTest, GetStringById_0100, Function | MediumTest | Level
 }
 
 /**
+ * @tc.number: GetStringByIdList_0100
+ * @tc.name: test GetStringByIdList with permission denied
+ * @tc.desc: test GetStringByIdList when IsSystemApp check fails
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0100, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0200
+ * @tc.name: test GetStringByIdList with empty resIdList
+ * @tc.desc: test GetStringByIdList with empty resIdList
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0200, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList;
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+    EXPECT_TRUE(labelList.empty());
+}
+
+/**
+ * @tc.number: GetStringByIdList_0300
+ * @tc.name: test GetStringByIdList with empty bundleName
+ * @tc.desc: test GetStringByIdList when bundleName is empty
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0300, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        "", MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0400
+ * @tc.name: test GetStringByIdList with empty moduleName
+ * @tc.desc: test GetStringByIdList when moduleName is empty
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0400, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, "", resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0500
+ * @tc.name: test GetStringByIdList with resIdList exceeding max size
+ * @tc.desc: test GetStringByIdList when resIdList size exceeds MAX_RES_ID_LIST_SIZE
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0500, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList;
+    for (int32_t i = 0; i < 1001; ++i) {
+        resIdList.push_back(i);
+    }
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0700
+ * @tc.name: test GetStringByIdList with localeInfo parameter
+ * @tc.desc: test GetStringByIdList with non-empty localeInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0600, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "en_US");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0800
+ * @tc.name: test GetStringByIdList with large resIdList but within limit
+ * @tc.desc: test GetStringByIdList when resIdList size equals MAX_RES_ID_LIST_SIZE
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0700, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList;
+    for (int32_t i = 0; i < 1000; ++i) {
+        resIdList.push_back(i);
+    }
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_0900
+ * @tc.name: test GetStringByIdList with different userId
+ * @tc.desc: test GetStringByIdList with Constants::DEFAULT_USERID
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0800, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, Constants::DEFAULT_USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStringByIdList_1000
+ * @tc.name: test GetStringByIdList with invalid userId
+ * @tc.desc: test GetStringByIdList with Constants::INVALID_USERID
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringByIdList_0900, Function | MediumTest | Level1)
+{
+    std::vector<uint32_t> resIdList = {1, 2, 3};
+    std::vector<std::string> labelList;
+    ErrCode ret = bundleMgrHostImpl_->GetStringByIdList(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, resIdList, labelList, Constants::INVALID_USERID, "");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+
+/**
  * @tc.number: GetSandboxHapModuleInfo_0100
  * @tc.name: test GetSandboxHapModuleInfo
  * @tc.desc: 1.GetSandboxHapModuleInfo
@@ -4603,9 +4756,9 @@ HWTEST_F(BmsBundleDataMgrTest, GetCallingInfo_0100, Function | SmallTest | Level
 
     dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
     dataMgr->AddInnerBundleInfo(bundleName, info);
-    dataMgr->UpdateUidMap(TEST_QUERY_EVENT_UID, bundleName, 0);
 
     int32_t testBundleId = TEST_QUERY_EVENT_BUNDLE_ID;
+    dataMgr->bundleIdMap_.insert(std::pair<int32_t, std::string>(testBundleId, bundleName));
     ret = bundleMgrHostImpl_->GetCallingInfo(callingUid, callingBundleName, callingAppId);
     EXPECT_EQ(ret, true);
     EXPECT_EQ(callingBundleName, bundleName);
@@ -4822,9 +4975,10 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleNameForUid_0100, Function | SmallTest | 
     dataMgr->AddInnerBundleInfo(bundleName, info);
 
     int32_t testBundleId = TEST_QUERY_EVENT_BUNDLE_ID2;
+    dataMgr->bundleIdMap_.insert(std::pair<int32_t, std::string>(testBundleId, bundleName));
 
     testRet = bundleMgrHostImpl_->GetBundleNameForUid(TEST_QUERY_EVENT_UID2, testResult);
-    EXPECT_FALSE(testRet);
+    EXPECT_TRUE(testRet);
 }
 
 /**
@@ -7121,7 +7275,7 @@ HWTEST_F(BmsBundleDataMgrTest, ProcessUninstallBundle_2000, Function | SmallTest
     std::vector<BundleOptionInfo> bundleOptionInfos;
     bool result = dataMgr->ProcessUninstallBundle(bundleOptionInfos);
     EXPECT_TRUE(result);
-    EXPECT_GE(bundleOptionInfos.size(), 1);
+    EXPECT_EQ(bundleOptionInfos.size(), 1);
     dataMgr->DeleteUninstallBundleInfo(bundleName, TEST_USERID);
     dataMgr->multiUserIdsSet_.erase(TEST_USERID);
 }

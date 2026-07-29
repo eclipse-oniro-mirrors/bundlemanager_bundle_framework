@@ -42,19 +42,6 @@ namespace AppExecFwk {
 using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::string, std::string> &,
     const CodeCryptoHapInfo &, bool &);
 
-struct SessionProvisionInfo {
-    std::string bundleName;
-    std::string apl;
-    int32_t distributionType = 0;
-    int32_t provisionType = 0;
-    bool isEnterpriseResigned = false;
-    std::string appIdentifier;
-    uint32_t profileBlockLength = 0;
-    std::shared_ptr<unsigned char[]> profileBlock;
-    std::string distributionCertificate;
-    std::string appServiceCapabilities;
-};
-
 class InstalldOperator {
 public:
     /**
@@ -114,7 +101,7 @@ public:
      * @return Returns true if the package extracted successfully; returns false otherwise.
      */
     static bool ExtractFiles(const std::string &sourcePath, const std::string &targetSoPath,
-        const std::string &cpuAbi);
+        const std::string &cpuAbi, const bool needFakeDecompression, const bool isSystemApp);
 
     static bool IsNativeSo(const std::string &entryName, const std::string &cpuAbi);
 
@@ -125,6 +112,9 @@ public:
         const BundleExtractor &extractor,
         const std::string &entryName,
         const ExtractParam &param);
+    static bool ChangeModeFile(const ExtractParam &param, const std::string &path);
+    static bool FakeDecompression(const BundleExtractor &extractor, const std::string &entryName,
+        const ExtractParam &param, const std::string &targetPath);
     static void ExtractTargetHnpFile(
         const BundleExtractor &extractor,
         const std::string &entryName,
@@ -419,7 +409,6 @@ public:
     static ErrCode DeleteCertAndRemoveKey(const std::string &path);
 
     static bool IsValidBundleName(const std::string &bundleName);
-    static bool IsValidBundleNameWithOriBundle(const std::string &bundleName, std::string &oriBundleName);
 
     static bool IsValidUserId(const int32_t userId);
 
@@ -503,6 +492,7 @@ public:
         const std::string &bundleName, const BundleDirScene &scene);
     static bool IsValidPathByGetDiskUsageFromPathScene(
         const std::string &path, const std::string &bundleName, const BundleDirScene &scene);
+    static bool IsValidPathByGetCacheDiskUsageFromPath(const std::string &path);
     static bool IsValidPathByGetFileStatScene(const std::string &file, const BundleDirScene &scene);
     static bool IsValidPathByHashFiles(const std::string &file);
     static bool IsValidPathByMigrateData(

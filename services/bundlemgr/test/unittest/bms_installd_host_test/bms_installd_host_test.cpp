@@ -673,7 +673,7 @@ HWTEST_F(BmsInstalldHostTest, HandDeliverySignProfile_0100, Function | SmallTest
     MessageParcel data;
     MessageParcel reply;
     bool res = installdHost.HandDeliverySignProfile(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -1047,6 +1047,37 @@ HWTEST_F(BmsInstalldHostTest, HandleDeleteOldCacheFiles_0300, Function | SmallTe
     data.WriteUint64(UINT64_MAX);
     MessageParcel reply;
     bool res = installdHost.HandleDeleteOldCacheFiles(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleGetCacheDiskUsageFromPath_0100
+ * @tc.name: test HandleGetCacheDiskUsageFromPath
+ * @tc.desc: 1.HandleGetCacheDiskUsageFromPath test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleGetCacheDiskUsageFromPath_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleGetCacheDiskUsageFromPath(data, reply);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: HandleGetCacheDiskUsageFromPath_0200
+ * @tc.name: test HandleGetCacheDiskUsageFromPath
+ * @tc.desc: 1.HandleGetCacheDiskUsageFromPath test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleGetCacheDiskUsageFromPath_0200, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    data.WriteUint32(1);
+    data.WriteString("/data/test");
+    data.WriteInt64(-1);
+    MessageParcel reply;
+    bool res = installdHost.HandleGetCacheDiskUsageFromPath(data, reply);
     EXPECT_TRUE(res);
 }
 

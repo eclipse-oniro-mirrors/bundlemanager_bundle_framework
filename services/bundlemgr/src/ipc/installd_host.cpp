@@ -287,9 +287,6 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_SIGN_PROFILE):
             result = this->HandRemoveSignProfile(data, reply);
             break;
-        case static_cast<uint32_t>(InstalldInterfaceCode::CLEAR_SESSION_PROVISION_CACHE):
-            result = this->HandClearSessionProvisionCache(data, reply);
-            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::ADD_CERT_AND_ENABLE_KEY):
             result = this->HandleAddCertAndEnableKey(data, reply);
             break;
@@ -386,6 +383,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_OLD_CACHE_FILES):
             result = HandleDeleteOldCacheFiles(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_CACHE_DISK_USAGE_FROM_PATH):
+            result = HandleGetCacheDiskUsageFromPath(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -415,8 +415,10 @@ bool InstalldHost::HandleExtractModuleFiles(MessageParcel &data, MessageParcel &
     std::string targetPath = Str16ToStr8(data.ReadString16());
     std::string targetSoPath = Str16ToStr8(data.ReadString16());
     std::string cpuAbi = Str16ToStr8(data.ReadString16());
-    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "ExtractModuleFiles %{public}s", targetPath.c_str());
-    ErrCode result = ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
+    bool needFakeDecompression = data.ReadBool();
+    bool isSystemApp = data.ReadBool();
+    ErrCode result =
+        ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi, needFakeDecompression, isSystemApp);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1230,8 +1232,23 @@ bool InstalldHost::HandVerifyCodeSignatureForHap(MessageParcel &data, MessagePar
 bool InstalldHost::HandDeliverySignProfile(MessageParcel &data, MessageParcel &reply)
 {
     std::string bundleName = Str16ToStr8(data.ReadString16());
-    int32_t sessionId = data.ReadInt32();
-    ErrCode result = DeliverySignProfile(bundleName, sessionId);
+    int32_t profileBlockLength = data.ReadInt32();
+    if (profileBlockLength <= 0 || profileBlockLength > Constants::MAX_PARCEL_CAPACITY) {
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    auto dataInfo = data.ReadRawData(profileBlockLength);
+    if (!dataInfo) {
+        LOG_E(BMS_TAG_INSTALLD, "readRawData failed");
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    const unsigned char *profileBlock = reinterpret_cast<const unsigned char *>(dataInfo);
+    if (profileBlock == nullptr) {
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    ErrCode result = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1241,15 +1258,6 @@ bool InstalldHost::HandRemoveSignProfile(MessageParcel &data, MessageParcel &rep
     std::string bundleName = Str16ToStr8(data.ReadString16());
 
     ErrCode result = RemoveSignProfile(bundleName);
-    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    return true;
-}
-
-bool InstalldHost::HandClearSessionProvisionCache(MessageParcel &data, MessageParcel &reply)
-{
-    int32_t sessionId = data.ReadInt32();
-
-    ErrCode result = ClearSessionProvisionCache(sessionId);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -1643,6 +1651,28 @@ bool InstalldHost::HandleDeleteOldCacheFiles(MessageParcel &data, MessageParcel 
     ErrCode result = DeleteOldCacheFiles(paths, cacheSize, cleanedSize);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Uint64, reply, cleanedSize);
+    return true;
+}
+
+bool InstalldHost::HandleGetCacheDiskUsageFromPath(MessageParcel &data, MessageParcel &reply)
+{
+    auto cachePathSize = data.ReadUint32();
+    if (cachePathSize == 0 || cachePathSize > Constants::MAX_CACHE_DIR_SIZE) {
+        WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    std::vector<std::string> cachePaths;
+    cachePaths.reserve(cachePathSize);
+    for (uint32_t i = 0; i < cachePathSize; i++) {
+        std::string path;
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, data, path);
+        cachePaths.emplace_back(path);
+    }
+    int64_t timeoutMs = data.ReadInt64();
+    int64_t statSize = 0;
+    auto result = GetCacheDiskUsageFromPath(cachePaths, statSize, timeoutMs);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int64, reply, statSize);
     return true;
 }
 }  // namespace AppExecFwk

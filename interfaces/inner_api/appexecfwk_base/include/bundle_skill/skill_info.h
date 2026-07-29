@@ -45,6 +45,8 @@ struct SkillInfo : public Parcelable {
     std::string hapPath;
     std::string skillPath;
     uint32_t versionCode = 0;
+    std::string version;
+    std::string visibility;
     std::string abilityName;
     std::string description;
     std::vector<std::string> srcEntries;

@@ -15,6 +15,8 @@
 
 #define private public
 
+#include <memory>
+
 #include <gtest/gtest.h>
 
 #include "bundle_skill/skill_info.h"
@@ -601,6 +603,8 @@ HWTEST_F(BmsSkillManagerTest, SkillInfo_0001, TestSize.Level1)
     EXPECT_EQ(skillInfo.hapPath, "");
     EXPECT_EQ(skillInfo.skillPath, "");
     EXPECT_EQ(skillInfo.versionCode, static_cast<uint32_t>(0));
+    EXPECT_EQ(skillInfo.version, "");
+    EXPECT_EQ(skillInfo.visibility, "");
     EXPECT_EQ(skillInfo.abilityName, "");
     EXPECT_EQ(skillInfo.description, "");
     EXPECT_TRUE(skillInfo.srcEntries.empty());
@@ -623,6 +627,8 @@ HWTEST_F(BmsSkillManagerTest, SkillInfo_0002, TestSize.Level1)
     skillInfo.hapPath = "/data/app/test.hap";
     skillInfo.skillPath = "/data/app/el1/skills/public/com.test/entry/skills/testSkill";
     skillInfo.versionCode = 100200;
+    skillInfo.version = "1.0.0";
+    skillInfo.visibility = "public";
     skillInfo.abilityName = "TestAbility";
     skillInfo.description = "test skill description";
     skillInfo.srcEntries = {"src/entry1.js", "src/entry2.js"};
@@ -636,11 +642,56 @@ HWTEST_F(BmsSkillManagerTest, SkillInfo_0002, TestSize.Level1)
     EXPECT_EQ(skillInfo.hapPath, "/data/app/test.hap");
     EXPECT_EQ(skillInfo.skillPath, "/data/app/el1/skills/public/com.test/entry/skills/testSkill");
     EXPECT_EQ(skillInfo.versionCode, static_cast<uint32_t>(100200));
+    EXPECT_EQ(skillInfo.version, "1.0.0");
+    EXPECT_EQ(skillInfo.visibility, "public");
     EXPECT_EQ(skillInfo.abilityName, "TestAbility");
     EXPECT_EQ(skillInfo.description, "test skill description");
     EXPECT_EQ(skillInfo.srcEntries.size(), static_cast<size_t>(2));
     EXPECT_EQ(skillInfo.permissions.size(), static_cast<size_t>(2));
     EXPECT_EQ(skillInfo.requestPermissions.size(), static_cast<size_t>(1));
+}
+
+/**
+ * @tc.number: SkillInfo_0003
+ * @tc.name: SkillInfo parcel
+ * @tc.desc: Test SkillInfo parcel marshalling and unmarshalling
+ */
+HWTEST_F(BmsSkillManagerTest, SkillInfo_0003, TestSize.Level1)
+{
+    SkillInfo skillInfo;
+    skillInfo.bundleName = BUNDLE_NAME;
+    skillInfo.moduleName = MODULE_NAME;
+    skillInfo.skillName = SKILL_NAME;
+    skillInfo.skillType = SkillType::INDEPENDENT_SKILL;
+    skillInfo.hapPath = "/data/app/test.hap";
+    skillInfo.skillPath = "/data/app/el1/skills/public/com.test/entry/skills/testSkill";
+    skillInfo.versionCode = 100200;
+    skillInfo.version = "1.0.0";
+    skillInfo.visibility = "public";
+    skillInfo.abilityName = "TestAbility";
+    skillInfo.description = "test skill description";
+    skillInfo.srcEntries = {"src/entry1.js", "src/entry2.js"};
+    skillInfo.permissions = {"ohos.permission.READ", "ohos.permission.WRITE"};
+    skillInfo.requestPermissions = {"ohos.permission.CAMERA"};
+
+    Parcel parcel;
+    ASSERT_TRUE(skillInfo.Marshalling(parcel));
+    std::unique_ptr<SkillInfo> restored(SkillInfo::Unmarshalling(parcel));
+    ASSERT_NE(restored, nullptr);
+    EXPECT_EQ(restored->bundleName, skillInfo.bundleName);
+    EXPECT_EQ(restored->moduleName, skillInfo.moduleName);
+    EXPECT_EQ(restored->skillName, skillInfo.skillName);
+    EXPECT_EQ(restored->skillType, skillInfo.skillType);
+    EXPECT_EQ(restored->hapPath, skillInfo.hapPath);
+    EXPECT_EQ(restored->skillPath, skillInfo.skillPath);
+    EXPECT_EQ(restored->versionCode, skillInfo.versionCode);
+    EXPECT_EQ(restored->version, skillInfo.version);
+    EXPECT_EQ(restored->visibility, skillInfo.visibility);
+    EXPECT_EQ(restored->abilityName, skillInfo.abilityName);
+    EXPECT_EQ(restored->description, skillInfo.description);
+    EXPECT_EQ(restored->srcEntries, skillInfo.srcEntries);
+    EXPECT_EQ(restored->permissions, skillInfo.permissions);
+    EXPECT_EQ(restored->requestPermissions, skillInfo.requestPermissions);
 }
 
 /**

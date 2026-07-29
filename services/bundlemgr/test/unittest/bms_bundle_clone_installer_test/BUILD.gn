@@ -42,9 +42,6 @@ ohos_unittest("BmsBundleCloneInstallerTest") {
   sources += bundle_install_sources
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
-  sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
-  sources +=
-      [ "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp" ]
 
   sources += [ "bms_bundle_clone_installer_test.cpp" ]
 

@@ -194,6 +194,11 @@ const std::shared_ptr<BundleDataMgr> BundleMgrService::GetDataMgr() const
     return nullptr;
 }
 
+const std::shared_ptr<AppClonePreferenceDataMgr> BundleMgrService::GetAppClonePreferenceDataMgr() const
+{
+    return nullptr;
+}
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 const std::shared_ptr<BundleAgingMgr> BundleMgrService::GetAgingMgr() const
 {

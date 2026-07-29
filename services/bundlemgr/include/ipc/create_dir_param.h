@@ -53,7 +53,6 @@ struct CreateDirParam : public Parcelable {
     uint32_t remainingNum = 0;
     std::string stopReason;
     BundleDirScene bundleDirScene = BundleDirScene::EL1_ARK_PROFILE_DIR;
-    int32_t sessionId = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

@@ -498,9 +498,8 @@ void VerifyManagerHostImpl::Rollback(
 void VerifyManagerHostImpl::Rollback(const std::vector<std::string> &paths)
 {
     for (const auto &abcPath : paths) {
-        auto result = BundleUtil::DeleteDir(abcPath);
-        if (result != ERR_OK) {
-            APP_LOGE("move file to real path failed %{public}d", result);
+        if (!BundleUtil::DeleteDir(abcPath)) {
+            APP_LOGE("move file to real path failed %{private}s", abcPath.c_str());
         }
     }
 }

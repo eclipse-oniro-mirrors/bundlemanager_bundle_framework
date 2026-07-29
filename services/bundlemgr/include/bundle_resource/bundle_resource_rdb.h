@@ -21,6 +21,7 @@
 #include "bundle_system_state.h"
 #include "bundle_resource_info.h"
 #include "launcher_ability_resource_info.h"
+#include "bundle_rdb_util.h"
 #include "rdb_data_manager.h"
 #include "resource_info.h"
 #include "extension_ability_info.h"
@@ -93,14 +94,6 @@ private:
         BundleResourceInfo &bundleResourceInfo);
 
     std::shared_ptr<RdbDataManager> rdbDataManager_;
-
-#define CHECK_RDB_RESULT_RETURN_IF_FAIL(errcode, errmsg)                           \
-    do {                                                                           \
-        if ((errcode) != NativeRdb::E_OK) {                                          \
-            APP_LOGE(errmsg, errcode);                                             \
-            return false;                                                          \
-        }                                                                          \
-    } while (0)
 };
 } // AppExecFwk
 } // OHOS
