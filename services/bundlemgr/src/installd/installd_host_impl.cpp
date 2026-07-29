@@ -3766,13 +3766,23 @@ ErrCode InstalldHostImpl::ExtractSkillsPackage(const SkillsPackageParam &param,
     return InstalldOperator::ExtractSkillsPackage(param, skillInfoList);
 }
 
-int64_t InstalldHostImpl::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs)
+ErrCode InstalldHostImpl::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths,
+    int64_t &statSize, int64_t timeoutMs)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    return InstalldOperator::GetCacheDiskUsageFromPath(paths, timeoutMs);
+
+    std::vector<std::string> validPath;
+    for (auto& item : paths) {
+        if (InstalldOperator::IsValidPathByGetCacheDiskUsageFromPath(item)) {
+            validPath.emplace_back(item);
+        }
+    }
+
+    statSize = InstalldOperator::GetCacheDiskUsageFromPath(validPath, timeoutMs);
+    return ERR_OK;
 }
 
 void InstalldHostImpl::GetFilesAndSortByLastModifiedTime(const std::vector<std::string> &paths,
@@ -3828,8 +3838,15 @@ ErrCode InstalldHostImpl::DeleteOldCacheFiles(
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
 
+    std::vector<std::string> validPath;
+    for (auto& item : paths) {
+        if (InstalldOperator::IsValidPathByGetCacheDiskUsageFromPath(item)) {
+            validPath.emplace_back(item);
+        }
+    }
+
     std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> fileTimePairs;
-    GetFilesAndSortByLastModifiedTime(paths, fileTimePairs);
+    GetFilesAndSortByLastModifiedTime(validPath, fileTimePairs);
 
     cleanedSize = 0;
     for (const auto &file : fileTimePairs) {
