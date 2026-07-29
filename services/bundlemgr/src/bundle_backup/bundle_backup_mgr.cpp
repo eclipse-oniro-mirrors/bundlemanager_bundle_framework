@@ -136,6 +136,10 @@ ErrCode BundleBackupMgr::LoadFromFile(int32_t fd, std::string& config)
         APP_LOGE("Fstat failed, errno: %{public}d", errno);
         return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
+    if (!S_ISREG(statBuf.st_mode)) {
+        APP_LOGE("Fd is not a regular file, mode: 0%{public}o", static_cast<unsigned>(statBuf.st_mode));
+        return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
+    }
     if (statBuf.st_size < 0 || statBuf.st_size > static_cast<off_t>(Constants::CAPACITY_SIZE)) {
         APP_LOGE_NOFUNC("config size too large: %{public}lld", static_cast<long long>(statBuf.st_size));
         return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
