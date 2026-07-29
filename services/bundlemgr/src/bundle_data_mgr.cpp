@@ -1351,7 +1351,21 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
             " -u %{public}d", bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), responseUserId);
         return false;
     }
-    return QueryAbilityInfoWithFlags(ability, flags, responseUserId, *innerBundleInfo, abilityInfo);
+    int32_t queryAppIndex = appIndex;
+#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+    if (appIndex == Constants::MAIN_APP_INDEX &&
+        !(static_cast<uint32_t>(flags) & static_cast<uint32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))) {
+        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, requestUserId);
+        if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
+            LOG_NOFUNC_W(BMS_TAG_QUERY, "car mode: all apps disabled, bundleName:%{public}s", bundleName.c_str());
+            return false;
+        }
+        queryAppIndex = enableAppIndex;
+        LOG_NOFUNC_D(BMS_TAG_QUERY, "car mode: use clone appIndex:%{public}d, bundleName:%{public}s",
+            queryAppIndex, bundleName.c_str());
+    }
+#endif
+    return QueryAbilityInfoWithFlags(ability, flags, responseUserId, *innerBundleInfo, abilityInfo, queryAppIndex);
 }
 
 ErrCode BundleDataMgr::ExplicitQueryAbilityInfoV9(const Want &want, int32_t flags, int32_t userId,
@@ -1850,7 +1864,19 @@ bool BundleDataMgr::ImplicitQueryCurAbilityInfos(const Want &want, int32_t flags
     int32_t responseUserId = innerBundleInfo->GetResponseUserId(userId);
     std::vector<std::string> mimeTypes;
     MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
-    GetMatchAbilityInfos(want, flags, *innerBundleInfo, responseUserId, abilityInfos, mimeTypes);
+    int32_t queryAppIndex = appIndex;
+#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+    if (appIndex == Constants::MAIN_APP_INDEX &&
+        !(static_cast<uint32_t>(flags) & static_cast<uint32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))) {
+        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, userId);
+        if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
+            LOG_NOFUNC_W(BMS_TAG_QUERY, "car mode: all apps disabled, bundleName:%{public}s", bundleName.c_str());
+            return false;
+        }
+        queryAppIndex = enableAppIndex;
+    }
+#endif
+    GetMatchAbilityInfos(want, flags, *innerBundleInfo, responseUserId, abilityInfos, mimeTypes, queryAppIndex);
     FilterAbilityInfosByModuleName(want.GetElement().GetModuleName(), abilityInfos);
     return true;
 }
@@ -1987,7 +2013,20 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags
                     innerBundleInfo.GetBundleName().c_str(), responseUserId);
                 continue;
             }
-            GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos, mimeTypes);
+            int32_t queryAppIndex = 0;
+#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+            if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))) {
+                int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(innerBundleInfo, requestUserId);
+                if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
+                    LOG_D(BMS_TAG_QUERY,
+                        "ImplicitQueryAllAbilityInfos failed, bundleName:%{public}s, responseUserId:%{public}d",
+                        innerBundleInfo.GetBundleName().c_str(), responseUserId);
+                    continue;
+                }
+                queryAppIndex = enableAppIndex;
+            }
+#endif
+            GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos, mimeTypes, queryAppIndex);
         }
     } else {
         // query from sandbox manager for sandbox bundle
