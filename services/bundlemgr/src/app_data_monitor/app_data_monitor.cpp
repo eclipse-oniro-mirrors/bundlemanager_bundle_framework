@@ -108,7 +108,7 @@ void AppDataMonitor::StartScan(int32_t userId)
     ScanLargeApps(userId, sortedApps);
 
     lastScanTime_ = std::chrono::steady_clock::now();
-    APP_LOGI_NOFUNC("ScanSystemAppSize scan completed, next scan allowed after 72h");
+    APP_LOGI_NOFUNC("ScanSystemAppSize scan completed, next scan allowed after 7*24h");
 }
 
 void AppDataMonitor::StopScan(const std::string &reason)
