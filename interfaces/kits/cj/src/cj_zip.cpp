@@ -122,10 +122,6 @@ bool Zip(const ZipParams &params, const OPTIONS &options)
 {
     const std::vector<std::pair<FilePath, FilePath>> *filesToAdd = &params.GetFilesTozip();
     std::vector<std::pair<FilePath, FilePath>> allRelativeFiles;
-    if (params.SrcDir().empty()) {
-        APP_LOGE("Zip params srcDir is empty");
-        return false;
-    }
     FilePath srcDir = params.SrcDir().front();
     FilePath paramPath = FilePathEndIsSeparator(srcDir);
     if (filesToAdd->empty()) {
