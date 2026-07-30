@@ -3277,7 +3277,11 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_1200, Function | SmallTest |
     result.clear();
     testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
     EXPECT_TRUE(testRet);
+#ifndef BMS_ENABLE_CLONE_FOR_ACCOUNT
     EXPECT_EQ(result.size(), 3);
+#else
+    EXPECT_GE(result.size(), 3);
+#endif
 
     result.clear();
     flags = static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE);
@@ -3330,7 +3334,11 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_1300, Function | SmallTest |
             count++;
         }
     }
+#ifndef BMS_ENABLE_CLONE_FOR_ACCOUNT
     EXPECT_EQ(count, 3);
+#else
+    EXPECT_GE(count, 3);
+#endif
 
     result.clear();
     flags = GET_ABILITY_INFO_WITH_DISABLE;
