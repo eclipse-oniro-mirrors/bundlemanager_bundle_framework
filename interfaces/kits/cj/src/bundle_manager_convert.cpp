@@ -710,7 +710,6 @@ RetAbilityInfoV2 ConvertAbilityInfoV2(const AppExecFwk::AbilityInfo& cAbilityInf
 
     abInfo.excludeFromDock = cAbilityInfos.excludeFromDock;
     abInfo.skills = ConvertSkills(cAbilityInfos.skills);
-    abInfo.appIndex = cAbilityInfos.appIndex;
     return abInfo;
 }
 
