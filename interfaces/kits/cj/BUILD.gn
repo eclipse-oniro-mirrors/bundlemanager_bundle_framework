@@ -96,6 +96,7 @@ ohos_shared_library("cj_bundle_manager_ffi") {
       "node:node_header_notice",
       "samgr:samgr_proxy",
       "zlib:shared_libz",
+      "bounds_checking_function:libsec_shared",
     ]
   } else {
     defines += [ "PREVIEWER" ]
