@@ -3438,6 +3438,7 @@ HWTEST_F(BmsEventHandlerTest, NeedProcessOtaNewPreloadInstall_0100, Function | S
     handler->LoadOtaNewInstallWhitelist();
     bundleName = BUNDLE_TEST_NAME;
     handler->otaNewInstallEnable_ = true;
+    scanPath = std::string(ServiceConstants::PRELOAD_APP_DIR) + "test.hap";
     ret = handler->NeedProcessOtaNewPreloadInstall(bundleName, scanPath);
     EXPECT_TRUE(ret);
 }
