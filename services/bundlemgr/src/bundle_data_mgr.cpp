@@ -2013,20 +2013,7 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags
                     innerBundleInfo.GetBundleName().c_str(), responseUserId);
                 continue;
             }
-            int32_t queryAppIndex = 0;
-#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
-            if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))) {
-                int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(innerBundleInfo, requestUserId);
-                if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
-                    LOG_D(BMS_TAG_QUERY,
-                        "ImplicitQueryAllAbilityInfos failed, bundleName:%{public}s, responseUserId:%{public}d",
-                        innerBundleInfo.GetBundleName().c_str(), responseUserId);
-                    continue;
-                }
-                queryAppIndex = enableAppIndex;
-            }
-#endif
-            GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos, mimeTypes, queryAppIndex);
+            GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos, mimeTypes);
         }
     } else {
         // query from sandbox manager for sandbox bundle
