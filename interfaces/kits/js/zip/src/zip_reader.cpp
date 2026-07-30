@@ -181,6 +181,7 @@ bool ZipReader::OpenCurrentEntryInZip()
         return false;
     }
     if (raw_file_name_in_zip[0] == '\0') {
+        APP_LOGE("read ZIP entry failed: entry file name is empty");
         return false;
     }
     std::string originalFileNameInZip(raw_file_name_in_zip);
@@ -256,11 +257,14 @@ bool ZipReader::OpenInternal()
     }
 
     unz_global_info zipInfo = {};  // Zero-clear.
-    if (unzGetGlobalInfo(zipFile_, &zipInfo) != UNZ_OK) {
+    int32_t result = unzGetGlobalInfo(zipFile_, &zipInfo);
+    if (result != UNZ_OK) {
+        APP_LOGE("open ZIP internal failed: read global info failed, result=%{public}d", result);
         return false;
     }
     numEntries_ = zipInfo.number_entry;
     if (numEntries_ < 0) {
+        APP_LOGE("open ZIP internal failed: invalid entry count=%{public}d", numEntries_);
         return false;
     }
 
@@ -313,7 +317,9 @@ bool ZipParallelReader::GotoEntry(unzFile &zipFile, unz_file_pos filePos)
         return false;
     }
 
-    if (unzGoToFilePos(zipFile, &filePos) != UNZ_OK) {
+    int32_t result = unzGoToFilePos(zipFile, &filePos);
+    if (result != UNZ_OK) {
+        APP_LOGE("go to ZIP entry failed: unzGoToFilePos result=%{public}d", result);
         return false;
     }
     return true;
@@ -346,7 +352,12 @@ FilePathWriterDelegate::FilePathWriterDelegate(const FilePath &outputFilePath) :
 {}
 
 FilePathWriterDelegate::~FilePathWriterDelegate()
-{}
+{
+    if (file_ != nullptr) {
+        fclose(file_);
+        file_ = nullptr;
+    }
+}
 
 bool FilePathWriterDelegate::PrepareOutput()
 {
@@ -357,6 +368,8 @@ bool FilePathWriterDelegate::PrepareOutput()
     // We can't rely on parent directory entries being specified in the
     // zip, so we make sure they are created.
     if (!FilePath::CreateDirectory(outputFilePath_.DirName())) {
+        APP_LOGE("prepare output failed: create parent directory failed, path=%{private}s",
+            outputFilePath_.DirName().Value().c_str());
         return false;
     }
 
@@ -366,7 +379,7 @@ bool FilePathWriterDelegate::PrepareOutput()
             outputFilePath_.Value().c_str(), errno, strerror(errno));
         return false;
     }
-    return FilePath::PathIsValid(outputFilePath_);
+    return true;
 }
 
 bool FilePathWriterDelegate::WriteBytes(const char *data, int numBytes)

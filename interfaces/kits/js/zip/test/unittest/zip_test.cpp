@@ -18,6 +18,7 @@
 #include <set>
 #include <thread>
 
+#include "ani_zlib_callback_info.h"
 #include "zip.h"
 #include "zip_reader.h"
 #include "zlib_callback_info.h"
@@ -38,6 +39,9 @@ const std::string KEEP_TOP_LEVEL_SECOND_PATH = KEEP_TOP_LEVEL_TEST_PATH + "secon
 const std::string KEEP_TOP_LEVEL_SINGLE_ZIP = KEEP_TOP_LEVEL_TEST_PATH + "single.zip";
 const std::string KEEP_TOP_LEVEL_SINGLE_FALSE_ZIP = KEEP_TOP_LEVEL_TEST_PATH + "single_false.zip";
 const std::string KEEP_TOP_LEVEL_MULTI_ZIP = KEEP_TOP_LEVEL_TEST_PATH + "multi.zip";
+const std::string UNZIP_ERROR_DETAIL_TEST_PATH = "/data/test/zip_error_detail/";
+const std::string UNZIP_ERROR_DETAIL_SRC = UNZIP_ERROR_DETAIL_TEST_PATH + "not_zip.txt";
+const std::string UNZIP_ERROR_DETAIL_DEST = UNZIP_ERROR_DETAIL_TEST_PATH + "dest";
 
 bool CreateTestFile(const std::string &path)
 {
@@ -76,6 +80,29 @@ std::set<std::string> GetZipEntryNames(const std::string &zipPath)
     }
     return entryNames;
 }
+
+class MockZlibCallbackInfo : public ZlibCallbackInfoBase {
+public:
+    void OnZipUnZipFinish(ErrCode result) override
+    {
+        result_ = result;
+        detailMessage_.clear();
+    }
+
+    void OnZipUnZipFinish(ErrCode result, const std::string &detailMessage) override
+    {
+        result_ = result;
+        detailMessage_ = detailMessage;
+    }
+
+    void DoTask(const OHOS::AppExecFwk::InnerEvent::Callback& task) override
+    {
+        task();
+    }
+
+    ErrCode result_ = ERR_OK;
+    std::string detailMessage_;
+};
 }  // namespac
 
 bool Zip(const ZipParams &params, const OPTIONS &options);
@@ -108,9 +135,12 @@ void ZipTest::TearDown()
     unlink(KEEP_TOP_LEVEL_SINGLE_ZIP.c_str());
     unlink(KEEP_TOP_LEVEL_SINGLE_FALSE_ZIP.c_str());
     unlink(KEEP_TOP_LEVEL_MULTI_ZIP.c_str());
+    unlink(UNZIP_ERROR_DETAIL_SRC.c_str());
     unlink((KEEP_TOP_LEVEL_SINGLE_PATH + "/single.txt").c_str());
     unlink((KEEP_TOP_LEVEL_FIRST_PATH + "/first.txt").c_str());
     unlink((KEEP_TOP_LEVEL_SECOND_PATH + "/second.txt").c_str());
+    rmdir(UNZIP_ERROR_DETAIL_DEST.c_str());
+    rmdir(UNZIP_ERROR_DETAIL_TEST_PATH.c_str());
     rmdir(KEEP_TOP_LEVEL_SINGLE_PATH.c_str());
     rmdir(KEEP_TOP_LEVEL_FIRST_PATH.c_str());
     rmdir(KEEP_TOP_LEVEL_SECOND_PATH.c_str());
@@ -495,6 +525,113 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0800_parallel, Function | MediumTes
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
     auto ret = Unzip(src, dest, options, zlibCallbackInfo);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_UnzipErrorDetail_0100
+ * @tc.name: UnzipErrorDetail_0100
+ * @tc.desc: Verify invalid destination path returns detailed unzip error.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_UnzipErrorDetail_0100, Function | MediumTest | Level1)
+{
+    std::string src = TEST_ZIP_OK;
+    std::string dest = "";
+    auto zlibCallbackInfo = std::make_shared<MockZlibCallbackInfo>();
+
+    OPTIONS options;
+    auto ret = Unzip(src, dest, options, zlibCallbackInfo);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(zlibCallbackInfo->result_, ERR_ZLIB_DEST_FILE_DISABLED);
+    EXPECT_EQ(zlibCallbackInfo->detailMessage_, "destination path is empty or contains relative path");
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_UnzipErrorDetail_0200
+ * @tc.name: UnzipErrorDetail_0200
+ * @tc.desc: Verify invalid source path returns detailed unzip error.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_UnzipErrorDetail_0200, Function | MediumTest | Level1)
+{
+    std::string src = "";
+    std::string dest = BASE_PATH + APP_PATH;
+    auto zlibCallbackInfo = std::make_shared<MockZlibCallbackInfo>();
+
+    OPTIONS options;
+    auto ret = Unzip(src, dest, options, zlibCallbackInfo);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(zlibCallbackInfo->result_, ERR_ZLIB_SRC_FILE_DISABLED);
+    EXPECT_EQ(zlibCallbackInfo->detailMessage_, "source path is empty or contains relative path");
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_UnzipErrorDetail_0300
+ * @tc.name: UnzipErrorDetail_0300
+ * @tc.desc: Verify inaccessible source path returns detailed unzip error.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_UnzipErrorDetail_0300, Function | MediumTest | Level1)
+{
+    std::string src = UNZIP_ERROR_DETAIL_TEST_PATH + "not_exist.zip";
+    std::string dest = UNZIP_ERROR_DETAIL_DEST;
+    auto zlibCallbackInfo = std::make_shared<MockZlibCallbackInfo>();
+
+    OPTIONS options;
+    auto ret = Unzip(src, dest, options, zlibCallbackInfo);
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(zlibCallbackInfo->result_, ERR_ZLIB_SRC_FILE_DISABLED);
+    EXPECT_EQ(zlibCallbackInfo->detailMessage_, "source file does not exist or cannot be accessed");
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_UnzipErrorDetail_0400
+ * @tc.name: UnzipErrorDetail_0400
+ * @tc.desc: Verify non-ZIP source file returns detailed unzip error.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_UnzipErrorDetail_0400, Function | MediumTest | Level1)
+{
+    ASSERT_TRUE(FilePath::CreateDirectory(FilePath(UNZIP_ERROR_DETAIL_DEST)));
+    ASSERT_TRUE(CreateTestFile(UNZIP_ERROR_DETAIL_SRC));
+    auto zlibCallbackInfo = std::make_shared<MockZlibCallbackInfo>();
+
+    OPTIONS options;
+    auto ret = Unzip(UNZIP_ERROR_DETAIL_SRC, UNZIP_ERROR_DETAIL_DEST, options, zlibCallbackInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(zlibCallbackInfo->result_, ERR_ZLIB_SRC_FILE_FORMAT_ERROR);
+    EXPECT_EQ(zlibCallbackInfo->detailMessage_, "source file is not in ZIP format or is damaged");
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_UnzipErrorDetail_0500
+ * @tc.name: UnzipErrorDetail_0500
+ * @tc.desc: Verify non-ZIP source file returns detailed unzip error in parallel mode.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_UnzipErrorDetail_0500, Function | MediumTest | Level1)
+{
+    ASSERT_TRUE(FilePath::CreateDirectory(FilePath(UNZIP_ERROR_DETAIL_DEST)));
+    ASSERT_TRUE(CreateTestFile(UNZIP_ERROR_DETAIL_SRC));
+    auto zlibCallbackInfo = std::make_shared<MockZlibCallbackInfo>();
+
+    OPTIONS options;
+    options.parallel = PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION;
+    auto ret = Unzip(UNZIP_ERROR_DETAIL_SRC, UNZIP_ERROR_DETAIL_DEST, options, zlibCallbackInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(zlibCallbackInfo->result_, ERR_ZLIB_SRC_FILE_FORMAT_ERROR);
+    EXPECT_EQ(zlibCallbackInfo->detailMessage_, "source file is not in ZIP format or is damaged");
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_ANIUnzipErrorDetail_0100
+ * @tc.name: ANIUnzipErrorDetail_0100
+ * @tc.desc: Verify ANI callback keeps detailed unzip error.
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_ANIUnzipErrorDetail_0100, Function | MediumTest | Level1)
+{
+    ANIZlibCallbackInfo callbackInfo;
+    callbackInfo.OnZipUnZipFinish(
+        ERR_ZLIB_SRC_FILE_DISABLED, "source file does not exist or cannot be accessed");
+
+    auto result = callbackInfo.GetDetailedResult();
+    EXPECT_EQ(result.errCode, ERR_ZLIB_SRC_FILE_DISABLED);
+    EXPECT_EQ(result.detailMessage, "source file does not exist or cannot be accessed");
 }
 
 /**

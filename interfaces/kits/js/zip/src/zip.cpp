@@ -16,14 +16,17 @@
 
 #include <fcntl.h>
 #include <list>
+#include <mutex>
 #include <stdio.h>
 #include <string>
+#include <unordered_map>
 #include <unistd.h>
 #include <vector>
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_errors.h"
+#include "business_error_map.h"
 #include "directory_ex.h"
 #include "event_handler.h"
 #include "ffrt.h"
@@ -37,6 +40,27 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
+std::string BuildBusinessErrorMessage(int32_t err, const std::string &detailMessage)
+{
+    std::string errMessage = BusinessErrorNS::ERR_MSG_BUSINESS_ERROR;
+    auto iter = errMessage.find("$");
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, std::to_string(err));
+    }
+
+    if (!detailMessage.empty()) {
+        errMessage += detailMessage;
+        return errMessage;
+    }
+
+    std::unordered_map<int32_t, const char*> errMap;
+    BusinessErrorMap::GetErrMap(errMap);
+    if (errMap.find(err) != errMap.end()) {
+        errMessage += errMap[err];
+    }
+    return errMessage;
+}
+
 namespace {
 using FilterCallback = std::function<bool(const FilePath &)>;
 using DirectoryCreator = std::function<bool(FilePath &, FilePath &)>;
@@ -50,6 +74,52 @@ struct UnzipParam {
     FilterCallback filterCB = nullptr;
     bool logSkippedFiles = false;
 };
+
+struct ZipResult {
+    ErrCode errCode = ERR_OK;
+    std::string detailMessage;
+};
+
+ZipResult MakeZipResult(ErrCode errCode, const std::string &detailMessage = "")
+{
+    return ZipResult { errCode, detailMessage };
+}
+
+bool HasZipResultFailed(const ZipResult &ret, std::mutex &retMutex)
+{
+    std::lock_guard<std::mutex> lock(retMutex);
+    return ret.errCode != ERR_OK;
+}
+
+void SetFirstZipError(ZipResult &ret, std::mutex &retMutex, const ZipResult &result)
+{
+    std::lock_guard<std::mutex> lock(retMutex);
+    if (ret.errCode == ERR_OK) {
+        ret = result;
+    }
+}
+
+class FfrtTaskWaiter {
+public:
+    explicit FfrtTaskWaiter(std::vector<ffrt::dependence> &handles) : handles_(handles) {}
+    ~FfrtTaskWaiter()
+    {
+        Wait();
+    }
+
+    void Wait()
+    {
+        if (!waited_) {
+            ffrt::wait(handles_);
+            waited_ = true;
+        }
+    }
+
+private:
+    std::vector<ffrt::dependence> &handles_;
+    bool waited_ = false;
+};
+
 bool IsHiddenFile(const FilePath &filePath)
 {
     FilePath localFilePath = filePath;
@@ -240,42 +310,47 @@ bool Zips(const ZipParams &params, const OPTIONS &options)
     return zipWriter->WriteEntries(*filesToAdd, options);
 }
 
-ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir, WriterFactory writerFactory,
+ZipResult UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir, WriterFactory writerFactory,
     DirectoryCreator directoryCreator, UnzipParam &unzipParam, bool needChangePathSeparator)
 {
     APP_LOGD("destDir=%{private}s", destDir.Value().c_str());
     ZipReader reader(needChangePathSeparator);
     if (!reader.OpenFromPlatformFile(srcFile)) {
-        APP_LOGI("Failed to open srcFile");
-        return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+        APP_LOGI("decompressFile failed: source file is not in ZIP format or is damaged");
+        return MakeZipResult(ERR_ZLIB_SRC_FILE_FORMAT_ERROR, "source file is not in ZIP format or is damaged");
     }
     while (reader.HasMore()) {
         if (!reader.OpenCurrentEntryInZip()) {
-            APP_LOGI("Failed to open the current file in zip");
-            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+            APP_LOGI("decompressFile failed: source file is damaged");
+            return MakeZipResult(ERR_ZLIB_SRC_FILE_FORMAT_ERROR, "source file is damaged");
         }
         const FilePath &constEntryPath = reader.CurrentEntryInfo()->GetFilePath();
         FilePath entryPath = constEntryPath;
         if (reader.CurrentEntryInfo()->IsUnsafe()) {
-            APP_LOGI("Found an unsafe file in zip");
-            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+            APP_LOGI("decompressFile failed: ZIP entry path contains a relative path, entry=%{private}s",
+                entryPath.Value().c_str());
+            return MakeZipResult(ERR_ZLIB_SRC_FILE_FORMAT_ERROR, "ZIP entry path contains a relative path");
         }
         // callback
         if (unzipParam.filterCB(entryPath)) {
             if (reader.CurrentEntryInfo()->IsDirectory()) {
                 if (!directoryCreator(destDir, entryPath)) {
-                    APP_LOGI("directory_creator(%{private}s) Failed", entryPath.Value().c_str());
-                    return ERR_ZLIB_DEST_FILE_DISABLED;
+                    APP_LOGI("decompressFile failed: create output directory failed, entry=%{private}s",
+                        entryPath.Value().c_str());
+                    return MakeZipResult(ERR_ZLIB_DEST_FILE_DISABLED, "create output directory failed");
                 }
             } else {
                 std::unique_ptr<WriterDelegate> writer = writerFactory(destDir, entryPath);
                 if (!writer->PrepareOutput()) {
-                    APP_LOGE("PrepareOutput err");
-                    return ERR_ZLIB_DEST_FILE_DISABLED;
+                    APP_LOGE("decompressFile failed: target file creation or opening failed, entry=%{private}s",
+                        entryPath.Value().c_str());
+                    return MakeZipResult(ERR_ZLIB_DEST_FILE_DISABLED, "target file creation or opening failed");
                 }
                 if (!reader.ExtractCurrentEntry(writer.get(), std::numeric_limits<uint64_t>::max())) {
-                    APP_LOGI("Failed to extract");
-                    return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+                    APP_LOGI("decompressFile failed: ZIP entry data extraction failed, "
+                        "source file may be damaged, entry=%{private}s", entryPath.Value().c_str());
+                    return MakeZipResult(ERR_ZLIB_SRC_FILE_FORMAT_ERROR,
+                        "ZIP entry data extraction failed, source file may be damaged");
                 }
             }
         } else if (unzipParam.logSkippedFiles) {
@@ -283,14 +358,14 @@ ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir
         }
 
         if (!reader.AdvanceToNextEntry()) {
-            APP_LOGI("Failed to advance to the next file");
-            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+            APP_LOGI("decompressFile failed: source file is damaged");
+            return MakeZipResult(ERR_ZLIB_SRC_FILE_FORMAT_ERROR, "source file is damaged");
         }
     }
-    return ERR_OK;
+    return MakeZipResult(ERR_OK);
 }
 
-ErrCode UnzipWithFilterAndWritersParallel(const FilePath &srcFile, FilePath &destDir, WriterFactory writerFactory,
+ZipResult UnzipWithFilterAndWritersParallel(const FilePath &srcFile, FilePath &destDir, WriterFactory writerFactory,
     DirectoryCreator directoryCreator, UnzipParam &unzipParam, bool needChangePathSeparator)
 {
     APP_LOGD("destDir=%{private}s", destDir.Value().c_str());
@@ -298,58 +373,71 @@ ErrCode UnzipWithFilterAndWritersParallel(const FilePath &srcFile, FilePath &des
     FilePath src = srcFile;
 
     if (!reader.Open(src)) {
-        APP_LOGI("Failed to open srcFile");
-        return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+        APP_LOGI("decompressFile failed: source file is not in ZIP format or is damaged");
+        return MakeZipResult(ERR_ZLIB_SRC_FILE_FORMAT_ERROR, "source file is not in ZIP format or is damaged");
     }
-    ErrCode ret = ERR_OK;
+    ZipResult ret = MakeZipResult(ERR_OK);
+    std::mutex retMutex;
     std::vector<ffrt::dependence> handles;
+    FfrtTaskWaiter taskWaiter(handles);
     for (int32_t i = 0; i < reader.num_entries(); i++) {
         if (!reader.OpenCurrentEntryInZip()) {
-            APP_LOGI("Failed to open the current file in zip");
-            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+            APP_LOGI("decompressFile failed: source file is damaged");
+            return MakeZipResult(ERR_ZLIB_SRC_FILE_FORMAT_ERROR, "source file is damaged");
         }
         const FilePath &constEntryPath = reader.CurrentEntryInfo()->GetFilePath();
+        FilePath entryPath = constEntryPath;
         if (reader.CurrentEntryInfo()->IsUnsafe()) {
-            APP_LOGI("Found an unsafe file in zip");
-            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+            APP_LOGI("decompressFile failed: ZIP entry path contains a relative path, entry=%{private}s",
+                entryPath.Value().c_str());
+            return MakeZipResult(ERR_ZLIB_SRC_FILE_FORMAT_ERROR, "ZIP entry path contains a relative path");
         }
         unz_file_pos position = {};
         if (!reader.GetCurrentEntryPos(position)) {
-            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+            APP_LOGI("decompressFile failed: source file is damaged");
+            return MakeZipResult(ERR_ZLIB_SRC_FILE_FORMAT_ERROR, "source file is damaged");
         }
         bool isDirectory = reader.CurrentEntryInfo()->IsDirectory();
-        ffrt::task_handle handle = ffrt::submit_h([&, position, isDirectory, constEntryPath] () {
-            if (ret != ERR_OK) {
+        ffrt::task_handle handle = ffrt::submit_h([&, position, isDirectory, entryPath] () {
+            if (HasZipResultFailed(ret, retMutex)) {
                 return;
             }
             int resourceId = sched_getcpu();
             unzFile zipFile = reader.GetZipHandler(resourceId);
             if (!reader.GotoEntry(zipFile, position)) {
-                APP_LOGI("Failed to go to entry");
-                ret = ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+                APP_LOGI("decompressFile failed: source file is damaged");
+                reader.ReleaseZipHandler(resourceId);
+                SetFirstZipError(ret, retMutex, MakeZipResult(ERR_ZLIB_SRC_FILE_FORMAT_ERROR,
+                    "source file is damaged"));
                 return;
             }
-            FilePath entryPath = constEntryPath;
-            if (unzipParam.filterCB(entryPath)) {
+            FilePath taskEntryPath = entryPath;
+            if (unzipParam.filterCB(taskEntryPath)) {
                 if (isDirectory) {
-                    if (!directoryCreator(destDir, entryPath)) {
-                        APP_LOGI("directory_creator(%{private}s) Failed", entryPath.Value().c_str());
+                    if (!directoryCreator(destDir, taskEntryPath)) {
+                        APP_LOGI("decompressFile failed: create output directory failed, entry=%{private}s",
+                            taskEntryPath.Value().c_str());
                         reader.ReleaseZipHandler(resourceId);
-                        ret = ERR_ZLIB_DEST_FILE_DISABLED;
+                        SetFirstZipError(ret, retMutex, MakeZipResult(ERR_ZLIB_DEST_FILE_DISABLED,
+                            "create output directory failed"));
                         return;
                     }
                 } else {
-                    std::unique_ptr<WriterDelegate> writer = writerFactory(destDir, entryPath);
+                    std::unique_ptr<WriterDelegate> writer = writerFactory(destDir, taskEntryPath);
                     if (!writer->PrepareOutput()) {
-                        APP_LOGE("PrepareOutput err");
+                        APP_LOGE("decompressFile failed: target file creation or opening failed, entry=%{private}s",
+                            taskEntryPath.Value().c_str());
                         reader.ReleaseZipHandler(resourceId);
-                        ret = ERR_ZLIB_DEST_FILE_DISABLED;
+                        SetFirstZipError(ret, retMutex, MakeZipResult(ERR_ZLIB_DEST_FILE_DISABLED,
+                            "target file creation or opening failed"));
                         return;
                     }
                     if (!reader.ExtractEntry(writer.get(), zipFile, std::numeric_limits<uint64_t>::max())) {
-                        APP_LOGI("Failed to extract");
+                        APP_LOGI("decompressFile failed: ZIP entry data extraction failed, "
+                            "source file may be damaged, entry=%{private}s", taskEntryPath.Value().c_str());
                         reader.ReleaseZipHandler(resourceId);
-                        ret = ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+                        SetFirstZipError(ret, retMutex, MakeZipResult(ERR_ZLIB_SRC_FILE_FORMAT_ERROR,
+                            "ZIP entry data extraction failed, source file may be damaged"));
                         return;
                     }
                 }
@@ -357,24 +445,24 @@ ErrCode UnzipWithFilterAndWritersParallel(const FilePath &srcFile, FilePath &des
                 APP_LOGI("Skipped file");
             }
             reader.ReleaseZipHandler(resourceId);
-            }, {}, {});
+        }, {}, {});
         handles.push_back(std::move(handle));
         if (!reader.AdvanceToNextEntry()) {
-            APP_LOGI("Failed to advance to the next file");
-            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+            APP_LOGI("decompressFile failed: source file is damaged");
+            return MakeZipResult(ERR_ZLIB_SRC_FILE_FORMAT_ERROR, "source file is damaged");
         }
     }
-    ffrt::wait(handles);
-    return ERR_OK;
+    taskWaiter.Wait();
+    return ret;
 }
 
-ErrCode UnzipWithFilterCallback(
+ZipResult UnzipWithFilterCallback(
     const FilePath &srcFile, const FilePath &destDir, const OPTIONS &options, UnzipParam &unzipParam)
 {
     FilePath src = srcFile;
     if (!FilePathCheckValid(src.Value())) {
-        APP_LOGI("FilePathCheckValid returnValue is false");
-        return ERR_ZLIB_SRC_FILE_DISABLED;
+        APP_LOGI("decompressFile failed: source file path is invalid");
+        return MakeZipResult(ERR_ZLIB_SRC_FILE_DISABLED, "source file path is invalid");
     }
 
     FilePath dest = destDir;
@@ -382,11 +470,11 @@ ErrCode UnzipWithFilterCallback(
     APP_LOGD("srcFile=%{private}s, destFile=%{private}s", src.Value().c_str(), dest.Value().c_str());
 
     if (!FilePath::PathIsValid(srcFile)) {
-        APP_LOGI("PathIsValid return value is false");
-        return ERR_ZLIB_SRC_FILE_DISABLED;
+        APP_LOGI("decompressFile failed: source file does not exist or cannot be accessed");
+        return MakeZipResult(ERR_ZLIB_SRC_FILE_DISABLED, "source file does not exist or cannot be accessed");
     }
 
-    ErrCode ret = ERR_OK;
+    ZipResult ret = MakeZipResult(ERR_OK);
     bool needChangePathSeparator = false;
     if (options.pathSeparatorStrategy == PathSeparatorStrategy::PATH_SEPARATOR_STRATEGY_REPLACE_BACKSLASH) {
         needChangePathSeparator = true;
@@ -401,8 +489,8 @@ ErrCode UnzipWithFilterCallback(
     } else {
         PlatformFile zipFd = open(src.Value().c_str(), S_IREAD, O_CREAT);
         if (zipFd == kInvalidPlatformFile) {
-            APP_LOGE("Failed to open");
-            return ERR_ZLIB_SRC_FILE_DISABLED;
+            APP_LOGE("decompressFile failed: source file opening failed, errno=%{public}d", errno);
+            return MakeZipResult(ERR_ZLIB_SRC_FILE_DISABLED, "source file opening failed");
         }
         fdsan_exchange_owner_tag(zipFd, 0, LOG_DOMAIN);
 
@@ -428,28 +516,34 @@ bool Unzip(const std::string &srcFile, const std::string &destFile, OPTIONS opti
     FilePath srcFileDir(srcFile);
     FilePath destDir(destFile);
     if ((destDir.Value().size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(destFile)) {
-        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
+        APP_LOGI("decompressFile failed: destination path is empty or contains relative path");
+        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED,
+            "destination path is empty or contains relative path");
         return false;
     }
     if ((srcFileDir.Value().size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(srcFile)) {
-        APP_LOGI("srcFile isn't Exist");
-        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
+        APP_LOGI("decompressFile failed: source path is empty or contains relative path");
+        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED,
+            "source path is empty or contains relative path");
         return false;
     }
     if (!FilePath::PathIsValid(srcFileDir)) {
-        APP_LOGI("srcFile invalid");
-        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
+        APP_LOGI("decompressFile failed: source file does not exist or cannot be accessed");
+        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED,
+            "source file does not exist or cannot be accessed");
         return false;
     }
     if (FilePath::DirectoryExists(destDir)) {
         if (!FilePath::PathIsWriteable(destDir)) {
-            APP_LOGI("FilePath::PathIsWriteable(destDir) fail");
-            zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
+            APP_LOGI("decompressFile failed: destination directory is not writable");
+            zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED,
+                "destination directory is not writable");
             return false;
         }
     } else {
-        APP_LOGI("destDir isn't path");
-        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
+        APP_LOGI("decompressFile failed: destination path is not an existing directory");
+        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED,
+            "destination path is not an existing directory");
         return false;
     }
     auto innerTask = [srcFileDir, destDir, options, zlibCallbackInfo]() {
@@ -457,9 +551,9 @@ bool Unzip(const std::string &srcFile, const std::string &destFile, OPTIONS opti
             .filterCB = ExcludeNoFilesFilter,
             .logSkippedFiles = true
         };
-        ErrCode err = UnzipWithFilterCallback(srcFileDir, destDir, options, unzipParam);
+        ZipResult result = UnzipWithFilterCallback(srcFileDir, destDir, options, unzipParam);
         if (zlibCallbackInfo != nullptr) {
-            zlibCallbackInfo->OnZipUnZipFinish(err);
+            zlibCallbackInfo->OnZipUnZipFinish(result.errCode, result.detailMessage);
         }
     };
     zlibCallbackInfo->DoTask(innerTask);
