@@ -9301,24 +9301,23 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool
         return false;
     }
     APP_LOGD("UpdateInnerBundleInfo:%{public}s", bundleName.c_str());
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem == bundleInfos_.end()) {
-        APP_LOGW("bundle:%{public}s info is not existed", bundleName.c_str());
-        return false;
+    std::string lastOdid;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            APP_LOGW("bundle:%{public}s info is not existed", bundleName.c_str());
+            return false;
+        }
+        infoItem->second.GetOdid(lastOdid);
     }
     std::string developerId = innerBundleInfo.GetDeveloperId();
     if (!developerId.empty()) {
-        // Read lastOdid from FirstInstallBundleInfo using ALL_USERID to make ODID reset count
-        // independent of userId, only associated with bundleName
-        std::string lastOdid;
-        FirstInstallBundleInfo lastOdidInfo;
-        GetFirstInstallBundleInfo(bundleName, Constants::ALL_USERID, lastOdidInfo);
-        infoItem->second.GetOdid(lastOdid);
         std::string odid = GenerateOdidNoLock(developerId);
         innerBundleInfo.UpdateOdid(developerId, odid);
-        // Increment odid reset count when generating new odid different from last odid
         if (!lastOdid.empty() && !odid.empty() && odid != lastOdid) {
+            FirstInstallBundleInfo lastOdidInfo;
+            GetFirstInstallBundleInfo(bundleName, Constants::ALL_USERID, lastOdidInfo);
             lastOdidInfo.IncrementOdidResetCount();
             lastOdidInfo.lastOdid = odid;
             APP_LOGI("odid reset for bundle %{public}s, last odid:%{private}s, new odid:%{private}s, count:%{public}d",
@@ -9330,7 +9329,10 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool
         APP_LOGE("to update InnerBundleInfo:%{public}s failed", bundleName.c_str());
         return false;
     }
-    bundleInfos_.at(bundleName) = innerBundleInfo;
+    {
+        std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        bundleInfos_.at(bundleName) = innerBundleInfo; 
+    }
     return true;
 }
 
