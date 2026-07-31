@@ -904,9 +904,10 @@ private:
     void UpdateDeveloperIdAndOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    void SetDualModeAppInfo(const InstallParam &installParam,
+    ErrCode SetDualModeAppInfo(const InstallParam &installParam,
         std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode CheckDualModeCategoryConsistency(const InnerBundleInfo &oldInfo, const InstallParam &installParam);
+    ErrCode CheckDualModeCategoryConsistencyInTemp(const InstallParam &installParam);
     void InitDualModeBundleName(const InstallParam &installParam);
     void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;

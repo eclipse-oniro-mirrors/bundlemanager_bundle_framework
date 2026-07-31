@@ -15,8 +15,8 @@
 
 // Unified unit tests for dual-mode app install: DualModeHelper utility + BaseBundleInstaller
 // dual-mode hooks. Expose private/protected members so we can drive every branch directly via the
-// DualModeHelper cache (cachedMode_/cachedDeviceType_) and BaseBundleInstaller members, without
-// reading or modifying real system parameters. IsTestDualMode=true system-parameter branches
+// DualModeHelper cache (cachedIspcmode_/cachedMainmode_) and BaseBundleInstaller members, without
+// reading or modifying real system parameters. The system-parameter read paths
 // (GetSysMode/InitializeCache/UpdateModeCache) are intentionally not covered.
 #define private public
 #define protected public
@@ -61,19 +61,21 @@ public:
 // Reset DualModeHelper cache before each case so cases do not affect each other. No system parameter.
 void BmsDualModeInstallTest::SetUp()
 {
-    DualModeHelper::cachedMode_.clear();
-    DualModeHelper::cachedDeviceType_.clear();
+    DualModeHelper::cachedIspcmode_ = ServiceConstants::DUAL_MODE_VALUE_INVALID;
+    DualModeHelper::cachedMainmode_ = ServiceConstants::DUAL_MODE_VALUE_INVALID;
 }
 
-static void SetDualModeCache(const std::string &mode, const std::string &deviceType)
+// Drive DualModeHelper mode judgment by writing the int cache directly (no system parameter).
+// ispcmode: 0=tablet, 1=2in1 (current mode); mainmode: 0=main tablet, 1=main 2in1; -1=invalid (non-dual-mode).
+static void SetDualModeCache(int ispcmode, int mainmode)
 {
-    DualModeHelper::cachedMode_ = mode;
-    DualModeHelper::cachedDeviceType_ = deviceType;
+    DualModeHelper::cachedIspcmode_ = ispcmode;
+    DualModeHelper::cachedMainmode_ = mainmode;
 }
 
 static void EnableSecondaryMode()
 {
-    SetDualModeCache(ServiceConstants::DUAL_MODE_PC, ServiceConstants::DUAL_MODE_DEVICE_TABLET);
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
 }
 
 // Build a category-7 (APP_CATEGORY_DIFF_PACKAGE) InnerBundleInfo; mark as dual-mode clone if needed.
@@ -133,13 +135,13 @@ static std::shared_ptr<BundleDataMgr> InstallTestDataMgr(int32_t userId)
 
 HWTEST_F(BmsDualModeInstallTest, IsDualModeDevice_0100, Function | SmallTest | Level0)
 {
-    SetDualModeCache("", "");
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
     EXPECT_FALSE(DualModeHelper::IsDualModeDevice());
 }
 
 HWTEST_F(BmsDualModeInstallTest, IsDualModeDevice_0200, Function | SmallTest | Level0)
 {
-    SetDualModeCache(ServiceConstants::DUAL_MODE_PC, ServiceConstants::DUAL_MODE_DEVICE_TABLET);
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
     EXPECT_TRUE(DualModeHelper::IsDualModeDevice());
 }
 
@@ -147,37 +149,38 @@ HWTEST_F(BmsDualModeInstallTest, IsDualModeDevice_0200, Function | SmallTest | L
 
 HWTEST_F(BmsDualModeInstallTest, IsSecondaryMode_0100, Function | SmallTest | Level0)
 {
-    SetDualModeCache("", ServiceConstants::DUAL_MODE_DEVICE_TABLET);
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_TABLET);
     EXPECT_FALSE(DualModeHelper::IsSecondaryMode());
 }
 
 HWTEST_F(BmsDualModeInstallTest, IsSecondaryMode_0200, Function | SmallTest | Level0)
 {
-    SetDualModeCache(ServiceConstants::DUAL_MODE_PC, ServiceConstants::DUAL_MODE_DEVICE_TABLET);
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
     EXPECT_TRUE(DualModeHelper::IsSecondaryMode());
 }
 
 HWTEST_F(BmsDualModeInstallTest, IsSecondaryMode_0300, Function | SmallTest | Level0)
 {
-    SetDualModeCache(ServiceConstants::DUAL_MODE_PAD, ServiceConstants::DUAL_MODE_DEVICE_2IN1);
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_TABLET, ServiceConstants::DUAL_MODE_VALUE_2IN1);
     EXPECT_TRUE(DualModeHelper::IsSecondaryMode());
 }
 
 HWTEST_F(BmsDualModeInstallTest, IsSecondaryMode_0400, Function | SmallTest | Level0)
 {
-    SetDualModeCache(ServiceConstants::DUAL_MODE_PC, ServiceConstants::DUAL_MODE_DEVICE_2IN1);
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_2IN1);
     EXPECT_FALSE(DualModeHelper::IsSecondaryMode());
 }
 
 HWTEST_F(BmsDualModeInstallTest, IsSecondaryMode_0500, Function | SmallTest | Level0)
 {
-    SetDualModeCache(ServiceConstants::DUAL_MODE_PAD, ServiceConstants::DUAL_MODE_DEVICE_TABLET);
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_TABLET, ServiceConstants::DUAL_MODE_VALUE_TABLET);
     EXPECT_FALSE(DualModeHelper::IsSecondaryMode());
 }
 
 HWTEST_F(BmsDualModeInstallTest, IsSecondaryMode_0600, Function | SmallTest | Level0)
 {
-    SetDualModeCache("invalidMode", ServiceConstants::DUAL_MODE_DEVICE_TABLET);
+    // ispcmode=2 is illegal (not in {0,1}) -> treated as invalid -> non-dual-mode (AC-33 value check)
+    SetDualModeCache(2, ServiceConstants::DUAL_MODE_VALUE_TABLET);
     EXPECT_FALSE(DualModeHelper::IsSecondaryMode());
 }
 
@@ -222,13 +225,13 @@ HWTEST_F(BmsDualModeInstallTest, NeedDualModeHandle_0200, Function | SmallTest |
 
 HWTEST_F(BmsDualModeInstallTest, NeedDualModeHandle_0300, Function | SmallTest | Level0)
 {
-    SetDualModeCache("", "");
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
     EXPECT_FALSE(DualModeHelper::NeedDualModeHandle(AppCategory::APP_CATEGORY_DIFF_PACKAGE));
 }
 
 HWTEST_F(BmsDualModeInstallTest, NeedDualModeHandle_0400, Function | SmallTest | Level0)
 {
-    SetDualModeCache("", "");
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
     EXPECT_FALSE(DualModeHelper::NeedDualModeHandle(AppCategory::APP_CATEGORY_UNSPECIFIED));
 }
 
@@ -356,7 +359,7 @@ HWTEST_F(BmsDualModeInstallTest, InitDualModeBundleName_0100, Function | SmallTe
 HWTEST_F(BmsDualModeInstallTest, InitDualModeBundleName_0200, Function | SmallTest | Level0)
 {
     // primary mode + category 7 -> clear
-    SetDualModeCache("", "");
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
     BaseBundleInstaller installer;
     installer.bundleName_ = BUNDLE_NAME;
     installer.dualModeBundleName_ = "stale";
@@ -384,7 +387,7 @@ HWTEST_F(BmsDualModeInstallTest, InitDualModeBundleName_0300, Function | SmallTe
 HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0100, Function | SmallTest | Level0)
 {
     // not a dual-mode device -> early return, no mutation
-    SetDualModeCache("", "");
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
     BaseBundleInstaller installer;
     std::unordered_map<std::string, InnerBundleInfo> infos;
     infos[BUNDLE_NAME] = InnerBundleInfo();
@@ -408,14 +411,18 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0200, Function | SmallTest |
 
 HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0300, Function | SmallTest | Level0)
 {
-    // dual-mode device + category 7 (clone app) -> SetDualModeCloneApp(true) + appCategory
+    // dual-mode device + category 7 (clone) + system app -> clone flag set, appCategory set, ERR_OK
     EnableSecondaryMode();
     BaseBundleInstaller installer;
     std::unordered_map<std::string, InnerBundleInfo> infos;
-    infos[BUNDLE_NAME] = InnerBundleInfo();
+    InnerBundleInfo systemInfo;
+    ApplicationInfo appInfo;
+    appInfo.isSystemApp = true;
+    systemInfo.SetBaseApplicationInfo(appInfo);
+    infos[BUNDLE_NAME] = systemInfo;
     InstallParam installParam;
     installParam.appCategory = AppCategory::APP_CATEGORY_DIFF_PACKAGE;
-    installer.SetDualModeAppInfo(installParam, infos);
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), OHOS::ERR_OK);
     EXPECT_TRUE(infos[BUNDLE_NAME].IsDualModeCloneApp());
     EXPECT_EQ(infos[BUNDLE_NAME].GetAppCategory(), AppCategory::APP_CATEGORY_DIFF_PACKAGE);
 }
@@ -434,12 +441,54 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0400, Function | SmallTest |
     EXPECT_EQ(infos[BUNDLE_NAME].GetAppCategory(), AppCategory::APP_CATEGORY_TABLET_ONLY);
 }
 
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0500, Function | SmallTest | Level0)
+{
+    // dual-mode device + category 7 (clone) + non-system app -> rejected with NOT_SYSTEM_APP, no mutation
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo normalInfo;  // isSystemApp defaults to false
+    normalInfo.SetAppCategory(AppCategory::APP_CATEGORY_UNSPECIFIED);
+    infos[BUNDLE_NAME] = normalInfo;
+    InstallParam installParam;
+    installParam.appCategory = AppCategory::APP_CATEGORY_DIFF_PACKAGE;
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos),
+        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP);
+    // rejected before the set-loop: clone flag stays false, appCategory unchanged
+    EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
+    EXPECT_EQ(infos[BUNDLE_NAME].GetAppCategory(), AppCategory::APP_CATEGORY_UNSPECIFIED);
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0600, Function | SmallTest | Level0)
+{
+    // dual-mode device + category 7 (clone) + mixed (system + non-system) -> rejected, no partial mutation
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo systemInfo;
+    ApplicationInfo systemAppInfo;
+    systemAppInfo.isSystemApp = true;
+    systemInfo.SetBaseApplicationInfo(systemAppInfo);
+    InnerBundleInfo normalInfo;  // isSystemApp = false
+    normalInfo.SetAppCategory(AppCategory::APP_CATEGORY_UNSPECIFIED);
+    infos["com.system.app"] = systemInfo;
+    infos["com.normal.app"] = normalInfo;
+    InstallParam installParam;
+    installParam.appCategory = AppCategory::APP_CATEGORY_DIFF_PACKAGE;
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos),
+        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP);
+    // rejected before the set-loop regardless of iteration order: neither info mutated
+    EXPECT_FALSE(infos["com.system.app"].IsDualModeCloneApp());
+    EXPECT_FALSE(infos["com.normal.app"].IsDualModeCloneApp());
+    EXPECT_EQ(infos["com.normal.app"].GetAppCategory(), AppCategory::APP_CATEGORY_UNSPECIFIED);
+}
+
 // ====================== BaseBundleInstaller::CheckDualModeCategoryConsistency ======================
 
 HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0100, Function | SmallTest | Level0)
 {
     // not a dual-mode device -> ERR_OK even if category crosses 7
-    SetDualModeCache("", "");
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
     BaseBundleInstaller installer;
     installer.isAppExist_ = true;
     InnerBundleInfo oldInfo;
@@ -464,7 +513,7 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0200, Function
 
 HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0300, Function | SmallTest | Level0)
 {
-    // dual-mode + app exists + cross 7<->non-7 -> ERR_APPEXECFWK_INSTALL_PARAM_ERROR
+    // dual-mode + app exists + cross 7<->non-7 -> ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT
     EnableSecondaryMode();
     BaseBundleInstaller installer;
     installer.isAppExist_ = true;
@@ -473,7 +522,7 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0300, Function
     InstallParam installParam;
     installParam.appCategory = AppCategory::APP_CATEGORY_TABLET_ONLY;
     EXPECT_EQ(installer.CheckDualModeCategoryConsistency(oldInfo, installParam),
-        OHOS::ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT);
 }
 
 HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0400, Function | SmallTest | Level0)
@@ -502,6 +551,121 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0500, Function
     EXPECT_EQ(installer.CheckDualModeCategoryConsistency(oldInfo, installParam), OHOS::ERR_OK);
 }
 
+// ====================== BaseBundleInstaller::CheckDualModeCategoryConsistencyInTemp ======================
+// Cross-map (tempBundleInfos_) category-7 consistency — the other-mode variant of the same bundleName.
+// dataMgr_ + bundleName_ + tempBundleInfos_ entry drive FetchTempBundleInfo; category-7-ness mismatch
+// between the temp variant and the current install returns ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT.
+
+HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0100, Function | SmallTest | Level0)
+{
+    // not a dual-mode device -> early return ERR_OK (dataMgr_ not touched)
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    InstallParam installParam;
+    installParam.appCategory = AppCategory::APP_CATEGORY_DIFF_PACKAGE;
+    EXPECT_EQ(installer.CheckDualModeCategoryConsistencyInTemp(installParam), OHOS::ERR_OK);
+}
+
+HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0200, Function | SmallTest | Level0)
+{
+    // dual-mode device but bundleName_ absent from tempBundleInfos_ -> FetchTempBundleInfo false -> ERR_OK
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    installer.dataMgr_ = dataMgr;  // tempBundleInfos_ empty -> not found
+    InstallParam installParam;
+    installParam.appCategory = AppCategory::APP_CATEGORY_DIFF_PACKAGE;
+    EXPECT_EQ(installer.CheckDualModeCategoryConsistencyInTemp(installParam), OHOS::ERR_OK);
+}
+
+HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0300, Function | SmallTest | Level0)
+{
+    // dual-mode + temp variant is category 7 + new install is category 7 -> consistent -> ERR_OK
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeCat7Info(false);  // existing temp variant, cat7
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.appCategory = AppCategory::APP_CATEGORY_DIFF_PACKAGE;  // new cat7
+    EXPECT_EQ(installer.CheckDualModeCategoryConsistencyInTemp(installParam), OHOS::ERR_OK);
+}
+
+HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0400, Function | SmallTest | Level0)
+{
+    // dual-mode + temp variant is category 7 + new install is non-category-7 -> mismatch -> CONFLICT
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeCat7Info(false);  // existing temp cat7
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.appCategory = AppCategory::APP_CATEGORY_TABLET_ONLY;  // new non-cat7
+    EXPECT_EQ(installer.CheckDualModeCategoryConsistencyInTemp(installParam),
+        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT);
+}
+
+HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0500, Function | SmallTest | Level0)
+{
+    // dual-mode + temp variant is non-category-7 + new install is category 7 -> mismatch (other dir) -> CONFLICT
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    InnerBundleInfo nonCat7Temp;
+    nonCat7Temp.SetAppCategory(AppCategory::APP_CATEGORY_TABLET_ONLY);  // existing temp non-cat7
+    dataMgr->tempBundleInfos_[BUNDLE_NAME] = nonCat7Temp;
+    installer.dataMgr_ = dataMgr;
+    InstallParam installParam;
+    installParam.appCategory = AppCategory::APP_CATEGORY_DIFF_PACKAGE;  // new cat7
+    EXPECT_EQ(installer.CheckDualModeCategoryConsistencyInTemp(installParam),
+        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT);
+}
+
+// ====================== BaseBundleInstaller::DeliveryProfileToCodeSign ======================
+// Lines 8530-8532 (dual-mode effective-name selection for DeliverySignProfile):
+//   deliveryBundleName = dualModeBundleName_.empty() ? provisionInfo.bundleInfo.bundleName
+//                                                     : dualModeBundleName_;
+// The mock InstalldClient::DeliverySignProfile returns ERR_APPEXECFWK_INSTALLD_PARAM_ERROR for an
+// empty bundleName before reaching the service, ERR_OK/error otherwise. By leaving
+// provisionInfo.bundleInfo.bundleName empty and toggling dualModeBundleName_, the two ternary
+// branches yield distinguishable results without depending on the installd service.
+
+HWTEST_F(BmsDualModeInstallTest, DeliveryProfileToCodeSign_0100, Function | SmallTest | Level0)
+{
+    // dualModeBundleName_ empty -> true branch -> deliveryBundleName = provision name (empty)
+    // -> DeliverySignProfile gets empty name -> mock returns INSTALLD_PARAM_ERROR
+    BaseBundleInstaller installer;
+    installer.dualModeBundleName_.clear();
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;  // enter the delivery if-block
+    provisionInfo.profileBlockLength = 1;
+    provisionInfo.bundleInfo.bundleName = "";  // empty
+    provisionInfo.profileBlock = std::make_unique<unsigned char[]>(provisionInfo.profileBlockLength);
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    EXPECT_EQ(installer.DeliveryProfileToCodeSign(), OHOS::ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+HWTEST_F(BmsDualModeInstallTest, DeliveryProfileToCodeSign_0200, Function | SmallTest | Level0)
+{
+    // dualModeBundleName_ non-empty -> false branch -> deliveryBundleName = dualModeBundleName_
+    // (prefixed, non-empty; the empty provision name must NOT be used) -> name reaches the service
+    BaseBundleInstaller installer;
+    installer.dualModeBundleName_ = PREFIXED_NAME;  // non-empty
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    provisionInfo.profileBlockLength = 1;
+    provisionInfo.bundleInfo.bundleName = "";  // empty, but the false branch must skip it
+    provisionInfo.profileBlock = std::make_unique<unsigned char[]>(provisionInfo.profileBlockLength);
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    // non-empty name reached DeliverySignProfile (not the empty-name PARAM_ERROR path) -> false branch
+    EXPECT_NE(installer.DeliveryProfileToCodeSign(), OHOS::ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
 // ====================== BundleDataMgr::ClassifyDualModeAppsNoLock ======================
 // dataMgr is a process-wide singleton obtained via BundleMgrService; clear bundleInfos_ /
 // tempBundleInfos_ before each case to avoid cross-case residue.
@@ -509,7 +673,7 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistency_0500, Function
 HWTEST_F(BmsDualModeInstallTest, ClassifyDualModeAppsNoLock_0100, Function | SmallTest | Level0)
 {
     // not a dual-mode device -> early return, bundleInfos_ unchanged
-    SetDualModeCache("", "");
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
     std::shared_ptr<BundleDataMgr> dataMgr = std::make_shared<BundleDataMgr>();
     ASSERT_NE(dataMgr, nullptr);
     dataMgr->bundleInfos_.clear();
@@ -523,7 +687,7 @@ HWTEST_F(BmsDualModeInstallTest, ClassifyDualModeAppsNoLock_0100, Function | Sma
 HWTEST_F(BmsDualModeInstallTest, ClassifyDualModeAppsNoLock_0200, Function | SmallTest | Level0)
 {
     // primary mode (pc + 2in1): prefixed clone app -> moved to tempBundleInfos_ (original-name key)
-    SetDualModeCache(ServiceConstants::DUAL_MODE_PC, ServiceConstants::DUAL_MODE_DEVICE_2IN1);
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_2IN1);
     std::shared_ptr<BundleDataMgr> dataMgr = std::make_shared<BundleDataMgr>();
     ASSERT_NE(dataMgr, nullptr);
     dataMgr->bundleInfos_.clear();
@@ -571,7 +735,7 @@ HWTEST_F(BmsDualModeInstallTest, ClassifyDualModeAppsNoLock_0400, Function | Sma
 HWTEST_F(BmsDualModeInstallTest, ClassifyDualModeAppsNoLock_0500, Function | SmallTest | Level0)
 {
     // primary mode: category-7 app under original key (non-prefixed) is NOT moved
-    SetDualModeCache(ServiceConstants::DUAL_MODE_PC, ServiceConstants::DUAL_MODE_DEVICE_2IN1);
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_2IN1);
     std::shared_ptr<BundleDataMgr> dataMgr = std::make_shared<BundleDataMgr>();
     ASSERT_NE(dataMgr, nullptr);
     dataMgr->bundleInfos_.clear();
@@ -1124,7 +1288,7 @@ HWTEST_F(BmsDualModeInstallTest, TransformStrToInfo_DualModeCloneKey_0300, Funct
 
 HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0100, Function | SmallTest | Level0)
 {
-    // dual-mode device (cachedMode_ non-empty) -> branch fires, extended fields populated
+    // dual-mode device (cachedIspcmode_/cachedMainmode_ valid) -> branch fires, extended fields populated
     EnableSecondaryMode();
     BaseBundleInstaller installer;
     InstallParam installParam;
@@ -1139,18 +1303,18 @@ HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0100, Function | SmallT
 
 HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0200, Function | SmallTest | Level0)
 {
-    // non-dual-mode device (cachedMode_ empty) -> branch skipped, pre-set markers preserved
-    SetDualModeCache("", "");
+    // non-dual-mode device (cachedIspcmode_/cachedMainmode_ invalid) -> branch skipped, pre-set markers preserved
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
     BaseBundleInstaller installer;
     InstallParam installParam;
     installParam.appCategory = AppCategory::APP_CATEGORY_TABLET_ONLY;
     NotifyBundleEvents installRes;
     installRes.appCategory = AppCategory::APP_CATEGORY_2IN1_ONLY;  // non-default marker
-    installRes.currentMode = "marker";
+    installRes.currentMode = 999;
     installRes.isSharedSandbox = false;  // flip default true to prove it is not rewritten
     installer.FillDualModeEventFields(installParam, installRes);
     EXPECT_EQ(installRes.appCategory, AppCategory::APP_CATEGORY_2IN1_ONLY);
-    EXPECT_EQ(installRes.currentMode, "marker");
+    EXPECT_EQ(installRes.currentMode, 999);
     EXPECT_FALSE(installRes.isSharedSandbox);
 }
 
