@@ -2043,6 +2043,9 @@ bool BMSEventHandler::NeedProcessOtaNewPreloadInstall(const std::string &bundleN
         LOG_NOFUNC_W(BMS_TAG_DEFAULT, "bundleName is empty");
         return false;
     }
+    if (scanPath.find(ServiceConstants::PRELOAD_APP_DIR) != 0) {
+        return false;
+    }
     if (otaNewInstallEnable_) {
         return true;
     }
