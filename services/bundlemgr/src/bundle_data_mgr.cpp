@@ -3143,7 +3143,20 @@ bool BundleDataMgr::GetApplicationInfo(
     }
 
     int32_t responseUserId = innerBundleInfo->GetResponseUserId(requestUserId);
-    innerBundleInfo->GetApplicationInfo(flags, responseUserId, appInfo);
+    int32_t queryAppIndex = 0;
+#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+    if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)) {
+        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, requestUserId);
+        if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
+            LOG_NOFUNC_W(BMS_TAG_QUERY, "car mode: maybe all apps are disabled, bundleName:%{public}s", appName.c_str());
+            return false;
+        }
+        queryAppIndex = enableAppIndex;
+        LOG_NOFUNC_D(BMS_TAG_QUERY, "car mode: use appIndex:%{public}d, bundleName:%{public}s",
+            queryAppIndex, appName.c_str());
+    }
+#endif // BMS_ENABLE_CLONE_FOR_ACCOUNT
+    innerBundleInfo->GetApplicationInfo(flags, responseUserId, appInfo, queryAppIndex);
     return true;
 }
 
@@ -3175,10 +3188,23 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
     }
 
     int32_t responseUserId = innerBundleInfo->GetResponseUserId(requestUserId);
-    ret = innerBundleInfo->GetApplicationInfoV9(flags, responseUserId, appInfo, appIndex);
+    int32_t queryAppIndex = appIndex;
+#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+    if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))) {
+        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, requestUserId);
+        if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
+            LOG_NOFUNC_W(BMS_TAG_QUERY, "car mode: maybe all apps are disabled, bundleName:%{public}s", appName.c_str());
+            return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+        }
+        queryAppIndex = enableAppIndex;
+        LOG_NOFUNC_D(BMS_TAG_QUERY, "car mode: use appIndex:%{public}d, bundleName:%{public}s",
+            queryAppIndex, appName.c_str());
+    }
+#endif // BMS_ENABLE_CLONE_FOR_ACCOUNT
+    ret = innerBundleInfo->GetApplicationInfoV9(flags, responseUserId, appInfo, queryAppIndex);
     if (ret != ERR_OK) {
         LOG_NOFUNC_E(BMS_TAG_QUERY, "GetApplicationInfoV9 failed -n:%{public}s -u:%{public}d -i:%{public}d",
-            appName.c_str(), responseUserId, appIndex);
+            appName.c_str(), responseUserId, queryAppIndex);
         return ret;
     }
     return ret;
