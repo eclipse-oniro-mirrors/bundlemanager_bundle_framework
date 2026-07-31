@@ -81,8 +81,10 @@ bool ExtractParam::Marshalling(Parcel &parcel) const
 ExtractParam *ExtractParam::Unmarshalling(Parcel &parcel)
 {
     ExtractParam *info = new (std::nothrow) ExtractParam();
-    if (info) {
-        info->ReadFromParcel(parcel);
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
     }
     return info;
 }
