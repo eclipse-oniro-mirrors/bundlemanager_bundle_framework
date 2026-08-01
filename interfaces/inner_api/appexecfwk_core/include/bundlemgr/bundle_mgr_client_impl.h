@@ -45,6 +45,7 @@ public:
     virtual ~BundleMgrClientImpl();
 
     ErrCode GetNameForUid(const int uid, std::string &name);
+    ErrCode StartAppDetailAbility();
     bool GetBundleInfo(const std::string &bundleName, const BundleFlag flag, BundleInfo &bundleInfo, int32_t userId);
     ErrCode GetBundlePackInfo(
         const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId);

@@ -44,6 +44,15 @@ ErrCode BundleMgrClient::GetNameForUid(const int uid, std::string &name)
     return impl_->GetNameForUid(uid, name);
 }
 
+ErrCode BundleMgrClient::StartAppDetailAbility()
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return impl_->StartAppDetailAbility();
+}
+
 bool BundleMgrClient::GetBundleInfo(const std::string &bundleName, const BundleFlag flag, BundleInfo &bundleInfo,
     int32_t userId)
 {

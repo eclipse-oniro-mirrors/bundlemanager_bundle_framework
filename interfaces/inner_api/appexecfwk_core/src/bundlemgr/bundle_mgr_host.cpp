@@ -167,6 +167,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_NAME_FOR_UID):
             errCode = this->HandleGetBundleNameForUid(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::START_APP_DETAIL_ABILITY):
+            errCode = this->HandleStartAppDetailAbility(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLES_FOR_UID):
             errCode = this->HandleGetBundlesForUid(data, reply);
             break;
@@ -1311,6 +1314,17 @@ ErrCode BundleMgrHost::HandleGetBundleNameForUid(MessageParcel &data, MessagePar
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleStartAppDetailAbility(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    ErrCode ret = StartAppDetailAbility();
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

@@ -297,6 +297,7 @@ public:
      * @return Returns true if the bundle name is successfully obtained; returns false otherwise.
      */
     virtual bool GetBundleNameForUid(const int uid, std::string &bundleName) override;
+    virtual ErrCode StartAppDetailAbility() override;
     /**
      * @brief Obtains all bundle names of a specified application based on the given application UID the proxy object.
      * @param uid Indicates the uid.
