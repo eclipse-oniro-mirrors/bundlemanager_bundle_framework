@@ -35,6 +35,7 @@
 #include "patch_data_mgr.h"
 #include "want.h"
 #include "user_unlocked_event_subscriber.h"
+#include "bms_extension_runtime_helper.h"
 #undef private
 
 using namespace testing::ext;
@@ -759,6 +760,9 @@ HWTEST_F(BmsEventHandlerTest, GetBundleDirFromScan_0100, Function | SmallTest | 
     handler->GetBundleDirFromScan(bundleDirs);
     #ifdef USE_BUNDLE_EXTENSION
     auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), SYSTEM_RESOURCES_CAMERA_PATH);
+    if (iter == bundleDirs.end()) {
+        iter = std::find(bundleDirs.begin(), bundleDirs.end(), SYSTEM_RESOURCES_APP_PATH);
+    }
     #else
     auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), SYSTEM_RESOURCES_APP_PATH);
     #endif
@@ -1024,7 +1028,11 @@ HWTEST_F(BmsEventHandlerTest, OTAInstallSystemHsp_0100, Function | SmallTest | L
     filePaths.push_back(BUNDLE_PATH);
     auto ret = handler->OTAInstallSystemHsp(filePaths);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_NO_BUNDLE_SIGNATURE);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_NO_BUNDLE_SIGNATURE);
+    } else {
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    }
     #else
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
     #endif

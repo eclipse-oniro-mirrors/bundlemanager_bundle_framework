@@ -68,6 +68,7 @@
 #include "process_cache_callback_host.h"
 #include "ipc/skills_package_param.h"
 #include "skills_installer/skills_package_info.h"
+#include "bms_extension_runtime_helper.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -7343,7 +7344,11 @@ HWTEST_F(BmsBundleInstallerTest, UninstallBundleFromBmsExtension_0400, Function 
     }
     auto ret = installer.UninstallBundleFromBmsExtension("");
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    } else {
+        EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+    }
     #else
     EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
     #endif
@@ -10565,7 +10570,11 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7500, Function | SmallTest 
     baseBundleInstaller.sysEventInfo_.callingUid = ServiceConstants::SHELL_UID;
     auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(ret, ERR_OK);
+    } else {
+        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL);
+    }
     #else
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL);
     #endif
@@ -15905,7 +15914,11 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1018, Function | SmallTest 
     
     bool ret = installer.IsArkWeb("com.ohos.arkwebcore");
 #ifdef USE_EXTENSION_DATA
-    EXPECT_FALSE(ret);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_FALSE(ret);
+    } else {
+        EXPECT_TRUE(ret);
+    }
 #else
     EXPECT_TRUE(ret);
 #endif

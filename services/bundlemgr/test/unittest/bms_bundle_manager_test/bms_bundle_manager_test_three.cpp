@@ -46,6 +46,7 @@
 #include "scope_guard.h"
 #include "system_bundle_installer.h"
 #include "want.h"
+#include "bms_extension_runtime_helper.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -1943,7 +1944,11 @@ HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_3401, Function | MediumTest | 
     std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
     ErrCode retCode = hostImpl->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(retCode, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(retCode, ERR_OK);
+    } else {
+        EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2647,7 +2652,11 @@ HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0004, Function | MediumT
     int32_t appIndex = 0;
     auto testRet = hostImpl->RecoverBackupBundleData(bundleName, userId, appIndex);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(testRet, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(testRet, ERR_OK);
+    } else {
+        EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2726,7 +2735,11 @@ HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0004, Function | MediumTe
     int32_t appIndex = 0;
     auto testRet = hostImpl->RemoveBackupBundleData(bundleName, userId, appIndex);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(testRet, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(testRet, ERR_OK);
+    } else {
+        EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
