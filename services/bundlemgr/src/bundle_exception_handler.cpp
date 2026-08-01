@@ -16,6 +16,7 @@
 #include "bundle_exception_handler.h"
 
 #include "installd_client.h"
+#include "dual_mode_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -143,32 +144,37 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
         return;
     }
     APP_LOGW_NOFUNC("handle -n %{public}s status is %{public}d", info.GetBundleName().c_str(), mark.status);
+    // dual-mode: clone app dirs are keyed by the effective (prefixed) name; derive it once so all
+    // dir operations below hit the clone's own dirs instead of the primary-mode same-name app.
+    std::string effectiveBundleName = info.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(info.GetBundleName())
+        : info.GetBundleName();
     std::string appCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
-        ServiceConstants::PATH_SEPARATOR + info.GetBundleName();
+        ServiceConstants::PATH_SEPARATOR + effectiveBundleName;
     auto moduleDir = appCodePath + ServiceConstants::PATH_SEPARATOR + mark.packageName;
-    auto moduleDataDir = info.GetBundleName() + ServiceConstants::HAPS + mark.packageName;
+    auto moduleDataDir = effectiveBundleName + ServiceConstants::HAPS + mark.packageName;
 
     // install and update failed before service restart
     if (mark.status == InstallExceptionStatus::INSTALL_START) {
         // unable to distinguish which user failed the installation
-        (void)RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId());
+        (void)RemoveBundleAndDataDir(appCodePath, effectiveBundleName, info.GetUserId());
         DeleteBundleInfoFromStorage(info);
         isBundleValid = false;
     } else if (mark.status == InstallExceptionStatus::UPDATING_EXISTED_START) {
         if (InstalldClient::GetInstance()->RemoveDir(moduleDir + ServiceConstants::TMP_SUFFIX,
-            BundleDirScene::REMOVE_MODULE_DIR, info.GetBundleName()) == ERR_OK) {
+            BundleDirScene::REMOVE_MODULE_DIR, effectiveBundleName) == ERR_OK) {
             info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         }
     } else if (mark.status == InstallExceptionStatus::UPDATING_NEW_START &&
         RemoveBundleAndDataDir(moduleDir, moduleDataDir, info.GetUserId())) {
         info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     } else if (mark.status == InstallExceptionStatus::UNINSTALL_BUNDLE_START &&
-        RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId())) {  // continue to uninstall
+        RemoveBundleAndDataDir(appCodePath, effectiveBundleName, info.GetUserId())) {  // continue to uninstall
         DeleteBundleInfoFromStorage(info);
         isBundleValid = false;
     } else if (mark.status == InstallExceptionStatus::UNINSTALL_PACKAGE_START) {
         if (info.IsOnlyModule(mark.packageName) &&
-            RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId())) {
+            RemoveBundleAndDataDir(appCodePath, effectiveBundleName, info.GetUserId())) {
             DeleteBundleInfoFromStorage(info);
             isBundleValid = false;
             return;
@@ -179,7 +185,7 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
         }
     } else if (mark.status == InstallExceptionStatus::UPDATING_FINISH) {
         if (InstalldClient::GetInstance()->RenameModuleDir(moduleDir + ServiceConstants::TMP_SUFFIX, moduleDir,
-            info.GetBundleName(), BundleDirScene::BUNDLE_CODE_DIR) != ERR_OK) {
+            effectiveBundleName, BundleDirScene::BUNDLE_CODE_DIR) != ERR_OK) {
             APP_LOGI_NOFUNC("%{public}s rename module failed, may not exist", info.GetBundleName().c_str());
         }
     }

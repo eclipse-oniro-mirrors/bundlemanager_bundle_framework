@@ -97,7 +97,7 @@ struct NotifyBundleEvents {
     std::vector<std::string> allowListenBundles;
     // === DUAL_MODE: Extended fields for dual-mode app events ===
     AppCategory appCategory = AppCategory::APP_CATEGORY_UNSPECIFIED;  // Application category
-    std::string currentMode = "";  // Current system mode (pcmode/padmode/empty)
+    int32_t currentMode = -1;  // Current system mode (0=tablet, 1=2in1, -1=not read/non-dual-mode)
     bool isSharedSandbox = true;  // Whether app uses shared sandbox
     // === DUAL_MODE END ===
 

@@ -1058,6 +1058,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     // DUAL_MODE: category-7 <-> non-category-7 transitions are not allowed on update.
     CHECK_RESULT(CheckDualModeCategoryConsistency(oldInfo, installParam),
         "Dual mode category consistency check failed %{public}d");
+    // DUAL_MODE: cross-mode consistency — when installing in a different mode, if the same bundleName
+    // exists in tempBundleInfos_, its appCategory must agree with the current install on category-7-ness.
+    CHECK_RESULT(CheckDualModeCategoryConsistencyInTemp(installParam),
+        "Dual mode cross-map (tempBundleInfos_) category consistency check failed %{public}d");
 
     KillRelatedProcessIfArkWeb(installParam.isOTA);
     ErrCode result = ERR_OK;
@@ -1708,9 +1712,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = CheckDriverIsolation(verifyRes_, userId_, newInfos);
     CHECK_RESULT(result, "check debug scaner driver failed %{public}d");
 
-    result = DeliveryProfileToCodeSign();
-    CHECK_RESULT(result, "delivery profile failed %{public}d");
-
     UpdateInstallerState(InstallerState::INSTALL_PARSED);                          // ---- 20%
 
     userId_ = GetConfirmUserId(userId_, newInfos);
@@ -1740,6 +1741,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     // === DUAL_MODE: set bundle name prefix for secondary mode category 7 apps ===
     InitDualModeBundleName(installParam);
+
+    // dual-mode: deliver sign profile after the dual-mode prefix is set so secondary-mode clone apps
+    // deliver under the effective (prefixed) bundle name (DeliveryProfileToCodeSign reads dualModeBundleName_).
+    result = DeliveryProfileToCodeSign();
+    CHECK_RESULT(result, "delivery profile failed %{public}d");
 
     result = CheckSpaceIsolation(installParam, newInfos);
     CHECK_RESULT(result, "check space isolation failed:%{public}d");
@@ -3146,7 +3152,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
     info.SetAccessTokenIdEx(accessTokenIdEx, userId_);
 
-    info.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::INSTALL_START);
+    info.SetInstallMark(GetEffectiveBundleName(), modulePackage_, InstallExceptionStatus::INSTALL_START);
 
     ScopeGuard stateGuard([&] {
         dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::INSTALL_FAIL);
@@ -3307,7 +3313,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         }
     }
     if (isAppExist_) {
-        oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_NEW_START);
+        oldInfo.SetInstallMark(GetEffectiveBundleName(), modulePackage_, InstallExceptionStatus::UPDATING_NEW_START);
     }
     std::string modulePath = GetModulePath(newInfo, isFeatureNeedUninstall_, false);
     result = ExtractModule(newInfo, modulePath);
@@ -3404,7 +3410,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         UpdateKillApplicationProcess(oldInfo);
     }
 
-    oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_EXISTED_START);
+    oldInfo.SetInstallMark(GetEffectiveBundleName(), modulePackage_, InstallExceptionStatus::UPDATING_EXISTED_START);
     result = CheckArkProfileDir(newInfo, oldInfo);
     CHECK_RESULT(result, "CheckArkProfileDir failed %{public}d");
     auto hnpPackageOldInfos = oldInfo.GetInnerModuleInfoHnpInfo(newInfo.GetCurModuleName());
@@ -3441,7 +3447,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     }
 
     newInfo.RestoreModuleInfo(oldInfo);
-    oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_FINISH);
+    oldInfo.SetInstallMark(GetEffectiveBundleName(), modulePackage_, InstallExceptionStatus::UPDATING_FINISH);
     oldInfo.SetBundleUpdateTimeForAllUser(BundleUtil::GetCurrentTimeMs());
     if (!dataMgr_->UpdateInnerBundleInfo(newInfo, oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "update innerBundleInfo %{public}s failed", bundleName_.c_str());
@@ -5695,7 +5701,9 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     UpdateExtensionSandboxInfo(infos, hapVerifyRes);
 
     // Set appCategory + isDualModeCloneApp from installParam to InnerBundleInfo for dual-mode devices.
-    SetDualModeAppInfo(installParam, infos);
+    // Dual-mode category-7 is restricted to system apps; non-system apps are rejected with a dedicated error.
+    ret = SetDualModeAppInfo(installParam, infos);
+    CHECK_RESULT(ret, "set dual mode app info failed %{public}d");
 
     return ret;
 }
@@ -5726,13 +5734,23 @@ void BaseBundleInstaller::InitDualModeBundleName(const InstallParam &installPara
     }
 }
 
-void BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam,
+ErrCode BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam,
     std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     if (!DualModeHelper::IsDualModeDevice() || infos.empty()) {
-        return;
+        return ERR_OK;
     }
     bool isCloneApp = DualModeHelper::NeedDualModeHandle(installParam.appCategory);
+    // Dual-mode category-7 (clone) install is only allowed for system apps; reject non-system apps.
+    if (isCloneApp) {
+        for (const auto &infoPair : infos) {
+            if (!infoPair.second.IsSystemApp()) {
+                APP_LOGE("Dual mode: category-7 install is only allowed for system apps, "
+                    "bundle=%{public}s", infoPair.second.GetBundleName().c_str());
+                return ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP;
+            }
+        }
+    }
     for (auto &infoPair : infos) {
         InnerBundleInfo &info = infoPair.second;
         info.SetAppCategory(installParam.appCategory);
@@ -5742,6 +5760,7 @@ void BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam,
         LOG_D(BMS_TAG_INSTALLER, "Dual mode: set appCategory=%{public}u isCloneApp=%{public}d for bundle=%{public}s",
             installParam.appCategory, isCloneApp, info.GetBundleName().c_str());
     }
+    return ERR_OK;
 }
 
 ErrCode BaseBundleInstaller::CheckDualModeCategoryConsistency(const InnerBundleInfo &oldInfo,
@@ -5755,7 +5774,30 @@ ErrCode BaseBundleInstaller::CheckDualModeCategoryConsistency(const InnerBundleI
     // Category 7 <-> non-category 7 transitions are not allowed
     if (oldIsCategory7 != newIsCategory7) {
         APP_LOGE("Dual mode: cannot change between category 7 and non-category 7 apps");
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+        return ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT;
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckDualModeCategoryConsistencyInTemp(const InstallParam &installParam)
+{
+    if (!DualModeHelper::IsDualModeDevice()) {
+        return ERR_OK;
+    }
+    // Cross-mode consistency: tempBundleInfos_ holds the other-mode variant of the same bundleName
+    // (only category-7 apps are classified there). If it exists, its appCategory must agree with the
+    // current install on category-7-ness; a cat7 <-> non-cat7 mismatch is rejected. Complements
+    // CheckDualModeCategoryConsistency (which checks the current-mode bundleInfos_ entry via oldInfo).
+    InnerBundleInfo tempInfo;
+    if (!dataMgr_->FetchTempBundleInfo(bundleName_, tempInfo)) {
+        return ERR_OK;
+    }
+    bool existingIsCategory7 = DualModeHelper::IsDiffPackageCategory(tempInfo.GetAppCategory());
+    bool newIsCategory7 = DualModeHelper::IsDiffPackageCategory(installParam.appCategory);
+    if (existingIsCategory7 != newIsCategory7) {
+        APP_LOGE("Dual mode: cross-map category mismatch in tempBundleInfos_ for bundle %{public}s, "
+                 "cannot change between category 7 and non-category 7 apps", bundleName_.c_str());
+        return ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT;
     }
     return ERR_OK;
 }
@@ -8481,7 +8523,13 @@ ErrCode BaseBundleInstaller::DeliveryProfileToCodeSign() const
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
         provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING ||
         provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
-        return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
+        // dual-mode: deliver the sign profile under the effective (prefixed for clone) bundle name so the
+        // code signature matches the isolated install identity. dualModeBundleName_ is empty for
+        // non-dual-mode apps (and before InitDualModeBundleName runs), so fall back to the provision's
+        // original bundle name in that case (old flow).
+        const std::string &deliveryBundleName = dualModeBundleName_.empty()
+            ? provisionInfo.bundleInfo.bundleName : dualModeBundleName_;
+        return InstalldClient::GetInstance()->DeliverySignProfile(deliveryBundleName,
             provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
     }
     return ERR_OK;
@@ -8877,8 +8925,8 @@ ErrCode BaseBundleInstaller::RollbackHmpCommonInfo(const std::string &bundleName
             oldInfo.GetBundleName().c_str());
     }
     DeleteRouterInfo(oldInfo);
-    BundleResourceHelper::DeleteBundleResourceInfo(oldInfo.GetBundleName(), userId_, false);
-    RemoveProfileFromCodeSign(oldInfo.GetBundleName());
+    BundleResourceHelper::DeleteBundleResourceInfo(GetEffectiveBundleName(oldInfo), userId_, false);
+    RemoveProfileFromCodeSign(GetEffectiveBundleName(oldInfo));
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), oldInfo.GetBundleName());
     return ERR_OK;
 }
@@ -9083,7 +9131,7 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
     info.ResetAOTFlags();
     (void)bundleInstallChecker_->DetermineCloneApp(info);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-    info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
+    info.SetInstallMark(GetEffectiveBundleName(), info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }

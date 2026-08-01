@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_DUAL_MODE_HELPER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_DUAL_MODE_HELPER_H
 
+#include <cstdint>
 #include <mutex>
 #include <string>
 
@@ -30,24 +31,30 @@ namespace AppExecFwk {
 // need directory/key isolation in the secondary mode.
 class DualModeHelper {
 public:
-    // Read current system mode from "persist.sys.mode" (pcmode/padmode/empty).
-    static std::string GetSysMode();
+    // Read current system mode from "persist.sceneboard.ispcmode".
+    // Returns 0 (tablet), 1 (2in1), or -1 (param not exist / read failed / illegal).
+    static int32_t GetSysMode();
 
-    // Whether the device is a dual-mode device (supports pcmode or padmode).
-    // Returns true if the cached system mode is configured (non-empty).
+    // Whether the device is a dual-mode device.
+    // Returns true only when both cached ispcmode and mainmode are valid (0 or 1).
     static bool IsDualModeDevice();
 
     // Whether the device is currently in secondary mode.
-    // Secondary: pcmode+tablet or padmode+2in1. Other cases (including invalid mode) are primary.
+    // Secondary: isDualModeDevice && (ispcmode != mainmode). Other cases are primary / non-dual-mode.
     static bool IsSecondaryMode();
 
-    // Initialize the cached mode and device type by reading system parameters.
+    // Initialize the cached ispcmode/mainmode by reading system parameters.
     // Called once at process startup (BundleMgrService::Init); no later re-init needed.
     static void InitializeCache();
 
-    // Update the cached mode and device type by re-reading system parameters.
+    // Update the cached ispcmode/mainmode by re-reading system parameters.
     // Should be called when system mode may have changed (e.g., device mode switch).
     static void UpdateModeCache();
+
+    // Test-injection switch (persist.bms.test_dual_mode). When true, ispcmode/mainmode are read
+    // from persist.bms.ispcmode / persist.bms.mainmode instead of persist.sceneboard.* for test
+    // verification; production (unset/false) is unaffected.
+    static bool IsTestDualMode();
 
     // Whether the appCategory contains APP_CATEGORY_DIFF_PACKAGE (category 7).
     static bool IsDiffPackageCategory(AppCategory appCategory);
@@ -67,11 +74,11 @@ public:
     static bool IsDualModeCloneKey(const std::string &key);
 
 private:
-    // Cached system mode value (persist.sys.mode)
-    static std::string cachedMode_;
+    // Cached ispcmode value (persist.sceneboard.ispcmode): 0=tablet, 1=2in1, -1=not read/illegal
+    static int32_t cachedIspcmode_;
 
-    // Cached device type value
-    static std::string cachedDeviceType_;
+    // Cached mainmode value (persist.sceneboard.mainmode): 0=main tablet, 1=main 2in1, -1=not read/illegal
+    static int32_t cachedMainmode_;
 
     // Mutex for thread-safe cache access
     static std::mutex cacheMutex_;
