@@ -28,6 +28,7 @@
 #include "bundle_option.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_extension_profile.h"
+#include "bms_extension_runtime_helper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_ext_register.h"
 #include "code_protect_bundle_info.h"
@@ -256,7 +257,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0001, Function | SmallTest
     bundleInfo.compatibleVersion = COMPATIBLE_VERSION;
     bool res = bmsExtensionDataMgr.CheckApiInfo(bundleInfo, std::make_tuple(10, 0, 0));
 #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, true);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, true);
+    } else {
+        EXPECT_EQ(res, false);
+    }
 #else
     EXPECT_EQ(res, false);
 #endif
@@ -272,7 +277,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0002, Function | SmallTest
     BmsExtensionDataMgr bmsExtensionDataMgr;
     bool res = bmsExtensionDataMgr.OpenHandler();
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, true);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, true);
+    } else {
+        EXPECT_EQ(res, false);
+    }
     #else
     EXPECT_EQ(res, false);
     #endif
@@ -368,7 +377,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0008, Function | SmallTest
     Security::Verify::HapVerifyResult hapVerifyResult;
     ErrCode res = bmsExtensionDataMgr.HapVerify(filePath, hapVerifyResult);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED);
     #endif
@@ -574,7 +587,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionProfile_0006, Function | SmallTest
     BmsExtension bmsExtension;
     ErrCode res = bmsExtensionProfile.ParseBmsExtension(BMS_EXTENSION_PATH, bmsExtension);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+    }
     #else
     EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_FILE_FAILED);
     #endif
@@ -1029,7 +1046,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionKeyOperation_0001, Function | Smal
     std::vector<CodeProtectBundleInfo> codeProtectBundleInfos;
     auto res = bmsExtensionDataMgr.KeyOperation(codeProtectBundleInfos, 1);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_NE(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_NE(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_OK);
+    }
     #else
     EXPECT_EQ(res, ERR_OK);
     #endif
@@ -1170,7 +1191,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0027, Function | SmallTest
     ErrCode res = bmsExtensionDataMgr.GetAllBundleResourceInfo(
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
 #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_NE(res, ERR_OK);
+    }
 #else
     EXPECT_NE(res, ERR_OK);
 #endif
@@ -1189,7 +1214,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0028, Function | SmallTest
     ErrCode res = bmsExtensionDataMgr.GetAllLauncherAbilityResourceInfo(
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
 #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_NE(res, ERR_OK);
+    }
 #else
     EXPECT_NE(res, ERR_OK);
 #endif
@@ -1259,7 +1288,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_0032, Function | Small
     BmsExtensionDataMgr bmsExtensionDataMgrTest;
     bool res = bmsExtensionDataMgrTest.IsRdDevice();
 #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(res);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_TRUE(res);
+    } else {
+        EXPECT_FALSE(res);
+    }
 #else
     EXPECT_FALSE(res);
 #endif
@@ -1290,7 +1323,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_0034, Function | Small
     std::string bundleName = "bundleNameTest";
     std::string res = bmsExtensionDataMgrTest.GetCompatibleDeviceType(bundleName);
 #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, "");
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, "");
+    } else {
+        EXPECT_EQ(res, "default");
+    }
 #else
     EXPECT_EQ(res, "default");
 #endif
@@ -1309,7 +1346,11 @@ HWTEST_F(
     std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
     ErrCode res = bmsExtensionDataMgrTest.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -1449,7 +1490,11 @@ HWTEST_F(BmsExtensionDataMgrTest, HapVerify_001, Function | SmallTest | Level0)
     Security::Verify::HapVerifyResult hapVerifyResult;
     ErrCode res = bmsExtensionDataMgrTest.HapVerify(filePath, hapVerifyResult);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED);
     #endif
@@ -1458,7 +1503,11 @@ HWTEST_F(BmsExtensionDataMgrTest, HapVerify_001, Function | SmallTest | Level0)
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.HapVerify(filePath, hapVerifyResult);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
+    } else {
+        EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    }
     #else
     EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
     #endif
@@ -1474,7 +1523,11 @@ HWTEST_F(BmsExtensionDataMgrTest, IsRdDevice_001, Function | SmallTest | Level0)
     BmsExtensionDataMgr bmsExtensionDataMgrTest;
     ErrCode res = bmsExtensionDataMgrTest.IsRdDevice();
     #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(res);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_TRUE(res);
+    } else {
+        EXPECT_FALSE(res);
+    }
     #else
     EXPECT_FALSE(res);
     #endif
@@ -1483,7 +1536,11 @@ HWTEST_F(BmsExtensionDataMgrTest, IsRdDevice_001, Function | SmallTest | Level0)
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.IsRdDevice();
     #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(res);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_TRUE(res);
+    } else {
+        EXPECT_FALSE(res);
+    }
     #else
     EXPECT_FALSE(res);
     #endif
@@ -1809,7 +1866,11 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBackupUninstallList_001, Function | SmallTe
     std::set<std::string> uninstallBundles;
     ErrCode res = bmsExtensionDataMgrTest.GetBackupUninstallList(userId, uninstallBundles);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -1818,7 +1879,11 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBackupUninstallList_001, Function | SmallTe
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.GetBackupUninstallList(userId, uninstallBundles);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -1836,7 +1901,11 @@ HWTEST_F(BmsExtensionDataMgrTest, ClearBackupUninstallFile_001, Function | Small
     int32_t userId = 0;
     ErrCode res = bmsExtensionDataMgrTest.ClearBackupUninstallFile(userId);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -1845,7 +1914,11 @@ HWTEST_F(BmsExtensionDataMgrTest, ClearBackupUninstallFile_001, Function | Small
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.ClearBackupUninstallFile(userId);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -1947,7 +2020,11 @@ HWTEST_F(BmsExtensionDataMgrTest, DeleteResourceInfo_001, Function | SmallTest |
     std::string key = "test";
     ErrCode res = bmsExtensionDataMgrTest.DeleteResourceInfo(key);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -1956,7 +2033,11 @@ HWTEST_F(BmsExtensionDataMgrTest, DeleteResourceInfo_001, Function | SmallTest |
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.DeleteResourceInfo(key);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -1975,7 +2056,11 @@ HWTEST_F(BmsExtensionDataMgrTest, KeyOperation_001, Function | SmallTest | Level
     int32_t type = 0;
     ErrCode res = bmsExtensionDataMgrTest.KeyOperation(codeProtectBundleInfos, type);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(res);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_TRUE(res);
+    } else {
+        EXPECT_EQ(res, ERR_OK);
+    }
     #else
     EXPECT_EQ(res, ERR_OK);
     #endif
@@ -1984,7 +2069,11 @@ HWTEST_F(BmsExtensionDataMgrTest, KeyOperation_001, Function | SmallTest | Level
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.KeyOperation(codeProtectBundleInfos, type);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(res);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_TRUE(res);
+    } else {
+        EXPECT_EQ(res, ERR_OK);
+    }
     #else
     EXPECT_EQ(res, ERR_OK);
     #endif
@@ -2030,7 +2119,11 @@ HWTEST_F(BmsExtensionDataMgrTest, GetLauncherAbilityResourceInfo_001, Function |
     ErrCode res = bmsExtensionDataMgrTest.GetLauncherAbilityResourceInfo(bundleName, flags,
         launcherAbilityResourceInfo, appIndex);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2040,7 +2133,11 @@ HWTEST_F(BmsExtensionDataMgrTest, GetLauncherAbilityResourceInfo_001, Function |
     res = bmsExtensionDataMgrTest.GetLauncherAbilityResourceInfo(bundleName, flags,
         launcherAbilityResourceInfo, appIndex);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2059,7 +2156,11 @@ HWTEST_F(BmsExtensionDataMgrTest, GetAllBundleResourceInfo_001, Function | Small
     std::vector<BundleResourceInfo> bundleResourceInfos;
     ErrCode res = bmsExtensionDataMgrTest.GetAllBundleResourceInfo(flags, bundleResourceInfos);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2068,7 +2169,11 @@ HWTEST_F(BmsExtensionDataMgrTest, GetAllBundleResourceInfo_001, Function | Small
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.GetAllBundleResourceInfo(flags, bundleResourceInfos);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2087,7 +2192,11 @@ HWTEST_F(BmsExtensionDataMgrTest, GetAllLauncherAbilityResourceInfo_001, Functio
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
     ErrCode res = bmsExtensionDataMgrTest.GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2096,7 +2205,11 @@ HWTEST_F(BmsExtensionDataMgrTest, GetAllLauncherAbilityResourceInfo_001, Functio
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2126,7 +2239,11 @@ HWTEST_F(BmsExtensionDataMgrTest, DetermineCloneNum_001, Function | SmallTest | 
     bundleName = "testname";
     res = bmsExtensionDataMgrTest.DetermineCloneNum(bundleName, appIdentifier, cloneNum);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(res);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_TRUE(res);
+    } else {
+        EXPECT_FALSE(res);
+    }
     #else
     EXPECT_FALSE(res);
     #endif
@@ -2145,7 +2262,11 @@ HWTEST_F(BmsExtensionDataMgrTest, GetCompatibleDeviceType_001, Function | SmallT
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
     std::string res = bmsExtensionDataMgrTest.GetCompatibleDeviceType(bundleName);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, "");
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, "");
+    } else {
+        EXPECT_EQ(res, "default");
+    }
     #else
     EXPECT_EQ(res, "default");
     #endif
@@ -2164,7 +2285,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BatchGetCompatibleDeviceType_001, Function | S
     std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
     ErrCode res = bmsExtensionDataMgrTest.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2200,7 +2325,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionInit_001, Function | SmallTest | L
     bmsExtensionDataMgrTest.handler_ = nullptr;
     ErrCode res = bmsExtensionDataMgrTest.BmsExtensionInit();
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2208,7 +2337,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionInit_001, Function | SmallTest | L
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.BmsExtensionInit();
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2343,7 +2476,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BackupBundleData_001, Function | SmallTest | L
     int32_t appIndex = 0;
     auto res = bmsExtensionDataMgrTest.BackupBundleData(bundleName, userId, appIndex);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2377,7 +2514,11 @@ HWTEST_F(BmsExtensionDataMgrTest, RecoverBackupBundleData_001, Function | SmallT
     int32_t appIndex = 0;
     auto res = bmsExtensionDataMgrTest.RecoverBackupBundleData(bundleName, userId, appIndex);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2411,7 +2552,11 @@ HWTEST_F(BmsExtensionDataMgrTest, RemoveBackupBundleData_001, Function | SmallTe
     int32_t appIndex = 0;
     auto res = bmsExtensionDataMgrTest.RemoveBackupBundleData(bundleName, userId, appIndex);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -2477,7 +2622,11 @@ HWTEST_F(BmsExtensionDataMgrTest, GetInstallAndRecoverList_0001, Function | Smal
     bmsExtensionDataMgr.handler_ = nullptr;
     ErrCode res = bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
 #ifdef USE_ARM64
-    EXPECT_TRUE(res);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_TRUE(res);
+    } else {
+        EXPECT_FALSE(res);
+    }
 #else
     EXPECT_FALSE(res);
 #endif

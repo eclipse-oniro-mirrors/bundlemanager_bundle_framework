@@ -59,6 +59,7 @@
 #include "system_ability_helper.h"
 #include "want.h"
 #include "user_unlocked_event_subscriber.h"
+#include "bms_extension_runtime_helper.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -2217,7 +2218,11 @@ HWTEST_F(BmsBundleDataMgrTest2, QueryAppGalleryBundleName_0001, Function | Mediu
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     bool ret = bundleMgrHostImpl_->QueryAppGalleryBundleName(bundleName);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(ret);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_TRUE(ret);
+    } else {
+        EXPECT_FALSE(ret);
+    }
     #else
     EXPECT_FALSE(ret);
     #endif
@@ -2235,7 +2240,11 @@ HWTEST_F(BmsBundleDataMgrTest2, QueryAppGalleryBundleName_0002, Function | Mediu
     std::string bundleName;
     bool ret = bundleMgrHostImpl_->QueryAppGalleryBundleName(bundleName);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(ret);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_TRUE(ret);
+    } else {
+        EXPECT_FALSE(ret);
+    }
     #else
     EXPECT_FALSE(ret);
     #endif

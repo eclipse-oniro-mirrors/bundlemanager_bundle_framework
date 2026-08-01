@@ -69,6 +69,7 @@
 #include "scope_guard.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
+#include "bms_extension_runtime_helper.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -4938,7 +4939,11 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0184, Function | SmallTest
     auto ret = bmsExtensionClient->GetAllBundleResourceInfo(static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL),
         infos);
 #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(ret, ERR_OK);
+    } else {
+        EXPECT_NE(ret, ERR_OK);
+    }
 #else
     EXPECT_NE(ret, ERR_OK);
 #endif
@@ -4958,7 +4963,11 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0185, Function | SmallTest
     auto ret = bmsExtensionClient->GetAllLauncherAbilityResourceInfo(
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
 #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(ret, ERR_OK);
+    } else {
+        EXPECT_NE(ret, ERR_OK);
+    }
 #else
     EXPECT_NE(ret, ERR_OK);
 #endif

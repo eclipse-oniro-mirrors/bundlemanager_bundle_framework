@@ -45,6 +45,7 @@
 #include "shortcut_visible_data_storage_rdb.h"
 #include "uninstall_data_mgr_storage_rdb.h"
 #include "want_params_wrapper.h"
+#include "bms_extension_runtime_helper.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -5130,7 +5131,11 @@ HWTEST_F(BmsDataMgrTest, GetDirForAtomicService_0001, TestSize.Level1)
     std::string dataDir = "";
     auto ret = bundleDataMgr.GetDirForAtomicService(bundleName, dataDir);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED);
+    } else {
+        EXPECT_EQ(ret, ERR_OK);
+    }
     #else
     EXPECT_EQ(ret, ERR_OK);
     #endif

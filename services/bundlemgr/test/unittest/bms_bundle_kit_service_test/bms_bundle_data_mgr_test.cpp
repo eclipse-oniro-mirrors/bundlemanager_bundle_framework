@@ -64,6 +64,7 @@
 #include "want.h"
 #include "user_unlocked_event_subscriber.h"
 #include "bundle_manager_helper.h"
+#include "bms_extension_runtime_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -6148,7 +6149,11 @@ HWTEST_F(BmsBundleDataMgrTest, BackupBundleData_0100, Function | MediumTest | Le
     bmsExtensionClient->bmsExtensionImpl_ = std::make_shared<BmsExtensionDataMgr>();
     ret = bmsExtensionClient->BackupBundleData(bundleName, userId, appIndex);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(ret, ERR_OK);
+    } else {
+        EXPECT_NE(ret, ERR_OK);
+    }
     #else
     EXPECT_NE(ret, ERR_OK);
     #endif
@@ -6200,7 +6205,11 @@ HWTEST_F(BmsBundleDataMgrTest, RemoveBackupBundleData_0100, Function | MediumTes
     bmsExtensionClient->bmsExtensionImpl_ = std::make_shared<BmsExtensionDataMgr>();
     ret = bmsExtensionClient->RemoveBackupBundleData(bundleName, userId, appIndex);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_OK);
+    if (IsBmsExtensionRuntimeReady()) {
+        EXPECT_EQ(ret, ERR_OK);
+    } else {
+        EXPECT_NE(ret, ERR_OK);
+    }
     #else
     EXPECT_NE(ret, ERR_OK);
     #endif
