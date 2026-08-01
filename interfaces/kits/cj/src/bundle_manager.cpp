@@ -40,6 +40,10 @@ AppExecFwk::BundleInfo BundleManagerImpl::GetBundleInfoForSelf(int32_t bundleFla
     APP_LOGI("BundleManagerImpl::GetBundleInfoForSelf inter");
     auto iBundleMgr = AppExecFwk::CommonFunc::GetBundleMgr();
     AppExecFwk::BundleInfo bundleInfo;
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is nullptr");
+        return bundleInfo;
+    }
     iBundleMgr->GetBundleInfoForSelf(bundleFlags, bundleInfo);
     return bundleInfo;
 }
