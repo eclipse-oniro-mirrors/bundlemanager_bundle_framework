@@ -1415,6 +1415,10 @@ private:
     bool DumpAllBundleInfoNamesByUserId(int32_t userId, std::string &result);
     bool DumpDebugBundleInfoNames(int32_t userId, std::string &result);
     bool DumpDebugBundleInfoNamesByUserId(int32_t userId, std::string &result);
+    bool GetBundleInfoForDump(const std::shared_ptr<BundleDataMgr> &dataMgr,
+        const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId);
+    bool GetShortcutInfosForDump(
+        const std::string &bundleName, int32_t userId, std::vector<ShortcutInfo> &shortcutInfos);
     bool DumpBundleInfo(const std::string &bundleName, int32_t userId, std::string &result);
     bool DumpShortcutInfo(const std::string &bundleName, int32_t userId, std::string &result);
     std::set<int32_t> GetExistsCommonUserIs();

@@ -23,7 +23,7 @@
 #include <mutex>
 #include <thread>
 #include <gtest/gtest.h>
-
+#include "accesstoken_kit.h"
 #include "ability_manager_client.h"
 #include "ability_info.h"
 #include "app_install_extended_info.h"
@@ -34,6 +34,8 @@
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_mgr_client_impl.h"
+#include "bms_extension_data_mgr.h"
+#include "bundle_mgr_ext_register.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_mgr_host.h"
@@ -84,6 +86,11 @@ void SetIsBundleSelfCallingForTest(bool value);
 void SetCheckUserFromShellForTest(bool value);
 void SetIsCallingUidValid(bool value);
 void ResetTestValues();
+void SetPermissionResultForTest(const std::string &permissionName, bool granted);
+int32_t GetPermissionCheckCountForTest(const std::string &permissionName);
+int32_t GetPermissionSuccessCountForTest(const std::string &permissionName);
+int32_t GetPermissionFailCountForTest(const std::string &permissionName);
+
 namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME_TEST = "com.example.bundlekit.test";
@@ -302,7 +309,38 @@ constexpr int32_t TEST_SANDBOX_APP_INDEX = 1001;
 const std::string TYPE_FORM = "form";
 constexpr size_t TEST_VECTOR_SIZE_MAX = 200;
 constexpr const char* TEST_PATH = "/data/app/dest";
+const std::string DUMP_BMS_EXTENSION_NAME = "dump-bundle-info-extension";
+const std::string DUMP_EXTENSION_BUNDLE_NAME = "ohos.test.bundle.extension.only";
+
+class DumpBundleMgrExt : public BundleMgrExt {
+public:
+    bool CheckApiInfo(const BundleInfo &bundleInfo) override
+    {
+        return true;
+    }
+
+    ErrCode GetBundleInfo(const std::string &bundleName, int32_t flags, int32_t userId,
+        BundleInfo &bundleInfo, bool isNewVersion = false) override
+    {
+        bundleInfo.name = bundleName;
+        return ERR_OK;
+    }
+};
 }  // namespace
+
+void PrepareDumpPermissionTest(bool hasNewPermission, bool hasOldPermission)
+{
+    ResetTestValues();
+
+    SetPermissionResultForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO, hasNewPermission);
+    SetPermissionResultForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, hasOldPermission);
+    SetPermissionResultForTest(Constants::PERMISSION_GET_BUNDLE_INFO, false);
+}
+
+void ResetDumpPermissionTest()
+{
+    ResetTestValues();
+}
 
 class BmsBundleKitServiceTest : public testing::Test {
 public:
@@ -695,9 +733,12 @@ std::shared_ptr<BundleDataMgr> BmsBundleKitServiceTest::GetBundleDataMgr() const
 
 void BmsBundleKitServiceTest::SetBundleDataMgr()
 {
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_->AddUserId(Constants::DEFAULT_USERID);
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+
+    service->dataMgr_ = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(service->dataMgr_, nullptr);
+
+    service->dataMgr_->AddUserId(Constants::DEFAULT_USERID);
 }
 
 void BmsBundleKitServiceTest::UnsetBundleDataMgr()
@@ -9458,6 +9499,511 @@ HWTEST_F(BmsBundleKitServiceTest, DumpInfosImpl_0100, Function | SmallTest | Lev
 
     flag = static_cast<DumpFlag>(9999);
     ret = hostImpl->DumpInfos(flag, BUNDLE_NAME_TEST, DEFAULT_USERID, result);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_0100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test DumpInfos with PERMISSION_GET_ALL_BUNDLE_INFO
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0100, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    PrepareDumpPermissionTest(true, false);
+    ScopeGuard guard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_LIST, "", Constants::DEFAULT_USERID, result);
+
+    EXPECT_TRUE(ret);
+    EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_0200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GET_ALL_BUNDLE_INFO supports dumping bundle list for default user
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0200, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    PrepareDumpPermissionTest(true, false);
+    ScopeGuard guard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_LIST, "", Constants::DEFAULT_USERID, result);
+
+    EXPECT_TRUE(ret);
+    EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_0300
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GET_ALL_BUNDLE_INFO takes precedence when both permissions are granted
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0300, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    PrepareDumpPermissionTest(true, true);
+    ScopeGuard guard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_LIST, "", Constants::DEFAULT_USERID, result);
+
+    EXPECT_TRUE(ret);
+    EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_0400
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test old privileged permission remains compatible when new permission is denied
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0400, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    PrepareDumpPermissionTest(false, true);
+    ScopeGuard guard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_LIST, "", Constants::DEFAULT_USERID, result);
+
+    EXPECT_TRUE(ret);
+    EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_0500
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test invalid DumpFlag records GET_ALL_BUNDLE_INFO failure
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0500, Function | MediumTest | Level1)
+{
+    PrepareDumpPermissionTest(true, false);
+    ScopeGuard guard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    std::string result;
+    bool ret = hostImpl->DumpInfos(static_cast<DumpFlag>(9999), "", Constants::DEFAULT_USERID, result);
+
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(result.empty());
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_0600
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test DumpInfos rejects caller without permissions
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0600, Function | MediumTest | Level1)
+{
+    PrepareDumpPermissionTest(false, false);
+    ScopeGuard guard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_LIST, "", Constants::DEFAULT_USERID, result);
+
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(result.empty());
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_0700
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test DumpBundleInfo uses permission authorized by DumpInfos
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0700, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    PrepareDumpPermissionTest(true, false);
+    ScopeGuard guard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_INFO, BUNDLE_NAME_TEST,
+        Constants::DEFAULT_USERID, result);
+
+    EXPECT_TRUE(ret);
+    EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
+    EXPECT_NE(result.find("\"applicationInfo\""), std::string::npos);
+    EXPECT_NE(result.find("\"userInfo\""), std::string::npos);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_0800
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test DumpShortcutInfo uses permission authorized by DumpInfos
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0800, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    PrepareDumpPermissionTest(true, false);
+    ScopeGuard guard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_SHORTCUT_INFO, BUNDLE_NAME_TEST, Constants::DEFAULT_USERID, result);
+
+    EXPECT_TRUE(ret);
+    EXPECT_NE(result.find("shortcuts"), std::string::npos);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_0900
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test shell user validation runs before permission validation
+ *           2.test GET_ALL_BUNDLE_INFO cannot bypass user restriction
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_0900, Function | MediumTest | Level1)
+{
+    PrepareDumpPermissionTest(true, false);
+    SetCheckUserFromShellForTest(false);
+    ScopeGuard guard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_LIST, "", Constants::START_USERID, result);
+
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(result.empty());
+    // CheckUserFromShell fails before permission verification.
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    // The new permission was not used, so no usage record is generated.
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_1000
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test DUMP_DEBUG_BUNDLE_LIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1000, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    ASSERT_TRUE(dataMgr->QueryInnerBundleInfo(BUNDLE_NAME_TEST, innerBundleInfo));
+    ApplicationInfo applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
+    applicationInfo.debug = true;
+    applicationInfo.appProvisionType = Constants::APP_PROVISION_TYPE_DEBUG;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    ASSERT_TRUE(dataMgr->UpdateInnerBundleInfo(innerBundleInfo, false));
+
+    PrepareDumpPermissionTest(true, false);
+    ScopeGuard permissionGuard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_DEBUG_BUNDLE_LIST, "", Constants::DEFAULT_USERID, result);
+
+    EXPECT_TRUE(ret);
+    EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_1100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test DUMP_BUNDLE_LABEL
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1100, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    PrepareDumpPermissionTest(true, false);
+    ScopeGuard guard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_LABEL, BUNDLE_NAME_TEST,
+        Constants::DEFAULT_USERID, result);
+
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_1200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test DUMP_LABEL_LIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1200, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    PrepareDumpPermissionTest(true, false);
+    ScopeGuard guard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_LABEL_LIST, "", Constants::DEFAULT_USERID, result);
+
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_1300
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GET_ALL_BUNDLE_INFO does not authorize GetBundleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1300, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    PrepareDumpPermissionTest(true, false);
+    SetIsBundleSelfCallingForTest(false);
+    ScopeGuard guard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    bool ret = hostImpl->GetBundleInfo(BUNDLE_NAME_TEST, BundleFlag::GET_BUNDLE_DEFAULT,
+        bundleInfo, Constants::DEFAULT_USERID);
+
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 1);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_1400
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GET_ALL_BUNDLE_INFO does not authorize GetShortcutInfos
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1400, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    PrepareDumpPermissionTest(true, false);
+    ScopeGuard guard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool ret = hostImpl->GetShortcutInfos(BUNDLE_NAME_TEST, Constants::DEFAULT_USERID, shortcutInfos);
+
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_1500
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test old privileged permission supports DUMP_BUNDLE_INFO through the dump-only query path
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1500, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    PrepareDumpPermissionTest(false, true);
+    ScopeGuard permissionGuard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_INFO, BUNDLE_NAME_TEST,
+        Constants::DEFAULT_USERID, result);
+
+    EXPECT_TRUE(ret);
+    EXPECT_NE(result.find(BUNDLE_NAME_TEST), std::string::npos);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_1600
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test old privileged permission supports DUMP_SHORTCUT_INFO through the dump-only query path
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1600, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard bundleGuard([this] { MockUninstallBundle(BUNDLE_NAME_TEST); });
+    PrepareDumpPermissionTest(false, true);
+    ScopeGuard permissionGuard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_SHORTCUT_INFO, BUNDLE_NAME_TEST,
+        Constants::DEFAULT_USERID, result);
+
+    EXPECT_TRUE(ret);
+    EXPECT_NE(result.find("shortcuts"), std::string::npos);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 1);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+}
+
+/**
+ * @tc.number: DumpInfosPermission_1700
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test a valid dump command records GET_ALL_BUNDLE_INFO failure when bundle query fails
+ */
+HWTEST_F(BmsBundleKitServiceTest, DumpInfosPermission_1700, Function | MediumTest | Level1)
+{
+    PrepareDumpPermissionTest(true, false);
+    ScopeGuard permissionGuard([] { ResetDumpPermissionTest(); });
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string result;
+    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_INFO, "ohos.test.bundle.not.exist",
+        Constants::DEFAULT_USERID, result);
+
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(result.empty());
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED), 0);
+    EXPECT_EQ(GetPermissionCheckCountForTest(Constants::PERMISSION_GET_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionSuccessCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 0);
+    EXPECT_EQ(GetPermissionFailCountForTest(Constants::PERMISSION_GET_ALL_BUNDLE_INFO), 1);
+}
+
+/**
+ * @tc.number: GetBundleInfoForDump_0100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleInfoForDump returns false when data manager is null
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoForDump_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    bool ret = hostImpl->GetBundleInfoForDump(nullptr, BUNDLE_NAME_TEST, BundleFlag::GET_BUNDLE_DEFAULT,
+        bundleInfo, Constants::DEFAULT_USERID);
+
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetBundleInfoForDump_0200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleInfoForDump falls back to the BMS extension when local query fails
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoForDump_0200, Function | SmallTest | Level1)
+{
+    BmsExtension oldExtension = BmsExtensionDataMgr::bmsExtension_;
+    void *oldHandler = BmsExtensionDataMgr::handler_;
+    char mockHandler = 0;
+    ScopeGuard extensionGuard([oldExtension, oldHandler] {
+        BmsExtensionDataMgr::bmsExtension_ = oldExtension;
+        BmsExtensionDataMgr::handler_ = oldHandler;
+    });
+
+    BmsExtensionBundleMgr extensionBundleMgr;
+    extensionBundleMgr.extensionName = DUMP_BMS_EXTENSION_NAME;
+    BmsExtensionDataMgr::bmsExtension_.bmsExtensionBundleMgr = extensionBundleMgr;
+    BmsExtensionDataMgr::handler_ = &mockHandler;
+    BundleMgrExtRegister::GetInstance().RegisterBundleMgrExt(DUMP_BMS_EXTENSION_NAME,
+        []() -> std::shared_ptr<BundleMgrExt> { return std::make_shared<DumpBundleMgrExt>(); });
+
+    auto localDataMgr = std::make_shared<BundleDataMgr>();
+    localDataMgr->AddUserId(Constants::DEFAULT_USERID);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    bool ret = hostImpl->GetBundleInfoForDump(localDataMgr, DUMP_EXTENSION_BUNDLE_NAME,
+        BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, Constants::DEFAULT_USERID);
+
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(bundleInfo.name, DUMP_EXTENSION_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: GetShortcutInfosForDump_0100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetShortcutInfosForDump returns false when data manager is unavailable
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfosForDump_0100, Function | SmallTest | Level1)
+{
+    DataMgrGuard dataMgrGuard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool ret = hostImpl->GetShortcutInfosForDump(BUNDLE_NAME_TEST, Constants::DEFAULT_USERID, shortcutInfos);
+
     EXPECT_FALSE(ret);
 }
 

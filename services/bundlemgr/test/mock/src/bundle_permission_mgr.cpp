@@ -14,6 +14,8 @@
  */
 
 #include "bundle_permission_mgr.h"
+#include <string>
+#include <unordered_map>
 
 bool g_isSystemApp = true;
 bool g_isNativeTokenType = true;
@@ -32,6 +34,33 @@ bool g_isCallingUidValid = true;
 bool g_verifyPermissionFalse = false;
 bool g_isBundleSelfCallingFalse = false;
 bool g_isNativeTokenTypeOnly = true;
+
+namespace {
+std::unordered_map<std::string, bool> g_permissionResults;
+std::unordered_map<std::string, int32_t> g_permissionCheckCounts;
+std::unordered_map<std::string, int32_t> g_permissionSuccessCounts;
+std::unordered_map<std::string, int32_t> g_permissionFailCounts;
+
+bool GetPermissionResultForTest(const std::string &permissionName, bool defaultResult)
+{
+    ++g_permissionCheckCounts[permissionName];
+    auto iter = g_permissionResults.find(permissionName);
+    if (iter != g_permissionResults.end()) {
+        return iter->second;
+    }
+    return defaultResult;
+}
+
+bool GetPermissionsResultForTest(const std::vector<std::string> &permissionNames, bool defaultResult)
+{
+    for (const auto &permissionName : permissionNames) {
+        if (GetPermissionResultForTest(permissionName, defaultResult)) {
+            return true;
+        }
+    }
+    return false;
+}
+} // namespace
 
 void SetSystemAppForTest(bool value)
 {
@@ -117,6 +146,29 @@ void SetIsNativeTokenTypeOnlyForTest(bool value)
     g_isNativeTokenTypeOnly = value;
 }
 
+void SetPermissionResultForTest(const std::string &permissionName, bool granted)
+{
+    g_permissionResults[permissionName] = granted;
+}
+
+int32_t GetPermissionCheckCountForTest(const std::string &permissionName)
+{
+    auto iter = g_permissionCheckCounts.find(permissionName);
+    return iter == g_permissionCheckCounts.end() ? 0 : iter->second;
+}
+
+int32_t GetPermissionSuccessCountForTest(const std::string &permissionName)
+{
+    auto iter = g_permissionSuccessCounts.find(permissionName);
+    return iter == g_permissionSuccessCounts.end() ? 0 : iter->second;
+}
+
+int32_t GetPermissionFailCountForTest(const std::string &permissionName)
+{
+    auto iter = g_permissionFailCounts.find(permissionName);
+    return iter == g_permissionFailCounts.end() ? 0 : iter->second;
+}
+
 void ResetTestValues()
 {
     g_isNativeTokenType = true;
@@ -135,6 +187,10 @@ void ResetTestValues()
     g_isCallingUidValid = true;
     g_verifyPermissionFalse = false;
     g_isBundleSelfCallingFalse = false;
+    g_permissionResults.clear();
+    g_permissionCheckCounts.clear();
+    g_permissionSuccessCounts.clear();
+    g_permissionFailCounts.clear();
 }
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
@@ -166,12 +222,12 @@ bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &pe
 
 bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
 {
-    return g_verifyPermissionFalse;
+    return GetPermissionResultForTest(permissionName, g_verifyPermissionFalse);
 }
 
 bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames)
 {
-    return g_verifyPermissionFalse;
+    return GetPermissionsResultForTest(permissionNames, g_verifyPermissionFalse);
 }
 
 bool BundlePermissionMgr::IsCliToolCalling(const uint64_t callerToken)
@@ -240,12 +296,12 @@ bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &pe
 
 bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
 {
-    return g_verifyPermission;
+    return GetPermissionResultForTest(permissionName, g_verifyPermission);
 }
 
 bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames)
 {
-    return g_verifyPermission;
+    return GetPermissionsResultForTest(permissionNames, g_verifyPermission);
 }
 
 bool BundlePermissionMgr::IsCliToolCalling(const uint64_t callerToken)
@@ -466,6 +522,8 @@ bool BundlePermissionMgr::RefreshPreAuthorizationForOTA()
 void BundlePermissionMgr::AddPermissionUsedRecord(
     const std::string &permission, int32_t successCount, int32_t failCount)
 {
+    g_permissionSuccessCounts[permission] += successCount;
+    g_permissionFailCounts[permission] += failCount;
 }
 
 
