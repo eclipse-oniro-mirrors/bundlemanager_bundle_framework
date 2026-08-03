@@ -3865,7 +3865,9 @@ ErrCode InstalldHostImpl::DeleteOldCacheFiles(
         if (!std::filesystem::remove(filePath, ec)) {
             continue;
         }
-        cleanedSize += static_cast<uint64_t>(fileSize);
+        if (fileSize >= 0) {
+            cleanedSize += static_cast<uint64_t>(fileSize);
+        }
 
         auto parentPath = filePath.parent_path();
         while (std::find(paths.begin(), paths.end(), parentPath) == paths.end()) {
@@ -3875,7 +3877,9 @@ ErrCode InstalldHostImpl::DeleteOldCacheFiles(
                 if (!std::filesystem::remove(parentPath, ec)) {
                     break;
                 }
-                cleanedSize += static_cast<uint64_t>(dirSize);
+                if (dirSize >= 0) {
+                    cleanedSize += static_cast<uint64_t>(dirSize);
+                }
                 parentPath = parentPath.parent_path();
             } else {
                 break;

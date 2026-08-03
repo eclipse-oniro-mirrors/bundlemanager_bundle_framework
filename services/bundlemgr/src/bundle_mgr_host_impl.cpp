@@ -2407,8 +2407,12 @@ ErrCode BundleMgrHostImpl::CleanBundlePartialCacheAutomatic(
     ret = InstalldClient::GetInstance()->DeleteOldCacheFiles(cachePaths, needFreeSize, cleanedSize);
     afterCleanedSize = (cleanedSize >= beforeCleanedSize) ? 0 : beforeCleanedSize - cleanedSize;
     if (afterCleanedSize > cacheThreshold) {
-        afterCleanedSize - 0;
+        afterCleanedSize = 0;
         BundleCacheMgr::GetBundleCacheSizeByAppIndex(bundleName, userId, appIndex, moduleNames, afterCleanedSize);
+    }
+    if (afterCleanedSize > beforeCleanedSize) {
+        APP_LOGW("cleanBundlePartialCacheAutomatic error, beforeCleanedSize = %{public}" PRIu64 ","
+            "afterCleanedSize = %{public}" PRIu64, beforeCleanedSize, afterCleanedSize);
     }
     return ret;
 }
