@@ -64,13 +64,10 @@ private:
     int32_t reportedCountInScan_ = 0;
 
     static constexpr int64_t LARGE_APP_THRESHOLD = 1024LL * 1024 * 1024; // 1GB
-    // One scan fires at most every 72h (idle-triggered). Combined with MAX_REPORT_COUNT_PER_SCAN
-    // this keeps daily reported events of BUNDLE_LARGE_FILES_MONITOR_EVENT within the framework
+    // One scan fires at most every 7*24h (idle-triggered). Combined with MAX_REPORT_COUNT_PER_SCAN
+    // this keeps daily reported events of BUNDLE_LARGE_FILES within the framework
     // per-event-per-day quota.
-    static constexpr int64_t COOLDOWN_SECONDS = 72 * 60 * 60; // 72h
-    // Hard cap on reported events per single scan (counted by event). Because a scan runs at most
-    // once per COOLDOWN_SECONDS, this also bounds daily output and avoids the framework silently
-    // dropping everything beyond its per-event-per-day quota.
+    static constexpr int64_t COOLDOWN_SECONDS = 7 * 24 * 60 * 60; // 7d
     static constexpr int32_t MAX_REPORT_COUNT_PER_SCAN = 20;
     static constexpr int32_t BUNDLE_DATA_SIZE_INDEX = 1;
     static constexpr int32_t GET_TOP_N_TIMEOUT = 30; // 30 seconds

@@ -49,7 +49,7 @@ constexpr const char* BMS_DISK_SPACE = "BMS_DISK_SPACE";
 constexpr const char* APP_CONTROL_RULE = "APP_CONTROL_RULE";
 constexpr const char* DB_ERROR = "DB_ERROR";
 constexpr const char* DEFAULT_APP = "DEFAULT_APP";
-constexpr const char* BUNDLE_LARGE_FILES_MONITOR_EVENT = "BUNDLE_LARGE_FILES_MONITOR_EVENT";
+constexpr const char* BUNDLE_LARGE_FILES = "BUNDLE_LARGE_FILES";
 constexpr const char* QUERY_BUNDLE_INFO = "QUERY_BUNDLE_INFO";
 constexpr const char* BUNDLE_DYNAMIC_SHORTCUTINFO = "BUNDLE_DYNAMIC_SHORTCUTINFO";
 constexpr const char* DESKTOP_SHORTCUT = "DESKTOP_SHORTCUT";
@@ -835,7 +835,7 @@ void InnerEventReport::InnerSendDefaultAppEvent(const EventInfo& eventInfo)
 void InnerEventReport::InnerSendLargeFilesMonitorEvent(const EventInfo& eventInfo)
 {
     InnerSystemEventWrite(
-        BUNDLE_LARGE_FILES_MONITOR_EVENT,
+        BUNDLE_LARGE_FILES,
         HiSysEventType::STATISTIC,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_USERID, eventInfo.userId,

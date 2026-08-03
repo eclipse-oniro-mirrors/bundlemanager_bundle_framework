@@ -180,7 +180,7 @@ HWTEST_F(BmsAppDataMonitorTest, AppDataMonitor_IsInCooldown_0100, Function | Sma
  * @tc.number: AppDataMonitor_IsInCooldown_0200
  * @tc.name: IsInCooldown right after a scan
  * @tc.desc: 1. lastScanTime_ set to now
- *           2. within 72h cooldown, IsInCooldown should return true
+ *           2. within 7*24h cooldown, IsInCooldown should return true
  */
 HWTEST_F(BmsAppDataMonitorTest, AppDataMonitor_IsInCooldown_0200, Function | SmallTest | Level0)
 {
@@ -194,15 +194,15 @@ HWTEST_F(BmsAppDataMonitorTest, AppDataMonitor_IsInCooldown_0200, Function | Sma
 /**
  * @tc.number: AppDataMonitor_IsInCooldown_0300
  * @tc.name: IsInCooldown after cooldown expires
- * @tc.desc: 1. lastScanTime_ set to 73h ago
- *           2. cooldown (72h) expired, IsInCooldown should return false
+ * @tc.desc: 1. lastScanTime_ set to 169h ago
+ *           2. cooldown (7*24h) expired, IsInCooldown should return false
  */
 HWTEST_F(BmsAppDataMonitorTest, AppDataMonitor_IsInCooldown_0300, Function | SmallTest | Level0)
 {
     auto monitor = DelayedSingleton<AppDataMonitor>::GetInstance();
     ASSERT_NE(monitor, nullptr);
 
-    monitor->lastScanTime_ = std::chrono::steady_clock::now() - std::chrono::hours(73);
+    monitor->lastScanTime_ = std::chrono::steady_clock::now() - std::chrono::hours(169);
     EXPECT_FALSE(monitor->IsInCooldown());
 }
 
@@ -297,7 +297,7 @@ HWTEST_F(BmsAppDataMonitorTest, AppDataMonitor_StartScan_TestModeBypass_0100, Fu
 /**
  * @tc.number: AppDataMonitor_StartScan_NormalProceed_0100
  * @tc.name: StartScan proceeds when cooldown expired (non-test mode)
- * @tc.desc: 1. test mode off, cooldown expired (lastScanTime_ 73h ago)
+ * @tc.desc: 1. test mode off, cooldown expired (lastScanTime_ 169h ago)
  *           2. proceeds past cooldown; lastScanTime_ updated to ~now
  */
 HWTEST_F(BmsAppDataMonitorTest, AppDataMonitor_StartScan_NormalProceed_0100, Function | SmallTest | Level0)
@@ -307,7 +307,7 @@ HWTEST_F(BmsAppDataMonitorTest, AppDataMonitor_StartScan_NormalProceed_0100, Fun
 
     OHOS::system::SetParameter(ServiceConstants::SCAN_APP_DATA_TEST_PARAM, "false");
     monitor->stopRequested_.store(false);
-    monitor->lastScanTime_ = std::chrono::steady_clock::now() - std::chrono::hours(73); // cooldown expired
+    monitor->lastScanTime_ = std::chrono::steady_clock::now() - std::chrono::hours(169); // cooldown expired
 
     monitor->StartScan(TEST_USER_ID);
 

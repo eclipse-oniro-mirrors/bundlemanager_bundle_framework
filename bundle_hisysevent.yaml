@@ -66,8 +66,8 @@ BUNDLE_LOCAL_PLUGIN_OPERATION:
   FILE_PATH_LIST: {type: STRING, arrsize: 30, desc: plugin hsp file path list}
   ERROR_CODE_LIST: {type: INT32, arrsize: 30, desc: error code list}
 
-BUNDLE_LARGE_FILES_MONITOR_EVENT:
-  __BASE: {type: STATISTIC, level: MINOR, desc: system app large files monitor report}
+BUNDLE_LARGE_FILES:
+  __BASE: {type: STATISTIC, level: CRITICAL, desc: system app large files monitor report}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   USERID: {type: INT32, desc: userId of the bundle}
   APP_INDEX: {type: INT32, desc: app index}
