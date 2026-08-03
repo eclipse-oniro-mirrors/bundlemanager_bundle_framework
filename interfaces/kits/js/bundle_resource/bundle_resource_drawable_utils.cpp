@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 
+#include "app_log_wrapper.h"
 #include "bundle_resource_drawable_utils.h"
 
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
 #include "drawable_descriptor.h"
 #include "js_drawable_descriptor.h"
 #include "resource_manager.h"
+#include "securec.h"
 #endif
 namespace OHOS {
 namespace AppExecFwk {
@@ -51,8 +53,9 @@ napi_value BundleResourceDrawableUtils::ConvertToDrawableDescriptor(napi_env env
     InitResourceManager();
     size_t lenForeground = foreground.size();
     std::unique_ptr<uint8_t[]> foregroundPtr = std::make_unique<uint8_t[]>(lenForeground);
-    for (size_t index = 0; index < lenForeground; ++index) {
-        foregroundPtr[index] = foreground[index];
+    if (memcpy_s(foregroundPtr.get(), lenForeground, foreground.data(), lenForeground) != EOK) {
+        APP_LOGE("memcpy_s failed for foreground");
+        return nullptr;
     }
     if (background.empty()) {
         // base-icon
@@ -64,8 +67,9 @@ napi_value BundleResourceDrawableUtils::ConvertToDrawableDescriptor(napi_env env
     // layered-icon
     size_t lenBackground = background.size();
     std::unique_ptr<uint8_t[]> backgroundPtr = std::make_unique<uint8_t[]>(lenBackground);
-    for (size_t index = 0; index < lenBackground; ++index) {
-        backgroundPtr[index] = background[index];
+    if (memcpy_s(backgroundPtr.get(), lenBackground, background.data(), lenBackground) != EOK) {
+        APP_LOGE("memcpy_s failed for background");
+        return nullptr;
     }
     std::unique_ptr<uint8_t[]> jsonBuf;
     std::string themeMask = (resourceManager_ == nullptr) ? "" : resourceManager_->GetThemeMask();

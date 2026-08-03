@@ -115,7 +115,7 @@ bool RdbDataManager::QueryData(const std::string &key, std::string &value)
 }
 
 std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryData(
-    const NativeRdb::AbsRdbPredicates &absRdbPredicates)
+    const NativeRdb::AbsRdbPredicates &absRdbPredicates, const std::vector<std::string> &columns)
 {
     std::cout<<"MockAbsSharedResultSet"<<std::endl;
     std::shared_ptr<NativeRdb::ResultSet> temp = std::make_shared<MockAbsSharedResultSet>();
