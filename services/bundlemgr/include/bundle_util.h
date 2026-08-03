@@ -78,6 +78,12 @@ public:
      */
     static ErrCode CheckFileName(const std::string &fileName);
     /**
+     * @brief Check whether a file name is valid against path traversal attacks.
+     * @param fileName Indicates the file name to check.
+     * @return Returns true if the file name is valid; returns false otherwise.
+     */
+    static bool IsFileNameValid(const std::string &fileName);
+    /**
      * @brief Check whether a Hap size is valid.
      * @param fileName Indicates the file path.
      * @return Returns ERR_OK if the file size checked successfully; returns errcode otherwise.

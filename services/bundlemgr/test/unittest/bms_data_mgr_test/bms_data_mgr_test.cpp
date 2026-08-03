@@ -7039,6 +7039,27 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0300, Function | MediumTest | Level1)
 }
 
 /**
+ * @tc.number: BundleBackupMgr_0400
+ * @tc.name: test BundleBackupMgr
+ * @tc.desc: 1.test OnRestore with non-regular fd
+ */
+HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0400, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleBackupMgr> bundleBackupMgr = DelayedSingleton<BundleBackupMgr>::GetInstance();
+    ASSERT_NE(bundleBackupMgr, nullptr);
+    int32_t pipeFds[2] = { -1, -1 };
+    ASSERT_EQ(pipe(pipeFds), 0);
+
+    MessageParcel data;
+    MessageParcel reply;
+    EXPECT_TRUE(data.WriteFileDescriptor(pipeFds[0]));
+    auto ret = bundleBackupMgr->OnRestore(data, reply);
+    (void)close(pipeFds[0]);
+    (void)close(pipeFds[1]);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR);
+}
+
+/**
  * @tc.number: GetAllExtensionBundleNames_0001
  * @tc.name: GetAllExtensionBundleNames
  * @tc.desc: test GetAllExtensionBundleNames

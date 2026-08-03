@@ -3692,4 +3692,99 @@ HWTEST_F(BmsInstalldOperatorTest, IsValidPathByDeleteUninstallTmpDirs_0300, Func
     ret = InstalldOperator::IsValidPathByDeleteUninstallTmpDirs(dir);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: IsFileNameValid_0100
+ * @tc.name: test IsFileNameValid with empty string
+ * @tc.desc: test IsFileNameValid of InstalldOperator with empty returns false.
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0100, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(""));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0200
+ * @tc.name: test IsFileNameValid with dot prefix
+ * @tc.desc: test IsFileNameValid of InstalldOperator with dot prefix returns false.
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0200, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(".hidden"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0300
+ * @tc.name: test IsFileNameValid with ../ traversal
+ * @tc.desc: test IsFileNameValid of InstalldOperator with ../ returns false.
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0300, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("../../../etc/passwd"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0400
+ * @tc.name: test IsFileNameValid with backslash
+ * @tc.desc: test IsFileNameValid of InstalldOperator with backslash returns false.
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0400, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("abc\\def"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0500
+ * @tc.name: test IsFileNameValid with null byte
+ * @tc.desc: test IsFileNameValid of InstalldOperator with null byte returns false.
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0500, Function | SmallTest | Level0)
+{
+    std::string withNull("abc");
+    withNull.push_back('\0');
+    withNull.append("def");
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(withNull));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0600
+ * @tc.name: test IsFileNameValid with control chars
+ * @tc.desc: test IsFileNameValid of InstalldOperator with control chars returns false.
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0600, Function | SmallTest | Level0)
+{
+    std::string withCtrl("abc");
+    withCtrl.push_back(static_cast<char>(0x01));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(withCtrl));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0700
+ * @tc.name: test IsFileNameValid with valid name
+ * @tc.desc: test IsFileNameValid of InstalldOperator with valid name returns true.
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0700, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::IsFileNameValid("valid_file.txt"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0800
+ * @tc.name: test IsFileNameValid with valid path
+ * @tc.desc: test IsFileNameValid of InstalldOperator with valid path returns true.
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0800, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(InstalldOperator::IsFileNameValid("lib/arm64-v8a"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0900
+ * @tc.name: test IsFileNameValid with /.. traversal
+ * @tc.desc: test IsFileNameValid of InstalldOperator with /.. returns false.
+ */
+HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0900, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid("abc/../etc"));
+}
 } // OHOS

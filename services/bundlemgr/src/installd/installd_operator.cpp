@@ -1111,6 +1111,10 @@ bool InstalldOperator::ExtractSkillFromHsp(
         if (fileName.find(skillPrefix) == 0) {
             // Calculate relative path and target file path
             std::string relativePath = fileName.substr(skillPrefix.length());
+            if (!IsFileNameValid(relativePath)) {
+                LOG_E(BMS_TAG_INSTALLD, "relativePath not legal %{public}s", relativePath.c_str());
+                continue;
+            }
             if (IsSkillScriptsRelativePath(relativePath)) {
                 LOG_D(BMS_TAG_INSTALLD, "skip skill scripts entry %{public}s", fileName.c_str());
                 continue;
@@ -3873,7 +3877,7 @@ bool InstalldOperator::IsFileNameValid(const std::string &fileName)
     if (fileName.empty()) {
         return false;
     }
-    if (fileName[0] == '.') {
+    if (fileName == "..") {
         return false;
     }
     if (fileName.find("../") != std::string::npos

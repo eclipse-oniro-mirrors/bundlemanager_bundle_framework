@@ -2729,7 +2729,7 @@ ErrCode InstalldHostImpl::SetEncryptionPolicy(const EncryptionParam &encryptionP
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if ((encryptionParam.encryptionDirType == EncryptionDirType::GROUP) &&
-        encryptionParam.groupId.empty()) {
+        !InstalldOperator::IsFileNameValid(encryptionParam.groupId)) {
         LOG_E(BMS_TAG_INSTALLD, "invalid encryptionParam.groupId");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
@@ -2756,7 +2756,7 @@ ErrCode InstalldHostImpl::DeleteEncryptionKeyId(const EncryptionParam &encryptio
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if ((encryptionParam.encryptionDirType == EncryptionDirType::GROUP) &&
-        encryptionParam.groupId.empty()) {
+        !InstalldOperator::IsFileNameValid(encryptionParam.groupId)) {
         LOG_E(BMS_TAG_INSTALLD, "invalid encryptionParam.groupId");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
