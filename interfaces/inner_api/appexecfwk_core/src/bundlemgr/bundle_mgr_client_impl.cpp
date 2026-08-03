@@ -71,6 +71,20 @@ ErrCode BundleMgrClientImpl::GetNameForUid(const int uid, std::string &name)
     return bundleMgr_->GetNameForUid(uid, name);
 }
 
+ErrCode BundleMgrClientImpl::StartAppDetailAbility()
+{
+    if (Connect() != ERR_OK) {
+        APP_LOGE("connect fail");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return bundleMgr_->StartAppDetailAbility();
+}
+
 bool BundleMgrClientImpl::GetBundleInfo(const std::string &bundleName, const BundleFlag flag, BundleInfo &bundleInfo,
     int32_t userId)
 {

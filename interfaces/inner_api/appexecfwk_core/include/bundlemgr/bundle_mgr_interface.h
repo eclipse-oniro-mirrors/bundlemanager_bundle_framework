@@ -422,6 +422,16 @@ public:
     {
         return false;
     }
+
+    /**
+     * @brief Launch the app detail page for the calling no-icon app.
+     *        Caller identity is taken from the IPC callingUid and gated by its needAppDetail.
+     * @return ERR_OK on success; ERR_APPEXECFWK_PERMISSION_DENIED if the caller is not a no-icon app.
+     */
+    virtual ErrCode StartAppDetailAbility()
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     /**
      * @brief Obtains all bundle names of a specified application based on the given application UID.
      * @param uid Indicates the uid.

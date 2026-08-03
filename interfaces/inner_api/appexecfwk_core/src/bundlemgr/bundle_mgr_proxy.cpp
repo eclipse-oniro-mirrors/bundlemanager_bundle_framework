@@ -933,6 +933,23 @@ bool BundleMgrProxy::GetBundleNameForUid(const int uid, std::string &bundleName)
     return true;
 }
 
+ErrCode BundleMgrProxy::StartAppDetailAbility()
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to StartAppDetailAbility");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to StartAppDetailAbility due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::START_APP_DETAIL_ABILITY, data, reply)) {
+        APP_LOGE("fail to StartAppDetailAbility from server");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
 bool BundleMgrProxy::GetBundlesForUid(const int uid, std::vector<std::string> &bundleNames)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

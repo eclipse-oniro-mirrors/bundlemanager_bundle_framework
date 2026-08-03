@@ -31,7 +31,10 @@ ohos_shared_library("app_detail_ability") {
     "LOG_DOMAIN = 0xD001120",
   ]
   sources = [ "src/app_detail_ability.cpp" ]
-  deps = [ "${common_path}:libappexecfwk_common" ]
+  deps = [
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+  ]
 
   cflags = [
     "-Os",

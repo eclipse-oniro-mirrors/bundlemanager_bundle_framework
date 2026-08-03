@@ -13023,4 +13023,41 @@ HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUriOptimal_0008, Function | 
     bool result = bundleDataMgr.QueryExtensionAbilityInfoByUriOptimal(uri, userId, extensionAbilityInfo);
     EXPECT_EQ(result, false);
 }
+
+/**
+ * @tc.number: GetNeedAppDetail_0001
+ * @tc.name: GetNeedAppDetail
+ * @tc.desc: 1. add a no-icon app (needAppDetail=true) and query true
+ *           2. query a non-existent bundle returns false
+ */
+HWTEST_F(BmsDataMgrTest, GetNeedAppDetail_0001, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr == nullptr) {
+        return;
+    }
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.needAppDetail = true;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    InnerBundleInfo info;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START));
+    EXPECT_TRUE(dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info));
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_START));
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_SUCCESS));
+
+    bool needAppDetail = false;
+    EXPECT_TRUE(dataMgr->GetNeedAppDetail(BUNDLE_NAME, needAppDetail));
+    EXPECT_TRUE(needAppDetail);
+
+    bool dummy = false;
+    EXPECT_FALSE(dataMgr->GetNeedAppDetail("com.example.not.exist", dummy));
+
+    EXPECT_TRUE(dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START));
+}
 } // OHOS

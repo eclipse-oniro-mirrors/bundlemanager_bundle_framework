@@ -15,37 +15,32 @@
 #include "app_detail_ability.h"
 
 #include "ability_loader.h"
-#include "ability_manager_client.h"
 #include "app_log_wrapper.h"
+#include "bundle_mgr_client.h"
 #include "element_name.h"
 #include "session_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-constexpr const char* SETTINGS_ACTION = "action.settings.app.info";
-constexpr const char* SETTINGS_PARAM_BUNDLE_NAME = "settingsParamBundleName";
-}
 
 void AppDetailAbility::OnStart(const Want &want, sptr<AAFwk::SessionInfo> sessionInfo)
 {
     std::string bundleName = want.GetBundle();
     APP_LOGD("AppDetailAbility::OnStart, bundleName: %{public}s", bundleName.c_str());
-    Want newWant;
     if (sessionInfo != nullptr) {
         sessionToken_ = sessionInfo->sessionToken;
     }
-    newWant.SetAction(SETTINGS_ACTION);
-    newWant.SetParam(SETTINGS_PARAM_BUNDLE_NAME, bundleName);
-    ErrCode errCode = AbilityManagerClient::GetInstance()->StartAbility(newWant);
+    
+    BundleMgrClient bundleMgrClient;
+    ErrCode errCode = bundleMgrClient.StartAppDetailAbility();
     if (errCode != ERR_OK) {
-        APP_LOGE("AppDetailAbility bundleName: %{public}s start ability failed, errCode: %{public}d",
-            want.GetBundle().c_str(), errCode);
+        APP_LOGE("AppDetailAbility bundleName: %{public}s start app detail failed, errCode: %{public}d",
+            bundleName.c_str(), errCode);
     }
     errCode = TerminateAbility();
     if (errCode != ERR_OK) {
         APP_LOGE("AppDetailAbility bundleName: %{public}s terminate ability failed, errCode: %{public}d",
-            want.GetBundle().c_str(), errCode);
+            bundleName.c_str(), errCode);
         return;
     }
     APP_LOGD("AppDetailAbility::OnStart end");

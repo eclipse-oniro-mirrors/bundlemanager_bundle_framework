@@ -388,6 +388,14 @@ public:
      */
     bool GetBundleNameForUid(const int32_t uid, std::string &bundleName) const;
     /**
+     * @brief Query whether the app identified by bundleName needs the app detail page
+     *        (i.e. is a no-icon app). Reads InnerBundleInfo.needAppDetail directly.
+     * @param bundleName Indicates the bundle name.
+     * @param needAppDetail Output the needAppDetail flag.
+     * @return Returns true if the bundle exists; returns false otherwise.
+     */
+    bool GetNeedAppDetail(const std::string &bundleName, bool &needAppDetail) const;
+    /**
      * @brief Obtains all bundle names of a specified application based on the given application UID.
      * @param uid Indicates the uid.
      * @param bundleNames Indicates the obtained bundle names.

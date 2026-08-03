@@ -255,6 +255,8 @@ public:
      * @return Returns the uid if successfully obtained; returns -1 otherwise.
      */
     virtual bool GetBundleNameForUid(const int uid, std::string &bundleName) override;
+
+    virtual ErrCode StartAppDetailAbility() override;
     /**
      * @brief Obtains all bundle names of a specified application based on the given application UID.
      * @param uid Indicates the uid.

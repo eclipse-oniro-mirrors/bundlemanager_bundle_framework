@@ -4760,6 +4760,18 @@ bool BundleDataMgr::GetBundleNameForUid(const int32_t uid, std::string &bundleNa
     return GetBundleNameAndIndexForUid(uid, bundleName, appIndex) == ERR_OK;
 }
 
+bool BundleDataMgr::GetNeedAppDetail(const std::string &bundleName, bool &needAppDetail) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        LOG_W(BMS_TAG_QUERY, "GetNeedAppDetail bundle not exist, bundle:%{public}s", bundleName.c_str());
+        return false;
+    }
+    needAppDetail = infoItem->second.GetBaseApplicationInfo().needAppDetail;
+    return true;
+}
+
 ErrCode BundleDataMgr::GetBundleNameAndIndexForUid(const int32_t uid, std::string &bundleName,
     int32_t &appIndex) const
 {

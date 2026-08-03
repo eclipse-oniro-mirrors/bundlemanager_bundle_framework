@@ -16,7 +16,9 @@
 #include "bundle_mgr_host_impl.h"
 #include <atomic>
 #include <cinttypes>
+#include "ability_manager_client.h"
 #include "ability_manager_helper.h"
+#include "want.h"
 #include "account_helper.h"
 #include "app_disable_forbidden/app_disable_forbidden_mgr.h"
 #include "app_log_tag_wrapper.h"
@@ -773,6 +775,39 @@ bool BundleMgrHostImpl::GetBundleNameForUid(const int uid, std::string &bundleNa
         SendQueryBundleInfoEvent(info, intervalTime, false);
     }
     return res;
+}
+
+ErrCode BundleMgrHostImpl::StartAppDetailAbility()
+{
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("StartAppDetailAbility failed, DataMgr is nullptr");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    std::string bundleName;
+    if (!dataMgr->GetBundleNameForUid(uid, bundleName)) {
+        APP_LOGE("StartAppDetailAbility failed, invalid uid: %{public}d", uid);
+        return ERR_APPEXECFWK_INVALID_UID;
+    }
+    bool needAppDetail = false;
+    if (!dataMgr->GetNeedAppDetail(bundleName, needAppDetail)) {
+        APP_LOGE("StartAppDetailAbility failed, bundle not exist: %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (!needAppDetail) {
+        APP_LOGE("StartAppDetailAbility permission denied, not a no-icon app: %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    OHOS::AAFwk::Want want;
+    want.SetAction("action.settings.app.info");
+    want.SetParam("settingsParamBundleName", bundleName);
+    ErrCode err = OHOS::AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
+    if (err != ERR_OK) {
+        APP_LOGE("StartAppDetailAbility StartAbility failed, bundle: %{public}s, err: %{public}d",
+            bundleName.c_str(), err);
+    }
+    return err;
 }
 
 bool BundleMgrHostImpl::GetBundlesForUid(const int uid, std::vector<std::string> &bundleNames)
