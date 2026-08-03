@@ -721,6 +721,8 @@ HWTEST_F(BmsCleanAllBundleCacheTest, CleanCache_0300, Function | SmallTest | Lev
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
     EXPECT_TRUE(result == ERR_OK);
+    // Wait for ffrt CleanBundleCacheTask before destroying hostImpl / tearing down fixture.
+    EXPECT_TRUE(cleanCache->GetResultCode());
 
     CleanFileDir();
     MockUninstallBundle(BUNDLE_NAME_TEST);
