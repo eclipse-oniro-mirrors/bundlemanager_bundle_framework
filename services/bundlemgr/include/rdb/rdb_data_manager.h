@@ -48,7 +48,8 @@ public:
         const NativeRdb::AbsRdbPredicates &absRdbPredicates, int32_t &changedRows);
     bool DeleteData(const NativeRdb::AbsRdbPredicates &absRdbPredicates);
     std::shared_ptr<NativeRdb::ResultSet> QueryData(
-        const NativeRdb::AbsRdbPredicates &absRdbPredicates);
+        const NativeRdb::AbsRdbPredicates &absRdbPredicates,
+        const std::vector<std::string> &columns = {});
     bool CreateTable();
     void DelayCloseRdbStore();
     std::shared_ptr<NativeRdb::ResultSet> QueryByStep(

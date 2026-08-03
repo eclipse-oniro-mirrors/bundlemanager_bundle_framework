@@ -423,7 +423,8 @@ bool RdbDataManager::QueryData(const std::string &key, std::string &value)
 }
 
 std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryData(
-    const NativeRdb::AbsRdbPredicates &absRdbPredicates)
+    const NativeRdb::AbsRdbPredicates &absRdbPredicates,
+    const std::vector<std::string> &columns)
 {
     APP_LOGD("QueryData start");
     ErrCode ret = ERR_OK;
@@ -436,7 +437,7 @@ std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryData(
         APP_LOGE("RdbStore table is invalid");
         return nullptr;
     }
-    auto absSharedResultSet = rdbStore->QueryByStep(absRdbPredicates, std::vector<std::string>());
+    auto absSharedResultSet = rdbStore->QueryByStep(absRdbPredicates, columns);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet failed");
         return nullptr;

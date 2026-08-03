@@ -242,7 +242,8 @@ bool AppProvisionInfoManagerRdb::GetSpecifiedDistributionType(
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
-    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    std::vector<std::string> columns = { SPECIFIED_DISTRIBUTED_TYPE };
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates, columns);
     if (absSharedResultSet == nullptr) {
         APP_LOGW("bundleName %{public}s GetSpecifiedDistributionType QueryData failed", bundleName.c_str());
         return false;
@@ -253,7 +254,7 @@ bool AppProvisionInfoManagerRdb::GetSpecifiedDistributionType(
         APP_LOGW("bundleName: %{public}s GetSpecifiedDistributionType failed", bundleName.c_str());
         return false;
     }
-    ret = absSharedResultSet->GetString(INDEX_SPECIFIED_DISTRIBUTED_TYPE, specifiedDistributionType);
+    ret = absSharedResultSet->GetString(0, specifiedDistributionType);
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("bundleName %{public}s GetString failed", bundleName.c_str());
         return false;
@@ -288,7 +289,8 @@ bool AppProvisionInfoManagerRdb::GetAdditionalInfo(
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
-    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    std::vector<std::string> columns = { ADDITIONAL_INFO };
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates, columns);
     if (absSharedResultSet == nullptr) {
         APP_LOGW("bundleName %{public}s, GetAdditionalInfo QueryData failed", bundleName.c_str());
         return false;
@@ -299,7 +301,7 @@ bool AppProvisionInfoManagerRdb::GetAdditionalInfo(
         APP_LOGW("bundleName %{public}s GetAdditionalInfo failed", bundleName.c_str());
         return false;
     }
-    ret = absSharedResultSet->GetString(INDEX_ADDITIONAL_INFO, additionalInfo);
+    ret = absSharedResultSet->GetString(0, additionalInfo);
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("bundleName %{public}s GetAdditionalInfo failed", bundleName.c_str());
         return false;

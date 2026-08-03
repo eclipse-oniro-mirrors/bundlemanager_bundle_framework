@@ -25,6 +25,7 @@
 #include "first_install_data_mgr_storage_rdb.h"
 #include "preinstall_data_storage_rdb.h"
 #include "rdb_data_manager.h"
+#include "scope_guard.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -730,6 +731,84 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1300, Function | SmallTest | Leve
     EXPECT_TRUE(datas[KEY_ONE] == VALUE_ONE);
     EXPECT_TRUE(datas[KEY_TWO] == VALUE_TWO);
     EXPECT_TRUE(datas[KEY_THREE] == VALUE_THREE);
+    CloseDb();
+}
+
+/**
+ * @tc.number: RdbDataManager_1400
+ * @tc.name: query data with specified columns
+ * @tc.desc: 1.insert data
+ *           2.query data with specified columns
+ *           3.verify only requested column is returned
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1400, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+
+    bool ret = rdbDataManager->InsertData(KEY_ONE, VALUE_ONE);
+    EXPECT_TRUE(ret);
+
+    NativeRdb::AbsRdbPredicates absRdbPredicates(TABLE_NAME);
+    absRdbPredicates.EqualTo("KEY", KEY_ONE);
+    std::vector<std::string> columns = { "VALUE" };
+    auto resultSet = rdbDataManager->QueryData(absRdbPredicates, columns);
+    ASSERT_NE(resultSet, nullptr);
+    ScopeGuard stateGuard([&resultSet] { resultSet->Close(); });
+
+    EXPECT_EQ(resultSet->GoToFirstRow(), NativeRdb::E_OK);
+    std::string value;
+    EXPECT_EQ(resultSet->GetString(0, value), NativeRdb::E_OK);
+    EXPECT_EQ(value, VALUE_ONE);
+    CloseDb();
+}
+
+/**
+ * @tc.number: RdbDataManager_1500
+ * @tc.name: query data with specified columns invalid table
+ * @tc.desc: 1.query data with specified columns on invalid table
+ *           2.expect nullptr returned
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1500, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+
+    NativeRdb::AbsRdbPredicates absRdbPredicates("InvalidTable");
+    std::vector<std::string> columns = { "VALUE" };
+    auto resultSet = rdbDataManager->QueryData(absRdbPredicates, columns);
+    EXPECT_EQ(resultSet, nullptr);
+    CloseDb();
+}
+
+/**
+ * @tc.number: RdbDataManager_1600
+ * @tc.name: query data with empty columns default behavior
+ * @tc.desc: 1.insert data
+ *           2.query data with empty columns vector
+ *           3.verify all columns returned (backward compatibility)
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1600, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+
+    bool ret = rdbDataManager->InsertData(KEY_ONE, VALUE_ONE);
+    EXPECT_TRUE(ret);
+
+    NativeRdb::AbsRdbPredicates absRdbPredicates(TABLE_NAME);
+    absRdbPredicates.EqualTo("KEY", KEY_ONE);
+    auto resultSet = rdbDataManager->QueryData(absRdbPredicates, {});
+    ASSERT_NE(resultSet, nullptr);
+    ScopeGuard stateGuard([&resultSet] { resultSet->Close(); });
+
+    EXPECT_EQ(resultSet->GoToFirstRow(), NativeRdb::E_OK);
+    std::string value;
+    EXPECT_EQ(resultSet->GetString(1, value), NativeRdb::E_OK);
+    EXPECT_EQ(value, VALUE_ONE);
     CloseDb();
 }
 
