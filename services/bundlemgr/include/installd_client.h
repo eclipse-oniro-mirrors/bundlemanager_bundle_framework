@@ -237,6 +237,10 @@ public:
 
     ErrCode ExtractFiles(const ExtractParam &extractParam);
 
+    ErrCode ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
+        const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
+        const std::string &targetPathSuffix);
+
     ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap, const ExtractParam &extractParam);
 
     ErrCode ProcessBundleInstallNative(const InstallHnpParam &installHnpParam);

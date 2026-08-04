@@ -242,6 +242,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_HNP_FILES):
             result = this->HandleExtractHnpFiles(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_QUICK_FIX_SO_FILE):
+            result = this->HandleExtractQuickFixSoFile(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::INSTALL_NATIVE):
             result = this->HandleProcessBundleInstallNative(data, reply);
             break;
@@ -453,6 +456,22 @@ bool InstalldHost::HandleExtractHnpFiles(MessageParcel &data, MessageParcel &rep
     }
 
     ErrCode result = ExtractHnpFiles(hnpPackageMap, *info);
+    WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractQuickFixSoFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::string hqfFilePath = Str16ToStr8(data.ReadString16());
+    std::string nativeLibraryPath = Str16ToStr8(data.ReadString16());
+    std::string cpuAbi = Str16ToStr8(data.ReadString16());
+    bool isReplace = data.ReadBool();
+    int32_t versionCode = data.ReadInt32();
+    std::string targetPathSuffix = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = ExtractQuickFixSoFile(
+        bundleName, hqfFilePath, nativeLibraryPath, cpuAbi, isReplace, versionCode, targetPathSuffix);
     WRITE_PARCEL_ERRCODE_ERRNO_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

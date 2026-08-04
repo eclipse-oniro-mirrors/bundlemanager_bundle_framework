@@ -272,6 +272,13 @@ ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
+    const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
+    const std::string &targetPathSuffix)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs, std::vector<uint8_t> &pendSignData)
 {
     return ERR_OK;

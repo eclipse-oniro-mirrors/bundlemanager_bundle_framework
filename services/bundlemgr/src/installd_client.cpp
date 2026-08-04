@@ -65,6 +65,18 @@ ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
     return CallService(&IInstalld::ExtractFiles, extractParam);
 }
 
+ErrCode InstalldClient::ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
+    const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
+    const std::string &targetPathSuffix)
+{
+    if (hqfFilePath.empty() || nativeLibraryPath.empty() || cpuAbi.empty()) {
+        APP_LOGE("hqfFilePath or nativeLibraryPath or cpuAbi is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractQuickFixSoFile, bundleName, hqfFilePath, nativeLibraryPath, cpuAbi,
+        isReplace, versionCode, targetPathSuffix);
+}
+
 ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

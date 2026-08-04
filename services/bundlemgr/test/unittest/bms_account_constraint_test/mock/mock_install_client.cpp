@@ -62,6 +62,13 @@ ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
     return 0;
 }
 
+ErrCode InstalldClient::ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
+    const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
+    const std::string &targetPathSuffix)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {
