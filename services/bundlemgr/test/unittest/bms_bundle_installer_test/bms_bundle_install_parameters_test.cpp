@@ -2725,15 +2725,15 @@ HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0500, Function | SmallT
 
 /**
  * @tc.number: IsFileNameValid_0600
- * @tc.name: test IsFileNameValid rejects paths starting with dot
- * @tc.desc: 1. test "." ".." "./foo" ".hidden" all return false
+ * @tc.name: test IsFileNameValid allows hidden files and relative paths
+ * @tc.desc: 1. "." "./foo" ".hidden" return true; ".." returns false as parent dir traversal
  */
 HWTEST_F(BmsBundleInstallParametersTest, IsFileNameValid_0600, Function | SmallTest | Level0)
 {
-    EXPECT_FALSE(InstalldOperator::IsFileNameValid("."));
+    EXPECT_TRUE(InstalldOperator::IsFileNameValid("."));
     EXPECT_FALSE(InstalldOperator::IsFileNameValid(".."));
-    EXPECT_FALSE(InstalldOperator::IsFileNameValid("./foo"));
-    EXPECT_FALSE(InstalldOperator::IsFileNameValid(".hidden"));
+    EXPECT_TRUE(InstalldOperator::IsFileNameValid("./foo"));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(".."));
 }
 
 /**

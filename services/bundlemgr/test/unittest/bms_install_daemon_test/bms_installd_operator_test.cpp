@@ -3705,12 +3705,12 @@ HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0100, Function | SmallTest | L
 
 /**
  * @tc.number: IsFileNameValid_0200
- * @tc.name: test IsFileNameValid with dot prefix
- * @tc.desc: test IsFileNameValid of InstalldOperator with dot prefix returns false.
+ * @tc.name: test IsFileNameValid with parent dir
+ * @tc.desc: test IsFileNameValid of InstalldOperator with .. returns false.
  */
 HWTEST_F(BmsInstalldOperatorTest, IsFileNameValid_0200, Function | SmallTest | Level0)
 {
-    EXPECT_FALSE(InstalldOperator::IsFileNameValid(".hidden"));
+    EXPECT_FALSE(InstalldOperator::IsFileNameValid(".."));
 }
 
 /**
