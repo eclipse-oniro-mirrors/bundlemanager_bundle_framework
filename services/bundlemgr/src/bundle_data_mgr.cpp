@@ -1355,7 +1355,7 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
 #ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
     if (appIndex == Constants::MAIN_APP_INDEX &&
         !(static_cast<uint32_t>(flags) & static_cast<uint32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))) {
-        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, requestUserId);
+        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, responseUserId);
         if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
             LOG_NOFUNC_W(BMS_TAG_QUERY, "car mode: all apps disabled, bundleName:%{public}s", bundleName.c_str());
             return false;
@@ -1868,7 +1868,7 @@ bool BundleDataMgr::ImplicitQueryCurAbilityInfos(const Want &want, int32_t flags
     int32_t queryAppIndex = appIndex;
     if (appIndex == Constants::MAIN_APP_INDEX &&
         !(static_cast<uint32_t>(flags) & static_cast<uint32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))) {
-        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, userId);
+        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, responseUserId);
         if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
             LOG_NOFUNC_W(BMS_TAG_QUERY, "car mode: all apps disabled, bundleName:%{public}s", bundleName.c_str());
             return false;
@@ -3148,7 +3148,7 @@ bool BundleDataMgr::GetApplicationInfo(
 #ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
     int32_t queryAppIndex = 0;
     if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)) {
-        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, requestUserId);
+        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, responseUserId);
         if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
             LOG_NOFUNC_W(BMS_TAG_QUERY, "car mode: maybe all apps are disabled, bundleName:%{public}s", appName.c_str());
             return false;
@@ -3195,7 +3195,7 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
 #ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
     int32_t queryAppIndex = appIndex;
     if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))) {
-        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, requestUserId);
+        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, responseUserId);
         if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
             LOG_NOFUNC_W(BMS_TAG_QUERY, "car mode: maybe all apps are disabled, bundleName:%{public}s", appName.c_str());
             return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
@@ -3576,7 +3576,7 @@ bool BundleDataMgr::GetBundleInfo(
 #ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
     int32_t queryAppIndex = 0;
     if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))) {
-        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, requestUserId);
+        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, responseUserId);
         if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
             LOG_NOFUNC_W(BMS_TAG_QUERY, "car mode: maybe all apps are disabled, bundleName:%{public}s", bundleName.c_str());
             return false;
@@ -3661,7 +3661,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
 #ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
     int32_t queryAppIndex = appIndex;
     if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))) {
-        int enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, requestUserId);
+        int enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, responseUserId);
         if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
             LOG_NOFUNC_W(BMS_TAG_QUERY, "car mode: maybe all apps are disabled, bundleName:%{public}s", bundleName.c_str());
             return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
@@ -5758,6 +5758,9 @@ ErrCode BundleDataMgr::GetLaunchWantForBundle(
     }
 #ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
     int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
     int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, requestUserId);
     if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
         LOG_NOFUNC_W(BMS_TAG_QUERY, "car mode: maybe all apps are disabled, bundleName:%{public}s", bundleName.c_str());
@@ -11616,7 +11619,7 @@ int32_t BundleDataMgr::GetUidByBundleName(const std::string &bundleName, int32_t
 #ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
     int32_t queryAppIndex = appIndex;
     if (appIndex == Constants::ALL_CLONE_APP_INDEX) {
-        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(innerBundleInfo, userId);
+        int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(innerBundleInfo, responseUserId);
         if (enableAppIndex == Constants::ALL_CLONE_APP_INDEX) {
             queryAppIndex = Constants::MAIN_APP_INDEX;
             LOG_NOFUNC_W(BMS_TAG_QUERY, "car mode: all apps disabled, fall back to main, bundleName:%{public}s",
