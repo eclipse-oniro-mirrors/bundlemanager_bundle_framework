@@ -540,9 +540,10 @@ ErrCode InstalldClient::DeleteOldCacheFiles(
     return ERR_OK;
 }
 
-int64_t InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths, int64_t timeoutMs)
+ErrCode InstalldClient::GetCacheDiskUsageFromPath(const std::vector<std::string> &paths,
+    int64_t &statSize, int64_t timeoutMs)
 {
-    return 0;
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
