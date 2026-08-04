@@ -140,6 +140,7 @@ private:
     std::atomic<bool> isAppInstallControlEnabled_  { false };
     std::mutex appRunningControlMutex_;
     std::mutex abilityRunningControlRuleMutex_;
+    std::atomic<uint64_t> abilityRunningControlRuleCacheGeneration_ { 0 };
     std::mutex runningRuleSettingStatusMutex_;
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
     std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb_;
