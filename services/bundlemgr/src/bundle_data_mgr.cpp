@@ -1351,8 +1351,8 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
             " -u %{public}d", bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), responseUserId);
         return false;
     }
-    int32_t queryAppIndex = appIndex;
 #ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+    int32_t queryAppIndex = Constants::MAIN_APP_INDEX;
     if (appIndex == Constants::MAIN_APP_INDEX &&
         !(static_cast<uint32_t>(flags) & static_cast<uint32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))) {
         int32_t enableAppIndex = CloneForAccountUtil::GetEnabledCloneAppIndex(*innerBundleInfo, requestUserId);
@@ -1364,8 +1364,10 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
         LOG_NOFUNC_D(BMS_TAG_QUERY, "car mode: use clone appIndex:%{public}d, bundleName:%{public}s",
             queryAppIndex, bundleName.c_str());
     }
-#endif
     return QueryAbilityInfoWithFlags(ability, flags, responseUserId, *innerBundleInfo, abilityInfo, queryAppIndex);
+#else
+    return QueryAbilityInfoWithFlags(ability, flags, responseUserId, *innerBundleInfo, abilityInfo);
+#endif
 }
 
 ErrCode BundleDataMgr::ExplicitQueryAbilityInfoV9(const Want &want, int32_t flags, int32_t userId,
