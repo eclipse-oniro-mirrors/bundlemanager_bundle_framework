@@ -377,7 +377,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         LOG_E(BMS_TAG_DEFAULT, "error: ExtractQuickFixResFile failed");
     }
     if (isDebug_ && (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG)) {
-        return ExtractQuickFixSoFile(appQuickFix, isReplace_ ? basePath : patchPath, bundleInfo);
+        return ExtractQuickFixSoFile(appQuickFix, bundleInfo);
     }
     return ERR_OK;
 }
@@ -722,7 +722,7 @@ void QuickFixDeployer::SendQuickFixSystemEvent(const InnerBundleInfo &innerBundl
 }
 
 ErrCode QuickFixDeployer::ExtractQuickFixSoFile(
-    const AppQuickFix &appQuickFix, const std::string &hqfSoPath, const BundleInfo &bundleInfo)
+    const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo)
 {
     LOG_D(BMS_TAG_DEFAULT, "start, bundleName:%{public}s", appQuickFix.bundleName.c_str());
     auto &appQfInfo = appQuickFix.deployingAppqfInfo;
@@ -747,15 +747,8 @@ ErrCode QuickFixDeployer::ExtractQuickFixSoFile(
             LOG_D(BMS_TAG_DEFAULT, "no so file");
             continue;
         }
-        std::string soPath = hqfSoPath + ServiceConstants::PATH_SEPARATOR + libraryPath;
-        ExtractParam extractParam;
-        extractParam.bundleName = bundleInfo.name;
-        extractParam.extractFileType = ExtractFileType::SO;
-        extractParam.srcPath = hqf.hqfFilePath;
-        extractParam.targetPath = soPath;
-        extractParam.cpuAbi = cpuAbi;
-        extractParam.needRemoveOld = isReplace_;
-        if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
+        if (InstalldClient::GetInstance()->ExtractQuickFixSoFile(bundleInfo.name, hqf.hqfFilePath,
+            libraryPath, cpuAbi, isReplace_, appQfInfo.versionCode, targetPath_) != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "moduleName: %{public}s extract so failed", hqf.moduleName.c_str());
             continue;
         }

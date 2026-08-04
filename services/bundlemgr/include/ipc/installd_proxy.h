@@ -57,6 +57,10 @@ public:
      */
     virtual ErrCode ExtractFiles(const ExtractParam &extractParam) override;
 
+    virtual ErrCode ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
+        const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
+        const std::string &targetPathSuffix) override;
+
     /**
      * @brief Extract the hnpFiles.
      * @param hnpPackageMap Indicates the hnpPackageInfo.

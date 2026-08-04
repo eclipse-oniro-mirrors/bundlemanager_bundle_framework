@@ -56,6 +56,21 @@ public:
     virtual ErrCode ExtractFiles(const ExtractParam &extractParam) override;
 
     /**
+     * @brief Extract quick fix so files.
+     * @param bundleName Indicates the bundle name for path construction and validation.
+     * @param hqfFilePath Indicates the source HQF file path.
+     * @param nativeLibraryPath Indicates the native library relative path.
+     * @param cpuAbi Indicates the cpuAbi.
+     * @param isReplace Indicates whether it's replace mode.
+     * @param versionCode Indicates the version code for patch path construction.
+     * @param targetPathSuffix Indicates the optional target path suffix.
+     * @return Returns ERR_OK if extracted successfully; returns error code otherwise.
+     */
+    virtual ErrCode ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
+        const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
+        const std::string &targetPathSuffix) override;
+
+    /**
      * @brief Extract the hnpFiles.
      * @param hnpPackageMap Indicates the hnpPackageInfo.
      * @param extractParam Indicates the extractParam.

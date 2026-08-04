@@ -206,6 +206,25 @@ ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_FILES, data, reply, option);
 }
 
+ErrCode InstalldProxy::ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
+    const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
+    const std::string &targetPathSuffix)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hqfFilePath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(nativeLibraryPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
+    INSTALLD_PARCEL_WRITE(data, Bool, isReplace);
+    INSTALLD_PARCEL_WRITE(data, Int32, versionCode);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetPathSuffix));
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_QUICK_FIX_SO_FILE, data, reply, option);
+}
+
 ErrCode InstalldProxy::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)
 {

@@ -92,7 +92,7 @@ private:
     void ResetNativeSoAttrs(AppQuickFix &appQuickFix);
 
     ErrCode ExtractQuickFixSoFile(const AppQuickFix &appQuickFix,
-        const std::string &hqfSoPath, const BundleInfo &bundleInfo);
+        const BundleInfo &bundleInfo);
 
     bool IsLibIsolated(const std::string &bundleName, const std::string &moduleName);
 

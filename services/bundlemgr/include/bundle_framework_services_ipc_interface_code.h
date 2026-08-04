@@ -108,6 +108,7 @@ enum class InstalldInterfaceCode : uint32_t {
     CHECK_HSP_PLUGIN_CERT_VALIDITY = 80,
     DELETE_OLD_CACHE_FILES = 82,
     GET_CACHE_DISK_USAGE_FROM_PATH = 83,
+    EXTRACT_QUICK_FIX_SO_FILE = 84,
 };
 
 } // namespace AppExecFwk

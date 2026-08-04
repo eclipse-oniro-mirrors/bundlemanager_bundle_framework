@@ -128,7 +128,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::vector<std::string> realPaths;
     quickFixDeployer.ProcessBundleFilePaths(bundleFilePaths, realPaths);
     quickFixDeployer.SendQuickFixSystemEvent(innerBundleInfo);
-    quickFixDeployer.ExtractQuickFixSoFile(appQuickFix, "", bundleInfo);
+    quickFixDeployer.ExtractQuickFixSoFile(appQuickFix, bundleInfo);
     quickFixDeployer.ExtractSoAndApplyDiff(appQuickFix, bundleInfo, "");
     std::string tmpSoPath;
     quickFixDeployer.ExtractSoFiles(bundleInfo, "", tmpSoPath);

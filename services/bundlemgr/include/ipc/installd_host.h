@@ -67,6 +67,14 @@ private:
      */
     bool HandleExtractHnpFiles(MessageParcel &data, MessageParcel &reply);
 
+    /**
+     * @brief Handles the HandleExtractQuickFixSoFile function called from a IInstalld proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleExtractQuickFixSoFile(MessageParcel &data, MessageParcel &reply);
+
     bool HandleProcessBundleInstallNative(MessageParcel &data, MessageParcel &reply);
     bool HandleProcessBundleUnInstallNative(MessageParcel &data, MessageParcel &reply);
 

@@ -301,6 +301,60 @@ ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractQuickFixSoFile(const std::string &bundleName, const std::string &hqfFilePath,
+    const std::string &nativeLibraryPath, const std::string &cpuAbi, bool isReplace, int32_t versionCode,
+    const std::string &targetPathSuffix)
+{
+    LOG_D(BMS_TAG_INSTALLD, "ExtractQuickFixSoFile bundleName:%{public}s", bundleName.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (!InstalldOperator::IsValidBundleName(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractQuickFixSoFile with invalid bundleName");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (hqfFilePath.empty() || nativeLibraryPath.empty() || cpuAbi.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractQuickFixSoFile with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    std::string basePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        bundleName + ServiceConstants::PATH_SEPARATOR;
+    std::string hqfSoPath;
+    if (isReplace) {
+        hqfSoPath = basePath;
+    } else if (!targetPathSuffix.empty()) {
+        hqfSoPath = basePath + "patch/" + targetPathSuffix + "/";
+    } else {
+        hqfSoPath = basePath + "patch_" + std::to_string(versionCode) + "/";
+    }
+
+    std::string targetPath = hqfSoPath + nativeLibraryPath;
+
+    if (!InstalldOperator::IsValidPathByBundleDirScene(BundleDirScene::EXTRACT_FILES, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractQuickFixSoFile with invalid targetPath prefix");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    ExtractParam extractParam;
+    extractParam.bundleName = bundleName;
+    extractParam.extractFileType = ExtractFileType::SO;
+    extractParam.srcPath = hqfFilePath;
+    extractParam.targetPath = targetPath;
+    extractParam.cpuAbi = cpuAbi;
+    extractParam.needRemoveOld = isReplace;
+
+    if (!InstalldOperator::ExtractFiles(extractParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "extract quick fix so failed, errno:%{public}d", errno);
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
+    }
+
+    return ERR_OK;
+}
+
 
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)

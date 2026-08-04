@@ -2722,23 +2722,23 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0104, Function | SmallTest
         AppQuickFix appQuickFix;
         std::string patchPath = "data/test";
         BundleInfo bundleInfo;
-        auto ret = deployer->ExtractQuickFixSoFile(appQuickFix, patchPath, bundleInfo);
+        auto ret = deployer->ExtractQuickFixSoFile(appQuickFix, bundleInfo);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
 
         appQuickFix = CreateAppQuickFix();
         // moduleName not exist
-        ret = deployer->ExtractQuickFixSoFile(appQuickFix, patchPath, bundleInfo);
+        ret = deployer->ExtractQuickFixSoFile(appQuickFix, bundleInfo);
         EXPECT_EQ(ret, ERR_OK);
 
         HapModuleInfo info;
         info.moduleName = "entry";
         bundleInfo.hapModuleInfos.emplace_back(info);
         // moduleName exist, so not exist
-        ret = deployer->ExtractQuickFixSoFile(appQuickFix, patchPath, bundleInfo);
+        ret = deployer->ExtractQuickFixSoFile(appQuickFix, bundleInfo);
         EXPECT_EQ(ret, ERR_OK);
         // so exist
         appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
-        ret = deployer->ExtractQuickFixSoFile(appQuickFix, patchPath, bundleInfo);
+        ret = deployer->ExtractQuickFixSoFile(appQuickFix, bundleInfo);
         EXPECT_EQ(ret, ERR_OK);
     }
     UninstallBundleInfo(BUNDLE_NAME);
