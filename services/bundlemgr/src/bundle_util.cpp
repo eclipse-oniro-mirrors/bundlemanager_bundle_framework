@@ -824,7 +824,7 @@ bool BundleUtil::IsUtd(const std::string &param)
 {
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
     bool isUtd = false;
-    auto ret = UDMF::UtdClient::GetInstance().IsUtd(param, isUtd);
+    auto ret = UDMF::UtdClient::IsUtd(param, isUtd);
     return ret == ERR_OK && isUtd;
 #else
     return false;
