@@ -6558,4 +6558,127 @@ HWTEST_F(BmsBundleQuickFixTest, VerifyCreateFdPermission_0100, Function | SmallT
     auto ret = hostImpl.VerifyCreateFdPermission();
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: ProcessNativeLibraryPathWithInvalidPath_0100
+ * @tc.name: test ProcessNativeLibraryPath with invalid libraryPath
+ * @tc.desc: 1. Test ProcessNativeLibraryPath with path traversal in libraryPath
+ */
+HWTEST_F(BmsBundleQuickFixTest, ProcessNativeLibraryPathWithInvalidPath_0100, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        std::string nativeLibraryPath = "../../../etc";
+        // Call the 3-parameter overload with a malicious libraryPath
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        InnerAppQuickFix innerAppQuickFix;
+        innerAppQuickFix.SetAppQuickFix(appQuickFix);
+        deployer->ProcessNativeLibraryPath(PATCH_PATH, innerAppQuickFix, nativeLibraryPath);
+        // libraryPath should be cleared due to invalid traversal path
+        EXPECT_TRUE(nativeLibraryPath.empty());
+    }
+}
+
+/**
+ * @tc.number: FetchPatchNativeSoAttrsWithTraversal_0100
+ * @tc.name: test FetchPatchNativeSoAttrs with path traversal
+ * @tc.desc: 1. Test FetchPatchNativeSoAttrs with nativeLibraryPath containing '..'
+ */
+HWTEST_F(BmsBundleQuickFixTest, FetchPatchNativeSoAttrsWithTraversal_0100, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        bool isLibIsolated = false;
+        std::string nativeLibraryPath;
+        std::string cpuAbi;
+        AppqfInfo appqfInfo;
+        HqfInfo hqfInfo;
+
+        // Case 1: nativeLibraryPath empty -> should return false
+        appqfInfo.nativeLibraryPath = "";
+        auto ret = deployer->FetchPatchNativeSoAttrs(appqfInfo, hqfInfo,
+            isLibIsolated, nativeLibraryPath, cpuAbi);
+        EXPECT_FALSE(ret);
+
+        // Case 2: nativeLibraryPath contains .. -> should return false
+        appqfInfo.nativeLibraryPath = "../etc";
+        ret = deployer->FetchPatchNativeSoAttrs(appqfInfo, hqfInfo,
+            isLibIsolated, nativeLibraryPath, cpuAbi);
+        EXPECT_FALSE(ret);
+
+        // Case 3: nativeLibraryPath starts with / -> should return false
+        appqfInfo.nativeLibraryPath = "/etc/passwd";
+        ret = deployer->FetchPatchNativeSoAttrs(appqfInfo, hqfInfo,
+            isLibIsolated, nativeLibraryPath, cpuAbi);
+        EXPECT_FALSE(ret);
+
+        // Case 4: valid nativeLibraryPath -> should return true
+        appqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+        ret = deployer->FetchPatchNativeSoAttrs(appqfInfo, hqfInfo,
+            isLibIsolated, nativeLibraryPath, cpuAbi);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: FetchPatchNativeSoAttrsLibIsolated_0100
+ * @tc.name: test FetchPatchNativeSoAttrs with libIsolated traversal
+ * @tc.desc: 1. Test FetchPatchNativeSoAttrs with hqfInfo path traversal when libIsolated
+ */
+HWTEST_F(BmsBundleQuickFixTest, FetchPatchNativeSoAttrsLibIsolated_0100, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        bool isLibIsolated = true;
+        std::string nativeLibraryPath;
+        std::string cpuAbi;
+        AppqfInfo appqfInfo;
+        HqfInfo hqfInfo;
+
+        // libIsolated=true, hqfInfo contains .. -> should return false
+        hqfInfo.nativeLibraryPath = "../etc";
+        auto ret = deployer->FetchPatchNativeSoAttrs(appqfInfo, hqfInfo,
+            isLibIsolated, nativeLibraryPath, cpuAbi);
+        EXPECT_FALSE(ret);
+
+        // libIsolated=true, hqfInfo starts with / -> should return false
+        hqfInfo.nativeLibraryPath = "/etc";
+        ret = deployer->FetchPatchNativeSoAttrs(appqfInfo, hqfInfo,
+            isLibIsolated, nativeLibraryPath, cpuAbi);
+        EXPECT_FALSE(ret);
+
+        // libIsolated=true, valid hqfInfo path -> should return true
+        hqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+        ret = deployer->FetchPatchNativeSoAttrs(appqfInfo, hqfInfo,
+            isLibIsolated, nativeLibraryPath, cpuAbi);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: MoveHqfFilesWithInvalidModule_0100
+ * @tc.name: test MoveHqfFiles with invalid moduleName
+ * @tc.desc: 1. Test MoveHqfFiles with path traversal in moduleName
+ */
+HWTEST_F(BmsBundleQuickFixTest, MoveHqfFilesWithInvalidModule_0100, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        InnerAppQuickFix innerAppQuickFix;
+        QuickFixMark mark;
+        mark.bundleName = appQuickFix.bundleName;
+        mark.status = QuickFixStatus::DEPLOY_START;
+        innerAppQuickFix.SetQuickFixMark(mark);
+        appQuickFix.deployingAppqfInfo.hqfInfos[0].moduleName = "../../../etc";
+        appQuickFix.deployingAppqfInfo.hqfInfos[0].hqfFilePath = "/data/test.hqf";
+        innerAppQuickFix.SetAppQuickFix(appQuickFix);
+        auto ret = deployer->MoveHqfFiles(innerAppQuickFix, PATCH_PATH);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    }
+}
 } // OHOS

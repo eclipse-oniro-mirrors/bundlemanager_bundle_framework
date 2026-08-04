@@ -1107,4 +1107,119 @@ HWTEST_F(BundleUtilTest, IsVmEnabled_0400, TestSize.Level2)
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
     }
 }
+
+/**
+ * @tc.number: IsFileNameValid_0100
+ * @tc.name: test the IsFileNameValid.
+ * @tc.desc: test IsFileNameValid with empty string returns false.
+ */
+HWTEST_F(BundleUtilTest, IsFileNameValid_0100, TestSize.Level2)
+{
+    EXPECT_FALSE(BundleUtil::IsFileNameValid(""));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0200
+ * @tc.name: test the IsFileNameValid.
+ * @tc.desc: test IsFileNameValid with dot prefix returns false.
+ */
+HWTEST_F(BundleUtilTest, IsFileNameValid_0200, TestSize.Level2)
+{
+    EXPECT_FALSE(BundleUtil::IsFileNameValid(".hidden"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0300
+ * @tc.name: test the IsFileNameValid.
+ * @tc.desc: test IsFileNameValid with ../ path traversal returns false.
+ */
+HWTEST_F(BundleUtilTest, IsFileNameValid_0300, TestSize.Level2)
+{
+    EXPECT_FALSE(BundleUtil::IsFileNameValid("../../../etc/passwd"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0400
+ * @tc.name: test the IsFileNameValid.
+ * @tc.desc: test IsFileNameValid with /.. returns false.
+ */
+HWTEST_F(BundleUtilTest, IsFileNameValid_0400, TestSize.Level2)
+{
+    EXPECT_FALSE(BundleUtil::IsFileNameValid("abc/../etc"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0500
+ * @tc.name: test the IsFileNameValid.
+ * @tc.desc: test IsFileNameValid with //.. returns false.
+ */
+HWTEST_F(BundleUtilTest, IsFileNameValid_0500, TestSize.Level2)
+{
+    EXPECT_FALSE(BundleUtil::IsFileNameValid("abc//.."));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0600
+ * @tc.name: test the IsFileNameValid.
+ * @tc.desc: test IsFileNameValid with backslash returns false.
+ */
+HWTEST_F(BundleUtilTest, IsFileNameValid_0600, TestSize.Level2)
+{
+    EXPECT_FALSE(BundleUtil::IsFileNameValid("abc\\windows"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0700
+ * @tc.name: test the IsFileNameValid.
+ * @tc.desc: test IsFileNameValid with embedded null byte returns false.
+ */
+HWTEST_F(BundleUtilTest, IsFileNameValid_0700, TestSize.Level2)
+{
+    std::string withNull("abc");
+    withNull.push_back('\0');
+    withNull.append("def");
+    EXPECT_FALSE(BundleUtil::IsFileNameValid(withNull));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0800
+ * @tc.name: test the IsFileNameValid.
+ * @tc.desc: test IsFileNameValid with control characters returns false.
+ */
+HWTEST_F(BundleUtilTest, IsFileNameValid_0800, TestSize.Level2)
+{
+    std::string withCtrl("abc");
+    withCtrl.push_back(static_cast<char>(0x01));
+    EXPECT_FALSE(BundleUtil::IsFileNameValid(withCtrl));
+}
+
+/**
+ * @tc.number: IsFileNameValid_0900
+ * @tc.name: test the IsFileNameValid.
+ * @tc.desc: test IsFileNameValid with valid file name returns true.
+ */
+HWTEST_F(BundleUtilTest, IsFileNameValid_0900, TestSize.Level2)
+{
+    EXPECT_TRUE(BundleUtil::IsFileNameValid("valid_file.txt"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_1000
+ * @tc.name: test the IsFileNameValid.
+ * @tc.desc: test IsFileNameValid with valid path returns true.
+ */
+HWTEST_F(BundleUtilTest, IsFileNameValid_1000, TestSize.Level2)
+{
+    EXPECT_TRUE(BundleUtil::IsFileNameValid("lib/arm64-v8a"));
+}
+
+/**
+ * @tc.number: IsFileNameValid_1100
+ * @tc.name: test the IsFileNameValid.
+ * @tc.desc: test IsFileNameValid with moduleName like path returns true.
+ */
+HWTEST_F(BundleUtilTest, IsFileNameValid_1100, TestSize.Level2)
+{
+    EXPECT_TRUE(BundleUtil::IsFileNameValid("entry"));
+}
 } // OHOS

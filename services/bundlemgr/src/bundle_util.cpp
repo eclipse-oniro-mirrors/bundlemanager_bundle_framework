@@ -333,6 +333,33 @@ ErrCode BundleUtil::CheckFileName(const std::string &fileName)
     return ERR_OK;
 }
 
+bool BundleUtil::IsFileNameValid(const std::string &fileName)
+{
+    if (fileName.empty()) {
+        return false;
+    }
+    if (fileName == "..") {
+        return false;
+    }
+    if (fileName.find("../") != std::string::npos
+        || fileName.find("/..") != std::string::npos
+        || fileName.find("//..") != std::string::npos) {
+        return false;
+    }
+    if (fileName.find('\\') != std::string::npos) {
+        return false;
+    }
+    if (fileName.find('\0') != std::string::npos) {
+        return false;
+    }
+    for (char c : fileName) {
+        if (static_cast<unsigned char>(c) < 0x20) {
+            return false;
+        }
+    }
+    return true;
+}
+
 ErrCode BundleUtil::CheckFileSize(const std::string &bundlePath, const int64_t fileSize)
 {
     APP_LOGD("fileSize is %{public}" PRId64, fileSize);

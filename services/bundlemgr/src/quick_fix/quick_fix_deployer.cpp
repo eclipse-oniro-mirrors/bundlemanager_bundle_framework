@@ -329,8 +329,13 @@ void QuickFixDeployer::ProcessNativeLibraryPath(
         LOG_I(BMS_TAG_DEFAULT, "replace mode not need to modify nativeLibraryPath");
         return;
     }
-    bool isSoExist = false;
     auto libraryPath = nativeLibraryPath;
+    if (!BundleUtil::IsFileNameValid(libraryPath)) {
+        LOG_E(BMS_TAG_DEFAULT, "invalid libraryPath (%{public}s)", libraryPath.c_str());
+        nativeLibraryPath.clear();
+        return;
+    }
+    bool isSoExist = false;
     std::string soPath = patchPath + ServiceConstants::PATH_SEPARATOR + libraryPath;
     if (InstalldClient::GetInstance()->IsExistDir(soPath, isSoExist) != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "ProcessNativeLibraryPath IsExistDir(%{public}s) failed", soPath.c_str());
@@ -453,6 +458,11 @@ void QuickFixDeployer::ResetNativeSoAttrs(AppQuickFix &appQuickFix)
         return;
     }
 
+    if (!BundleUtil::IsFileNameValid(appqfInfo.hqfInfos[0].moduleName)) {
+        LOG_E(BMS_TAG_DEFAULT, "invalid moduleName %{public}s", appqfInfo.hqfInfos[0].moduleName.c_str());
+        return;
+    }
+
     appqfInfo.hqfInfos[0].cpuAbi = appqfInfo.cpuAbi;
     appqfInfo.hqfInfos[0].nativeLibraryPath =
         appqfInfo.hqfInfos[0].moduleName + ServiceConstants::PATH_SEPARATOR + appqfInfo.nativeLibraryPath;
@@ -499,7 +509,15 @@ bool QuickFixDeployer::FetchPatchNativeSoAttrs(const AppqfInfo &appqfInfo,
         cpuAbi = appqfInfo.cpuAbi;
     }
 
-    return !nativeLibraryPath.empty();
+    if (nativeLibraryPath.empty()) {
+        return false;
+    }
+    
+    if (!BundleUtil::IsFileNameValid(nativeLibraryPath) || nativeLibraryPath[0] == '/') {
+        LOG_E(BMS_TAG_DEFAULT, "invalid nativeLibraryPath (%{public}s)", nativeLibraryPath.c_str());
+        return false;
+    }
+    return true;
 }
 
 bool QuickFixDeployer::HasNativeSoInBundle(const AppQuickFix &appQuickFix)
@@ -613,6 +631,10 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
     for (HqfInfo &info : appQuickFix.deployingAppqfInfo.hqfInfos) {
         if (info.hqfFilePath.empty()) {
             LOG_E(BMS_TAG_DEFAULT, "error hapFilePath is empty");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+        }
+        if (!BundleUtil::IsFileNameValid(info.moduleName)) {
+            LOG_E(BMS_TAG_DEFAULT, "invalid moduleName %{public}s", info.moduleName.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
         std::string realPath = path + info.moduleName + ServiceConstants::QUICK_FIX_FILE_SUFFIX;
