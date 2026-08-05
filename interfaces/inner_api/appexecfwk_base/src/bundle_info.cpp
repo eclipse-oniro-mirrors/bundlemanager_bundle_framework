@@ -53,6 +53,7 @@ const char* BUNDLE_INFO_TARGET_PATCH_API_VERSION = "targetPatchApiVersion";
 const char* BUNDLE_INFO_RELEASE_TYPE = "releaseType";
 const char* BUNDLE_INFO_UID = "uid";
 const char* BUNDLE_INFO_GID = "gid";
+const char* BUNDLE_INFO_DEVICE_MODE_DISTRIBUTION_POLICY = "deviceModeDistributionPolicy";
 const char* BUNDLE_INFO_SEINFO = "seInfo";
 const char* BUNDLE_INFO_INSTALL_TIME = "installTime";
 const char* BUNDLE_INFO_UPDATE_TIME = "updateTime";
@@ -603,6 +604,7 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
     isNewVersion = parcel.ReadBool();
     buildVersion = Str16ToStr8(parcel.ReadString16());
     sandboxCreatorBundleName = Str16ToStr8(parcel.ReadString16());
+    deviceModeDistributionPolicy = static_cast<DeviceModeDistributionPolicy>(parcel.ReadInt32());
     return true;
 }
 
@@ -729,6 +731,7 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isNewVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(buildVersion));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sandboxCreatorBundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(deviceModeDistributionPolicy));
     return true;
 }
 
@@ -942,7 +945,8 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_ROUTER_ARRAY, bundleInfo.routerArray},
         {BUNDLE_INFO_IS_NEW_VERSION, bundleInfo.isNewVersion},
         {Constants::BUILD_VERSION, bundleInfo.buildVersion},
-        {BUNDLE_INFO_SANDBOX_CREATOR_BUNDLE_NAME, bundleInfo.sandboxCreatorBundleName}
+        {BUNDLE_INFO_SANDBOX_CREATOR_BUNDLE_NAME, bundleInfo.sandboxCreatorBundleName},
+        {BUNDLE_INFO_DEVICE_MODE_DISTRIBUTION_POLICY, bundleInfo.deviceModeDistributionPolicy}
     };
 }
 
@@ -1340,6 +1344,14 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         bundleInfo.sandboxCreatorBundleName,
         false,
         parseResult);
+    GetValueIfFindKey<DeviceModeDistributionPolicy>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_DEVICE_MODE_DISTRIBUTION_POLICY,
+        bundleInfo.deviceModeDistributionPolicy,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("BundleInfo from_json error %{public}d", parseResult);
     }

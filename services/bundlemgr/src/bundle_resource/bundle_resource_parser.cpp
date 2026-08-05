@@ -131,7 +131,7 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
         if ((index > 0) && !IsNeedToParseResourceInfo(resourceInfos[index], resourceInfos[0])) {
             continue;
         }
-        // dual-mode: clone and primary category-7 apps share
+        // dual-mode: clone and primary different-package apps share
         // bundleName + moduleName but have different hapPath — key the ResourceManager cache by
         // effective name (+moduleName) so the two package bodies don't reuse each other's manager.
         std::string resMgrKey = resourceInfos[index].isDualModeCloneApp_
@@ -550,7 +550,7 @@ bool BundleResourceParser::ParseResourceInfosNoTheme(
         if ((index > 0) && !IsNeedToParseResourceInfo(resourceInfos[index], resourceInfos[0])) {
             continue;
         }
-        // dual-mode: clone and primary category-7 apps share
+        // dual-mode: clone and primary different-package apps share
         // bundleName + moduleName but have different hapPath — key the ResourceManager cache by
         // effective name (+moduleName) so the two package bodies don't reuse each other's manager.
         std::string resMgrKey = resourceInfos[index].isDualModeCloneApp_
@@ -603,7 +603,7 @@ bool BundleResourceParser::ParseIconResourceInfosWithTheme(
     std::map<std::string, std::shared_ptr<Global::Resource::ResourceManager>> resourceManagerMap;
     size_t size = resourceInfos.size();
     for (size_t index = 0; index < size; ++index) {
-        // dual-mode: clone and primary category-7 apps share
+        // dual-mode: clone and primary different-package apps share
         // bundleName + moduleName but have different hapPath — key the ResourceManager cache by
         // effective name (+moduleName) so the two package bodies don't reuse each other's manager.
         std::string resMgrKey = resourceInfos[index].isDualModeCloneApp_

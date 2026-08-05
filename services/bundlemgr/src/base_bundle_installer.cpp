@@ -1055,11 +1055,11 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     }
     SetOldAppIsEncrypted(oldInfo);
 
-    // DUAL_MODE: category-7 <-> non-category-7 transitions are not allowed on update.
+    // DUAL_MODE: different-package <-> non-different-package transitions are not allowed on update.
     CHECK_RESULT(CheckDualModeCategoryConsistency(oldInfo, installParam),
         "Dual mode category consistency check failed %{public}d");
     // DUAL_MODE: cross-mode consistency — when installing in a different mode, if the same bundleName
-    // exists in tempBundleInfos_, its appCategory must agree with the current install on category-7-ness.
+    // exists in tempBundleInfos_, its deviceModeDistributionPolicy must agree with the current install on different-package-ness.
     CHECK_RESULT(CheckDualModeCategoryConsistencyInTemp(installParam),
         "Dual mode cross-map (tempBundleInfos_) category consistency check failed %{public}d");
 
@@ -1739,7 +1739,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "verisoncode or bundleName is different in all haps %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_VERSION_AND_BUNDLENAME_CHECKED);  // ---- 35%
 
-    // === DUAL_MODE: set bundle name prefix for secondary mode category 7 apps ===
+    // === DUAL_MODE: set bundle name prefix for secondary mode different-package apps ===
     InitDualModeBundleName(installParam);
 
     // dual-mode: deliver sign profile after the dual-mode prefix is set so secondary-mode clone apps
@@ -5700,8 +5700,8 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     SetAppDistributionType(infos);
     UpdateExtensionSandboxInfo(infos, hapVerifyRes);
 
-    // Set appCategory + isDualModeCloneApp from installParam to InnerBundleInfo for dual-mode devices.
-    // Dual-mode category-7 is restricted to system apps; non-system apps are rejected with a dedicated error.
+    // Set deviceModeDistributionPolicy + isDualModeCloneApp from installParam to InnerBundleInfo for dual-mode devices.
+    // Dual-mode different-package is restricted to system apps; non-system apps are rejected with a dedicated error.
     ret = SetDualModeAppInfo(installParam, infos);
     CHECK_RESULT(ret, "set dual mode app info failed %{public}d");
 
@@ -5713,19 +5713,19 @@ void BaseBundleInstaller::FillDualModeEventFields(const InstallParam &installPar
 {
     // === DUAL_MODE: Fill extended event fields ===
     if (DualModeHelper::IsDualModeDevice()) {
-        installRes.appCategory = installParam.appCategory;
+        installRes.deviceModeDistributionPolicy = installParam.deviceModeDistributionPolicy;
         installRes.currentMode = DualModeHelper::GetSysMode();
-        installRes.isSharedSandbox = !DualModeHelper::NeedDualModeHandle(installParam.appCategory);
+        installRes.isSharedSandbox = !DualModeHelper::NeedDualModeHandle(installParam.deviceModeDistributionPolicy);
     }
     // === DUAL_MODE END ===
 }
 
 void BaseBundleInstaller::InitDualModeBundleName(const InstallParam &installParam)
 {
-    // === DUAL_MODE: Handle bundle name prefix for secondary mode category 7 apps ===
+    // === DUAL_MODE: Handle bundle name prefix for secondary mode different-package apps ===
     // Set dualModeBundleName_ early so that GetEffectiveBundleName() works correctly
     // in all subsequent operations (CreateBundleCodeDir, RenameModuleDir, etc.)
-    if (DualModeHelper::NeedDualModeHandle(installParam.appCategory)) {
+    if (DualModeHelper::NeedDualModeHandle(installParam.deviceModeDistributionPolicy)) {
         dualModeBundleName_ = DualModeHelper::GetDualModeBundleName(bundleName_);
         LOG_I(BMS_TAG_INSTALLER, "Dual mode install: original=%{public}s -> prefixed=%{public}s",
             bundleName_.c_str(), dualModeBundleName_.c_str());
@@ -5740,12 +5740,12 @@ ErrCode BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam
     if (!DualModeHelper::IsDualModeDevice() || infos.empty()) {
         return ERR_OK;
     }
-    bool isCloneApp = DualModeHelper::NeedDualModeHandle(installParam.appCategory);
-    // Dual-mode category-7 (clone) install is only allowed for system apps; reject non-system apps.
+    bool isCloneApp = DualModeHelper::NeedDualModeHandle(installParam.deviceModeDistributionPolicy);
+    // Dual-mode different-package (clone) install is only allowed for system apps; reject non-system apps.
     if (isCloneApp) {
         for (const auto &infoPair : infos) {
             if (!infoPair.second.IsSystemApp()) {
-                APP_LOGE("Dual mode: category-7 install is only allowed for system apps, "
+                APP_LOGE("Dual mode: different-package install is only allowed for system apps, "
                     "bundle=%{public}s", infoPair.second.GetBundleName().c_str());
                 return ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP;
             }
@@ -5753,12 +5753,12 @@ ErrCode BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam
     }
     for (auto &infoPair : infos) {
         InnerBundleInfo &info = infoPair.second;
-        info.SetAppCategory(installParam.appCategory);
+        info.SetDeviceModeDistributionPolicy(installParam.deviceModeDistributionPolicy);
         if (isCloneApp) {
             info.SetDualModeCloneApp(true);
         }
-        LOG_D(BMS_TAG_INSTALLER, "Dual mode: set appCategory=%{public}u isCloneApp=%{public}d for bundle=%{public}s",
-            installParam.appCategory, isCloneApp, info.GetBundleName().c_str());
+        LOG_D(BMS_TAG_INSTALLER, "Dual mode: set deviceModeDistributionPolicy=%{public}d isCloneApp=%{public}d for bundle=%{public}s",
+            installParam.deviceModeDistributionPolicy, isCloneApp, info.GetBundleName().c_str());
     }
     return ERR_OK;
 }
@@ -5769,11 +5769,11 @@ ErrCode BaseBundleInstaller::CheckDualModeCategoryConsistency(const InnerBundleI
     if (!DualModeHelper::IsDualModeDevice() || !isAppExist_) {
         return ERR_OK;
     }
-    bool oldIsCategory7 = DualModeHelper::IsDiffPackageCategory(oldInfo.GetAppCategory());
-    bool newIsCategory7 = DualModeHelper::IsDiffPackageCategory(installParam.appCategory);
-    // Category 7 <-> non-category 7 transitions are not allowed
-    if (oldIsCategory7 != newIsCategory7) {
-        APP_LOGE("Dual mode: cannot change between category 7 and non-category 7 apps");
+    bool oldIsDiffPackage = DualModeHelper::IsDiffPackageCategory(oldInfo.GetDeviceModeDistributionPolicy());
+    bool newIsDiffPackage = DualModeHelper::IsDiffPackageCategory(installParam.deviceModeDistributionPolicy);
+    // Different-package <-> non-different-package transitions are not allowed
+    if (oldIsDiffPackage != newIsDiffPackage) {
+        APP_LOGE("Dual mode: cannot change between different-package and non-different-package apps");
         return ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT;
     }
     return ERR_OK;
@@ -5785,18 +5785,19 @@ ErrCode BaseBundleInstaller::CheckDualModeCategoryConsistencyInTemp(const Instal
         return ERR_OK;
     }
     // Cross-mode consistency: tempBundleInfos_ holds the other-mode variant of the same bundleName
-    // (only category-7 apps are classified there). If it exists, its appCategory must agree with the
-    // current install on category-7-ness; a cat7 <-> non-cat7 mismatch is rejected. Complements
+    // (only different-package apps are classified there). If it exists, its deviceModeDistributionPolicy
+    // must agree with the current install on diff-package-ness; a diff-package <-> non-diff-package
+    // mismatch is rejected. Complements
     // CheckDualModeCategoryConsistency (which checks the current-mode bundleInfos_ entry via oldInfo).
     InnerBundleInfo tempInfo;
     if (!dataMgr_->FetchTempBundleInfo(bundleName_, tempInfo)) {
         return ERR_OK;
     }
-    bool existingIsCategory7 = DualModeHelper::IsDiffPackageCategory(tempInfo.GetAppCategory());
-    bool newIsCategory7 = DualModeHelper::IsDiffPackageCategory(installParam.appCategory);
-    if (existingIsCategory7 != newIsCategory7) {
+    bool existingIsDiffPackage = DualModeHelper::IsDiffPackageCategory(tempInfo.GetDeviceModeDistributionPolicy());
+    bool newIsDiffPackage = DualModeHelper::IsDiffPackageCategory(installParam.deviceModeDistributionPolicy);
+    if (existingIsDiffPackage != newIsDiffPackage) {
         APP_LOGE("Dual mode: cross-map category mismatch in tempBundleInfos_ for bundle %{public}s, "
-                 "cannot change between category 7 and non-category 7 apps", bundleName_.c_str());
+                 "cannot change between different-package and non-different-package apps", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT;
     }
     return ERR_OK;

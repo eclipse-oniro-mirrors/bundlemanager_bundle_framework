@@ -323,11 +323,11 @@ void BundleDataMgr::ResetBundleStateData()
 
 void BundleDataMgr::ClassifyDualModeAppsNoLock()
 {
-    // === DUAL_MODE: Classify category 7 apps (APP_CATEGORY_DIFF_PACKAGE) based on current mode ===
+    // === DUAL_MODE: Classify different-package apps (*_DIFFERENT_PACKAGE) based on current mode ===
     // Primary mode: secondary-mode apps (prefixed) → tempBundleInfos_, primary-mode apps → bundleInfos_
     // Secondary mode: primary-mode apps (non-prefixed) → tempBundleInfos_, secondary-mode apps (prefixed) → bundleInfos_
     // Final result: both maps use original bundle name as key (no prefix)
-    // Note: Only category 7 apps need classification; other apps stay in bundleInfos_
+    // Note: Only different-package apps need classification; other apps stay in bundleInfos_
 
     // Early return if not a dual-mode device
     if (!DualModeHelper::IsDualModeDevice()) {
@@ -344,10 +344,10 @@ void BundleDataMgr::ClassifyDualModeAppsNoLock()
     for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
         const std::string &dbKey = it->first;
         const InnerBundleInfo &innerBundleInfo = it->second;
-        AppCategory appCategory = innerBundleInfo.GetAppCategory();
+        DeviceModeDistributionPolicy policy = innerBundleInfo.GetDeviceModeDistributionPolicy();
 
-        // Only process category 7 (APP_CATEGORY_DIFF_PACKAGE) apps
-        if (!DualModeHelper::IsDiffPackageCategory(appCategory)) {
+        // Only process different-package (*_DIFFERENT_PACKAGE) apps
+        if (!DualModeHelper::IsDiffPackageCategory(policy)) {
             ++it;
             continue;
         }
@@ -365,17 +365,17 @@ void BundleDataMgr::ClassifyDualModeAppsNoLock()
     }
 
     // Step 2: Based on current mode, restore apps that should be visible
-    // Secondary mode: swap category7 apps from temp to bundleInfos_
+    // Secondary mode: swap different-package apps from temp to bundleInfos_
     // Primary mode: all apps stay in temp (already hidden)
     if (isSecondaryMode) {
         // Erase during traversal using erase return value for safe iteration
         for (auto it = tempBundleInfos_.begin(); it != tempBundleInfos_.end();) {
             const std::string &originalName = it->first;
             const InnerBundleInfo &innerBundleInfo = it->second;
-            AppCategory appCategory = innerBundleInfo.GetAppCategory();
+            DeviceModeDistributionPolicy policy = innerBundleInfo.GetDeviceModeDistributionPolicy();
 
-            // Only process category 7 apps
-            if (!DualModeHelper::IsDiffPackageCategory(appCategory)) {
+            // Only process different-package apps
+            if (!DualModeHelper::IsDiffPackageCategory(policy)) {
                 ++it;
                 continue;
             }
@@ -397,11 +397,11 @@ void BundleDataMgr::ClassifyDualModeAppsNoLock()
                 it = tempBundleInfos_.erase(it);
             }
         }
-        // Secondary mode: category-7 primary variants (non-clone) still in bundleInfos_ have no
+        // Secondary mode: different-package primary variants (non-clone) still in bundleInfos_ have no
         // clone counterpart in tempBundleInfos_ (so the swap pass above skipped them). They must
         // be hidden in secondary mode — move them to tempBundleInfos_.
         for (auto it = bundleInfos_.begin(); it != bundleInfos_.end();) {
-            if (DualModeHelper::IsDiffPackageCategory(it->second.GetAppCategory())
+            if (DualModeHelper::IsDiffPackageCategory(it->second.GetDeviceModeDistributionPolicy())
                 && !it->second.IsDualModeCloneApp()) {
                 tempBundleInfos_[it->first] = it->second;
                 it = bundleInfos_.erase(it);
@@ -11747,7 +11747,7 @@ std::string BundleDataMgr::GenerateOdidNoLock(const std::string &developerId) co
     // Reuse existing odid for the same groupId. The caller must hold bundleInfoMutex_,
     // which guards both bundleInfos_ and tempBundleInfos_. tempBundleInfos_ must also be
     // checked for dual-mode correctness: in secondary mode the primary-mode variant of a
-    // category-7 app is moved there by ClassifyDualModeAppsNoLock, so cross-mode odid reuse
+    // different-package app is moved there by ClassifyDualModeAppsNoLock, so cross-mode odid reuse
     // is only achievable by looking in both maps.
     auto findExistingOdid = [groupId](const std::map<std::string, InnerBundleInfo> &infos,
         const char *mapName) -> std::string {

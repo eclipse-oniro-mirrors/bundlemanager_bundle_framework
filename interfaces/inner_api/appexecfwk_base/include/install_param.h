@@ -22,6 +22,7 @@
 
 #include "application_info.h"
 #include "bundle_constants.h"
+#include "bundle_info.h"
 #include "parcel.h"
 namespace OHOS {
 namespace AppExecFwk {
@@ -70,8 +71,8 @@ struct InstallParam : public Parcelable {
     bool allUser = false;
     bool isPatch = false;
     bool isDataPreloadHap = false;
-    // application category for dual-mode (2IN1/TABLET), default UNSPECIFIED
-    AppCategory appCategory = AppCategory::APP_CATEGORY_UNSPECIFIED;
+    // device mode distribution policy for dual-mode (2IN1/TABLET), default UNSPECIFIED
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
     // allow patch app downgrade install
     bool allowPatchDowngrade = false;
     bool isCheckDebugApp = false;

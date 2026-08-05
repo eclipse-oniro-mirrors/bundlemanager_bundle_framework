@@ -20,14 +20,14 @@
 #include <mutex>
 #include <string>
 
-#include "application_info.h"
+#include "bundle_info.h"
 #include "inner_bundle_clone_common.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 
 // Helper for dual-mode (PC/PAD) application installation.
-// Only APP_CATEGORY_DIFF_PACKAGE (same bundle name, different package body) apps
+// Only *_DIFFERENT_PACKAGE policy apps (same bundle name, different package body)
 // need directory/key isolation in the secondary mode.
 class DualModeHelper {
 public:
@@ -56,12 +56,13 @@ public:
     // verification; production (unset/false) is unaffected.
     static bool IsTestDualMode();
 
-    // Whether the appCategory contains APP_CATEGORY_DIFF_PACKAGE (category 7).
-    static bool IsDiffPackageCategory(AppCategory appCategory);
+    // Whether the policy is a different-package category (UNIVERSAL/PARTIAL_COMPATIBLE/
+    // FULL_COMPATIBLE_DIFFERENT_PACKAGE).
+    static bool IsDiffPackageCategory(DeviceModeDistributionPolicy policy);
 
     // Whether the current install needs dual-mode isolation handling.
-    // True only when secondary mode AND category 7.
-    static bool NeedDualModeHandle(AppCategory appCategory);
+    // True only when secondary mode AND different-package category.
+    static bool NeedDualModeHandle(DeviceModeDistributionPolicy policy);
 
     // Build the dual-mode clone bundle name: "+clone-10000+{bundleName}".
     static std::string GetDualModeBundleName(const std::string &bundleName);

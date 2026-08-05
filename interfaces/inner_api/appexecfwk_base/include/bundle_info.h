@@ -154,6 +154,20 @@ struct BundleInfoForException : public Parcelable {
     static BundleInfoForException *Unmarshalling(Parcel &parcel);
 };
 
+// Device mode distribution policy for dual-mode (2IN1/TABLET) scenarios.
+// Values are consecutive integers (mutually exclusive, no bitwise-or combination).
+enum class DeviceModeDistributionPolicy : int32_t {
+    UNSPECIFIED = 0,                              // Unspecified policy (default)
+    MAIN_ONLY = 1,                                // Primary-mode only
+    SUB_ONLY = 2,                                 // Secondary-mode only
+    UNIVERSAL_IDENTICAL_PACKAGE = 3,              // Universal, identical package body
+    UNIVERSAL_DIFFERENT_PACKAGE = 4,              // Universal, different package body
+    PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE = 5,     // Partial-compatible, identical package body
+    PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE = 6,     // Partial-compatible, different package body
+    FULL_COMPATIBLE_IDENTICAL_PACKAGE = 7,        // Full-compatible, identical package body
+    FULL_COMPATIBLE_DIFFERENT_PACKAGE = 8,        // Full-compatible, different package body
+};
+
 // configuration information about a bundle
 struct BundleInfo : public Parcelable {
     bool isNewVersion = false;
@@ -222,6 +236,8 @@ struct BundleInfo : public Parcelable {
 
     std::vector<RouterItem> routerArray;
     ApplicationInfo applicationInfo;
+    // device mode distribution policy for dual-mode (2IN1/TABLET), default UNSPECIFIED
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

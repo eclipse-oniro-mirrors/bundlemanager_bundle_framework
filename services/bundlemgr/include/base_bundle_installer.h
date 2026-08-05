@@ -217,14 +217,14 @@ protected:
 
     /**
      * @brief Get the effective bundle name for directory and DB key operations.
-     * @return Returns dualModeBundleName_ if set (secondary mode category 7), otherwise bundleName_.
+     * @return Returns dualModeBundleName_ if set (secondary mode different-package), otherwise bundleName_.
      */
     const std::string& GetEffectiveBundleName() const;
 
     /**
      * @brief Get the effective bundle name for directory and DB key operations with InnerBundleInfo.
      * @param bundleInfo The InnerBundleInfo reference for fallback.
-     * @return Returns dualModeBundleName_ if set (secondary mode category 7), otherwise bundleInfo.GetBundleName().
+     * @return Returns dualModeBundleName_ if set (secondary mode different-package), otherwise bundleInfo.GetBundleName().
      */
     std::string GetEffectiveBundleName(const InnerBundleInfo &bundleInfo) const;
 
@@ -584,7 +584,7 @@ private:
      */
     ErrCode CreateBundleUserData(InnerBundleInfo &innerBundleInfo);
     void AddBundleStatus(const NotifyBundleEvents &installRes);
-    // Fill dual-mode extended fields (appCategory / currentMode / isSharedSandbox) on a notify event
+    // Fill dual-mode extended fields (deviceModeDistributionPolicy / currentMode / isSharedSandbox) on a notify event
     // when running on a dual-mode device; no-op otherwise. Shared by install / update / recover paths.
     void FillDualModeEventFields(const InstallParam &installParam, NotifyBundleEvents &installRes);
     ErrCode CheckInstallationFree(const InnerBundleInfo &innerBundleInfo,
@@ -1098,7 +1098,7 @@ private:
     BundleType bundleType_ = BundleType::APP;
     Security::AccessToken::AccessTokenID callerToken_ = 0;
     std::string bundleName_;           // original bundle name (for InnerBundleInfo storage, queries)
-    std::string dualModeBundleName_;   // dual-mode prefixed name (dirs/DB keys); secondary-mode category 7 only
+    std::string dualModeBundleName_;   // dual-mode prefixed name (dirs/DB keys); secondary-mode different-package only
     std::string modulePath_;
     std::string baseDataPath_;
     std::string modulePackage_;

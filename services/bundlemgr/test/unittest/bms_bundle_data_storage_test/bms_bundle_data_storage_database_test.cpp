@@ -794,7 +794,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
         "vendor":"example",
         "versionCode":1000000,
         "versionName":"1.0.0",
-        "sandboxCreatorBundleName":""
+        "sandboxCreatorBundleName":"",
+        "deviceModeDistributionPolicy": 1
     },
     "baseDataDir":"",
     "baseExtensionInfos":{},
@@ -1535,7 +1536,6 @@ protected:
                 "startMode":1,
                 "appPreloadPhase":0,
                 "appSignType": "none",
-                "appCategory": 1,
                 "allowListenBundleChangedEvent": []
             },
             "baseBundleInfo": {
@@ -1609,7 +1609,8 @@ protected:
                 "routerArray": [],
                 "isNewVersion": false,
                 "buildVersion": "",
-                "sandboxCreatorBundleName": ""
+                "sandboxCreatorBundleName": "",
+                "deviceModeDistributionPolicy": 1
             },
             "baseExtensionInfos_": {
             },
