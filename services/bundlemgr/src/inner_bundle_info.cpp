@@ -2299,11 +2299,19 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
             info.baseApplicationInfo_->cloudStructuredDataSyncEnabled;
         baseApplicationInfo_->alternateIcons = info.baseApplicationInfo_->alternateIcons;
         baseApplicationInfo_->curAlternateIconModuleName = info.baseApplicationInfo_->iconResource.moduleName;
+        baseApplicationInfo_->profileable = info.baseApplicationInfo_->profileable;
+        baseApplicationInfo_->compatibleMinorVersion = info.baseApplicationInfo_->compatibleMinorVersion;
+        baseApplicationInfo_->compatiblePatchVersion = info.baseApplicationInfo_->compatiblePatchVersion;
     }
     // update BundleInfo
     if (baseBundleInfo_ != nullptr && info.baseApplicationInfo_ != nullptr) {
         baseBundleInfo_->targetMinorApiVersion = info.baseApplicationInfo_->targetMinorApiVersion;
         baseBundleInfo_->targetPatchApiVersion = info.baseApplicationInfo_->targetPatchApiVersion;
+        baseBundleInfo_->compatibleMinorVersion = info.baseApplicationInfo_->compatibleMinorVersion;
+        baseBundleInfo_->compatiblePatchVersion = info.baseApplicationInfo_->compatiblePatchVersion;
+    }
+    if (baseBundleInfo_ != nullptr && info.baseBundleInfo_ != nullptr) {
+        baseBundleInfo_->buildVersion = info.baseBundleInfo_->buildVersion;
     }
     // update ModuleInfo
     for (auto &[moduleName, innerModuleInfo] : innerModuleInfos_) {
@@ -2322,6 +2330,7 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
         innerModuleInfo.arkTSMode = item->second.arkTSMode;
         innerModuleInfo.resizeable = item->second.resizeable;
         innerModuleInfo.metadata = item->second.metadata;
+        innerModuleInfo.easyGo = item->second.easyGo;
     }
     for (auto &[moduleName, innerModuleInfoVector] : innerSharedModuleInfos_) {
         auto item = info.innerModuleInfos_.find(moduleName);
@@ -2343,6 +2352,7 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
             innerModuleInfo.arkTSMode = item->second.arkTSMode;
             innerModuleInfo.resizeable = item->second.resizeable;
             innerModuleInfo.metadata = item->second.metadata;
+            innerModuleInfo.easyGo = item->second.easyGo;
         }
     }
     // update AbilityInfo
@@ -2360,6 +2370,7 @@ void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
         innerAbilityInfo.startWindowResource = item->second.startWindowResource;
         innerAbilityInfo.arkTSMode = item->second.arkTSMode;
         innerAbilityInfo.metadata = item->second.metadata;
+        innerAbilityInfo.allowSelfRedirect = item->second.allowSelfRedirect;
     }
     // update ExtensionInfo
     for (auto &[key, innerExtensionInfo] : baseExtensionInfos_) {
