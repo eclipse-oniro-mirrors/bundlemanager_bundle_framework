@@ -1699,6 +1699,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0054, Function | SmallTest
         appQuickFix.deployingAppqfInfo.versionCode = 2;
         std::vector<HqfInfo> hqfInfo;
         HqfInfo info;
+        info.moduleName = "hello";
         info.hqfFilePath = "/data/test/hello.hqf";
         hqfInfo.emplace_back(info);
         appQuickFix.deployingAppqfInfo.hqfInfos= hqfInfo;

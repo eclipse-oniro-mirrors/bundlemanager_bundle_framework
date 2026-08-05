@@ -1121,11 +1121,11 @@ HWTEST_F(BundleUtilTest, IsFileNameValid_0100, TestSize.Level2)
 /**
  * @tc.number: IsFileNameValid_0200
  * @tc.name: test the IsFileNameValid.
- * @tc.desc: test IsFileNameValid with dot prefix returns false.
+ * @tc.desc: test IsFileNameValid with parent dir returns false.
  */
 HWTEST_F(BundleUtilTest, IsFileNameValid_0200, TestSize.Level2)
 {
-    EXPECT_FALSE(BundleUtil::IsFileNameValid(".hidden"));
+    EXPECT_FALSE(BundleUtil::IsFileNameValid(".."));
 }
 
 /**
