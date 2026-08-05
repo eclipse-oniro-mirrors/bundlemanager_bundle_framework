@@ -241,6 +241,8 @@ ohos_shared_library("appexecfwk_core") {
     external_deps += [ "resource_management:global_resmgr" ]
   }
 
+  version_script = "libappexecfwk_core.map"
+
   subsystem_name = "bundlemanager"
   innerapi_tags = [
     "platformsdk",
