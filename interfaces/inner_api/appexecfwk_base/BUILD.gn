@@ -160,6 +160,8 @@ ohos_shared_library("appexecfwk_base") {
     "json:nlohmann_json_static",
   ]
 
+  version_script = "libappexecfwk_base.map"
+
   subsystem_name = "bundlemanager"
   innerapi_tags = [
     "platformsdk",
