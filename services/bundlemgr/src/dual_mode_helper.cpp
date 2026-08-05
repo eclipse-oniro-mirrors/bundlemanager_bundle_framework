@@ -117,14 +117,16 @@ bool DualModeHelper::IsTestDualMode()
     return OHOS::system::GetBoolParameter(TEST_DUAL_MODE_PARAM, false);
 }
 
-bool DualModeHelper::IsDiffPackageCategory(AppCategory appCategory)
+bool DualModeHelper::IsDiffPackageCategory(DeviceModeDistributionPolicy policy)
 {
-    return (static_cast<uint32_t>(appCategory) & static_cast<uint32_t>(AppCategory::APP_CATEGORY_DIFF_PACKAGE)) != 0;
+    return policy == DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE ||
+        policy == DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE ||
+        policy == DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE;
 }
 
-bool DualModeHelper::NeedDualModeHandle(AppCategory appCategory)
+bool DualModeHelper::NeedDualModeHandle(DeviceModeDistributionPolicy policy)
 {
-    return IsSecondaryMode() && IsDiffPackageCategory(appCategory);
+    return IsSecondaryMode() && IsDiffPackageCategory(policy);
 }
 
 std::string DualModeHelper::GetDualModeBundleName(const std::string &bundleName)

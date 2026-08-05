@@ -508,20 +508,20 @@ public:
         *baseApplicationInfo_ = applicationInfo;
     }
     /**
-     * @brief Set application category for dual-mode scenarios.
-     * @param appCategory Indicates the application category.
+     * @brief Set device mode distribution policy for dual-mode scenarios.
+     * @param deviceModeDistributionPolicy Indicates the device mode distribution policy.
      */
-    void SetAppCategory(AppCategory appCategory)
+    void SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy deviceModeDistributionPolicy)
     {
-        baseApplicationInfo_->appCategory = appCategory;
+        baseBundleInfo_->deviceModeDistributionPolicy = deviceModeDistributionPolicy;
     }
     /**
-     * @brief Get application category for dual-mode scenarios.
-     * @return Return the application category value.
+     * @brief Get device mode distribution policy for dual-mode scenarios.
+     * @return Return the device mode distribution policy value.
      */
-    AppCategory GetAppCategory() const
+    DeviceModeDistributionPolicy GetDeviceModeDistributionPolicy() const
     {
-        return baseApplicationInfo_->appCategory;
+        return baseBundleInfo_->deviceModeDistributionPolicy;
     }
     /**
      * @brief Update baseApplicationInfo.
@@ -2564,7 +2564,7 @@ private:
     // atomicservice Service Delay Aging
     bool isDelayAging_ = false;
 
-    // Dual-mode: true if installed as secondary-mode category-7 app (DB key + dir prefixed).
+    // Dual-mode: true if installed as secondary-mode different-package app (DB key + dir prefixed).
     bool isDualModeCloneApp_ = false;
     
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;

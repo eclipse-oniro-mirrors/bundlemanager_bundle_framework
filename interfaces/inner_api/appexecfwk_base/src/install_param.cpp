@@ -113,7 +113,7 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         parameters.emplace(key, value);
     }
     isPatch = parcel.ReadBool();
-    appCategory = static_cast<AppCategory>(parcel.ReadUint32());
+    deviceModeDistributionPolicy = static_cast<DeviceModeDistributionPolicy>(parcel.ReadInt32());
     return true;
 }
 
@@ -169,7 +169,7 @@ bool InstallParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(parameter.second));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPatch);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, static_cast<uint32_t>(appCategory));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(deviceModeDistributionPolicy));
     return true;
 }
 

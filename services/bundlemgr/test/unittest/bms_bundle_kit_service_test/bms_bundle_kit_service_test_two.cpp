@@ -5615,17 +5615,17 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateSharedModuleInfo_001, Function | SmallTe
 }
 
 /**
- * @tc.number: SetAppCategory_001
- * @tc.name: test SetAppCategory and GetAppCategory
+ * @tc.number: SetDeviceModeDistributionPolicy_001
+ * @tc.name: test SetDeviceModeDistributionPolicy and GetDeviceModeDistributionPolicy
  * @tc.desc: 1.system run normally
- *           2.SetAppCategory and GetAppCategory
+ *           2.SetDeviceModeDistributionPolicy and GetDeviceModeDistributionPolicy
  */
-HWTEST_F(BmsBundleKitServiceTest, SetAppCategory_001, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, SetDeviceModeDistributionPolicy_001, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    EXPECT_EQ(innerBundleInfo.GetAppCategory(), AppCategory::APP_CATEGORY_UNSPECIFIED);
-    innerBundleInfo.SetAppCategory(AppCategory::APP_CATEGORY_DIFF_PACKAGE);
-    EXPECT_EQ(innerBundleInfo.GetAppCategory(), AppCategory::APP_CATEGORY_DIFF_PACKAGE);
+    EXPECT_EQ(innerBundleInfo.GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::UNSPECIFIED);
+    innerBundleInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(innerBundleInfo.GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
 }
 
 /**

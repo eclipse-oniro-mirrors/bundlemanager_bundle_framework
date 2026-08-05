@@ -160,7 +160,6 @@ const char* APPLICATION_START_MODE = "startMode";
 const char* APPLICATION_APP_PRELOAD_PHASE = "appPreloadPhase";
 const char* APPLICATION_APP_SIGN_TYPE = "appSignType";
 const char* APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT = "allowListenBundleChangedEvent";
-const char* APPLICATION_APP_CATEGORY = "appCategory";
 }
 
 bool MultiAppModeData::ReadFromParcel(Parcel &parcel)
@@ -708,7 +707,6 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     appPreloadPhase = static_cast<AppPreloadPhase>(parcel.ReadUint8());
     appSignType = Str16ToStr8(parcel.ReadString16());
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, &allowListenBundleChangedEvent);
-    appCategory = static_cast<AppCategory>(parcel.ReadUint32());
     return true;
 }
 
@@ -909,7 +907,6 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(appPreloadPhase));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appSignType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, allowListenBundleChangedEvent);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, static_cast<uint32_t>(appCategory));
     return true;
 }
 
@@ -1181,8 +1178,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_START_MODE, applicationInfo.startMode},
         {APPLICATION_APP_PRELOAD_PHASE, applicationInfo.appPreloadPhase},
         {APPLICATION_APP_SIGN_TYPE, applicationInfo.appSignType},
-        {APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT, applicationInfo.allowListenBundleChangedEvent},
-        {APPLICATION_APP_CATEGORY, applicationInfo.appCategory}
+        {APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT, applicationInfo.allowListenBundleChangedEvent}
     };
 }
 
@@ -1440,8 +1436,6 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd,
         APPLICATION_ALLOW_LISTEN_BUNDLE_CHANGED_EVENT,
         applicationInfo.allowListenBundleChangedEvent, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
-    GetValueIfFindKey<AppCategory>(jsonObject, jsonObjectEnd, APPLICATION_APP_CATEGORY,
-        applicationInfo.appCategory, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error : %{public}d", parseResult);
     }

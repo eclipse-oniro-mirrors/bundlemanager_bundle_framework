@@ -25,6 +25,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_data_mgr.h"
 #include "bundle_constants.h"
+#include "bundle_info.h"
 #include "disposed_rule.h"
 #include "inner_bundle_info.h"
 
@@ -96,7 +97,7 @@ struct NotifyBundleEvents {
     std::map<std::string, std::string> metadataConfigInfos;
     std::vector<std::string> allowListenBundles;
     // === DUAL_MODE: Extended fields for dual-mode app events ===
-    AppCategory appCategory = AppCategory::APP_CATEGORY_UNSPECIFIED;  // Application category
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;  // Device mode distribution policy
     int32_t currentMode = -1;  // Current system mode (0=tablet, 1=2in1, -1=not read/non-dual-mode)
     bool isSharedSandbox = true;  // Whether app uses shared sandbox
     // === DUAL_MODE END ===
