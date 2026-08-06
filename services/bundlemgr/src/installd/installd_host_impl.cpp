@@ -3806,10 +3806,28 @@ void InstalldHostImpl::GetFilesAndSortByLastModifiedTime(const std::vector<std::
         }
 
         std::vector<std::string> resultList;
-        for (const auto &file : std::filesystem::recursive_directory_iterator(path, ec)) {
-            if (file.is_regular_file(ec) || (file.is_directory(ec) && std::filesystem::is_empty(file.path(), ec))) {
-                resultList.push_back(std::filesystem::absolute(file.path(), ec).string());
+        std::filesystem::recursive_directory_iterator dirIter(path,
+            std::filesystem::directory_options::skip_permission_denied, ec);
+        std::filesystem::recursive_directory_iterator endIter;
+        if (ec) {
+            LOG_E(BMS_TAG_DEFAULT, "fail to create recursive_directory_iterator for %{private}s", path.c_str());
+            continue;
+        }
+        for (; dirIter != endIter; dirIter.increment(ec)) {
+            if (ec) {
+                LOG_E(BMS_TAG_DEFAULT, "recursive_directory_iterator increment failed for %{private}s", path.c_str());
+                break;
             }
+            if (dirIter->path().filename() == "web" &&
+                dirIter->path().parent_path().filename() == "cache") {
+                dirIter.disable_recursion_pending();
+                continue;
+            }
+            if (!dirIter->is_regular_file(ec) &&
+                !(dirIter->is_directory(ec) && std::filesystem::is_empty(dirIter->path(), ec))) {
+                continue;
+            }
+            resultList.push_back(std::filesystem::absolute(dirIter->path(), ec).string());
         }
         fileList.reserve(fileList.size() + resultList.size());
         fileList.insert(fileList.end(), resultList.begin(), resultList.end());
@@ -3852,6 +3870,13 @@ ErrCode InstalldHostImpl::DeleteOldCacheFiles(
         if (InstalldOperator::IsValidPathByGetCacheDiskUsageFromPath(item)) {
             validPath.emplace_back(item);
         }
+    }
+
+    if (cacheSize == 0) {
+        for (const auto &path : validPath) {
+            InstalldOperator::DeleteFiles(path);
+        }
+        return ERR_OK;
     }
 
     std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> fileTimePairs;
