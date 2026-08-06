@@ -17,6 +17,8 @@
 
 #include <uv.h>
 
+#include <string>
+
 #include "appexecfwk_errors.h"
 #include "base_cb_info.h"
 #include "napi/native_api.h"
@@ -37,6 +39,7 @@ public:
     ZlibCallbackInfo(napi_env env, napi_ref callback, napi_deferred deferred, bool isCallback);
     virtual ~ZlibCallbackInfo();
     virtual void OnZipUnZipFinish(ErrCode result);
+    virtual void OnZipUnZipFinish(ErrCode result, const std::string &detailMessage);
     virtual void DoTask(const OHOS::AppExecFwk::InnerEvent::Callback& task);
     bool GetIsCallback() const;
     void SetIsCallback(bool isCallback);
@@ -64,6 +67,7 @@ struct AsyncCallbackInfo {
     napi_deferred deferred;
     bool isCallBack = false;
     ErrCode callbackResult;
+    std::string detailMessage;
     bool deliverErrcode = false;
     ZlibCallbackInfo *data = nullptr;
 };
