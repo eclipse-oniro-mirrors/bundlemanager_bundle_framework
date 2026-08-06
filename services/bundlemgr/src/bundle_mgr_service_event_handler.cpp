@@ -431,6 +431,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::UPDATE_EXTENSION_DIRS_SELINUX_APL);
     UpdateOtaFlag(OTAFlag::ADD_IDLE_INFO);
     UpdateOtaFlag(OTAFlag::UPDATE_ALTERNATE_ICONS);
+    UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON_EXTEND_FIELDS);
     (void)SaveUpdatePermissionsFlag();
     PerfProfile::GetInstance().Dump();
 }
