@@ -1971,7 +1971,9 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize, Cl
     }
 
     std::vector<RunningProcessInfo> runningList;
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     int result = appMgrProxy->GetAllRunningProcesses(runningList);
+    IPCSkeleton::SetCallingIdentity(identity);
     if (result != ERR_OK) {
         APP_LOGE_NOFUNC("Get all running processes failed");
         return ERR_BUNDLE_MANAGER_GET_ALL_RUNNING_PROCESSES_FAILED;
@@ -2364,9 +2366,11 @@ ErrCode BundleMgrHostImpl::IsAppRunning(const std::string &bundleName, const int
     }
 
     std::vector<RunningProcessInfo> runningList;
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     int result = appMgrProxy->GetAllRunningProcesses(runningList);
-    if (result != ERR_OK) {
-        APP_LOGE_NOFUNC("Get all running processes failed");
+    IPCSkeleton::SetCallingIdentity(identity);
+    if (result != ERR_OK || runningList.empty()) {
+        APP_LOGE_NOFUNC("Get all running processes failed, err:%{public}d", result);
         return ERR_BUNDLE_MANAGER_GET_ALL_RUNNING_PROCESSES_FAILED;
     }
 
