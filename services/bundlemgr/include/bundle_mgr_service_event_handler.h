@@ -762,6 +762,8 @@ private:
     bool NeedProcessOtaNewPreloadInstall(const std::string &bundleName,
         const std::string &scanPath) const;
     void ReInstallSystemHspAndSharedBundles();
+    bool ProcessNewInstallForBlackList(const std::string &bundleName, const std::set<int32_t> &allUsers,
+        std::vector<int32_t> &userIds);
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
