@@ -947,6 +947,10 @@ public:
      */
     bool GetInnerBundleInfoWithFlags(const std::string &bundleName, const int32_t flags,
         const InnerBundleInfo *&info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
+#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+    ErrCode GetInnerBundleInfoForClone(const std::string &bundleName, const int32_t flags,
+        const InnerBundleInfo *&info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
+#endif
     bool GetInnerBundleInfoWithFlags(const std::string &bundleName, const int32_t flags,
         int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
     bool GetInnerBundleInfoWithBundleFlagsAndLock(const std::string &bundleName, int32_t flags,
@@ -1448,6 +1452,10 @@ private:
      */
     bool ImplicitQueryAbilityInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
+#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+    bool ImplicitQueryAbilityInfosForClone(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
+#endif
     ErrCode ImplicitQueryAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
     bool CheckAbilityInfoFlagExist(int32_t flags, AbilityInfoFlag abilityInfoFlag) const;
@@ -1461,6 +1469,10 @@ private:
         const std::vector<std::string> &paramMimeTypes, int32_t appIndex = 0) const;
     bool ExplicitQueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
         int32_t appIndex = 0) const;
+#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+    bool ExplicitQueryAbilityInfoForClone(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
+        int32_t appIndex = 0) const;
+#endif
     ErrCode ExplicitQueryAbilityInfoV9(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
         int32_t appIndex = 0) const;
     ErrCode GenerateBundleId(const std::string &bundleName, int32_t &bundleId);
@@ -1514,6 +1526,10 @@ private:
         int32_t appIndex = 0) const;
     bool ImplicitQueryCurAbilityInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const;
+#ifdef BMS_ENABLE_CLONE_FOR_ACCOUNT
+    bool ImplicitQueryCurAbilityInfosForClone(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const;
+#endif
     ErrCode ImplicitQueryCurAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const;
     void ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags, int32_t userId,
