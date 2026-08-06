@@ -14,6 +14,7 @@
  */
 #define private public
 
+#include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <map>
@@ -22,6 +23,7 @@
 
 #include "bundle_mgr_service.h"
 #include "installd_host.h"
+#include "installd/installd_host_impl.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -959,7 +961,129 @@ HWTEST_F(BmsInstalldHostTest, HandleHashFiles_0100, Function | SmallTest | Level
     bool res = installdHost.HandleHashFiles(data, reply);
     EXPECT_TRUE(res);
 }
+
+/**
+ * @tc.number: GetFilesAndSortByLastModifiedTime_0100
+ * @tc.name: test GetFilesAndSortByLastModifiedTime filters cache/web
+ * @tc.desc: files under cache/web are excluded, other files are collected.
+ */
+HWTEST_F(BmsInstalldHostTest, GetFilesAndSortByLastModifiedTime_0100, Function | SmallTest | Level1)
+{
+    std::string basePath = "/data/local/tmp/bms_gfs_test";
+    std::string webDir = basePath + "/data/app/el2/100/base/com.example/cache/web";
+    std::string filesDir = basePath + "/data/app/el2/100/base/com.example/cache/files";
+    std::string webFile = webDir + "/test.html";
+    std::string normalFile = filesDir + "/settings.json";
+    std::filesystem::create_directories(webDir);
+    std::filesystem::create_directories(filesDir);
+    std::ofstream(webFile).close();
+    std::ofstream(normalFile).close();
+
+    InstalldHostImpl installdHost;
+    std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> fileTimePairs;
+    std::vector<std::string> paths = {basePath};
+    installdHost.GetFilesAndSortByLastModifiedTime(paths, fileTimePairs);
+
+    bool webFileFound = false;
+    bool normalFileFound = false;
+    for (const auto &pair : fileTimePairs) {
+    if (pair.first.string().find("cache/web/test.html") != std::string::npos) {
+        webFileFound = true;
+    }
+    if (pair.first.string().find("cache/files/settings.json") != std::string::npos) {
+    normalFileFound = true;
+    }
+    }
+    EXPECT_FALSE(webFileFound);
+    EXPECT_TRUE(normalFileFound);
+
+    std::filesystem::remove_all(basePath);
+}
  
+ /**
+  * @tc.number: GetFilesAndSortByLastModifiedTime_0200
+  * @tc.name: test GetFilesAndSortByLastModifiedTime with empty web dir
+  * @tc.desc: empty web directory under cache is excluded.
+  */
+HWTEST_F(BmsInstalldHostTest, GetFilesAndSortByLastModifiedTime_0200, Function | SmallTest | Level1)
+{
+    std::string basePath = "/data/local/tmp/bms_gfs_test2";
+    std::string webDir = basePath + "/data/app/el2/100/base/com.example/cache/web";
+    std::string filesDir = basePath + "/data/app/el2/100/base/com.example/cache/files";
+    std::string normalFile = filesDir + "/settings.json";
+
+    std::filesystem::create_directories(webDir);
+    std::filesystem::create_directories(filesDir);
+    std::ofstream(normalFile).close();
+
+    InstalldHostImpl installdHost;
+    std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> fileTimePairs;
+    std::vector<std::string> paths = {basePath};
+    installdHost.GetFilesAndSortByLastModifiedTime(paths, fileTimePairs);
+
+    bool webDirFound = false;
+    for (const auto &pair : fileTimePairs) {
+        if (pair.first.string().find("cache/web") != std::string::npos) {
+            webDirFound = true;
+        }
+    }
+    EXPECT_FALSE(webDirFound);
+
+    std::filesystem::remove_all(basePath);
+}
+ 
+/**
+ * @tc.number: GetFilesAndSortByLastModifiedTime_0300
+ * @tc.name: test GetFilesAndSortByLastModifiedTime with invalid path
+ * @tc.desc: non-existent path returns empty result.
+ */
+HWTEST_F(BmsInstalldHostTest, GetFilesAndSortByLastModifiedTime_0300, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHost;
+    std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> fileTimePairs;
+    std::vector<std::string> paths = {"/data/local/tmp/bms_gfs_nonexistent"};
+    installdHost.GetFilesAndSortByLastModifiedTime(paths, fileTimePairs);
+    EXPECT_TRUE(fileTimePairs.empty());
+}
+
+/**
+ * @tc.number: GetFilesAndSortByLastModifiedTime_0400
+ * @tc.name: test GetFilesAndSortByLastModifiedTime with empty directory
+ * @tc.desc: empty directory returns empty result.
+ */
+HWTEST_F(BmsInstalldHostTest, GetFilesAndSortByLastModifiedTime_0400, Function | SmallTest | Level1)
+{
+    std::string dirPath = "/data/local/tmp/bms_gfs_empty";
+    std::filesystem::create_directory(dirPath);
+
+    InstalldHostImpl installdHost;
+    std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> fileTimePairs;
+    std::vector<std::string> paths = {dirPath};
+    installdHost.GetFilesAndSortByLastModifiedTime(paths, fileTimePairs);
+    EXPECT_TRUE(fileTimePairs.empty());
+
+    std::filesystem::remove(dirPath);
+}
+
+/**
+ * @tc.number: GetFilesAndSortByLastModifiedTime_0500
+ * @tc.name: test GetFilesAndSortByLastModifiedTime with regular file as path
+ * @tc.desc: regular file passed as path is skipped.
+ */
+HWTEST_F(BmsInstalldHostTest, GetFilesAndSortByLastModifiedTime_0500, Function | SmallTest | Level1)
+{
+    std::string filePath = "/data/local/tmp/bms_gfs_regfile";
+    std::ofstream(filePath).close();
+
+    InstalldHostImpl installdHost;
+    std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> fileTimePairs;
+    std::vector<std::string> paths = {filePath};
+    installdHost.GetFilesAndSortByLastModifiedTime(paths, fileTimePairs);
+    EXPECT_TRUE(fileTimePairs.empty());
+
+    std::filesystem::remove(filePath);
+}
+
 /**
  * @tc.number: HandleHashSoFile_0100
  * @tc.name: test HandleHashSoFile
