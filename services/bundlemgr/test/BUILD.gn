@@ -150,6 +150,7 @@ group("unittest") {
       "unittest/bms_skills_package_test:unittest",
       "unittest/bms_space_isolation_test:unittest",
       "unittest/bms_spm_module_parser_test:unittest",
+      "unittest/bms_start_app_detail_ability_test:unittest",
       "unittest/bms_status_receiver_proxy_test:unittest",
       "unittest/bms_syscap_tool_test:unittest",
       "unittest/bms_update_selinux_mgr_test:unittest",

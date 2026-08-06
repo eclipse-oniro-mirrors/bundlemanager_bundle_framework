@@ -508,5 +508,78 @@ HWTEST_F(BundleMgrClientImplTest, OnPluginEventCallback_0600, Function | SmallTe
     bundleMgrClientImpl->UnregisterPluginEventCallback(mockCallback);
     setuid(uid);
 }
+
+/**
+ * @tc.number: Bundle_Mgr_Client_Impl_Test_0900
+ * @tc.name: test the StartAppDetailAbility
+ * @tc.desc: 1. the test process uid is not a registered no-icon bundle
+ *           2. verify StartAppDetailAbility is rejected by the host and does not return success
+ */
+HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_0900, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+    auto ret = bundleMgrClientImpl->StartAppDetailAbility();
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Client_Impl_Test_1000
+ * @tc.name: test the StartAppDetailAbility security path
+ * @tc.desc: Impersonate an installed non-no-icon app and walk the full path
+ *           client -> proxy -> host: the calling uid resolves to a bundle, the
+ *           bundle is not a no-icon app, so the host must reject at the
+ *           needAppDetail gate with ERR_APPEXECFWK_PERMISSION_DENIED. This is
+ *           the security boundary added by the StartAppDetailAbility fix.
+ *           NOTE: real coverage requires the host GetCallingUid() to honor the
+ *           setuid impersonation; if it does not, this test fails loudly rather
+ *           than silently passing.
+ */
+HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_1000, Function | SmallTest | Level0)
+{
+    // 1. enumerate installed bundles; fail loud when none are installed
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = GetBundleDataMgr()->GetBundleInfosV9(1, bundleInfos, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(bundleInfos.empty());
+    if (bundleInfos.empty()) {
+        return;
+    }
+
+    // 2. find a bundle we can impersonate: its uid must reverse-map to a bundle
+    //    AND that bundle must NOT be a no-icon app (needAppDetail == false).
+    //    Scan the whole list rather than only [0], so a single unsuitable entry
+    //    cannot turn this test into a silent no-op.
+    int32_t targetUid = -1;
+    for (const auto &info : bundleInfos) {
+        std::string mappedName;
+        if (!GetBundleDataMgr()->GetBundleNameForUid(info.applicationInfo.uid, mappedName)) {
+            continue;
+        }
+        bool needAppDetail = false;
+        if (!GetBundleDataMgr()->GetNeedAppDetail(mappedName, needAppDetail) || needAppDetail) {
+            continue;
+        }
+        targetUid = info.applicationInfo.uid;
+        break;
+    }
+    // fail loud if no qualifying target exists, so coverage never silently drops
+    EXPECT_NE(targetUid, -1);
+    if (targetUid == -1) {
+        return;
+    }
+
+    // 3. impersonate the installed app; skip if the harness lacks CAP_SETUID
+    int savedUid = getuid();
+    if (setuid(targetUid) != 0) {
+        return;
+    }
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+    ret = bundleMgrClientImpl->StartAppDetailAbility();
+    setuid(savedUid);
+
+    // 4. host resolves the uid, finds the bundle, sees needAppDetail == false,
+    //    and must reject at the needAppDetail gate with PERMISSION_DENIED
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
+}
 } // AppExecFwk
 } // OHOS

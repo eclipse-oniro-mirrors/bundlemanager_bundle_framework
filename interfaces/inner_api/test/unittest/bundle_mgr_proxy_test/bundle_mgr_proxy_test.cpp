@@ -856,5 +856,20 @@ HWTEST_F(BundleMgrProxyTest, BundleMgrProxy_GetBigStringWithOption_0100, Functio
     auto ret = bundleMgrProxy.GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE, data, profile, option);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_4100
+ * @tc.name: test the StartAppDetailAbility
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. SendTransactCmd returns false when remote object is null
+ *           3. verify StartAppDetailAbility returns ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_4100, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    auto ret = bundleMgrProxy.StartAppDetailAbility();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
 } // AppExecFwk
 } // OHOS
