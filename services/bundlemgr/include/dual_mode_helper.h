@@ -52,7 +52,8 @@ public:
     static void UpdateModeCache();
 
     // Test-injection switch (persist.bms.test_dual_mode). When true, ispcmode/mainmode are read
-    // from persist.bms.ispcmode / persist.bms.mainmode instead of persist.sceneboard.* for test
+    // from persist.bms.ispcmode / persist.bms.mainmode instead of the production sceneboard params
+    // (persist.sceneboard.ispcmode / const.sceneboard.mainmode) for test
     // verification; production (unset/false) is unaffected.
     static bool IsTestDualMode();
 
@@ -78,7 +79,7 @@ private:
     // Cached ispcmode value (persist.sceneboard.ispcmode): 0=tablet, 1=2in1, -1=not read/illegal
     static int32_t cachedIspcmode_;
 
-    // Cached mainmode value (persist.sceneboard.mainmode): 0=main tablet, 1=main 2in1, -1=not read/illegal
+    // Cached mainmode value (const.sceneboard.mainmode): 0=main tablet, 1=main 2in1, -1=not read/illegal
     static int32_t cachedMainmode_;
 
     // Mutex for thread-safe cache access
