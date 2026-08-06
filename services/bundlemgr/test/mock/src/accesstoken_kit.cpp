@@ -211,6 +211,11 @@ int AccessTokenKit::GetHapTokenInfo(AccessTokenID tokenID, HapTokenInfo& hapToke
     hapTokenInfoRes.bundleName = "tokenBundle";
     return g_errCode;
 }
+
+bool AccessTokenKit::IsCliToolToken(uint64_t tokenId)
+{
+    return true;
+}
 }
 }
 }

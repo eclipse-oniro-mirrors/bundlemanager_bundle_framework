@@ -14,6 +14,9 @@
  */
 
 #include "bundle_permission_mgr.h"
+
+#include <cinttypes>
+
 #include "access_token_error.h"
 #include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
@@ -351,6 +354,16 @@ int32_t BundlePermissionMgr::VerifyPermission(
     AccessToken::AccessTokenID tokenId = AccessToken::AccessTokenKit::GetHapTokenID(userId,
         bundleName, 0);
     return AccessToken::AccessTokenKit::VerifyAccessToken(tokenId, permissionName);
+}
+
+bool BundlePermissionMgr::IsCliToolCalling(const uint64_t callerToken)
+{
+    if (AccessToken::AccessTokenKit::IsCliToolToken(callerToken)) {
+        LOG_D(BMS_TAG_DEFAULT, "is cli tool calling caller:%{public}" PRIu64, callerToken);
+        return true;
+    }
+    LOG_D(BMS_TAG_DEFAULT, "not cli tool calling caller:%{public}" PRIu64, callerToken);
+    return false;
 }
 
 ErrCode BundlePermissionMgr::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)

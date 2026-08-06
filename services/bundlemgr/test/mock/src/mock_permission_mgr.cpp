@@ -303,5 +303,10 @@ bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
 {
     return true;
 }
+
+bool BundlePermissionMgr::IsCliToolCalling(const uint64_t tokenId)
+{
+    return true;
+}
 }
 }
