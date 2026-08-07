@@ -1749,7 +1749,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     result = CheckSpaceIsolation(installParam, newInfos);
     CHECK_RESULT(result, "check space isolation failed:%{public}d");
-
+    AddInstallingBundleName(installParam);
+    ScopeGuard beforeInstallBundleNameGuard([&] {
+        DeleteInstallingBundleName(installParam);
+    });
     // to send notify of start install application
     SendStartInstallNotify(installParam, newInfos);
 
@@ -1779,6 +1782,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ScopeGuard installBundleNameGuard([&] {
         DeleteInstallingBundleName(installParam);
     });
+    beforeInstallBundleNameGuard.Dismiss();
     // uninstall all sandbox app before
     UninstallAllSandboxApps(bundleName_);
     UpdateInstallerState(InstallerState::INSTALL_REMOVE_SANDBOX_APP);              // ---- 50%
