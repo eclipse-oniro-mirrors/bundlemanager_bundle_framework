@@ -10520,49 +10520,53 @@ ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string
         return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
     }
     std::string profilePath = mapItem->second;
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    const auto &item = bundleInfos_.find(bundleName);
-    if (item == bundleInfos_.end()) {
-        APP_LOGE("bundleName: %{public}s is not found", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    }
-    const InnerBundleInfo &bundleInfo = item->second;
-    bool isEnabled = false;
-    int32_t responseUserId = bundleInfo.GetResponseUserId(requestUserId);
-    ErrCode res = bundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled);
-    if (res != ERR_OK) {
-        APP_LOGE("check application enabled failed, bundleName: %{public}s", bundleName.c_str());
-        return res;
-    }
-    if (!isEnabled) {
-        APP_LOGE("bundleName: %{public}s is disabled", bundleInfo.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
-    }
-    std::string moduleNameTmp = moduleName;
-    if (moduleName.empty()) {
-        APP_LOGW("moduleName is empty, try to get profile from entry module");
-        std::map<std::string, InnerModuleInfo> moduleInfos = bundleInfo.GetInnerModuleInfos();
-        for (const auto &info : moduleInfos) {
-            if (info.second.isEntry) {
-                moduleNameTmp = info.second.moduleName;
-                APP_LOGW("try to get profile from entry module: %{public}s", moduleNameTmp.c_str());
-                break;
+    std::string hapPath;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        const auto &item = bundleInfos_.find(bundleName);
+        if (item == bundleInfos_.end()) {
+            APP_LOGE("bundleName: %{public}s is not found", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+        const InnerBundleInfo &bundleInfo = item->second;
+        bool isEnabled = false;
+        int32_t responseUserId = bundleInfo.GetResponseUserId(requestUserId);
+        ErrCode res = bundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled);
+        if (res != ERR_OK) {
+            APP_LOGE("check application enabled failed, bundleName: %{public}s", bundleName.c_str());
+            return res;
+        }
+        if (!isEnabled) {
+            APP_LOGE("bundleName: %{public}s is disabled", bundleInfo.GetBundleName().c_str());
+            return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+        }
+        std::string moduleNameTmp = moduleName;
+        if (moduleName.empty()) {
+            APP_LOGW("moduleName is empty, try to get profile from entry module");
+            std::map<std::string, InnerModuleInfo> moduleInfos = bundleInfo.GetInnerModuleInfos();
+            for (const auto &info : moduleInfos) {
+                if (info.second.isEntry) {
+                    moduleNameTmp = info.second.moduleName;
+                    APP_LOGW("try to get profile from entry module: %{public}s", moduleNameTmp.c_str());
+                    break;
+                }
             }
         }
+        auto moduleInfo = bundleInfo.GetInnerModuleInfoByModuleName(moduleNameTmp);
+        if (!moduleInfo) {
+            APP_LOGE("moduleName: %{public}s is not found", moduleNameTmp.c_str());
+            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+        }
+        if (profilePath.empty()) {
+            profilePath = GetProfilePath(profileType, *moduleInfo);
+        }
+        if (profilePath.empty()) {
+            APP_LOGD("profile: %{public}d not config", profileType);
+            return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
+        }
+        hapPath = moduleInfo->hapPath;
     }
-    auto moduleInfo = bundleInfo.GetInnerModuleInfoByModuleName(moduleNameTmp);
-    if (!moduleInfo) {
-        APP_LOGE("moduleName: %{public}s is not found", moduleNameTmp.c_str());
-        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
-    }
-    if (profilePath.empty()) {
-        profilePath = GetProfilePath(profileType, *moduleInfo);
-    }
-    if (profilePath.empty()) {
-        APP_LOGD("profile: %{public}d not config", profileType);
-        return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
-    }
-    return GetJsonProfileByExtractor(moduleInfo->hapPath, profilePath, profile);
+    return GetJsonProfileByExtractor(hapPath, profilePath, profile);
 }
 
 ErrCode BundleDataMgr::GetShareFilesJsonFromHap(const std::string &hapPath, const InnerModuleInfo &moduleInfo,
