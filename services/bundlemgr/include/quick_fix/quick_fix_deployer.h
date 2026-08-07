@@ -105,11 +105,6 @@ private:
 
     void SendQuickFixSystemEvent(const InnerBundleInfo &innerBundleInfo);
 
-    ErrCode ExtractSoAndApplyDiff(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo,
-        const std::string &patchPath);
-
-    bool ExtractSoFiles(const BundleInfo &bundleInfo, const std::string &moduleName, std::string &tmpSoPath);
-
     ErrCode ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, const HqfInfo &hqf,
         const std::string &oldSoPath, const std::string &patchPath, int32_t uid = Constants::INVALID_UID);
 

@@ -2745,94 +2745,6 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0104, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0105
- * Function: ExtractQuickFixSoFile
- * @tc.name: test ExtractQuickFixSoFile
- * @tc.require: issueI5N7AD
- * @tc.desc: ExtractQuickFixSoFile
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0105, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-    auto deployer = GetQuickFixDeployer();
-    EXPECT_FALSE(deployer == nullptr);
-    if (deployer != nullptr) {
-        AppQuickFix appQuickFix;
-        std::string patchPath = "data/test";
-        BundleInfo bundleInfo;
-        auto ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
-        EXPECT_EQ(ret, ERR_OK);
-
-        appQuickFix = CreateAppQuickFix();
-        ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
-        EXPECT_EQ(ret, ERR_OK);
-
-        HapModuleInfo info;
-        info.moduleName = "entry";
-        bundleInfo.hapModuleInfos.emplace_back(info);
-
-        ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
-        EXPECT_EQ(ret, ERR_OK);
-        // so exist
-        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
-        ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
-        EXPECT_EQ(ret, ERR_OK);
-    }
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: BmsBundleQuickFixTest_0106
- * Function: ExtractQuickFixSoFile
- * @tc.name: test ExtractQuickFixSoFile
- * @tc.require: issueI5N7AD
- * @tc.desc: ExtractQuickFixSoFile
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0106, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-    auto deployer = GetQuickFixDeployer();
-    EXPECT_FALSE(deployer == nullptr);
-    if (deployer != nullptr) {
-        AppQuickFix appQuickFix;
-        std::string patchPath = "data/test";
-        BundleInfo bundleInfo;
-        appQuickFix = CreateAppQuickFix();
-        appQuickFix.bundleName = "error";
-        auto ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
-        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
-    }
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: BmsBundleQuickFixTest_0107
- * Function: ExtractQuickFixSoFile
- * @tc.name: test ExtractQuickFixSoFile
- * @tc.require: issueI5N7AD
- * @tc.desc: ExtractQuickFixSoFile
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0107, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME);
-    auto deployer = GetQuickFixDeployer();
-    EXPECT_FALSE(deployer == nullptr);
-    if (deployer != nullptr) {
-        AppQuickFix appQuickFix;
-        std::string patchPath = "data/test";
-        BundleInfo bundleInfo;
-        appQuickFix = CreateAppQuickFix();
-        auto &appQfInfo = appQuickFix.deployingAppqfInfo;
-        for (auto &hqf : appQfInfo.hqfInfos) {
-            hqf.moduleName = "name";
-        }
-        auto ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
-        EXPECT_EQ(ret, ERR_OK);
-    }
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
  * @tc.number: BmsBundleQuickFixTest_0110
  * Function: DefaultNativeSo
  * @tc.name: test DefaultNativeSo
@@ -4596,44 +4508,6 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0390, Function | SmallTest
         InnerAppQuickFix oldInnerAppQuickFix;
         ErrCode ret = deployer->ToDeployEndStatus(newInnerAppQuickFix, oldInnerAppQuickFix);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
-    }
-}
-
-/**
- * @tc.number: BmsBundleQuickFixTest_0400
- * Function: ExtractSoFiles
- * @tc.name: test ExtractSoFiles
- * @tc.require: issueI5N7AD
- * @tc.desc: ExtractSoFiles
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0400, Function | SmallTest | Level0)
-{
-    auto deployer = GetQuickFixDeployer();
-    EXPECT_FALSE(deployer == nullptr);
-    if (deployer != nullptr) {
-        BundleInfo bundleInfo;
-        bundleInfo.applicationInfo.nativeLibraryPath = "";
-        std::string tmpSoPath = "";
-        std::string moduleName = "entry";
-
-        HapModuleInfo moduleInfo;
-        moduleInfo.nativeLibraryPath = "";
-        moduleInfo.moduleName = moduleName;
-        bundleInfo.hapModuleInfos.push_back(moduleInfo);
-        bool ret = deployer->ExtractSoFiles(bundleInfo, "feature", tmpSoPath);
-        EXPECT_FALSE(ret);
-
-        ret = deployer->ExtractSoFiles(bundleInfo, moduleName, tmpSoPath);
-        EXPECT_FALSE(ret);
-
-        bundleInfo.applicationInfo.nativeLibraryPath = "libs/arm";
-        ret = deployer->ExtractSoFiles(bundleInfo, moduleName, tmpSoPath);
-        EXPECT_FALSE(ret);
-
-        bundleInfo.applicationInfo.nativeLibraryPath = "";
-        bundleInfo.hapModuleInfos[0].nativeLibraryPath = "libs/arm";
-        ret = deployer->ExtractSoFiles(bundleInfo, moduleName, tmpSoPath);
-        EXPECT_FALSE(ret);
     }
 }
 
