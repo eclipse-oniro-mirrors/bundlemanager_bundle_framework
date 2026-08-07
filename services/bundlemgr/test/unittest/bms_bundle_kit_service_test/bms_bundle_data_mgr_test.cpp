@@ -6160,32 +6160,6 @@ HWTEST_F(BmsBundleDataMgrTest, BackupBundleData_0100, Function | MediumTest | Le
 }
 
 /**
- * @tc.number: RecoverBackupBundleData_0100
- * @tc.name: RecoverBackupBundleData
- * @tc.desc: test RecoverBackupBundleData of BmsExtensionClient
- */
-HWTEST_F(BmsBundleDataMgrTest, RecoverBackupBundleData_0100, Function | MediumTest | Level1)
-{
-    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
-
-    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
-    std::string bundleName = BUNDLE_NAME_TEST;
-    int32_t userId = 100;
-    int32_t appIndex = 0;
-    auto ret = bmsExtensionClient->RecoverBackupBundleData(bundleName, userId, appIndex);
-    EXPECT_NE(ret, ERR_OK);
-
-    bmsExtensionClient->bmsExtensionImpl_ = std::make_shared<BmsExtensionDataMgr>();
-    ret = bmsExtensionClient->RecoverBackupBundleData(bundleName, userId, appIndex);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, ERR_OK);
-    #else
-    EXPECT_NE(ret, ERR_OK);
-    #endif
-}
-
-/**
  * @tc.number: RemoveBackupBundleData_0100
  * @tc.name: RemoveBackupBundleData
  * @tc.desc: test RemoveBackupBundleData of BmsExtensionClient

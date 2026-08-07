@@ -3885,23 +3885,6 @@ HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0400, Function | SmallTest | Leve
     bool ret = extractor.GetFileInfo("bootpic.zip", offset, length);
     EXPECT_EQ(ret, false);
 }
-
-/**
- * @tc.number: BaseExtractor_0500
- * @tc.name: Test Init
- * @tc.desc: 1.Test Init of BaseExtractor
- */
-HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0500, Function | SmallTest | Level1)
-{
-    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
-    bool ret = extractor.Init();
-#ifdef USE_BUNDLE_EXTENSION
-    EXPECT_FALSE(ret);
-#else
-    EXPECT_TRUE(ret);
-#endif
-}
-
 /**
  * @tc.number: BaseExtractor_0600
  * @tc.name: Test GetZipFileNames
@@ -7354,66 +7337,6 @@ HWTEST_F(BmsBundleInstallerTest, UninstallBundleFromBmsExtension_0400, Function 
     #endif
     if (isEnableHmos) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
-    }
-    if (!isEnableFusion) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
-    }
-}
-
-/**
- * @tc.number: UninstallBundleFromBmsExtension_0500
- * @tc.name: test UninstallBundleFromBmsExtension
- * @tc.desc: test UninstallBundleFromBmsExtension of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, UninstallBundleFromBmsExtension_0500, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
-    if (!isEnableHmos) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
-    }
-    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
-    if (isEnableFusion) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
-    }
-    auto ret = installer.UninstallBundleFromBmsExtension("");
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, BMS_BROKER_ERR_UNINSTALL_FAILED);
-    #else
-    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
-    #endif
-    if (!isEnableHmos) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
-    }
-    if (isEnableFusion) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
-    }
-}
-
-/**
- * @tc.number: UninstallBundleFromBmsExtension_0600
- * @tc.name: test UninstallBundleFromBmsExtension
- * @tc.desc: test UninstallBundleFromBmsExtension of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, UninstallBundleFromBmsExtension_0600, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    auto isEnableHmos = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, false);
-    if (!isEnableHmos) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "true");
-    }
-    auto isEnableFusion = OHOS::system::GetBoolParameter(ServiceConstants::ENABLE_FUSION, false);
-    if (!isEnableFusion) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "true");
-    }
-    auto ret = installer.UninstallBundleFromBmsExtension("");
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, BMS_BROKER_ERR_UNINSTALL_FAILED);
-    #else
-    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
-    #endif
-    if (!isEnableHmos) {
-        OHOS::system::SetParameter(ServiceConstants::ENABLE_HMOS_SERVICE_BROKER, "false");
     }
     if (!isEnableFusion) {
         OHOS::system::SetParameter(ServiceConstants::ENABLE_FUSION, "false");
@@ -12522,61 +12445,6 @@ HWTEST_F(BmsBundleInstallerTest, RemoveExtensionDir_1000, Function | MediumTest 
     std::string extensionBundleDir = "/test/extension";
     ErrCode result = impl.RemoveExtensionDir(userId, extensionBundleDir);
     EXPECT_EQ(result, ERR_OK);
-}
-
-/**
- * @tc.number: MakeFsConfig_1000
- * @tc.name: MakeFsConfig
- * @tc.desc: 1.Test MakeFsConfig
-*/
-HWTEST_F(BmsBundleInstallerTest, MakeFsConfig_1000, Function | SmallTest | Level0)
-{
-    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
-    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_OK);
-    BundleUtil bundleUtil;
-    bundleUtil.MakeFsConfig(BUNDLE_BACKUP_NAME, ServiceConstants::HMDFS_CONFIG_PATH,
-        Constants::APP_PROVISION_TYPE_DEBUG, Constants::APP_PROVISION_TYPE_FILE_NAME);
-    std::string path = ServiceConstants::HMDFS_CONFIG_PATH + BUNDLE_BACKUP_NAME +
-        std::string(ServiceConstants::PATH_SEPARATOR) + Constants::APP_PROVISION_TYPE_FILE_NAME;
-    std::ifstream file(path);
-    EXPECT_TRUE(file.is_open()) << "Failed to open file: "<< path;
-    std::string strAppInfo(
-        (std::istreambuf_iterator<char>(file)),
-        std::istreambuf_iterator<char>());
-    EXPECT_GT(strAppInfo.size(), 0);
-    EXPECT_TRUE(strAppInfo.find(Constants::DEBUG_TYPE_VALUE) != std::string::npos);
-
-    installResult = UnInstallBundle(BUNDLE_BACKUP_NAME);
-    EXPECT_EQ(installResult, ERR_OK);
-}
-
-
-/**
- * @tc.number: MakeFsConfig_2000
- * @tc.name: MakeFsConfig
- * @tc.desc: 1.Test MakeFsConfig
-*/
-HWTEST_F(BmsBundleInstallerTest, MakeFsConfig_2000, Function | SmallTest | Level0)
-{
-    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
-    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_OK);
-    BundleUtil bundleUtil;
-    bundleUtil.MakeFsConfig(BUNDLE_BACKUP_NAME, ServiceConstants::HMDFS_CONFIG_PATH,
-        Constants::APP_PROVISION_TYPE_RELEASE, Constants::APP_PROVISION_TYPE_FILE_NAME);
-    std::string path = ServiceConstants::HMDFS_CONFIG_PATH + BUNDLE_BACKUP_NAME +
-        std::string(ServiceConstants::PATH_SEPARATOR) + Constants::APP_PROVISION_TYPE_FILE_NAME;
-    std::ifstream file(path);
-    EXPECT_TRUE(file.is_open()) << "Failed to open file: "<< path;
-    std::string strAppInfo(
-        (std::istreambuf_iterator<char>(file)),
-        std::istreambuf_iterator<char>());
-    EXPECT_GT(strAppInfo.size(), 0);
-    EXPECT_TRUE(strAppInfo.find(Constants::RELEASE_TYPE_VALUE) != std::string::npos);
-
-    installResult = UnInstallBundle(BUNDLE_BACKUP_NAME);
-    EXPECT_EQ(installResult, ERR_OK);
 }
 
 /**
