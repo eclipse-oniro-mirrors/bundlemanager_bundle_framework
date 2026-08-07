@@ -828,5 +828,37 @@ bool BmsExtensionDataMgr::GetInstallAndRecoverList(const int32_t userId, const s
     }
     return bundleMgrExtPtr->GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
 }
+
+ErrCode BmsExtensionDataMgr::GetAllBundleCacheSize(int32_t userId, int64_t &cacheSize)
+{
+    if ((Init() != ERR_OK) || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    APP_LOGI_NOFUNC("EXT GetAllBundleCacheSize -u %{public}d", userId);
+    return bundleMgrExtPtr->GetAllBundleCacheSize(userId, cacheSize);
+}
+
+ErrCode BmsExtensionDataMgr::CleanAllBundleCache(int32_t userId)
+{
+    if ((Init() != ERR_OK) || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    APP_LOGI_NOFUNC("EXT CleanAllBundleCache -u %{public}d", userId);
+    return bundleMgrExtPtr->CleanAllBundleCache(userId);
+}
 } // AppExecFwk
 } // OHOS

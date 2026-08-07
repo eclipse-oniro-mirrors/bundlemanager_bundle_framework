@@ -718,6 +718,31 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0008, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: BundleMgrExt_AllBundleCache_0001
+ * @tc.name: GetAllBundleCacheSize
+ * @tc.desc: default impl returns ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_AllBundleCache_0001, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    int64_t cacheSize = 0;
+    ErrCode res = bundleMgrExtTest.GetAllBundleCacheSize(USERID, cacheSize);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_AllBundleCache_0002
+ * @tc.name: CleanAllBundleCache
+ * @tc.desc: default impl returns ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_AllBundleCache_0002, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    ErrCode res = bundleMgrExtTest.CleanAllBundleCache(USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
  * @tc.number: BundleMgrExt_0009
  * @tc.name: GetUidByBundleName
  * @tc.desc: GetUidByBundleName
@@ -2487,5 +2512,30 @@ HWTEST_F(BmsExtensionDataMgrTest, GetInstallAndRecoverList_0001, Function | Smal
     bmsExtensionDataMgr.handler_ = &handleTest;
     res = bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
     EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_AllBundleCache_0001
+ * @tc.name: GetAllBundleCacheSize
+ * @tc.desc: ext unavailable -> ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_AllBundleCache_0001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int64_t cacheSize = 0;
+    ErrCode res = bmsExtensionDataMgr.GetAllBundleCacheSize(USERID, cacheSize);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_AllBundleCache_0002
+ * @tc.name: CleanAllBundleCache
+ * @tc.desc: ext unavailable -> ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_AllBundleCache_0002, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode res = bmsExtensionDataMgr.CleanAllBundleCache(USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 }
 } // OHOS

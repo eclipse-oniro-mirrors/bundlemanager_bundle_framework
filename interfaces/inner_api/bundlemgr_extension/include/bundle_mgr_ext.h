@@ -220,6 +220,14 @@ public:
     {
         return false;
     }
+    virtual ErrCode GetAllBundleCacheSize(int32_t userId, int64_t &cacheSize)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode CleanAllBundleCache(int32_t userId)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
 };
 } // AppExecFwk
 } // OHOS
