@@ -15,6 +15,7 @@
 
 #include "bundle_installer_host.h"
 
+#include <cinttypes>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -1651,6 +1652,12 @@ ErrCode BundleInstallerHost::CreateCliSandboxApp(const std::string &creatorBundl
         return ERR_APPEXECFWK_CLI_SANDBOX_INSTALL_INVALID_BUNDLE_NAME;
     }
 
+    uint64_t callerToken = IPCSkeleton::GetCallingFullTokenID();
+    if (!BundlePermissionMgr::IsCliToolCalling(callerToken)) {
+        LOG_E(BMS_TAG_INSTALLER, "not cli tool calling caller:%{public}" PRIu64, callerToken);
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+
     std::string finalCreatorBundleName = creatorBundleName;
     int32_t result = BundlePermissionMgr::VerifyPermission(
         envCreatorBundleName, Constants::PERMISSION_CLI_MANAGE_WEB_SANDBOX, userId);
@@ -1686,6 +1693,12 @@ ErrCode BundleInstallerHost::DestroyCliSandboxApp(const std::string &creatorBund
     const std::string &envCallerBundleName, const std::string &bundleName,
     int32_t userId, int32_t appIndex)
 {
+    uint64_t callerToken = IPCSkeleton::GetCallingFullTokenID();
+    if (!BundlePermissionMgr::IsCliToolCalling(callerToken)) {
+        LOG_E(BMS_TAG_INSTALLER, "not cli tool calling caller:%{public}" PRIu64, callerToken);
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+
     auto installer = std::make_shared<BundleCliSandboxInstaller>();
     return installer->DestroyCliSandboxApp(creatorBundleName, envCallerBundleName,
         bundleName, userId, appIndex, false);

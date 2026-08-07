@@ -50,6 +50,7 @@ public:
     static int32_t UpdateHapToken(AccessTokenIDEx& tokenIdEx, const UpdateHapInfoParams& info,
         const HapPolicyParams& policy, HapInfoCheckResult& checkResult);
     static int GetHapTokenInfo(AccessTokenID tokenID, HapTokenInfo& hapTokenInfoRes);
+    static bool IsCliToolToken(uint64_t tokenId);
 };
 } // namespace AccessToken
 } // namespace Security

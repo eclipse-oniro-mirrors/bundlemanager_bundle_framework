@@ -105,6 +105,8 @@ public:
 
     static bool VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames);
 
+    static bool IsCliToolCalling(const uint64_t callerToken);
+
     static bool IsSelfCalling();
 
     static bool VerifyUninstallPermission();
