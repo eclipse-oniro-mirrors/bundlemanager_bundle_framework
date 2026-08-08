@@ -1,0 +1,321 @@
+# DFX Skill 配置文件模板
+# 使用此配置文件为你的代码仓生成定制的 DFX skill
+
+# ============================================================================
+# 代码仓基本信息
+# ============================================================================
+codebase:
+  # 模块名称（全称）
+  name: "Your Module Name"  # 示例: "Network Manager", "Storage Manager"
+
+  # 模块缩写（用于宏命名，大写）
+  abbreviation: "YOUR_MODULE"  # 示例: "NETWORK", "STORAGE"
+
+  # 简短描述
+  description: "Brief description of your module"
+
+# ============================================================================
+# 目录结构配置
+# ============================================================================
+directories:
+  # 服务端目录（允许 HiSysEvent 打点）
+  server:
+    - "services/{module}/src"              # 主要服务实现
+    - "services/{module}/include"           # 服务头文件
+    - "foundation/{module}/"               # 基础服务（如果适用）
+    # 添加你的服务端目录...
+
+  # 客户端目录（禁止 HiSysEvent 打点）
+  client:
+    - "frameworks/{module}/"               # 框架层
+    - "interfaces/kits/{module}/"          # 公共 SDK
+    - "interfaces/innerkits/{module}/"     # 内部 SDK
+    - "sdk/{module}/"                      # SDK 目录
+    # 添加你的客户端目录...
+
+  # DFX 适配器目录
+  dfx:
+    - "dfx/hisysevent_adapter/"
+    - "dfx/hitrace_adapter/"
+    # 添加你的 DFX 目录...
+
+# ============================================================================
+# 操作类型定义
+# ============================================================================
+operations:
+  # 核心操作（根据你的模块定义）
+  # name: 操作名称（英文小写）
+  # constant: C++ 常量名称
+  # scenarios: 适用的场景列表
+  # priority: 优先级（HIGH/MEDIUM/LOW）
+  # description: 操作描述
+
+  - name: "create"
+    constant: "YOUR_MODULE_OPT_CREATE"
+    scenarios: ["boot", "settings", "api", "mdm"]
+    priority: "HIGH"
+    description: "Create a new resource"
+
+  - name: "delete"
+    constant: "YOUR_MODULE_OPT_DELETE"
+    scenarios: ["settings", "api", "mdm"]
+    priority: "HIGH"
+    description: "Delete a resource"
+
+  - name: "update"
+    constant: "YOUR_MODULE_OPT_UPDATE"
+    scenarios: ["settings", "api"]
+    priority: "MEDIUM"
+    description: "Update a resource"
+
+  - name: "query"
+    constant: "YOUR_MODULE_OPT_QUERY"
+    scenarios: ["api", "background"]
+    priority: "MEDIUM"
+    description: "Query resources"
+
+  # 添加你的操作...
+  # 示例（网络模块）:
+  # - name: "connect"
+  #   constant: "NETWORK_OPT_CONNECT"
+  #   scenarios: ["boot", "user", "auto"]
+  #   priority: "HIGH"
+  #   description: "Connect to network"
+
+# ============================================================================
+# 业务场景定义
+# ============================================================================
+scenarios:
+  # 场景前缀
+  prefixes:
+    - name: "boot"
+      description: "System boot"
+      constant: "SCENARIO_BOOT"
+
+    - name: "settings"
+      description: "Settings UI"
+      constant: "SCENARIO_SETTINGS"
+
+    - name: "api"
+      description: "API call"
+      constant: "SCENARIO_API"
+
+    - name: "mdm"
+      description: "Mobile Device Management"
+      constant: "SCENARIO_MDM"
+
+    - name: "recovery"
+      description: "Recovery mode"
+      constant: "SCENARIO_RECOVERY"
+
+    # 添加你的场景前缀...
+
+  # 场景后缀
+  suffixes:
+    - name: "local"
+      description: "Local operation"
+      constant: "SUFFIX_LOCAL"
+
+    - name: "network"
+      description: "Network operation"
+      constant: "SUFFIX_NETWORK"
+
+    - name: "offline"
+      description: "Offline mode"
+      constant: "SUFFIX_OFFLINE"
+
+    - name: "background"
+      description: "Background operation"
+      constant: "SUFFIX_BACKGROUND"
+
+    - name: "auto"
+      description: "Automatic operation"
+      constant: "SUFFIX_AUTO"
+
+    - name: "manual"
+      description: "Manual operation"
+      constant: "SUFFIX_MANUAL"
+
+    # 添加你的场景后缀...
+
+# ============================================================================
+# 敏感数据定义
+# ============================================================================
+sensitive_data:
+  # 需要匿名化的数据类型
+  - name: "user_name"
+    anonymization_method: "truncate"  # 截断
+    placeholder: "**********"
+
+  - name: "user_id"
+    anonymization_method: "hash"      # 哈希
+    placeholder: "{hashed_id}"
+
+  - name: "auth_token"
+    anonymization_method: "size_only" # 只记录大小
+    placeholder: "{size} bytes"
+
+  - name: "credential"
+    anonymization_method: "omit"      # 省略
+    placeholder: "[REDACTED]"
+
+  # 添加你的敏感数据类型...
+
+# ============================================================================
+# 性能阈值定义（毫秒）
+# ============================================================================
+performance_thresholds:
+  # 不同类型操作的预期耗时
+  # 超过这些阈值的操作应该添加 HiTrace
+
+  fast_operation: 1          # < 1ms: 不需要追踪
+  normal_operation: 10       # 1-10ms: 关键路径考虑
+  slow_operation: 50         # 10-50ms: 应该追踪
+  very_slow_operation: 100   # > 50ms: 必须追踪
+
+  # 特定操作类型阈值
+  database: 10              # 数据库操作
+  file_io: 50               # 文件 I/O
+  network: 100              # 网络操作
+  ipc: 5                    # IPC 调用
+  encryption: 20            # 加密/解密
+
+  # 添加你的特定阈值...
+
+# ============================================================================
+# 特殊规则和例外
+# ============================================================================
+exceptions:
+  # 底层工具类例外
+  low_level_utilities:
+    - path: "frameworks/common/utils/"
+      operations:
+        - name: "file_operation"
+          constant: "OPERATION_FILE"
+          description: "Basic file operations"
+          approved: true
+          approval_date: "2026-03-23"
+          approver: "Architecture Team"
+
+    # 添加你的底层工具类例外...
+
+  # 客户端生命周期事件例外
+  client_lifecycle_events:
+    - module: "your_client"
+      events:
+        - "CLIENT_INITIALIZED"
+        - "CLIENT_CONNECTED"
+        - "CLIENT_DESTROYED"
+      approved: false
+      notes: "Requires architecture approval"
+
+    # 添加你的客户端生命周期例外...
+
+# ============================================================================
+# 检查脚本配置
+# ============================================================================
+scripts:
+  # 要检查的客户端目录（用于自动化脚本）
+  client_check_dirs:
+    - "frameworks/{module}/"
+    - "interfaces/kits/{module}/"
+    - "sdk/{module}/"
+
+  # 要排除的文件/目录
+  exclude_patterns:
+    - "*/test/*"
+    - "*/mock/*"
+    - "*/unittest/*"
+
+  # 要检查的违规模式
+  violation_patterns:
+    - pattern: "REPORT_.*_FAIL"
+      description: "Event reporting macro"
+      allowed_in_server: true
+      allowed_in_client: false
+
+    - pattern: "HiSysEventWrite"
+      description: "Direct HiSysEvent call"
+      allowed_in_server: true
+      allowed_in_client: false
+
+    - pattern: "Report.*LifeCycle"
+      description: "Lifecycle event reporting"
+      allowed_in_server: true
+      allowed_in_client: false
+
+    # 添加你的违规模式...
+
+# ============================================================================
+# 自定义规则
+# ============================================================================
+custom_rules:
+  # 添加你的模块特定的 DFX 规则
+
+  # 示例：网络模块特定规则
+  # - rule: "Asynchronous operations must use separate events"
+  #   description: "Report request start and completion separately"
+  #   severity: "warning"
+
+  # 示例：存储模块特定规则
+  # - rule: "Large file operations must have progress events"
+  #   description: "Report progress for files > 10MB"
+  #   severity: "error"
+  #   threshold_mb: 10
+
+# ============================================================================
+# 代码示例
+# ============================================================================
+code_examples:
+  # 替换为你的实际代码路径
+
+  # 服务端示例（正确使用 HiSysEvent）
+  server_example:
+    file: "services/{module}/src/{module}_service.cpp"
+    function: "CreateResource"
+    line_range: "100-150"
+    description: "Shows proper HiSysEvent usage in server"
+
+  # 客户端示例（正确避免 HiSysEvent）
+  client_example:
+    file: "frameworks/{module}/src/{module}_client.cpp"
+    function: "CreateResource"
+    line_range: "50-80"
+    description: "Shows proper client-side implementation"
+
+  # 添加你的代码示例...
+
+# ============================================================================
+# 联系信息
+# ============================================================================
+metadata:
+  # DFX skill 维护者
+  maintainer:
+    name: "Your Name"
+    email: "your.email@example.com"
+    team: "Your Team Name"
+
+  # 架构评审者
+  architecture_reviewer:
+    name: "Architecture Reviewer Name"
+    email: "arch@example.com"
+
+  # 文档版本
+  version: "1.0.0"
+  last_updated: "2026-03-23"
+
+  # 参考文档
+  references:
+    - "HiSysEvent Guide: https://docs.openharmony.cn/"
+    - "HiTrace Guide: https://docs.openharmony.cn/"
+    - "Internal DFX Standards: link/to/standards"
+
+# ============================================================================
+# 使用说明
+# ============================================================================
+# 1. 复制此文件为你的配置文件
+# 2. 替换所有 {placeholder} 为实际值
+# 3. 填充 operations、scenarios 等部分
+# 4. 运行: python3 generate_dfx_skill.py this_config.yaml output.md
+# 5. 审查生成的 output.md 并手动调整
+# ============================================================================
