@@ -5677,8 +5677,7 @@ ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::st
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (!BundlePermissionMgr::IsSystemApp() &&
-        profileType != ProfileType::NETWORK_PROFILE &&
-        profileType != ProfileType::PKG_CONTEXT_PROFILE) {
+        profileType != ProfileType::NETWORK_PROFILE) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
