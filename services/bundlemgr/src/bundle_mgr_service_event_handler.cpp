@@ -2191,6 +2191,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMap;
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallSysMap;
     std::unordered_set<std::string> overlayBundles;
+    // new OTA bundles, install for target users
+    std::unordered_map<std::string, std::vector<int32_t>> blackListBundles;
     // OTA new-preload whitelist: target install users for newly allowed bundles
     std::unordered_map<std::string, std::vector<int32_t>> otaNewInstallTargetUsersForNew;
     auto canMarkOtaNewInstallUser = [&dataMgr](const std::string &bundleName) {
@@ -2262,9 +2264,9 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             }
             LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA Install new -n %{public}s by path:%{public}s",
                 bundleName.c_str(), scanPathIter.c_str());
+            const auto allUsers = dataMgr->GetAllUser();
             if (needOtaNewInstall) {
                 std::vector<int32_t> targetUserIds;
-                const auto allUsers = dataMgr->GetAllUser();
                 if (multiUserInstallThirdPreloadApp_) {
                     for (auto userId : allUsers) {
                         if (userId <= Constants::U1 || isPrivateUser(userId)) {
@@ -2278,6 +2280,10 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 if (!targetUserIds.empty()) {
                     otaNewInstallTargetUsersForNew[bundleName] = targetUserIds;
                 }
+            }
+            std::vector<int32_t> userIdsForNewInstall;
+            if (ProcessNewInstallForBlackList(bundleName, allUsers, userIdsForNewInstall)) {
+                blackListBundles[bundleName] = userIdsForNewInstall;
             }
             std::vector<std::string> filePaths { scanPathIter };
             auto iter = needInstallSysMap.find(bundleName);
@@ -2488,6 +2494,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
         auto targetUsersIter = otaNewInstallTargetUsersForNew.find(bundleName);
         bool hasinstalledOnStartUser = dataMgr->HasUserInstallInBundle(bundleName, Constants::START_USERID);
+        auto blackListIter = blackListBundles.find(bundleName);
         if (targetUsersIter != otaNewInstallTargetUsersForNew.end()) {
             ret = OTAInstallSystemBundleTargetUser(path, bundleName, appType, item.second.second,
                 targetUsersIter->second);
@@ -2495,6 +2502,9 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             std::vector<int32_t> userIds;
             GetBundleNameAndUserIdFromPath(path.front(), userIds, bundleName);
             ret = OTAInstallSystemBundleTargetUser(path, item.first, appType, item.second.second, userIds);
+        } else if (blackListIter != blackListBundles.end()) {
+            ret = OTAInstallSystemBundleTargetUser(path, bundleName, appType, item.second.second,
+                blackListIter->second);
         } else {
             ret = OTAInstallSystemBundle(path, appType, item.second.second);
         }
@@ -6077,6 +6087,25 @@ bool BMSEventHandler::IsForceInstallListEmpty(const std::string &bundleName)
     }
     return isEmpty;
 }
+
+bool BMSEventHandler::ProcessNewInstallForBlackList(const std::string &bundleName,
+    const std::set<int32_t> &allUsers, std::vector<int32_t> &userIds)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bool ret = false;
+    for (auto userId : allUsers) {
+        if (userId == Constants::U1 || userId == Constants::DEFAULT_USERID) {
+            continue;
+        }
+        if (bmsExtensionDataMgr.CheckAppBlackList(bundleName, userId) != ERR_OK) {
+            ret = true;
+            continue;
+        }
+        userIds.emplace_back(userId);
+    }
+    return ret;
+}
+
 
 void BMSEventHandler::ProcessUpdateExtensionDirsApl()
 {

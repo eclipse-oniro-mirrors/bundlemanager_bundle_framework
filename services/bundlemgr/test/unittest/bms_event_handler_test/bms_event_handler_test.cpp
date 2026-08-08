@@ -3469,4 +3469,25 @@ HWTEST_F(BmsEventHandlerTest, OTAInstallSystemSkills_0100, Function | SmallTest 
     ret = handler->OTAInstallSystemSkills(filePaths, userIds);
     EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
 }
+
+/**
+ * @tc.number: ProcessNewInstallForBlackList_0100
+ * @tc.name: test ProcessNewInstallForBlackList with single user not in blacklist
+ * @tc.desc: test ProcessNewInstallForBlackList when single user is not in blacklist
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessNewInstallForBlackList_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+
+    std::string bundleName = BUNDLE_NAME;
+    std::set<int32_t> allUsers = { Constants::DEFAULT_USERID };
+    std::vector<int32_t> userIds;
+
+    bool ret = handler->ProcessNewInstallForBlackList(bundleName, allUsers, userIds);
+
+    // Should return false (no users in blacklist) and userIds should contain the user
+    EXPECT_FALSE(ret);
+    EXPECT_EQ(userIds.size(), 0);
+}
 } // OHOS
