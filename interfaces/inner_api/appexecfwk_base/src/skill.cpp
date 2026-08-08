@@ -52,6 +52,7 @@ constexpr const char* PATH_SEPARATOR = "/";
 const char WILDCARD = '*';
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 const char* LINK_FEATURE = "linkFeature";
+constexpr const char* MAILTO_SCHEME_PREFIX = "mailto:";
 const uint32_t PROTOCOL_OFFSET = 3;
 }; // namespace
 
@@ -204,6 +205,11 @@ bool Skill::MatchUriAndType(const std::string &rawUriString, const std::string &
                 return true;
             }
         }
+        // mailto is an opaque uri, the suffix belongs to the mail address instead of a
+        // file name, so the mime type can not be inferred from it
+        if (StartsWith(uriString, MAILTO_SCHEME_PREFIX)) {
+            return false;
+        }
         // if uri is a file path, match type by the suffix
         return MatchMimeType(uriString);
     } else if (uriString.empty() && !type.empty()) {
@@ -298,6 +304,11 @@ bool Skill::MatchUriAndType(const std::string &rawUriString, const std::string &
                 matchUriIndex = uriIndex;
                 return true;
             }
+        }
+        // mailto is an opaque uri, the suffix belongs to the mail address instead of a
+        // file name, so the mime type can not be inferred from it
+        if (StartsWith(uriString, MAILTO_SCHEME_PREFIX)) {
+            return false;
         }
         // if uri is a file path, match type by the suffix
         return MatchMimeType(uriString, matchUriIndex);
