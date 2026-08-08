@@ -2182,7 +2182,6 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0011, Function | SmallTest | Level1)
     skill.uris.emplace_back(skillUri);
     EXPECT_EQ(true, skill.MatchUriAndType("mailto.jpg", ""));
     EXPECT_EQ(true, skill.MatchUriAndType("mailtoxxx.jpg", ""));
-    // scheme is matched case sensitively, keep consistent with android IntentFilter
     EXPECT_EQ(true, skill.MatchUriAndType("MailTo:support@xxx.jpg", ""));
 }
 
