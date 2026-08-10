@@ -30,31 +30,28 @@ void ServiceCenterConnection::OnAbilityConnectDone(
     LOG_I(BMS_TAG_DEFAULT, "OnAbilityConnectDone start");
     if (resultCode != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "OnAbilityConnectDone resultCode = %{public}d", resultCode);
-        connectState_ = ServiceCenterConnectState::DISCONNECTED;
-        cv_.notify_all();
+        UpdateConnectState(ServiceCenterConnectState::DISCONNECTED);
         return;
     }
 
     if (remoteObject == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "OnAbilityConnectDone remoteObject is nullptr");
-        connectState_ = ServiceCenterConnectState::DISCONNECTED;
-        cv_.notify_all();
+        UpdateConnectState(ServiceCenterConnectState::DISCONNECTED);
         return;
     }
     serviceCenterRemoteObject_ = remoteObject;
-    connectState_ = ServiceCenterConnectState::CONNECTED;
 
     deathRecipient_ = new (std::nothrow) ServiceCenterDeathRecipient(connectAbilityMgr_);
     if (deathRecipient_ == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "Failed to create ServiceCenterDeathRecipient");
-        cv_.notify_all();
+        UpdateConnectState(ServiceCenterConnectState::CONNECTED);
         return;
     }
 
     if (!serviceCenterRemoteObject_->AddDeathRecipient(deathRecipient_)) {
         LOG_E(BMS_TAG_DEFAULT, "Failed to add AbilityManagerDeathRecipient");
     }
-    cv_.notify_all();
+    UpdateConnectState(ServiceCenterConnectState::CONNECTED);
     LOG_I(BMS_TAG_DEFAULT, "OnAbilityConnectDone end");
 }
 
@@ -65,11 +62,16 @@ void ServiceCenterConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementN
         serviceCenterRemoteObject_->RemoveDeathRecipient(deathRecipient_);
     }
 
-    connectState_ = ServiceCenterConnectState::DISCONNECTED;
     serviceCenterRemoteObject_ = nullptr;
-
-    cv_.notify_all();
+    UpdateConnectState(ServiceCenterConnectState::DISCONNECTED);
     LOG_I(BMS_TAG_DEFAULT, "OnAbilityDisconnectDone end");
+}
+
+void ServiceCenterConnection::UpdateConnectState(int32_t state)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    connectState_ = state;
+    cv_.notify_all();
 }
 
 sptr<IRemoteObject> ServiceCenterConnection::GetRemoteObject()

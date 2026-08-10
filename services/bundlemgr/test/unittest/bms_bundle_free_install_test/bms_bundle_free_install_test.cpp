@@ -1082,8 +1082,9 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0001, Function | Smal
         bundleMgr->UpgradeAtomicService(want, USERID);
         int32_t connectState = 0;
         std::condition_variable cv;
+        std::mutex mutex;
         const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
-        ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+        ServiceCenterConnection connection(connectState, cv, mutex, connectAbilityMgr);
         bool ret = bundleMgr->QueryAbilityInfo(want,
             0, USERID, abilityInfo, connection.serviceCenterRemoteObject_);
         EXPECT_EQ(ret, false);
@@ -1115,8 +1116,9 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0003, Function | Smal
         bundleMgr->DisconnectDelay();
         int32_t connectState = 0;
         std::condition_variable cv;
+        std::mutex mutex;
         const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
-        ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+        ServiceCenterConnection connection(connectState, cv, mutex, connectAbilityMgr);
         bool ret = bundleMgr->ConnectAbility(want, connection.serviceCenterRemoteObject_);
         EXPECT_FALSE(ret);
         bundleMgr->DisconnectAbility();
@@ -1146,8 +1148,9 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0004, Function | Smal
         InnerBundleInfo innerBundleInfo;
         std::condition_variable cv;
         int32_t connectState = 0;
+        std::mutex mutex;
         const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
-        ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+        ServiceCenterConnection connection(connectState, cv, mutex, connectAbilityMgr);
         bool ret = bundleMgr->CheckIsModuleNeedUpdate(
             innerBundleInfo, want, 100, connection.serviceCenterRemoteObject_);
         EXPECT_FALSE(ret);
@@ -1476,8 +1479,9 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityConnectDone_0001, Function | SmallTe
 {
     int32_t connectState = 0;
     std::condition_variable cv;
+    std::mutex mutex;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
-    ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+    ServiceCenterConnection connection(connectState, cv, mutex, connectAbilityMgr);
     ElementName element;
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -1497,8 +1501,9 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityConnectDone_0002, Function | SmallTe
 {
     int32_t connectState = 0;
     std::condition_variable cv;
+    std::mutex mutex;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
-    ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+    ServiceCenterConnection connection(connectState, cv, mutex, connectAbilityMgr);
     ElementName element;
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -1518,8 +1523,9 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityConnectDone_0003, Function | SmallTe
 {
     int32_t connectState = 0;
     std::condition_variable cv;
+    std::mutex mutex;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
-    ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+    ServiceCenterConnection connection(connectState, cv, mutex, connectAbilityMgr);
     ElementName element;
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -1922,8 +1928,9 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0100, Function | Smal
 {
     int32_t connectState = 0;
     std::condition_variable cv;
+    std::mutex mutex;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
-    ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+    ServiceCenterConnection connection(connectState, cv, mutex, connectAbilityMgr);
     ElementName element;
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -1949,8 +1956,9 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0200, Function | Smal
 {
     int32_t connectState = 0;
     std::condition_variable cv;
+    std::mutex mutex;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
-    ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+    ServiceCenterConnection connection(connectState, cv, mutex, connectAbilityMgr);
     ElementName element;
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -1975,8 +1983,9 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0300, Function | Smal
 {
     int32_t connectState = 0;
     std::condition_variable cv;
+    std::mutex mutex;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
-    ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+    ServiceCenterConnection connection(connectState, cv, mutex, connectAbilityMgr);
     ElementName element;
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -2001,8 +2010,9 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0400, Function | Smal
 {
     int32_t connectState = 0;
     std::condition_variable cv;
+    std::mutex mutex;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
-    ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+    ServiceCenterConnection connection(connectState, cv, mutex, connectAbilityMgr);
     ElementName element;
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
