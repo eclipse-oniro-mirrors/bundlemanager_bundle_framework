@@ -25,6 +25,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_service_constants.h"
+#include "dual_mode_helper.h"
 #include "ipc_skeleton.h"
 
 namespace OHOS {
@@ -698,6 +699,15 @@ ErrCode AppControlManagerHostImpl::SetDisposedRules(
     GetCallerByUid(uid, callerName);
     bool isEdm = uid == AppControlConstants::EDM_UID ? true : false;
 
+    for (const auto &disposedRuleConfiguration : disposedRuleConfigurations) {
+        int32_t appIndex = disposedRuleConfiguration.appIndex;
+        if ((appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) &&
+            (appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX || !DualModeHelper::IsDualModeDevice())) {
+            LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
+            return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+        }
+    }
+    
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     for (auto &disposedRuleConfiguration : disposedRuleConfigurations) {
         disposedRuleConfiguration.disposedRule.isEdm = isEdm;
@@ -822,7 +832,8 @@ ErrCode AppControlManagerHostImpl::GetDisposedRuleForCloneApp(const std::string 
         LOG_W(BMS_TAG_DEFAULT, "verify get disposed rule permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if ((appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) &&
+        (appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX || !DualModeHelper::IsDualModeDevice())) {
         LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -855,7 +866,8 @@ ErrCode AppControlManagerHostImpl::SetDisposedRuleForCloneApp(const std::string 
         LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if ((appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) &&
+        (appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX || !DualModeHelper::IsDualModeDevice())) {
         LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
@@ -895,7 +907,8 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedRuleForCloneApp(const std::stri
         LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if ((appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) &&
+        (appIndex != ServiceConstants::DUAL_MODE_CLONE_APP_INDEX || !DualModeHelper::IsDualModeDevice())) {
         LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }

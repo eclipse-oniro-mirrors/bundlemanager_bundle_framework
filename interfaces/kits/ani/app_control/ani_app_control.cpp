@@ -37,6 +37,7 @@ constexpr const char* PROPERTYNAME_APPINDEX = "appIndex";
 constexpr const char* PROPERTYNAME_DISPOSEDRULE = "disposedRule";
 constexpr const char* PARAM_LENGTH_ERROR = "parameter length invalid";
 constexpr uint32_t MAX_VECTOR_NUM = 1000;
+constexpr int32_t DUAL_MODE_CLONE_APP_INDEX = 10000;
 } // namespace
 
 static void AniSetDisposedStatus(ani_env* env, ani_string aniAppId, ani_object aniWant, ani_boolean aniIsSync)
@@ -147,11 +148,7 @@ static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_int a
     }
 
     ErrCode ret = ERR_OK;
-    if (aniAppIndex == Constants::MAIN_APP_INDEX) {
-        ret = appControlProxy->DeleteDisposedStatus(appId);
-    } else {
-        ret = appControlProxy->DeleteDisposedRuleForCloneApp(appId, aniAppIndex);
-    }
+    ret = appControlProxy->DeleteDisposedRuleForCloneApp(appId, aniAppIndex);
     if (ret != ERR_OK) {
         APP_LOGE("DeleteDisposedStatusSync failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
@@ -183,11 +180,7 @@ static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_int 
 
     DisposedRule disposedRule;
     ErrCode ret = ERR_OK;
-    if (aniAppIndex == Constants::MAIN_APP_INDEX) {
-        ret = appControlProxy->GetDisposedRule(appId, disposedRule);
-    } else {
-        ret = appControlProxy->GetDisposedRuleForCloneApp(appId, disposedRule, aniAppIndex);
-    }
+    ret = appControlProxy->GetDisposedRuleForCloneApp(appId, disposedRule, aniAppIndex);
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedRule failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
@@ -282,11 +275,7 @@ static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object ani
     }
 
     ErrCode ret = ERR_OK;
-    if (aniAppIndex == Constants::MAIN_APP_INDEX) {
-        ret = appControlProxy->SetDisposedRule(appId, rule);
-    } else {
-        ret = appControlProxy->SetDisposedRuleForCloneApp(appId, rule, aniAppIndex);
-    }
+    ret = appControlProxy->SetDisposedRuleForCloneApp(appId, rule, aniAppIndex);
     if (ret != ERR_OK) {
         APP_LOGE("SetDisposedRule failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
@@ -428,7 +417,8 @@ static bool ParseDisposedRuleConfiguration(
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
         return false;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (appIndex < Constants::MAIN_APP_INDEX ||
+        (appIndex > BundleFileUtil::GetCloneMaxCount() && appIndex != DUAL_MODE_CLONE_APP_INDEX)) {
         APP_LOGE("appIndex invalid");
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, SET_DISPOSED_RULES, "");
         return false;

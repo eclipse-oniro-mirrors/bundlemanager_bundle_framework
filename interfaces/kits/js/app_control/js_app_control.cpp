@@ -37,6 +37,7 @@ using namespace OHOS::AAFwk;
 namespace {
 const char* PARAM_LENGTH_ERROR = "parameter length invalid";
 const int16_t MAX_VECTOR_NUM = 1000;
+const int32_t DUAL_MODE_CLONE_APP_INDEX = 10000;
 }
 static ErrCode InnerGetDisposedStatus(napi_env, const std::string& appId, Want& disposedWant)
 {
@@ -298,11 +299,7 @@ static napi_value InnerDeleteDisposedStatusSync(napi_env env, std::string &appId
         return nullptr;
     }
     ErrCode ret = ERR_OK;
-    if (appIndex == Constants::MAIN_APP_INDEX) {
-        ret = appControlProxy->DeleteDisposedStatus(appId);
-    } else {
-        ret = appControlProxy->DeleteDisposedRuleForCloneApp(appId, appIndex);
-    }
+    ret = appControlProxy->DeleteDisposedRuleForCloneApp(appId, appIndex);
     ret = CommonFunc::ConvertErrCode(ret);
     if (ret != ERR_OK) {
         APP_LOGE("DeleteDisposedStatusSync failed");
@@ -639,7 +636,8 @@ bool ParseDisposedRuleConfiguration(napi_env env, napi_value nDisposedRuleConfig
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, Constants::APP_INDEX, TYPE_NUMBER);
         return false;
     }
-    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > BundleFileUtil::GetCloneMaxCount()) {
+    if (appIndex < Constants::MAIN_APP_INDEX ||
+        (appIndex > BundleFileUtil::GetCloneMaxCount() && appIndex != DUAL_MODE_CLONE_APP_INDEX)) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ERROR_INVALID_APPINDEX, SET_DISPOSED_RULES);
         napi_throw(env, businessError);
@@ -713,11 +711,7 @@ static napi_value InnerGetDisposedRule(napi_env env, std::string &appId, int32_t
     }
     DisposedRule disposedRule;
     ErrCode ret = ERR_OK;
-    if (appIndex == Constants::MAIN_APP_INDEX) {
-        ret = appControlProxy->GetDisposedRule(appId, disposedRule);
-    } else {
-        ret = appControlProxy->GetDisposedRuleForCloneApp(appId, disposedRule, appIndex);
-    }
+    ret = appControlProxy->GetDisposedRuleForCloneApp(appId, disposedRule, appIndex);
     ret = CommonFunc::ConvertErrCode(ret);
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedStatusSync failed");
@@ -878,11 +872,7 @@ static napi_value InnerSetDisposedRule(napi_env env, std::string &appId, Dispose
         return nRet;
     }
     ErrCode ret = ERR_OK;
-    if (appIndex == Constants::MAIN_APP_INDEX) {
-        ret = appControlProxy->SetDisposedRule(appId, rule);
-    } else {
-        ret = appControlProxy->SetDisposedRuleForCloneApp(appId, rule, appIndex);
-    }
+    ret = appControlProxy->SetDisposedRuleForCloneApp(appId, rule, appIndex);
     ret = CommonFunc::ConvertErrCode(ret);
     if (ret != NO_ERROR) {
         APP_LOGE("SetDisposedRule err = %{public}d", ret);

@@ -29,12 +29,14 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
+#include "dual_mode_helper.h"
 #include "if_system_ability_manager.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "iservice_registry.h"
 #include "mock_status_receiver.h"
+#include "parameters.h"
 #include "permission_define.h"
 #include "scope_guard.h"
 #include "system_ability_definition.h"
@@ -70,6 +72,7 @@ const int32_t MAIN_APP_INDEX = -1;
 const int32_t CLONE_APP_INDEX_MAX = 6;
 const int32_t APP_INDEX = 1;
 const int32_t UNSPECIFIED_USERID = -2;
+const int32_t DUAL_MODE_CLONE_APP_INDEX = 10000;
 }  // namespace
 
 class MockAppControlHost : public AppControlHost {
@@ -5792,6 +5795,265 @@ HWTEST_F(BmsBundleAppControlTest, GetDisposedRulesBySetter_0100, Function | Smal
     std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
     ErrCode ret = appControlProxy->GetDisposedRulesBySetter("1", 0, TEST_USERID, disposedRuleConfigurations);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_GetDisposedRuleForCloneApp_DualMode_0100
+ * @tc.name: test appIndex = 10000 rejected on non-dual-mode device
+ * @tc.desc: 1.appIndex = 10000, !IsDualModeDevice -> false
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_GetDisposedRuleForCloneApp_DualMode_0100,
+    Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    DisposedRule rule;
+    auto ret = impl->GetDisposedRuleForCloneApp(APPID, rule, DUAL_MODE_CLONE_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_GetDisposedRuleForCloneApp_DualMode_0200
+ * @tc.name: test appIndex = 10000 on dual-mode device
+ * @tc.desc: 1.appIndex = 10000, IsDualModeDevice -> appIndex valid
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_GetDisposedRuleForCloneApp_DualMode_0200,
+    Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
+    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
+    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
+        OHOS::system::RemoveParameter("persist.bms.ispcmode");
+        OHOS::system::RemoveParameter("persist.bms.mainmode");
+    });
+
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    DisposedRule rule;
+    auto ret = impl->GetDisposedRuleForCloneApp(APPID, rule, DUAL_MODE_CLONE_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_GetDisposedRuleForCloneApp_DualMode_0300
+ * @tc.name: test invalid appIndex not in clone range and not 10000
+ * @tc.desc: 1.appIndex = -3, out of range and != 10000 -> false
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_GetDisposedRuleForCloneApp_DualMode_0300,
+    Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    DisposedRule rule;
+    auto ret = impl->GetDisposedRuleForCloneApp(APPID, rule, -3, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_GetDisposedRuleForCloneApp_DualMode_0400
+ * @tc.name: test appIndex = 0 in valid range but fails on null appControlManager_
+ * @tc.desc: 1.appIndex = 0 -> in valid range, appControlManager_ null
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_GetDisposedRuleForCloneApp_DualMode_0400,
+    Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    DisposedRule rule;
+    auto ret = impl->GetDisposedRuleForCloneApp(APPID, rule, Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_SetDisposedRuleForCloneApp_DualMode_0100
+ * @tc.name: test appIndex = 10000 rejected on non-dual-mode device
+ * @tc.desc: 1.appIndex = 10000, !IsDualModeDevice -> false
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRuleForCloneApp_DualMode_0100,
+    Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    DisposedRule rule;
+    auto ret = impl->SetDisposedRuleForCloneApp(APPID, rule, DUAL_MODE_CLONE_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_SetDisposedRuleForCloneApp_DualMode_0200
+ * @tc.name: test appIndex = 10000 on dual-mode device
+ * @tc.desc: 1.appIndex = 10000, IsDualModeDevice -> appIndex valid
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRuleForCloneApp_DualMode_0200,
+    Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
+    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
+    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
+        OHOS::system::RemoveParameter("persist.bms.ispcmode");
+        OHOS::system::RemoveParameter("persist.bms.mainmode");
+    });
+
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    DisposedRule rule;
+    auto ret = impl->SetDisposedRuleForCloneApp(APPID, rule, DUAL_MODE_CLONE_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_SetDisposedRuleForCloneApp_DualMode_0300
+ * @tc.name: test invalid appIndex not in clone range and not 10000
+ * @tc.desc: 1.appIndex = -3, out of range and != 10000 -> false
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRuleForCloneApp_DualMode_0300,
+    Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    DisposedRule rule;
+    auto ret = impl->SetDisposedRuleForCloneApp(APPID, rule, -3, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_SetDisposedRuleForCloneApp_DualMode_0400
+ * @tc.name: test appIndex = 0 in valid range but fails on null appControlManager_
+ * @tc.desc: 1.appIndex = 0 -> in valid range, appControlManager_ null
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRuleForCloneApp_DualMode_0400,
+    Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    DisposedRule rule;
+    auto ret = impl->SetDisposedRuleForCloneApp(APPID, rule, Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_DeleteDisposedRuleForCloneApp_DualMode_0100
+ * @tc.name: test appIndex = 10000 rejected on non-dual-mode device
+ * @tc.desc: 1.appIndex = 10000, !IsDualModeDevice -> false
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_DeleteDisposedRuleForCloneApp_DualMode_0100,
+    Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto ret = impl->DeleteDisposedRuleForCloneApp(APPID, DUAL_MODE_CLONE_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_DeleteDisposedRuleForCloneApp_DualMode_0200
+ * @tc.name: test appIndex = 10000 on dual-mode device
+ * @tc.desc: 1.appIndex = 10000, IsDualModeDevice -> appIndex valid
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_DeleteDisposedRuleForCloneApp_DualMode_0200,
+    Function | SmallTest | Level1)
+{
+    OHOS::system::SetParameter("persist.bms.test_dual_mode", "true");
+    OHOS::system::SetParameter("persist.bms.ispcmode", "1");
+    OHOS::system::SetParameter("persist.bms.mainmode", "0");
+    ScopeGuard dualModeGuard([&] {
+        OHOS::system::RemoveParameter("persist.bms.test_dual_mode");
+        OHOS::system::RemoveParameter("persist.bms.ispcmode");
+        OHOS::system::RemoveParameter("persist.bms.mainmode");
+    });
+
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    auto ret = impl->DeleteDisposedRuleForCloneApp(APPID, DUAL_MODE_CLONE_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_DeleteDisposedRuleForCloneApp_DualMode_0300
+ * @tc.name: test invalid appIndex not in clone range and not 10000
+ * @tc.desc: 1.appIndex = -3, out of range and != 10000 -> false
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_DeleteDisposedRuleForCloneApp_DualMode_0300,
+    Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto ret = impl->DeleteDisposedRuleForCloneApp(APPID, -3, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_DeleteDisposedRuleForCloneApp_DualMode_0400
+ * @tc.name: test appIndex = 0 in valid range but fails on null appControlManager_
+ * @tc.desc: 1.appIndex = 0 -> in valid range, appControlManager_ null
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_DeleteDisposedRuleForCloneApp_DualMode_0400,
+    Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    auto ret = impl->DeleteDisposedRuleForCloneApp(APPID, Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_SetDisposedRules_DualMode_0100
+ * @tc.name: test SetDisposedRules with appIndex = 10000 on non-dual-mode device
+ * @tc.desc: 1.appIndex = 10000, !IsDualModeDevice -> false
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRules_DualMode_0100,
+    Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(impl->appControlManager_, nullptr);
+
+    DisposedRuleConfiguration config;
+    config.appId = APPID;
+    config.appIndex = DUAL_MODE_CLONE_APP_INDEX;
+    config.disposedRule.componentType = ComponentType::UI_ABILITY;
+    config.disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    config.disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    std::vector<DisposedRuleConfiguration> configurations = { config };
+
+    auto ret = impl->SetDisposedRules(configurations, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_SetDisposedRules_DualMode_0200
+ * @tc.name: test SetDisposedRules with invalid appIndex not in clone range and not 10000
+ * @tc.desc: 1.appIndex = -3, out of range and != 10000 -> false
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_SetDisposedRules_DualMode_0200,
+    Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(impl->appControlManager_, nullptr);
+
+    DisposedRuleConfiguration config;
+    config.appId = APPID;
+    config.appIndex = -3;
+    config.disposedRule.componentType = ComponentType::UI_ABILITY;
+    config.disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    config.disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    std::vector<DisposedRuleConfiguration> configurations = { config };
+
+    auto ret = impl->SetDisposedRules(configurations, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
 }
 
 } // OHOS
