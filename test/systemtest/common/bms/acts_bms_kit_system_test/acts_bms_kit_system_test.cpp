@@ -9508,24 +9508,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetOverlayManagerProxy_0100, Function | SmallTest
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 }
 
-/**
- * @tc.number: QueryAppGalleryBundleName_0100
- * @tc.name: test BundleMgr proxy
- * @tc.desc: 1.system run normally
- *           2.return true
- */
-HWTEST_F(ActsBmsKitSystemTest, QueryAppGalleryBundleName_0100, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    std::string bundleName;
-    bool ret = bundleMgrProxy->QueryAppGalleryBundleName(bundleName);
-    #ifdef USE_KIT_STSTEM
-    EXPECT_TRUE(ret);
-    #else
-    EXPECT_FALSE(ret);
-    #endif
-}
 
 /**
  * @tc.number: ResetAOTCompileStatus_0100

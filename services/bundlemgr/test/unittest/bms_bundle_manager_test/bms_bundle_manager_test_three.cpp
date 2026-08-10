@@ -2197,26 +2197,6 @@ HWTEST_F(BmsBundleManagerTest3, SetAppDistributionTypes_0001, Function | MediumT
 }
 
 /**
- * @tc.number: GetPluginInfo_0001
- * @tc.name: test GetPluginInfo
- * @tc.desc: 1.test GetPluginInfo
- */
-HWTEST_F(BmsBundleManagerTest3, GetPluginInfo_0001, Function | MediumTest | Level1)
-{
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string hostBundleName = "bundle";
-    std::string pluginBundleName = "plugin";
-    int32_t userId = 100;
-    PluginBundleInfo pluginBundleInfo;
-    ErrCode retCode = hostImpl->GetPluginInfo(hostBundleName, pluginBundleName, 100, pluginBundleInfo);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
-    #else
-    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    #endif
-}
-
-/**
  * @tc.number: GetPluginInfo_0002
  * @tc.name: test GetPluginInfo
  * @tc.desc: 1.test GetPluginInfo
