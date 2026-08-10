@@ -3533,6 +3533,11 @@ void BMSEventHandler::HandleHmpUninstall()
 
 bool BMSEventHandler::IsSystemUpgrade()
 {
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr != nullptr && dataMgr->IsBopdModeEnabled()) {
+        LOG_I(BMS_TAG_DEFAULT, "system should be upgraded due to bopd mode enabled");
+        return true;
+    }
     return IsTestSystemUpgrade() || IsSystemFingerprintChanged();
 }
 
