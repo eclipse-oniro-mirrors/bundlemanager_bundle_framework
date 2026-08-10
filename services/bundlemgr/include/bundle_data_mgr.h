@@ -103,6 +103,8 @@ public:
      */
     bool LoadDataFromPersistentStorage();
 
+    bool IsBopdModeEnabled();
+
     /**
      * @brief Classify dual-mode apps into queryable and non-queryable based on current mode.
      * This function should be called after RestoreUidAndGid() to ensure proper classification.

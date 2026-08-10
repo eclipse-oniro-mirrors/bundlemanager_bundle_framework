@@ -268,6 +268,15 @@ bool BundleDataMgr::LoadDataFromPersistentStorage()
     return true;
 }
 
+bool BundleDataMgr::IsBopdModeEnabled()
+{
+    static const std::unordered_set<std::string> bopdModeSet = {
+        "0x2", "0x3", "0x6", "0x7", "0xa", "0xe", "0xf"
+    };
+    std::string bopdMode = OHOS::system::GetParameter("ohos.boot.bopd.mode", "");
+    return !bopdMode.empty() && bopdModeSet.find(bopdMode) != bopdModeSet.end();
+}
+
 void BundleDataMgr::CompatibleOldBundleStateInKvDb()
 {
     for (const auto& bundleInfoItem : bundleInfos_) {
