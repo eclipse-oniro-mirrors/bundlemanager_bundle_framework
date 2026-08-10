@@ -9609,7 +9609,8 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, bool
     }
     std::string developerId = innerBundleInfo.GetDeveloperId();
     if (!developerId.empty()) {
-        std::string odid = GenerateOdidNoLock(developerId);
+        std::string odid;
+        GenerateOdid(developerId, odid);
         innerBundleInfo.UpdateOdid(developerId, odid);
         if (!lastOdid.empty() && !odid.empty() && odid != lastOdid) {
             FirstInstallBundleInfo lastOdidInfo;
