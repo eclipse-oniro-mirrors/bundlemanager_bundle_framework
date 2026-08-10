@@ -25,6 +25,7 @@
 
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "bundle_resource_manager.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
@@ -500,6 +501,63 @@ HWTEST_F(BmsBundleResourceManagerTest, GetIconById_0014, Function | SmallTest | 
     EXPECT_NE(dataMgr, nullptr);
     std::string iconBase64 = dataMgr->GetIconById(BUNDLE_NAME, MODULE_NAME, ABILITY_ICON_ID, 0, 0);
     EXPECT_EQ(iconBase64, "");
+}
+
+/**
+ * @tc.number: BundleResourceManager_RebuildResourceDb_0100
+ * @tc.name: RebuildResourceDb normal flow
+ * @tc.desc: Test RebuildResourceDb with valid BundleMgrService and DataMgr
+ * @tc.require: issueIXXXXX
+ */
+HWTEST_F(BmsBundleResourceManagerTest, BundleResourceManager_RebuildResourceDb_0100, Function | MediumTest | Level1)
+{
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(bundleMgrService, nullptr);
+    auto dataMgr = bundleMgrService->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Call RebuildResourceDb - should complete without crash
+    auto bundleResourceManager = std::make_shared<BundleResourceManager>();
+    ASSERT_NE(bundleResourceManager, nullptr);
+    bundleResourceManager->RebuildResourceDb();
+}
+
+/**
+ * @tc.number: BundleResourceManager_RebuildResourceDb_0200
+ * @tc.name: RebuildResourceDb with null BundleMgrService
+ * @tc.desc: Test RebuildResourceDb handles null BundleMgrService gracefully
+ * @tc.require: issueIXXXXX
+ */
+HWTEST_F(BmsBundleResourceManagerTest, BundleResourceManager_RebuildResourceDb_0200, Function | SmallTest | Level0)
+{
+    // Note: Can't actually set DelayedSingleton to null, so test the null check path
+    // by verifying the method exists and handles null internally
+    auto bundleResourceManager = std::make_shared<BundleResourceManager>();
+    ASSERT_NE(bundleResourceManager, nullptr);
+    // The null check is handled inside RebuildResourceDb implementation
+    bundleResourceManager->RebuildResourceDb();
+}
+
+/**
+ * @tc.number: BundleResourceManager_RebuildResourceDb_0300
+ * @tc.name: RebuildResourceDb with null DataMgr
+ * @tc.desc: Test RebuildResourceDb handles null DataMgr gracefully
+ * @tc.require: issueIXXXXX
+ */
+HWTEST_F(BmsBundleResourceManagerTest, BundleResourceManager_RebuildResourceDb_0300, Function | SmallTest | Level0)
+{
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(bundleMgrService, nullptr);
+    // Temporarily clear the data mgr
+    auto savedDataMgr = bundleMgrService->GetDataMgr();
+    bundleMgrService->dataMgr_ = nullptr;
+
+    auto bundleResourceManager = std::make_shared<BundleResourceManager>();
+    ASSERT_NE(bundleResourceManager, nullptr);
+    bundleResourceManager->RebuildResourceDb();
+
+    // Restore data mgr
+    bundleMgrService->dataMgr_ = savedDataMgr;
 }
 }
 } // OHOS

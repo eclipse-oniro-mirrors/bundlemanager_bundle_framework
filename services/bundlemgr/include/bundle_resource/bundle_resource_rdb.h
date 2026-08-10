@@ -71,6 +71,8 @@ public:
     bool GetAllExtensionAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex = 0);
 
+    void CheckDbError(const BmsRdbConfig &bmsRdbConfig);
+
 private:
     bool ConvertToBundleResourceInfo(
         const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,

@@ -2488,4 +2488,16 @@ HWTEST_F(BmsExtensionDataMgrTest, GetInstallAndRecoverList_0001, Function | Smal
     res = bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
     EXPECT_FALSE(res);
 }
+
+/**
+ * @tc.number: RebuildBundleResourceTable_0001
+ * @tc.name: RebuildBundleResourceTable
+ * @tc.desc: RebuildBundleResourceTable
+ */
+HWTEST_F(BmsExtensionDataMgrTest, RebuildBundleResourceTable_0001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    auto res = bmsExtensionDataMgr.RebuildBundleResourceTable();
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
 } // OHOS

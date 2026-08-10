@@ -31,6 +31,7 @@
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
+#include "bundle_resource_constants.h"
 #include "bundle_scanner.h"
 #include "event_report.h"
 #include "on_demand_install_data_mgr.h"
@@ -432,6 +433,8 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::ADD_IDLE_INFO);
     UpdateOtaFlag(OTAFlag::UPDATE_ALTERNATE_ICONS);
     UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON_EXTEND_FIELDS);
+    UpdateOtaFlag(OTAFlag::DELETE_RESOURCE_SLAVE_DB);
+    UpdateOtaFlag(OTAFlag::MIGRATE_UNINSTALL_BUNDLE_RESOURCE);
     (void)SaveUpdatePermissionsFlag();
     PerfProfile::GetInstance().Dump();
 }
@@ -453,6 +456,8 @@ void BMSEventHandler::BundleRebootStartEvent()
         (void)SaveBmsSystemTimeForShortcut();
         AOTHandler::GetInstance().HandleOTA();
         ModuleJsonUpdater::UpdateModuleJsonAsync();
+        ProcessDeleteResourceSlaveDb();
+        ProcessMigrateUninstallBundleResource();
     } else {
         HandlePreInstallException();
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
@@ -5133,8 +5138,19 @@ void BMSEventHandler::ProcessBundleResourceInfo()
 
     for (const auto &bundleName : needAddResourceBundles) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "-n %{public}s add resource when reboot", bundleName.c_str());
-        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, Constants::START_USERID,
-            ADD_RESOURCE_TYPE::INSTALL_BUNDLE);
+        std::set<int32_t> userIds;
+        if (!dataMgr->GetInnerBundleInfoUsers(bundleName, userIds) || userIds.empty()) {
+            LOG_W(BMS_TAG_DEFAULT, "-n %{public}s has no installed user, skip", bundleName.c_str());
+            continue;
+        }
+        for (const auto &userId : userIds) {
+            BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId,
+                ADD_RESOURCE_TYPE::INSTALL_BUNDLE);
+            std::vector<int32_t> appIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
+            for (const auto &appIndex : appIndexes) {
+                BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, userId, appIndex, false);
+            }
+        }
     }
     LOG_I(BMS_TAG_DEFAULT, "ProcessBundleResourceInfo end");
 }
@@ -6160,6 +6176,81 @@ bool BMSEventHandler::ProcessIdleInfo()
     }
     UpdateOtaFlag(OTAFlag::ADD_IDLE_INFO);
     return true;
+}
+
+void BMSEventHandler::ProcessDeleteResourceSlaveDb()
+{
+    LOG_I(BMS_TAG_DEFAULT, "begin");
+    bool flag = false;
+    CheckOtaFlag(OTAFlag::DELETE_RESOURCE_SLAVE_DB, flag);
+    if (flag) {
+        LOG_I(BMS_TAG_DEFAULT, "already processed, skip");
+        return;
+    }
+    std::string slavePath = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH)
+        + BundleResourceConstants::BUNDLE_RESOURCE_BACKUP_RDB_NAME;
+    std::vector<std::string> siblingFiles = {
+        slavePath + "-dwr",
+        slavePath + "-shm",
+        slavePath + "-wal",
+        std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH)
+            + BundleResourceConstants::BMS_BACKUP_RDB_NAME,
+    };
+
+    // Update the OTA flag only when bundleResource_slave.db is removed.
+    bool slaveDeleted = false;
+    if (access(slavePath.c_str(), F_OK) == 0) {
+        if (BundleUtil::DeleteDir(slavePath)) {
+            slaveDeleted = true;
+            LOG_I(BMS_TAG_DEFAULT, "deleted slave db: %{public}s", slavePath.c_str());
+        } else {
+            LOG_E(BMS_TAG_DEFAULT, "failed to delete slave db: %{public}s, errno: %{public}d",
+                slavePath.c_str(), errno);
+        }
+    } else {
+        slaveDeleted = true;
+        LOG_I(BMS_TAG_DEFAULT, "slave db not exist, skip");
+    }
+
+    for (const auto &file : siblingFiles) {
+        if (access(file.c_str(), F_OK) != 0) {
+            continue;
+        }
+        if (BundleUtil::DeleteDir(file)) {
+            LOG_I(BMS_TAG_DEFAULT, "deleted %{public}s", file.c_str());
+        } else {
+            LOG_W(BMS_TAG_DEFAULT, "failed to delete %{public}s, errno: %{public}d", file.c_str(), errno);
+        }
+    }
+
+    if (slaveDeleted) {
+        UpdateOtaFlag(OTAFlag::DELETE_RESOURCE_SLAVE_DB);
+    }
+    LOG_I(BMS_TAG_DEFAULT, "end");
+}
+
+void BMSEventHandler::ProcessMigrateUninstallBundleResource()
+{
+    LOG_I(BMS_TAG_DEFAULT, "begin migrate uninstall bundle resource");
+    bool flag = false;
+    CheckOtaFlag(OTAFlag::MIGRATE_UNINSTALL_BUNDLE_RESOURCE, flag);
+    if (flag) {
+        LOG_I(BMS_TAG_DEFAULT, "already migrated, skip");
+        return;
+    }
+
+    auto bundleMgr = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (bundleMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "BundleMgrService is nullptr");
+        return;
+    }
+
+    if (BundleResourceHelper::MigrateUninstallBundleResource()) {
+        LOG_I(BMS_TAG_DEFAULT, "migrate success");
+        UpdateOtaFlag(OTAFlag::MIGRATE_UNINSTALL_BUNDLE_RESOURCE);
+    } else {
+        LOG_E(BMS_TAG_DEFAULT, "migrate failed");
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

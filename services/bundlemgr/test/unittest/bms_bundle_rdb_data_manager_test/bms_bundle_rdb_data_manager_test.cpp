@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <fstream>
 #include <gtest/gtest.h>
 #define private public
 #include "rdb_data_manager.h"
@@ -23,6 +24,10 @@ using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 
 void MockGetRdbStore(std::shared_ptr<OHOS::NativeRdb::RdbStore> mockRdbStore);
+void MockSetRdbStoreErrCode(int errCode);
+bool MockGetLastAllowRebuild();
+int32_t MockGetLastHaMode();
+void MockResetLastConfig();
 
 namespace OHOS {
 namespace {
@@ -828,5 +833,72 @@ HWTEST_F(BmsBundleRdbDataManagerTest, BmsRdbOpenCallback_0500, Function | SmallT
     MockAppProvisionInfo Store;
     auto ret = callback.OnOpen(Store);
     EXPECT_EQ(ret, NativeRdb::E_OK);
+}
+
+/**
+ * @tc.number: GetRdbStoreFromNative_ResourceDb_NoHa_0100
+ * @tc.name: resource db does not enable AllowRebuild / HA
+ * @tc.desc: dbName is the resource db -> captured config has AllowRebuild=false and HaMode!=MAIN_REPLICA
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, GetRdbStoreFromNative_ResourceDb_NoHa_0100, Function | SmallTest | Level0)
+{
+    BmsRdbConfig cfg;
+    cfg.dbPath = DB_PATH;
+    cfg.dbName = "/bundleResource.db"; // == BundleResourceConstants::BUNDLE_RESOURCE_RDB_NAME
+    cfg.tableName = TABLE_NAME;
+    auto mgr = std::make_shared<RdbDataManager>(cfg);
+    MockGetRdbStore(nullptr);
+    MockResetLastConfig();
+    // suppress TriggerRebuild spawning a thread when GetRdbStore returns nullptr for the resource db
+    RdbDataManager::isRebuilding_.store(true);
+    (void)mgr->GetRdbStoreFromNative();
+    RdbDataManager::isRebuilding_.store(false);
+    EXPECT_FALSE(MockGetLastAllowRebuild());
+    EXPECT_NE(MockGetLastHaMode(), static_cast<int32_t>(OHOS::NativeRdb::HAMode::MAIN_REPLICA));
+}
+
+/**
+ * @tc.number: GetRdbStoreFromNative_MainDb_Ha_0200
+ * @tc.name: main bundle db keeps AllowRebuild + MAIN_REPLICA
+ * @tc.desc: dbName is the main db ("/bmsdb.db") -> captured config has AllowRebuild=true and HaMode=MAIN_REPLICA
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, GetRdbStoreFromNative_MainDb_Ha_0200, Function | SmallTest | Level0)
+{
+    BmsRdbConfig cfg;
+    cfg.dbPath = DB_PATH;
+    cfg.dbName = "/bmsdb.db"; // == ServiceConstants::BUNDLE_RDB_NAME
+    cfg.tableName = TABLE_NAME;
+    auto mgr = std::make_shared<RdbDataManager>(cfg);
+    MockGetRdbStore(nullptr);
+    MockResetLastConfig();
+    RdbDataManager::isRebuilding_.store(true);
+    (void)mgr->GetRdbStoreFromNative();
+    RdbDataManager::isRebuilding_.store(false);
+    EXPECT_TRUE(MockGetLastAllowRebuild());
+    EXPECT_EQ(MockGetLastHaMode(), static_cast<int32_t>(OHOS::NativeRdb::HAMode::MAIN_REPLICA));
+}
+
+/**
+ * @tc.number: CheckDbError_Corrupt_DeletesAndRebuilds_0100
+ * @tc.name: CheckDbError deletes db and rebuilds on E_SQLITE_CORRUPT
+ * @tc.desc: GetRdbStore returns errCode=E_SQLITE_CORRUPT -> DeleteDbFiles removes the db file
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, CheckDbError_Corrupt_DeletesAndRebuilds_0100, Function | SmallTest | Level0)
+{
+    BmsRdbConfig cfg;
+    cfg.dbPath = DB_PATH;
+    cfg.dbName = "corruptTest.db";
+    cfg.tableName = TABLE_NAME;
+    std::string dbFile = DB_PATH + "corruptTest.db";
+    std::ofstream file(dbFile); // pre-create the db file
+    ASSERT_EQ(access(dbFile.c_str(), F_OK), 0);
+    MockGetRdbStore(nullptr);
+    MockSetRdbStoreErrCode(OHOS::NativeRdb::E_SQLITE_CORRUPT);
+    RdbDataManager::isRebuilding_.store(true); // defensive: suppress any rebuild thread
+    auto mgr = std::make_shared<RdbDataManager>(cfg);
+    mgr->CheckDbError();
+    RdbDataManager::isRebuilding_.store(false);
+    MockSetRdbStoreErrCode(OHOS::NativeRdb::E_OK);
+    EXPECT_NE(access(dbFile.c_str(), F_OK), 0); // file deleted by DeleteDbFiles
 }
 } // OHOS

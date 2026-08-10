@@ -17,6 +17,9 @@
 
 namespace {
     static std::shared_ptr<OHOS::NativeRdb::RdbStore> g_mockRdbStore = nullptr;
+    static int g_mockErrCode = OHOS::NativeRdb::E_OK;
+    static bool g_lastAllowRebuild = false;
+    static int32_t g_lastHaMode = 0;
 }
 
 void MockGetRdbStore(std::shared_ptr<OHOS::NativeRdb::RdbStore> mockRdbStore)
@@ -24,11 +27,36 @@ void MockGetRdbStore(std::shared_ptr<OHOS::NativeRdb::RdbStore> mockRdbStore)
     g_mockRdbStore = mockRdbStore;
 }
 
+void MockSetRdbStoreErrCode(int errCode)
+{
+    g_mockErrCode = errCode;
+}
+
+bool MockGetLastAllowRebuild()
+{
+    return g_lastAllowRebuild;
+}
+
+int32_t MockGetLastHaMode()
+{
+    return g_lastHaMode;
+}
+
+void MockResetLastConfig()
+{
+    g_lastAllowRebuild = false;
+    g_lastHaMode = 0;
+    g_mockErrCode = OHOS::NativeRdb::E_OK;
+}
+
 namespace OHOS {
 namespace NativeRdb {
 std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     const RdbStoreConfig& config, int version, RdbOpenCallback& openCallback, int& errCode)
 {
+    g_lastAllowRebuild = config.GetAllowRebuild();
+    g_lastHaMode = config.GetHaMode();
+    errCode = g_mockErrCode;
     return g_mockRdbStore;
 }
 }

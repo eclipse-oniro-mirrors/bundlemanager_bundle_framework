@@ -31,6 +31,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int32_t INDEX_NAME = 0;
+constexpr int32_t INDEX_USERID = 1;
 constexpr int32_t INDEX_APPINDEX = 2;
 constexpr int32_t INDEX_LABEL = 3;
 constexpr int32_t INDEX_ICON = 4;
@@ -43,8 +44,8 @@ UninstallBundleResourceRdb::UninstallBundleResourceRdb()
 {
     APP_LOGI_NOFUNC("UninstallBundleResourceRdb create");
     BmsRdbConfig bmsRdbConfig;
-    bmsRdbConfig.dbName = BundleResourceConstants::BUNDLE_RESOURCE_RDB_NAME;
-    bmsRdbConfig.dbPath = BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH;
+    bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;  // bmsdb.db
+    bmsRdbConfig.dbPath = ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH;
     bmsRdbConfig.tableName = BundleResourceConstants::UINSTALL_BUNDLE_RESOURCE_RDB;
     bmsRdbConfig.createTableSql = std::string(
         "CREATE TABLE IF NOT EXISTS "
@@ -53,6 +54,13 @@ UninstallBundleResourceRdb::UninstallBundleResourceRdb()
         + "FOREGROUND BLOB, BACKGROUND BLOB, PRIMARY KEY (NAME, USER_ID, APP_INDEX));");
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
+
+    // Old database configuration (bundleresource.db)
+    BmsRdbConfig oldBmsRdbConfig;
+    oldBmsRdbConfig.dbName = BundleResourceConstants::BUNDLE_RESOURCE_RDB_NAME;  // bundleResource.db
+    oldBmsRdbConfig.dbPath = BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH;
+    oldBmsRdbConfig.tableName = BundleResourceConstants::UINSTALL_BUNDLE_RESOURCE_RDB;
+    oldRdbDataManager_ = std::make_shared<RdbDataManager>(oldBmsRdbConfig);
 }
 
 UninstallBundleResourceRdb::~UninstallBundleResourceRdb()
@@ -171,7 +179,10 @@ bool UninstallBundleResourceRdb::GetUninstallBundleResource(const std::string &b
     }
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
-    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GoToFirstRow failed, ret %{public}d");
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        return QueryFromOldTable(bundleName, userId, appIndex, flags, bundleResourceInfo);
+    }
     return ConvertToBundleResourceInfo(absSharedResultSet, flags, BundleResourceParam::GetSystemLocale(),
         bundleResourceInfo);
 }
@@ -271,6 +282,164 @@ std::string UninstallBundleResourceRdb::GetAvailableLabel(const std::string &bun
     }
     APP_LOGW("-n %{public}s -l %{public}s label not exist", bundleName.c_str(), language.c_str());
     return bundleName;
+}
+
+bool UninstallBundleResourceRdb::MigrateData()
+{
+    APP_LOGI_NOFUNC("MigrateData start");
+
+    if (oldRdbDataManager_ == nullptr) {
+        APP_LOGE("oldRdbDataManager_ is nullptr");
+        return false;
+    }
+
+    // Query all data from old table
+    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::UINSTALL_BUNDLE_RESOURCE_RDB);
+    auto absSharedResultSet = oldRdbDataManager_->QueryByStep(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGW_NOFUNC("Old table may not exist, skip migration");
+        return true;
+    }
+
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret == NativeRdb::E_ROW_OUT_RANGE) {
+        APP_LOGI_NOFUNC("No data in old table, skip migration");
+        absSharedResultSet->Close();
+        return true;
+    }
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        absSharedResultSet->Close();
+        return false;
+    }
+
+    int32_t migratedCount = 0;
+    bool res = true;
+    do {
+        std::string name;
+        int32_t userId = 0;
+        int32_t appIndex = 0;
+        std::string label;
+        std::string icon;
+        std::vector<uint8_t> foreground;
+        std::vector<uint8_t> background;
+
+        auto result = absSharedResultSet->GetString(INDEX_NAME, name);
+        if (result != NativeRdb::E_OK) {
+            APP_LOGW("Failed to get NAME, ret: %{public}d", result);
+            continue;
+        }
+
+        result = absSharedResultSet->GetInt(INDEX_APPINDEX, appIndex);
+        if (result != NativeRdb::E_OK) {
+            APP_LOGW("Failed to get APP_INDEX, ret: %{public}d", result);
+            continue;
+        }
+
+        result = absSharedResultSet->GetInt(INDEX_USERID, userId);  // USER_ID is at index 1
+        if (result != NativeRdb::E_OK) {
+            APP_LOGW("Failed to get USER_ID, ret: %{public}d", result);
+            continue;
+        }
+
+        // Get optional fields
+        absSharedResultSet->GetString(INDEX_LABEL, label);
+        absSharedResultSet->GetString(INDEX_ICON, icon);
+        absSharedResultSet->GetBlob(INDEX_FOREGROUND, foreground);
+        absSharedResultSet->GetBlob(INDEX_BACKGROUND, background);
+
+        // Insert into new table
+        NativeRdb::ValuesBucket valuesBucket;
+        valuesBucket.PutString(BundleResourceConstants::NAME, name);
+        valuesBucket.PutInt(BundleResourceConstants::USER_ID, userId);
+        valuesBucket.PutInt(BundleResourceConstants::APP_INDEX, appIndex);
+        valuesBucket.PutString(BundleResourceConstants::LABEL, label);
+        valuesBucket.PutString(BundleResourceConstants::ICON, icon);
+        valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, foreground);
+        valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, background);
+
+        if (!rdbDataManager_->InsertData(valuesBucket)) {
+            APP_LOGW("Insert data failed for -n %{public}s -u %{public}d -i %{public}d",
+                name.c_str(), userId, appIndex);
+            res = false;
+        } else {
+            migratedCount++;
+        }
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+
+    absSharedResultSet->Close();
+    APP_LOGI_NOFUNC("MigrateData success, migrated %{public}d rows", migratedCount);
+    return res;
+}
+
+bool UninstallBundleResourceRdb::DeleteTable()
+{
+    APP_LOGI_NOFUNC("drop old uninstall resource table");
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbName = BundleResourceConstants::BUNDLE_RESOURCE_RDB_NAME;
+    bmsRdbConfig.dbPath = BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH;
+    bmsRdbConfig.tableName = BundleResourceConstants::UINSTALL_BUNDLE_RESOURCE_RDB;
+    bmsRdbConfig.insertColumnSql.push_back(
+        "DROP TABLE IF EXISTS " + std::string(BundleResourceConstants::UINSTALL_BUNDLE_RESOURCE_RDB));
+    auto deleteRdbManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    return deleteRdbManager->ExecuteSql();
+}
+
+bool UninstallBundleResourceRdb::QueryFromOldTable(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex, const uint32_t flags,
+    BundleResourceInfo &bundleResourceInfo)
+{
+    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::UINSTALL_BUNDLE_RESOURCE_RDB);
+    absRdbPredicates.EqualTo(BundleResourceConstants::NAME, bundleName);
+    absRdbPredicates.EqualTo(BundleResourceConstants::USER_ID, userId);
+    absRdbPredicates.EqualTo(BundleResourceConstants::APP_INDEX, appIndex);
+    auto absSharedResultSet = oldRdbDataManager_->QueryByStep(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("Query from old table failed -n %{public}s", bundleName.c_str());
+        return false;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGW("Old table query failed, ret: %{public}d", ret);
+        return false;
+    }
+    return ConvertToBundleResourceInfo(absSharedResultSet, flags,
+        BundleResourceParam::GetSystemLocale(), bundleResourceInfo);
+}
+
+bool UninstallBundleResourceRdb::QueryAllFromOldTable(
+    const int32_t userId, const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos)
+{
+    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::UINSTALL_BUNDLE_RESOURCE_RDB);
+    absRdbPredicates.EqualTo(BundleResourceConstants::USER_ID, userId);
+    auto absSharedResultSet = oldRdbDataManager_->QueryByStep(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("get all from old table failed -u %{public}d", userId);
+        return true;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret == NativeRdb::E_ROW_OUT_RANGE) {
+        APP_LOGI_NOFUNC("no data in old table -u %{public}d", userId);
+        return true;
+    }
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        return true;
+    }
+
+    std::string language = BundleResourceParam::GetSystemLocale();
+    do {
+        BundleResourceInfo bundleResourceInfo;
+        if (ConvertToBundleResourceInfo(absSharedResultSet, flags, language, bundleResourceInfo)) {
+            bundleResourceInfos.emplace_back(bundleResourceInfo);
+        }
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+
+    APP_LOGI_NOFUNC("get all from old table end -u %{public}d size%{public}zu",
+                    userId, bundleResourceInfos.size());
+    return true;
 }
 } // AppExecFwk
 } // OHOS

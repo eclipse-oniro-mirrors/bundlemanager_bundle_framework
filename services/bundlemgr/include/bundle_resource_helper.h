@@ -87,6 +87,8 @@ public:
         const int32_t appIndex);
 
     static void DeleteUninstallBundleResourceForUser(const int32_t userId);
+
+    static bool MigrateUninstallBundleResource();
 };
 } // AppExecFwk
 } // OHOS

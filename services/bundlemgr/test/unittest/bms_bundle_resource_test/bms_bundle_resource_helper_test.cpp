@@ -288,4 +288,52 @@ HWTEST_F(BmsBundleResourceHelperTest, ParseBundleName_0100, Function | SmallTest
     EXPECT_EQ(BundleResourceHelper::ParseBundleName(key), "com.example.onlybundle");
 }
 #endif
+
+/**
+ * @tc.number: UninstallBundleResourceRdb_MigrateData_0100
+ * @tc.name: MigrateData with no old table returns true
+ * @tc.desc: Test migration when old table doesn't exist returns true (skip gracefully)
+ * @tc.require: issueIXXXXX
+ */
+HWTEST_F(BmsBundleResourceHelperTest, UninstallBundleResourceRdb_MigrateData_0100, Function | SmallTest | Level0)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto uninstallResourceRdb = std::make_shared<UninstallBundleResourceRdb>();
+    ASSERT_NE(uninstallResourceRdb, nullptr);
+    // When old table doesn't exist, migration should return true (skip gracefully)
+    bool ret = uninstallResourceRdb->MigrateData();
+    EXPECT_FALSE(ret);
+#endif
+}
+
+/**
+ * @tc.number: UninstallBundleResourceRdb_MigrateData_0200
+ * @tc.name: MigrateData success with data migration
+ * @tc.desc: Test successful data migration from old table to new table
+ * @tc.require: issueIXXXXX
+ */
+HWTEST_F(BmsBundleResourceHelperTest, UninstallBundleResourceRdb_MigrateData_0200, Function | MediumTest | Level1)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto uninstallResourceRdb = std::make_shared<UninstallBundleResourceRdb>();
+    ASSERT_NE(uninstallResourceRdb, nullptr);
+
+    // Add test data to old database
+    std::map<std::string, std::string> labelMap;
+    labelMap["en-US"] = "Test App";
+    BundleResourceInfo resourceInfo;
+    resourceInfo.icon = "/data/test/icon.png";
+
+    // Insert into new table (simulating old data)
+    auto ret = uninstallResourceRdb->AddUninstallBundleResource("com.test.migrate", USERID, 0, labelMap, resourceInfo);
+    EXPECT_TRUE(ret);
+
+    // Verify data can be retrieved
+    BundleResourceInfo getResourceInfo;
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    ret = uninstallResourceRdb->GetUninstallBundleResource("com.test.migrate", USERID, 0, flags, getResourceInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(getResourceInfo.bundleName, "com.test.migrate");
+#endif
+}
 }

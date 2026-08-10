@@ -220,6 +220,11 @@ public:
     {
         return false;
     }
+
+    virtual ErrCode RebuildBundleResourceTable()
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
 };
 } // AppExecFwk
 } // OHOS

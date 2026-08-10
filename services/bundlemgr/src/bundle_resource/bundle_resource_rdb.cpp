@@ -15,8 +15,13 @@
 
 #include "bundle_resource_rdb.h"
 
+#include <set>
+
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
+#include "bundle_mgr_service.h"
 #include "bundle_resource_constants.h"
+#include "bundle_resource_manager.h"
 #include "bundle_util.h"
 #include "hitrace_meter.h"
 #include "scope_guard.h"
@@ -45,7 +50,14 @@ BundleResourceRdb::BundleResourceRdb()
     bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " +
         std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME) +
         " ADD BACKGROUND BLOB;"));
+    CheckDbError(bmsRdbConfig);
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    rdbDataManager_->SetRebuildCallback([]() {
+        auto instance = DelayedSingleton<BundleResourceManager>::GetInstance();
+        if (instance) {
+            instance->RebuildResourceDb();
+        }
+    });
     rdbDataManager_->CreateTable();
 }
 
@@ -763,6 +775,12 @@ void BundleResourceRdb::ParseKey(const std::string &key,
     info.ParseKey(key);
     bundleResourceInfo.bundleName = info.bundleName_;
     bundleResourceInfo.appIndex = info.appIndex_;
+}
+
+void BundleResourceRdb::CheckDbError(const BmsRdbConfig &bmsRdbConfig)
+{
+    auto rdbDataManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    rdbDataManager->CheckDbError();
 }
 } // AppExecFwk
 } // OHOS
