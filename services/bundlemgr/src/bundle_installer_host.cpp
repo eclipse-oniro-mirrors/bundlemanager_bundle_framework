@@ -485,13 +485,13 @@ void BundleInstallerHost::HandleUninstallAndRecoverMessage(MessageParcel &data)
 bool BundleInstallerHost::Install(
     const std::string &bundleFilePath, const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (!CheckBundleInstallerManager(statusReceiver)) {
+        LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
+        return false;
+    }
     if (!BundlePermissionMgr::CheckUserFromShell(installParam.userId)) {
         LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
         statusReceiver->OnFinished(ERR_APPEXECFWK_USER_NOT_INSTALL_HAP, "can not specify user in shell");
-        return false;
-    }
-    if (!CheckBundleInstallerManager(statusReceiver)) {
-        LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return false;
     }
     if (!BundlePermissionMgr::IsSystemApp() &&
@@ -546,13 +546,13 @@ ErrCode BundleInstallerHost::VerifyInstallPermission()
 bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
     const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (!CheckBundleInstallerManager(statusReceiver)) {
+        LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
+        return false;
+    }
     if (!BundlePermissionMgr::CheckUserFromShell(installParam.userId)) {
         LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
         statusReceiver->OnFinished(ERR_APPEXECFWK_USER_NOT_INSTALL_HAP, "can not specify user in shell");
-        return false;
-    }
-    if (!CheckBundleInstallerManager(statusReceiver)) {
-        LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return false;
     }
     InstallParam verifiedInstallParam = installParam;
@@ -653,13 +653,13 @@ ErrCode BundleInstallerHost::CheckIsDebugAppProvisionType(const std::string &bun
 bool BundleInstallerHost::Uninstall(
     const std::string &bundleName, const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (!CheckBundleInstallerManager(statusReceiver)) {
+        LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
+        return false;
+    }
     if (!BundlePermissionMgr::CheckUserFromShell(installParam.userId)) {
         LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
         statusReceiver->OnFinished(ERR_APPEXECFWK_USER_NOT_INSTALL_HAP, "can not specify user in shell");
-        return false;
-    }
-    if (!CheckBundleInstallerManager(statusReceiver)) {
-        LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return false;
     }
     auto verifyResult = VerifyUninstallPermission(true);
@@ -695,13 +695,13 @@ bool BundleInstallerHost::Uninstall(
 bool BundleInstallerHost::Uninstall(const std::string &bundleName, const std::string &modulePackage,
     const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (!CheckBundleInstallerManager(statusReceiver)) {
+        LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
+        return false;
+    }
     if (!BundlePermissionMgr::CheckUserFromShell(installParam.userId)) {
         LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
         statusReceiver->OnFinished(ERR_APPEXECFWK_USER_NOT_INSTALL_HAP, "can not specify user in shell");
-        return false;
-    }
-    if (!CheckBundleInstallerManager(statusReceiver)) {
-        LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
         return false;
     }
     if (!BundlePermissionMgr::IsSystemApp() &&

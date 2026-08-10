@@ -12609,6 +12609,7 @@ ErrCode BundleDataMgr::GetApiTargetVersionByUid(const int32_t uid, int32_t &apiT
     if (ret != ERR_OK) {
         return ret;
     }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto bundleInfoIter = bundleInfos_.find(bundleName);
     if (bundleInfoIter == bundleInfos_.end()) {
         APP_LOGE("bundleName %{public}s is not existed in bundleInfos_", bundleName.c_str());
