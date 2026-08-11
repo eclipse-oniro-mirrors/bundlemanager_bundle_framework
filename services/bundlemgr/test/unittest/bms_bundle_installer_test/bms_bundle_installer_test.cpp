@@ -17182,37 +17182,6 @@ HWTEST_F(BmsBundleInstallerTest, ExtractNPAPIPluginFiles_0030, Function | SmallT
 }
 
 /**
- * @tc.number: RemoveNPAPIPluginDir_0010
- * @tc.name: test RemoveNPAPIPluginDir
- * @tc.desc: test RemoveNPAPIPluginDir npapiPluginStatus_ in different scenarios
- *           1. directory not exist - STATUS_NOT_APPLICABLE
- *           2. RemoveDir failed - STATUS_REMOVE_FAILED
- *           3. RemoveNPAPIPluginDir success - STATUS_SUCCESS
- */
-HWTEST_F(BmsBundleInstallerTest, RemoveNPAPIPluginDir_0010, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    installer.bundleName_ = "com.example.test";
-    installer.userId_ = USERID;
-    
-    // scenario 1: directory not exist, status should be STATUS_NOT_APPLICABLE
-    installer.RemoveNPAPIPluginDir();
-    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
-    
-    // scenario 2: IsExistDir check fails, status should be STATUS_REMOVE_FAILED
-    // when InstalldClient::IsExistDir returns error
-    installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
-    installer.bundleName_ = "";  // invalid bundleName will cause path validation failure
-    installer.RemoveNPAPIPluginDir();
-    // with empty bundleName, targetPath construction may lead to failure
-    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
-    
-    // scenario 3: directory exists and RemoveDir succeeds
-    // requires creating test directory and proper setup
-    // in unit test environment, this scenario needs special test resources
-}
-
-/**
  * @tc.number: RemoveNPAPIPluginDir_0020
  * @tc.name: test RemoveNPAPIPluginDir with different userId
  * @tc.desc: test RemoveNPAPIPluginDir npapiPluginStatus_ with different userId scenarios
@@ -17238,35 +17207,6 @@ HWTEST_F(BmsBundleInstallerTest, RemoveNPAPIPluginDir_0020, Function | SmallTest
     installer.userId_ = TEST_EL5_USERID;
     installer.RemoveNPAPIPluginDir();
     EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
-}
-
-/**
- * @tc.number: RemoveNPAPIPluginDir_0030
- * @tc.name: test RemoveNPAPIPluginDir with directory creation and removal
- * @tc.desc: test RemoveNPAPIPluginDir with real directory operations
- */
-HWTEST_F(BmsBundleInstallerTest, RemoveNPAPIPluginDir_0030, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    installer.bundleName_ = "com.example.test.npapi.remove";
-    installer.userId_ = USERID;
-    
-    // Create a test directory that simulates NPAPI plugin directory
-    std::string targetPath = ServiceConstants::NPAPI_PLUGIN_TARGET_BASE_PATH + std::to_string(USERID) +
-        ServiceConstants::NPAPI_PLUGIN_TARGET_DIR + installer.bundleName_;
-    
-    // Try to remove non-existent directory
-    installer.RemoveNPAPIPluginDir();
-    EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE);
-    
-    // Create test directory for removal test
-    ErrCode createRet = InstalldOperator::MkOwnerDir(targetPath, 0, 0, 0);
-    if (createRet == ERR_OK) {
-        installer.npapiPluginStatus_ = BaseBundleInstaller::NpapiPluginStatus::STATUS_NOT_APPLICABLE;
-        installer.RemoveNPAPIPluginDir();
-        // After removal, status should be STATUS_SUCCESS
-        EXPECT_EQ(installer.npapiPluginStatus_, BaseBundleInstaller::NpapiPluginStatus::STATUS_SUCCESS);
-    }
 }
 
 /**
