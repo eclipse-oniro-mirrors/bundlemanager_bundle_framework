@@ -524,6 +524,22 @@ public:
         return baseBundleInfo_->deviceModeDistributionPolicy;
     }
     /**
+     * @brief Set app sandbox policy for dual-mode scenarios.
+     * @param appSandboxPolicy Indicates the app sandbox policy.
+     */
+    void SetAppSandboxPolicy(AppSandboxPolicy appSandboxPolicy)
+    {
+        baseBundleInfo_->appSandboxPolicy = appSandboxPolicy;
+    }
+    /**
+     * @brief Get app sandbox policy for dual-mode scenarios.
+     * @return Return the app sandbox policy value.
+     */
+    AppSandboxPolicy GetAppSandboxPolicy() const
+    {
+        return baseBundleInfo_->appSandboxPolicy;
+    }
+    /**
      * @brief Update baseApplicationInfo.
      * @param applicationInfo Indicates the ApplicationInfo object.
      * @param isEntry Indicates the isEntry.

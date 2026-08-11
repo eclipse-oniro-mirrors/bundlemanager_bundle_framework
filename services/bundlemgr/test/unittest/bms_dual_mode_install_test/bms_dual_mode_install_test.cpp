@@ -79,6 +79,12 @@ static void EnableSecondaryMode()
     SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_2IN1, ServiceConstants::DUAL_MODE_VALUE_TABLET);
 }
 
+// Primary mode: ispcmode == mainmode (both tablet), so IsSecondaryMode() == false.
+static void EnablePrimaryMode()
+{
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_TABLET, ServiceConstants::DUAL_MODE_VALUE_TABLET);
+}
+
 // Build a different-package (UNIVERSAL_DIFFERENT_PACKAGE) InnerBundleInfo; mark as dual-mode clone if needed.
 static InnerBundleInfo MakeCat7Info(bool isClone)
 {
@@ -417,7 +423,8 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0200, Function | SmallTest |
 
 HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0300, Function | SmallTest | Level0)
 {
-    // dual-mode device + different-package (clone) + system app -> clone flag set, deviceModeDistributionPolicy set, ERR_OK
+    // dual-mode device + different-package (clone) + system app -> clone flag set,
+    // deviceModeDistributionPolicy set, ERR_OK
     EnableSecondaryMode();
     BaseBundleInstaller installer;
     std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -430,7 +437,9 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0300, Function | SmallTest |
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
     EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), OHOS::ERR_OK);
     EXPECT_TRUE(infos[BUNDLE_NAME].IsDualModeCloneApp());
-    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(infos[BUNDLE_NAME].GetAppIndex(), ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
 }
 
 HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0400, Function | SmallTest | Level0)
@@ -487,6 +496,74 @@ HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0600, Function | SmallTest |
     EXPECT_FALSE(infos["com.system.app"].IsDualModeCloneApp());
     EXPECT_FALSE(infos["com.normal.app"].IsDualModeCloneApp());
     EXPECT_EQ(infos["com.normal.app"].GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::UNSPECIFIED);
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0700, Function | SmallTest | Level0)
+{
+    // primary mode + different-package + system app -> policy set, clone flag NOT set (primary mode is not
+    // clone), ERR_OK. The system-app check now applies to different-package regardless of mode.
+    EnablePrimaryMode();
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo systemInfo;
+    ApplicationInfo appInfo;
+    appInfo.isSystemApp = true;
+    systemInfo.SetBaseApplicationInfo(appInfo);
+    infos[BUNDLE_NAME] = systemInfo;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), OHOS::ERR_OK);
+    EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
+    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(),
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0800, Function | SmallTest | Level0)
+{
+    // primary mode + different-package + non-system app -> rejected with NOT_SYSTEM_APP. The system-app
+    // check applies to different-package in both modes, not only the secondary-mode clone path.
+    EnablePrimaryMode();
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo normalInfo;  // isSystemApp defaults to false
+    normalInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNSPECIFIED);
+    infos[BUNDLE_NAME] = normalInfo;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos),
+        OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP);
+    EXPECT_FALSE(infos[BUNDLE_NAME].IsDualModeCloneApp());
+    EXPECT_EQ(infos[BUNDLE_NAME].GetDeviceModeDistributionPolicy(), DeviceModeDistributionPolicy::UNSPECIFIED);
+}
+
+HWTEST_F(BmsDualModeInstallTest, SetDualModeAppInfo_0900, Function | SmallTest | Level0)
+{
+    // Sync-27: a successful dual-mode install persists appSandboxPolicy on the info (the sticky-isolation
+    // source of truth) via ComputeCurrentAppSandboxPolicy. diff-package -> ISOLATED; non-diff -> SHARED.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo systemInfo;
+    ApplicationInfo appInfo;
+    appInfo.isSystemApp = true;
+    systemInfo.SetBaseApplicationInfo(appInfo);
+    infos[BUNDLE_NAME] = systemInfo;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam, infos), OHOS::ERR_OK);
+    EXPECT_EQ(infos[BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::ISOLATED_SANDBOX);
+
+    // non-diff policy persists SHARED (derived from the policy; before stays default SHARED -> not sticky)
+    std::unordered_map<std::string, InnerBundleInfo> infos2;
+    InnerBundleInfo systemInfo2;
+    ApplicationInfo appInfo2;
+    appInfo2.isSystemApp = true;
+    systemInfo2.SetBaseApplicationInfo(appInfo2);
+    infos2[BUNDLE_NAME] = systemInfo2;
+    InstallParam installParam2;
+    installParam2.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    EXPECT_EQ(installer.SetDualModeAppInfo(installParam2, infos2), OHOS::ERR_OK);
+    EXPECT_EQ(infos2[BUNDLE_NAME].GetAppSandboxPolicy(), AppSandboxPolicy::SHARED_SANDBOX);
 }
 
 // ====================== BaseBundleInstaller::CheckDualModeCategoryConsistency ======================
@@ -596,7 +673,8 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0300, Fu
     dataMgr->tempBundleInfos_[BUNDLE_NAME] = MakeCat7Info(false);  // existing temp variant, diff-package
     installer.dataMgr_ = dataMgr;
     InstallParam installParam;
-    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;  // new diff-package
+    // new install is different-package
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
     EXPECT_EQ(installer.CheckDualModeCategoryConsistencyInTemp(installParam), OHOS::ERR_OK);
 }
 
@@ -617,17 +695,20 @@ HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0400, Fu
 
 HWTEST_F(BmsDualModeInstallTest, CheckDualModeCategoryConsistencyInTemp_0500, Function | SmallTest | Level0)
 {
-    // dual-mode + temp variant is non-different-package + new install is different-package -> mismatch (other dir) -> CONFLICT
+    // dual-mode + temp variant is non-different-package + new install is different-package
+    // -> mismatch (other dir) -> CONFLICT
     EnableSecondaryMode();
     BaseBundleInstaller installer;
     installer.bundleName_ = BUNDLE_NAME;
     auto dataMgr = std::make_shared<BundleDataMgr>();
     InnerBundleInfo nonCat7Temp;
-    nonCat7Temp.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::MAIN_ONLY);  // existing temp non-diff-package
+    // existing temp variant is non-diff-package
+    nonCat7Temp.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::MAIN_ONLY);
     dataMgr->tempBundleInfos_[BUNDLE_NAME] = nonCat7Temp;
     installer.dataMgr_ = dataMgr;
     InstallParam installParam;
-    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;  // new diff-package
+    // new install is different-package
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
     EXPECT_EQ(installer.CheckDualModeCategoryConsistencyInTemp(installParam),
         OHOS::ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT);
 }
@@ -984,22 +1065,24 @@ HWTEST_F(BmsDualModeInstallTest, GetAllResourceInfo_0900, Function | SmallTest |
 }
 
 // ====================== BundlePermissionMgr::CreateHapInfoParams ======================
-// CreateHapInfoParams is static; exposed via #define private public. Verify the
-// IsDualModeCloneApp && GetAppIndex()==0 branch sets instIndex to DUAL_MODE_CLONE_APP_INDEX.
+// CreateHapInfoParams is static; exposed via #define private public. It propagates
+// InnerBundleInfo.GetAppIndex() directly to hapInfo.instIndex; a dual-mode clone app carries
+// appIndex = DUAL_MODE_CLONE_APP_INDEX (set by SetDualModeAppInfo), yielding an independent hap token.
 
 HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_0100, Function | SmallTest | Level0)
 {
-    // dual-mode clone app + appIndex 0 -> instIndex = DUAL_MODE_CLONE_APP_INDEX (10000)
+    // dual-mode clone app: appIndex is set to DUAL_MODE_CLONE_APP_INDEX (10000) by SetDualModeAppInfo;
+    // CreateHapInfoParams propagates GetAppIndex() directly to instIndex (10000) for an independent hap token.
     InnerBundleInfo info;
     info.SetDualModeCloneApp(true);
-    info.SetAppIndex(0);
+    info.SetAppIndex(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
     auto hapInfo = BundlePermissionMgr::CreateHapInfoParams(info, 0, 0);
     EXPECT_EQ(hapInfo.instIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
 }
 
 HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_0200, Function | SmallTest | Level0)
 {
-    // dual-mode clone app + appIndex != 0 -> branch NOT hit, instIndex stays = appIndex
+    // dual-mode clone app + non-default appIndex -> instIndex = appIndex (propagated directly)
     InnerBundleInfo info;
     info.SetDualModeCloneApp(true);
     info.SetAppIndex(1);
@@ -1009,7 +1092,7 @@ HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_0200, Function | SmallTest 
 
 HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_0300, Function | SmallTest | Level0)
 {
-    // non-clone app + appIndex 0 -> branch NOT hit (not clone), instIndex = 0
+    // non-clone app + appIndex 0 -> instIndex = 0 (propagated directly)
     InnerBundleInfo info;
     info.SetDualModeCloneApp(false);
     info.SetAppIndex(0);
@@ -1019,7 +1102,7 @@ HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_0300, Function | SmallTest 
 
 HWTEST_F(BmsDualModeInstallTest, CreateHapInfoParams_0400, Function | SmallTest | Level0)
 {
-    // non-clone app + appIndex != 0 -> branch NOT hit, instIndex = appIndex
+    // non-clone app + appIndex != 0 -> instIndex = appIndex (propagated directly)
     InnerBundleInfo info;
     info.SetDualModeCloneApp(false);
     info.SetAppIndex(2);
@@ -1287,13 +1370,15 @@ HWTEST_F(BmsDualModeInstallTest, TransformStrToInfo_DualModeCloneKey_0300, Funct
 
 // ====================== BaseBundleInstaller::FillDualModeEventFields ======================
 // Single branch: extended fields are filled only on a dual-mode device. Cover both arms via the
-// DualModeHelper cache (no system parameter): true -> deviceModeDistributionPolicy / currentMode / isSharedSandbox
-// populated; false -> pre-set fields left untouched. BaseBundleInstaller is default-constructed and
-// the private method is reached through #define private public.
+// DualModeHelper cache (no system parameter): true -> deviceModeDistributionPolicy / currentMode /
+// appSandboxPolicy + beforeDeviceModeDistributionPolicy / beforeAppSandboxPolicy populated; false ->
+// pre-set fields left untouched. BaseBundleInstaller is default-constructed and the private method
+// (and before_* members) are reached through #define private public.
 
 HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0100, Function | SmallTest | Level0)
 {
-    // dual-mode device (cachedIspcmode_/cachedMainmode_ valid) -> branch fires, extended fields populated
+    // dual-mode device (cache valid) + fresh install (before members stay default) + different-package:
+    // current appSandboxPolicy = ISOLATED (derived from policy); before fields keep defaults.
     EnableSecondaryMode();
     BaseBundleInstaller installer;
     InstallParam installParam;
@@ -1302,13 +1387,16 @@ HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0100, Function | SmallT
     installer.FillDualModeEventFields(installParam, installRes);
     EXPECT_EQ(installRes.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
     EXPECT_EQ(installRes.currentMode, DualModeHelper::GetSysMode());
-    // secondary mode + different-package => NeedDualModeHandle true => shared sandbox disabled
-    EXPECT_FALSE(installRes.isSharedSandbox);
+    // different-package (not sticky, before shared) => isolated sandbox
+    EXPECT_EQ(installRes.appSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
+    // fresh install: before values are defaults
+    EXPECT_EQ(installRes.beforeDeviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(installRes.beforeAppSandboxPolicy, AppSandboxPolicy::SHARED_SANDBOX);
 }
 
 HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0200, Function | SmallTest | Level0)
 {
-    // non-dual-mode device (cachedIspcmode_/cachedMainmode_ invalid) -> branch skipped, pre-set markers preserved
+    // non-dual-mode device (cache invalid) -> branch skipped, pre-set markers preserved
     SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
     BaseBundleInstaller installer;
     InstallParam installParam;
@@ -1316,11 +1404,132 @@ HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0200, Function | SmallT
     NotifyBundleEvents installRes;
     installRes.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::SUB_ONLY;  // non-default marker
     installRes.currentMode = 999;
-    installRes.isSharedSandbox = false;  // flip default true to prove it is not rewritten
+    installRes.appSandboxPolicy = AppSandboxPolicy::ISOLATED_SANDBOX;  // flip default to prove not rewritten
+    installRes.beforeAppSandboxPolicy = AppSandboxPolicy::ISOLATED_SANDBOX;  // non-default marker
     installer.FillDualModeEventFields(installParam, installRes);
     EXPECT_EQ(installRes.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::SUB_ONLY);
     EXPECT_EQ(installRes.currentMode, 999);
-    EXPECT_FALSE(installRes.isSharedSandbox);
+    EXPECT_EQ(installRes.appSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
+    EXPECT_EQ(installRes.beforeAppSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
+}
+
+HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0300, Function | SmallTest | Level0)
+{
+    // Sticky isolation (Sync-27): before was ISOLATED, new policy is same-package (non-diff) which would
+    // normally yield SHARED, but isolation is sticky -> current stays ISOLATED, independent of new policy.
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.beforeAppSandboxPolicy_ = AppSandboxPolicy::ISOLATED_SANDBOX;  // prior state: isolated
+    installer.beforeDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE;
+    NotifyBundleEvents installRes;
+    installer.FillDualModeEventFields(installParam, installRes);
+    // sticky: isolated before + same-package now -> still ISOLATED (not SHARED)
+    EXPECT_EQ(installRes.appSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
+    EXPECT_EQ(installRes.beforeAppSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
+    EXPECT_EQ(installRes.beforeDeviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(installRes.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0400, Function | SmallTest | Level0)
+{
+    // dual-mode device + clone install (dualModeBundleName_ set) -> event carries clone appIndex (10000)
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;
+    installer.dualModeBundleName_ = PREFIXED_NAME;  // dual-mode clone variant present
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    NotifyBundleEvents installRes;
+    installer.FillDualModeEventFields(installParam, installRes);
+    EXPECT_EQ(installRes.appIndex, ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
+}
+
+HWTEST_F(BmsDualModeInstallTest, FillDualModeEventFields_0500, Function | SmallTest | Level0)
+{
+    // dual-mode device but non-clone (dualModeBundleName_ empty) -> appIndex is not modified
+    EnableSecondaryMode();
+    BaseBundleInstaller installer;  // dualModeBundleName_ defaults empty
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    NotifyBundleEvents installRes;
+    installRes.appIndex = 7;  // pre-set marker to prove it is not overwritten
+    installer.FillDualModeEventFields(installParam, installRes);
+    EXPECT_EQ(installRes.appIndex, 7);
+}
+
+// ====================== BaseBundleInstaller sandbox policy & reset (Sync-27) ======================
+// ComputeCurrentAppSandboxPolicy applies the sticky-isolation rule: an app that was already isolated
+// stays isolated regardless of the new policy; otherwise the policy is derived (diff-package -> ISOLATED,
+// same/other -> SHARED). Shared by SetDualModeAppInfo (persist) and FillDualModeEventFields (broadcast).
+
+HWTEST_F(BmsDualModeInstallTest, ComputeCurrentAppSandboxPolicy_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    // before = SHARED (fresh-install default): derive from the new policy
+    installer.beforeAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
+    EXPECT_EQ(installer.ComputeCurrentAppSandboxPolicy(
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE), AppSandboxPolicy::ISOLATED_SANDBOX);
+    EXPECT_EQ(installer.ComputeCurrentAppSandboxPolicy(
+        DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE), AppSandboxPolicy::SHARED_SANDBOX);
+    // before = ISOLATED: sticky, isolated regardless of the new policy
+    installer.beforeAppSandboxPolicy_ = AppSandboxPolicy::ISOLATED_SANDBOX;
+    EXPECT_EQ(installer.ComputeCurrentAppSandboxPolicy(
+        DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE), AppSandboxPolicy::ISOLATED_SANDBOX);
+    EXPECT_EQ(installer.ComputeCurrentAppSandboxPolicy(
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE), AppSandboxPolicy::ISOLATED_SANDBOX);
+}
+
+// ResetInstallProperties must clear the Sync-27 before-values so a reused installer instance does not
+// leak the prior install's sandbox / distribution policy into the next fresh install. Before the fix they
+// were not reset, so a second install on a reused instance broadcast stale before-values and could trip
+// the sticky-isolation rule in ComputeCurrentAppSandboxPolicy.
+
+HWTEST_F(BmsDualModeInstallTest, ResetInstallProperties_BeforeDualModeFields_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    // leftover state from a previous install on the same (reused) instance
+    installer.beforeDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+    installer.beforeAppSandboxPolicy_ = AppSandboxPolicy::ISOLATED_SANDBOX;
+    installer.ResetInstallProperties();
+    EXPECT_EQ(installer.beforeDeviceModeDistributionPolicy_, DeviceModeDistributionPolicy::UNSPECIFIED);
+    EXPECT_EQ(installer.beforeAppSandboxPolicy_, AppSandboxPolicy::SHARED_SANDBOX);
+}
+
+HWTEST_F(BmsDualModeInstallTest, ResetInstallProperties_ClearsStickySandbox_0200, Function | SmallTest | Level0)
+{
+    // ComputeCurrentAppSandboxPolicy depends only on beforeAppSandboxPolicy_ + the new policy, not on the
+    // mode cache; the point is that Reset clears the stale before-value so the sticky rule cannot fire.
+    BaseBundleInstaller installer;
+    installer.beforeAppSandboxPolicy_ = AppSandboxPolicy::ISOLATED_SANDBOX;  // stale from a prior install
+    installer.ResetInstallProperties();
+    // same-package policy normally yields SHARED; a stale ISOLATED before-value would force ISOLATED
+    EXPECT_EQ(installer.ComputeCurrentAppSandboxPolicy(
+        DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE), AppSandboxPolicy::SHARED_SANDBOX);
+    // different-package still derives ISOLATED from the policy (not from a sticky before-value)
+    EXPECT_EQ(installer.ComputeCurrentAppSandboxPolicy(
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE), AppSandboxPolicy::ISOLATED_SANDBOX);
+}
+
+// InnerBundleInfo sandbox-policy accessor (Sync-27): default SHARED_SANDBOX + round-trip.
+
+HWTEST_F(BmsDualModeInstallTest, AppSandboxPolicy_InnerBundleInfo_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    EXPECT_EQ(info.GetAppSandboxPolicy(), AppSandboxPolicy::SHARED_SANDBOX);  // default
+    info.SetAppSandboxPolicy(AppSandboxPolicy::ISOLATED_SANDBOX);
+    EXPECT_EQ(info.GetAppSandboxPolicy(), AppSandboxPolicy::ISOLATED_SANDBOX);
+    info.SetAppSandboxPolicy(AppSandboxPolicy::SHARED_SANDBOX);
+    EXPECT_EQ(info.GetAppSandboxPolicy(), AppSandboxPolicy::SHARED_SANDBOX);
+}
+
+// Dual-mode system parameter keys: ispcmode stays persist.sceneboard.*; mainmode is a read-only boot
+// constant under const.sceneboard.*. Both are read via GetIntParameter, which is prefix-agnostic.
+
+HWTEST_F(BmsDualModeInstallTest, DualModeParamKeys_0100, Function | SmallTest | Level0)
+{
+    EXPECT_STREQ(ServiceConstants::DUAL_MODE_ISPCMODE_PARAM_KEY, "persist.sceneboard.ispcmode");
+    EXPECT_STREQ(ServiceConstants::DUAL_MODE_MAINMODE_PARAM_KEY, "const.sceneboard.mainmode");
 }
 
 // ====================== BundleDataMgr::GetSkillInfoWithFlags ======================

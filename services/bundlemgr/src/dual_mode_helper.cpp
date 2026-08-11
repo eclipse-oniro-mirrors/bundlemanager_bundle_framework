@@ -31,7 +31,8 @@ std::mutex DualModeHelper::cacheMutex_;
 namespace {
 // Test-injection params (kept in this file, not in ServiceConstants). When persist.bms.test_dual_mode
 // is true, ispcmode/mainmode are read from persist.bms.ispcmode / persist.bms.mainmode instead of
-// persist.sceneboard.*, so dual-mode logic can be exercised without dual-mode hardware.
+// the production sceneboard params (persist.sceneboard.ispcmode / const.sceneboard.mainmode), so
+// dual-mode logic can be exercised without dual-mode hardware.
 // Production (unset/false) is fully unaffected.
 constexpr const char *TEST_DUAL_MODE_PARAM = "persist.bms.test_dual_mode";
 constexpr const char *TEST_ISPCMODE_PARAM = "persist.bms.ispcmode";

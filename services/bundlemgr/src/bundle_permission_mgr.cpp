@@ -764,9 +764,6 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
     hapInfo.userID = userId;
     hapInfo.bundleName = innerBundleInfo.GetBundleName();
     hapInfo.instIndex = innerBundleInfo.GetAppIndex();
-    if (innerBundleInfo.IsDualModeCloneApp() && innerBundleInfo.GetAppIndex() == 0) {
-        hapInfo.instIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
-    }
     hapInfo.appIDDesc = innerBundleInfo.GetAppId();
     hapInfo.dlpType = dlpType;
     hapInfo.apiVersion = innerBundleInfo.GetBaseApplicationInfo().apiTargetVersion;

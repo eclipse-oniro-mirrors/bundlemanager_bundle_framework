@@ -97,9 +97,13 @@ struct NotifyBundleEvents {
     std::map<std::string, std::string> metadataConfigInfos;
     std::vector<std::string> allowListenBundles;
     // === DUAL_MODE: Extended fields for dual-mode app events ===
-    DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;  // Device mode distribution policy
+    // Current device mode distribution policy
+    DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
     int32_t currentMode = -1;  // Current system mode (0=tablet, 1=2in1, -1=not read/non-dual-mode)
-    bool isSharedSandbox = true;  // Whether app uses shared sandbox
+    AppSandboxPolicy appSandboxPolicy = AppSandboxPolicy::SHARED_SANDBOX;  // Current app sandbox policy
+    // Pre-update device mode distribution policy
+    DeviceModeDistributionPolicy beforeDeviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
+    AppSandboxPolicy beforeAppSandboxPolicy = AppSandboxPolicy::SHARED_SANDBOX;  // Pre-update app sandbox policy
     // === DUAL_MODE END ===
 
     void SetMetadataConfigInfos(const std::map<std::string, std::string>& configs)

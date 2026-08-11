@@ -224,7 +224,8 @@ protected:
     /**
      * @brief Get the effective bundle name for directory and DB key operations with InnerBundleInfo.
      * @param bundleInfo The InnerBundleInfo reference for fallback.
-     * @return Returns dualModeBundleName_ if set (secondary mode different-package), otherwise bundleInfo.GetBundleName().
+     * @return Returns dualModeBundleName_ if set (secondary mode different-package),
+     * otherwise bundleInfo.GetBundleName().
      */
     std::string GetEffectiveBundleName(const InnerBundleInfo &bundleInfo) const;
 
@@ -584,9 +585,14 @@ private:
      */
     ErrCode CreateBundleUserData(InnerBundleInfo &innerBundleInfo);
     void AddBundleStatus(const NotifyBundleEvents &installRes);
-    // Fill dual-mode extended fields (deviceModeDistributionPolicy / currentMode / isSharedSandbox) on a notify event
-    // when running on a dual-mode device; no-op otherwise. Shared by install / update / recover paths.
+    // Fill dual-mode extended fields (deviceModeDistributionPolicy / currentMode / appSandboxPolicy +
+    // beforeDeviceModeDistributionPolicy / beforeAppSandboxPolicy) on a notify event when running on a
+    // dual-mode device; no-op otherwise. Shared by install / update / recover paths.
     void FillDualModeEventFields(const InstallParam &installParam, NotifyBundleEvents &installRes);
+    // Compute the current app sandbox policy (Sync-27) applying the sticky-isolation rule: an app that
+    // was already isolated stays isolated regardless of the new policy; otherwise it is derived from the
+    // new policy. Shared by SetDualModeAppInfo (persist on info) and FillDualModeEventFields (broadcast).
+    AppSandboxPolicy ComputeCurrentAppSandboxPolicy(DeviceModeDistributionPolicy newPolicy) const;
     ErrCode CheckInstallationFree(const InnerBundleInfo &innerBundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
@@ -1099,6 +1105,10 @@ private:
     Security::AccessToken::AccessTokenID callerToken_ = 0;
     std::string bundleName_;           // original bundle name (for InnerBundleInfo storage, queries)
     std::string dualModeBundleName_;   // dual-mode prefixed name (dirs/DB keys); secondary-mode different-package only
+    // Pre-update values captured from oldInfo at update start (Sync-27); stay default on fresh install / when
+    // oldInfo is unavailable. Consumed by ComputeCurrentAppSandboxPolicy (sticky) and FillDualModeEventFields.
+    DeviceModeDistributionPolicy beforeDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
+    AppSandboxPolicy beforeAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
     std::string modulePath_;
     std::string baseDataPath_;
     std::string modulePackage_;
