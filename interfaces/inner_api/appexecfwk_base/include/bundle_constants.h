@@ -248,6 +248,8 @@ constexpr const char* VERIFY_UNINSTALL_RULE_VALUE = "true";
 
 constexpr const char* SUPPORT_APP_TYPES_SEPARATOR = ",";
 constexpr const char* SCHEME_SEPARATOR = "://";
+// mailto is an opaque uri, the part after the scheme is a mail address instead of a file path
+constexpr const char* MAILTO_SCHEME_PREFIX = "mailto:";
 constexpr const char* APP_DISTRIBUTION_TYPE_WHITE_LIST = "appDistributionTypeWhiteList";
 
 //param key-value

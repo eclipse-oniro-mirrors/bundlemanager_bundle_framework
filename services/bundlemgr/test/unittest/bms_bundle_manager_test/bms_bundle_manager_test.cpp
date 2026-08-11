@@ -2125,6 +2125,126 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0008, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: SkillFalse_0009
+ * @tc.name: test MatchUriAndType with mailto uri
+ * @tc.desc: 1.system run normally
+ *           2.mailto is an opaque uri, its suffix must not be used to infer mime type
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0009, Function | SmallTest | Level1)
+{
+    // the reported case : action is viewData, uri is mailto:support@xxx.cc, the skill
+    // configures no scheme and configures the utd of .cc as the type
+    std::vector<std::string> utdVector;
+    ASSERT_TRUE(MimeTypeMgr::GetUtdVectorByUri("mailto:support@xxx.cc", utdVector));
+    ASSERT_FALSE(utdVector.empty());
+    struct Skill skill;
+    SkillUri skillUri;
+    skillUri.type = utdVector[0];
+    skill.uris.emplace_back(skillUri);
+    EXPECT_EQ(false, skill.MatchUriAndType("mailto:support@xxx.cc", ""));
+
+    // the same case while the skill configures a mime type instead of a utd
+    struct Skill imageSkill;
+    SkillUri imageSkillUri;
+    imageSkillUri.type = "image/*";
+    imageSkill.uris.emplace_back(imageSkillUri);
+    EXPECT_EQ(false, imageSkill.MatchUriAndType("mailto:support@xxx.jpg", ""));
+}
+
+/**
+ * @tc.number: SkillFalse_0010
+ * @tc.name: test MatchUriAndType with mailto uri and matchUriIndex
+ * @tc.desc: 1.system run normally
+ *           2.matchUriIndex is not modified when not matched
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0010, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    SkillUri skillUri;
+    skillUri.type = "image/*";
+    skill.uris.emplace_back(skillUri);
+    size_t matchUriIndex = 1;
+    EXPECT_EQ(false, skill.MatchUriAndType("mailto:support@xxx.jpg", "", matchUriIndex));
+    EXPECT_EQ(matchUriIndex, 1);
+}
+
+/**
+ * @tc.number: SkillFalse_0011
+ * @tc.name: test MatchUriAndType, mailto prefix is not over matched
+ * @tc.desc: 1.system run normally
+ *           2.only the exact lower case prefix mailto: is treated as the mailto scheme
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0011, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    SkillUri skillUri;
+    skillUri.type = "image/*";
+    skill.uris.emplace_back(skillUri);
+    EXPECT_EQ(true, skill.MatchUriAndType("mailto.jpg", ""));
+    EXPECT_EQ(true, skill.MatchUriAndType("mailtoxxx.jpg", ""));
+    EXPECT_EQ(true, skill.MatchUriAndType("MailTo:support@xxx.jpg", ""));
+}
+
+/**
+ * @tc.number: SkillFalse_0012
+ * @tc.name: test MatchUriAndType, file path is not affected
+ * @tc.desc: 1.system run normally
+ *           2.file path with or without colon still matches by suffix
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0012, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    SkillUri skillUri;
+    skillUri.type = "image/*";
+    skill.uris.emplace_back(skillUri);
+    EXPECT_EQ(true, skill.MatchUriAndType("/data/test/a.jpg", ""));
+    EXPECT_EQ(true, skill.MatchUriAndType("/data/te:st/a.jpg", ""));
+    // uri with :// keeps the original behaviour
+    EXPECT_EQ(false, skill.MatchUriAndType("file:///data/test/a.jpg", ""));
+}
+
+/**
+ * @tc.number: SkillFalse_0013
+ * @tc.name: test MatchUriAndType, skill uri with mailto scheme configured
+ * @tc.desc: 1.system run normally
+ *           2.the mail application which declares scheme mailto still matches
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0013, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    SkillUri skillUri;
+    skillUri.scheme = "mailto";
+    skill.uris.emplace_back(skillUri);
+    EXPECT_EQ(true, skill.MatchUriAndType("mailto:support@xxx.jpg", ""));
+    EXPECT_EQ(true, skill.MatchUriAndType("mailto:support@xxx.cc", ""));
+    // MatchUri lowers the scheme, so the configured scheme is matched case insensitively
+    EXPECT_EQ(true, skill.MatchUriAndType("MailTo:support@xxx.cc", ""));
+}
+
+/**
+ * @tc.number: SkillFalse_0014
+ * @tc.name: test Match with mailto uri
+ * @tc.desc: 1.system run normally
+ *           2.the reported scenario, action viewData with a mailto uri
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0014, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back("ohos.want.action.viewData");
+    SkillUri skillUri;
+    skillUri.type = "image/*";
+    skill.uris.emplace_back(skillUri);
+
+    AAFwk::Want want;
+    want.SetAction("ohos.want.action.viewData");
+    want.SetUri("mailto:support@xxx.jpg");
+    EXPECT_EQ(false, skill.Match(want));
+
+    want.SetUri("/data/test/a.jpg");
+    EXPECT_EQ(true, skill.Match(want));
+}
+
+/**
  * @tc.number: MatchUri_0100
  * @tc.name: test MatchUri
  * @tc.desc: 1.system run normally
