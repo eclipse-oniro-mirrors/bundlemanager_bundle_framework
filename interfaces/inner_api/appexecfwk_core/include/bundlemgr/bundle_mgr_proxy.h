@@ -1470,6 +1470,17 @@ public:
 
     virtual ErrCode SetApplicationDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex,
         bool forbidden) override;
+
+    virtual ErrCode GetBundleInfoDualMode(const std::string &bundleName, int32_t userId,
+        BundleInfoDualMode &bundleInfoDualMode) override
+    {
+        bundleInfoDualMode.appIndex = 0;
+        bundleInfoDualMode.deviceModeDistributionPolicy =
+            DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE;
+        bundleInfoDualMode.appSandboxPolicy = AppSandboxPolicy::SHARED_SANDBOX;
+        return ERR_OK;
+    }
+
 private:
     /**
      * @brief Send a command message from the proxy object.

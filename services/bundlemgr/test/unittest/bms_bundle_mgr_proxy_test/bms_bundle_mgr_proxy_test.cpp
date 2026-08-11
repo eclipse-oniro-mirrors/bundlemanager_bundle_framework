@@ -2209,5 +2209,21 @@ HWTEST_F(BmsBundleMgrProxyTest, GetStringByIdListProxy_0600, Function | MediumTe
     auto res = bundleMgrProxy.GetStringByIdList(bundleName, moduleName, resIdList, labelList, userId, localeInfo);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
 }
+
+/**
+ * @tc.number: GetBundleInfoDualMode_0001
+ * @tc.name: test the GetBundleInfoDualMode
+ * @tc.desc: 1. remote object unavailable
+ *           2. test GetBundleInfoDualMode
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetBundleInfoDualMode_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "com.example.bundle";
+    BundleInfoDualMode info;
+    auto res = bundleMgrProxy.GetBundleInfoDualMode(bundleName, Constants::START_USERID, info);
+    EXPECT_EQ(res, ERR_OK);
+}
 }
 }

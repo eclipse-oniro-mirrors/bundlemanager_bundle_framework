@@ -8329,5 +8329,15 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoFromApp(
     mergedInfo.GetBundleInfoV9(flags, bundleInfo, ServiceConstants::NOT_EXIST_USERID);
     return ERR_OK;
 }
+
+ErrCode BundleMgrHostImpl::GetBundleInfoDualMode(const std::string &bundleName, int32_t userId,
+    BundleInfoDualMode &bundleInfoDualMode)
+{
+    bundleInfoDualMode.appIndex = 0;
+    bundleInfoDualMode.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE;
+    bundleInfoDualMode.appSandboxPolicy = AppSandboxPolicy::SHARED_SANDBOX;
+    return ERR_OK;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

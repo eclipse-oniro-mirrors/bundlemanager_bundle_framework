@@ -1468,5 +1468,75 @@ void from_json(const nlohmann::json &jsonObject, AssetGroupInfo &assetGroupInfo)
         parseResult,
         ArrayType::STRING);
 }
+
+bool BundleInfoDualMode::ReadFromParcel(Parcel &parcel)
+{
+    appIndex = parcel.ReadUint32();
+    deviceModeDistributionPolicy = static_cast<DeviceModeDistributionPolicy>(parcel.ReadInt32());
+    appSandboxPolicy = static_cast<AppSandboxPolicy>(parcel.ReadInt32());
+    return true;
+}
+
+bool BundleInfoDualMode::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, appIndex);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(deviceModeDistributionPolicy));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(appSandboxPolicy));
+    return true;
+}
+
+BundleInfoDualMode *BundleInfoDualMode::Unmarshalling(Parcel &parcel)
+{
+    BundleInfoDualMode *info = new (std::nothrow) BundleInfoDualMode();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const BundleInfoDualMode &info)
+{
+    jsonObject = nlohmann::json {
+        {BUNDLE_INFO_APP_INDEX, info.appIndex},
+        {BUNDLE_INFO_DEVICE_MODE_DISTRIBUTION_POLICY, info.deviceModeDistributionPolicy},
+        {BUNDLE_INFO_APP_SANDBOX_POLICY, info.appSandboxPolicy},
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, BundleInfoDualMode &info)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_APP_INDEX,
+        info.appIndex,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<DeviceModeDistributionPolicy>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_DEVICE_MODE_DISTRIBUTION_POLICY,
+        info.deviceModeDistributionPolicy,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<AppSandboxPolicy>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_APP_SANDBOX_POLICY,
+        info.appSandboxPolicy,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("BundleInfoDualMode from_json error %{public}d", parseResult);
+    }
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
