@@ -2909,4 +2909,56 @@ HWTEST_F(BmsInstallDaemonTest, GetCacheDiskUsageFromPath_Normal_0100, Function |
     std::error_code ec;
     std::filesystem::remove_all("/data/app/cache", ec);
 }
+
+/**
+ * @tc.number: ExtractQuickFixSoFile_0100
+ * @tc.name: test ExtractQuickFixSoFile with invalid hqfFilePath (path traversal)
+ * @tc.desc: 1. hqfFilePath contains ../
+ */
+HWTEST_F(BmsInstallDaemonTest, ExtractQuickFixSoFile_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    ErrCode ret = hostImpl.ExtractQuickFixSoFile(
+        "com.example", "/path/../hqf.hqf", "libs/arm64", "arm64-v8a", false, 1000000, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractQuickFixSoFile_0200
+ * @tc.name: test ExtractQuickFixSoFile with invalid nativeLibraryPath (path traversal)
+ * @tc.desc: 1. nativeLibraryPath contains ../
+ */
+HWTEST_F(BmsInstallDaemonTest, ExtractQuickFixSoFile_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    ErrCode ret = hostImpl.ExtractQuickFixSoFile(
+        "com.example", "/path/hqf.hqf", "../libs/arm64", "arm64-v8a", false, 1000000, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractQuickFixSoFile_0300
+ * @tc.name: test ExtractQuickFixSoFile with invalid cpuAbi (path traversal)
+ * @tc.desc: 1. cpuAbi contains ../
+ */
+HWTEST_F(BmsInstallDaemonTest, ExtractQuickFixSoFile_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    ErrCode ret = hostImpl.ExtractQuickFixSoFile(
+        "com.example", "/path/hqf.hqf", "libs/arm64", "../arm64-v8a", false, 1000000, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractQuickFixSoFile_0400
+ * @tc.name: test ExtractQuickFixSoFile with invalid targetPathSuffix (path traversal)
+ * @tc.desc: 1. targetPathSuffix is non-empty but contains ../
+ */
+HWTEST_F(BmsInstallDaemonTest, ExtractQuickFixSoFile_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    ErrCode ret = hostImpl.ExtractQuickFixSoFile(
+        "com.example", "/path/hqf.hqf", "libs/arm64", "arm64-v8a", false, 1000000, "../suffix");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
 } // OHOS

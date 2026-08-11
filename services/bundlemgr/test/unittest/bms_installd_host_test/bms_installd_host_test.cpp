@@ -1236,4 +1236,5 @@ HWTEST_F(BmsInstalldHostTest, HandleCheckHspPluginCertValidity_0100, Function | 
     bool res = installdHost.HandleCheckHspPluginCertValidity(data, reply);
     EXPECT_TRUE(res);
 }
+
 } // OHOS

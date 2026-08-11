@@ -316,8 +316,11 @@ ErrCode InstalldHostImpl::ExtractQuickFixSoFile(const std::string &bundleName, c
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    if (hqfFilePath.empty() || nativeLibraryPath.empty() || cpuAbi.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractQuickFixSoFile with invalid param");
+    if (!InstalldOperator::IsFileNameValid(hqfFilePath) ||
+        !InstalldOperator::IsFileNameValid(nativeLibraryPath) ||
+        !InstalldOperator::IsFileNameValid(cpuAbi) ||
+        (!targetPathSuffix.empty() && !InstalldOperator::IsFileNameValid(targetPathSuffix))) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling ExtractQuickFixSoFile with path traversal characters");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
@@ -354,7 +357,6 @@ ErrCode InstalldHostImpl::ExtractQuickFixSoFile(const std::string &bundleName, c
 
     return ERR_OK;
 }
-
 
 ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
     const ExtractParam &extractParam)

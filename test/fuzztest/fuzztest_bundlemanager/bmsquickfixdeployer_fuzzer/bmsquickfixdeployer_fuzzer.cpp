@@ -129,12 +129,9 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     quickFixDeployer.ProcessBundleFilePaths(bundleFilePaths, realPaths);
     quickFixDeployer.SendQuickFixSystemEvent(innerBundleInfo);
     quickFixDeployer.ExtractQuickFixSoFile(appQuickFix, bundleInfo);
-    quickFixDeployer.ExtractSoAndApplyDiff(appQuickFix, bundleInfo, "");
-    std::string tmpSoPath;
-    quickFixDeployer.ExtractSoFiles(bundleInfo, "", tmpSoPath);
-
     quickFixDeployer.ProcessApplyDiffPatch(appQuickFix, hqfInfo, "", "", 0);
 
+    std::string tmpSoPath;
     quickFixDeployer.ExtractEncryptedSoFiles(bundleInfo, MODULE_NAME, 0, tmpSoPath);
     CodeSignatureParam codeSignatureParam;
     quickFixDeployer.PrepareCodeSignatureParam(appQuickFix, hqfInfo, bundleInfo, "", codeSignatureParam);
