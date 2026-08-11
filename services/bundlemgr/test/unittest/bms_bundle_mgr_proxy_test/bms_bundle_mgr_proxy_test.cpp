@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include "bundle_mgr_proxy.h"
+#include "bundle_stats_callback_interface.h"
 #include "get_largest_items_callback_interface.h"
 #include "if_system_ability_manager.h"
 #include "iservice_registry.h"
@@ -1900,6 +1901,87 @@ HWTEST_F(BmsBundleMgrProxyTest, GetTopNLargestItemsInAppDataDir_0100, Function |
 
     ErrCode ret = bundleMgrProxy.GetTopNLargestItemsInAppDataDir(bundleName, appIndex, userId, callback);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetBundleStatsAsync_0100
+ * @tc.name: test GetBundleStatsAsync with null remote object
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify GetBundleStatsAsync returns parcel error when IPC fails
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetBundleStatsAsync_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+
+    class MockBundleStatsCallback : public IBundleStatsCallback {
+    public:
+        void OnGetBundleStatsFinished(int32_t errCode, const std::vector<int64_t> &bundleStats) override
+        {
+            resultErrCode = errCode;
+            resultStats = bundleStats;
+        }
+        sptr<IRemoteObject> AsObject() override
+        {
+            return nullptr;
+        }
+        ErrCode resultErrCode = ERR_OK;
+        std::vector<int64_t> resultStats;
+    };
+
+    sptr<MockBundleStatsCallback> callback = new (std::nothrow) MockBundleStatsCallback();
+    ASSERT_NE(callback, nullptr);
+
+    std::string bundleName = "com.example.test";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    uint32_t statFlag = 0;
+
+    ErrCode ret = bundleMgrProxy.GetBundleStatsAsync(bundleName, userId, appIndex, statFlag, callback);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetBundleStatsAsync_0200
+ * @tc.name: test GetBundleStatsAsync with empty bundleName
+ * @tc.desc: 1. call GetBundleStatsAsync with empty bundleName
+ *           2. verify returns ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetBundleStatsAsync_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+
+    class MockBundleStatsCallback : public IBundleStatsCallback {
+    public:
+        void OnGetBundleStatsFinished(int32_t errCode, const std::vector<int64_t> &bundleStats) override {}
+        sptr<IRemoteObject> AsObject() override
+        {
+            return nullptr;
+        }
+    };
+
+    sptr<MockBundleStatsCallback> callback = new (std::nothrow) MockBundleStatsCallback();
+    ASSERT_NE(callback, nullptr);
+
+    ErrCode ret = bundleMgrProxy.GetBundleStatsAsync("", 100, 0, 0, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetBundleStatsAsync_0300
+ * @tc.name: test GetBundleStatsAsync with null callback
+ * @tc.desc: 1. call GetBundleStatsAsync with null callback
+ *           2. verify returns ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetBundleStatsAsync_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+
+    sptr<IBundleStatsCallback> callback = nullptr;
+    ErrCode ret = bundleMgrProxy.GetBundleStatsAsync("com.example.test", 100, 0, 0, callback);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 
 /**

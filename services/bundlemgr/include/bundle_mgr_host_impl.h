@@ -18,7 +18,9 @@
 
 #include <atomic>
 #include <chrono>
+#include <map>
 #include <mutex>
+#include <tuple>
 #include "bundle_cache_mgr.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "bundle_connect_ability_mgr.h"
@@ -26,6 +28,7 @@
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_host.h"
+#include "bundle_stats_callback_interface.h"
 #include "event_report.h"
 #include "inner_bundle_user_info.h"
 
@@ -1036,6 +1039,9 @@ public:
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
         std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
+    virtual ErrCode GetBundleStatsAsync(const std::string &bundleName, int32_t userId, int32_t appIndex,
+        uint32_t statFlag, const sptr<IBundleStatsCallback> &callback) override;
+
     virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback) override;
 
@@ -1409,6 +1415,10 @@ private:
         const int32_t appIndex, const std::string &path, uint64_t &cleanCacheSize);
     void GetTopNLargestItemsTask(const std::string &bundleName, int32_t appIndex, int32_t userId,
         const sptr<IGetLargestItemsCallback> getLargestItemsCallback);
+    bool GetBundleStatsInternal(const std::string &bundleName, int32_t userId,
+        std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag,
+        int32_t activeUserId = Constants::INVALID_USERID);
+    static uint32_t NormalizeStatFlag(uint32_t statFlag);
     bool CleanBundleCacheByInodeCount(const std::string &bundleName, int32_t userId,
         int32_t appIndex, const std::vector<std::string> &moduleNames, uint64_t &cleanCacheSize);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
@@ -1479,6 +1489,10 @@ private:
     // Frequency limit for GetTopNLargestItemsInAppDataDir
     std::mutex lastSuccessCallTimeMutex_;
     std::chrono::steady_clock::time_point lastSuccessCallTime_ = std::chrono::steady_clock::time_point{};
+
+    std::mutex bundleStatsAsyncMutex_;
+    std::map<std::tuple<std::string, int32_t, int32_t, uint32_t>,
+        std::vector<sptr<IBundleStatsCallback>>> bundleStatsAsyncMap_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

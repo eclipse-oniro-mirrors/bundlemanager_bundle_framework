@@ -3785,6 +3785,61 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     return true;
 }
 
+ErrCode BundleMgrProxy::GetBundleStatsAsync(const std::string &bundleName, int32_t userId, int32_t appIndex,
+    uint32_t statFlag, const sptr<IBundleStatsCallback> &callback)
+{
+    APP_LOGI_NOFUNC("GetBundleStatsAsync -n %{public}s -u %{public}d -i %{public}d",
+        bundleName.c_str(), userId, appIndex);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+
+    if (bundleName.empty()) {
+        APP_LOGE("fail to GetBundleStatsAsync due to bundleName empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (callback == nullptr) {
+        APP_LOGE("fail to GetBundleStatsAsync due to params error");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to GetBundleStatsAsync due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetBundleStatsAsync due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetBundleStatsAsync due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to GetBundleStatsAsync due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(statFlag)) {
+        APP_LOGE("fail to GetBundleStatsAsync due to write statFlag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteRemoteObject(callback->AsObject())) {
+        APP_LOGE("fail to GetBundleStatsAsync, for write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_STATS_ASYNC, data, reply)) {
+        APP_LOGE("fail to GetBundleStatsAsync from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    int32_t ret = 0;
+    if (!reply.ReadInt32(ret)) {
+        APP_LOGE("fail to GetBundleStatsAsync due to read result fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ret;
+}
+
 ErrCode BundleMgrProxy::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
     const int32_t userId, const sptr<IGetLargestItemsCallback> getLargestItemsCallback)
 {
