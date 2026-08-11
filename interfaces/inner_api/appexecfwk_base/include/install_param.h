@@ -122,7 +122,6 @@ private:
 public:
     static constexpr const char* RENAME_INSTALL_KEY = "ohos.bms.param.renameInstall";
     static constexpr const char* ENTERPRISE_FOR_ALL_USER_KEY = "ohos.bms.param.enterpriseForAllUser";
-    static constexpr const char* SUPPORT_DATA_CLONE_INSTALL_KEY = "ohos.bms.para.supportDataCloneInstall";
     static constexpr const char* PARAMETERS_VALUE_TRUE = "true";
 
     bool GetForceExecuted() const
@@ -177,12 +176,6 @@ public:
     {
         return parameters.find(ENTERPRISE_FOR_ALL_USER_KEY) != parameters.end() &&
             parameters.at(ENTERPRISE_FOR_ALL_USER_KEY) == PARAMETERS_VALUE_TRUE;
-    }
-
-    bool IsSupportDataCloneInstall() const
-    {
-        return parameters.find(SUPPORT_DATA_CLONE_INSTALL_KEY) != parameters.end() &&
-            parameters.at(SUPPORT_DATA_CLONE_INSTALL_KEY) == PARAMETERS_VALUE_TRUE;
     }
 
     bool IsForcedUninstall() const
