@@ -52,8 +52,10 @@ bool StringParcelable::Marshalling(Parcel &parcel) const
 StringParcelable *StringParcelable::Unmarshalling(Parcel &parcel)
 {
     auto *info = new (std::nothrow) StringParcelable();
-    if (info != nullptr) {
-        info->ReadFromParcel(parcel);
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
     }
     return info;
 }
