@@ -1937,7 +1937,9 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize, Cl
     }
 
     std::vector<RunningProcessInfo> runningList;
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     int result = appMgrProxy->GetAllRunningProcesses(runningList);
+    IPCSkeleton::SetCallingIdentity(identity);
     if (result != ERR_OK) {
         APP_LOGE_NOFUNC("Get all running processes failed");
         return ERR_BUNDLE_MANAGER_GET_ALL_RUNNING_PROCESSES_FAILED;
@@ -2330,9 +2332,11 @@ ErrCode BundleMgrHostImpl::IsAppRunning(const std::string &bundleName, const int
     }
 
     std::vector<RunningProcessInfo> runningList;
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     int result = appMgrProxy->GetAllRunningProcesses(runningList);
-    if (result != ERR_OK) {
-        APP_LOGE_NOFUNC("Get all running processes failed");
+    IPCSkeleton::SetCallingIdentity(identity);
+    if (result != ERR_OK || runningList.empty()) {
+        APP_LOGE_NOFUNC("Get all running processes failed, err:%{public}d", result);
         return ERR_BUNDLE_MANAGER_GET_ALL_RUNNING_PROCESSES_FAILED;
     }
 
@@ -2379,6 +2383,7 @@ ErrCode BundleMgrHostImpl::CleanBundlePartialCacheAutomatic(
 
     ret = IsAppRunning(bundleName, userId);
     if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("%{public}s -u %{public}d IsAppNotRunning", bundleName.c_str(), userId);
         return ret;
     }
 
@@ -2397,19 +2402,25 @@ ErrCode BundleMgrHostImpl::CleanBundlePartialCacheAutomatic(
     BundleCacheMgr::GetBundleCacheSizeByAppIndex(bundleName, userId, appIndex, moduleNames, beforeCleanedSize);
     auto cacheThreshold = cleanCacheInfo.cacheThreshold;
     if (beforeCleanedSize <= cacheThreshold) {
-        APP_LOGI("the reserved cache size meets the requirement, no need to clean");
+        APP_LOGI("%{public}s -u %{public}d cache size meets the requirement, no need to clean",
+            bundleName.c_str(), userId);
         afterCleanedSize = beforeCleanedSize;
         return ERR_OK;
     }
 
     auto cachePaths = BundleCacheMgr::GetBundleCachePath(bundleName, userId, appIndex, moduleNames);
-    auto needFreeSize = beforeCleanedSize - cacheThreshold;
+    auto needFreeSize = cacheThreshold == 0 ? 0 : beforeCleanedSize - cacheThreshold;
     uint64_t cleanedSize = 0;
     ret = InstalldClient::GetInstance()->DeleteOldCacheFiles(cachePaths, needFreeSize, cleanedSize);
-    afterCleanedSize = (cleanedSize >= beforeCleanedSize) ? 0 : beforeCleanedSize - cleanedSize;
-    if (afterCleanedSize > cacheThreshold) {
-        afterCleanedSize - 0;
+    if (cacheThreshold == 0) {
+        afterCleanedSize = 0;
         BundleCacheMgr::GetBundleCacheSizeByAppIndex(bundleName, userId, appIndex, moduleNames, afterCleanedSize);
+    } else {
+        afterCleanedSize = (cleanedSize >= beforeCleanedSize) ? 0 : beforeCleanedSize - cleanedSize;
+    }
+    if (afterCleanedSize > beforeCleanedSize) {
+        APP_LOGW("cleanBundlePartialCacheAutomatic error, beforeCleanedSize = %{public}" PRIu64 ","
+            "afterCleanedSize = %{public}" PRIu64, beforeCleanedSize, afterCleanedSize);
     }
     return ret;
 }
