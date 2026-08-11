@@ -38,7 +38,9 @@ void ModuleJsonUpdater::UpdateModuleJsonAsync()
     (void)BMSEventHandler::CheckOtaFlag(OTAFlag::UPDATE_MODULE_JSON, isHandled);
     bool isAlternateIconsHandled = false;
     (void)BMSEventHandler::CheckOtaFlag(OTAFlag::UPDATE_ALTERNATE_ICONS, isAlternateIconsHandled);
-    if (isHandled && isAlternateIconsHandled) {
+    bool isExtendFieldsHandled = false;
+    (void)BMSEventHandler::CheckOtaFlag(OTAFlag::UPDATE_MODULE_JSON_EXTEND_FIELDS, isExtendFieldsHandled);
+    if (isHandled && isAlternateIconsHandled && isExtendFieldsHandled) {
         ClearIgnoreBundleNames();
         return;
     }
@@ -46,6 +48,7 @@ void ModuleJsonUpdater::UpdateModuleJsonAsync()
         UpdateModuleJson();
         (void)BMSEventHandler::UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON);
         (void)BMSEventHandler::UpdateOtaFlag(OTAFlag::UPDATE_ALTERNATE_ICONS);
+        (void)BMSEventHandler::UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON_EXTEND_FIELDS);
     }).detach();
 }
 
@@ -133,9 +136,11 @@ bool ModuleJsonUpdater::MergeInnerBundleInfo(
         return false;
     }
     mergedInfo.SetBaseApplicationInfo(moduleJsonMap.begin()->second.GetBaseApplicationInfo());
+    mergedInfo.SetBaseBundleInfo(moduleJsonMap.begin()->second.GetBaseBundleInfo());
     for (const auto &[moduleName, innerBundleInfo] : moduleJsonMap) {
         if (innerBundleInfo.IsEntryModule(moduleName)) {
             mergedInfo.SetBaseApplicationInfo(innerBundleInfo.GetBaseApplicationInfo());
+            mergedInfo.SetBaseBundleInfo(innerBundleInfo.GetBaseBundleInfo());
         }
         mergedInfo.AddInnerModuleInfo(innerBundleInfo.GetInnerModuleInfos());
         mergedInfo.AddModuleAbilityInfo(innerBundleInfo.GetInnerAbilityInfos());
