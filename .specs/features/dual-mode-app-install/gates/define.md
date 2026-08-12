@@ -1,7 +1,7 @@
 # 定义阶段 Gate 检查 — FEAT-20260715-001
 
 > 对应 gate-checklist.md「一、定义阶段」。命中 Profile：无。
-> 本 Gate 结论：**通过 / Approved**（需求基线 v1.0 + 范围追加 AC-27~35 均已批准）。
+> 本 Gate 结论：**通过 / Approved**（需求基线 v1.0 已批准）。
 
 ## 入口检查
 
@@ -20,7 +20,7 @@
 | 范围和排除项已明确 | ✅ | proposal.md 范围边界（含/不含） |
 | 涉及子系统/仓已识别 | ✅ | bundlemanager_bundle_framework（单仓） |
 | 复杂度级别已判断 | ✅ | 标准（单仓多模块，需架构决策） |
-| 每个 P0/P1 AC 以 WHEN/THEN 格式写出且可测试 | ✅ | [spec.md](../spec.md) AC-1~35 |
+| 每个 P0/P1 AC 以 WHEN/THEN 格式写出且可测试 | ✅ | [spec.md](../spec.md) AC-1~40 |
 
 ## 复杂度裁剪确认
 
@@ -28,7 +28,7 @@
 
 ## 总结论
 
-**通过 / Approved** — 需求基线（v1.0）经逐轮澄清并显式批准；后续范围追加（installStates_ 状态机、BundleResourceManager、UpdateBundleInstallState 重新设计、模式判断参数 ispcmode/mainmode、类别7仅系统应用准入 + 跨 map 类别一致性）均已陆续批准并纳入基线。AC 总数 35（AC-1~35）。
+**通过 / Approved** — 需求基线（v1.0）经逐轮澄清并显式批准，含 installStates_ 状态机、BundleResourceManager、UpdateBundleInstallState、模式判断参数 ispcmode/mainmode、不同包体类别仅系统应用准入 + 跨 map 类别一致性等范围。AC 总数 40（AC-1~40）。
 
 ## Approval 记录
 
