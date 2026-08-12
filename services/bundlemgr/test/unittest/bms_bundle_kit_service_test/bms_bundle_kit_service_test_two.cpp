@@ -10663,6 +10663,75 @@ HWTEST_F(BmsBundleKitServiceTest, GetJsonProfilefImpl_0400, Function | SmallTest
     ResetTestValues();
 }
 
+// GetJsonProfileForSelf resolves the target bundle from the caller's uid on the service side and
+// only allows NETWORK_PROFILE, so the caller cannot inject another bundle's name. The cases below
+// cover every new branch added by GetJsonProfileForSelf. The success path is intentionally not
+// duplicated here: it delegates to BundleDataMgr::GetJsonProfile, already covered by the
+// GetJsonProfile_000x data-mgr-level tests.
+// NOTE: BmsBundleKitServiceTwoTest links the real libipc (mock_ipc_skeleton.cpp is NOT in its
+// sources), so IPCSkeleton::GetCallingUid() returns the test process uid; the SetGetCallingUid()
+// helper from the mock is unavailable here. The cases below rely only on the real calling uid.
+/**
+ * @tc.number: GetJsonProfileForSelfImpl_0100
+ * @tc.name: test GetJsonProfileForSelf rejects non-NETWORK profile types
+ * @tc.desc: 1. test GetJsonProfileForSelf with PKG_CONTEXT_PROFILE / UNSPECIFIED_PROFILE
+ *           2. PKG_CONTEXT_PROFILE is exactly the type the legacy GetJsonProfile leaked to
+ *              non-system apps; ForSelf must reject it before any data lookup
+ *           3. should return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetJsonProfileForSelfImpl_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string profile;
+    // The profileType allow-list gate is independent of system-app status, so even the default
+    // (system) test caller must be rejected for non-NETWORK types.
+    auto ret = hostImpl->GetJsonProfileForSelf(
+        AppExecFwk::ProfileType::PKG_CONTEXT_PROFILE, MODULE_NAME_TEST, profile);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST);
+
+    ret = hostImpl->GetJsonProfileForSelf(
+        AppExecFwk::ProfileType::UNSPECIFIED_PROFILE, MODULE_NAME_TEST, profile);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetJsonProfileForSelfImpl_0200
+ * @tc.name: test GetJsonProfileForSelf with dataMgr nullptr
+ * @tc.desc: 1. test GetJsonProfileForSelf when dataMgr is nullptr
+ *           2. should return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetJsonProfileForSelfImpl_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string profile;
+    auto ret = hostImpl->GetJsonProfileForSelf(
+        AppExecFwk::ProfileType::NETWORK_PROFILE, MODULE_NAME_TEST, profile);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetJsonProfileForSelfImpl_0300
+ * @tc.name: test GetJsonProfileForSelf with calling uid not mapped to any bundle
+ * @tc.desc: 1. test GetJsonProfileForSelf when the caller's uid cannot be resolved to a bundle
+ *           2. bundleName is resolved from the caller's uid; an unmapped uid must be refused
+ *              rather than falling back to any caller-supplied name
+ *           3. should return ERR_BUNDLE_MANAGER_INVALID_UID
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetJsonProfileForSelfImpl_0300, Function | SmallTest | Level1)
+{
+    // This target uses the real IPCSkeleton; GetCallingUid() returns the test process uid (the
+    // thread-local default, 0, which is < BASE_APP_UID), and no bundle in the fixture is installed
+    // under that uid. So the service cannot resolve a bundleName and must refuse rather than fall
+    // back to any caller-supplied name. (Same uid=0 -> INVALID_UID path as
+    // GetNameAndIndexForUidImpl_0300, which passes uid=0 explicitly.)
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string profile;
+    auto ret = hostImpl->GetJsonProfileForSelf(
+        AppExecFwk::ProfileType::NETWORK_PROFILE, MODULE_NAME_TEST, profile);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
 /**
  * @tc.number: CreateBundleDataDirImpl_0100
  * @tc.name: test CreateBundleDataDir with no permission

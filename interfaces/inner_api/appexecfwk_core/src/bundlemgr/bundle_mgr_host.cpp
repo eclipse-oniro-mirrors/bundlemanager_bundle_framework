@@ -576,6 +576,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_JSON_PROFILE):
             errCode = this->HandleGetJsonProfile(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_JSON_PROFILE_FOR_SELF):
+            errCode = this->HandleGetJsonProfileForSelf(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_PROXY):
             errCode = this->HandleGetBundleResourceProxy(data, reply);
             break;
@@ -4319,6 +4322,24 @@ ErrCode BundleMgrHost::HandleGetJsonProfile(MessageParcel &data, MessageParcel &
     int32_t userId = data.ReadInt32();
     std::string profile;
     ErrCode ret = GetJsonProfile(profileType, bundleName, moduleName, profile, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && WriteBigString(profile, reply) != ERR_OK) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetJsonProfileForSelf(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    ProfileType profileType = static_cast<ProfileType>(data.ReadInt32());
+    std::string moduleName = data.ReadString();
+    std::string profile;
+    ErrCode ret = GetJsonProfileForSelf(profileType, moduleName, profile);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

@@ -1939,6 +1939,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetJsonProfile_0100, Function | MediumTest 
 }
 
 /**
+ * @tc.number: HandleGetJsonProfileForSelf
+ * @tc.name: test the HandleGetJsonProfileForSelf
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetJsonProfileForSelf dispatches and returns ERR_OK on parcel success
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetJsonProfileForSelf_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetJsonProfileForSelf(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: HandleGetBundleResourceProxy
  * @tc.name: test the HandleGetBundleResourceProxy
  * @tc.desc: 1. system running normally
