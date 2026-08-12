@@ -1737,7 +1737,11 @@ bool BundleInstallChecker::CheckSupportAppTypes(
         set_intersection(appTypesVec.begin(), appTypesVec.end(),
             devVec.begin(), devVec.end(), back_inserter(intersectionVec));
         if (intersectionVec.empty()) {
-            LOG_W(BMS_TAG_INSTALLER, "check supportAppTypes failed");
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER,
+                "check supportAppTypes failed: %{public}s moduleName: %{public}s hapPath: %{public}s",
+                supportAppTypes.c_str(),
+                info.second.GetCurModuleName().c_str(),
+                info.first.c_str());
             return false;
         }
     }
@@ -1777,7 +1781,11 @@ ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, In
         }
 
         if (find(devVec.begin(), devVec.end(), deviceType) == devVec.end()) {
-            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "%{public}s is not supported", deviceType.c_str());
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER,
+                "%{public}s is not supported. moduleName: %{public}s hapPath: %{public}s",
+                deviceType.c_str(),
+                info.second.GetCurModuleName().c_str(),
+                info.first.c_str());
             return CheckRequiredDeviceFeatures(infos);
         }
     }
@@ -1814,11 +1822,18 @@ ErrCode BundleInstallChecker::CheckRequiredDeviceFeatures(
         auto requiredDeviceFeatures = info.second.GetRequiredDeviceFeatures(info.second.GetCurrentModulePackage());
         auto it = requiredDeviceFeatures.find(deviceType);
         if (it == requiredDeviceFeatures.end()) {
-            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "requiredDeviceFeatures not support: %{public}s", deviceType.c_str());
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER,
+                "requiredDeviceFeatures not support: %{public}s moduleName: %{public}s hapPath: %{public}s",
+                deviceType.c_str(),
+                info.second.GetCurModuleName().c_str(),
+                info.first.c_str());
             return ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED;
         }
         if (!IsSubSet(providedDeviceFeatures, it->second)) {
-            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "requiredDeviceFeatures not in provided");
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER,
+                "requiredDeviceFeatures not in provided, moduleName: %{public}s hapPath: %{public}s",
+                info.second.GetCurModuleName().c_str(),
+                info.first.c_str());
             return ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED;
         }
     }
