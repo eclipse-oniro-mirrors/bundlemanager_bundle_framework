@@ -98,7 +98,7 @@ public:
     bool GetInstallAndRecoverList(const int32_t userId, const std::vector<std::string> &bundleList,
         std::vector<std::string> &installList, std::vector<std::string> &recoverList);
     ErrCode GetAllBundleCacheSize(int32_t userId, int64_t &cacheSize);
-    ErrCode CleanAllBundleCache(int32_t userId);
+    ErrCode ClearAllBundleCache(int32_t userId, sptr<IRemoteObject> callback);
 private:
     bool OpenHandler();
     static void *handler_;

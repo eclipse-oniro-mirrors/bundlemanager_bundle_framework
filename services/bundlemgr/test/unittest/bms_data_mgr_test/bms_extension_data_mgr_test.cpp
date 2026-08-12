@@ -732,13 +732,13 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_AllBundleCache_0001, Function | S
 
 /**
  * @tc.number: BundleMgrExt_AllBundleCache_0002
- * @tc.name: CleanAllBundleCache
+ * @tc.name: ClearAllBundleCache
  * @tc.desc: default impl returns ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR
  */
 HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_AllBundleCache_0002, Function | SmallTest | Level0)
 {
     BundleMgrExtTest bundleMgrExtTest;
-    ErrCode res = bundleMgrExtTest.CleanAllBundleCache(USERID);
+    ErrCode res = bundleMgrExtTest.ClearAllBundleCache(USERID, nullptr);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
 }
 
@@ -2529,13 +2529,13 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_AllBundleCache_0001, Funct
 
 /**
  * @tc.number: BmsExtensionDataMgr_AllBundleCache_0002
- * @tc.name: CleanAllBundleCache
+ * @tc.name: ClearAllBundleCache
  * @tc.desc: ext unavailable -> ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR
  */
 HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_AllBundleCache_0002, Function | SmallTest | Level0)
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    ErrCode res = bmsExtensionDataMgr.CleanAllBundleCache(USERID);
+    ErrCode res = bmsExtensionDataMgr.ClearAllBundleCache(USERID, nullptr);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 }
 } // OHOS

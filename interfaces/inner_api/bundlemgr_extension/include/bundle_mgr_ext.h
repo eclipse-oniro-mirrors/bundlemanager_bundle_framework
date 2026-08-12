@@ -224,7 +224,7 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
-    virtual ErrCode CleanAllBundleCache(int32_t userId)
+    virtual ErrCode ClearAllBundleCache(int32_t userId, sptr<IRemoteObject> callback)
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }

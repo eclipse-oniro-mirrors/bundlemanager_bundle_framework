@@ -36,6 +36,7 @@ public:
     uint64_t GetCacheStat() override;
     void OnCleanAllBundleCacheFinished(int32_t result) override;
     int32_t GetCleanRet();
+    bool WaitForCleanRet(int64_t timeoutMs, int32_t &result);
     void setAllComplete(bool getAllcomplete)
     {
         std::lock_guard<std::mutex> lock(getAllMutex_);
