@@ -25,9 +25,9 @@
 #include "bundle_compatible_device_type.h"
 #include "bundle_info.h"
 #include "bundle_option.h"
-#include "bundle_resource_info.h"
+#include "bundle_resource/bundle_resource_info.h"
 #include "code_protect_bundle_info.h"
-#include "launcher_ability_resource_info.h"
+#include "bundle_resource/launcher_ability_resource_info.h"
 #include "interfaces/hap_verify.h"
 #include "want.h"
 #include "abs_rdb_predicates.h"
@@ -97,6 +97,7 @@ public:
         std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList);
     bool GetInstallAndRecoverList(const int32_t userId, const std::vector<std::string> &bundleList,
         std::vector<std::string> &installList, std::vector<std::string> &recoverList);
+    ErrCode RebuildBundleResourceTable();
 private:
     bool OpenHandler();
     static void *handler_;

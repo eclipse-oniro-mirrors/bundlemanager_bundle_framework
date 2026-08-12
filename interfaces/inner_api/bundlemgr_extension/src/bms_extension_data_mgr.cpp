@@ -828,5 +828,20 @@ bool BmsExtensionDataMgr::GetInstallAndRecoverList(const int32_t userId, const s
     }
     return bundleMgrExtPtr->GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
 }
+
+ErrCode BmsExtensionDataMgr::RebuildBundleResourceTable()
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    return bundleMgrExtPtr->RebuildBundleResourceTable();
+}
 } // AppExecFwk
 } // OHOS

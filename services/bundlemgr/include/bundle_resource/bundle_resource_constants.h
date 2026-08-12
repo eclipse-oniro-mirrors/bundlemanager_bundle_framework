@@ -25,6 +25,9 @@ constexpr const char* BUNDLE_RESOURCE_RDB_PATH = "/data/service/el1/public/bms/b
 constexpr const char* BUNDLE_RESOURCE_RDB_STORAGE_PATH = "/data/storage/bundle_resources";
 // resource database name
 constexpr const char* BUNDLE_RESOURCE_RDB_NAME = "/bundleResource.db";
+constexpr const char* BUNDLE_RESOURCE_BACKUP_RDB_NAME = "/bundleResource_slave.db";
+// legacy bms backup db located in the resource rdb dir, cleaned together with the slave db
+constexpr const char* BMS_BACKUP_RDB_NAME = "/bms-backup.db";
 // resource table name
 constexpr const char* BUNDLE_RESOURCE_RDB_TABLE_NAME = "bundleResource";
 constexpr const char* BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME = "bundleIconResource";

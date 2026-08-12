@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_RDB_DATA_MANAGER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_RDB_DATA_MANAGER_H
 
+#include <atomic>
+#include <functional>
 #include <mutex>
 #include <unordered_map>
 
@@ -69,6 +71,11 @@ public:
     void ReportRdbLostEvent(HighRiskOperationType operation, int32_t userId);
 
     bool ExecuteSql();
+
+    void SetRebuildCallback(std::function<void()> callback);
+
+    void CheckDbError();
+
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore(ErrCode &result);
     ErrCode GetRdbStoreFromNative();
@@ -76,6 +83,8 @@ private:
         const NativeRdb::ValuesBucket &valuesBucket);
     bool IsRetryErrCode(int32_t errCode);
     std::mutex &GetRdbRestoreMutex(const std::string &dbName);
+    void TriggerRebuild();
+    void DeleteDbFiles(const std::string &dbFile);
     bool isInitial_ = false;
     std::mutex rdbMutex_;
     static std::mutex restoreRdbMapMutex_;
@@ -84,6 +93,8 @@ private:
 
     BmsRdbConfig bmsRdbConfig_;
     std::shared_ptr<SingleDelayedTaskMgr> delayedTaskMgr_;
+    std::function<void()> rebuildCallback_;
+    static std::atomic<bool> isRebuilding_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

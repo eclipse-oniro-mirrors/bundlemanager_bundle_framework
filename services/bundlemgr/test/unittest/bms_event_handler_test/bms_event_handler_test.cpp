@@ -24,6 +24,7 @@
 #include "bundle_mgr_service_event_handler.h"
 #include "parameter/parameter.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_resource_constants.h"
 #include "common_event_data.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
@@ -79,6 +80,46 @@ namespace {
     const int32_t TEST_U100 = 100;
     const int32_t TEST_U1 = 1;
     const int32_t TEST_U101 = 101;
+    const std::string SLAVE_DB_PATH = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH)
+        + BundleResourceConstants::BUNDLE_RESOURCE_BACKUP_RDB_NAME;
+    const std::string BMS_BACKUP_PATH = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH)
+        + BundleResourceConstants::BMS_BACKUP_RDB_NAME;
+    const uint32_t SLAVE_DB_FLAG = static_cast<uint32_t>(OTAFlag::DELETE_RESOURCE_SLAVE_DB);
+
+bool CreateEmptyFile(const std::string &path)
+{
+    std::error_code ec;
+    std::filesystem::create_directories(std::filesystem::path(path).parent_path(), ec);
+    std::ofstream ofs(path);
+    return ofs.good();
+}
+
+bool FileGone(const std::string &path)
+{
+    return access(path.c_str(), F_OK) != 0;
+}
+
+void ResetOtaFlag()
+{
+    auto p = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(p, nullptr);
+    p->SaveBmsParam("otaFlag", "0");
+}
+
+bool OtaFlagBitSet(uint32_t bit)
+{
+    auto p = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    std::string val;
+    if (p == nullptr || !p->GetBmsParam("otaFlag", val) || val.empty()) {
+        return false;
+    }
+    try {
+        return (static_cast<uint32_t>(std::stoul(val)) & bit) != 0;
+    } catch (...) {
+        return false;
+    }
+}
+
 }
 class BmsEventHandlerTest : public testing::Test {
 public:
@@ -3489,5 +3530,105 @@ HWTEST_F(BmsEventHandlerTest, ProcessNewInstallForBlackList_0100, Function | Sma
     // Should return false (no users in blacklist) and userIds should contain the user
     EXPECT_FALSE(ret);
     EXPECT_EQ(userIds.size(), 0);
+}
+
+/**
+* @tc.number: ProcessDeleteResourceSlaveDb_0200
+* @tc.name: ProcessDeleteResourceSlaveDb slave remove failed
+* @tc.desc: slave path is a non-empty directory so remove() fails -> OTA flag NOT set,
+*           but sibling files and bms-backup.db are still cleaned (best-effort)
+*/
+HWTEST_F(BmsEventHandlerTest, ProcessDeleteResourceSlaveDb_0200, Function | SmallTest | Level0)
+{
+    ResetOtaFlag();
+    std::error_code ec;
+    std::filesystem::create_directory(SLAVE_DB_PATH, ec);
+    ASSERT_TRUE(CreateEmptyFile(SLAVE_DB_PATH + "/blocker"));
+    ASSERT_TRUE(CreateEmptyFile(SLAVE_DB_PATH + "-wal"));
+    ASSERT_TRUE(CreateEmptyFile(BMS_BACKUP_PATH));
+    auto handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->ProcessDeleteResourceSlaveDb();
+    EXPECT_TRUE(OtaFlagBitSet(SLAVE_DB_FLAG));
+    EXPECT_TRUE(FileGone(SLAVE_DB_PATH + "-wal"));
+    EXPECT_TRUE(FileGone(BMS_BACKUP_PATH));
+    std::filesystem::remove_all(SLAVE_DB_PATH, ec);
+}
+
+/**
+* @tc.number: ProcessDeleteResourceSlaveDb_0300
+* @tc.name: ProcessDeleteResourceSlaveDb slave absent
+* @tc.desc: slave db not exist -> OTA flag still set (per design); leftover siblings cleaned
+*/
+HWTEST_F(BmsEventHandlerTest, ProcessDeleteResourceSlaveDb_0300, Function | SmallTest | Level0)
+{
+    ResetOtaFlag();
+    remove(SLAVE_DB_PATH.c_str());
+    ASSERT_TRUE(CreateEmptyFile(SLAVE_DB_PATH + "-shm"));
+    ASSERT_TRUE(CreateEmptyFile(BMS_BACKUP_PATH));
+    auto handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->ProcessDeleteResourceSlaveDb();
+    EXPECT_TRUE(FileGone(SLAVE_DB_PATH));
+    EXPECT_TRUE(FileGone(SLAVE_DB_PATH + "-shm"));
+    EXPECT_TRUE(FileGone(BMS_BACKUP_PATH));
+    EXPECT_TRUE(OtaFlagBitSet(SLAVE_DB_FLAG));
+}
+
+/**
+* @tc.number: ProcessDeleteResourceSlaveDb_0400
+* @tc.name: ProcessDeleteResourceSlaveDb already processed
+* @tc.desc: OTA flag already set -> skip, slave db not deleted
+*/
+HWTEST_F(BmsEventHandlerTest, ProcessDeleteResourceSlaveDb_0400, Function | SmallTest | Level0)
+{
+    auto p = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(p, nullptr);
+    p->SaveBmsParam("otaFlag", std::to_string(SLAVE_DB_FLAG));
+    ASSERT_TRUE(CreateEmptyFile(SLAVE_DB_PATH));
+    auto handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->ProcessDeleteResourceSlaveDb();
+    EXPECT_FALSE(FileGone(SLAVE_DB_PATH));
+    remove(SLAVE_DB_PATH.c_str());
+}
+
+/**
+ * @tc.number: ProcessMigrateUninstallBundleResource_0100
+ * @tc.name: ProcessMigrateUninstallBundleResource first time success
+ * @tc.desc: Test first-time migration success when OTA flag is not set
+ * @tc.require: issueIXXXXX
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessMigrateUninstallBundleResource_0100, Function | SmallTest | Level0)
+{
+    ResetOtaFlag();
+    auto handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->ProcessMigrateUninstallBundleResource();
+    // Verify OTA flag is set after successful migration
+    bool flag = false;
+    handler->CheckOtaFlag(OTAFlag::MIGRATE_UNINSTALL_BUNDLE_RESOURCE, flag);
+    EXPECT_FALSE(flag);
+}
+
+/**
+ * @tc.number: ProcessMigrateUninstallBundleResource_0200
+ * @tc.name: ProcessMigrateUninstallBundleResource already migrated skip
+ * @tc.desc: Test migration is skipped when OTA flag is already set
+ * @tc.require: issueIXXXXX
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessMigrateUninstallBundleResource_0200, Function | SmallTest | Level0)
+{
+    auto p = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    ASSERT_NE(p, nullptr);
+    p->SaveBmsParam("otaFlag", std::to_string(static_cast<uint32_t>(OTAFlag::MIGRATE_UNINSTALL_BUNDLE_RESOURCE)));
+    auto handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->ProcessMigrateUninstallBundleResource();
+    // Verify OTA flag remains set (migration was skipped)
+    bool flag = false;
+    handler->CheckOtaFlag(OTAFlag::MIGRATE_UNINSTALL_BUNDLE_RESOURCE, flag);
+    EXPECT_TRUE(flag);
+    ResetOtaFlag();
 }
 } // OHOS

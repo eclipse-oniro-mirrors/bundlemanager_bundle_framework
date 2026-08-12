@@ -38,6 +38,10 @@ public:
     bool GetAllUninstallBundleResource(const int32_t userId, const uint32_t flags,
         std::vector<BundleResourceInfo> &bundleResourceInfos);
 
+    // Data migration methods
+    bool MigrateData();
+    bool DeleteTable();
+
 private:
     std::map<std::string, std::string> FromString(const std::string &labels);
     std::string ToString(const std::map<std::string, std::string> &labelMap);
@@ -46,7 +50,14 @@ private:
     std::string GetAvailableLabel(const std::string &bundleName, const std::string &language,
         const std::string &labels);
 
-    std::shared_ptr<RdbDataManager> rdbDataManager_;
+    // Compatible query methods for old database
+    bool QueryFromOldTable(const std::string &bundleName, const int32_t userId, const int32_t appIndex,
+        const uint32_t flags, BundleResourceInfo &bundleResourceInfo);
+    bool QueryAllFromOldTable(const int32_t userId, const uint32_t flags,
+        std::vector<BundleResourceInfo> &bundleResourceInfos);
+
+    std::shared_ptr<RdbDataManager> rdbDataManager_;      // New database (bmsdb.db)
+    std::shared_ptr<RdbDataManager> oldRdbDataManager_;   // Old database (bundleresource.db)
 };
 } // AppExecFwk
 } // OHOS

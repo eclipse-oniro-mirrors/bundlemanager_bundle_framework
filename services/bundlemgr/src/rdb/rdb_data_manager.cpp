@@ -15,9 +15,11 @@
 #include <atomic>
 #include <cstdlib>
 #include "bundle_service_constants.h"
+#include "bms_extension_data_mgr.h"
 #include "rdb_data_manager.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_resource_constants.h"
 #include "bundle_util.h"
 #include "event_report.h"
 #include "installd_client.h"
@@ -75,6 +77,7 @@ const std::unordered_map<int32_t, int32_t> RDB_ERR_MAP = {
 
 std::mutex RdbDataManager::restoreRdbMapMutex_;
 std::unordered_map<std::string, std::mutex> RdbDataManager::restoreRdbMap_;
+std::atomic<bool> RdbDataManager::isRebuilding_ {false};
 
 RdbDataManager::RdbDataManager(const BmsRdbConfig &bmsRdbConfig)
     : bmsRdbConfig_(bmsRdbConfig)
@@ -117,8 +120,10 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
-    rdbStoreConfig.SetAllowRebuild(true);
-    rdbStoreConfig.SetHaMode(NativeRdb::HAMode::MAIN_REPLICA);
+    if (bmsRdbConfig_.dbName == ServiceConstants::BUNDLE_RDB_NAME) {
+        rdbStoreConfig.SetAllowRebuild(true);
+        rdbStoreConfig.SetHaMode(NativeRdb::HAMode::MAIN_REPLICA);
+    }
     // for check db exist or not
     bool isNewDb = false;
     bool needReportFallBack = false;
@@ -139,6 +144,10 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
     if (rdbStore_ == nullptr) {
         APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
         SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::OPEN), errCode);
+        if (bmsRdbConfig_.dbName == BundleResourceConstants::BUNDLE_RESOURCE_RDB_NAME
+            && errCode == NativeRdb::E_SQLITE_CORRUPT) {
+            TriggerRebuild();
+        }
         return errCode;
     }
     if (needReportFallBack) {
@@ -629,6 +638,68 @@ bool RdbDataManager::IsRetryErrCode(int32_t errCode)
         return true;
     }
     return false;
+}
+
+void RdbDataManager::SetRebuildCallback(std::function<void()> callback)
+{
+    rebuildCallback_ = callback;
+}
+
+void RdbDataManager::DeleteDbFiles(const std::string &dbFile)
+{
+    APP_LOGI_NOFUNC("delete db %{public}s", dbFile.c_str());
+    NativeRdb::RdbHelper::DeleteRdbStore(dbFile);
+}
+
+void RdbDataManager::CheckDbError()
+{
+    APP_LOGI_NOFUNC("CheckDbError start");
+    NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
+    int32_t errCode = NativeRdb::E_OK;
+    BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    rdbStore_ = NativeRdb::RdbHelper::GetRdbStore(
+        rdbStoreConfig,
+        bmsRdbConfig_.version,
+        bmsRdbOpenCallback, errCode);
+    if (errCode == NativeRdb::E_SQLITE_CORRUPT) {
+        DeleteDbFiles(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
+        bmsExtensionDataMgr.RebuildBundleResourceTable();
+        return;
+    }
+    if (rdbStore_ == nullptr) {
+        APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
+        return;
+    }
+
+    bool isNeedRebuildDb = RdbIntegrityCheckNeedRestore();
+    if (isNeedRebuildDb) {
+        DeleteDbFiles(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
+        bmsExtensionDataMgr.RebuildBundleResourceTable();
+    }
+}
+
+void RdbDataManager::TriggerRebuild()
+{
+    bool expected = false;
+    if (!isRebuilding_.compare_exchange_strong(expected, true)) {
+        APP_LOGW("rebuild already in progress");
+        return;
+    }
+    std::string dbFile = bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName;
+    auto callback = rebuildCallback_;
+    std::thread rebuildThread([this, dbFile, callback]() {
+        APP_LOGI("rebuild thread started");
+        DeleteDbFiles(dbFile);
+        if (callback) {
+            callback();
+        }
+        BmsExtensionDataMgr bmsExtensionDataMgr;
+        bmsExtensionDataMgr.RebuildBundleResourceTable();
+        isRebuilding_.store(false);
+        APP_LOGI("rebuild thread finished");
+    });
+    rebuildThread.detach();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

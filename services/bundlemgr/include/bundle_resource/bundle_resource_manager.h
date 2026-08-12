@@ -137,7 +137,11 @@ public:
     bool GetAllUninstallBundleResourceInfo(const int32_t userId, const uint32_t flags,
         std::vector<BundleResourceInfo> &bundleResourceInfos);
 
+    bool MigrateUninstallBundleResource();
+
     int32_t GetUserId();
+
+    void RebuildResourceDb();
 
 private:
     void ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo);

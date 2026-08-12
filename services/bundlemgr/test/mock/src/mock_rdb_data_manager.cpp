@@ -15,6 +15,8 @@
 
 #include "rdb_data_manager.h"
 
+#include <functional>
+
 #include "app_log_wrapper.h"
 #include "bundle_util.h"
 #include "scope_guard.h"
@@ -128,6 +130,14 @@ bool RdbDataManager::UpdateOrInsertData(const NativeRdb::ValuesBucket &valuesBuc
     const NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
     return true;
+}
+
+void RdbDataManager::CheckDbError()
+{
+}
+
+void RdbDataManager::SetRebuildCallback(std::function<void()> callback)
+{
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

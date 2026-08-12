@@ -24,6 +24,7 @@
 #include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
 #include "bundle_resource_theme_process.h"
+#include "bundle_resource_helper.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
 #include "dual_mode_helper.h"
@@ -1558,6 +1559,65 @@ bool BundleResourceManager::GetAllUninstallBundleResourceInfo(const int32_t user
         APP_LOGE("-u %{public}d get all uinstall bundle resource failed", newUserId);
         return false;
     }
+    return true;
+}
+
+void BundleResourceManager::RebuildResourceDb()
+{
+    APP_LOGI_NOFUNC("resource db rebuild start");
+    bundleResourceRdb_ = std::make_shared<BundleResourceRdb>();
+    bundleResourceIconRdb_ = std::make_shared<BundleResourceIconRdb>();
+    uninstallBundleResourceRdb_ = std::make_shared<UninstallBundleResourceRdb>();
+    auto service = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (service == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "BundleMgrService is null");
+        return;
+    }
+    auto dataMgr = service->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "GetDataMgr is null");
+        return;
+    }
+    std::set<int32_t> allUsers = dataMgr->GetAllUser();
+    for (const auto userId : allUsers) {
+        std::vector<std::string> bundleNames;
+        if (!dataMgr->GetBundleList(bundleNames, userId)) {
+            LOG_W(BMS_TAG_DEFAULT, "GetBundleList failed for userId:%{public}d", userId);
+            continue;
+        }
+        for (const auto &bundleName : bundleNames) {
+            BundleResourceHelper::AddResourceInfoByBundleName(
+                bundleName, userId, ADD_RESOURCE_TYPE::INSTALL_BUNDLE);
+            std::vector<int32_t> appIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
+            for (const auto &appIndex : appIndexes) {
+                BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, userId, appIndex, false);
+            }
+        }
+    }
+    APP_LOGI_NOFUNC("resource db rebuild finish");
+}
+
+bool BundleResourceManager::MigrateUninstallBundleResource()
+{
+    APP_LOGI_NOFUNC("MigrateUninstallBundleResource start");
+    if (uninstallBundleResourceRdb_ == nullptr) {
+        APP_LOGE_NOFUNC("uninstallBundleResourceRdb_ is nullptr");
+        return false;
+    }
+
+    // 1. Execute data migration
+    if (!uninstallBundleResourceRdb_->MigrateData()) {
+        APP_LOGE_NOFUNC("MigrateData failed");
+        return false;
+    }
+
+    // 2. Delete old table
+    if (!uninstallBundleResourceRdb_->DeleteTable()) {
+        APP_LOGE_NOFUNC("Delete old uninstall bundle resource table failed");
+        return false;
+    }
+
+    APP_LOGI_NOFUNC("MigrateUninstallBundleResource success");
     return true;
 }
 } // AppExecFwk
