@@ -1204,4 +1204,45 @@ HWTEST_F(BmsCleanAllBundleCacheTest, TryMarkCleaning_0200, Function | SmallTest 
     EXPECT_FALSE(ret);
     BundleCacheMgr::MarkCleaningDone(BUNDLE_NAME_TEST, DEFAULT_USERID, DEFAULT_APP_INDEX);
 }
+
+/**
+ * @tc.number: GetAllBundleCacheStat_BestEffort_0100
+ * @tc.name: ext unavailable does not break GetAllBundleCacheStat
+ * @tc.desc: 1. system run normally
+ *           2. BMS-ext not loaded (no in-lake .so in test env)
+ *           3. GetAllBundleCacheStat still returns ERR_OK and fires callback (best-effort)
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, GetAllBundleCacheStat_BestEffort_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true);
+    CreateFileDir();
+    auto callback = sptr<ProcessCacheCallbackHost>(new ProcessCacheCallbackHost());
+    auto result = BundleCacheMgr::GetAllBundleCacheStat(callback);
+    EXPECT_EQ(result, ERR_OK);
+
+    uint64_t cacheStat = callback->GetCacheStat();  // future blocks until the callback fires or times out
+    EXPECT_LT(cacheStat, 1024ULL * 1024 * 1024);    // < 1GB; guards against ext negative wrap-around polluting the stat
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanAllBundleCache_BestEffort_0100
+ * @tc.name: ext unavailable does not break CleanAllBundleCache
+ * @tc.desc: 1. system run normally
+ *           2. BMS-ext not loaded (no in-lake .so in test env) -> treated as not-participating
+ *           3. CleanAllBundleCache still returns ERR_OK and fires callback (both-OK, ext no-fault)
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanAllBundleCache_BestEffort_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true);
+    CreateFileDir();
+    auto callback = sptr<ProcessCacheCallbackHost>(new ProcessCacheCallbackHost());
+    auto result = BundleCacheMgr::CleanAllBundleCache(callback);
+    EXPECT_EQ(result, ERR_OK);
+
+    EXPECT_EQ(callback->GetCleanRet(), ERR_OK);  // future blocks until the callback fires or times out
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
 }

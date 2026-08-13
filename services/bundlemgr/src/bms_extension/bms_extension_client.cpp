@@ -501,6 +501,26 @@ ErrCode BmsExtensionClient::RemoveBackupBundleData(const std::string &bundleName
     return bmsExtensionImpl_->RemoveBackupBundleData(bundleName, userId, appIndex);
 }
 
+ErrCode BmsExtensionClient::GetAllBundleCacheSize(int32_t userId, int64_t &cacheSize)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bmsExtensionImpl_ == nullptr) {
+        LOG_W(BMS_TAG_QUERY, "bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->GetAllBundleCacheSize(userId, cacheSize);
+}
+
+ErrCode BmsExtensionClient::ClearAllBundleCache(int32_t userId, sptr<IRemoteObject> callback)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bmsExtensionImpl_ == nullptr) {
+        LOG_W(BMS_TAG_QUERY, "bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->ClearAllBundleCache(userId, callback);
+}
+
 const std::shared_ptr<BundleDataMgr> BmsExtensionClient::GetDataMgr() const
 {
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();

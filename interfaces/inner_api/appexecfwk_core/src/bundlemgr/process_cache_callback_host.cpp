@@ -98,5 +98,15 @@ int32_t ProcessCacheCallbackHost::GetCleanRet()
 {
     return cleanAllFuture_.get();
 };
+
+bool ProcessCacheCallbackHost::WaitForCleanRet(int64_t timeoutMs, int32_t &result)
+{
+    auto status = cleanAllFuture_.wait_for(std::chrono::milliseconds(timeoutMs));
+    if (status == std::future_status::timeout) {
+        return false;
+    }
+    result = cleanAllFuture_.get();
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

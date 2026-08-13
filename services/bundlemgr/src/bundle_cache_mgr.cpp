@@ -17,6 +17,8 @@
 #include "bundle_cache_mgr.h"
 
 #include <cinttypes>
+#include "bms_extension_client.h"
+#include "process_cache_callback_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "scope_guard.h"
@@ -30,6 +32,36 @@ constexpr size_t INDEX_MODULE_NAMES = 1;
 constexpr size_t INDEX_CLONE_APP_INDEX = 2;
 constexpr int64_t TOTAL_TIMEOUT_MS = 60000;
 constexpr int64_t CACHE_TIMEOUT_MS = 20000;
+constexpr int64_t CLEAN_CACHE_TIMEOUT_MS = 20000;
+
+// ext returns these two codes when unavailable/not-participating (no-fault); any other non-OK code is a real failure
+bool IsExtRealFailure(ErrCode ret)
+{
+    return ret != ERR_OK
+        && ret != ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR
+        && ret != ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+}
+
+void HandleExtCleanResult(int32_t userId, int32_t &result)
+{
+    auto extCallback = sptr<ProcessCacheCallbackHost>(new ProcessCacheCallbackHost());
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode extRet = bmsExtensionClient->ClearAllBundleCache(userId, extCallback->AsObject());
+    if (extRet != ERR_OK) {
+        if (IsExtRealFailure(extRet)) {
+            LOG_E(BMS_TAG_EXT, "ClearAllBundleCache extension failed, ret: %{public}d", extRet);
+        }
+        return;
+    }
+    int32_t extResult = ERR_OK;
+    if (!extCallback->WaitForCleanRet(CLEAN_CACHE_TIMEOUT_MS, extResult)) {
+        LOG_E(BMS_TAG_EXT, "ClearAllBundleCache extension timeout");
+        return;
+    }
+    if (extResult != ERR_OK && result == ERR_OK) {
+        result = extResult;
+    }
+}
 }
 
 std::vector<std::string> BundleCacheMgr::GetBundleCachePath(const std::string &bundleName,
@@ -184,6 +216,18 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
         uint64_t cacheStat = 0;
         APP_LOGI("thread for GetBundleCacheSize start");
         GetBundleCacheSize(validBundles, userId, cacheStat);
+        // Query in-lake (BMS-ext) cache; best-effort, accumulate only on success
+        int64_t extCacheSize = 0;
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        ErrCode extRet = bmsExtensionClient->GetAllBundleCacheSize(userId, extCacheSize);
+        if (extRet == ERR_OK && extCacheSize > 0) {
+            cacheStat += static_cast<uint64_t>(extCacheSize);
+            LOG_I(BMS_TAG_EXT, "extension cache size: %{public}" PRId64, extCacheSize);
+        } else if (extRet == ERR_OK) {
+            LOG_W(BMS_TAG_EXT, "extension cache size invalid, skipped: %{public}" PRId64, extCacheSize);
+        } else {
+            LOG_W(BMS_TAG_EXT, "get all bundle cache size from extension failed, ret: %{public}d", extRet);
+        }
         processCacheCallback->OnGetAllBundleCacheFinished(cacheStat);
         auto endTime = BundleUtil::GetCurrentTimeMs();
         auto elapsedTime = endTime - startTime;
@@ -261,6 +305,8 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
             ErrCode result = ERR_OK;
             APP_LOGI("thread for CleanBundleCache start");
             result = CleanBundleCache(validBundles, userId);
+            HandleExtCleanResult(userId, result);
+            LOG_I(BMS_TAG_EXT, "ClearAllBundleCache final result: %{public}d", result);
             processCacheCallback->OnCleanAllBundleCacheFinished(result);
             auto endTime = BundleUtil::GetCurrentTimeMs();
             auto elapsedTime = endTime - startTime;

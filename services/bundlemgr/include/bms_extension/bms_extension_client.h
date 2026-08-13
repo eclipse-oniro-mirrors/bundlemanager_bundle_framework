@@ -78,6 +78,9 @@ public:
     ErrCode RecoverBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     ErrCode RemoveBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
 
+    ErrCode GetAllBundleCacheSize(int32_t userId, int64_t &cacheSize);
+    ErrCode ClearAllBundleCache(int32_t userId, sptr<IRemoteObject> callback);
+
 private:
     void ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) const;
     const std::shared_ptr<BundleDataMgr> GetDataMgr() const;

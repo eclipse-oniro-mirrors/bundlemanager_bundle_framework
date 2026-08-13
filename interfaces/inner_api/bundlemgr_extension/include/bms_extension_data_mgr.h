@@ -97,6 +97,8 @@ public:
         std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList);
     bool GetInstallAndRecoverList(const int32_t userId, const std::vector<std::string> &bundleList,
         std::vector<std::string> &installList, std::vector<std::string> &recoverList);
+    ErrCode GetAllBundleCacheSize(int32_t userId, int64_t &cacheSize);
+    ErrCode ClearAllBundleCache(int32_t userId, sptr<IRemoteObject> callback);
     ErrCode RebuildBundleResourceTable();
 private:
     bool OpenHandler();

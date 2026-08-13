@@ -220,7 +220,14 @@ public:
     {
         return false;
     }
-
+    virtual ErrCode GetAllBundleCacheSize(int32_t userId, int64_t &cacheSize)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode ClearAllBundleCache(int32_t userId, sptr<IRemoteObject> callback)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
     virtual ErrCode RebuildBundleResourceTable()
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
