@@ -1365,6 +1365,15 @@ public:
         bool &forbidden) override;
     virtual ErrCode SetApplicationDisableForbidden(const std::string &bundleName, int32_t userId, int32_t appIndex,
         bool forbidden) override;
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param userId Indicates the user ID.
+     * @param bundleInfoDualMode Indicates the obtained BundleInfoDualMode object.
+     * @return Returns true if the BundleInfoDualMode is successfully obtained; returns false otherwise.
+     */
+    virtual ErrCode GetBundleInfoDualMode(const std::string &bundleName, int32_t userId,
+        BundleInfoDualMode &bundleInfoDualMode) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);

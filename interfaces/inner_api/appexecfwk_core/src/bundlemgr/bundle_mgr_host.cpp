@@ -6147,5 +6147,25 @@ ErrCode BundleMgrHost::HandleSetApplicationDisableForbidden(MessageParcel &data,
     }
     return ERR_OK;
 }
+
+ErrCode BundleMgrHost::HandleGetBundleInfoDualMode(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    APP_LOGD("bundleName %{public}s, userId %{public}d", bundleName.c_str(), userId);
+    BundleInfoDualMode bundleInfoDualMode;
+    auto ret = GetBundleInfoDualMode(bundleName, userId, bundleInfoDualMode);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteParcelable(&bundleInfoDualMode)) {
+        APP_LOGE("write bundleInfo DualMode failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

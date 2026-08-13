@@ -10442,4 +10442,34 @@ HWTEST_F(BmsBundleKitServiceTest, Proxy_GetLocalPluginInstaller_0100, Function |
     sptr<ILocalPluginInstaller> installer = bundleMgrProxy->GetLocalPluginInstaller();
     EXPECT_NE(installer, nullptr);
 }
+
+/**
+ * @tc.number: HandleGetBundleInfoDualMode_0001
+ * @tc.desc: test HandleGetBundleInfoDualMode
+ */
+HWTEST_F(BmsBundleKitServiceTest, HandleGetBundleInfoDualMode_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString("bundleName");  // bundleName
+    data.WriteInt32(Constants::START_USERID);  // userId
+    ErrCode res = localBundleMgrHostImpl->HandleGetBundleInfoDualMode(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleInfoDualMode_0001
+ * @tc.desc: test GetBundleInfoDualMode
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoDualMode_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::string bundleName = "bundleName";
+    BundleInfoDualMode info;
+    ErrCode ret = localBundleMgrHostImpl->GetBundleInfoDualMode(bundleName, Constants::START_USERID, info);
+    EXPECT_EQ(ret, ERR_OK);
+}
 }
