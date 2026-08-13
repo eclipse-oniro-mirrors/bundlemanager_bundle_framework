@@ -168,6 +168,13 @@ enum class DeviceModeDistributionPolicy : int32_t {
     FULL_COMPATIBLE_DIFFERENT_PACKAGE = 8,        // Full-compatible, different package body
 };
 
+// App sandbox policy for dual-mode (2IN1/TABLET) scenarios.
+// Values are consecutive integers (mutually exclusive, no bitwise-or combination).
+enum class AppSandboxPolicy : int32_t {
+    SHARED_SANDBOX = 0,                           // Shared sandbox (default)
+    ISOLATED_SANDBOX = 1,                         // Isolated sandbox
+};
+
 // configuration information about a bundle
 struct BundleInfo : public Parcelable {
     bool isNewVersion = false;
@@ -238,6 +245,8 @@ struct BundleInfo : public Parcelable {
     ApplicationInfo applicationInfo;
     // device mode distribution policy for dual-mode (2IN1/TABLET), default UNSPECIFIED
     DeviceModeDistributionPolicy deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNSPECIFIED;
+    // app sandbox policy for dual-mode (2IN1/TABLET), default SHARED_SANDBOX
+    AppSandboxPolicy appSandboxPolicy = AppSandboxPolicy::SHARED_SANDBOX;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

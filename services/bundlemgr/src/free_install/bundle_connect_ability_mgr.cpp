@@ -488,7 +488,7 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
     } else if (connectState_ == ServiceCenterConnectState::DISCONNECTED) {
         connectState_ = ServiceCenterConnectState::CONNECTING;
         serviceCenterConnection_ = new (std::nothrow) ServiceCenterConnection(connectState_,
-            cv_, weak_from_this());
+            cv_, mutex_, weak_from_this());
         if (serviceCenterConnection_ == nullptr) {
             LOG_E(BMS_TAG_DEFAULT, "ServiceCenterConnection is nullptr");
             connectState_ = ServiceCenterConnectState::DISCONNECTED;

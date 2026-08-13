@@ -860,5 +860,20 @@ ErrCode BmsExtensionDataMgr::ClearAllBundleCache(int32_t userId, sptr<IRemoteObj
     LOG_I(BMS_TAG_EXT, "EXT ClearAllBundleCache");
     return bundleMgrExtPtr->ClearAllBundleCache(userId, callback);
 }
+ 
+ErrCode BmsExtensionDataMgr::RebuildBundleResourceTable()
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    return bundleMgrExtPtr->RebuildBundleResourceTable();
+}
 } // AppExecFwk
 } // OHOS

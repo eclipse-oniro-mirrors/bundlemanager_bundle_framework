@@ -584,7 +584,10 @@ std::string DefaultAppMgr::GetTypeFromWant(const Want& want) const
         return Constants::EMPTY_STRING;
     }
     std::string uri = Skill::GetOptParamUri(want.GetUriString());
-    bool containsScheme = uri.find(SCHEME_SIGN) != std::string::npos;
+    // mailto is an opaque uri, it carries no scheme separator but is not a local file either,
+    // its suffix belongs to the mail address and must not be used to infer the type
+    bool containsScheme = uri.find(SCHEME_SIGN) != std::string::npos ||
+        uri.rfind(Constants::MAILTO_SCHEME_PREFIX, 0) == 0;
     bool isLocalScheme = uri.rfind(FILE_SCHEME, 0) == 0 || uri.rfind(CONTENT_SCHEME, 0) == 0;
     if (containsScheme && !isLocalScheme) {
         LOG_D(BMS_TAG_DEFAULT, "not local scheme");

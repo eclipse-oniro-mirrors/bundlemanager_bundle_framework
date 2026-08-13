@@ -78,7 +78,9 @@ constexpr const char* CHANGE_TYPE = "changeType";
 constexpr int32_t CONTROL_API_VERSION = 25;
 constexpr const char* DEVICE_MODE_DISTRIBUTION_POLICY = "deviceModeDistributionPolicy";
 constexpr const char* CURRENT_MODE = "currentMode";
-constexpr const char* IS_SHARED_SANDBOX = "isSharedSandbox";
+constexpr const char* APP_SANDBOX_POLICY = "appSandboxPolicy";
+constexpr const char* BEFORE_DEVICE_MODE_DISTRIBUTION_POLICY = "beforeDeviceModeDistributionPolicy";
+constexpr const char* BEFORE_APP_SANDBOX_POLICY = "beforeAppSandboxPolicy";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -338,7 +340,10 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(CHANGE_TYPE, static_cast<int32_t>(installResult.changeType));
     want.SetParam(DEVICE_MODE_DISTRIBUTION_POLICY, static_cast<int32_t>(installResult.deviceModeDistributionPolicy));
     want.SetParam(CURRENT_MODE, installResult.currentMode);
-    want.SetParam(IS_SHARED_SANDBOX, installResult.isSharedSandbox);
+    want.SetParam(APP_SANDBOX_POLICY, static_cast<int32_t>(installResult.appSandboxPolicy));
+    want.SetParam(BEFORE_DEVICE_MODE_DISTRIBUTION_POLICY,
+        static_cast<int32_t>(installResult.beforeDeviceModeDistributionPolicy));
+    want.SetParam(BEFORE_APP_SANDBOX_POLICY, static_cast<int32_t>(installResult.beforeAppSandboxPolicy));
     for (const auto &item : installResult.metadataConfigInfos) {
             want.SetParam(item.first, item.second);
     }

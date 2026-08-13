@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
+#include <mutex>
 
 #include "bmsfreeinstall_fuzzer.h"
 #include "bms_ecological_rule_mgr_service_param.h"
@@ -42,7 +43,9 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::shared_ptr<BundleConnectAbilityMgr> bundleConnectAbilityMgrPtr = std::make_shared<BundleConnectAbilityMgr>();
     int32_t connectState = fdp.ConsumeIntegralInRange<int32_t>(0, 2);
     std::condition_variable cv;
-    OHOS::AppExecFwk::ServiceCenterConnection serviceCenterConnection(connectState, cv, bundleConnectAbilityMgrPtr);
+    std::mutex mutex;
+    OHOS::AppExecFwk::ServiceCenterConnection serviceCenterConnection(
+        connectState, cv, mutex, bundleConnectAbilityMgrPtr);
     AppExecFwk::ElementName element;
     int32_t resultCode = fdp.ConsumeIntegralInRange<int32_t>(0, 1);
     serviceCenterConnection.OnAbilityConnectDone(element, nullptr, resultCode);

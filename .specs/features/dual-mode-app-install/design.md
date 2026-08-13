@@ -1,6 +1,6 @@
 # 架构设计
 
-> 双模式同包名不同安装包应用安装支持。当前代码基线：`appIndex_dual_mode_04` tip `80d089208`。
+> 双模式同包名不同安装包应用安装支持。当前代码基线：`appIndex_dual_mode_07_doc` HEAD `020de12b8`（含代码落地提交 `14eb7f286`，2026-08-06）。本文档行号引用基于该 HEAD，后续提交可能偏移。
 
 ## 设计元数据
 
@@ -22,8 +22,8 @@
 | 双模式设备 | `persist.sceneboard.ispcmode` 与 `persist.sceneboard.mainmode` 均为合法值 ∈{0,1}（0=tablet, 1=2in1） |
 | 主模式 | `ispcmode == mainmode`（当前模式即主模式） |
 | 副模式 | `ispcmode != mainmode`（当前模式为非主模式） |
-| 不同包体类别（DiffPackage） | `DeviceModeDistributionPolicy` ∈ {`UNIVERSAL_DIFFERENT_PACKAGE`(4), `PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE`(6), `FULL_COMPATIBLE_DIFFERENT_PACKAGE`(8)}，同包名不同包体，双模式特殊处理对象（`DualModeHelper::IsDiffPackageCategory` 判定为 true；对应旧 AppCategory 方案的 DIFF_PACKAGE） |
-| dual-mode clone app | 副模式安装的不同包体类别 应用，`InnerBundleInfo.isDualModeCloneApp=true`，`appIndex=0` |
+| 不同包体类别（DiffPackage） | `DeviceModeDistributionPolicy` ∈ {`UNIVERSAL_DIFFERENT_PACKAGE`(4), `PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE`(6), `FULL_COMPATIBLE_DIFFERENT_PACKAGE`(8)}，同包名不同包体，双模式特殊处理对象（`DualModeHelper::IsDiffPackageCategory` 判定为 true） |
+| dual-mode clone app | 副模式安装的不同包体类别 应用，`InnerBundleInfo.isDualModeCloneApp=true`，`appIndex=DUAL_MODE_CLONE_APP_INDEX(10000)`（由 `SetDualModeAppInfo` 置位） |
 | effective name | clone app 的带前缀标识 `+clone-10000+{bundleName}`，用于目录/DB key/状态机 |
 | 原始名 | `bundleName` 本身（不带前缀），用于查询/事件/odid/日志 |
 
@@ -54,6 +54,7 @@
 | OH-ARCH-LAYERING | 框架层（BMS）经 IPC 调服务层（installd） | 安装流程在 BMS 组织，目录/权限操作经 InstalldClient→SA511 | 代码评审/集成测试 |
 | OH-ARCH-IPC-SAF | InstallParam 跨 IPC 传递 | deviceModeDistributionPolicy 必须加入 Parcel 序列化（ReadFromParcel+Marshalling） | 单测 |
 | OH-ARCH-API-LEVEL | 新增 Public API | BundleInfo.deviceModeDistributionPolicy / InstallParam.deviceModeDistributionPolicy / DeviceModeDistributionPolicy，需 SysCap 声明 | API 评审/XTS |
+| OH-ARCH-API-LEVEL | 新增 Public API | BundleInfo.appSandboxPolicy / AppSandboxPolicy（SHARED_SANDBOX=0 / ISOLATED_SANDBOX=1），需 SysCap 声明 | API 评审/XTS |
 | OH-ARCH-ERROR-LOG | 不同包体类别互转/非系统应用安装失败需错误码 | 新增专用错误码 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT`(8519943) / `ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP`(8519942) | hilog/单测 |
 | OH-ARCH-COMPONENT-BUILD | 无新增部件 | 仅现有模块修改，BUILD.gn 无需改动（新增源文件需加入对应 target） | 构建验证 |
 
@@ -120,7 +121,7 @@ return bundleInfo.IsDualModeCloneApp()
 
 **规则**：目录/DB key/状态机用 effective name；日志/事件/odid/查询用原始名。
 
-**不同包体类别判定**：`DualModeHelper::IsDiffPackageCategory(policy)` 判定 `policy ∈ {UNIVERSAL_DIFFERENT_PACKAGE(4), PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE(6), FULL_COMPATIBLE_DIFFERENT_PACKAGE(8)}`。新枚举为连续 int 值、不支持按位或，故由旧版按位与 `(appCategory & 32) != 0` 改为枚举值集合判定（详见「数据模型」枚举定义）。
+**不同包体类别判定**：`DualModeHelper::IsDiffPackageCategory(policy)` 判定 `policy ∈ {UNIVERSAL_DIFFERENT_PACKAGE(4), PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE(6), FULL_COMPATIBLE_DIFFERENT_PACKAGE(8)}`。枚举为连续 int 值、不支持按位或，用枚举值集合判定（详见「数据模型」枚举定义）。
 
 ### 隔离维度全景
 
@@ -207,10 +208,10 @@ return bundleInfo.IsDualModeCloneApp()
 
 | 字段 | 内容 |
 |------|------|
-| 问题 | 设备模式分发策略枚举值如何定义？旧 `AppCategory`（7 成员、按位或幂次值）语义不足以表达"模式分发 + 兼容性 + 包体异同"三轴，需重新设计 |
-| 推荐方案 | 枚举类型 `DeviceModeDistributionPolicy`（底层 `int32_t`），9 个成员取连续整数值 0~8：`UNSPECIFIED`=0（默认，不区分）、`MAIN_ONLY`=1（仅主模式）、`SUB_ONLY`=2（仅副模式）、`UNIVERSAL_IDENTICAL_PACKAGE`=3（通用·相同包体）、`UNIVERSAL_DIFFERENT_PACKAGE`=4（通用·不同包体）、`PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE`=5（部分兼容·相同包体）、`PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE`=6（部分兼容·不同包体）、`FULL_COMPATIBLE_IDENTICAL_PACKAGE`=7（完全兼容·相同包体）、`FULL_COMPATIBLE_DIFFERENT_PACKAGE`=8（完全兼容·不同包体）。成员名采用**无前缀短名**（依赖 `enum class` 作用域区分），与既有 `AppCategory::APP_CATEGORY_*` 前缀风格不同 |
-| 取舍理由 | 新语义为"模式分发策略 + 兼容性维度 + 包体异同维度"三轴组合，策略互斥，连续整数 0~8 天然表达，无需按位或组合；`*_DIFFERENT_PACKAGE` 三个值（4/6/8）即"不同包体类别"，统一由 `IsDiffPackageCategory` 判定触发副模式隔离；`*_IDENTICAL_PACKAGE` 三个值（3/5/7）为同包体共享，不触发隔离；`MAIN_ONLY`/`SUB_ONLY`（1/2）为单模式独有，不触发隔离。放弃旧 `AppCategory` 按位或幂次值方案——新语义下策略互斥，连续整数更直观，且 `IsDiffPackageCategory` 由按位与 `(appCategory & 32) != 0` 改为集合判定 `policy ∈ {4,6,8}` |
-| 影响 | ①旧 `AppCategory`（7 成员、按位或、`uint32_t`）整体替换为新 `DeviceModeDistributionPolicy`（9 成员、连续 int、`int32_t`）；②字段 `appCategory` → `deviceModeDistributionPolicy`，访问器 `Get/SetAppCategory` → `Get/SetDeviceModeDistributionPolicy`；③`IsDiffPackageCategory` 实现由按位与改为枚举值集合判定（5 个调用点语义等价）；④事件 Want 字段 key 同步由 `"appCategory"` 改为 `"deviceModeDistributionPolicy"`（AC-17 对外契约变更，须同步需求二上层消费者）；⑤旧 DIFF_PACKAGE 概念等价为"不同包体类别（4/6/8）"，全部 ADR/AC 语义不变；⑥（Sync-23）枚举定义迁至 `bundle_info.h`、字段迁至 `BundleInfo`（`InnerBundleInfo` Get/Set 经 `baseBundleInfo_`），`InstallParam` 字段保留——位置迁移，语义不变，详见 gates/specify.md Sync-23 |
+| 问题 | 设备模式分发策略枚举值如何定义？需表达"模式分发 + 兼容性 + 包体异同"三轴，且策略互斥 |
+| 推荐方案 | 枚举类型 `DeviceModeDistributionPolicy`（底层 `int32_t`），9 个成员取连续整数值 0~8：`UNSPECIFIED`=0（默认，不区分）、`MAIN_ONLY`=1（仅主模式）、`SUB_ONLY`=2（仅副模式）、`UNIVERSAL_IDENTICAL_PACKAGE`=3（通用·相同包体）、`UNIVERSAL_DIFFERENT_PACKAGE`=4（通用·不同包体）、`PARTIAL_COMPATIBLE_IDENTICAL_PACKAGE`=5（部分兼容·相同包体）、`PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE`=6（部分兼容·不同包体）、`FULL_COMPATIBLE_IDENTICAL_PACKAGE`=7（完全兼容·相同包体）、`FULL_COMPATIBLE_DIFFERENT_PACKAGE`=8（完全兼容·不同包体）。成员名采用**无前缀短名**（依赖 `enum class` 作用域区分） |
+| 取舍理由 | 语义为"模式分发策略 + 兼容性维度 + 包体异同维度"三轴组合，策略互斥，连续整数 0~8 天然表达，不采用按位或组合；`*_DIFFERENT_PACKAGE` 三个值（4/6/8）即"不同包体类别"，统一由 `IsDiffPackageCategory` 判定触发副模式隔离；`*_IDENTICAL_PACKAGE` 三个值（3/5/7）为同包体共享，不触发隔离；`MAIN_ONLY`/`SUB_ONLY`（1/2）为单模式独有，不触发隔离；`IsDiffPackageCategory` 用集合判定 `policy ∈ {4,6,8}` |
+| 影响 | ①枚举类型 `DeviceModeDistributionPolicy`（9 成员、连续 int 0~8、`int32_t`）；②字段 `deviceModeDistributionPolicy`，访问器 `Get/SetDeviceModeDistributionPolicy`；③`IsDiffPackageCategory` 用枚举值集合判定 `policy ∈ {4,6,8}`（5 个调用点）；④事件 Want 字段 key 为 `"deviceModeDistributionPolicy"`（须同步需求二上层消费者）；⑤"不同包体类别"即 `*_DIFFERENT_PACKAGE`（4/6/8）；⑥枚举定义位于 `bundle_info.h`、字段位于 `BundleInfo`（`InnerBundleInfo` Get/Set 经 `baseBundleInfo_`），`InstallParam` 字段保留 |
 
 ### ADR-9：副模式应用标识字段 isDualModeCloneApp
 
@@ -235,16 +236,16 @@ return bundleInfo.IsDualModeCloneApp()
 | 字段 | 内容 |
 |------|------|
 | 问题 | 双模式克隆应用（isDualModeCloneApp=true）与主模式同名应用如何实现 HAP token / 权限隔离？ |
-| 推荐方案 | `BundlePermissionMgr::CreateHapInfoParams` 中：当 `innerBundleInfo.IsDualModeCloneApp() && GetAppIndex()==0` 时，将 `hapInfo.instIndex` 置为 `DUAL_MODE_CLONE_APP_INDEX (10000)`，使克隆应用获得独立 HapInfoParams，生成独立 hap token |
-| 取舍理由 | 与目录/DB key 的 `+clone-10000+` 前缀在权限层对齐：10000 统一标识双模式克隆实例，目录、存储、权限三处隔离语义一致 |
-| 影响 | `bundle_permission_mgr.cpp` CreateHapInfoParams 新增克隆应用 instIndex 赋值（关联 AC-19） |
+| 推荐方案 | `SetDualModeAppInfo`（base_bundle_installer.cpp:5789-5792）在 isCloneApp（副模式）分支内置 `info.SetAppIndex(DUAL_MODE_CLONE_APP_INDEX=10000)`（单一数据源，安装时一次置位，随 InnerBundleInfo 持久化）；`BundlePermissionMgr::CreateHapInfoParams`（bundle_permission_mgr.cpp:766）直接 `hapInfo.instIndex = innerBundleInfo.GetAppIndex()`，使克隆应用获得独立 HapInfoParams，生成独立 hap token |
+| 取舍理由 | 与目录/DB key 的 `+clone-10000+` 前缀在权限层对齐：10000 统一标识双模式克隆实例，目录、存储、权限三处隔离语义一致。appIndex 单一数据源——安装时一次置位，所有消费方直接读 10000，消除「info=0 / token=10000」分裂模型与 `GetAppIndex()==0` 隐含假设，与 ADR-6「appIndex 固定 10000」前提对齐 |
+| 影响 | `base_bundle_installer.cpp` SetDualModeAppInfo 新增 `SetAppIndex`；`bundle_permission_mgr.cpp` CreateHapInfoParams 直接传播 `GetAppIndex()`（净减代码，关联 AC-19/AC-38）。`IsValidAppIndex` 由 ADR-6 既定绕过（双模式走 BaseBundleInstaller 不触达 installd 校验）；`GetDualModeBundleName`（目录/DB key 前缀）用常量派生、不读 appIndex 字段，目录/key 行为不变 |
 
 ### ADR-12：不同包体类别一致性校验收敛到双模式设备
 
 | 字段 | 内容 |
 |------|------|
 | 问题 | 更新时的「不同包体类别 ↔ 非不同包体类别 互转拦截」（AC-8）在所有设备都生效，还是仅双模式设备？ |
-| 推荐方案 | `BaseBundleInstaller::CheckDualModeCategoryConsistency`（base_bundle_installer.cpp:5766-5780）入口先判 `!DualModeHelper::IsDualModeDevice()` → 直接返回 ERR_OK。不同包体类别互转拦截仅对双模式设备生效 |
+| 推荐方案 | `BaseBundleInstaller::CheckDualModeCategoryConsistency`（base_bundle_installer.cpp:5804-5818）入口先判 `!DualModeHelper::IsDualModeDevice()` → 直接返回 ERR_OK。不同包体类别互转拦截仅对双模式设备生效 |
 | 取舍理由 | 校验作用域与特性作用域一致（仅双模式设备），避免在 default/手机等设备误拦合法更新 |
 | 影响 | AC-8 前置条件「且当前为双模式设备」 |
 
@@ -390,18 +391,36 @@ return bundleInfo.IsDualModeCloneApp()
 | 字段 | 内容 |
 |------|------|
 | 问题 | 双模式不同包体类别隔离是系统级能力。普通（非系统）应用若可配置不同包体类别，会无意义占用隔离资源且语义错配。是否限制？ |
-| 推荐方案 | `SetDualModeAppInfo`（base_bundle_installer.cpp:5737-5764）在置 `isDualModeCloneApp=true` **前**校验 `info.IsSystemApp()`：非系统应用返回 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP`（8519942，appexecfwk_errors.h:213），校验先于置位（确保失败时不留 isDualModeCloneApp=true 副作用）；`SetDualModeAppInfo` 返回值 void→`ErrCode`，调用点 `ParseHapFiles`（:5704）/`InstallProcessNewInfo`（:5705）`CHECK_RESULT` 提前返回。对外错误经 `status_receiver_proxy.cpp:720-721` 映射为 `ERR_INSTALL_PARSE_FAILED` |
-| 取舍理由 | 不同包体类别隔离是系统级能力，限制系统应用对齐其语义；校验先于置位保证失败无副作用；非系统应用/主模式/非不同包体类别/非双模式设备不触达，零回归 |
-| 影响 | `SetDualModeAppInfo` void→ErrCode；新增错误码 8519942 + status_receiver_proxy 映射；单测 `SetDualModeAppInfo_0500/0600`（关联 AC-34） |
+| 推荐方案 | `SetDualModeAppInfo`（base_bundle_installer.cpp:5766-5802）的系统应用校验条件由 `isCloneApp`（`NeedDualModeHandle`，仅副模式）扩展为 `isDiffPackage`（`IsDiffPackageCategory`，**不分主副模式**）：凡不同包体类别应用（主/副模式）须 `info.IsSystemApp()`，非系统应用返回 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP`（8519942，appexecfwk_errors.h:213），校验先于置位（确保失败时不留 isDualModeCloneApp=true 副作用）；`isDualModeCloneApp` 仍仅 `isCloneApp`（副模式）置位。`SetDualModeAppInfo` 返回值 void→`ErrCode`，调用点 :5717（hap 解析校验后）`CHECK_RESULT` 提前返回。对外错误经 `status_receiver_proxy.cpp:720-721` 映射为 `ERR_INSTALL_PARSE_FAILED` |
+| 取舍理由 | 不同包体类别隔离是系统级能力，限制系统应用对齐其语义；主/副模式均校验（主模式不同包体应用同样需系统级准入），避免主模式漏校验；校验先于置位保证失败无副作用；`isDualModeCloneApp` 仅副模式置位保持 clone 语义；非不同包体类别/非双模式设备不触达，零回归 |
+| 影响 | `SetDualModeAppInfo` void→ErrCode；新增错误码 8519942 + status_receiver_proxy 映射；校验条件 isCloneApp→isDiffPackage（主模式也校验）；单测 `SetDualModeAppInfo_0500/0600/0700/0800`（关联 AC-34） |
 
 ### ADR-27：跨 map 类别一致性校验（CheckDualModeCategoryConsistencyInTemp）
 
 | 字段 | 内容 |
 |------|------|
-| 问题 | ADR-12 `CheckDualModeCategoryConsistency`（:5766-5780）仅校验当前模式侧（bundleInfos_）。副模式安装时另一模式变体在 tempBundleInfos_，类别不一致（不同包体类别↔非不同包体类别）会致主副模式类别冲突。如何补跨 map 维度？ |
-| 推荐方案 | 新增 `CheckDualModeCategoryConsistencyInTemp`（base_bundle_installer.cpp:5782-5803），由 `InnerProcessBundleInstall`（:1063，紧随 :1059 当前模式侧）调用：`IsDualModeDevice` 守卫 → `FetchTempBundleInfo(bundleName_)` 查 tempBundleInfos_ 另一模式变体 → 不同包体类别↔非不同包体类别 互转返回 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT`（8519943）；两模式均不同包体类别 或另一模式不存在则放行 |
+| 问题 | ADR-12 `CheckDualModeCategoryConsistency`（:5804-5818）仅校验当前模式侧（bundleInfos_）。副模式安装时另一模式变体在 tempBundleInfos_，类别不一致（不同包体类别↔非不同包体类别）会致主副模式类别冲突。如何补跨 map 维度？ |
+| 推荐方案 | 新增 `CheckDualModeCategoryConsistencyInTemp`（base_bundle_installer.cpp:5820-5842），由 `InnerProcessBundleInstall`（:1063，紧随 :1059 当前模式侧）调用：`IsDualModeDevice` 守卫 → `FetchTempBundleInfo(bundleName_)` 查 tempBundleInfos_ 另一模式变体 → 不同包体类别↔非不同包体类别 互转返回 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT`（8519943）；两模式均不同包体类别 或另一模式不存在则放行 |
 | 取舍理由 | 补 ADR-12 当前模式侧的跨 map 维度，与 AC-8（当前模式）配对成 AC-35（跨 map）；`IsDualModeDevice` 守卫使非双模式设备早退零回归；不误拦合法双模式（两模式均不同包体类别 放行） |
 | 影响 | 新增函数 + 调用点 :1063；单测 `CheckDualModeCategoryConsistencyInTemp_0100~0500`（关联 AC-35） |
+
+### ADR-28：appIndex 单一数据源——安装时一次置位
+
+| 字段 | 内容 |
+|------|------|
+| 问题 | 副模式不同包体类别（clone）应用的 `InnerBundleInfo.appIndex` 应如何承载 `DUAL_MODE_CLONE_APP_INDEX(10000)`，使 hap token instIndex 等所有消费方统一读 10000，与目录/DB key 的 `+clone-10000+` 前缀及 ADR-6「appIndex 固定 10000」前提一致？ |
+| 推荐方案 | `SetDualModeAppInfo`（base_bundle_installer.cpp:5789-5792，isCloneApp 副模式分支内）在置 `isDualModeCloneApp=true` 时同步 `info.SetAppIndex(DUAL_MODE_CLONE_APP_INDEX)`；`CreateHapInfoParams`（bundle_permission_mgr.cpp:766）直接 `hapInfo.instIndex = innerBundleInfo.GetAppIndex()`。clone app 的 appIndex 在 info 上即为 10000，hap token 自然得到 instIndex=10000（AC-19） |
+| 取舍理由 | 单一数据源——appIndex 在安装时一次置位，所有消费方直接读 10000，消除「info=0 / token=10000」分裂模型与 `GetAppIndex()==0` 隐含假设；与 ADR-6 前提对齐。静态搜索确认 services/bundlemgr/src 无其他 `GetAppIndex()==0` 分支消费；`IsValidAppIndex` 由 ADR-6 既定绕过（双模式 BaseBundleInstaller 路径不触达 installd 校验），不受影响；`GetDualModeBundleName`（目录/DB key 前缀）用常量派生、不读 appIndex 字段，目录/key 行为不变 |
+| 影响 | `base_bundle_installer.cpp` SetDualModeAppInfo 新增 `SetAppIndex`；`bundle_permission_mgr.cpp` CreateHapInfoParams 直接传播（净减代码）；AC-19（instIndex=10000）、AC-38（关联） |
+
+### ADR-29：广播沙箱策略 + 粘性隔离 + 更新前值
+
+| 字段 | 内容 |
+|------|------|
+| 问题 | AC-17 安装/更新广播需携带应用沙箱策略，且更新场景须同时告知"更新前/当前"两组策略值，供上层判断变更。原 `isSharedSandbox`（bool）仅表达当前、且每次由 policy 现场推导——一旦应用因不同包体隔离后，下次更新若 policy 变回非不同包体，推导会"撤销"隔离，与"隔离后应保持隔离"的语义冲突。如何设计？ |
+| 推荐方案 | ① `NotifyBundleEvents` 双模式扩展字段改为 5 个：`deviceModeDistributionPolicy`（当前，已存在）、`currentMode`（已存在）、`appSandboxPolicy`（当前，由 `isSharedSandbox` 改名，默认 SHARED_SANDBOX）、`beforeDeviceModeDistributionPolicy`（更新前，新增，默认 UNSPECIFIED）、`beforeAppSandboxPolicy`（更新前，新增，默认 SHARED_SANDBOX）；Want key 同名。② **粘性规则**（统一含首装）：`beforeAppSandboxPolicy==ISOLATED → 当前=ISOLATED`（隔离粘性，与新 policy 无关）；否则（共沙箱或首装默认 SHARED）`当前 = IsDiffPackageCategory(newPolicy) ? ISOLATED : SHARED`。③ **持久化闭环**：粘性要求下次更新能读到上次是否隔离 → 补 `InnerBundleInfo Get/SetAppSandboxPolicy`，`SetDualModeAppInfo` 按粘性规则 `info.SetAppSandboxPolicy(current)` 写入新 info 并随 baseBundleInfo_ 持久化。④ before 值在存量加载后（`InitTempBundleFromCache` base_bundle_installer.cpp:1802-1811，`isAppExist_=true`）从 oldInfo 捕获到 BaseBundleInstaller 成员变量；首装（无存量）成员保持默认（UNSPECIFIED/SHARED_SANDBOX）。⑤ `FillDualModeEventFields`（base_bundle_installer.cpp:5723-5738，仅双模式设备）填 before 两字段（成员）+ 当前 appSandboxPolicy（同粘性 helper 重算，与写入 info 同源）。⑥ 私有 helper `ComputeCurrentAppSandboxPolicy(newPolicy)`（:5740-5750）封装粘性规则，SetDualModeAppInfo 写入 info（:5795）与 FillDualModeEventFields 填广播共用，保证同源一致。⑦ `ResetInstallProperties`（:7278-7279）在安装器实例复用时重置 before 成员变量为默认（UNSPECIFIED/SHARED_SANDBOX），防止上一次安装的粘性状态泄漏到新安装 |
+| 取舍理由 | 粘性隔离贴合"隔离不可逆"的安全语义，避免更新翻覆；before+当前两组值让上层一次广播即可判断变更，无需查询历史；持久化闭环是粘性的必要条件，故把 InnerBundleInfo 访问器一并实现。放弃纯现场推导（无法表达粘性）；放弃由上层自行比对历史（增加查询与竞态）。before 值用成员变量透传（避免改 FillDualModeEventFields 签名波及 3 个调用点），成员默认值天然覆盖首装/拿不到 oldInfo 的场景 |
+| 影响 | `bundle_common_event_mgr.h/cpp`（结构体 5 字段 + Want key + SetParam）、`base_bundle_installer.h/cpp`（before 成员变量 + 捕获点 :1802-1811 + `ComputeCurrentAppSandboxPolicy` helper :5740-5750 + SetDualModeAppInfo 写入 :5795 + FillDualModeEventFields 填充 :5723-5738 + ResetInstallProperties 重置 :7278-7279）、`inner_bundle_info.h`（Get/SetAppSandboxPolicy）；AC-17（5 字段）、AC-39（粘性）、AC-40（before 值 + 首装默认）；**对外契约变更**（Want key `isSharedSandbox`→`appSandboxPolicy` + 新增 2 个 before key），须同步需求二上层消费者；非双模式设备保持默认值零回归 |
 
 ## 双模式 key 规则
 
@@ -728,7 +747,7 @@ enum DeviceModeDistributionPolicy {
 | 异常恢复 | `services/bundlemgr/src/bundle_exception_handler.cpp` / `install_exception_mgr.cpp` |
 | 资源缓存 | `services/bundlemgr/src/bundle_resource/` |
 | InnerBundleInfo | `services/bundlemgr/include/inner_bundle_info.h` |
-| 单测 | `services/bundlemgr/test/unittest/bms_dual_mode_install_test/`（112 例） |
+| 单测 | `services/bundlemgr/test/unittest/bms_dual_mode_install_test/`（123 例） |
 
 ### 错误码
 
@@ -743,7 +762,7 @@ enum DeviceModeDistributionPolicy {
 ### 参考文档
 
 - [proposal.md](./proposal.md) — 需求基线
-- [spec.md](./spec.md) — 特性规格（AC-1~35、FR-1~15）
+- [spec.md](./spec.md) — 特性规格（AC-1~40、FR-1~15）
 - [双模式应用安装方案.md](../../双模式应用安装方案.md) — 原始方案
 
 ## 设计审批

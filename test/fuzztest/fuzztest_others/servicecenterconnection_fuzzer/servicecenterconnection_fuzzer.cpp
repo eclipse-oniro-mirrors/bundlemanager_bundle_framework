@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
+#include <mutex>
 
 #define private public
 #include "bms_fuzztest_util.h"
@@ -38,8 +39,9 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     int32_t connectState = 0;
     std::condition_variable cv;
+    std::mutex mutex;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
-    ServiceCenterConnection serviceCenterConnection(connectState, cv, connectAbilityMgr);
+    ServiceCenterConnection serviceCenterConnection(connectState, cv, mutex, connectAbilityMgr);
     sptr<IRemoteObject> remoteObject = nullptr;
     ElementName element;
     FuzzedDataProvider fdp(data, size);

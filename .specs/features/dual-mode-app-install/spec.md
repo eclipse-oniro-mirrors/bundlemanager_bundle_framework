@@ -14,7 +14,7 @@
 | SIG 归属 | BundleManager SIG |
 | 状态 | Review |
 | 复杂度 | 标准 |
-| 当前代码基线 | `appIndex_dual_mode_04` tip `80d089208` |
+| 当前代码基线 | `appIndex_dual_mode_07_doc` HEAD `020de12b8`（含代码落地 `14eb7f286`） |
 
 ## 本次变更范围（Delta）
 
@@ -26,6 +26,8 @@
 | ADDED | 副模式不同包体类别应用安装目录/数据隔离行为 | 同包名不同包体在副模式独立安装 |
 | ADDED | 设备重启后按当前模式分类加载应用列表 | 副模式可查询到对应应用 |
 | ADDED | 不同包体类别 仅系统应用准入 + 跨模式类别一致性校验 | 非系统应用副模式 不同包体类别 安装失败（8519942）+ 跨模式类别冲突拦截（8519943） |
+| ADDED | 应用沙箱策略枚举 AppSandboxPolicy（SHARED_SANDBOX=0 / ISOLATED_SANDBOX=1，连续 int 值，互斥单值） | Public API |
+| ADDED | BundleInfo.appSandboxPolicy 字段（默认 SHARED_SANDBOX，完整 Parcel+JSON 序列化） | Public API；业务消费留后续 |
 | MODIFIED | 安装更新时新增"设备模式分发策略一致性"校验 | 不同包体类别与其他类别互转则更新失败 |
 
 ## 输入文档
@@ -51,7 +53,16 @@
 | FULL_COMPATIBLE_IDENTICAL_PACKAGE | 7 | 完全兼容·相同包体 |
 | FULL_COMPATIBLE_DIFFERENT_PACKAGE | 8 | 完全兼容·不同包体（不同包体类别，副模式隔离） |
 
-> 枚举值互斥、不支持按位或组合。判断"是否不同包体类别"用 `DualModeHelper::IsDiffPackageCategory(policy)`（判定 `policy ∈ {UNIVERSAL_DIFFERENT_PACKAGE(4), PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE(6), FULL_COMPATIBLE_DIFFERENT_PACKAGE(8)}`）。旧 `AppCategory` 方案（7 成员、按位或幂次值、`APP_CATEGORY_DIFF_PACKAGE`=32）已整体替换为本枚举。
+> 枚举值互斥、不支持按位或组合。判断"是否不同包体类别"用 `DualModeHelper::IsDiffPackageCategory(policy)`（判定 `policy ∈ {UNIVERSAL_DIFFERENT_PACKAGE(4), PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE(6), FULL_COMPATIBLE_DIFFERENT_PACKAGE(8)}`）。
+
+### 应用沙箱策略枚举 AppSandboxPolicy（API 契约）
+
+> 枚举类型 `AppSandboxPolicy`（底层 `int32_t`），2 个成员取连续整数值 0~1，互斥单值（不支持按位或）。位于 `bundle_info.h`（`DeviceModeDistributionPolicy` 之后、`BundleInfo` 之前），字段 `BundleInfo.appSandboxPolicy` 默认 `SHARED_SANDBOX`。与 AC-17 事件层 `isSharedSandbox`（bool）概念呼应——`ISOLATED_SANDBOX` 语义对应副模式不同包体类别隔离应用。**本次仅建立数据模型 + 完整序列化（Parcel Int32 + JSON NUMBER）+ InnerBundleInfo Get/Set；InstallParam 入参 / 业务消费点留后续**。
+
+| 枚举成员 | 值 | 含义 |
+|----------|----|------|
+| SHARED_SANDBOX | 0 | 共享沙箱（默认） |
+| ISOLATED_SANDBOX | 1 | 隔离沙箱 |
 
 ## 用户故事
 
@@ -91,7 +102,7 @@
 **验收标准：**
 
 - **AC-7:** WHEN 更新已安装应用且已安装类别与待安装类别一致 THEN 继续安装流程
-- **AC-8:** WHEN 更新时已安装类别与待安装类别不一致且涉及不同包体类别与其他类别互转 THEN 返回更新失败（错误码 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT`=8519943）。当前模式侧 `CheckDualModeCategoryConsistency`（base_bundle_installer.cpp:5766-5780）+ 跨 map 侧 `CheckDualModeCategoryConsistencyInTemp`（:5782-5803，查 `tempBundleInfos_` 另一模式变体，详见 AC-35），`DualModeHelper::IsDiffPackageCategory` 判定不同包体类别
+- **AC-8:** WHEN 更新时已安装类别与待安装类别不一致且涉及不同包体类别与其他类别互转 THEN 返回更新失败（错误码 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT`=8519943）。当前模式侧 `CheckDualModeCategoryConsistency`（base_bundle_installer.cpp:5804-5818）+ 跨 map 侧 `CheckDualModeCategoryConsistencyInTemp`（:5820-5842，查 `tempBundleInfos_` 另一模式变体，详见 AC-35），`DualModeHelper::IsDiffPackageCategory` 判定不同包体类别
 - **AC-9:** WHEN 更新时类别不一致但不涉及不同包体类别互转 THEN 继续安装流程并更新设备模式分发策略为最新值
 
 ### US-4: 设备重启后按模式加载应用列表
@@ -125,7 +136,7 @@
 
 **验收标准：**
 
-- **AC-17:** WHEN 发送安装/更新事件 THEN 事件包含设备模式分发策略（deviceModeDistributionPolicy，事件 Want key 同名 `"deviceModeDistributionPolicy"`）、当前模式（currentMode，**int**：0=tablet, 1=2in1, -1=未读取/非双模式）、是否共沙箱（isSharedSandbox）三个字段。由 `GetSysMode()` 返回值填充 currentMode（base_bundle_installer.cpp:5717）；`isSharedSandbox = !NeedDualModeHandle(deviceModeDistributionPolicy)`——副模式不同包体类别隔离应用=false（独立沙箱），其余=true（共享沙箱）；仅双模式设备填充（`FillDualModeEventFields` base_bundle_installer.cpp:5711-5721），非双模式设备保持默认值（deviceModeDistributionPolicy=0 / currentMode=-1 / isSharedSandbox=true）。**对外契约：currentMode 为 int、事件 Want key 为 `deviceModeDistributionPolicy`（旧 `deviceModeDistributionPolicy` 已更名），须同步需求二「模式切换接口」上层消费者**
+- **AC-17:** WHEN 双模式设备发送安装/更新事件 THEN 事件含 5 个双模式扩展字段（Want key 同名）：设备模式分发策略 `deviceModeDistributionPolicy`（当前）、当前模式 `currentMode`（**int**：0=tablet, 1=2in1, -1=未读取/非双模式）、应用沙箱策略 `appSandboxPolicy`（当前，默认 SHARED_SANDBOX）、更新前策略 `beforeDeviceModeDistributionPolicy`（默认 UNSPECIFIED）、更新前沙箱策略 `beforeAppSandboxPolicy`（默认 SHARED_SANDBOX）。`currentMode = GetSysMode()`；当前 `appSandboxPolicy` 按粘性规则计算（AC-39）；before 两值在存量加载后从 oldInfo 捕获（AC-40）。仅双模式设备填充（`FillDualModeEventFields` base_bundle_installer.cpp:5723-5738），非双模式设备保持默认值。**对外契约变更**：Want key `isSharedSandbox`（bool）更名为 `appSandboxPolicy`（int 枚举 0/1）并新增 2 个 before key，须同步需求二「模式切换接口」上层消费者
 
 ### US-7: 副模式完整隔离（权限 token / uid / 异常恢复 / 数据层）
 
@@ -135,7 +146,7 @@
 
 **验收标准：**
 
-- **AC-19:** WHEN 副模式安装不同包体类别应用（isDualModeCloneApp=true，appIndex=0）THEN 其 HAP token 通过 instIndex=10000 与主模式同名应用隔离（独立 hap token，见 design ADR-11）
+- **AC-19:** WHEN 副模式安装不同包体类别应用（isDualModeCloneApp=true，appIndex=`DUAL_MODE_CLONE_APP_INDEX(10000)`，由 `SetDualModeAppInfo` 安装时置位）THEN 其 HAP token 通过 instIndex=10000 与主模式同名应用隔离（独立 hap token；`CreateHapInfoParams` 直接传播 `GetAppIndex()`，见 design ADR-11/ADR-28）
 - **AC-20:** WHEN 副模式安装不同包体类别应用 THEN 其数据目录/asan 日志目录归属独立 uid（基于带前缀名分配的 bundleId 派生），与主模式同名应用 uid 不同；重启后 uid 保持一致（持久化 uid，不重新生成，见 design ADR-13）
 - **AC-21:** WHEN 安装异常恢复（InnerProcessNewToRealPath）接收带前缀的 bundleName THEN FetchInnerBundleInfo 用解析回的原名查询；目录轮转操作仍用带前缀名（见 design ADR-15）
 - **AC-22:** WHEN 副模式（isDualModeCloneApp=true）安装/更新/卸载不同包体类别应用 THEN skills 安装目录（`/data/app/el1/skills/public/<bundleName>/<module>` 及其 +TMP temp 目录）的提取落盘、temp→real 重命名、删除均使用带 `+clone-10000+` 前缀的隔离命名（info-driven：`info.IsDualModeCloneApp()` 判定），与主模式同名应用 skills 目录物理隔离；主模式用原名按正常流程（见 design ADR-16）
@@ -159,12 +170,44 @@
 
 **验收标准：**
 
-- **AC-34:** WHEN 双模式设备安装不同包体类别应用（`SetDualModeAppInfo` 置 `isDualModeCloneApp=true`，base_bundle_installer.cpp:5737-5764）THEN 仅系统应用（`info.IsSystemApp()==true`）允许配置为不同包体类别 clone，继续安装流程；WHEN 非系统应用（`IsSystemApp()==false`）THEN 安装失败，返回错误码 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP`（**8519942**，appexecfwk_errors.h:213，`status_receiver_proxy.cpp:720-721` 映射对外为 `ERR_INSTALL_PARSE_FAILED`），校验先于 `isDualModeCloneApp` 置位（`SetDualModeAppInfo` void→`ErrCode`，:5705 调用点 `CHECK_RESULT` 提前返回）。主模式 / 非不同包体类别 / 非双模式设备 THEN 零回归（不触发该校验）。单测：`SetDualModeAppInfo_0500/0600`
-- **AC-35:** WHEN 双模式设备副模式安装不同包体类别应用 THEN `CheckDualModeCategoryConsistencyInTemp`（base_bundle_installer.cpp:5782-5803，`InnerProcessBundleInstall` :1063 调用，紧随 :1059 当前模式侧 `CheckDualModeCategoryConsistency`）经 `FetchTempBundleInfo(bundleName_)` 查 `tempBundleInfos_` 另一模式变体；WHEN 另一模式已存在该应用且类别不一致（涉及不同包体类别↔非不同包体类别互转）THEN 返回 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT`（**8519943**）；WHEN 两模式均不同包体类别 或 另一模式不存在该应用 THEN 放行继续安装。补 AC-8（当前模式侧）的跨 map 维度；非双模式设备 `IsDualModeDevice=false` 守卫早退、零回归。单测：`CheckDualModeCategoryConsistencyInTemp_0100~0500`（5 例）
+- **AC-34:** WHEN 双模式设备安装不同包体类别应用（`SetDualModeAppInfo`，`IsDiffPackageCategory(policy)==true`，**不分主副模式**，base_bundle_installer.cpp:5766-5802）THEN 仅系统应用（`info.IsSystemApp()==true`）允许，继续安装流程；WHEN 非系统应用（`IsSystemApp()==false`）THEN 安装失败，返回错误码 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP`（**8519942**，appexecfwk_errors.h:213，`status_receiver_proxy.cpp:720-721` 映射对外为 `ERR_INSTALL_PARSE_FAILED`），校验先于 `isDualModeCloneApp` 置位（`SetDualModeAppInfo` void→`ErrCode`，:5717 调用点 `CHECK_RESULT` 提前返回）。主模式不同包体类别 + 系统应用 THEN 通过校验但 **不置** `isDualModeCloneApp`（仅副模式 clone 置位）；非不同包体类别 / 非双模式设备 THEN 零回归（不触发该校验）。单测：`SetDualModeAppInfo_0500/0600/0700/0800`
+- **AC-35:** WHEN 双模式设备副模式安装不同包体类别应用 THEN `CheckDualModeCategoryConsistencyInTemp`（base_bundle_installer.cpp:5820-5842，`InnerProcessBundleInstall` :1063 调用，紧随 :1059 当前模式侧 `CheckDualModeCategoryConsistency`）经 `FetchTempBundleInfo(bundleName_)` 查 `tempBundleInfos_` 另一模式变体；WHEN 另一模式已存在该应用且类别不一致（涉及不同包体类别↔非不同包体类别互转）THEN 返回 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT`（**8519943**）；WHEN 两模式均不同包体类别 或 另一模式不存在该应用 THEN 放行继续安装。补 AC-8（当前模式侧）的跨 map 维度；非双模式设备 `IsDualModeDevice=false` 守卫早退、零回归。单测：`CheckDualModeCategoryConsistencyInTemp_0100~0500`（5 例）
+
+### US-9: 应用沙箱策略数据模型
+
+**作为** 系统,
+**需要** 在 BundleInfo 中持久化应用沙箱策略（共享/隔离）,
+**以便** 后续双模式隔离逻辑统一读取该字段（本次仅数据模型 + 完整序列化，业务消费留后续 Sync）。
+
+**验收标准：**
+
+- **AC-36:** WHEN BundleInfo 经 Parcel（`Marshalling`/`ReadFromParcel`，bundle_info.cpp）或 JSON（`to_json`/`from_json`，key `BUNDLE_INFO_APP_SANDBOX_POLICY = "appSandboxPolicy"`）序列化往返 THEN `appSandboxPolicy` 保持原值（`SHARED_SANDBOX`/`ISOLATED_SANDBOX` 均保真）；字段随 `baseBundleInfo_` 经 `BASE_BUNDLE_INFO` 节点持久化（inner_bundle_info.cpp:636），AC-1 持久化不破坏
+- **AC-37:** WHEN 反序列化不含 `appSandboxPolicy` 字段的存量 BundleInfo JSON THEN `appSandboxPolicy` 默认为 `SHARED_SANDBOX`（值 0，字段类内默认值 + `from_json` 缺 key 回退机制，与 AC-18 同理）
+
+### US-10: appIndex 单一数据源
+
+**作为** 系统,
+**需要** 副模式不同包体类别（clone）应用的 appIndex 在安装时一次置位为 10000,
+**以便** hap token instIndex 等所有消费方直接读 10000，消除「info=0 / token=10000」分裂，与目录/DB key 的 `+clone-10000+` 前缀及 ADR-6 前提统一。
+
+**验收标准：**
+
+- **AC-38:** WHEN 双模式设备副模式安装不同包体类别应用（`SetDualModeAppInfo`，`isCloneApp=true`）THEN `InnerBundleInfo.appIndex` 置为 `DUAL_MODE_CLONE_APP_INDEX(10000)`（单一数据源，安装时一次置位，随 InnerBundleInfo 持久化），`CreateHapInfoParams` 直接 `hapInfo.instIndex = GetAppIndex()` 得 10000（不再运行时覆写，AC-19 结果等价）；WHEN 非副模式 / 非不同包体类别 / 非双模式设备 THEN appIndex 保持默认（0），零回归。单测：`SetDualModeAppInfo_0300`（`GetAppIndex()==10000`）、`CreateHapInfoParams_0100`（`instIndex==10000`）。见 design ADR-28
+
+### US-11: 广播沙箱策略与更新前值
+
+**作为** 系统（供需求二上层消费）,
+**需要** 安装/更新广播携带应用沙箱策略（当前 + 更新前），且隔离一旦生效即"粘性"保持,
+**以便** 上层一次广播即可判断沙箱/策略变更，且隔离不被更新翻覆。
+
+**验收标准：**
+
+- **AC-39:** WHEN 双模式设备计算当前 `appSandboxPolicy`（`ComputeCurrentAppSandboxPolicy` 私有 helper，`SetDualModeAppInfo` 写入 info 与 `FillDualModeEventFields` 填广播同源）THEN 若 `beforeAppSandboxPolicy==ISOLATED_SANDBOX`（存量已隔离）当前恒为 `ISOLATED_SANDBOX`（**粘性**，与新 policy 无关）；否则（共沙箱或首装默认 SHARED）当前 = `IsDiffPackageCategory(newPolicy) ? ISOLATED_SANDBOX : SHARED_SANDBOX`。WHEN 存量隔离应用更新为非不同包体类别 THEN 当前仍 ISOLATED（粘性保持）。单测：`FillDualModeEventFields_0100`（首装+不同包体→ISOLATED）、`FillDualModeEventFields_0300`（粘性：before=ISOLATED + 非不同包体→仍 ISOLATED）
+- **AC-40:** WHEN 更新（存量存在，`isAppExist_=true`）THEN `beforeDeviceModeDistributionPolicy`/`beforeAppSandboxPolicy` 从 oldInfo 捕获（`InitTempBundleFromCache` 后 base_bundle_installer.cpp:1802-1811，存入 BaseBundleInstaller 成员）；WHEN 首次安装（无存量）THEN before 两字段为默认（UNSPECIFIED/SHARED_SANDBOX）；WHEN 非双模式设备 THEN 5 字段全默认、零回归。`appSandboxPolicy` 经 `InnerBundleInfo.SetAppSandboxPolicy` 写入并随 baseBundleInfo_ 持久化（粘性闭环，AC-39 下次更新可读）；`ResetInstallProperties`（:7278-7279）重置 before 成员防实例复用泄漏。单测：`FillDualModeEventFields_0100`（首装 before 默认）、`FillDualModeEventFields_0200`（非双模式保持预置标记）
 
 ## 验收追溯
 
-> 全 AC（AC-1~35）编译验证通过（`_04` commit `80d089208`，112 例单测编译 OK）。运行时集成回归 + 人类 Owner 发布批准为发布 Gate 未决项（见 [gates/release.md](./gates/release.md)）。
+> 全 AC（AC-1~40）代码已落地、待集成环境编译/单测验证；AC-17（5 字段）、AC-19（instIndex=10000）待集成环境重验；AC-1~35 已编译验证通过（`80d089208`，112 例单测编译 OK）；增量代码落地提交 `14eb7f286`（2026-08-06）后单测扩至 123 例。运行时集成回归 + 人类 Owner 发布批准为发布 Gate 未决项（见 [gates/release.md](./gates/release.md)）。
 
 | AC | 关联规则 | 关联 Task | 验证方式 | 证据 |
 |----|----------|-----------|----------|------|
@@ -185,8 +228,8 @@
 | AC-14 | FR-6 | TASK-5 | 集成（副模式加载+边界） | ✅ 编译通过；运行时集成回归待集成环境 |
 | AC-15 | FR-6 | TASK-5 | 集成（主模式加载） | ✅ 编译通过；运行时集成回归待集成环境 |
 | AC-16 | FR-7 | TASK-5 | 集成（跨模式odid一致） | ✅ 编译通过；单测 GenerateOdid_ReuseFromTempBundleInfos_×4；运行时集成回归待集成环境 |
-| AC-17 | FR-8 | TASK-6 | 集成（事件字段 currentMode int） | ✅ 编译通过；运行时集成回归待集成环境；对外契约须同步需求二 |
-| AC-19 | FR-9 | TASK-3 | 集成（副模式 hap token 隔离） | ✅ 已集成验证 PASS（2026-07-18） |
+| AC-17 | FR-8 | TASK-6 | 集成（事件 5 字段：currentMode int / appSandboxPolicy / before×2） | ✅ 编译通过；运行时集成回归待集成环境；**对外契约变更**（isSharedSandbox→appSandboxPolicy + before key），须同步需求二 |
+| AC-19 | FR-9 | TASK-3 | 集成（副模式 hap token 隔离） | ✅ 编译通过；appIndex 安装时置位、CreateHapInfoParams 直接传播，instIndex=10000，待集成环境重验 |
 | AC-20 | FR-10 | TASK-3/5 | 集成（副模式独立 uid + 重启一致） | ✅ 已集成验证 PASS（2026-07-18） |
 | AC-21 | FR-11 | TASK-3 | 集成（异常恢复按原名查询） | ✅ 已集成验证 PASS（2026-07-18） |
 | AC-22 | FR-2 | TASK-3 | 集成（副模式 skills 目录隔离） | ✅ 编译通过；运行时集成回归待集成环境 |
@@ -201,8 +244,13 @@
 | AC-31 | FR-13 | TASK-3 | 集成（语言/主题切换两模式 label 均刷新） | ✅ 编译通过；运行时集成回归待集成环境；OTA 遗留 |
 | AC-32 | FR-2 | TASK-3 | 集成（4 独立调用方 BundleType 互斥零回归） | ✅ 编译通过；运行时集成回归待集成环境 |
 | AC-33 | EX-2 | TASK-2/3 | 单测+集成（参数非法值∉{0,1}回退） | ✅ 编译通过；运行时集成回归待集成环境 |
-| AC-34 | EX-4 | TASK-3 | 单测+集成（非系统应用 不同包体类别 副模式安装失败 8519942） | ✅ 编译通过；单测 SetDualModeAppInfo_0500/0600；运行时集成回归待集成环境 |
+| AC-34 | EX-4 | TASK-3 | 单测+集成（非系统应用 不同包体类别 主/副模式安装失败 8519942） | ✅ 编译通过；单测 SetDualModeAppInfo_0500/0600/0700/0800；运行时集成回归待集成环境 |
 | AC-35 | EX-3 | TASK-3 | 单测+集成（跨 map 类别不一致拦截 8519943） | ✅ 编译通过；单测 CheckDualModeCategoryConsistencyInTemp_×5；运行时集成回归待集成环境 |
+| AC-36 | — | TASK-1 | 单测（AppSandboxPolicy Parcel+JSON 序列化往返保真） | ⏳ 代码已落地，待集成环境编译/单测 |
+| AC-37 | EX-5 | TASK-1 | 单测（缺字段默认 SHARED_SANDBOX） | ⏳ 代码已落地，待集成环境编译/单测 |
+| AC-38 | — | TASK-3 | 单测+集成（副模式不同包体 appIndex=10000、CreateHapInfoParams 直接传播） | ⏳ 代码已落地，待集成环境编译/单测/运行时回归 |
+| AC-39 | — | TASK-6 | 单测+集成（粘性隔离：隔离后更新仍隔离） | ⏳ 代码已落地，待集成环境编译/单测/运行时回归 |
+| AC-40 | — | TASK-6 | 单测+集成（before 值更新捕获/首装默认/非双模式零回归） | ⏳ 代码已落地，待集成环境编译/单测/运行时回归 |
 
 ## 业务规则
 
@@ -229,7 +277,7 @@
 | FR-11 | 安装异常恢复接收带前缀名时解析回原名查询 FetchInnerBundleInfo | 异常恢复 + 带前缀名 | exception 查询 | AC-21 |
 | FR-12 | 副模式不同包体类别应用资源缓存隔离：`BundleResourceRdb` 写入/更新/重启重建以带 `+clone-10000+` 前缀 effective name 作 key（写入 key 带前缀，硬约束）；`BundleResourceIconRdb` 保留原始 bundleName（按设计不隔离）；`UninstallBundleResourceRdb` + 卸载删除路径未适配（用原名，遗留其他需求） | 副模式 + 不同包体类别 + 写入/更新/重启重建 | BundleResourceManager | AC-29/30 |
 | FR-13 | 语言/主题切换时刷新双模式（`bundleInfos_` + `tempBundleInfos_`）同名应用的名称资源，两模式各自 key 不交叉污染 | 语言/主题切换 + 双模式 | BundleResourceManager 刷新路径（GetAllResourceInfo） | AC-31 |
-| FR-14 | 双模式设备不同包体类别 clone 安装仅限系统应用，非系统应用安装失败返回 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP` | 双模式 + 不同包体类别 + 安装准入 | SetDualModeAppInfo（IsSystemApp 校验） | AC-34 |
+| FR-14 | 双模式设备不同包体类别（**不分主副模式**）仅限系统应用，非系统应用安装失败返回 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP`；`isDualModeCloneApp` 仅副模式置位 | 双模式 + 不同包体类别 + 安装准入 | SetDualModeAppInfo（IsDiffPackageCategory 时校验 IsSystemApp） | AC-34 |
 | FR-15 | 副模式安装时跨 map（`tempBundleInfos_`）校验类别一致性，不同包体类别 互转拦截返回 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT` | 双模式 + 不同包体类别 + 跨模式 | CheckDualModeCategoryConsistencyInTemp | AC-35 |
 
 ## 异常/豁免规则
@@ -240,6 +288,7 @@
 | EX-2 | 模式回退 | 系统模式参数缺失/非法 | persist.sceneboard.ispcmode / mainmode 任一读取失败(返回 -1)或非法(∉{0,1}) | N/A | 回退正常安装流程 | AC-3/AC-33 |
 | EX-3 | 更新失败 | 不同包体类别与其他类别互转 | 更新时类别不一致且涉及不同包体类别（当前模式侧 `CheckDualModeCategoryConsistency` + 跨 map `CheckDualModeCategoryConsistencyInTemp`） | N/A | 返回 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT`（8519943） | AC-8/AC-35 |
 | EX-4 | 安装失败 | 不同包体类别仅系统应用 | 双模式设备非系统应用安装不同包体类别（`SetDualModeAppInfo` 校验 `IsSystemApp`） | N/A | 返回 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP`（8519942） | AC-34 |
+| EX-5 | 默认值兜底 | 存量应用无 appSandboxPolicy 字段 | 反序列化缺失字段 | N/A | 默认 SHARED_SANDBOX（值 0） | AC-37 |
 
 ## 恢复契约
 
@@ -265,6 +314,8 @@
 | DeviceModeDistributionPolicy（枚举） | Public | 9 个枚举成员（值 0~8） | - | N/A | 设备模式分发策略定义，连续 int 值不支持按位或 | AC-1 |
 | BundleInfo.deviceModeDistributionPolicy | Public | number（枚举值，0~8） | - | N/A | 应用设备模式分发策略，默认 UNSPECIFIED（值 0） | AC-1/AC-2 |
 | InstallParam.deviceModeDistributionPolicy | Public | number（枚举值，0~8） | - | N/A | 安装时指定的设备模式分发策略，默认 UNSPECIFIED（值 0） | AC-1 |
+| AppSandboxPolicy（枚举） | Public | 2 个枚举成员（值 0~1） | - | N/A | 应用沙箱策略定义，连续 int 值互斥单值 | AC-36 |
+| BundleInfo.appSandboxPolicy | Public | number（枚举值，0~1） | - | N/A | 应用沙箱策略，默认 SHARED_SANDBOX（值 0） | AC-36/37 |
 
 ### 新增错误码
 
@@ -279,14 +330,15 @@
 |----------|----------|----------|----------|---------|
 | InstallParam（结构扩展） | 新增可选字段 | 现有调用方不传 deviceModeDistributionPolicy 时走默认值 | 无需迁移，向后兼容 | AC-1/AC-2 |
 | ApplicationInfo（结构扩展） | 新增可选字段 | 反序列化老数据时字段缺失 | from_json 默认值兜底，无需迁移 | AC-18 |
+| BundleInfo（结构扩展） | 新增可选字段 appSandboxPolicy | 反序列化老数据时字段缺失 | from_json 默认值兜底（SHARED_SANDBOX），无需迁移 | AC-37 |
 
 > API 签名细节、d.ts 位置、SysCap 见 design.md「API 签名、Kit 与权限」。
 
 ## 兼容性声明
 
-- **已有 API 行为变更:** 否。仅新增可选字段，现有调用方行为不变
+- **已有 API 行为变更:** 是。安装/更新广播 Want key `isSharedSandbox`（bool）更名为 `appSandboxPolicy`（int 枚举 0/1），并新增 `beforeDeviceModeDistributionPolicy` / `beforeAppSandboxPolicy` 两个 key——对外契约变更，须同步需求二上层消费者；其余仅新增可选字段，现有调用方行为不变
 - **配置文件格式变更:** 否
-- **数据存储格式变更:** 是（installed_bundle 表 JSON value 新增 deviceModeDistributionPolicy + isDualModeCloneApp 字段；副模式不同包体类别记录 DB key 带 `+clone-10000+` 前缀，由 isDualModeCloneApp 字段驱动）。**向后兼容**：老数据缺字段走默认值（deviceModeDistributionPolicy=0 / isDualModeCloneApp=false，AC-18）
+- **数据存储格式变更:** 是（installed_bundle 表 JSON value 新增 deviceModeDistributionPolicy + isDualModeCloneApp 字段；副模式不同包体类别记录 DB key 带 `+clone-10000+` 前缀，由 isDualModeCloneApp 字段驱动；追加 appSandboxPolicy 字段，随 baseBundleInfo_ 节点存储）。**向后兼容**：老数据缺字段走默认值（deviceModeDistributionPolicy=0 / isDualModeCloneApp=false，AC-18；appSandboxPolicy=SHARED_SANDBOX(0)，AC-37）
 - **最低支持版本:** OpenHarmony-6.0-Release
 - **API 版本号策略:** 新增字段与枚举标注 `@since` 目标版本
 

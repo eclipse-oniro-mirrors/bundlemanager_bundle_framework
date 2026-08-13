@@ -66,6 +66,8 @@ enum OTAFlag : uint32_t {
     ADD_IDLE_INFO = 0x00800000,
     UPDATE_ALTERNATE_ICONS = 0x01000000,
     UPDATE_MODULE_JSON_EXTEND_FIELDS = 0x02000000,
+    DELETE_RESOURCE_SLAVE_DB = 0x04000000,
+    MIGRATE_UNINSTALL_BUNDLE_RESOURCE = 0x08000000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -756,6 +758,8 @@ private:
     static std::vector<std::string> ObtainRealPath(const std::vector<std::string> &paths);
     void RegisterIdleConditionEvent();
     bool ProcessIdleInfo();
+    void ProcessDeleteResourceSlaveDb();
+    void ProcessMigrateUninstallBundleResource();
     static bool GetBundleNameAndUserIdFromPath(const std::string &path, std::vector<int32_t> &userIds,
         std::string &bundleName);
     void LoadPreInstallWhiteList();
@@ -763,6 +767,8 @@ private:
     bool NeedProcessOtaNewPreloadInstall(const std::string &bundleName,
         const std::string &scanPath) const;
     void ReInstallSystemHspAndSharedBundles();
+    bool ProcessNewInstallForBlackList(const std::string &bundleName, const std::set<int32_t> &allUsers,
+        std::vector<int32_t> &userIds);
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;

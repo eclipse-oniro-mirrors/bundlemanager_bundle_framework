@@ -795,7 +795,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
         "versionCode":1000000,
         "versionName":"1.0.0",
         "sandboxCreatorBundleName":"",
-        "deviceModeDistributionPolicy": 1
+        "deviceModeDistributionPolicy": 1,
+        "appSandboxPolicy":1
     },
     "baseDataDir":"",
     "baseExtensionInfos":{},
@@ -1610,7 +1611,8 @@ protected:
                 "isNewVersion": false,
                 "buildVersion": "",
                 "sandboxCreatorBundleName": "",
-                "deviceModeDistributionPolicy": 1
+                "deviceModeDistributionPolicy": 1,
+                "appSandboxPolicy":1
             },
             "baseExtensionInfos_": {
             },

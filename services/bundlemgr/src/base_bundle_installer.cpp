@@ -1749,7 +1749,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     result = CheckSpaceIsolation(installParam, newInfos);
     CHECK_RESULT(result, "check space isolation failed:%{public}d");
-
+    AddInstallingBundleName(installParam);
+    ScopeGuard beforeInstallBundleNameGuard([&] {
+        DeleteInstallingBundleName(installParam);
+    });
     // to send notify of start install application
     SendStartInstallNotify(installParam, newInfos);
 
@@ -1779,6 +1782,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ScopeGuard installBundleNameGuard([&] {
         DeleteInstallingBundleName(installParam);
     });
+    beforeInstallBundleNameGuard.Dismiss();
     // uninstall all sandbox app before
     UninstallAllSandboxApps(bundleName_);
     UpdateInstallerState(InstallerState::INSTALL_REMOVE_SANDBOX_APP);              // ---- 50%
@@ -1798,6 +1802,14 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!InitTempBundleFromCache(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INIT_INSTALL_TEMP_BUNDLE_ERROR;
     }
+    // === DUAL_MODE: capture pre-update sandbox/policy for the before-value broadcast (Sync-27) ===
+    // On update (app exists) read the prior values so the event can report before vs. current and so the
+    // sticky-isolation rule can see whether the app was already isolated. Fresh install leaves defaults.
+    if (isAppExist_) {
+        beforeDeviceModeDistributionPolicy_ = oldInfo.GetDeviceModeDistributionPolicy();
+        beforeAppSandboxPolicy_ = oldInfo.GetAppSandboxPolicy();
+    }
+    // === DUAL_MODE END ===
     UpdateDeveloperIdAndOdid(newInfos, hapVerifyResults);
     sysEventInfo_.oldAppProvisionType = oldInfo.GetAppProvisionType();
     if (!(installParam.isOTA || otaInstall_) && !newInfos.empty()) {
@@ -5715,9 +5727,26 @@ void BaseBundleInstaller::FillDualModeEventFields(const InstallParam &installPar
     if (DualModeHelper::IsDualModeDevice()) {
         installRes.deviceModeDistributionPolicy = installParam.deviceModeDistributionPolicy;
         installRes.currentMode = DualModeHelper::GetSysMode();
-        installRes.isSharedSandbox = !DualModeHelper::NeedDualModeHandle(installParam.deviceModeDistributionPolicy);
+        installRes.appSandboxPolicy = ComputeCurrentAppSandboxPolicy(installParam.deviceModeDistributionPolicy);
+        installRes.beforeDeviceModeDistributionPolicy = beforeDeviceModeDistributionPolicy_;
+        installRes.beforeAppSandboxPolicy = beforeAppSandboxPolicy_;
+        if (!dualModeBundleName_.empty()) {
+            installRes.appIndex = ServiceConstants::DUAL_MODE_CLONE_APP_INDEX;
+        }
     }
     // === DUAL_MODE END ===
+}
+
+AppSandboxPolicy BaseBundleInstaller::ComputeCurrentAppSandboxPolicy(DeviceModeDistributionPolicy newPolicy) const
+{
+    // Sticky isolation (Sync-27): once an app is isolated, an update keeps it isolated regardless of the
+    // new policy; otherwise (shared before, or fresh-install default SHARED) derive from the new policy.
+    if (beforeAppSandboxPolicy_ == AppSandboxPolicy::ISOLATED_SANDBOX) {
+        return AppSandboxPolicy::ISOLATED_SANDBOX;
+    }
+    return DualModeHelper::IsDiffPackageCategory(newPolicy)
+        ? AppSandboxPolicy::ISOLATED_SANDBOX
+        : AppSandboxPolicy::SHARED_SANDBOX;
 }
 
 void BaseBundleInstaller::InitDualModeBundleName(const InstallParam &installParam)
@@ -5740,25 +5769,34 @@ ErrCode BaseBundleInstaller::SetDualModeAppInfo(const InstallParam &installParam
     if (!DualModeHelper::IsDualModeDevice() || infos.empty()) {
         return ERR_OK;
     }
-    bool isCloneApp = DualModeHelper::NeedDualModeHandle(installParam.deviceModeDistributionPolicy);
-    // Dual-mode different-package (clone) install is only allowed for system apps; reject non-system apps.
-    if (isCloneApp) {
+    // Dual-mode different-package is a system-level capability: any different-package app (primary or
+    // secondary mode) must be a system app; reject non-system apps. isCloneApp (secondary mode) only
+    // additionally sets the clone flag below.
+    bool isDiffPackage = DualModeHelper::IsDiffPackageCategory(installParam.deviceModeDistributionPolicy);
+    if (isDiffPackage) {
         for (const auto &infoPair : infos) {
             if (!infoPair.second.IsSystemApp()) {
-                APP_LOGE("Dual mode: different-package install is only allowed for system apps, "
+                APP_LOGE("Dual mode: different-package is only allowed for system apps, "
                     "bundle=%{public}s", infoPair.second.GetBundleName().c_str());
                 return ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP;
             }
         }
     }
+    bool isCloneApp = DualModeHelper::NeedDualModeHandle(installParam.deviceModeDistributionPolicy);
     for (auto &infoPair : infos) {
         InnerBundleInfo &info = infoPair.second;
         info.SetDeviceModeDistributionPolicy(installParam.deviceModeDistributionPolicy);
         if (isCloneApp) {
             info.SetDualModeCloneApp(true);
+            info.SetAppIndex(ServiceConstants::DUAL_MODE_CLONE_APP_INDEX);
         }
-        LOG_D(BMS_TAG_INSTALLER, "Dual mode: set deviceModeDistributionPolicy=%{public}d isCloneApp=%{public}d for bundle=%{public}s",
-            installParam.deviceModeDistributionPolicy, isCloneApp, info.GetBundleName().c_str());
+        // Persist the current sandbox policy (sticky-isolation rule) so a later update can read it as the
+        // before-value; same computation as FillDualModeEventFields broadcast (Sync-27).
+        info.SetAppSandboxPolicy(ComputeCurrentAppSandboxPolicy(installParam.deviceModeDistributionPolicy));
+        LOG_D(BMS_TAG_INSTALLER, "Dual mode: set deviceModeDistributionPolicy=%{public}d isCloneApp=%{public}d "
+            "appSandboxPolicy=%{public}d for bundle=%{public}s",
+            installParam.deviceModeDistributionPolicy, isCloneApp,
+            static_cast<int32_t>(info.GetAppSandboxPolicy()), info.GetBundleName().c_str());
     }
     return ERR_OK;
 }
@@ -7237,6 +7275,8 @@ void BaseBundleInstaller::ResetInstallProperties()
     hapPathRecords_.clear();
     uninstallBundleAppId_.clear();
     dualModeBundleName_.clear();
+    beforeDeviceModeDistributionPolicy_ = DeviceModeDistributionPolicy::UNSPECIFIED;
+    beforeAppSandboxPolicy_ = AppSandboxPolicy::SHARED_SANDBOX;
     isModuleUpdate_ = false;
     isEntryInstalled_ = false;
     isHnpInstalled_ = false;

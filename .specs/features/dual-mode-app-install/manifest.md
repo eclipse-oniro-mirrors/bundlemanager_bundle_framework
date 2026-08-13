@@ -13,20 +13,17 @@ status: reviewing
 owner: "[待确认]"
 source_issue: "REQ-DUALMODE-001"
 created_at: 2026-07-15
-updated_at: 2026-08-04
+updated_at: 2026-08-11
 related_features: []
 related_bugs: []
 related_tasks: []
 related_decisions:
-  - "Stage 1 基线已批准（2026-07-15）；Stage 2 design/spec 已批准；Stage 3 主体实现集成验证 PASS（AC-1~21，2026-07-18），增量 ADR-16~27 / AC-22~35 编译验证通过（2026-08-01，_04 commit 80d089208）"
-  - "Sync-21（2026-08-01）：全套 spec 刷新至 `appIndex_dual_mode_04` tip `80d089208`（112 例单测）；新增 AC-34/35 + ADR-26/27；运行时全 AC 集成回归 + 人类发布批准仍为发布 Gate 未决项"
-  - "Sync-22（2026-08-04）：Stage 2 枚举定义迭代——AppCategory→DeviceModeDistributionPolicy（int32_t，9 成员连续 int 0~8，不支持按位或），字段 appCategory→deviceModeDistributionPolicy，事件 Want key 同步改名；IsDiffPackageCategory 由按位与 (appCategory&32) 改为集合判定 policy∈{4,6,8}；旧'类别7'等价为'不同包体类别（4/6/8）'。design.md/spec.md 已同步刷新，ADR/AC 语义边界不变；Public API 契约变更；Stage 2 迭代已批准（用户 2026-08-04），进入 Stage 3 代码实现"
-  - "Sync-23（2026-08-04）：Stage 2 枚举/字段位置迁移——DeviceModeDistributionPolicy 枚举从 application_info.h 迁到 bundle_info.h；deviceModeDistributionPolicy 字段从 ApplicationInfo 迁到 BundleInfo；Parcel/JSON 序列化同步迁移（application_info.cpp→bundle_info.cpp，JSON key APPLICATION_DEVICE_MODE_DISTRIBUTION_POLICY→BUNDLE_INFO_DEVICE_MODE_DISTRIBUTION_POLICY）；InnerBundleInfo Get/Set 访问 baseApplicationInfo_→baseBundleInfo_；InstallParam 字段保留。baseBundleInfo_ 经 BASE_BUNDLE_INFO 节点完整持久化，AC-1 不破坏。代码已落地待集成验证"
+  - "最终状态（2026-08-11）：代码基线 `appIndex_dual_mode_07_doc` HEAD `020de12b8`（代码落地 `14eb7f286`，2026-08-06）。Stage 1 基线 + Stage 2 design/spec + Stage 3 主体实现均已批准；design ADR-1~29 / spec AC-1~40 完整一致。AC-1~35 编译验证通过 + AC-1~21 运行 PASS（2026-07-18）；增量（AC-36~40 + AC-17 5 字段 + AC-19 appIndex 置位）代码已落地、待集成环境编译/单测/运行时回归；单测 123 例。发布 Gate Blocked（运行时全 AC 回归 + 人类 Owner 发布批准未决）"
 code_refs:
   - "bundlemanager_bundle_framework"
 commits:
-  - "80d089208（_04 tip，2026-08-01，dual mode install，IssueNo:#9695，11 文件 +363 -114）：双模式安装特性当前实现基线（dual_mode_helper / base_bundle_installer / bundle_data_mgr / bundle_service_constants / appexecfwk_errors / bundle_exception_handler / status_receiver_proxy / bundle_common_event_mgr / 单测 112 例）。编译验证通过（用户确认）"
-  - "2f9bf3d9b（_03，support dual-mode install，10 文件）+ 085961697（_03，dual mode install，7 文件）：_03 重提交基线（已被 _04 超越）"
+  - "80d089208（_04 tip，2026-08-01，dual mode install，IssueNo:#9695，11 文件 +363 -114）：双模式安装特性 _04 实现基线（dual_mode_helper / base_bundle_installer / bundle_data_mgr / bundle_service_constants / appexecfwk_errors / bundle_exception_handler / status_receiver_proxy / bundle_common_event_mgr / 单测 112 例）。编译验证通过（用户确认）"
+  - "14eb7f286（2026-08-06，add dual appSandboxPolicy，IssueNo:#9753，13 文件 +349 -47）：增量代码落地（AppSandboxPolicy 枚举+序列化 / SetDualModeAppInfo isDiffPackage 校验+SetAppIndex / ComputeCurrentAppSandboxPolicy 粘性+before 成员+ResetInstallProperties / NotifyBundleEvents 5 字段 / Get/SetAppSandboxPolicy / 移除 instIndex 覆写特例 / 单测 +11 例至 123 例）。在当前分支 HEAD `020de12b8` 历史内（`git merge-base --is-ancestor` 确认）。编译/单测/运行时回归待集成环境"
 baseline_approval:
   approved: true
   approver: "用户"

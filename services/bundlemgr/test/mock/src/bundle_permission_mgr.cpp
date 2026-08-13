@@ -174,6 +174,11 @@ bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::
     return g_verifyPermissionFalse;
 }
 
+bool BundlePermissionMgr::IsCliToolCalling(const uint64_t callerToken)
+{
+    return false;
+}
+
 bool BundlePermissionMgr::IsSelfCalling()
 {
     return false;
@@ -241,6 +246,11 @@ bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permi
 bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames)
 {
     return g_verifyPermission;
+}
+
+bool BundlePermissionMgr::IsCliToolCalling(const uint64_t callerToken)
+{
+    return true;
 }
 
 bool BundlePermissionMgr::IsSelfCalling()

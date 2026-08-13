@@ -81,6 +81,7 @@ grep -rn "字段名\s*=" --include="*.cpp" --include="*.h"
 - [ ] 所有外部输入和元数据保留了参数
 - [ ] 标识符参数覆盖路径构造所需的所有变量
 - [ ] 参数数量合理
+- [ ] 检查同文件内是否有同类已有方法需要同步加固（如新增 `ExtractHqfModuleSoFiles` 时也检查 `ExtractQuickFixSoFile` 是否需要补 `IsFileNameValid`）
 
 ## Phase 3: 实现 — 全链路修改
 
@@ -114,7 +115,11 @@ services/bundlemgr/
     └── mock_installd_host_impl.cpp                        ← Mock（return ERR_OK 模式）
 ```
 
-**注意**：还需检查 `test/unittest/*/mock/` 下是否有额外的 mock 文件。
+**注意**：还需检查 `test/unittest/*/mock/` 下是否有额外的 mock 文件。使用以下命令搜索：
+
+```bash
+grep -rn "InstalldClient::ExtractFiles\|InstalldClient::ExtractQuickFixSoFile" test/unittest/*/mock/
+```
 
 ### 序列化规则
 
@@ -126,36 +131,50 @@ Proxy 写入顺序与 Host 读取顺序**必须完全一致**：
 | bool | `INSTALLD_PARCEL_WRITE(data, Bool, val)` | `data.ReadBool()` |
 | int32 | `INSTALLD_PARCEL_WRITE(data, Int32, val)` | `data.ReadInt32()` |
 
+### 校验责任分层
+
+| 层级 | 职责 | 校验内容 |
+|---|---|---|
+| **InstalldClient** | 轻量第一道防线 | 外部输入非空（`hapPath`、`cpuAbi` 等）。**不**做 `IsFileNameValid`（那是 HostImpl 的职责） |
+| **InstalldHostImpl** | 深度安全校验 | 权限 + `IsValidBundleName` + `IsFileNameValid`（含空检查 + 路径穿越）+ 构造后路径前缀白名单 |
+
+> **关键**：`IsFileNameValid` 内部首行已执行 `if (fileName.empty()) return false;`，因此 HostImpl 中**不要**在 `IsFileNameValid` 前单独做空检查——那是冗余代码。Client 侧的轻量空校验保留即可。
+
 ### InstalldHostImpl 实现模板
 
 ```cpp
 ErrCode InstalldHostImpl::NewMethod(/* 标识符参数 */)
 {
-    // 1. 权限校验（必须）
+    // 1. 权限校验（必须，不可省略）
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
 
-    // 2. 标识符/元数据校验
+    // 2. bundleName 校验
     if (!InstalldOperator::IsValidBundleName(bundleName)) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (/* 必填参数非空检查 */) {
+
+    // 3. 外部输入和标识符路径穿越防护（IsFileNameValid 已涵盖空检查）
+    if (!InstalldOperator::IsFileNameValid(externalFilePath) ||
+        !InstalldOperator::IsFileNameValid(metadataField) ||
+        !InstalldOperator::IsFileNameValid(cpuAbi)) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+    // 可选参数按需校验：(!suffix.empty() && !IsFileNameValid(suffix))
 
-    // 3. 路径构造（下沉自 BMS）
+    // 4. 路径构造（下沉自 BMS）
     std::string basePath = std::string(Constants::BUNDLE_CODE_DIR) +
         ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR;
     std::string targetPath = /* 使用标识符 + 已知常量拼接 */;
 
-    // 4. 路径前缀校验
+    // 5. 路径前缀白名单校验
     if (!InstalldOperator::IsValidPathByBundleDirScene(
             BundleDirScene::XXX, targetPath)) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    // 5. 委托现有 operator
+    // 6. 委托现有 operator
     ExtractParam extractParam;
     extractParam.bundleName = bundleName;
     extractParam.extractFileType = ExtractFileType::XX;
@@ -168,6 +187,20 @@ ErrCode InstalldHostImpl::NewMethod(/* 标识符参数 */)
         return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
     }
     return ERR_OK;
+}
+```
+
+### Client 校验模板
+
+```cpp
+ErrCode InstalldClient::NewMethod(/* 标识符参数 */)
+{
+    // 仅校验外部输入非空（轻量第一道防线）
+    if (externalFilePath.empty() || cpuAbi.empty()) {
+        APP_LOGE("externalFilePath or cpuAbi is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::NewMethod, bundleName, externalFilePath, ...);
 }
 ```
 
@@ -210,7 +243,73 @@ Proxy write 顺序 ≡ Host read 顺序
 
 每个异常分支确认返回相同错误码。
 
-### 4.5 编译验证
+### 4.5 TDD 单元测试（必须）
+
+新增或修改的 InstalldHostImpl 方法必须编写 TDD 单元测试，确保分支覆盖率 >80%。
+
+#### 测试文件位置
+
+| 测试层 | 文件 | 测试对象 |
+|---|---|---|
+| IPC Handle 层 | `test/unittest/bms_installd_host_test/bms_installd_host_test.cpp` | `HandleXxx` 方法（MessageParcel 序列化校验） |
+| HostImpl 业务层 | `test/unittest/bms_install_daemon_test/bms_install_daemon_test.cpp` | `InstalldHostImpl::Xxx` 方法（分支覆盖） |
+
+#### 分支覆盖分析流程
+
+1. 列出 `InstalldHostImpl` 新方法中所有条件分支
+2. 为每个分支设计至少一个测试用例
+3. 计算覆盖率：`覆盖分支数 / 总分支数 > 80%`
+4. 无法覆盖的分支（如 `VerifyCallingPermission`）需在文档中说明原因
+
+#### 测试命名规范
+
+- 文件名不变，追加到现有 `bms_install_daemon_test.cpp` 和 `bms_installd_host_test.cpp`
+- 测试方法名：`{MethodName}_0X00`，递增编号
+- 测试注释包含 `@tc.number`、`@tc.name`、`@tc.desc`
+
+#### 测试用例设计模板
+
+每个校验分支设计一个测试用例，覆盖以下场景：
+
+| 分支类型 | 测试输入 | 预期结果 |
+|---|---|---|
+| 权限校验失败 | 无法在单元测试中覆盖（需 root） | 说明原因 |
+| 参数为空 | 依次传入空字符串 | `ERR_APPEXECFWK_INSTALLD_PARAM_ERROR` |
+| `IsValidBundleName` 失败 | 传入包含 `../` 的 bundleName | `ERR_APPEXECFWK_INSTALLD_PARAM_ERROR` |
+| `IsFileNameValid` 失败 | 传入包含 `../`、`\\`、`\0` 或控制字符的字符串 | `ERR_APPEXECFWK_INSTALLD_PARAM_ERROR` |
+| `IsValidPathByBundleDirScene` 失败 | 传入不满足前缀白名单的标识符组合 | `ERR_APPEXECFWK_INSTALLD_PARAM_ERROR` |
+| 操作成功/失败 | 传入合法参数 | `ERR_OK` 或对应错误码 |
+
+#### 示例：InstalldHostImpl 测试
+
+```cpp
+/**
+ * @tc.number: NewMethod_0100
+ * @tc.name: test NewMethod with invalid bundle name
+ * @tc.desc: 1. bundleName contains ../
+ */
+HWTEST_F(BmsInstallDaemonTest, NewMethod_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    ErrCode ret = hostImpl.NewMethod("../invalid", ...);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+```
+
+#### 示例：InstalldHost IPC 测试
+
+```cpp
+HWTEST_F(BmsInstalldHostTest, HandleNewMethod_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleNewMethod(data, reply);
+    EXPECT_FALSE(res);
+}
+```
+
+### 4.6 编译验证
 ```bash
 ./build.sh --product-name xxx --target bundle_framework
 ```
@@ -227,12 +326,17 @@ Proxy write 顺序 ≡ Host read 顺序
 4. ❌ 下沉需要 `InnerBundleInfo` 的逻辑（installd 无数据库访问权限）
 5. ❌ 忘记更新 mock 文件导致测试编译失败
 6. ❌ Proxy/Host 读写顺序不一致
+7. ❌ 在 HostImpl 中 `IsFileNameValid` 前重复做空检查（`IsFileNameValid` 已内含空检查）
+8. ❌ 重构时忽略同类已有方法的安全加固（如只加固新方法，不加固已有 `ExtractQuickFixSoFile`）
 
 ## 常用常量
 
 | 常量 | 值 | 位置 |
 |---|---|---|
 | `Constants::BUNDLE_CODE_DIR` | `/data/app/el1/bundle/public` | `bundle_constants.h` |
+| `ServiceConstants::HAP_COPY_PATH` | `/data/service/el1/public/bms/bundle_manager_service` | `bundle_service_constants.h` |
+| `ServiceConstants::TMP_SUFFIX` | `_tmp` | `bundle_service_constants.h` |
+| `ServiceConstants::LIBS` | `libs/` | `bundle_service_constants.h` |
 | `ServiceConstants::PATCH_PATH` | `patch_` | `bundle_service_constants.h` |
 | `ServiceConstants::HOT_RELOAD_PATH` | `hotreload_` | `bundle_service_constants.h` |
 | `ServiceConstants::PATH_SEPARATOR` | `/` | `bundle_service_constants.h` |
@@ -249,7 +353,8 @@ Proxy write 顺序 ≡ Host read 顺序
 
 ## 参考案例
 
-完整案例见 `ohdesign/installdRefactor/ExtractQuickFixSoFile归档.md`
+- `ohdesign/installdRefactor/ExtractQuickFixSoFile归档.md` — 首个下沉重构案例（7 参数，BUNDLE_CODE_DIR 路径）
+- `ohdesign/installdRefactor/ExtractHqfModuleSoFiles归档.md` — 4 参数轻量重构（HAP_COPY_PATH 路径，含同步加固 + TDD）
 
 ## 参考资料
 

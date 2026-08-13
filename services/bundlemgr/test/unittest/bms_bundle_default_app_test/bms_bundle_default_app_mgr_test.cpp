@@ -1136,6 +1136,61 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, GetTypeFromWant_0600, Function | SmallTest 
 }
 
 /**
+ * @tc.number: GetTypeFromWant_0700
+ * @tc.name: Test GetTypeFromWant by DefaultAppMgr
+ * @tc.desc: 1.mailto is an opaque uri, its suffix must not be used to infer the type
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, GetTypeFromWant_0700, Function | SmallTest | Level1)
+{
+    Want want;
+    want.SetAction(ACTION_VIEW_DATA);
+    want.SetUri("mailto:support@xxx.zip");
+    auto ret = DefaultAppMgr::GetInstance().GetTypeFromWant(want);
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+
+    // the mail address is followed by params
+    want.SetUri("mailto:support@xxx.zip?subject=test");
+    ret = DefaultAppMgr::GetInstance().GetTypeFromWant(want);
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: GetTypeFromWant_0800
+ * @tc.name: Test GetTypeFromWant by DefaultAppMgr
+ * @tc.desc: 1.the mailto prefix is not over matched, file path is not affected
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, GetTypeFromWant_0800, Function | SmallTest | Level1)
+{
+    Want want;
+    want.SetAction(ACTION_VIEW_DATA);
+    want.SetUri("mailto.zip");
+    auto ret = DefaultAppMgr::GetInstance().GetTypeFromWant(want);
+    EXPECT_EQ(ret, ".zip");
+
+    want.SetUri("mailtoxxx.zip");
+    ret = DefaultAppMgr::GetInstance().GetTypeFromWant(want);
+    EXPECT_EQ(ret, ".zip");
+
+    want.SetUri("/data/test/mailto/a.zip");
+    ret = DefaultAppMgr::GetInstance().GetTypeFromWant(want);
+    EXPECT_EQ(ret, ".zip");
+}
+
+/**
+ * @tc.number: GetTypeFromWant_0900
+ * @tc.name: Test GetTypeFromWant by DefaultAppMgr
+ * @tc.desc: 1.email want is matched before the mailto uri is filtered out
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, GetTypeFromWant_0900, Function | SmallTest | Level1)
+{
+    Want want;
+    want.SetAction(EMAIL_ACTION);
+    want.SetUri("mailto:support@xxx.zip");
+    auto ret = DefaultAppMgr::GetInstance().GetTypeFromWant(want);
+    EXPECT_EQ(ret, EMAIL);
+}
+
+/**
  * @tc.number: GetBundleInfoByUtd_0100
  * @tc.name: Test GetBundleInfoByUtd by DefaultAppMgr
  * @tc.desc: 1.GetBundleInfoByUtd

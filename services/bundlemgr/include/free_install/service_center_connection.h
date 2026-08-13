@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_FREE_INSTALL_SERVICE_CENTER_CONNECTION_H
 
 #include <condition_variable>
+#include <mutex>
 
 #include "ability_connect_callback_stub.h"
 #include "bundle_connect_ability_mgr.h"
@@ -29,9 +30,9 @@ class ServiceCenterDeathRecipient;
 
 class ServiceCenterConnection : public AAFwk::AbilityConnectionStub {
 public:
-    ServiceCenterConnection(int32_t &connectState, std::condition_variable &cv,
+    ServiceCenterConnection(int32_t &connectState, std::condition_variable &cv, std::mutex &mutex,
         const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr)
-        : connectState_(connectState), cv_(cv), connectAbilityMgr_(connectAbilityMgr)
+        : connectState_(connectState), cv_(cv), mutex_(mutex), connectAbilityMgr_(connectAbilityMgr)
     {
     }
     virtual ~ServiceCenterConnection();
@@ -54,10 +55,16 @@ public:
     sptr<IRemoteObject> GetRemoteObject();
 
 private:
+    // Transition connectState_ and notify waiters under mutex_. The state change must be
+    // serialized with the wait side's predicate check + cv_.wait() to avoid a lost wakeup:
+    // otherwise a notify fired before the waiter parks is lost and the waiter blocks forever.
+    void UpdateConnectState(int32_t state);
+
     int32_t &connectState_;
     sptr<IRemoteObject> serviceCenterRemoteObject_;
     sptr<ServiceCenterDeathRecipient> deathRecipient_;
     std::condition_variable &cv_;
+    std::mutex &mutex_;
     std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr_;
 };
 }  //  namespace AppExecFwk
