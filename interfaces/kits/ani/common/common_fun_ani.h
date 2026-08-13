@@ -289,13 +289,20 @@ public:
     {
         RETURN_NULL_IF_NULL(env);
         RETURN_NULL_IF_NULL(converter);
-
+        ani_ref undefinedRef = nullptr;
+        auto status = env->GetUndefined(&undefinedRef);
+        if (status != ANI_OK) {
+            APP_LOGE("GetUndefined failed, status: %{public}d", status);
+            return nullptr;
+        }
         ani_int length = static_cast<ani_int>(cArray.size());
-        ani_value arg = { .i = length };
-        ani_object arrayObj = CreateNewObjectByClassV2(env, CommonFunAniNS::CLASSNAME_ARRAY, "i:", &arg);
-        RETURN_NULL_IF_NULL(arrayObj);
+        ani_array aniArray = nullptr;
+        status = env->Array_New(length, undefinedRef, &aniArray);
+        if (status != ANI_OK) {
+            APP_LOGE("Array_New failed, status: %{public}d", status);
+            return nullptr;
+        }
 
-        ani_status status = ANI_OK;
         ani_status deleteStatus = ANI_OK;
         if (length > 0) {
             for (ani_int i = 0; i < length; ++i) {
@@ -304,7 +311,7 @@ public:
                     APP_LOGE("convert failed");
                     return nullptr;
                 }
-                status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iY:", i, item);
+                status = env->Array_Set(aniArray, i, item);
                 deleteStatus = env->Reference_Delete(item);
                 if (deleteStatus != ANI_OK) {
                     APP_LOGW_NOFUNC("ConvertAniArrayEnum Reference_Delete failed %{public}d", deleteStatus);
@@ -316,7 +323,7 @@ public:
             }
         }
 
-        return arrayObj;
+        return aniArray;
     }
 
     template<typename containerType, typename Converter, typename... Args>
@@ -325,19 +332,25 @@ public:
     {
         RETURN_NULL_IF_NULL(env);
         RETURN_NULL_IF_NULL(converter);
+        ani_ref undefinedRef = nullptr;
+        auto status = env->GetUndefined(&undefinedRef);
+        if (status != ANI_OK) {
+            APP_LOGE("GetUndefined failed, status: %{public}d", status);
+            return nullptr;
+        }
+        ani_array aniArray = nullptr;
+        status = env->Array_New(nativeArray.size(), undefinedRef, &aniArray);
+        if (status != ANI_OK) {
+            APP_LOGE("Array_New failed, status: %{public}d", status);
+            return nullptr;
+        }
 
-        ani_size length = nativeArray.size();
-        ani_value arg = { .i = static_cast<ani_int>(length) };
-        ani_object arrayObj = CreateNewObjectByClassV2(env, CommonFunAniNS::CLASSNAME_ARRAY, "i:", &arg);
-        RETURN_NULL_IF_NULL(arrayObj);
-
-        ani_status status = ANI_OK;
         ani_status deleteStatus = ANI_OK;
         ani_int i = 0;
         for (const auto& iter : nativeArray) {
             ani_object item = converter(env, iter, std::forward<Args>(args)...);
             RETURN_NULL_IF_NULL(item);
-            status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iY:", i, item);
+            status = env->Array_Set(aniArray, i, item);
             deleteStatus = env->Reference_Delete(item);
             if (deleteStatus != ANI_OK) {
                 APP_LOGW_NOFUNC("ConvertAniArray Reference_Delete failed %{public}d", deleteStatus);
@@ -349,7 +362,7 @@ public:
             ++i;
         }
 
-        return arrayObj;
+        return aniArray;
     }
 
     template<typename callbackType, typename... Args>
