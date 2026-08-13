@@ -10645,12 +10645,12 @@ HWTEST_F(BmsBundleKitServiceTest, GetJsonProfilefImpl_0300, Function | SmallTest
 }
 
 /**
- * @tc.number: GetJsonProfilefImpl_0400
+ * @tc.number: GetJsonProfileImpl_0400
  * @tc.name: test GetJsonProfile with non-system app calling
  * @tc.desc: 1. test GetJsonProfile when non-system app calling
  *           2. should return ERR_BUNDLE_MANAGER_INVALID_USER_ID
  */
-HWTEST_F(BmsBundleKitServiceTest, GetJsonProfilefImpl_0400, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, GetJsonProfileImpl_0400, Function | SmallTest | Level1)
 {
     SetSystemAppForTest(false);
 
@@ -10659,7 +10659,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetJsonProfilefImpl_0400, Function | SmallTest
     std::string profile = "";
     auto ret = hostImpl->GetJsonProfile(
         profileType, BUNDLE_NAME_TEST, MODULE_NAME_TEST, profile, INVALID_UID);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
     ResetTestValues();
 }
 
