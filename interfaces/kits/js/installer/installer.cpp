@@ -1595,15 +1595,16 @@ void InstallPreexistingAppComplete(napi_env env, napi_status status, void *data)
         return;
     }
     std::unique_ptr<InstallPreexistingAppCallbackInfo> callbackPtr {asyncCallbackInfo};
+    int32_t innerCode = static_cast<int32_t>(asyncCallbackInfo->err);
     asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
-    APP_LOGD("err is %{public}d", asyncCallbackInfo->err);
+    APP_LOGD("err is %{public}d, innerCode is %{public}d", asyncCallbackInfo->err, innerCode);
 
     napi_value result[ARGS_SIZE_ONE] = {0};
     if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
     } else {
-        result[FIRST_PARAM] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            INSTALL_PREEXISTING_APP, Constants::PERMISSION_INSTALL_BUNDLE);
+        result[FIRST_PARAM] = BusinessError::CreateInstallError(env, asyncCallbackInfo->err,
+            innerCode, INSTALL_PREEXISTING_APP, Constants::PERMISSION_INSTALL_BUNDLE, false);
     }
     CommonFunc::NapiReturnDeferred<InstallPreexistingAppCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
