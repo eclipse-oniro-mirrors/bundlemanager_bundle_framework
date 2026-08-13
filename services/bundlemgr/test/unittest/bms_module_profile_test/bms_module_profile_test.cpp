@@ -117,13 +117,13 @@ HWTEST_F(BmsModuleProfileTest, ProcessLibrarySupportDirectory_003, Function | Sm
 
 /**
  * @tc.number: BmsModuleProfileTest_ProcessLibrarySupportDirectory_004
- * @tc.name: Test ProcessLibrarySupportDirectory when dirs size > 1024
+ * @tc.name: Test ProcessLibrarySupportDirectory when dirs size > 2048
  * @tc.desc: When dirs size exceeds 1024, should return ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR
  */
 HWTEST_F(BmsModuleProfileTest, ProcessLibrarySupportDirectory_004, Function | SmallTest | Level0)
 {
     std::map<std::string, std::vector<std::string>> librarySupportDirectoryMap;
-    std::vector<std::string> dirs(1025, NORMAL_DIR);
+    std::vector<std::string> dirs(2049, NORMAL_DIR);
     librarySupportDirectoryMap[CPU_ABI] = dirs;
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetCurrentModulePackage(MODULE_PACKAGE);
