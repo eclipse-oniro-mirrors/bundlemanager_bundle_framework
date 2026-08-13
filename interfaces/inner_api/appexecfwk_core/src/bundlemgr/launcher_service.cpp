@@ -134,6 +134,7 @@ bool LauncherService::UnRegisterCallback()
         APP_LOGE("register bundle status callback failed due to lack of permission");
         return false;
     }
+    APP_LOGI_NOFUNC("SubEvent op=off_all kit=AbilityKit event=BundleStatusChange");
     return bundleMonitor_->UnSubscribe();
 }
 
