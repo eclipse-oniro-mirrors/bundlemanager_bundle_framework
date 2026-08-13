@@ -5167,6 +5167,28 @@ ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::strin
     return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE, data, profile, option);
 }
 
+ErrCode BundleMgrProxy::GetJsonProfileForSelf(ProfileType profileType, const std::string &moduleName,
+    std::string &profile)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to GetJsonProfileForSelf");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetJsonProfileForSelf due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(profileType)) {
+        APP_LOGE("fail to GetJsonProfileForSelf due to write profileType fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetJsonProfileForSelf due to write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
+    return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE_FOR_SELF, data, profile, option);
+}
+
 sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

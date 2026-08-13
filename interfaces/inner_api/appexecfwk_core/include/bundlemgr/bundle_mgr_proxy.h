@@ -1224,6 +1224,9 @@ public:
     virtual ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName,
         const std::string &moduleName, std::string &profile, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
+    virtual ErrCode GetJsonProfileForSelf(ProfileType profileType, const std::string &moduleName,
+        std::string &profile) override;
+
     virtual sptr<IBundleResource> GetBundleResourceProxy() override;
 
     virtual sptr<IBundleSkillManager> GetSkillManagerProxy() override;

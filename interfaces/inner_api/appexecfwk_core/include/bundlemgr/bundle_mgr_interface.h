@@ -1772,6 +1772,21 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    /**
+     * @brief Obtain the caller's own json profile. Only NETWORK_PROFILE is supported.
+     *        bundleName is resolved from the caller's uid on the service side, so the caller
+     * is structurally unable to query another bundle's profile through this interface.
+     * @param profileType Profile type, only NETWORK_PROFILE is allowed.
+     * @param moduleName Module name, empty means the entry module.
+     * @param profile Output param, the json profile content.
+     * @return Returns ERR_OK on success, error code otherwise.
+     */
+    virtual ErrCode GetJsonProfileForSelf(ProfileType profileType, const std::string &moduleName,
+        std::string &profile)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual sptr<IBundleResource> GetBundleResourceProxy()
     {
         return nullptr;

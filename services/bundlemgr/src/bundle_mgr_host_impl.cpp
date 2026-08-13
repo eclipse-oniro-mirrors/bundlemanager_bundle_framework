@@ -5689,6 +5689,34 @@ ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::st
     return dataMgr->GetJsonProfile(profileType, bundleName, moduleName, profile, userId);
 }
 
+ErrCode BundleMgrHostImpl::GetJsonProfileForSelf(ProfileType profileType, const std::string &moduleName,
+    std::string &profile)
+{
+    APP_LOGD("GetJsonProfileForSelf profileType: %{public}d, moduleName: %{public}s",
+        profileType, moduleName.c_str());
+    // This interface only allows a caller to obtain its own NETWORK_PROFILE.
+    if (profileType != ProfileType::NETWORK_PROFILE) {
+        APP_LOGE("GetJsonProfileForSelf only support NETWORK_PROFILE, profileType: %{public}d", profileType);
+        return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    // bundleName is resolved from the caller's uid on the service side, so the caller cannot
+    // spoof another bundle's name to sniff its profile.
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    std::string bundleName;
+    if (!dataMgr->GetBundleNameForUid(callingUid, bundleName)) {
+        APP_LOGE("GetBundleNameForUid failed, callingUid: %{public}d", callingUid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    // userId is omitted: UNSPECIFIED_USERID is resolved to the active user inside GetJsonProfile.
+    return dataMgr->GetJsonProfile(profileType, bundleName, moduleName, profile,
+        Constants::UNSPECIFIED_USERID);
+}
+
 ErrCode BundleMgrHostImpl::SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo)
 {
     APP_LOGD("Called. BundleName: %{public}s", bundleName.c_str());
