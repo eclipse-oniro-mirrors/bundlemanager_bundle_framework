@@ -49,7 +49,7 @@ void HandleExtCleanResult(int32_t userId, int32_t &result)
     ErrCode extRet = bmsExtensionClient->ClearAllBundleCache(userId, extCallback->AsObject());
     if (extRet != ERR_OK) {
         if (IsExtRealFailure(extRet)) {
-            LOG_E(BMS_TAG_EXT, "ClearAllBundleCache extension failed, ret: %{public}d", extRet);
+            LOG_E(BMS_TAG_EXT, "ClearAllBundleCache extension failed, ret: %{public}d",extRet);
         }
         return;
     }
