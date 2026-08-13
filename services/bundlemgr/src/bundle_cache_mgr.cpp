@@ -306,7 +306,7 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
             APP_LOGI("thread for CleanBundleCache start");
             result = CleanBundleCache(validBundles, userId);
             HandleExtCleanResult(userId, result);
-            LOG_I(BMS_TAG_EXT, "ClearAllBundleCache final result: %{public}d" , result);
+            LOG_I(BMS_TAG_EXT, "ClearAllBundleCache final result: %{public}d", result);
             processCacheCallback->OnCleanAllBundleCacheFinished(result);
             auto endTime = BundleUtil::GetCurrentTimeMs();
             auto elapsedTime = endTime - startTime;
