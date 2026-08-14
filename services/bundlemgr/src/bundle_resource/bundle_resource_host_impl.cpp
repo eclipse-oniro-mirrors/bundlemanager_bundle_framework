@@ -16,6 +16,7 @@
 #include "bundle_resource_host_impl.h"
 
 #include "bms_extension_client.h"
+#include "bundle_data_mgr.h"
 #include "bundle_file_util.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_manager.h"
@@ -58,6 +59,8 @@ ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleN
         APP_LOGE_NOFUNC("get resource failed -n %{public}s -f %{public}u", bundleName.c_str(), flags);
         return CheckBundleNameValid(bundleName, appIndex);
     }
+    // BOPD filter third party bundle resource
+    FilterThirdPartyIconInBopdMode(bundleName, bundleResourceInfo);
     return ERR_OK;
 }
 
@@ -88,6 +91,8 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfo(const std::string
         return CheckBundleNameValid(bundleName, appIndex);
     }
     manager->FilterLauncherAbilityResourceInfoWithFlag(flags, bundleName, launcherAbilityResourceInfo);
+    // BOPD filter third party bundle resource
+    FilterThirdPartyIconInBopdMode(launcherAbilityResourceInfo);
     return ERR_OK;
 }
 
@@ -160,6 +165,8 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfoList(const std::ve
     if (isAllFailed) {
         return result;
     }
+    // BOPD filter third party bundle resource
+    FilterThirdPartyIconInBopdMode(launcherAbilityResourceInfo);
     return ERR_OK;
 }
 
@@ -205,6 +212,8 @@ ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
                 });
         }
     }
+    // BOPD filter third party bundle resource
+    FilterThirdPartyIconInBopdMode(bundleResourceInfos);
     BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
     APP_LOGI_NOFUNC("GetAllBundleResourceInfo count:%{public}zu", bundleResourceInfos.size());
     return ERR_OK;
@@ -253,6 +262,8 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
         }
     }
     manager->FilterLauncherAbilityResourceInfoWithFlag(flags, Constants::EMPTY_STRING, launcherAbilityResourceInfos);
+    // BOPD filter third party bundle resource
+    FilterThirdPartyIconInBopdMode(launcherAbilityResourceInfos);
     BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
     APP_LOGI_NOFUNC("GetAllLauncherAbilityResourceInfo count:%{public}zu", launcherAbilityResourceInfos.size());
     return ERR_OK;
@@ -407,6 +418,8 @@ ErrCode BundleResourceHostImpl::GetExtensionAbilityResourceInfo(const std::strin
         extensionAbilityResourceInfo, appIndex)) {
         return CheckExtensionAbilityValid(bundleName, extensionAbilityType, flags, appIndex);
     }
+    // BOPD filter third party bundle resource
+    FilterThirdPartyIconInBopdMode(extensionAbilityResourceInfo);
     return ERR_OK;
 }
 
@@ -499,6 +512,8 @@ ErrCode BundleResourceHostImpl::GetAllUninstallBundleResourceInfo(const int32_t 
                 return resourceA.label < resourceB.label;
             });
     }
+    // BOPD filter third party bundle resource
+    FilterThirdPartyIconInBopdMode(bundleResourceInfos);
     APP_LOGI_NOFUNC("GetAllUninstallBundleResourceInfo count:%{public}zu", bundleResourceInfos.size());
     return ERR_OK;
 }
@@ -537,6 +552,86 @@ ErrCode BundleResourceHostImpl::GetElementLauncherAbilityResourceInfo(
     } else {
         APP_LOGE("appIndex %{public}d not match for ability %{public}s", appIndex, abilityName.c_str());
         return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
+    }
+}
+
+void BundleResourceHostImpl::FilterThirdPartyIconInBopdMode(const std::string &bundleName,
+    BundleResourceInfo &resourceInfo)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return;
+    }
+    if (!dataMgr->IsBopdModeEnabled()) {
+        return;
+    }
+    bool isSystemApp = false;
+    if (dataMgr->IsSystemApp(bundleName, isSystemApp) != ERR_OK) {
+        return;
+    }
+    if (!isSystemApp) {
+        APP_LOGD("BOPD mode: clear icon for third-party app: %{public}s", bundleName.c_str());
+        resourceInfo.icon.clear();
+        resourceInfo.foreground.clear();
+        resourceInfo.background.clear();
+    }
+}
+
+void BundleResourceHostImpl::FilterThirdPartyIconInBopdMode(
+    std::vector<BundleResourceInfo> &resourceInfos)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return;
+    }
+    if (!dataMgr->IsBopdModeEnabled()) {
+        return;
+    }
+    for (auto &resource : resourceInfos) {
+        bool isSystemApp = false;
+        if (dataMgr->IsSystemApp(resource.bundleName, isSystemApp) != ERR_OK) {
+            continue;
+        }
+        if (!isSystemApp) {
+            APP_LOGD("BOPD mode: clear icon for third-party app: %{public}s", resource.bundleName.c_str());
+            resource.icon.clear();
+            resource.foreground.clear();
+            resource.background.clear();
+        }
+    }
+}
+
+void BundleResourceHostImpl::FilterThirdPartyIconInBopdMode(
+    std::vector<LauncherAbilityResourceInfo> &resourceInfos)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return;
+    }
+    if (!dataMgr->IsBopdModeEnabled()) {
+        return;
+    }
+    std::map<std::string, bool> bundleSystemCache;
+    for (auto &resource : resourceInfos) {
+        bool isSystemApp = false;
+        auto it = bundleSystemCache.find(resource.bundleName);
+        if (it != bundleSystemCache.end()) {
+            isSystemApp = it->second;
+        } else {
+            if (dataMgr->IsSystemApp(resource.bundleName, isSystemApp) != ERR_OK) {
+                continue;
+            }
+            bundleSystemCache[resource.bundleName] = isSystemApp;
+        }
+        if (!isSystemApp) {
+            APP_LOGD("BOPD mode: clear icon for third-party app: %{public}s", resource.bundleName.c_str());
+            resource.icon.clear();
+            resource.foreground.clear();
+            resource.background.clear();
+        }
     }
 }
 } // AppExecFwk

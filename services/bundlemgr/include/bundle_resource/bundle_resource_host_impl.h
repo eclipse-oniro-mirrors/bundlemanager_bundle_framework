@@ -61,6 +61,9 @@ private:
     ErrCode GetElementLauncherAbilityResourceInfo(const std::vector<LauncherAbilityResourceInfo>& allResources,
         const std::string& moduleName, const std::string& abilityName, const int32_t appIndex,
         LauncherAbilityResourceInfo& resourceInfo);
+    void FilterThirdPartyIconInBopdMode(const std::string &bundleName, BundleResourceInfo &resourceInfo);
+    void FilterThirdPartyIconInBopdMode(std::vector<BundleResourceInfo> &resourceInfos);
+    void FilterThirdPartyIconInBopdMode(std::vector<LauncherAbilityResourceInfo> &resourceInfos);
 };
 } // AppExecFwk
 } // OHOS

@@ -97,6 +97,8 @@ public:
     BundleDataMgr();
     virtual ~BundleDataMgr();
 
+    bool IsBopdModeEnabled();
+
     /**
      * @brief Boot query persistent storage.
      * @return Returns true if this function is successfully called; returns false otherwise.
