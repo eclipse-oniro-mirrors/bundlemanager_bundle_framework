@@ -54,7 +54,7 @@ const std::string BUNDLE_NAME_TEST = "com.sandbox.test";
 int32_t INVALID_DLP_TYPE = 0;
 int32_t DLP_TYPE_1 = 1;
 int32_t DLP_TYPE_2 = 2;
-int32_t DLP_TYPE_3 = 3;
+int32_t DLP_TYPE_5 = 5;
 int32_t INVALID_APP_INDEX = 0;
 int32_t APP_INDEX_1 = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
 int32_t APP_INDEX_2 = Constants::INITIAL_SANDBOX_APP_INDEX + 2;
@@ -79,7 +79,7 @@ public:
     void SetUp();
     void TearDown();
 
-    ErrCode InstallSandboxApp(const std::string &bundleName, int32_t dplType, int32_t userId, int32_t &appIndex) const;
+    ErrCode InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId, int32_t &appIndex) const;
     ErrCode UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId) const;
     ErrCode GetSandboxAppBundleInfo(const std::string &bundleName, const int32_t &appIndex, const int32_t &userId,
         BundleInfo &info);
@@ -159,7 +159,7 @@ void BmsSandboxAppTest::SetDataMgr()
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
-ErrCode BmsSandboxAppTest::InstallSandboxApp(const std::string &bundleName, int32_t dplType, int32_t userId,
+ErrCode BmsSandboxAppTest::InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId,
     int32_t &appIndex) const
 {
     auto installer = bundleMgrService_->GetBundleInstaller();
@@ -168,7 +168,7 @@ ErrCode BmsSandboxAppTest::InstallSandboxApp(const std::string &bundleName, int3
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
-    return installer->InstallSandboxApp(bundleName, dplType, userId, appIndex);
+    return installer->InstallSandboxApp(bundleName, dlpType, userId, appIndex);
 }
 
 ErrCode BmsSandboxAppTest::UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId) const
@@ -443,7 +443,7 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0300, Function | SmallTest 
     EXPECT_EQ(installRes, ERR_OK);
 
     int32_t appIndex = 0;
-    auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_3, USERID, appIndex);
+    auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_5, USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
     auto uninstallRes = UninstallBundle(BUNDLE_NAME);

@@ -1148,9 +1148,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7200, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7300, Function | SmallTest | Level0)
 {
-    int32_t dplType = 1;
+    int32_t dlpType = 1;
     int32_t appIndex = 1;
-    ErrCode ret1 = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dplType, USERID, appIndex);
+    ErrCode ret1 = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dlpType, USERID, appIndex);
     ErrCode ret2 = bundleInstallerHost_->UninstallSandboxApp(BUNDLE_NAME, appIndex, USERID);
     EXPECT_EQ(ret1, ERR_APPEXECFWK_PERMISSION_DENIED);
     EXPECT_EQ(ret2, ERR_APPEXECFWK_PERMISSION_DENIED);
