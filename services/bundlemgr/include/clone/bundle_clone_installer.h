@@ -87,8 +87,6 @@ private:
     void StopRelable(const InnerBundleInfo &info, int32_t uid);
     ErrCode ProcessBundleShareFiles(const InnerBundleInfo &info, const std::string &cloneBundleName,
         const int32_t userId, uint32_t tokenId);
-    bool GetBundleEnableState(const std::map<std::string, std::string> &parameters, bool &enableState);
-    bool IsDisableInstallEventReport(const std::map<std::string, std::string> &parameters);
 
     // Trigger HandleAppCloneUninstalled on AppClonePreferenceDataMgr after a single clone is
     // uninstalled. No-op when AppClonePreferenceDataMgr is unavailable (e.g. test env); logs the skip.

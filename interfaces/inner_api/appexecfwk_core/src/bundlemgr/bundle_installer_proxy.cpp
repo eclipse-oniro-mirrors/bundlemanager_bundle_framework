@@ -969,6 +969,13 @@ ErrCode BundleInstallerProxy::WriteCloneAppParameters(MessageParcel &data,
         LOG_E(BMS_TAG_INSTALLER, "failed to InstallCloneApp due to parameters size exceeds limit");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
+    for (const auto &param : parameters) {
+        if (param.first.size() > static_cast<size_t>(Constants::MAX_INSTALL_PARAM_KEY_LENGTH) ||
+            param.second.size() > static_cast<size_t>(Constants::MAX_INSTALL_PARAM_VALUE_LENGTH)) {
+            LOG_E(BMS_TAG_INSTALLER, "failed to InstallCloneApp due to parameter key or value exceeds limit");
+            return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+        }
+    }
     if (!data.WriteInt32(static_cast<int32_t>(parameters.size()))) {
         LOG_E(BMS_TAG_INSTALLER, "failed to InstallCloneApp due to write parameters size fail");
         return ERR_APPEXECFWK_CLONE_INSTALL_WRITE_PARCEL_ERROR;

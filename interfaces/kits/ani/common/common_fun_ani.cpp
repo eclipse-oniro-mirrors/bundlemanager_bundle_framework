@@ -3153,11 +3153,15 @@ bool CommonFunAni::ParseCreateAppCloneParam(ani_env* env, ani_object object,
     // parameters?: Array<Parameters>
     ani_object arrayObj = nullptr;
     if (CallGetterOptional(env, object, PROPERTYNAME_PARAMETERS, &arrayObj) && arrayObj != nullptr) {
-        std::vector<std::pair<std::string, std::string>> tmpParameters;
-        RETURN_FALSE_IF_FALSE(ParseAniArray(env, arrayObj, tmpParameters, ParseKeyValuePair));
-        for (const auto& parameter : tmpParameters) {
-            parameters[parameter.first] = parameter.second;
-        }
+        auto mapParser = [env, &parameters](ani_object aniObj) {
+            std::pair<std::string, std::string> pair;
+            if (!ParseKeyValuePair(env, aniObj, pair)) {
+                return false;
+            }
+            parameters[pair.first] = pair.second;
+            return true;
+        };
+        RETURN_FALSE_IF_FALSE(AniArrayForeach(env, arrayObj, mapParser));
     }
     return true;
 }

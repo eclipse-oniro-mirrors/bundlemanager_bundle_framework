@@ -70,7 +70,7 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
         DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
 
     bool bundleEnableState = true;
-    bool hasEnableState = GetBundleEnableState(parameters, bundleEnableState);
+    bool hasEnableState = InstallParam::GetBundleEnableState(parameters, bundleEnableState);
     if (hasEnableState && result == ERR_OK && dataMgr != nullptr) {
         bool stateChanged = false;
         auto ret = dataMgr->SetApplicationEnabled(
@@ -85,7 +85,7 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
         }
     }
 
-    bool disableEventReport = IsDisableInstallEventReport(parameters);
+    bool disableEventReport = InstallParam::IsDisableInstallEventReport(parameters);
     if (!disableEventReport) {
         if (!hasEnableState && result == ERR_OK && dataMgr != nullptr) {
             auto queryRet = dataMgr->IsApplicationEnabled(bundleName, appIndex, bundleEnableState, userId);
@@ -878,26 +878,6 @@ ErrCode BundleCloneInstaller::ProcessBundleShareFiles(const InnerBundleInfo &inf
     }
     LOG_D(BMS_TAG_INSTALLER, "No shareFiles configuration found for bundle=%{public}s", info.GetBundleName().c_str());
     return ERR_OK;
-}
-
-bool BundleCloneInstaller::GetBundleEnableState(const std::map<std::string, std::string> &parameters,
-    bool &enableState)
-{
-    auto it = parameters.find(Constants::BUNDLE_ENABLE_STATE_KEY);
-    if (it == parameters.end()) {
-        return false;
-    }
-    enableState = (it->second == InstallParam::PARAMETERS_VALUE_TRUE);
-    return true;
-}
-
-bool BundleCloneInstaller::IsDisableInstallEventReport(const std::map<std::string, std::string> &parameters)
-{
-    auto it = parameters.find(Constants::DISABLE_INSTALL_EVENT_REPORT_KEY);
-    if (it == parameters.end()) {
-        return false;
-    }
-    return (it->second == InstallParam::PARAMETERS_VALUE_TRUE);
 }
 } // AppExecFwk
 } // OHOS

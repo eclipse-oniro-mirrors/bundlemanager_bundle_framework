@@ -207,6 +207,25 @@ public:
         return true;
     }
 
+    static bool IsDisableInstallEventReport(const std::map<std::string, std::string> &params)
+    {
+        auto it = params.find(Constants::DISABLE_INSTALL_EVENT_REPORT_KEY);
+        if (it == params.end()) {
+            return false;
+        }
+        return (it->second == PARAMETERS_VALUE_TRUE);
+    }
+
+    static bool GetBundleEnableState(const std::map<std::string, std::string> &params, bool &enableState)
+    {
+        auto it = params.find(Constants::BUNDLE_ENABLE_STATE_KEY);
+        if (it == params.end()) {
+            return false;
+        }
+        enableState = (it->second == PARAMETERS_VALUE_TRUE);
+        return true;
+    }
+
 private:
     bool CheckPermission() const;
 };

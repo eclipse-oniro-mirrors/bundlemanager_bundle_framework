@@ -19099,4 +19099,85 @@ HWTEST_F(BmsBundleInstallerTest, UninstallBundleInfo_FromJson_0100, TestSize.Lev
     EXPECT_EQ(parsedInfo.appId, info.appId);
     EXPECT_EQ(parsedInfo.bundleType, info.bundleType);
 }
+
+/**
+ * @tc.number: InstallParam_StaticGetBundleEnableState_001
+ * @tc.name: InstallParam Static GetBundleEnableState
+ * @tc.desc: test static method for getting bundle enable state from parameters map
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallParam_StaticGetBundleEnableState_001, TestSize.Level1)
+{
+    std::map<std::string, std::string> params;
+    bool enableState = false;
+
+    EXPECT_FALSE(InstallParam::GetBundleEnableState(params, enableState));
+
+    params[Constants::BUNDLE_ENABLE_STATE_KEY] = "true";
+    EXPECT_TRUE(InstallParam::GetBundleEnableState(params, enableState));
+    EXPECT_TRUE(enableState);
+
+    params[Constants::BUNDLE_ENABLE_STATE_KEY] = "false";
+    EXPECT_TRUE(InstallParam::GetBundleEnableState(params, enableState));
+    EXPECT_FALSE(enableState);
+}
+
+/**
+ * @tc.number: InstallParam_StaticIsDisableInstallEventReport_001
+ * @tc.name: InstallParam Static IsDisableInstallEventReport
+ * @tc.desc: test static method for checking disable install event report from parameters map
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallParam_StaticIsDisableInstallEventReport_001, TestSize.Level1)
+{
+    std::map<std::string, std::string> params;
+
+    EXPECT_FALSE(InstallParam::IsDisableInstallEventReport(params));
+
+    params[Constants::DISABLE_INSTALL_EVENT_REPORT_KEY] = "true";
+    EXPECT_TRUE(InstallParam::IsDisableInstallEventReport(params));
+
+    params[Constants::DISABLE_INSTALL_EVENT_REPORT_KEY] = "false";
+    EXPECT_FALSE(InstallParam::IsDisableInstallEventReport(params));
+
+    params[Constants::DISABLE_INSTALL_EVENT_REPORT_KEY] = "1";
+    EXPECT_FALSE(InstallParam::IsDisableInstallEventReport(params));
+}
+
+/**
+ * @tc.number: InstallParam_InstanceGetBundleEnableState_001
+ * @tc.name: InstallParam Instance GetBundleEnableState
+ * @tc.desc: test instance method for getting bundle enable state
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallParam_InstanceGetBundleEnableState_001, TestSize.Level1)
+{
+    InstallParam installParam;
+    bool enableState = false;
+
+    EXPECT_FALSE(installParam.GetBundleEnableState(enableState));
+
+    installParam.parameters[Constants::BUNDLE_ENABLE_STATE_KEY] = "true";
+    EXPECT_TRUE(installParam.GetBundleEnableState(enableState));
+    EXPECT_TRUE(enableState);
+
+    installParam.parameters[Constants::BUNDLE_ENABLE_STATE_KEY] = "false";
+    EXPECT_TRUE(installParam.GetBundleEnableState(enableState));
+    EXPECT_FALSE(enableState);
+}
+
+/**
+ * @tc.number: InstallParam_InstanceIsDisableInstallEventReport_001
+ * @tc.name: InstallParam Instance IsDisableInstallEventReport
+ * @tc.desc: test instance method for checking disable install event report
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallParam_InstanceIsDisableInstallEventReport_001, TestSize.Level1)
+{
+    InstallParam installParam;
+
+    EXPECT_FALSE(installParam.IsDisableInstallEventReport());
+
+    installParam.parameters[Constants::DISABLE_INSTALL_EVENT_REPORT_KEY] = "true";
+    EXPECT_TRUE(installParam.IsDisableInstallEventReport());
+
+    installParam.parameters[Constants::DISABLE_INSTALL_EVENT_REPORT_KEY] = "false";
+    EXPECT_FALSE(installParam.IsDisableInstallEventReport());
+}
 } // OHOS
