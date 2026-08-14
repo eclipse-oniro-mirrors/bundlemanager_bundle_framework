@@ -3778,71 +3778,8 @@ ErrCode InstalldHostImpl::GetCacheDiskUsageFromPath(const std::vector<std::strin
     return ERR_OK;
 }
 
-void InstalldHostImpl::GetFilesAndSortByLastModifiedTime(const std::vector<std::string> &paths,
-    std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> &fileTimePairs)
-{
-    std::vector<std::string> fileList;
-    std::error_code ec;
-    for (const auto &path : paths) {
-        if (!std::filesystem::exists(path, ec) || !std::filesystem::is_directory(path, ec)) {
-            LOG_E(BMS_TAG_DEFAULT, "Path(%{private}s) does not exist or is not a directory", path.c_str());
-            continue;
-        }
-
-        std::vector<std::string> resultList;
-        std::filesystem::recursive_directory_iterator dirIter(path,
-            std::filesystem::directory_options::skip_permission_denied, ec);
-        std::filesystem::recursive_directory_iterator endIter;
-        if (ec) {
-            LOG_E(BMS_TAG_DEFAULT, "fail to create recursive_directory_iterator for %{private}s", path.c_str());
-            continue;
-        }
-        for (; dirIter != endIter; dirIter.increment(ec)) {
-            if (ec) {
-                LOG_E(BMS_TAG_DEFAULT, "recursive_directory_iterator increment failed for %{private}s", path.c_str());
-                break;
-            }
-            if (dirIter->path().filename() == "web" &&
-                dirIter->path().parent_path().filename() == "cache") {
-                dirIter.disable_recursion_pending();
-                continue;
-            }
-            if (!dirIter->is_regular_file(ec) &&
-                !(dirIter->is_directory(ec) && std::filesystem::is_empty(dirIter->path(), ec))) {
-                continue;
-            }
-            resultList.push_back(std::filesystem::absolute(dirIter->path(), ec).string());
-        }
-        fileList.reserve(fileList.size() + resultList.size());
-        fileList.insert(fileList.end(), resultList.begin(), resultList.end());
-    }
-
-    fileTimePairs.reserve(fileList.size());
-    for (const auto& file : fileList) {
-        auto time = std::filesystem::last_write_time(file, ec);
-        if (!ec) {
-            fileTimePairs.emplace_back(std::filesystem::path(file), time);
-        }
-    }
-
-    std::sort(fileTimePairs.begin(), fileTimePairs.end(),
-        [](const auto& a, const auto& b) {
-            return a.second < b.second;
-        });
-}
-
-int64_t InstalldHostImpl::GetFileSize(const std::string &filePath)
-{
-    struct stat fileInfo = { 0 };
-    if (stat(filePath.c_str(), &fileInfo) != 0) {
-        LOG_E(BMS_TAG_INSTALLD, "call stat error:%{public}d", errno);
-        return 0;
-    }
-    return fileInfo.st_blocks * BLOCK_SIZE;
-}
-
 ErrCode InstalldHostImpl::DeleteOldCacheFiles(
-    const std::vector<std::string> &paths, const uint64_t cacheSize, uint64_t &cleanedSize)
+    const std::vector<std::string> &paths, const uint64_t /*cacheSize*/, uint64_t & /*cleanedSize*/)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
@@ -3856,48 +3793,8 @@ ErrCode InstalldHostImpl::DeleteOldCacheFiles(
         }
     }
 
-    if (cacheSize == 0) {
-        for (const auto &path : validPath) {
-            InstalldOperator::DeleteFiles(path);
-        }
-        return ERR_OK;
-    }
-
-    std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> fileTimePairs;
-    GetFilesAndSortByLastModifiedTime(validPath, fileTimePairs);
-
-    cleanedSize = 0;
-    for (const auto &file : fileTimePairs) {
-        std::error_code ec;
-        const auto &filePath = file.first;
-        int64_t fileSize = GetFileSize(filePath);
-        if (!std::filesystem::remove(filePath, ec)) {
-            continue;
-        }
-        if (fileSize >= 0) {
-            cleanedSize += static_cast<uint64_t>(fileSize);
-        }
-
-        auto parentPath = filePath.parent_path();
-        while (std::find(paths.begin(), paths.end(), parentPath) == paths.end()) {
-            if (std::filesystem::is_directory(parentPath, ec) &&
-                std::filesystem::is_empty(parentPath, ec)) {
-                auto dirSize = GetFileSize(parentPath);
-                if (!std::filesystem::remove(parentPath, ec)) {
-                    break;
-                }
-                if (dirSize >= 0) {
-                    cleanedSize += static_cast<uint64_t>(dirSize);
-                }
-                parentPath = parentPath.parent_path();
-            } else {
-                break;
-            }
-        }
-
-        if (cleanedSize >= cacheSize) {
-            break;
-        }
+    for (const auto &path : validPath) {
+        InstalldOperator::DeleteFilesExceptDirs(path, {"/web"});
     }
     return ERR_OK;
 }

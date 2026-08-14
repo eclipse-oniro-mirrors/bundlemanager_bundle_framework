@@ -2421,6 +2421,12 @@ ErrCode BundleMgrHostImpl::CleanBundlePartialCacheAutomatic(
         return ret;
     }
 
+    if (!dataMgr->IsCacheClearable(bundleName, userId)) {
+        APP_LOGI("%{public}s -u %{public}d is keepAlive or dataUnclearable, skip cache cleanup",
+            bundleName.c_str(), userId);
+        return ERR_OK;
+    }
+
     if (!BundleCacheMgr::TryMarkCleaning(bundleName, userId, appIndex)) {
         APP_LOGI("%{public}s is already being cleaned, skip", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_IS_BEING_CLEANED;
@@ -2443,15 +2449,10 @@ ErrCode BundleMgrHostImpl::CleanBundlePartialCacheAutomatic(
     }
 
     auto cachePaths = BundleCacheMgr::GetBundleCachePath(bundleName, userId, appIndex, moduleNames);
-    auto needFreeSize = cacheThreshold == 0 ? 0 : beforeCleanedSize - cacheThreshold;
     uint64_t cleanedSize = 0;
-    ret = InstalldClient::GetInstance()->DeleteOldCacheFiles(cachePaths, needFreeSize, cleanedSize);
-    if (cacheThreshold == 0) {
-        afterCleanedSize = 0;
-        BundleCacheMgr::GetBundleCacheSizeByAppIndex(bundleName, userId, appIndex, moduleNames, afterCleanedSize);
-    } else {
-        afterCleanedSize = (cleanedSize >= beforeCleanedSize) ? 0 : beforeCleanedSize - cleanedSize;
-    }
+    ret = InstalldClient::GetInstance()->DeleteOldCacheFiles(cachePaths, 0, cleanedSize);
+    afterCleanedSize = 0;
+    BundleCacheMgr::GetBundleCacheSizeByAppIndex(bundleName, userId, appIndex, moduleNames, afterCleanedSize);
     if (afterCleanedSize > beforeCleanedSize) {
         APP_LOGW("cleanBundlePartialCacheAutomatic error, beforeCleanedSize = %{public}" PRIu64 ","
             "afterCleanedSize = %{public}" PRIu64, beforeCleanedSize, afterCleanedSize);

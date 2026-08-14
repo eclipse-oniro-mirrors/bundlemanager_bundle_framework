@@ -413,11 +413,6 @@ private:
     void InnerCleanBundleDataDirByName(std::string &suffixName, const int userid, const int appIndex = 0);
     ErrCode ResetBmsDBSecurityByPath(const std::string &parentPath, const std::string &fileFlag);
     ErrCode ResetSecurityByPath(const FileStat &fileStat, const std::string &targetPath);
-
-    void GetFilesAndSortByLastModifiedTime(const std::vector<std::string> &paths,
-        std::vector<std::pair<std::filesystem::path, std::filesystem::file_time_type>> &fileTimePairs);
-
-    int64_t GetFileSize(const std::string &filePath);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

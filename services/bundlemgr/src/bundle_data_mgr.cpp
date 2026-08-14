@@ -15453,6 +15453,22 @@ bool BundleDataMgr::ProcessUninstallBundle(std::vector<BundleOptionInfo> &bundle
     return true;
 }
 
+bool BundleDataMgr::IsCacheClearable(const std::string &bundleName, int32_t userId) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return false;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        return false;
+    }
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    return !innerBundleInfo.GetIsKeepAlive() &&
+        innerBundleInfo.GetBaseApplicationInfo().userDataClearable;
+}
+
 ErrCode BundleDataMgr::CheckBundleExist(const std::string &bundleName, int32_t userId, int32_t appIndex) const
 {
     int32_t requestUserId = GetUserId(userId);
