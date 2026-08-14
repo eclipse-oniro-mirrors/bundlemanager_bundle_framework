@@ -133,6 +133,7 @@ napi_value Unregister(napi_env env, napi_callback_info info)
         g_bundleMonitor->BundleMonitorOff(env, args[ARGS_POS_ONE], type);
         return nullptr;
     }
+    APP_LOGI_NOFUNC("SubEvent op=off_all kit=AbilityKit event=%{public}s", type.c_str());
     std::lock_guard<std::mutex> lock(g_monitorLock);
     g_bundleMonitor->BundleMonitorOff(env, type);
     return nullptr;
