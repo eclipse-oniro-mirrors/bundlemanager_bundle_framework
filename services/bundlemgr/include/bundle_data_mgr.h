@@ -1405,6 +1405,7 @@ public:
     ErrCode GetCreateDirParamByBundleOption(const BundleOptionInfo &optionInfo, CreateDirParam &dirParam) const;
     bool ProcessIdleInfo() const;
     ErrCode CheckBundleExist(const std::string &bundleName, int32_t userId, int32_t appIndex) const;
+    bool IsCacheClearable(const std::string &bundleName, int32_t userId) const;
     bool DeleteRouterInfoForSharedBundle(const InnerBundleInfo &info, const int32_t versionCode);
     std::vector<std::string> GetAllowListenBundleNames(const std::string &bundleName) const;
     ErrCode GetSkillInfoForSelf(const std::string &moduleName, const std::string &skillName,

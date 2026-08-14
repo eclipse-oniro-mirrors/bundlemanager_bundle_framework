@@ -8015,4 +8015,77 @@ HWTEST_F(BmsBundleDataMgrTest, HandleGetLocalPluginInstaller_0100, Function | Sm
     auto ret = localBundleMgrHost->HandleGetLocalPluginInstaller(data, reply);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_HOST_INSTALLER_FAILED);
 }
+
+/**
+ * @tc.number: IsCacheClearable_0100
+ * @tc.name: test IsCacheClearable with invalid userId
+ * @tc.desc: invalid userId returns false.
+ */
+HWTEST_F(BmsBundleDataMgrTest, IsCacheClearable_0100, Function | SmallTest | Level1)
+{
+    EXPECT_FALSE(GetBundleDataMgr()->IsCacheClearable(BUNDLE_NAME_TEST, ERROR_USERID));
+}
+
+/**
+ * @tc.number: IsCacheClearable_0200
+ * @tc.name: test IsCacheClearable with bundle not found
+ * @tc.desc: bundle not installed returns false.
+ */
+HWTEST_F(BmsBundleDataMgrTest, IsCacheClearable_0200, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->AddUserId(USERID);
+    EXPECT_FALSE(GetBundleDataMgr()->IsCacheClearable(BUNDLE_TEST1, USERID));
+}
+
+/**
+ * @tc.number: IsCacheClearable_0300
+ * @tc.name: test IsCacheClearable with keepAlive bundle
+ * @tc.desc: keepAlive bundle returns false regardless of userDataClearable.
+ */
+HWTEST_F(BmsBundleDataMgrTest, IsCacheClearable_0300, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->AddUserId(USERID);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetKeepAlive(true);
+    innerBundleInfo.SetUserDataClearable(true);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    EXPECT_FALSE(GetBundleDataMgr()->IsCacheClearable(BUNDLE_TEST1, USERID));
+
+    innerBundleInfo.SetUserDataClearable(false);
+    GetBundleDataMgr()->bundleInfos_[BUNDLE_TEST1] = innerBundleInfo;
+    EXPECT_FALSE(GetBundleDataMgr()->IsCacheClearable(BUNDLE_TEST1, USERID));
+    GetBundleDataMgr()->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: IsCacheClearable_0400
+ * @tc.name: test IsCacheClearable with dataUnclearable bundle
+ * @tc.desc: non-keepAlive bundle with userDataClearable false returns false.
+ */
+HWTEST_F(BmsBundleDataMgrTest, IsCacheClearable_0400, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->AddUserId(USERID);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetKeepAlive(false);
+    innerBundleInfo.SetUserDataClearable(false);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    EXPECT_FALSE(GetBundleDataMgr()->IsCacheClearable(BUNDLE_TEST1, USERID));
+    GetBundleDataMgr()->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: IsCacheClearable_0500
+ * @tc.name: test IsCacheClearable with clearable bundle
+ * @tc.desc: non-keepAlive bundle with userDataClearable true returns true.
+ */
+HWTEST_F(BmsBundleDataMgrTest, IsCacheClearable_0500, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->AddUserId(USERID);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetKeepAlive(false);
+    innerBundleInfo.SetUserDataClearable(true);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    EXPECT_TRUE(GetBundleDataMgr()->IsCacheClearable(BUNDLE_TEST1, USERID));
+    GetBundleDataMgr()->bundleInfos_.erase(BUNDLE_TEST1);
+}
 } // OHOS
