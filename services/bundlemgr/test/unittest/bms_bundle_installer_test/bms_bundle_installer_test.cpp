@@ -9103,6 +9103,144 @@ HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0200, Function | SmallTes
 }
 
 /**
+ * @tc.number: HandleInstallCloneApp_0300
+ * @tc.name: test InstallCloneApp with parametersSize exceeding limit
+ * @tc.desc: Test the HandleInstallCloneApp of BundleInstallerHost with parametersSize > 128
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0300, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.test.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+    data.WriteInt32(129);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleInstallCloneApp_0400
+ * @tc.name: test InstallCloneApp with negative parametersSize
+ * @tc.desc: Test the HandleInstallCloneApp of BundleInstallerHost with negative parametersSize
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0400, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.test.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+    data.WriteInt32(-1);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleInstallCloneApp_0500
+ * @tc.name: test InstallCloneApp with empty key in parameters
+ * @tc.desc: Test the HandleInstallCloneApp of BundleInstallerHost with empty key
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0500, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.test.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+    data.WriteInt32(1);
+    data.WriteString16(Str8ToStr16(""));
+    data.WriteString16(Str8ToStr16("value"));
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleInstallCloneApp_0600
+ * @tc.name: test InstallCloneApp with key exceeding length limit
+ * @tc.desc: Test the HandleInstallCloneApp of BundleInstallerHost with key > 128 chars
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0600, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.test.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+    data.WriteInt32(1);
+    std::string longKey(129, 'a');
+    data.WriteString16(Str8ToStr16(longKey));
+    data.WriteString16(Str8ToStr16("value"));
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleInstallCloneApp_0700
+ * @tc.name: test InstallCloneApp with value exceeding length limit
+ * @tc.desc: Test the HandleInstallCloneApp of BundleInstallerHost with value > 1024 chars
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0700, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.test.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+    data.WriteInt32(1);
+    data.WriteString16(Str8ToStr16("key"));
+    std::string longValue(1025, 'b');
+    data.WriteString16(Str8ToStr16(longValue));
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
  * @tc.number: UninstallCloneApp_0100
  * @tc.name: test Install
  * @tc.desc: 1.Test the UninstallCloneApp of BundleInstallerHost

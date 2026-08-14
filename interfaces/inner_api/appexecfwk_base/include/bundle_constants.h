@@ -55,6 +55,8 @@ constexpr int16_t MAX_FILE_NAME_LENGTH = 256;
 constexpr int16_t BMS_MAX_PATH_LENGTH = 4096;
 constexpr int16_t MAX_UNINSTALL_PREINSTALLED_APP_NUM = 200;
 constexpr int32_t MAX_INSTALL_PARAM_SIZE = 128;
+constexpr int32_t MAX_INSTALL_PARAM_KEY_LENGTH = 128;
+constexpr int32_t MAX_INSTALL_PARAM_VALUE_LENGTH = 1024;
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;

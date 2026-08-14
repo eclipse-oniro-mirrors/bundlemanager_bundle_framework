@@ -76,16 +76,21 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
         auto ret = dataMgr->SetApplicationEnabled(
             bundleName, appIndex, bundleEnableState, "cloneInstaller", userId, stateChanged);
         if (ret != ERR_OK) {
-            APP_LOGW("SetApplicationEnabled for clone failed, ret=%{public}d", ret);
+            LOG_W(BMS_TAG_INSTALLER, "SetApplicationEnabled for clone failed, ret=%{public}d", ret);
+            auto queryRet = dataMgr->IsApplicationEnabled(bundleName, appIndex, bundleEnableState, userId);
+            if (queryRet != ERR_OK) {
+                LOG_W(BMS_TAG_INSTALLER, "IsApplicationEnabled fallback for clone failed, ret=%{public}d", queryRet);
+                bundleEnableState = true;
+            }
         }
     }
 
     bool disableEventReport = IsDisableInstallEventReport(parameters);
-    if (!disableEventReport && dataMgr != nullptr) {
-        if (!hasEnableState && result == ERR_OK) {
+    if (!disableEventReport) {
+        if (!hasEnableState && result == ERR_OK && dataMgr != nullptr) {
             auto queryRet = dataMgr->IsApplicationEnabled(bundleName, appIndex, bundleEnableState, userId);
             if (queryRet != ERR_OK) {
-                APP_LOGW("IsApplicationEnabled for clone failed, ret=%{public}d", queryRet);
+                LOG_W(BMS_TAG_INSTALLER, "IsApplicationEnabled for clone failed, ret=%{public}d", queryRet);
                 bundleEnableState = true;
             }
         }

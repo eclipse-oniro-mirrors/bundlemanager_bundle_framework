@@ -1172,6 +1172,14 @@ void BundleInstallerHost::HandleInstallCloneApp(MessageParcel &data, MessageParc
             }
             return;
         }
+        if (key.size() > static_cast<size_t>(Constants::MAX_INSTALL_PARAM_KEY_LENGTH) ||
+            value.size() > static_cast<size_t>(Constants::MAX_INSTALL_PARAM_VALUE_LENGTH)) {
+            LOG_E(BMS_TAG_INSTALLER, "parameter key or value exceeds limit at index %{public}d", i);
+            if (!reply.WriteInt32(ERR_APPEXECFWK_INSTALL_PARAM_ERROR)) {
+                LOG_E(BMS_TAG_INSTALLER, "write failed");
+            }
+            return;
+        }
         parameters.emplace(key, value);
     }
 
