@@ -110,6 +110,7 @@ enum class DirType : uint8_t {
     DIR_EL1,
     DIR_EL2,
 };
+constexpr int32_t READ_ONLY = 1;
 constexpr int32_t CONTENT_EDIT = 2;
 constexpr int32_t UNMOUNT_DIS_SHARE_TIMEOUT_MS = 3000;
 constexpr int64_t BLOCK_SIZE = 512;
@@ -1739,8 +1740,10 @@ unsigned int InstalldHostImpl::GetHapFlags(const bool isPreInstallApp, const boo
     if (isDlpSandbox) {
         if (dlpType == CONTENT_EDIT) {
             hapFlags |= SELINUX_HAP_DLP_FULL_CONTROL;
-        } else {
+        } else if (dlpType == READ_ONLY) {
             hapFlags |= SELINUX_HAP_DLP_READ_ONLY;
+        } else {
+            LOG_I(BMS_TAG_INSTALLD, "not need to set specified selinux");
         }
     }
     hapFlags |= isExtensionDir ? SELINUX_HAP_INPUT_ISOLATE_FULL : 0;

@@ -53,7 +53,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 #endif
     int32_t userId = BMSFuzzTestUtil::GenerateRandomUser(fdp);
     int32_t appIndex = fdp.ConsumeIntegral<int32_t>();
-    int32_t dplType = fdp.ConsumeIntegral<int32_t>();
+    int32_t dlpType = fdp.ConsumeIntegral<int32_t>();
     int32_t streamInstallerId = fdp.ConsumeIntegral<int32_t>();
     std::string bundleFilePath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
@@ -77,7 +77,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bundleInstallerHost->Uninstall(bundleName, modulePackage, installParam, statusReceiver);
     bundleInstallerHost->Uninstall(uninstallParam, statusReceiver);
     bundleInstallerHost->InstallByBundleName(bundleName, installParam, statusReceiver);
-    bundleInstallerHost->InstallSandboxApp(bundleName, dplType, userId, appIndex);
+    bundleInstallerHost->InstallSandboxApp(bundleName, dlpType, userId, appIndex);
     bundleInstallerHost->UninstallSandboxApp(bundleName, appIndex, userId);
     bundleInstallerHost->InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
     bundleInstallerHost->UninstallPlugin(hostBundleName, pluginFilePath, installPluginParam);

@@ -128,9 +128,9 @@ const std::shared_ptr<BundleDataMgr> BmsBundlePermissionTokenTest::GetBundleData
  */
 HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_0100, Function | SmallTest | Level0)
 {
-    int32_t dplType = 1;
+    int32_t dlpType = 1;
     int32_t appIndex = 1;
-    auto ret1 = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dplType, USERID, appIndex);
+    auto ret1 = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dlpType, USERID, appIndex);
     auto ret2 = bundleInstallerHost_->UninstallSandboxApp(BUNDLE_NAME, appIndex, USERID);
     EXPECT_EQ(ret1, ERR_APPEXECFWK_SANDBOX_APP_NOT_SUPPORTED);
     EXPECT_EQ(ret2, ERR_APPEXECFWK_SANDBOX_APP_NOT_SUPPORTED);

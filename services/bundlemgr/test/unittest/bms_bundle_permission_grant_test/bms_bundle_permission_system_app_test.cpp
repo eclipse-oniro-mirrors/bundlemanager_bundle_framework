@@ -1345,10 +1345,10 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6800
  */
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0001, Function | SmallTest | Level0)
 {
-    int32_t dplType = 1;
+    int32_t dlpType = 1;
     int32_t appIndex = 1;
     SetSystemAppFalseForTest(false);
-    ErrCode ret = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dplType, USERID, appIndex);
+    ErrCode ret = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dlpType, USERID, appIndex);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
     ResetTestValues();
 }
@@ -1555,20 +1555,20 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0011
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6900, Function | SmallTest | Level0)
 {
     InstallParam installParam;
-    int32_t dplType = 0;
+    int32_t dlpType = 0;
     int32_t appIndex = 1;
-    ErrCode ret = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dplType, USERID, appIndex);
+    ErrCode ret = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dlpType, USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    dplType = 1;
-    ret = bundleInstallerHost_->InstallSandboxApp("", dplType, USERID, appIndex);
+    dlpType = 1;
+    ret = bundleInstallerHost_->InstallSandboxApp("", dlpType, USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    dplType = 3;
-    ret = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dplType, USERID, appIndex);
+    dlpType = 5;
+    ret = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dlpType, USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    ret = bundleInstallerHost_->InstallSandboxApp("", dplType, USERID, appIndex);
+    ret = bundleInstallerHost_->InstallSandboxApp("", dlpType, USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 }
 

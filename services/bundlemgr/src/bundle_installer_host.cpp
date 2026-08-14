@@ -55,7 +55,7 @@ constexpr const char* BMS_PARA_APP_INDEX = "ohos.bms.param.appIndex";
 constexpr const char* UIEXTENSION_MODAL_TYPE = "ability.want.params.modalType";
 int32_t INVALID_APP_INDEX = 0;
 int32_t LOWER_DLP_TYPE_BOUND = 0;
-int32_t UPPER_DLP_TYPE_BOUND = 3;
+int32_t UPPER_DLP_TYPE_BOUND = 5;
 }  // namespace
 
 BundleInstallerHost::BundleInstallerHost()
@@ -330,10 +330,10 @@ void BundleInstallerHost::HandleInstallSandboxApp(MessageParcel &data, MessagePa
     BUNDLE_MANAGER_HITRACE_CHAIN_NAME("InstallSandboxApp", HITRACE_FLAG_INCLUDE_ASYNC);
     LOG_D(BMS_TAG_INSTALLER, "handle install sandbox app message");
     std::string bundleName = Str16ToStr8(data.ReadString16());
-    int32_t dplType = data.ReadInt32();
+    int32_t dlpType = data.ReadInt32();
     int32_t userId = data.ReadInt32();
     int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX;
-    auto ret = InstallSandboxApp(bundleName, dplType, userId, appIndex);
+    auto ret = InstallSandboxApp(bundleName, dlpType, userId, appIndex);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_INSTALLER, "write failed");
     }
@@ -784,10 +784,10 @@ bool BundleInstallerHost::InstallByBundleName(const std::string &bundleName,
     return true;
 }
 
-ErrCode BundleInstallerHost::InstallSandboxApp(const std::string &bundleName, int32_t dplType, int32_t userId,
+ErrCode BundleInstallerHost::InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId,
     int32_t &appIndex)
 {
-    if (bundleName.empty() || dplType <= LOWER_DLP_TYPE_BOUND || dplType >= UPPER_DLP_TYPE_BOUND) {
+    if (bundleName.empty() || dlpType <= LOWER_DLP_TYPE_BOUND || dlpType >= UPPER_DLP_TYPE_BOUND) {
         LOG_E(BMS_TAG_INSTALLER, "install sandbox failed due to error parameters");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
@@ -804,7 +804,7 @@ ErrCode BundleInstallerHost::InstallSandboxApp(const std::string &bundleName, in
     if (helper == nullptr) {
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
-    auto res = helper->InstallSandboxApp(bundleName, dplType, userId, appIndex);
+    auto res = helper->InstallSandboxApp(bundleName, dlpType, userId, appIndex);
     if (res != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "install sandbox failed due to error code : %{public}d", res);
     }

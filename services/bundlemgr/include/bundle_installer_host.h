@@ -107,7 +107,7 @@ public:
      * @param appIndex Indicates the appIndex of the sandbox application installed under which user id.
      * @return Returns ERR_OK if the sandbox application is installed successfully; returns errcode otherwise.
      */
-    virtual ErrCode InstallSandboxApp(const std::string &bundleName, int32_t dplType, int32_t userId,
+    virtual ErrCode InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId,
         int32_t &appIndex) override;
     /**
      * @brief Uninstall sandbox application.
