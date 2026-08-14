@@ -315,7 +315,29 @@ ErrCode BaseBundleInstaller::InstallBundle(
     CheckPreBundleRecoverResult(result);
     std::map<std::string, std::string> tokenIdMetadataInfos;
     tokenIdMetadataInfos[ServiceConstants::META_KEEP_TOKEN_ID_KEY] = isKeepTokenId_ ? BMS_TRUE : BMS_FALSE;
-    if (installParam.needSendEvent && dataMgr_ && !bundleName_.empty()) {
+
+    bool hasEnableState = false;
+    bool bundleEnableState = true;
+    hasEnableState = installParam.GetBundleEnableState(bundleEnableState);
+    if (hasEnableState && result == ERR_OK && dataMgr_ != nullptr) {
+        bool stateChanged = false;
+        auto ret = dataMgr_->SetApplicationEnabled(
+            bundleName_, Constants::INITIAL_APP_INDEX, bundleEnableState, "installParam", userId_, stateChanged);
+        if (ret != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "SetApplicationEnabled failed, ret=%{public}d", ret);
+        }
+    }
+
+    bool shouldSendEvent = installParam.needSendEvent && !installParam.IsDisableInstallEventReport();
+    if (shouldSendEvent && dataMgr_ && !bundleName_.empty()) {
+        if (!hasEnableState && result == ERR_OK) {
+            auto queryRet = dataMgr_->IsApplicationEnabled(
+                bundleName_, Constants::INITIAL_APP_INDEX, bundleEnableState, userId_);
+            if (queryRet != ERR_OK) {
+                LOG_W(BMS_TAG_INSTALLER, "IsApplicationEnabled failed, ret=%{public}d", queryRet);
+                bundleEnableState = true;
+            }
+        }
         NotifyBundleEvents installRes = {
             .isModuleUpdate = isModuleUpdate_,
             .type = GetNotifyType(),
@@ -329,7 +351,9 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .abilityName = mainAbility_,
             .appIdentifier = bundleAppIdentifier_,
             .appDistributionType = appDistributionType_,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+            .installBundleEnabled = bundleEnableState,
+            .includeEnabledInEvent = true,
         };
         FillDualModeEventFields(installParam, installRes);
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);

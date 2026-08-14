@@ -248,7 +248,8 @@ public:
     static bool ParseHashParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
     static bool ParsePgoParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
     static bool ParseUninstallParam(ani_env* env, ani_object object, UninstallParam& uninstallParam);
-    static bool ParseCreateAppCloneParam(ani_env* env, ani_object object, int32_t& userId, int32_t& appIdx);
+    static bool ParseCreateAppCloneParam(ani_env* env, ani_object object,
+        int32_t& userId, int32_t& appIdx, std::map<std::string, std::string>& parameters);
     static bool ParseDestroyAppCloneParam(ani_env* env, ani_object object, DestroyAppCloneParam& destroyAppCloneParam);
     static bool ParsePluginParam(ani_env* env, ani_object object, InstallPluginParam& installPluginParam);
     static bool ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo& abilityInfo);

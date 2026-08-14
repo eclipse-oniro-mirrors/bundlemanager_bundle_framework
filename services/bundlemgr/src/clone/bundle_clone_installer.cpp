@@ -24,6 +24,7 @@
 #include "bms_update_selinux_mgr.h"
 #include "bundle_file_util.h"
 #include "bundle_mgr_service.h"
+#include "install_param.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
 #include "bundle_service_constants.h"
@@ -55,7 +56,7 @@ BundleCloneInstaller::~BundleCloneInstaller()
 }
 
 ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
-    const int32_t userId, int32_t &appIndex)
+    const int32_t userId, int32_t &appIndex, const std::map<std::string, std::string> &parameters)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("InstallCloneApp %{public}s begin", bundleName.c_str());
@@ -64,21 +65,47 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
     startTime_ = BundleUtil::GetCurrentTimeMs();
 
     ErrCode result = ProcessCloneBundleInstall(bundleName, userId, appIndex);
-    NotifyBundleEvents installRes = {
-        .type = NotifyType::INSTALL,
-        .resultCode = result,
-        .accessTokenId = accessTokenId_,
-        .uid = uid_,
-        .appIndex = appIndex,
-        .bundleName = bundleName,
-        .appId = appId_,
-        .appIdentifier = appIdentifier_,
-        .appDistributionType = appDistributionType_,
-        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-    };
-    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
+
+    std::shared_ptr<BundleDataMgr> dataMgr =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+
+    bool bundleEnableState = true;
+    bool hasEnableState = GetBundleEnableState(parameters, bundleEnableState);
+    if (hasEnableState && result == ERR_OK && dataMgr != nullptr) {
+        bool stateChanged = false;
+        auto ret = dataMgr->SetApplicationEnabled(
+            bundleName, appIndex, bundleEnableState, "cloneInstaller", userId, stateChanged);
+        if (ret != ERR_OK) {
+            APP_LOGW("SetApplicationEnabled for clone failed, ret=%{public}d", ret);
+        }
+    }
+
+    bool disableEventReport = IsDisableInstallEventReport(parameters);
+    if (!disableEventReport && dataMgr != nullptr) {
+        if (!hasEnableState && result == ERR_OK) {
+            auto queryRet = dataMgr->IsApplicationEnabled(bundleName, appIndex, bundleEnableState, userId);
+            if (queryRet != ERR_OK) {
+                APP_LOGW("IsApplicationEnabled for clone failed, ret=%{public}d", queryRet);
+                bundleEnableState = true;
+            }
+        }
+        NotifyBundleEvents installRes = {
+            .type = NotifyType::INSTALL,
+            .resultCode = result,
+            .accessTokenId = accessTokenId_,
+            .uid = uid_,
+            .appIndex = appIndex,
+            .bundleName = bundleName,
+            .appId = appId_,
+            .appIdentifier = appIdentifier_,
+            .appDistributionType = appDistributionType_,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+            .installBundleEnabled = bundleEnableState,
+            .includeEnabledInEvent = true,
+        };
+        std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+        commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
+    }
     SendBundleSystemEvent(bundleName, BundleEventType::INSTALL, userId, appIndex,
         false, false, InstallScene::NORMAL, result);
 
@@ -846,6 +873,26 @@ ErrCode BundleCloneInstaller::ProcessBundleShareFiles(const InnerBundleInfo &inf
     }
     LOG_D(BMS_TAG_INSTALLER, "No shareFiles configuration found for bundle=%{public}s", info.GetBundleName().c_str());
     return ERR_OK;
+}
+
+bool BundleCloneInstaller::GetBundleEnableState(const std::map<std::string, std::string> &parameters,
+    bool &enableState)
+{
+    auto it = parameters.find(Constants::BUNDLE_ENABLE_STATE_KEY);
+    if (it == parameters.end()) {
+        return false;
+    }
+    enableState = (it->second == InstallParam::PARAMETERS_VALUE_TRUE);
+    return true;
+}
+
+bool BundleCloneInstaller::IsDisableInstallEventReport(const std::map<std::string, std::string> &parameters)
+{
+    auto it = parameters.find(Constants::DISABLE_INSTALL_EVENT_REPORT_KEY);
+    if (it == parameters.end()) {
+        return false;
+    }
+    return (it->second == InstallParam::PARAMETERS_VALUE_TRUE);
 }
 } // AppExecFwk
 } // OHOS

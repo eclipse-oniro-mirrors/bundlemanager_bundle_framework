@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_H
 #define FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_H
 
+#include <map>
+
 #include "base_cb_info.h"
 #include "clone_param.h"
 #include "install_param.h"
@@ -68,6 +70,7 @@ struct CreateAppCloneCallbackInfo : public BaseCallbackInfo {
     int32_t userId = Constants::UNSPECIFIED_USERID;
     int32_t appIndex = Constants::INITIAL_APP_INDEX;
     std::string bundleName;
+    std::map<std::string, std::string> parameters;
     OHOS::AppExecFwk::DestroyAppCloneParam destroyAppCloneParam;
 };
 

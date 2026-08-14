@@ -69,6 +69,7 @@ constexpr const char* IS_BUNDLE_EXIST = "isBundleExist";
 constexpr const char* CROSS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* IS_RECOVER = "isRecover";
 constexpr const char* IS_ENABLED = "isEnabled";
+constexpr const char* ENABLE = "enable";
 constexpr const char* PACKAGE_UNINSTALLED_DATA_CLEARED = "usual.event.PACKAGE_UNINSTALLED_DATA_CLEARED";
 constexpr const char* IS_BMS_EXTENSION_UNINSTALLED = "isBmsExtensionUninstalled";
 constexpr const char* ADDED_SKILLS = "added";
@@ -344,6 +345,9 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(BEFORE_DEVICE_MODE_DISTRIBUTION_POLICY,
         static_cast<int32_t>(installResult.beforeDeviceModeDistributionPolicy));
     want.SetParam(BEFORE_APP_SANDBOX_POLICY, static_cast<int32_t>(installResult.beforeAppSandboxPolicy));
+    if (installResult.includeEnabledInEvent) {
+        want.SetParam(ENABLE, installResult.installBundleEnabled);
+    }
     for (const auto &item : installResult.metadataConfigInfos) {
             want.SetParam(item.first, item.second);
     }

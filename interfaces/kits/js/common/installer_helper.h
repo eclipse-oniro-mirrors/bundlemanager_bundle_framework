@@ -47,7 +47,8 @@ public:
     static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t>& errCodeMap);
     static void ConvertInstallResult(InstallResult& installResult);
     static void CreateProxyErrCode(std::unordered_map<int32_t, int32_t>& errCodeMap);
-    static ErrCode InnerCreateAppClone(std::string& bundleName, int32_t userId, int32_t& appIndex);
+    static ErrCode InnerCreateAppClone(const std::string& bundleName, int32_t userId, int32_t& appIndex,
+        const std::map<std::string, std::string>& parameters);
     static ErrCode InnerDestroyAppClone(
         std::string& bundleName, int32_t userId, int32_t appIndex, DestroyAppCloneParam& destroyAppCloneParam);
     static ErrCode InnerAddExtResource(const std::string& bundleName, const std::vector<std::string>& filePaths);

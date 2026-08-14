@@ -9063,6 +9063,37 @@ HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0100, Function | SmallTes
     data.WriteString16(Str8ToStr16(bundleName));
     data.WriteInt32(userId);
     data.WriteInt32(appIndex);
+    data.WriteInt32(0);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleInstallCloneApp_0200
+ * @tc.name: test InstallCloneApp with parameters
+ * @tc.desc: Test the HandleInstallCloneApp of BundleInstallerHost with parameters map
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0200, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName;
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+    data.WriteInt32(2);
+    data.WriteString16(Str8ToStr16("ohos.bms.param.disableInstallEventReport"));
+    data.WriteString16(Str8ToStr16("true"));
+    data.WriteString16(Str8ToStr16("ohos.bms.param.bundleEnableState"));
+    data.WriteString16(Str8ToStr16("false"));
 
     BundleInstallerHost bundleInstallerHost;
     bundleInstallerHost.HandleInstallCloneApp(data, reply);
