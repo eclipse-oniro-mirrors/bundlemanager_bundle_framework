@@ -85,6 +85,7 @@ ErrCode AppServiceFwkInstaller::Install(
     const std::vector<std::string> &hspPaths, InstallParam &installParam)
 {
     startTime_ = BundleUtil::GetCurrentTimeMs();
+    isSoNeedFakeDecompression_ = false;
     ErrCode result = BeforeInstall(hspPaths, installParam);
     CHECK_RESULT(result, "BeforeInstall check failed %{public}d");
     result = ProcessInstall(hspPaths, installParam);
@@ -710,13 +711,14 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
             versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;
         auto needFakeDecompression =
             newInfo.IsFakeDecompressionEnable() &&
-            BundleUtil::IsSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive());
+            BundleUtil::IsSoSupportFakeDecompression(newInfo.GetBundleName(), newInfo.GetIsKeepAlive(), bundlePath);
         auto isSystemApp = newInfo.IsSystemApp();
         APP_LOGI_NOFUNC("TempSoPath %{public}s cpuAbi %{public}s needFakeDecompression:%{public}d",
             tempSoPath.c_str(), cpuAbi_.c_str(), needFakeDecompression);
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
             bundlePath, moduleDir, tempSoPath, cpuAbi_, needFakeDecompression, isSystemApp);
         CHECK_RESULT(result, "Extract module files failed %{public}d");
+        isSoNeedFakeDecompression_ = isSoNeedFakeDecompression_ || needFakeDecompression;
         if (!copyHapToInstallPath) {
             // verify hap or hsp code signature for compressed so files
             result = VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi_, tempSoPath);
@@ -1015,6 +1017,7 @@ void AppServiceFwkInstaller::SendBundleSystemEvent(
     sysEventInfo.callingUid = IPCSkeleton::GetCallingUid();
     sysEventInfo.startTime = startTime_;
     sysEventInfo.endTime = BundleUtil::GetCurrentTimeMs();
+    sysEventInfo.isSoFakeDecompression = isSoNeedFakeDecompression_;
     if (dataMgr_ != nullptr) {
         dataMgr_->GetOdidByBundleName(bundleName_, sysEventInfo.odid);
     }

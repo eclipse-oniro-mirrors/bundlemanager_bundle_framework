@@ -73,6 +73,7 @@ private:
     bool isLocalPluginInstall_ = false;
     bool isDeveloperDistribution_ = false;
     bool isEnterpriseBundle_ = false;
+    bool isSoFakeDecompression_ = false;
     bool isCompressNativeLibs_ = true;
     int32_t userId_ = Constants::INVALID_USERID;
     // the real path or the parent directory of hsp files to be installed.
