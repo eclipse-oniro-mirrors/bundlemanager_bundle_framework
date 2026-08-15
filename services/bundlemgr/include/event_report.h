@@ -189,6 +189,10 @@ struct EventInfo {
 
     InstallScene preBundleScene = InstallScene::NORMAL;
 
+    bool isSoFakeDecompression = false;
+
+    bool isResourceFileFakeDecompression = false;
+
     // only used in user event
     UserEventType userEventType = UserEventType::UNKNOW;
     int32_t userId = Constants::INVALID_USERID;
@@ -350,6 +354,8 @@ struct EventInfo {
         shortcutIds.clear();
         isAbcCompressed = false;
         odid.clear();
+        isSoFakeDecompression = false;
+        isResourceFileFakeDecompression = false;
     }
 };
 
