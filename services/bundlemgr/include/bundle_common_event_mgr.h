@@ -94,6 +94,8 @@ struct NotifyBundleEvents {
     bool crossAppSharedConfig = false;
     bool isRecover = false;
     bool isInstallByBundleName = false;
+    bool installBundleEnabled = true;
+    bool includeEnabledInEvent = false;
     std::map<std::string, std::string> metadataConfigInfos;
     std::vector<std::string> allowListenBundles;
     // === DUAL_MODE: Extended fields for dual-mode app events ===

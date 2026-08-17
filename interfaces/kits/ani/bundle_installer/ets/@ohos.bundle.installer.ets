@@ -138,6 +138,7 @@ namespace installer {
   export interface CreateAppCloneParam {
     userId?: int;
     appIndex?: int;
+    parameters?: Array<Parameters>;
   }
 
   export interface DestroyAppCloneParam {

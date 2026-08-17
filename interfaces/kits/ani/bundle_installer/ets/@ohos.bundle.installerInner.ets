@@ -52,6 +52,7 @@ export class UninstallParamInner implements installer.UninstallParam {
 export class CreateAppCloneParamInner implements installer.CreateAppCloneParam {
   userId?: int;
   appIndex?: int;
+  parameters?: Array<installer.Parameters>;
 }
 
 export class DestroyAppCloneParamInner implements installer.DestroyAppCloneParam {

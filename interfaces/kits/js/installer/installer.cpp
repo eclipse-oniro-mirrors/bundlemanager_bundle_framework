@@ -1382,7 +1382,7 @@ void CreateAppCloneExec(napi_env env, void *data)
         asyncCallbackInfo->userId,
         asyncCallbackInfo->appIndex);
     asyncCallbackInfo->err = InstallerHelper::InnerCreateAppClone(asyncCallbackInfo->bundleName,
-        asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
+        asyncCallbackInfo->userId, asyncCallbackInfo->appIndex, asyncCallbackInfo->parameters);
 }
 
 void CreateAppCloneComplete(napi_env env, napi_status status, void *data)
@@ -1408,7 +1408,8 @@ void CreateAppCloneComplete(napi_env env, napi_status status, void *data)
     CommonFunc::NapiReturnDeferred<CreateAppCloneCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
-void ParseAppCloneParam(napi_env env, napi_value args, int32_t &userId, int32_t &appIndex)
+void ParseAppCloneParam(napi_env env, napi_value args, int32_t &userId, int32_t &appIndex,
+    std::map<std::string, std::string> &parameters)
 {
     if (!ParseUserId(env, args, userId)) {
         APP_LOGI("parse userId failed. assign a default value = %{public}d", userId);
@@ -1420,6 +1421,9 @@ void ParseAppCloneParam(napi_env env, napi_value args, int32_t &userId, int32_t 
         }
     } else {
         APP_LOGI("parse appIndex failed. assign a default value = %{public}d", appIndex);
+    }
+    if (!ParseParameters(env, args, parameters)) {
+        APP_LOGI("parse parameters failed. using default value");
     }
 }
 
@@ -1449,7 +1453,8 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
             }
         } else if (i == ARGS_POS_ONE) {
             if (valueType == napi_object) {
-                ParseAppCloneParam(env, args[i], asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
+                ParseAppCloneParam(env, args[i], asyncCallbackInfo->userId,
+                    asyncCallbackInfo->appIndex, asyncCallbackInfo->parameters);
             }
         } else {
             APP_LOGW("The number of parameters is incorrect");

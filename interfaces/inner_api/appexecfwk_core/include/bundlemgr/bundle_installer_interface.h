@@ -161,7 +161,8 @@ public:
         return true;
     }
 
-    virtual ErrCode InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex)
+    virtual ErrCode InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex,
+        const std::map<std::string, std::string> &parameters = {})
     {
         return ERR_OK;
     }

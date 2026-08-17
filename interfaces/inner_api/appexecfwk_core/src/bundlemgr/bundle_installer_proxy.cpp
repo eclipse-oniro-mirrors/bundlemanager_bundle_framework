@@ -951,7 +951,39 @@ ErrCode BundleInstallerProxy::SendInstallRequestWithErrCode(
     return ERR_OK;
 }
 
-ErrCode BundleInstallerProxy::InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex)
+ErrCode BundleInstallerProxy::WriteCloneAppParameters(MessageParcel &data,
+    const std::map<std::string, std::string> &parameters)
+{
+    if (parameters.size() > Constants::MAX_INSTALL_PARAM_SIZE) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallCloneApp due to parameters size exceeds limit");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    for (const auto &param : parameters) {
+        if (param.first.size() > static_cast<size_t>(Constants::MAX_INSTALL_PARAM_KEY_LENGTH) ||
+            param.second.size() > static_cast<size_t>(Constants::MAX_INSTALL_PARAM_VALUE_LENGTH)) {
+            LOG_E(BMS_TAG_INSTALLER, "failed to InstallCloneApp due to parameter key or value exceeds limit");
+            return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+        }
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(parameters.size()))) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallCloneApp due to write parameters size fail");
+        return ERR_APPEXECFWK_CLONE_INSTALL_WRITE_PARCEL_ERROR;
+    }
+    for (const auto &param : parameters) {
+        if (!data.WriteString16(Str8ToStr16(param.first))) {
+            LOG_E(BMS_TAG_INSTALLER, "failed to InstallCloneApp due to write parameter key fail");
+            return ERR_APPEXECFWK_CLONE_INSTALL_WRITE_PARCEL_ERROR;
+        }
+        if (!data.WriteString16(Str8ToStr16(param.second))) {
+            LOG_E(BMS_TAG_INSTALLER, "failed to InstallCloneApp due to write parameter value fail");
+            return ERR_APPEXECFWK_CLONE_INSTALL_WRITE_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerProxy::InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex,
+    const std::map<std::string, std::string> &parameters)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
@@ -973,6 +1005,10 @@ ErrCode BundleInstallerProxy::InstallCloneApp(const std::string &bundleName, int
     if (!data.WriteInt32(appIndex)) {
         LOG_E(BMS_TAG_INSTALLER, "failed to InstallCloneApp due to write appIndex fail");
         return ERR_APPEXECFWK_CLONE_INSTALL_WRITE_PARCEL_ERROR;
+    }
+    auto paramRet = WriteCloneAppParameters(data, parameters);
+    if (paramRet != ERR_OK) {
+        return paramRet;
     }
 
     auto ret =

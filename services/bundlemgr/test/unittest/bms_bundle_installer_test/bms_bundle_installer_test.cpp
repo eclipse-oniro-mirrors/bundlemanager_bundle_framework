@@ -9061,12 +9061,181 @@ HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0100, Function | SmallTes
     data.WriteString16(Str8ToStr16(bundleName));
     data.WriteInt32(userId);
     data.WriteInt32(appIndex);
+    data.WriteInt32(0);
 
     BundleInstallerHost bundleInstallerHost;
     bundleInstallerHost.HandleInstallCloneApp(data, reply);
 
     int32_t ret = reply.ReadInt32();
     EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleInstallCloneApp_0200
+ * @tc.name: test InstallCloneApp with parameters
+ * @tc.desc: Test the HandleInstallCloneApp of BundleInstallerHost with parameters map
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0200, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName;
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+    data.WriteInt32(2);
+    data.WriteString16(Str8ToStr16("ohos.bms.param.disableInstallEventReport"));
+    data.WriteString16(Str8ToStr16("true"));
+    data.WriteString16(Str8ToStr16("ohos.bms.param.bundleEnableState"));
+    data.WriteString16(Str8ToStr16("false"));
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleInstallCloneApp_0300
+ * @tc.name: test InstallCloneApp with parametersSize exceeding limit
+ * @tc.desc: Test the HandleInstallCloneApp of BundleInstallerHost with parametersSize > 128
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0300, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.test.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+    data.WriteInt32(129);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleInstallCloneApp_0400
+ * @tc.name: test InstallCloneApp with negative parametersSize
+ * @tc.desc: Test the HandleInstallCloneApp of BundleInstallerHost with negative parametersSize
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0400, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.test.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+    data.WriteInt32(-1);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleInstallCloneApp_0500
+ * @tc.name: test InstallCloneApp with empty key in parameters
+ * @tc.desc: Test the HandleInstallCloneApp of BundleInstallerHost with empty key
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0500, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.test.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+    data.WriteInt32(1);
+    data.WriteString16(Str8ToStr16(""));
+    data.WriteString16(Str8ToStr16("value"));
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleInstallCloneApp_0600
+ * @tc.name: test InstallCloneApp with key exceeding length limit
+ * @tc.desc: Test the HandleInstallCloneApp of BundleInstallerHost with key > 128 chars
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0600, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.test.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+    data.WriteInt32(1);
+    std::string longKey(129, 'a');
+    data.WriteString16(Str8ToStr16(longKey));
+    data.WriteString16(Str8ToStr16("value"));
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleInstallCloneApp_0700
+ * @tc.name: test InstallCloneApp with value exceeding length limit
+ * @tc.desc: Test the HandleInstallCloneApp of BundleInstallerHost with value > 1024 chars
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0700, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName = "com.test.bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+    data.WriteInt32(1);
+    data.WriteString16(Str8ToStr16("key"));
+    std::string longValue(1025, 'b');
+    data.WriteString16(Str8ToStr16(longValue));
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
 
 /**
@@ -18651,5 +18820,86 @@ HWTEST_F(BmsBundleInstallerTest, UninstallBundleInfo_FromJson_0100, TestSize.Lev
     from_json(jsonObject, parsedInfo);
     EXPECT_EQ(parsedInfo.appId, info.appId);
     EXPECT_EQ(parsedInfo.bundleType, info.bundleType);
+}
+
+/**
+ * @tc.number: InstallParam_StaticGetBundleEnableState_001
+ * @tc.name: InstallParam Static GetBundleEnableState
+ * @tc.desc: test static method for getting bundle enable state from parameters map
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallParam_StaticGetBundleEnableState_001, TestSize.Level1)
+{
+    std::map<std::string, std::string> params;
+    bool enableState = false;
+
+    EXPECT_FALSE(InstallParam::GetBundleEnableState(params, enableState));
+
+    params[Constants::BUNDLE_ENABLE_STATE_KEY] = "true";
+    EXPECT_TRUE(InstallParam::GetBundleEnableState(params, enableState));
+    EXPECT_TRUE(enableState);
+
+    params[Constants::BUNDLE_ENABLE_STATE_KEY] = "false";
+    EXPECT_TRUE(InstallParam::GetBundleEnableState(params, enableState));
+    EXPECT_FALSE(enableState);
+}
+
+/**
+ * @tc.number: InstallParam_StaticIsDisableInstallEventReport_001
+ * @tc.name: InstallParam Static IsDisableInstallEventReport
+ * @tc.desc: test static method for checking disable install event report from parameters map
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallParam_StaticIsDisableInstallEventReport_001, TestSize.Level1)
+{
+    std::map<std::string, std::string> params;
+
+    EXPECT_FALSE(InstallParam::IsDisableInstallEventReport(params));
+
+    params[Constants::DISABLE_INSTALL_EVENT_REPORT_KEY] = "true";
+    EXPECT_TRUE(InstallParam::IsDisableInstallEventReport(params));
+
+    params[Constants::DISABLE_INSTALL_EVENT_REPORT_KEY] = "false";
+    EXPECT_FALSE(InstallParam::IsDisableInstallEventReport(params));
+
+    params[Constants::DISABLE_INSTALL_EVENT_REPORT_KEY] = "1";
+    EXPECT_FALSE(InstallParam::IsDisableInstallEventReport(params));
+}
+
+/**
+ * @tc.number: InstallParam_InstanceGetBundleEnableState_001
+ * @tc.name: InstallParam Instance GetBundleEnableState
+ * @tc.desc: test instance method for getting bundle enable state
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallParam_InstanceGetBundleEnableState_001, TestSize.Level1)
+{
+    InstallParam installParam;
+    bool enableState = false;
+
+    EXPECT_FALSE(installParam.GetBundleEnableState(enableState));
+
+    installParam.parameters[Constants::BUNDLE_ENABLE_STATE_KEY] = "true";
+    EXPECT_TRUE(installParam.GetBundleEnableState(enableState));
+    EXPECT_TRUE(enableState);
+
+    installParam.parameters[Constants::BUNDLE_ENABLE_STATE_KEY] = "false";
+    EXPECT_TRUE(installParam.GetBundleEnableState(enableState));
+    EXPECT_FALSE(enableState);
+}
+
+/**
+ * @tc.number: InstallParam_InstanceIsDisableInstallEventReport_001
+ * @tc.name: InstallParam Instance IsDisableInstallEventReport
+ * @tc.desc: test instance method for checking disable install event report
+ */
+HWTEST_F(BmsBundleInstallerTest, InstallParam_InstanceIsDisableInstallEventReport_001, TestSize.Level1)
+{
+    InstallParam installParam;
+
+    EXPECT_FALSE(installParam.IsDisableInstallEventReport());
+
+    installParam.parameters[Constants::DISABLE_INSTALL_EVENT_REPORT_KEY] = "true";
+    EXPECT_TRUE(installParam.IsDisableInstallEventReport());
+
+    installParam.parameters[Constants::DISABLE_INSTALL_EVENT_REPORT_KEY] = "false";
+    EXPECT_FALSE(installParam.IsDisableInstallEventReport());
 }
 } // OHOS

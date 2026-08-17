@@ -133,7 +133,8 @@ public:
     virtual bool UninstallAndRecover(const std::string &bundleName, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver) override;
 
-    virtual ErrCode InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex) override;
+    virtual ErrCode InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex,
+        const std::map<std::string, std::string> &parameters = {}) override;
 
     virtual ErrCode UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex,
                                       const DestroyAppCloneParam &destroyAppCloneParam) override;
@@ -191,6 +192,8 @@ private:
 
     ErrCode SendInstallRequestWithErrCode(BundleInstallerInterfaceCode code, MessageParcel& data,
         MessageParcel& reply, MessageOption& option);
+
+    ErrCode WriteCloneAppParameters(MessageParcel &data, const std::map<std::string, std::string> &parameters);
 
     static inline BrokerDelegator<BundleInstallerProxy> delegator_;
 };

@@ -1121,7 +1121,8 @@ size_t BundleInstallerHost::GetCurTaskNum()
     return manager_->GetCurTaskNum();
 }
 
-ErrCode BundleInstallerHost::InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex)
+ErrCode BundleInstallerHost::InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex,
+    const std::map<std::string, std::string> &parameters)
 {
     if (OHOS::system::GetBoolParameter(ServiceConstants::IS_APP_CLONE_DISABLE, false)) {
         LOG_E(BMS_TAG_INSTALLER, "the enterprise device does not support the creation of an appClone instance.");
@@ -1142,7 +1143,7 @@ ErrCode BundleInstallerHost::InstallCloneApp(const std::string &bundleName, int3
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
     std::shared_ptr<BundleCloneInstaller> installer = std::make_shared<BundleCloneInstaller>();
-    return installer->InstallCloneApp(bundleName, userId, appIndex);
+    return installer->InstallCloneApp(bundleName, userId, appIndex, parameters);
 }
 
 void BundleInstallerHost::HandleInstallCloneApp(MessageParcel &data, MessageParcel &reply)
@@ -1152,10 +1153,39 @@ void BundleInstallerHost::HandleInstallCloneApp(MessageParcel &data, MessageParc
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
+    std::map<std::string, std::string> parameters;
+    int32_t parametersSize = data.ReadInt32();
+    if (parametersSize < 0 || parametersSize > Constants::MAX_INSTALL_PARAM_SIZE) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid parametersSize: %{public}d", parametersSize);
+        if (!reply.WriteInt32(ERR_APPEXECFWK_INSTALL_PARAM_ERROR)) {
+            LOG_E(BMS_TAG_INSTALLER, "write failed");
+        }
+        return;
+    }
+    for (int32_t i = 0; i < parametersSize; ++i) {
+        std::string key = Str16ToStr8(data.ReadString16());
+        std::string value = Str16ToStr8(data.ReadString16());
+        if (key.empty()) {
+            LOG_E(BMS_TAG_INSTALLER, "failed to read parameter key at index %{public}d", i);
+            if (!reply.WriteInt32(ERR_APPEXECFWK_INSTALL_PARAM_ERROR)) {
+                LOG_E(BMS_TAG_INSTALLER, "write failed");
+            }
+            return;
+        }
+        if (key.size() > static_cast<size_t>(Constants::MAX_INSTALL_PARAM_KEY_LENGTH) ||
+            value.size() > static_cast<size_t>(Constants::MAX_INSTALL_PARAM_VALUE_LENGTH)) {
+            LOG_E(BMS_TAG_INSTALLER, "parameter key or value exceeds limit at index %{public}d", i);
+            if (!reply.WriteInt32(ERR_APPEXECFWK_INSTALL_PARAM_ERROR)) {
+                LOG_E(BMS_TAG_INSTALLER, "write failed");
+            }
+            return;
+        }
+        parameters.emplace(key, value);
+    }
 
-    LOG_I(BMS_TAG_INSTALLER, "receive Install CLone App Request");
+    LOG_I(BMS_TAG_INSTALLER, "receive Install Clone App Request");
 
-    auto ret = InstallCloneApp(bundleName, userId, appIndex);
+    auto ret = InstallCloneApp(bundleName, userId, appIndex, parameters);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_INSTALLER, "write failed");
     }

@@ -386,13 +386,15 @@ static ani_int AniCreateAppClone(ani_env* env, [[maybe_unused]] ani_object insta
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return static_cast<ani_int>(Constants::INITIAL_APP_INDEX);
     }
-    int32_t userId;
-    int32_t appIdx;
-    CommonFunAni::ParseCreateAppCloneParam(env, aniCrtAppCloneParam, userId, appIdx);
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t appIdx = Constants::INITIAL_APP_INDEX;
+    std::map<std::string, std::string> parameters;
+    CommonFunAni::ParseCreateAppCloneParam(env, aniCrtAppCloneParam, userId, appIdx, parameters);
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
-    ErrCode res = CommonFunc::ConvertErrCode(InstallerHelper::InnerCreateAppClone(bundleName, userId, appIdx));
+    ErrCode res = CommonFunc::ConvertErrCode(
+        InstallerHelper::InnerCreateAppClone(bundleName, userId, appIdx, parameters));
     if (res != SUCCESS) {
         BusinessErrorAni::ThrowCommonError(env, res, CREATE_APP_CLONE, Constants::PERMISSION_INSTALL_CLONE_BUNDLE);
     }

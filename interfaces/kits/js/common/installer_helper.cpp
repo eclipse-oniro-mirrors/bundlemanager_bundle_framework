@@ -277,7 +277,8 @@ void InstallerHelper::CreateProxyErrCode(std::unordered_map<int32_t, int32_t>& e
     };
 }
 
-ErrCode InstallerHelper::InnerCreateAppClone(std::string& bundleName, int32_t userId, int32_t& appIndex)
+ErrCode InstallerHelper::InnerCreateAppClone(const std::string& bundleName, int32_t userId, int32_t& appIndex,
+    const std::map<std::string, std::string>& parameters)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
@@ -289,7 +290,7 @@ ErrCode InstallerHelper::InnerCreateAppClone(std::string& bundleName, int32_t us
         APP_LOGE("can not get iBundleInstaller");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode result = iBundleInstaller->InstallCloneApp(bundleName, userId, appIndex);
+    ErrCode result = iBundleInstaller->InstallCloneApp(bundleName, userId, appIndex, parameters);
     APP_LOGD("InstallCloneApp result is %{public}d", result);
     return result;
 }

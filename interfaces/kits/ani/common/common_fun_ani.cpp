@@ -3124,7 +3124,8 @@ bool CommonFunAni::ParsePluginParam(ani_env* env, ani_object object, InstallPlug
     return true;
 }
 
-bool CommonFunAni::ParseCreateAppCloneParam(ani_env* env, ani_object object, int32_t& userId, int32_t& appIdx)
+bool CommonFunAni::ParseCreateAppCloneParam(ani_env* env, ani_object object,
+    int32_t& userId, int32_t& appIdx, std::map<std::string, std::string>& parameters)
 {
     RETURN_FALSE_IF_NULL(env);
     RETURN_FALSE_IF_NULL(object);
@@ -3147,6 +3148,20 @@ bool CommonFunAni::ParseCreateAppCloneParam(ani_env* env, ani_object object, int
     } else {
         appIdx = Constants::INITIAL_APP_INDEX;
         APP_LOGW("Parse appIdx failed,using default value");
+    }
+
+    // parameters?: Array<Parameters>
+    ani_object arrayObj = nullptr;
+    if (CallGetterOptional(env, object, PROPERTYNAME_PARAMETERS, &arrayObj) && arrayObj != nullptr) {
+        auto mapParser = [env, &parameters](ani_object aniObj) {
+            std::pair<std::string, std::string> pair;
+            if (!ParseKeyValuePair(env, aniObj, pair)) {
+                return false;
+            }
+            parameters[pair.first] = pair.second;
+            return true;
+        };
+        RETURN_FALSE_IF_FALSE(AniArrayForeach(env, arrayObj, mapParser));
     }
     return true;
 }
