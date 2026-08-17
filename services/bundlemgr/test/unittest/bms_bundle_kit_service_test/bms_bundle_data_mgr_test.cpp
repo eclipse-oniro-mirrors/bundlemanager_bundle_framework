@@ -3816,6 +3816,18 @@ HWTEST_F(BmsBundleDataMgrTest, GetStringById_0100, Function | MediumTest | Level
 }
 
 /**
+ * @tc.number: GetStringById_0200
+ * @tc.name: test GetStringById
+ * @tc.desc: test GetStringById
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringById_0200, Function | MediumTest | Level1)
+{
+    uint32_t resId = 1;
+    std::string retBool = bundleMgrHostImpl_->GetStringById(BUNDLE_NAME_TEST, MODULE_NAME_TEST, resId, USERID, "en-US");
+    EXPECT_EQ(retBool, Constants::EMPTY_STRING);
+}
+
+/**
  * @tc.number: GetStringByIdList_0100
  * @tc.name: test GetStringByIdList with permission denied
  * @tc.desc: test GetStringByIdList when IsSystemApp check fails

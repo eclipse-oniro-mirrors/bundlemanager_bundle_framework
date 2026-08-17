@@ -9008,7 +9008,7 @@ std::string BundleDataMgr::GetStringById(const std::string &bundleName, const st
     APP_LOGD("GetStringById:%{public}s , %{public}s, %{public}d", bundleName.c_str(), moduleName.c_str(), resId);
 #ifdef GLOBAL_RESMGR_ENABLE
     std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
-        GetResourceManager(bundleName, moduleName, userId);
+        GetResourceManager(bundleName, moduleName, userId, localeInfo);
     if (resourceManager == nullptr) {
         APP_LOGW("InitResourceManager failed");
         return Constants::EMPTY_STRING;
@@ -9034,7 +9034,7 @@ ErrCode BundleDataMgr::GetStringByIdList(const std::string &bundleName, const st
         bundleName.c_str(), moduleName.c_str(), resIdList.size());
 #ifdef GLOBAL_RESMGR_ENABLE
     std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
-        GetResourceManager(bundleName, moduleName, userId);
+        GetResourceManager(bundleName, moduleName, userId, localeInfo);
     if (resourceManager == nullptr) {
         APP_LOGW("InitResourceManager failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
