@@ -462,6 +462,21 @@ HWTEST_F(BmsBundleMgrProxyTest, GetPluginInfosForSelf_0100, Function | MediumTes
 }
 
 /**
+ * @tc.number: GetJsonProfileForSelf_0100
+ * @tc.name: test the GetJsonProfileForSelf
+ * @tc.desc: 1. system running normally
+ *           2. test GetJsonProfileForSelf
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetJsonProfileForSelf_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string profile;
+    auto res = bundleMgrProxy.GetJsonProfileForSelf(ProfileType::NETWORK_PROFILE, "moduleName", profile);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
  * @tc.number: GetUidByBundleName_0100
  * @tc.name: test the GetUidByBundleName
  * @tc.desc: 1. system running normally
