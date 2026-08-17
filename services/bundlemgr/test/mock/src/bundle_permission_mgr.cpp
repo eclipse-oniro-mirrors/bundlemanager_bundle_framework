@@ -487,6 +487,14 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
 {
     return -1;
 }
+
+int32_t BundlePermissionMgr::RestoreHapToken(const InnerBundleInfo &innerBundleInfo,
+    const int32_t userId, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
+    Security::AccessToken::HapInfoCheckResult &checkResult,
+    const std::string &appServiceCapabilities)
+{
+    return -1;
+}
 #else
 int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
@@ -500,6 +508,14 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
     const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
     const std::string &appServiceCapabilities, bool dataRefresh,
     const bool isDebugGrant)
+{
+    return 0;
+}
+
+int32_t BundlePermissionMgr::RestoreHapToken(const InnerBundleInfo &innerBundleInfo,
+    const int32_t userId, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
+    Security::AccessToken::HapInfoCheckResult &checkResult,
+    const std::string &appServiceCapabilities)
 {
     return 0;
 }

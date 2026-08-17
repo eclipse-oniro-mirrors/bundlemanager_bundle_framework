@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_MOCK_ACCESS_TOKEN_KIT_H
 
 #include <string>
+#include <cstddef>
 #include <vector>
 
 #include "access_token.h"
@@ -50,8 +51,18 @@ public:
     static int32_t UpdateHapToken(AccessTokenIDEx& tokenIdEx, const UpdateHapInfoParams& info,
         const HapPolicyParams& policy, HapInfoCheckResult& checkResult);
     static int GetHapTokenInfo(AccessTokenID tokenID, HapTokenInfo& hapTokenInfoRes);
+    static int32_t ResetDatabaseRecoveryStatus();
     static bool IsCliToolToken(uint64_t tokenId);
 };
+
+// Test hooks for BMS unit tests only.
+void PushInitHapTokenResultForTest(int32_t ret);
+void ClearInitHapTokenMockStateForTest();
+size_t GetInitHapTokenCallCountForTest();
+HapInfoParams GetInitHapInfoParamsForTest(size_t index);
+HapPolicyParams GetInitHapPolicyParamsForTest(size_t index);
+int32_t GetResetDatabaseRecoveryStatusCallCountForTest();
+void SetResetDatabaseRecoveryStatusResultForTest(int32_t ret);
 } // namespace AccessToken
 } // namespace Security
 } // namespace OHOS

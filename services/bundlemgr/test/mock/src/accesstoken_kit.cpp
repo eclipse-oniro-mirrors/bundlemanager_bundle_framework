@@ -16,6 +16,7 @@
 #include "accesstoken_kit.h"
 
 #include "interfaces/hap_verify.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace Security {
@@ -25,8 +26,16 @@ namespace AccessToken {
 static constexpr int GRANT_STATUS = 100;
 #endif
 #endif
+// Mirrors ACCESS_TOKEN_DB_ERROR_PARAM in bundle_service_constants.h; duplicated to keep the
+// test mock free of service headers.
+constexpr const char* MOCK_DB_ERROR_PARAM = "persist.accesstoken.permission.dberror";
 unsigned int g_accessTokenID = 0;
 int32_t g_errCode = 0;
+std::vector<int32_t> g_initHapTokenRetSeq;
+std::vector<HapInfoParams> g_initHapTokenCalls;
+std::vector<HapPolicyParams> g_initHapPolicyCalls;
+int32_t g_resetRecoveryStatusRet = 0;
+int32_t g_resetRecoveryStatusCallCount = 0;
 
 void SetAccessTokenIDForTest(unsigned int value)
 {
@@ -36,6 +45,51 @@ void SetAccessTokenIDForTest(unsigned int value)
 void SetErrCodeForTest(int32_t value)
 {
     g_errCode = value;
+}
+
+void PushInitHapTokenResultForTest(int32_t ret)
+{
+    g_initHapTokenRetSeq.push_back(ret);
+}
+
+void ClearInitHapTokenMockStateForTest()
+{
+    g_initHapTokenRetSeq.clear();
+    g_initHapTokenCalls.clear();
+    g_initHapPolicyCalls.clear();
+    g_resetRecoveryStatusRet = 0;
+    g_resetRecoveryStatusCallCount = 0;
+}
+
+size_t GetInitHapTokenCallCountForTest()
+{
+    return g_initHapTokenCalls.size();
+}
+
+HapInfoParams GetInitHapInfoParamsForTest(size_t index)
+{
+    if (index >= g_initHapTokenCalls.size()) {
+        return HapInfoParams();
+    }
+    return g_initHapTokenCalls[index];
+}
+
+HapPolicyParams GetInitHapPolicyParamsForTest(size_t index)
+{
+    if (index >= g_initHapPolicyCalls.size()) {
+        return HapPolicyParams();
+    }
+    return g_initHapPolicyCalls[index];
+}
+
+int32_t GetResetDatabaseRecoveryStatusCallCountForTest()
+{
+    return g_resetRecoveryStatusCallCount;
+}
+
+void SetResetDatabaseRecoveryStatusResultForTest(int32_t ret)
+{
+    g_resetRecoveryStatusRet = ret;
 }
 
 AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const HapPolicyParams& policy)
@@ -184,9 +238,32 @@ int32_t AccessTokenKit::InitHapToken(const HapInfoParams& info, HapPolicyParams&
         return -1;
     }
 #endif
-    fullTokenId.tokenIDEx = 1;
-    checkResult.permCheckResult.permissionName = "test"; // invalid Name
-    return 0;
+    g_initHapTokenCalls.push_back(info);
+    g_initHapPolicyCalls.push_back(policy);
+    int32_t ret = 0;
+    if (!g_initHapTokenRetSeq.empty()) {
+        ret = g_initHapTokenRetSeq.front();
+        g_initHapTokenRetSeq.erase(g_initHapTokenRetSeq.begin());
+    }
+    if (ret == 0) {
+        fullTokenId.tokenIDEx = 1;
+        checkResult.permCheckResult.permissionName = "test"; // invalid Name
+    }
+    return ret;
+}
+
+int32_t AccessTokenKit::ResetDatabaseRecoveryStatus()
+{
+    ++g_resetRecoveryStatusCallCount;
+    if (g_resetRecoveryStatusRet != 0) {
+        // Faithful to the access_token service contract (4883.diff): on failure the
+        // dberror parameter is left untouched, so the next mount point re-enters recovery.
+        return g_resetRecoveryStatusRet;
+    }
+    // Success clears the marker, mirroring SetParameter("persist.accesstoken.permission.dberror",
+    // "0") on the service side; this is the latch that makes the second mount point idempotent.
+    OHOS::system::SetParameter(MOCK_DB_ERROR_PARAM, "0");
+    return g_resetRecoveryStatusRet;
 }
 
 int32_t AccessTokenKit::UpdateHapToken(AccessTokenIDEx& tokenIdEx, const UpdateHapInfoParams& info,

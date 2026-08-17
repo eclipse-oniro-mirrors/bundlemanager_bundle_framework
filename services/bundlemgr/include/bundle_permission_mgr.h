@@ -70,6 +70,21 @@ public:
         Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
         bool dataRefresh = false, const bool isDebugGrant = false);
 
+    /**
+     * @brief Restore one app's hap token into the access token service with the original
+     *        token id persisted by BMS (used when the access token database is lost).
+     * @param innerBundleInfo Indicates the inner bundle info of the app.
+     * @param userId Indicates the user id of the app.
+     * @param tokenIdeEx Indicates the persisted AccessTokenIDEx, tokenID field must be valid.
+     * @param checkResult Indicates the permission check result from the access token service.
+     * @param appServiceCapabilities Indicates the app service capabilities.
+     * @return Returns the raw access token error code, no internal retry.
+     */
+    static int32_t RestoreHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+        Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
+        Security::AccessToken::HapInfoCheckResult &checkResult,
+        const std::string &appServiceCapabilities);
+
     static std::string GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult);
 
     static int32_t DeleteAccessTokenId(const Security::AccessToken::AccessTokenID tokenId,

@@ -856,6 +856,29 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
     return ERR_OK;
 }
 
+int32_t BundlePermissionMgr::RestoreHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+    Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
+    Security::AccessToken::HapInfoCheckResult &checkResult,
+    const std::string &appServiceCapabilities)
+{
+    AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, 0);
+    // Restore with the token id persisted by BMS before the access token database was lost,
+    // so that the token id keeps stable and no TOKEN_ID_CHANGE is reported by access token.
+    hapInfo.isRestore = true;
+    hapInfo.tokenID = tokenIdeEx.tokenIdExStruct.tokenID;
+    AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo, appServiceCapabilities, false);
+    auto ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx, checkResult);
+    if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        LOG_E(BMS_TAG_DEFAULT, "RestoreHapToken failed, bundleName:%{public}s errCode:%{public}d",
+            innerBundleInfo.GetBundleName().c_str(), ret);
+        return ret;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "RestoreHapToken -n %{public}s -u %{public}d -i %{public}d -t %{public}u",
+        innerBundleInfo.GetBundleName().c_str(), userId, innerBundleInfo.GetAppIndex(),
+        tokenIdeEx.tokenIdExStruct.tokenID);
+    return ERR_OK;
+}
+
 std::string BundlePermissionMgr::GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult)
 {
     std::string result = "";

@@ -26,6 +26,7 @@
 #include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
 #include "independent_skills_installer.h"
+#include "bundle_access_token_recovery_mgr.h"
 #include "bundle_install_checker.h"
 #include "bundle_installer.h"
 #include "bundle_parser.h"
@@ -335,6 +336,13 @@ void BMSEventHandler::AfterBmsStart()
     SetAllInstallFlag();
     HandleSceneBoard();
     CleanTempDir();
+    // Single mount point, placed right before the service is published: once RegisterService
+    // makes BMS visible, dependents (launcher, appspawn) may query packages and spawn apps,
+    // which requires valid tokens. Every startup path (db-loaded, guard recover, reinstall,
+    // first boot) converges here. If the reset fails the persist parameter stays set and the
+    // next boot retries the whole pass idempotently (mostly already-exist).
+    BundleAccessTokenRecoveryMgr::ProcessRecovery(
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr(), "AfterBmsStart");
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
     // delay after regist
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
