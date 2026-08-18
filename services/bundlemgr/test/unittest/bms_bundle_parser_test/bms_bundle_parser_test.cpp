@@ -1902,6 +1902,51 @@ const nlohmann::json MODULE_JSON_16 = R"(
     }
 })"_json;
 
+const nlohmann::json MODULE_JSON_17 = R"(
+{
+    "app": {
+        "bundleName": "com.example.arktsruntest",
+        "debug": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777220,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 9,
+        "minMinorAPIVersion": 0,
+        "minPatchAPIVersion": 0,
+        "targetAPIVersion": 9,
+        "vendor": "example",
+        "versionCode": 1000000,
+        "versionName": "1.0.0"
+    },
+    "module": {
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "deviceTypes": ["default"],
+        "abilities": [{
+            "description": "$string:MainAbility_desc",
+            "descriptionId": 16777217,
+            "icon": "$media:icon",
+            "iconId": 16777221,
+            "label": "$string:MainAbility_label",
+            "labelId": 16777218,
+            "name": "MainAbility",
+            "launchType": "unknowlaunchType",
+            "orientation": "unknoworientation",
+            "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+            "visible": true
+        }],
+        "name": "entry",
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "virtualMachine": "ark0.0.0.3"
+    }
+})"_json;
+
 InnerBundleInfo CreateInnerBundleInfoForTest(const std::string &bundleName,
     const std::string &modulePackage, const std::string &moduleName, int32_t userId, int32_t uid)
 {
@@ -6884,6 +6929,98 @@ HWTEST_F(BmsBundleParserTest, to_json_sceneAnimationParams, Function | MediumTes
     EXPECT_EQ(jsonObject["sceneAnimationParams"]["abilityName"], "testAbilityName");
     EXPECT_EQ(jsonObject["sceneAnimationParams"]["disabledDesktopBehaviors"], "PULL_DOWN_SEARCH|LONG_CLICK");
     EXPECT_EQ(jsonObject["sceneAnimationParams"]["triggerTypes"].size(), 1);
-    EXPECT_EQ(jsonObject["sceneAnimationParams"]["triggerTypes"][0], SceneAnimationTriggerType::SHAKE);
+EXPECT_EQ(jsonObject["sceneAnimationParams"]["triggerTypes"][0], SceneAnimationTriggerType::SHAKE);
 }
+
+/**
+ * @tc.number: TransformTo_arkTSRunType_0100
+ * @tc.name: arkTSRunType differs from moduleArkTSMode
+ * @tc.desc: moduleArkTSMode=dynamic, arkTSRunType=static → overwritten to static
+ */
+HWTEST_F(BmsBundleParserTest, TransformTo_arkTSRunType_0100, Function | SmallTest | Level1)
+{
+    nlohmann::json profileJson = MODULE_JSON_17;
+    profileJson["module"]["moduleArkTSMode"] = "dynamic";
+    profileJson["module"]["arkTSRunType"] = "static";
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+    auto iter = innerBundleInfo.innerModuleInfos_.find("entry");
+    ASSERT_NE(iter, innerBundleInfo.innerModuleInfos_.end());
+    EXPECT_EQ(iter->second.moduleArkTSMode, Constants::ARKTS_MODE_STATIC);
+}
+
+/**
+ * @tc.number: TransformTo_arkTSRunType_0200
+ * @tc.name: arkTSRunType is same as moduleArkTSMode
+ * @tc.desc: both dynamic → moduleArkTSMode remains dynamic
+ */
+HWTEST_F(BmsBundleParserTest, TransformTo_arkTSRunType_0200, Function | SmallTest | Level1)
+{
+    nlohmann::json profileJson = MODULE_JSON_17;
+    profileJson["module"]["moduleArkTSMode"] = "dynamic";
+    profileJson["module"]["arkTSRunType"] = "dynamic";
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+    auto iter = innerBundleInfo.innerModuleInfos_.find("entry");
+    ASSERT_NE(iter, innerBundleInfo.innerModuleInfos_.end());
+    EXPECT_EQ(iter->second.moduleArkTSMode, Constants::ARKTS_MODE_DYNAMIC);
+}
+
+/**
+ * @tc.number: TransformTo_arkTSRunType_0300
+ * @tc.name: arkTSRunType is empty string
+ * @tc.desc: moduleArkTSMode=static, arkTSRunType="" → not overwritten
+ */
+HWTEST_F(BmsBundleParserTest, TransformTo_arkTSRunType_0300, Function | SmallTest | Level1)
+{
+    nlohmann::json profileJson = MODULE_JSON_17;
+    profileJson["module"]["moduleArkTSMode"] = "static";
+    profileJson["module"]["arkTSRunType"] = "";
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+    auto iter = innerBundleInfo.innerModuleInfos_.find("entry");
+    ASSERT_NE(iter, innerBundleInfo.innerModuleInfos_.end());
+    EXPECT_EQ(iter->second.moduleArkTSMode, Constants::ARKTS_MODE_STATIC);
+}
+
+/**
+ * @tc.number: TransformTo_arkTSRunType_0400
+ * @tc.name: arkTSRunType is absent
+ * @tc.desc: moduleArkTSMode=dynamic, arkTSRunType key not present → remains dynamic
+ */
+HWTEST_F(BmsBundleParserTest, TransformTo_arkTSRunType_0400, Function | SmallTest | Level1)
+{
+    nlohmann::json profileJson = MODULE_JSON_17;
+    profileJson["module"]["moduleArkTSMode"] = "dynamic";
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << profileJson.dump();
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+    auto iter = innerBundleInfo.innerModuleInfos_.find("entry");
+    ASSERT_NE(iter, innerBundleInfo.innerModuleInfos_.end());
+    EXPECT_EQ(iter->second.moduleArkTSMode, Constants::ARKTS_MODE_DYNAMIC);
+}
+
 } // OHOS
