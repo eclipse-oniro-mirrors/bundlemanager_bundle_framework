@@ -19,7 +19,7 @@
 
 | 概念 | 含义 |
 |------|------|
-| 双模式设备 | `persist.sceneboard.ispcmode` 与 `persist.sceneboard.mainmode` 均为合法值 ∈{0,1}（0=tablet, 1=2in1） |
+| 双模式设备 | `persist.sceneboard.ispcmode` 与 `const.sceneboard.mainmode` 均为合法值 ∈{0,1}（0=tablet, 1=2in1） |
 | 主模式 | `ispcmode == mainmode`（当前模式即主模式） |
 | 副模式 | `ispcmode != mainmode`（当前模式为非主模式） |
 | 不同包体类别（DiffPackage） | `DeviceModeDistributionPolicy` ∈ {`UNIVERSAL_DIFFERENT_PACKAGE`(4), `PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE`(6), `FULL_COMPATIBLE_DIFFERENT_PACKAGE`(8)}，同包名不同包体，双模式特殊处理对象（`DualModeHelper::IsDiffPackageCategory` 判定为 true） |
@@ -37,7 +37,7 @@
 | appIndex 固定 10000 | 不走分身 appIndex 分配（1..5），不触发 `VerifyAndAckCloneAppIndex`；普通安装路径无 `IsValidAppIndex(10000)` 校验 |
 | odid 一致性 | `GenerateOdidNoLock` 基于 developerId 的 groupId 派生（非 bundleName），同时遍历 `bundleInfos_` + `tempBundleInfos_`，同应用主/副模式 developerId 相同 → 一致性保持 |
 | key 自愈陷阱 | `bundle_data_storage_rdb.cpp` 的 `TransResult`/`UpdateDataBase` 会重写 `key != GetBundleName()` 的记录，是前缀方案的核心风险点（ADR-3 处理） |
-| 模式判断参数 | `persist.sceneboard.ispcmode`(int 0/1) + `persist.sceneboard.mainmode`(int 0/1)；任一缺失/非法(∉{0,1}) → 非双模式设备 |
+| 模式判断参数 | `persist.sceneboard.ispcmode`(int 0/1) + `const.sceneboard.mainmode`(int 0/1)；任一缺失/非法(∉{0,1}) → 非双模式设备 |
 
 ## 上下文和现状
 
@@ -339,7 +339,7 @@ return bundleInfo.IsDualModeCloneApp()
 | 字段 | 内容 |
 |------|------|
 | 问题 | 双模式逻辑依赖 ispcmode/mainmode 系统参数，非双模式硬件无法触发副模式分支，单测/集成验证难以复现。如何注入？ |
-| 推荐方案 | `DualModeHelper::IsTestDualMode()`（公开静态，读 `persist.bms.test_dual_mode` 开关）+ 匿名 namespace `GetIspcmodeParamKey()`/`GetMainmodeParamKey()`（选 key）+ 常量（dual_mode_helper.cpp:36-38/115-118）。开关 true 时 ispcmode/mainmode 在 `persist.sceneboard.*` 与 `persist.bms.*` 间切换；生产（开关未设/false）读真实 sceneboard 参数，零影响 |
+| 推荐方案 | `DualModeHelper::IsTestDualMode()`（公开静态，读 `persist.bms.test_dual_mode` 开关）+ 匿名 namespace `GetIspcmodeParamKey()`/`GetMainmodeParamKey()`（选 key）+ 常量（dual_mode_helper.cpp:36-38/115-118）。开关 true 时 ispcmode/mainmode 改读 `persist.bms.*`（默认读 `persist.sceneboard.ispcmode` / `const.sceneboard.mainmode`）；生产（开关未设/false）读真实 sceneboard 参数，零影响 |
 | 取舍理由 | 生产环境完全不生效，零影响；测试环境可精确注入任意 ispcmode/mainmode 组合。单测另用 `#define private public` 直写缓存成员（不走参数） |
 | 影响 | 仅 DualModeHelper cache 初始化路径；生产环境无行为变化 |
 
@@ -421,6 +421,15 @@ return bundleInfo.IsDualModeCloneApp()
 | 推荐方案 | ① `NotifyBundleEvents` 双模式扩展字段改为 5 个：`deviceModeDistributionPolicy`（当前，已存在）、`currentMode`（已存在）、`appSandboxPolicy`（当前，由 `isSharedSandbox` 改名，默认 SHARED_SANDBOX）、`beforeDeviceModeDistributionPolicy`（更新前，新增，默认 UNSPECIFIED）、`beforeAppSandboxPolicy`（更新前，新增，默认 SHARED_SANDBOX）；Want key 同名。② **粘性规则**（统一含首装）：`beforeAppSandboxPolicy==ISOLATED → 当前=ISOLATED`（隔离粘性，与新 policy 无关）；否则（共沙箱或首装默认 SHARED）`当前 = IsDiffPackageCategory(newPolicy) ? ISOLATED : SHARED`。③ **持久化闭环**：粘性要求下次更新能读到上次是否隔离 → 补 `InnerBundleInfo Get/SetAppSandboxPolicy`，`SetDualModeAppInfo` 按粘性规则 `info.SetAppSandboxPolicy(current)` 写入新 info 并随 baseBundleInfo_ 持久化。④ before 值在存量加载后（`InitTempBundleFromCache` base_bundle_installer.cpp:1802-1811，`isAppExist_=true`）从 oldInfo 捕获到 BaseBundleInstaller 成员变量；首装（无存量）成员保持默认（UNSPECIFIED/SHARED_SANDBOX）。⑤ `FillDualModeEventFields`（base_bundle_installer.cpp:5723-5738，仅双模式设备）填 before 两字段（成员）+ 当前 appSandboxPolicy（同粘性 helper 重算，与写入 info 同源）。⑥ 私有 helper `ComputeCurrentAppSandboxPolicy(newPolicy)`（:5740-5750）封装粘性规则，SetDualModeAppInfo 写入 info（:5795）与 FillDualModeEventFields 填广播共用，保证同源一致。⑦ `ResetInstallProperties`（:7278-7279）在安装器实例复用时重置 before 成员变量为默认（UNSPECIFIED/SHARED_SANDBOX），防止上一次安装的粘性状态泄漏到新安装 |
 | 取舍理由 | 粘性隔离贴合"隔离不可逆"的安全语义，避免更新翻覆；before+当前两组值让上层一次广播即可判断变更，无需查询历史；持久化闭环是粘性的必要条件，故把 InnerBundleInfo 访问器一并实现。放弃纯现场推导（无法表达粘性）；放弃由上层自行比对历史（增加查询与竞态）。before 值用成员变量透传（避免改 FillDualModeEventFields 签名波及 3 个调用点），成员默认值天然覆盖首装/拿不到 oldInfo 的场景 |
 | 影响 | `bundle_common_event_mgr.h/cpp`（结构体 5 字段 + Want key + SetParam）、`base_bundle_installer.h/cpp`（before 成员变量 + 捕获点 :1802-1811 + `ComputeCurrentAppSandboxPolicy` helper :5740-5750 + SetDualModeAppInfo 写入 :5795 + FillDualModeEventFields 填充 :5723-5738 + ResetInstallProperties 重置 :7278-7279）、`inner_bundle_info.h`（Get/SetAppSandboxPolicy）；AC-17（5 字段）、AC-39（粘性）、AC-40（before 值 + 首装默认）；**对外契约变更**（Want key `isSharedSandbox`→`appSandboxPolicy` + 新增 2 个 before key），须同步需求二上层消费者；非双模式设备保持默认值零回归 |
+
+### ADR-30：TS 接口 parameters 保留 key 透传设备模式分发策略（2026-08-17/18 增量）
+
+| 字段 | 内容 |
+|------|------|
+| 问题 | 分发平台需在 TS `install` 调用时刻指定 `deviceModeDistributionPolicy`，但该策略为内部 IPC 字段（InstallParam），TS d.ts 无对应参数字段。扩 d.ts 新增 Public 参数需走 API 评审流程且引入版本兼容负担；如何在不改 TS API 契约的前提下把策略送到服务端？ |
+| 推荐方案 | 复用 installParam.parameters 既有通用通道（`Array<{key, value}>`，d.ts 已有）：约定保留 key `Constants::DEVICE_MODE_DISTRIBUTION_POLICY_KEY`（`ohos.bms.param.deviceModeDistributionPolicy`，对齐 `ohos.bms.param.*` 保留前缀惯例），value 为枚举值十进制字符串（如 "4"）。新增 `InstallParam::RefreshDeviceModeDistributionPolicy()`（install_param.cpp，对齐 `IsVerifyUninstallRule` 的 parameters 提取模式）：key 缺失返回 true 且字段不动（零回归）；key 存在做严格十进制解析（拒非数字符/空串/超值域，手工解析防溢出）后刷新字段；非法返回 false 且字段保持刷新前值。适配层接入点 2 处、均在参数解析/校验完成之后：NAPI `Install`（installer.cpp:891，对 `callbackPtr->installParam` 调用）+ ANI `AniInstall`（ani_bundle_installer.cpp:225，`GetInstallParamForInstall` 返回之后对局部 installParam 调用）；返回 false 时适配层仅 `APP_LOGW` 告警、继续安装（2026-08-17 需求方裁定：非法值不报 401、静默降级走默认策略）。刷新后的字段经既有 Parcel 链路（AC-1）跨 IPC 持久化。NAPI/ANI `updateBundleForSelf` 两入口均未接入（按代码现状记录，如需生效为后续增量） |
+| 取舍理由 | 不改 d.ts：零 API 契约变更、零版本兼容负担，parameters 通道本就面向系统级保留参数透传（`ohos.bms.param.*` 前缀已有 `verifyUninstallForced` 等先例）。静默降级优于报错：安装主流程不应因策略参数笔误被拦截（分发平台脚本容错），非法值仅告警走默认 UNSPECIFIED。手工十进制解析优于 `stoi`：无异常、拒绝空串/正负号/空格/尾随字符，且 `parsed > maxValue` 提前截断防溢出。放弃在共享 helper `GetInstallParamForInstall` 内部刷新（那样可顺带覆盖 `AniUpdateBundleForSelf`，但 helper 返回 bool 语义是"参数解析失败"，混入静默降级刷新会污染语义；且自更新入口是否应接受策略指定本身待定） |
+| 影响 | `bundle_constants.h`（保留 key 常量）、`install_param.h/cpp`（`RefreshDeviceModeDistributionPolicy` 声明+实现）、`installer.cpp`（NAPI `Install` 接入）、`ani_bundle_installer.cpp`（`AniInstall` 接入）、`bms_dual_mode_install_test.cpp`（+5 例至 128 例：有效值刷新/缺 key 零回归/边界值 0/8/前导零/非法值集拒收不污染字段/Parcel 往返保真）；AC-41、FR-16。初版 installer.cpp 曾误写未声明标识符 `installParam`（编译不过），2026-08-18 工作区已修正为 `callbackPtr->installParam` |
 
 ## 双模式 key 规则
 
@@ -613,7 +622,7 @@ enum DeviceModeDistributionPolicy {
 | 副模式不同包体类别记录 key | installed_bundle 表 KEY（带前缀） | /bmsdb.db | 持久化 |
 | tempBundleInfos_ | 内存 map（不持久化，重启重建） | BundleDataMgr | 进程级 |
 | DualModeHelper 模式缓存（cachedIspcmode_/cachedMainmode_，int，-1=未读取） | 内存静态变量 | DualModeHelper | 进程级（启动 InitializeCache 填充，UpdateModeCache 刷新） |
-| persist.sceneboard.ispcmode / mainmode（只读，int 0/1） | 系统参数 | param | 系统级 |
+| persist.sceneboard.ispcmode / const.sceneboard.mainmode（只读，int 0/1） | 系统参数 | param | 系统级 |
 
 ### 异常场景
 

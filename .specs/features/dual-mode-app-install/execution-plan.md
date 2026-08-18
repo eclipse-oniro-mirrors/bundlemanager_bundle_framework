@@ -1,6 +1,6 @@
 # 执行计划
 
-> 将 Spec 拆成可独立执行、可验证、可审查的 Task。每个 Task 自包含。当前代码基线：`appIndex_dual_mode_07_doc` HEAD `020de12b8`（含代码落地提交 `14eb7f286`，2026-08-06，13 文件 +349 -47，123 例单测）。TASK-1~6 已落地。
+> 将 Spec 拆成可独立执行、可验证、可审查的 Task。每个 Task 自包含。当前代码基线：`appIndex_dual_mode_07_doc` HEAD `020de12b8`（含代码落地提交 `14eb7f286`，2026-08-06，13 文件 +349 -47，123 例单测）。TASK-1~6 已落地；TASK-7（TS 接口 parameters 透传，AC-41）为 2026-08-17 增量，2026-08-18 增补 ANI `install` 入口（接入点共 2 处：NAPI `install` + ANI `install`；NAPI/ANI `updateBundleForSelf` 均未接入）。
 
 ## Plan 元数据
 
@@ -43,6 +43,7 @@
 | AC-36 / AC-37 | TASK-1 | 单测（AppSandboxPolicy Parcel+JSON 序列化往返保真 / 缺字段默认 SHARED_SANDBOX） |
 | AC-38 | TASK-3 | 单测+集成（副模式不同包体 appIndex=10000 单一数据源、CreateHapInfoParams 直接传播） |
 | AC-39 / AC-40 | TASK-6 | 单测+集成（粘性隔离 / before 值更新捕获/首装默认） |
+| AC-41 | TASK-7 | 单测+集成（parameters 保留 key 刷新枚举 / 缺 key 零回归 / 非法 value 告警降级） |
 
 ## 阶段计划
 
@@ -62,6 +63,7 @@
 | TASK-4 | DB key 前缀适配 + 自愈陷阱修复 | bundle_data_storage_rdb.cpp, inner_bundle_info.cpp | AC-4, AC-11 | TASK-2, TASK-3 | 副模式 key 不被自愈误删 + 查询正确 | 集成 |
 | TASK-5 | 重启数据加载分类 + tempBundleInfos_ | bundle_data_mgr.h/cpp | AC-11~AC-16 | TASK-4 | 重启按模式分类加载 + odid 跨模式一致 | 集成 |
 | TASK-6 | 安装事件字段扩展（5 双模式字段 + before 值 + 粘性规则） | bundle_common_event_mgr.h/cpp, base_bundle_installer.h/cpp, inner_bundle_info.h | AC-17, AC-39, AC-40 | TASK-1 | 事件含 5 字段（deviceModeDistributionPolicy/currentMode int/appSandboxPolicy/before×2）；粘性隔离保持 | 集成 |
+| TASK-7 | TS 接口 parameters 保留 key 透传设备模式分发策略 | bundle_constants.h, install_param.h/cpp, installer.cpp, ani_bundle_installer.cpp, common_fun_ani.cpp | AC-41 | TASK-1 | parameters 携带保留 key 时刷新 InstallParam.deviceModeDistributionPolicy（NAPI install + ANI install 共 2 入口；NAPI/ANI updateBundleForSelf 均不适配（2026-08-18 裁定））；缺 key 零回归；非法 value 仅告警降级；服务端 ReadFromParcel 越界值降级 UNSPECIFIED；NAPI/ANI 重复 key 统一 first-wins（codecheck R1 加固，2026-08-18） | `unittest` |
 
 ## Task 详情
 
@@ -115,6 +117,16 @@
 - **完成判据**：安装/更新事件含 5 双模式字段；currentMode 为 int（0/1/-1）；粘性隔离保持（before=ISOLATED 则当前 ISOLATED）；before 值更新捕获/首装默认。
 - **关联**：AC-17/AC-39/AC-40，design ADR-29（currentMode int + Want key 改名 isSharedSandbox→appSandboxPolicy + 新增 2 before key 属对外契约变更，须同步需求二）。
 
+### TASK-7: TS 接口 parameters 保留 key 透传设备模式分发策略
+
+- **目标**：TS 侧经 installParam.parameters 既有通用通道（`Array<{key, value}>`，无需改 d.ts）传入 key `ohos.bms.param.deviceModeDistributionPolicy`、value 为枚举值十进制字符串（如 "4"）；`InstallParam::RefreshDeviceModeDistributionPolicy()`（新方法，对齐 `IsVerifyUninstallRule` 的 parameters 提取模式）在 parameters 含该 key 时将字符串解析为 int 并校验值域 [0,8]、刷新 `deviceModeDistributionPolicy` 字段；接入点共 2 处（均在参数解析/校验完成之后调用）：NAPI `Install`（installer.cpp:891，对 `callbackPtr->installParam` 调用；初版曾误写未声明标识符 `installParam` 致编译不过，2026-08-18 工作区修正为 `callbackPtr->installParam`）+ ANI `AniInstall`（ani_bundle_installer.cpp:225，`GetInstallParamForInstall` 返回之后对局部 installParam 调用，2026-08-18 增补 ANI；刷新调用在 `AniInstall` 函数体内、不在共享 helper 内部，故 `AniUpdateBundleForSelf`（:311 经同一 helper）不被覆盖）；key 缺失保持默认 UNSPECIFIED 零回归，value 非法（非十进制整数/超 0~8）返回 false，适配层 `APP_LOGW` 告警后继续安装、字段不被污染（2026-08-17 需求方裁定：不报 401、静默降级）；NAPI `updateBundleForSelf`（installer.cpp:1146 `CheckInstallParam` 之后）与 ANI `AniUpdateBundleForSelf` 均不接入，保留 key 在该两入口不生效（**2026-08-18 需求方裁定：updateBundleForSelf 接口不适配，透传范围即 install 入口，非缺口**）。
+- **文件**：`bundle_constants.h`（key 常量 `DEVICE_MODE_DISTRIBUTION_POLICY_KEY`，`ohos.bms.param.*` 保留前缀区）、`install_param.h/cpp`（方法声明+实现）、`installer.cpp`（NAPI `Install` 接入）、`ani_bundle_installer.cpp`（ANI `AniInstall` 路径接入）、`bms_dual_mode_install_test.cpp`（单测组）。
+- **完成判据**：带 key "4" → 字段刷新为 UNIVERSAL_DIFFERENT_PACKAGE(4)；缺 key → 默认 UNSPECIFIED；"abc"/"9"/"-1"/"4x" → 返回 false 且字段保持刷新前值（适配层仅告警、继续安装）。
+- **codecheck R1 加固（2026-08-18，codecheck_report_192a99ab_R1 F-P2-01/F-P2-02，用户裁定方向：越界静默降级 UNSPECIFIED + 双栈重复 key 严格剥离）**：
+  - **F-P2-01（服务端值域白名单）**：`InstallParam::ReadFromParcel`（install_param.cpp）对 policy 字段加值域白名单 `[UNSPECIFIED(0), FULL_COMPATIBLE_DIFFERENT_PACKAGE(8)]`，越界 int32（原生 IPC 调用方绕过 kit 校验场景）`APP_LOGW` 告警后降级 UNSPECIFIED（与 amended AC-41 静默降级口径一致，不阻断 IPC 安装请求），越界值不再可达广播事件字段；单测 `RefreshDeviceModeDistributionPolicy_0600`（越界 999/-5 降级 + 边界 0/8 直通）。
+  - **F-P2-02（重复 key 跨栈统一 first-wins）**：NAPI `ParseParameters`（installer.cpp）遇重复 key 从 `APP_LOGE + return false`（中断循环、调用方吞错后实际 first-wins 且丢失后续合法 key）改为 `APP_LOGW` 告警 + `continue` 跳过（保留首个、后续重复忽略，循环继续解析其余 key）；ANI `ParseInstallParam` parameters 分支（common_fun_ani.cpp）从 `operator[]` last-wins 改为 find 检查 + `continue`——双栈统一为 **first-wins**（保留首个、忽略后续重复、`APP_LOGW` 告警），单次 key 零回归；kit 层解析无本仓单测覆盖（XTS 待集成，同 F-P3-05 遗留口径）。
+- **关联**：AC-41/FR-16。
+
 ## Plan 自审清单
 
 - [x] 每个 P0/P1 AC 至少映射到一个 Task
@@ -125,4 +137,4 @@
 - [x] 无 TBD/TODO/占位符
 - [x] 无超 3000 行阈值的 Task
 
-**Plan 结论:** Approved — TASK-1~6 已实现落地（`_04` commit `80d089208` 基线 + 增量代码落地提交 `14eb7f286`，2026-08-06，13 文件 +349 -47，123 例单测）。AC-1~35 已编译验证通过（`_04`）；AC-36~40 代码已落地、待集成环境编译/单测/运行时回归。运行时全 AC（AC-1~40）集成回归 + 人类 Owner 发布批准仍待（见 [gates/release.md](./gates/release.md)）。
+**Plan 结论:** Approved — TASK-1~6 已实现落地（`_04` commit `80d089208` 基线 + 增量代码落地提交 `14eb7f286`，2026-08-06，13 文件 +349 -47，123 例单测）。AC-1~35 已编译验证通过（`_04`）；AC-36~40 代码已落地、待集成环境编译/单测/运行时回归。TASK-7（AC-41，TS 接口 parameters 透传）代码已落地（2026-08-17 NAPI `Install` 入口，2026-08-18 增补 ANI `AniInstall` 入口 + 提交 `192a99abb`；2026-08-18 codecheck R1 加固 F-P2-01/F-P2-02 落地工作区——服务端 ReadFromParcel 值域白名单 + NAPI/ANI 重复 key 统一剥离语义，单测扩至 129 例，见 TASK-7 详情）待集成环境编译/单测/运行时回归。运行时全 AC（AC-1~41）集成回归 + 人类 Owner 发布批准仍待（见 [gates/release.md](./gates/release.md)）。

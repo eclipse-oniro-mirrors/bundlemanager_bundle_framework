@@ -82,7 +82,7 @@
 | -1 / 非法(∉{0,1}) | * | false | false | 非双模式（回退正常流程） |
 | * | -1 / 非法(∉{0,1}) | false | false | 非双模式（回退正常流程） |
 
-> 参数源：`persist.sceneboard.ispcmode`（int：0=tablet/1=2in1）+ `persist.sceneboard.mainmode`（int：0=主tablet/1=主2in1）。`GetIntParameter(key, -1)` 用 -1 作"参数不存在/读取失败"sentinel，再校验值域 ∈{0,1}。仅不同包体类别（policy ∈ {4,6,8}）应用在**副模式**（ispcmode≠mainmode）下安装时做目录/key 前缀特殊处理；主模式及非双模式均不做处理。
+> 参数源：`persist.sceneboard.ispcmode`（int：0=tablet/1=2in1）+ `const.sceneboard.mainmode`（int：0=主tablet/1=主2in1）。`GetIntParameter(key, -1)` 用 -1 作"参数不存在/读取失败"sentinel，再校验值域 ∈{0,1}。仅不同包体类别（policy ∈ {4,6,8}）应用在**副模式**（ispcmode≠mainmode）下安装时做目录/key 前缀特殊处理；主模式及非双模式均不做处理。
 
 ### 目标和成功指标
 
