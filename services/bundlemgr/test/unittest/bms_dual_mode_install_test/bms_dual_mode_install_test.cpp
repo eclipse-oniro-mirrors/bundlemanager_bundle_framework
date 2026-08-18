@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "appexecfwk_errors.h"
 #include "application_info.h"
@@ -1282,6 +1283,111 @@ HWTEST_F(BmsDualModeInstallTest, DeviceModeDistributionPolicy_LegacyDefault_0100
     from_json(legacyJson, dst);
     EXPECT_EQ(dst.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNSPECIFIED);
     EXPECT_EQ(static_cast<int32_t>(dst.deviceModeDistributionPolicy), 0);
+}
+
+// ====================== InstallParam::RefreshDeviceModeDistributionPolicy (TS parameters passthrough) =====
+// TS install interfaces pass the policy through the existing installParam.parameters channel as the
+// reserved key Constants::DEVICE_MODE_DISTRIBUTION_POLICY_KEY with a decimal-string enum value; the
+// install adapters (NAPI installer.cpp Install / ANI ani_bundle_installer.cpp AniInstall path) invoke
+// this method right after CheckInstallParam. Contract: an absent key leaves the field untouched
+// (zero regression for existing callers), a valid decimal string within [0,8] refreshes the field
+// before the IPC hop, and any other value is rejected (adapters log a warning and continue with the
+// default policy, per the 2026-08-17 ruling: no BusinessError 401) without mutating the field.
+
+HWTEST_F(BmsDualModeInstallTest, RefreshDeviceModeDistributionPolicy_0100, Function | SmallTest | Level0)
+{
+    // key present with valid value "4" -> field refreshed to UNIVERSAL_DIFFERENT_PACKAGE (4)
+    InstallParam installParam;
+    installParam.parameters[Constants::DEVICE_MODE_DISTRIBUTION_POLICY_KEY] = "4";
+    EXPECT_TRUE(installParam.RefreshDeviceModeDistributionPolicy());
+    EXPECT_EQ(installParam.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(static_cast<int32_t>(installParam.deviceModeDistributionPolicy), 4);
+}
+
+HWTEST_F(BmsDualModeInstallTest, RefreshDeviceModeDistributionPolicy_0200, Function | SmallTest | Level0)
+{
+    // key absent -> true (accepted, nothing to refresh) and a pre-set field is NOT overwritten,
+    // covering both the fresh default and an already-populated IPC value
+    InstallParam installParam;
+    EXPECT_TRUE(installParam.RefreshDeviceModeDistributionPolicy());
+    EXPECT_EQ(installParam.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNSPECIFIED);
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    EXPECT_TRUE(installParam.RefreshDeviceModeDistributionPolicy());
+    EXPECT_EQ(installParam.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::MAIN_ONLY);
+}
+
+HWTEST_F(BmsDualModeInstallTest, RefreshDeviceModeDistributionPolicy_0300, Function | SmallTest | Level0)
+{
+    // range boundaries "0"/"8" and leading-zero decimal "04" are accepted
+    InstallParam installParam;
+    installParam.parameters[Constants::DEVICE_MODE_DISTRIBUTION_POLICY_KEY] = "0";
+    EXPECT_TRUE(installParam.RefreshDeviceModeDistributionPolicy());
+    EXPECT_EQ(installParam.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNSPECIFIED);
+    installParam.parameters[Constants::DEVICE_MODE_DISTRIBUTION_POLICY_KEY] = "8";
+    EXPECT_TRUE(installParam.RefreshDeviceModeDistributionPolicy());
+    EXPECT_EQ(installParam.deviceModeDistributionPolicy,
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    installParam.parameters[Constants::DEVICE_MODE_DISTRIBUTION_POLICY_KEY] = "04";
+    EXPECT_TRUE(installParam.RefreshDeviceModeDistributionPolicy());
+    EXPECT_EQ(installParam.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+}
+
+HWTEST_F(BmsDualModeInstallTest, RefreshDeviceModeDistributionPolicy_0400, Function | SmallTest | Level0)
+{
+    // invalid values (non-digit / sign / space / trailing char / above range / empty / overflow-long)
+    // are rejected with false and must not mutate the field from its pre-set value
+    const std::vector<std::string> invalidValues = {"abc", "-1", " 4", "4x", "9", "", "99999999999999"};
+    for (const auto &value : invalidValues) {
+        InstallParam installParam;
+        installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;  // sentinel
+        installParam.parameters[Constants::DEVICE_MODE_DISTRIBUTION_POLICY_KEY] = value;
+        EXPECT_FALSE(installParam.RefreshDeviceModeDistributionPolicy()) << "value: " << value;
+        EXPECT_EQ(installParam.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::MAIN_ONLY)
+            << "value: " << value;
+    }
+}
+
+HWTEST_F(BmsDualModeInstallTest, RefreshDeviceModeDistributionPolicy_0500, Function | SmallTest | Level0)
+{
+    // refreshed field survives the existing Parcel hop so the value reaches the service side intact
+    InstallParam installParam;
+    installParam.parameters[Constants::DEVICE_MODE_DISTRIBUTION_POLICY_KEY] = "6";
+    ASSERT_TRUE(installParam.RefreshDeviceModeDistributionPolicy());
+    OHOS::MessageParcel parcel;
+    ASSERT_TRUE(installParam.Marshalling(parcel));
+    InstallParam dst;
+    ASSERT_TRUE(dst.ReadFromParcel(parcel));
+    EXPECT_EQ(dst.deviceModeDistributionPolicy,
+        DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE);
+    EXPECT_EQ(static_cast<int32_t>(dst.deviceModeDistributionPolicy), 6);
+}
+
+HWTEST_F(BmsDualModeInstallTest, RefreshDeviceModeDistributionPolicy_0600, Function | SmallTest | Level0)
+{
+    // an out-of-range int32 on the wire (native caller bypassing the kit-layer value check) is
+    // degraded to UNSPECIFIED by the server-side ReadFromParcel value-range whitelist, so the
+    // overflow value never reaches the broadcast event fields (codecheck F-P2-01 hardening)
+    for (const int32_t invalidPolicy : {999, -5}) {
+        InstallParam installParam;
+        installParam.deviceModeDistributionPolicy = static_cast<DeviceModeDistributionPolicy>(invalidPolicy);
+        OHOS::MessageParcel parcel;
+        ASSERT_TRUE(installParam.Marshalling(parcel));
+        InstallParam dst;
+        ASSERT_TRUE(dst.ReadFromParcel(parcel));
+        EXPECT_EQ(dst.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::UNSPECIFIED)
+            << "policy: " << invalidPolicy;
+    }
+    // whitelist boundaries pass through the same hop untouched
+    for (const int32_t validPolicy : {0, 8}) {
+        InstallParam installParam;
+        installParam.deviceModeDistributionPolicy = static_cast<DeviceModeDistributionPolicy>(validPolicy);
+        OHOS::MessageParcel parcel;
+        ASSERT_TRUE(installParam.Marshalling(parcel));
+        InstallParam dst;
+        ASSERT_TRUE(dst.ReadFromParcel(parcel));
+        EXPECT_EQ(static_cast<int32_t>(dst.deviceModeDistributionPolicy), validPolicy)
+            << "policy: " << validPolicy;
+    }
 }
 
 // ====================== BundleDataStorageRdb::TransformStrToInfo (TransResult self-heal branch) =====

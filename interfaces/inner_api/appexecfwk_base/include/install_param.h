@@ -172,6 +172,13 @@ public:
             parameters.at(Constants::VERIFY_UNINSTALL_RULE_KEY) == Constants::VERIFY_UNINSTALL_RULE_VALUE;
     }
 
+    // Refresh deviceModeDistributionPolicy from the parameters map entry keyed by
+    // Constants::DEVICE_MODE_DISTRIBUTION_POLICY_KEY, whose value is the decimal string of the
+    // DeviceModeDistributionPolicy enum value (0~8). Returns true when the key is absent (field
+    // keeps its current value) or the value parses into the valid enum range; returns false only
+    // when the key exists but the value is not a valid decimal enum string.
+    bool RefreshDeviceModeDistributionPolicy();
+
     bool IsEnterpriseForAllUser() const
     {
         return parameters.find(ENTERPRISE_FOR_ALL_USER_KEY) != parameters.end() &&

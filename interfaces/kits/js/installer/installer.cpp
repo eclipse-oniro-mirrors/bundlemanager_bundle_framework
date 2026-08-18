@@ -888,6 +888,9 @@ napi_value Install(napi_env env, napi_callback_info info)
         BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_HAPS_FILE_EMPTY_ERROR);
         return nullptr;
     }
+    if (!callbackPtr->installParam.RefreshDeviceModeDistributionPolicy()) {
+        APP_LOGW("Parse deviceModeDistributionPolicy failed, using default value");
+    }
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
         OperationCompleted);
     callbackPtr.release();
