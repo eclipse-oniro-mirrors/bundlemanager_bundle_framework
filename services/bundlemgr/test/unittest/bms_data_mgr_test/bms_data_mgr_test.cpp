@@ -13060,4 +13060,41 @@ HWTEST_F(BmsDataMgrTest, GetNeedAppDetail_0001, Function | SmallTest | Level0)
 
     EXPECT_TRUE(dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START));
 }
+
+/**
+ * @tc.number: DeleteBundleStateByUserId_0001
+ * @tc.name: DeleteBundleStateByUserId
+ * @tc.desc: 1. test DeleteBundleStateByUserId when bundleStateStorage is null
+ *           2. return ERR_APPEXECFWK_NULL_PTR
+ */
+HWTEST_F(BmsDataMgrTest, DeleteBundleStateByUserId_0001, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.hello";
+    int32_t userId = 100;
+
+    bundleDataMgr.bundleStateStorage_ = nullptr;
+
+    auto ret = bundleDataMgr.DeleteBundleStateByUserId(bundleName, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: DeleteBundleStateByUserId_0002
+ * @tc.name: DeleteBundleStateByUserId
+ * @tc.desc: 1. test DeleteBundleStateByUserId with empty bundleName
+ *           2. BundleStateStorage::DeleteBundleState returns false
+ */
+HWTEST_F(BmsDataMgrTest, DeleteBundleStateByUserId_0002, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    int32_t userId = 100;
+
+    auto bundleStateStorage = std::make_shared<BundleStateStorage>();
+    bundleDataMgr.bundleStateStorage_ = bundleStateStorage;
+
+    auto ret = bundleDataMgr.DeleteBundleStateByUserId(bundleName, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_DELETE_ERROR);
+}
 } // OHOS

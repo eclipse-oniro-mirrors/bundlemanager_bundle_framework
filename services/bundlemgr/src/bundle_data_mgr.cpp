@@ -14866,6 +14866,23 @@ ErrCode BundleDataMgr::DeleteShortcutEnabledInfo(const std::string &bundleName)
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::DeleteBundleStateByUserId(const std::string &bundleName, int32_t userId)
+{
+    APP_LOGD("DeleteBundleStateByUserId, bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), userId);
+    if (bundleStateStorage_ == nullptr) {
+        APP_LOGE("bundleStateStorage is null");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    if (!bundleStateStorage_->DeleteBundleState(bundleName, userId)) {
+        APP_LOGW("DeleteBundleState failed, -n %{public}s -u %{public}d",
+            bundleName.c_str(), userId);
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
+    }
+
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
     const int32_t userId, PluginBundleInfo &pluginBundleInfo)
 {
