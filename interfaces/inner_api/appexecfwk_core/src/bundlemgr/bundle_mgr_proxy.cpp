@@ -392,8 +392,9 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
     auto res = GetParcelInfoIntelligent<BundleInfo>(
-        BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo, option);
     if (res != ERR_OK) {
         LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoV9 fail -n %{public}s -u %{public}d -f %{public}d error: %{public}d",
             bundleName.c_str(), userId, flags, res);
@@ -515,8 +516,9 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
     auto res = GetParcelInfoIntelligent<BundleInfo>(
-        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo, option);
     if (res != ERR_OK) {
         LOG_D(BMS_TAG_QUERY, "GetBundleInfoForSelf failed err:%{public}d", res);
         return res;
@@ -620,8 +622,9 @@ ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, Bu
         APP_LOGE("fail to GetDependentBundleInfo due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(
-        BundleMgrInterfaceCode::GET_DEPENDENT_BUNDLE_INFO, data, bundleInfo);
+        BundleMgrInterfaceCode::GET_DEPENDENT_BUNDLE_INFO, data, bundleInfo, option);
     if (res != ERR_OK) {
         APP_LOGW("GetDependentBundleInfo failed -n %{public}s code: %{public}d", bundleName.c_str(), res);
         return res;
@@ -1867,8 +1870,9 @@ bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleI
         return false;
     }
 
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
     if (GetParcelInfoIntelligent<HapModuleInfo>(
-        BundleMgrInterfaceCode::GET_HAP_MODULE_INFO, data, hapModuleInfo)!= ERR_OK) {
+        BundleMgrInterfaceCode::GET_HAP_MODULE_INFO, data, hapModuleInfo, option)!= ERR_OK) {
         APP_LOGE("fail to GetHapModuleInfo from server");
         return false;
     }
@@ -4455,7 +4459,8 @@ sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
         return nullptr;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_OVERLAY_MANAGER_PROXY, data, reply)) {
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_OVERLAY_MANAGER_PROXY, data, reply, option)) {
         return nullptr;
     }
 
@@ -4549,8 +4554,9 @@ ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,
         APP_LOGE("fail to GetBaseSharedBundleInfos due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
     return GetParcelableInfosWithErrCode<BaseSharedBundleInfo>(BundleMgrInterfaceCode::GET_BASE_SHARED_BUNDLE_INFOS,
-        data, baseSharedBundleInfos);
+        data, baseSharedBundleInfos, option);
 }
 
 ErrCode BundleMgrProxy::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles)
@@ -5121,7 +5127,8 @@ ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::strin
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE, data, profile);
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
+    return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE, data, profile, option);
 }
 
 sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
@@ -5341,7 +5348,8 @@ ErrCode BundleMgrProxy::GetOdid(std::string &odid)
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ODID, data, reply)) {
+    MessageOption option(MessageOption::TF_SYNC | MessageOption::TF_IMAGE);
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ODID, data, reply, option)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     auto ret = reply.ReadInt32();
@@ -5465,6 +5473,30 @@ ErrCode BundleMgrProxy::GetParcelableInfoWithErrCodeReply(
     return res;
 }
 
+template <typename T>
+ErrCode BundleMgrProxy::GetParcelableInfoWithErrCode(
+    BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo, MessageOption &option)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply, option)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    ErrCode res = reply.ReadInt32();
+    if (res == ERR_OK) {
+        std::unique_ptr<T> info(reply.ReadParcelable<T>());
+        if (info == nullptr) {
+            APP_LOGE("readParcelableInfo failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        parcelableInfo = *info;
+    }
+
+    APP_LOGD("GetParcelableInfoWithErrCode ErrCode : %{public}d", res);
+    return res;
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfos(
     BundleMgrInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos)
@@ -5522,6 +5554,34 @@ ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(BundleMgrInterfaceCode cod
 }
 
 template<typename T>
+ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data,
+    std::vector<T> &parcelableInfos, MessageOption &option)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply, option)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    ErrCode res = reply.ReadInt32();
+    if (res == ERR_OK) {
+        int32_t infoSize = reply.ReadInt32();
+        CONTAINER_SECURITY_VERIFY(reply, infoSize, &parcelableInfos);
+        for (int32_t i = 0; i < infoSize; i++) {
+            std::unique_ptr<T> info(reply.ReadParcelable<T>());
+            if (info == nullptr) {
+                APP_LOGE("Read Parcelable infos failed");
+                return ERR_APPEXECFWK_PARCEL_ERROR;
+            }
+            parcelableInfos.emplace_back(*info);
+        }
+        APP_LOGD("get parcelable infos success");
+    }
+    APP_LOGD("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
+    return res;
+}
+
+template<typename T>
 ErrCode BundleMgrProxy::GetParcelInfoIntelligent(
     BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo)
 {
@@ -5534,6 +5594,43 @@ ErrCode BundleMgrProxy::GetParcelInfoIntelligentWithReply(
     BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply, T &parcelInfo)
 {
     ErrCode ret = SendTransactCmdWithErrCode(code, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE("SendTransactCmd failed");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGD("reply ErrCode: %{public}d", ret);
+        return ret;
+    }
+    size_t dataSize = reply.ReadUint32();
+    void *buffer = nullptr;
+    if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
+        APP_LOGE("GetData failed dataSize : %{public}zu", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel tmpParcel;
+    if (!tmpParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        APP_LOGE("ParseFrom failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    std::unique_ptr<T> info(tmpParcel.ReadParcelable<T>());
+    if (info == nullptr) {
+        APP_LOGE("ReadParcelable failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    parcelInfo = *info;
+    return ERR_OK;
+}
+
+template<typename T>
+ErrCode BundleMgrProxy::GetParcelInfoIntelligent(
+    BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo, MessageOption &option)
+{
+    MessageParcel reply;
+    ErrCode ret = SendTransactCmdWithErrCode(code, data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGE("SendTransactCmd failed");
         return ret;
@@ -5667,11 +5764,46 @@ bool BundleMgrProxy::SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel 
     return true;
 }
 
+bool BundleMgrProxy::SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply,
+    MessageOption &option)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("fail send transact cmd %{public}d due remote object", code);
+        return false;
+    }
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    if (result != NO_ERROR) {
+        APP_LOGE("error code %{public}d in transact cmd %{public}d", result, code);
+        return false;
+    }
+    return true;
+}
+
 ErrCode BundleMgrProxy::SendTransactCmdWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data,
     MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
 
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("fail send transact cmd %{public}d due remote object", code);
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    if (result != NO_ERROR) {
+        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
+        if (CoreConstants::IPC_ERR_MAP.find(result) != CoreConstants::IPC_ERR_MAP.end()) {
+            return CoreConstants::IPC_ERR_MAP.at(result);
+        }
+        return result;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::SendTransactCmdWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data,
+    MessageParcel &reply, MessageOption &option)
+{
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         APP_LOGE("fail send transact cmd %{public}d due remote object", code);
@@ -5841,6 +5973,22 @@ ErrCode BundleMgrProxy::GetBigString(BundleMgrInterfaceCode code, MessageParcel 
 {
     MessageParcel reply;
     if (!SendTransactCmd(code, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGD("host reply err %{public}d", ret);
+        return ret;
+    }
+    return InnerGetBigString(reply, result);
+}
+
+ErrCode BundleMgrProxy::GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result,
+    MessageOption &option)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply, option)) {
         APP_LOGE("SendTransactCmd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
