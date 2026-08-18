@@ -9291,6 +9291,55 @@ void BundleDataMgr::UpdatePrivilegeCapability(
     infoItem->second.UpdatePrivilegeCapability(appInfo);
 }
 
+static AccessTokenRestoreInfo MakeRestoreInfo(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, uint64_t accessTokenIdEx)
+{
+    AccessTokenRestoreInfo restoreInfo;
+    restoreInfo.bundleName = bundleName;
+    restoreInfo.userId = userId;
+    restoreInfo.appIndex = appIndex;
+    restoreInfo.accessTokenIdEx = accessTokenIdEx;
+    return restoreInfo;
+}
+
+static void CollectRestoreInfosFromUserInfo(const std::string &bundleName,
+    const InnerBundleUserInfo &userInfo, std::vector<AccessTokenRestoreInfo> &restoreInfos)
+{
+    int32_t userId = userInfo.bundleUserInfo.userId;
+    if (userInfo.accessTokenIdEx != 0) {
+        restoreInfos.emplace_back(MakeRestoreInfo(bundleName, userId, 0, userInfo.accessTokenIdEx));
+    }
+    for (const auto &cloneItem : userInfo.cloneInfos) {
+        const InnerBundleCloneInfo &cloneInfo = cloneItem.second;
+        if (cloneInfo.accessTokenIdEx == 0) {
+            continue;
+        }
+        restoreInfos.emplace_back(
+            MakeRestoreInfo(bundleName, userId, cloneInfo.appIndex, cloneInfo.accessTokenIdEx));
+    }
+    // cli sandbox apps hold their own persisted tokens; their appIndex range
+    // [CLI_SANDBOX_APP_INDEX_MIN, CLI_SANDBOX_APP_INDEX_MAX] never overlaps clone's.
+    for (const auto &sandboxItem : userInfo.sandboxInfos) {
+        const InnerCliSandboxInfo &sandboxInfo = sandboxItem.second;
+        if (sandboxInfo.accessTokenIdEx == 0) {
+            continue;
+        }
+        restoreInfos.emplace_back(
+            MakeRestoreInfo(bundleName, userId, sandboxInfo.appIndex, sandboxInfo.accessTokenIdEx));
+    }
+}
+
+static void CollectAccessTokenRestoreInfos(const std::map<std::string, InnerBundleInfo> &bundleInfos,
+    std::vector<AccessTokenRestoreInfo> &restoreInfos)
+{
+    for (const auto &bundleItem : bundleInfos) {
+        const InnerBundleInfo &innerBundleInfo = bundleItem.second;
+        for (const auto &userItem : innerBundleInfo.GetInnerBundleUserInfos()) {
+            CollectRestoreInfosFromUserInfo(bundleItem.first, userItem.second, restoreInfos);
+        }
+    }
+}
+
 bool BundleDataMgr::FetchInnerBundleInfo(
     const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
 {
@@ -9309,6 +9358,12 @@ bool BundleDataMgr::FetchInnerBundleInfo(
 
     innerBundleInfo = infoItem->second;
     return true;
+}
+
+void BundleDataMgr::GetAccessTokenRestoreInfos(std::vector<AccessTokenRestoreInfo> &restoreInfos)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    CollectAccessTokenRestoreInfos(bundleInfos_, restoreInfos);
 }
 
 bool BundleDataMgr::FetchTempBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo)

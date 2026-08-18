@@ -288,6 +288,14 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
     return ERR_OK;
 }
 
+int32_t BundlePermissionMgr::RestoreHapToken(const InnerBundleInfo &innerBundleInfo,
+    const int32_t userId, Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
+    Security::AccessToken::HapInfoCheckResult &checkResult,
+    const std::string &appServiceCapabilities)
+{
+    return ERR_OK;
+}
+
 std::string BundlePermissionMgr::GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult)
 {
     std::string result = "";

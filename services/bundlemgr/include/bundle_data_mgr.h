@@ -89,6 +89,15 @@ enum class InstallState {
     USER_CHANGE,
 };
 
+// Recovery entry for access token database lost: one per (bundleName, userId, appIndex)
+// that holds a persisted accessTokenIdEx. tempBundleInfos_ (dual-mode) is out of scope.
+struct AccessTokenRestoreInfo {
+    std::string bundleName;
+    int32_t userId = Constants::INVALID_USERID;
+    int32_t appIndex = 0;
+    uint64_t accessTokenIdEx = 0;
+};
+
 class BundleDataMgr {
 public:
     using Want = OHOS::AAFwk::Want;
@@ -995,6 +1004,7 @@ public:
         const std::string &bundleName, const ApplicationInfo &appInfo);
     bool FetchInnerBundleInfo(
         const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
+    void GetAccessTokenRestoreInfos(std::vector<AccessTokenRestoreInfo> &restoreInfos);
     // dual-mode: fetch the other-mode counterpart of a dual-mode
     // same-name app from tempBundleInfos_ (mirrors FetchInnerBundleInfo). Used by resource
     // refresh (language/theme) to rebuild both modes' resources.

@@ -232,6 +232,9 @@ constexpr const char* ENTERPRISE_SPACE_USER_ID_LIST = "persist.space_mgr_service
 constexpr const char* RELABEL_PARAM = "persist.bms.test.relabel";
 constexpr const char* BMS_RELABEL_PARAM = "const.bms.relabel";
 constexpr const char* BMS_SCAN_APP_DATA_PARAM = "const.bms.scan_app_data";
+// persistable; set to "1" by access_token service when its permission db is abnormal, and reset to
+// "0" by access_token service through ResetDatabaseRecoveryStatus after BMS restores hap tokens on boot
+constexpr const char* ACCESS_TOKEN_DB_ERROR_PARAM = "persist.accesstoken.permission.dberror";
 constexpr const char* SCAN_APP_DATA_TEST_PARAM = "persist.bms.test.scan_app_data";
 constexpr const char* HAP_BIN_INSTALL_ENABLE = "const.bms.bin_install";
 constexpr const char* KEEP_DATA_PRELOAD_HAP = "const.vendor.atcmd.cust_preload_flag";
