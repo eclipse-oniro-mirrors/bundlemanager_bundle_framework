@@ -261,6 +261,9 @@ constexpr const char* APP_DISTRIBUTION_TYPE_WHITE_LIST = "appDistributionTypeWhi
 constexpr const char* VERIFY_UNINSTALL_FORCED_KEY = "ohos.bms.param.verifyUninstallForced";
 constexpr const char* VERIFY_UNINSTALL_FORCED_VALUE = "true";
 
+//param key-value, value is the decimal string of DeviceModeDistributionPolicy enum value (0~8)
+constexpr const char* DEVICE_MODE_DISTRIBUTION_POLICY_KEY = "ohos.bms.param.deviceModeDistributionPolicy";
+
 constexpr const char* ARKTS_MODE = "arkTSMode";
 constexpr const char* MODULE_ARKTS_MODE = "moduleArkTSMode";
 constexpr const char* AOT_COMPILE_STATUS = "aotCompileStatus";

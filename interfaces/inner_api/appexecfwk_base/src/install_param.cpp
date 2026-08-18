@@ -18,6 +18,7 @@
 #include "nlohmann/json.hpp"
 #include "string_ex.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "parcel_macro.h"
 #include "ipc_skeleton.h"
@@ -25,6 +26,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr int32_t DECIMAL_RADIX = 10;
 constexpr int32_t MAX_INSTALL_PARAM_ENTRIES = 1000;
 constexpr int32_t MAX_INSTALL_HASH_PARAMS = 1000;
 constexpr int32_t MAX_INSTALL_SHARED_PATHS = 500;
@@ -113,7 +115,15 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         parameters.emplace(key, value);
     }
     isPatch = parcel.ReadBool();
-    deviceModeDistributionPolicy = static_cast<DeviceModeDistributionPolicy>(parcel.ReadInt32());
+    int32_t policyData = parcel.ReadInt32();
+    if (policyData < static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED) ||
+        policyData > static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE)) {
+        // value-range whitelist: out-of-range int from native IPC callers degrades to UNSPECIFIED
+        // (same silent-degradation policy as kit-layer value parsing), never reaches broadcast fields
+        APP_LOGW("invalid deviceModeDistributionPolicy from parcel, using default value");
+        policyData = static_cast<int32_t>(DeviceModeDistributionPolicy::UNSPECIFIED);
+    }
+    deviceModeDistributionPolicy = static_cast<DeviceModeDistributionPolicy>(policyData);
     return true;
 }
 
@@ -170,6 +180,36 @@ bool InstallParam::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPatch);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(deviceModeDistributionPolicy));
+    return true;
+}
+
+bool InstallParam::RefreshDeviceModeDistributionPolicy()
+{
+    auto it = parameters.find(Constants::DEVICE_MODE_DISTRIBUTION_POLICY_KEY);
+    if (it == parameters.end()) {
+        return true;
+    }
+    if (it->second.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "invalid deviceModeDistributionPolicy value, empty string");
+        return false;
+    }
+    // manual decimal parse: rejects non-digit input (spaces, signs, trailing chars) and any value
+    // outside the enum range, with the range check bounding the accumulator before overflow
+    const std::string &value = it->second;
+    const int32_t maxValue = static_cast<int32_t>(DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE);
+    int32_t parsed = 0;
+    for (char c : value) {
+        if (c < '0' || c > '9' || parsed > maxValue) {
+            LOG_E(BMS_TAG_DEFAULT, "invalid deviceModeDistributionPolicy value");
+            return false;
+        }
+        parsed = parsed * DECIMAL_RADIX + (c - '0');
+    }
+    if (parsed > maxValue) {
+        LOG_E(BMS_TAG_DEFAULT, "invalid deviceModeDistributionPolicy value");
+        return false;
+    }
+    deviceModeDistributionPolicy = static_cast<DeviceModeDistributionPolicy>(parsed);
     return true;
 }
 

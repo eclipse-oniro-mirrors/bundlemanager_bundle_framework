@@ -222,6 +222,9 @@ static void AniInstall(ani_env* env, [[maybe_unused]] ani_object installerObj,
     if (!GetInstallParamForInstall(env, arrayObj, aniInstParam, hapFiles, installParam)) {
         return;
     }
+    if (!installParam.RefreshDeviceModeDistributionPolicy()) {
+        APP_LOGW("Parse deviceModeDistributionPolicy failed, using default value");
+    }
     InstallResult result;
     ExecuteInstall(hapFiles, installParam, result);
     ProcessResult(env, result, InstallOption::INSTALL);
