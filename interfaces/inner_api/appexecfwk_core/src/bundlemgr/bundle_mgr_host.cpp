@@ -431,6 +431,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_STATS):
             errCode = this->HandleGetBundleStats(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_STATS_ASYNC):
+            errCode = this->HandleGetBundleStatsAsync(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_BUNDLE_STATS):
             errCode = this->HandleBatchGetBundleStats(data, reply);
             break;
@@ -3673,6 +3676,31 @@ ErrCode BundleMgrHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &
     }
     if (ret && !reply.WriteInt64Vector(bundleStats)) {
         APP_LOGE("write bundleStats failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleStatsAsync(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    uint32_t statFlag = data.ReadUint32();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("read IBundleStatsCallback failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    sptr<IBundleStatsCallback> callback = iface_cast<IBundleStatsCallback>(object);
+    if (callback == nullptr) {
+        APP_LOGE("iface_cast IBundleStatsCallback failed");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    ErrCode ret = GetBundleStatsAsync(bundleName, userId, appIndex, statFlag, callback);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

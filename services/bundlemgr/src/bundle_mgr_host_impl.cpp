@@ -4471,6 +4471,13 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGE("verify permission failed");
         return false;
     }
+    int32_t activeUserId = AccountHelper::GetUserIdByCallerType();
+    return GetBundleStatsInternal(bundleName, userId, bundleStats, appIndex, statFlag, activeUserId);
+}
+
+bool BundleMgrHostImpl::GetBundleStatsInternal(const std::string &bundleName, int32_t userId,
+    std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag, int32_t activeUserId)
+{
     if (bundleName.empty()) {
         APP_LOGE("bundleName empty");
         return false;
@@ -4498,7 +4505,73 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
             return ret == ERR_OK;
         }
     }
-    return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex, statFlag);
+    return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex, statFlag, activeUserId);
+}
+
+ErrCode BundleMgrHostImpl::GetBundleStatsAsync(const std::string &bundleName, int32_t userId, int32_t appIndex,
+    uint32_t statFlag, const sptr<IBundleStatsCallback> &callback)
+{
+    LOG_D(BMS_TAG_QUERY, "GetBundleStatsAsync -n: %{public}s, -u: %{public}d, -i: %{public}d",
+        bundleName.c_str(), userId, appIndex);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bundleName.empty() || callback == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "bundleName empty or callback is nullptr");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    statFlag = NormalizeStatFlag(statFlag);
+    auto key = std::make_tuple(bundleName, userId, appIndex, statFlag);
+    {
+        std::lock_guard<std::mutex> lock(bundleStatsAsyncMutex_);
+        auto it = bundleStatsAsyncMap_.find(key);
+        if (it != bundleStatsAsyncMap_.end()) {
+            it->second.push_back(callback);
+            LOG_D(BMS_TAG_QUERY, "merge callback into existing task, count: %{public}zu",
+                it->second.size());
+            return ERR_OK;
+        } else {
+            bundleStatsAsyncMap_[key] = {callback};
+            LOG_D(BMS_TAG_QUERY, "create new async task");
+        }
+    }
+    int32_t activeUserId = AccountHelper::GetUserIdByCallerType();
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto getBundleStatsFunc = [bundleName, userId, appIndex, statFlag, key, traceId,
+        activeUserId, this]() {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
+        std::vector<int64_t> bundleStats;
+        bool ret = GetBundleStatsInternal(bundleName, userId, bundleStats, appIndex, statFlag,
+            activeUserId);
+        int32_t errCode = ret ? ERR_OK : ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+
+        std::vector<sptr<IBundleStatsCallback>> callbacks;
+        {
+            std::lock_guard<std::mutex> lock(bundleStatsAsyncMutex_);
+            auto it = bundleStatsAsyncMap_.find(key);
+            if (it != bundleStatsAsyncMap_.end()) {
+                callbacks = std::move(it->second);
+                bundleStatsAsyncMap_.erase(it);
+            }
+        }
+        for (const auto &cb : callbacks) {
+            if (cb != nullptr) {
+                cb->OnGetBundleStatsFinished(errCode, bundleStats);
+            }
+        }
+    };
+    ffrt::submit(getBundleStatsFunc);
+    return ERR_OK;
+}
+
+uint32_t BundleMgrHostImpl::NormalizeStatFlag(uint32_t statFlag)
+{
+    constexpr uint32_t VALID_STAT_FLAG_MASK = Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE
+        | Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE
+        | Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE;
+    return statFlag & VALID_STAT_FLAG_MASK;
 }
 
 ErrCode BundleMgrHostImpl::GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,

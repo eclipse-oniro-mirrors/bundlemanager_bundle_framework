@@ -107,6 +107,8 @@ ohos_shared_library("appexecfwk_core") {
     "src/bundlemgr/bundle_monitor.cpp",
     "src/bundlemgr/bundle_status_callback_host.cpp",
     "src/bundlemgr/bundle_status_callback_proxy.cpp",
+    "src/bundlemgr/bundle_stats_callback_host.cpp",
+    "src/bundlemgr/bundle_stats_callback_proxy.cpp",
     "src/bundlemgr/bundle_stream_installer_host.cpp",
     "src/bundlemgr/bundle_stream_installer_proxy.cpp",
     "src/bundlemgr/bundle_user_mgr_host.cpp",

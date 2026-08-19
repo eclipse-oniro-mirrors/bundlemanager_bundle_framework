@@ -32,6 +32,7 @@
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
 #include "bundle_installer_interface.h"
+#include "bundle_stats_callback_interface.h"
 #include "bundle_status_callback_interface.h"
 #include "bundle_storage_stats.h"
 #include "bundle_user_mgr_interface.h"
@@ -1510,6 +1511,23 @@ public:
         int32_t appIndex = 0, uint32_t statFlag = 0)
     {
         return false;
+    }
+
+    /**
+     * @brief Obtains the bundle stats asynchronously to avoid blocking IPC channels during
+     *        time-consuming disk usage statistics. The result is returned via the callback.
+     * @param bundleName Indicates the bundle name.
+     * @param userId Indicates the user id.
+     * @param appIndex Indicates the app index.
+     * @param statFlag Indicates the stat flag, see NoGetBundleStatsFlag.
+     * @param callback Indicates the callback to receive the bundle stats result.
+     * @return Returns ERR_OK if the request is accepted; returns error code otherwise.
+     *         The actual stats result is delivered via callback->OnGetBundleStatsFinished.
+     */
+    virtual ErrCode GetBundleStatsAsync(const std::string &bundleName, int32_t userId, int32_t appIndex,
+        uint32_t statFlag, const sptr<IBundleStatsCallback> &callback)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     virtual ErrCode GetTopNLargestItemsInAppDataDir(const std::string &bundleName, const int32_t appIndex,
