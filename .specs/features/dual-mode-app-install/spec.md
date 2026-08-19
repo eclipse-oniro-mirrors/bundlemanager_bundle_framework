@@ -205,9 +205,19 @@
 - **AC-39:** WHEN 双模式设备计算当前 `appSandboxPolicy`（`ComputeCurrentAppSandboxPolicy` 私有 helper，`SetDualModeAppInfo` 写入 info 与 `FillDualModeEventFields` 填广播同源）THEN 若 `beforeAppSandboxPolicy==ISOLATED_SANDBOX`（存量已隔离）当前恒为 `ISOLATED_SANDBOX`（**粘性**，与新 policy 无关）；否则（共沙箱或首装默认 SHARED）当前 = `IsDiffPackageCategory(newPolicy) ? ISOLATED_SANDBOX : SHARED_SANDBOX`。WHEN 存量隔离应用更新为非不同包体类别 THEN 当前仍 ISOLATED（粘性保持）。单测：`FillDualModeEventFields_0100`（首装+不同包体→ISOLATED）、`FillDualModeEventFields_0300`（粘性：before=ISOLATED + 非不同包体→仍 ISOLATED）
 - **AC-40:** WHEN 更新（存量存在，`isAppExist_=true`）THEN `beforeDeviceModeDistributionPolicy`/`beforeAppSandboxPolicy` 从 oldInfo 捕获（`InitTempBundleFromCache` 后 base_bundle_installer.cpp:1802-1811，存入 BaseBundleInstaller 成员）；WHEN 首次安装（无存量）THEN before 两字段为默认（UNSPECIFIED/SHARED_SANDBOX）；WHEN 非双模式设备 THEN 5 字段全默认、零回归。`appSandboxPolicy` 经 `InnerBundleInfo.SetAppSandboxPolicy` 写入并随 baseBundleInfo_ 持久化（粘性闭环，AC-39 下次更新可读）；`ResetInstallProperties`（:7278-7279）重置 before 成员防实例复用泄漏。单测：`FillDualModeEventFields_0100`（首装 before 默认）、`FillDualModeEventFields_0200`（非双模式保持预置标记）
 
+### US-12: TS 接口透传设备模式分发策略
+
+**作为** 上层分发调用方（经 TS installer 接口）,
+**需要** 在调用 TS 安装接口时经 installParam.parameters 通用通道传入设备模式分发策略,
+**以便** 分发平台在安装时刻指定策略，走既有 IPC 字段链路（AC-1）持久化，无需新增独立 TS 参数字段。
+
+**验收标准：**
+
+- **AC-41:** WHEN TS 侧调用 `install` 接口且 installParam.parameters 携带 key `ohos.bms.param.deviceModeDistributionPolicy`（value 为枚举值的十进制字符串，如 "4"） THEN 适配层解析后将 `InstallParam.deviceModeDistributionPolicy` 刷新为对应枚举值（int 0~8），经既有 Parcel 字段（IPC）传至服务端，衔接 AC-1 持久化链路；WHEN parameters 不含该 key THEN 字段保持默认 UNSPECIFIED（0），现有调用方零回归；WHEN key 存在但 value 非法（非十进制整数/空串/超出 0~8 值域）THEN 忽略该 key 仅打印 warning 日志（`RefreshDeviceModeDistributionPolicy` 返回 false，适配层 `APP_LOGW` 告警后继续安装流程，字段不被污染、保持刷新前值即默认 UNSPECIFIED），不拦截安装、不返回异常（2026-08-17 需求方裁定：非法值不报 401，静默降级走默认策略）。实现：`InstallParam::RefreshDeviceModeDistributionPolicy()`（install_param.cpp，从 parameters map 提取并刷新字段，对齐 `IsVerifyUninstallRule` 的 parameters 提取模式），接入点共 2 处（均在参数解析/校验完成之后调用）：NAPI `Install`（installer.cpp:891，对 `callbackPtr->installParam` 调用）与 ANI `AniInstall`（ani_bundle_installer.cpp:225，`GetInstallParamForInstall` 返回之后对局部 `installParam` 调用，2026-08-18 增补 ANI；刷新调用在 `AniInstall` 函数体内、不在共享 helper 内部，故经同一 helper 的 `AniUpdateBundleForSelf` 不被覆盖）；NAPI `updateBundleForSelf`（installer.cpp:1146 `CheckInstallParam` 之后）与 ANI `AniUpdateBundleForSelf`（ani_bundle_installer.cpp:311 helper 调用之后）均不接入刷新，该两入口携带保留 key 不生效、字段走默认（**2026-08-18 需求方裁定：updateBundleForSelf 接口不适配，保留 key 透传范围即 install 入口，非功能覆盖缺口**）；key 常量 `Constants::DEVICE_MODE_DISTRIBUTION_POLICY_KEY`（bundle_constants.h，对齐 `ohos.bms.param.*` 保留前缀惯例）；**codecheck R1 加固（2026-08-18，F-P2-01/F-P2-02）**：① 服务端 `InstallParam::ReadFromParcel` 对该字段加值域白名单 [0,8]，原生 IPC 调用方携越界 int32 时 `APP_LOGW` 告警后降级 UNSPECIFIED（与非法 value 静默降级同口径，不阻断安装请求），越界值不可达广播事件字段；② NAPI `ParseParameters` 与 ANI `ParseInstallParam`（common_fun_ani.cpp）对 parameters 重复 key 统一为 **first-wins**——遇重复 key `APP_LOGW` 告警 + 跳过（保留首个、忽略后续，消除原 NAPI 吞错中断 / ANI last-wins 跨栈分歧），单次 key 行为零回归
+
 ## 验收追溯
 
-> 全 AC（AC-1~40）代码已落地、待集成环境编译/单测验证；AC-17（5 字段）、AC-19（instIndex=10000）待集成环境重验；AC-1~35 已编译验证通过（`80d089208`，112 例单测编译 OK）；增量代码落地提交 `14eb7f286`（2026-08-06）后单测扩至 123 例。运行时集成回归 + 人类 Owner 发布批准为发布 Gate 未决项（见 [gates/release.md](./gates/release.md)）。
+> 全 AC（AC-1~41）代码已落地、待集成环境编译/单测验证；AC-41 为 TS 接口透传增量（2026-08-17 NAPI `install`，2026-08-18 增补 ANI `install`，接入点共 2 处；NAPI/ANI `updateBundleForSelf` 均不适配——2026-08-18 需求方裁定，透传范围即 install 入口，非缺口）；AC-17（5 字段）、AC-19（instIndex=10000）待集成环境重验；AC-1~35 已编译验证通过（`80d089208`，112 例单测编译 OK）；增量代码落地提交 `14eb7f286`（2026-08-06）后单测扩至 123 例。运行时集成回归 + 人类 Owner 发布批准为发布 Gate 未决项（见 [gates/release.md](./gates/release.md)）。
 
 | AC | 关联规则 | 关联 Task | 验证方式 | 证据 |
 |----|----------|-----------|----------|------|
@@ -251,6 +261,7 @@
 | AC-38 | — | TASK-3 | 单测+集成（副模式不同包体 appIndex=10000、CreateHapInfoParams 直接传播） | ⏳ 代码已落地，待集成环境编译/单测/运行时回归 |
 | AC-39 | — | TASK-6 | 单测+集成（粘性隔离：隔离后更新仍隔离） | ⏳ 代码已落地，待集成环境编译/单测/运行时回归 |
 | AC-40 | — | TASK-6 | 单测+集成（before 值更新捕获/首装默认/非双模式零回归） | ⏳ 代码已落地，待集成环境编译/单测/运行时回归 |
+| AC-41 | FR-16 | TASK-7 | 单测（parameters key 刷新枚举/缺 key 零回归/非法 value 静默降级/Parcel 越界值降级） | ⏳ 代码已落地（NAPI install + ANI install 共 2 入口；NAPI/ANI updateBundleForSelf 均不适配（2026-08-18 裁定）；codecheck R1 加固：服务端值域白名单 + 双栈重复 key first-wins，已随提交 `e148c7a34` 入库、R2 报告 approve/94），待集成环境编译/单测/运行时回归 |
 
 ## 业务规则
 
@@ -279,6 +290,7 @@
 | FR-13 | 语言/主题切换时刷新双模式（`bundleInfos_` + `tempBundleInfos_`）同名应用的名称资源，两模式各自 key 不交叉污染 | 语言/主题切换 + 双模式 | BundleResourceManager 刷新路径（GetAllResourceInfo） | AC-31 |
 | FR-14 | 双模式设备不同包体类别（**不分主副模式**）仅限系统应用，非系统应用安装失败返回 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_NOT_SYSTEM_APP`；`isDualModeCloneApp` 仅副模式置位 | 双模式 + 不同包体类别 + 安装准入 | SetDualModeAppInfo（IsDiffPackageCategory 时校验 IsSystemApp） | AC-34 |
 | FR-15 | 副模式安装时跨 map（`tempBundleInfos_`）校验类别一致性，不同包体类别 互转拦截返回 `ERR_APPEXECFWK_INSTALL_DUAL_MODE_CATEGORY_CONFLICT` | 双模式 + 不同包体类别 + 跨模式 | CheckDualModeCategoryConsistencyInTemp | AC-35 |
+| FR-16 | TS 安装接口经 installParam.parameters 保留 key `ohos.bms.param.deviceModeDistributionPolicy`（value 为枚举值十进制字符串）透传设备模式分发策略，适配层解析刷新 `InstallParam.deviceModeDistributionPolicy` 字段后走既有 IPC 链路；NAPI/ANI `updateBundleForSelf` 均不适配（2026-08-18 裁定，保留 key 透传范围即 install 入口，该两入口走默认非缺口）；服务端 ReadFromParcel 值域白名单 [0,8] 越界降级 UNSPECIFIED；NAPI/ANI parameters 重复 key 统一 first-wins（codecheck R1 加固）；保留 key 为内部分发平台契约，不出对外资料（2026-08-18 裁定） | NAPI `install`（installer.cpp:893）+ ANI `install`（ani_bundle_installer.cpp:225）+ parameters 携带保留 key | InstallParam::RefreshDeviceModeDistributionPolicy（接入点 2 处，参数校验之后调用）+ ReadFromParcel 值域白名单 + 双栈重复 key first-wins | AC-41 |
 
 ## 异常/豁免规则
 
@@ -313,7 +325,7 @@
 |----------|----------|----------|--------|------------|----------|---------|
 | DeviceModeDistributionPolicy（枚举） | Public | 9 个枚举成员（值 0~8） | - | N/A | 设备模式分发策略定义，连续 int 值不支持按位或 | AC-1 |
 | BundleInfo.deviceModeDistributionPolicy | Public | number（枚举值，0~8） | - | N/A | 应用设备模式分发策略，默认 UNSPECIFIED（值 0） | AC-1/AC-2 |
-| InstallParam.deviceModeDistributionPolicy | Public | number（枚举值，0~8） | - | N/A | 安装时指定的设备模式分发策略，默认 UNSPECIFIED（值 0） | AC-1 |
+| InstallParam.deviceModeDistributionPolicy | Public | number（枚举值，0~8） | - | N/A | 安装时指定的设备模式分发策略，默认 UNSPECIFIED（值 0）；TS 侧经 parameters 保留 key 透传（AC-41），native/IPC 侧为字段 | AC-1/AC-41 |
 | AppSandboxPolicy（枚举） | Public | 2 个枚举成员（值 0~1） | - | N/A | 应用沙箱策略定义，连续 int 值互斥单值 | AC-36 |
 | BundleInfo.appSandboxPolicy | Public | number（枚举值，0~1） | - | N/A | 应用沙箱策略，默认 SHARED_SANDBOX（值 0） | AC-36/37 |
 
@@ -329,6 +341,7 @@
 | API 名称 | 变更类型 | 影响场景 | 迁移指引 | 关联 AC |
 |----------|----------|----------|----------|---------|
 | InstallParam（结构扩展） | 新增可选字段 | 现有调用方不传 deviceModeDistributionPolicy 时走默认值 | 无需迁移，向后兼容 | AC-1/AC-2 |
+| InstallParam.parameters（保留 key 透传） | 新增保留 key 语义 | TS 侧经既有 parameters 数组（`Array<{key, value}>`）传 key `ohos.bms.param.deviceModeDistributionPolicy`、value 为枚举值十进制字符串（如 "4"）；适配层（NAPI `install`；ANI `install`）刷新 `deviceModeDistributionPolicy` 字段 | 无需迁移：不传该 key 走默认 UNSPECIFIED；传非法 value（非十进制整数/超 0~8）仅打 warning 日志、静默降级默认策略，不拦截安装（2026-08-17 裁定不报 401） | AC-41 |
 | ApplicationInfo（结构扩展） | 新增可选字段 | 反序列化老数据时字段缺失 | from_json 默认值兜底，无需迁移 | AC-18 |
 | BundleInfo（结构扩展） | 新增可选字段 appSandboxPolicy | 反序列化老数据时字段缺失 | from_json 默认值兜底（SHARED_SANDBOX），无需迁移 | AC-37 |
 

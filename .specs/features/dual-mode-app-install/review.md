@@ -8,8 +8,8 @@
 |------|------|
 | 特性 | FEAT-20260715-001 双模式同包名不同安装包应用安装支持 |
 | 审查人 | Claude（AI 审查） |
-| 代码基线 | `appIndex_dual_mode_07_doc` HEAD `020de12b8`（含代码落地 `14eb7f286`，123 例单测） |
-| 审查范围 | spec AC-1~40 + design ADR-1~29 + 实现代码静态对照 |
+| 代码基线 | `appIndex_dual_mode_07_doc` HEAD `020de12b8`（含代码落地 `14eb7f286`，123 例单测）+ TASK-7 工作区增量（2026-08-17/18，+5 例至 128 例） |
+| 审查范围 | spec AC-1~41 + design ADR-1~30 + 实现代码静态对照 |
 | 复杂度 | 标准 |
 
 ## 审查输入
@@ -17,16 +17,16 @@
 | 项 | 内容 |
 |----|------|
 | Requirement | [proposal.md](./proposal.md) |
-| Design | [design.md](./design.md)（ADR-1~29） |
-| Spec | [spec.md](./spec.md)（AC-1~40、FR-1~15） |
-| 代码 | `services/bundlemgr/`（dual_mode_helper / base_bundle_installer / bundle_data_mgr / bundle_data_storage_rdb / bundle_resource/ / bundle_exception_handler / install_exception_mgr / bundle_common_event_mgr / bundle_permission_mgr 等） |
-| 单测 | `services/bundlemgr/test/unittest/bms_dual_mode_install_test/bms_dual_mode_install_test.cpp`（123 例 HWTEST_F） |
+| Design | [design.md](./design.md)（ADR-1~30） |
+| Spec | [spec.md](./spec.md)（AC-1~41、FR-1~16） |
+| 代码 | `services/bundlemgr/`（dual_mode_helper / base_bundle_installer / bundle_data_mgr / bundle_data_storage_rdb / bundle_resource/ / bundle_exception_handler / install_exception_mgr / bundle_common_event_mgr / bundle_permission_mgr 等）+ `interfaces/`（TASK-7：install_param.h/cpp / bundle_constants.h / kits/js/installer/installer.cpp / kits/ani/bundle_installer/ani_bundle_installer.cpp） |
+| 单测 | `services/bundlemgr/test/unittest/bms_dual_mode_install_test/bms_dual_mode_install_test.cpp`（128 例 HWTEST_F） |
 
 ## 规范符合性
 
 | 检查项 | 结果 | 证据 |
 |--------|------|------|
-| 需求覆盖（AC-1~40 全部由代码实现） | PASS | 逐 AC 对照源码，安装/更新路径与 HEAD `020de12b8` 代码一致；AC-34（不同包体类别仅系统应用准入，不分主副模式）由 `SetDualModeAppInfo`（base_bundle_installer.cpp:5766-5802）/ AC-35（跨 map 一致性）由 `CheckDualModeCategoryConsistencyInTemp`（:5820-5842）实现 |
+| 需求覆盖（AC-1~41 全部由代码实现） | PASS | 逐 AC 对照源码，安装/更新路径与 HEAD `020de12b8` 代码一致；AC-34（不同包体类别仅系统应用准入，不分主副模式）由 `SetDualModeAppInfo`（base_bundle_installer.cpp:5766-5802）/ AC-35（跨 map 一致性）由 `CheckDualModeCategoryConsistencyInTemp`（:5820-5842）实现；AC-41（TS parameters 透传）由 `InstallParam::RefreshDeviceModeDistributionPolicy` + NAPI `Install`/ANI `AniInstall` 两入口接入实现（见下方增量检视记录） |
 | 架构合规（特权文件操作经 SA 511；IPC Parcel 序列化） | PASS | 安装目录创建/轮转跨 IPC 到 installd；deviceModeDistributionPolicy / appSandboxPolicy 经 Parcel 跨进程 |
 | API 契约（DeviceModeDistributionPolicy 9 成员 + AppSandboxPolicy 2 成员枚举 + BundleInfo/InstallParam 字段） | PASS | 与 `bundle_info.h`（:159-176）/ `install_param.h` 实现一致 |
 | 错误码（CATEGORY_CONFLICT 8519943 / NOT_SYSTEM_APP 8519942） | PASS | `appexecfwk_errors.h:213-214` + `status_receiver_proxy.cpp:720-723` 映射 |
@@ -41,14 +41,24 @@
 | 错误处理 | PASS | CHECK_RESULT 宏 + ROLLBACK |
 | 锁契约/DRY/日志 | PASS | effective name 集中 helper；粘性沙箱 helper（ComputeCurrentAppSandboxPolicy）单源；日志保持原名 |
 
+## 增量检视记录（TASK-7 / AC-41，2026-08-17 检视 + 2026-08-18 刷新）
+
+| 项 | 结论 | 证据/说明 |
+|----|------|-----------|
+| 2026-08-17 检视（NAPI 入口） | PASS | `RefreshDeviceModeDistributionPolicy` 实现健壮（严格十进制解析、值域 [0,8]、防溢出截断、非法值不污染字段），与 amended AC-41（非法值静默降级不报 401）一致 |
+| 2026-08-18 刷新（Sync-24） | 2 处修正 | ① 接入点事实修正：spec/plan/gates 曾记"ANI 经共享 helper 覆盖 install/updateBundleForSelf 共 3 入口"——实际刷新调用位于 `AniInstall` 函数体（ani_bundle_installer.cpp:225）而非 helper 内部，`AniUpdateBundleForSelf` 不被覆盖，真实接入点 2 处（NAPI `Install` + ANI `AniInstall`），NAPI/ANI `updateBundleForSelf` 均未接入，全部文档已按代码现状改记；② installer.cpp:891 初版误写未声明标识符 `installParam`（编译不过，静态检视遗漏、本地无编译环境未拦截），用户 2026-08-18 工作区修正为 `callbackPtr->installParam` |
+| 2026-08-18 codecheck R1 加固（F-P2-01/F-P2-02） | PASS（静态） | 对 `192a99abb` 的 codecheck R1（score 80 / conditional / 无 P0P1）2 个 P2 落地修复（用户裁定：越界静默降级 UNSPECIFIED + 双栈重复 key 统一 first-wins，初版严格剥离方案因改动过大收敛为最小改动）：① F-P2-01 `InstallParam::ReadFromParcel` 加值域白名单 [0,8]，越界 int32 降级 UNSPECIFIED + `APP_LOGW`（与 amended AC-41 静默降级口径一致），越界值不可达广播字段，消除 kit 校验被原生通道绕过的校验不对称；② F-P2-02 NAPI `ParseParameters` 重复 key 由 `APP_LOGE + return false`（中断循环、调用方吞错后实际 first-wins 且丢失后续合法 key）改为 `APP_LOGW + continue`，ANI `ParseInstallParam` parameters 分支由 `operator[]` last-wins 改为 find 检查 + continue——双栈统一 first-wins（保留首个、忽略后续、告警，单次 key 零回归，净改动 NAPI 1 处 + ANI 4 行）。单测 `RefreshDeviceModeDistributionPolicy_0600`（越界 999/-5 降级 + 边界 0/8 直通），128→129 例；kit 层解析无本仓单测（XTS 待集成，同 F-P3-05 口径）。编译/单测待集成环境 |
+| 401 表述统一 | ✅ 已消 | spec 内 4 处提及均为"不报 401"裁定表述，无失实残留；单测注释（bms_dual_mode_install_test.cpp:1295）同口径 |
+| 遗留（已裁定关闭） | ✅ 非缺口 | NAPI/ANI `updateBundleForSelf` 不接入刷新（保留 key 在该两入口不生效、字段走默认）——**2026-08-18 需求方裁定：该接口不适配，透传范围即 install 入口**（spec AC-41/FR-16 已改记裁定口径；codecheck R2 F-P3-03 同步关闭，资料锚点 F-P3-04 亦裁定资料不适配） |
+
 ## 验证证据
 
 | 项 | 结果 | 证据 |
 |----|------|------|
-| 编译（bms_target + 单测编译） | ✅（`_04`）/ ⏳（增量） | 用户确认 `_04` `80d089208` 代码与单测（112 例）编译 OK；增量代码（`14eb7f286`，123 例）编译待集成环境 |
-| 单测 | 123 例（`14eb7f286` 后） | 覆盖 DualModeHelper 谓词 / IsDiffPackageCategory / GetEffectiveBundleName / Classify / Resource / DeviceModeDistributionPolicy+AppSandboxPolicy 序列化 / FillDualModeEventFields（5 字段+粘性+before）/ ComputeCurrentAppSandboxPolicy / Router / Skill / FetchTempBundleInfo / GenerateOdid 双 map / UpdateBundleInstallState / SetDualModeAppInfo（系统应用，主+副模式）/ CreateHapInfoParams（appIndex 直接传播）/ CheckDualModeCategoryConsistencyInTemp / DeliveryProfileToCodeSign |
+| 编译（bms_target + 单测编译） | ✅（`_04`）/ ⏳（增量） | 用户确认 `_04` `80d089208` 代码与单测（112 例）编译 OK；增量代码（`14eb7f286` 123 例 + TASK-7 工作区至 128 例）编译待集成环境 |
+| 单测 | 129 例（`14eb7f286` 后 + TASK-7 增量 + codecheck R1 加固 0600） | 覆盖 DualModeHelper 谓词 / IsDiffPackageCategory / GetEffectiveBundleName / Classify / Resource / DeviceModeDistributionPolicy+AppSandboxPolicy 序列化 / FillDualModeEventFields（5 字段+粘性+before）/ ComputeCurrentAppSandboxPolicy / Router / Skill / FetchTempBundleInfo / GenerateOdid 双 map / UpdateBundleInstallState / SetDualModeAppInfo（系统应用，主+副模式）/ CreateHapInfoParams（appIndex 直接传播）/ CheckDualModeCategoryConsistencyInTemp / DeliveryProfileToCodeSign / RefreshDeviceModeDistributionPolicy（有效刷新/缺 key 零回归/边界 0/8/前导零/非法值拒收不污染/Parcel 往返/Parcel 越界值降级 UNSPECIFIED（0600，F-P2-01）） |
 | 主体集成回归（AC-1~21） | ✅ 运行 PASS | 2026-07-18 集成环境编译 + 单测 + AC-1~21 全回归 PASS |
-| 增量 AC-22~40 运行时集成回归 | ⏳ 待集成环境 | 含 AC-36~40 + AC-17（5 字段重验）+ AC-19（appIndex 置位机制重验）；编译验证通过 ≠ 运行回归 PASS |
+| 增量 AC-22~41 运行时集成回归 | ⏳ 待集成环境 | 含 AC-36~40 + AC-41（TS parameters 透传真机验证）+ AC-17（5 字段重验）+ AC-19（appIndex 置位机制重验）；编译验证通过 ≠ 运行回归 PASS |
 
 ## 关键遗留（不阻塞 Stage 3，影响发布范围）
 
@@ -70,8 +80,8 @@
 | 字段 | 内容 |
 |----|------|
 | 阶段 | 实现（Stage 3） |
-| 决策 | **静态审查 PASS** — spec AC-1~40 / design ADR-1~29 与 HEAD `020de12b8` 代码静态一致；`_04` AC-1~35 编译验证通过 + AC-1~21 运行 PASS；增量代码（`14eb7f286`）核对全命中、编译/单测/运行时回归待集成环境。运行时全 AC 集成回归 + 人类 Owner 发布批准仍待 |
-| 下一阶段 | 集成环境全 AC（AC-1~40）运行回归 PASS + 人类 Owner 发布批准 + 复盘 → [gates/release.md](./gates/release.md) 解阻塞 |
-| 重检范围 | 全量（`_04` + `14eb7f286` 编译 + 123 例单测运行 + 全 AC 运行时集成回归 + 人工发布批准） |
+| 决策 | **静态审查 PASS** — spec AC-1~41 / design ADR-1~30 与 HEAD `020de12b8` + TASK-7 工作区增量代码静态一致；`_04` AC-1~35 编译验证通过 + AC-1~21 运行 PASS；增量代码（`14eb7f286`）核对全命中、TASK-7 增量（2026-08-17/18 检视，见「增量检视记录」）静态一致，编译/单测/运行时回归待集成环境。运行时全 AC 集成回归 + 人类 Owner 发布批准仍待 |
+| 下一阶段 | 集成环境全 AC（AC-1~41）运行回归 PASS + 人类 Owner 发布批准 + 复盘 → [gates/release.md](./gates/release.md) 解阻塞 |
+| 重检范围 | 全量（`_04` + `14eb7f286` + TASK-7 工作区增量编译 + 128 例单测运行 + 全 AC 运行时集成回归 + 人工发布批准） |
 
-> **编译验证通过的精确含义**：`_04`「代码和用例均编译验证 OK」= bms_target 编译通过 + 单测编译通过（112 例）。按「证据先于声明」，增量代码（`14eb7f286`，123 例）编译/单测 + 运行时逐 AC 集成回归（clone app 安装/更新/卸载隔离、副模式目录/key、重启分类、跨模式 odid、粘性沙箱、广播 5 字段等）仍须集成环境运行。编译通过不等于运行时回归 PASS。Stage 4 发布仍需人类 Owner 批准。
+> **编译验证通过的精确含义**：`_04`「代码和用例均编译验证 OK」= bms_target 编译通过 + 单测编译通过（112 例）。按「证据先于声明」，增量代码（`14eb7f286` 123 例 + TASK-7 工作区增量至 128 例）编译/单测 + 运行时逐 AC 集成回归（clone app 安装/更新/卸载隔离、副模式目录/key、重启分类、跨模式 odid、粘性沙箱、广播 5 字段、TS parameters 透传等）仍须集成环境运行。编译通过不等于运行时回归 PASS。Stage 4 发布仍需人类 Owner 批准。
