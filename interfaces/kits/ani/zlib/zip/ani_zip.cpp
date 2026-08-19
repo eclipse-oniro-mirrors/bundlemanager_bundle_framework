@@ -21,9 +21,10 @@
 #include "napi_constants.h"
 #include "securec.h"
 #include "zlib.h"
+#include <iostream>
+#include <memory>
 #include <sstream>
 #include <streambuf>
-#include <iostream>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -77,17 +78,25 @@ static bool SetNativeZStream(ani_env* env, ani_object instance, const z_streamp 
         return false;
     }
     ani_class cls = CommonFunAni::CreateClassByName(env, CLASS_NAME_ZIPINTERNAL);
-    CHECK_PARAM_NULL_RETURN(cls, false);
+    if (cls == nullptr) {
+        (void)env->Object_SetFieldByName_Long(instance, FIELD_NAME_NATIVEZSTREAM, 0);
+        return false;
+    }
     ani_method method = nullptr;
     status = env->Class_FindMethod(cls, METHOD_NAME_REGISTERZIPCLEANER, ":", &method);
     if (status != ANI_OK) {
         APP_LOGE("Class_FindMethod failed %{public}d", status);
+        (void)env->Object_SetFieldByName_Long(instance, FIELD_NAME_NATIVEZSTREAM, 0);
         return false;
     }
-    CHECK_PARAM_NULL_RETURN(method, false);
+    if (method == nullptr) {
+        (void)env->Object_SetFieldByName_Long(instance, FIELD_NAME_NATIVEZSTREAM, 0);
+        return false;
+    }
     status = env->Object_CallMethod_Void(instance, method);
     if (status != ANI_OK) {
         APP_LOGE("Object_CallMethod_Void failed %{public}d", status);
+        (void)env->Object_SetFieldByName_Long(instance, FIELD_NAME_NATIVEZSTREAM, 0);
         return false;
     }
     return true;
@@ -107,15 +116,12 @@ static bool SetZStream(ani_env* env, ani_object instance, ani_object aniStrm, z_
     }
 
     if (zStream == nullptr) {
-        zStream = new (std::nothrow)z_stream(zs);
-        if (zStream == nullptr) {
-            APP_LOGE("create zStream failed");
-            return false;
-        }
-        if (!SetNativeZStream(env, instance, zStream)) {
+        std::unique_ptr<z_stream> newZStream = std::make_unique<z_stream>(zs);
+        if (!SetNativeZStream(env, instance, newZStream.get())) {
             APP_LOGE("set native zStream failed");
             return false;
         }
+        zStream = newZStream.release();
         return true;
     }
 
@@ -971,28 +977,26 @@ ani_enum_item InflateInit2Native(ani_env* env, ani_object instance, ani_object a
         return nullptr;
     }
 
-    z_streamp zs = new (std::nothrow)z_stream();
-    if (zs == nullptr) {
-        APP_LOGE("create zs failed");
-        return nullptr;
-    }
-    if (!SetZStream(env, instance, aniStrm, zs)) {
+    std::unique_ptr<z_stream> zs = std::make_unique<z_stream>();
+    z_streamp zsRaw = zs.get();
+    if (!SetZStream(env, instance, aniStrm, zsRaw)) {
         APP_LOGE("set zStream failed");
         AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return nullptr;
     }
 
-    int32_t errCode = inflateInit2(zs, aniWindowBits);
+    int32_t errCode = inflateInit2(zs.get(), aniWindowBits);
     if (errCode < 0) {
         APP_LOGE("inflateInit2 failed %{public}d", errCode);
         AniZLibCommon::ThrowZLibNapiError(env, errCode);
         return nullptr;
     }
-    zStream = zs;
-    if (!SetNativeZStream(env, instance, zStream)) {
+    if (!SetNativeZStream(env, instance, zs.get())) {
         APP_LOGE("set native zStream failed");
+        (void)inflateEnd(zs.get());
         return nullptr;
     }
+    zs.release();
 
     return EnumUtils::EnumNativeToETS_Zlib_ReturnStatus(env, errCode);
 }
@@ -1011,27 +1015,25 @@ ani_enum_item InflateInitNative(ani_env* env, ani_object instance, ani_object an
         return nullptr;
     }
 
-    z_streamp zs = new (std::nothrow)z_stream();
-    if (zs == nullptr) {
-        APP_LOGE("create zs failed");
-        return nullptr;
-    }
-    if (!SetZStream(env, instance, aniStrm, zs)) {
+    std::unique_ptr<z_stream> zs = std::make_unique<z_stream>();
+    z_streamp zsRaw = zs.get();
+    if (!SetZStream(env, instance, aniStrm, zsRaw)) {
         APP_LOGE("set zStream failed");
         return nullptr;
     }
 
-    int32_t errCode = inflateInit(zs);
+    int32_t errCode = inflateInit(zs.get());
     if (errCode < 0) {
         APP_LOGE("inflateInit failed %{public}d", errCode);
         AniZLibCommon::ThrowZLibNapiError(env, errCode);
         return nullptr;
     }
-    zStream = zs;
-    if (!SetNativeZStream(env, instance, zStream)) {
+    if (!SetNativeZStream(env, instance, zs.get())) {
         APP_LOGE("set native zStream failed");
+        (void)inflateEnd(zs.get());
         return nullptr;
     }
+    zs.release();
 
     return EnumUtils::EnumNativeToETS_Zlib_ReturnStatus(env, errCode);
 }
@@ -1159,15 +1161,12 @@ ani_enum_item InflateCopyNative(ani_env* env, ani_object instance, ani_object an
     }
 
     if (zStream == nullptr) {
-        zStream = new (std::nothrow)z_stream();
-        if (zStream == nullptr) {
-            APP_LOGE("create zStream failed");
-            return nullptr;
-        }
-        if (!SetNativeZStream(env, instance, zStream)) {
+        std::unique_ptr<z_stream> newZStream = std::make_unique<z_stream>();
+        if (!SetNativeZStream(env, instance, newZStream.get())) {
             APP_LOGE("set native zStream failed");
             return nullptr;
         }
+        zStream = newZStream.release();
     }
     int32_t errCode = inflateCopy(zStream, srcZStream);
     if (errCode < 0) {
@@ -1361,16 +1360,6 @@ ani_enum_item DeflateInitNative(ani_env* env, ani_object instance, ani_object an
         return nullptr;
     }
 
-    z_streamp zs = new (std::nothrow)z_stream();
-    if (zs == nullptr) {
-        APP_LOGE("create zs failed");
-        return nullptr;
-    }
-    if (!SetZStream(env, instance, aniStrm, zs)) {
-        APP_LOGE("set zs failed");
-        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
-        return nullptr;
-    }
     int32_t level = 0;
     if (!EnumUtils::EnumETSToNative(env, aniLevel, level)) {
         APP_LOGE("Parse aniLevel failed");
@@ -1378,17 +1367,25 @@ ani_enum_item DeflateInitNative(ani_env* env, ani_object instance, ani_object an
         return nullptr;
     }
 
-    int32_t errCode = deflateInit(zs, level);
+    std::unique_ptr<z_stream> zs = std::make_unique<z_stream>();
+    z_streamp zsRaw = zs.get();
+    if (!SetZStream(env, instance, aniStrm, zsRaw)) {
+        APP_LOGE("set zs failed");
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
+        return nullptr;
+    }
+    int32_t errCode = deflateInit(zs.get(), level);
     if (errCode < 0) {
         APP_LOGE("deflateInit failed %{public}d", errCode);
         AniZLibCommon::ThrowZLibNapiError(env, errCode);
         return nullptr;
     }
-    zStream = zs;
-    if (!SetNativeZStream(env, instance, zStream)) {
+    if (!SetNativeZStream(env, instance, zs.get())) {
         APP_LOGE("set native zStream failed");
+        (void)deflateEnd(zs.get());
         return nullptr;
     }
+    zs.release();
 
     return EnumUtils::EnumNativeToETS_Zlib_ReturnStatus(env, errCode);
 }
@@ -1413,16 +1410,6 @@ ani_enum_item DeflateInit2Native(ani_env* env, ani_object instance,
         return nullptr;
     }
 
-    z_streamp zs = new (std::nothrow)z_stream();
-    if (zs == nullptr) {
-        APP_LOGE("create zs failed");
-        return nullptr;
-    }
-    if (!SetZStream(env, instance, aniStrm, zs)) {
-        APP_LOGE("set zStream failed");
-        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
-        return nullptr;
-    }
     int32_t level = 0;
     if (!EnumUtils::EnumETSToNative(env, aniLevel, level)) {
         APP_LOGE("Parse aniLevel failed");
@@ -1448,17 +1435,25 @@ ani_enum_item DeflateInit2Native(ani_env* env, ani_object instance,
         return nullptr;
     }
 
-    int32_t errCode = deflateInit2(zs, level, method, aniWindowBits, memLevel, strategy);
+    std::unique_ptr<z_stream> zs = std::make_unique<z_stream>();
+    z_streamp zsRaw = zs.get();
+    if (!SetZStream(env, instance, aniStrm, zsRaw)) {
+        APP_LOGE("set zStream failed");
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
+        return nullptr;
+    }
+    int32_t errCode = deflateInit2(zs.get(), level, method, aniWindowBits, memLevel, strategy);
     if (errCode < 0) {
         APP_LOGE("deflateInit2 failed %{public}d", errCode);
         AniZLibCommon::ThrowZLibNapiError(env, errCode);
         return nullptr;
     }
-    zStream = zs;
-    if (!SetNativeZStream(env, instance, zStream)) {
+    if (!SetNativeZStream(env, instance, zs.get())) {
         APP_LOGE("set native zStream failed");
+        (void)deflateEnd(zs.get());
         return nullptr;
     }
+    zs.release();
 
     return EnumUtils::EnumNativeToETS_Zlib_ReturnStatus(env, errCode);
 }
@@ -1611,15 +1606,12 @@ ani_enum_item DeflateCopyNative(ani_env* env, ani_object instance, ani_object an
     }
 
     if (zStream == nullptr) {
-        zStream = new (std::nothrow)z_stream();
-        if (zStream == nullptr) {
-            APP_LOGE("create zStream failed");
-            return nullptr;
-        }
-        if (!SetNativeZStream(env, instance, zStream)) {
+        std::unique_ptr<z_stream> newZStream = std::make_unique<z_stream>();
+        if (!SetNativeZStream(env, instance, newZStream.get())) {
             APP_LOGE("set native zStream failed");
             return nullptr;
         }
+        zStream = newZStream.release();
     }
     int32_t errCode = deflateCopy(zStream, srcZStream);
     if (errCode < 0) {

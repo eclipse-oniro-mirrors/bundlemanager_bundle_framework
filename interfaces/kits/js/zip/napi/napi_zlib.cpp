@@ -715,6 +715,7 @@ napi_value NAPI_ZipFile(napi_env env, napi_callback_info info)
 
 napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackInfo *asyncZipCallbackInfo)
 {
+    std::unique_ptr<AsyncZipCallbackInfo> callbackPtr {asyncZipCallbackInfo};
     napi_value args[ARGS_MAX_COUNT] = {nullptr};
     napi_value thisArg = nullptr;
     size_t argcAsync = 4;
@@ -741,7 +742,6 @@ napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackIn
         return nullptr;
     }
     napi_value promise = nullptr;
-    std::unique_ptr<AsyncZipCallbackInfo> callbackPtr {asyncZipCallbackInfo};
     asyncZipCallbackInfo->param = param;
     if (argcAsync > PARAM3) {
         napi_valuetype valuetype = napi_undefined;
@@ -758,7 +758,6 @@ napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackIn
         NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
         asyncZipCallbackInfo->zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>(env, nullptr, deferred, false);
     }
-
     CompressExcute(env, asyncZipCallbackInfo);
     callbackPtr.release();
     return promise;
