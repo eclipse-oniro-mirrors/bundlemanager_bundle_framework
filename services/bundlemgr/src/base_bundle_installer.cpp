@@ -3317,9 +3317,9 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         return ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME;
     }
 
-    // same version need to check app label
+    // need to check when adding new module in same version update
     ErrCode result = ERR_OK;
-    if (!otaInstall_ && (oldInfo.GetVersionCode() == newInfo.GetVersionCode())) {
+    if (!otaInstall_ && isAppExist_ && !isFeatureNeedUninstall_) {
         result = CheckAppLabel(oldInfo, newInfo);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "CheckAppLabel failed %{public}d", result);
