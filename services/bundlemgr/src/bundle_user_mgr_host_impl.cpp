@@ -43,6 +43,7 @@
 #include "scene_board_judgement.h"
 #endif
 #include "status_receiver_host.h"
+#include "xcollie_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -168,7 +169,14 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BeforeCreateNewUser(userId);
-    ErrCode res = OnCreateNewUser(userId, needToSkipPreBundleInstall, disallowList, allowList);
+    ErrCode res = ERR_OK;
+    if ((system::GetBoolParameter(ServiceConstants::RETAIL_MODE_KEY, false)) && (userId == Constants::START_USERID)) {
+        XCollieHelper::PauseFoundationWatchdog();
+        res = OnCreateNewUser(userId, needToSkipPreBundleInstall, disallowList, allowList);
+        XCollieHelper::ResumeFoundationWatchdog();
+    } else {
+        res = OnCreateNewUser(userId, needToSkipPreBundleInstall, disallowList, allowList);
+    }
     if (res != ERR_OK) {
         APP_LOGE("OnCreateNewUser failed %{public}d %{public}d", userId, res);
         InnerRemoveUser(userId, false);
