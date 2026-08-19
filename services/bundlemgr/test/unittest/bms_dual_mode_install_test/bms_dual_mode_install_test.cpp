@@ -38,6 +38,7 @@
 #include "install_param.h"
 #include "message_parcel.h"
 #include "nlohmann/json.hpp"
+#include "parameters.h"
 #include "bundle_resource/bundle_resource_process.h"
 
 using namespace testing::ext;
@@ -392,6 +393,80 @@ HWTEST_F(BmsDualModeInstallTest, InitDualModeBundleName_0300, Function | SmallTe
     installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
     installer.InitDualModeBundleName(installParam);
     EXPECT_TRUE(installer.dualModeBundleName_.empty());
+}
+
+HWTEST_F(BmsDualModeInstallTest, InitDualModeBundleNameByInfo_0100, Function | SmallTest | Level0)
+{
+    // Uninstall must derive the physical identity from the persisted clone flag instead of current mode.
+    BaseBundleInstaller installer;
+    InnerBundleInfo secondaryInfo = MakeResourceInfo(true);
+    secondaryInfo.SetDeviceModeDistributionPolicy(DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    installer.InitDualModeBundleName(secondaryInfo);
+    EXPECT_EQ(installer.GetEffectiveBundleName(), DualModeHelper::GetDualModeBundleName(secondaryInfo.GetBundleName()));
+
+    InnerBundleInfo primaryInfo = MakeResourceInfo(false);
+    installer.InitDualModeBundleName(primaryInfo);
+    EXPECT_TRUE(installer.dualModeBundleName_.empty());
+    EXPECT_EQ(installer.GetEffectiveBundleName(), primaryInfo.GetBundleName());
+}
+
+HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_0100, Function | SmallTest | Level0)
+{
+    EnableSecondaryMode();
+    ASSERT_TRUE(OHOS::system::SetParameter(ServiceConstants::DUAL_MODE_ISPCMODE_PARAM_KEY,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_2IN1)));
+
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE;
+
+    // Full-bundle and module-uninstall notifications use the uninstall request, just as install events do.
+    NotifyBundleEvents uninstallEvent;
+    installer.FillDualModeUninstallEventFields(installParam, uninstallEvent);
+    EXPECT_EQ(uninstallEvent.deviceModeDistributionPolicy,
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE);
+    EXPECT_EQ(uninstallEvent.currentMode, ServiceConstants::DUAL_MODE_VALUE_2IN1);
+    EXPECT_EQ(uninstallEvent.appSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
+    OHOS::system::RemoveParameter(ServiceConstants::DUAL_MODE_ISPCMODE_PARAM_KEY);
+}
+
+HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_0200, Function | SmallTest | Level0)
+{
+    // A non-dual-mode device must not overwrite event fields which are populated by the common path.
+    SetDualModeCache(ServiceConstants::DUAL_MODE_VALUE_INVALID, ServiceConstants::DUAL_MODE_VALUE_INVALID);
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::MAIN_ONLY;
+    NotifyBundleEvents uninstallEvent;
+    uninstallEvent.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::SUB_ONLY;
+    uninstallEvent.currentMode = 99;
+    uninstallEvent.appSandboxPolicy = AppSandboxPolicy::ISOLATED_SANDBOX;
+
+    installer.FillDualModeUninstallEventFields(installParam, uninstallEvent);
+
+    EXPECT_EQ(uninstallEvent.deviceModeDistributionPolicy, DeviceModeDistributionPolicy::SUB_ONLY);
+    EXPECT_EQ(uninstallEvent.currentMode, 99);
+    EXPECT_EQ(uninstallEvent.appSandboxPolicy, AppSandboxPolicy::ISOLATED_SANDBOX);
+}
+
+HWTEST_F(BmsDualModeInstallTest, DualModeUninstallEventFields_0300, Function | SmallTest | Level0)
+{
+    // A same-package app in the primary mode reports the current mode and shared-sandbox policy.
+    EnablePrimaryMode();
+    ASSERT_TRUE(OHOS::system::SetParameter(ServiceConstants::DUAL_MODE_ISPCMODE_PARAM_KEY,
+        std::to_string(ServiceConstants::DUAL_MODE_VALUE_TABLET)));
+
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.deviceModeDistributionPolicy = DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE;
+    NotifyBundleEvents uninstallEvent;
+    installer.FillDualModeUninstallEventFields(installParam, uninstallEvent);
+
+    EXPECT_EQ(uninstallEvent.deviceModeDistributionPolicy,
+        DeviceModeDistributionPolicy::UNIVERSAL_IDENTICAL_PACKAGE);
+    EXPECT_EQ(uninstallEvent.currentMode, ServiceConstants::DUAL_MODE_VALUE_TABLET);
+    EXPECT_EQ(uninstallEvent.appSandboxPolicy, AppSandboxPolicy::SHARED_SANDBOX);
+    OHOS::system::RemoveParameter(ServiceConstants::DUAL_MODE_ISPCMODE_PARAM_KEY);
 }
 
 // ====================== BaseBundleInstaller::SetDualModeAppInfo ======================
