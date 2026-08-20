@@ -139,6 +139,7 @@ ohos_source_set("rpcid_decode") {
   sources = [ "src/rpcid_decode/syscap_tool.c" ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
   ]
