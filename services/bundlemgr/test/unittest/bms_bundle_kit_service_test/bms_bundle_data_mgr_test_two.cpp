@@ -3261,7 +3261,7 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1300, Function | Smal
     forbiddenMgr->disableForbiddenDb_ = nullptr;
 
     auto ret = dataMgr->BatchSetApplicationEnabled(
-        USERID, 99, 1, "", false, false, false);
+        USERID, 2, 1, "", false, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_NOT_READY);
 
     // Restore disableForbiddenDb_
