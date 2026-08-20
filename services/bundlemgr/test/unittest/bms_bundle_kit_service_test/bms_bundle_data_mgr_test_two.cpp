@@ -3172,10 +3172,16 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1200, Function | Smal
     });
     auto setupClone = [&](const std::string &name, int32_t uid) {
         auto it = dataMgr->bundleInfos_.find(name);
-        ASSERT_NE(it, dataMgr->bundleInfos_.end());
+        EXPECT_NE(it, dataMgr->bundleInfos_.end());
+        if (it == dataMgr->bundleInfos_.end()) {
+            return;
+        }
         std::string key = name + Constants::FILE_UNDERLINE + std::to_string(USERID);
         auto userIt = it->second.innerBundleUserInfos_.find(key);
-        ASSERT_NE(userIt, it->second.innerBundleUserInfos_.end());
+        EXPECT_NE(userIt, it->second.innerBundleUserInfos_.end());
+        if (userIt == it->second.innerBundleUserInfos_.end()) {
+            return;
+        }
         InnerBundleCloneInfo cloneInfo;
         cloneInfo.appIndex = 1;
         cloneInfo.uid = uid;
@@ -3264,8 +3270,15 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1400, Function | Smal
 {
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
+
     MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    ScopeGuard guard([&] { MockUninstallBundle(BUNDLE_TEST1); });
+    auto forbiddenMgr = DelayedSingleton<AppDisableForbiddenMgr>::GetInstance();
+    ASSERT_NE(forbiddenMgr, nullptr);
+    ScopeGuard guard([&] {
+        MockUninstallBundle(BUNDLE_TEST1);
+        forbiddenMgr->SetApplicationDisableForbidden(BUNDLE_TEST1, USERID, 1, false);
+    });
+
     auto it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
     ASSERT_NE(it, dataMgr->bundleInfos_.end());
     std::string key = BUNDLE_TEST1 + Constants::FILE_UNDERLINE + std::to_string(USERID);
@@ -3276,18 +3289,18 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1400, Function | Smal
     cloneInfo.uid = TEST_UID;
     cloneInfo.enabled = true;
     userIt->second.cloneInfos["1"] = cloneInfo;
-    auto forbiddenMgr = DelayedSingleton<AppDisableForbiddenMgr>::GetInstance();
-    ASSERT_NE(forbiddenMgr, nullptr);
+
     forbiddenMgr->SetApplicationDisableForbidden(BUNDLE_TEST1, USERID, 1, true);
+
     auto ret = dataMgr->BatchSetApplicationEnabled(
         USERID, 2, 1, "", false, false, false);
     EXPECT_EQ(ret, ERR_OK);
+
     it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
     ASSERT_NE(it, dataMgr->bundleInfos_.end());
     bool enabled = false;
     EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 1), ERR_OK);
     EXPECT_TRUE(enabled);
-    forbiddenMgr->SetApplicationDisableForbidden(BUNDLE_TEST1, USERID, 1, false);
 }
 
 /**
