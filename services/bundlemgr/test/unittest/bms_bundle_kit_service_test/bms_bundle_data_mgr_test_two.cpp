@@ -18,6 +18,7 @@
 
 #include <chrono>
 #include <fstream>
+#include <functional>
 #include <thread>
 #include <gtest/gtest.h>
 
@@ -373,6 +374,9 @@ public:
 
     bool SaveStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) override
     {
+        if (saveCallback) {
+            return saveCallback(innerBundleInfo);
+        }
         return !saveShouldFail;
     }
 
@@ -387,6 +391,7 @@ public:
     }
 
     bool saveShouldFail = false;
+    std::function<bool(const InnerBundleInfo &)> saveCallback;
 };
 
 class BmsBundleDataMgrTest2 : public testing::Test {
@@ -3147,6 +3152,81 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1100, Function | Smal
     bool enabled = true;
     EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 1), ERR_OK);
     EXPECT_FALSE(enabled);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_1200
+ * @tc.name: test BatchSetApplicationEnabled with multiple bundles and rollback
+ * @tc.desc: test BatchSetApplicationEnabled when first bundle succeeds but second bundle fails,
+ *           verifying that the first bundle is rolled back correctly
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_TEST2, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard guard([&] {
+        MockUninstallBundle(BUNDLE_TEST1);
+        MockUninstallBundle(BUNDLE_TEST2);
+    });
+
+    // Setup clone for BUNDLE_TEST1 (appIndex=1, enabled=true)
+    auto it1 = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it1, dataMgr->bundleInfos_.end());
+    std::string key1 = BUNDLE_TEST1 + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto userIt1 = it1->second.innerBundleUserInfos_.find(key1);
+    ASSERT_NE(userIt1, it1->second.innerBundleUserInfos_.end());
+    InnerBundleCloneInfo cloneInfo1;
+    cloneInfo1.appIndex = 1;
+    cloneInfo1.uid = TEST_UID;
+    cloneInfo1.enabled = true;
+    userIt1->second.cloneInfos["1"] = cloneInfo1;
+
+    // Setup clone for BUNDLE_TEST2 (appIndex=1, enabled=true)
+    auto it2 = dataMgr->bundleInfos_.find(BUNDLE_TEST2);
+    ASSERT_NE(it2, dataMgr->bundleInfos_.end());
+    std::string key2 = BUNDLE_TEST2 + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto userIt2 = it2->second.innerBundleUserInfos_.find(key2);
+    ASSERT_NE(userIt2, it2->second.innerBundleUserInfos_.end());
+    InnerBundleCloneInfo cloneInfo2;
+    cloneInfo2.appIndex = 1;
+    cloneInfo2.uid = TEST_UID + 1;
+    cloneInfo2.enabled = true;
+    userIt2->second.cloneInfos["1"] = cloneInfo2;
+
+    // Replace dataStorage with mock that will fail on second save
+    auto mockStorage = std::make_shared<MockBundleDataStorage>();
+    auto savedStorage = dataMgr->dataStorage_;
+    dataMgr->dataStorage_ = mockStorage;
+
+    // First call succeeds, second call fails
+    int callCount = 0;
+    mockStorage->saveCallback = [&callCount](const InnerBundleInfo &) -> bool {
+        callCount++;
+        return callCount <= 1; // First save succeeds, second fails
+    };
+
+    auto ret = dataMgr->BatchSetApplicationEnabled(
+        USERID, 99, 1, "", false, false, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    dataMgr->dataStorage_ = savedStorage;
+
+    // Verify: BUNDLE_TEST1 should be rolled back (enabled=true)
+    it1 = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it1, dataMgr->bundleInfos_.end());
+    bool enabled1 = false;
+    EXPECT_EQ(it1->second.GetApplicationEnabledV9(USERID, enabled1, 1), ERR_OK);
+    EXPECT_TRUE(enabled1);
+
+    // Verify: BUNDLE_TEST2 should also be rolled back (enabled=true)
+    it2 = dataMgr->bundleInfos_.find(BUNDLE_TEST2);
+    ASSERT_NE(it2, dataMgr->bundleInfos_.end());
+    bool enabled2 = false;
+    EXPECT_EQ(it2->second.GetApplicationEnabledV9(USERID, enabled2, 1), ERR_OK);
+    EXPECT_TRUE(enabled2);
 }
 
 /**

@@ -6517,8 +6517,10 @@ ErrCode BundleDataMgr::BatchSetApplicationEnabled(int32_t userId, int32_t enable
 {
     BUNDLE_MANAGER_HITRACE_CHAIN_NAME("BatchSetApplicationEnabled", HITRACE_FLAG_INCLUDE_ASYNC);
     APP_LOGI("BatchSetApplicationEnabled userId=%{public}d, enableAppIndex=%{public}d, "
-        "disableAppIndex=%{public}d, caller=%{public}s, killProcess=%{public}d, needSendEvent=%{public}d",
-        userId, enableAppIndex, disableAppIndex, caller.c_str(), killProcess, needSendEvent);
+        "disableAppIndex=%{public}d, caller=%{public}s, killProcess=%{public}d, "
+        "needSendEvent=%{public}d, skipDisableForbidden=%{public}d",
+        userId, enableAppIndex, disableAppIndex, caller.c_str(), killProcess, needSendEvent,
+        skipDisableForbidden);
 
     auto validateRet = ValidateBatchSetAppIndex(enableAppIndex, disableAppIndex);
     if (validateRet != ERR_OK) {
@@ -6616,6 +6618,10 @@ ErrCode BundleDataMgr::ProcessDisableForBundle(InnerBundleInfo &innerBundleInfo,
         return ERR_OK; // forbidden, skip this bundle
     }
     if (forbidRet != ERR_OK) {
+        APP_LOGE("CheckDisableForbidden failed for %{public}s appIndex %{public}d, ret=%{public}d",
+            bundleName.c_str(), disableAppIndex, forbidRet);
+        EventReport::SendComponentStateSysEventForException(
+            bundleName, "", requestUserId, false, disableAppIndex, caller);
         RollbackBatchSetEnabled(rollbackList, requestUserId);
         return forbidRet;
     }
