@@ -13,6 +13,7 @@
 
 import("//build/test.gni")
 import("../../../../../appexecfwk.gni")
+import("../../../appexecfwk_bundlemgr.gni")
 
 config("private_config") {
   include_dirs = [
