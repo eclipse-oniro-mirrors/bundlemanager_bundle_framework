@@ -3388,6 +3388,57 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::BatchSetApplicationEnabled(int32_t userId, int32_t enableAppIndex,
+    int32_t disableAppIndex, bool killProcess, bool needSendEvent)
+{
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("BatchSetApplicationEnabled", HITRACE_FLAG_INCLUDE_ASYNC);
+    APP_LOGD("BatchSetApplicationEnabled userId=%{public}d, enableAppIndex=%{public}d, "
+        "disableAppIndex=%{public}d, killProcess=%{public}d, needSendEvent=%{public}d",
+        userId, enableAppIndex, disableAppIndex, killProcess, needSendEvent);
+
+    auto permRet = CheckBatchSetPermission();
+    if (permRet != ERR_OK) {
+        EventReport::SendComponentStateSysEventForException(
+            "", "", userId, false, enableAppIndex, "batch_permission_denied");
+        return permRet;
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = BundleUtil::GetUserIdByCallingUid();
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        EventReport::SendComponentStateSysEventForException(
+            "", "", userId, false, enableAppIndex, "batch_dataMgr_null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (!dataMgr->HasUserId(userId)) {
+        APP_LOGE("userId %{public}d does not exist", userId);
+        EventReport::SendComponentStateSysEventForException(
+            "", "", userId, false, enableAppIndex, "batch_userId_not_exist");
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
+    }
+
+    bool skipDisableForbidden = BundlePermissionMgr::IsNativeTokenTypeOnly();
+    return dataMgr->BatchSetApplicationEnabled(
+        userId, enableAppIndex, disableAppIndex, GetCallerName(), killProcess, needSendEvent,
+        skipDisableForbidden);
+}
+
+ErrCode BundleMgrHostImpl::CheckBatchSetPermission()
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHostImpl::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

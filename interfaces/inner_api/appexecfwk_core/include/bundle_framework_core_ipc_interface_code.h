@@ -273,6 +273,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     START_APP_DETAIL_ABILITY = 247,
     GET_JSON_PROFILE_FOR_SELF = 248,
     GET_BUNDLE_STATS_ASYNC = 249,
+    BATCH_SET_CLONE_APPLICATION_ENABLED = 250,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

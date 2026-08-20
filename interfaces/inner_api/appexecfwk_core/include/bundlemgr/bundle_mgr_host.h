@@ -607,6 +607,13 @@ private:
      */
     ErrCode HandleSetCloneApplicationEnabled(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the BatchSetApplicationEnabled function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleBatchSetApplicationEnabled(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the IsAbilityEnabled function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;

@@ -867,6 +867,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_STRING_BY_ID_LIST):
             errCode = this->HandleGetStringByIdList(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_SET_CLONE_APPLICATION_ENABLED):
+            errCode = this->HandleBatchSetApplicationEnabled(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -2454,6 +2457,21 @@ ErrCode BundleMgrHost::HandleSetCloneApplicationEnabled(MessageParcel &data, Mes
     int32_t userId = data.ReadInt32();
     bool killProcess = data.ReadBool();
     ErrCode ret = SetCloneApplicationEnabled(bundleName, appIndex, isEnable, userId, killProcess);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleBatchSetApplicationEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    int32_t userId = data.ReadInt32();
+    int32_t enableAppIndex = data.ReadInt32();
+    int32_t disableAppIndex = data.ReadInt32();
+    bool killProcess = data.ReadBool();
+    bool needSendEvent = data.ReadBool();
+    ErrCode ret = BatchSetApplicationEnabled(userId, enableAppIndex, disableAppIndex, killProcess, needSendEvent);
     if (!reply.WriteInt32(ret)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

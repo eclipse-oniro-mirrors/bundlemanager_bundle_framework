@@ -64,6 +64,7 @@ enum class ChangeType : int32_t {
     UNKNOWN = 0,
     SET_APPLICATION_ENABLE = 1,
     SET_APPLICATION_DISABLE = 2,
+    BATCH_SET_APPLICATION_ENABLED = 3, // batch enable/disable for clone apps
 };
 
 struct NotifyBundleEvents {
@@ -165,6 +166,10 @@ public:
 
     // Async version of NotifyDeleteDisposedRule
     void NotifyDeleteDisposedRuleAsync(const std::string &appId, int32_t userId, int32_t appIndex);
+
+    // Async version of NotifyBundleStatus
+    void NotifyBundleStatusAsync(const NotifyBundleEvents &event,
+        const std::shared_ptr<BundleDataMgr> &dataMgr);
 
 private:
     // Async notification with rate limiting (15 events per 5ms max)

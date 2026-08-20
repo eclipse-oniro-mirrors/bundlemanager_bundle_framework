@@ -25,8 +25,10 @@
 #include <set>
 #include <shared_mutex>
 #include <string>
+#include <tuple>
 #include <unordered_set>
 
+#include "bundle_common_event_mgr.h"
 #include "bundle_dir.h"
 #include "want.h"
 
@@ -549,6 +551,20 @@ public:
      */
     ErrCode SetApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
         const std::string &caller, int32_t userId, bool &stateChanged);
+    /**
+     * @brief Batch set application enabled status for clone apps under a specific user.
+     * @param userId Indicates the user id.
+     * @param enableAppIndex Indicates the app index to enable.
+     * @param disableAppIndex Indicates the app index to disable.
+     * @param caller Indicates the caller name.
+     * @param killProcess Indicates whether to kill the process when disabling.
+     * @param needSendEvent Indicates whether to send broadcast events.
+     * @param skipDisableForbidden Indicates whether to skip the disable forbidden check.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    ErrCode BatchSetApplicationEnabled(int32_t userId, int32_t enableAppIndex,
+        int32_t disableAppIndex, const std::string &caller, bool killProcess, bool needSendEvent,
+        bool skipDisableForbidden);
     /**
      * @brief Sets whether the bundle is first launch.
      * @param bundleName Indicates the bundle name.
@@ -1514,6 +1530,40 @@ private:
     bool MatchUtd(const std::string &skillUtd, const std::string &wantUtd) const;
     bool MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd) const;
     std::vector<int32_t> GetCloneAppIndexesNoLock(const std::string &bundleName, int32_t userId) const;
+    ErrCode ProcessDisableForBundle(InnerBundleInfo &innerBundleInfo,
+        const InnerBundleUserInfo *innerBundleUserInfoPtr, const std::string &bundleName,
+        int32_t disableAppIndex, const std::string &caller, int32_t requestUserId,
+        bool needSendEvent, bool skipDisableForbidden,
+        std::vector<NotifyBundleEvents> &eventsToSend,
+        std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+        std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend);
+    ErrCode ProcessEnableForBundle(InnerBundleInfo &innerBundleInfo,
+        const InnerBundleUserInfo *innerBundleUserInfoPtr, const std::string &bundleName,
+        int32_t enableAppIndex, const std::string &caller, int32_t requestUserId,
+        bool needSendEvent,
+        std::vector<NotifyBundleEvents> &eventsToSend,
+        std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend);
+    ErrCode CheckDisableForbidden(const std::string &bundleName, int32_t requestUserId,
+        int32_t disableAppIndex, bool skipDisableForbidden);
+    NotifyBundleEvents BuildBatchNotifyEvent(const InnerBundleInfo &innerBundleInfo,
+        const InnerBundleUserInfo &userInfo, const std::string &bundleName,
+        int32_t appIndex, int32_t userId);
+    void RollbackBatchSetEnabled(
+        const std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
+        int32_t userId);
+    ErrCode ValidateBatchSetAppIndex(int32_t enableAppIndex, int32_t disableAppIndex);
+    ErrCode ProcessBatchForAllBundles(int32_t requestUserId, int32_t enableAppIndex,
+        int32_t disableAppIndex, const std::string &caller, bool needSendEvent,
+        bool skipDisableForbidden,
+        std::vector<NotifyBundleEvents> &eventsToSend,
+        std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+        std::vector<std::tuple<std::string, int32_t, bool, int32_t, std::string>> &sysEventsToSend);
+    void KillDisabledBundleProcesses(
+        const std::vector<std::tuple<std::string, int32_t, int32_t>> &disabledBundles,
+        const std::string &caller);
+    void SendBatchNotifyEventsAsync(std::vector<NotifyBundleEvents> &&eventsToSend);
     void GetCloneAppInfo(const InnerBundleInfo &info, int32_t userId, int32_t flags,
         std::vector<ApplicationInfo> &appInfos) const;
     void GetCloneAppInfoV9(const InnerBundleInfo &info, int32_t userId, int32_t flags,

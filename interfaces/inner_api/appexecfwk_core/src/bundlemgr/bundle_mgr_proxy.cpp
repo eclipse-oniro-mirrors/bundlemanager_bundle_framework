@@ -2689,6 +2689,45 @@ ErrCode BundleMgrProxy::SetCloneApplicationEnabled(
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::BatchSetApplicationEnabled(int32_t userId, int32_t enableAppIndex,
+    int32_t disableAppIndex, bool killProcess, bool needSendEvent)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to BatchSetApplicationEnabled userId=%{public}d, enableAppIndex=%{public}d, "
+        "disableAppIndex=%{public}d", userId, enableAppIndex, disableAppIndex);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to BatchSetApplicationEnabled due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to BatchSetApplicationEnabled due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(enableAppIndex)) {
+        APP_LOGE("fail to BatchSetApplicationEnabled due to write enableAppIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(disableAppIndex)) {
+        APP_LOGE("fail to BatchSetApplicationEnabled due to write disableAppIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(killProcess)) {
+        APP_LOGE("fail to BatchSetApplicationEnabled due to write killProcess fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(needSendEvent)) {
+        APP_LOGE("fail to BatchSetApplicationEnabled due to write needSendEvent fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::BATCH_SET_CLONE_APPLICATION_ENABLED, data, reply)) {
+        APP_LOGE("fail to BatchSetApplicationEnabled due to send transact cmd fail");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
