@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import("//build/test.gni")
-import("../../../../../appexecfwk.gni")
 
 module_output_path = "bundle_framework/bmsbatchsetenabled_fuzzer"
 
