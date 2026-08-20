@@ -3164,12 +3164,14 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1200, Function | Smal
 {
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
+
     MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     MockInstallBundle(BUNDLE_TEST2, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     ScopeGuard guard([&] {
         MockUninstallBundle(BUNDLE_TEST1);
         MockUninstallBundle(BUNDLE_TEST2);
     });
+
     auto setupClone = [&](const std::string &name, int32_t uid) {
         auto it = dataMgr->bundleInfos_.find(name);
         EXPECT_NE(it, dataMgr->bundleInfos_.end());
@@ -3190,18 +3192,21 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1200, Function | Smal
     };
     setupClone(BUNDLE_TEST1, TEST_UID);
     setupClone(BUNDLE_TEST2, TEST_UID + 1);
+
     auto mockStorage = std::make_shared<MockBundleDataStorage>();
     auto savedStorage = dataMgr->dataStorage_;
+    ScopeGuard storageGuard([&] { dataMgr->dataStorage_ = savedStorage; });
     dataMgr->dataStorage_ = mockStorage;
     int callCount = 0;
     mockStorage->saveCallback = [&callCount](const InnerBundleInfo &) -> bool {
         callCount++;
         return callCount <= 1;
     };
+
     auto ret = dataMgr->BatchSetApplicationEnabled(
         USERID, 2, 1, "", false, false, true);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-    dataMgr->dataStorage_ = savedStorage;
+
     auto it1 = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
     ASSERT_NE(it1, dataMgr->bundleInfos_.end());
     bool enabled1 = false;
@@ -3239,20 +3244,16 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1300, Function | Smal
     cloneInfo.enabled = true;
     userIt->second.cloneInfos["1"] = cloneInfo;
 
-    // Set AppDisableForbiddenMgr's disableForbiddenDb_ to nullptr to trigger error path
     auto forbiddenMgr = DelayedSingleton<AppDisableForbiddenMgr>::GetInstance();
     ASSERT_NE(forbiddenMgr, nullptr);
     auto savedDb = forbiddenMgr->disableForbiddenDb_;
+    ScopeGuard dbGuard([&] { forbiddenMgr->disableForbiddenDb_ = savedDb; });
     forbiddenMgr->disableForbiddenDb_ = nullptr;
 
     auto ret = dataMgr->BatchSetApplicationEnabled(
         USERID, 2, 1, "", false, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_NOT_READY);
 
-    // Restore disableForbiddenDb_
-    forbiddenMgr->disableForbiddenDb_ = savedDb;
-
-    // Verify: BUNDLE_TEST1 should be rolled back (enabled=true)
     it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
     ASSERT_NE(it, dataMgr->bundleInfos_.end());
     bool enabled = false;
