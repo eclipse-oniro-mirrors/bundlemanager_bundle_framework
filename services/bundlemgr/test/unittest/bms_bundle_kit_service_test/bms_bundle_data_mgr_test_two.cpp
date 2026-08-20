@@ -3230,6 +3230,52 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1200, Function | Smal
 }
 
 /**
+ * @tc.number: BatchSetApplicationEnabled_1300
+ * @tc.name: test BatchSetApplicationEnabled with CheckDisableForbidden error
+ * @tc.desc: test BatchSetApplicationEnabled when CheckDisableForbidden returns error (disableForbiddenDb_ is nullptr),
+ *           verifying that error is returned and rollback happens correctly
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard guard([&] { MockUninstallBundle(BUNDLE_TEST1); });
+
+    auto it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    std::string key = BUNDLE_TEST1 + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto userIt = it->second.innerBundleUserInfos_.find(key);
+    ASSERT_NE(userIt, it->second.innerBundleUserInfos_.end());
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    cloneInfo.uid = TEST_UID;
+    cloneInfo.enabled = true;
+    userIt->second.cloneInfos["1"] = cloneInfo;
+
+    // Set AppDisableForbiddenMgr's disableForbiddenDb_ to nullptr to trigger error path
+    auto forbiddenMgr = DelayedSingleton<AppDisableForbiddenMgr>::GetInstance();
+    ASSERT_NE(forbiddenMgr, nullptr);
+    auto savedDb = forbiddenMgr->disableForbiddenDb_;
+    forbiddenMgr->disableForbiddenDb_ = nullptr;
+
+    auto ret = dataMgr->BatchSetApplicationEnabled(
+        USERID, 99, 1, "", false, false, false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_NOT_READY);
+
+    // Restore disableForbiddenDb_
+    forbiddenMgr->disableForbiddenDb_ = savedDb;
+
+    // Verify: BUNDLE_TEST1 should be rolled back (enabled=true)
+    it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    bool enabled = false;
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 1), ERR_OK);
+    EXPECT_TRUE(enabled);
+}
+
+/**
  * @tc.number: BundleExceptionHandler_0100
  * Function: BundleExceptionHandler
  * @tc.name: test HandleInvalidBundle

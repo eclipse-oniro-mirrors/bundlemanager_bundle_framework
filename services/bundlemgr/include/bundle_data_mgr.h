@@ -1554,8 +1554,8 @@ private:
         const std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList,
         int32_t userId);
     ErrCode ValidateBatchSetAppIndex(int32_t enableAppIndex, int32_t disableAppIndex);
-    void ReportErrorAndRollback(const std::string &bundleName, int32_t userId, int32_t appIndex,
-        bool isEnable, const std::string &caller,
+    void ReportErrorAndRollback(const std::string &bundleName, int32_t userId, bool isEnable,
+        int32_t appIndex, const std::string &caller,
         std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList);
     ErrCode ProcessBatchForAllBundles(int32_t requestUserId, int32_t enableAppIndex,
         int32_t disableAppIndex, const std::string &caller, bool needSendEvent,

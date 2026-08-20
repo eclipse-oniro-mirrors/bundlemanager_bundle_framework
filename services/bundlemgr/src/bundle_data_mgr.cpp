@@ -6620,21 +6620,21 @@ ErrCode BundleDataMgr::ProcessDisableForBundle(InnerBundleInfo &innerBundleInfo,
     if (forbidRet != ERR_OK) {
         APP_LOGE("CheckDisableForbidden failed for %{public}s appIndex %{public}d, ret=%{public}d",
             bundleName.c_str(), disableAppIndex, forbidRet);
-        ReportErrorAndRollback(bundleName, requestUserId, disableAppIndex, false, caller, rollbackList);
+        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller, rollbackList);
         return forbidRet;
     }
     auto ret = innerBundleInfo.SetCloneApplicationEnabled(false, disableAppIndex, caller, requestUserId);
     if (ret != ERR_OK) {
         APP_LOGE("disable appIndex %{public}d failed for %{public}s, ret=%{public}d",
             disableAppIndex, bundleName.c_str(), ret);
-        ReportErrorAndRollback(bundleName, requestUserId, disableAppIndex, false, caller, rollbackList);
+        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller, rollbackList);
         return ret;
     }
     rollbackList.emplace_back(bundleName, disableAppIndex, false, caller);
     if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
         APP_LOGE("SaveStorageBundleInfo failed for %{public}s appIndex %{public}d",
             bundleName.c_str(), disableAppIndex);
-        ReportErrorAndRollback(bundleName, requestUserId, disableAppIndex, false, caller, rollbackList);
+        ReportErrorAndRollback(bundleName, requestUserId, false, disableAppIndex, caller, rollbackList);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     disabledBundles.emplace_back(bundleName, requestUserId, disableAppIndex);
@@ -6667,14 +6667,14 @@ ErrCode BundleDataMgr::ProcessEnableForBundle(InnerBundleInfo &innerBundleInfo,
     if (ret != ERR_OK) {
         APP_LOGE("enable appIndex %{public}d failed for %{public}s, ret=%{public}d",
             enableAppIndex, bundleName.c_str(), ret);
-        ReportErrorAndRollback(bundleName, requestUserId, enableAppIndex, true, caller, rollbackList);
+        ReportErrorAndRollback(bundleName, requestUserId, true, enableAppIndex, caller, rollbackList);
         return ret;
     }
     rollbackList.emplace_back(bundleName, enableAppIndex, true, caller);
     if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
         APP_LOGE("SaveStorageBundleInfo failed for %{public}s appIndex %{public}d",
             bundleName.c_str(), enableAppIndex);
-        ReportErrorAndRollback(bundleName, requestUserId, enableAppIndex, true, caller, rollbackList);
+        ReportErrorAndRollback(bundleName, requestUserId, true, enableAppIndex, caller, rollbackList);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (needSendEvent) {
@@ -6730,7 +6730,7 @@ NotifyBundleEvents BundleDataMgr::BuildBatchNotifyEvent(const InnerBundleInfo &i
 }
 
 void BundleDataMgr::ReportErrorAndRollback(const std::string &bundleName, int32_t userId,
-    int32_t appIndex, bool isEnable, const std::string &caller,
+    bool isEnable, int32_t appIndex, const std::string &caller,
     std::vector<std::tuple<std::string, int32_t, bool, std::string>> &rollbackList)
 {
     EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller);
