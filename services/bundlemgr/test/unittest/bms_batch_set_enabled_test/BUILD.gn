@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/test.gni")
-import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
+import("../../../../../appexecfwk.gni")
 
 config("private_config") {
   include_dirs = [
@@ -76,7 +76,24 @@ ohos_unittest("BmsBatchSetEnabledTest") {
     "ipc:ipc_core",
     "json:nlohmann_json_static",
   ]
-  external_deps += bundle_install_external_deps
+  external_deps += [
+    "ability_runtime:ability_manager",
+    "app_file_service:remote_file_share_native",
+    "appspawn:appspawn_client",
+    "dfs_service:distributed_file_daemon_kit_inner",
+    "dfs_service:libdecompress",
+    "ffrt:libffrt",
+    "hitrace:libhitracechain",
+    "icu:shared_icuuc",
+    "libxml2:libxml2",
+    "memmgr:memmgrclient",
+    "openssl:libcrypto_shared",
+    "os_account:libaccountkits",
+    "safwk:api_cache_manager",
+    "storage_service:storage_manager_acl",
+    "window_manager:libmodal_system_ui_extension_client",
+    "zlib:shared_libz",
+  ]
   defines = [ "BUNDLE_FRAMEWORK_BUNDLE_UTIL_RETURN_TRUE" ]
   if (ability_runtime_enable) {
     external_deps += [ "ability_runtime:ability_manager" ]
