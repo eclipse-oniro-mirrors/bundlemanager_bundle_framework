@@ -77,7 +77,6 @@ ohos_unittest("BmsBatchSetEnabledTest") {
     "json:nlohmann_json_static",
   ]
   external_deps += [
-    "ability_runtime:ability_manager",
     "app_file_service:remote_file_share_native",
     "appspawn:appspawn_client",
     "dfs_service:distributed_file_daemon_kit_inner",
