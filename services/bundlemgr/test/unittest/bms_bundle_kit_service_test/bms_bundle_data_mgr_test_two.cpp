@@ -2894,7 +2894,7 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_0400, Function | Smal
     userIt->second.cloneInfos["1"] = cloneInfo;
 
     auto ret = dataMgr->BatchSetApplicationEnabled(
-        USERID, 99, 88, "", false, false, false);
+        USERID, 3, 4, "", false, false, false);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -2929,7 +2929,7 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_0500, Function | Smal
 
     mockStorage->saveShouldFail = true;
     auto ret = dataMgr->BatchSetApplicationEnabled(
-        USERID, 99, 1, "", false, false, false);
+        USERID, 2, 1, "", false, false, false);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
     dataMgr->dataStorage_ = savedStorage;
@@ -2972,7 +2972,7 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_0600, Function | Smal
 
     mockStorage->saveShouldFail = true;
     auto ret = dataMgr->BatchSetApplicationEnabled(
-        USERID, 2, 99, "", false, false, false);
+        USERID, 2, 3, "", false, false, false);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
     dataMgr->dataStorage_ = savedStorage;
@@ -3039,7 +3039,7 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_0800, Function | Smal
     userIt->second.cloneInfos["1"] = cloneInfo;
 
     auto ret = dataMgr->BatchSetApplicationEnabled(
-        USERID, 99, 1, "", true, false, true);
+        USERID, 2, 1, "", true, false, true);
     EXPECT_EQ(ret, ERR_OK);
 
     it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
@@ -3074,7 +3074,7 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_0900, Function | Smal
     userIt->second.cloneInfos["1"] = cloneInfo;
 
     auto ret = dataMgr->BatchSetApplicationEnabled(
-        USERID, 99, 1, "", false, true, true);
+        USERID, 2, 1, "", false, true, true);
     EXPECT_EQ(ret, ERR_OK);
 
     it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
@@ -3109,7 +3109,7 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1000, Function | Smal
     userIt->second.cloneInfos["1"] = cloneInfo;
 
     auto ret = dataMgr->BatchSetApplicationEnabled(
-        USERID, 99, 1, "", false, false, false);
+        USERID, 2, 1, "", false, false, false);
     EXPECT_EQ(ret, ERR_OK);
 
     it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
@@ -3144,7 +3144,7 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1100, Function | Smal
     userIt->second.cloneInfos["1"] = cloneInfo;
 
     auto ret = dataMgr->BatchSetApplicationEnabled(
-        USERID, 99, 1, "", false, false, true);
+        USERID, 2, 1, "", false, false, true);
     EXPECT_EQ(ret, ERR_OK);
 
     it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
@@ -3164,65 +3164,44 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1200, Function | Smal
 {
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
-
     MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     MockInstallBundle(BUNDLE_TEST2, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     ScopeGuard guard([&] {
         MockUninstallBundle(BUNDLE_TEST1);
         MockUninstallBundle(BUNDLE_TEST2);
     });
-
-    // Setup clone for BUNDLE_TEST1 (appIndex=1, enabled=true)
-    auto it1 = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
-    ASSERT_NE(it1, dataMgr->bundleInfos_.end());
-    std::string key1 = BUNDLE_TEST1 + Constants::FILE_UNDERLINE + std::to_string(USERID);
-    auto userIt1 = it1->second.innerBundleUserInfos_.find(key1);
-    ASSERT_NE(userIt1, it1->second.innerBundleUserInfos_.end());
-    InnerBundleCloneInfo cloneInfo1;
-    cloneInfo1.appIndex = 1;
-    cloneInfo1.uid = TEST_UID;
-    cloneInfo1.enabled = true;
-    userIt1->second.cloneInfos["1"] = cloneInfo1;
-
-    // Setup clone for BUNDLE_TEST2 (appIndex=1, enabled=true)
-    auto it2 = dataMgr->bundleInfos_.find(BUNDLE_TEST2);
-    ASSERT_NE(it2, dataMgr->bundleInfos_.end());
-    std::string key2 = BUNDLE_TEST2 + Constants::FILE_UNDERLINE + std::to_string(USERID);
-    auto userIt2 = it2->second.innerBundleUserInfos_.find(key2);
-    ASSERT_NE(userIt2, it2->second.innerBundleUserInfos_.end());
-    InnerBundleCloneInfo cloneInfo2;
-    cloneInfo2.appIndex = 1;
-    cloneInfo2.uid = TEST_UID + 1;
-    cloneInfo2.enabled = true;
-    userIt2->second.cloneInfos["1"] = cloneInfo2;
-
-    // Replace dataStorage with mock that will fail on second save
+    auto setupClone = [&](const std::string &name, int32_t uid) {
+        auto it = dataMgr->bundleInfos_.find(name);
+        ASSERT_NE(it, dataMgr->bundleInfos_.end());
+        std::string key = name + Constants::FILE_UNDERLINE + std::to_string(USERID);
+        auto userIt = it->second.innerBundleUserInfos_.find(key);
+        ASSERT_NE(userIt, it->second.innerBundleUserInfos_.end());
+        InnerBundleCloneInfo cloneInfo;
+        cloneInfo.appIndex = 1;
+        cloneInfo.uid = uid;
+        cloneInfo.enabled = true;
+        userIt->second.cloneInfos["1"] = cloneInfo;
+    };
+    setupClone(BUNDLE_TEST1, TEST_UID);
+    setupClone(BUNDLE_TEST2, TEST_UID + 1);
     auto mockStorage = std::make_shared<MockBundleDataStorage>();
     auto savedStorage = dataMgr->dataStorage_;
     dataMgr->dataStorage_ = mockStorage;
-
-    // First call succeeds, second call fails
     int callCount = 0;
     mockStorage->saveCallback = [&callCount](const InnerBundleInfo &) -> bool {
         callCount++;
-        return callCount <= 1; // First save succeeds, second fails
+        return callCount <= 1;
     };
-
     auto ret = dataMgr->BatchSetApplicationEnabled(
-        USERID, 99, 1, "", false, false, true);
+        USERID, 2, 1, "", false, false, true);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-
     dataMgr->dataStorage_ = savedStorage;
-
-    // Verify: BUNDLE_TEST1 should be rolled back (enabled=true)
-    it1 = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    auto it1 = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
     ASSERT_NE(it1, dataMgr->bundleInfos_.end());
     bool enabled1 = false;
     EXPECT_EQ(it1->second.GetApplicationEnabledV9(USERID, enabled1, 1), ERR_OK);
     EXPECT_TRUE(enabled1);
-
-    // Verify: BUNDLE_TEST2 should also be rolled back (enabled=true)
-    it2 = dataMgr->bundleInfos_.find(BUNDLE_TEST2);
+    auto it2 = dataMgr->bundleInfos_.find(BUNDLE_TEST2);
     ASSERT_NE(it2, dataMgr->bundleInfos_.end());
     bool enabled2 = false;
     EXPECT_EQ(it2->second.GetApplicationEnabledV9(USERID, enabled2, 1), ERR_OK);
@@ -3273,6 +3252,42 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1300, Function | Smal
     bool enabled = false;
     EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 1), ERR_OK);
     EXPECT_TRUE(enabled);
+}
+
+/**
+ * @tc.number: BatchSetApplicationEnabled_1400
+ * @tc.name: test BatchSetApplicationEnabled with forbidden clone skip
+ * @tc.desc: test BatchSetApplicationEnabled when CheckDisableForbidden returns PERMISSION_DENIED,
+ *           verifying that the bundle is skipped and remains enabled
+ */
+HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    ScopeGuard guard([&] { MockUninstallBundle(BUNDLE_TEST1); });
+    auto it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    std::string key = BUNDLE_TEST1 + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    auto userIt = it->second.innerBundleUserInfos_.find(key);
+    ASSERT_NE(userIt, it->second.innerBundleUserInfos_.end());
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    cloneInfo.uid = TEST_UID;
+    cloneInfo.enabled = true;
+    userIt->second.cloneInfos["1"] = cloneInfo;
+    auto forbiddenMgr = DelayedSingleton<AppDisableForbiddenMgr>::GetInstance();
+    ASSERT_NE(forbiddenMgr, nullptr);
+    forbiddenMgr->SetApplicationDisableForbidden(BUNDLE_TEST1, USERID, 1, true);
+    auto ret = dataMgr->BatchSetApplicationEnabled(
+        USERID, 2, 1, "", false, false, false);
+    EXPECT_EQ(ret, ERR_OK);
+    it = dataMgr->bundleInfos_.find(BUNDLE_TEST1);
+    ASSERT_NE(it, dataMgr->bundleInfos_.end());
+    bool enabled = false;
+    EXPECT_EQ(it->second.GetApplicationEnabledV9(USERID, enabled, 1), ERR_OK);
+    EXPECT_TRUE(enabled);
+    forbiddenMgr->SetApplicationDisableForbidden(BUNDLE_TEST1, USERID, 1, false);
 }
 
 /**
