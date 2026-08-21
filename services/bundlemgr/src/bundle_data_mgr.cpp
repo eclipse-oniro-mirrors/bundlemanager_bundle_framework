@@ -6515,7 +6515,7 @@ ErrCode BundleDataMgr::BatchSetApplicationEnabled(int32_t userId, int32_t enable
     int32_t disableAppIndex, const std::string &caller, bool killProcess, bool needSendEvent,
     bool skipDisableForbidden)
 {
-    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("BatchSetApplicationEnabled", HITRACE_FLAG_INCLUDE_ASYNC);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("BatchSetApplicationEnabled userId=%{public}d, enableAppIndex=%{public}d, "
         "disableAppIndex=%{public}d, caller=%{public}s, killProcess=%{public}d, "
         "needSendEvent=%{public}d, skipDisableForbidden=%{public}d",
