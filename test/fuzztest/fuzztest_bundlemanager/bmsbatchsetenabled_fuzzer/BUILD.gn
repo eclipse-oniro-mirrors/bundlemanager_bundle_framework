@@ -11,37 +11,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//build/config/features.gni")
+import("//build/ohos.gni")
 import("//build/test.gni")
 import("../../../../appexecfwk.gni")
-import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
-module_output_path = "bundle_framework/bmsbatchsetenabled_fuzzer"
+module_output_path = fuzz_test_path
 
 ohos_fuzztest("BmsBatchSetEnabledFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "project.xml"
-  include_dirs = [
-    "${inner_api_path}/appexecfwk_core/include/bundlemgr",
-    "${inner_api_path}/appexecfwk_base/include",
-    "${services_path}/bundlemgr/include",
-    "${bundle_framework_path}/test/fuzztest/fuzztest_bundlemanager",
+  fuzz_config_file =
+      "../../../fuzztest/fuzztest_bundlemanager/bmsbatchsetenabled_fuzzer"
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
   ]
+  include_dirs = [ "${test_path}/fuzztest" ]
+  sources = [ "bmsbatchsetenabled_fuzzer.cpp" ]
 
-  sources = [
-    "bmsbatchsetenabled_fuzzer.cpp",
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
   ]
-
-  configs = [
-    "${services_path}/bundlemgr:bundlemgr_common_config",
-  ]
-
-  cflags = [ "-fno-rtti" ]
-  cflags_cc = [ "-fno-rtti" ]
-
   external_deps = [
     "ability_base:want",
     "c_utils:utils",
-    "hilog:libhilog",
     "ipc:ipc_core",
   ]
 }

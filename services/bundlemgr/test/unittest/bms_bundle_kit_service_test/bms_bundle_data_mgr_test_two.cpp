@@ -41,6 +41,7 @@
 #include "bundle_stream_installer_host_impl.h"
 #include "bundle_exception_handler.h"
 #include "bundle_file_util.h"
+#include "app_disable_forbidden/app_disable_forbidden_mgr.h"
 #include "clean_cache_callback_proxy.h"
 #include "directory_ex.h"
 #include "hidump_helper.h"
@@ -3166,7 +3167,7 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1200, Function | Smal
     ASSERT_NE(dataMgr, nullptr);
     MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     MockInstallBundle(BUNDLE_TEST2, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    ScopeGuard guard([BUNDLE_TEST1, BUNDLE_TEST2] {
+    ScopeGuard guard([] {
         MockUninstallBundle(BUNDLE_TEST1);
         MockUninstallBundle(BUNDLE_TEST2);
     });
