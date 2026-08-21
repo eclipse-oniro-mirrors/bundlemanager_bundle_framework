@@ -25,20 +25,20 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleAccessTokenRecoveryMgr final {
 public:
-    // Restore every hap token recorded by BMS into the access token service when the access token
-    // database is detected lost (persistable system parameter persist.accesstoken.permission.dberror
-    // is set by ATM and stays set across boots until BMS finishes the recovery).
-    // Called during BMS startup before the service reports ready, from two mount points
-    // (OnBmsStarting db-loaded path and AfterBmsStart); mountPoint tells them apart in logs.
-    // Idempotent across mount points: the reset call clears the parameter. Single-threaded by design.
+    // Restore every hap token recorded by BMS when the access token database is lost
+    // (persist.accesstoken.permission.dberror set by ATM). Runs during BMS startup, before the
+    // service reports ready. Apps still pending after the retry rounds keep the marker set, so
+    // the next boot re-enters recovery idempotently. Single-threaded by design.
     static void ProcessRecovery(const std::shared_ptr<BundleDataMgr> &dataMgr, const char *mountPoint);
 
 private:
     static bool NeedRecovery();
-    static void RestoreAllApps(const std::shared_ptr<BundleDataMgr> &dataMgr,
+    // True when nothing is pending (safe to reset the marker); false keeps it for the next boot.
+    static bool RestoreAllApps(const std::shared_ptr<BundleDataMgr> &dataMgr,
         const std::vector<AccessTokenRestoreInfo> &restoreInfos);
+    // Returns the raw result of one attempt; classification is the caller's job.
     static int32_t RestoreSingleApp(const std::shared_ptr<BundleDataMgr> &dataMgr,
-        const AccessTokenRestoreInfo &restoreInfo, bool &alreadyExist);
+        const AccessTokenRestoreInfo &restoreInfo);
 };
 } // namespace AppExecFwk
 } // namespace OHOS
