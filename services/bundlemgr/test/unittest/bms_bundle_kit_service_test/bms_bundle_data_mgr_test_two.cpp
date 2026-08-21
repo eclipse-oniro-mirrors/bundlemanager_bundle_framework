@@ -3167,7 +3167,7 @@ HWTEST_F(BmsBundleDataMgrTest2, BatchSetApplicationEnabled_1200, Function | Smal
     ASSERT_NE(dataMgr, nullptr);
     MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     MockInstallBundle(BUNDLE_TEST2, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    ScopeGuard guard([] {
+    ScopeGuard guard([this] {
         MockUninstallBundle(BUNDLE_TEST1);
         MockUninstallBundle(BUNDLE_TEST2);
     });
