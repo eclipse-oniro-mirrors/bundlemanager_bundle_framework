@@ -6520,6 +6520,13 @@ ErrCode BundleDataMgr::SetBundleFirstLaunch(const std::string &bundleName, int32
         APP_LOGW("Request userId %{public}d is invalid, bundleName:%{public}s", userId, bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    bool isSecondaryMode = DualModeHelper::IsSecondaryMode();
+    bool isSecondaryAppIndex = (appIndex / ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) > 0;
+    bool isValidAppIndex = (isSecondaryMode && isSecondaryAppIndex) || (!isSecondaryMode && !isSecondaryAppIndex);
+    if (!isValidAppIndex) {
+        APP_LOGW("Request appIndex %{public}d is invalid", appIndex);
+        return ERR_BUNDLE_MANAGER_INVALID_APP_INDEX;
+    }
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -6537,7 +6544,8 @@ ErrCode BundleDataMgr::SetBundleFirstLaunch(const std::string &bundleName, int32
     }
     // Check if isBundleFirstLaunched value has changed
     bool currentValue = false;
-    if (appIndex == 0) {
+    bool isMainApp = (appIndex % ServiceConstants::DUAL_MODE_CLONE_APP_INDEX) == 0;
+    if (isMainApp) {
         currentValue = innerBundleUserInfoPtr->isBundleFirstLaunched;
     } else {
         auto iter = innerBundleUserInfoPtr->cloneInfos.find(std::to_string(appIndex));
@@ -6552,7 +6560,7 @@ ErrCode BundleDataMgr::SetBundleFirstLaunch(const std::string &bundleName, int32
         return ERR_OK;
     }
     ErrCode ret = ERR_OK;
-    if (appIndex == 0) {
+    if (isMainApp) {
         ret = info.SetBundleFirstLaunch(isBundleFirstLaunched, requestUserId);
     } else {
         ret = info.SetCloneBundleFirstLaunch(isBundleFirstLaunched, appIndex, requestUserId);
