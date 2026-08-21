@@ -28,7 +28,6 @@
 #include <tuple>
 #include <unordered_set>
 
-#include "bundle_common_event_mgr.h"
 #include "bundle_dir.h"
 #include "want.h"
 
@@ -77,6 +76,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct NotifyBundleEvents;
 enum class InstallState {
     INSTALL_START = 1,
     INSTALL_SUCCESS,
