@@ -6517,10 +6517,9 @@ ErrCode BundleDataMgr::BatchSetApplicationEnabled(int32_t userId, int32_t enable
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("BatchSetApplicationEnabled userId=%{public}d, enableAppIndex=%{public}d, "
-        "disableAppIndex=%{public}d, caller=%{private}s, killProcess=%{public}d, "
-        "needSendEvent=%{public}d, skipDisableForbidden=%{public}d",
-        userId, enableAppIndex, disableAppIndex, caller.c_str(), killProcess, needSendEvent,
-        skipDisableForbidden);
+        "disableAppIndex=%{public}d, killProcess=%{public}d, needSendEvent=%{public}d, "
+        "skipDisableForbidden=%{public}d",
+        userId, enableAppIndex, disableAppIndex, killProcess, needSendEvent, skipDisableForbidden);
 
     auto validateRet = ValidateBatchSetAppIndex(enableAppIndex, disableAppIndex);
     if (validateRet != ERR_OK) {
