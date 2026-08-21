@@ -2416,6 +2416,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "remove whole bundle failed");
         return result;
     }
+    // Delete bundle state for current user when removing user data
+    if (dataMgr_->DeleteBundleStateByUserId(bundleName, userId_) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "DeleteBundleStateByUserId failed, -n %{public}s -u %{public}d",
+            bundleName.c_str(), userId_);
+    }
 
     result = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
     if (result != ERR_OK) {

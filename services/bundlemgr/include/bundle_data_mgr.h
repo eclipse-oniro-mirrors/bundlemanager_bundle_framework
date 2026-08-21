@@ -1387,6 +1387,13 @@ public:
     void RemoveInvalidShortcutInfo(std::vector<ShortcutInfo> &shortcutInfos) const;
     ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled);
     ErrCode DeleteShortcutEnabledInfo(const std::string &bundleName);
+    /**
+     * @brief Delete bundle state for a specific user.
+     * @param bundleName Indicates the bundle name.
+     * @param userId Indicates the user id.
+     * @return Returns ERR_OK if successful; returns error code otherwise.
+     */
+    ErrCode DeleteBundleStateByUserId(const std::string &bundleName, int32_t userId);
     ErrCode GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32_t userId, std::unordered_map<std::string,
         std::vector<std::pair<int32_t, int32_t>>> &cloneInfos) const;
     void UpdateShortcutInfos(const std::string &bundleName);
