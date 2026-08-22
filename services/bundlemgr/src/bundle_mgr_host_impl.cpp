@@ -6759,6 +6759,29 @@ ErrCode BundleMgrHostImpl::SetAppClonePreference(const std::string &bundleName,
     return prefDataMgr->SetAppClonePreference(bundleName, userId, preference);
 }
 
+ErrCode BundleMgrHostImpl::FilterBundleListByDeviceModeDistributionPolicies(
+    const std::set<DeviceModeDistributionPolicy> &policies)
+{
+    APP_LOGD("start FilterBundleListByDeviceModeDistributionPolicies size = %{public}zu", policies.size());
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
+        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    // policy validation (non-empty, all values 0~8, must contain different-package policies 4/6/8)
+    // is enforced in BundleDataMgr.
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("FilterBundleListByDeviceModeDistributionPolicies BundleDataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->FilterBundleListByDeviceModeDistributionPolicies(policies);
+}
+
 ErrCode BundleMgrHostImpl::GetLaunchWant(Want &want)
 {
     APP_LOGD("start GetLaunchWant");

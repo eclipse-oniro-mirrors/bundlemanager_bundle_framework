@@ -2322,5 +2322,95 @@ HWTEST_F(BmsBundleMgrProxyTest, GetBundleInfoDualMode_0001, Function | MediumTes
     auto res = bundleMgrProxy.GetBundleInfoDualMode(bundleName, Constants::START_USERID, info);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: FilterBundleListByDeviceModeDistributionPolicies_0100
+ * @tc.name: test FilterBundleListByDeviceModeDistributionPolicies with null remote object
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify FilterBundleListByDeviceModeDistributionPolicies returns null ptr
+ *              when IPC fails
+ */
+HWTEST_F(BmsBundleMgrProxyTest, FilterBundleListByDeviceModeDistributionPolicies_0100,
+    Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+
+    std::set<DeviceModeDistributionPolicy> policies = {
+        DeviceModeDistributionPolicy::UNIVERSAL_DIFFERENT_PACKAGE,
+        DeviceModeDistributionPolicy::PARTIAL_COMPATIBLE_DIFFERENT_PACKAGE,
+        DeviceModeDistributionPolicy::FULL_COMPATIBLE_DIFFERENT_PACKAGE,
+    };
+
+    ErrCode ret = bundleMgrProxy.FilterBundleListByDeviceModeDistributionPolicies(policies);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: FilterBundleListByDeviceModeDistributionPolicies_0200
+ * @tc.name: test FilterBundleListByDeviceModeDistributionPolicies with empty policy set
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify FilterBundleListByDeviceModeDistributionPolicies returns param
+ *              error before any IPC when the policy set is empty
+ */
+HWTEST_F(BmsBundleMgrProxyTest, FilterBundleListByDeviceModeDistributionPolicies_0200,
+    Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+
+    std::set<DeviceModeDistributionPolicy> policies;
+    ErrCode ret = bundleMgrProxy.FilterBundleListByDeviceModeDistributionPolicies(policies);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: FilterBundleListByDeviceModeDistributionPolicies_0300
+ * @tc.name: test FilterBundleListByDeviceModeDistributionPolicies with oversized policy set
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify FilterBundleListByDeviceModeDistributionPolicies returns param
+ *              error when the policy set exceeds the enum value-range bound (9 distinct
+ *              values, 0~8) before any IPC
+ */
+HWTEST_F(BmsBundleMgrProxyTest, FilterBundleListByDeviceModeDistributionPolicies_0300,
+    Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+
+    // 11 distinct values (> 9 enum values, 0~8): 0~8 plus two out-of-range casts
+    std::set<DeviceModeDistributionPolicy> policies;
+    for (int32_t value = 0; value <= 10; ++value) {
+        policies.insert(static_cast<DeviceModeDistributionPolicy>(value));
+    }
+    ASSERT_EQ(policies.size(), 11u);
+
+    ErrCode ret = bundleMgrProxy.FilterBundleListByDeviceModeDistributionPolicies(policies);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: FilterBundleListByDeviceModeDistributionPolicies_0350
+ * @tc.name: test FilterBundleListByDeviceModeDistributionPolicies at the size boundary
+ * @tc.desc: 1. BundleMgrProxy constructed with null IRemoteObject
+ *           2. verify a 10-value set (one more than the 9 distinct enum values 0~8) is
+ *              rejected with param error before any IPC (enum-derived size bound)
+ */
+HWTEST_F(BmsBundleMgrProxyTest, FilterBundleListByDeviceModeDistributionPolicies_0350,
+    Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+
+    // 10 distinct values (one more than the 9 enum values 0~8): 0~8 plus one out-of-range cast
+    std::set<DeviceModeDistributionPolicy> policies;
+    for (int32_t value = 0; value <= 9; ++value) {
+        policies.insert(static_cast<DeviceModeDistributionPolicy>(value));
+    }
+    ASSERT_EQ(policies.size(), 10u);
+
+    ErrCode ret = bundleMgrProxy.FilterBundleListByDeviceModeDistributionPolicies(policies);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
 }
 }

@@ -1250,6 +1250,9 @@ public:
     virtual ErrCode SetAppClonePreference(const std::string &bundleName,
         int32_t userId, const AppClonePreference &preference) override;
 
+    virtual ErrCode FilterBundleListByDeviceModeDistributionPolicies(
+        const std::set<DeviceModeDistributionPolicy> &policies) override;
+
     virtual ErrCode GetLaunchWant(Want &want) override;
 
     virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName, int32_t flags,

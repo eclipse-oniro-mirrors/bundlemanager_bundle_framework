@@ -262,6 +262,10 @@ constexpr const char* DUAL_MODE_MAINMODE_PARAM_KEY = "const.sceneboard.mainmode"
 constexpr int32_t DUAL_MODE_VALUE_INVALID = -1;  // param not exist / read failed / value illegal
 constexpr int32_t DUAL_MODE_VALUE_TABLET = 0;
 constexpr int32_t DUAL_MODE_VALUE_2IN1 = 1;
+// Dual-mode device mode distribution policy set persisted in bms_param as canonical CSV
+// (ascending unique DeviceModeDistributionPolicy values joined by ",", e.g. "1,2,3,4,5,6,7,8").
+constexpr const char* DUAL_MODE_DEVICE_MODE_DISTRIBUTION_POLICIES_KEY =
+    "DualModeDeviceModeDistributionPolicies";
 constexpr const char* BMS_TRUE = "true";
 // cli sandbox application
 constexpr int32_t CLI_SANDBOX_APP_INDEX_MIN = 2000;
