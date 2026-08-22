@@ -680,7 +680,9 @@ bool BundleDataMgr::RemoveModuleInfo(
             APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
             return false;
         }
-        DeleteRouterInfo(bundleName, modulePackage);
+        const std::string routerBundleName = oldInfo.IsDualModeCloneApp()
+            ? DualModeHelper::GetDualModeBundleName(bundleName) : bundleName;
+        DeleteRouterInfo(routerBundleName, modulePackage);
         bundleInfos_.at(bundleName) = oldInfo;
         APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
     }
@@ -7014,13 +7016,16 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
         return;
     }
 
+    const std::string effectiveBundleName = info.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(info.GetBundleName())
+        : info.GetBundleName();
     UninstallBundleInfo uninstallBundleInfo;
-    if (GetUninstallBundleInfo(info.GetBundleName(), uninstallBundleInfo)) {
+    if (GetUninstallBundleInfo(effectiveBundleName, uninstallBundleInfo)) {
         return;
     }
     bundleIdMap_.erase(bundleId);
-    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH);
-    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::SHAREFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(effectiveBundleName, ServiceConstants::HMDFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(effectiveBundleName, ServiceConstants::SHAREFS_CONFIG_PATH);
 }
 
 bool BundleDataMgr::RestoreUidAndGid()

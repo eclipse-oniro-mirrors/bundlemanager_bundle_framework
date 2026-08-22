@@ -59,6 +59,7 @@
 #include "bundle_verify_mgr.h"
 #include "common_event_support.h"
 #include "directory_ex.h"
+#include "dual_mode_helper.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
@@ -6219,6 +6220,47 @@ HWTEST_F(BmsBundleResourceTest, AddUninstallBundleResource_0020, Function | Smal
 }
 
 /**
+ * @tc.number: AddUninstallBundleResource_DualMode_0010
+ * @tc.name: test AddUninstallBundleResource with InnerBundleInfo
+ * @tc.desc: 1. reject a bundle which is absent from BundleDataMgr
+ *           2. persist the primary-mode resource under the logical bundle name
+ *           3. persist the secondary-mode resource under the dual-mode effective name
+ */
+HWTEST_F(BmsBundleResourceTest, AddUninstallBundleResource_DualMode_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    InnerBundleInfo absentInfo;
+    ApplicationInfo absentAppInfo;
+    absentAppInfo.bundleName = "com.example.dualmode.resource.absent";
+    absentAppInfo.bundleType = BundleType::APP;
+    absentInfo.SetBaseApplicationInfo(absentAppInfo);
+    absentInfo.SetDualModeCloneApp(true);
+    EXPECT_FALSE(manager->AddUninstallBundleResource(absentInfo, USERID, 0));
+
+    ASSERT_EQ(InstallBundle(HAP_FILE_PATH1), ERR_OK);
+    InnerBundleInfo installedInfo;
+    ASSERT_TRUE(GetBundleDataMgr()->FetchInnerBundleInfo(BUNDLE_NAME, installedInfo));
+
+    ASSERT_TRUE(manager->AddUninstallBundleResource(installedInfo, USERID, 0));
+    BundleResourceInfo primaryResource;
+    EXPECT_TRUE(manager->GetUninstallBundleResource(BUNDLE_NAME, USERID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), primaryResource));
+    EXPECT_TRUE(manager->DeleteUninstallBundleResource(BUNDLE_NAME, USERID, 0));
+
+    installedInfo.SetDualModeCloneApp(true);
+    const std::string effectiveBundleName = DualModeHelper::GetDualModeBundleName(BUNDLE_NAME);
+    ASSERT_TRUE(manager->AddUninstallBundleResource(installedInfo, USERID, 0));
+    BundleResourceInfo secondaryResource;
+    EXPECT_TRUE(manager->GetUninstallBundleResource(effectiveBundleName, USERID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), secondaryResource));
+    EXPECT_TRUE(manager->DeleteUninstallBundleResource(effectiveBundleName, USERID, 0));
+
+    EXPECT_EQ(UnInstallBundle(BUNDLE_NAME), ERR_OK);
+}
+
+/**
  * @tc.number: GetAllUninstallBundleResourceInfo_0010
  * Function: AddUninstallBundleResource
  * @tc.name: test
@@ -7493,6 +7535,129 @@ HWTEST_F(BmsBundleResourceTest, DeleteBundleResourceMultiUser_0002, Function | S
     delRet = manager->DeleteBundleResourceInfo("", Constants::U1, false);
     // Verify deletion succeeded
     EXPECT_FALSE(delRet);
+}
+
+/**
+ * @tc.number: DeleteBundleResourceDualMode_0001
+ * @tc.name: delete a dual-mode bundle using separate resource keys
+ * @tc.desc: Main resource RDB uses the effective name while icon RDB uses the logical name.
+ */
+HWTEST_F(BmsBundleResourceTest, DeleteBundleResourceDualMode_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    const std::string logicalName = "com.example.dualmode.resource.delete1";
+    const std::string effectiveName = DualModeHelper::GetDualModeBundleName(logicalName);
+
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = logicalName;
+    appInfo.bundleType = BundleType::APP;
+    info.SetBaseApplicationInfo(appInfo);
+    info.SetDualModeCloneApp(true);
+
+    ResourceInfo logicalResource;
+    logicalResource.bundleName_ = logicalName;
+    logicalResource.label_ = "logical";
+    logicalResource.icon_ = "logical_icon";
+    ResourceInfo effectiveResource = logicalResource;
+    effectiveResource.bundleName_ = effectiveName;
+    ASSERT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(logicalResource));
+    ASSERT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(effectiveResource));
+    ASSERT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(USERID, IconResourceType::THEME_ICON,
+        { logicalResource, effectiveResource }));
+
+    EXPECT_TRUE(manager->DeleteBundleResourceInfo(info, USERID, false));
+
+    BundleResourceInfo resource;
+    EXPECT_FALSE(manager->bundleResourceRdb_->GetBundleResourceInfo(effectiveName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), resource));
+    EXPECT_TRUE(manager->bundleResourceRdb_->GetBundleResourceInfo(logicalName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), resource));
+    std::vector<LauncherAbilityResourceInfo> iconInfos;
+    EXPECT_FALSE(manager->bundleResourceIconRdb_->GetResourceIconInfos(logicalName, USERID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), iconInfos));
+    EXPECT_TRUE(manager->bundleResourceIconRdb_->GetResourceIconInfos(effectiveName, USERID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), iconInfos));
+
+    EXPECT_TRUE(manager->bundleResourceRdb_->DeleteResourceInfo(logicalName));
+    EXPECT_TRUE(manager->bundleResourceIconRdb_->DeleteResourceIconInfos(effectiveName, USERID));
+}
+
+/**
+ * @tc.number: DeleteBundleResourceDualMode_0002
+ * @tc.name: retain main resources while another mode still exists
+ * @tc.desc: isExistInOtherUser skips effective-name main RDB deletion but still removes this user's logical icon.
+ */
+HWTEST_F(BmsBundleResourceTest, DeleteBundleResourceDualMode_0002, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    const std::string logicalName = "com.example.dualmode.resource.delete2";
+    const std::string effectiveName = DualModeHelper::GetDualModeBundleName(logicalName);
+
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = logicalName;
+    appInfo.bundleType = BundleType::APP;
+    info.SetBaseApplicationInfo(appInfo);
+    info.SetDualModeCloneApp(true);
+
+    ResourceInfo effectiveResource;
+    effectiveResource.bundleName_ = effectiveName;
+    effectiveResource.label_ = "effective";
+    effectiveResource.icon_ = "effective_icon";
+    ResourceInfo logicalIcon = effectiveResource;
+    logicalIcon.bundleName_ = logicalName;
+    ASSERT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(effectiveResource));
+    ASSERT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(USERID, IconResourceType::THEME_ICON,
+        { logicalIcon }));
+
+    EXPECT_TRUE(manager->DeleteBundleResourceInfo(info, USERID, true));
+
+    BundleResourceInfo resource;
+    EXPECT_TRUE(manager->bundleResourceRdb_->GetBundleResourceInfo(effectiveName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), resource));
+    std::vector<LauncherAbilityResourceInfo> iconInfos;
+    EXPECT_FALSE(manager->bundleResourceIconRdb_->GetResourceIconInfos(logicalName, USERID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), iconInfos));
+    EXPECT_TRUE(manager->bundleResourceRdb_->DeleteResourceInfo(effectiveName));
+}
+
+/**
+ * @tc.number: DeleteBundleResourceDualMode_0003
+ * @tc.name: delete logical icons for every user from the default-user path
+ * @tc.desc: The InnerBundleInfo overload keeps normal-app naming and exercises the DEFAULT_USERID icon branch.
+ */
+HWTEST_F(BmsBundleResourceTest, DeleteBundleResourceDualMode_0003, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    const std::string logicalName = "com.example.dualmode.resource.delete3";
+
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = logicalName;
+    appInfo.bundleType = BundleType::APP;
+    info.SetBaseApplicationInfo(appInfo);
+
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = logicalName;
+    resourceInfo.label_ = "logical";
+    resourceInfo.icon_ = "logical_icon";
+    ASSERT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resourceInfo));
+    ASSERT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(USERID, IconResourceType::THEME_ICON,
+        { resourceInfo }));
+    ASSERT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(Constants::U1, IconResourceType::THEME_ICON,
+        { resourceInfo }));
+
+    EXPECT_TRUE(manager->DeleteBundleResourceInfo(info, Constants::DEFAULT_USERID, false));
+
+    std::vector<LauncherAbilityResourceInfo> iconInfos;
+    EXPECT_FALSE(manager->bundleResourceIconRdb_->GetResourceIconInfos(logicalName, USERID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), iconInfos));
+    EXPECT_FALSE(manager->bundleResourceIconRdb_->GetResourceIconInfos(logicalName, Constants::U1, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), iconInfos));
 }
 
 /**

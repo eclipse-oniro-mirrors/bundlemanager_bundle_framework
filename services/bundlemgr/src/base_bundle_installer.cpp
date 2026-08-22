@@ -565,6 +565,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .allowListenBundles = allowListenBundles_,
         };
+        FillDualModeUninstallEventFields(installParam, installRes);
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
 
         if (installParam.concentrateSendEvent) {
@@ -844,6 +845,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .allowListenBundles = allowListenBundles_,
         };
+        FillDualModeUninstallEventFields(installParam, installRes);
         installRes.SetMetadataConfigInfos(tokenIdMetadataInfos);
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
@@ -1195,7 +1197,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
                 APP_LOGE("user %{public}d is not allowed to install app", userId_);
                 return ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT;
             }
-            if (!CheckInstallOnKeepData(bundleName_, installParam.isOTA, newInfos)) {
+            if (!CheckInstallOnKeepData(GetEffectiveBundleName(), installParam.isOTA, newInfos)) {
                 LOG_E(BMS_TAG_INSTALLER, "check failed");
                 return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
             }
@@ -1206,7 +1208,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             newInnerBundleUserInfo.bundleName = bundleName_;
             oldInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
             ScopeGuard userGuard([&] {
-                if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
+                if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(GetEffectiveBundleName(), userId_,
                     Constants::INITIAL_APP_INDEX)) {
                     InstallParam installParam;
                     RemoveBundleUserData(oldInfo, installParam);
@@ -1214,7 +1216,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
-            if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo, false)
+            if (!RecoverHapToken(GetEffectiveBundleName(), userId_, accessTokenIdEx, oldInfo, false)
                 && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult,
                 verifyRes_.GetProvisionInfo().appServiceCapabilities, false) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
@@ -1259,7 +1261,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             APP_LOGE("user %{public}d is not allowed to install app", userId_);
             return ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT;
         }
-        if (!CheckInstallOnKeepData(bundleName_, installParam.isOTA, newInfos)) {
+        if (!CheckInstallOnKeepData(GetEffectiveBundleName(), installParam.isOTA, newInfos)) {
             LOG_E(BMS_TAG_INSTALLER, "check failed");
             return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
         }
@@ -1303,7 +1305,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     UpdateExtensionDirsApl(updateSelinuxAplExtensionDirs, oldInfo);
     ScopeGuard userGuard([&] {
         if ((!hasInstalledInUser_ || (!isAppExist_)) &&
-            !dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_, Constants::INITIAL_APP_INDEX)) {
+            !dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(GetEffectiveBundleName(), userId_,
+                Constants::INITIAL_APP_INDEX)) {
             InstallParam installParam;
             RemoveBundleUserData(oldInfo, installParam);
         }
@@ -1900,7 +1903,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // create Screen Lock File Protection Dir
     CreateScreenLockProtectionDir(true);
     ScopeGuard ScreenLockFileProtectionDirGuard([&] {
-        if (!isAppExist_ && !dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
+        if (!isAppExist_ && !dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(GetEffectiveBundleName(), userId_,
             Constants::INITIAL_APP_INDEX)) {
             DeleteScreenLockProtectionDir(bundleName_);
         }
@@ -1982,7 +1985,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT_WITH_ROLLBACK(result, "mark install finish failed %{public}d", newInfos, oldInfo);
     // delete app_tmp
     (void)DeleteAppGalleryHapFromTempPath();
-    DeleteUninstallBundleInfo(bundleName_);
+    DeleteUninstallBundleInfo(GetEffectiveBundleName());
     codePathGuard.Dismiss();
     ProcessOldCodePath(GetEffectiveBundleName(), isFeatureNeedUninstall_);
     // create data group dir
@@ -2060,7 +2063,7 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         if (!InitDataMgr()) {
             return;
         }
-        bool isKeepData = dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
+        bool isKeepData = dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(GetEffectiveBundleName(), userId_,
             Constants::INITIAL_APP_INDEX);
         RemoveBundleAndDataDir(newInfos.begin()->second, isKeepData);
         isKeepTokenId_ = oldInfo.HasKeepTokenIdMetadata();
@@ -2225,6 +2228,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_W(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
+    InitDualModeBundleName(oldInfo);
     if (installParam.GetIsUninstallAndRecover()) {
         PreInstallBundleInfo preInstallBundleInfo;
         if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
@@ -2329,7 +2333,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("remove group dir failed for %{public}s", oldInfo.GetBundleName().c_str());
     }
 
-    DeleteEncryptionKeyId(oldInfo.GetBundleName(), oldInfo.NeedCreateEl5Dir(), installParam.isKeepData);
+    DeleteEncryptionKeyId(GetEffectiveBundleName(), oldInfo.NeedCreateEl5Dir(), installParam.isKeepData);
     if (!installParam.isRemoveUser &&
         !SaveFirstInstallBundleInfo(bundleName, userId_, oldInfo.IsPreInstallApp(), curInnerBundleUserInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "save first install bundle info failed");
@@ -2365,9 +2369,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             LOG_E(BMS_TAG_INSTALLER, "remove bundle user data failed");
             return res;
         }
-        SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+        SaveUninstallBundleInfo(GetEffectiveBundleName(), installParam.isKeepData, uninstallBundleInfo);
         if (installParam.isKeepData) {
-            BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
+            BundleResourceHelper::AddUninstallBundleResource(oldInfo, userId_, 0);
         } else {
             DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId_, 0);
         }
@@ -2377,7 +2381,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 "DeleteShortcutVisibleInfo failed, bundleName: %{public}s, userId: %{public}d, appIndex: 0",
                 bundleName.c_str(), userId_);
         }
-        BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, true);
+        BundleResourceHelper::DeleteBundleResourceInfo(oldInfo, userId_, true);
         bool isDriverForAllUser = OHOS::system::GetBoolParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, true);
         bool isEntSpaceEnable = OHOS::system::GetBoolParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, false);
         if (!isDriverForAllUser && isEntSpaceEnable) {
@@ -2392,21 +2396,21 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
     dataMgr_->DisableBundle(bundleName);
 
-    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
+    if (!dataMgr_->UpdateBundleInstallState(GetEffectiveBundleName(), InstallState::UNINSTALL_START)) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall already start");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
 
     std::string packageName;
-    oldInfo.SetInstallMark(bundleName, packageName, InstallExceptionStatus::UNINSTALL_BUNDLE_START);
+    oldInfo.SetInstallMark(GetEffectiveBundleName(), packageName, InstallExceptionStatus::UNINSTALL_BUNDLE_START);
     if (!dataMgr_->SaveInnerBundleInfo(oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "save install mark failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
 
-    SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+    SaveUninstallBundleInfo(GetEffectiveBundleName(), installParam.isKeepData, uninstallBundleInfo);
     if (installParam.isKeepData) {
-        BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
+        BundleResourceHelper::AddUninstallBundleResource(oldInfo, userId_, 0);
     }
 
     RemoveNPAPIPluginDir();
@@ -2432,7 +2436,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "delete old arkNativeFile failed");
     }
 
-    result = DeleteArkProfile(bundleName, userId_);
+    result = DeleteArkProfile(GetEffectiveBundleName(), userId_);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to removeArkProfile, error is %{public}d", result);
     }
@@ -2452,7 +2456,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         quickFixDataMgr->DeleteInnerAppQuickFix(bundleName);
     }
 #endif
-    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(GetEffectiveBundleName())) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed", bundleName.c_str());
     }
     LOG_D(BMS_TAG_INSTALLER, "finish to process %{public}s bundle uninstall", bundleName.c_str());
@@ -2461,10 +2465,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // remove drive so file
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     driverInstaller->RemoveDriverSoFile(oldInfo, "", false);
-    BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, false);
+    BundleResourceHelper::DeleteBundleResourceInfo(oldInfo, userId_, false);
     DeleteRouterInfo(oldInfo);
     // remove profile from code signature
-    RemoveProfileFromCodeSign(bundleName);
+    RemoveProfileFromCodeSign(GetEffectiveBundleName());
     DeleteEncryptedStatus(bundleName, uid);
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
     if (oldInfo.IsPreInstallApp() && (oldInfo.IsRemovable() || isForcedUninstall)) {
@@ -2573,6 +2577,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_W(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
+    // Resolve physical resources from the persisted clone flag. The active-memory lookup above intentionally
+    // keeps the original name, while the install state and dual-mode storage keys use the effective name.
+    InitDualModeBundleName(oldInfo);
+    const std::string effectiveBundleName = GetEffectiveBundleName(oldInfo);
+    bundleType_ = oldInfo.GetApplicationBundleType();
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
     appDistributionType_ = oldInfo.GetAppDistributionType();
@@ -2623,12 +2632,14 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
 
-    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
+    if (!dataMgr_->UpdateBundleInstallState(effectiveBundleName, InstallState::UNINSTALL_START)) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall already start");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
 
-    ScopeGuard stateGuard([&] { dataMgr_->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS); });
+    ScopeGuard stateGuard([&] {
+        dataMgr_->UpdateBundleInstallState(effectiveBundleName, InstallState::INSTALL_SUCCESS);
+    });
 
     // reboot scan case will not kill the bundle
     if (installParam.GetKillProcess()) {
@@ -2639,7 +2650,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         }
     }
 
-    oldInfo.SetInstallMark(bundleName, modulePackage, InstallExceptionStatus::UNINSTALL_PACKAGE_START);
+    oldInfo.SetInstallMark(effectiveBundleName, modulePackage, InstallExceptionStatus::UNINSTALL_PACKAGE_START);
     if (!dataMgr_->SaveInnerBundleInfo(oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "save install mark failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
@@ -2691,12 +2702,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 LOG_E(BMS_TAG_INSTALLER, "remove bundle failed");
                 return result;
             }
-            SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+            SaveUninstallBundleInfo(effectiveBundleName, installParam.isKeepData, uninstallBundleInfo);
             if (installParam.isKeepData) {
-                BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
+                BundleResourceHelper::AddUninstallBundleResource(oldInfo, userId_, 0);
             }
             // remove profile from code signature
-            RemoveProfileFromCodeSign(bundleName);
+            RemoveProfileFromCodeSign(effectiveBundleName);
 
             ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
 
@@ -2706,7 +2717,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 return result;
             }
 
-            result = DeleteArkProfile(bundleName, userId_);
+            result = DeleteArkProfile(effectiveBundleName, userId_);
             if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "fail to removeArkProfile, error is %{public}d", result);
                 return result;
@@ -2724,19 +2735,19 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             }
             DeleteRouterInfo(oldInfo);
             UninstallDebugAppSandbox(bundleName, uid, oldInfo);
-            BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, false);
+            BundleResourceHelper::DeleteBundleResourceInfo(oldInfo, userId_, false);
             return ERR_OK;
         }
         auto removeRes = RemoveBundleUserData(oldInfo, installParam);
         if (removeRes != ERR_OK) {
             return removeRes;
         }
-        SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+        SaveUninstallBundleInfo(effectiveBundleName, installParam.isKeepData, uninstallBundleInfo);
         UninstallDebugAppSandbox(bundleName, uid, oldInfo);
         if (!PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName)) {
             LOG_E(BMS_TAG_INSTALLER, "DeleteInnerPatchInfo failed, bundleName: %{public}s", bundleName.c_str());
         }
-        BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, true);
+        BundleResourceHelper::DeleteBundleResourceInfo(oldInfo, userId_, true);
         if (installParam.needSendEvent) {
             PrepareAppSkillStatus(oldInfo, InnerBundleInfo());
         }
@@ -2765,7 +2776,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     oldInfo.ResetAOTFlags();
     (void)DeleteOldArkNativeFile(oldInfo);
-    oldInfo.SetInstallMark(bundleName, modulePackage, InstallExceptionStatus::INSTALL_FINISH);
+    oldInfo.SetInstallMark(effectiveBundleName, modulePackage, InstallExceptionStatus::INSTALL_FINISH);
     LOG_D(BMS_TAG_INSTALLER, "remove module %{public}s in %{public}s ", modulePackage.c_str(), bundleName.c_str());
     if (!dataMgr_->RemoveModuleInfo(bundleName, modulePackage, oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "RemoveModuleInfo failed");
@@ -2873,6 +2884,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                 LOG_E(BMS_TAG_INSTALLER, "App is exist in user(%{public}d)", userId_);
                 return ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME;
             }
+            const std::string effectiveBundleName = GetEffectiveBundleName(oldInfo);
 
             ErrCode ret = InstallNormalAppControl(
                 oldInfo.GetAppId(), oldInfo.GetAppIdentifier(), userId_, installParam.isPreInstallApp);
@@ -2895,7 +2907,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             curInnerBundleUserInfo.bundleName = bundleName;
             oldInfo.AddInnerBundleUserInfo(curInnerBundleUserInfo);
             ScopeGuard userGuard([&] {
-                if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
+                if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(effectiveBundleName, userId_,
                     Constants::INITIAL_APP_INDEX)) {
                     InstallParam installParam;
                     RemoveBundleUserData(oldInfo, installParam);
@@ -2904,7 +2916,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
             isKeepTokenId_ = oldInfo.HasKeepTokenIdMetadata();
-            if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)) {
+            if (!RecoverHapToken(effectiveBundleName, userId_, accessTokenIdEx, oldInfo)) {
                 if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult,
                     verifyRes_.GetProvisionInfo().appServiceCapabilities) != ERR_OK) {
                     LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
@@ -2954,9 +2966,9 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                 dataMgr_->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
             }
             UninstallBundleInfo uninstallBundleInfo;
-            if (dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+            if (dataMgr_->GetUninstallBundleInfo(effectiveBundleName, uninstallBundleInfo)) {
                 existBeforeKeepDataApp_ = true;
-                DeleteUninstallBundleInfo(bundleName);
+                DeleteUninstallBundleInfo(effectiveBundleName);
             }
             // process resource
             BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId_, ADD_RESOURCE_TYPE::CREATE_USER);
@@ -3164,7 +3176,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
     isKeepTokenId_ = info.HasKeepTokenIdMetadata();
-    if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, info, isDebugGrant)) {
+    if (!RecoverHapToken(GetEffectiveBundleName(), userId_, accessTokenIdEx, info, isDebugGrant)) {
         if (BundlePermissionMgr::InitHapToken(info, userId_, 0, accessTokenIdEx, checkResult,
             verifyRes_.GetProvisionInfo().appServiceCapabilities, isDebugGrant) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
@@ -3187,8 +3199,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     }
 
     ScopeGuard bundleGuard([&] {
-        RemoveBundleAndDataDir(info, dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
-            Constants::INITIAL_APP_INDEX));
+        RemoveBundleAndDataDir(info, dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(
+            GetEffectiveBundleName(), userId_, Constants::INITIAL_APP_INDEX));
         // dual-mode: skills dir uses the effective (prefixed) name for secondary-mode clone apps.
         RemoveAppSkillsDir(GetEffectiveBundleName(info));
     });
@@ -5427,10 +5439,13 @@ ErrCode BaseBundleInstaller::ExtractArkProfileFile(
 
 ErrCode BaseBundleInstaller::DeleteOldArkNativeFile(const InnerBundleInfo &oldInfo)
 {
+    // TODO: Switch to effective name after the Ark Native/AOT cache creation and update cleanup paths
+    // are consistently adapted for dual-mode isolation.
+    const std::string &bundleName = oldInfo.GetBundleName();
     std::string targetPath;
-    targetPath.append(ServiceConstants::HAP_ARK_CACHE_PATH).append(oldInfo.GetBundleName());
+    targetPath.append(ServiceConstants::HAP_ARK_CACHE_PATH).append(bundleName);
     auto result = InstalldClient::GetInstance()->RemoveDir(
-        targetPath, BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR, oldInfo.GetBundleName());
+        targetPath, BundleDirScene::REMOVE_AOT_ARK_CACHE_DIR, bundleName);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove arkNativeFilePath %{public}s, error is %{public}d",
             targetPath.c_str(), result);
@@ -5465,9 +5480,10 @@ ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info,
 ErrCode BaseBundleInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info, const bool async) const
 {
     // process install exception mgr
-    (void)DelayedSingleton<InstallExceptionMgr>::GetInstance()->HandleBundleExceptionInfo(info.GetBundleName());
+    (void)DelayedSingleton<InstallExceptionMgr>::GetInstance()->HandleBundleExceptionInfo(
+        GetEffectiveBundleName(info));
     auto result = InstalldClient::GetInstance()->RemoveDir(
-        info.GetAppCodePath(), BundleDirScene::REMOVE_BUNDLE_CODE_DIR, info.GetBundleName(), async);
+        info.GetAppCodePath(), BundleDirScene::REMOVE_BUNDLE_CODE_DIR, GetEffectiveBundleName(info), async);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove bundle code dir %{public}s, error is %{public}d",
             info.GetAppCodePath().c_str(), result);
@@ -5480,7 +5496,7 @@ ErrCode BaseBundleInstaller::RemoveBundleDataDir(
 {
     sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
     ErrCode result =
-        InstalldClient::GetInstance()->RemoveBundleDataDir(info.GetBundleName(), userId_,
+        InstalldClient::GetInstance()->RemoveBundleDataDir(GetEffectiveBundleName(info), userId_,
             info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE, async);
     InstallParam installParam;
     if (result >= APPEXECFWK_INSTALLD_ERR_OFFSET) {
@@ -5768,6 +5784,24 @@ void BaseBundleInstaller::InitDualModeBundleName(const InstallParam &installPara
             bundleName_.c_str(), dualModeBundleName_.c_str());
     } else {
         dualModeBundleName_.clear();
+    }
+}
+
+void BaseBundleInstaller::InitDualModeBundleName(const InnerBundleInfo &bundleInfo)
+{
+    bundleName_ = bundleInfo.GetBundleName();
+    dualModeBundleName_ = bundleInfo.IsDualModeCloneApp()
+        ? DualModeHelper::GetDualModeBundleName(bundleInfo.GetBundleName())
+        : Constants::EMPTY_STRING;
+}
+
+void BaseBundleInstaller::FillDualModeUninstallEventFields(const InstallParam &installParam,
+    NotifyBundleEvents &uninstallRes) const
+{
+    if (DualModeHelper::IsDualModeDevice()) {
+        uninstallRes.deviceModeDistributionPolicy = installParam.deviceModeDistributionPolicy;
+        uninstallRes.currentMode = DualModeHelper::GetSysMode();
+        uninstallRes.appSandboxPolicy = ComputeCurrentAppSandboxPolicy(installParam.deviceModeDistributionPolicy);
     }
 }
 
@@ -7147,7 +7181,7 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
         }
     }
 
-    result = DeleteArkProfile(bundleName, userId_);
+    result = DeleteArkProfile(GetEffectiveBundleName(innerBundleInfo), userId_);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to removeArkProfile, error is %{public}d", result);
     }
@@ -7645,9 +7679,8 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
 
 ErrCode BaseBundleInstaller::CleanAsanDirectory(InnerBundleInfo &info) const
 {
-    const std::string bundleName = info.GetBundleName();
     const std::string asanLogDir = std::string(ServiceConstants::BUNDLE_ASAN_LOG_DIR) + ServiceConstants::PATH_SEPARATOR
-        + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR + bundleName;
+        + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR + GetEffectiveBundleName(info);
     ErrCode errCode =
         InstalldClient::GetInstance()->RemoveDir(asanLogDir, BundleDirScene::REMOVE_ASAN_LOG_DIR);
     if (errCode != ERR_OK) {
@@ -8940,7 +8973,7 @@ ErrCode BaseBundleInstaller::RollbackHmpCommonInfo(const std::string &bundleName
             oldInfo.GetBundleName().c_str());
     }
     DeleteRouterInfo(oldInfo);
-    BundleResourceHelper::DeleteBundleResourceInfo(GetEffectiveBundleName(oldInfo), userId_, false);
+    BundleResourceHelper::DeleteBundleResourceInfo(oldInfo, userId_, false);
     RemoveProfileFromCodeSign(GetEffectiveBundleName(oldInfo));
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), oldInfo.GetBundleName());
     return ERR_OK;

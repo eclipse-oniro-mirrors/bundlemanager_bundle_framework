@@ -43,6 +43,7 @@
 #include "bundle_exception_handler.h"
 #include "clean_cache_callback_proxy.h"
 #include "directory_ex.h"
+#include "dual_mode_helper.h"
 #include "event_report.h"
 #include "hidump_helper.h"
 #include "inner_event_report.h"
@@ -4798,6 +4799,114 @@ HWTEST_F(BmsBundleDataMgrTest3, RecycleUidAndGid_0300, Function | MediumTest | L
     // bundleId should be erased from the map
     bool found = bundleDataMgr->bundleIdMap_.find(bundleId) != bundleDataMgr->bundleIdMap_.end();
     EXPECT_FALSE(found);
+}
+
+/**
+ * @tc.number: RecycleUidAndGid_DualMode_0400
+ * @tc.name: preserve dual-mode uid when effective-name keep-data exists
+ * @tc.desc: A secondary-mode uninstall record is keyed by the prefixed effective bundle name.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, RecycleUidAndGid_DualMode_0400, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    const std::string effectiveName = DualModeHelper::GetDualModeBundleName(BUNDLE_TEST3);
+    const int32_t bundleId = TEST_MAX_UID - USERID * Constants::BASE_USER_RANGE;
+    bundleDataMgr->bundleIdMap_.emplace(bundleId, effectiveName);
+
+    UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo uninstallUserInfo;
+    uninstallUserInfo.uid = TEST_MAX_UID;
+    uninstallBundleInfo.userInfos.emplace(std::to_string(USERID), uninstallUserInfo);
+    ASSERT_TRUE(bundleDataMgr->UpdateUninstallBundleInfo(effectiveName, uninstallBundleInfo));
+
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_TEST3;
+    info.SetBaseApplicationInfo(appInfo);
+    info.SetDualModeCloneApp(true);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_TEST3;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.uid = TEST_MAX_UID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    bundleDataMgr->RecycleUidAndGid(info);
+    EXPECT_NE(bundleDataMgr->bundleIdMap_.find(bundleId), bundleDataMgr->bundleIdMap_.end());
+
+    EXPECT_TRUE(bundleDataMgr->DeleteUninstallBundleInfo(effectiveName, USERID));
+    bundleDataMgr->bundleIdMap_.erase(bundleId);
+}
+
+/**
+ * @tc.number: RecycleUidAndGid_DualMode_0500
+ * @tc.name: do not treat a logical-name keep-data record as the secondary-mode record
+ * @tc.desc: The secondary-mode uid is recycled when only the other mode's logical-name record exists.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, RecycleUidAndGid_DualMode_0500, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    const std::string effectiveName = DualModeHelper::GetDualModeBundleName(BUNDLE_TEST4);
+    const int32_t bundleId = TEST_NORMAL_UID - USERID * Constants::BASE_USER_RANGE;
+    bundleDataMgr->bundleIdMap_.emplace(bundleId, effectiveName);
+
+    UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo uninstallUserInfo;
+    uninstallUserInfo.uid = TEST_NORMAL_UID;
+    uninstallBundleInfo.userInfos.emplace(std::to_string(USERID), uninstallUserInfo);
+    ASSERT_TRUE(bundleDataMgr->UpdateUninstallBundleInfo(BUNDLE_TEST4, uninstallBundleInfo));
+
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_TEST4;
+    info.SetBaseApplicationInfo(appInfo);
+    info.SetDualModeCloneApp(true);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_TEST4;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.uid = TEST_NORMAL_UID;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    bundleDataMgr->RecycleUidAndGid(info);
+    EXPECT_EQ(bundleDataMgr->bundleIdMap_.find(bundleId), bundleDataMgr->bundleIdMap_.end());
+    EXPECT_TRUE(bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_TEST4, USERID));
+}
+
+/**
+ * @tc.number: RemoveModuleInfo_DualMode_0100
+ * @tc.name: use the effective bundle name for dual-mode module-uninstall state
+ * @tc.desc: The logical-name state is rejected; the prefixed state permits module removal.
+ */
+HWTEST_F(BmsBundleDataMgrTest3, RemoveModuleInfo_DualMode_0100, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    const std::string effectiveName = DualModeHelper::GetDualModeBundleName(BUNDLE_TEST5);
+
+    InnerBundleInfo oldInfo;
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_TEST5;
+    oldInfo.SetBaseApplicationInfo(appInfo);
+    oldInfo.SetDualModeCloneApp(true);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = PACKAGE_NAME;
+    moduleInfo.name = MODULE_NAME1;
+    oldInfo.innerModuleInfos_.emplace(PACKAGE_NAME, moduleInfo);
+    bundleDataMgr->bundleInfos_[BUNDLE_TEST5] = oldInfo;
+
+    bundleDataMgr->installStates_[BUNDLE_TEST5] = InstallState::UNINSTALL_START;
+    EXPECT_FALSE(bundleDataMgr->RemoveModuleInfo(BUNDLE_TEST5, PACKAGE_NAME, oldInfo, false));
+    EXPECT_NE(oldInfo.innerModuleInfos_.find(PACKAGE_NAME), oldInfo.innerModuleInfos_.end());
+
+    bundleDataMgr->installStates_[effectiveName] = InstallState::UNINSTALL_START;
+    EXPECT_TRUE(bundleDataMgr->RemoveModuleInfo(BUNDLE_TEST5, PACKAGE_NAME, oldInfo, false));
+    EXPECT_EQ(oldInfo.innerModuleInfos_.find(PACKAGE_NAME), oldInfo.innerModuleInfos_.end());
+    EXPECT_EQ(bundleDataMgr->bundleInfos_[BUNDLE_TEST5].innerModuleInfos_.find(PACKAGE_NAME),
+        bundleDataMgr->bundleInfos_[BUNDLE_TEST5].innerModuleInfos_.end());
 }
 
 /**
