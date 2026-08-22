@@ -5138,6 +5138,10 @@ void BMSEventHandler::ProcessBundleResourceInfo()
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
         return;
     }
+    if (dataMgr->IsBopdModeEnabled()) {
+        LOG_I(BMS_TAG_DEFAULT, "not process bundle resource info due to bopd mode enabled");
+        return;
+    }
     std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
     if (bundleNames.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "bundleNames is empty");
